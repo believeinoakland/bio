@@ -83,7 +83,7 @@ test("R33: its reach (DRAFT_REACH) is none — only the passage the door hands i
   assert.ok(Object.isFrozen(DRAFT_REACH) && Object.isFrozen(DRAFT_REACH.reading));
   assert.deepEqual(Object.keys(DRAFT_REACH.reading), ["scope", "means"]);
   assert.equal(DRAFT_REACH.reading.scope, "none");
-  assert.match(DRAFT_REACH.reading.means, /^nothing of the record: only the passage of the group's own writing the door hands in/);
+  assert.match(DRAFT_REACH.reading.means, /^nothing of the record: only the passage of the team's own writing the door hands in/);
   assert.equal(DRAFT_REACH.reading.scope, DRAFT_REACH.translation.scope, "as a translation is given only its words");
   /* the control the requirement names */
   assert.equal(draftMayRead({ kind: "reading", suggestions: true }), false);

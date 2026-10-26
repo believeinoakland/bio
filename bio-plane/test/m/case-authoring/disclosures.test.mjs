@@ -65,12 +65,12 @@ test("R55: publishCase asks case-disclosures, after R6 and before the case ident
 test("R55: it answers the first refusal of the first step that refuses — each step in turn — asking no later step, writing nothing and drawing no id", () => {
   const R = (code) => ({ ok: false, reason: code, code, detail: "made to refuse" });
   const steps = [
-    ["hunchDebt", (r) => R("H")],
-    ["tensionsJudged", (r) => ({ ...r, refusals: [R("T")] })],
-    ["selfAttestedJudged", (r) => ({ ...r, refusals: [R("S")] })],
-    ["materialsJudged", (r) => ({ ...r, refusals: [R("M")] })],
-    ["acceptedWorkJudged", (r) => ({ ...r, refusals: [R("A")] })],
-    ["flagsJudged", (r) => ({ ...r, refusals: [R("F")] })],
+    ["hunchDebt", (r) => R("H")], // fixtures-generic: H
+    ["tensionsJudged", (r) => ({ ...r, refusals: [R("T")] })], // fixtures-generic: T
+    ["selfAttestedJudged", (r) => ({ ...r, refusals: [R("S")] })], // fixtures-generic: S
+    ["materialsJudged", (r) => ({ ...r, refusals: [R("M")] })], // fixtures-generic: M
+    ["acceptedWorkJudged", (r) => ({ ...r, refusals: [R("A")] })], // fixtures-generic: A
+    ["flagsJudged", (r) => ({ ...r, refusals: [R("F")] })], // fixtures-generic: F
   ];
   for (const [m, refuse] of steps) {
     const { w, P } = setup();

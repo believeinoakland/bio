@@ -56,7 +56,7 @@ import { localFactsOf } from "../local-facts/index.mjs";
 import * as EVENTS from "../events/index.mjs";
 import * as STANDARDS from "../standards/index.mjs";
 import { registerOwner, BOUNDS } from "../connection-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
 import { refusal, generic, notADisposition } from "./checks.mjs";
 
@@ -114,6 +114,11 @@ function dispositionVersionView(d, cur) {
            definition_version_state: recorded ? "recorded" : "not recorded",
            current_definition_version: current, applies, applies_because: because };
 }
+
+/* R46: a finding's state is the state of the decision that applies to it (R20), else `open`: no decision, or one that
+   judged an earlier version of the declared flow. */
+const stateOf = (disposition) => (disposition && disposition.applies ? disposition.state : "open");
+const withState = (f, disposition) => ({ ...f, disposition, state: stateOf(disposition) });
 
 /* R12 (D-552): the decision rides on the finding it judged, on every read that publishes the finding; it never filters. */
 function dispositionOnFinding(d, cur) {
@@ -433,7 +438,7 @@ export class Progressions {
       /* DEC-49 REGION is-stage-required — C-100.7. */
       if (!STAGE_REQUIREDNESS.includes(req))
         return refusal("BAD_REQUIRED",
-          `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "),
+          localize("progressions.index.stage_sk_required_must_be", "stage '{sk}' required must be one of {STAGE_REQUIREDNESS}", { sk: String(sk), STAGE_REQUIREDNESS: String(STAGE_REQUIREDNESS.join(", ")) }),
           { stage_key: sk });
       /* END DEC-49 REGION is-stage-required */
       norm.push({ stage_key: sk, stage_no: i + 1,
@@ -462,7 +467,7 @@ export class Progressions {
     const cur = this.#current(key);
     if (!cur) {
       if (!stmt) return refusal("NO_BASIS", `'${key}' is declared for the first time; a first declaration states its basis -- why `
-                                 + `the group expects this flow -- and a citation may name where that is published or held `
+                                 + `the team expects this flow -- and a citation may name where that is published or held `
                                  + `(framework 8.2). Nothing was written.`,
                                 { progression_key: key, version: null });
     } else {
@@ -560,8 +565,7 @@ export class Progressions {
     const want = version == null || version === "" ? cur.version : Number(version);
     /* DEC-49 REGION is-version-held — C-100.8. */
     if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
-      return refusal("PROGRESSION_VERSION_NOT_HELD", `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions `
-                                 + versions.map((v) => v.version).join(", "),
+      return refusal("PROGRESSION_VERSION_NOT_HELD", localize("progressions.index.key_has_no_version_string", "'{key}' has no version {String}; it holds versions {map}", { key: String(key), String: String(String(version).slice(0, 40)), map: String(versions.map((v) => v.version).join(", ")) }),
                      { progression_key: key, version: String(version).slice(0, 40), current_version: cur.version,
                        versions_held: versions.map((v) => v.version) });
     /* END DEC-49 REGION is-version-held */
@@ -709,13 +713,15 @@ export class Progressions {
       if (present && pred && docsByStage.has(pred.stage_key))
         this.#junctions(s, docs, docsByStage.get(pred.stage_key), definitionVersion, carried, findings, undetermined);
     }
-    return { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
-             definition_version: definitionVersion, label: def.label, entity,
-             grade, grade_determined: determined, established: determined && isEstablished(grade),
-             stage_count: stageDefs.length, placed_count: placedInOrder.length,
-             chain, stages, findings, finding_count: findings.length,
-             discharges, discharge_count: discharges.length,
-             undetermined_checks: undetermined, zone: zone.zone, zone_why: zone.zone ? null : zone.why };
+    const assembled = { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
+                        definition_version: definitionVersion, label: def.label, entity,
+                        grade, grade_determined: determined, established: determined && isEstablished(grade),
+                        stage_count: stageDefs.length, placed_count: placedInOrder.length,
+                        chain, stages, findings, finding_count: findings.length,
+                        discharges, discharge_count: discharges.length,
+                        undetermined_checks: undetermined, zone: zone.zone, zone_why: zone.zone ? null : zone.why };
+    this.#missingSays(assembled);
+    return assembled;
   }
 
   /* R38, R32 (K1505 (8)): the amount-free junction checks of one placed stage `s` against the placed stage it is
@@ -793,8 +799,8 @@ export class Progressions {
   #withDecisions(inst, byStage = null) {
     if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
     const decided = byStage || this.#decisionsByStage(inst.progression_key);
-    const findings = inst.findings.map((f) => ({ ...f, disposition: decided.get(f.stage_key) ?? null }));
-    return { ...inst, findings, open_finding_count: findings.filter((f) => !(f.disposition && f.disposition.applies)).length };
+    const findings = inst.findings.map((f) => withState(f, decided.get(f.stage_key) ?? null));
+    return { ...inst, findings, open_finding_count: findings.filter((f) => f.state === "open").length };
   }
 
   /* R13: the whole derivation stands for every reader; only the back-references to bundles the viewer may not see are
@@ -989,12 +995,11 @@ export class Progressions {
         .filter((x) => typeof x === "string").map((x) => x.trim()).filter(Boolean))];
       /* DEC-49 REGION is-set-named */
       if (!ids.length)
-        return refusal("NO_SET", "the matters a project follows are read for an explicit set of entity ids, which the caller resolves "
-                                 + "from the project; none was named");
+        return refusal("NO_SET", localize("progressions.index.set_none_named", "the matters a project follows are read for an explicit set of entity ids, which the caller resolves from the project; none was named"));
       /* END DEC-49 REGION is-set-named */
       /* DEC-49 REGION is-set-bounded */
       if (ids.length > INSTANCES_SET_MAX)
-        return refusal("SET_TOO_LARGE", `a set of at most ${INSTANCES_SET_MAX} entity ids is read at once; ${ids.length} were named`,
+        return refusal("SET_TOO_LARGE", localize("progressions.index.a_set_of_at_most", "a set of at most {INSTANCES_SET_MAX} entity ids is read at once; {length} were named", { INSTANCES_SET_MAX: String(INSTANCES_SET_MAX), length: String(ids.length) }),
                        { max: INSTANCES_SET_MAX, given: ids.length });
       /* END DEC-49 REGION is-set-bounded */
       const n = limit === null || limit === undefined || limit === "" ? INSTANCES_LIMIT_DEFAULT : Number(limit);
@@ -1029,7 +1034,34 @@ export class Progressions {
                ...(truncated ? { next: `${encodeURIComponent(last.entity_id)},${encodeURIComponent(last.progression_key)}` } : {}) };
     } catch (e) {
       return { ok: false, reason: "INSTANCES_UNREADABLE", code: "INSTANCES_UNREADABLE",
-               detail: `the matters could not be read: ${String(e && e.message || e).slice(0, 200)}` };
+               detail: localize("progressions.index.the_matters_could_not_be", "the matters could not be read: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) };
+    }
+  }
+
+  /** R48 (`op=progressions`): the declared flows, in key order, each `{progression_key, label, current_version,
+   *  stage_count, stages}` as R5 reads the current version, so a screen offers the flows a group holds rather than asking
+   *  for a typed id. `limit` 1-200 (default 50), `truncated` by reading one past, `next` the last key, to pass as `after`.
+   *  Names no declarer, basis or bundle; writes nothing and never throws. */
+  listProgressions({ limit = null, after = null, viewer = null } = {}) {
+    void viewer;
+    try {
+      const n = limit === null || limit === undefined || limit === "" ? INSTANCES_LIMIT_DEFAULT : Number(limit);
+      const size = Number.isFinite(n) ? Math.min(INSTANCES_LIMIT_MAX, Math.max(1, Math.floor(n))) : INSTANCES_LIMIT_DEFAULT;
+      const cut = typeof after === "string" && after !== "" ? after : null;
+      const keys = this.#rows(
+        `SELECT progression_key FROM progression_defs${cut === null ? "" : " WHERE progression_key > ?"}
+           ORDER BY progression_key LIMIT ?`, ...(cut === null ? [] : [cut]), size + 1).map((r) => r.progression_key);
+      const truncated = keys.length > size;
+      const items = keys.slice(0, size).map((k) => {
+        const cur = this.#current(k);
+        return { progression_key: k, label: cur.label, current_version: cur.version, stage_count: cur.stages.length,
+                 stages: cur.stages };
+      });
+      return { ok: true, count: items.length, items, limit: size, truncated,
+               ...(truncated ? { next: items[items.length - 1].progression_key } : {}) };
+    } catch (e) {
+      return { ok: false, reason: "PROGRESSIONS_UNREADABLE", code: "PROGRESSIONS_UNREADABLE",
+               detail: localize("progressions.index.the_progressions_could_not_be", "the progressions could not be read: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) };
     }
   }
 
@@ -1275,6 +1307,15 @@ export class Progressions {
     return { key, vars, lead, words: `${word(lead.key)} ${word(key, vars)}` };
   }
 
+  /* R49 (T51 fix round 10; K5186): a missing_predecessor finding, a step not yet due, says what it expects as R45's
+     overdue_successor does: from its clock (R16), `progression.expects` with the deadline day, or the undetermined form.
+     A step with no clock (no parsable interval, or its predecessor not placed) says nothing: `says` is null. */
+  #missingSays(inst) {
+    const says = new Map(this.#clocks(inst).map((c) => [c.finding, this.#says(c, c.deadline.undetermined ? null : c.deadline.latest.value)]));
+    for (const f of inst.findings)
+      if (f.kind === "missing_predecessor") f.says = says.get(f) || null;
+  }
+
   /* R16: the overdue findings of one instance at `nowMs`, each also a missing predecessor, carrying its grade: `overdue:
      true` past its deadline, `overdue: "undetermined"` where the dates do not settle it, with why. */
   #overdue(inst, nowMs) {
@@ -1309,9 +1350,7 @@ export class Progressions {
                  predecessor_at: c.documents.map((x) => x.own_date).reduce(later, null).value,
                  overdue_by: { amount, unit: c.interval.unit },
                  overdue_by_ms: nowMs - endMs(L), says: this.#says(c, L.value),
-                 detail: "the '" + f.stage_key + "' stage is " + f.required + " required and still absent past its '"
-                       + c.within_interval + "' deadline after '" + c.predecessor_stage + "' (" + L.value + ", the local day in "
-                       + L.zone + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade" });
+                 detail: localize("progressions.index.the_stage_key_stage_is", "the '{stage_key}' stage is {required} required and still absent past its '{within_interval}' deadline after '{predecessor_stage}' ({value}, the local day in {zone}) -- an overdue successor (framework 8.2, temporal), carrying the instance's grade", { stage_key: String(f.stage_key), required: String(f.required), within_interval: String(c.within_interval), predecessor_stage: String(c.predecessor_stage), value: String(L.value), zone: String(L.zone) }) });
     }
     return out;
   }
@@ -1362,7 +1401,8 @@ export class Progressions {
       const overdueF = this.#overdue(inst, now).filter(open);
       const others = (inst.findings || []).filter((f) => f.kind !== "missing_predecessor" && open(f));
       const overdueByStage = new Map(overdueF.map((f) => [f.stage_key, f]));
-      const findings = [...missing, ...overdueF, ...others];
+      /* R46: every finding left here is governed by no applying decision, so its state is `open` */
+      const findings = [...missing, ...overdueF, ...others].map((f) => ({ ...f, state: "open" }));
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
       instances.push({ progression_key: inst.progression_key, progression_label: inst.label,
@@ -1447,13 +1487,13 @@ export class Progressions {
       const missing = inst.findings.filter((f) => f.kind === "missing_predecessor");
       const others = inst.findings.filter((f) => f.kind !== "missing_predecessor");
       const findings = [...missing, ...a.overdue, ...others].map(project)
-        .map((f) => ({ ...f, disposition: a.decided.get(f.stage_key) ?? null }));
+        .map((f) => withState(f, a.decided.get(f.stage_key) ?? null));
       instances.push({ progression_key: inst.progression_key, progression_label: inst.label,
                        definition_version: inst.definition_version,
                        entity_id: inst.entity_id, entity_label: inst.entity ? inst.entity.label : null,
                        stage_key: r.stage_key, stage_label: stage ? stage.label : r.stage_key,
                        findings, finding_count: findings.length,
-                       open_finding_count: findings.filter((f) => !(f.disposition && f.disposition.applies)).length });
+                       open_finding_count: findings.filter((f) => f.state === "open").length });
     }
     return { ok: true, capture_sha: captureSha, count: instances.length, instances };
   }
@@ -1598,6 +1638,9 @@ export function progressionOps(p, url, body) {
   return {
     progressiondefine: () => p.defineProgression({ ...(body || {}), viewer: q("viewer") }),
     progression: () => p.readProgression({ progressionKey: q("key"), version: q("version"), viewer: q("viewer") }),
+    /* R48: the definitions listed, paged */
+    progressions: () => p.listProgressions({ limit: q("limit") ?? (body && body.limit), after: q("after") ?? (body && body.after),
+                                             viewer: q("viewer") }),
     thread: () => p.threadInstance({ ...(body || {}), viewer: q("viewer") }),
     instance: () => p.readInstance({ progressionKey: q("key"), entityId: q("id"), viewer: q("viewer") }),
     discharge: () => p.dischargeStage({ ...(body || {}), viewer: q("viewer") }),
@@ -1611,6 +1654,25 @@ export function progressionOps(p, url, body) {
     captureprogressions: () => p.captureProgressions({ captureSha: q("sha256") }),
   };
 }
+
+/* R47 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  progressiondefine: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("progressions.declared.progressiondefine", "progression definition, keyed by progression key"),
+    fields: { accepts: ["progressionKey","label","note","stages","basis","citation"], requires: ["progressionKey","label","stages"] } },
+  thread: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("progressions.declared.thread", "progression instance write, keyed by (progression, entity)"),
+    fields: { accepts: ["progressionKey","entityId","placements"], requires: ["progressionKey","entityId","placements"] } },
+  discharge: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("progressions.declared.discharge", "exception document, keyed by (progression, entity, stage)"),
+    fields: { accepts: ["progressionKey","entityId","stageKey","stage","captureSha","capture_sha","reason","citation"], requires: ["progressionKey","entityId",["stageKey","stage"],["captureSha","capture_sha"],"reason","citation"] } },
+  progression: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.progression.label.timeline",
+    fields: { accepts: ["key","version"], requires: ["key"] } },
+  progressions: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("progressions.declared.progressions", "the progression definitions, listed"),
+    fields: { accepts: ["limit","after"], requires: [] } },
+  instance: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.instance.label.timeline",
+    fields: { accepts: ["key","id"], requires: ["key","id"] } },
+  captureprogressions: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.captureprogressions.label.document",
+    fields: { accepts: ["sha256"], requires: ["sha256"] } },
+});
 
 const instances = new WeakMap();
 

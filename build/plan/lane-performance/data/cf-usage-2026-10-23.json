@@ -1,0 +1,842 @@
+{
+"taken": "2026-10-23 ~14:30 UTC",
+"source": "Cloudflare GraphQL analytics (read-only), account 20b5...7f72; stats op on biosmoke8",
+"window": "2026-10-23T11:01Z (deploy) to 14:30Z unless stated",
+"do_periodic": [
+{
+"dimensions": {
+"date": "2026-10-22",
+"namespaceId": "617cf9c75373456db8446fe1d2fa49f8"
+},
+"max": {
+"activeWebsocketConnections": 0
+},
+"sum": {
+"activeTime": 16383582,
+"cpuTime": 709469,
+"rowsRead": 0,
+"rowsWritten": 0,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+},
+{
+"dimensions": {
+"date": "2026-10-23",
+"namespaceId": "915183acbb654a7998fcd760a1e76639"
+},
+"max": {
+"activeWebsocketConnections": 1
+},
+"sum": {
+"activeTime": 5209704195,
+"cpuTime": 1339616215,
+"rowsRead": 212286023,
+"rowsWritten": 2292260,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+},
+{
+"dimensions": {
+"date": "2026-10-22",
+"namespaceId": "fd86253a55304348b20f893b8cfd2f35"
+},
+"max": {
+"activeWebsocketConnections": 0
+},
+"sum": {
+"activeTime": 26877817195,
+"cpuTime": 151057,
+"rowsRead": 546,
+"rowsWritten": 4,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+},
+{
+"dimensions": {
+"date": "2026-10-23",
+"namespaceId": "617cf9c75373456db8446fe1d2fa49f8"
+},
+"max": {
+"activeWebsocketConnections": 0
+},
+"sum": {
+"activeTime": 14624981,
+"cpuTime": 390083,
+"rowsRead": 0,
+"rowsWritten": 0,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+},
+{
+"dimensions": {
+"date": "2026-10-22",
+"namespaceId": "fc5878d8b5c842eab8faf332c6b06d17"
+},
+"max": {
+"activeWebsocketConnections": 0
+},
+"sum": {
+"activeTime": 122368582755,
+"cpuTime": 889438,
+"rowsRead": 1969,
+"rowsWritten": 20,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+},
+{
+"dimensions": {
+"date": "2026-10-23",
+"namespaceId": "fc5878d8b5c842eab8faf332c6b06d17"
+},
+"max": {
+"activeWebsocketConnections": 0
+},
+"sum": {
+"activeTime": 62142501026,
+"cpuTime": 680728,
+"rowsRead": 1005,
+"rowsWritten": 17,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+},
+{
+"dimensions": {
+"date": "2026-10-23",
+"namespaceId": "fd86253a55304348b20f893b8cfd2f35"
+},
+"max": {
+"activeWebsocketConnections": 0
+},
+"sum": {
+"activeTime": 8697547870,
+"cpuTime": 92580,
+"rowsRead": 174,
+"rowsWritten": 5,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+},
+{
+"dimensions": {
+"date": "2026-10-22",
+"namespaceId": "915183acbb654a7998fcd760a1e76639"
+},
+"max": {
+"activeWebsocketConnections": 2
+},
+"sum": {
+"activeTime": 9322047465,
+"cpuTime": 1424976324,
+"rowsRead": 148290518,
+"rowsWritten": 79261,
+"storageReadUnits": 0,
+"storageWriteUnits": 0
+}
+}
+],
+"do_invocations": [
+{
+"dimensions": {
+"namespaceId": "915183acbb654a7998fcd760a1e76639",
+"scriptName": "ocr-worker",
+"status": "success"
+},
+"quantiles": {
+"cpuTimeP50": 2102071,
+"cpuTimeP99": 3173696,
+"wallTimeP50": 2574268,
+"wallTimeP99": 3884863
+},
+"sum": {
+"errors": 0,
+"requests": 168,
+"responseBodySize": 857246
+}
+},
+{
+"dimensions": {
+"namespaceId": "fd86253a55304348b20f893b8cfd2f35",
+"scriptName": "file-scanner",
+"status": "success"
+},
+"quantiles": {
+"cpuTimeP50": 637,
+"cpuTimeP99": 3861,
+"wallTimeP50": 119973650,
+"wallTimeP99": 333515100
+},
+"sum": {
+"errors": 0,
+"requests": 103,
+"responseBodySize": 373155783
+}
+},
+{
+"dimensions": {
+"namespaceId": "617cf9c75373456db8446fe1d2fa49f8",
+"scriptName": "agent-runner",
+"status": "clientDisconnected"
+},
+"quantiles": {
+"cpuTimeP50": 137,
+"cpuTimeP99": 261,
+"wallTimeP50": 325436,
+"wallTimeP99": 402563
+},
+"sum": {
+"errors": 5,
+"requests": 5,
+"responseBodySize": 0
+}
+},
+{
+"dimensions": {
+"namespaceId": "915183acbb654a7998fcd760a1e76639",
+"scriptName": "biosmoke8",
+"status": "scriptThrewException"
+},
+"quantiles": {
+"cpuTimeP50": 875,
+"cpuTimeP99": 423582,
+"wallTimeP50": 57250,
+"wallTimeP99": 22917620
+},
+"sum": {
+"errors": 36,
+"requests": 36,
+"responseBodySize": 1121854
+}
+},
+{
+"dimensions": {
+"namespaceId": "915183acbb654a7998fcd760a1e76639",
+"scriptName": "biosmoke8",
+"status": "clientDisconnected"
+},
+"quantiles": {
+"cpuTimeP50": 1373,
+"cpuTimeP99": 456485,
+"wallTimeP50": 40458,
+"wallTimeP99": 4267626
+},
+"sum": {
+"errors": 628,
+"requests": 628,
+"responseBodySize": 306043158
+}
+},
+{
+"dimensions": {
+"namespaceId": "915183acbb654a7998fcd760a1e76639",
+"scriptName": "pdf-worker",
+"status": "success"
+},
+"quantiles": {
+"cpuTimeP50": 251159,
+"cpuTimeP99": 696710,
+"wallTimeP50": 887762,
+"wallTimeP99": 2858180
+},
+"sum": {
+"errors": 0,
+"requests": 74,
+"responseBodySize": 6826448
+}
+},
+{
+"dimensions": {
+"namespaceId": "fd86253a55304348b20f893b8cfd2f35",
+"scriptName": "file-scanner",
+"status": "scriptThrewException"
+},
+"quantiles": {
+"cpuTimeP50": 1231,
+"cpuTimeP99": 2270,
+"wallTimeP50": 41297910,
+"wallTimeP99": 135108510
+},
+"sum": {
+"errors": 2,
+"requests": 2,
+"responseBodySize": 0
+}
+},
+{
+"dimensions": {
+"namespaceId": "617cf9c75373456db8446fe1d2fa49f8",
+"scriptName": "agent-runner",
+"status": "success"
+},
+"quantiles": {
+"cpuTimeP50": 225,
+"cpuTimeP99": 768,
+"wallTimeP50": 450,
+"wallTimeP99": 502361
+},
+"sum": {
+"errors": 0,
+"requests": 1464,
+"responseBodySize": 102480
+}
+},
+{
+"dimensions": {
+"namespaceId": "fc5878d8b5c842eab8faf332c6b06d17",
+"scriptName": "file-scanner",
+"status": "success"
+},
+"quantiles": {
+"cpuTimeP50": 610,
+"cpuTimeP99": 1990,
+"wallTimeP50": 754649,
+"wallTimeP99": 334477920
+},
+"sum": {
+"errors": 0,
+"requests": 589,
+"responseBodySize": 22568
+}
+},
+{
+"dimensions": {
+"namespaceId": "915183acbb654a7998fcd760a1e76639",
+"scriptName": "file-scanner",
+"status": "clientDisconnected"
+},
+"quantiles": {
+"cpuTimeP50": 275557,
+"cpuTimeP99": 298181,
+"wallTimeP50": 32503138,
+"wallTimeP99": 35609540
+},
+"sum": {
+"errors": 3,
+"requests": 3,
+"responseBodySize": 268435456
+}
+},
+{
+"dimensions": {
+"namespaceId": "915183acbb654a7998fcd760a1e76639",
+"scriptName": "file-scanner",
+"status": "success"
+},
+"quantiles": {
+"cpuTimeP50": 8134,
+"cpuTimeP99": 879346,
+"wallTimeP50": 4705264,
+"wallTimeP99": 147293500
+},
+"sum": {
+"errors": 0,
+"requests": 119,
+"responseBodySize": 373348048
+}
+},
+{
+"dimensions": {
+"namespaceId": "fc5878d8b5c842eab8faf332c6b06d17",
+"scriptName": "file-scanner",
+"status": "scriptThrewException"
+},
+"quantiles": {
+"cpuTimeP50": 2094,
+"cpuTimeP99": 4023,
+"wallTimeP50": 58947610,
+"wallTimeP99": 180009280
+},
+"sum": {
+"errors": 4,
+"requests": 4,
+"responseBodySize": 0
+}
+},
+{
+"dimensions": {
+"namespaceId": "fc5878d8b5c842eab8faf332c6b06d17",
+"scriptName": "file-scanner",
+"status": "clientDisconnected"
+},
+"quantiles": {
+"cpuTimeP50": 2153,
+"cpuTimeP99": 2261,
+"wallTimeP50": 1082224100,
+"wallTimeP99": 6180521000
+},
+"sum": {
+"errors": 4,
+"requests": 4,
+"responseBodySize": 0
+}
+},
+{
+"dimensions": {
+"namespaceId": "fd86253a55304348b20f893b8cfd2f35",
+"scriptName": "file-scanner",
+"status": "clientDisconnected"
+},
+"quantiles": {
+"cpuTimeP50": 1006,
+"cpuTimeP99": 2775,
+"wallTimeP50": 36512828,
+"wallTimeP99": 3239587600
+},
+"sum": {
+"errors": 3,
+"requests": 3,
+"responseBodySize": 273144582
+}
+},
+{
+"dimensions": {
+"namespaceId": "915183acbb654a7998fcd760a1e76639",
+"scriptName": "biosmoke8",
+"status": "success"
+},
+"quantiles": {
+"cpuTimeP50": 1379,
+"cpuTimeP99": 622090,
+"wallTimeP50": 23294,
+"wallTimeP99": 3826743
+},
+"sum": {
+"errors": 0,
+"requests": 43642,
+"responseBodySize": 2129157014
+}
+}
+],
+"worker": {
+"h": [
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T00:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 1414957,
+"wallTimeP50": 447986,
+"wallTimeP99": 2214510
+},
+"sum": {
+"requests": 855
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T03:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 747726,
+"wallTimeP50": 756414,
+"wallTimeP99": 756414
+},
+"sum": {
+"requests": 1
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T05:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 1110517,
+"wallTimeP50": 351997,
+"wallTimeP99": 18276780
+},
+"sum": {
+"requests": 2915
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T06:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 949721,
+"wallTimeP50": 501294,
+"wallTimeP99": 4765176
+},
+"sum": {
+"requests": 16379
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T07:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 914422,
+"wallTimeP50": 519126,
+"wallTimeP99": 7866486
+},
+"sum": {
+"requests": 4646
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T08:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 918121,
+"wallTimeP50": 800854,
+"wallTimeP99": 8108806
+},
+"sum": {
+"requests": 1225
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T12:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 9264,
+"wallTimeP50": 9735,
+"wallTimeP99": 9735
+},
+"sum": {
+"requests": 1
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T13:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 1284283,
+"wallTimeP50": 286006,
+"wallTimeP99": 2562714
+},
+"sum": {
+"requests": 12240
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T14:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 1171635,
+"wallTimeP50": 363702,
+"wallTimeP99": 3889294
+},
+"sum": {
+"requests": 2878
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-22T17:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 1159045,
+"wallTimeP50": 364138,
+"wallTimeP99": 2091904
+},
+"sum": {
+"requests": 3001
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-23T04:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 25765,
+"wallTimeP50": 491640,
+"wallTimeP99": 2279265
+},
+"sum": {
+"requests": 114
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-23T11:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 1110714,
+"wallTimeP50": 350561,
+"wallTimeP99": 4765077
+},
+"sum": {
+"requests": 10180
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-23T12:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 1095843,
+"wallTimeP50": 568162,
+"wallTimeP99": 4167953
+},
+"sum": {
+"requests": 15675
+}
+},
+{
+"dimensions": {
+"datetimeHour": "2026-10-23T13:00:00Z"
+},
+"quantiles": {
+"cpuTimeP99": 55691,
+"wallTimeP50": 2192,
+"wallTimeP99": 3114860
+},
+"sum": {
+"requests": 303
+}
+}
+],
+"r": [
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T13:20:00Z"
+},
+"max": {
+"metadataSize": 62006,
+"objectCount": 1355,
+"payloadSize": 2270080071
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T13:10:00Z"
+},
+"max": {
+"metadataSize": 1004,
+"objectCount": 96,
+"payloadSize": 6121957
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T12:30:00Z"
+},
+"max": {
+"metadataSize": 1004,
+"objectCount": 96,
+"payloadSize": 6121957
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T12:30:00Z"
+},
+"max": {
+"metadataSize": 62006,
+"objectCount": 1355,
+"payloadSize": 2270080071
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T12:20:00Z"
+},
+"max": {
+"metadataSize": 59958,
+"objectCount": 1293,
+"payloadSize": 2270070582
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T12:10:00Z"
+},
+"max": {
+"metadataSize": 53799,
+"objectCount": 1112,
+"payloadSize": 2267729172
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T12:00:00Z"
+},
+"max": {
+"metadataSize": 52095,
+"objectCount": 1077,
+"payloadSize": 2089906940
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T11:50:00Z"
+},
+"max": {
+"metadataSize": 852,
+"objectCount": 81,
+"payloadSize": 1643842
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T11:50:00Z"
+},
+"max": {
+"metadataSize": 50377,
+"objectCount": 1066,
+"payloadSize": 2083702308
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T11:40:00Z"
+},
+"max": {
+"metadataSize": 49742,
+"objectCount": 1058,
+"payloadSize": 2058414378
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T11:40:00Z"
+},
+"max": {
+"metadataSize": 764,
+"objectCount": 71,
+"payloadSize": 1605412
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T11:30:00Z"
+},
+"max": {
+"metadataSize": 48919,
+"objectCount": 1046,
+"payloadSize": 2001876498
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T11:20:00Z"
+},
+"max": {
+"metadataSize": 44299,
+"objectCount": 954,
+"payloadSize": 1764461741
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T11:20:00Z"
+},
+"max": {
+"metadataSize": 700,
+"objectCount": 66,
+"payloadSize": 1595359
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T11:10:00Z"
+},
+"max": {
+"metadataSize": 34676,
+"objectCount": 813,
+"payloadSize": 1427709864
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T11:10:00Z"
+},
+"max": {
+"metadataSize": 540,
+"objectCount": 46,
+"payloadSize": 1498295
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T10:50:00Z"
+},
+"max": {
+"metadataSize": 540,
+"objectCount": 46,
+"payloadSize": 1498295
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T10:50:00Z"
+},
+"max": {
+"metadataSize": 34572,
+"objectCount": 810,
+"payloadSize": 1427653756
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-captures",
+"datetime": "2026-10-23T10:30:00Z"
+},
+"max": {
+"metadataSize": 34572,
+"objectCount": 810,
+"payloadSize": 1427653756
+}
+},
+{
+"dimensions": {
+"bucketName": "bio-published",
+"datetime": "2026-10-23T10:20:00Z"
+},
+"max": {
+"metadataSize": 540,
+"objectCount": 46,
+"payloadSize": 1498295
+}
+}
+],
+"s": [],
+"w": [
+{
+"quantiles": {
+"cpuTimeP25": 1753,
+"cpuTimeP50": 2982,
+"cpuTimeP75": 5635,
+"cpuTimeP90": 11581,
+"cpuTimeP99": 1119453,
+"cpuTimeP999": 2071641,
+"wallTimeP90": 1655055,
+"wallTimeP99": 4312286,
+"wallTimeP999": 15200489
+},
+"sum": {
+"requests": 24256
+}
+}
+]
+}
+}

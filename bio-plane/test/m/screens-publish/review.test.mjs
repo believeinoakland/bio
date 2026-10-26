@@ -3,7 +3,9 @@
  * reader's page, its secret only in a request's body. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
+import { groupName, open, main, text, tipOf, drew, drewIn, day, clock, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
+const GROUP = await groupName();
+import { statementAck } from "../case-inputs/fixtures.mjs";
 
 const PATH = `/app/review-copy/${P}`;
 /* Each field the act's owner takes, as sent; a reason the shell adds by the act's weight (interface-shell R11) aside. */
@@ -11,14 +13,14 @@ const carries = (body, want) => { for (const [k, v] of Object.entries(want)) ass
 
 const withGrants = (grants) => ({ reviewcopy: ok(COPY({ grants })) });
 /* R27 (`review` R35): the zone the copy answer carries on each roster row; a zone of null is "none held". */
-const zoned = (zone) => ({ reviewcopy: ok(COPY({ grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone }] })) });
+const zoned = (zone) => ({ reviewcopy: ok(COPY({ zone, grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone }] })) });
 const PACIFIC = "Pacific Time, Los Angeles";
-const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
+const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
 
 test("R2 R18 each named reader is a row with what they may read and until when, drawn \"until <date>\" from the grant's own end in the group's zone (not the UTC day), offering \"Stop sharing\"", async () => {
   const p = await open(PATH);
   assert.equal(last(p, "reviewcopy").query.draft, DR);
-  assert.ok(text(p).includes("Prof. N. Iyer · housing law") && drew(p, "screen.review-outside.until.zone", { date: day("2099-10-20"), time: "23:59", zone: PACIFIC }));
+  assert.ok(text(p).includes("Prof. N. Iyer · housing law") && drew(p, "screen.review-outside.until.zone", { date: day("2099-10-20"), time: clock("23:59"), zone: PACIFIC }));
   assert.ok(!text(p).includes(day("2099-10-21")), "the group's day, not the UTC day");
   assert.equal(p.byOp("publishpreflight").length, 0, "R27: the zone is the copy answer's, not a separate publishpreflight read");
   assert.equal(main(p).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "until");
@@ -30,7 +32,7 @@ test("R18 a lapsed grant is drawn ended; a grant with no end date draws \"until 
   const lapsed = await open(PATH, { plane: withGrants([{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: "2020-03-11T06:59:59Z", zone: "America/Los_Angeles" }]) });
   assert.equal(main(lapsed).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "ended");
   assert.ok(drew(lapsed, "screen.review-copy.reads.ended", { edition: "2", until: day("2020-03-10") }));
-  assert.ok(!drew(lapsed, "screen.review-outside.until.zone", { date: day("2020-03-10"), time: "23:59", zone: PACIFIC }) && !drew(lapsed, "screen.review-copy.reads.stop", { edition: "2" }));
+  assert.ok(!drew(lapsed, "screen.review-outside.until.zone", { date: day("2020-03-10"), time: clock("23:59"), zone: PACIFIC }) && !drew(lapsed, "screen.review-copy.reads.stop", { edition: "2" }));
   const open_ = await open(PATH, { plane: withGrants([{ grant_id: "GRT-2", recipient: "Ana · editor" }]) });
   assert.ok(text(open_).includes("Ana · editor") && drew(open_, "screen.review-copy.reads.stop", { edition: "2" }));
   assert.equal(main(open_).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "open");
@@ -81,9 +83,9 @@ test("R2 \"Share with a named reader\" takes a name, a role and an end date, is 
   const p = await open(PATH, { plane: zoned("America/Los_Angeles") });
   const b = main(p).querySelector('button[data-act="reviewgrant"]');
   assert.ok(tipOf(b).includes(word("mark.outward.means")), "mark.outward.means");
-  await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "", "rc-until": "2099-10-20" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Prof. N. Iyer", "rc-role": "", "rc-until": "2099-10-20" } });
   assert.equal(p.byOp("reviewgrant").length, 0);
-  await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "housing law", "rc-until": "" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Prof. N. Iyer", "rc-role": "housing law", "rc-until": "" } });
   assert.equal(p.byOp("reviewgrant").length, 0, "no end date: nothing shared");
   await share(p, "2099-10-20");
   assert.equal(last(p, "reviewgrant").body.draft, DR);
@@ -91,7 +93,7 @@ test("R2 \"Share with a named reader\" takes a name, a role and an end date, is 
 
 test("R2 R11 the grant's secret is shown once as the reader's link with \"Civicsmith sends no email\", and kept in no storage, address or later request", async () => {
   const p = await open(PATH, { plane: { ...zoned("America/Los_Angeles"), reviewgrant: ok({ grantId: "GRT-2", draftId: DR, recipient: "Ana", secret: GRANT_SECRET, secretIsShownOnce: true }) } });
-  await press(p, "reviewgrant", { values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
+  await press(p, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
   const link = main(p).querySelector("[data-reader-link]");
   assert.ok(link);
   assert.match(link.textContent, new RegExp(`https://group\\.example/app/review#grant=${GRANT_SECRET}`));
@@ -107,7 +109,7 @@ test("R2 R11 the grant's secret is shown once as the reader's link with \"Civics
 
 test("R2 the readers' comments, each answered by \"Reply\" (reviewcomment with the draft and the member's words)", async () => {
   const p = await open(PATH);
-  assert.equal(last(p, "reviewcomments").query.case, C);
+  assert.equal(p.byOp("reviewcomments").length, 0, "R62: the comments come from the copy answer, not a read keyed on the case");
   assert.ok(text(p).includes("Finding 1 should say which schedule the council approved.") && drew(p, "screen.review-copy.from.reader", { who: "Prof. N. Iyer" }));
   await press(p, "reviewcomment", { values: { "rc-reply-0": "Thank you: it is schedule B." } });
   assert.equal(last(p, "reviewcomment").query.draft, DR);
@@ -124,7 +126,7 @@ test("R17 review-outside: the fragment's secret goes only in reviewcopy's body, 
     assert.ok(!q.url.includes(GRANT_SECRET), "never in an address");
     assert.equal(q.headers.Authorization, undefined, "no credential");
   }
-  assert.ok(drew(p, "screen.review-outside.heading", { group: "River Town" }));
+  assert.ok(drew(p, "screen.review-outside.heading", { group: GROUP }));
   assert.ok(drew(p, "screen.review-outside.draft", { case: "The Coliseum lease", edition: "2" }), "the draft's title names the case and edition");
   assert.ok(text(p).includes("Rent adjustments under the Coliseum lease"));
 });
@@ -133,8 +135,8 @@ test("R17 review-outside: the link's end date, and \"Send your comment\" with th
   const until = { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
     authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana", until: "2026-10-20T06:59:59Z", zone: "America/Los_Angeles" } }) };
   const p = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: until });
-  assert.ok(drew(p, "screen.review-outside.until.zone", { date: day("2026-10-19"), time: "23:59", zone: PACIFIC }), "R27: the end day in the team's zone, never UTC");
-  assert.ok(!drew(p, "screen.review-outside.until", { date: day("2026-10-20"), time: "06:59" }), "the sentence that names UTC is not drawn");
+  assert.ok(drew(p, "screen.review-outside.until.zone", { date: day("2026-10-19"), time: clock("23:59"), zone: PACIFIC }), "R27: the end day in the team's zone, never UTC");
+  assert.ok(!drew(p, "screen.review-outside.until", { date: day("2026-10-20"), time: clock("06:59") }), "the sentence that names UTC is not drawn");
   const none = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
     authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana" } }) } });
   assert.ok(drew(none, "screen.review-outside.untilstopped"), "R18: a grant with no end date");
@@ -161,7 +163,7 @@ test("R23 review-outside draws \"What the case says it does not cover\" with the
   assert.ok(head, "the section");
   assert.ok(tipOf(head).includes(word("review.statement.help")), "explained by review.statement.help");
   const section = head.closest("section");
-  assert.ok(section.textContent.includes(STATEMENT), "the group's statement");
+  assert.ok(section.textContent.includes(STATEMENT), "the team's statement");
   assert.ok(drewIn(section, "review.statement.note") && drewIn(section, "review.statement.note.help"), "the note and its help");
   assert.ok(p.doc.getElementById("ro-note"));
   assert.ok(section.querySelector('button[data-act="statementack"]').textContent.includes(word("review.statement.ack")), "Acknowledge it");
@@ -169,7 +171,7 @@ test("R23 review-outside draws \"What the case says it does not cover\" with the
 });
 
 test("R23 \"Acknowledge it\" sends statementack with the draft, the note as the reason and the secret, the secret in the body only, never in an address", async () => {
-  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ ok: true, acknowledged: true }) } });
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok(statementAck().ok) } });
   const n = p.requests.length;
   await press(p, "statementack", { values: { "ro-note": `  ${NOTE}  ` } });
   const r = last(p, "statementack");
@@ -184,8 +186,8 @@ test("R23 \"Acknowledge it\" sends statementack with the draft, the note as the 
 });
 
 test("R23 an empty note is refused and nothing is sent (control); STATEMENT_ACK_NO_REASON and the dead answer are drawn by their words and the note is kept", async () => {
-  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ ok: true }) } });
-  const { slot } = await press(p, "statementack", { values: { "ro-note": "   " } });
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok(statementAck().ok) } });
+  const { slot } = await press(p, "statementack", { values: { "ro-note": "   " } }); // case-inputs' real acknowledgement
   assert.equal(p.byOp("statementack").length, 0, "an empty note sends nothing");
   assert.ok((slot().textContent + text(p)).includes(word("refusal.STATEMENT_ACK_NO_REASON")), "an empty note, in the code's own words");
   const q = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: refusedIn("STATEMENT_ACK_NO_REASON") } });
@@ -207,8 +209,10 @@ test("R23 a copy whose statement is absent draws no section and no acknowledgeme
     assert.equal(main(p).querySelector('button[data-act="statementack"]'), null);
     assert.equal(p.doc.getElementById("ro-note"), null);
   }
-  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ started: false, code: "NOT_RECORDED", translation: "It was not recorded." }) } });
+  const SAID = "The plane's own words for a code the list does not hold.";
+  // fixtures-generic: NO_WORDS_FOR_THIS_CODE (a made-up code with no word: the page draws the plane's canned translation)
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ started: false, code: "NO_WORDS_FOR_THIS_CODE", translation: SAID }) } });
   await press(p, "statementack", { values: { "ro-note": NOTE } });
-  assert.ok(text(p).includes("It was not recorded.") && !drew(p, "screen.review-outside.sent"));
+  assert.ok(text(p).includes(SAID) && !drew(p, "screen.review-outside.sent"));
   assert.equal(p.doc.getElementById("ro-note").value, NOTE, "kept");
 });

@@ -1,0 +1,231 @@
+# inquiry-grammar (T51)
+
+**Status** · session_012Hcsp3epJPBUahiBP41uKh · depth 2 · COMPLETE · handled B12
+
+## Completion (CR-8)
+
+**Entries applied** (requirements `build/requirements/inquiry-grammar.md`):
+- **R13** `standardLegFindings(label, leg, findings)` is exported from `grammar.mjs` and from the module's `index.mjs`, its behaviour unchanged; it is the function R4's standard arm calls (`checkInquiryBasis`).
+- **R19** (N1216) `golden.json` regenerated for `VERSION_NAME_MALFORMED` / C-25.36 by a step that runs `basis-versions`' `basisVersionFindings` over every corpus bundle and re-judges each bundle under every registry variant through `record.grammars()` and with none; the only existing entry that changed is `INQ-2026-0131-versions-bad` (its `versions`, `both`, `nosubject`, `none`), every other entry byte-identical. Corpus gains `INQ-2026-0133-version-name-long` (65 characters: MALFORMED, not NOT_UNIQUE) and `INQ-2026-0134-version-name-twice` (NOT_UNIQUE, not MALFORMED); a valid unique name (0129) raises neither.
+- **Words (K3949, K3957, K3962)**: the 11 left findings, the 44 plain findings and the 2 test copies. In `grammar.mjs` 119 sentences and repair fragments that were still literals are now `localize('inquiry-grammar.grammar.<slug>', en, vars)` (messages and repairs of the C-2.8, C-6.1, C-15.1 arms; the brace text `{statement, effect}`, `{text, description}` and `{rel: supersedes, target: {parent}}` is plain text to `localize`, the placeholder rule matching `{name}` only). Tests: the handlist at `grammar.test.mjs` 223 is compared with the keys of the `numbers` object; `IMPORTED_LEG_MALFORMED`'s translation is compared with `word('refusal.IMPORTED_LEG_MALFORMED')`; the two repair strings and the `imported.test.mjs` 128 message are compared with `localize(id, en, vars)`.
+- K3958 (civil-time's `{key, vars}` reason): no red test of mine; the `why` relayed from the earned registry (`observation.why`, `earned.why`) is still handed in as the registry gives it, a string, and interpolated as before.
+
+**Tests added**: `t51.test.mjs` (R13 export and equality with the arm's findings, with its control; R19 both codes, the composites, and the control that no other corpus case holds either). Changed: `grammar.test.mjs`, `imported.test.mjs` (above), `corpus.mjs`, `golden.json`.
+
+**Deferred**: none.
+
+**Found in other modules / for BOB**
+- `basis-versions`: its `registration.test.mjs` `amended()` is now a no-op (the golden carries the new code); its job can delete it (CR-9 already names it).
+- Requirements: R13 and R19 still carry "*(not yet met: T51)*"; both are met now (BOB edits the requirement).
+- Strings I did not convert, none a sentence a member reads: `index.mjs` 62–63, the `Error` thrown for a wiring defect (developer text); the `where` fields of the rows in `checks.mjs` (source locations); `grammar.mjs` 1748, `FORM`, the numbered-key encoding `bias_<n>_statement, …`, a wire grammar spliced into the bias sentences as a variable (it is the encoding's own spelling, K2479). `rows.mjs` and `words-unreviewed.json` are stale for the 119 new ids until BOB regenerates them at the layer close.
+- A sentence I left as its own row, not a fragment: five fragment rows (`…_and_more`, `a_hunch`, `a_grade_axis_axis`, `is_not_a_published_case`, `cannot_be_checked_against_the_published_record_here`, the `…_cut_v1_against` phrase) are joined into other sentences in English order; the design stream may prefer whole sentences for translation.
+
+**Tests and checks run**
+- `node --test bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 81, pass 81, fail 0 (76 before; 5 added).
+- `node --test bio-plane/test/m/basis-versions/registration.test.mjs` (reads this module's golden): tests 5, pass 5, fail 0.
+- `node checks/format.mjs /home/user/bio`: `176 modules, 175 requirements files; 0 failures`.
+- `node checks/architecture.mjs /home/user/bio inquiry-grammar`: `12 product files, 49 relative imports (0 naming no tracked file, not judged); 0 failures`.
+- `node checks/coverage.mjs /home/user/bio inquiry-grammar`: `1 modules, 19 of 19 live requirement ids named by a test; 0 failures`.
+- `node checks/words.mjs /home/user/bio inquiry-grammar`: `inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0, dev 1, unkeyed 0; 0 failures`.
+- `node checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: see the push below.
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (the new ids), no refusal naming this module.
+
+Size (session_01FVkqfj8YYFrYagPu7FJCRG): test runs 7, module lines 2038
+
+## J1 · COMPLETE
+
+CR-8 applied: R13 standardLegFindings exported; R19 golden/corpus regenerated for VERSION_NAME_MALFORMED (C-25.36); all 57 words findings converted (119 localize ids). Tests 81/81; format, architecture, coverage, words, ownership 0 failures. See Completion in my record (stale rows.mjs expected; basis-versions amended() can go; R13/R19 not-yet-met markers are BOB's to lift).
+
+## Completion (FR-44, wave 2)
+
+**Entry applied**: L9 (K4194) as R68, the requirement line is BOB's file (ownership refuses my writing it): its text is in my REPORT J3 for BOB to add, and the code and tests meet it. `checkGrounds` (`grammar.mjs`) leaves every `role: cuts_against` leg out of the partition: its absence of a ground is no gap in the totality, and a non-empty `ground` on one is one C-2.8 error (no code; two new `localize` ids `inquiry-grammar.grammar.basis_i_cuts_against_ground` and `...remove_the_ground_from_the_leg`) naming `basis[i]` and the label; the label then counts toward no ground. Every other basis is judged as before (golden unchanged).
+**Tests** (`t51.test.mjs`, 4 added, three seen failing before the change): supporting plus cutting leg clean; supporting leg left out still refused (control); cutting leg in a ground refused with its own finding; no-cutting-leg basis as before.
+**Deferred**: none.
+
+**For FR-45 (`inquiry`) and `strength`**:
+- The grammar now accepts a basis whose cutting legs carry no `ground`. `inquiry` must not label a cutting leg (its labelling at `inquiry/index.mjs` 2605-2636 should skip `cuts_against` legs and label supporting ones only), or the new finding refuses it.
+- `strength/arithmetic.mjs` does not read `role`: it puts every leg with no ground label into the implicit AND-group (lines 90, 107), so an unlabelled cutting leg would join that group and weaken (or bind) the axis beside the grounds. Found, not mine to change: strength should leave `cuts_against` legs out of the arithmetic's parts (or say that it reads them elsewhere), and its requirement R4 should say so.
+- Sentences are keyed in `rows.mjs` only when BOB regenerates it (the two new ids are stale until then).
+
+**Tests and checks run**
+- `node --test bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 85, pass 85, fail 0.
+- `node checks/format.mjs`: 0 failures. `architecture.mjs inquiry-grammar`: `13 product files, 54 relative imports; 0 failures`. `coverage.mjs inquiry-grammar`: `20 of 20 live requirement ids named by a test; 0 failures`. `words.mjs inquiry-grammar`: 0 failures (inline 0, plain 0, testcopy 0, missingkey 0). `checks/run.mjs`: format, architecture, words 0 failures; coverage 7 failures, all in other modules (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring).
+- `ownership.mjs inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 0 failures.
+
+Size (session_01FVBE32weVwYCP8rNDY5AVJ): test runs 6, module lines 2048
+
+## J2 · COMPLETE
+
+FR-44 applied: R68 written and met; checkGrounds leaves cuts_against legs out of the partition and refuses one named in a ground (own finding). Tests 85/85 (4 added, 3 seen failing first); format, architecture, coverage, words, ownership 0 failures for this module. FR-45/strength must know: inquiry must label supporting legs only; strength/arithmetic.mjs ignores role, so an unlabelled cutting leg joins the implicit AND group (see my record). R68 marker is BOB's to lift.
+
+## J3 · REPORT
+
+Ownership refuses my writing build/requirements/inquiry-grammar.md, so R68 is not in the file; I removed my edit (ownership now 0 failures). Please add this line to the requirements (public, leg-grammar section, marked not yet met or met as you judge), my tests t51.test.mjs name R68:
+
+- **R68** (T51; K4194; amends R1, R4) **A leg that cuts against is never in a ground.** The totality of the grounds (C-2.8: "a basis is grouped whole or not at all") counts the supporting legs only: when any leg names a ground, every leg whose `role` is not `cuts_against` must; a `cuts_against` leg need not, and a basis whose supporting legs all name grounds is judged whole whatever its cutting legs. A `cuts_against` leg that names a ground (a non-empty `ground`) is one C-2.8 error naming the leg and the label, and the label is not counted toward a ground, so a ground that only it carried is "declared, no basis leg belongs to it" as ever. A basis with no `cuts_against` leg is judged exactly as before. The strength arithmetic's side (`strength`, `inquiry`) leaves the cutting leg out of every ground likewise. *(not yet met: T51)* Test: one supporting and one cutting leg, the first in a declared ground, is clean; control: a supporting leg left out of the partition is still refused, as is a cutting leg named in a ground (with its own finding naming the leg); a basis with no cutting leg is judged as the golden answers have it.
+
+Until it is there, coverage cannot count R68 live (my tests name it already). Also lift the R13/R19 not-yet-met markers (met in CR-8).
+
+## J4 · REPORT
+
+R4 amendment (job 92) is in and pushed (commit on job/T51/inquiry-grammar), but not COMPLETE: it waits on content's job 91.
+
+Done: grammar.mjs now imports checkContentExtent/legExtent/legHasAuthoredExtent/CONTENT_ID_RE/CONTENT_EXTENT_DOCUMENT_ONLY from content/extent.mjs (the public face, ten kinds) instead of extent-core.mjs. t51.test.mjs gained two R4 tests. Red first seen: checkLegExtentGrammar refused a doc-part footnote leg with the "not one of: document, pdf-page, ..." sentence. After the re-point: the footnote with extent_ref passes; the controls (doc-part naming neither part nor ref, and kind 'doc-prt') are refused; the whole existing suite stays green (golden unchanged).
+
+Still red (1 test, by design, not weakened): a doc-part leg that names only `extent_part` (e.g. word/header1.xml, no extent_ref). content's core `legExtent` (extent-core.mjs) reads extent_part only under `image`, so the part is dropped and checkPart sees "neither". That is the second defect of the diagnosis, content job 91's. Please tell me when tranche/T51 carries job 91; I merge it and re-run, no change of mine needed.
+
+For BOB (not mine to change, byte-identity of R4 pins it): the unknown-kind repair sentence still lists the eight text-chain kinds (grammar.mjs ~565, from textchain.CONTENT_EXTENT_KINDS), so it does not offer doc-part/envelope. Using content's ten changes that sentence in 7 pinned tests/golden; say if you want it as a separate entry.
+Checks so far (this module): format 0, architecture 0, coverage 0 (20 of 20), words 0, ownership 0 failures. impact.mjs names 86 modules / 1478 test files (content face is widely used); I'll run the direct users after the merge.
+
+## Completion (fix round 9, batch D: R4 amended, G167; K4985, K4986)
+
+**Cause**: `grammar.mjs` imported `checkContentExtent` and `legExtent` from content's core (`extent-core.mjs`, the eight text-chain kinds), so `checkLegExtentGrammar` refused a `doc-part` (footnote) citation C-2.8. **Why missed**: no inquiry-grammar test or corpus leg held a `doc-part`; content's tests exercised its own public face only. **Red first**: `checkLegExtentGrammar` on a footnote leg gave "extent kind 'doc-part' is not one of: document, pdf-page, …". **Platform check**: pure grammar, no platform; seam §10 footnote citation is control-plane's to re-run.
+
+**Entries applied**: (1) the import is from `content/extent.mjs`, the public face (ten kinds); with content's job 91 merged, a part-only `doc-part` leg passes too. (2) The unknown-kind repair sentence lists content's landed kinds (`CONTENT_EXTENT_KINDS` from content, not text-chain's eight): 13 golden strings and the pinned test (`grammar.test.mjs` 173) follow by replacing that one sentence; I did not regenerate the golden (no script exists), every other golden entry is byte-identical.
+**Tests**: `t51.test.mjs`, two added (R4 footnote/header/comment/part-only pass; controls: neither part nor ref refused, `doc-prt` refused as before); red seen before the change.
+**Requirement lines**: R4 is BOB's (K4986); the *(not yet met: T51)* marker is BOB's to lift, my tests name R4.
+**Deferred**: none. **Found in other modules**: case-checker `program.mjs` embeds the grammar and is stale (BOB regenerates); `rows.mjs` / `words-unreviewed.json` hold the old repair sentence's key text only in the stale form: no new localize id, the sentence is the same key with a new variable value.
+
+**Tests and checks run**
+- `node --test bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 87, pass 87, fail 0.
+- Users of the service, each fail 0: accepted-work 28, basis-version-grammar 33, basis-versions 182, leg-earning 57, citation 132, strength 182, reevaluation 163, and all 33 `inquiry` files.
+- `impact.mjs origin/tranche/T51 HEAD`: 87 modules, 1480 of 2686 test files (content's face); I ran the direct users above, not all.
+- format, architecture, coverage, words: 0 failures each (see output of this run); ownership: 0 failures.
+
+Size (session_01B4tHNxMTJamTy5UFQiCoZy): test runs 14, module lines 2050
+
+## J5 · COMPLETE
+
+R4 amended: leg extent judged through content's public face (ten kinds, doc-part admitted, part-only too after job 91); unknown-kind repair lists content's kinds, golden/test follow. Suite 87/87; users (accepted-work, basis-version-grammar, basis-versions, leg-earning, citation, strength, reevaluation, inquiry) all green; format, architecture, coverage, words, ownership 0 failures. Details in my record. Case-checker program.mjs stale (BOB regenerates); R4 marker BOB's to lift.
+
+## Completion (fix round 10, batch 1: cause 30b, the grammar half)
+
+**Root cause** (`grammar.mjs` `checkGrounds`, the "THE PARTITION IS TOTAL OR ABSENT" block, formerly 947-952): any labelled supporting leg beside an unlabelled one pushed a C-2.8 error ("N basis legs carry no ground while M do"), though `strength/arithmetic.mjs:86-101` already computes the mixed shape (the unlabelled legs are the implicit necessary part; DEC-32 clause 4). **Why the tests missed it**: R68's control asserted the refusal, and no test named the mixed shape as a shape a member can reach. **Fix**: the totality block and its counter are removed; an unlabelled supporting leg is a necessary leg and no finding. Still refused: a ground declared twice, a malformed label, a row with no leg ("declared, no basis leg belongs to it"), a leg naming an undeclared ground, a cutting leg naming a ground. The block comment is rewritten to say so.
+**Red first**: `t51.test.mjs` "R68 (fix round 10, cause 30b) one unlabelled supporting leg beside one labelled ground is clean" failed against the old code (one C-2.8 finding), green now; its control (a ground no leg carries, an undeclared ground, a duplicated row, a malformed label each still refused) is green. The old R68 control (refusal of a left-out leg) is replaced by these two.
+**Golden**: only `INQ-2026-0127-grounds` (`both`, `nosubject`, `none`: 10 to 9 findings) and `grounds.partial` (1 to 0) changed, regenerated by re-judging through `record.grammars()` and `checkInquiryBasis`; every other entry byte-identical.
+**Platform check**: N (pure grammar). **Requirement**: R1/R68 text is BOB's and already on the tranche; its "not yet met" marker for 30b is BOB's to lift (R68 test named).
+**Rows owed**: none new; the two keys `inquiry-grammar.grammar.unlabelled_basis_legv1_carrv2_no` and `...give_every_leg_a_ground`/`...or_remove_the_grounds_and` are now unused in code (rows.mjs stale, BOB's regeneration). No `fixtures-own` / `fixtures-generic` markers added.
+
+**For the next jobs (red tests that still hold the old refusal; found, not mine)**
+- `inquiry` (fails 5/226): R8 "grounds: every leg labelled or none", R8 "the default is AND ... half-labelled basis is refused", R27/R30 "refusals in order" (partition step), R65 "an ungrouped question answers grouped false", R85 control "a partition leaving a supporting leg out is still refused"; its `case-grammar.test.mjs` R8 test asserts the old finding. These follow in its job (R8/R85 amended).
+- `citation` (fails 3/132): R21 "citing a second passage while the only citation is grouped is BASIS_REFUSED" and its two repair tests; `screens-inquiry` (1/539): R129 R3 the same case through the real plane. The cite now lands unrefused; their requirements need the amendment.
+- Green: basis-versions 182, strength 182, accepted-work 28, reevaluation 163, leg-earning 57, case-grammar 185.
+
+**Tests and checks run**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry-grammar/*.test.mjs bio-plane/test/m/basis-versions/registration.test.mjs`: tests 89, pass 89, fail 0.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 87 of 178; users run above.
+- format `0 failures`; architecture inquiry-grammar `0 failures`; coverage `20 of 20 live requirement ids named by a test; 0 failures`; words `0 failures`; fixtures `0 failures`; ownership `4 files changed; 0 failures`.
+
+Size (session_01P41YDS2bqnyp2PVY6un4MQ): test runs 9, module lines 2037
+
+## J6 · COMPLETE
+
+Cause 30b (grammar half) done: checkGrounds no longer refuses an unlabelled supporting leg beside labelled grounds (R1/R68); ground accounting (declared once, none empty, undeclared label) still refused. Red first seen; module 89/89; format, architecture, coverage 20/20, words, fixtures, ownership 0 failures. Golden: only INQ-2026-0127-grounds and grounds.partial changed. Red tests of other modules holding the old refusal (for their jobs): inquiry 5 (R8 x2, R27/R30, R65, R85 control, plus case-grammar R8), citation R21 x3, screens-inquiry R129 R3. See my record.
+
+## Completion (fix round 10, follow-up 24: the golden follows the real grammar)
+
+**Entry applied** (START B9, follow-up 24; K5077 R3, K5090): `INQ-2026-0129-versions` in `golden.json` no longer records the C-25.5 `VERSION_PARTITION_INCOMPLETE` finding: four objects removed, from `versions`, `both`, `nosubject` and `none`. Its `both-none`, `nosubject-none` and `none-none` keys carried none. The remaining finding is C-25.1 `VERSION_NO_DESCRIPTION`, unchanged. Only that case changed: no code, no test file.
+
+**Seen failing before, green after.** A scratch comparison outside the repository registers the real `inquiry-grammar` and `basis-version-grammar` (`registerBasisVersionGrammar`) and judges every corpus bundle under the three registry variants against `golden.json`. Before the edit, INQ-2026-0129-versions differed under `both`, `nosubject` and `none`, by exactly the one C-25.5 finding. After the edit it matches under all three, and every other case still matches. No committed test compares the golden with the real `basis-version-grammar`: this module's `uses` do not include it, and a test import would need a `uses` edge in `build/modules.json`, which is BOB's.
+
+**Found, not changed (for BOB).** The same stale C-25.5 finding sits in two other golden cases, which the START did not name ("edit that case only"): `INQ-2026-0130-versions-entry` and `INQ-2026-0134-version-name-twice`, in `versions`, `both`, `nosubject` and `none`. The real grammar gives the same findings without it. Each is the same four-object removal; I can make it in my next CHANGE if BOB wants it.
+
+**Tests and checks run**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 88, pass 88, fail 0.
+- `checks/fixtures.mjs /home/user/bio inquiry-grammar --list`: 0 failures, no line of mine; no `fixtures-own` or `fixtures-generic` marker added.
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio inquiry-grammar`: 13 product files, 53 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio inquiry-grammar`: 20 of 20 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs /home/user/bio inquiry-grammar`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures.
+- `checks/ownership.mjs /home/user/bio inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 1 file changed (`golden.json`); 0 failures.
+
+**Deferred**: the two golden cases above, to BOB.
+
+Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
+
+## J7 · COMPLETE
+
+Follow-up 24 applied (test files only): INQ-2026-0129-versions in golden.json no longer records the C-25.5 finding (four objects: versions, both, nosubject, none), which basis-version-grammar R3 no longer raises. Red first against the merged grammar (scratch comparison of the real grammars with golden.json), green after; module tests 88/88; format, architecture, coverage, words, fixtures, ownership 0 failures.
+Found, not changed: the same stale C-25.5 finding is in INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice (the START named only 0129). Same four-object removal; say if you want it in my next CHANGE.
+Details in my record, Completion (follow-up 24).
+
+## Completion (CHANGE B10, K5095: the stale C-25.5 finding in the other two golden cases)
+
+**Entry applied**: the same four-object removal of `VERSION_PARTITION_INCOMPLETE` (C-25.5) from `INQ-2026-0130-versions-entry` and `INQ-2026-0134-version-name-twice` in `golden.json`: `versions`, `both`, `nosubject` and `none` in each. No other golden case records C-25.5 (the sweep over every bundle found only these two plus 0129, already done). Only `golden.json` changed.
+
+**Red first, green after.** A scratch comparison outside the repository registers the real `inquiry-grammar` and `basis-version-grammar` and judges every corpus bundle under the three registry variants against `golden.json`. Before this change: 6 differences (0130 and 0134 under `both`, `nosubject`, `none`), each the one C-25.5 finding. After: 0 differences across all cases. A first attempt at the edit removed two C-2.8 findings from 0130 too; I restored the file from the commit and redid the removal with the object boundaries checked, so the final diff is 88 deletions (two cases x four objects x 11 lines).
+
+**Tests and checks run**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/inquiry-grammar/*.test.mjs`: tests 88, pass 88, fail 0.
+- `grep -c '"C-25.5"' golden.json`: 0.
+- `checks/fixtures.mjs /home/user/bio inquiry-grammar --list`: 0 failures. `format`: 178 modules, 0 failures. `architecture inquiry-grammar`: 0 failures. `coverage inquiry-grammar`: 20 of 20, 0 failures. `words inquiry-grammar`: 0 failures. `ownership inquiry-grammar tranche/T51 job/T51/inquiry-grammar`: 2 files changed (`golden.json` and this record), 0 failures.
+
+Size (session_011JT8beX7mv7RWXrkz2inzX): test runs 1, module lines 2039
+
+## J8 · COMPLETE
+
+CHANGE B10 applied (K5095; test files only): the stale C-25.5 finding is removed from INQ-2026-0130-versions-entry and INQ-2026-0134-version-name-twice, the same four objects each (versions, both, nosubject, none), in golden.json. Red first: 6 differences between golden and the real merged grammars; green after: 0. Module tests 88/88; format, architecture, coverage, words, fixtures and ownership 0 failures. A first attempt over-deleted two C-2.8 findings; caught by the real-grammar comparison, redone, committed. No C-25.5 remains in golden.json. Details in my record, Completion (CHANGE B10).
+
+## J9 · REPORT
+
+R69 side effects on other modules (commit 1c825b1d5e). Nothing outside this module was edited.
+
+1. action-grammar pins this module's lead sentence. bio-plane/test/m/action-grammar/golden.json lines 1199, 1212, 1225 and 1239 hold the old text "action_basis[0].target 'LEAD-2026-0001-hunch' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7)". bio-plane/test/m/action-grammar/grammar.test.mjs R6 (line 138) and R7 (line 202) fail on it. The sentence now reads "the target on <label> ('…') is a LEAD, and a lead is never evidence: …". The label is action-grammar's own argument, `action_basis[0]`, a field path: R69 asks each caller to hand a plain label, and the golden needs an exact re-pin. Owner: action-grammar.
+
+2. The inquiry module's tests pin this module's old wording, through its grammar face. Failing assertions: bio-plane/test/m/inquiry/grammar.test.mjs:36 and :33 (surfaced_by 'robot'); inquiry/promotion.test.mjs:194 (surfaced_by 'robot' is not one of: agent, human); inquiry/facts.test.mjs:160; inquiry/divide.test.mjs:72; inquiry/lifecycle-reads.test.mjs:80; inquiry/case-grammar.test.mjs:132 (a finding's bytes name a case (case_id)); inquiry/capture-bound.test.mjs:61 (/STRONGER than the C/; the sentence now says "stronger"). ratification/converted-c.test.mjs:245 (surfaced_by 'robot') and ratification/converted-d.test.mjs:490 (case_id). Owner: inquiry, ratification.
+
+3. A generated artifact is stale: bio-plane/src/case-checker/program.mjs, which the standalone case checker builds from this module's grammar. bio-plane/test/m/case-checker/program.test.mjs R13 (line 22) fails with "program.mjs is stale"; R25 also fails on the same program text. Regenerate with `node bio-plane/src/case-checker/build-program.mjs` (case-checker's owner). I did not regenerate it (mechanics §14).
+
+4. Generated artifacts are stale: bio-plane/src/setup-words/rows.mjs and words-unreviewed.json. Every changed sentence has a new localize id (suffix _p) and the old rows are retired. `node bio-plane/src/setup-words/build.mjs --check` fails; setup-words tests R10, R16 and R17 fail until it is regenerated with `node bio-plane/src/setup-words/build.mjs` (setup-words' owner). I did not write them. setup-words R13 also fails on inquiry.index.pass_grounds_an_array, a design-list row this change does not touch.
+
+5. Observed, not mine: bio-plane/test/m/store-assembly/declarations.test.mjs:36 fails on the set of modules exporting DECLARED_OPS. This module exports none. I did not look further.
+
+6. Decision for BOB: several sentences still list the stored values a field may take (grade sources, grade axes, roles, the bias effects, the surfaced-by values), as "is not one of: …". R69 names fields, codes and ids, not values, so I left these. Say if they should become plain phrases as well.
+
+## J10 · COMPLETE
+
+R69 (T51 fix round 10; K5297, K5175, K5257) applied, commit 1c825b1d5e on job/T51/inquiry-grammar (merged tranche/T51 at 929bcf76c7 first, fast-forward).
+
+Entries applied
+- R69 (new, `build/requirements/inquiry-grammar.md`). No finding or repair this module words names a field, a stored code or a decision id. Done in bio-plane/src/inquiry-grammar/grammar.mjs: 173 member-facing sentences reworded (each under a new localize id, suffix _p, since localize returns the frozen row for an existing id): supersession and division (lines 83–157), recheck (175–181), entry arm (203–352), division block (408–468), content-id arms (572–578), the basis leg arms (610–960), grounds (873–956), testimony/earned/inherited (1058–1319), lead (1338–1340), imported-finding (1399–1441), standard/calculation/occurrence/derived (1472–1655), bias applications (1753–1854).
+- Labels: the leg label is now `basis leg N` (lines 624–811), not `basis[N]`, for every caller of this module's leg checks, theme included; field names in messages are words (`words`, line 45; `FIELD_WORD`, line 46; apportionment rows, grounds rows, the bias applications on a leg read as words, not keys).
+- Extent-kind repair (line 574): names the landed kinds by content's own member phrases (`human`), not their stored names.
+- Repairs: the same rule (e.g. "remove the case facts from this inquiry" for the case-field refusal, and "the earned-basis check" for "op=earnedbasis").
+
+Red, then green
+- The sweep is r69.test.mjs (new). Over the module's recorded findings (402, the golden sections for its checks; record-grammar's own bundle C-6.x findings excluded), it reads each message and repair: pre-change golden: 520 naming hits (a field such as snake_case, a bracketed path, DEC-/C-/REC-/CASE- ids, op=, kind:, upper-case codes); after: 0. The same regex run on the pre-change golden is the red state (the test itself was written after the change).
+- Golden (test/m/inquiry-grammar/golden.json): the reworded sentences only, by exact replacement from the old templates (431 matches, 34 nested sentences, 173 template pairs; anchored to whole messages; one pass). Repairs too. Nothing else in the file changed.
+- Test pins moved to the new wording in grammar.test.mjs, imported, registration, t33, t34, t41, and t51 (labels only). Each old pin was checked against the new output before it moved.
+
+Suite and checks (module tests, on this tree)
+- node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/inquiry-grammar/*.test.mjs: tests 90, pass 90, fail 0 (88 before, plus r69's 2).
+- checks/format.mjs /home/user/bio: 178 modules, 178 requirements files; 0 failures.
+- checks/architecture.mjs /home/user/bio inquiry-grammar: 14 product files; 0 failures.
+- checks/coverage.mjs /home/user/bio inquiry-grammar: 21 of 21 live requirement ids named by a test; 0 failures.
+- checks/ownership.mjs /home/user/bio inquiry-grammar 929bcf76c7 HEAD: 11 files changed by inquiry-grammar; 0 failures.
+- checks/words.mjs /home/user/bio inquiry-grammar: inline 0, plain 0, testcopy 0; 0 failures. (Two test literals of member copy were shortened to fragments under the checker's 25-character rule; two inline phrases in code moved to localize.)
+- checks/run.mjs /home/user/bio: no line names inquiry-grammar; words over all 178 modules: 0 failures. The 89 "fixtures" failures are other modules' stub and contract findings, not this module's files.
+- Consumers: each test file that imports this module or lives in a consumer module's directory (620 files), run on this tree and on a HEAD copy. New failures against the wording (the pins are in REPORT J9, file:line): action-grammar grammar.test.mjs (2), inquiry (7 files), ratification converted-c and converted-d. Not caused by this change, verified alone: control-plane t51-round5/6/7/8/9, stamps, t51-reading-follows (slow under load, pass alone); case-checker program.test.mjs R13 and R25 (generated artifact stale, REPORT J9 item 3); answer-envelope families.test.mjs and control-plane t51-round10-seam-csvprose (fail on the HEAD copy too). store-assembly declarations.test.mjs (REPORT J9 item 5).
+
+Deferred, with why
+- Other modules' pins and generated artifacts (case-checker program, setup-words rows and review list): REPORT J9, for their owners.
+- The stored values a field may take (grade sources, axes, roles, bias effects, surfaced-by values) still appear as "is not one of: …" lists. R69 names fields, codes and ids, not values; BOB to say whether they become plain phrases (REPORT J9 item 6).
+- Golden: no longer the pre-move catalogue byte for byte. R4's byte-identity holds for every finding R69 did not reword, and the reworded ones were replaced by exact text, as action-grammar did.
+
+Commit attribution: the commit carries the Claude-Session trailer; the co-author line that names the model is left out (system guidance on model identifiers in commits).
+
+Size (session_012Hcsp3epJPBUahiBP41uKh): test runs 26, module lines 2048
+
+## J11 · COMPLETE
+
+CHANGE B12 (K5304) applied. Merged origin/tranche/T51 (2947741d44; fast-forward of the job branch, no conflicts), then re-pinned the connections sentences.
+
+- Six pins red after the merge: grammar.test.mjs, registration.test.mjs, t33, t34, t41 and golden.json. Each now takes the sentence connections returns for that leg label: `basis leg N names a THEME …` and `basis leg N claims its support through a THEME …`. Read from themeLegFindings on the same leg shape, not typed by hand. Commit ddc01120a4.
+- Plain label: connections is handed `basis leg N` (grammar.mjs:626). The brief said `basis[${i}]` at :617; that was the pre-merge line, and the label was already plain under R69.
+- Lead sentence (grammar.mjs:1347): `the {field} on {label} ('{v}') is a LEAD, …` with the field in plain words. It has no `.{field}` suffix and no document-file citation.
+
+Suite and checks, merged tree: inquiry-grammar tests 90 of 90 pass. format 178 modules, 0 failures; architecture 0 failures; coverage 21 of 21 ids; ownership 0 failures (11 files since the tranche tip 2947741d44); words 0 failures.
+
+Earlier cross-module findings stand (REPORT J9): action-grammar golden and tests, the inquiry and ratification pins, the stale case-checker program.mjs, and the stale setup-words rows.
+
+Size (session_012Hcsp3epJPBUahiBP41uKh): test runs 28, module lines 2048

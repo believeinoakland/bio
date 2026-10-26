@@ -11,6 +11,7 @@ import { ACQUIRE_GRADE_NOTE } from "../../../src/capture/index.mjs";
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
 const storageAbsent = (op, error) => json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op, error }, 503);
+// fixtures-contract: answer-envelope door-helpers
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
 /* The control plane's envelope reader (index.mjs `doAnswer`), as it is handed to the ops (N247). */
 const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }

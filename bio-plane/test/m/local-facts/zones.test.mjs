@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, P, TP, written } from "./fixture.mjs";
 import { factPath, parseFactPath } from "../../../src/local-facts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const EXAMINER = { role: "Examiner of Accounts", body: "Marlow County Audit Office" };
 const CLERK = { role: "Town Clerk", body: "City of Port Ellery" };
@@ -94,11 +95,11 @@ test("R3 a day for an office fact is that office's local day when the profile ho
 test("R6 governingPath for time_zone: the office's own path when the profile holds one, else the profile's, saying so", () => {
   const w = world();
   const ask = (office) => w.lf.governingPath({ profile: TP, fact: "time_zone", office, viewer: V("bob") });
-  assert.deepEqual(ask(EXAMINER), { ok: true, path: P.examinerTz, via: "own", lines: [], why: "the profile holds this office's own time zone" });
+  assert.deepEqual(ask(EXAMINER), { ok: true, path: P.examinerTz, via: "own", lines: [], why: word("local-facts.why.profile_holds_office") });
   assert.equal(ask({ venue: "commitment_claim" }).path, P.venueTz);
   assert.deepEqual(ask(CLERK), { ok: true, path: P.tz, via: "profile", lines: [],
-                                 why: "the profile holds no time zone of this office's own, so the profile's governs it" });
-  assert.deepEqual(ask(undefined), { ok: true, path: P.tz, via: "profile", lines: [], why: "the time zone is the profile's, for every office" });
+                                 why: word("local-facts.profile_holds_time") });
+  assert.deepEqual(ask(undefined), { ok: true, path: P.tz, via: "profile", lines: [], why: word("local-facts.time_zone_profile") });
   /* no zone anywhere: undetermined */
   const bare = written("test-bare", { counterparties: [{ role: "Clerk", body: "Office", level: "city", elected: false, basis: "TEST" }] });
   const b = world({ profiles: ["test-bare"], own: [bare] });

@@ -2,9 +2,12 @@
    driven at the module's interface over the fixture's stand-ins, with negative controls. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, opened, V, MACHINE, OFFICE, ms } from "./fixture.mjs";
+import { seeded, world, opened, V, MACHINE, OFFICE, ms, noSuchAction } from "./fixture.mjs";
+import { actionsForRefusal } from "../actions/fixtures.mjs";
+import { consequencesOfRefusal } from "../consequences/fixtures.mjs";
 import { JUDGMENT_KEYS, REASON_MAX } from "../../../src/escalation/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const draftOf = (w, extra = {}) => w.esc.escalationReasonDraft({ determination: w.D, viewer: V("bob"), ...extra });
 const D_LINE = (D) => `Determination ${D} finds the act noncompliant with 2 standards: STD-2026-0001-a, STD-2026-0002-b.`;
@@ -33,7 +36,7 @@ test("R29 the draft states, part by part and each part naming the record id it w
       causation: { state: "established" } },
     { id: "CONS-2026-0003-part", determination: w.D, standard: "STD-2026-0002-b", affected: { kind: "service", description: "the library" },
       measure: null, period: { from: "2026-02-01", to: "2026-03-01" }, state: "undetermined",
-      undetermined: { why: "the figure is not in the record" }, causation: { state: "unproven" } },
+      undetermined: { why: word("consequences.not_in_record") }, causation: { state: "unproven" } },
   ]);
   const r = draftOf(w, { nowMs: ms("2026-10-01T12:00:00Z") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
@@ -65,8 +68,8 @@ test("R29 the draft states, part by part and each part naming the record id it w
   const v = seeded();
   const none = draftOf(v);
   assert.deepEqual(none.parts.slice(4).map((p) => [p.id, p.text]), [
-    [v.D, "No action resting on the determination is recorded."],
-    [v.D, "No consequence of the breach is recorded on the determination."]]);
+    [v.D, word("escalation.action_resting_determination")],
+    [v.D, word("escalation.consequence_breach_recorded")]]);
 });
 
 test("R29 what could not be read is stated undetermined, never filled: the actions or the consequences unreadable, a standard with no basis in the read, its being in force undetermined, an act with no description, office or date, an action with no counterparty office or no clock, a clock entry missing its text, date, basis or status, a consequence part missing its affected, measure, period or state", () => {
@@ -77,7 +80,7 @@ test("R29 what could not be read is stated undetermined, never filled: the actio
   w.D = w.determine({ project: w.P, actor: { role: "", body: "" }, outcomes: [
     { standard: "STD-a", outcome: "noncompliant", rows: [] },
     { standard: "STD-b", outcome: "noncompliant", in_force: "undetermined", in_force_why: "on 2026-09-01: the record does not decide it",
-      disagreement: "every row reads aligns, and the member's outcome is noncompliant",
+      disagreement: word("conformance.row_reads_aligns"),
       rows: [{ requires: "", did: "notice given late", reading: "aligns", content: [] }] }] });
   const d = w.determinations.get(w.D);
   d.act = { id: null, description: "", actor: {}, evidence: [] };
@@ -106,12 +109,14 @@ test("R29 what could not be read is stated undetermined, never filled: the actio
 
   /* the actions and the consequences unreadable: each stated undetermined, named by the determination; nothing in
      their place */
-  w.stand.actions.actionsFor = () => ({ ok: false, reason: "UNAVAILABLE" });
-  w.stand.consequences.consequencesOf = () => ({ ok: false, reason: "UNAVAILABLE" });
+  const refused = actionsForRefusal().unknownRead;
+  const unreadable = consequencesOfRefusal({ determination: w.D }).answer;
+  w.stand.actions.actionsFor = () => refused;
+  w.stand.consequences.consequencesOf = () => unreadable;
   const u = draftOf(w);
   assert.deepEqual(u.parts.slice(4).map((p) => [p.id, p.text]), [
-    [w.D, "The actions resting on the determination could not be read (undetermined)."],
-    [w.D, "The consequences of the breach could not be read (undetermined)."]]);
+    [w.D, word("escalation.actions_resting_determination")],
+    [w.D, word("escalation.consequences_breach_read")]]);
   /* a provider absent altogether answers PROVIDER_UNAVAILABLE, never a draft in part */
   const x = seeded();
   delete x.esc.deps.consequences;
@@ -139,9 +144,9 @@ test("R29 an action resting on the determination that the viewer may not see is 
   const u = seeded();
   const only = u.action({ project: u.P, restsOn: [u.D] });
   const read = u.stand.actions.actionRead;
-  u.stand.actions.actionRead = (a) => (a.id === only && a.now !== undefined ? { ok: false, reason: "NO_SUCH_BUNDLE" } : read(a));
-  assert.deepEqual(draftOf(u).parts.slice(4).map((p) => p.text), ["No action resting on the determination is recorded.",
-    "No consequence of the breach is recorded on the determination."]);
+  u.stand.actions.actionRead = (a) => (a.id === only && a.now !== undefined ? noSuchAction(a.id) : read(a));
+  assert.deepEqual(draftOf(u).parts.slice(4).map((p) => p.text), [word("escalation.action_resting_determination"),
+    word("escalation.consequence_breach_recorded")]);
 });
 
 test("R29 every date passed without a response is read at nowMs by actions R12's rule: a pending entry is past once the office's local day after its date has begun (T33-73; the test profile's zone, America/Halifax), at the caller's nowMs, else the instance clock; an entry that is not pending, or due later, is never stated passed", () => {
@@ -162,7 +167,7 @@ test("R29 every date passed without a response is read at nowMs by actions R12's
   /* with no zone held for the office's local day, whether a date passed is undetermined, and said so */
   w.record.setSetting("jurisdiction_profiles", [], "test");
   assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") })), []);
-  assert.ok(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") }).text.includes(`Whether the date 2026-09-20 on action ${A} has passed is undetermined`));
+  assert.ok(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") }).text.includes(word("escalation.whether_date_action", { date: "2026-09-20", id: A })));
   w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
   /* each clock entry stated, the met one with its status */
   assert.ok(draftOf(w).text.includes(`Action ${A}'s clock entry "answered" is due 2026-09-01, on the basis "the records rule", met.`));

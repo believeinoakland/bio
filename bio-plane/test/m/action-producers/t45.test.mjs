@@ -6,8 +6,9 @@
    invariants over every kind (R14–R17, R19). Providers are fakes in their requirements' shapes; membership is real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
-import { ACTION_WORDS, WORDS_CANON } from "../../../src/action-producers/index.mjs";
+import { world, byId, NOW, iso, page, ofKind, DAY, day, escalationsAnswer, planAnswer, noSuchPlan } from "./world.mjs";
+import { ACTION_KEYS, WORDS_CANON } from "../../../src/action-producers/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { WORD, FILLED } from "./words.mjs";
 
 /* ada an administrator; alice, bob, carl members; olga owns PRJ-1 (alice, bob, carl joined); PRJ-2 owned by olga too;
@@ -89,8 +90,8 @@ test("R1 (T45; v0.2 rule 6), R23: the words by basis, read by key: the addressee
   const m = byId(w.read("alice"));
   const at = (n) => m[`CONDITION::action-clock-overdue::ACT-1::${n}`];
   assert.equal(at(0).summary_key, "queue.action-clock-overdue.noreply");
-  assert.equal(at(0).summary, "Noticed: no reply recorded by 25 August", "canon's own words (v0.2 rule 6), unchanged (R23)");
-  assert.equal(ACTION_WORDS["queue.action-clock-overdue.noreply"], "Noticed: no reply recorded by {date}");
+  assert.equal(at(0).summary, localize("action-producers.words.noreply_canon", "Noticed: no reply recorded by {date}", { date: "August 25" }),
+    "canon's own words (v0.2 rule 6), unchanged (R23)");
   assert.deepEqual([...WORDS_CANON], ["queue.action-clock-overdue.noreply"], "the one key held apart from words.json, named");
   assert.equal(at(1).summary_key, "queue.action-clock-overdue.noreply", "an entry whose owner is not stated reads as canon's question");
   /* R23: the group's own date and the other side's stated date, each its key's words filled, never a copy */
@@ -100,7 +101,7 @@ test("R1 (T45; v0.2 rule 6), R23: the words by basis, read by key: the addressee
   assert.equal(at(3).summary_key, "queue.action-clock-overdue.theirs.summary");
   assert.equal(at(3).summary, FILLED("queue.action-clock-overdue.theirs.summary", { what: "their date" }));
   /* control: the interim keys are gone, and canon's question is no other key's sentence */
-  assert.equal(ACTION_WORDS["queue.action-clock-overdue.ours"], undefined);
+  assert.equal(ACTION_KEYS.includes("queue.action-clock-overdue.ours"), false);
   assert.notEqual(at(0).summary, at(2).summary);
   /* the kept details answer no detail_key (R23: returned to BOB) */
   for (const n of [0, 1, 2, 3]) assert.equal("detail_key" in at(n), false, at(n).id);
@@ -118,8 +119,8 @@ test("R2, R3, R7 (T45): their recipients follow R1's rule", () => {
   const w = people({
     actionPlans: { checkpointsDue: () => ({ ok: true, limit: 500, truncated: false, items: [
       { plan: "PLN-1", project: "PRJ-1", scenario: 1, version: 1, phase: "p", set_by: "alice", due: day(NOW - DAY) }] }) },
-    escalation: { escalationsDue: () => ({ ok: true, limit: 500, truncated: false, items: [
-      { id: "ESC-1", project: "PRJ-1", opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - DAY), ids: [] }] }) },
+    escalation: { escalationsDue: () => escalationsAnswer(
+      { id: "ESC-1", project: "PRJ-1", opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - DAY), ids: [] }) },
     actionClocks: { calendarFactsRead: () => ({ ok: true, actions_limit: 500, truncated: false,
       paths: [{ path: "profile:p/hours/clerk", actions: [{ action: "ACT-1", project: "PRJ-1", created_by: "alice" }] }] }) },
     localFacts: { factsDue: () => ({ ok: true, unknown: [], absent: [], due: [{ path: "profile:p/hours/clerk", fact: {}, status: "unconfirmed",
@@ -140,9 +141,9 @@ test("R2, R3, R7 (T45): their recipients follow R1's rule", () => {
 });
 
 test("R3 (T45): a stopped_pursuing escalation proposes no edge and raises no item; the control, an open one, does", () => {
-  const w = people({ escalation: { escalationsDue: () => ({ ok: true, limit: 500, truncated: false, items: [
+  const w = people({ escalation: { escalationsDue: () => escalationsAnswer(
     { id: "ESC-1", project: "PRJ-1", opened_by: "alice", from: 1, to: 2, stage: "s", instant: iso(NOW), ids: [], state: "stopped_pursuing" },
-    { id: "ESC-1", project: "PRJ-1", opened_by: "alice", from: 2, to: 3, stage: "s", instant: iso(NOW), ids: [], state: "open" }] }) } });
+    { id: "ESC-1", project: "PRJ-1", opened_by: "alice", from: 2, to: 3, stage: "s", instant: iso(NOW), ids: [], state: "open" }) } });
   assert.deepEqual(ids(w.read("alice"), "escalation-stage-proposed"), ["OBLIGATION::escalation-stage-proposed::ESC-1::3"]);
 });
 
@@ -284,7 +285,7 @@ test("R10: one OBLIGATION watch-keep-or-stop per due link, to its recipients alo
   const asked = [];
   const w = people({
     following: { watchQuestions: (a) => { asked.push(a); return { ok: true, questions: due, cursor: null }; } },
-    actionPlans: { planRead: ({ id }) => (id === "PLN-1" ? { ok: true, id, project: "PRJ-1" } : { ok: false, reason: "NO_SUCH_PLAN" }) } });
+    actionPlans: { planRead: ({ id }) => (id === "PLN-1" ? planAnswer(id, "PRJ-1") : noSuchPlan()) } });
   assert.deepEqual(ids(w.read("alice"), "watch-keep-or-stop"), [], "control: no due link, no item");
   due = questions;
   const r = w.read("alice");
@@ -350,12 +351,12 @@ function everyKind() {
       { plan: "PLN-1", project: "PRJ-1", scenario: 1, version: 1, phase: "p", set_by: "alice", due: day(NOW - DAY) }] }),
       plansToLookAgain: () => ({ ok: true, limit: 500, truncated: false, items: [
         { plan: "PLN-1", project: "PRJ-1", title: "T", look_again: day(NOW), paused_by: "alice", paused_at: iso(NOW - DAY), reason: "r", pause: "PLN-1#1" }] }),
-      planRead: ({ id }) => ({ ok: true, id, project: "PRJ-1" }) },
+      planRead: ({ id }) => planAnswer(id, "PRJ-1") },
     planWork: { takeUpsFor: () => ({ ok: true, items: [], truncated: false, cursor: null }),
                 planReviewsDue: () => ({ ok: true, limit: 500, truncated: false, items: [
                   { plan: "PLN-1", project: "PRJ-1", member: "alice", due: iso(NOW - 3600000), day: day(NOW - 3600000), zone: "UTC" }] }) },
-    escalation: { escalationsDue: () => ({ ok: true, limit: 500, truncated: false, items: [
-      { id: "ESC-1", project: "PRJ-1", opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - DAY), ids: [] }] }) },
+    escalation: { escalationsDue: () => escalationsAnswer(
+      { id: "ESC-1", project: "PRJ-1", opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - DAY), ids: [] }) },
     actionHolds: {
       holdsDue: () => page([{ action: "ACT-1", ord: 3, note: "n", marked_by: "alice", marked_at: iso(NOW), project: "PRJ-1", arrived: { action: "ACT-1", ord: 3 } },
                             { arrived: { docket_entry: "CASE-1#1", case: "CASE-1" }, note: "n", marked_by: null, marked_at: iso(NOW), project: "PRJ-1" },

@@ -10,6 +10,7 @@ import { CASE_DISCLOSURE_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { materialsOf } from "../../../src/case-grammar/index.mjs";
 import { OBSCURED_LABEL, PUBLISHED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { PHOTO_NOT_COVERABLE_WORDS } from "../../../src/case-disclosures/materials.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -82,8 +83,8 @@ test("R34: steps gains photos after \"what you are leaving out\" — case-disclo
   const before = w.snapshot();
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], { [Q]: "load_bearing", [Q2]: "supporting" }));
   assert.deepEqual(w.snapshot(), before, "nothing written");
-  assert.deepEqual(pre.steps.map((s) => s.name), ["what becomes permanent", "what this rests on", "what you are leaving out",
-    "photos", "the edition this creates", "the account", "approvals", "sign"]);
+  assert.deepEqual(pre.steps.map((s) => s.name), [localize("case-authoring.name.becomes_permanent", "what becomes permanent"), localize("case-authoring.name.rests", "what this rests on"), localize("case-authoring.name.leaving_out", "what you are leaving out"),
+    "photos", localize("case-authoring.name.edition_creates", "the edition this creates"), "the account", "approvals", "sign"]);
   const step = pre.steps[3];
   assert.equal(step.step, 4);
   assert.deepEqual(step.photos.map((p) => [p.ref, p.sha, p.state, p.copy, p.words, p.relied_on_by]), [

@@ -6,9 +6,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, docMd } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
-const CLAUSE = " (the set had moved since it was made; citing is report-weight and proceeded)";
+const CLAUSE = localize("citation.index.set_had_moved_since", " (the set had moved since it was made; citing is report-weight and proceeded)");
 
 /* A document the criterion `word` finds, by its title. */
 const put = (w, id, word) => w.put(id, docMd(id, "information").replace(`"Document ${id}"`, `"${word} ${id}"`));

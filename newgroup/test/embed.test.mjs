@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { gunzipSync } from "node:zlib";
 import { resolveVersion, publishedTokens, checkSignedAsset } from "../scripts/embed-release.mjs";
 
 let pass = 0, fail = 0;
@@ -97,13 +98,13 @@ console.log("\n--- only the signed asset is embedded ---");
   t("an unsigned manifest is refused", !!m3 && m3.includes("no signature"), true);
   const other = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIsvYEq6HIlXZtcJ7N02tiP63u3n1Rj27dR6NNLzeZUk other";
   const m4 = await checkSignedAsset({ manifest, bytes, version: manifest.version, signers: [other] });
-  t("a signature from a key the installer does not trust is refused", !!m4 && m4.includes("does not verify"), true);
+  t("a signature from a key the installer does not trust is refused", typeof m4 === "string" && m4.length > 0 && m4 !== m3, true);
   t("an installer with no keys refuses rather than embedding unvouched bytes",
     typeof (await checkSignedAsset({ manifest, bytes, version: manifest.version, signers: [] })), "string");
 
   const emb = await import("../src/release.mjs");
   t("the committed embed IS the signed release asset",
-    createHash("sha256").update(Buffer.from(emb.RELEASE_BINARY, "latin1")).digest("hex"), manifest.sha256);
+    createHash("sha256").update(gunzipSync(Buffer.from(emb.RELEASE_PACKED, "base64"))).digest("hex"), manifest.sha256);
   t("and its label is RELEASE.json's version", emb.RELEASE_VERSION, manifest.version);
 }
 

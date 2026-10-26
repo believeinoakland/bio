@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUTSIDER, INQ, E1, E2, E3 } from "./fixture.mjs";
 import { HYPOTHESIS_KINDS, HYPOTHESES_CHECKS } from "../../../src/hypotheses/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R1 hold records one HYP- in an inquiry, of each of the five kinds, with the member's statement and nodes, and answers {ok, hypothesis_id, kind, label, at}", () => {
   const w = world();
@@ -51,7 +52,7 @@ test("R1 hold's refusals, in order: NO_SUCH_BUNDLE (absent or invisible, one ans
   for (const statement of ["", "   ", null, 7]) {
     const r = w.h.hold({ ...ok, statement, about: null });
     assert.deepEqual([r.reason, r.code, r.check], ["HYPOTHESIS_NO_STATEMENT", "HYPOTHESIS_NO_STATEMENT", "C-134.5"]);
-    assert.equal(r.translation, "Say what you think, in your own words. Nothing was written.", "the row's translation is unchanged");
+    assert.equal(r.translation, word("refusal.HYPOTHESIS_NO_STATEMENT"), "the row's translation is unchanged");
   }
   const bad = [
     [{ from: E1, to: "not-an-id" }, "not-an-id"], [{ from: E1 }, null], [{ from: E1, to: E1 }, E1],
@@ -80,7 +81,7 @@ test("R2 a hypothesis is never edited in place: revise appends a revision, withd
   assert.equal(only.ok, true, "a revision may change neither statement nor nodes");
   for (const r of [w.h.revise({ hypothesisId: id, statement: "x", by: ANN }), w.h.withdraw({ hypothesisId: id, reason: "  ", by: ANN })]) {
     assert.deepEqual([r.reason, r.code, r.check], ["HYPOTHESIS_NO_REASON", "HYPOTHESIS_NO_REASON", "C-134.7"]);
-    assert.equal(r.translation, "Say why you are changing or withdrawing this hypothesis. Nothing was written.", "the row's translation is unchanged");
+    assert.equal(r.translation, word("refusal.HYPOTHESIS_NO_REASON"), "the row's translation is unchanged");
   }
   for (const statement of ["", "  "]) {
     const r = w.h.revise({ hypothesisId: id, statement, reason: "r", by: ANN });

@@ -52,10 +52,12 @@
  * `R\nESOLUTION \nN\nO\n.` from a drop cap and splits its own enacting formula across a
  * line break. Line-anchored phrase tests find neither. See `flatten` in ./index.mjs.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
-         vocabPatterns, anyMatch, allMatches, enactmentPatterns, enactmentNumber, codePatterns } from "../docprofile/doctypes/index.mjs";
+import { CONFIDENCE, CONTRACT, diffEntities, alsoSatisfies,
+         vocabPatterns, anyMatch, enactmentPatterns, enactmentNumber, codePatterns } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
-import { codeHeadingsIn, readSections, readDefinitions, readExceptions, sha256Hex } from "./sections.mjs";
+import { codeHeadingsIn, readSections, readDefinitions, readExceptions, textDigest } from "./sections.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
+import { scanFlatMany, mergedHits, rawMergedHits, referenceBook, counted, spend } from "./windows.mjs";
 
 /* THE OPERATIVE VOICE — a body enacting, in the forms the measured instruments use plus
    the general shapes. It is the language of enactment, the same in every jurisdiction
@@ -112,15 +114,31 @@ const regBodyEnds = (ctx) => vocabPatterns(ctx, "bodies", (re) => `(?:${re})[^A-
  *  caption pattern matches — gets a null number with its reason stated, never the
  *  nearest number in the text. That is the direction this reader has already been
  *  wrong in twice. */
-function ownCaption(flat, captions, bodies) {
-  for (const { m, tag } of allMatches(captions, flat)) {
+function ownCaption(text, captions, bodies, afterChars = 0) {
+  /* R37: the captions are met in the flattened text a window at a time (./windows.mjs), in the order and with the
+     overlap rule `allMatches` gives them over all of it; `after` is the flattened text that follows the caption found. */
+  let found = null;
+  mergedHits(text, captions, ({ m, tag }, abs, w) => {
     /* Tested as printed and in capitals: a caption's body is set in capitals, and a
        profile may write a body's name in either case. */
-    const before = flat.slice(Math.max(0, m.index - 120), m.index);
-    if (anyMatch(bodies, before) || anyMatch(bodies, before.toUpperCase()))
-      return { m, kind: tag.kind, number: enactmentNumber(tag.forms, m.groups && m.groups.num) };
-  }
-  return null;
+    const before = w.buf.slice(Math.max(0, m.index - 120), m.index);
+    if (!(anyMatch(bodies, before) || anyMatch(bodies, before.toUpperCase()))) return false;
+    const at = m.index + m[0].length;
+    found = { kind: tag.kind, number: enactmentNumber(tag.forms, m.groups && m.groups.num),
+              after: afterChars ? w.buf.slice(at, at + afterChars) : "" };
+    return true;
+  });
+  return found;
+}
+
+/** How many matches of a global pattern the text holds. The patterns it is used for bridge words with `\s` only, so the
+ *  count is the same over the text as it stands as over its flattened form (R37: no flattened copy). */
+function countIn(text, re) {
+  spend(text.length);
+  const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+  let n = 0;
+  while (g.exec(text) !== null) n++;
+  return n;
 }
 
 /** What was verified unchanged between two readings of an instrument, or null when
@@ -141,8 +159,7 @@ function sectionChanges(a, b) {
   const sa = Array.isArray(a.sections) ? a.sections : [], sb = Array.isArray(b.sections) ? b.sections : [];
   if (!sa.length && !sb.length)
     return { compared: false, events: [],
-             why: "no section was read from either reading, so nothing is said about sections: "
-                + (b.sections_why || a.sections_why || "neither reading carries sections") };
+             why: localize("doctypes.regulation.sections_none_read", "no section was read from either reading, so nothing is said about sections: {why}", { why: String(b.sections_why || a.sections_why || "neither reading carries sections") }) };
   const key = (s) => s.path.join("/");
   const ma = new Map(sa.map((s) => [key(s), s])), mb = new Map(sb.map((s) => [key(s), s]));
   const inSec = (list, k) => (Array.isArray(list) ? list : []).filter((x) => x.section && x.section.join("/") === k);
@@ -153,7 +170,7 @@ function sectionChanges(a, b) {
     const now = mb.get(k);
     if (!now) {
       events.push(event("instrument_changed", { key: "section", section: was.path, was: was.number, now: null,
-        why: `section ${was.number} was read before and is not read now` }));
+        why: localize("doctypes.regulation.section_gone", "section {number} was read before and is not read now", { number: String(was.number) }) }));
       continue;
     }
     const moved = [];
@@ -164,12 +181,12 @@ function sectionChanges(a, b) {
     if (moved.length)
       events.push(event("instrument_changed", { key: "section", section: now.path, moved,
         was: was.heading || was.number, now: now.heading || now.number,
-        why: `section ${now.number}'s ${moved.join(", ")} is not what it was at this address` }));
+        why: localize("doctypes.regulation.section_changed", "section {number}'s {moved} is not what it was at this address", { number: String(now.number), moved: moved.join(", ") }) }));
   }
   for (const [k, now] of mb)
     if (!ma.has(k))
       events.push(event("instrument_changed", { key: "section", section: now.path, was: null, now: now.number,
-        why: `section ${now.number} is read now and was not read before` }));
+        why: localize("doctypes.regulation.section_added", "section {number} is read now and was not read before", { number: String(now.number) }) }));
   return { compared: true, events, why: null };
 }
 
@@ -182,7 +199,7 @@ function structure(ctx, raw, form, locate) {
   const definitions = readDefinitions(raw, sections, locate);
   const exceptions = readExceptions(raw, sections, form, ctx, locate);
   const digests = {};
-  for (const s of sections) digests[s.path.join("/")] = sha256Hex(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
+  for (const s of sections) digests[s.path.join("/")] = textDigest(raw, s.start, s.end);
   return {
     sections, sections_why, section_digests: digests, definitions, exceptions,
     counts: { sections: sections.length, definitions: definitions.length, exceptions: exceptions.length,
@@ -191,7 +208,7 @@ function structure(ctx, raw, form, locate) {
   };
 }
 
-export default {
+export default counted({
   key: "regulation",
   label: "an ordinance or resolution",
   version: 1,
@@ -208,16 +225,18 @@ export default {
    *  no enacting formula at all. */
   detect(ctx) {
     const t = String(ctx.text || "");
-    const flat = flatten(t);
     const signals = [];
 
-    const enacting = ENACTING.test(flat);
-    if (enacting) signals.push("an enacting formula in the operative voice");
-    const recitals = (flat.match(RECITAL) || []).length;
-    if (recitals >= 2) signals.push(`a recital chain of ${recitals} WHEREAS clause(s)`);
-    const caption = allMatches(regCaptions(ctx), flat).length > 0;
+    /* R37: one pass over the flattened text, a window at a time; the counts are the whole text's. */
+    let enacting = false, caption = false, codeCites = 0;
+    scanFlatMany(t, [{ re: ENACTING, on: () => (enacting = true) }]);
+    mergedHits(t, regCaptions(ctx), () => (caption = true));
+    mergedHits(t, codePatterns(ctx), () => { codeCites++; });
+    if (enacting) signals.push(localize("doctypes.regulation.enacting", "an enacting formula in the operative voice"));
+    const recitals = countIn(t, RECITAL);
+    if (recitals >= 2) signals.push(localize("doctypes.regulation.recital_chain", "a recital chain of {count} WHEREAS clause(s)", { count: String(recitals) }));
     if (caption) signals.push("an instrument caption");
-    const codify = (flat.match(CODIFYING) || []).length + allMatches(codePatterns(ctx), flat).length;
+    const codify = countIn(t, CODIFYING) + codeCites;
     if (codify) signals.push(`${codify} codification phrase(s)`);
 
     /* The caption alone is NEVER a match, at any confidence — that is the measured
@@ -227,8 +246,8 @@ export default {
        section heading, or is divided by several, is the code before it is an instrument;
        an instrument's own caption under its body still decides for the instrument. */
     const heads = codeHeads(ctx, t);
-    if ((heads.first || heads.count >= 2) && !ownCaption(flat, regCaptions(ctx), regBodyEnds(ctx))) {
-      signals.push(`${heads.count} section heading(s) of ${heads.label}`);
+    if ((heads.first || heads.count >= 2) && !ownCaption(t, regCaptions(ctx), regBodyEnds(ctx))) {
+      signals.push(localize("doctypes.regulation.code_headings", "{count} section heading(s) of {label}", { count: String(heads.count), label: String(heads.label) }));
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     }
     if (!enacting) {
@@ -268,13 +287,13 @@ export default {
    *  not a fact here and `number` being null is reported as exactly what it is. */
   parse(ctx) {
     const raw = String(ctx.text || "");
-    const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
 
-    const enacts = ENACTING.test(flat);
-    const cap = ownCaption(flat, regCaptions(ctx), regBodyEnds(ctx));
+    let enacts = false;
+    scanFlatMany(raw, [{ re: ENACTING, on: () => (enacts = true) }]);
+    const cap = ownCaption(raw, regCaptions(ctx), regBodyEnds(ctx), 2500);
     const number = cap && cap.number ? cap.number : null;
-    const instrument = cap ? cap.kind : (/\bORDAIN/i.test(flat) ? "ordinance" : null);
+    const instrument = cap ? cap.kind : (/\bORDAIN/i.test(raw) ? "ordinance" : null);
 
     /* The caption's TITLE — the capitalised sentence that says what the instrument
        does. Taken from the OWN caption only, for the same reason the number is, and
@@ -284,7 +303,7 @@ export default {
        that demanded adjacency returned null on the one document it was written from. */
     let title = null;
     if (cap) {
-      const after = flat.slice(cap.m.index + cap.m[0].length, cap.m.index + cap.m[0].length + 2500);
+      const after = cap.after;
       const blanks = vocabPatterns(ctx, "template_blanks", null, "g");
       for (const s of after.split(/(?<=\.)\s+/)) {
         const t = s.trim();
@@ -307,33 +326,32 @@ export default {
       }
     }
 
-    const recitals = (flat.match(RECITAL) || []).length;
+    const recitals = countIn(raw, RECITAL);
 
-    const entities = [];
-    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
-    const seen = new Map();
-    const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
-      const e = entity(key, kind, label, facts, locate(offset));
-      seen.set(key, e);
-      entities.push(e);
-    };
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped; R40: up to the bounds
+       ./windows.mjs `referenceBook` states, past which the answer says what it did not keep. */
+    const book = referenceBook(locate);
+    const { entities, take } = book;
     /* The instruments this one acts on or cites. Its OWN number, when it has one, is a
        document fact rather than an entity — an instrument is not a reference to
        itself, and emitting it as one would make every instrument appear to cite one
        more thing than it does. */
     const ownKey = number ? `${instrument}:${number}` : null;
-    for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
+    /* R40: each kind of reference is met a window of the text at a time (./windows.mjs `rawMergedHits`), in the order
+       and with the overlap rule `allMatches` gives over all of it, so 400,000 citations are never a list of 400,000
+       matches. */
+    rawMergedHits(raw, enactmentPatterns(ctx), ({ m, tag }) => {
       const n = enactmentNumber(tag.forms, m.groups && m.groups.num);
-      if (!n) continue;
+      if (!n) return;
       const key = `${tag.kind}:${n}`;
-      if (key === ownKey) continue;
+      if (key === ownKey) return;
       take(key, "instrument", `${tag.kind[0].toUpperCase()}${tag.kind.slice(1)} No. ${n}`,
            { instrument: tag.kind, number: n }, m.index);
-    }
-    for (const { m, tag } of allMatches(codePatterns(ctx), raw))
+    });
+    rawMergedHits(raw, codePatterns(ctx), ({ m, tag }) => {
       take(`${tag.key}:${m.groups.sec}`, "code_section", `${tag.label} ${m.groups.sec}`,
            { code: tag.key, section: m.groups.sec }, m.index);
+    });
 
     /* T33-13 (R9): WHICH FORM OF LAW this is. An instrument enacts (its operative voice, or
        its own caption under a body); a code section is a codifier's page of a code, read
@@ -344,10 +362,10 @@ export default {
 
     return {
       entities,
+      ...book.state(),
       form,
       form_why: form ? null
-        : "this text carries no enacting formula, no instrument caption under a body, and no section heading of a "
-        + "code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section",
+        : localize("doctypes.regulation.no_form", "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section"),
       ...st,
       instrument,
       /* Null means THIS INSTRUMENT CARRIES NO NUMBER — document A's caption is
@@ -355,10 +373,8 @@ export default {
          not mean the reader failed, and `number_why` says which. */
       number,
       number_why: number ? null
-        : cap ? "this instrument's caption carries no number, which is what a proposed ordinance "
-              + "or resolution looks like before a body adopts it"
-        : "no caption introduced by an enacting body was read, in the words the active "
-        + "jurisdiction profiles give for instruments and bodies, so the number is not stated",
+        : cap ? localize("doctypes.regulation.proposed_no_number", "this instrument's caption carries no number, which is what a proposed ordinance or resolution looks like before a body adopts it")
+        : localize("doctypes.regulation.no_caption", "no caption introduced by an enacting body was read, in the words the active jurisdiction profiles give for instruments and bodies, so the number is not stated"),
       title,
       recitals,
       also_satisfies: alsoSatisfies(ctx, "regulation"),
@@ -373,9 +389,8 @@ export default {
     const readNothing = (x) => !x.instrument && !(x.entities || []).length && !(x.sections || []).length;
     if (readNothing(a) || readNothing(b))
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               sections_compared: false, sections_why: "nothing was read from one of the readings, so nothing is said about its sections",
-               why: "nothing could be read from this instrument this time, so nothing is claimed "
-                  + "about it either way" };
+               sections_compared: false, sections_why: localize("doctypes.regulation.one_side_unread", "nothing was read from one of the readings, so nothing is said about its sections"),
+               why: localize("doctypes.regulation.unread_either", "nothing could be read from this instrument this time, so nothing is claimed about it either way") };
 
     const events = [];
     /* AN INSTRUMENT'S OWN TEXT MOVING AT THE SAME ADDRESS IS THE SERIOUS ONE. This is
@@ -385,24 +400,24 @@ export default {
     for (const k of ["instrument", "number", "title"])
       if (String(a[k] || "") !== String(b[k] || ""))
         events.push(event("instrument_changed", { key: k, was: a[k] || null, now: b[k] || null,
-          why: `this instrument's ${k} is not what it was at this address` }));
+          why: localize("doctypes.regulation.instrument_changed", "this instrument's {field} is not what it was at this address", { field: k }) }));
     if (Number(a.recitals || 0) !== Number(b.recitals || 0))
       events.push(event("instrument_changed", { key: "recitals", was: a.recitals, now: b.recitals,
-        why: "the recitals establishing this instrument's grounds changed in number" }));
+        why: localize("doctypes.regulation.recitals", "the recitals establishing this instrument's grounds changed in number") }));
 
     if ((a.form || b.form) && String(a.form || "") !== String(b.form || ""))
       events.push(event("instrument_changed", { key: "form", was: a.form || null, now: b.form || null,
-        why: "what was read at this address is not the same form of law it was" }));
+        why: localize("doctypes.regulation.form_changed", "what was read at this address is not the same form of law it was") }));
     const sec = sectionChanges(a, b);
     for (const e of sec.events) events.push(e);
 
     const d = diffEntities(a.entities || [], b.entities || []);
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "an instrument or code section this one acted on is no longer named in it" }));
+        why: localize("doctypes.regulation.pulled", "an instrument or code section this one acted on is no longer named in it") }));
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "this instrument now names something it did not name before" }));
+        why: localize("doctypes.regulation.added", "this instrument now names something it did not name before") }));
 
     bySeverity(events);
     return {
@@ -410,8 +425,8 @@ export default {
       confirmed: regConfirmed(a, b),
       sections_compared: sec.compared, sections_why: sec.why,
       why: events.length
-        ? `${events.length} change(s) to an instrument at the same address`
-        : "this instrument says what it said, and acts on the same things",
+        ? localize("doctypes.regulation.changes", "{count} change(s) to an instrument at the same address", { count: String(events.length) })
+        : localize("doctypes.regulation.unchanged", "this instrument says what it said, and acts on the same things"),
     };
   },
-};
+});

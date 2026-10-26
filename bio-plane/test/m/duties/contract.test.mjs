@@ -6,6 +6,7 @@ import { DUTIES_CHECKS, DUTIES_TABLES, CONNECTION_KINDS, MODALITIES, SOURCE_KIND
          OCCURRENCE_REASONS, DUTIES_REASON_WORDS, dutiesOps } from "../../../src/duties/index.mjs";
 import { ownerConformance, derivedId, BOUNDS, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = { value: "2026-03-01", precision: "day", zone: ZONE };
 const row = (r, code) => {
@@ -32,7 +33,7 @@ test("R18 the module registers once as a connection owner, and its neighbours pa
   const { w, A, B, C, D } = owners();
   const mine = w.registry.owners().find((o) => o.owner === "duties");
   assert.deepEqual(mine.kinds, CONNECTION_KINDS.map((k) => ({ ...k })));
-  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["owes", "is owed to", "holds the power", "met by", "used in"]);
+  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["owes", word("duties.word.owed"), word("duties.word.holds_power"), "met by", "used in"]);
   const r = ownerConformance({
     owner: "duties", kinds: CONNECTION_KINDS.map((k) => ({ ...k })), neighbours: (args) => w.duties.neighbours(args),
     fixture: { node: E.clerk, at: AT, in: `${A}:owes`, out: `${B}:owes`, undetermined: `${C}:owes`, fenced: `${D}:owes`,

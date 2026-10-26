@@ -19,6 +19,7 @@ import { world, plane, newKey, signBundle, signCase, cleanInfoMd, cleanCase, cas
 import { ratifyOp, caseRatifyOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, checkCaseDocument } from "../../../src/ratification/index.mjs";
 import { GATE_VERSION, CATALOG_VERSION } from "../../../src/promotion/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the transfer was authorised", falsifier: "an adopted resolution forbidding it",
@@ -47,8 +48,8 @@ function cleanInqMd(id, { extra = [], question = `Was the transfer ${id} authori
     "state_history: []", "annotations_open: 0", "reeval_pending: false", "visuals: []", "surfaced_by: human",
     "recheck_triggers:", "  - text: Revisit after the next budget cycle",
     "    description: The adopted budget may restate the transfer basis.",
-    ...extra, "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    ...extra, "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 
 /* iris owns the project and holds the registered key; gus joined it and holds none; vera is a member of no project. */

@@ -18,17 +18,15 @@
  * Nothing is recorded as a standard, a duty or a law relation (R15). A timeframe is a reading, never a deadline. */
 import { CONFIDENCE, CONTRACT, alsoSatisfies } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
-import { readDefinitions, sha256Hex } from "./sections.mjs";
-import { readHeader, policySeries, headerLabels, HEADER_FIELDS } from "./policy-header.mjs";
+import { readDefinitions, textDigest } from "./sections.mjs";
+import { readHeader, headerAnchored, policySeries, headerLabels, HEADER_FIELDS } from "./policy-header.mjs";
+import { lineIndex, counted, spend } from "./windows.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ------------------------------------------------------------------------ lines */
 
-function linesOf(raw) {
-  const out = [];
-  let at = 0;
-  for (const text of raw.split("\n")) { out.push({ start: at, end: at + text.length, text }); at += text.length + 1; }
-  return out;
-}
+/* R38: the lines of a text are held as offsets (./windows.mjs `lineIndex`) and a line is cut from the text when it is
+   read, so a large text is never split into a list of its lines. */
 const indentOf = (l) => l.text.length - l.text.trimStart().length;
 /* Page furniture, which no section is: a page counter, a bare page number. */
 const FURNITURE = /^\s*(?:Page\s+\d+\s+of\s+\d+|\d{1,3})\s*$/i;
@@ -37,7 +35,17 @@ const caps = (t) => { const letters = t.replace(/[^A-Za-z]/g, ""); return letter
 /* A line opening with an outline marker. */
 const OUTLINE_LINE = /^\s*(?:[IVX]{1,5}|[A-Z]|\d{1,2}|[a-z])[.)]\s+\S/;
 /* A table of contents' line: dot leaders, or a heading ending in its page number. */
-const TOC_LINE = /\.{4,}|^[^a-z]*[A-Z][^a-z]*\s\d{1,3}\s*$/;
+const DOT_LEADERS = /\.{4,}/;
+const PAGE_NUMBER_END = /\s\d{1,3}\s*$/;
+/** Is this line a contents entry: dot leaders, or a heading with no lower-case letter that ends in its page number? Read
+ *  in work linear in the line (R40): the heading is what stands before the page number, which is found from the line's end. */
+function isTocLine(t) {
+  if (DOT_LEADERS.test(t)) return true;
+  const m = PAGE_NUMBER_END.exec(t);
+  if (!m) return false;
+  const head = t.slice(0, m.index);
+  return !/[a-z]/.test(head) && /[A-Z]/.test(head);
+}
 
 /* ------------------------------------------------------------- the outline sections */
 
@@ -66,17 +74,17 @@ function order(k, a, b) {
  *  heading, start, end, source}`; a marker is read only where it continues its level's sequence (B after A) or opens
  *  a new level at its first value, so a line of prose that happens to open with "3." is not a section. */
 export function readOutline(raw, from, skip, locate) {
-  const lines = linesOf(raw);
+  const lines = lineIndex(raw);
   const out = [];
   const open = [];            // [{kind, value, entry}]
   const close = (depth, at) => { while (open.length > depth) open.pop().entry.end = at; };
-  for (const [li, l] of lines.entries()) {
+  for (let li = 0; li < lines.length; li++) {
+    const l = lines.at(li);
     if (l.start < from || FURNITURE.test(l.text) || skip.some((s) => l.start >= s.start && l.start < s.end)) continue;
     const t = l.text.trim();
-    if (TOC_LINE.test(t)) continue;
+    if (isTocLine(t)) continue;
     /* A contents entry wrapped onto a second line, which carries its page number. */
-    const nextLine = lines[li + 1];
-    if (nextLine && TOC_LINE.test(nextLine.text.trim()) && caps(t)) continue;
+    if (li + 1 < lines.length && isTocLine(lines.at(li + 1).text.trim()) && caps(t)) continue;
     const hits = [];
     for (const [rank, k] of KINDS.entries()) { const m = k.re.exec(t); if (m) hits.push({ rank, k, m }); }
     let placed = null;
@@ -126,8 +134,8 @@ function holder(sections, offset) {
   return best;
 }
 const UNPLACED = (sections) => (sections.length
-  ? "no section read from this policy holds this passage (it stands before the first outline heading)"
-  : "this policy's text was not divided into sections, so no section can be named for this passage");
+  ? localize("doctypes.policy.unplaced", "no section read from this policy holds this passage (it stands before the first outline heading)")
+  : localize("doctypes.policy.not_divided", "this policy's text was not divided into sections, so no section can be named for this passage"));
 function placed(sections, item) {
   const s = holder(sections, item.start);
   return s ? { ...item, section: s.path } : { ...item, section: null, why: UNPLACED(sections) };
@@ -202,25 +210,41 @@ const STEP = /^(.*?)(?:^|\s)(\d{1,2})\.[ \t]+(\S.*)$/;
  *  above it after the last action ended; where an action does not end before the next party's numbering starts again,
  *  the columns cannot be told apart and the table is listed unread, never split by guess. */
 export function readResponsibilities(raw, sections, from, locate) {
-  const lines = linesOf(raw);
+  const lines = lineIndex(raw);
   const rows = [], unread = [], extents = [];
-  const recurs = new Map();
-  for (const l of lines) { const t = l.text.trim(); if (t) recurs.set(t, (recurs.get(t) || 0) + 1); }
+  /* The tables first: each one's head and the line its section (or the next roman heading) ends it at. */
+  const tables = [];
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].start < from || !TABLE_HEAD.test(lines[i].text)) continue;
-    const head = lines[i];
+    const head = lines.at(i);
+    if (head.start < from || !TABLE_HEAD.test(head.text)) continue;
     const sec = holder(sections, head.start);
     /* The table runs to the end of the section holding it, or to the next outline heading of a roman level. */
     let stop = sec ? sec.end : raw.length;
-    for (let j = i + 1; j < lines.length; j++) if (/^\s*[IVX]{1,5}\.\s+\S/.test(lines[j].text) && lines[j].start < stop) { stop = lines[j].start; break; }
-    /* A running header or footer (a line printed three times or more that ends no sentence) is page furniture,
-       never a party. */
-    const body = lines.filter((l) => l.start > head.start && l.start < stop && l.text.trim() && !FURNITURE.test(l.text)
-                                     && !((recurs.get(l.text.trim()) || 0) >= 3 && !/[.;:]\s*$/.test(l.text)));
+    for (let j = i + 1; j < lines.length && lines.start(j) < stop; j++)
+      if (/^\s*[IVX]{1,5}\.\s+\S/.test(lines.at(j).text)) { stop = lines.start(j); break; }
+    tables.push({ i, head, stop });
+  }
+  /* A running header or footer (a line printed three times or more that ends no sentence) is page furniture, never a
+     party. Only the lines a table holds can be taken for one, so only those are counted, in one pass over the text. */
+  const recurs = new Map();
+  if (tables.length) {
+    for (const { i, stop } of tables)
+      for (let j = i + 1; j < lines.length && lines.start(j) < stop; j++) {
+        const l = lines.at(j), t = l.text.trim();
+        if (t && !FURNITURE.test(l.text)) recurs.set(t, 0);
+      }
+    for (let j = 0; j < lines.length; j++) {
+      const t = lines.at(j).text.trim();
+      if (recurs.has(t)) recurs.set(t, recurs.get(t) + 1);
+    }
+  }
+  for (const { i, head, stop } of tables) {
     const table = [];
     let party = null, pending = [], cur = null, ok = true, why = null, expect = 1;
     const finish = () => { if (cur) { cur.end = cur.lastEnd; delete cur.lastEnd; table.push(cur); cur = null; } };
-    for (const l of body) {
+    for (let j = i + 1; j < lines.length && lines.start(j) < stop; j++) {
+      const l = lines.at(j);
+      if (!l.text.trim() || FURNITURE.test(l.text) || ((recurs.get(l.text.trim()) || 0) >= 3 && !/[.;:]\s*$/.test(l.text))) continue;
       let m = STEP.exec(l.text.trim());
       /* Only a first action is printed beside its party; any other number opens its line. */
       if (m && m[1].trim() && Number(m[2]) !== 1) m = null;
@@ -245,9 +269,9 @@ export function readResponsibilities(raw, sections, from, locate) {
           if (cur && k > 0) cur.lastEnd = pending[k - 1].end;
           if (cur && carried) cur.lastEnd = l.start + indentOf(l) + carried;
           pending = inline ? [] : pending.slice(k);
-          if (!inline && !pending.length) { ok = false; why = "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before"; break; }
+          if (!inline && !pending.length) { ok = false; why = localize("doctypes.policy.no_party_numbering", "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before"); break; }
           if (cur && !inline && !/[.;:]\s*$/.test(raw.slice(cur.start, cur.lastEnd))) {
-            ok = false; why = "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told"; break;
+            ok = false; why = localize("doctypes.policy.action_unbounded", "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told"); break;
           }
           finish();
           const pStart = pending.length ? pending[0].start + indentOf(pending[0]) : l.start + indentOf(l);
@@ -277,7 +301,7 @@ export function readResponsibilities(raw, sections, from, locate) {
     extents.push({ start, end: stop });
     if (!ok || !table.length) {
       unread.push(placed(sections, { start, end: stop, source: locate(start) || null,
-        why: why || "the table's header is printed but no numbered action under a party is read below it" }));
+        why: why || localize("doctypes.policy.table_no_action", "the table's header is printed but no numbered action under a party is read below it") }));
       continue;
     }
     for (const r of table) {
@@ -337,7 +361,7 @@ export function readPolicy(ctx, raw, locate = () => null) {
   const applicability = readApplicability(raw, sections, from, locate);
   const timeframes = readTimeframes(raw, sections, from, locate);
   const digests = {};
-  for (const s of sections) digests[s.path.join("/")] = sha256Hex(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
+  for (const s of sections) digests[s.path.join("/")] = textDigest(raw, s.start, s.end);
   const lists = { sections, definitions, applicability, responsibilities: responsibilities.rows, timeframes };
   const counts = {};
   for (const k of READINGS) {
@@ -348,16 +372,16 @@ export function readPolicy(ctx, raw, locate = () => null) {
   return {
     header: h.header, header_why: h.why,
     sections, sections_why: sections.length ? null
-      : "no outline heading (I., A., 1.) opens a line of this policy after its header, so its text is not divided into sections",
+      : localize("doctypes.policy.no_outline", "no outline heading (I., A., 1.) opens a line of this policy after its header, so its text is not divided into sections"),
     section_digests: digests,
     definitions, applicability, responsibilities: responsibilities.rows, responsibilities_unread: responsibilities.unread,
     timeframes, counts,
   };
 }
 
-export default {
+export default counted({
   key: "policy",
-  label: "a policy of a numbered series",
+  label: localize("doctypes.policy.label", "a policy of a numbered series"),
   version: 1,
   /* A policy says what it says: its substance is the unit (R25, R4). */
   contract: CONTRACT.SUBSTANCE,
@@ -368,17 +392,19 @@ export default {
     const series = policySeries(ctx);
     if (!series.length || !headerLabels(ctx).length)
       return { match: false, confidence: CONFIDENCE.NONE,
-               why: "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy" };
-    const h = readHeader(ctx, String(ctx.text || ""));
-    const hd = h.header;
+               why: localize("doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy") };
+    /* R37: a header's type is read only from an anchor, so a text with none is refused without being cut into lines. */
+    const text = String(ctx.text || "");
+    spend(text.length * series.length);   // the search for an anchor reads the text once for each series
+    const hd = headerAnchored(ctx, text) ? readHeader(ctx, text).header : null;
     if (!hd || !hd.type)
       return { match: false, confidence: CONFIDENCE.NONE,
-               why: "no line of this text opens with a policy series the active profiles name, beside the header labels they give" };
+               why: localize("doctypes.policy.no_series_line", "no line of this text opens with a policy series the active profiles name, beside the header labels they give") };
     if (!hd.number)
       return { match: false, confidence: CONFIDENCE.NONE,
-               why: `the header names ${hd.type.text} but carries no number that series reads, so it is not read as one of its items` };
+               why: localize("doctypes.policy.no_series_number", "the header names {type} but carries no number that series reads, so it is not read as one of its items", { type: String(hd.type.text) }) };
     return { match: true, confidence: CONFIDENCE.CERTAIN,
-             signals: [`a header naming ${hd.type.text} ${hd.number.text}`,
+             signals: [localize("doctypes.policy.header_names", "a header naming {type} {number}", { type: String(hd.type.text), number: String(hd.number.text) }),
                        `${HEADER_FIELDS.length - hd.missing.length} header field(s) read`] };
   },
 
@@ -400,9 +426,11 @@ export default {
         const was = ha[f] ? (ha[f].date || ha[f].text) : null, now = hb[f] ? (hb[f].date || hb[f].text) : null;
         if (String(was || "") !== String(now || ""))
           events.push(event("instrument_changed", { key: `header.${f}`, was, now,
-            why: `this policy's ${f.replace("_", " ")} as its header states it is not what it was at this address` }));
+            why: localize("doctypes.policy.header_changed", "this policy's {field} as its header states it is not what it was at this address", { field: f.replace("_", " ") }) }));
       }
-    } else headerWhy = (ha || hb ? "only one of the readings" : "neither reading") + " gave a header, so nothing is said about the header";
+    } else headerWhy = ha || hb
+      ? localize("doctypes.policy.header_one_side", "only one of the readings gave a header, so nothing is said about the header")
+      : localize("doctypes.policy.header_neither", "neither reading gave a header, so nothing is said about the header");
     const sa = Array.isArray(a.sections) ? a.sections : [], sb = Array.isArray(b.sections) ? b.sections : [];
     let sectionsWhy = null;
     if (sa.length && sb.length) {
@@ -415,28 +443,32 @@ export default {
       for (const [k, was] of ma) {
         const now = mb.get(k);
         if (!now) { events.push(event("instrument_changed", { key: "section", section: was.path, was: was.number, now: null,
-          why: `section ${was.number} was read before and is not read now` })); continue; }
+          why: localize("doctypes.policy.section_gone", "section {number} was read before and is not read now", { number: String(was.number) }) })); continue; }
         const moved = [];
         if (String(was.heading || "") !== String(now.heading || "")) moved.push("heading");
         if (((a.section_digests || {})[k] || null) !== ((b.section_digests || {})[k] || null)) moved.push("text");
         for (const [list, show] of Object.entries(shows)) if (inSec(a, list, k, show) !== inSec(b, list, k, show)) moved.push(list);
         if (moved.length) events.push(event("instrument_changed", { key: "section", section: now.path, moved,
           was: was.heading || was.number, now: now.heading || now.number,
-          why: `section ${now.number}'s ${moved.join(", ")} is not what it was at this address` }));
+          why: localize("doctypes.policy.section_changed", "section {number}'s {moved} is not what it was at this address", { number: String(now.number), moved: moved.join(", ") }) }));
       }
       for (const [k, now] of mb) if (!ma.has(k)) events.push(event("instrument_changed", { key: "section", section: now.path,
-        was: null, now: now.number, why: `section ${now.number} is read now and was not read before` }));
-    } else sectionsWhy = (sa.length || sb.length ? "only one of the readings" : "neither reading") + " gave sections"
-      + ", so nothing is said about sections: " + (b.sections_why || a.sections_why || "neither reading carries sections");
+        was: null, now: now.number, why: localize("doctypes.policy.section_added", "section {number} is read now and was not read before", { number: String(now.number) }) }));
+    } else {
+      const why = b.sections_why || a.sections_why || "neither reading carries sections";
+      sectionsWhy = sa.length || sb.length
+        ? localize("doctypes.policy.sections_one_side", "only one of the readings gave sections, so nothing is said about sections: {why}", { why: String(why) })
+        : localize("doctypes.policy.sections_neither", "neither reading gave sections, so nothing is said about sections: {why}", { why: String(why) });
+    }
     if (headerWhy && sectionsWhy)
       return { meaningful: null, significance: null, events: [], confirmed: null, header_why: headerWhy, sections_why: sectionsWhy,
-               why: "nothing could be read from this policy on one side or the other, so nothing is claimed about it either way" };
+               why: localize("doctypes.policy.unread", "nothing could be read from this policy on one side or the other, so nothing is claimed about it either way") };
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events, confirmed: null,
       header_compared: !headerWhy, header_why: headerWhy, sections_compared: !sectionsWhy, sections_why: sectionsWhy,
-      why: events.length ? `${events.length} change(s) between two readings of a policy at the same address`
-        : "this policy reads as it read: the same header and the same sections",
+      why: events.length ? localize("doctypes.policy.changes", "{count} change(s) between two readings of a policy at the same address", { count: String(events.length) })
+        : localize("doctypes.policy.unchanged", "this policy reads as it read: the same header and the same sections"),
     };
   },
-};
+});

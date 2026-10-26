@@ -10,9 +10,10 @@ import { parseFigure, evaluate, divide, METHOD } from "../calc-grammar/index.mjs
 import { canonicalJson, sha256HexSync } from "../record-grammar/index.mjs";
 import { writeXlsx, sheetRef, colName } from "./xlsxwrite.mjs";
 import { plainDecimal } from "./cells.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const COMPUTED_LABEL = "computed by bio-calc/1";
-export const FORMULA_LABEL = "formula over the input sheets";
+export const FORMULA_LABEL = word("workbooks.formula_input_sheets");
 const FORMULA_OPS = new Set(["count", "sum", "difference", "ratio", "share"]);
 const RATIO_DEFAULT = { places: 12, mode: "half_even" };
 const MAX_COMBINATIONS = 16;
@@ -30,8 +31,8 @@ function valueCell(v) {
   if (v && v.undetermined) return S(`undetermined: ${v.why || ""}`.trim());
   if (v && v.relation) return S(`${v.relation} (${v.label || "computed fact"})`);
   if (isFigure(v)) return S(v.precision === "range" ? `${v.low}–${v.high}` : `${v.precision} ${v.value}`);
-  if (v && Array.isArray(v.rows)) return S(`a table of ${v.rows.length} row${v.rows.length === 1 ? "" : "s"}`);
-  if (v && typeof v.rows === "number") return S(`a table of ${v.rows} row${v.rows === 1 ? "" : "s"}`);
+  if (v && Array.isArray(v.rows)) return S(word("workbooks.table_row", { rows: String(v.rows.length), plural: String(v.rows.length === 1 ? "" : "s") }));
+  if (v && typeof v.rows === "number") return S(word("workbooks.table_row", { rows: String(v.rows), plural: String(v.rows === 1 ? "" : "s") }));
   return S(v === undefined || v === null ? "" : typeof v === "string" ? v : canonicalJson(v));
 }
 
@@ -178,9 +179,10 @@ function rounded(expr, num, den, places, mode) {
 /**
  * The workbook for a calculation: `calc` as `calculations.read` answers it (`{question, period, recipe, method_version,
  * result_key, inputs: [{name, kind, sha?, figure?, content_id?}], results}`), `tables` the input tables by name
- * (`{sha, fields, rows}`, from `calculations.readTable`). Answers `{bytes, sheets, formulas, labelled}`.
+ * (`{sha, fields, rows}`, from `calculations.readTable`). Answers `{bytes, sheets, formulas, labelled, cells}`, `cells`
+ * the cells the sheets lay out (R22); more than `maxCells` of them answers `{cells, tooLarge: true}` and writes no file.
  */
-export function buildExport(calc, tables) {
+export function buildExport(calc, tables, { maxCells = Infinity } = {}) {
   const recipe = calc.recipe;
   const taken = new Set(["results", "method"]);
   const bound = {};
@@ -213,7 +215,7 @@ export function buildExport(calc, tables) {
   const figures = new Map((calc.inputs || []).filter((i) => i.kind !== "table").map((i) => [i.name, i.figure]));
   for (const inp of calc.inputs || []) {
     if (inp.kind === "table") continue;
-    res.push([S(inp.name), S("input"), valueCell(inp.figure), S("a cited figure")]);
+    res.push([S(inp.name), S("input"), valueCell(inp.figure), S(word("workbooks.cited_figure"))]);
     rowOf.set(inp.name, res.length);
   }
   const steps = new Map(recipe.steps.map((s) => [s.as, s]));
@@ -263,8 +265,9 @@ export function buildExport(calc, tables) {
     [S("result key"), S(calc.result_key ?? "")], [S("input"), S("kind"), S("sha256")]];
   for (const inp of calc.inputs || [])
     method.push([S(inp.name), S(inp.kind), S(inp.kind === "table" ? inp.sha : inp.sha || sha256HexSync(canonicalJson(inp.figure ?? null)))]);
-  method.push([S("results"), S(`each result of a count, sum, difference, ratio or share step is a formula over the input sheets `
-    + `whose cached value is the stored result; any other is a value ${COMPUTED_LABEL}`)]);
+  method.push([S("results"), S(word("workbooks.result_count_sum", { computed_label: String(COMPUTED_LABEL) }))]);
   sheets.push({ name: "method", rows: method });
-  return { bytes: writeXlsx(sheets), sheets: sheets.map((s) => s.name), formulas, labelled };
+  const cells = sheets.reduce((n, s) => n + s.rows.reduce((m, r) => m + r.length, 0), 0);
+  if (cells > maxCells) return { cells, tooLarge: true };
+  return { bytes: writeXlsx(sheets), sheets: sheets.map((s) => s.name), formulas, labelled, cells };
 }

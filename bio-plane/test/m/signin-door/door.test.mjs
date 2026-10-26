@@ -5,6 +5,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { subscriptionSignin, subscriptionDisconnect, signoutLeaver, leaverOf, tokenRefusedSeen, signintrace,
          memberRefOf, testInstanceOf, SIGNIN_WORDS, TRACE_HEADER, MEMBER_REF_HEADER } from "../../../src/signin-door/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { accountReference, tokenMalformedHold, subscriptionDisconnect as accountDisconnect } from "../ai-accounts/fixtures.mjs";
+import { refusedAnswer } from "../answer-envelope/fixtures.mjs";
 
 const ANN = "member:ann";
 const TEST_ENV = { CIVICSMITH_TEST_INSTANCE: "civ-test", INSTANCE_NAME: "civ-test" };
@@ -12,7 +15,8 @@ const PROD_ENV = { INSTANCE_NAME: "oakland" };
 const keptAway = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", detail: "kept away", keep_away: { reason: "a case" } };
 const disclosureDue = { ok: false, reason: "DISCLOSURE_DUE", code: "DISCLOSURE_DUE", check: "C-29.40",
                         translation: "Read what connecting means first.", detail: "not yet shown", member: "ann" };
-const subscription = { connected: true, since: "2026-10-01T00:00:00Z", held: true, valid_until: "2027-10-01T00:00:00Z", uses: null };
+/* ai-accounts' published state of a member whose subscription is connected and its token held */
+const ACCOUNT = await accountReference();
 
 /* The stand-in store: `routes[name]` is a result (answered), `"refused"`, `"silent"` or a function of the call. */
 function storeOf(routes = {}) {
@@ -26,8 +30,7 @@ function storeOf(routes = {}) {
     let r = routes[route];
     if (typeof r === "function") r = r(call);
     if (r === "silent") return { answered: false, result: undefined };
-    if (r === "refused") return { answered: false, refused: true, result: undefined,
-                                  reply: { status: 400, body: { ok: false, reason: "BAD_JSON", detail: "no" } } };
+    if (r === "refused") return refusedAnswer();
     return { answered: true, result: r ?? { ok: true } };
   };
   fn.calls = calls;
@@ -48,7 +51,7 @@ function world({ env = PROD_ENV, routes = {}, reply } = {}) {
   const aw = agentWorker(reply);
   const lines = [];
   const store = storeOf({ aikeptaway: { ok: true }, signindisclosuredue: { ok: true },
-                          accountreference: { ok: true, held: false, subscription }, ...routes });
+                          accountreference: ACCOUNT.with, ...routes });
   const e = { ...env, AGENT_WORKER: aw };
   const go = (asked, member = ANN) => subscriptionSignin({ env: e, member, asked, store, log: (l) => lines.push(l) });
   return { aw, lines, store, env: e, go };
@@ -131,8 +134,8 @@ test("R1: with no `AGENT_WORKER` binding the door answers 503 AGENT_WORKER_UNBOU
     .go({ step: "start" });
   assert.deepEqual([absent.status, absent.body.code, absent.body.reason, absent.body.detail, absent.body.translation],
                    [503, "RUNNER_NOT_CONFIGURED", "RUNNER_NOT_CONFIGURED", "x", SIGNIN_WORDS["ai.refused.signinabsent"]]);
-  assert.equal(SIGNIN_WORDS["ai.refused.signinabsent"], "Signing in with Claude is not installed in your group's Civicsmith yet. "
-    + "Whoever installed your group's Civicsmith can add it.");
+  assert.ok(hasWord("ai.refused.signinabsent"), "the translation is held by key");
+  assert.equal(SIGNIN_WORDS["ai.refused.signinabsent"], word("ai.refused.signinabsent"));
   const kept = await world({ reply: () => json(503, { ok: false, reason: "RUNNER_NOT_CONFIGURED", translation: "theirs" }) }).go({ step: "start" });
   assert.equal(kept.body.translation, "theirs");
 });
@@ -242,8 +245,8 @@ test("R4 (K3060 D10; ai-accounts R19; agent-worker R81): on `code` the door send
   assert.equal(JSON.stringify(w.aw.sent).includes(TOKEN), false, "no request to agent-worker");
   assert.equal(w.lines[0].held, true);
   /* the hold refused, or not answered: held false with the fact's code, and still no token */
-  for (const [hold, code] of [[{ ok: false, reason: "SUBSCRIPTION_TOKEN_MALFORMED", code: "SUBSCRIPTION_TOKEN_MALFORMED" }, "SUBSCRIPTION_TOKEN_MALFORMED"],
-                              ["silent", "STORE_DID_NOT_ANSWER"]]) {
+  const malformed = await tokenMalformedHold();
+  for (const [hold, code] of [[malformed.tooShort, "SUBSCRIPTION_TOKEN_MALFORMED"], ["silent", "STORE_DID_NOT_ANSWER"]]) {
     const x = world({ routes: { signintokenhold: hold }, reply: (b) => json(200, { ok: true, member: b.member, token: TOKEN, valid_for: "1 year" }) });
     const a = await x.go({ step: "code", code: "c" });
     assert.deepEqual([a.body.held, a.body.fact], [false, { code }], code);
@@ -272,7 +275,7 @@ test("R4 (ai-accounts R19, R23): `state` is answered from `accountReferenceState
   assert.deepEqual(w.aw.sent, []);
   assert.deepEqual(w.store.of("accountreference")[0].params, { member: ANN, viewer: ANN });
   assert.equal(r.status, 200);
-  for (const [k, v] of Object.entries(subscription)) assert.deepEqual(r.body[k], v, k);
+  for (const [k, v] of Object.entries(ACCOUNT.with.subscription)) assert.deepEqual(r.body[k], v, k);
   assert.deepEqual([r.body.ok, r.body.step], [true, "state"]);
   const silent = await world({ routes: { accountreference: "silent" } }).go({ step: "state" });
   assert.deepEqual([silent.status, silent.body.ok, silent.body.reason, "connected" in silent.body], [502, false, "STORE_DID_NOT_ANSWER", false]);
@@ -282,7 +285,7 @@ test("R4 (ai-accounts R19, R23): `state` is answered from `accountReferenceState
 
 test("R4 (ai-accounts R18, R19): `subscriptionDisconnect` reaches the store's `subscriptiondisconnect` (ai-accounts drops the token there) with `by` the stamp, then sends `signout` for that member; a runner that cannot be reached changes nothing of the answer; a refused disconnect sends nothing", async () => {
   for (const throws of [false, true]) {
-    const store = storeOf({ subscriptiondisconnect: { ok: true, disconnected: true } });
+    const store = storeOf({ subscriptiondisconnect: await accountDisconnect() });
     const aw = agentWorker(() => { if (throws) throw new Error("down"); return json(200, { ok: true }); });
     const out = await subscriptionDisconnect({ env: { AGENT_WORKER: aw }, member: ANN, store });
     assert.deepEqual([out.answered, out.result], [true, { ok: true, disconnected: true }]);

@@ -34,6 +34,61 @@ function makeMeter() {
   };
 }
 
+// ../bio-plane/src/setup-words/rows.mjs
+var WORD_ROWS = Object.freeze([
+  ["workbooks.recomputed", "not recomputed here", null, null, false, "design"],
+  ["sheet-worker.contract.loading_the_workbook_took_longer", "loading the workbook took longer than the time budget, so evaluation was not started", null, null, false, "code"],
+  ["sheet-worker.contract.no_capture_with_that_sha_in", "no capture with that sha in that store", null, null, false, "code"],
+  ["sheet-worker.contract.recompute_is_not_enabled_here", "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member", null, null, false, "code"],
+  ["sheet-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none", null, null, false, "code"],
+  ["sheet-worker.contract.the_engine_did_not_load", "the engine did not load as the pinned build, so no workbook is recomputed", null, null, false, "code"],
+  ["sheet-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this workbook", null, null, false, "code"],
+  ["sheet-worker.contract.the_workbook_is_larger_than", "the workbook is larger than this member recomputes; nothing of it was recomputed", null, null, false, "code"],
+  ["sheet-worker.contract.the_workbook_refers_to_other", "the workbook refers to other workbooks, whose values are not here", null, null, false, "code"],
+  ["sheet-worker.enginecore.the_engine_module_did_not", "the engine module did not instantiate: {String}", null, null, false, "code"],
+  ["sheet-worker.enginecore.the_engine_reports_commit_commit", "the engine reports commit {commit}; the pinned build is {ENGINE_VERSION}", null, null, false, "code"],
+  ["sheet-worker.enginecore.the_wasm_module_carries_length", "the wasm module carries {length} `{ENGINE_SECTION}` sections, not one", null, null, false, "code"],
+  ["sheet-worker.enginecore.the_wasm_module_is_length", "the wasm module is {length} B; the pinned build is {WASM_BYTES} B", null, null, false, "code"],
+  ["sheet-worker.enginecore.the_wasm_module_lacks_the", "the wasm module lacks the engine's exports ({missing}), so it is not this engine", null, null, false, "code"],
+  ["sheet-worker.enginecore.the_wasm_module_names_v1", "the wasm module names {v1} at {v2}; the pinned build is {ENGINE_NAME} at {ENGINE_VERSION}", null, null, false, "code"],
+  ["sheet-worker.enginecore.the_wasm_modules_engine_section", "the wasm module's `{ENGINE_SECTION}` section does not parse", null, null, false, "code"],
+  ["sheet-worker.member.errors_formula_cell_s_gave", '{errors} formula cell(s) gave an error value and are marked "{NOT_RECOMPUTED}" with a cause; an error here is not a disagreement with the file', null, null, false, "code"],
+  ["sheet-worker.member.loading_took_elapsed_ms_the", "loading took {elapsed} ms; the budget is {timeBudgetMs} ms", null, null, false, "code"],
+  ["sheet-worker.member.spill_cells_cell_s_hold", "{spill_cells} cell(s) hold an array formula's spilled values and are not listed; the formula is listed at its anchor", null, null, false, "code"],
+  ["sheet-worker.member.the_engine_failed_while_evaluating", "the engine failed while evaluating the workbook", null, null, false, "code"],
+  ["sheet-worker.member.the_engine_refused_the_workbook", "the engine refused the workbook while loading it", null, null, false, "code"],
+  ["sheet-worker.member.the_workbook_holds_cells_cells", "the workbook holds {cells} cells; this member's bound is {maxCells}", null, null, false, "code"],
+  ["sheet-worker.member.the_workbook_refers_to_other", "the workbook refers to other workbooks: {parts} external-link part(s), {formulas} formula(s) and {defined_names} defined name(s)", null, null, false, "code"],
+  ["sheet-worker.member.the_workbook_unzips_to_more", "the workbook unzips to more than {maxUnzippedBytes} B, this member's bound; reading stopped at {unzipped_bytes} B", null, null, false, "code"],
+  ["sheet-worker.member.volatile_formula_cell_s_call", "{volatile} formula cell(s) call a volatile function, whose value now is not the value the file cached", null, null, false, "code"]
+]);
+
+// ../bio-plane/src/setup-words/index.mjs
+var table;
+var rowsByKey = () => table ??= new Map(WORD_ROWS.map((r) => [r[0], r]));
+var fail = (code, message) => Object.assign(new Error(`${code}: ${message}`), { code });
+var PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
+var ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
+function fill(key, text, vars) {
+  return text.replace(PLACEHOLDER, (_, name) => {
+    const v = vars?.[name];
+    if (!Object.hasOwn(vars ?? {}, name) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
+    if (typeof v === "object" && typeof v.key === "string") return word(v.key, v.vars ?? {});
+    return String(v);
+  });
+}
+function word(key, vars = {}) {
+  const row = typeof key === "string" ? rowsByKey().get(key) : void 0;
+  if (!row) throw fail("UNKNOWN_WORD", `no word ${typeof key === "string" ? key : String(key)}`);
+  return fill(key, row[1], vars);
+}
+function localize(id, en, vars = {}) {
+  if (typeof id !== "string" || !ID.test(id)) throw fail("BAD_WORD_ID", `${typeof id === "string" ? id : String(id)} is not a word id`);
+  const row = rowsByKey().get(id);
+  if (!row && typeof en !== "string") throw fail("BAD_WORD_EN", `${id} has no row and no sentence`);
+  return fill(id, row ? row[1] : en, vars);
+}
+
 // src/contract.mjs
 var ENGINE_NAME = "ironcalc";
 var ENGINE_VERSION = "4deab8f6e6a858744f8966f67f70f4ed8d29c78d";
@@ -55,7 +110,7 @@ var SETTING = "SHEET_RECOMPUTE";
 var enabledIn = (env) => (env && env[SETTING]) === "on";
 var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var PLANE_OPS = Object.freeze({});
-var NOT_RECOMPUTED = "not recomputed here";
+var NOT_RECOMPUTED = word("workbooks.recomputed");
 var VOLATILE_FUNCTIONS = Object.freeze([
   "NOW",
   "TODAY",
@@ -83,17 +138,17 @@ var WORKBOOK_REFUSALS = Object.freeze([
 ]);
 var REFUSALS = Object.freeze({
   BAD_SHA: "capture_sha must be 64 hex characters",
-  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
+  BAD_STORE: localize("sheet-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none"),
   NAMESPACE_UNKNOWN: "no namespace by that name exists, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
   R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
-  NOT_FOUND: "no capture with that sha in that store",
-  NOT_ENABLED: "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member",
-  ENGINE_ABSENT: "the engine did not load as the pinned build, so no workbook is recomputed",
+  NOT_FOUND: localize("sheet-worker.contract.no_capture_with_that_sha_in", "no capture with that sha in that store"),
+  NOT_ENABLED: localize("sheet-worker.contract.recompute_is_not_enabled_here", "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member"),
+  ENGINE_ABSENT: localize("sheet-worker.contract.the_engine_did_not_load", "the engine did not load as the pinned build, so no workbook is recomputed"),
   NOT_A_WORKBOOK: "the bytes are not an OOXML spreadsheet",
-  OVER_BOUND: "the workbook is larger than this member recomputes; nothing of it was recomputed",
-  EXTERNAL_LINKS: "the workbook refers to other workbooks, whose values are not here",
-  ENGINE_FAILED: "the engine refused or failed on this workbook",
-  TIME_LIMIT: "loading the workbook took longer than the time budget, so evaluation was not started",
+  OVER_BOUND: localize("sheet-worker.contract.the_workbook_is_larger_than", "the workbook is larger than this member recomputes; nothing of it was recomputed"),
+  EXTERNAL_LINKS: localize("sheet-worker.contract.the_workbook_refers_to_other", "the workbook refers to other workbooks, whose values are not here"),
+  ENGINE_FAILED: localize("sheet-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this workbook"),
+  TIME_LIMIT: localize("sheet-worker.contract.loading_the_workbook_took_longer", "loading the workbook took longer than the time budget, so evaluation was not started"),
   UNKNOWN: "POST /recompute or GET /version only"
 });
 
@@ -117,26 +172,26 @@ function makeMember(engine, {
       if (seen.over_unzipped)
         return refusal(
           "OVER_BOUND",
-          `the workbook unzips to more than ${bounds.maxUnzippedBytes} B, this member's bound; reading stopped at ${seen.unzipped_bytes} B`,
+          localize("sheet-worker.member.the_workbook_unzips_to_more", "the workbook unzips to more than {maxUnzippedBytes} B, this member's bound; reading stopped at {unzipped_bytes} B", { maxUnzippedBytes: String(bounds.maxUnzippedBytes), unzipped_bytes: String(seen.unzipped_bytes) }),
           { measure: "unzipped_bytes", measured: seen.unzipped_bytes, measured_is: "at_least", bound: bounds.maxUnzippedBytes }
         );
       if (seen.over_cells)
         return refusal(
           "OVER_BOUND",
-          `the workbook holds ${seen.cells} cells; this member's bound is ${bounds.maxCells}`,
+          localize("sheet-worker.member.the_workbook_holds_cells_cells", "the workbook holds {cells} cells; this member's bound is {maxCells}", { cells: String(seen.cells), maxCells: String(bounds.maxCells) }),
           { measure: "cells", measured: seen.cells, measured_is: "exact", bound: bounds.maxCells }
         );
       const ext = seen.external;
       const links = ext.parts + ext.formulas + ext.defined_names;
       if (links > 0)
-        return refusal("EXTERNAL_LINKS", `the workbook refers to other workbooks: ${ext.parts} external-link part(s), ${ext.formulas} formula(s) and ${ext.defined_names} defined name(s)`, { links, external: ext });
+        return refusal("EXTERNAL_LINKS", localize("sheet-worker.member.the_workbook_refers_to_other", "the workbook refers to other workbooks: {parts} external-link part(s), {formulas} formula(s) and {defined_names} defined name(s)", { parts: String(ext.parts), formulas: String(ext.formulas), defined_names: String(ext.defined_names) }), { links, external: ext });
       const t0 = now();
       try {
         meter.sync("load", () => engine.load(bytes), bytes.length);
       } catch (e) {
         return refusal(
           "ENGINE_FAILED",
-          `the engine refused the workbook while loading it`,
+          localize("sheet-worker.member.the_engine_refused_the_workbook", "the engine refused the workbook while loading it"),
           { stage: "load", engine_error: engineMessage(e) }
         );
       }
@@ -145,7 +200,7 @@ function makeMember(engine, {
       if (elapsed > bounds.timeBudgetMs)
         return refusal(
           "TIME_LIMIT",
-          `loading took ${elapsed} ms; the budget is ${bounds.timeBudgetMs} ms`,
+          localize("sheet-worker.member.loading_took_elapsed_ms_the", "loading took {elapsed} ms; the budget is {timeBudgetMs} ms", { elapsed: String(elapsed), timeBudgetMs: String(bounds.timeBudgetMs) }),
           { elapsed_ms: elapsed, budget_ms: bounds.timeBudgetMs }
         );
       let out;
@@ -154,7 +209,7 @@ function makeMember(engine, {
       } catch (e) {
         return refusal(
           "ENGINE_FAILED",
-          `the engine failed while evaluating the workbook`,
+          localize("sheet-worker.member.the_engine_failed_while_evaluating", "the engine failed while evaluating the workbook"),
           { stage: "evaluate", engine_error: engineMessage(e) }
         );
       }
@@ -187,11 +242,11 @@ function makeMember(engine, {
     if (seen.macros)
       notes.push("the workbook carries a VBA project; macros are never run, so it was recomputed by its formulas alone");
     if (out.counts.errors)
-      notes.push(`${out.counts.errors} formula cell(s) gave an error value and are marked "${NOT_RECOMPUTED}" with a cause; an error here is not a disagreement with the file`);
+      notes.push(localize("sheet-worker.member.errors_formula_cell_s_gave", '{errors} formula cell(s) gave an error value and are marked "{NOT_RECOMPUTED}" with a cause; an error here is not a disagreement with the file', { errors: String(out.counts.errors), NOT_RECOMPUTED: String(NOT_RECOMPUTED) }));
     if (out.counts.volatile)
-      notes.push(`${out.counts.volatile} formula cell(s) call a volatile function, whose value now is not the value the file cached`);
+      notes.push(localize("sheet-worker.member.volatile_formula_cell_s_call", "{volatile} formula cell(s) call a volatile function, whose value now is not the value the file cached", { volatile: String(out.counts.volatile) }));
     if (out.spill_cells)
-      notes.push(`${out.spill_cells} cell(s) hold an array formula's spilled values and are not listed; the formula is listed at its anchor`);
+      notes.push(localize("sheet-worker.member.spill_cells_cell_s_hold", "{spill_cells} cell(s) hold an array formula's spilled values and are not listed; the formula is listed at its anchor", { spill_cells: String(out.spill_cells) }));
     return {
       ok: true,
       engine: engine.name,
@@ -623,22 +678,22 @@ function moduleCheck(mod) {
     return "the engine did not arrive as a compiled WebAssembly.Module; this member must be installed with its `assets/sheet-engine.wasm` part";
   const exported = new Set(WebAssembly.Module.exports(mod).map((e) => e.name));
   const missing = ENGINE_EXPORTS.filter((n) => !exported.has(n));
-  if (missing.length) return `the wasm module lacks the engine's exports (${missing.join(", ")}), so it is not this engine`;
+  if (missing.length) return localize("sheet-worker.enginecore.the_wasm_module_lacks_the", "the wasm module lacks the engine's exports ({missing}), so it is not this engine", { missing: String(missing.join(", ")) });
   const sections = WebAssembly.Module.customSections(mod, ENGINE_SECTION);
-  if (sections.length !== 1) return `the wasm module carries ${sections.length} \`${ENGINE_SECTION}\` sections, not one`;
+  if (sections.length !== 1) return localize("sheet-worker.enginecore.the_wasm_module_carries_length", "the wasm module carries {length} `{ENGINE_SECTION}` sections, not one", { length: String(sections.length), ENGINE_SECTION: String(ENGINE_SECTION) });
   let facts;
   try {
     facts = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(sections[0]));
   } catch {
-    return `the wasm module's \`${ENGINE_SECTION}\` section does not parse`;
+    return localize("sheet-worker.enginecore.the_wasm_modules_engine_section", "the wasm module's `{ENGINE_SECTION}` section does not parse", { ENGINE_SECTION: String(ENGINE_SECTION) });
   }
   if (!facts || facts.engine !== ENGINE_NAME || facts.commit !== ENGINE_VERSION)
-    return `the wasm module names ${facts && facts.engine} at ${facts && facts.commit}; the pinned build is ${ENGINE_NAME} at ${ENGINE_VERSION}`;
+    return localize("sheet-worker.enginecore.the_wasm_module_names_v1", "the wasm module names {v1} at {v2}; the pinned build is {ENGINE_NAME} at {ENGINE_VERSION}", { v1: String(facts && facts.engine), v2: String(facts && facts.commit), ENGINE_NAME: String(ENGINE_NAME), ENGINE_VERSION: String(ENGINE_VERSION) });
   const nameBytes = new TextEncoder().encode(ENGINE_SECTION).length;
   const body = lebLength(nameBytes) + nameBytes + sections[0].byteLength;
   const length = facts.code_bytes + 1 + lebLength(body) + body;
   if (!Number.isInteger(facts.code_bytes) || length !== WASM_BYTES)
-    return `the wasm module is ${length} B; the pinned build is ${WASM_BYTES} B`;
+    return localize("sheet-worker.enginecore.the_wasm_module_is_length", "the wasm module is {length} B; the pinned build is {WASM_BYTES} B", { length: String(length), WASM_BYTES: String(WASM_BYTES) });
   return null;
 }
 function makeEngine(mod) {
@@ -653,9 +708,9 @@ function makeEngine(mod) {
       resetEngine();
       exports = initSync({ module: mod });
       const commit = engine_commit();
-      if (commit !== ENGINE_VERSION) return `the engine reports commit ${commit}; the pinned build is ${ENGINE_VERSION}`;
+      if (commit !== ENGINE_VERSION) return localize("sheet-worker.enginecore.the_engine_reports_commit_commit", "the engine reports commit {commit}; the pinned build is {ENGINE_VERSION}", { commit: String(commit), ENGINE_VERSION: String(ENGINE_VERSION) });
     } catch (e) {
-      return `the engine module did not instantiate: ${String(e && e.message || e)}`;
+      return localize("sheet-worker.enginecore.the_engine_module_did_not", "the engine module did not instantiate: {String}", { String: String(String(e && e.message || e)) });
     }
     opened = true;
     return null;

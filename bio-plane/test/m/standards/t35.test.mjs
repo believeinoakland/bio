@@ -3,6 +3,7 @@
    over the test profile (`test-port-ellery`: the Harbour Standing Orders, Board Rules, the ferry company's code and the
    Harbour Safety Institute's standards carry series). */
 import test from "node:test";
+import { word as tableWord } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, BYLAW, REASON, sha } from "./fixture.mjs";
 import { WORD } from "./words.mjs";
@@ -68,7 +69,7 @@ test("R34 isMeasure is true only for a standard held text the viewer may read; i
   for (const id of [cited, absent]) {
     assert.equal(w.s.isMeasure(id, V("carol")), false, id);
     const f = w.s.inForceAt({ standard: id, date: "2025-01-01" });
-    assert.deepEqual([f.state, f.why], ["undetermined", "its text is not held, so it is not a measure"]);
+    assert.deepEqual([f.state, f.why], ["undetermined", tableWord("standards.why.text_held_measure")]);
     assert.equal(w.s.inForce(id, "2025-01-01").state, "undetermined");
     assert.equal(w.s.standardRead({ id, viewer: V("carol") }).ok, true, "read like any standard");
   }
@@ -390,6 +391,21 @@ test("R41 access is free, reading_room or paywalled (ACCESS_UNKNOWN), a standard
   assert.equal(w.declare().access, null, "not a standard kind: none stated");
 });
 
+test("R41 K5148 a capture's actor names a member whether spelled member:<id> or as the bare id capture records (capture R69); a machine identity never does", () => {
+  const w = seeded();
+  const bare = w.passage("bare", { text: "Section 5: keep the log." }), stamped = w.passage("stamped"), machine = w.passage("machine"), empty = w.passage("empty");
+  w.actors[bare.capSha] = ["bob"];
+  w.actors[stamped.capSha] = [V("bob")];
+  w.actors[machine.capSha] = ["system", "token:ingest"];
+  w.actors[empty.capSha] = ["member:", ""];
+  for (const access of ["paywalled", "reading_room"]) {
+    assert.equal(w.declare({ cite: MHS, kind: "standard", access, text: [bare.contentId] }).ok, true, `${access}: a bare member id is a member`);
+    assert.equal(w.declare({ cite: MHS, kind: "standard", access, text: [stamped.contentId] }).ok, true, `${access}: member:<id> is a member`);
+    refusalRow(w.declare({ cite: MHS, kind: "standard", access, text: [machine.contentId] }), "TEXT_NOT_MEMBER_CAPTURED");
+    refusalRow(w.declare({ cite: MHS, kind: "standard", access, text: [empty.contentId] }), "TEXT_NOT_MEMBER_CAPTURED");
+  }
+});
+
 test("R42 a commitment, policy or standard may carry a target {metric, threshold, period, definition}: comparator at_least, at_most or within, an exact decimal value read by calc-grammar, the unit as the text states it, a period or a stated recurrence, a definition passage or \"none\"; TARGET_INVALID names the field; nothing is computed", () => {
   const w = seeded();
   const t = w.passage().contentId, def = w.passage().contentId;
@@ -400,7 +416,7 @@ test("R42 a commitment, policy or standard may carry a target {metric, threshold
   assert.deepEqual(c.target.threshold, { comparator: "at_most", value: "48", unit: "hours", as_read: "48" });
   assert.equal(c.target.met, undefined, "never computed here");
   const none = w.declare({ cite: "MCBC 2024-8", kind: "commitment", text: [t], target: { ...good, definition: "none", period: { recurrence: "each quarter", content_id: t } } });
-  assert.deepEqual([none.target.definition, none.target.definition_says, none.target.period.recurrence], ["none", "no definition stated", "each quarter"]);
+  assert.deepEqual([none.target.definition, none.target.definition_says, none.target.period.recurrence], ["none", tableWord("standards.definition_stated"), "each quarter"]);
   for (const [target, field, kind] of [[good, "kind", "ordinance"], [{ ...good, metric: { words: "x" } }, "metric"],
          [{ ...good, threshold: { ...good.threshold, comparator: "about" } }, "threshold"], [{ ...good, threshold: { ...good.threshold, value: "about 48" } }, "threshold"],
          [{ ...good, threshold: { ...good.threshold, value: "40-50" } }, "threshold"], [{ ...good, threshold: { ...good.threshold, unit: "" } }, "threshold"],
@@ -425,7 +441,7 @@ test("R43 bindsAt: binds when the body issued it, adopted it, an incorporating s
   assert.equal(b(own, "2019-01-01").state, "undetermined", "an ordinance not yet in force: a law is never a benchmark by default");
   const bench = b(pol);
   assert.deepEqual([bench.state, bench.says.binding], ["benchmark", WORD("standard.binding.benchmark", { body: "Port Ellery Selectboard" })]);
-  assert.deepEqual([b(statute).state, b(statute).why], ["undetermined", "whether this law binds the body is not recorded"]);
+  assert.deepEqual([b(statute).state, b(statute).why], ["undetermined", tableWord("standards.whether_law_binds")]);
   /* a member's declaration of a benchmark never makes it bind */
   assert.equal(codeOf(w.s.benchmarkDeclare({ standard: pol, body, reason: "", author: V("bob") })), "STANDARD_NO_REASON");
   assert.equal(codeOf(w.s.benchmarkDeclare({ standard: pol, body, reason: REASON, author: MACHINE })), "MACHINE_CANNOT_DECLARE_STANDARD");
@@ -476,9 +492,9 @@ test("R45 every read carries says, the members' words of DEC-145 composed from t
 
 test("R46 where no active profile is held or the profiles cannot be combined, R3's why names your group's Civicsmith, never the instance", () => {
   const none = seeded({ profiles: null }).declare();
-  assert.equal(none.source.why, "your group's Civicsmith has no active jurisdiction profile, so no source of standards is known");
+  assert.equal(none.source.why, tableWord("standards.why.group_civicsmith_active"));
   const bad = seeded({ profiles: ["no-such-profile"] }).declare();
-  assert.equal(bad.source.why, "the active jurisdiction profiles of your group's Civicsmith could not be combined (UNKNOWN_PROFILE), so no source of standards is known");
+  assert.equal(bad.source.why, "the active jurisdiction profiles of your team's Civicsmith could not be combined (UNKNOWN_PROFILE), so no source of standards is known");
   assert.ok(![none.source.why, bad.source.why].some((s) => /instance/.test(s)));
 });
 

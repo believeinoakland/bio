@@ -7,9 +7,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, received } from "./fixture.mjs";
 import * as holds from "../../../src/action-holds/index.mjs";
+import { docketEntryRead } from "../docket/fixtures.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice"), BOB = V("bob");
+/* the docket's own refusal of an absent or unseen entry, as its real code answers it */
+const NO_ENTRY = docketEntryRead().absent;
 
 /* `docket` R27's two reads over a list of marks `{mark, entry, case, project, kind, note, at}`, as the plane reads them
    (`docketPressureMarks`) and as a viewer who must see the entry's project at FULL does (`docketPressureOf`). */
@@ -26,7 +29,7 @@ function docketOver(w, marks) {
     docketPressureOf({ entry = null, viewer = null } = {}) {
       const m = marks.find((x) => x.entry === entry);
       if (!m || w.membership.sight(m.project, viewer) !== "full")
-        return { ok: false, reason: "NO_SUCH_DOCKET_ENTRY", detail: "no record entry you see answers by that id" };
+        return NO_ENTRY;
       const { mark, ...view } = m;
       return { ok: true, ...view };
     },

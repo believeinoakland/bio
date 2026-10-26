@@ -1,6 +1,6 @@
 # text-chain — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Carried rows D-635 and D-665 are outside this module. Every requirement met. Last changed T41's opening (T41-2: R104 new; N820; K2405, K2418, K2420); marked not yet met (T41).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Carried rows D-635 and D-665 are outside this module. Every requirement met. Last changed T41's opening (T41-2: R104 new; N820; K2405, K2418, K2420); marked not yet met (T41). Fix round 9 (T51; G141, G131g; X27, X9; K4837): R39 and R73 amended, R76 and R78 carry R105, R105 and R106 new (`mergeTier2Text` keeps every page, `appendStep` in linear work); marked not yet met (T51).
 
 ## Public
 
@@ -151,7 +151,7 @@ of a document with its own provenance, each `chain` already built by `appendStep
 - **R39** Otherwise, one sentence per step joined by `" -> "`: the kind's label, `(engine version)` or
   `(engine to format)` when the step names an engine (and, for `convert`, a format), `(member[, at])`
   for `attested` and `typed`, and, for a SCOPED derivation step (extent not "all"), the pages it covers
-  or `(over an extent this record cannot read)` for an unreadable one.
+  or `(over an extent this record cannot read)` for an unreadable one. (Fix round 9, G141; ruling (6) of the plan's section 2b) The sentence spells a page 1-BASED, as a reader counts: the stored page number 0 is read "page 1", and a page list is spelled the same way; the stored numbers (R22's extents, R27, R47) stay 0-based and are not changed.
 - Errors: never throws.
 
 **`checkConfidence(confidence) → refusal | null`**
@@ -280,7 +280,7 @@ contain the place a reference was read? The default is NO.
 
 **`glyphCount(s) → integer`** (D-501/D-514) The number of non-whitespace Unicode CODE POINTS in `s`.
 - **R73** `0` for a non-string. Otherwise counts code points (a surrogate pair counts once) that do
-  not match `\s` (Unicode-aware).
+  not match `\s` (Unicode-aware) and are neither U+FFFD (the replacement character) nor U+0000 (NUL): a decode's failures are not glyphs (fix round 9, G141, G131g; X27).
 - Errors: never throws.
 
 **`mergeTier2Text(base, t2) → {ok, text?, wholesale?, perPageTier, replaced, kept, why?}`** (D-283)
@@ -297,7 +297,7 @@ page. `base`/`t2` are `{document, pages:[{page, text, undetermined:[{count}]}], 
   entry becomes `{page, text:<t2's text>, undetermined:<t2's markers>, tier:2}` — only when BOTH: tier
   2's page has strictly FEWER undetermined characters (summed `.undetermined[].count`) than tier 1's
   AND strictly MORE glyphs (`glyphCount` of `.text`, R73) than tier 1's. Otherwise tier 1's page is
-  kept, spread unchanged plus `tier:1`.
+  kept, spread unchanged plus `tier:1`. (Pages of `base` with no integer `.page`, and pages of `t2` that `base` lacks, are R105's.)
 - **R77** When tier 2 wins a page (R76), every entry of the base page's
   `undetermined` list whose `reason` starts with `image_content_`, and every base-page field whose
   name starts with `image_content_`, is carried onto the merged page unchanged, never re-graded,
@@ -345,13 +345,13 @@ new refusal condition in this module mints the next one in the family and is add
 - **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`, and (T41; R104, K2427) `ai_transcription`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai", "ai_transcription"]` from T41), which `query-language` re-exports.
 
 **The content-extent algebra** (copied from the catalogue in T19, K747; the catalogue's copy was deleted at T19's close, K855, so this module's is the only one).
-- **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}`, the phrases unchanged from the catalogue's as this module copied them (K747); `dom` is not a key.
+- **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}`, each phrase read through `word` from the design's `textchain.text.*` row where one exists ("a cell of this spreadsheet", …; the word table wins, K3930, K3965), else through `localize`; `dom` is not a key.
 - **R93** `CONTENT_EXTENT_A1_RE` matches exactly a cell in A1 notation (an optional `$`, 1–3 letters of either case, an optional `$`, a row 1–9999999 with no leading zero); `CONTENT_EXTENT_RANGE_RE` matches such a cell or two joined by `:`.
 - **R94** `a1ToRowCol(cell)` → `{col, row}`, both 1-based, the column bijective base 26 (A=1, Z=26, AA=27, ZZ=702, AAA=703), `$` dropped and case folded; `null` for anything else.
 - **R95** `rangeCorners(range)` → `{r0, c0, r1, c1}` with each pair ordered (min, max), a single cell being a one-cell range, `null` unless the trimmed input matches `CONTENT_EXTENT_RANGE_RE`; `canonicalRange(range)` → `"<col0><r0>:<col1><r1>"`, upper case, no `$`, always two corners, `null` when `rangeCorners` is.
 - **R96** `contentCitedAs(extent)` → the extent's `cited_as` unchanged when present and not `""`; else `"bytes"` for an `image` and `"text"` for every other kind (a non-object reads as `{}`).
-- **R97** `canonicalExtent(extent)` → `canonicalJson` (record-grammar) of the arm's fixed fields, absent ones `null`, `ref` never among them: `document` {kind}; `pdf-page` {kind, page, rect min/max-normalised}; `sheet-cell` {kind, sheet trimmed, cell trimmed, `$`-free, upper case}; `slide-shape` {kind, slide, shape}; `doc-para` {kind, para, run}; `sheet-range` {kind, sheet, range = `canonicalRange`}; `doc-table` {kind, table, cell as sheet-cell's}; `image` {kind, cited_as = `contentCitedAs`, part trimmed lower-case, page, rect as pdf-page's}; integers only where an index is meant; any other kind `{kind: kind ?? null, fields: fields ?? null}`. Byte-identical to the catalogue's `canonicalExtent` for every input while the catalogue holds its copy (content ids are taken over it).
-- **R98** `describeExtent(extent)` → an authored non-blank `ref`, trimmed; else the derived form per arm (`the whole document`; `page <n+1>` or `page <n+1>, a region of it`; `<sheet>!<cell>`; `¶<para+1>`; `slide <slide>`; `<sheet>!<canonical range>`; `table <t+1>[, <CELL>]`; `image <part, 12 chars>` or `an image on page <n+1>`), each arm's fallback phrase when its fields are missing, the kind's `human` for a landed kind otherwise, and `a part of this document the record cannot name` for any other kind (own keys only: a kind such as `constructor` reads as unknown). R92–R98 never throw.
+- **R97** `canonicalExtent(extent)` → `canonicalJson` (record-grammar) of the arm's fixed fields, absent ones `null`, `ref` never among them: `document` {kind}; `pdf-page` {kind, page, rect min/max-normalised}; `sheet-cell` {kind, sheet trimmed, cell trimmed, `$`-free, upper case}; `slide-shape` {kind, slide, shape}; `doc-para` {kind, para, run}; `sheet-range` {kind, sheet, range = `canonicalRange`}; `doc-table` {kind, table, cell as sheet-cell's}; `image` {kind, cited_as = `contentCitedAs`, part trimmed lower-case, page, rect as pdf-page's}; integers only where an index is meant; any other kind `{kind: kind ?? null, fields: fields ?? null}`. Byte-identical to the catalogue's `canonicalExtent` for every input while the catalogue holds its copy (content ids are taken over it). (K4913) `pdf-page`, `slide-shape` and `sheet-range` also carry `run` when it is an integer and omit it otherwise (a chunk of a unit over 128 Ki characters, `reading-pipeline` R47, so each chunk has its own address and no existing address changes); `doc-part` {kind, part, ref} (the package part and the element reference, each a trimmed string or `null`; `content` R1, K4910).
+- **R98** `describeExtent(extent)` → an authored non-blank `ref`, trimmed; else the derived form per arm (`the whole document`; `page <n+1>` or `page <n+1>, a region of it`; `<sheet>!<cell>`; `¶<para+1>`; `slide <slide>`; `<sheet>!<canonical range>`; `table <t+1>[, <CELL>]`; `image <part, 12 chars>` or `an image on page <n+1>`), each arm's fallback phrase when its fields are missing, the kind's `human` for a landed kind otherwise, and `a part of this document the record cannot name` for any other kind (own keys only: a kind such as `constructor` reads as unknown). R92–R98 never throw. (K4913) `doc-part`: `part <ref>` (by key), `run` never in the sentence. Since K4917: a `doc-part`'s `ref` is its element reference, an address field: its form "part <ref>" is read before the authored-ref rule, and `run` is never in the sentence.
 
 **Helpers named by N416** (K747; `EXTENT_KINDS` is internal).
 - **R99** `weaker(a, b)` → the weaker (higher `BASIS_GRADES` index) of two grade letters; `null` when either is not a `BASIS_GRADES` letter.
@@ -363,6 +363,10 @@ new refusal condition in this module mints the next one in the family and is add
 **T41's addition** (N820; D21; K2418; `plan/draft-T41-investigation.md` §3.6)
 - **R104** (D21) Step kind `ai_transcription` with a derivation cap undetermined until its accuracy is measured (`calibration`), so `captureBound` answers undetermined for text it produced.
 
+**Fix round 9's additions** (G141; X27)
+- **R105** `mergeTier2Text` drops no page. On the page-wise path (R76) the merged `pages` hold every page of `base` and every page of `t2` exactly once: a `base` page with no integer `.page` is kept as tier 1 (R76's tier-1 shape, `tier:1`), after the numbered pages and in its own order, and is listed in `kept`; a `t2` page that `base` lacks is adopted as tier 2 (`tier:2`) at its page number and is listed in `replaced`; `document`, `counts` and `perPageTier` follow the pages as R78 states, and `tier2Note` (R79, R80) counts them. A `t2` page with no integer `.page` is adopted as tier 2 after the numbered pages, in its own order. (K4864) The `kept` or `replaced` entry of a page with no integer number is `null`.
+- **R106** `appendStep` does work linear in the number of steps appended over a chain's life, not quadratic: a chain this module returned (from `layerChain`, `appendStep`, `convertedChain` or `mergedChain`) is known well-formed, so appending to it checks the new step against the chain's cap and extents without re-checking every earlier step; the refusals and results of R12-R14 are unchanged, and a chain built by hand is still checked whole. 5,000 `appendStep` calls inspect at most 4 times 5,000 steps in all (a count of steps inspected, not a time).
+
 ## Private
 
 ### Uses
@@ -371,6 +375,7 @@ new refusal condition in this module mints the next one in the family and is add
   `EARNED_CAPTURE_CEILING` (the strongest letter `captureBound` may answer); `isMachineIdentity`
   (whether an attestation's `.member` names a machine credential). (K634; until T18's text-chain job
   re-points, read through `legacy-checks`' re-exports.)
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

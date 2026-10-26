@@ -1,6 +1,7 @@
 /* record-grammar at its interface: the one accepting act's record (R52; T41-1, N820; D3). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { ACCEPTANCE_FORMS, ACCEPT_MUST_REAUTHOR, acceptanceRecord, isMachineIdentity, NON_MEMBER_AUTHORS, ACTOR_CLASSES,
   SHARED_ACT_CHECKS }
   from "../../../src/record-grammar/index.mjs";
@@ -22,8 +23,7 @@ test("R52 ACCEPT_MUST_REAUTHOR is the one spelling of the code an act's owner re
   assert.equal(row.check, "C-33.54");
   /* Its translation states the meaning: accepting would make you vouch for what the machine proposed, so write it in
      your own words instead. */
-  assert.match(row.translation, /vouch for words the machine wrote/);
-  assert.match(row.translation, /in your own words instead/);
+  assert.equal(row.translation, word("refusal.ACCEPT_MUST_REAUTHOR"));
   /* The owners are named in its where, and no other shared row holds its number or its code. */
   for (const owner of ["steps R24", "hypotheses R17", "run-productions R22", "question-explorer R6", "investigation R12",
     "case-account R4"]) assert.ok(row.where.includes(owner), owner);

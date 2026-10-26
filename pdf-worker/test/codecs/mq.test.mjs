@@ -132,3 +132,41 @@ test("R5 data running out is counted, never hidden: overrun names the bytes need
   for (const [cx] of ds) mq.decode(ctx, cx);
   assert.ok(mq.overrun > 0);
 });
+
+test("R5 (fix round 9, G132l (d)) data running out is detected as the bytes are consumed: onShort is called at the first byte the decode lacks, not after the region", () => {
+  const ds = decisions(12, 20000, 9);
+  const coded = mqEncode(ds);
+  /* cut in half: the marker is gone, so the first byte past the cut is the first one lacking */
+  const cut = coded.subarray(0, coded.length >> 1);
+  const stop = Symbol("short");
+  let decoded = 0;
+  const mq = new MqDecoder(cut, 0, cut.length, { onShort() { throw stop; } }), ctx = mqContexts(9);
+  let thrown;
+  try { for (const [cx] of ds) { mq.decode(ctx, cx); decoded++; } } catch (e) { thrown = e; }
+  assert.equal(thrown, stop, "the decode was stopped by onShort");
+  assert.ok(decoded > 0 && decoded < ds.length / 2 + 1000, `stopped after ${decoded} of ${ds.length} decisions`);
+  assert.ok(mq.overrun > 0, "and the shortfall is counted as before");
+  /* the same cut with no onShort: counted, decoded to the end (the callers that tolerate it, JPX's code-blocks) */
+  const quiet = new MqDecoder(cut), qctx = mqContexts(9);
+  for (const [cx] of ds) quiet.decode(qctx, cx);
+  assert.ok(quiet.overrun > 0);
+});
+
+test("R5 (fix round 9, G132l (d)) a stream that ends in its 0xFFAC marker is short once the decode feeds on the marker past the coder's look-ahead; a whole stream never is", () => {
+  for (const [seed, count, n] of [[1, 5000, 1], [2, 20000, 3], [3, 20000, 19], [4, 40000, 512], [5, 3000, 2], [6, 60000, 64], [7, 1, 1], [8, 17, 2]]) {
+    const ds = decisions(seed, count, n), coded = mqEncode(ds);
+    assert.deepEqual([...coded.subarray(-2)], [0xff, 0xac], "the standard's encoder ends on the marker");
+    const mq = new MqDecoder(coded, 0, coded.length, { onShort() { assert.fail(`seed ${seed}: a whole stream is not short`); } }), ctx = mqContexts(n);
+    for (const [cx] of ds) mq.decode(ctx, cx);
+    assert.equal(mq.overrun, 0, `seed ${seed}`);
+  }
+  /* decisions asked beyond what was coded are fed from the marker's 1-bits: they stop within a few bytes' worth of them */
+  const ds = decisions(2, 20000, 3), coded = mqEncode(ds);
+  const stop = Symbol("short");
+  const mq = new MqDecoder(coded, 0, coded.length, { onShort() { throw stop; } }), ctx = mqContexts(3);
+  for (const [cx] of ds) mq.decode(ctx, cx);
+  let extra = 0, thrown;
+  try { for (; extra < 5000; extra++) mq.decode(ctx, extra % 3); } catch (e) { thrown = e; }
+  assert.equal(thrown, stop);
+  assert.ok(extra > 0 && extra < 1000, `stopped after ${extra} invented decisions`);
+});

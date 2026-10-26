@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, sha, V, provDoc } from "./fixture.mjs";
 import { chainFromEvidence, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { DOORBELL_ORIGIN, UPLOAD_ORIGIN } from "../../../src/provenance/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const fetched = { locator: "https://e.org/d", retrieved: "2026-09-01T00:00:00Z",
                   capture: { method: "acquire", actor_class: "session", sha256: sha("d") } };
@@ -39,9 +40,10 @@ test("R1: a fetched route gives one hop by this instance, a custodian one by the
   assert.equal(none.ok, false);
   assert.equal(none.missing.length, 5);
   assert.deepEqual(chainFromEvidence({ ...fetched, retrieved: "" }).missing,
-                   ["the instant it was retrieved (`retrieved`)", "a named custodian (`custody.holder`)",
-                    "when the custodian obtained it (`custody.obtained`)"]);
-  assert.deepEqual(chainFromEvidence(null), { ok: false, missing: ["the document entry is not an object"] });
+                   [localize("provenance-routes.index.the_instant_it_was", "the instant it was retrieved (`retrieved`)"),
+                    localize("provenance-routes.index.a_named_custodian_custody", "a named custodian (`custody.holder`)"),
+                    localize("provenance-routes.index.when_the_custodian_obtained", "when the custodian obtained it (`custody.obtained`)")]);
+  assert.deepEqual(chainFromEvidence(null), { ok: false, missing: [localize("provenance-routes.index.the_document_entry_is_not", "the document entry is not an object")] });
   /* Negative control: "in hand" is never a fetched address, whatever else the entry records. */
   assert.equal(chainFromEvidence({ ...fetched, locator: "in hand" }).ok, false);
   /* Pure and never throws: odd inputs answer, and the same input answers the same. */
@@ -65,7 +67,7 @@ test("R1: a co-archive is never a hop, and every derived hop is stamped reconstr
   for (const h of [r.hops[0], custody.hops[0]]) {
     assert.equal(h.reconstructed.by, "op=provenancechain (REC-54)");
     assert.equal(h.reconstructed.basis,
-      "derived from fields the capture record already held; no fact is asserted that the register did not carry");
+      word("provenance-routes.basis.derived_fields_capture"));
     assert.equal(h.reconstructed.at, "2026-09-27T00:00:00Z");
     assert.ok(Array.isArray(h.reconstructed.from) && h.reconstructed.from.length);
   }
@@ -78,7 +80,7 @@ test("R1: a co-archive is never a hop, and every derived hop is stamped reconstr
 const knockDoc = (id, { receipt = true, bytes = `handed in ${id}` } = {}) => ({
   file: `snapshots/${id}`, locator: `knock:${id}`, retrieved: "2026-09-30T12:00:00Z",
   authority_state: "undetermined", authority_basis: "handed in at the doorbell; no authority is asserted",
-  capture: { method: "doorbell knock, received, hashed at receipt", grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+  capture: { method: "knock fixture method", grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
              actor_class: "member", actor: "member:ruth", sha256: sha(bytes), encoding: "binary", bytes: Buffer.byteLength(bytes) },
   source: { kind: "knocker", named: false, pseudonym: null,
             ...(receipt ? { receipt: { knock_id: id, sha256: sha(bytes), bytes: Buffer.byteLength(bytes), received: "2026-09-30T11:00:00Z" } } : {}) },
@@ -158,7 +160,8 @@ test("R1 (K2457): an upload document is never a fetched route: its one hop is re
   assert.equal(r.ok, true);
   assert.equal(r.hops.length, 1);
   const h = r.hops[0];
-  assert.equal(h.asserts, `these bytes were received for upload:${sha("a file she held")} at 2026-10-09T11:00:00Z`);
+  assert.equal(h.asserts, localize("provenance-routes.index.these_bytes_were_received_for_2", "these bytes were received for upload:{rsha} at {received}",
+    { rsha: sha("a file she held"), received: "2026-10-09T11:00:00Z" }));
   assert.deepEqual([h.via, h.bound, h.who], ["upload", false, "instance civic (upload by member:ruth)"]);
   assert.equal(/served for/.test(h.asserts), false, "never a fetched hop, though locator, retrieved and method are all present");
   assert.deepEqual(h.reconstructed.from, ["origin.kind", "source.receipt.sha256", "source.receipt.received", "capture.actor"]);

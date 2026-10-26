@@ -26,6 +26,7 @@ function sentences(x, path = "", out = []) {
 }
 const offending = (answers) => answers.flatMap((a) => sentences(a)).filter(([, s]) => SUBJECT.test(s));
 
+// fixtures-generic: SOMEONE_ELSES
 test("R36: the words scan finds a sentence calling a matter a subject, and leaves codes, keys and other modules' refusals alone (negative control)", () => {
   assert.deepEqual(offending([{ ok: false, code: "SUBJECT_MALFORMED", detail: "that subject is not one the plan is about" }]),
     [[".detail", "that subject is not one the plan is about"]]);
@@ -69,7 +70,7 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   /* R9–R12: options */
   const add = (extra = {}) => keep(w.ap.optionAdd({ plan: w.PL, summary: "Write", category: "awareness", subjects: [w.S1], ...by("bob"), ...extra }));
   add(m); add({ summary: "" }); add({ detail: "x".repeat(5001) }); add({ category: "x" }); add({ subjects: [] }); add({ subjects: [w.S3] });
-  add({ addressee: { state: "named", name: "A Person" } }); add({ dates: [{ date: "2026-13-01", basis: "b" }] }); add({ tier: 1 });
+  add({ addressee: { state: "named", name: "A Person" } }); add({ addressee: { state: "named", kind: "press", role: "", organisation: "" } }); add({ dates: [{ date: "2026-13-01", basis: "b" }] }); add({ tier: 1 });
   add({ category: "legal", tier: 9 }); add({ lobbying: true }); add({ budget: 1 }); add({ ...by("carol") });
   const a = add({ subjects: [w.SI, w.S1], addressee: OFFICE, dates: [{ date: "2026-09-01", basis: "the order" }] }).option;
   const b = add({ subjects: [w.SI], addressee: OFFICE, lobbying: true, enforces: w.S1 }).option;
@@ -188,7 +189,8 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   assert.deepEqual(unreached, ["PLAN_HISTORY_REWRITTEN"]);
   /* the reads answered their sentences: checks, liveness, the disclosure, the preview */
   const all = sentences(said).map(([, s]) => s).join("\n");
-  for (const words of ["no longer live", "suspected matter", "Suggested by the assistant", "a check informs", "a preview of starting",
+  const SUGGESTED = DISCLOSURE("RUN", "planning@1").split(" in run")[0];
+  for (const words of ["no longer live", "suspected matter", SUGGESTED, "a check informs", "a preview of starting",
                        "when_subject names a matter of the plan", "that matter is not one the plan is about"])
     assert.ok(all.includes(words), words);
   assert.deepEqual(offending(said), [], "no member-facing sentence calls a matter a subject");

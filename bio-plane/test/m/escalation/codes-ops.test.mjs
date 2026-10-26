@@ -3,8 +3,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V } from "./fixture.mjs";
 import { ESCALATION_CHECKS, escalationOps } from "../../../src/escalation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
-const TRANSLATION = "This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written.";
+const TRANSLATION = word("refusal.ESCALATION_NO_REASON");
 const BAD_REASONS = [undefined, null, "", "   ", "\n\t", 7, "x".repeat(2001), ` ${"y".repeat(2001)} `];
 
 test("R24 every act that takes a reason (R1's opening, R9's attachment, R10's evaluation, R13's advance and decline, R15's suspension, R27's decline to escalate) refuses one absent, not a string, blank or over 2,000 characters ESCALATION_NO_REASON, row C-116.24 with its translation unchanged, never progressions' NO_REASON; nothing is written, and a reason of 1 or 2,000 characters lands", () => {

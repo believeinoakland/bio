@@ -12,6 +12,8 @@ import {
 } from "../../../src/content/index.mjs";
 import * as textChain from "../../../src/textchain.mjs";
 import { TESTIMONY_PATH } from "../../../src/provenance/index.mjs";
+import { CONTENT_OP_NAMES } from "../../../src/content/ops.mjs";
+import { checkContentExtent as coreCheck, legExtent as coreLegExtent } from "../../../src/content/extent-core.mjs";
 
 const DOC = "INFO-2026-0001-a", OTHER = "INFO-2026-0002-b";
 const H = "a".repeat(64);
@@ -68,12 +70,14 @@ test("R48: every C-45 refusal this module answers, at the grammar, the mint and 
 
 test("R48: the extent algebra is text-chain's: its eight kinds (with envelope beside them), A1 notation, canonical and human forms and cited_as, answer for answer", () => {
   assert.equal(CONTENT_EXTENT_A1_RE, textChain.CONTENT_EXTENT_A1_RE, "the one pattern");
-  const { envelope, ...eight } = CONTENT_EXTENT_KINDS;
-  assert.deepEqual(eight, textChain.CONTENT_EXTENT_KINDS);
-  assert.ok(envelope && envelope.landed);
+  const { envelope, "doc-part": docPart, ...eight } = CONTENT_EXTENT_KINDS;
+  /* text-chain gains its own `doc-part` arm in its own job (K4913); the eight are compared without it, here and below */
+  const { "doc-part": _own, ...algebra } = textChain.CONTENT_EXTENT_KINDS;
+  assert.deepEqual(eight, algebra);
+  assert.ok(envelope && envelope.landed && docPart && docPart.landed);
   const extents = [];
   const cells = ["B14", "$b$14", "zz9", "14B", undefined];
-  for (const kind of Object.keys(textChain.CONTENT_EXTENT_KINDS))
+  for (const kind of Object.keys(algebra))
     for (const page of [undefined, 0, 2, -1, "1"])
       for (const rect of [undefined, [10, 20, 1, 2], [0, 0, 1]])
         for (const cell of cells)
@@ -131,6 +135,30 @@ test("R48: the core's leg reader, content id shape, document-only context and pa
     "a coarse field missing is unreadable, never narrower");
 });
 
+test("R48 (G167, K4985): the core takes a doc-part leg: its part and ref survive legExtent, its check is the grammar's, and an unknown kind is refused as before", () => {
+  const leg = { extent_kind: "doc-part", extent_part: "word/footnotes.xml", extent_ref: "fn:3", extent_cell: "A1" };
+  const ext = coreLegExtent(leg);
+  assert.deepEqual(ext, { kind: "doc-part", ref: "fn:3", part: "word/footnotes.xml" }, "the part and ref are read, a stray field is not");
+  assert.equal(coreCheck(ext, CONTENT_EXTENT_DOCUMENT_ONLY), null, "the leg grammar's pass admits it");
+  /* the content id a citation mints is over the extent the reading found */
+  assert.equal(contentIdFor("c", ext, LAYER), contentIdFor("c", { kind: "doc-part", part: "word/footnotes.xml", ref: "fn:3" }, LAYER));
+  assert.notEqual(contentIdFor("c", ext, LAYER), contentIdFor("c", { kind: "doc-part", ref: "fn:3" }, LAYER), "the part is in the address");
+  /* the core and the face answer alike over every shape and context */
+  const chain = LAYER;
+  for (const e of [ext, { kind: "doc-part", part: "p" }, { kind: "doc-part", ref: "r" }, { kind: "doc-part" }, { kind: "doc-part", part: 7 },
+                   { kind: "doc-part", part: "", ref: "" }, { kind: "doc-part", ref: ["fn"] }, { ...ext, cited_as: "bytes" }])
+    for (const ctx of [CONTENT_EXTENT_DOCUMENT_ONLY, { chain: null }, { chain }])
+      assert.deepEqual(coreCheck(e, ctx), checkContentExtent(e, ctx), JSON.stringify([e, ctx.chain]));
+  assert.equal(coreCheck(ext, { chain: null }).code, "CONTENT_EXTENT_NO_CHAIN", "a capture nobody read holds no text to address");
+  assert.equal(coreCheck({ kind: "doc-part" }, CONTENT_EXTENT_DOCUMENT_ONLY).code, "CONTENT_EXTENT_UNREADABLE");
+  assert.equal(coreCheck({ ...ext, cited_as: "bytes" }, CONTENT_EXTENT_DOCUMENT_ONLY).code, "CONTENT_EXTENT_UNREADABLE", "only an image is cited as bytes");
+  /* control: another kind's flattened fields are not read for it, and an unknown kind is refused C-45 as before */
+  assert.deepEqual(coreLegExtent({ extent_kind: "doc-para", extent_para: 1, extent_part: "word/footnotes.xml" }), { kind: "doc-para", para: 1 });
+  const unknown = coreCheck({ kind: "doc-footnote", part: "p" }, CONTENT_EXTENT_DOCUMENT_ONLY);
+  assert.equal(unknown.code, "CONTENT_EXTENT_UNREADABLE");
+  assert.equal(unknown.check, "C-45.3");
+});
+
 /* ------------------------------------------------------------------------------------------------------- R49 */
 
 /** A promotion's step context on the testimony path, as provenance's slot reads it. */
@@ -140,7 +168,7 @@ test("R49: content registers its check and its mint on provenance's testimony sl
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]);
   const again = w.prov.onTestimony("content", { check: () => null });
-  assert.deepEqual([again.ok, again.code], [false, "LISTENER_DECLARED"], "registered once, at start");
+  assert.deepEqual([again.ok, again.code], [false, "LISTENER_DECLARED"]);
   const slot = w.prov.testimonySlot();
   const asked = [];
   const ctx = w.content.contentContextFor;
@@ -193,8 +221,7 @@ const urlOf = (q) => new URL(`https://plane.invalid/?${new URLSearchParams(q)}`)
 test("R50: contentOps publishes eight route arms, each a function of no arguments answering what its service answers", () => {
   const w = world();
   const ops = contentOps(w.content, urlOf({}), null);
-  assert.deepEqual(Object.keys(ops).sort(),
-    ["attesttext", "content", "contentcrop", "contentmint", "textattest", "transcribe", "transcription", "transcriptionattest"]);
+  assert.deepEqual(Object.keys(ops).sort(), [...CONTENT_OP_NAMES].sort());
   for (const [k, f] of Object.entries(ops)) assert.equal(f.length, 0, k);
 });
 

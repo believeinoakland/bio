@@ -8,6 +8,7 @@
 import { AI_RUN_OWN_CHECKS } from "./checks.mjs";
 import { DEPLOYMENT_SEQUENCE, ASK_MODE, ENQUIRE_MODE, DRAFT_KINDS, deployable } from "./deployment.mjs";
 import { CIVICSMITH_TEST_SET } from "./test-set.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** The AI parts the bar is held for, each by the name an R75 record carries: the run modes of the order; the
  *  interactive modes `ask` and `enquire`; `explore`, the explorer's use (`question-explorer`); each draft kind as
@@ -151,7 +152,6 @@ export function partRefusal(part) {
   const row = AI_RUN_OWN_CHECKS.AI_PART_NOT_DEPLOYED;
   const p = String(part ?? "").slice(0, 40);
   return { ok: false, code: "AI_PART_NOT_DEPLOYED", check: row.check, translation: row.translation,
-           detail: `${JSON.stringify(p)} has not passed its bar on Civicsmith's test investigations, or what must come `
-             + "before it is not yet verified, and this is not a test instance (R29). Nothing was sent to the assistant",
+           detail: localize("run-rules.test-bar.stringify_has_not_passed_its", "{stringify} has not passed its bar on Civicsmith's test investigations, or what must come before it is not yet verified, and this is not a test instance (R29). Nothing was sent to the assistant", { stringify: String(JSON.stringify(p)) }),
            part: p };
 }

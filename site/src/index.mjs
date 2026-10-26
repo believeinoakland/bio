@@ -76,7 +76,7 @@ export function config(env = {}) {
   if (!Array.isArray(g)) bad("LISTED_GROUPS is not a list");
   c.groups = g.map((x, i) => {
     const n = `LISTED_GROUPS[${i}]`;
-    if (!x || typeof x !== "object") bad(`${n} is not a group`);
+    if (!x || typeof x !== "object") bad(`${n} is not a team`);
     const cases = count(x.cases, `${n}.cases`), editions = count(x.editions ?? cases, `${n}.editions`);
     if (editions < cases) bad(`${n}.editions is fewer than its cases`);
     return {

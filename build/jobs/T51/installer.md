@@ -1,0 +1,500 @@
+# installer (T51)
+
+**Status** · session_01DCAWkiUVqfwYfbb2mBxLJd · depth 2 · COMPLETE · handled B35
+
+## J1 · QUESTION
+
+Ordering. My entry (T51-128) deletes the moved ranges after installer-steps merges, and the split map §8 wants the delegation seen green on the old words before any key is read. installer-steps (T51-127) has not merged: its job's J1 says its modules.json row on tranche/T51 is still empty (paths [], tests [], uses []), so its ownership checks cannot run, and there is no newgroup/src/steps/ on the tranche. Best reading: I read the keys now in everything that stays in installer (ui.mjs, index.html, the runs, the panels, the notices, the release choice, held/images halves, words.mjs, the tests) and do R74, R78, SCOPES, the bundle-fresh test exit and the ghcr fixtures; I leave the moved ranges (index.mjs 289-1520 and the lines 2075-2105, cfx/signers/account/images halves) untouched and their sentences to installer-steps' second stage (map §10 option 1), and I do the deletion, imports, re-exports, held.mjs and the fixture re-point only once installer-steps is on tranche/T51. Please answer: (a) set the modules.json row for installer-steps (J1 of that job) so it can finish; (b) confirm I carry on in that order and wait, ended turn, for the merge before the deletion. I carry on with the staying code meanwhile.
+
+## J2 · BLOCKED
+
+BLOCKED, cause: context (my window is past half; restart me: the work below is committed and pushed on job/T51/installer, tip 540843a396).
+
+DONE in the staying code (all suites green: wizard 207, requirements 54, t47 5, t48 10, t50 17, t51 3, embed 23; realsize green but for the R33 bound below; format and architecture 0 failures; ownership 0 failures):
+- Every sentence of ui.mjs, the runs (installRun, updateRun, removal runs), the panels, notices, routes, plain pages, account.mjs' describeCopy, images.mjs' notice half is read by `word(key)`; `emit.fail(said, doLine, at)` is one sentence by key (R75), the client shows it with `installer.stopped.at`; STATE words, copy button, step labels, checks, parts by key (R76); pages, dialog, update page, begin refusals, callback and 404 pages by key (R77). `words.mjs` KEYS is regenerated from the source (393 keys; every one held in rows.mjs); `node checks/words.mjs /home/user/bio installer` lists only the moved ranges (index.mjs 289-1520: 74 inline + 25 plain, installer-steps' stage two) and nothing in ui, account, words, the staying index code or a test.
+- The invitation page is built from the 24 `installer.invite.*` keys by the new `newgroup/scripts/invite-page.mjs` (R79; `node scripts/invite-page.mjs`, `--check`); BOB: add it to manifest §14's generated artifacts (owned by installer, regenerate in newgroup/, inputs setup-words' rows).
+- R74: `foreignContainers` before any update upload; stop `installer.update.stopped.foreign`; test in new `test/t51.test.mjs`. R78: `readGroup`/`recordTeam` (install and resumed install, ADMIN_TOKEN in the header only; update reads, never seeds); R18's telling drawn by `groupNotice` from the read. N1151: `account-logs.read` is the sixth SCOPES entry (CFG.LOGPUSH_SCOPE restated). N1254: newgroup-bundle-fresh now `await esbuild.stop()` (its process leaked the esbuild child holding the stdout pipe; exits in 3 s through a pipe). N1242: requirements R23 (T46) holds the Docker Hub embed (partsLeftOut is []), the ghcr arms stay as an unpullable-registry stand-in.
+- fixture.mjs: parsePage `failed = {said, d, s}`; the copy answers op=instancegroup / instancegroupseed (options `group`, `seedRefused`; returns `seeds`, `recorded()`).
+
+NEXT STEPS, in order (BOB's B2: carry on, then WAITING ON BOB for the deletion):
+1. R75, R76, R77 each need an explicit test naming it (coverage lists R77 and R80 as named by no test; R75/R76 are named only in comments). Write one corpus test: run the states (install ok/lagging/asleep, update ok/noop/stops, removal view/confirm/refused, every install and update stop, callback pages, 404, GET /, GET /update, begin refusals), strip every KEYS row (placeholders as wildcards, html-escaped too) from the drawn text, and assert nothing English is left outside the exempt moved-code lines (steps fleet, bind, logs, the lag lists); control: an inline sentence fails it. Name R76, R77 in titles.
+2. After installer-steps merges (BOB's CHANGE): merge tranche/T51, delete the moved ranges (map §2), add the barrel imports and the §5 re-exports, held.mjs and the slimmed images.mjs, re-point test imports (§8: WAIT_BOUND_MINUTES from the steps api, t48's signers import, embed-release's, package.json `node --test test/steps/`, the GATE header of newgroup-bundle-fresh), fixture.mjs imports steps' world.mjs; lower realsize's bound to 112 MB (R33) and report the figure; write R80's test (the export names equal the old list; src holds no copy of a moved function); run every suite unchanged first (map §8), then words.
+3. Reports owed to BOB (design/other modules), also in the record at COMPLETE: (a) design table has no key for: the sixth scope's allowed line (R50 draws one line per scope; four lines cover five scopes, none for `account-logs.read`); naming a retired container part (R74 detects it, `foreignContainers` answers `retired`, nothing is drawn); the lag lists' `installer.lag.*` etc. are installer-steps'. (b) design keys no path reads: `installer.fact.unknown`, `installer.fact.unknown.older`, `installer.tryagain.install` (the install stops carry their own text), `installer.team.unrecorded.address`, `screen.install.stopped.running`, `screen.install.progress.scanner`, `.assistant`, `screen.install.ready.scanner`/`.assistant`, `screen.install.stopped.others`, the `screen.install.tip.*` cards, `installer.update.nothing.changed` is read. (c) words-reads.json `installer` entry should equal KEYS plus the setup-fleet leaf's twelve (the design stream's file; I did not touch it). (d) `installer.remove.done` is said as the progress line before `removedPanel`, not inside it (it repeats "The account is clear" otherwise). (e) update paths now read `op=instancegroup` with no credential (the public projection) to decide R18's telling. (f) stale bundle: dist/newgroup.bundled.mjs and the committed words rows are BOB's to regenerate (`cd newgroup && npm run build`).
+Size (session_011C8Rkezi3vkSRfm413DJsR, partial): test runs ~40, module lines 3110 (src 3978 with release.mjs, before the deletion).
+
+## J3 · REPORT
+
+Step 1 done (pushed on job/T51/installer): newgroup/test/corpus.test.mjs names R75, R76, R77 in three tests. It draws ~60 states of the fake account (install ok/lagging/asleep/silent/resumed/alongside/box variants, 27+ install, update and removal stops, GET /, /update, /begin refusals, callback pages, 404), takes every KEYS row out (placeholders as wildcards) and finds no run of English left; exempt are only instance-setup's hosting-control sentences and the moved-code sentences (fleet, bind, read-back, logs, lag lists), listed in the test as MOVED for installer-steps' stage two. Controls: an inline sentence in a page, panel, line or stop fails it, and I confirmed by mutating index.mjs (restored). Suites green: wizard 207, requirements/t47/t48/t50/t51/corpus 92 pass 0 fail. Coverage 70 of 70, format and architecture 0 failures, ownership 0. Step 2 (the deletion, re-exports, R80 test, realsize 112 MB bound) waits for installer-steps on tranche/T51: no newgroup/src/steps/ there yet. I am ending my turn waiting on BOB's CHANGE.
+
+## J4 · COMPLETE
+
+COMPLETE (pushed on job/T51/installer, tip f69c631bab; tranche/T51 merged in).
+
+APPLIED (step 2, B4): the moved ranges are deleted from index.mjs (2,645 -> 1,402 lines) by declaration, cfx.mjs, signers.mjs and account.mjs removed; held.mjs (describeCopy, R63) and the slimmed images.mjs (partsLeftOut, leftOutNotice) remain; index.mjs imports from newgroup/src/steps/index.mjs and re-exports the old names, so its export list equals the old one exactly (32 names, each moved one the very value installer-steps exports; R80 test in t51.test.mjs, with its controls). CFG.API/RELEASE_LATEST/RELEASE_TAGGED read installer-steps' constants. Imports re-pointed (WAIT_BOUND_MINUTES, signers, IMAGE_UNPULLABLE), package.json test gains `node --test test/steps/` and corpus.test.mjs, the GATE header of newgroup-bundle-fresh names steps/*.mjs and held.mjs. Every suite ran green on the delegation before and after the words (wizard 207, embed 23, requirements/t47/t48/t50/t51/corpus + installer-steps' test/steps 175 tests: 169 pass, 1 fail = the inherited R53 below). Earlier in this job (steps 1): corpus.test.mjs names R75, R76, R77 (about 60 states, every stop, every page; controls proved by mutating the source).
+R33 (realsize): bound now LIVE_MB = 112; measured with R33_REPORT=1 on the production bundle: live peak 110 MB (install and update, built-in release and the real fleet; 102 for a repository release with no fleet), baseline 58, margin 18 MB; the process-growth bound stays 128. realsize now builds as `npm run build` does (build.mjs's bundleOptions), which is what a Worker runs.
+N1254: newgroup-bundle-fresh exits by itself in 3 s (shown: `time node bio-plane/test/system/newgroup-bundle-fresh.test.mjs` real 0m2.98s).
+
+FOUND AND FIXED IN MY MODULE: scripts/build.mjs cut the word rows to KEYS plus setup-fleet's reads, but record-grammar's document.mjs (bundled) now calls word("conformance.rests") when it loads (words conversion pass), so a regenerated bundle would have thrown UNKNOWN_WORD at load (the realsize child died on it). bundledKeys() now also takes every key a bundled module names in a word("...") call (found with one esbuild pass over the bundle's inputs): 454 rows. t50's R72 control `rows < 400` became `rows < a fifth of the list` (its aim, "not the whole list", kept; the other asserts unchanged).
+
+DEFERRED, with why: (1) fixture.mjs keeps its own fake account instead of importing installer-steps' test/steps/world.mjs (map §8): world.mjs's account() lacks what the wizard suites need (the install lock, op=instancegroup/instancegroupseed, install/update/removal modes, held copies of the old names) and is installer-steps' file; the duplicate stays until installer-steps' world.mjs covers them (a later job of that module). (2) newgroup/DEPLOY.md and bio-plane/INSTALLER.md name newgroup/src as a whole; not mine to edit here (INSTALLER.md is outside my paths); BOB's check.
+
+FOR BOB (other modules / generated): (a) STALE: newgroup/dist/newgroup.bundled.mjs (newgroup-bundle-fresh arm C fails: committed 23,577,285 bytes vs fresh 23,488,982), and the t47 R53 arm (it reads the committed bundle for interface-assets' shell.css) fails for the same reason; both red on tranche/T51 before my change; `cd newgroup && npm run build` at L11's close clears both (regenerate after setup-words' rows and after installer-steps' keys). (b) manifest §14: the newgroup bundle's inputs gain installer-steps (steps/*.mjs) and record-grammar's words (document.mjs reads conformance.* at load; the design's words-reads.json record-grammar entry lacks conformance.rests/.falsify). (c) modules.json: installer's `uses` gains installer-steps (yours). (d) installer.md: R33's 112 MB is met at 110; R80 test named.
+
+CHECKS (process repo): format 0 failures; architecture 0; coverage 70 of 70; ownership 0 (19+ files); words check on installer: 0 failures (inline 0, testcopy 0); `setup-words/build.mjs --check`: stale-rows note only (instance-setup row), none naming installer.
+Size (session_01CXckEksWGM54HGjBVzGfj2, installer #18 only): test runs ~24, module lines 2778 (src 2,362 without release.mjs, scripts 416).
+
+## J5 · COMPLETE
+
+B5 applied (pushed, tranche/T51 merged): screen.install.cf.logs is the sixth allowed line (ALLOWED, in R2's order; t47's R50 list gains it); installer.update.retired {parts} is drawn once in the update's finished panel for a retired container part, left in place (t51 R74 test, control: none retired draws nothing); both keys added to KEYS. The three retired keys are read nowhere on this branch. Suites: wizard 207; requirements/t47/t48/t50/t51/corpus/steps 169 of 175 pass; the only red is t47 R53 on the stale committed bundle, as in J4. Checks: format, architecture, ownership 0 failures, coverage 70/70, words 0 failures. Size (session_01CXckEksWGM54HGjBVzGfj2): test runs ~26, module lines 2789.
+
+## J6 · COMPLETE
+
+B6 applied (pushed, tranche/T51 merged, tip as in the branch): every assertion of a moved sentence now reads the row by equality or by pattern from the word table (new fixture helpers headOf(key, vars) and like(key, vars), the fills given and every other placeholder matching anything); no sentence copied. Converted: requirements R11, R15, R20, R33, R38 x4, R39, R40 (step label), R43, R44, R45, R46; t50 R68 and the R15/R38 ghcr arm; wizard.test.mjs (9 arms); realsize.test.mjs (the child now returns the done panel and the parent reads the flags from the word table, so the child's memory baseline is untouched). corpus.test.mjs: the MOVED exemptions are gone, PATTERNS = KEYS + STEP_KEYS; its row patterns no longer let a row that starts or ends with a placeholder swallow the text beside it (found when STEP_KEYS joined: the 'update stop tamper' state). Two assertions could not stay as they were, each by the new rows: (1) t50 R68 no longer asserts the two digests on the page: installer.image.lag.older names the container and no digest, and R68 asks only that the member be named; (2) the several distinct causes of an unreadable container/program description (policy, no class, no maximum, bindings, unparseable, misnamed or unpathed part, bucket/cron unreadable) are one sentence now (installer.fleet.why.container / .program / .limits): each case still asserts the member is left out and the sentence, not the cause. Findings for installer-steps/design: installer-steps/members.mjs still builds 'failed its integrity check' in English (members left out by hash are named so); I kept those two assertions on that machine reason as they were. Suites: wizard 207; requirements 54, t47/t48/t50/t51/corpus/steps and realsize all pass; the only red is t47 R53 on the stale committed bundle, as before. Peak memory unchanged at 110 MB live. Checks: format, architecture, ownership 0 failures, coverage 70/70, words 0 failures (testcopy 0). fixture.mjs still keeps its own account (J4 deferral 1: steps' world.mjs lacks the lock, op=instancegroup, the run modes and held copies; not simple). Size (session_01CXckEksWGM54HGjBVzGfj2): test runs ~40, module lines 2791.
+
+## J7 · COMPLETE
+
+B7 folded (pushed, tranche/T51 merged): nothing of mine calls the changed steps API (imageSaid, containerDescriptor/Classes with a part, conditionWhy, withLacks): images.mjs still uses only imageWhy, lacksOf and IMAGE_UNPINNED, which are unchanged. The tests followed DEC-362's rows: the left-out reasons are read by key (installer.fleet.why.* and installer.fleet.left.item {member, why}, the lacks sentence by installer.image.lacks.scanner), so the distinct container causes are asserted again one by one (policy, class, size, bindings, parse, part path; unpinned, unpullable, free plan, permission; http and integrity), and the wizard's manifest arm reads installer.fleet.skip.manifest.reason. Suites: wizard 207; requirements, t48, t50, t51, corpus, steps, realsize all pass; t47 red only in R53 (the stale committed bundle). Checks: format, architecture, ownership 0 failures; coverage 70/70; words 0 failures, testcopy 0. J6's note on the two weakened assertions is superseded: the per-cause assertions are back. Size (session_01CXckEksWGM54HGjBVzGfj2): test runs ~46, module lines 2791.
+
+## J8 · QUESTION
+
+B8 item 6 (F12). My reading of the code: groupNotice('refused'|'certain'|'unknown') ends with installer.team.unrecorded.how ('run the installer again'). For a copy whose install finished (INSTALL_COMPLETE present) that sends the operator to the 'already holds a copy' page (R62), whose only acts are update, alongside, remove; updateRun never seeds (K3892: it binds no new ADMIN_TOKEN, and a new one would re-arm the claim step), and installRun/resumed install seeds only when it generated the credential, i.e. only for an unfinished copy. So for a finished, unrecorded copy no path in the installer records the team: the telling is a loop. The act itself (op=instancegroupseed) needs the ADMIN_TOKEN bearer; after the claim nobody but the hosting account holds it, and that holder can already replace ADMIN_TOKEN by hand (the hosting-control block says so). Routes, smallest first: (A) Honest telling only, no new act: for a finished copy the installer no longer says 'run the installer again'; it says the record cannot be made from here and why, and what stays refused meanwhile (the head/effect rows stay). This needs one new design key (the finished copy's how: today's rows have only 'run the installer again'); until it exists I cannot ship any English, so I would draw head + effect + suggest and omit how, which is honest but gives no way on. (B) A real path inside the installer: an update run for a copy answering group:null may, on the operator's explicit choice at the exists/update page (a checkbox with its own key and the K3868 warning), generate a fresh ADMIN_TOKEN, seed, and leave that credential bound, showing it once as the claim password again (this re-opens the claim of a claimed copy, so it is the hosting-recovery act in installer form; contradicts K3892 unless you rule an exception). (C) Leave the record to a signed-in administrator in the copy (instance-setup/screens-settings, DEC-331 (2), withdrawn by K3868). My recommendation: A now (drop the loop, ship no false instruction; ask the design lane for one key: 'record cannot be made by this installer for a copy already claimed; its administrators ... / the hosting account holder can ...'), and C as the real path in a later tranche if you want it. Which? Until you answer I ship nothing for item 6 and carry on with items 1-5.
+
+## J9 · BLOCKED
+
+BLOCKED, cause: context (my window is at half; restart me: B8 is merged into my branch and item 1 is done and pushed on job/T51/installer).
+DONE: B8 item 1 (S2, R33, R69): progressShell's script now notes the last sign of life, knows when a panel or a stop was drawn, and on the page's load, or after 8 minutes of quiet (STREAM_QUIET_MS, longer than the 5-minute Cloudflare wait it draws), draws a stop with installer.stopped.unexpected, said = installer.stopped.at {the step in progress}; a late panel takes it away; a stream that ended with its panel or stop draws nothing more. Test: t51.test.mjs 'R69 R33 a progress stream…' runs the shell's own script against a stand-in DOM, with controls. Suites green but t47 R53 (stale bundle): wizard 207; requirements, t47, t48, t50, t51, corpus pass; words 0 failures; coverage 70/70.
+J8 (my QUESTION on item 6, F12) is posted and unanswered; I ship nothing for item 6 until it is.
+NEXT STEPS, in order:
+2. F2/R70: src/index.mjs containersOn (about line 483) and CONTAINERS_OFF: decide positively: the list call answering = 'on'; a refusal matching CONTAINERS_OFF = 'off'; a 401/403 permission refusal keeps today's path (R38 leaves the container member out and the install continues; requirements.test 'unasked'/'noscope' arms depend on it); any other refusal = 'could not tell': stop with installer.install.stopped.lookup {said} beside screen.install.stopped.containers.do, never 'on'. Check again: installRun passes retry=null to progressShell (line ~1392, in the callback route: it passes a retry link only for mode update); for the Workers Paid / Containers stops (screen.install.stopped.plan, .containers) give the shell a retry that re-runs the pre-checks without starting over: the design has the label screen.install.stopped.containers.done ('It's on now'); NO key for the plan stop's check-again, report that to BOB. The retry must carry the same cookie (the callback is single-use: /begin again with the same slug/mode is the simplest real route: a link/button that POSTs /begin with the saved slug and mode and goes to Cloudflare again; consent is quick). Tests in t50 R70 arm (line ~455: stops table) with a control: an unknown refusal is not 'on'.
+3. F3/R70: updateRun runs limitReached too when the release adds members, classes, buckets or containers (compare the release's fleet with the copy's members/classes: loaded.* and listNamespaces/listApps); limits read from the account where Cloudflare states them: I know of no endpoint I can verify (ACCOUNT_LIMITS is a table of ceilings, index.mjs ~line 470): ask BOB which API states them before building; until then say the defaults are a fallback needs a design key (none seen): REPORT.
+4. F4/F6 (R66, R71): exchange (OAuth token POST), scriptHash and readCopyFacts use plain fetch: route them through patiently/cfCall (installer-steps' api.mjs exports Session, patiently, cf, cfCall): exchange is in index.mjs (not steps), scriptHash is steps' (readback.mjs) and readCopyFacts steps' (account.mjs): those two are installer-steps' files; I may only report them. Do exchange here; REPORT the other two to BOB for installer-steps.
+5. F11 (R74): foreignContainers (index.mjs ~line 505) also examines the Workers on the copy's names (listScripts): a Worker whose name is not one of names.* and carries the copy's slug-scheme marker → stop 'installer.update.stopped.foreign'; a Worker of a retired part named once (installer.update.retired {parts}) and left; run the same check on an install that continues an unfinished copy (installRun's resume branch).
+6. F12: wait for BOB's answer to J8.
+Reports owed at COMPLETE: the plan stop has no check-again key; the limits-API question; scriptHash and readCopyFacts are installer-steps'. Size (session_01CXckEksWGM54HGjBVzGfj2, partial): test runs ~50, module lines 2830.
+
+## J10 · COMPLETE
+
+COMPLETE (B9 and B8 applied; pushed on job/T51/installer, tip cda7c1150d, tranche/T51 merged in).
+
+APPLIED
+(a) readGroup reads the group inside the copy's envelope `{ok, result:{ok, group}, store}`; recordTeam reads the seed answer's code from `result` too. The fixture, wizard.test.mjs' recordsGroup and the seed answers now use the real shape; control (t51 R78): a group at the top level of the answer is not read as recorded (fixture option groupFlat).
+(b) B8 item 1 (S2, R33, R69) was J9. Item 2 (F2, R70): containersState decides positively: an answer listing applications = on; CONTAINERS_OFF = off; a permission refusal = leave it to R38's member check (install continues, as before); anything else = could not tell: `installer.install.stopped.lookup {said}` beside `screen.install.stopped.containers.do`, never "on". The Containers-off stop now offers `screen.install.stopped.containers.done` ("It's on now"): `emit.retry` draws a button that POSTs /begin again with the saved slug, mode and choices (the `again` body, no credential) and goes to Cloudflare again; the shell gained `again()`. KEYS gained that key. Tests t50 R70 (retry label and body, /begin takes it, odd answer stops with nothing created, controls: permission refusal continues).
+Item 3 (F3): `limitReached(api, needs)`; an update computes what the chosen release adds (members not held, container classes not in the account's namespaces, missing buckets) and stops with `screen.install.stopped.limit` before any upload; an update that adds nothing needs no room. Ceilings stay ACCOUNT_LIMITS (no new sentence). Test t50 (workers limit; controls: nothing added, room).
+Item 4 (F4/F6): `exchange` goes through `patiently` (429/5xx/dropped connection wait, drawn through onWait; still failing at the bound = the lasting stop; a refused code is the permission stop as before), in install, update and removal runs. Test t50 "token exchange".
+Item 5 (F11): foreignContainers also examines the Workers on the copy's member names: a Worker whose settings state no `VERSION` plain_text (every member this installer uploads carries it) is foreign and stops with `installer.update.stopped.foreign`; a marked Worker of a member the chosen release no longer has is named once (`installer.update.retired`) and left; one whose settings cannot be read is not judged. The same check runs on an install that continues an unfinished copy (before anything is created; its retired parts join the final panel's notes). Test t51 (update, resumed install, controls: another copy's Worker, the copy's own, retired).
+(c) F12, option A (J8, ruled): `groupNotice` draws `installer.team.unrecorded.how` only for a copy KNOWN unfinished (an install whose mark failed; an update of a copy whose plane lacks INSTALL_COMPLETE); a finished copy, or one the run could not tell, gets head, effect and suggestion with no "how". Nothing is seeded in an update. Tests: t51 R78 (finished install and finished update: no how; controls: mark refused / no mark: how drawn), wizard.test.mjs' 'naming the way' arm now asserts its absence.
+Also: embed.test.mjs held the substring "does not verify" (a code row of case-checker; it showed in the joint words run over every module): now asserts the refusal is a string distinct from the unsigned one.
+
+DEFERRED, with why
+- F7: installer-steps' `offerSubdomain(session, account, slug)` is not on tranche/T51 yet (none in newgroup/src/steps/ at the merge of 6f7be5e65b+), so the offered name before anything is created is not built. Send a CHANGE when it has merged and I call it and show the offered name.
+- fixture.mjs still keeps its own fake account (J4 deferral 1).
+
+FOR BOB
+1. The plan stop (`screen.install.stopped.plan`) has no check-again row; the retry is drawn for the Containers stop only (asked of the design, HANDOFF).
+2. `installer.update.stopped.foreign` says "try the update again"; the install that continues an unfinished copy uses it for want of an install wording. A key for the install is owed.
+3. scriptHash and readCopyFacts (installer-steps' readback.mjs and account.mjs) still use plain fetch (F4/F6): installer-steps' to route through patiently.
+4. The row for a finished copy's `how` is owed by the design; until then the telling omits it.
+5. installer.md: R18/R78 read "run the installer again"; it now holds only for an unfinished copy. newgroup/dist/newgroup.bundled.mjs is stale (t47 R53 red, as before); `npm run build` at L11's close. The retry's new function `again` and the KEYS addition change the bundle's input.
+
+CHECKS (process repo, T51 tip merged): format 0 failures; architecture 0; coverage 70 of 70; ownership 0 failures; words installer: 0 failures (inline 0, testcopy 0); the all-modules words run names no line of installer; setup-words build --check: rows match. Suites: wizard 207; requirements 54; t48 10; t50 19; t51 7; corpus 3; realsize 4; embed 23; steps 78 pass; t47: 4 pass, R53 red only on the stale committed bundle.
+Size (session_011hjYKR44H9ywSxAQA6QTj8): test runs ~25, module lines 2880
+
+## J11 · COMPLETE
+
+COMPLETE (B10 applied; pushed on job/T51/installer, tranche/T51 merged in).
+
+APPLIED
+(1) confirmContainers(session, account, base, release, fleetResult, onWait) runs after bindMembers on the install (once the address answers) and on the update (beside verifyServing); its lags join byteLags in withByteLags, so a container member still on the old build blocks "confirmed" and is named. readCopyFacts takes onWait (describeHeld passes the run's). Test t51 (an update with a member serving 0.0.1: verify not confirmed, `installer.lag.member.version` named; control: confirmed).
+(2) F12: a finished copy (or one not known unfinished) is told `installer.team.unrecorded.how.finished` in place of `.how`; an unfinished copy keeps `.how`. F2: the Workers Paid stop now offers `screen.install.stopped.plan.done` ("Check again") like the Containers stop. Tests t50 R70 (plan retry), t51 R78. Both keys added to KEYS.
+(3) F7: offerSubdomain runs in the `room` step, before anything is created, and its offer is handed to ensureSubdomain so exactly those names are tried. A failed offer is not a stop (the old path stands). Not drawn: no row says an offered name before the fact (installer.address.prefix says "it is now"), so no English is shipped; a row for the offered name is owed by the design.
+Also: requirements R40 scans pages for "copy"; the design's `installer.team.unrecorded.how.finished` says "a copy that has finished installing". The test removes that one row by key before scanning (no text held); the design should reword it ("a team's Civicsmith that has finished installing") and the exemption goes.
+
+DEFERRED: fixture.mjs keeps its own account (J4 deferral 1).
+FOR BOB (unchanged from J10 except the three now done): the offered-name row (design); the install wording of the foreign stop; scriptHash is installer-steps' plain fetch; newgroup/dist bundle stale (t47 R53 red only for that); R18/R78 text.
+
+CHECKS: format 0 failures; architecture 0; coverage 70 of 70; ownership 0; words check for installer: no finding; setup-words build --check matches. Suites: wizard 207; requirements 54; t48 10; t50 19; t51 8; corpus 3; realsize 4; embed 23; steps pass; t47 4 pass, R53 red on the stale bundle.
+Size (session_011hjYKR44H9ywSxAQA6QTj8): test runs ~45, module lines 2900
+
+## J12 · COMPLETE
+
+COMPLETE (B11 applied; pushed on job/T51/installer, tranche/T51 merged in).
+(1) F7: when the account has no workers.dev prefix, the room step says `installer.address.offer` {prefix} (the first name that will be tried) before anything is created; none is said when a prefix exists. Test t50 R70 (said, in the room step before the first resource; control: an account with a prefix).
+(2) An install that continues an unfinished copy and meets a foreign part stops with `installer.install.stopped.foreign` (t51 reads it by key); the update keeps `installer.update.stopped.foreign`.
+(3) requirements R40's by-key exemption for `how.finished` is dropped; the test passes on the reworded row. Both new keys are in KEYS.
+CHECKS: format 0 failures; architecture 0; coverage 70 of 70; ownership 0; words check for installer no finding; setup-words --check matches. Suites: wizard 207, requirements 54, t48 10, t50 19, t51 8, corpus 3, realsize 4, steps and embed pass; t47 red only in R53 (stale bundle).
+Size (session_011hjYKR44H9ywSxAQA6QTj8): test runs ~55, module lines 2905
+
+## J13 · COMPLETE
+
+COMPLETE (CR-23, B13 applied; pushed on job/T51/installer, tip 577c2e890d; tranche/T51 merged in, no installer path changed by it).
+
+APPLIED
+(1) R81 / BOB note 1: `MEMBER_OBJECTS` is removed from the re-export in `newgroup/src/index.mjs` (line 86) and from the export-list name list in `newgroup/test/t51.test.mjs` (R80's OLD_EXPORTS). New test `R81 ...` in t51.test.mjs asserts the export list holds no MEMBER_OBJECTS, with controls (the list is read; a list that holds the name is found). R81 is now named by a test; coverage 71 of 71.
+(2a) BOB note 2(a): the t50 release fixture (`newgroup/test/fixture.mjs`) now states agent-worker's `Worker` part (`worker.json`) with its own Durable Objects (SEGMENTS/SegmentDriver, CHECKS/CheckRecord, migrations v1, v2), as installer-steps' `test/steps/world.mjs` does (new `agentWorker` option, default AGENT_WORKER; `null` gives no part). R59 and R69 are green again.
+(2b) BOB note 2(b): `MEMBER_OBJECTS` removed from `index.mjs` and `t51.test.mjs` (see 1).
+(2c) BOB note 2(c): `t50.test.mjs` line 103 drops the stale first argument: `objectMigrations(null)` (new signature `(heldTag, objects)`).
+
+TESTS (session_015N9KMart6rS3Kg4rAe27xb; each run on the branch as it stands)
+- newgroup/test/t50.test.mjs + t51.test.mjs: 27 pass, 0 fail, 2 todo (R56, a todo since before this job). t51 alone: 9 pass, 0 fail (R81 passes).
+- newgroup/test/wizard.test.mjs: 207 passed, 0 failed.
+- requirements, t47, t48, corpus, realsize (node --test): 76 pass, 0 fail, 3 todo.
+- newgroup/test/steps/ (installer-steps' suite, run unchanged): 89 pass, 0 fail.
+- newgroup/test/embed.test.mjs: 23 passed, 0 failed.
+- Not run: newgroup-bundle-fresh (bio-plane/test/system); see FOR BOB (a).
+
+CHECKS (process repo, after the tranche merge)
+- node checks/format.mjs: 175 modules, 0 failures.
+- node checks/architecture.mjs installer: 0 failures.
+- node checks/coverage.mjs installer: 71 of 71 live requirement ids named by a test; 0 failures.
+- node checks/words.mjs installer: inline 0, plain 0, testcopy 0; 0 failures.
+- node checks/ownership.mjs /home/user/bio installer tranche/T51 job/T51/installer: 5 files changed by installer; 0 failures.
+- node checks/run.mjs /home/user/bio: installer's own lines clean (words and architecture for installer: 0 findings). The run has 8 coverage failures and 19 words failures, none in installer; listed under FOR BOB (b).
+
+DEFERRED: none.
+
+FOR BOB
+(a) STALE GENERATED ARTIFACT: `newgroup/dist/newgroup.bundled.mjs` (and its .bundle.json) is built from `newgroup/src/index.mjs`, which changed here (the re-export). Regenerate with `cd newgroup && npm run build` at L11's close (manifest §14). I did not run newgroup-bundle-fresh, so I do not know its current state.
+(b) OTHER MODULES' RED, seen in `node checks/run.mjs`, none of it mine:
+   - coverage, live ids named by no test: agent-harness R17; agent-runner R36 R37 R38 R40; installer-steps R26 R31; instance-setup R98 R99; journey-check R19; screens-inquiry R81 R82; screens-settings R62.
+   - words, inline copy in instance-setup `bio-plane/src/setup-fleet.mjs` lines 30 to 67 (12 sentences, instance-setup's, not installer's; these are the hosting-control sentences my J4 note says the design owns).
+   - testcopy in file-safety: `bio-plane/test/m/file-safety/fixture.mjs:126`, `tools.test.mjs:33,180,191,195,275,434` (7 literal copies).
+(c) REQUIREMENTS MARKER: `build/requirements/installer.md` R81 still reads "*(not yet met: T51)*". That file is not in my paths, so I did not edit it. The test that names R81 now passes; please mark it met.
+(d) installer-steps' test/steps/world.mjs and this module's fixture.mjs still carry two copies of the agent-worker release (J4 deferral 1 stands; world.mjs's shape is the one copied here).
+
+Size (session_015N9KMart6rS3Kg4rAe27xb): test runs ~9, module lines 2888 (src 2,472 without release.mjs, scripts 416).
+
+## J14 · QUESTION
+
+QUESTION (B14 entry 1, R33): FR-38 (installer-steps) is not on tranche/T51 yet (its job is at B10 START, WORKING), so I measured the tranche as it stands and found that the steps half alone cannot reach the bound. My reading, with the numbers from `R33_REPORT=1 node --test test/realsize.test.mjs` (install and update, built-in release, real fleet): peak 143 MB, baseline 75 MB (was 58 at 0.85.0). R11 is done (test only, requirements suite 54 of 54).
+
+Where the 75 MB baseline is: the embedded release is held twice by the engine, once as the 32 MB source text of the bundle (external memory) and once as the 29 MB heap string of the `RELEASE_BINARY` literal; the Node baseline is 16. With the plane held as a Blob for the act (29), the test's own sample at an upload (the body as `fetch` serialises it, a second 29) is 75 + 29 + 29 + about 8 = 141, whatever FR-38 does to the read-back. Even with every steps copy gone the floor is above 112 (75 + 29 Blob + 8 = 112 at rest, 130 at a member upload). So the cause that is left is mine, and it is the embedded literal.
+
+My reading of the way: carry the built-in release compressed. `release.mjs` would hold the signed release as base64 of its gzip (7.5 MB of the 29; 10 MB as base64), plus the two facts the installer reads from the release text (R20's limits, R15's `capable`), computed at embed time from the verified bytes; at use the installer expands it once into the one Blob (chunked, never a whole second copy) with `DecompressionStream`. The bytes uploaded are exactly the signed release's (the embed still refuses unless they hash to the manifest, and the read-back compares with the manifest's `sha256`). Expected baseline about 37 MB, so the floor is about 75 and the peaks about 100 with FR-38's streamed read-back. Costs, all in my module except one: `scripts/embed-release.mjs` (the literal), `src/index.mjs` (builtInRelease, the two planeLimits reads), `scripts/build.mjs`, `test/embed.test.mjs`, `test/release-text.mjs` and `requirements.test.mjs` (the arms that read `RELEASE_BINARY`), R26's text. The one outside: `bio-plane/test/system/newgroup-bundle-fresh.test.mjs` reads the `RELEASE_BINARY` literal of `release.mjs` and of the bundle (its arms A to C), so it would need the new name; that file is not in my paths.
+
+Please answer: (1) approve the compressed embed (my recommendation); if so, who edits `newgroup-bundle-fresh.test.mjs` for the new literal's name, `RELEASE_PACKED` (BOB or its owner), or may I edit it as a wiring change; (2) or name another route. I carry on meanwhile with what holds on either reading: the chunked build of the Blob, the built-in's hash from the manifest instead of a second pass over the 29 MB, and R33's text amended to 29 MB.
+
+## J15 · COMPLETE
+
+COMPLETE (B14 entries 1 and 2, B15, B16; pushed on job/T51/installer, tip 0fd7f33e27; tranche/T51 merged in).
+
+APPLIED
+1. R33 (memory at 0.86.0's 29 MB). Cause found in my module: the built-in release was held twice by the engine (the bundle's 32 MB source text and the 29 MB literal's heap string, baseline 75 MB), and the real-size stand-in held each upload body whole (143 MB). Fixes, as BOB approved (B15):
+   - `release.mjs` (generated by `scripts/embed-release.mjs`) now carries `RELEASE_PACKED` (the base64 of the signed bytes' gzip, 10 MB) and `RELEASE_FACTS` (`planeLimits` and `reportsBuilds` of the verified bytes, computed at embed time). `RELEASE_BINARY` and `binaryLiteral` are gone (`packedLiteral` replaces it). Reproducible: gzip level 9, no name or time in the header.
+   - `src/index.mjs` `builtInRelease` expands the packed text once, 4 MB of base64 at a time, through `DecompressionStream` into the one Blob, taking steps' `Sha256` over the bytes as they come out; the hash must equal the manifest's `sha256` or the release is not uploaded. Limits (R20) and `capable` (R15) come from `RELEASE_FACTS`. `scripts/build.mjs`'s stub follows.
+   - `fetchRepoAsset` (B16) receives the response as a stream into its Blob, hash taken as the chunks arrive (`Sha256`, the engine of steps' `hashStream`, used directly because the chunks also go into the Blob), never `arrayBuffer()` beside the Blob. The signature check takes its message whole (`verifySshsig`, `signatures`'), so one view of the Blob is made for it and let go at the end of the function.
+   - `test/realsize-child.mjs`: the stand-in counts each upload body as it streams (nothing held) and now places container members: it answers Durable Object namespaces from the uploaded migrations and keeps Containers applications (the real-size run had hidden, behind the memory red, that both container members read as lags).
+   - Measured, `R33_REPORT=1 node --test test/realsize.test.mjs` (baseline 35 MB, was 75): install and update, built-in 85-86 MB live; repository release 95 MB (with the real fleet 95); read-back differing by one byte 85-86; resident growth 0-27 MB. Bound 112 MB kept, margin 17 MB at the worst. Tests: R33 amended text (29 MB, the packed form) in `build/requirements/installer.md` (written there, not in this record; R26's text amended too).
+   - New tests (realsize.test.mjs, named R33, with controls): a built-in release that does not expand to the signed bytes is never uploaded (install and update; control: the signed one uploads and the act does not stop); a repository release of the real size whose bytes differ from its manifest (past the first 4 MB fold) is never installed, the built-in installs, and the unaltered release installs (control).
+   - Test files followed the rename: `release-text.mjs`, `requirements.test.mjs` (R26's test is now the packed literal's: ASCII, every byte back, reproducible, under half the size; the embed test checks the facts; R49 builds the bundle in memory with `bundleText` instead of reading the committed `dist`, so it no longer depends on a stale artifact), `embed.test.mjs`, `bio-plane/test/system/newgroup-bundle-fresh.test.mjs` (arm B compares the expanded packed literals; my own test per B15).
+2. R11 (B14 entry 2, done by #21, confirmed): `requirements.test.mjs` R11's built-in arm reads all six members installed (installer-steps R17).
+3. realsize's finished-check no longer expects the two container members left out: all six install; the members are read from the release's own signed statement (RELEASE_MANIFEST.fleet), not a hand list.
+
+ASSUMPTION TO CHECK (BOB): the real-size stand-in no longer serialises an upload body whole (B16 says to count without holding). If Cloudflare's runtime buffers a FormData body in `fetch`, one more 29 MB sits beside the Blob at the plane upload: 86 + 29 = 115 MB against 112. The old double measured exactly that; I did not measure it on a Worker.
+
+TESTS (session_01YSLD2TXXeo3tqTWJcDifHz; each run on the branch as it stands)
+- requirements, t47, t48, t50, t51, corpus, realsize (node --test): 111 tests, 106 pass, 0 fail, 5 todo (the todo are older).
+- test/steps/ (installer-steps' suite, unchanged): 93 pass, 0 fail.
+- embed.test.mjs 23 passed, 0 failed; wizard.test.mjs 207 passed, 0 failed.
+- newgroup-bundle-fresh: its arms B and C cannot pass until `dist` is rebuilt (below); arm A passes.
+
+CHECKS (process repo)
+- format: 175 modules, 0 failures. architecture installer: 0 failures. coverage installer: 71 of 71 live ids named; 0 failures. words installer: inline 0, plain 0, testcopy 0, missingkey 0; 0 failures.
+- ownership installer tranche/T51 job/T51/installer: 12 files changed; 1 failure, `build/requirements/installer.md`, the file B15 says is accepted (my amended R33 and R26 lines).
+- `node checks/run.mjs /home/user/bio`: no line names installer; the failures are others' (coverage: installer-steps R26 R31 and others; words: op-grades' testcopy).
+
+DEFERRED: fixture.mjs still keeps its own fake account (J4 deferral 1).
+
+FOR BOB
+(a) STALE GENERATED ARTIFACT: `newgroup/dist/newgroup.bundled.mjs` (and its .bundle.json if any) is built from `src/index.mjs` and `src/release.mjs`, both changed here; `cd newgroup && npm run build` at the round's end clears `newgroup-bundle-fresh` arms B and C. `src/release.mjs` is regenerated (`npm run embed`, 34 MB to 10 MB); no hand edit.
+(b) `npm run embed` is reproducible only on the same zlib: a different Node/zlib build may write other gzip bytes for the same release; the signature and hash are over the expanded bytes, so nothing breaks, but the file would show as changed.
+(c) For installer-steps (FR-38) nothing owed from this job; the steps half measured fine (the read-back streams).
+
+Size (session_01YSLD2TXXeo3tqTWJcDifHz): test runs ~14, module lines 2908 (src without release.mjs and scripts)
+
+## J16 · COMPLETE
+
+INSTALLER #23, B17 (G39's newgroup half) applied: pushed on job/T51/installer, tranche/T51 merged (290bdb94c2). The regenerated bundle is NOT committed (BOB regenerates it, newgroup last).
+
+**What changed.**
+- `newgroup/scripts/build.mjs:17,62,69`: `bundleOptions` spreads bundler's `asciiOptions()` (charset ascii, legal comments kept at the end, whitespace minified, templates lowered); `bundleText`, the one function `npm run build` and the freshness guard both call, runs bundler's `asciiOutput` over the bytes and returns them. The installer holds no recipe of its own. Built to a scratch: 11,566,099 bytes, 0 bytes over 0x7F (346 before), no licence banner in it.
+- `newgroup/test/t51-ascii.test.mjs` (new, in `package.json`'s test script): R82, below.
+- `bio-plane/test/system/newgroup-bundle-fresh.test.mjs`: a PIN that the build carries `asciiOptions()` and nothing beside them, arm (D) the committed bundle holds no byte over 0x7F, and `literal()` finds `NAME="..."` as well as `NAME = "..."` (minified whitespace).
+- `newgroup/test/requirements.test.mjs` (`ownBundle`) and `test/t50.test.mjs` (R72's control) located `RELEASE_PACKED = ` and `WORD_ROWS = Object.freeze(` by exact spacing; both now by pattern. They failed on the new output and nothing else changed in them.
+
+**G39's four fields, newgroup.**
+1. Root cause: `scripts/build.mjs:56-62` (before) built with no ASCII option and no pass: 346 bytes over 0x7F (138 characters, in string and regex literals), so V8 holds the 11.5 MB source two bytes a character (23 MB).
+2. Missed: nothing asked for the bundle's character set; `newgroup-bundle-fresh` compared bytes with a fresh build of the same recipe. Gap closed: R82's test, and arm (D) on the committed artifact.
+3. Failing-first (R82, `newgroup/test/t51-ascii.test.mjs`, through `bundleText`, the build's own entry): RED on the old build.mjs: `AssertionError: no character above U+007F ... actual: 138, expected: 0`; GREEN with the change (1 pass). The same test runs the built bundle and compares `/`, `/update`, `/nowhere` (status and text) with the source's: equal. `newgroup-bundle-fresh` against a scratch build: 6 passed, 0 failed; against the committed (unregenerated) bundle arms (C) and (D) are red by design until BOB regenerates (D: want 0 got 346).
+4. Platform check: N. The installer's live memory (R33's 112 MB bound) should fall by about 11.5 MB of source; not measured, since `realsize.test.mjs` fails at the tranche tip before my change too (below).
+
+**Suites** (all `node --test --test-force-exit`, two at a time at most): `newgroup/test/steps/` 103 pass 0 fail; `embed.test.mjs` 23/0; requirements, t47, t48, t50, t51, t51-ascii, corpus, realsize: 112 tests, 94 pass, 14 fail; the same set without my change: 111 tests, 93 pass, 13 fail, **the same 13 names** (R8, R11, R20, R33 x7, R44, R55, R61, R71 in requirements/t48/realsize), so none is caused by this job. `wizard.test.mjs` crashes at `sourceOf` (`planePuts[0]` undefined, line 232 from 552), also without my change. Cause seen for R20 and R8: the embedded 0.86.0 release states no plane limits (`BUILTIN_LIMITS.ok` false in `test/fixture.mjs:161`), so the built-in arms that expect an upload get none. BOB: those 14 are the embedded release's, not this entry's; the prior record's "requirements 54 green" was on a tree before that (or with a release that stated limits). I changed nothing for them.
+
+**Checks** (process repo): format 0 failures; architecture installer 0; coverage installer 71 of 71; ownership installer 7 files, 0 failures; `checks/run.mjs`: words 680886 literals, 18421 words, inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 1982 (1982 before; the count does not rise), 0 failures.
+
+**Requirement lines I propose (BOB writes them).**
+- **R82** (T51 fix round 6, G39; bundler R2; K4616, K4617) The installer's bundle (`newgroup/dist/newgroup.bundled.mjs`) is pure ASCII: no byte over 0x7F, so V8 holds its source one byte a character. The build is bundler's recipe, `asciiOptions()` with `asciiOutput(bytes)` over the result, in `scripts/build.mjs`'s `bundleOptions` and `bundleText` (the one function the build and the freshness guard call), the installer stating no option of its own; a character that pass will not edit refuses the build `[NON_ASCII_REMAINS]`. The bundle still answers every route as the source does. Test: `bundleText` holds no character above U+007F, its options equal `asciiOptions()`, and the built bundle's `/`, `/update` and 404 answers equal the source's; control: `newgroup-bundle-fresh` arm (D) reads the committed bundle.
+- Uses: `bundler` (`asciiOptions`, `asciiOutput`) is already declared; list them under R82.
+- `newgroup/DEPLOY.md`'s manual path is unaffected (the bundle is pasted as text).
+
+**Found in another module / generated:** `newgroup/dist/newgroup.bundled.mjs` is stale by this change (arms (C) and (D) red until regenerated: `cd newgroup && npm run build`, committed by BOB at the round end). The embedded 0.86.0 release states no plane limits (above): the built-in arms of R8, R11, R20, R33, R44, R55, R61, R71 cannot pass until a release cut after control-plane's statement is embedded.
+
+Size (session_01SEQEwCjB36QQ1ity32UNHo): test runs 14, module lines 2922
+
+## J17 · QUESTION
+
+QUESTION (G54, B18). Confirmed by grep and a read: (1) the release does NOT carry observability as it carries limits. limits and the cron ride as quoted statements in the plane's own code (control-plane/index.mjs:604 PLANE_LIMITS_STATEMENT, :608 PLANE_CRONS_STATEMENT, read from the verified bytes by installer-steps' statements.mjs); no bio-plane-observability statement exists anywhere (grep: only wrangler.jsonc:140 and jsonc.mjs). release-assemble.mjs is not involved. (2) The edit is not in my paths: both metadata objects (uploads.mjs:32 install, :98 update) are in newgroup/src/steps/, installer-steps' (modules.json), and B14/ownership forbid me to edit it; mine are newgroup/src/ (index.mjs, release.mjs) and newgroup/test/. Smallest thing I need, my recommendation: ROUTE A (fastest, alpha): a CHANGE to INSTALLER-STEPS (or lift of ownership of uploads.mjs and the settings read in account.mjs to me for this change) so both metas carry observability: {enabled: true} as a constant of the installer (the platform setting the plane's own wrangler.jsonc:140 states, and a test pins equal to it) and the read-back of /workers/scripts/<slug>/settings refuses unless observability.enabled is true; an old signed release needs nothing (no statement to find, no R-OLD case). I write the failing-first test now in newgroup/test/ (install and update metadata through the real runs, and a settings read-back that lacks it refused). ROUTE B (heavier, mirrors limits): control-plane states bio-plane-observability/1 enabled=true beside its limits, installer-steps reads it from the bytes and sends it; every already-signed release then lacks the statement (needs a rule: refuse or default). I recommend A. Until you answer, I write only my test; I will not touch newgroup/src/steps/.
+
+## J18 · COMPLETE
+
+COMPLETE (G54, B18, B19; Route A, K4702). Changed: `newgroup/test/t51.test.mjs` (new test "G54 the install and the update upload the plane with observability {enabled: true}…") and `newgroup/test/fixture.mjs` (the fake account states each script's `observability` as the last upload sent it, in the settings answer; option `observabilityDropped` makes it state none). No source of mine changes: the edit is installer-steps' (`newgroup/src/steps/uploads.mjs:32`, `:98`, and the settings read-back), by INSTALLER-STEPS #7.
+Cause (R-FOUR 1): `uploads.mjs:32` and `:98` send no `observability`; the release carries `limits` and the cron as statements in control-plane's code (`control-plane/index.mjs:604`, `:608`) and none for observability, so there was nothing to read.
+Why the tests missed it (2): the fake account never stated a script's settings beyond bindings, so no test could see a lost setting; fixed by the fixture's `observability` and `observabilityDropped`.
+Failing-first (3), seen red: through the real install and update runs, `planePuts.at(-1).meta.observability` is `undefined`, expected `{ enabled: true }`; red by name until installer-steps merges. Green on the same test then follows without change in this module. Platform check (4): N for me; the platform's own shape (settings with `observability`) was read on biosmoke8 in the diagnosis.
+Suites: t51 9 pass, 1 fail (this test, red by name); t50 and requirements unchanged by my change (same failures with and without it: R61, R71; R8, R11, R20, R44, all on the inherited list). Not run: newgroup-bundle-fresh (no source or bundle input of mine changed). Census ops: none. Words: none. Generated artifacts: none made stale.
+Reading of the read-back refusal: my test asserts the run stops (`page.failed`) and is not done when the account states no observability; if installer-steps' refusal takes another form, the assertion follows it at their merge.
+Size (session_01Vk7s17rF6Xh1AySjTxhLSy): test runs 7, module lines 2922.
+
+## J19 · COMPLETE
+
+COMPLETE (G54, Route A). Failing-first test in newgroup/test/t51.test.mjs (install and update metadata carry observability {enabled: true}; a run whose account states none afterwards stops and is not done; control: normal run not refused), seen red (meta.observability undefined), red by name until installer-steps #7 merges. fixture.mjs: the fake account states observability from the last upload (option observabilityDropped). No source edited. Checks: format, architecture, coverage (72 of 72), ownership 0 failures. t50/requirements failures are the inherited ones, identical without my change. My assertion of the refusal is 'page.failed set, done null'; adjust at installer-steps' merge if its refusal differs. Record J18. Size (session_01Vk7s17rF6Xh1AySjTxhLSy): test runs 7, module lines 2922.
+
+## J20 · COMPLETE
+
+COMPLETE (B20). `newgroup/src/index.mjs`: a `note` collector (`planeNote`) is passed as `opts.note` to all five `uploadInstall`/`uploadUpdate` calls (install, in-place connections update, the noSelf retries, the update run); its sentences join the install's final panel notes and appear as a notice on the update's page. `fixture.mjs`: the fake states `observability` from the last upload (`observabilityDropped`) and answers the plane's settings with nothing readable after the upload (`observabilityUnreadable`). Test (`t51.test.mjs`): "G54 an unreadable settings read-back shows the step's note…": through the real install and update, the run continues and its page gains exactly one notice the control page (read-back stating enabled) lacks; seen red without the wiring (install page shows no note), green with it.
+The sentence is not written by me: the words check refuses `localize` in a drawn-screen module (`marker installer newgroup/src/words.mjs:11`, then `held.mjs:51`), so installer-steps' step owns the text and its row; the test holds no sentence (it compares notices). FOR BOB: B20 told me to write `localize("installer.fleet.logsunconfirmed", …)` in my source; the check rejects that in installer (K3930 marker). Installer-steps' branch (job/T51/installer-steps) is NOT yet on tranche/T51 (merge-base check: not an ancestor; `uploads.mjs` there has the observability read-back, tranche's has none), so on my branch alone the two G54 tests are red by name; on a scratch merge of both branches (not committed) t51 is 11 of 11 green, t50 and requirements show only the inherited R61, R71, R8, R11, R20, R44; corpus green. The row `installer.fleet.logsunconfirmed` is owed to the design (installer-steps reads `installer-steps.plane.logsunconfirmed` on its branch now; its CHANGE renames it).
+Checks: format, architecture 0 failures; coverage 72 of 72; words installer: no failure from my files. Size (session_01Vk7s17rF6Xh1AySjTxhLSy): test runs 14, module lines 2931.
+
+## J21 · COMPLETE
+
+COMPLETE (B20). opts.note passed in all five plane upload calls; notes shown on the install's final panel and the update's page; test through the real install and update (page gains exactly one notice vs the control; red without wiring). Words: I did NOT write localize('installer.fleet.logsunconfirmed') — the words check rejects localize in installer as a drawn-screen module (marker, words.mjs:11 / held.mjs:51), so the sentence and its row stay installer-steps'; my test holds no sentence. Order caution: job/T51/installer-steps is not yet on tranche/T51 (uploads.mjs there has no observability), so on my branch alone both G54 tests are red by name; on a scratch merge of both, t51 11/11 green, other reds only inherited. Checks: format, architecture, ownership 0 failures; coverage 72/72; words 0 failures. Record J20. Size (session_01Vk7s17rF6Xh1AySjTxhLSy): test runs 14, module lines 2931.
+
+## J22 · QUESTION
+
+Names between R83 and installer-steps R41/R42 are not written, and installer-steps (job branch tip) has none of them yet. Best reading, which I build on: the barrel `newgroup/src/steps/index.mjs` exports `locationHintFor(cf)` (answers a hint string or null); `uploadInstall(token, acct, slug, secrets, release, opts)` takes `opts.storeLocation` (a hint string or null/undefined) beside `opts.profiles` and appends `storeLocationBinding(opts.storeLocation)`; `uploadUpdate` takes no option (it restates the held value, R42). The installer passes the hint at the two uploadInstall sites only (index.mjs:813, :829); its step-3 and own-hosts re-uploads go through bindMembers/uploadUpdate and restate the held value without my help. The cookie field is `sl` (hint string, written only when non-null), so a cookie without it is today's cookie. Please confirm the option name `storeLocation` to INSTALLER-STEPS #8 or tell me another. Until installer-steps merges, my T5 stays red by name and the module cannot import `locationHintFor`; I will carry on and verify the rest with an uncommitted stub that I remove before every commit.
+
+## J23 · REPORT
+
+R83 built, waiting on installer-steps R41/R42 (no COMPLETE while red on the provider, B21).
+
+DONE (newgroup/src/index.mjs, newgroup/test/g83-begin.test.mjs, newgroup/package.json): `POST /begin` in install mode reads `req.cf` (an object only), takes `locationHintFor(req.cf)` from the steps barrel and writes a non-null string as cookie field `sl`; `/callback`'s install run reads `saved.sl` and passes it as `storeLocation` to `uploadInstall` at both creating sites (the first upload and the no-SELF retry). An update writes no `sl` and passes nothing: uploadUpdate restates the held value (installer-steps R42). No cf, a non-object cf, or a null hint writes nothing: the install is as today. No page, word or dialog changed (words check: 0 failures).
+
+TESTS: T5 `newgroup/test/g83-begin.test.mjs` (R83 x3): wnam for NA/-122.4, weur for Frankfurt, enam, sam; six no-hint cases (no cf, empty, AN, no longitude, bad longitude, non-object) install with no STORE_LOCATION in any plane upload and complete; an update with a Frankfurt cf restates the held wnam, and a script holding none gets none. Seen red before the change (binding null). Added to `npm test`. With an UNCOMMITTED stand-in for installer-steps R41/R42 (saved, not committed: scratchpad stub.patch), T5 is 3/3 green and every other newgroup suite has exactly the failure set it has without my change (20 inherited reds: R8, R11, R20, R33 real-size x5, R44, R55, R61, R71, G54, the wizard). The steps suite 105/109 with the stand-in. RED NOW BY NAME, until installer-steps merges and exports `locationHintFor`: the module does not import (SyntaxError: no export `locationHintFor`), so every installer suite is red for that one reason.
+
+OPTION NAME (J22's question, unanswered): I used `storeLocation` on uploadInstall's opts. If installer-steps names it otherwise, tell me and it is a one-word change at two sites.
+
+CHECKS: format 0 failures; architecture 0; coverage 73 of 73 ids named; ownership 0; words 0 failures; impact (origin/tranche/T51..HEAD): 0 other modules affected. STALE ARTIFACT: `newgroup/dist/newgroup.bundled.mjs` (BOB regenerates, and the bundle-fresh test goes red until then).
+
+Next: on BOB's CHANGE (installer-steps merged), merge tranche/T51, run the suites, check, COMPLETE.
+
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 9, module lines 2166
+
+## J24 · REPORT
+
+B23 done on my side. `runUpdate` now stops right after reading the copy's held bindings when they are unreadable: `installer.update.stopped.lookup` with `{said}` = `word("installer.keys.unread")`, before any release is chosen or upload made (the page's stop says the copy runs as before). requirements.test.mjs's R17 (K1541) test now asserts that refusal (failed.said, planePuts 0, no done panel) in place of "proceeds"; its title says so. With the uncommitted stand-in for installer-steps, that test and g83-begin are green; the remaining reds are the inherited set (G54, R11, R20, R44, R8) as before.
+PROPOSAL (BOB writes): a dedicated key for this stop would read better than reusing `installer.keys.unread` as the `{said}` fill (it carries a sentence about member keys); the design lane could add one.
+STILL WAITING on installer-steps R41/R42 being merged (no `locationHintFor` export on tranche/T51 yet). Post a CHANGE when it is; I then merge, run suites and checks, and COMPLETE.
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 12, module lines 2172
+
+## J25 · COMPLETE
+
+B24 done: tranche/T51 merged (installer-steps R41/R42 in), stub dropped (working tree clean of it), nothing else of another module touched.
+
+ENTRIES APPLIED: R83 (index.mjs: /begin writes cookie `sl` from `locationHintFor(req.cf)` for an install only; the install run hands it as `storeLocation` to both uploadInstall sites) and K4758's R17 (runUpdate stops with `installer.update.stopped.lookup` before any release choice or upload when the copy's held settings cannot be read; the K1541 test now asserts the refusal). No page, word or dialog changed.
+
+TESTS (real provider): g83-begin 3/3 green (T5; was red first); requirements.test.mjs R17 green; newgroup suites 13 reds + wizard, all in the set inherited before my change (R8, R11, R20, R33 x5, R44, R55, R61, R71, wizard; G54 now green); steps suite 115/117, the two reds R36/R40 are K4731's accepted list (row installer.fleet.logsunconfirmed owed to the design). journey-check (the one user of installer): its account-installer and journey tests fail on the same fleet/container-member installs as R44/R61 above (environment/accepted family), not on anything R83 or R17 touches.
+CHECKS: format 0, architecture 0, coverage 73/73, ownership 0 (5 files), words 0 failures. Impact lists 64 modules, only journey-check uses installer.
+DEFERRED: none. FOR BOB: (1) `newgroup/dist/newgroup.bundled.mjs` is stale (regenerate; its freshness test is red until then). (2) A dedicated design key for the unreadable-settings stop would replace reusing `installer.keys.unread` as the {said} fill (J24). (3) R83 and R17's "not yet met" marks can be struck.
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 16, module lines 2172
+
+## J26 · QUESTION
+
+Two readings I code on, until you correct them (I carry on meanwhile).
+
+(1) installer-steps R43-R45 interface, as I read it (job 72 has pushed no code yet): `storageEntitlement(token, acctId)` -> `{state: "on"|"not_entitled"|"permission"|"unknown", said?}` (R43); `addressState(token, acctId, slug)` -> `{sub: <prefix>|null, proposed: <slug>|null}` (R44; `proposed` is null when the account has a prefix); `registerSubdomain(token, acctId, name)` -> `{ok: true}` | `{ok: false, taken: true}`, other refusals thrown with Cloudflare's message; `ensureSubdomain(token, acctId, slug)` still answers `{sub, registered}` with `registered` null and registers nothing (I pass no `offer`); `missingScopes(granted, needed)` -> array of the `needed` names absent from `granted` (the token response's scope string, or null when it states none; I skip the comparison for null). `needed` is the installer's own list: SCOPES less `account-logs.read` and `connectivity-directory.bind`. If job 72 shapes any of these otherwise, tell me and I follow; in my tests a temporary stand-in of exactly this, not committed.
+
+(2) Containers: Cloudflare's measured answer codes are not in hand (the diagnosis says "not documented"; K4942's measurement is owed). I decide by `e.code` against one exported table in `newgroup/src/ready.mjs` (permission: 10000, 9109; plan: 100328, the one plan refusal code measured so far; anything else is "could not tell", stated), each marked "documented shape; BOB measures on the rehearsal account (K4942)". There is no "off" state any more (no documented switch): the old words-regex arm goes. Replace the plan code (and add any "off" code) in that one table when you measure.
+
+(3) Words: B25 says each new sentence is `localize`d at its use; `checks/words.mjs` reports a `marker` finding for every `localize` call in a drawn-screen module and `installer` is one (DRAWN_MODULES). My previous job refused for that reason (J25). I follow B25 and will list the marker findings (one per new key) in my record as expected, not as defects. Say if you want otherwise.
+
+## J27 · COMPLETE
+
+COMPLETE (B25 R84, B26, B27). Merged tranche/T51 (installer-steps R43-R45 real; my stand-in dropped, never committed).
+
+**Entries applied.** R84's seven conditions, all in the room before anything is created (`newgroup/src/ready.mjs`, new; `index.mjs`, `ui.mjs`): (1) storage: a step `ready` right after the lock, before `fresh` (the look at what the account holds lists its buckets, which an account without R2 refuses), reads `storageEntitlement`; not entitled shows the R2 checkout walk-through + Check again, permission asks to approve again, any other answer is told as itself (a 500 is the lasting stop); (2) Containers by `e.code` through one exported table `CONTAINERS_CODES` (permission 10000, 9109; plan 100328), marked "documented shape; BOB measures on the rehearsal account (K4942)"; plan shows the plan's own stop, permission asks to approve again, anything else is "could not tell" stated with Cloudflare's words; the words regex and the "off" state are gone; (3) ceilings Workers 500, classes 500, buckets 1,000,000, cron triggers 250 (each with its source in a comment; the container-count ceiling removed, none is documented; crons counted per Worker, an unreadable schedule not counted); the limit stop offers Check again; the update's limit check uses the same table; (4) the workers.dev prefix: with none, a panel with the proposed name (editable), the permanence sentence and a button (`data-sub-from`); `/begin` takes `subdomain` (validated) into the cookie (`sd`); `registerSubdomain` runs last of the room checks, before any upload; taken asks again; nothing is registered without the click; `ensureSubdomain` then only enables the address; (5) `missingScopes` against SCOPES less `account-logs.read` and `connectivity-directory.bind`, compared right after the token exchange (install only; null = not compared); a missing scope throws approveAgain with its sentence (streamPage draws `e.said` then R71's panel); (6) `GET /accounts` with several: a panel by name (install, update, removal view and run), `account` in `/begin` (`ac` in the cookie), kept in the Check again body, the exists panel and the remove panel; (7) the plane's Blob over 64 MiB stops before anything is created; a member whose manifest `bytes` is over it is left out by name (its entry carries the reason, the fleet step names it). B26: the seven tests (R7, R14, R47, R67, R69, R70, R78) are green; fixture answers 10073 (exists), 10042 (not entitled), 10000/403 (permission), 409 (taken).
+
+**Words (B27 (3)).** No `localize`. Each new sentence is `word(key)` on a stop or choice path only; the happy path draws no new key (the step `ready` reads the existing `installer.step.storage`), so a team installs with no new row; a stop needs its row. KEYS lists them; `words-reads.json` (design's file) not touched. New keys with stand-in English, for the HANDOFF to UX-DESIGN (23):
+- `installer.begin.account`: That Cloudflare account could not be used. Start again from the first page.
+- `installer.begin.subdomain`: That address name cannot be used. Use letters, digits and dashes, not starting or ending with a dash.
+- `installer.limit.crons.other`: {n} scheduled jobs
+- `installer.ready.account.head`: Which Cloudflare account?
+- `installer.ready.account.use`: Use {name}
+- `installer.ready.account.which`: Your Cloudflare sign-in can reach more than one account. Choose the one your team's Civicsmith is for. Nothing has been created.
+- `installer.ready.address.head`: Choose your account's address
+- `installer.ready.address.label`: Address name
+- `installer.ready.address.none`: Your Cloudflare account has no workers.dev address yet. Choose the name your team's Civicsmith will be reached at. Nothing has been created.
+- `installer.ready.address.permanent`: This name is permanent for the whole Cloudflare account: every address in it ends with the name, and changing it later breaks every address already given out.
+- `installer.ready.address.taken`: The name {name} is already taken on Cloudflare. Choose another. Nothing has been created.
+- `installer.ready.address.use`: Use this address
+- `installer.ready.checkagain`: Check again
+- `installer.ready.containers.permission`: Stopped: the permission you gave does not let the installer look at your account's Containers. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.
+- `installer.ready.containers.unknown`: Stopped: the installer could not tell whether your Cloudflare account can run Containers ({said}). Nothing was created.
+- `installer.ready.scopes`: Stopped: the permission you gave Cloudflare does not include everything the installer needs ({missing}). Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.
+- `installer.ready.size.member`: its program is larger than the 64 MiB Cloudflare allows for one Worker
+- `installer.ready.size.plane`: Stopped: the Civicsmith program of this release is larger than the 64 MiB Cloudflare allows for one Worker, so it cannot be installed. Nothing was created.
+- `installer.ready.storage.do`: In the Cloudflare dashboard open Storage & databases, then R2, then Overview, and complete the checkout that adds an R2 subscription to the account. Then come back and choose Check again.
+- `installer.ready.storage.off`: Stopped: your Cloudflare account has not turned on R2, the storage your team's Civicsmith keeps its evidence in. Nothing was created.
+- `installer.ready.storage.permission`: Stopped: the permission you gave does not let the installer look at your account's storage. Nothing was created. Approve again, and keep every permission Cloudflare lists switched on.
+- `installer.ready.storage.unknown`: Stopped: Cloudflare would not say whether your account's storage is turned on ({said}). Nothing was created.
+- `installer.ready.unknown.do`: Choose Check again in a moment. If it keeps happening, the message above is what to give whoever helps you with Cloudflare.
+
+**Accepted reds until the rows land** (words check: missingkey 12 (the other keys sit on multi-line calls the check does not read); tests that draw those stops): R84 (1)-(7) in `r84.test.mjs`, R38 (its "unasked" arm), R70, R72 (hasWord on the new keys). With the 23 stand-in rows appended to a scratch copy of `rows.mjs` (reverted, never committed) all of these are green: r84 8/8, requirements 50/54, t50 17/19, corpus 3/3, the rest as below; the reds left are the inherited ones.
+
+**Deferred.** None of R84's. Not placed (per the diagnosis): email verification; the first install beside other tools' Workers (told by the limit counts only). words-reads.json entry for the 23 keys (design's). The R84 steps and `ready.mjs` list no "off" code: BOB replaces the plan code and adds any measured one in `CONTAINERS_CODES`.
+
+**Found in other modules.** (a) `installer-steps` `storageEntitlement` reads any 403 as permission, so a 403 that is not an authentication one is told as permission: fine for now, measure at K4942. (b) Generated: `newgroup/dist/newgroup.bundled.mjs` is stale (source changed; `newgroup-bundle-fresh` red by name until BOB regenerates). (c) journey-check (the one user, impact 2/25) not run: no `playwright-core` in its directory in this container (K4066).
+
+**Tests (this tree, no stand-in rows, i.e. as it ships).** r84 1/8 (7 red: need rows), requirements 49/54, t47 5/5, t48 9/10, t50 15/19, t51 11/11, g83-begin 3/3, corpus 3/3, embed 1/1, t51-ascii 1/1, wizard (whole file, inherited), realsize 0/6 (inherited, identical on the untouched tranche). Reds that are not R84's, all inherited on the tranche: R8, R11, R20, R44, R55, R61, R71, t48's one, wizard, realsize x6. Red-first for R84: the seven conditions' tests all red with `index.mjs`/`ui.mjs` reverted, green after.
+**Checks:** format 0 failures; architecture 0; coverage 74 of 74, 0; ownership 0; words: inline 0, plain 0, testcopy 0, missingkey 12, marker 0, 12 failures (all missingkey, accepted above). Impact: installer 11/22 test files run here, journey-check not run (above).
+
+Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 45, module lines 3154
+
+## J28 · COMPLETE
+
+COMPLETE (B28, R85). Merged tranche/T51 first.
+
+**Built.** `newgroup/src/guide.mjs` (new) and `ui.mjs`: the first page's first stage asks "do you already have a Cloudflare account?". Yes leaves for the short name and the sign-in as before; No shows four steps, one a screen, in order (account and email; Workers Paid and a payment method; R2; sign-in and "Allow", naming what Civicsmith asks and never does), each with why, what to do and what it costs, the six likely questions answered beside it (own account; cost, who is paid, how to stop; what Civicsmith can see and do and how to remove it; is my card shared; already use Cloudflare; stuck), a resume note, Back and Next. The step is the page's fragment (`#guide-2`), so the installer keeps nothing (R27). The confirming check is R84's (Check again at the run). No field in the guide at all: no token, no account id. The stage is drawn only when the word list holds all 40 keys (`GUIDE_KEYS`); without the rows the first page is exactly as it was (a control test), so nothing breaks before the design's rows land. Keys added to `KEYS`.
+
+**Red first.** With the 40 stand-in rows in a scratch copy of `rows.mjs` (reverted) and `ui.mjs` reverted, the R85 order/answers/resume test was red; green with the change. `r85.test.mjs`: rows held; order, answers, resume, costs, no input; the guide's script run against a stand-in DOM (no, next, back, last, fragment resume, yes); control.
+
+**Accepted reds until the rows land:** r85 (rows held, order test, script test) and R84's as in J27. R40 keeps green (my stand-in for `installer.guide.q.own.a` first said "copy"; reworded).
+
+**Tests:** with all 63 stand-in rows (R84's 23 and these 40) in a scratch rows.mjs: requirements 50/54, r84 8/8, r85 4/4, t50 17/19, corpus 3/3, t47, t51, g83, embed, ascii green; reds are the inherited ones only (R8, R11, R20, R44, R55, R61, R71, t48 one, wizard, realsize x6). Without rows: as J27 plus r85's three. Checks: format 0; architecture 0; coverage see line below; ownership see below; words: missingkey 12 (the R84 ones; the guide's keys are held in `GUIDE_KEYS`, not literal `word(...)` calls, so the check does not list them), inline 0, marker 0.
+
+**The 40 new keys, stand-in English (for the HANDOFF to UX-DESIGN):**
+- `installer.guide.account.cost`: An account is free.
+- `installer.guide.account.do`: Go to dash.cloudflare.com/sign-up, enter an email and a password, then open the email Cloudflare sends and follow its link to confirm the address.
+- `installer.guide.account.title`: Create your Cloudflare account and confirm your email
+- `installer.guide.account.why`: Everything of your team's lives in an account you own, so nobody else holds it.
+- `installer.guide.allow.asks`: On Cloudflare's Allow page, Civicsmith asks to put its programs and storage in your account, to read the account's name, to set up its helper programs, and to check that no log keeps a record of who opens which file.
+- `installer.guide.allow.never`: Civicsmith never asks for your password, your card, an API token or an account id, and it keeps nothing you allow after the install is done.
+- `installer.guide.ask.no`: No, or I am not sure it is ready
+- `installer.guide.ask.sub`: Your team's Civicsmith lives in your own Cloudflare account, so you need one before you start. If you have none, or you are not sure it is ready, we will go through it step by step.
+- `installer.guide.ask.title`: Do you already have a Cloudflare account?
+- `installer.guide.ask.yes`: Yes, I have one
+- `installer.guide.back`: Back
+- `installer.guide.checknote`: When you go on, the installer checks that this step is done. If it is not, it stops before creating anything and offers Check again.
+- `installer.guide.faq`: Questions people ask at this step
+- `installer.guide.next`: I have done this, go on
+- `installer.guide.plan.cost`: About $5 a month, paid to Cloudflare and never to Civicsmith. You can cancel it in the same place.
+- `installer.guide.plan.do`: In the Cloudflare dashboard open Workers & Pages, then Plans, choose Workers Paid, and enter a card when it asks.
+- `installer.guide.plan.title`: Choose Workers Paid and add a payment method
+- `installer.guide.plan.why`: Civicsmith's programs need Cloudflare's Workers Paid plan to run for a team.
+- `installer.guide.q.access.a`: The installer can create and update your team's programs and storage, and nothing else. It keeps no access afterwards. You can remove everything from the installer's page or in the Cloudflare dashboard.
+- `installer.guide.q.access.q`: What can Civicsmith see and do in my account, and how do I remove it?
+- `installer.guide.q.card.a`: No. You give your card to Cloudflare only. Civicsmith never sees it.
+- `installer.guide.q.card.q`: Is my card shared?
+- `installer.guide.q.cost.a`: Cloudflare charges about $5 a month for Workers Paid, plus a little for storage beyond its free allowance. You pay Cloudflare only. To stop, cancel the plan in the Cloudflare dashboard.
+- `installer.guide.q.cost.q`: What does it cost, who is paid, and how do I stop paying?
+- `installer.guide.q.existing.a`: Use that account. Civicsmith adds its own parts under its own names and leaves what you already have alone, and the installer checks there is room.
+- `installer.guide.q.existing.q`: What if I already use Cloudflare?
+- `installer.guide.q.own.a`: So your team's records are yours alone. Civicsmith's publisher keeps none of them and cannot open your account.
+- `installer.guide.q.own.q`: Why my own account?
+- `installer.guide.q.stuck.a`: Stop at any step and come back; nothing is lost. If Cloudflare's own page confuses you, its help pages explain each step, and the installer will say exactly what is missing.
+- `installer.guide.q.stuck.q`: What if I get stuck?
+- `installer.guide.resume`: You can close this page at any step. Come back to this address and it opens at the step you were on.
+- `installer.guide.signin.cost`: This step costs nothing.
+- `installer.guide.signin.do`: Choose your team's short name on the next page, then continue to Cloudflare, sign in, and choose Allow.
+- `installer.guide.signin.title`: Sign in and choose Allow
+- `installer.guide.signin.why`: Signing in lets Cloudflare ask you, on its own page, whether Civicsmith may set things up. You stay in control of that permission.
+- `installer.guide.step`: Step {n} of {total}
+- `installer.guide.storage.cost`: R2 has a free allowance; Cloudflare charges only for use beyond it, and shows the price at the checkout.
+- `installer.guide.storage.do`: In the dashboard open Storage & databases, then R2, then Overview, and complete the checkout that adds an R2 subscription.
+- `installer.guide.storage.title`: Turn on R2 storage
+- `installer.guide.storage.why`: Your team's documents and evidence are kept in R2, Cloudflare's storage.
+
+**Deferred / other modules.** `words-reads.json` (design's) lacks the 63 keys. The generated bundle and `invite-page.mjs` are untouched; the bundle is stale (BOB regenerates).
+
+Size (session_0133bNMzhnXsy441ZfjLU6xR): test runs 62, module lines 3262
+
+## Job 83 (G157, R84 amended: Containers on Free is 401 / 1000, K4970) — INSTALLER #27, session_01EBZBHpiJKKbVycjEP1ox2e
+
+**Done in this module.** `newgroup/src/ready.mjs`: `CONTAINERS_CODES.planUnauthorized = {status: 401, code: 1000}`; `containersState` reads the plan answer (that pair, or 100328) before `special(e)`, so a measured Free answer is state `plan` and the plan stop (R6); a bare 1000 under another status is "unknown" (Cloudflare's words), a 401 of another code stays "approve again". `newgroup/test/fixture.mjs` brought to the measured shapes: Containers plan 401/1000 (the measured message), R2 not entitled 403/10042, no prefix 404/10007, taken prefix 403/10031 (plan probe 400/100328 was already so); new knobs `containers: "bare1000"` and `"expired"`. `r84.test.mjs` R84 (2) gains the two controls. No sentence added.
+
+**Found in installer-steps (another module; needs BOB, two one-line changes), both measured in `measure-R9-account-shapes.md`:**
+1. `api.mjs` `failureOf` raises every 401 as `ApproveAgain` with `status` and `apiMessage` but NOT `code`; so `containersState` cannot tell the measured Free answer (401/1000) from an expired permission, and the fresh run asks the founder to approve again instead of showing the plan stop. Fix: `{ status: 401, code: e.code, apiMessage: e.message }`.
+2. `probes.mjs` `registerSubdomain` reads a taken prefix as HTTP 409; the measured answer is 403 / code 10031. Fix: also accept `e.code === 10031` (not `e.status === 403` alone: 403 is also "not permitted"). Until then a taken name ends the run as a lookup failure instead of asking for another.
+With both applied locally (then reverted, not committed) `newgroup/test/r84.test.mjs`: 8 pass, 0 fail. Without them: R84 (2) and R84 (4) fail on these two points alone.
+
+**Checks run (before the steps fix).** format 0 failures; architecture 0 failures; coverage 0 failures (75 of 75). Not yet run: words, ownership, impact, the full suite (waiting on the installer-steps change, which changes the suite's outcome).
+
+## J29 · BLOCKED
+
+BLOCKED (cause: needs BOB, another module). G157 is built in installer (ready.mjs, fixtures at the measured shapes, controls) but two measured answers are lost in installer-steps, which I may not change:
+1. api.mjs failureOf: a 401 becomes ApproveAgain with status and apiMessage but no code, so the Free account's 401/1000 on /containers/applications cannot be told from an expired permission. One line: add `code: e.code` to that object.
+2. probes.mjs registerSubdomain: a taken prefix is read as HTTP 409; measured is 403/10031. One line: accept `e.code === 10031` too.
+With both applied locally (reverted, uncommitted) r84.test.mjs is 8 pass 0 fail; without them R84 (2) and (4) fail on exactly these. Please have installer-steps change them (or tell me to proceed otherwise), then CHANGE me to merge and finish. Details in my record, Job 83.
+
+**Job 83 completion (after CHANGE B31, tranche merged, job 82's failureOf code and 403/10031 in).**
+- Entries applied: G157 / R84 amended: the Containers plan stop decided by 401 + code 1000 on this path (`CONTAINERS_CODES.planUnauthorized`), fixtures at every measured shape, controls for a bare 1000 and a bare 401. No sentence added. Nothing deferred.
+- Found in another module: nothing new (the two installer-steps points of J29 are fixed by job 82).
+- Tests: `newgroup/test/r84.test.mjs` 8 pass, 0 fail. Installer suite (`cd newgroup && node --test --test-force-exit test/`): tests 254, pass 232, fail 15, all on the accepted list (R8, R11, R20, R44, R55, R61, R71, G54, wizard, R33 six): fifteen, one fewer than the sixteen BOB named; none new. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: installer 12/23, journey-check 2/25 (affected modules 2 of 176, test files 14 of 2671). The user journey-check's files `account-installer.test.mjs`, `journey.test.mjs` with `newgroup-bundle-fresh.test.mjs`: 28 tests, 8 pass, 20 fail, identical with my three files (ready.mjs, fixture.mjs, r84.test.mjs) reverted to the tranche version, so not caused by this job (bundle staleness is BOB's regeneration; the newgroup bundle is stale by this change).
+- Checks (failure counts): format 0, architecture 0, coverage 0 (75 of 75), words 0, ownership 0.
+Size (session_01EBZBHpiJKKbVycjEP1ox2e): test runs 9, module lines 3270
+
+## J30 · COMPLETE
+
+COMPLETE (G157, R84 amended). Entries applied: Containers plan stop by 401/1000 on this path; every R84 fixture at the measured shapes; controls for a bare 1000 and a bare 401; no sentence added; nothing deferred. r84: 8 pass 0 fail. Installer suite: 254 tests, 232 pass, 15 fail, all on the accepted list (fifteen, not sixteen; none new). Impact: installer 12/23, journey-check 2/25; the journey-check/bundle files show 20 failing of 28 identically with my change reverted (not this job's; the newgroup bundle is stale, yours to regenerate). Checks: format 0, architecture 0, coverage 0, words 0, ownership 0. Size (session_01EBZBHpiJKKbVycjEP1ox2e): test runs 9, module lines 3270.
+
+## J31 · COMPLETE
+
+COMPLETE (fix round 10, Wave B batch 6: 12 own fixture lines, 5 markers), with ONE request: add `credentials` to installer's `uses` in build/modules.json (BOB's file). `checks/architecture.mjs` fails twice only on that: requirements.test.mjs and t50.test.mjs import credentials' published `bootstrapVersions` (K5071 names it); installer declares instance-setup but not credentials. Everything else is done.
+
+- Lines done (newgroup/test): instance-setup/instanceGroupAnswer: fixture.mjs:549 (the copy's `instancegroup` handler is now async and takes `recorded`/`none` from the fixture), wizard.test.mjs:1115. credentials/bootstrapVersions: requirements.test.mjs 554-561 (store part from `bootstrapVersions`; the member entries SILENT/MISNAMED/UNBOUND from instance-setup's `fleetReports`; the store-version-absent case from `fleetReports().storeVersionAbsent` with the run's version and members), t50.test.mjs:272, 401.
+- Expectation changes forced by the real fixtures: R66's misnamed arm now expects name pdf-worker, other ocr-worker (the fixture's real MISNAMED entry); t50:401's agent-worker SILENT entry is the fixture's real silent entry (binding field reads OCR_WORKER, which the verdict ignores).
+- fixtures-own markers added (platform: a copy still waking, its self-check answers not-ok): corpus.test.mjs:70, requirements.test.mjs:520, :615 (now :616), :1750 (now :1752), t47.test.mjs:192.
+- Left: t50.test.mjs:272 still spreads the hand-built `TEAM` facts (team_name, installed_at, last_used_at, counts) beside the real version part: instance-setup publishes no fixture for `bootstrapFacts` (setup.mjs BOOTSTRAP_FACT_KEYS). For BOB: instance-setup would need to publish one; `fixtures.mjs` does not list that line.
+- Checks: fixtures installer 0 failures (accepted 5 = the markers); format 0 failures; coverage 75 of 75, 0 failures; words 0 failures; ownership 7 files, 0 failures; architecture 2 failures (the uses edge above).
+- Tests (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit newgroup/test/<file>`): corpus 3/3, t47 5/5, r84 8/8, r85 4/4, g83-begin 3/3; reds identical with and without my change (run on HEAD~1 tests): requirements 4 fail (R8, R11, R20, R44), t48 1 (R55), t51 1 (G54), t50 2 (R61, R71), wizard.test.mjs stops at line 233/553 with the same 55 PASS and same FAIL lines. These are the accepted-list reds of J30; none is touched by this change. Impact run (`impact.mjs`) not run for lack of a change to any published service.
+Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 14, module lines 3270
+
+## J32 · COMPLETE
+
+COMPLETE (B33, K5101, SUITE #2 Cluster A; tranche/T51 merged, no rebase). Test files only, newgroup/test/. Still open from J31: add `credentials` to installer's `uses` (architecture fails 2: requirements.test.mjs and t50.test.mjs import credentials' `bootstrapVersions`).
+
+**Cause (2), both parts, one definition each (fixture.mjs):**
+- `scheduleRules({schedules, crons, refuse})` is exported from fixture.mjs (the schedules GET/PUT the fake account already had, lifted out; `pageWorld` uses it); wizard.test.mjs' `FALLBACK` takes it (`...scheduleRules()`). Its `PLANE_CRONS_STATEMENT` literal is now fixture.mjs' `CRONS_STATEMENT`.
+- `CRONS_STATEMENT` added to the synthetic release sources that stated none: wizard repoSrc, repoSrc2, repoSrc3, repoSrc6; requirements R20's `plane()`; realsize `REAL`. (t50, t51, r84 take CAPABLE_SRC/PRE116_SRC, which already had it.)
+
+**Further stale fakes the first red hid (mine, test side; each seen red, then green):**
+1. wizard.test.mjs: the held-settings answers (10 arms) stated no `bindings` list and no `observability`; R39's held place and R40's logs read-back (installer-steps) refuse that ("this release's description of its program can't be read"). They now state `bindings` and `observability: {enabled: true}`; the oak-watch arm holds `ACCOUNT_SEAL_SECRET` (so the update restates none, as before), cross-town holds `INSTALL_COMPLETE` (a finished copy, so `installer.team.unrecorded.how.finished`, F12); DIST-6's own settings handler answers what the account holds as the last upload left it.
+2. wizard "no card" arm scripted no workers.dev address, so R84 (4) stopped at `room` before the R2 refusal: `GET /workers/subdomain` added.
+3. requirements R44: the plane's watchdog schedule (R39) is in `w.schedules` now: asserts the plane's keys and its cron beside the scanner's; `refuseSchedules` takes script names (true still means all) and the refused-schedule arm refuses the scanner's only, since the plane's refusal stops the act by design (R39).
+4. t51 G54: an unreadable plane settings read also leaves the members' bindings unread, so the page gains two notices; the test names the logs one by its own sentence (`installer.fleet.logsunconfirmed`).
+5. wizard.test.mjs `sourceOf`/`metadataOf` tolerate a missing upload (assertions fail by value, not a TypeError that ends the script and hides every arm after it), and the built-in arm states `an upload happened` as its own assertion.
+
+**Result:** wizard.test.mjs (run as a script): 205 passed, 3 failed (was: 55 passed and a crash at :232/:552). t51 11/11 (was 10/1). requirements 50 pass, 4 fail (the same four tests, each now failing later, on its built-in case). corpus, embed, g83-begin, r84, r85, t47, t51-ascii all green.
+
+**Every red that remains installs from the built-in 0.86.0: waiting on the 0.87.0 cut (G90), with its assertion:**
+- wizard.test.mjs, "release: a copy that fails verification is never installed" (tampered bytes, built-in installs): `the built-in was uploaded (an upload happened)` want true got false; `VERSION stays the built-in` want "0.86.0" got undefined. "release signing: armed, an unsigned copy is refused": `VERSION stays the built-in (or, R20, ...)` want "0.86.0" got true (no upload).
+- requirements R8 :296 `not newer` (the built-in case; `put?.source` undefined vs the built-in source); R11 :391 (`fleet-unreachable`, the built-in's own fleet: `own.acct.has("pdf-worker-fleet-unreachable")` falsy); R20 :786 `the built-in stands in`.
+- t48 R55 :183: the page says "Stopped: Cloudflare refused the upload ... (this release's description of its program can't be read)" at "Putting release 0.86.0 in place".
+- t50 R61 :133 (`builtInFleet`: the finished panel is null, `matchAll` of null); R71 :564 (`builtInFleet, sourceFlaky`: fleet status null, want "ok").
+- realsize.test.mjs, all 6: the built-in scenarios (:71 TypeError on the missing upload, :153 install and :153 update "no stop", :200 `the mismatch is named`, :219 `the signed release, unaltered, is uploaded`, :233 `never the altered release: the built-in installed`). The repository-release part of the first test passes (line :63) now that `REAL` states the cron.
+Found in another module: none new. journey-check clusters B1 and B3 are theirs (diagnosis).
+Checks: fixtures installer 0 failures (accepted 5, the J31 markers); format 0; coverage 75 of 75; words 0; ownership 0 (7 files); architecture 2 (the uses edge above).
+Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 40, module lines 3270
+
+## J33 · COMPLETE
+
+COMPLETE, both (re B34, K5105): `origin/tranche/T51` merged (no rebase); architecture now 0 failures with the `credentials` edge. CHANGE B33 is as in J32 (schedules rule and cron statement from fixture.mjs, the further stale fakes, wizard 205 passed 3 failed). Corrections to J32's counts: requirements is 51 pass, 3 fail (R8, R11, R20; R44 green), not 4.
+- Waiting on follow-up 36: t50.test.mjs:272 still spreads the hand-built `TEAM` facts (`bootstrapFacts`) beside the real version part, until instance-setup publishes that fixture.
+- Waiting on the 0.87.0 cut (G90), each on a built-in 0.86.0 install: wizard.test.mjs (tampered-bytes arm: `the built-in was uploaded` and `VERSION stays the built-in`; unsigned-copy arm: `VERSION stays the built-in (or, R20...)`); requirements R8 :296, R11 :391, R20 :786; t48 R55 :183; t50 R61 :133, R71 :564; realsize.test.mjs all 6.
+- Checks: fixtures 0 failures (accepted 5 = the J31 markers), format 0, coverage 75 of 75, words 0, ownership 0 (9 files), architecture 0.
+Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 46, module lines 3270
+
+## J34 · COMPLETE
+
+COMPLETE (re B35, follow-up 36, K5110). `origin/tranche/T51` merged (no rebase). t50.test.mjs:272's hand-built `TEAM` facts are now instance-setup's published `bootstrapFacts({team: "Lakeshore Tenants", members: 6, projects: 3, documents: 412, published: 1})`, awaited once at the top of the file and used for both the held-copy arm (:200) and the removal arm (:274); the R63 date assertion reads `installed_at` and `last_used_at` from that answer instead of the old literals. No line is left hand-built.
+- Checks (failure counts): fixtures 0 (accepted 5, the J31 markers), format 0, coverage 0 (75 of 75), words 0, ownership 0 (9 files), architecture 0.
+- Tests: t50 17 pass, 2 fail (R61 :133, R71 :564; R63 and R65 green with the real facts). Every other red is unchanged from J33 and waits on the 0.87.0 cut (G90): wizard.test.mjs 3 assertions, requirements R8/R11/R20, t48 R55, t50 R61/R71, realsize all 6.
+Size (session_01DCAWkiUVqfwYfbb2mBxLJd): test runs 48, module lines 3270

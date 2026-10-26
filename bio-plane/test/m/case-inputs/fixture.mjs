@@ -12,9 +12,12 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
 import { caseAccountOf } from "../../../src/case-account/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
+import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { fmSafe, outcomesLines, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
-import { caseInputsOf, ackFrontmatterLines, ackBodyLines } from "../../../src/case-inputs/index.mjs";
+import { caseInputsOf, registerCaseInputsPublicReads, ackFrontmatterLines, ackBodyLines } from "../../../src/case-inputs/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -40,6 +43,8 @@ export function storage() {
 
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:daemon";
+/* R24: the team's slug, the fact `producingGroup` (promotion R40) as instance-setup registers it. */
+export const SLUG = "test-group";
 export const NOW = "2026-09-28T01:00:00Z";
 export const T0 = "2026-09-27T00:00:00Z";
 /* The statement a well-formed preparation prints. */
@@ -52,9 +57,11 @@ const CASE_DRAFTS = `CREATE TABLE IF NOT EXISTS case_drafts (draft_id TEXT PRIMA
   case_id TEXT, params TEXT NOT NULL, created_by TEXT NOT NULL, created_at TEXT NOT NULL, updated_by TEXT NOT NULL,
   updated_at TEXT NOT NULL, statement_by TEXT)`;
 
-/** The dead answer of the stand-in review provider, C-87.1's code, as `review` builds it from no argument. */
+/** The dead answer of the stand-in review provider, C-87.1's code, in the shape `review` builds it (its `refusal`): the
+ *  canned `translation` and the `detail` sentence, both strings. The stand-in holds placeholders for the two sentences
+ *  and never copies them (K3810); fixtures.test.mjs checks their presence and type against the real answer's shape. */
 export const DEAD = Object.freeze({ ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY", check: "C-87.1",
-  translation: "(the review copy's dead answer)" });
+  translation: "(the review copy's dead answer)", detail: "(the review copy's dead detail)" });
 
 /* The review provider `review` fills (publication R23), over its own tables as the test holds them. `grants` maps a
    secret fingerprint to `{grant_id, draft_id, case_id, edition, recipient, revoked}`. */
@@ -85,7 +92,7 @@ function reviewProvider(w) {
     draftForMember, draftFor: draftForMember,
     draftIdentity: identity,
     caseIdentitySentence: (caseId, edition, newCase) => (caseId ? `the next edition (${edition}) of ${caseId}`
-      : newCase ? "a new case" : "a derived case"),
+      : newCase ? "NEWCASE-IDENTITY" : "DERIVEDCASE-IDENTITY"),
     statedEdition: (ident, newCase) => (ident.caseId || newCase ? ident.edition : null),
     liveGrant,
     grantAdmitsCaseEdition: (s, c, e) => { const l = liveGrant(s); return !!(l && l.grant.case_id === c && Number(l.grant.edition) === Number(e)); },
@@ -112,12 +119,12 @@ export function caseDocText({ caseId, edition, project, statement, author, write
     ...ackFrontmatterLines(acks),
     "completeness_excluded:",
     "---", "", "## What This Excludes", "", statement, "",
-    ...(writer ? [`**Who wrote this statement.** ${writer.stated}`, ""] : []),
+    ...(writer ? [`WRITER-LINE ${writer.stated}`, ""] : []),
     ...(withAckRuns ? ackBodyLines(acks, project) : []), "",
     "## What Was Searched", "", "Nothing was searched in this fixture.", ""].join("\n");
 }
 
-export function world({ provider = true, now = null } = {}) {
+export function world({ provider = true, now = null, publicReads = true } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -135,9 +142,16 @@ export function world({ provider = true, now = null } = {}) {
   /* case-account (layer 8, directly before this module): its R5's shape of an outcome's cites. */
   const account = caseAccountOf(host, { record, membership });
   st.db.exec(CASE_DRAFTS);
+  /* R21, R24 (T51): the entities this team holds, the producing group's slug, and public-read, which the module registers
+     `casedetailspublic` with. */
+  const entities = entitiesOf(host, { record, membership });
+  entities.migrate();
+  const promotion = promotionOf(host, { record, membership });
+  promotion.registerFact("producingGroup", "instance-setup", () => SLUG);
+  const publicRead = publicReadOf(host);
   let n = 0, cases = 0;
   const w = {
-    st, host, record, membership, publication, publishSchedule, account, clock, grants: new Map(),
+    st, host, record, membership, publication, publishSchedule, account, entities, promotion, publicRead, clock, grants: new Map(),
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -151,7 +165,9 @@ export function world({ provider = true, now = null } = {}) {
   };
   if (provider) publication.registerReviewProvider("review", reviewProvider(w));
   const clockOf = now || ((p) => (p === "millisecond" ? clock.ms : clock.now));
-  w.ci = caseInputsOf(host, { record, membership, publication, publishSchedule, account, now: clockOf });
+  w.ci = caseInputsOf(host, { record, membership, publication, publishSchedule, account, entities, promotion, now: clockOf });
+  /* R24: registered where the plane registers the public reads (it is not a part of creating the instance) */
+  if (publicReads) w.publicReadsRegistration = registerCaseInputsPublicReads(host, { publicRead });
   /* The tables record-core holds declared for modules this world does not build (provenance, content, inquiry and
      others), created empty with the key columns the purge reads (record-core R21), so a whole-store purge runs here as
      it runs over the whole plane. Nothing of this module's is among them. */

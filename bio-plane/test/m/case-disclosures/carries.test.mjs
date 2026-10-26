@@ -12,8 +12,12 @@ import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, chainsOf, materialHeld, mater
 import { GRADING_METHOD_VERSION, DEPTH_BOUND, recomputePair } from "../../../src/strength/index.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { contentIdFor } from "../../../src/content/index.mjs";
 import { CASE_DOCUMENT_FORMAT, extractedTextOf, materialBlockLines, methodBlockLines, materialsOf, methodOf, GRADING_FACT_FIELDS,
          gradingFactsLines, passagesLines, gradingFactsOf, passagesOf } from "../../../src/case-grammar/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+import { factUnavailable } from "../promotion/fixtures.mjs";
+import { gradingFactsUnread } from "../strength/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -49,8 +53,9 @@ test("R5: methodOf answers strength's GRADING_METHOD_VERSION and promotion's CAT
   const fm = fmOf(w, methodBlockLines(m));
   assert.deepEqual(methodOf(fm), m);
   const body = carriesBodyLines(m, { rows: [], attestations: [] }, "g").join("\n");
-  assert.ok(body.includes(`by the grading method ${GRADING_METHOD_VERSION}, and the case was checked under the publication checks ${CATALOG_VERSION}.`));
-  assert.ok(carriesBodyLines(null, { rows: [] }, null).join("\n").includes("grading method (not stated)"));
+  assert.ok(body.includes(word("case-disclosures.grade_case_reached", { method: GRADING_METHOD_VERSION, method_2: CATALOG_VERSION })));
+  const none = localize("case-disclosures.document.not_stated_bracketed", "(not stated)");
+  assert.ok(carriesBodyLines(null, { rows: [] }, null).join("\n").includes(word("case-disclosures.grade_case_reached", { method: none, method_2: none })));
 });
 
 test("R6, R7: materialsJudged lists every document a member's chain reaches with what this copy holds — bytes and extracted text, its fingerprint — included when whole; material only a supporting member reaches, not held whole, is listed included: false and never refused", () => {
@@ -67,16 +72,18 @@ test("R6, R7: materialsJudged lists every document a member's chain reaches with
   const { out } = blocks(w, [Q, Q2], { supporting: [Q2] });
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: a, text_sha: textSha(DOC), origin: `https://example.org/${DOC}`,
-      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", obscured: null },
+      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", title: `Document ${DOC}`, obscured: null },
     { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false, rests_under: "supporting",
-      obscured: null }]);
+      title: `Document ${DOC2}`, obscured: null }]);
   /* read back through case-grammar's one reader */
   const fm = fmOf(w, materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }));
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
   const body = carriesBodyLines(w.cd.methodOf(), out.materials, out.group).join("\n");
-  assert.ok(body.includes("## What This Case Carries"));
-  assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
-  assert.ok(body.includes(`- ${DOC}, a document, fingerprint ${a}: travels whole with this case; relied on by a load-bearing finding`));
+  assert.ok(body.includes(word("case-disclosures.case_carries")));
+  const line = (ref) => body.split("\n").find((l) => l.startsWith(`- ${ref}, `));
+  assert.ok(line(DOC2).includes(`fingerprint ${b}: ${word("case-disclosures.included_fingerprint_origin")}`));
+  assert.ok(line(DOC).includes(`fingerprint ${a}: ${word("case-disclosures.travels_whole_case")}`));
+  assert.ok(line(DOC).includes(localize("case-disclosures.document.a_load_bearing", "a load-bearing")));
 });
 
 test("R6 (C-120.8): a load-bearing member resting on material not held whole — text not indexed, indexed in part, a unit cut, or its bytes gone — is RELIED_ON_NOT_PRESENTABLE, naming each member and material and what it lacks; it writes nothing", () => {
@@ -156,16 +163,21 @@ test("R7: material_attestations states, per material, the attesting member's sig
   assert.equal(w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).length, tables, "no new table");
   assert.deepEqual(w.snapshot(), before, "nothing written");
   const body = carriesBodyLines(w.cd.methodOf(), out.materials, out.group).join("\n");
-  for (const s of ["  - Attested: test-group vouches for it by signing this case.", `  - Attested: the record of PROJ-team holds it, registered ${reg.registered}, in ${reg.bundle_id}.`,
-                   "  - Attested: a third party's co-archive at https://archive.example/web/x.",
-                   "  - Attested: alice, credited at the name level as they chose, on 2026-09-27T12:00:00Z, with their signature."])
+  const attested = (attester) => localize("case-disclosures.document.attested_by", "  - Attested: {attester}.", { attester });
+  for (const s of [attested(word("case-disclosures.vouches_signing_case", { group: "test-group" })),
+                   attested(word("case-disclosures.record_holds_registered", { by: "PROJ-team", at: reg.registered, recorded_in: reg.bundle_id })),
+                   attested(word("case-disclosures.third_party_archive", { by: "https://archive.example/web/x" })),
+                   attested(["alice", word("case-disclosures.credited_level_chose", { level: "name" }),
+                             localize("case-disclosures.document.attested_on", "on {at}", { at: "2026-09-27T12:00:00Z" }),
+                             word("case-disclosures.with_their_signature")].join(", "))])
     assert.ok(body.includes(s), s);
   /* no producing group: the group row names none, and the words say "the group" */
-  const g = world({ deps: { promotion: { fact: () => ({ ok: false, reason: "NO_SUCH_FACT" }) } } });
+  const g = world({ deps: { promotion: { fact: () => factUnavailable() } } });
   g.member("alice"); g.doc(DOC); g.finding(Q, [{ target: DOC }]);
   const og = blocks(g, [Q]).out;
   assert.deepEqual([og.group, og.materials.attestations.at(-1).by], [null, null]);
-  assert.ok(carriesBodyLines(null, og.materials, og.group).join("\n").includes("the group vouches for it by signing this case"));
+  assert.ok(carriesBodyLines(null, og.materials, og.group).join("\n").includes(word("case-disclosures.vouches_signing_case",
+    { group: localize("case-disclosures.document.the_team", "the team") })));
   /* negative control for "no new table": a table created inside the same read is counted (T42-23b) */
   let made = null;
   const n = world({ deps: { promotion: { fact: () => { made.st.sql.exec(`CREATE TABLE IF NOT EXISTS added_by_read (x)`); return { ok: true, value: "g" }; } } } });
@@ -189,7 +201,7 @@ test("R7, R8: an observation a chain reaches (a member's authored words, provena
   const none = blocks(w, [Q]).out.materials.attestations[0];
   assert.deepEqual([none.by, none.level], [null, null], "no attribution: nobody named");
   assert.ok(carriesBodyLines(null, blocks(w, [Q]).out.materials, "g").join("\n")
-    .includes("a member who has not yet chosen how they are credited, so not named"));
+    .includes(word("case-disclosures.member_chosen_credited")));
 });
 
 test("R9, R10: off-the-record material (a knocker's capture stated Withheld) is presentable like any other — included, never refused — its origin not stated, and its attesting member's row and account carry the account's text only, never their handle or signature, until they choose cover or name", () => {
@@ -240,7 +252,7 @@ test("R12: a chain stops at a leg on another group's finding — none of that gr
   w.finding(Q2, [{ target: Q }]);
   const r = judged(w, [Q2]);
   assert.deepEqual(r.refs, [{ member: Q2, leg_of: Q, ord: 1, ref }]);
-  assert.deepEqual(r.materials.map((m) => m.ref), [DOC], "only this group's document");
+  assert.deepEqual(r.materials.map((m) => m.ref), [DOC], "only this team's document");
   assert.deepEqual(r.refusals, []);
   /* chainsOf is the walk: a ref is never read as a local id */
   const asked = [];
@@ -254,10 +266,12 @@ test("R15: findingFacts answers one grading_facts row per leg of each finding re
   const w = setup();
   const a = w.doc(DOC, {}, { receipt: true });
   w.doc(DOC2);
-  const cid = sha("passage of DOC");
+  const cid = contentIdFor(a, { kind: "doc-para", para: 1 }, null);
   w.content(cid, a, DOC, "paragraph 1", canonicalJson({ kind: "doc-para", para: 1 }));
-  const gone = sha("passage nobody indexed");
+  const chain = [{ kind: "doc-para", para: 2 }];
+  const gone = contentIdFor(sha("unindexed"), { kind: "doc-para", para: 9 }, chain);
   w.content(gone, sha("unindexed"), DOC2, "paragraph 9", canonicalJson({ kind: "doc-para", para: 9 }));
+  w.st.sql.exec("UPDATE content SET chain = ? WHERE content_id = ?", canonicalJson(chain), gone);
   w.finding(Q2, [{ target: DOC2, grade: "C", grade_axis: "capture", grade_source: "capture" }]);
   w.finding(Q, [{ target: DOC, content_id: cid, grade: "B", grade_axis: "capture", grade_source: "capture" },
                 { target: Q2 }, { target: DOC2, content_id: gone }]);
@@ -278,12 +292,19 @@ test("R15: findingFacts answers one grading_facts row per leg of each finding re
   assert.ok(GRADING_FACT_FIELDS.length > 2);
   const p = f.passages.filter((x) => x.finding === Q);
   assert.deepEqual(p.find((x) => x.content_id === cid), { finding: Q, ord: 0, content_id: cid, capture_sha: a,
-    extent: canonicalJson({ kind: "doc-para", para: 1 }), chain: null, quoted: `the text of ${DOC}` });
+    extent: { kind: "doc-para", para: 1 }, chain: null, quoted: `the text of ${DOC}` });
+  /* R15 (K5148): the extent is the canonical extent object and the chain its value or null, so the checker recomputes each content id */
+  for (const row of f.passages) {
+    assert.equal(typeof row.extent, "object", `${row.content_id} extent`);
+    assert.ok(row.chain === null || Array.isArray(row.chain), `${row.content_id} chain`);
+    assert.equal(contentIdFor(row.capture_sha, row.extent, row.chain), row.content_id, `${row.content_id} recomputes`);
+  }
   assert.equal(p.find((x) => x.content_id === gone).quoted, null, "none held there: null, never filled");
+  assert.deepEqual(p.find((x) => x.content_id === gone).chain, chain, "a held chain is its value, parsed");
   assert.deepEqual(passagesOf(fm)[Q].map((x) => x.content_id).sort(), p.map((x) => x.content_id).sort());
   assert.ok(extractedTextOf(w.extraction.unitsOf(a).units).includes(JSON.stringify(`the text of ${DOC}`)));
   /* a refusing or throwing gradingFacts: no row, answered in unread */
-  for (const gf of [() => ({ ok: false, reason: "NO_SUCH_INQUIRY" }), () => { throw new Error("down"); }]) {
+  for (const gf of [() => gradingFactsUnread(), () => { throw new Error("down"); }]) {
     const x = world({ deps: { strength: { gradingFacts: gf } } });
     const out = x.cd.findingFacts([{ id: Q, member: Q }, { id: Q, member: Q2 }], V("alice"));
     assert.deepEqual([out.grading, out.passages, out.unread.map((u) => u.finding)], [[], [], [Q]]);
@@ -330,5 +351,34 @@ test("R20: everything a row asserts arrived as an argument or was read from the 
     { project: "p", group: "g", at: "t", facts: () => { throw new Error("not asked for an observation"); }, origin: () => "o",
       registered: () => null, member: () => [] });
   assert.deepEqual(rows, { rows: [{ ref: "x", kind: "observation", sha: "s", text_sha: null, origin: "o", archived_copy: null,
-    included: true, rests_under: "supporting", obscured: null }], attestations: [{ ref: "x", by_kind: "group", by: "g", level: null, at: "t", signature: "case", recorded_in: null }] });
+    included: true, rests_under: "supporting", title: null, obscured: null }], attestations: [{ ref: "x", by_kind: "group", by: "g", level: null, at: "t", signature: "case", recorded_in: null }] });
+});
+
+test("R7 (fix round 4, C47; K4438): each materials: row carries `title`, the document's title as its capture holds it, so the signed case names a document by its title and not its address; null for an observation and for a document that states none (nothing about a person is added, R26)", () => {
+  const w = setup();
+  const FAQ = "Freedom of Information Act: frequently asked questions", REPORT = "Capture B";
+  const a = w.doc(DOC, {}, { receipt: true, title: FAQ });
+  const b = w.doc(DOC2, {}, { title: REPORT });
+  const c = w.doc("INFO-2026-0003-c", {}, { title: "A note by the member" });
+  const d = w.doc("INFO-2026-0004-d");
+  w.st.sql.exec(`UPDATE register SET authored=1 WHERE bundle_id=?`, "INFO-2026-0003-c");
+  w.st.sql.exec(`UPDATE bundles SET title=NULL WHERE bundle_id=?`, "INFO-2026-0004-d");
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }, { target: "INFO-2026-0003-c" }, { target: "INFO-2026-0004-d" }]);
+  const { out } = blocks(w, [Q]);
+  assert.deepEqual(out.materials.rows.map((r) => [r.ref, r.kind, r.sha, r.title]), [
+    [DOC, "document", a, FAQ], [DOC2, "document", b, REPORT],
+    ["INFO-2026-0003-c", "observation", c, null], ["INFO-2026-0004-d", "document", d, null]]);
+  /* control: a title is the capture's own; the document's address (origin) is never taken for it */
+  assert.equal(out.materials.rows[0].origin, `https://example.org/${DOC}`);
+  assert.notEqual(out.materials.rows[0].title, out.materials.rows[0].origin);
+  /* control: blank words are no title */
+  w.st.sql.exec(`UPDATE bundles SET title='   ' WHERE bundle_id=?`, DOC2);
+  assert.equal(blocks(w, [Q]).out.materials.rows[1].title, null);
+  /* the written block (case-grammar R12): each title is in the block's lines, and the one reader gives the rows back */
+  const rows = out.materials.rows;
+  const lines = materialBlockLines({ materials: rows, attestations: out.materials.attestations });
+  assert.ok(lines.join("\n").includes(FAQ) && lines.join("\n").includes(REPORT), "the titles are written into the case document");
+  const fm = fmOf(w, lines);
+  assert.deepEqual(materialsOf(fm).materials.map((r) => [r.ref, r.title]), rows.map((r) => [r.ref, r.title]));
+  assert.deepEqual(materialsOf(fm).materials, rows);
 });

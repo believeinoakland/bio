@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, sha, MACHINE, ANN, BOB, OUTSIDER } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, kinds, phases, stages, bases, precisions }
   from "../../../src/money/index.mjs";
 
@@ -49,9 +50,9 @@ test("R1 the refusals come in their stated order, each naming its closed list, a
     [{ phase: "adopted" }, "STAGE_NOT_ACTUAL"],
     [{ stage: "collected" }, "UNKNOWN_STAGE"],
     [{ period: undefined }, "NO_PERIOD"],
-    [{ period: { fiscal: "FY1999-00X", body: "Nobody" } }, "BAD_PERIOD"],
-    [{ period: { from: "2026-02-31", to: "2026-03-01" } }, "BAD_PERIOD"],
-    [{ period: { from: "2026-03-01", to: "2026-02-01" } }, "BAD_PERIOD"],
+    [{ period: { fiscal: "FY1999-00X", body: "Nobody" } }, "MONEY_BAD_PERIOD"],
+    [{ period: { from: "2026-02-31", to: "2026-03-01" } }, "MONEY_BAD_PERIOD"],
+    [{ period: { from: "2026-03-01", to: "2026-02-01" } }, "MONEY_BAD_PERIOD"],
     [{ codes: [{ scheme: "nowhere", code: "1" }] }, "UNKNOWN_CODE_SCHEME"],
     [{ kind: "balance", stage: "incurred", balance_class: "committed" }, "BALANCE_CLASS_NOT_IN_FAMILY"],
     [{ to: { entity: "ENT-2026-9999" } }, "NO_SUCH_ENTITY"],
@@ -100,7 +101,7 @@ test("R1 a period is a date-time range with its zone (the profile's by default),
   const b = s.rec({ period: { fiscal: "HD2014", body: "Port Ellery Harbour District" } });
   const p = s.m.readFact({ factId: b, viewer: ANN }).fact.period;
   assert.deepEqual([p.from, p.to], ["2013-10-01", "2014-09-30"]);
-  assert.equal(s.m.recordFact(s.fact({ period: { fiscal: "HD2014" } })).reason, "BAD_PERIOD");
+  assert.equal(s.m.recordFact(s.fact({ period: { fiscal: "HD2014" } })).reason, "MONEY_BAD_PERIOD");
 });
 
 test("R1 balance_class is read against the family of the fund's held type (GASB 54 for a governmental fund)", () => {
@@ -190,7 +191,7 @@ test("R4 the machine writes only from a canonical table row read through a bindi
   assert.equal(ok.ok, true, ok.detail);
   const f = s.m.readFact({ factId: ok.fact_id, viewer: ANN }).fact;
   assert.deepEqual(f.source, { table: "TBL-payments", row: "17", binding: "BND-1", capture_sha: s.cap });
-  assert.match(f.citation, /^row 17 of the table TBL-payments, read from capture [0-9a-f]{64} through the binding BND-1$/);
+  assert.equal(f.citation, word("money.citation", { source_row: "17", source_table: "TBL-payments", source_capture_sha: s.cap, source_binding: "BND-1" }));
   assert.equal(f.grade.reading, "B");
   assert.equal(s.one(`SELECT source_capture_sha FROM money_facts WHERE fact_id=?`, ok.fact_id).source_capture_sha, s.cap);
   assert.equal(machine({ source: { capture_sha: s.cap } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
@@ -282,9 +283,9 @@ test("R21 sight: a fact follows its source capture's visibility, a fact on a fac
   }
   const decl = s.record.declaredTables().filter((d) => d.module === "money");
   assert.deepEqual(decl.map((d) => d.name).sort(), ["money_codes", "money_concerns", "money_facts", "money_fund_types",
-    "money_set_acts", "money_set_proposals", "money_sets", "money_withdrawals"]);
+    "money_ingests", "money_set_acts", "money_set_proposals", "money_sets", "money_withdrawals"]);
   for (const d of decl) {
-    assert.equal(d.sight, ["money_sets", "money_set_acts", "money_set_proposals", "money_fund_types"].includes(d.name) ? "group" : "source", d.name);
+    assert.equal(d.sight, ["money_sets", "money_set_acts", "money_set_proposals", "money_ingests", "money_fund_types"].includes(d.name) ? "group" : "source", d.name);
     for (const c of ["purge", "expunge", "export", "derive", "version_chain"]) assert.notEqual(d[c], undefined, `${d.name}.${c}`);
   }
   const purged = s.record.purge({ bundleId: "INFO-H" });

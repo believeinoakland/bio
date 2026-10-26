@@ -1339,7 +1339,6 @@
    "case-disclosures.copy_state_read_answered_refused",
    "case-disclosures.copy_state_read_answered_shape",
    "case-disclosures.credited_level_chose",
-   "case-disclosures.document_case_findings",
    "case-disclosures.document_case_rests",
    "case-disclosures.document_grade_attestation",
    "case-disclosures.document_observation_case",
@@ -3318,6 +3317,7 @@
    "refusal.SCAN_HOLD",
    "refusal.SCAN_PENDING",
    "refusal.SCAN_STALE",
+   "refusal.SIGNATURES_RUN_RECENT",
    "refusal.USE_NOT_ALLOWED",
    "refusal.WARNING_NOT_CONFIRMED"
   ],
@@ -10328,374 +10328,7 @@
    "refusal.SEVERED_EDGE",
    "refusal.UNKNOWN_EXTENT_FIELD"
   ],
-  "unkeyed": [
-   {
-    "file": "citation/index.mjs",
-    "line": 232,
-    "text": "citations live on the citing object, and this is neither a case nor a question, so it holds no citation to withdraw or restore. A case keeps them in its references; a question keeps them in the basis its answer rests on.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 245,
-    "text": "${…} an edge records WHY. The catalog's own remediation for a bad reference is \"sever with reason\", and an edge moved with no reason is an unexplained change wearing a status field.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 250,
-    "text": "a reason is at most ${…} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 258,
-    "text": "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 274,
-    "text": "a citation points at material or at a question, and these members of the selection are neither, so they carry no citation to move. The whole call is refused rather than narrowed.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 286,
-    "text": "the group has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 320,
-    "text": "${…} requires an edge currently in ${…}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 339,
-    "text": "the references block is not in a shape this grammar can edit in place",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 346,
-    "text": "### Session ${…} | ${…} ${…} citation${…} | ${…} Trigger: selection ${…} ${…}",
-    "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 350,
-    "text": "Changes: basis legs on ${…} moved to '${…}', each leg kept as it was. Reason: ${…}.",
-    "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 351,
-    "text": "Changes: cites edges to ${…} moved to '${…}'. Reason: ${…}.",
-    "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 356,
-    "text": "the reasons appended to these citations would push bundle.md past the 1MB inline limit",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 409,
-    "text": "this call names a passage found by search and also a selection or a part of a document. A found passage already names its document and its part, so the record could not tell which you meant; nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 412,
-    "text": "this call names neither a selection nor a passage found by search, so there is nothing to cite; nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 429,
-    "text": "a passage found by search is cited by the document it is in, the capture it was found in and its part of that capture, and this one names no document you can see, no capture, or no part; nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 438,
-    "text": "this passage was found in capture ${…} of ${…}, and a citation of ${…} is pinned to ${…}, so its part could name different words. Nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 455,
-    "text": "no question by that id is one you can see, so this citation cannot be kept with it; nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 460,
-    "text": "${…} is not a question, so it cannot be the question this was cited for; nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 480,
-    "text": "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 497,
-    "text": "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 509,
-    "text": "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your group's Civicsmith was created without them, so nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 518,
-    "text": "a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: ${…}.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 525,
-    "text": "'${…}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: ${…}.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 530,
-    "text": "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 552,
-    "text": "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 559,
-    "text": "a case rests on material, or on a question the group is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 570,
-    "text": "the group has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 576,
-    "text": "the project's own bundle.md does not parse under the restricted grammar",
-    "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 608,
-    "text": "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 626,
-    "text": "this call names ${…}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: ${…}.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 635,
-    "text": "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded — refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 644,
-    "text": "a part of a document is a part of ONE document, and this call would write ${…} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 655,
-    "text": "'${…}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 676,
-    "text": "the part of the document this citation names",
-    "why": "states the wire's fields or grammar for whoever builds the request (a grammar finding's message or repair); no screen draws it"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 682,
-    "text": "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 691,
-    "text": "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 701,
-    "text": "every member of the selection was already cited; nothing was written${…}",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 703,
-    "text": ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 727,
-    "text": "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 759,
-    "text": "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 766,
-    "text": "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 780,
-    "text": "(the set had moved since it was made; citing is report-weight and proceeded)",
-    "why": "a diagnostic for builders (module registration, release history, file-structure signals, an HTTP user agent); no member reads it"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 787,
-    "text": "### Session ${…} | Rested this question on ${…} record${…} (${…}) | ${…} ${…}Changes: basis legs added for ${…}, each with role ${…}. Grades: ${…} filled from the record's own resolutions to this question's subject; ${…} left undetermined and stated.${…}",
-    "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 794,
-    "text": "### Session ${…} | Cited ${…} record${…} | ${…} ${…}Changes: cites edges added to ${…}.${…}",
-    "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 811,
-    "text": "citing this many records at once would push this ${…}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 863,
-    "text": "a question is drawn into a case, and this is not a case. A question rests on another question through a leg of its own basis, which citing onto it writes.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 871,
-    "text": "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 879,
-    "text": "no question by that id is one you can see, so it cannot be drawn into this case; nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 884,
-    "text": "${…} is not a question, so it cannot be drawn into this case as one; nothing was written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 888,
-    "text": "the group has RETIRED this, recording that it is superseded or no longer stands, and drawing on it now would read to every later member as live support. Draw on what superseded it.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 891,
-    "text": "the project's own bundle.md does not parse under the restricted grammar",
-    "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 900,
-    "text": "this case already carries a SEVERED edge to this question, which is a recorded decision to cut the dependency, not the absence of one. Drawing on it again would neither reverse that decision silently nor skip past it. Reinstating a severance is a separate action that records its own reason.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 908,
-    "text": "this case already draws on this question; nothing was written",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 915,
-    "text": "the project's references block is not in a shape this grammar can extend in place. Drawing a question in edits only that block and never rewrites the rest of the document.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 920,
-    "text": "### Session ${…} | Cited 1 record | ${…} Trigger: question ${…} drawn into this case Changes: cites edges added to ${…}.${…}",
-    "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-   },
-   {
-    "file": "citation/index.mjs",
-    "line": 928,
-    "text": "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every edge is written into the document; nothing has been written.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/recorded.mjs",
-    "line": 135,
-    "text": "a read names the member reading; with none, nothing is answered",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/recorded.mjs",
-    "line": 136,
-    "text": "who cited a passage is read for one captured document, named by its capture sha256",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/recorded.mjs",
-    "line": 140,
-    "text": "an extent is an object of one of the kinds ${…}",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/recorded.mjs",
-    "line": 152,
-    "text": "the legs that cite a passage are found through the inquiry module's leg projection, and your group's Civicsmith was created without it, so this read could not be made.",
-    "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-   },
-   {
-    "file": "citation/splice.mjs",
-    "line": 76,
-    "text": "- rel: ${…} target: ${…} status: ${…} note: \"${…}\"${…}",
-    "why": "a frontmatter line in the record's own grammar (rel, target, status), written for the grammar's reader"
-   }
-  ],
+  "unkeyed": [],
   "renamed": {}
  },
  "action-records": {
@@ -11311,6 +10944,30 @@
     "line": 865,
     "text": "opc:no known main content type",
     "why": "a diagnostic for builders (module registration, release history, file-structure signals, an HTTP user agent); no member reads it"
+   },
+   {
+    "file": "ooxml.mjs",
+    "line": 927,
+    "text": "odf:${…} present but NOT the first archive member",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
+   },
+   {
+    "file": "ooxml.mjs",
+    "line": 929,
+    "text": " local-header offset ${…}, earliest ${…})",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
+   },
+   {
+    "file": "ooxml.mjs",
+    "line": 933,
+    "text": "odf:${…} is first but COMPRESSED (method ${…}, ODF requires stored)",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
+   },
+   {
+    "file": "ooxml.mjs",
+    "line": 965,
+    "text": "odf:${…} ${…} (first member, stored)",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
    },
    {
     "file": "ooxml.mjs",

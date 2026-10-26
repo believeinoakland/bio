@@ -6,8 +6,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, rankBy, Scheduler } from "../../../src/scheduler/index.mjs";
-import { world, storage, writes, NOW } from "./fixture.mjs";
+import { world, storage, writes, NOW, pinNow } from "./fixture.mjs";
 import { world as nnWorld, seeded, post, monday, V, WEEK, DAY } from "../network-notices/fixture.mjs";
+import { acquireRefusals } from "../acquisition/fixtures.mjs";
 import { world as lsWorld, infoMd, sweepDef, sha as lsSha } from "../link-sweep/fixture.mjs";
 
 const NEW = ["gathering-sweep", "working-on-seal", "working-on-attest"];
@@ -122,7 +123,7 @@ function promotionNotice() {
            fire: async (p) => await heard[0].fn(p) };
 }
 
-test("R9: a promotion that ratifies or re-ratifies a sweep, on an idle instance, leaves the alarm armed at the sweep's wake; an unratified sweep's promotion arms nothing", async () => {
+test("R9: a promotion that ratifies or re-ratifies a sweep, on an idle instance, leaves the alarm armed at the sweep's wake; an unratified sweep's promotion arms nothing", async (t) => { pinNow(t);
   const SWEEP = NOW + 3_600_000;
   /* monitoring otherwise wants nothing (unconfigured, no clock pending, no debt): only the sweep can ask */
   const { s, st, set } = world({ monitoring: { configured: false }, "gathering-sweep": { wake: null } });
@@ -231,7 +232,7 @@ function sweepWorld() {
   const fetched = [];
   w.capture.acquire = async (body, opts) => {
     fetched.push(opts.captureRequest.origin.matched_sweep);
-    return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } };
+    return acquireRefusals({ kind: "source_refused" });
   };
   const write = (id, sweeps) => {
     const t = JSON.stringify({ sweeps });

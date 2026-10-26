@@ -24,7 +24,7 @@ registerDoctype({
   key: "member_only_register", label: "a member-only register", version: 1, contract: null,
   detect(ctx) {
     if (ctx.origin !== "member") return { match: false, confidence: "none", signals: [] };
-    return { match: true, confidence: "certain", signals: ["a member's own capture"] };
+    return { match: true, confidence: "certain", signals: ["origin member"] };
   },
 });
 

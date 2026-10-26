@@ -16,50 +16,43 @@
  * Object name is an exact string). The plane's set is not per instance (`namespaceGate` holds it in code), so "no such
  * namespace exists" is the same fact on every instance this member can be bound to. A COPY, because a fleet member
  * cannot import the plane; pinned to the plane's gate by the suites (R44) and by control-plane (N402). */
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+
 export const NAMESPACES = Object.freeze(["bio", "scratch"]);
 
 /* R37, R53 — THE OPS A RUN'S ROWS MAY NAME, AND WHY EACH ONE IS HERE. QUERY, NEVER LOAD (§14b.1): no op here returns
  * document bytes, and the suites assert that over the set itself. */
 export const PLANE_OPS = {
-  whoami:         { mutating: false, why: "who the plane says this credential is (FL-2's round trip, kept)" },
-  airun:          { mutating: false, why: "the run object: its conditions, its live budget" },
-  airunlog:       { mutating: false, why: "§14b.7 — a RESUMED run reads its own log and continues" },
-  airunspawn:     { mutating: false, why: "PL-12's spawn payload; the search half has no manifest field to read" },
-  meaningrows:    { mutating: false, why: "PL-9 / D-222 option C — the meaning-grain read. CONSUMED, never rebuilt" },
-  basisversions:  { mutating: false, why: "PL-1's version set — what DEDUP compares against, read before any write" },
-  search:         { mutating: false, why: "D-220 — which held record a citation names, and the source address its bytes name" },
-  versionchain:   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
-  agentpack:      { mutating: false, why: "R48 — the rendered skill pack and its fences, read apart from what else the plane publishes, before any model turn (N695)" },
+  "whoami":         { mutating: false, why: "who the plane says this credential is (FL-2's round trip, kept)" },
+  "airun":          { mutating: false, why: "the run object: its conditions, its live budget" },
+  "airunlog":       { mutating: false, why: "§14b.7 — a RESUMED run reads its own log and continues" },
+  "airunspawn":     { mutating: false, why: localize("agent-worker.ops.pl_12s_spawn_payload_the", "PL-12's spawn payload; the search half has no manifest field to read") },
+  "meaningrows":    { mutating: false, why: "PL-9 / D-222 option C — the meaning-grain read. CONSUMED, never rebuilt" },
+  "basisversions":  { mutating: false, why: localize("agent-worker.ops.pl_1s_version_set_what", "PL-1's version set — what DEDUP compares against, read before any write") },
+  "search":         { mutating: false, why: "D-220 — which held record a citation names, and the source address its bytes name" },
+  "versionchain":   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
+  "agentpack":      { mutating: false, why: "R48 — the rendered skill pack and its fences, read apart from what else the plane publishes, before any model turn (N695)" },
   /* R51, R53 (K660) — MODE `plan`'s reads, under the run's credential and nothing else. Their op names are held in
      `agent-harness`' `PLAN_READS`, beside the rows that call them. */
-  plan:              { mutating: false, why: "R51 — the run's action plan: its subjects, options and proposals (action-plans R6)" },
-  plans:             { mutating: false, why: "R51 — the earlier plans of the SAME project, as the plane answers them (action-plans R7)" },
-  determination:     { mutating: false, why: "R51 — a determined subject's determination (conformance.determinationRead)" },
-  standard:          { mutating: false, why: "R51 — a subject's standard and its text (standards.standardRead)" },
-  consequencesof:    { mutating: false, why: "R51 — the consequences recorded for a determined outcome (consequences)" },
-  availableactions:  { mutating: false, why: "R51 — the actions a determination makes available (filings.availableActions)" },
-  publishededitions: { mutating: false, why: "R51 — a suspected subject's inquiry, as its findings stand published" },
-  profiles:          { mutating: false, why: "R51 — the active jurisdiction profiles (jurisdictions.combine), read once" },
+  "plan":              { mutating: false, why: "R51 — the run's action plan: its subjects, options and proposals (action-plans R6)" },
+  "plans":             { mutating: false, why: "R51 — the earlier plans of the SAME project, as the plane answers them (action-plans R7)" },
+  "determination":     { mutating: false, why: "R51 — a determined subject's determination (conformance.determinationRead)" },
+  "standard":          { mutating: false, why: "R51 — a subject's standard and its text (standards.standardRead)" },
+  "consequencesof":    { mutating: false, why: "R51 — the consequences recorded for a determined outcome (consequences)" },
+  "availableactions":  { mutating: false, why: "R51 — the actions a determination makes available (filings.availableActions)" },
+  "publishededitions": { mutating: false, why: "R51 — a suspected subject's inquiry, as its findings stand published" },
+  "profiles":          { mutating: false, why: "R51 — the active jurisdiction profiles (jurisdictions.combine), read once" },
   /* R78 (T45; N887) — a RE-EXAMINATION run's reads (ai-runs R77's `origin: "reexamination"`), besides R51's, and nothing
      else: the recorded response and the procedure guide for its action's kind. */
-  action:            { mutating: false, why: "R78 — the action the recorded response is on: its kind and its correspondence entry (actions' actionRead)" },
-  reading:           { mutating: false, why: "R78 — the response's capture as the plane's readers extracted it, text only (extraction R27)" },
-  procedureguides:   { mutating: false, why: "R78 — the procedure guide for the action's kind, the profile's first (reading-guides.procedureGuidesFor, R13)" },
-  airuntick:      { mutating: true,  why: "log-always and budget spend, through the plane's own producer" },
-  suggest:        { mutating: true,  why: "PL-3 — ONE version, as formed. The only write that reaches the record" },
-  capturerequest: { mutating: true,  why: "PL-4 — the internet level REQUESTS acquisition; it does not perform it" },
-  airunclose:     { mutating: true,  why: "the ordinary exit, naming the bound (C-22.5)" },
-  optionpropose:  { mutating: true,  why: "R52 — mode `plan`'s one write: ONE proposal to the run's plan, as formed (action-plans R11, R31)" },
+  "action":            { mutating: false, why: "R78 — the action the recorded response is on: its kind and its correspondence entry (actions' actionRead)" },
+  "reading":           { mutating: false, why: "R78 — the response's capture as the plane's readers extracted it, text only (extraction R27)" },
+  "procedureguides":   { mutating: false, why: "R78 — the procedure guide for the action's kind, the profile's first (reading-guides.procedureGuidesFor, R13)" },
+  "airuntick":      { mutating: true,  why: "log-always and budget spend, through the plane's own producer" },
+  "suggest":        { mutating: true,  why: "PL-3 — ONE version, as formed. The only write that reaches the record" },
+  "capturerequest": { mutating: true,  why: "PL-4 — the internet level REQUESTS acquisition; it does not perform it" },
+  "airunclose":     { mutating: true,  why: "the ordinary exit, naming the bound (C-22.5)" },
+  "optionpropose":  { mutating: true,  why: "R52 — mode `plan`'s one write: ONE proposal to the run's plan, as formed (action-plans R11, R31)" },
 };
-
-/** R78 — A RE-EXAMINATION RUN'S `response` (ai-runs R77, stored verbatim; written by `plan-work` R10 from `actions`
- *  R95's `{action, ord}`): `<action>#<ord>`, the action's id and the entry's place in its correspondence ledger. */
-export const RESPONSE_ID = /^(.{1,200})#(0|[1-9][0-9]{0,5})$/s;
-
-/** THE MEANING ARM THIS MEMBER READS AT (D-276). `op=meaningrows` chooses no arm for a caller (C-23.1), so the arm is
- *  declared: `leg`, one row per leg of an inquiry's basis, which is what a run that forms versions of a basis composes
- *  against. The plural `legs` is an arm the plane does not hold and was refused C-23.2. */
-export const MEANING_ARM = "leg";
 
 /* R55 (K1450; the canon audit's R37 row) — AN ASK'S WHOLE REACH. Equal to `answers`' `ASK_SCOPE` (its R1) and to
  * `credentials`' `AI_GRANT_OPS` (its R28), both ways, by the suites. Since N580 (K1603, K1609) each entry is the op's
@@ -99,14 +92,3 @@ export const TRANSCRIBE_TURNS = 2;
  *  vision documentation states it at T42-20's START (2026-10-11). */
 export const TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
-/* R91 (R085-8; K3477; `ai-runs` R84; BOB's B2, B3) — HOW A SEGMENT ENDED, as its last `op=airuntick` states it in
- * `segment_end: {by, done, refusals, error?}`: `by` the run's end by the table's close or the plane's own exit (`done:
- * true`, R28's `ended.by`), a refusal (the plane's or the model's, its code in `refusals`) or an error (its code in
- * `error`, `SEGMENT_THREW` for a throw); `by` is null when the segment met one of its own bounds (turns, bytes, its wall
- * time or `max_steps`) while the run goes on. */
-export const SEGMENT_END_BY = Object.freeze({
-  table: "the table",
-  plane: "the plane's own exit",
-  refusal: "a refusal",
-  error: "an error",
-});

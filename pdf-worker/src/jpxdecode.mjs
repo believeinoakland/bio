@@ -32,14 +32,19 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * High-throughput coding (Part 15), packed packet headers, sub-sampled
  * components, a palette, sYCC,
- * signed samples and any precision but 8 bits, more than three components, and
- * an image whose decode would pass the memory bound (below), refused from its
- * headers before a sample is allocated.
+ * signed samples and any precision but 8 bits, more than three components.
+ * A size the decoder will not allocate for (an image past the pixel or edge bound,
+ * past the memory bound below, or a codestream whose precincts and code-blocks
+ * would pass the retained-objects bound) is refused from its headers before a
+ * sample or an object is allocated: IMAGE_TOO_LARGE, final and never retried,
+ * its `detail` the declared size, the bound and the sentence's key (R4, R12).
  * Every error thrown is a `JpxRefusal` carrying a code: UNSUPPORTED (with the
- * feature), UNSUPPORTED_SAMPLES, TRUNCATED or CORRUPT.
+ * feature), UNSUPPORTED_SAMPLES, IMAGE_TOO_LARGE, TRUNCATED or CORRUPT.
  */
 
 import { MqDecoder, mqContexts } from "./mq.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs";
 
 export class JpxRefusal extends Error {
   constructor(code, detail = {}) {
@@ -53,17 +58,23 @@ const samples = (note, extra = {}) => new JpxRefusal("UNSUPPORTED_SAMPLES", { no
 const corrupt = (note, extra = {}) => new JpxRefusal("CORRUPT", { note, ...extra });
 const truncated = (note, extra = {}) => new JpxRefusal("TRUNCATED", { note, ...extra });
 
+/** The old `feature` of the memory refusal, an identifier read by code. The refusal is `IMAGE_TOO_LARGE` now (R4, R12) and no
+ *  longer a key of `JPX_REFUSES`; the name stays exported so `pdf-pixels`' import of it still loads until it maps the code. */
+export const MEMORY_FEATURE = "image-past-memory-bound";
+
 /** Every `feature` an UNSUPPORTED refusal can carry. */
 export const JPX_REFUSES = Object.freeze({
-  "high-throughput coding": "the codestream uses Part 15 (HTJ2K) block coding",
-  "a JP2 palette": "the image's samples index a palette (pclr box)",
-  "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
+  "high-throughput coding": localize("image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding"),
+  "a JP2 palette": localize("image-codecs.jpxdecode.the_image_s_samples_index", "the image's samples index a palette (pclr box)"),
+  "sYCC colour": localize("image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined"),
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile",
 });
 
-/* THE MEMORY BOUND (N34), a workload size and never a share of 128 MB (D-312).
+/* THE BOUNDS (R4, R12, fix round 9, G125b), all read from the table. The image is judged by its pixels and its edge, the
+ * decode by its working set, and the codestream by the objects its precincts and code-blocks would build.
+ *
+ * THE MEMORY BOUND (N34), a workload size and never a share of 128 MB (D-312).
  * The working set is what a decode must hold at once. Since N75 the decode is
  * line-based ("THE LINE-BASED DECODE", below): no component is ever held whole,
  * so the working set is the 8-bit output and, beside it, the buffers the tiles
@@ -77,8 +88,23 @@ export const JPX_REFUSES = Object.freeze({
  * set plus 11-23 MB of its own (code-blocks, tag trees, input, garbage not yet
  * collected), as the whole-plane decode's was plus 12-18 MB: a 2550x3300 colour
  * page in one tile (31.5 MB, refused at 101 MB before N75) peaks 54 MB above
- * the idle isolate, where the whole-plane decode peaked at 119 MB. */
-const MEMORY_BOUND = 61_300_000;
+ * the idle isolate, where the whole-plane decode peaked at 119 MB.
+ *
+ * THE OBJECT BOUND (G125b). Tier 2 builds an object for every precinct of every band and one for every code-block, and
+ * two tag trees per precinct, before a packet byte is read: a codestream of about 170 bytes with 2 x 2 precincts cost
+ * 629 MB at SIZ 500, 2 GB at 1000 and 7.7 GB at 2000. They are counted from the headers, in closed form per band, and
+ * judged against the table's retained-objects bound before the first is built (the bound is the table's: 250,000,
+ * proposed, BOB confirming for JPX). */
+const PIXELS_MAX = boundOf("image", "pixels");
+const EDGE_MAX = boundOf("image", "edge");
+/* the two rows BOB ruled for this module (K4858): `image.working_set` and `image.retained_objects`. Until runtime-limits has added them
+ * the same figures are read from the rows that hold them today, `ocr.frame_bytes` and `office.retained_objects`; the guard needs no
+ * edit when the rows land. */
+const WORKING_ROW = Object.hasOwn(READ_BOUNDS.image, "working_set") ? ["image", "working_set"] : ["ocr", "frame_bytes"];
+const OBJECTS_ROW = Object.hasOwn(READ_BOUNDS.image, "retained_objects") ? ["image", "retained_objects"] : ["office", "retained_objects"];
+const WORKING_SET_MAX = boundOf(...WORKING_ROW);
+const OBJECTS_MAX = boundOf(...OBJECTS_ROW);
+const tooLarge = (kind, name, size, note, extra) => new JpxRefusal("IMAGE_TOO_LARGE", { note, bound_name: name, ...statement(kind, name, size), ...extra });
 
 /** What decoding this codestream must hold at once, from its headers alone:
  *  the 8-bit output, and the buffers the tiles share (`Pool`), each slot as
@@ -91,6 +117,31 @@ function workingSet(cs, nTiles) {
     tileSlots(tileLayout(cs, t, no)).forEach((n, i) => { slots[i] = Math.max(slots[i] ?? 0, n); });
   }
   return (siz.X - siz.XO) * (siz.Y - siz.YO) * siz.comps.length + slots.reduce((a, n) => a + n, 0);
+}
+
+/** The objects tier 2 would build for the tiles present, counted from the headers alone: per band, one per precinct and one
+ *  per code-block; per tile, one, and one entry of the packet order for every layer of every precinct of every component
+ *  and resolution (`packetOrder` lists them all before a packet byte is read). Stops at the bound, so a hostile count is
+ *  not summed past it. */
+function retainedObjects(cs, nTiles) {
+  let n = 0;
+  for (const [no, t] of cs.tiles) {
+    if (no >= nTiles) continue;
+    n++;
+    let precincts = 0;
+    const { tc, cod } = tileLayout(cs, t, no);
+    for (const x of tc) for (const R0 of x.res) {
+      precincts += R0.npw * R0.nph;
+      for (const B of R0.bands) {
+        const bw = Math.max(0, B.x1 - B.x0), bh = Math.max(0, B.y1 - B.y0);
+        n += R0.npw * R0.nph + ceilDiv(bw, 2 ** B.xcb) * ceilDiv(bh, 2 ** B.ycb);
+      }
+      if (n > OBJECTS_MAX) return n;
+    }
+    n += cod.layers * precincts;
+    if (n > OBJECTS_MAX) return n;
+  }
+  return n;
 }
 
 const f32 = Math.fround;
@@ -109,7 +160,7 @@ function boxes(d, p, end) {
         + (((d[p + 12] << 24) | (d[p + 13] << 16) | (d[p + 14] << 8) | d[p + 15]) >>> 0);
       hdr = 16;
     } else if (len === 0) len = end - p;
-    if (len < hdr || p + len > end) throw truncated(`the JP2 box '${type}' runs past the data`);
+    if (len < hdr || p + len > end) throw truncated(localize("image-codecs.jpxdecode.the_jp2_box_type_runs", "the JP2 box '{type}' runs past the data", { type: String(type) }));
     out.push({ type, start: p + hdr, end: p + len });
     p += len;
   }
@@ -136,7 +187,7 @@ function container(d) {
       }
     }
   }
-  if (!cs) throw truncated("the JP2 file holds no codestream (jp2c box)");
+  if (!cs) throw truncated(localize("image-codecs.jpxdecode.the_jp2_file_holds_no", "the JP2 file holds no codestream (jp2c box)"));
   if (palette) throw unsupported("a JP2 palette");
   if (colour && colour.method === "enumerated" && colour.enumCs === 18) throw unsupported("sYCC colour");
   return { cs, colour, jp2: true };
@@ -146,7 +197,7 @@ function container(d) {
 
 class R {
   constructor(d, p, end) { this.d = d; this.p = p; this.end = end; }
-  need(n, what) { if (this.p + n > this.end) throw truncated(`${what} runs past the codestream`); }
+  need(n, what) { if (this.p + n > this.end) throw truncated(localize("image-codecs.jpxdecode.what_runs_past_the_codestream", "{what} runs past the codestream", { what: String(what) })); }
   u8(w = "a field") { this.need(1, w); return this.d[this.p++]; }
   u16(w = "a field") { this.need(2, w); const v = (this.d[this.p] << 8) | this.d[this.p + 1]; this.p += 2; return v; }
   u32(w = "a field") { this.need(4, w); const d = this.d, p = this.p; this.p += 4; return ((d[p] << 24) | (d[p + 1] << 16) | (d[p + 2] << 8) | d[p + 3]) >>> 0; }
@@ -164,7 +215,7 @@ function readSiz(r, len) {
   }
   r.p = end;
   if (!s.XT || !s.YT || s.X <= s.XO || s.Y <= s.YO || s.XTO > s.XO || s.YTO > s.YO || s.XTO + s.XT <= s.XO || s.YTO + s.YT <= s.YO)
-    throw corrupt("an image and tile geometry the standard does not allow");
+    throw corrupt(localize("image-codecs.jpxdecode.an_image_and_tile_geometry", "an image and tile geometry the standard does not allow"));
   if (rsiz & 0x4000) throw unsupported("high-throughput coding");
   if (rsiz & 0x8000) throw unsupported("an extended capability", { rsiz });
   return s;
@@ -175,7 +226,7 @@ function readSpcod(r, precincts) {
   const c = { nl: r.u8("decomposition levels"), xcb: (r.u8("code-block width") & 0xf) + 2, ycb: (r.u8("code-block height") & 0xf) + 2,
               cblksty: r.u8("code-block style"), qmfbid: r.u8("the wavelet") };
   if (c.nl > 32) throw corrupt(`${c.nl} decomposition levels`);
-  if (c.xcb + c.ycb > 12 || c.xcb > 10 || c.ycb > 10) throw corrupt("a code-block larger than 4096 samples");
+  if (c.xcb + c.ycb > 12 || c.xcb > 10 || c.ycb > 10) throw corrupt(localize("image-codecs.jpxdecode.a_code_block_larger_than", "a code-block larger than 4096 samples"));
   if (c.cblksty & 0x40) throw unsupported("high-throughput coding");
   c.prc = [];
   for (let i = 0; i <= c.nl; i++) {
@@ -238,10 +289,10 @@ function parseCodestream(d, start, end) {
   for (;;) {
     const m = r.u16("a main-header marker");
     if (m === 0xff90) { r.p -= 2; break; }
-    if (m === 0xffd9) throw truncated("the codestream ends before any tile");
+    if (m === 0xffd9) throw truncated(localize("image-codecs.jpxdecode.the_codestream_ends_before_any", "the codestream ends before any tile"));
     if ((m & 0xff00) !== 0xff00) throw corrupt("a main-header marker expected");
     const len = r.u16("a marker segment length");
-    if (len < 2) throw corrupt("a marker segment length under 2");
+    if (len < 2) throw corrupt(localize("image-codecs.jpxdecode.a_marker_segment_length_under", "a marker segment length under 2"));
     r.need(len - 2, "a marker segment");
     if (m === 0xff51) { siz = readSiz(r, len); continue; }
     if (!siz) throw corrupt("a marker before SIZ");
@@ -252,13 +303,13 @@ function parseCodestream(d, start, end) {
   while (r.p + 2 <= end) {
     const m = r.u16("a tile-part marker");
     if (m === 0xffd9) break;
-    if (m !== 0xff90) throw corrupt(`marker 0x${m.toString(16)} where SOT was expected`);
+    if (m !== 0xff90) throw corrupt(localize("image-codecs.jpxdecode.marker_0x_m_where_sot", "marker 0x{m} where SOT was expected", { m: String(m.toString(16)) }));
     const sotAt = r.p - 2;
     r.u16("Lsot");
     const isot = r.u16("Isot"), psot = r.u32("Psot");
     r.u8("TPsot"); r.u8("TNsot");
     const tpEnd = psot ? sotAt + psot : end;
-    if (tpEnd > end) throw truncated(`tile-part of tile ${isot} runs past the codestream`);
+    if (tpEnd > end) throw truncated(localize("image-codecs.jpxdecode.tile_part_of_tile_isot", "tile-part of tile {isot} runs past the codestream", { isot: String(isot) }));
     let t = tiles.get(isot);
     const first = !t;
     if (!t) { t = { index: isot, cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null, data: [] }; tiles.set(isot, t); }
@@ -616,7 +667,7 @@ function tileLayout(cs, t, tileNo) {
         const st = qc.style === 1
           ? { expn: Math.max(0, qc.steps[0].expn - (r === 0 ? 0 : Math.floor((bi - 1) / 3))), mant: qc.steps[0].mant }
           : qc.steps[bi];
-        if (!st) throw corrupt(`no quantisation step for band ${bi}`);
+        if (!st) throw corrupt(localize("image-codecs.jpxdecode.no_quantisation_step_for_band", "no quantisation step for band {bi}", { bi: String(bi) }));
         B.numbps = st.expn + qc.guard - 1;
         const rb = cp.prec + (sp.qmfbid === 0 ? 0 : bandno === 0 ? 0 : bandno === 3 ? 2 : 1);
         B.stepsize = f32((1 + st.mant / 2048) * 2 ** (rb - st.expn));
@@ -680,7 +731,7 @@ function decodeTile(cs, t, tileNo) {
     if (sop && bp + 6 <= body.length && body[bp] === 0xff && body[bp + 1] === 0x91) bp += 6;
     const bio = new Bio(body, bp, body.length);
     const contrib = [];
-    if (bio.p >= body.length) throw truncated(`the tile's packets run out at packet ${packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1} of ${packets.length}`);
+    if (bio.p >= body.length) throw truncated(localize("image-codecs.jpxdecode.the_tiles_packets_run_out", "the tile's packets run out at packet {v1} of {length}", { v1: String(packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1), length: String(packets.length) }));
     if (bio.bit()) {
       for (const B of res.bands) {
         const pr = B.prec[pi];
@@ -723,7 +774,7 @@ function decodeTile(cs, t, tileNo) {
     bp = bio.p;
     if (eph && bp + 2 <= body.length && body[bp] === 0xff && body[bp + 1] === 0x92) bp += 2;
     for (const k of contrib) {
-      if (bp + k.len > body.length) throw truncated(`a packet's code-block data runs past the tile (${bp + k.len - body.length} bytes)`);
+      if (bp + k.len > body.length) throw truncated(localize("image-codecs.jpxdecode.a_packets_code_block_data", "a packet's code-block data runs past the tile ({v1} bytes)", { v1: String(bp + k.len - body.length) }));
       k.seg.chunks.push(body.subarray(bp, bp + k.len));
       k.seg.passes += k.n;
       bp += k.len;
@@ -800,7 +851,7 @@ class BandRows {
       cb.segs = null;                                // read once; its bytes can go
       if (!segs.length) continue;
       const bpn = x.roi + cb.numbps;
-      if (bpn >= 31) throw corrupt("a code-block of 31 or more bit-planes");
+      if (bpn >= 31) throw corrupt(localize("image-codecs.jpxdecode.a_code_block_of_31", "a code-block of 31 or more bit-planes"));
       tmp.fill(0, 0, cw * ch);
       decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, this.t1.flags);
       if (x.roi) {
@@ -931,19 +982,26 @@ export function decodeJpx(d) {
   const cs = parseCodestream(d, box.cs[0], box.cs[1]);
   const { siz } = cs;
   const nc = siz.comps.length;
-  if (nc !== 1 && nc !== 3) throw samples(`${nc} components; only 1 (grey) or 3 (colour) are decoded here`, { components: nc });
+  if (nc !== 1 && nc !== 3) throw samples(localize("image-codecs.jpxdecode.nc_components_only_1_grey", "{nc} components; only 1 (grey) or 3 (colour) are decoded here", { nc: String(nc) }), { components: nc });
   for (const cp of siz.comps) {
     if (cp.dx !== 1 || cp.dy !== 1) throw samples("a sub-sampled component", { dx: cp.dx, dy: cp.dy });
     if (cp.sgnd) throw samples("signed samples");
-    if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
+    if (cp.prec !== 8) throw samples(localize("image-codecs.jpxdecode.prec_bit_samples_only_8", "{prec}-bit samples; only 8-bit are decoded here", { prec: String(cp.prec) }), { precision: cp.prec });
   }
   const W = siz.X - siz.XO, H = siz.Y - siz.YO;
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
+  if (Math.max(W, H) > EDGE_MAX)
+    throw tooLarge("image", "edge", Math.max(W, H), localize("image-codecs.jpxdecode.the_image_is_w_by_h", "the image is {W} by {H}, and the decoder reads an edge of at most {bound}", { W: String(W), H: String(H), bound: String(EDGE_MAX) }), { width: W, height: H, components: nc });
+  if (W * H > PIXELS_MAX)
+    throw tooLarge("image", "pixels", W * H, localize("image-codecs.jpxdecode.the_image_is_w_by_h_2", "the image is {W} by {H}, past the {bound} pixels the decoder reads", { W: String(W), H: String(H), bound: String(PIXELS_MAX) }), { width: W, height: H, components: nc });
   const need = workingSet(cs, nTiles);
-  if (need > MEMORY_BOUND) {
-    throw unsupported("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
-  }
-  if (cs.tiles.size < nTiles) throw truncated(`${cs.tiles.size} of ${nTiles} tiles are present`);
+  if (need > WORKING_SET_MAX)
+    throw tooLarge(...WORKING_ROW, need, localize("image-codecs.jpxdecode.the_decode_would_hold_bytes_at", "the decode would hold {bytes} bytes at once, past the {bound} the memory bound allows: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile", { bytes: String(need), bound: String(WORKING_SET_MAX) }),
+      { bound_name: "working_set", working_set_bytes: need, bound_bytes: WORKING_SET_MAX, width: W, height: H, components: nc });
+  const objects = retainedObjects(cs, nTiles);
+  if (objects > OBJECTS_MAX)
+    throw tooLarge(...OBJECTS_ROW, objects, localize("image-codecs.jpxdecode.the_codestream_s_precincts_and_code", "the codestream's precincts and code-blocks would be {objects} objects, past the {bound} the decoder builds", { objects: String(objects), bound: String(OBJECTS_MAX) }), { bound_name: "objects", width: W, height: H, components: nc });
+  if (cs.tiles.size < nTiles) throw truncated(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
   const t1 = { tmp: new Int32Array(4096), flags: new Uint16Array(1026 * 6) };
   const pool = new Pool();
@@ -960,7 +1018,7 @@ export function decodeJpx(d) {
     const irreversible = tc.map((x) => x.sp.qmfbid === 0);
     transform ??= irreversible[0] ? "9/7" : "5/3";
     const mct = cod.mct && nc >= 3;
-    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt("a colour transform over mixed wavelets");
+    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt(localize("image-codecs.jpxdecode.a_colour_transform_over_mixed", "a colour transform over mixed wavelets"));
     pool.i = 0;
     const src = tc.map((x, c) => componentRows(x, irreversible[c], t1, pool));
     const w = tile.x1 - tile.x0, h = tile.y1 - tile.y0;

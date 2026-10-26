@@ -153,9 +153,12 @@ console.log("\n--- B. `leads`/`observations` absent for all; `observationsNonLea
 const ALL = { ...VIEWERS, "vera's own member SESSION": VERA, "ruth's admin-ROLE member SESSION": RUTH };
 for (const [k, tok] of Object.entries(ALL)) {
   const r = await stats(tok);
+  /* G42 (K4638): an administering member (ruth) is stamped capacity and reads `dbBytes` floored to a whole 100 MB */
   t(`B1: ${k} receives op=stats: \`observationsNonLead\` a number, no \`leads\`, no \`observations\`, and `
-    + (tok === ADMIN ? "`dbBytes` (the admin CLASS keeps capacity)" : "no `dbBytes` — absent, not zero"),
-    [typeof r?.bundles, ...shape(r)], ["number", ...(tok === ADMIN ? ADMIN_SHAPE : MEMBER_SHAPE)]);
+    + (tok === ADMIN ? "`dbBytes` (the admin CLASS keeps capacity)" : tok === RUTH ? "`dbBytes` floored to a whole 100 MB (G42)"
+                                                                          : "no `dbBytes` — absent, not zero"),
+    [typeof r?.bundles, ...shape(r), ...(tok === RUTH ? [r?.dbBytes % 1e8] : [])],
+    ["number", ...(tok === ADMIN || tok === RUTH ? ADMIN_SHAPE : MEMBER_SHAPE), ...(tok === RUTH ? [0] : [])]);
 }
 for (const [k, tok] of Object.entries({ "sam's member SESSION": SAM, "the probe TOKEN": "prb-r129s" })) {
   const plain = JSON.stringify(await stats(tok));

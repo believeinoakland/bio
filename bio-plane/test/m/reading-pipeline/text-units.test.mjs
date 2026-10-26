@@ -5,11 +5,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, hold, doc, member, withEntry, i2, noText, folio, ocrAnswer, sha } from "./fixture.mjs";
 import { checkChain } from "../../../src/textchain.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { ACQUIRE_TEXT_UNITS_BUDGET, CAPTURE_TEXT_UNIT_CAP, ACQUIRE_TEXT_UNIT_ENVELOPE, ReadHooks, tier4Extend } from "../../../src/reading-pipeline/index.mjs";
 import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { accountsServing } from "../ai-accounts/fixtures.mjs";
+import { world as accountsWorld } from "../ai-accounts/fixture.mjs";
 
 registerDoctypes(registerDoctype);
 
@@ -36,7 +39,7 @@ test("R32 R1: an HTML capture read as text with no format entry answers one doc-
     ["doc-para", 2, null, 2, "Second line"],
     ["doc-para", 3, null, 3, "One"],
     ["doc-para", 4, null, 4, "Two"]]);
-  assert.deepEqual(Object.keys(out.text_units[0]), ["extent", "seq", "text"]);
+  assert.deepEqual(Object.keys(out.text_units[0]), ["extent", "seq", "text", "kind"]);   /* R47: a unit names its kind */
   assert.deepEqual(Object.keys(out.text_units[0].extent), ["kind", "para", "run"]);
   const said = out.text_units.map((u) => u.text).join("\n");
   for (const gone of [/<\/?[a-z!]/i, /class=|data-note|lead/, /secret|script words/, /color: red|late style/, /comment words/, /Hidden Title/, /&amp;|&#|&nbsp;/])
@@ -57,24 +60,25 @@ test("R32 R1: a plain-text capture answers one doc-para unit per run of text bet
     ["doc-para", 0, null, 0, "First line\nstill the first"],
     ["doc-para", 1, null, 1, "Second"],
     ["doc-para", 2, null, 2, "Third"]]);
-  /* a capture whose bytes are not UTF-8 is read as the intake decoded it */
+  /* fix round 9 (R49; G131g): a capture whose bytes are not UTF-8 is decoded by ooxml's one rule (here detected windows-1252), never
+     read as replacement characters */
   const bytes = Uint8Array.from([...Buffer.from("caf"), 0xe9, ...Buffer.from(" au lait\n\nsecond")]);
   const w = fresh();
   const d = await hold(w.evidence, bytes);
   const lat = await w.read(doc({ digest: d, bytes: bytes.length, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }));
-  assert.deepEqual(lat.text_units.map((u) => u.text), ["caf� au lait", "second"]);
+  assert.deepEqual(lat.text_units.map((u) => u.text), ["café au lait", "second"]);
+  assert.equal(lat.reading.encoding, "windows-1252");
 });
 
-test("R32 R15: the wire's rules apply unchanged to these units: a paragraph over the per-unit cap is carried as its capped prefix marked truncated, units past the byte budget are left out and named", async () => {
+test("R32 R15 R47: the wire's rules apply to these units: a paragraph over the per-unit cap is carried as its chunks, never cut, units past the byte budget are left out and named", async () => {
   const big = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 10);
-  const per = CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE;
-  const fit = Math.floor(ACQUIRE_TEXT_UNITS_BUDGET / per);
   const out = await plain([big, big, big, big, big].join("\n\n"));
-  assert.equal(out.text_units.length, fit);
-  assert.ok(out.text_units.every((u) => u.truncated === true && u.text.length === CAPTURE_TEXT_UNIT_CAP));
-  assert.equal(out.text_units_over_bound, 5 - fit);
-  assert.deepEqual(out.text_units_skipped, [{ first: { kind: "doc-para", para: fit, run: null }, first_seq: fit,
-    last: { kind: "doc-para", para: 4, run: null }, last_seq: 4, units: 5 - fit }]);
+  /* fix round 9 (R15 amended, R47; G128d): a unit over the cap is carried as its chunks, never cut; a chunk past the budget is
+     left out and named */
+  assert.ok(out.text_units.every((u) => !u.truncated && u.text.length <= CAPTURE_TEXT_UNIT_CAP && Number.isInteger(u.extent.run)));
+  assert.equal(out.text_units.length + out.text_units_over_bound, 10, "five paragraphs, two chunks each");
+  assert.ok(out.text_units_over_bound > 0);
+  assert.equal(out.text_units_skipped.reduce((n, r) => n + r.units, 0), out.text_units_over_bound);
 });
 
 test("R32 (control) R1 R21: a capture read as text whose text holds no glyph answers no text_units, absent and never an empty list, and its reading is as R1 states it; so does an HTML page with markup and no words", async () => {
@@ -86,11 +90,12 @@ test("R32 (control) R1 R21: a capture read as text whose text holds no glyph ans
   }
 });
 
-test("R32 (control) R1: a capture not read as text answers no text_units: a multipart capture, a capture over the profile's text bound or of a non-textual type (profiled_from_text false), and a capture whose bytes are not held", async () => {
+test("R32 (control) R1: a capture not read as text answers no text_units: a multipart capture of a non-textual type, a capture over the profile's text bound or of a non-textual type (profiled_from_text false), and a capture whose bytes are not held", async () => {
   const w = fresh();
   const words = "words that would be a unit\n\nand another";
   const d = await hold(w.evidence, words);
-  const multi = await w.read(doc({ digest: d, bytes: words.length, ct: "text/plain", format: "undetermined", fromText: true, headers: [],
+  /* R1 (fix round 10): "single part" is no condition; a textual capture held in parts is read (r1-parts.test.mjs). A capture in parts of no text type still is not. */
+  const multi = await w.read(doc({ digest: d, bytes: words.length, ct: "application/octet-stream", format: "undetermined", fromText: false, headers: [],
     parts: [{ index: 0, sha256: d, bytes: words.length }] }));
   assert.equal("text_units" in multi, false);
   assert.match(multi.reading.basis, /not read as text/);
@@ -112,8 +117,8 @@ test("R32 R2: a PDF and an office capture, and delimited text, answer their unit
   const docx = await withEntry({ format: "r32docx", text: async () => ({ ok: true, container: "docx", document: "p1\np2",
       paragraphs: [{ para: 0, text: "p1" }, { para: 1, text: "p2" }], counts: { chars: 4, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "r32 office bytes"); return w.read(doc({ digest: d, ct: "application/x", format: "r32docx", fromText: true })); });
-  assert.deepEqual(docx.text_units, [{ extent: { kind: "doc-para", para: 0, run: null }, seq: 0, text: "p1" },
-                                     { extent: { kind: "doc-para", para: 1, run: null }, seq: 1, text: "p2" }]);
+  assert.deepEqual(docx.text_units, [{ extent: { kind: "doc-para", para: 0, run: null }, seq: 0, text: "p1", kind: "body" },
+                                     { extent: { kind: "doc-para", para: 1, run: null }, seq: 1, text: "p2", kind: "body" }]);   /* R47: kind */
   const csv = "name,place\nAna,Hall\n";
   const c = await readAs(w, csv, { ct: "text/csv", format: "csv" });
   assert.deepEqual(c.text_units.map((u) => u.extent.kind), ["sheet-range"]);
@@ -163,7 +168,7 @@ test("R33 (control) R32: a reading with no text units has no chain: a capture wh
   assert.equal(blank.text_container, undefined);
   const words = "words that would be a unit";
   const d = await hold(w.evidence, words);
-  const multi = (await w.read(doc({ digest: d, bytes: words.length, ct: "text/plain", format: "undetermined", fromText: true, headers: [],
+  const multi = (await w.read(doc({ digest: d, bytes: words.length, ct: "application/octet-stream", format: "undetermined", fromText: false, headers: [],
     parts: [{ index: 0, sha256: d, bytes: words.length }] }))).reading;
   const absent = (await w.read(doc({ digest: "e".repeat(64), ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
   for (const r of [multi, absent]) assert.equal(r.text_source, undefined);
@@ -198,7 +203,7 @@ test("R33 R32 (T50; N1191 (a)): a plain-text capture of a title line and four se
   assert.deepEqual(shape(await plain(ORDER.join("\r\n"))), want);
   const padded = await plain(`  ${ORDER[0]}  \n\t${ORDER[1]}\t\n${ORDER[2]}`);
   assert.deepEqual(shape(padded), ORDER.slice(0, 3).map((t, i) => ["doc-para", i, null, i, t]));
-  assert.deepEqual(Object.keys(padded.text_units[0]), ["extent", "seq", "text"]);
+  assert.deepEqual(Object.keys(padded.text_units[0]), ["extent", "seq", "text", "kind"]);
   assert.deepEqual(Object.keys(padded.text_units[0].extent), ["kind", "para", "run"]);
   /* R33's chain, R14's provenance and R17's counts stay as for any text read as text */
   const body = ORDER.join("\n");
@@ -222,16 +227,15 @@ test("R33 (control) R32: the same text with a blank line after the title answers
   for (const none of [await plain(" \n \t"), await plain("\n"), await html("<div>\n</div>\n<div> </div>")]) assert.equal("text_units" in none, false);
 });
 
-test("R33 R15: the wire's bound, cap, truncated and named gaps apply unchanged to line units", async () => {
+test("R33 R15 R47: the wire's bound, chunks and named gaps apply to line units", async () => {
   const big = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 10);
-  const per = CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE;
-  const fit = Math.floor(ACQUIRE_TEXT_UNITS_BUDGET / per);
   const out = await plain([big, big, big, big, big].join("\n"));
-  assert.equal(out.text_units.length, fit);
-  assert.ok(out.text_units.every((u) => u.truncated === true && u.text.length === CAPTURE_TEXT_UNIT_CAP));
-  assert.equal(out.text_units_over_bound, 5 - fit);
-  assert.deepEqual(out.text_units_skipped, [{ first: { kind: "doc-para", para: fit, run: null }, first_seq: fit,
-    last: { kind: "doc-para", para: 4, run: null }, last_seq: 4, units: 5 - fit }]);
+  /* fix round 9 (R15 amended, R47; G128d): a unit over the cap is carried as its chunks, never cut; a chunk past the budget is
+     left out and named */
+  assert.ok(out.text_units.every((u) => !u.truncated && u.text.length <= CAPTURE_TEXT_UNIT_CAP && Number.isInteger(u.extent.run)));
+  assert.equal(out.text_units.length + out.text_units_over_bound, 10, "five paragraphs, two chunks each");
+  assert.ok(out.text_units_over_bound > 0);
+  assert.equal(out.text_units_skipped.reduce((n, r) => n + r.units, 0), out.text_units_over_bound);
 });
 
 test("R33 R32 (the measure, M-T50-4): textUnitsOfText gives V4's order shape one unit before this rule and one unit per non-empty line after", () => {
@@ -331,11 +335,140 @@ test("R34 R21 (control): a failed reading carries no title, absent and never nul
     (await w.read({ capture: {} })).reading,
     (await w.read(doc({ digest: "e".repeat(64), ct: "text/html", format: "html", fromText: true }))).reading,
     (await w.read(doc({ digest: d, ct: "text/html", format: "html", fromText: false }))).reading,
-    (await w.read(doc({ digest: d, ct: "text/html", format: "html", fromText: true, parts: [{ index: 0, sha256: d, bytes: 5 }] }))).reading,
+    (await w.read(doc({ digest: d, ct: "application/octet-stream", format: "html", fromText: false, parts: [{ index: 0, sha256: d, bytes: 5 }] }))).reading,
     await withEntry({ format: "r34none", text: async () => null }, async () => (await w.read(doc({ digest: d, format: "r34none", ct: "application/x" }))).reading),
     await withEntry({ format: "r34boom", text: async () => { throw new Error("boom"); } }, async () => (await w.read(doc({ digest: d, format: "r34boom", ct: "application/x" }))).reading),
   ];
   for (const r of failedOnes) { assert.equal(r.found, false); assert.equal("title" in r, false, r.basis); }
+});
+
+/* ---------------------------------------------------------------- R32 (T51; K4194; L6): a page's content, not its furniture */
+
+const FURNITURE_PAGE = `<!DOCTYPE html><html><head><title>Site</title></head><body>
+<a class="skip" href="#main">Skip to main content</a>
+<nav id="top"><ul><li><a href="/signin">Sign In</a></li><li>{1}</li><li><nav><a href="/x">Nested menu</a></nav></li></ul></nav>
+<div role="navigation" aria-label="Section"><div class="inner"><a href="/a">Section link</a></div><div>More section links</div></div>
+<p>##LOC[OK]##</p><p>{name}</p>
+<main id="main"><h1>Notice 2026-118</h1><p>The council adopted the shelter repair standard on 3 March 2025.</p>
+<p>Repairs follow within 30 days.</p></main>
+<div>Words after the main element.</div></body></html>`;
+const ARTICLE = [["doc-para", 0, null, 0, "Notice 2026-118"],
+  ["doc-para", 1, null, 1, "The council adopted the shelter repair standard on 3 March 2025."],
+  ["doc-para", 2, null, 2, "Repairs follow within 30 days."]];
+
+test("R32 (T51; K4194; L6): a captured page's text units are its content only: an element nav or role=navigation with its contents (nesting-aware), a skip link and unresolved template tokens ({1}, {name}, ##LOC[...]##) are no passage; the reader still gets the whole decoded text, so counts and provenance are as before", async () => {
+  const out = await html(FURNITURE_PAGE);
+  assert.deepEqual(shape(out), ARTICLE);
+  const said = out.text_units.map((u) => u.text).join("\n");
+  for (const gone of [/after the main/, /Skip to/, /Sign In/, /Nested menu/, /Section link/, /More section links/, /\{1\}|\{name\}/, /##LOC/])
+    assert.doesNotMatch(said, gone, String(gone));
+  assert.equal(out.reading.text_chars, FURNITURE_PAGE.length);
+  assert.equal(out.reading.provenance.text_sha256, sha(FURNITURE_PAGE));
+  /* each landmark alone, so no one rule carries the others */
+  assert.deepEqual(shape(await html("<nav><a>Menu</a></nav><p>Body words.</p>")), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.deepEqual(shape(await html('<div role="navigation"><p>Menu</p></div><p>Body words.</p>')), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.deepEqual(shape(await html('<a href="#main">Skip to content</a><p>Body words.</p>')), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.deepEqual(shape(await html("<p>{1}</p><p>##LOC[OK]##</p><p>{name}</p><p>Body words.</p>")), [["doc-para", 0, null, 0, "Body words."]]);
+  assert.equal("text_units" in await html("<nav>Only a menu</nav><p>{1}</p>"), false, "a page of furniture alone has no unit");
+});
+
+test("R32 (T51; K4194; L6) (control): a nav inside the article body is dropped with all of its contents and the article words around it are kept; nesting is by the element's own name, so a sibling after a nested role=navigation div is kept", async () => {
+  assert.deepEqual(shape(await html("<article><p>Before.</p><nav><p>Menu one</p><nav>Inner</nav><p>Menu two</p></nav><p>After.</p></article>")),
+    [["doc-para", 0, null, 0, "Before."], ["doc-para", 1, null, 1, "After."]]);
+  assert.deepEqual(shape(await html('<div><div role="navigation"><div>A</div><div>B</div></div><div>Sibling words.</div></div>')),
+    [["doc-para", 0, null, 0, "Sibling words."]]);
+  assert.deepEqual(shape(await html("<NAV class=x>Menu</NAV><P>Body words.</P><DIV ROLE='Navigation'>Menu</DIV>")),
+    [["doc-para", 0, null, 0, "Body words."]], "names and role value are case-insensitive");
+  assert.deepEqual(shape(await html("<p>Before.</p><nav>Menu never closed<p>After.</p>")).map((u) => u[4]), ["Before.", "Menu never closed", "After."],
+    "an element with no end tag is not guessed at: its words are kept");
+});
+
+test("R32 (T51; K4194; L6) (control): a page with no landmarks keeps all its text, and what the rule does not name is kept: another role, a # link that does not begin Skip to, a Skip to link that is not a # link, and braces that are not a token", async () => {
+  const plainPage = "<html><body><h1>Title words</h1><p>First.</p><div>Second.</div></body></html>";
+  assert.deepEqual(shape(await html(plainPage)).map((u) => u[4]), ["Title words", "First.", "Second."]);
+  assert.deepEqual(shape(await html('<div role="main">Main words.</div><div role="status">Status words.</div>')).map((u) => u[4]), ["Main words.", "Status words."]);
+  assert.deepEqual(shape(await html('<p>Go <a href="#top">Back to top</a> now.</p><p>Go <a href="/page">Skip to content</a> now.</p><p>See #1 and {1, 2} and {two words} and [OK].</p>')).map((u) => u[4]),
+    ["Go Back to top now.", "Go Skip to content now.", "See #1 and {1, 2} and {two words} and [OK]."]);
+  /* text read as text that is not HTML is never touched */
+  assert.deepEqual(shape(await plain("{1}\n\n<nav>Menu</nav>")).map((u) => u[4]), ["{1}", "<nav>Menu</nav>"]);
+  assert.deepEqual(shape(await html(PAGE)).length, 5, "R32's first page reads as before");
+});
+
+test("R32 (T51; K4194; L6) (control): two readings of the same fixture are identical, units and reading both", async () => {
+  const a = await html(FURNITURE_PAGE);
+  const b = await html(FURNITURE_PAGE);
+  assert.deepEqual(a.text_units, b.text_units);
+  assert.deepEqual(a.reading, b.reading);
+  assert.deepEqual(rp.textUnitsOfText(FURNITURE_PAGE, { html: true }), rp.textUnitsOfText(FURNITURE_PAGE, { html: true }));
+  assert.equal(rp.visibleTextOfHtml(FURNITURE_PAGE), rp.visibleTextOfHtml(FURNITURE_PAGE));
+});
+
+/* ---------------------------------------------------------------- R32 (T51 fix round 2, C19; K4303): landmarks of furniture */
+
+const LANDMARK_PAGE = `<!DOCTYPE html><html><head><title>Site</title></head><body>
+<header><h1>Oakland Housing Site</h1><p>Quick Links</p></header>
+<aside><p>Related pages (opens in new tab)</p></aside>
+<main><h1>Notice 2026-118</h1><p>The council adopted the shelter repair standard on 3 March 2025.</p>
+<p>Repairs follow within 30 days.</p></main>
+<footer><p>Copyright and contact words.</p></footer></body></html>`;
+const MAIN_ONLY = `<main><h1>Notice 2026-118</h1><p>The council adopted the shelter repair standard on 3 March 2025.</p>
+<p>Repairs follow within 30 days.</p></main>`;
+const NOTICE = [["doc-para", 0, null, 0, "Notice 2026-118"],
+  ["doc-para", 1, null, 1, "The council adopted the shelter repair standard on 3 March 2025."],
+  ["doc-para", 2, null, 2, "Repairs follow within 30 days."]];
+const words = async (markup) => (await html(markup)).text_units.map((u) => u.text);
+
+test("R32 (T51 fix round 2, C19; K4303): a captured page with a header, a footer, an aside and a main yields units from the main only; the reader and the counts still see the whole page", async () => {
+  const out = await html(LANDMARK_PAGE);
+  assert.deepEqual(shape(out), NOTICE);
+  const said = out.text_units.map((u) => u.text).join("\n");
+  for (const gone of [/Oakland Housing Site/, /Quick Links/, /opens in new tab/, /Related pages/, /Copyright/])
+    assert.doesNotMatch(said, gone, String(gone));
+  assert.equal(out.reading.text_chars, LANDMARK_PAGE.length);
+  assert.equal(out.reading.provenance.text_sha256, sha(LANDMARK_PAGE));
+  /* a passage already cited keeps resolving to the same words: the units are those of the article read alone */
+  assert.deepEqual(out.text_units, (await html(MAIN_ONLY)).text_units);
+});
+
+test("R32 (T51 fix round 2, C19; K4303): without a main or an article, the header, footer and aside elements and the roles banner, contentinfo, complementary and search go with their contents; the rest of the page is kept", async () => {
+  assert.deepEqual(await words("<header><p>Head words.</p></header><p>Body words.</p><footer><p>Foot words.</p></footer><aside><p>Side words.</p></aside>"), ["Body words."]);
+  for (const role of ["banner", "contentinfo", "complementary", "search"])
+    assert.deepEqual(await words(`<div role="${role}"><div>Furniture words.</div></div><p>Body words.</p>`), ["Body words."], role);
+  assert.deepEqual(await words(`<DIV ROLE='Banner'>Furniture</DIV><HEADER>Furniture</HEADER><p>Body words.</p>`), ["Body words."], "names and role values are case-insensitive");
+  assert.deepEqual(await words("<header><header>Inner</header><p>Outer head</p></header><p>Body words.</p>"), ["Body words."], "nesting is by the element's own name");
+  assert.equal("text_units" in await html("<header>Only a header</header><footer>Only a footer</footer>"), false, "a page of furniture alone has no unit");
+});
+
+test("R32 (T51 fix round 2, C19; K4303) (control): a header, footer, aside or landmark role inside a main or an article is kept; a nav inside them is still dropped", async () => {
+  assert.deepEqual(await words("<article><header><h1>Notice 2026-118</h1></header><p>Body words.</p><aside>Aside in the article.</aside><footer>Signed by the clerk.</footer></article>"),
+    ["Notice 2026-118", "Body words.", "Aside in the article.", "Signed by the clerk."]);
+  assert.deepEqual(await words('<main><div role="complementary">Complementary kept.</div><div role="search">Search kept.</div><nav>Menu</nav><p>Body.</p></main>'),
+    ["Complementary kept.", "Search kept.", "Body."]);
+  assert.deepEqual(await words("<p>Outside.</p><div><article><footer>Inside the article.</footer></article></div><footer>Outside footer.</footer>"), ["Inside the article."]);
+});
+
+test("R32 (T51 fix round 2, C19; K4303): when the page has a main element only its contents give passages, else when it has an article element only the articles' contents do; main wins, and several of either are read in the page's order", async () => {
+  assert.deepEqual(await words("<p>Before.</p><article>An article outside the main.</article><main><p>Main words.</p><article>Article in the main.</article></main><p>After.</p>"),
+    ["Main words.", "Article in the main."]);
+  assert.deepEqual(await words("<p>Before.</p><article><p>First article.</p></article><div>Between.</div><article><p>Second article.</p></article><p>After.</p>"),
+    ["First article.", "Second article."]);
+  assert.deepEqual(await words("<main><p>One.</p><main><p>Nested.</p></main></main><main><p>Two.</p></main>"), ["One.", "Nested.", "Two."], "a nested main is not a second region");
+  assert.deepEqual(await words("<MAIN class=x><P>Upper.</P></MAIN><p>Outside.</p>"), ["Upper."]);
+});
+
+test("R32 (T51 fix round 2, C19; K4303) (control): a page with no landmarks keeps all its visible text, and a main or article that is no element (no end tag, a self-closing tag, a role only) does not narrow the page", async () => {
+  assert.deepEqual(await words("<h1>Title words</h1><p>First.</p><div>Second.</div>"), ["Title words", "First.", "Second."]);
+  assert.deepEqual(await words("<p>Before.</p><main>Never closed<p>After.</p>"), ["Before.", "Never closed", "After."], "an element with no end tag is not guessed at");
+  assert.deepEqual(await words("<p>Before.</p><main/><p>After.</p>"), ["Before.", "After."]);
+  assert.deepEqual(await words('<p>Before.</p><div role="main">Role words.</div><p>After.</p>'), ["Before.", "Role words.", "After."]);
+  assert.deepEqual(await words("<p>Before.</p><article>Never closed<p>After.</p>"), ["Before.", "Never closed", "After."]);
+});
+
+test("R32 (T51 fix round 2, C19; K4303) (control): two readings of a landmark page are identical, and text that is not HTML is never narrowed", async () => {
+  const a = await html(LANDMARK_PAGE), b = await html(LANDMARK_PAGE);
+  assert.deepEqual(a.text_units, b.text_units);
+  assert.deepEqual(a.reading, b.reading);
+  assert.deepEqual(shape(await plain("<main>Kept</main>\n\n<footer>Also kept</footer>")).map((u) => u[4]), ["<main>Kept</main>", "<footer>Also kept</footer>"]);
 });
 
 /* ---------------------------------------------------------------- R22 (N1065) */
@@ -373,6 +506,8 @@ async function outwardText() {
   say(await pdf(t1(20), { PDF_WORKER: member(() => ({ ok: true, text: { document: "", pages: [], undetermined: [], counts: { chars: 0, undetermined: 0 } } })) }));
   for (const o of ["unbound", "no_improvement", "unavailable", "merged"]) say(rp.tier2FailureNote(o) || "");
   /* tier 3 */
+  // fixtures-generic: busy
+  // fixtures-generic: no
   const ocrEnvs = [{}, { OCR_WORKER: member(() => ({ status: 500, body: {} })) }, { OCR_WORKER: member(() => new Error("down")) },
     { OCR_WORKER: member(() => ({ ok: false, reason: "busy" })) }, { OCR_WORKER: member(() => ({ ok: true })) },
     { OCR_WORKER: member(() => ocrAnswer([0, 2])) }, { OCR_WORKER: member(() => ocrAnswer([0, 1, 7])) },
@@ -391,12 +526,18 @@ async function outwardText() {
   say(rp.ocrTextFromMember(ocrAnswer([0], { floor: 0.9 })));
   /* tier 4: every stop and a success */
   const base = { sha: "d", storeName: "bio", i2text: scan(), wiredTier: 1, chain: rp.layerChainFor(scan(), { tier: 1, container: "pdf" }) };
-  const acct = { ok: true, level: "member", key: "k" };
-  const good = { member: "ann", accounts: { accountFor: () => acct }, useCheck: () => null,
-                 transcribe: (q) => ({ ok: true, engine: "model", version: "1", pages: q.pages.map((p) => ({ page: p, text: `ai ${p}` })) }) };
+  /* the paying account is ai-accounts' real one (its published `accountsServing`: a member's own key referenced), and a real group with no account for the refusal */
+  const serving = (await accountsServing()).accounts;
+  const refusing = (await accountsWorld().group("ann")).a;
+  // fixtures-contract: store-assembly transcribe-answer
+  const good = { member: "ann", accounts: serving, useCheck: () => null,
+                 transcribe: (q) => ({ ok: true, engine: "model", version: "1", pages: q.pages.map((p) => ({ page: p, text: `ai ${p}` })),
+                                       asked: q.pages, sent: q.pages, owed: [] }) };
   const variants = [undefined, {}, { ...good, member: "" }, { ...good, accounts: {} }, { ...good, accounts: { accountFor: () => { throw new Error("x"); } } },
-    { ...good, accounts: { accountFor: () => ({ ok: false, code: "NO_ACCOUNT", detail: "none" }) } }, { ...good, useCheck: undefined },
+    { ...good, accounts: refusing }, { ...good, useCheck: undefined },
     { ...good, useCheck: () => ({ code: "AI_LIMIT_REACHED", detail: "limit" }) }, { ...good, useCheck: () => { throw new Error("x"); } },
+    // fixtures-contract: store-assembly transcribe-answer
+    // fixtures-generic: no
     { ...good, transcribe: undefined }, { ...good, transcribe: () => { throw new Error("x"); } }, { ...good, transcribe: () => ({ ok: false, reason: "no" }) },
     { ...good, transcribe: () => ({ ok: true, pages: [] }) }, { ...good, transcribe: () => ({ ok: true, engine: "m", pages: [] }) },
     { ...good, transcribe: (q) => ({ ok: true, engine: "m", pages: [{ page: 1, text: "stray" }, ...q.pages.slice(0, 1).map((p) => ({ page: p, text: "t" }))] }) },
@@ -428,7 +569,7 @@ test("R22 (N1065): no place is named in this module's behaviour or outward text:
   assert.ok(places.size >= 4, "the profiles name places");
   const all = await outwardText();
   assert.ok(all.length > 20000, `the module said a good deal: ${all.length} characters`);
-  for (const must of ["tier 1 read essentially nothing", "OCR member", "the AI was not asked", "was not read as text"])
+  for (const must of [word("reading-pipeline.tier_read_essentially_nothing"), "OCR member", "the AI was not asked", "was not read as text"])
     assert.ok(all.includes(must), `the scenarios reached "${must}"`);
   const lower = all.toLowerCase();
   for (const p of places) assert.equal(lower.includes(p.toLowerCase()), false, `names ${p}`);

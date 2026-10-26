@@ -50,9 +50,13 @@
    T50 (T50-79; N1179, N1186, N1146; K3747, K3557; DEC-278): an administrator's own act that `REAUTH_ACTS` names, asked
    by a session whose member is not an administrator, is refused membership's `NOT_AN_ADMIN` before the password is
    asked (R29); the viewer of an `ai` credential minted in a project carries that project (R30); the key list R28 reads
-   is the design's regenerated one (R31). */
+   is the design's regenerated one (R31).
+
+   T51 fix round 10 (K5170; ratification R60): the session read and, for an act that asks the password again, the
+   question whether it is due are issued together, one hop in the door's chain (R33). */
 import { liveToken, sha256hex } from "../tokens.mjs";
-import { word } from "../setup-words/index.mjs";
+import { storeStub } from "../store-place.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS,
          OP_FAMILIES } from "../op-declarations/index.mjs";
@@ -306,7 +310,9 @@ export async function classify(token, env) {
    that did not resolve" and "a session that did not resolve" stay two answers. */
 export const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 const SESSION_TOKEN_SHAPE = /^[0-9a-f]{64}$/;
-const bioStore = (env) => env.STORE.get(env.STORE.idFromName("bio"));
+/* G83 (K4746, K4747; runtime-limits R28): the team's room is obtained through the one helper, which passes its location
+   hint and names it by its generation, so every store call of this module reaches the same room. */
+const bioStore = (env) => storeStub(env, "bio");
 
 /* R6, R20 (K2038) — HOW A LOOKUP REACHES THE STORE: in a header, never the address. `x-bio-session` carries the token
    `session` resolves, `x-bio-credential-sha` the digest `aicredentiallook` resolves; `store-door` hands each to
@@ -338,6 +344,26 @@ async function sessionPresented(t, env, doAnswer, background = false) {
   const out = await doAnswer(lookup(env, "session", "x-bio-session", t, background === true ? "?background=1" : ""));
   if (!out.answered) return { silent: { op: "session", correlation: out.correlation } };
   return { sess: out.result?.session ?? null };
+}
+
+/* R32 (G119; K4814 (4), K4817) — ONE SESSION READ PER REQUEST. The three places that read a session (`admit`, `readerOf` and
+   `liveSessionDigest`, the window's) are handed the door's one `presentedCredential` answer for the request, so that
+   object is the request's key: the first read is kept, as the promise of its answer (a silence included), and the others
+   of the same request take it. It holds only what the first read asked, the token, `background` and the `env` and
+   `doAnswer` it was asked with; a different token, `background` mark, `env` or reader is its own read. Weakly held, so it
+   lives no longer than the request; a credential presented without the door's object has nothing to key on and is read
+   each time. A read that fails is dropped from the memo. `doorwindow` is not read here and stays asked (K1881). */
+const sessionReads = new WeakMap();
+function sessionRead(credential, t, env, doAnswer, background) {
+  const bg = background === true;
+  if (!credential || typeof credential !== "object") return sessionPresented(t, env, doAnswer, bg);
+  const memo = sessionReads.get(credential);
+  if (memo && memo.t === t && memo.bg === bg && memo.env === env && memo.doAnswer === doAnswer) return memo.looked;
+  const looked = sessionPresented(t, env, doAnswer, bg);
+  const kept = { t, bg, env, doAnswer, looked };
+  sessionReads.set(credential, kept);
+  looked.catch(() => { if (sessionReads.get(credential) === kept) sessionReads.delete(credential); });
+  return looked;
 }
 
 /* REC-132 / D-422 — WHO A SESSION IS, IN TWO HALVES KEPT APART. `viewer` is what it may SEE (the founder's is the bare
@@ -402,9 +428,7 @@ export function aiTaskScope(cred, op, spec, { named = [] } = {}) {
 
   if (!aiReachesAsMember(spec, op))
     return { refusal: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", ...aiScopeRow("AI_BEYOND_TASK_SCOPE"),
-      detail: `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it `
-      + `either. An agent is confined to what a member could do themselves, which is a property of the `
-      + `operation rather than a list kept anywhere.`,
+      detail: localize("admission.index.no_member_of_this_team", "no member of this team reaches '{String}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.", { String: String(String(op).slice(0, 60)) }),
       op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai" } } };
 
   /* R26 (T48; N1045; K3150): a read that answers WHO A SOURCE IS is no part of the floor. A member's reach alone never
@@ -488,10 +512,7 @@ export function aiScopeDeclaration(writes) {
             + `session, and no agent credential is among the credentials it admits, so it cannot be `
             + `handed to an agent. This is a property of the operation and not a list of forbidden `
             + `ones: its OPS row names the credentials that reach it, and an agent's is not one.`
-          : `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed `
-            + `to an agent. This is a property of the operation and not a list of forbidden ones: the `
-            + `unattended worker's own verbs carry no member class by construction, so they are `
-            + `outside every scope anybody can author.`,
+          : localize("admission.index.op_is_not_reachable_by", "'{op}' is not reachable by a member of this team, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.", { op: String(op.slice(0, 60)) }),
         op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null } } };
   }
   /* END DEC-49 REGION is-ai-scope-declaration */
@@ -577,7 +598,7 @@ export function sessionOpGate(kind, op, spec, method, tables = DECLARED) {
       detail: `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only the founder's: `
       + `the password session made when this instance was claimed with its root credential. This is `
       + `a member's session, which is what every enrolled member signs in with, an administrator of `
-      + `this group included — so an administrator's session is refused this exactly as this one is, `
+      + `this team included — so an administrator's session is refused this exactly as this one is, `
       + `and nothing here says whether you are one. There is no machine credential to go and find: `
       + `the founder performs this from their own browser.`,
       op, session: kind, reachedBy: "founder" } };
@@ -592,11 +613,7 @@ export function sessionOpGate(kind, op, spec, method, tables = DECLARED) {
   if (recorded)
     return { status: 403, body: { ok: false, reason: "MACHINE_CREDENTIAL_REQUIRED", ...admissionRow("MACHINE_CREDENTIAL_REQUIRED"),
       error: "this operation requires a machine credential, not a signed-in session",
-      detail: `'${String(op).slice(0, 60)}' is on the unattended path. No signed-in session of any role `
-      + `reaches it, the founder's included; it answers to a credential held in the hosting `
-      + `account. This instance holds a decision on record saying so, cited in 'recorded' so you `
-      + `can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the `
-      + `opposite): it says which credential this verb is addressed to.`,
+      detail: localize("admission.index.string_is_on_the_unattended", "'{String}' is on the unattended path. No signed-in session of any role reaches it, the founder's included; it answers to a credential held in the hosting account. This instance holds a decision on record saying so, cited in 'recorded' so you can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the opposite): it says which credential this verb is addressed to.", { String: String(String(op).slice(0, 60)) }),
       op, recorded } };
   return { status: 403, body: { ok: false, reason: "SESSION_ROUTE_NOT_RECORDED", ...admissionRow("SESSION_ROUTE_NOT_RECORDED"),
     error: "no signed-in session reaches this operation, and no decision on record says why",
@@ -631,7 +648,7 @@ export function projectCreationGate(caps) {
 /* R5–R11 — THE ADMISSION (REC-79, C-38): every refusal a caller meets before their op runs, in this order, for a gated
    op (`spec.classes` a list; the namespace gates R1–R3 and the public ops come first, at the door):
      a binding class (R5; the retired member key refused MEMBER_TOKEN_RETIRED), else the presented agent credential (R6, `presented` from `aiCredentialPresented`), else a
-     session token resolved (R6) and judged: `export` refused (R8's ROOT_OF_TRUST_REQUIRED, section 8.1), then the
+     session token resolved (R6) and judged: `export` refused to any session but the founder's (R8's ROOT_OF_TRUST_REQUIRED, section 8.1), then the
      session gate (R8); no class (R7); the agent's task scope (R10) or the class list (R9: `machineClasses` for a caller
      not arriving by a session, where the spec gives it); the session's capability (R11); the landing (R4).
    Answers `{ refusal }`, `{ silent }` (the session lookup's store did not answer) or `{ caller }`:
@@ -653,7 +670,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
   const bound = await bindingOf(t, env);
   let cls = bound === RETIRED ? null : bound;
   let viaSession = false, sess = null, halves = { member: null, viewer: null, identity: null };
-  let aiCred = null;
+  let aiCred = null, dueEarly = null;
   if (!cls && bound !== RETIRED && presented?.cred) { cls = "ai"; aiCred = presented.cred; }
 
   /* DEC-49 REGION is-admission
@@ -665,12 +682,20 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
   if (bound === RETIRED)
     return { refusal: { status: 401, body: { ok: false, reason: "MEMBER_TOKEN_RETIRED", ...admissionRow("MEMBER_TOKEN_RETIRED"),
       error: "the shared member key is retired",
-      detail: "this request presented the group's shared member key, which is retired: it no longer signs anybody in, "
+      detail: "this request presented the team's shared member key, which is retired: it no longer signs anybody in, "
             + "and nothing was read or written. A member signs in with their own password, and an agent uses an "
             + "agent credential a member creates for it." } } };
   if (!cls) {
     if (t && SESSION_TOKEN_SHAPE.test(t)) {
-      const looked = await sessionPresented(t, env, doAnswer, background);
+      /* R33 (fix round 10; K5170; ratification R60): an act that asks the password again asks the store whether it is due
+         in the same hop as the session read, the two issued together, not one after the other. It is asked only for an
+         act R29 does not put to the roster first (a member who may not take that act is never asked, so those keep their
+         order); its answer is used only if the gates between the session and R25 let the request on, and a request one
+         of them refuses has the answer dropped unread. */
+      const dueAsked = reauthAsked(reauthActs, op, { url, body }) && !administratorsOwnActs().has(op)
+        ? reauthDuePresented(t, env, doAnswer) : null;
+      if (dueAsked) dueAsked.catch(() => {});
+      const looked = await sessionRead(credential, t, env, doAnswer, background);
       if (looked.silent) return { silent: looked.silent };
       if (looked.sess) {
         const kind = looked.sess.role === "admin" ? "admin" : "member";
@@ -679,22 +704,23 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
            nobody for it until it is unlocked. */
         if (looked.sess.locked === true && !LOCKED_SESSION_OPS.includes(op))
           return { refusal: { status: 401, body: Credentials.sessionLockedRefusal() } };
-        /* Section 8.1, before the session gate so the answer states the actual rule: the root of trust is the token in
-           the hosting account, and a session (the founder's own browser included) is not it. */
-        if (op === "export")
+        /* Section 8.1 (Membership v2 §4.6; R8), before the session gate so the answer states the actual rule: the root of
+           trust has two forms, the ADMIN_TOKEN holder's bearer (admitted by R9, never here) and the founder's session,
+           the one the claim made from that token (session kind `admin`). Every other session, an enrolled
+           administrator's included, is refused. */
+        if (op === "export" && kind !== "admin")
           return { refusal: { status: 403, body: { ok: false, reason: "ROOT_OF_TRUST_REQUIRED", ...admissionRow("ROOT_OF_TRUST_REQUIRED"), op,
-            detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a "
-                  + "signed-in session, and not in-app administrator status. A session is derived from a "
-                  + "password; the root of trust is the token held in the hosting account. This refuses "
-                  + "the founder's own browser too, which is the one place in this system where being "
-                  + "the founder is not enough. The published record needs no credential at all: see "
-                  + "op=publishedmanifest." } } };
+            detail: "a full working-corpus export needs the root of trust: the ADMIN_TOKEN-class credential, or the "
+                  + "founder's own session, which the claim made from it. A member's session is neither, and "
+                  + "neither is in-app administrator status: an administrator signs in as a member. The "
+                  + "published record needs no credential at all: see op=publishedmanifest." } } };
         const gated = sessionOpGate(kind, op, spec, method, tables);
         if (gated) return { refusal: gated };
         cls = kind;
         sess = looked.sess;
         halves = resolveSession(sess);
         viaSession = true;
+        dueEarly = dueAsked;
       }
     }
   }
@@ -725,7 +751,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
          take it is never asked to sign in again for it. Membership's one answer, `NOT_AN_ADMIN`; nothing is asked of the store. */
       if (sess.administer !== true && administratorsOwnActs().has(op))
         return { refusal: { status: 403, body: notAnAdmin(halves.member, op) } };
-      const due = await reauthDuePresented(t, env, doAnswer);
+      const due = await (dueEarly ?? reauthDuePresented(t, env, doAnswer));
       if (due.silent) return { silent: due.silent };
       if (due.refusal) return { refusal: { status: 403, body: due.refusal } };
     }
@@ -820,7 +846,7 @@ export function bearerFence(op, caller) {
   if (IDENTITY_ACTIONS.includes(op))
     return { status: 403, body: { ok: false, reason: "GROUP_IDENTITY_NEEDS_SESSION",
       ...identityFenceRow("GROUP_IDENTITY_NEEDS_SESSION"), op, tokenClass: cls,
-      detail: `the group's display name and its domain claim are set by a named administrator's own signed-in `
+      detail: `the team's display name and its domain claim are set by a named administrator's own signed-in `
             + `session, and the record names who set each one (Publication §7). The credential that asked is the `
             + `operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.` } };
   /* END DEC-49 REGION is-group-identity-session */
@@ -876,7 +902,7 @@ export async function readerOf(url, env, storeName, presented, doAnswer, credent
     return { viewer: scoped && !scoped.refusal ? scoped.viewer : "", cls: "ai" };
   }
   if (SESSION_TOKEN_SHAPE.test(t)) {
-    const looked = await sessionPresented(t, env, doAnswer, background);
+    const looked = await sessionRead(credential, t, env, doAnswer, background);
     if (looked.silent) return { silent: looked.silent };
     /* R24 (T47): a locked session reads nothing until it is unlocked, so it is no one here */
     if (!looked.sess || looked.sess.locked === true) return { viewer: "" };
@@ -950,9 +976,7 @@ export function doorRateLimited(retryAfter, { session = false } = {}) {
   /* DEC-49 REGION is-door-window */
   return { status: 429, body: { ok: false, reason: "DOOR_RATE_LIMITED", ...admissionRow("DOOR_RATE_LIMITED", { minutes },
       session ? "refusal.DOOR_RATE_LIMITED.session" : undefined),
-    detail: `too many requests to the operations anyone may call reached this group's Civicsmith from ${where} in `
-      + `a short time, so this one was turned away before the operation ran; nothing was read or written. Try again `
-      + `in ${wait} seconds.`,
+    detail: localize("admission.index.too_many_requests_to_the", "too many requests to the operations anyone may call reached this team's Civicsmith from {where} in a short time, so this one was turned away before the operation ran; nothing was read or written. Try again in {wait} seconds.", { where: String(where), wait: String(wait) }),
     stated: session ? SESSION_WINDOW_STATED : DOOR_WINDOW_STATED, retryAfter: wait, minutes } };
   /* END DEC-49 REGION is-door-window */
 }
@@ -1022,7 +1046,7 @@ async function liveSessionDigest({ req, env, doAnswer, credential, background })
   if (typeof t !== "string" || !SESSION_TOKEN_SHAPE.test(t) || typeof doAnswer !== "function") return null;
   try {
     if ((await bindingOf(t, env)) !== null) return null;
-    const looked = await sessionPresented(t, env, doAnswer, background === null ? backgroundOf(req) : background === true);
+    const looked = await sessionRead(credential, t, env, doAnswer, background === null ? backgroundOf(req) : background === true);
     if (looked.silent) {
       console.warn(`admission: the session was not read for the door's window; the request is counted by source (correlation ${
         typeof looked.silent.correlation === "string" ? looked.silent.correlation : "none"})`);

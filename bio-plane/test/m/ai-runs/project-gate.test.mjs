@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, PROJ, ORG } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const PLN = "PLN-2026-0001";
 /** The sight of an organisation `ai` credential's run (`class:ai`): a machine viewer sees every project, so the gate alone judges the actor. */
@@ -24,7 +25,7 @@ let n = 0;
 const ask = (w, actor, over = {}) => {
   const m = actor.replace(/^member:/, "").split("/")[0];
   return w.runs.open(OPEN({ run: `RP${n++}`, contextType: "project", contextId: PROJ, mode: "plan", plan: PLN,
-    label: "asking the assistant for options on a plan", principalPlane: `member:${m}`, principalClaude: `member:${m}`,
+    label: word("action-plans.label.asking_assistant_options"), principalPlane: `member:${m}`, principalClaude: `member:${m}`,
     bounds: [{ bound: "proposals", allowed: 5 }], actor, viewer: `member:${m}`, ...over }));
 };
 const refusedNotMember = (r, what) => {

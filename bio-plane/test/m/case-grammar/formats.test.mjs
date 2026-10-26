@@ -3,14 +3,14 @@
    `casedoc`, `sources` and `tensions` suites' R20 arms (K651) and driven on the bytes alone. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
-         CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+         CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
          caseDocumentRequiresMaterials, caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
          BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED, caseTensionsOf, disclosedCandidates,
          TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE, TENSIONS_PREDATE_SENTENCE,
-         TENSIONS_UNREADABLE_SENTENCE } from "../../../src/case-grammar/index.mjs";
+         TENSIONS_UNREADABLE_SENTENCE, SENTENCES as PINNED } from "../../../src/case-grammar/index.mjs";
 import { doc, tensionLines, sha, NOW, V } from "./helpers.mjs";
 
 const PREDICATES = [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
@@ -18,30 +18,33 @@ const PREDICATES = [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosu
 const ODD = [null, undefined, 7, "x", {}, [], { format: null }, { format: "bio-case-document/5 " },
              { get format() { throw new Error("boom"); } }];
 
-test("R1 the formats: /7 is written, /7–/1 accepted as written, /7 identical in fields to /6 under every predicate, pure and never throwing", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
+test("R1 R33 the formats: /8 is written, /8–/1 accepted as written, /8 and /7 identical in fields to /6 under every predicate, pure and never throwing", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/8");
+  assert.equal(CASE_DOCUMENT_FORMAT_V7, "bio-case-document/7");
   assert.deepEqual([CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
                     CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY],
                    ["bio-case-document/6", "bio-case-document/5", "bio-case-document/4", "bio-case-document/3",
                     "bio-case-document/2", "bio-case-document/1"]);
-  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/7", "bio-case-document/6", "bio-case-document/5",
-    "bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
+  assert.equal(CASE_DOCUMENT_FORMAT_V9, "bio-case-document/9");
+  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/9", "bio-case-document/8", "bio-case-document/7", "bio-case-document/6",
+    "bio-case-document/5", "bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
   assert.equal(Object.isFrozen(CASE_DOCUMENT_FORMATS_ACCEPTED), true);
   const f = (v) => ({ format: `bio-case-document/${v}` });
-  const vs = [7, 6, 5, 4, 3, 2, 1, 8, 0];
-  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, true, true, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, true, true, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, true, true, false, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, true, true, false, false, false, false, false, false],
-                   "the other predicates hold for /6 and /7 as they hold for /5");
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresMaterials(f(v))), [true, true, false, false, false, false, false, false, false],
-                   "the method and materials blocks are required of /6 and /7 only");
-  /* DEC-124: /7 is identical in fields to /6: every predicate answers the same for both */
-  for (const pred of PREDICATES) assert.equal(pred(f(7)), pred(f(6)), pred.name);
-  for (const odd of [...ODD, { format: "bio-case-document/6 " }, { format: "bio-case-document/7 " }, { format: "Bio-case-document/7" }])
+  const vs = [9, 8, 7, 6, 5, 4, 3, 2, 1, 10, 0];
+  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, true, true, true, true, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, true, true, true, true, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, true, true, true, true, false, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, true, true, true, true, false, false, false, false, false, false],
+                   "the other predicates hold for /6, /7, /8 and /9 as they hold for /5");
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresMaterials(f(v))), [true, true, true, true, false, false, false, false, false, false, false],
+                   "the method and materials blocks are required of /6, /7, /8 and /9 only");
+  /* DEC-124, R33: /7 and /8 are identical in fields to /6: every predicate answers the same for all three */
+  for (const pred of PREDICATES) { assert.equal(pred(f(7)), pred(f(6)), pred.name); assert.equal(pred(f(8)), pred(f(6)), pred.name); assert.equal(pred(f(9)), pred(f(6)), pred.name); }
+  for (const odd of [...ODD, { format: "bio-case-document/6 " }, { format: "bio-case-document/7 " }, { format: "bio-case-document/8 " }, { format: "bio-case-document/9 " },
+                     { format: "Bio-case-document/8" }])
     for (const pred of PREDICATES) assert.equal(pred(odd), false);
   /* pure: the same answer twice, and the argument untouched */
-  for (const v of [7, 6, 5]) {
+  for (const v of [9, 8, 7, 6, 5]) {
     const fm = f(v);
     for (const pred of PREDICATES) assert.equal(pred(fm), pred(fm));
     assert.deepEqual(fm, { format: `bio-case-document/${v}` });
@@ -110,7 +113,8 @@ test("R1 R6 blocks before /5 answer null with the sentence that the format preda
 test("R1 sourceStatement is the one spelling of an entry the public may be told, and unnamedSourceStatement the one for none, Withheld with its reason", () => {
   assert.equal(sourceStatement({ kind: "attribute", attribute: "employer", value: "the water board", how: "self" }),
                "attribute employer: the water board");
-  assert.equal(sourceStatement({ kind: "name", recorded: false, how: "self" }), `name: ${NOT_RECORDED_STATED}`);
+  assert.equal(sourceStatement({ kind: "name", recorded: false, how: "self" }, CASE_DOCUMENT_FORMAT_V7), `name: ${NOT_RECORDED_STATED}`,
+               "a /7 document spells the sentence in its frozen words");
   assert.equal(NOT_RECORDED_STATED, "known to the group, not recorded");
   assert.equal(sourceStatement({ kind: "pseudonym_link", to: "SRC-2026-0002", how: "self" }),
                "pseudonym_link: the same person as SRC-2026-0002");
@@ -170,8 +174,7 @@ const SENTENCES = [
 const withTensions = (t, format = CASE_DOCUMENT_FORMAT) => doc(format, t ? tensionLines(t) : []);
 
 test("R1 a /5 document's tension section round-trips: each disclosed contradiction with its finding, both sides, its state in words, the explanation, who acknowledged it and when, depth 1 with its sentence", () => {
-  assert.deepEqual({ ...TENSION_STATE_WORDS }, { open: "open", explained_not_shown: "explained, not yet shown",
-    taken_up: "taken up as a question", irreconcilable: "held irreconcilable, to be reopened by new evidence" });
+  assert.equal(sha(JSON.stringify({ ...TENSION_STATE_WORDS })), "85a10b2060f655f39778707068f368edef3f81ac5028066f618ac684de61d469", "the state words' bytes are pinned");
   const r = caseTensionsOf(withTensions({ rows: ROWS, sentences: SENTENCES }));
   assert.equal(r.detail, null);
   assert.deepEqual(r.tensions.map((x) => x.candidate), ["c-open", "c-expl", "c-up", "c-irr", "c-hid"]);
@@ -182,7 +185,7 @@ test("R1 a /5 document's tension section round-trips: each disclosed contradicti
                    [F, 1, TENSION_DEPTH_SENTENCE, V("olive"), "2026-09-29T00:00:00Z", false]);
   assert.deepEqual(open.sides.a, { kind: "claim", text: "A1 says so", source: "SRC-A1", date: "2026-09-01", doctype: "minutes", capture: null });
   assert.equal(open.sides.b.text, "B1 says so");
-  assert.deepEqual(open.owner_words, { text: "We know.", by: "the case's owner" });
+  assert.deepEqual(open.owner_words, { text: "We know.", by: PINNED.caseOwner });
   assert.equal(r.tensions[1].owner_words, null);
   assert.equal(r.tensions[1].explanation, "Different dates.");
   assert.equal(r.tensions[3].kind, "irreconcilable");
@@ -198,8 +201,7 @@ test("R1 DEC-85 a disclosed contradiction with a side the publisher could not se
   const r = caseTensionsOf(withTensions({ rows: ROWS, sentences: SENTENCES }));
   const hid = r.tensions.find((x) => x.candidate === "c-hid");
   assert.deepEqual([hid.unseen_other_side, hid.highlighted, hid.sentence, hid.state], [true, true, TENSION_HIGHLIGHT_SENTENCE, "open"]);
-  assert.equal(TENSION_HIGHLIGHT_SENTENCE, "This finding rests on a side in conflict with a record not shown here. The "
-    + "record and who holds it are not named.");
+  assert.equal(sha(TENSION_HIGHLIGHT_SENTENCE), "506dc7c6fc8c5d024920c6392147ddb8823a8d904196e8bd1755d9361ab31424", "the sentence's bytes are pinned");
   assert.deepEqual(hid.side, { kind: "claim", text: "S5 says so", source: "SRC-S5", date: "2026-09-01", doctype: "minutes", capture: null });
   assert.equal(r.highlighted, 1);
   for (const k of ["sides", "explanation", "kind", "b", "a"]) assert.equal(k in hid, false, `no ${k}`);

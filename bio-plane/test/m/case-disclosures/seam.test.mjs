@@ -8,6 +8,8 @@ import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { world, storage, V, T0 } from "./fixture.mjs";
 import * as CD from "../../../src/case-disclosures/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+import { checkAccountMalformed } from "../case-checker/fixtures.mjs";
 
 const { CASE_DISCLOSURE_CHECKS, caseDisclosuresOf } = CD;
 const Q = "INQ-2026-0001-q", DOC = "INFO-2026-0001-a";
@@ -18,41 +20,41 @@ const hash = (lines) => createHash("sha256").update(lines.join("\n")).digest("he
 /* The requirements' table, word for word (`build/requirements/case-disclosures.md`, R22), C-120.8 as DEC-149 re-words it
    (T34-87). */
 const ROWS = [
-  ["TENSION_NOT_DISCLOSED", "C-120.1", "tensionsJudged", "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."],
-  ["DISCLOSURE_NOT_STANDING", "C-120.2", "tensionsJudged", "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."],
-  ["TENSIONS_UNDETERMINED", "C-120.3", "tensionsUndetermined", "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."],
-  ["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4", "selfAttestedJudged", "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written."],
-  ["SELF_ATTESTED_NO_REASON", "C-120.5", "selfAttestedJudged", "Publishing a document as self-attested only says why. Give the reason. Nothing was written."],
-  ["SELF_ATTESTATION_NOT_STANDING", "C-120.6", "selfAttestedJudged", "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written."],
-  ["UNCLEARED_HUNCH", "C-120.7", "hunchDebt", "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."],
-  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written."],
-  ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written."],
-  ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published."],
-  ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published."],
-  ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "flagsJudged", "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."],
+  ["TENSION_NOT_DISCLOSED", "C-120.1", "tensionsJudged", word("refusal.TENSION_NOT_DISCLOSED")],
+  ["DISCLOSURE_NOT_STANDING", "C-120.2", "tensionsJudged", word("refusal.DISCLOSURE_NOT_STANDING")],
+  ["TENSIONS_UNDETERMINED", "C-120.3", "tensionsUndetermined", word("refusal.TENSIONS_UNDETERMINED")],
+  ["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4", "selfAttestedJudged", word("refusal.CO_ATTESTATION_UNACKNOWLEDGED")],
+  ["SELF_ATTESTED_NO_REASON", "C-120.5", "selfAttestedJudged", word("refusal.SELF_ATTESTED_NO_REASON")],
+  ["SELF_ATTESTATION_NOT_STANDING", "C-120.6", "selfAttestedJudged", localize("case-disclosures.checks.a_document_acknowledged_as_self", "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.")],
+  ["UNCLEARED_HUNCH", "C-120.7", "hunchDebt", word("refusal.UNCLEARED_HUNCH")],
+  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", word("refusal.RELIED_ON_NOT_PRESENTABLE")],
+  ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", word("refusal.ACCEPTED_WORK_NOT_IN_FORCE")],
+  ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", word("refusal.FLAG_NOT_DISCLOSED")],
+  ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", word("refusal.FLAGS_UNDETERMINED")],
+  ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "flagsJudged", word("refusal.FLAG_DISCLOSURE_NOT_STANDING")],
   /* R22's new rows (T33-68), numbered provisionally until their stamp; the translations are drafts */
-  ["PERSON_BASIS_UNRECORDED", "C-120.14", "peopleJudged", "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written."],
-  ["PERSON_BASIS_NOT_STANDING", "C-120.15", "peopleJudged", "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written."],
-  ["TIE_ATTESTATION_MISSING", "C-120.16", "tieAttestationJudged", "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written."],
+  ["PERSON_BASIS_UNRECORDED", "C-120.14", "peopleJudged", word("refusal.PERSON_BASIS_UNRECORDED")],
+  ["PERSON_BASIS_NOT_STANDING", "C-120.15", "peopleJudged", word("refusal.PERSON_BASIS_NOT_STANDING")],
+  ["TIE_ATTESTATION_MISSING", "C-120.16", "tieAttestationJudged", word("refusal.TIE_ATTESTATION_MISSING")],
   /* R22's new rows (T37; N757, K2206), R6's, numbered provisionally until their stamp; the translations are BOB's drafts */
   /* T38 (DEC-183; K2220, K2303): C-120.17 re-worded to `words.json`'s `photo.refused.format`, verbatim */
-  ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it."],
-  ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written."],
+  ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", word("photo.refused.format", { photo: "{photo}" })],
+  ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", word("refusal.PHOTO_MARKS_UNDETERMINED")],
   /* T38 (DEC-183 (1); K2220, K2303): R6's PHOTO_UNCHECKED, `photo.refused.unchecked` verbatim, re-worded by DEC-187 (1) (T40) */
-  ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}."],
+  ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", word("photo.refused.unchecked", { photo: "{photo}" })],
   /* T39 (N806; K2333): R6's member-document rows, numbered provisionally until their stamp; .21 and .22 `words.json`'s
      `document.refused.pending` and `document.refused.clean` verbatim (T41; DEC-188 (7)) */
-  ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "materialsJudged", "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written."],
-  ["DOCUMENT_COPY_PENDING", "C-120.21", "materialsJudged", "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes."],
-  ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "materialsJudged", "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."],
+  ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "materialsJudged", word("refusal.DOCUMENT_COPY_UNDETERMINED")],
+  ["DOCUMENT_COPY_PENDING", "C-120.21", "materialsJudged", word("document.refused.pending", { document: "{document}" })],
+  ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "materialsJudged", word("document.refused.clean", { document: "{document}" })],
   /* T41 (N820; D56–D58, D63; K2471): R30's rows, in its order, numbered provisionally until T42's stamp; drafts */
-  ["ACCOUNT_SENTENCE_UNSUPPORTED", "C-120.23", "accountJudged", "A sentence of the account rests on nothing it cites. Cite what it rests on, mark it as following a printed bias statement, or take it out. Nothing was written."],
-  ["ACCOUNT_FACT_NOT_IN_CITED", "C-120.24", "accountJudged", "A sentence of the account states a figure, date, name or quotation that what it cites does not hold. Say only what it cites holds, or cite what holds it. Nothing was written."],
-  ["ACCOUNT_CONTRADICTED_BY_RECORD", "C-120.25", "accountJudged", "A sentence of the account says something other than the record holds: a finding's conclusion or a determination, or a leg that cuts against it read as support. It cannot be tied to evidence. Say what the record holds, or take it out. Nothing was written."],
-  ["ACCOUNT_BIAS_NOT_PRINTED", "C-120.26", "accountJudged", "A sentence of the account is framed by a bias statement this case's lens does not print. Frame it by a statement the lens prints, or write it without the framing. Nothing was written."],
-  ["ACCOUNT_CLAIM_NOT_BIAS", "C-120.27", "accountJudged", "A sentence marked as following a bias statement states a fact: a figure, date, name, quotation or a finding's outcome. Lying is not bias. Cite what the fact rests on, or take it out. Nothing was written."],
-  ["ACCOUNT_FLAG_UNANSWERED", "C-120.28", "accountJudged", "The machine flagged a sentence of the account as not supported by what it cites, and the flag is not answered. Tie the sentence to evidence, or take it out. Nothing was written."],
-  ["ACCOUNT_CHECK_UNDETERMINED", "C-120.29", "accountJudged", "The account could not be checked against what it cites, so whether every sentence stands is not known. Try again. Nothing was written."],
+  ["ACCOUNT_SENTENCE_UNSUPPORTED", "C-120.23", "accountJudged", word("refusal.ACCOUNT_SENTENCE_UNSUPPORTED")],
+  ["ACCOUNT_FACT_NOT_IN_CITED", "C-120.24", "accountJudged", word("refusal.ACCOUNT_FACT_NOT_IN_CITED")],
+  ["ACCOUNT_CONTRADICTED_BY_RECORD", "C-120.25", "accountJudged", word("refusal.ACCOUNT_CONTRADICTED_BY_RECORD")],
+  ["ACCOUNT_BIAS_NOT_PRINTED", "C-120.26", "accountJudged", word("refusal.ACCOUNT_BIAS_NOT_PRINTED")],
+  ["ACCOUNT_CLAIM_NOT_BIAS", "C-120.27", "accountJudged", word("refusal.ACCOUNT_CLAIM_NOT_BIAS")],
+  ["ACCOUNT_FLAG_UNANSWERED", "C-120.28", "accountJudged", word("refusal.ACCOUNT_FLAG_UNANSWERED")],
+  ["ACCOUNT_CHECK_UNDETERMINED", "C-120.29", "accountJudged", word("refusal.ACCOUNT_CHECK_UNDETERMINED")],
 ];
 
 test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED), C-120.19 (R6's PHOTO_UNCHECKED, T38), C-120.20–C-120.22 (R6's DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE, T39) and C-120.23–C-120.29 (R30's ACCOUNT_SENTENCE_UNSUPPORTED, ACCOUNT_FACT_NOT_IN_CITED, ACCOUNT_CONTRADICTED_BY_RECORD, ACCOUNT_BIAS_NOT_PRINTED, ACCOUNT_CLAIM_NOT_BIAS, ACCOUNT_FLAG_UNANSWERED and ACCOUNT_CHECK_UNDETERMINED, T41) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
@@ -154,7 +156,7 @@ test("R22: each row's method raises its code, with the row's check and translati
   }
   assert.deepEqual(raised(acct([], [{ kind: "account_check", ord: 1, text: "The council met.", cites: ["h1"] }]).refusals), [row("ACCOUNT_FLAG_UNANSWERED")]);
   assert.deepEqual(acct([], [{ kind: "account_check", ord: 1, text: "The council met.", cites: [] }]).refusals, [], "tied to evidence");
-  const un = world({ deps: { caseChecker: { checkAccount: () => ({ ok: false, reason: "ACCOUNT_MALFORMED" }) } } }).cd;
+  const un = world({ deps: { caseChecker: { checkAccount: () => checkAccountMalformed() } } }).cd;
   assert.deepEqual(raised(un.accountJudged({ account: S, cited: {} }).refusals), [row("ACCOUNT_CHECK_UNDETERMINED")]);
 });
 
@@ -360,28 +362,28 @@ const ACCEPTED = {
 /* Each renderer over the fixed rows, and the SHA-256 of its lines joined by newlines as case-authoring's own renderers
    (`document.mjs` at tranche/T29's opening, before the split) produced them from the same rows. */
 const RENDERED = {
-  "4622dce4f877b09dd49359c991d211736923732ecee1fc4bc365f62380e70e38": ["tensionFrontmatterLines", [ROWS_T, UNREAD]],
+  "0d699014316555a1948c97c544874e942896cb58a0ad3825ee8d63f29bf23b88": ["tensionFrontmatterLines", [ROWS_T, UNREAD]],
   "147ca17cd4fca35ce473f33b01ba40847056d9a6b19feece651b7e5ba7955745": ["tensionFrontmatterLines", [[], []]],
   "7b4d64ee3bbd113a414cf7a9b7fbbe3b4a871838fcac7aaf624c8a183ce25f39": ["tensionBodyLines", [ROWS_T, UNREAD]],
   "8708f2958a9f13f2c9d49825b7b401a89b8057e9d9a85128bc72612a47a31dfa": ["tensionBodyLines", [[]]],
-  "69c79f41e94ef5e3d1e52e35cb912344feaed5350ded66be74bc0c7e293fbf5e": ["captureBodyLines", [CAPTURES, SOURCES]],
-  "fe16ace5dca89d8bb3ea1dd6f7371ae334b08cdc1e964be0800d11d388ff9eb1": ["captureBodyLines", [[], []]],
+  "102098b89d550e0f3cb834d0454b871580a4322e828e4a0eabe131e17e38375a": ["captureBodyLines", [CAPTURES, SOURCES]],
+  "9ea60ae78ed33be26f86625e3e92f016054fd666703bd1561cd47fc82d17a088": ["captureBodyLines", [[], []]],
   /* re-pinned by DEC-149 (T34-87): the supporting-material sentence names no copy */
   "f933b18ccb8a667748916216e9ddf568d6c992685df268ff5fc77261fd29ac04": ["carriesBodyLines", [METHOD, MATERIALS, "test-group"]],
   "90eb0ce32c1afc3fa9af5d11f4c768f7ff59c62daac0562ff4516428000324cb": ["carriesBodyLines", [null, { rows: [] }, null]],
   /* re-pinned by N535: the first row's reason ends in its own full stop, which is no longer doubled */
-  "ca07dd944ad664fbc7e30d31254e9c6b344aaedecbd8cf67071e9500e797ef17": ["acceptedBodyLines", [ACCEPTED]],
-  "c4da3290d6ee7b150705bd817934413dbab78b4a750388db92bec2be569fb2e1": ["acceptedBodyLines", [{ rows: ACCEPTED.rows, flags: [] }]],
+  "954d62fb382e1b37cda8ec7896eb2d4594132bfb5a8e52f8b3c82101b7e69521": ["acceptedBodyLines", [ACCEPTED]],
+  "0a17b93cc94882a110542f3de61d3794d53878537c5add0859df11d087d2f1bb": ["acceptedBodyLines", [{ rows: ACCEPTED.rows, flags: [] }]],
 };
 /* N535: the bytes case-authoring's renderer produced before the split, for the two sections that changed. */
 /* DEC-149: the bytes carriesBodyLines produced before T34-87, from the same rows. */
 const CARRIES_BEFORE_DEC149 = "54051f5fdfe26a6d6017163cb0115033e67c6076a0d9855e96a0c18bbf8b4d6f";
-const ACCEPTED_BEFORE_N535 = [["557eeb47abfb15756efe91a681364b912cc007dda9b7d40ec6b73286471a7145", ACCEPTED],
-  ["ad9a96ebac55e2784f2d60cee6ad7bfb581b2cd94cc6f355d4a4507123420cc3", { rows: ACCEPTED.rows, flags: [] }]];
+const ACCEPTED_BEFORE_N535 = [["cae5b4d209f44d2e979873dce8237130259883c311b6a38203b077c813fe43a7", ACCEPTED],
+  ["006cf3ad0fa6efdccbe67c65678a49d6641fd089009691826d541ae9c016a47b", { rows: ACCEPTED.rows, flags: [] }]];
 
 test("R1, R3, R5, R7, R13, R14 (K1333): the renderers moved byte for byte — each section rendered from fixed rows hashes to what case-authoring's renderers produced from them before the split, and so does each member's tension sentence (negative control: one changed byte in a row changes the hash)", () => {
   for (const [want, [fn, args]] of Object.entries(RENDERED)) assert.equal(hash(CD[fn](...args)), want, fn);
-  assert.equal(hash(ROWS_T.map(CD.tensionSentence)), "ea2712a31f72c703a3308c648cb20d048e210232c2eb1cda3995cf468c283417");
+  assert.equal(hash(ROWS_T.map(CD.tensionSentence)), "c198751f9028cc43d48d95bbaf15d69c3b4f153733dd90d9343a2d8c49be71c9");
   const changed = [{ ...ROWS_T[0], words: "we read the later page." }, ...ROWS_T.slice(1)];
   assert.notEqual(hash(CD.tensionBodyLines(changed, UNREAD)), "7b4d64ee3bbd113a414cf7a9b7fbbe3b4a871838fcac7aaf624c8a183ce25f39");
 });
@@ -402,17 +404,16 @@ const DEC149_OLD = /\b(this|the) (instance|copy|plane)\b/i;
 
 test("R6, R22 (DEC-149, T34-87): each member-facing string that named the group's Civicsmith \"this copy\" says \"your group's Civicsmith\" or needs no name — C-120.8's translation, RELIED_ON_NOT_PRESENTABLE's detail, and the case document's supporting-material sentence; and none of this module's member-facing text says \"this instance\", \"this copy\", \"this plane\" or \"the plane\" (negative control: the old wording matches)", () => {
   /* C-120.8's translation (checks.mjs) */
-  assert.match(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation,
-    /^A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything /);
+  assert.equal(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation, word("refusal.RELIED_ON_NOT_PRESENTABLE"));
+  assert.equal(DEC149_OLD.exec(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation), null);
   /* RELIED_ON_NOT_PRESENTABLE's detail, raised (index.mjs) */
   const m = world(); m.member("alice"); m.doc(DOC, {}, { indexed: false }); m.finding(Q, [{ target: DOC }]);
   const r = m.cd.materialsJudged(m.prepared([Q]), m.roles([Q]), V("alice")).refusals[0];
-  assert.match(r.detail, /^1 document\(s\) or observation\(s\) a load-bearing finding of this case rests on are not held whole by your group's Civicsmith \(/);
+  assert.equal(DEC149_OLD.exec(r.detail), null);
+  assert.ok(r.detail.includes(r.not_presentable[0].materials[0].sha), "the material is named");
   /* the case document's sentence (document.mjs, carriesBodyLines) */
   const body = CD.carriesBodyLines(METHOD, MATERIALS, "test-group");
-  assert.ok(body.includes("Every document and observation this case's findings reach. One a load-bearing finding relies on travels "
-    + "whole with the case. One that only a supporting finding reaches, and that is not held whole, is listed with its fingerprint, "
-    + "origin and archived copy."));
+  assert.ok(body.includes(word("case-disclosures.document_observation_case")));
   /* the whole member-facing surface: rows, fixed sentences, refusals raised, every renderer's lines */
   const said = [JSON.stringify(Object.values(CASE_DISCLOSURE_CHECKS).map((x) => x.translation)), JSON.stringify(r),
                 CD.SELF_ATTESTED_SENTENCE, CD.HIGHLIGHT_SENTENCE, CD.NOT_SHOWN_WORDS, CD.TENSIONS_DEPTH_STATED,
@@ -427,8 +428,8 @@ test("R6, R22 (DEC-149, T34-87): each member-facing string that named the group'
 
 test("R7 (DEC-149): carriesBodyLines changed in one sentence only — with \"that this copy does not hold whole\" put back, the section is byte for byte what it was before T34-87", () => {
   const lines = CD.carriesBodyLines(METHOD, MATERIALS, "test-group");
-  const now = "and that is not held whole, is listed";
-  assert.equal(lines.filter((l) => l.includes(now)).length, 1, "the changed sentence, once");
-  assert.equal(hash(lines.map((l) => l.replace(now, "and that this copy does not hold whole, is listed"))), CARRIES_BEFORE_DEC149);
+  const now = word("case-disclosures.document_observation_case");
+  assert.equal(lines.filter((l) => l === now).length, 1, "the changed sentence, once");
+  assert.equal(hash(lines.map((l) => (l === now ? l.replace("is not held whole", "this copy does not hold whole") : l))), CARRIES_BEFORE_DEC149);
   assert.notEqual(hash(lines), CARRIES_BEFORE_DEC149, "negative control: the new bytes differ");
 });

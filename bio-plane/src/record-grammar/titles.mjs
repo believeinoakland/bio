@@ -10,9 +10,9 @@
    boundary before 120 and an ellipsis is appended, so a cut is visible as
    a cut rather than reading as a silently different sentence. The first
    line, because a question is authored as one line and elaboration under
-   it must not retitle the record. Pure and closure-free on purpose: the
-   setup page embeds this function's source verbatim, so the client and
-   the store cannot drift. */
+   it must not retitle the record. Pure and closure-free on purpose: its
+   source text, evaluated alone, gives the same answers, so a client that
+   embeds it cannot drift from the store (R30). */
 export const INQUIRY_TITLE_MAX = 120;
 export const deriveInquiryTitle = (question) => {
   const line = String(question == null ? '' : question)

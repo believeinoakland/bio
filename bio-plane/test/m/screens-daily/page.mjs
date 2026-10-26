@@ -12,6 +12,8 @@ const MONTHS = ["january", "february", "march", "april", "may", "june", "july", 
 export const dmy = (iso) => word("date.daymonthyear", { day: String(Number(iso.slice(8, 10))), month: word("date.month." + MONTHS[Number(iso.slice(5, 7)) - 1]), year: iso.slice(0, 4) });
 /** True when each of `parts` is found in `hay`, one after the other (a screen's words read in their order). */
 export const inOrder = (hay, parts) => { let at = 0; for (const x of parts) { const i = hay.indexOf(x, at); if (i < 0) return false; at = i + x.length; } return true; };
+/** `casedrafts` for many projects in one read (review R19): `single(id)` is the answer the single read gives for that project; the batch holds each under its id. */
+export const batched = (single) => (req) => ok({ ok: true, kind: "review-drafts-batch", count: String(req.query.projects || "").split(",").filter(Boolean).length, lists: Object.fromEntries(String(req.query.projects || "").split(",").filter(Boolean).map((id) => [id, single(id)])) });
 /** The seven screens and a bare stand-in for each other screen named, so a reference to it is a link (the screen's page is another module's). */
 export const withScreens = (...ids) => [...SCREENS, ...ids.map((id) => ({ id, reads: () => ({}), acts: [], render: () => "", words: [] }))];
 export const screen = (id) => SCREENS.find((s) => s.id === id);
@@ -34,8 +36,8 @@ export function fill(p, values) {
     if (el.type === "checkbox" || el.type === "radio") el.checked = !!v; else el.value = v;
   }
 }
-/** Presses `op`'s `nth` button, answering a reasoned act's reason field with `reason` when the shell asks one. */
-export async function press(p, op, { nth = 0, values = {}, reason } = {}) {
+/** Presses `op`'s `nth` button, answering a reasoned act's reason field with `reason` when the shell asks one, and a terminal act's dialog with `confirm`. */
+export async function press(p, op, { nth = 0, values = {}, reason, confirm = false } = {}) {
   fill(p, values);
   const b = button(p, op, nth);
   if (!b) throw new Error(`no ${op} button`);
@@ -45,6 +47,7 @@ export async function press(p, op, { nth = 0, values = {}, reason } = {}) {
     const ta = p.doc.getElementById("cs-reason-" + ai.replace(":", "-"));
     if (ta) { ta.value = reason; await p.click(p.root().querySelector(`[data-shell="reason-send"][data-for="${ai}"]`)); }
   }
+  if (confirm) await p.click(p.root().querySelector(`[data-shell="confirm"][data-for="${b.getAttribute("data-ai")}"]`));
   await settle();
   return b;
 }

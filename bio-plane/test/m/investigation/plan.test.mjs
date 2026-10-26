@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, BOB, CAT, DAN, OUT, AI, P1, PH, Q1, Q3 } from "./fixture.mjs";
 import { INVESTIGATION_CHECKS } from "../../../src/investigation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R20: planPropose stores a proposed question or step drawn from a member's words, labelled the system's; never a question or step until accepted", () => {
   const w = world();
@@ -94,7 +95,7 @@ test("R23: planAccept refuses a planning proposal absent or unseen with NO_SUCH_
   const a = w.inv.planPropose({ project: P1, kind: "step", text: "Ask the district for the newsletter", run: "RUN-1", by: AI }).proposal;
   const before = w.snapshot();
   const row = INVESTIGATION_CHECKS.NO_SUCH_PLANNING_PROPOSAL;
-  assert.deepEqual([row.check, row.translation], ["C-146.21", "There is no planning proposal here by that number that you can see. Nothing was written."]);
+  assert.deepEqual([row.check, row.translation], ["C-146.21", word("refusal.NO_SUCH_PLANNING_PROPOSAL")]);
   assert.equal(INVESTIGATION_CHECKS.NO_SUCH_PROPOSAL, undefined, "intent's code is not minted here");
   const refusals = [
     w.inv.planAccept({ proposal: 999, form: "as_proposed", by: ANN }),          /* absent */

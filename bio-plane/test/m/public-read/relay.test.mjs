@@ -27,6 +27,7 @@ const storeSilent = (op, correlation = undefined) =>
   json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, detail: "the store did not answer", correlation }, 502);
 const PLANE = { json, doAnswer, storeSilent, StoreSilent, STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER",
                 STORE_SILENT_DETAIL: "silent", PUBLISHED_STORE: "bio",
+                // fixtures-contract: answer-envelope door-helpers
                 requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }) };
 
 const SHA = "a".repeat(64), BODY_SHA = "b".repeat(64);
@@ -35,7 +36,9 @@ const CORRELATION = "0f0e0d0c-0b0a-4908-8706-050403020100";
 const REPLY = {
   refused: () => Response.json({ ok: false, reason: "BAD_JSON", detail: "the body was not JSON" }, { status: 400 }),
   stack: () => Response.json({ ok: false, error: "Error: boom\n    at Store.fetch (store.mjs:1:1)" }, { status: 500 }),
+  // fixtures-contract: store-door store-replies
   internal: () => Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION }, { status: 500 }),
+  // fixtures-contract: store-door store-replies
   bare: () => Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR" }, { status: 500 }),
 };
 const FINDING = ["---", "object_type: inquiry", "basis:", "  - target: INQ-2026-0002", "    role: supports", "---", "",

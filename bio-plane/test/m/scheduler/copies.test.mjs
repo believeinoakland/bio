@@ -9,6 +9,7 @@ import * as scheduler from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW, COPY_CONSUMER } from "./fixture.mjs";
 import { world as ccWorld, sha, NOW as CC_NOW } from "../case-carriage/fixture.mjs";
 import { pdf } from "../doc-clean/fixtures.mjs";
+import { copyTickRefusals, onCopyWorkRegistrarRefusals } from "../case-carriage/fixtures.mjs";
 import { DOCUMENT_COPY_RETRY_MS } from "../../../src/case-carriage/index.mjs";
 
 const { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, ALWAYS_DUE, SCHED_GRACE_MS, Scheduler, schedulerOf } = scheduler;
@@ -87,7 +88,7 @@ test("R25, R7, R11, R18: copyWake is asked afresh at every firing, arm and start
 });
 
 test("R25, R3: a refusal case-carriage answers (DOCUMENT_COPY_NO_STORE) is the tick's answer; a copyWake or copyBatch that throws is answered {error} under doccopy, every other consumer still ticks and the reconcile runs", async () => {
-  const refusal = { ok: false, code: "DOCUMENT_COPY_NO_STORE", check: "C-141.11", detail: "no evidence store" };
+  const refusal = (await copyTickRefusals()).batch;   /* case-carriage's own refusal of a tick with no evidence store */
   const { s } = world({ [DC]: { wake: NOW, tick: refusal } });
   assert.deepEqual((await s.onAlarm(NOW)).doccopy, refusal);
   for (const what of ["wake", "tick"]) {
@@ -144,11 +145,11 @@ test("R25, R1: an onCopyWork call made inside a firing arms nothing of its own: 
 });
 
 test("R25, R23: a refused onCopyWork registration (LISTENER_DECLARED, LISTENER_MALFORMED) is a start-up fault in faults(), never ignored; the consumer still runs", async () => {
-  for (const code of ["LISTENER_DECLARED", "LISTENER_MALFORMED"]) {
-    const refusal = { ok: false, code, detail: "refused" };
+  const real = onCopyWorkRegistrarRefusals();   /* case-carriage's own refusals of a second and of a malformed registration */
+  for (const [code, refusal] of [["LISTENER_DECLARED", real.twice], ["LISTENER_MALFORMED", real.malformed]]) {
     const { s, o } = world({ [DC]: { wake: NOW }, "copy-work": { tick: refusal } });
     assert.deepEqual(s.listenTo({ caseCarriage: o.caseCarriage }).caseCarriage, refusal, "the owner's answer, as given");
-    assert.deepEqual(s.faults(), [{ notice: "caseCarriage", reason: code, detail: "refused" }], code);
+    assert.deepEqual(s.faults(), [{ notice: "caseCarriage", reason: code, detail: refusal.detail }], code);
     assert.ok("doccopy" in (await s.onAlarm(NOW)), `${code}: the consumer stands`);
   }
 });

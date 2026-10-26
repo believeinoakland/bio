@@ -13,12 +13,12 @@ const D = await import("../../../src/store-door/dispatch.mjs");
 
 const { OPS } = O;
 const MAP = Object.keys(wizardScriptsOps(null, new URL("http://do/"), null));
-const AUTHOR = ["wizarddraft", "wizardrevise", "wizardsubmit"];
-const APPROVER = ["wizardapprove", "wizardretire"];
-const ADMIN = ["wizardeditorgrant", "wizardeditorrevoke"];
-const READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck",
-               "startfrom", "baseupdates"];   /* T34 (K1869 (2); wizard-scripts R23, R26): its two new reads */
-const ALL = [...AUTHOR, ...APPROVER, ...ADMIN, "wizardpropose", "wizardprogress", ...READS];
+/* op-declarations' own lists (wizard-scripts R15, R20, R28), not a copy of them here */
+const AUTHOR = [...O.WIZARD_SCRIPTS_AUTHOR];
+const APPROVER = O.WIZARD_SCRIPTS_BY.filter((op) => !op.startsWith("wizardeditor"));
+const ADMIN = O.WIZARD_SCRIPTS_BY.filter((op) => op.startsWith("wizardeditor"));
+const READS = [...O.WIZARD_SCRIPTS_READS, ...O.WIZARD_CHECK_READS, ...O.OP_FAMILIES["wizard-scripts"].reads.filter((op) => op !== "writinghelp")];   /* T34 (K1869 (2); wizard-scripts R23, R26): its two new reads */
+const ALL = [...AUTHOR, ...APPROVER, ...ADMIN, ...O.WIZARD_PROPOSAL_ACTIONS, ...O.WIZARD_PROGRESS_ACTIONS, ...READS];
 const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "proposer", "principal", "owner", "member", "mintedBy", "secretSha"])];
 
 /* What each op is stamped, for a caller `c` ({viewer, identity, member, label}). */

@@ -25,6 +25,8 @@ import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { concludeAct } from "../basis-versions/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -54,7 +56,7 @@ export function storage() {
 
 
 /** A fresh record with the modules above and contradiction over it. `gate: false` registers no run gate. */
-export function world({ gate = true, now = null } = {}) {
+export function world({ gate = true, now = null, strictConclude = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -86,7 +88,7 @@ export function world({ gate = true, now = null } = {}) {
   entities.migrate();
   const connections = { themeLegFindings: () => [], edgeSevered: () => false, portionGrades: () => ({}), portionAxes: () => ({}) };
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, provenance: prov,
-                              retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) }, now: tick });
+                              retrieval: { selectionResolve: noSelection().selectionResolve }, now: tick });
   k.migrate();
   migrateBasisVersions(st.sql);
   for (const [id, cover] of [["m1", "Cover m1"], ["m2", "Cover m2"], ["m3", "Cover m3"], ["outsider", "Cover outsider"]])
@@ -97,7 +99,7 @@ export function world({ gate = true, now = null } = {}) {
   const drawing = new Map();      /* inquiry -> [project ids] */
   const stances = new Map();      /* `${project}|${inquiry}` -> {claim, version} */
   const bv = {
-    concludeCalls: [], concludeRefusal: null,
+    concludeCalls: [], concludeRefusal: null, accepted: new Set(),      /* `${inquiry}|${version}` named accepted */
     projectsDrawingOn(inq, viewer) {
       const all = (drawing.get(inq) || []).filter((p) => membership.inSight(p, viewer)).sort();
       const out = all.slice(0, 32).map((id) => ({ id, title: `title of ${id}`, current: null }));
@@ -118,14 +120,29 @@ export function world({ gate = true, now = null } = {}) {
     conclude(args) {
       bv.concludeCalls.push(args);
       if (bv.concludeRefusal) return bv.concludeRefusal;
+      /* With `strictConclude`: R16's no-project arms in its order, and R51's one-act path (a `reading` takes the place of a
+         named `version`, 12 to 500 characters), as basis-versions answers them. Off, it concludes whatever it is given
+         (the stand-in other modules' tests were written against). Every answer is basis-versions' published one
+         (`concludeAct`: concluded, no_conclusion, bad_reading, adopted, no_claim), the target this question's. */
+      const concl = String(args.conclusion ?? "").trim(), vname = String(args.version ?? "").trim();
+      const hasReading = args.reading !== undefined && args.reading !== null;
+      const own = hasReading ? String(args.reading).trim() : "";
+      if (strictConclude) {
+        if (!concl && !hasReading) return concludeAct({ kind: "no_conclusion", target: args.target });
+        if (hasReading && (own.length < 12 || own.length > 500 || vname))
+          return concludeAct({ kind: "bad_reading", target: args.target });
+        if (!hasReading && (!vname || !bv.accepted.has(`${args.target}|${vname}`)))
+          return concludeAct({ kind: "no_claim", target: args.target });
+      }
       const md = record.readFile(args.target, "bundle.md");
       const head = record.head(args.target);
       let text = md.text.replace(/^current_state: .*$/m, "current_state: concluded")
                         .replace(/^prior_state: .*$/m, `prior_state: ${head.currentState}`);
-      text = text.replace(/\n---\n/, `\nconclusion: "${args.conclusion}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
+      text = text.replace(/\n---\n/, `\nconclusion: "${concl || own}"\nfalsifier: "${args.falsifier || "a record showing otherwise"}"\n---\n`);
       const r = promotion.promote({ bundleId: args.target, base: head.bundleSha, snapKey: `conclude${++n}`,
         author: args.author, files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" } });
-      return r.ok ? { ok: true, target: args.target, to: "concluded", relationship: "no_project", project: null } : r;
+      if (!r.ok) return r;
+      return concludeAct({ kind: hasReading ? "concluded" : "adopted", target: args.target });
     },
   };
   let n = 0;
@@ -135,7 +152,7 @@ export function world({ gate = true, now = null } = {}) {
   events.migrate();
   const money = moneyOf(host, { record, membership, entities, provenance: prov, events, lines: null, now: tick });
   money.migrate();
-  const c = contradictionOf(host, { record, extraction: x, membership, promotion, entities, basisVersions: bv, events, money,
+  const c = contradictionOf(host, { record, extraction: x, membership, promotion, entities, basisVersions: bv, events, money, content,
                                     inquiry: inquiryServices(host), now: now || (() => clock.now) });
   c.migrate();
   /* The runs the stand-in gate answers for: {status, principal, hidden}. */
@@ -186,11 +203,11 @@ export function world({ gate = true, now = null } = {}) {
       st.sql.exec(`INSERT OR IGNORE INTO project_participants (project_id, member_id, state, owner, created, updated)
                    VALUES (?, ?, ?, ?, '2026-01-01', '2026-01-01')`, projectId, memberId, state, owner);
     },
-    /* A content row over `capture` filed in `bundleId` (content R45's columns). */
-    content(contentId, capture, bundleId, { ref = `ref of ${contentId}`, kind = "pdf-page", stale = 0 } = {}) {
+    /* A content row over `capture` filed in `bundleId` (content R45's columns); `extent` the canonical extent it holds. */
+    content(contentId, capture, bundleId, { ref = `ref of ${contentId}`, kind = "pdf-page", stale = 0, extent = "{}" } = {}) {
       w.bundle(bundleId);
       st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, stale)
-                   VALUES (?, ?, ?, ?, '{}', ?, 'plane', '2026-01-01', ?)`, contentId, capture, bundleId, kind, ref, stale);
+                   VALUES (?, ?, ?, ?, ?, ?, 'plane', '2026-01-01', ?)`, contentId, capture, bundleId, kind, extent, ref, stale);
       return contentId;
     },
     leg(inquiry, ord, role, { content = null, target = "INFO-2026-0001", note = null } = {}) {

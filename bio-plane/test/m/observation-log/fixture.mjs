@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { extractionNotice } from "../extraction/fixtures.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
@@ -63,23 +64,8 @@ export function storage() {
   };
 }
 
-/** Extraction's reading notice and index notice, as its R24 and R62 state them: `onReading(module, fn)` and
- *  `onIndexed(module, fn)` once per module; `fire` and `fireIndexed` run them. */
-export function extractionNotice() {
-  const listeners = [], indexListeners = [];
-  const register = (list) => (module, fn) => {
-    if (list.some((l) => l.module === module)) return { ok: false, reason: "LISTENER_DECLARED" };
-    list.push({ module, fn }); return { ok: true };
-  };
-  return {
-    listeners, indexListeners,
-    onReading: register(listeners),
-    onIndexed: register(indexListeners),
-    fire(e) { return listeners.map((l) => ({ module: l.module, answer: l.fn(e) })); },
-    fireIndexed(e) { return indexListeners.map((l) => ({ module: l.module, answer: l.fn(e) })); },
-    readingOf: () => null, unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [],
-  };
-}
+/** Extraction's reading notice and index notice, as its R24 and R62 state them: extraction's own published fixture (K4990), made by its real code. */
+export { extractionNotice };
 
 export function world({ now = "2026-09-27T03:00:00Z", extraction = "notice" } = {}) {
   const st = storage();

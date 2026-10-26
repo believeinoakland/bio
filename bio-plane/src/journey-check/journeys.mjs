@@ -6,7 +6,10 @@
 import { StepFailed, settle } from "./walker.mjs";
 import { drawnState, sweepScreens, addressOf, adminAsName, ADMIN_WORDS } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
-import { requireWord, wordPattern, byWord } from "./words.mjs";
+import { requireWord, wordPattern, byWord, drawsWord } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
+import { pair, WIDTHS, viewportOf } from "./design.mjs";
+import { join, relative } from "node:path";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
@@ -133,18 +136,28 @@ async function shownWord(page, key) {
   catch { throw new Error(`no link or control "${key}" on ${page.url()}`); }
 }
 
+/* The installer's first page, to the short name typed: installer R85 asks first whether she already has a Cloudflare account and
+   holds the short name's stage (`#stage-choose`, which holds `#slug`) back until it is answered; the walk's person has one (the
+   fake account), so she answers yes (`[data-guide="yes"]`, the installer's own control). A walk that came from civicsmith.org is
+   on the installer's first page already. */
+export async function installerFirstPage(p, installerOrigin) {
+  if (new URL(p.url()).origin !== installerOrigin) await p.goto(installerOrigin + "/");
+  const yes = p.locator('#stage-guide [data-guide="yes"]');
+  try { await yes.waitFor({ state: "visible", timeout: 10000 }); }
+  catch { throw new Error(`the installer's first page does not ask whether she has a Cloudflare account (no [data-guide="yes"] on ${p.url()})`); }
+  await yes.click();
+  await p.locator("#slug").fill(SLUG);
+  const profile = p.locator('input[name="profile"]').first();
+  if (await profile.count()) await profile.check();
+}
+
 /* From the installer's first page to its last: the short name, Cloudflare's consent, the progress, the checks. Answers
    the copy's address and the one-time password (kept secret by the walk). A walk that came from civicsmith.org is on the
    installer's first page already. */
 export async function walkInstaller(walk, page, installerOrigin) {
   let copy = null, boot = null;
   walk.mask.push("#out-boot", "#out-probe", '[href*="#invite="]', "[data-invite-link]", '[data-secret]');
-  await walk.step(page, "install: the installer's first page", async (p) => {
-    if (new URL(p.url()).origin !== installerOrigin) await p.goto(installerOrigin + "/");
-    await p.locator("#slug").fill(SLUG);
-    const profile = p.locator('input[name="profile"]').first();
-    if (await profile.count()) await profile.check();
-  });
+  await walk.step(page, "install: the installer's first page", (p) => installerFirstPage(p, installerOrigin));
   await walk.step(page, "install: the short name, confirmed permanent", async (p) => {
     await p.locator("#go").click();
     await p.locator("#confirm-yes").click();
@@ -265,13 +278,17 @@ export async function signInBy(walk, page, base, who, label) {
 
 /* An administrator makes an invitation link for a new member, with the short id and the cover the group knows them by
    (`memberadd`), and `startProjects` ticks that she may start projects; the link is shown once. */
+/* The choice that lets the invited member start projects, as `members` draws the invitation's capabilities (`cs.checks("mi-caps")`:
+   one checkbox per capability, named `mi-caps`, valued by the capability, its id numbered by its place in the vocabulary). */
+export const START_PROJECTS_BOX = 'input[name="mi-caps"][value="create_projects"]';
+
 export async function inviteMember(walk, page, base, { id, cover, startProjects = false }) {
   let link = null;
   await walk.step(page, `members: an invitation link for ${id}`, async (p) => {
     await open(walk, p, base, "/app/members", "members");
     /* journey 28: she lets Mai start projects as well as contribute (DEC-286: a member may not by default), so Home offers her "What happened?" */
     if (startProjects) {
-      const box = p.locator("#mi-cap-create_projects");
+      const box = p.locator(START_PROJECTS_BOX);
       if (!(await box.count())) throw new Error(`the invitation form has no choice to let her start projects on ${where(p)}`);
       await reveal(box);
       await box.check();
@@ -440,6 +457,66 @@ export function sweepAsFounder(walk, page, base, { handle, screens = undefined }
     each: async (p, s, drawn) => {
       if (!drawn) return;
       const at = adminAsName(await p.locator("body").innerText(), { except });
-      if (at.length) walk.fail(FAIL.ADMIN_NAME, `${s.id} draws admin as a name: ${at.map((a) => `…${a.at}…`).join(" | ")}`);
+      if (at.length) walk.fail(FAIL.ADMIN_NAME, localize("journey-check.journeys.id_draws_admin_as_a", "{id} draws admin as a name: {map}", { id: String(s.id), map: String(at.map((a) => `…${a.at}…`).join(" | ")) }));
     } });
+}
+
+/* ---------- R22, R25: the dashboards, and the signing page gone ---------- */
+
+/* R22 (K3815, K4146; screens-inquiry R79, screens-action R30, screens-daily R17): `dash-project` and `dash-action` opened as
+   working screens, drawn, neither drawing "Nothing is here" (interface-shell R61) nor the failed state. Home's
+   Investigation block opens `dash-project`. Home's Action block opens `dash-action` when Home draws that block; when the team holds no action Home
+   draws no Action block (DEC-219 (3): no empty block), which is asserted and noted, and `dash-action` is then opened by its address. */
+export const DASHBOARDS = Object.freeze(["dash-project", "dash-action"]);
+export const ACTION_BLOCK_NOT_DRAWN = localize("journey-check.journeys.action_block_not_drawn_the_team_holds", "Action block: not drawn, the team holds no action");
+export async function walkDashboards(walk, page, base, { mock = null, b = null, out = null } = {}) {
+  for (const id of DASHBOARDS) {
+    await walk.step(page, localize("journey-check.journeys.dashboard_id_opened_from_the_door", "dashboard {id}: opened from the door on Home", { id: String(id) }), async (p) => {
+      await open(walk, p, base, "/app", "home");
+      const door = p.locator(`#cs-main a[href^="/app/${id}"]`).first();
+      let byAddress = false;
+      /* Home's areas are drawn together: once the Investigation block is there, an Action block that is not has been left out */
+      if (id === "dash-action") await p.locator('#cs-main a[href^="/app/dash-project"], #cs-main a[href="/app/projects"]').first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+      try { await door.waitFor({ state: "visible", timeout: id === "dash-action" ? 1500 : 8000 }); } catch {
+        if (id !== "dash-action") throw new Error(`Home draws no door to ${id}`);
+        /* DEC-219 (3): no Action block for a team with no action; a block drawn without its door is a fault */
+        if (await p.locator('#cs-main [data-area="action"]').count()) throw new Error(`Home draws the Action block without a door to ${id}`);
+        walk.notes.push(ACTION_BLOCK_NOT_DRAWN);
+        byAddress = true;
+      }
+      if (byAddress) await open(walk, p, base, `/app/${id}`, id);
+      else { await door.click(); await settle(p); }
+      await requireDrawn(walk, p, id);
+      const main = (await p.locator("#cs-main").innerText()).replace(/\s+/g, " ");
+      if (drawsWord(main, "shell.unavailable.nothing.title")) throw new Error(`${id} draws "Nothing is here"`);
+      if (await p.locator('#cs-main [data-state="failed"]').count()) throw new Error(`${id} draws the failed state`);
+      /* R6 (R22: both arms pair it): where the arm gives the design mock (the local arm; the live arm's sweep pairs every working screen), the
+         dashboard beside the design's drawing of it at both widths */
+      if (mock) await pairDashboard(walk, p, id, { mock, b, out });
+    });
+  }
+}
+async function pairDashboard(walk, p, id, { mock, b, out }) {
+  try {
+    for (const width of WIDTHS) {
+      await p.setViewportSize(viewportOf(width));
+      await p.reload(); await settle(p);
+      const design = await mock.draw(id, width);
+      if (!design) { walk.fail(FAIL.DESIGN, localize("journey-check.journeys.id_the_design_mock_at", "{id}: the design mock at {commit} draws no such screen", { id: String(id), commit: String(mock.commit) })); continue; }
+      walk.pairs.push(relative(out, await pair(b, await p.screenshot(), design, join(out, "pairs", `dashboard-${id}-${width}.png`), { title: `${id}, ${width}px` })));
+    }
+  } finally { await p.setViewportSize(viewportOf(WIDTHS[0])); }
+}
+
+/* R25 (K3807, K3835; control-plane R109): `/sign` is requested once on the copy, expecting 404, and answers the interface's
+   "nothing is here" page, holding no signing page. */
+export async function walkSignGone(walk, page, base) {
+  await walk.step(page, "sign: /sign answers the nothing-is-here page", async (p) => {
+    const res = await p.goto(new URL("/sign", base).href);
+    await settle(p);
+    if (!res || res.status() !== 404) throw new Error(`/sign answered ${res ? res.status() : "nothing"}, not 404`);
+    const main = (await p.locator("body").innerText()).replace(/\s+/g, " ");
+    if (!drawsWord(main, "shell.unavailable.nothing.title")) throw new Error("/sign does not answer the interface's nothing-is-here page");
+    if (await p.locator("#cs-main :is(form, input, textarea, select, [type=file])").count()) throw new Error("/sign holds a signing page");
+  }, { expect: [404] });
 }

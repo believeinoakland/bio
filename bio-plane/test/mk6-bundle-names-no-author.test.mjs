@@ -47,6 +47,7 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { word } from "../src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -193,8 +194,8 @@ const findingMd = withAdoptableReading(["---", `id: ${F1}`, "object_type: inquir
   "recheck_triggers:", "  - text: Revisit after the next meeting", "    description: The minutes may say otherwise.",
   "basis:", `  - target: ${OBS}`, "    role: supports",
   "    grade: D", "    grade_axis: connection", "    grade_source: testimony",
-  "---", "", "## Question", "", "What did the clerk do?", "", "## What It Rests On", "", "## Conclusion", "",
-  "## What Would Falsify This", "", "## Session Log", "", `### Session ${NOW} | Formation | agent`,
+  "---", "", "## Question", "", "What did the clerk do?", "", word("conformance.rests"), "", "## Conclusion", "",
+  word("conformance.falsify"), "", "## Session Log", "", `### Session ${NOW} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n"), { by: "iris", at: NOW });
 const pf = await POST(`op=promote&token=${IRIS}`, { bundleId: F1, base: null, snapKey: "20260918T560001Z_mk6aaaa1",
   meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",

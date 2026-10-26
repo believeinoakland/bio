@@ -1,27 +1,55 @@
-/* screens-investigate R8: a standard the city set itself (Projects › <project> › Standard; registry screen `standard`,
- * its 3 acts). Reads the standard (`standards`' `standard`: its words as written, its source passage, its issuer, kind and
- * when it is in force), its relations to laws (`lawrelations`) and, only while the assistant is reachable, the proposals
- * (`proposals`), each drawn as machine work, "not a standard until a member adopts it". */
+/* screens-investigate R8, R64: a standard the city set itself (Projects › <project> › Standard; registry screen `standard`,
+ * its acts). Reads the standard (`standards`' `standard`: its words as written, its source passage, its issuer, kind and
+ * when it is in force), its relations to laws (`lawrelations`) and the project's proposals (`standardproposals`, R19: drawn whether or
+ * not the assistant is reachable, a member's among them), each labelled with who proposed it, machine work marked, "not a standard until a member adopts it". */
 
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
+import { WHY_KEYS } from "./whywords.mjs";
+import { rereading } from "./rereads.mjs";
+import { hasWord } from "../setup-words/index.mjs";
 
+/* R56, R57: the path's project step is the project's title, read from its record as the timeline's is; a project that cannot
+   be read is `crumb.project.unjoined` (drawn text left in `view.ui` by `render`, since `place` has no kit), never its id; the
+   last step says which standard the member is on (the shell draws `screen.standard.crumb` with it). */
 function place(view) {
-  const id = String(view.subject || "").split("/")[0];
-  return { project: { id: /^PROJ-/.test(id) ? id : "", title: /^PROJ-/.test(id) ? id : "" } };
+  const [first, second] = String(view.subject || "").split("/");
+  /* C62: a standard opened from its project's list carries the project as the address's second step (`/app/standard/<STD>/<PROJ>`) */
+  const id = /^PROJ-/.test(first) ? first : /^STD-/.test(first) && /^PROJ-/.test(second || "") ? second : first;
+  const std = view.data && view.data.standard && view.data.standard.state === "ok" && view.data.standard.value ? view.data.standard.value : null;
+  const last = std && typeof std.cite === "string" && std.cite ? std.cite : "";
+  if (!/^PROJ-/.test(id)) return { project: { id: "", title: "" }, last };
+  const d = view.data && view.data.project;
+  const text = d && d.state === "ok" && d.value && d.value["bundle.md"];
+  const m = typeof text === "string" ? /^title:\s*(.*)$/m.exec(text.split(/\n---\s*\n/)[0] || "") : null;
+  let title = m ? m[1].trim() : "";
+  try { if (title.startsWith("\"")) title = JSON.parse(title); } catch { /* the raw title is drawn */ }
+  const settled = d && d.state !== "loading";
+  return { project: { id, title: title || (settled ? String((view.ui && view.ui.unjoined) || "") : "") }, last };
 }
 
 function reads(view) {
   const [id, mode] = String(view.subject || "").split("/");
   const state = mode === "adopted" || mode === "all" ? mode : "open";
-  const out = { docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+  const out = { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    /* R8 (K5148; WALK-FINAL-08 D9): the registered bodies "Who set it" chooses among */
+    bodies: { op: "entitieskind", query: { kind: "body", limit: "200" } }, institutions: { op: "entitieskind", query: { kind: "institution", limit: "200" } },
+    /* R64: the team's offices, beside its bodies, are what "Whom it binds" chooses a body among */
+    offices: { op: "entitieskind", query: { kind: "office", limit: "200" } } };
   if (/^STD-/.test(id)) {
     out.standard = { op: "standard", query: { id }, subject: true };
     out.relations = { op: "lawrelations", query: { id } };
     out.laws = { op: "standards", query: { limit: "200" } };
+    /* C62: the project a standard was opened from, for the path */
+    if (/^PROJ-/.test(mode || "")) out.project = { op: "image", query: { id: mode }, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] };
   }
   /* R19 (N1029): the project's proposals, a member's among them, whether or not the assistant is reachable */
-  if (/^PROJ-/.test(id)) out.proposals = { op: "standardproposals", query: { project: id, state } };
+  if (/^PROJ-/.test(id)) {
+    out.proposals = { op: "standardproposals", query: { project: id, state } };
+    out.project = { op: "image", query: { id }, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] };
+    /* C61: the standards the record holds, each a door to its page */
+    out.held = { op: "standards", query: { limit: "200" } };
+  }
   return out;
 }
 
@@ -29,26 +57,196 @@ function render(cs, view) {
   const S = "screen.standard.";
   const P = view.parts;
   const [id, mode] = String(view.subject || "").split("/");
+  /* the kinds `standards` accepts (R1, `jurisdictions` R23), in the order the choice offers them */
+  const KINDS = ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"];
   const state = mode === "adopted" || mode === "all" ? mode : "open";
   const s = view.data.standard && view.data.standard.state === "ok" ? view.data.standard.value : null;
-  const out = [cs.title(s ? s.cite || id : cs.w("screen.standard.name"), { thing: { kind: "standard", facts: s ? [s.kind || "", s.issuer || ""] : [] } })];
+  /* R57: the text `place` names an unreadable project by (plain, the path escapes it itself) */
+  view.ui.unjoined = P.plain(cs, "crumb.project.unjoined");
+  /* R8 (K5148; WALK-FINAL-08 D9): the registered bodies "Who set it" chooses among */
+  const bodies = ["bodies", "institutions"].flatMap((n) => (view.data[n] && view.data[n].state === "ok" && view.data[n].value && Array.isArray(view.data[n].value.entities) ? view.data[n].value.entities : []))
+    .filter((e) => e && e.entity_id && e.label).map((e) => ({ value: e.entity_id, text: e.label }));
+  /* R61 (2): the issuer is drawn by its label, never by the entity id the store holds when a registered body was chosen: the label the standard's own answer gives (`owner`),
+     else the registered body of that id, else the name as typed; an id nothing names is `connection.node.unnamed` */
+  const issuerOf = (x) => {
+    const label = x && x.owner && typeof x.owner.label === "string" ? x.owner.label.trim() : "";
+    if (label && !/^ENT-/.test(label)) return label;
+    const held = x && typeof x.issuer === "string" ? x.issuer.trim() : "";
+    const body = bodies.find((b) => b.value === held || (x && x.owner && b.value === x.owner.entity));
+    if (body) return body.text;
+    return held && !/^ENT-/.test(held) ? held : P.plain(cs, "connection.node.unnamed");
+  };
+  /* K5178: the owner answers a source as `{captureSha, extent}`; it is drawn as the held document's title, never its fingerprint (R34) */
+  const sourceTitle = (src) => {
+    const row = P.docsAll(cs, view).rows.find((x) => x && x.capture && src && typeof src === "object" && x.capture.sha256 === src.captureSha);
+    return row && typeof row.title === "string" && row.title ? row.title : P.plain(cs, "screen.held.untitled");
+  };
+  const out = [cs.title(s ? s.cite || id : cs.w("screen.standard.name"), { thing: { kind: "standard", facts: s ? [s.kind || "", issuerOf(s)] : [] } })];
   if (/^STD-/.test(id)) out.push(cs.state("standard", view, (v) => {
-    const texts = Array.isArray(v.texts) ? v.texts : (v.text || []).map((c) => ({ content_id: c }));
+    const texts = (Array.isArray(v.texts) ? v.texts : (v.text || []).map((c) => ({ content_id: c }))).slice(0, 5);
     const per = v.period || {};
-    return `<p class="mk-sub">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"].includes(v.kind) ? v.kind : "standard")), issuer: v.issuer || "" })}`
+    /* C61: the passage's words, as `content` places the passage (its capture and extent) read against that capture's reading; the
+       document it is written in by title; never the content id */
+    const heldRows = P.docsAll(cs, view).rows;
+    const same = (a, b) => JSON.stringify(Object.keys(a || {}).sort().map((k) => [k, a[k]])) === JSON.stringify(Object.keys(b || {}).sort().map((k) => [k, b[k]]));
+    const passage = (t) => {
+      const cq = P.later(cs, view, "content:" + t.content_id, "content", { query: { id: t.content_id } });
+      const c = cq.state === "ok" && cq.value && typeof cq.value.capture_sha === "string" ? cq.value : null;
+      if (!c) return cq.state === "failed" ? cs.state(cq, () => "") : "";
+      const rd = P.later(cs, view, "reading:" + c.capture_sha, "reading", { query: { sha256: c.capture_sha } });
+      const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units.filter((u) => u && String(u.text || "").trim()) : [];
+      /* R61 (2): a passage that is the whole document is drawn whole, to a stated bound (PASSAGE_UNITS text units); past it a gap mark says how many were left, never a cut with no mark */
+      const hit = c.extent && c.extent.kind !== "document" ? units.filter((u) => same(u.extent, c.extent)) : units;
+      const PASSAGE_UNITS = 100;
+      const words = hit.slice(0, PASSAGE_UNITS).map((u) => String(u.text).trim()).join(" ");
+      const left = hit.length - PASSAGE_UNITS;
+      const row = heldRows.find((r) => r && r.capture && r.capture.sha256 === c.capture_sha);
+      return (words ? `<blockquote class="mk-passage rec" data-words>${cs.esc(words)}</blockquote>` : "")
+        + (left > 0 ? `<p class="mk-small" data-passage-more>${cs.mark("gap", "undetermined", { reason: cs.w(S + "more.passages", { n: String(left) }) })}</p>` : "")
+        + `<p class="mk-small">${P.refOf(cs, c.capture_sha, (row && row.title) || P.plain(cs, "screen.person.source"), [t.standing || ""], "capture")}</p>`;
+    };
+    /* R8 (K5148; WALK-FINAL-08 D4): the words the plane composes for the standard (`standards` R45), each as the plane gave it, beside the passages */
+    const says = v.says && typeof v.says === "object" ? ["owner", "held", "cited_by_words", "searched_words", "access", "copy", "public", "release_by_words", "note"]
+      .filter((k) => typeof v.says[k] === "string" && v.says[k].trim()).map((k) => `<p class="mk-small" data-says="${k}">${cs.esc(v.says[k])}</p>`).join("") : "";
+    return `<p class="mk-sub">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (KINDS.includes(v.kind) ? v.kind : "standard")), issuer: issuerOf(v) })}`
       + ` · ${per.from ? cs.w(per.to ? S + "inforce.span" : S + "inforce.since", { from: cs.date(per.from), to: per.to ? cs.date(per.to) : "" }) : cs.mark("gap", "undetermined", { reason: cs.w(S + "inforce.none") })}</p>`
+      + says
       + (v.reason ? `<blockquote class="mk-passage rec">${cs.esc(v.reason)}</blockquote>` : "")
-      + (texts.length ? `<p class="mk-small">${cs.w(S + "words")} ${texts.map((t) => cs.ref("passage", t.content_id, t.content_id, [t.standing || ""])).join(", ")}</p>` : "")
+      + (texts.length ? `<p class="mk-small">${cs.w(S + "words")}</p>` + texts.map(passage).join("") : "")
       + (v.text_withheld ? cs.mark("gap", "withheld") : "");
   }));
+  /* R8 (K5148; WALK-FINAL-08 D8): a related law is named by its citation (the standards the record holds, `laws`), never its id; an incoming relation
+     (`direction: "in"`: the other standard does it to this one) is drawn other-end first, the way it runs, so it is not read as this standard doing it */
+  const lawsRead = view.data.laws && view.data.laws.state === "ok" && view.data.laws.value && Array.isArray(view.data.laws.value.items) ? view.data.laws.value.items : [];
+  const citeOf = (sid) => { const x = lawsRead.find((l) => l && l.id === sid); return (x && x.cite) || P.plain(cs, "connection.node.unnamed"); };
+  /* D3: the passage that says a relation is one of this standard's own passages, chosen by its words (the reading of its capture), never a content id */
+  const stdTexts = s && Array.isArray(s.texts) ? s.texts.filter((x) => x && x.content_id) : [];
+  const passageOptions = P.textOptions(cs, view, stdTexts);
+  const blank = { value: "", text: "" };
   if (/^STD-/.test(id)) out.push(cs.sec(S + "laws", cs.state("relations", view, (v) => {
     const all = (v.temporal || []).concat(v.referential || []).filter((r) => !r.withdrawn);
-    return all.length ? cs.sheet(all.map((r) => cs.row(`<b>${cs.w(S + "rel." + (r.type || "refers_to"))}</b>`,
-      cs.esc(((r.direction === "in" ? r.from : r.to) || {}).standard || ""), `<span class="mk-small">${cs.esc(r.reason || "")}</span>`)).join("")) : "";
+    return all.length ? cs.sheet(all.map((r) => {
+      const incoming = r.direction === "in";
+      const other = citeOf(((incoming ? r.from : r.to) || {}).standard || "");
+      const verb = cs.w(S + "rel." + (r.type || "refers_to"));
+      /* the incoming verb's own word ("Implemented by") where the word table holds it; else the way the relation runs is drawn by its arrow */
+      const inKey = S + "rel.in." + (r.type || "refers_to"), inWord = cs.w(inKey) !== cs.esc(inKey) ? cs.w(inKey) : "";
+      return cs.row("", `<span data-relation data-direction="${incoming ? "in" : "out"}">${incoming ? (inWord ? `<b>${inWord}</b> ${cs.esc(other)}` : `${cs.esc(other)} → <b>${verb}</b>`) : `<b>${verb}</b> ${cs.esc(other)}`}</span>`,
+        `<span class="mk-small">${cs.esc(r.reason || "")}</span>`);
+    }).join("")) : "";
   })
-    + cs.choice("st-type", S + "type", ["implements", "refers_to", "amends", "repeals", "defines", "excepts"].map((k) => [k, S + "rel." + k]), {})
-    + cs.choice("st-to", S + "to", view.parts.options(view, "laws", (v) => v.items, (x) => ({ value: x.id, text: x.cite || x.id })).filter((o) => o.value !== id), {}) + cs.field("st-citation", S + "citation", {}) + cs.field("st-effective", S + "effective", { type: "date", help: S + "effective.help" })
+    + cs.choice("st-type", S + "type", [blank].concat(["implements", "refers_to", "amends", "repeals", "defines", "excepts"].map((k) => [k, S + "rel." + k])), {})
+    + cs.choice("st-to", S + "to", [blank].concat(view.parts.options(view, "laws", (v) => v.items, (x) => ({ value: x.id, text: x.cite || x.id })).filter((o) => o.value !== id)), {})
+    + cs.choice("st-citation", "form.choose.passage", [blank].concat(passageOptions), {}) + cs.field("st-effective", S + "effective", { type: "date", help: S + "effective.help" })
     + cs.act("lawrelate", { label: "act.lawrelate.label.standard" })));
+  /* R51 (DEC-375, C40): "Was it in force on a date?": the day asked (`standardinforce`, a read that writes nothing) and the
+     owner's answer: its state and why, kept as the owner gave it, including "not in force" and "undetermined" */
+  if (/^STD-/.test(id)) {
+    const r = view.ui.inforce;
+    /* R8 (K5148; R70.12): a version known in force through a day is worded by `standard.inforce.known` with the member who recorded it by name
+       (never the stamp the plane's sentence was composed with) */
+    const known = r && r.state === "in_force" && r.known && typeof r.known.through === "string" && typeof r.known.by === "string" && r.known.by
+      ? cs.w("standard.inforce.known", { through: { html: cs.date(r.known.through) }, source: sourceTitle(r.known.source), author: P.who(cs, r.known.by) }) : "";
+    const whyHtml = (w) => (known ? known : typeof w === "string" ? cs.esc(w) : w && typeof w === "object" ? P.why(cs, w) : "");
+    const per = (s && s.period) || {};
+    /* B419 (DEC-387): the state is drawn by its key, "On {date} it was: {state}"; a state the owner gives that no key names is undetermined */
+    const KNOWN = ["in_force", "not_in_force", "overridden", "undetermined"];
+    const st = r && KNOWN.includes(r.state) ? r.state : "undetermined";
+    const line = r ? cs.w(S + "inforce.result.line", { date: cs.date(r.date), state: cs.w(S + "inforce.state." + st) }) : "";
+    const answer = r ? cs.sheet(cs.row("", `<span data-inforce="${cs.esc(String(r.state || ""))}">${line}${st === "undetermined" ? " " + cs.mark("gap", "undetermined", { reason: whyHtml(r.why) }) : ` · ${whyHtml(r.why)}`}</span>`
+      + (r.state === "in_force" && per.from && !per.to ? `<span class="meta">${cs.w(S + "inforce.result.meta", { from: cs.date(per.from) })}</span>` : ""), "")) : "";
+    out.push(cs.sec(S + "inforce.heading", cs.field("st-inforce-day", S + "inforce.day.label", { type: "date", help: S + "inforce.day.help" })
+      + cs.act("standardinforce", { label: "act.standardinforce.label.standard" }) + answer
+      + `<details class="mk-details"><summary>${cs.w(S + "inforce.refused.summary")}</summary><p>${cs.w(S + "inforce.refused.body")} ${cs.w(S + "inforce.refused.body2")}</p></details>`, { help: S + "inforce.help" }));
+  }
+  /* R64 (DEC-438): "Whom it binds, and until when": the days the standard is recorded known in force through (`standard`'s `in_force_through`, each beside its
+     withdrawal), said plainly when none is recorded and no end is stated, and the four acts that record what the documents show, each in its own fold */
+  if (/^STD-/.test(id)) {
+    const records = s && Array.isArray(s.in_force_through) ? s.in_force_through.filter((x) => x && x.id && !x.withdrawn) : [];
+    const per = (s && s.period) || {};
+    const note = (k) => `<p class="mk-small">${cs.w(k)}</p>`;
+    const blankFirst = (list) => [blank].concat(list);
+    /* the held standards a choice of act or law offers (this one left out), by citation; and the passages of the one chosen, by their words, read once each */
+    const heldActs = view.parts.options(view, "laws", (v) => v.items, (x) => ({ value: x.id, text: x.cite || P.plain(cs, "connection.node.unnamed") })).filter((o) => o.value !== id);
+    /* R66: the team's dated events, from the documents it holds (`timeline` by their captures, as Matter's event choice reads them), are offered beside its held standards as the act that adopted it */
+    const unesc = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
+    const heldShas = P.docsAll(cs, view).rows.map((r) => r && r.capture && r.capture.sha256).filter(Boolean).slice(0, 200);
+    const tl = heldShas.length ? P.later(cs, view, "events", "timeline", { query: { captures: heldShas.join(",") } }) : null;
+    const tlw = tl && tl.state === "ok" && tl.value && tl.value.world ? tl.value.world : {};
+    const dayOfEvent = (e) => (e && e.when && typeof e.when === "object" && /^\d{4}-\d{2}-\d{2}/.test(String(e.when.value || "")) ? String(e.when.value).slice(0, 10) : "");
+    const kindWord = (k) => (cs.w("screen.timeline.evkind." + k) !== cs.esc("screen.timeline.evkind." + k) ? P.plain(cs, "screen.timeline.evkind." + k) : String(k || ""));
+    const events = (Array.isArray(tlw.items) ? tlw.items : []).filter((e) => e && e.event_id && dayOfEvent(e));
+    const evName = (e) => [kindWord(e.kind), unesc(cs.date(dayOfEvent(e)))].filter(Boolean).join(" \u00b7 ");
+    const sameExtent = (x, y) => JSON.stringify(Object.keys(x || {}).sort().map((k) => [k, x[k]])) === JSON.stringify(Object.keys(y || {}).sort().map((k) => [k, y[k]]));
+    /* the passages that date an event (its attestations), by their words, each the value `att:<n>` */
+    const eventPassages = (rd) => {
+      const ev = rd.state === "ok" && rd.value && rd.value.event ? rd.value.event : null;
+      return (ev && Array.isArray(ev.attestations) ? ev.attestations : []).filter((a) => a && typeof a.capture_sha === "string" && a.capture_sha).map((a) => {
+        const r = P.later(cs, view, "reading:" + a.capture_sha, "reading", { query: { sha256: a.capture_sha } });
+        const units = r.state === "ok" && r.value && Array.isArray(r.value.text_units) ? r.value.text_units.filter((u) => u && String(u.text || "").trim()) : [];
+        const hit = a.extent && a.extent.kind !== "document" ? units.filter((u) => sameExtent(u.extent, a.extent)) : units.slice(0, 1);
+        const row = P.docsAll(cs, view).rows.find((x) => x && x.capture && x.capture.sha256 === a.capture_sha);
+        return { value: "att:" + a.attestation_id, text: hit.map((u) => String(u.text).trim()).join(" ").slice(0, 160) || (row && row.title) || P.plain(cs, "screen.person.source") };
+      });
+    };
+    const actChoice = (cid, label, help, passageId, withEvents) => {
+      const offered = heldActs.concat(withEvents ? events.map((e) => ({ value: e.event_id, text: evName(e) })) : []);
+      if (!offered.length) return P.emptyChoice(cs, cid, label);
+      const made = view.ui["choice:" + cid];
+      const at = offered.some((o) => o.value === made) ? made : offered[0].value;
+      const isEvent = /^EVT-/.test(at);
+      const rd = isEvent ? P.later(cs, view, "evt:" + at, "event", { query: { id: at } }) : P.later(cs, view, "std:" + at, "standard", { query: { id: at } });
+      const opts = rd.state !== "ok" || !rd.value ? [] : isEvent ? eventPassages(rd) : P.textOptions(cs, view, rd.value.texts);
+      return cs.choice(cid, label, offered, { acts: {} }) + (help ? note(help) : "")
+        + (opts.length ? cs.choice(passageId, S + "f.passage", blankFirst(opts), {}) : rd.state === "loading" ? cs.state(rd, () => "") : P.emptyChoice(cs, passageId, S + "f.passage"));
+    };
+    const actors = ["offices", "bodies"].flatMap((n) => (view.data[n] && view.data[n].state === "ok" && view.data[n].value && Array.isArray(view.data[n].value.entities) ? view.data[n].value.entities : []))
+      .filter((e) => e && e.entity_id && e.label).map((e) => ({ value: e.entity_id, text: e.label }));
+    const bodyChoice = (cid) => (actors.length ? cs.choice(cid, S + "f.body", blankFirst(actors), {}) + note(S + "f.body.help") : P.emptyChoice(cs, cid, S + "f.body"));
+    const fold = (op, inner) => `<details class="mk-details"><summary>${cs.w("act." + op + ".label.standard")}</summary>${inner}${cs.act(op, { label: "act." + op + ".label.standard", tone: "primary" })}</details>`;
+    const project = /^PROJ-/.test(mode || "") ? mode : "";
+    /* R66 (DEC-442): each binding the `standard` read answers (`bindings`), by its kind in the design's words; none recorded says so, exactly then */
+    const named = ["offices", "bodies", "institutions"].flatMap((n) => (view.data[n] && view.data[n].state === "ok" && view.data[n].value && Array.isArray(view.data[n].value.entities) ? view.data[n].value.entities : []))
+      .filter((e) => e && e.entity_id && e.label);
+    const unnamed = P.plain(cs, "connection.node.unnamed");
+    const bodyName = (v) => { const e = named.find((n) => n.entity_id === v); return e ? e.label : typeof v === "string" && v.trim() && !/^ENT-/.test(v) ? v.trim() : unnamed; };
+    const actName = (a) => { if (/^EVT-/.test(String(a || ""))) { const e = events.find((x) => x.event_id === a); return e ? evName(e) : unnamed; } return a ? citeOf(a) : unnamed; };
+    const recorded = (b) => cs.w(S + "binding.recorded", { author: P.who(cs, b.by), date: { html: cs.date(String(b.at || "").slice(0, 10)) } });
+    const bindingRow = (b) => {
+      if (b.kind === "adoption") {
+        const from = b.from && typeof b.from.date === "string" ? b.from.date : "";
+        const who = { mode: { html: cs.w(S + "mode." + b.mode) }, author: P.who(cs, b.by), date: { html: cs.date(String(b.at || "").slice(0, 10)) } };
+        return cs.row("", `<span data-binding="adoption">${cs.w(S + "binding.adoption", { body: bodyName(b.body), act: actName(b.act), edition: String(b.edition || "") })}<br><span class="mk-small">`
+          + (from ? cs.w(S + "binding.adoption.meta", Object.assign({ from: { html: cs.date(from) } }, who)) : cs.w(S + "binding.adoption.meta.nofrom", who)) + "</span></span>");
+      }
+      if (b.kind === "imposition") return cs.row("", `<span data-binding="imposition">${cs.w(S + "binding.imposition", { body: bodyName(b.body), law: citeOf(b.law) })}<br><span class="mk-small">${recorded(b)}</span></span>`);
+      if (b.kind === "benchmark") return cs.row("", `<span data-binding="benchmark">${cs.w(S + "binding.benchmark", { body: bodyName(b.body) })}<br><span class="mk-small">${recorded(b)}</span></span>`);
+      return "";
+    };
+    const bindings = s && Array.isArray(s.bindings) ? s.bindings : null;
+    const bindingsHtml = !bindings ? "" : bindings.length ? cs.sheet(bindings.map(bindingRow).join("")) : `<p class="mk-small" data-binds-unknown>${cs.w(S + "binds.unknown")}</p>`;
+    out.push(cs.sec(S + "binds.head",
+      (records.length ? cs.sheet(records.map((x) => cs.row("", `<span data-through-record="${cs.esc(x.id)}">${cs.w("standard.inforce.known", { through: { html: cs.date(x.through) }, source: sourceTitle(x.source), author: P.who(cs, x.by) })}</span>`,
+        cs.act("standardinforcethroughwithdraw", { label: "act.standardinforcethroughwithdraw.label.standard", data: { record: x.id } }))).join(""))
+        : per.from && !per.to ? `<details class="mk-details"><summary>${cs.w(S + "through.none.summary")}</summary>${cs.mark("gap", "undetermined", { reason: cs.w(S + "through.unknown", { from: { html: cs.date(per.from) } }) })}</details>` : "")
+      + bindingsHtml
+      + fold("standardinforcethrough", cs.field("st-thr-day", S + "f.through", { type: "date", help: S + "f.through.help" })
+        + P.docChoice(cs, view, "st-thr-doc", { label: S + "f.source", help: S + "f.source.help", passage: false, drive: true, project })
+        + P.passagePick(cs, view, "st-thr-doc", "st-thr-passage", P.later))
+      + fold("standardadoption", actChoice("st-ad-act", S + "f.act", S + "f.act.help", "st-ad-passage", true) + cs.field("st-ad-edition", S + "f.edition", { help: S + "f.edition.help" })
+        + cs.field("st-ad-from", S + "inforce.day.label", { type: "date", help: S + "inforce.day.help" })
+        + cs.choice("st-ad-mode", S + "f.mode", blankFirst(["by_reference", "voluntary", "by_accreditation"].map((k) => [k, S + "mode." + k])), {}))
+      + fold("standardimpose", bodyChoice("st-im-body") + actChoice("st-im-law", S + "f.law", "", "st-im-passage"))
+      + fold("standardbenchmark", bodyChoice("st-bm-body")), { help: S + "binds.help" }));
+  }
+  /* C61: the standards the record holds, on the project's screen, each a door to its page (keeping the project in the path) */
+  if (/^PROJ-/.test(id)) out.push(`<div data-held-standards>` + cs.sec(S + "held", cs.state("held", view, (v) => {
+    const items = (Array.isArray(v.items) ? v.items : []).filter((x) => x && /^STD-/.test(String(x.id)));
+    return (items.length ? cs.sheet(items.map((x) => cs.row("", `<a class="cs-ref" data-standard-door data-nav href="/app/standard/${encodeURIComponent(x.id)}/${encodeURIComponent(id)}">${cs.esc(x.cite || x.id)}</a>`,
+      `<span class="mk-small">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (KINDS.includes(x.kind) ? x.kind : "standard")), issuer: issuerOf(x) })}</span>`)).join(""))
+      : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`)
+      + (v.truncated ? `<p class="mk-small" data-held-more>${cs.w(S + "held.more")}</p>` : "");
+  })) + `</div>`);
   /* R19: the project's proposals under their state, each labelled with who proposed it, why, and what became of it */
   if (/^PROJ-/.test(id)) out.push(cs.sec(S + "proposals", `<div class="mk-acts">${["open", "adopted", "all"].map((k) =>
     `<a class="cs-btn" data-tone="quiet" data-nav href="/app/standard/${encodeURIComponent(id)}${k === "open" ? "" : "/" + k}" aria-pressed="${k === state}">${cs.w(S + "state." + k)}</a>`).join("")}</div>`
@@ -57,30 +255,46 @@ function render(cs, view) {
       return (list.length ? cs.sheet(list.map((p) => {
         const lab = p.label || {};
         return cs.row(lab.machine_work ? cs.mark("origin", "machine") : "",
-          `<b>${cs.esc(p.cite || p.id)}</b> · ${cs.esc(lab.says || "")} <span class="mk-small">${cs.w(S + "proposedby", { by: String(p.proposed_by || lab.by || "").replace(/^(member|class):/, ""), date: cs.date(p.proposed_at || "") })}</span>`
+          `<b>${cs.esc(p.cite || p.id)}</b> · ${cs.esc(lab.says || "")} <span class="mk-small">${cs.w(S + "proposedby", { by: P.who(cs, p.proposed_by || lab.by || ""), date: cs.date(p.proposed_at || "") })}</span>`
           + (p.why ? `<br><span class="rec">${cs.esc(p.why)}</span>` : "") + `<br><span class="mk-small">${cs.w(S + "notyet")}</span>`,
-          p.adoption ? `<span class="mk-small">${cs.w(S + "adopted", { by: String(p.adoption.by || "").replace(/^member:/, ""), date: cs.date(p.adoption.at || "") })}</span> ${cs.ref("standard", p.adoption.standard, p.adoption.standard, [])}`
+          p.adoption ? `<span class="mk-small">${cs.w(S + "adopted", { by: P.who(cs, p.adoption.by || ""), date: cs.date(p.adoption.at || "") })}</span> ${cs.ref("standard", p.adoption.standard, p.adoption.standard, [])}`
             : cs.act("standardadopt", { label: "act.standardadopt.label.standard", data: { proposal: p.id } }));
       }).join("")) : "") + (v.truncated ? `<p class="mk-small">${cs.w(S + "proposals.more")}</p>` : "");
     })));
-  /* "Hold this as a standard", from a passage */
+  /* "Hold this as a standard", from a passage the member chooses on the document by its words (R34; K5148 D6); the kind opens with nothing chosen (D10)
+     and offers every kind the store accepts (D7); "Who set it" chooses a registered body or takes a typed name (D9) */
   out.push(cs.sec(S + "declare", cs.field("st-cite", S + "cite", { help: S + "cite.help" })
-    + cs.choice("st-kind", S + "kindpick", ["policy", "ordinance", "regulation", "statute", "commitment", "standard"].map((k) => [k, S + "kind." + k]), {})
-    + cs.field("st-issuer", S + "issuer", {}) + P.docChoice(cs, view, "st-doc", { label: S + "text", help: S + "text.help" })
+    + cs.choice("st-kind", S + "kindpick", [blank].concat(KINDS.map((k) => [k, S + "kind." + k])), {})
+    + (bodies.length ? cs.choice("st-issuer-body", S + "issuer", [blank].concat(bodies), {}) : "") + cs.field("st-issuer", S + "issuer", {})
+    + P.docChoice(cs, view, "st-doc", { label: S + "text", help: S + "text.help", passage: false, drive: true, project: /^PROJ-/.test(id) ? id : /^PROJ-/.test(mode || "") ? mode : "" })
+    + P.passagePick(cs, view, "st-doc", "st-passage", P.later)
     + cs.field("st-from", S + "from", { type: "date" })
     + cs.act("standarddeclare", { label: "act.standarddeclare.label.standard", tone: "primary" })));
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
+  /* R51: "Check a date": whether the standard was in force on the day chosen, as the owner answers it */
+  { op: "standardinforce", label: "act.standardinforce.label.standard", rereads: [],
+    send(view, el, cs) {
+      const date = String(cs.value("st-inforce-day") || "").trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { refuse: "screen.standard.inforce.refused.body2" };
+      return { query: { id: String(view.subject || "").split("/")[0], date } };
+    },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      if (r && r.ok !== false && typeof r.state === "string") cs.set("inforce", { date: r.date, state: r.state, why: r.why, known: r.known_through || null });
+      return { stay: true };
+    } },
   { op: "standarddeclare", label: "act.standarddeclare.label.standard",
     send(view, el, cs) {
-      const cite = String(cs.value("st-cite") || "").trim(), issuer = String(cs.value("st-issuer") || "").trim();
-      const at = view.parts.chosen(cs, "st-doc");
+      const cite = String(cs.value("st-cite") || "").trim(), issuer = String(cs.value("st-issuer-body") || "").trim() || String(cs.value("st-issuer") || "").trim();
+      const kind = String(cs.value("st-kind") || "").trim();
+      const at = view.parts.chosen(cs, "st-doc", "st-passage");
       const text = at ? [{ capture_sha: at.captureSha, extent: at.extent }] : [];
       const from = String(cs.value("st-from") || "").trim();
-      if (!cite || !issuer || !text.length) return { refuse: "screen.standard.declare.empty" };
-      return { body: Object.assign({ cite, kind: String(cs.value("st-kind") || "policy"), issuer, text }, from ? { period: { from, to: null } } : {}) };
+      if (!cite || !kind || !issuer || !text.length) return { refuse: "screen.standard.declare.empty" };
+      return { body: Object.assign({ cite, kind, issuer, text }, from ? { period: { from, to: null } } : {}) };
     },
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; if (r && r.id) cs.go("standard", r.id); } },
   /* adopting a proposal is the member's own act, with her own reason */
@@ -91,33 +305,93 @@ const acts = [
       return { body: { proposal } };
     },
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; if (r && r.id) cs.go("standard", r.id); } },
+  /* R64 (DEC-438): the four acts of "Whom it binds, and until when"; each sends what the page holds and the owner refuses what it will not take, drawn by its key */
+  { op: "standardinforcethrough", label: "act.standardinforcethrough.label.standard",
+    send(view, el, cs) {
+      const at = view.parts.chosen(cs, "st-thr-doc", "st-thr-passage");
+      return { body: Object.assign({ standard: String(view.subject || "").split("/")[0], through: String(cs.value("st-thr-day") || "").trim() }, at ? { source: { captureSha: at.captureSha, extent: at.extent } } : {}) };
+    } },
+  { op: "standardinforcethroughwithdraw", label: "act.standardinforcethroughwithdraw.label.standard",
+    send(view, el, cs) {
+      const record = String((el && el.dataset && el.dataset.record) || "").trim();
+      return record ? { body: { record } } : null;
+    } },
+  /* the day the adoption runs from (`from`, the owner's) is the day the member typed, else the adopting act's own start; with neither the screen says so and sends nothing */
+  { op: "standardadoption", label: "act.standardadoption.label.standard",
+    async send(view, el, cs) {
+      const standard = String(view.subject || "").split("/")[0], act = String(cs.value("st-ad-act") || "").trim();
+      const typed = String(cs.value("st-ad-from") || "").trim();
+      const base = { standard, act, edition: String(cs.value("st-ad-edition") || "").trim(), mode: String(cs.value("st-ad-mode") || "").trim() };
+      const later = view.ui.later || {};
+      if (/^EVT-/.test(act)) {
+        /* a dated event as the act (standards R64): the passage is one that dates it, its content id minted for that extent of the document; the adoption runs from the event's own day */
+        const read = later["evt:" + act], ev = read && read.state === "ok" && read.value && read.value.event ? read.value.event : null;
+        const att = ev && Array.isArray(ev.attestations) ? ev.attestations.find((a) => "att:" + a.attestation_id === String(cs.value("st-ad-passage") || "")) : null;
+        const row = att ? view.parts.docsAll(cs, view).rows.find((r) => r && r.capture && r.capture.sha256 === att.capture_sha) : null;
+        let citation = "";
+        if (att && row) {
+          const made = await cs.call("contentmint", { body: { bundleId: row.bundle_id, captureSha: att.capture_sha, extent: att.extent } }).then((x) => x, () => null);
+          const r = made && made.result !== undefined ? made.result : made;
+          citation = r && r.ok !== false ? String(r.content_id || r.id || "") : "";
+        }
+        const day = ev && ev.when && /^\d{4}-\d{2}-\d{2}$/.test(String(ev.when.value || "")) ? ev.when.value : "";
+        return { body: Object.assign(base, { citation }, { from: typed || day || { event: act, edge: "start" } }) };
+      }
+      const read = later["std:" + act];
+      const own = read && read.state === "ok" && read.value && read.value.period && typeof read.value.period.from === "string" ? read.value.period.from : "";
+      const from = typed || own;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) return { refuse: "screen.standard.inforce.refused.body2" };
+      return { body: Object.assign(base, { citation: String(cs.value("st-ad-passage") || "").trim(), from }) };
+    } },
+  { op: "standardimpose", label: "act.standardimpose.label.standard",
+    send(view, el, cs) {
+      return { body: { standard: String(view.subject || "").split("/")[0], body: String(cs.value("st-im-body") || "").trim(), law: String(cs.value("st-im-law") || "").trim(), citation: String(cs.value("st-im-passage") || "").trim() } };
+    } },
+  { op: "standardbenchmark", label: "act.standardbenchmark.label.standard",
+    send(view, el, cs) {
+      return { body: { standard: String(view.subject || "").split("/")[0], body: String(cs.value("st-bm-body") || "").trim() } };
+    } },
   { op: "lawrelate", label: "act.lawrelate.label.standard",
     send(view, el, cs) {
       const to = String(cs.value("st-to") || "").trim(), citation = String(cs.value("st-citation") || "").trim();
-      const type = String(cs.value("st-type") || "implements"), effective = String(cs.value("st-effective") || "").trim();
-      if (!to || !citation) return { refuse: "screen.standard.relate.empty" };
+      const type = String(cs.value("st-type") || "").trim(), effective = String(cs.value("st-effective") || "").trim();
+      if (!to || !citation || !type) return { refuse: "screen.standard.relate.empty" };
       if (["amends", "repeals"].includes(type) && !effective) return { refuse: "screen.standard.relate.effective" };
-      return { body: Object.assign({ type, from: String(view.subject || ""), to, citation }, effective ? { effective } : {}) };
+      /* D2: the standard's own id, the subject before any `/` (a standard opened from its project's list carries the project after it) */
+      return { body: Object.assign({ type, from: String(view.subject || "").split("/")[0], to, citation }, effective ? { effective } : {}) };
     } },
-];
+], ["standard", "relations", "laws", "project", "proposals", "held", "bodies", "institutions", "offices"]);
 
 const STANDARD_KEYS = [
-  "screen.standard.sub", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",
+  "screen.standard.more.passages",
+  "screen.standard.sub", "screen.standard.held", "screen.standard.held.more", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",
   "screen.standard.kind.court", "screen.standard.kind.policy", "screen.standard.kind.commitment", "screen.standard.kind.standard",
   "screen.standard.inforce.since", "screen.standard.inforce.span", "screen.standard.inforce.none", "screen.standard.words", "screen.standard.laws",
   "screen.standard.rel.implements", "screen.standard.rel.refers_to", "screen.standard.rel.amends", "screen.standard.rel.repeals",
   "screen.standard.rel.renumbers", "screen.standard.rel.recodifies", "screen.standard.rel.defines", "screen.standard.rel.excepts",
-  "screen.standard.rel.incorporates", "screen.standard.type", "screen.standard.to", "screen.standard.citation", "screen.standard.effective",
+  "screen.standard.rel.incorporates", "screen.standard.type", "screen.standard.to", "screen.standard.effective",
   "screen.standard.effective.help", "screen.standard.proposals", "screen.standard.proposals.more", "screen.standard.state.open",
   "screen.standard.state.adopted", "screen.standard.state.all", "screen.standard.proposedby", "screen.standard.adopted", "screen.standard.notyet",
   "screen.standard.declare", "screen.standard.cite", "screen.standard.cite.help", "screen.standard.kindpick", "screen.standard.issuer",
   "screen.standard.text", "screen.standard.text.help", "screen.standard.from", "screen.standard.declare.empty", "screen.standard.relate.empty",
   "screen.standard.relate.effective",
+  "screen.standard.inforce.heading", "screen.standard.inforce.day.help", "screen.standard.inforce.result.meta", "screen.standard.inforce.refused.summary",
+  "screen.standard.inforce.refused.body", "screen.standard.inforce.refused.body2", "screen.standard.inforce.help", "crumb.project.unjoined",
+  "screen.standard.inforce.day.label", "screen.standard.inforce.result.line", "standard.inforce.known",
+  /* R64 (DEC-438) */
+  "screen.standard.binds.head", "screen.standard.binds.help", "screen.standard.through.unknown", "screen.standard.through.none.summary",
+  "screen.standard.f.through", "screen.standard.f.through.help", "screen.standard.f.source", "screen.standard.f.source.help", "screen.standard.f.body", "screen.standard.f.body.help",
+  "screen.standard.f.act", "screen.standard.f.act.help", "screen.standard.f.edition", "screen.standard.f.edition.help", "screen.standard.f.mode", "screen.standard.mode.by_reference",
+  "screen.standard.mode.voluntary", "screen.standard.mode.by_accreditation", "screen.standard.f.passage", "screen.standard.f.law", "connection.node.unnamed", "screen.standard.binds.unknown", "screen.standard.binding.adoption", "screen.standard.binding.adoption.meta", "screen.standard.binding.adoption.meta.nofrom", "screen.standard.binding.imposition", "screen.standard.binding.benchmark", "screen.standard.binding.recorded",
+  "screen.person.source", "screen.standard.inforce.state.in_force", "screen.standard.inforce.state.not_in_force", "screen.standard.inforce.state.overridden", "screen.standard.inforce.state.undetermined",
 ];
 
-const words = ["screen.standard.name", "screen.standard.purpose",
-  ...["standarddeclare", "standardadopt", "lawrelate"].flatMap((op) => ["act." + op + ".label.standard", "act." + op + ".does"]),
+/* the incoming words of D8, listed when the word table holds them */
+const INCOMING = ["implements", "refers_to", "amends", "repeals", "renumbers", "recodifies", "defines", "excepts", "incorporates"].map((k) => "screen.standard.rel.in." + k).filter((k) => hasWord(k));
+
+const words = ["screen.standard.name", "screen.standard.purpose", ...INCOMING,
+  ...["standardinforce", "standarddeclare", "standardadopt", "lawrelate", "standardinforcethrough", "standardinforcethroughwithdraw", "standardadoption", "standardimpose", "standardbenchmark"].flatMap((op) => ["act." + op + ".label.standard", "act." + op + ".does"]),
   "mark.origin.machine.name", "mark.origin.machine.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
-  "mark.gap.withheld.name", "mark.gap.withheld.means", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...STANDARD_KEYS];
+  "mark.gap.withheld.name", "mark.gap.withheld.means", ...WHY_KEYS, "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...STANDARD_KEYS];
 
 export const STANDARD_SCREEN = Object.freeze({ id: "standard", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, place, render, acts, words, parts: PARTS });

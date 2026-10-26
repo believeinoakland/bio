@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, F, WHY } from "./fixture.mjs";
 import { Filings } from "../../../src/filings/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const CODE = "INFO-2026-0010-code", ACTS = "INFO-2026-0011-acts";
@@ -54,19 +55,19 @@ test("R8 a standard whose access is not free is carried by its designation, edit
   const items = Object.fromEntries(p.sections.standards.items.map((i) => [i.standard, i]));
   const s = items[S3];
   assert.deepEqual([s.cite, s.kind, s.issuer, s.designation, s.edition, s.access], ["TS 101:2024", "standard", "Test Standards Body", "TS 101", "2024", "undetermined"]);
-  assert.match(s.access_says, /not stated, so it is carried as not free/);
+  assert.equal(s.access_says, word("filings.standard_text_read"));
   assert.equal("text" in s, false, "no list of its text");
   /* the comparison row's requires, with the row's content ids that are passages of its text (the act's evidence is not) */
   assert.deepEqual(s.requires, [{ requires: ROW, content_ids: [P0, WHOLE], row: 0, source: S3 }]);
   /* the passages relied on: the row's, then the finding's leg; each quoted, the whole document named and not quoted */
   assert.deepEqual(s.passages.map((q) => [q.content_id, q.text]), [[P0, WORDS[0]], [WHOLE, null], [P1, WORDS[1]]]);
-  assert.match(s.passages[1].text_why, /whole document, so it is not quoted/);
+  assert.equal(s.passages[1].text_why, word("filings.passage_cited_whole"));
   assert.deepEqual(s.passages[0].relied_on_by, [{ comparison_row: 0, source: S3 }]);
   assert.deepEqual(s.passages[2].relied_on_by, [{ finding_leg: CODE, source: p.sections.facts.items[0].source }]);
   /* another stating no access and no edition: not free, and nothing of its text relied on, so no passage */
   assert.deepEqual([items[S5].access, items[S5].passages, "text" in items[S5], items[S5].edition], ["undetermined", [], false, null]);
-  assert.match(items[S5].edition_says, /states no edition/);
-  assert.match(items[S5].says, /no passage of its text is relied on/);
+  assert.equal(items[S5].edition_says, word("filings.record_states_edition"));
+  assert.equal(items[S5].says, word("filings.says.passage_text_relied"));
   /* never the whole text, nor any other passage: P2 is in both standards' text and relied on by nothing */
   const v2 = pack();
   const read = f.counselPacketRead({ id: p.id, version: 1, viewer: V("bo") });
@@ -89,7 +90,7 @@ test("R8 a standard's adoption is the edition the act's body had adopted on the 
   const { x, pack, S3 } = heldBack();
   const none = pack().sections.standards.items.find((i) => i.standard === S3).adoption;
   assert.deepEqual([none.state, none.body, none.date, none.edition], ["undetermined", "Port Ellery Selectboard", "2026-03-02", null]);
-  assert.match(none.why, /no adoption by Port Ellery Selectboard/);
+  assert.equal(none.why, x.standards.editionInForce({ standard: S3, body: "Port Ellery Selectboard", date: "2026-03-02", viewer: V("olive") }).why, "standards' own reason");
   /* the Selectboard adopts edition 2024 by an ordinance of its own (standards R40) */
   x.doc(ACTS);
   const cite = x.content.transcribe({ bundleId: ACTS, extent: { kind: "pdf-page", page: 0 }, text: "TS 101:2024 is adopted by reference.",
@@ -107,7 +108,7 @@ test("R8 a standard's adoption is the edition the act's body had adopted on the 
   /* no module answering adoptions: undetermined, said so */
   const bare = { ...Object.fromEntries(["standardRead", "inForce"].map((k) => [k, x.standards[k].bind(x.standards)])) };
   const u = pack({}, x.filingsWith({ standards: bare })).sections.standards.items.find((i) => i.standard === S3).adoption;
-  assert.deepEqual([u.state, u.why], ["undetermined", "no module answers a standard's adoptions here"]);
+  assert.deepEqual([u.state, u.why], ["undetermined", word("filings.why.module_answers_standard")]);
 });
 
 test("R8 R9 access as standards holds it: paywalled and reading-room standards carried with only the passages relied on, in the members' words, a law kind's too; a free standard, and a law kind stating no access (K2019: public law), carried as R9 states (its text content ids, no passages quoted); negative controls", async () => {
@@ -115,13 +116,13 @@ test("R8 R9 access as standards holds it: paywalled and reading-room standards c
   const as = (access, words) => new Proxy(x.standards, { get: (t, k) => (k === "standardRead"
     ? (a) => { const r = t.standardRead(a); return r.ok && r.id === S3 ? { ...r, access, says: { ...r.says, ...(words ? { access: words } : {}) } } : r; }
     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
-  for (const [access, words] of [["paywalled", "Behind a paywall"], ["reading_room", "Reading room only"]]) {
+  for (const [access, words] of [["paywalled", word("label.standardaccess.paywalled")], ["reading_room", word("label.standardaccess.reading_room")]]) {
     const s = pack({}, x.filingsWith({ standards: as(access, words) })).sections.standards.items.find((i) => i.standard === S3);
     assert.deepEqual([s.access, s.passages.map((q) => q.content_id), "text" in s], [access, [P0, WHOLE], false], access);
-    assert.equal(s.access_says, `${words}: only the passages relied on are carried, never the whole text`);
+    assert.equal(s.access_says, word("filings.passages_relied_carried", { words: String(words) }));
   }
   /* negative control: the same standard free to read is carried whole, as R9 states */
-  const free = pack({}, x.filingsWith({ standards: as("free", "Free to read") })).sections.standards.items.find((i) => i.standard === S3);
+  const free = pack({}, x.filingsWith({ standards: as("free", word("label.standardaccess.free")) })).sections.standards.items.find((i) => i.standard === S3);
   assert.deepEqual([free.access, free.text, "passages" in free, "designation" in free], ["free", [P0, P1, P2, WHOLE], false, false]);
   /* the fixture's ordinance and commitment state no access: public law, carried as R9 states (K2019) */
   const T = x.action({ kind: "commitment_claim" });

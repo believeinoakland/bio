@@ -48,6 +48,7 @@ import { expandRecurrence, localDay } from "../civil-time/index.mjs";
 import { isMachineIdentity, proposalLabel, parseFrontmatter, sha256HexSync, ISO_TS_RE } from "../record-grammar/index.mjs";
 import { PLAN_WORK_TABLES, migratePlanWork } from "./schema.mjs";
 import { PLAN_WORK_CHECKS, refusal } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { PLAN_WORK_SCHEMA, PLAN_WORK_TABLES } from "./schema.mjs";
 export { PLAN_WORK_CHECKS } from "./checks.mjs";
@@ -68,7 +69,7 @@ export const REEXAM_BOUNDS = Object.freeze([Object.freeze({ bound: "proposals", 
                                             Object.freeze({ bound: "wallclock", allowed: 600000 })]);
 /** R8: the label every assembled draft carries. */
 export const DRAFT_LABEL = Object.freeze({ machine_work: true, by: "system",
-  says: "assembled by the system from where the plan stands, each item naming its source; machine work, not a member's report" });
+  says: word("plan-work.says.assembled_system_where") });
 /** R14: who a report that began as the assistant's draft names as its drafter: a machine identity, so its label's state
  *  is `machine_proposed`. */
 export const ASSISTANT = "class:ai";
@@ -169,7 +170,7 @@ export class PlanWork {
     const held = (p.subjects || []).find((x) => x.key === key);
     /* DEC-49 REGION is-matter-of-plan */
     if (!held)
-      return { r: refusal("MATTER_NOT_OF_PLAN", "the plan is not about that matter. Nothing was written.",
+      return { r: refusal("MATTER_NOT_OF_PLAN", localize("plan-work.index.the_plan_is_not_about", "the plan is not about that matter. Nothing was written."),
         { plan: p.id, subject: s ?? (typeof subject === "string" ? subject.slice(0, 200) : null) }) };
     /* END DEC-49 REGION is-matter-of-plan */
     return { s: held.subject, key: held.key };
@@ -228,14 +229,14 @@ export class PlanWork {
       const esc = [];
       if (s.kind === "outcome") {
         const l = this.escalation.escalationsFor({ determination: s.determination, viewer: sightOf(viewer) });
-        if (!ok(l)) return { state: "undetermined", why: "the matter's escalations could not be read" };
+        if (!ok(l)) return { state: "undetermined", why: word("plan-work.why.matter_escalations_read") };
         esc.push(...(l.items || []));
       }
       const ended = esc.find((e) => e.state === "ended");
       if (ended) return { state: "ended", escalation: ended.id };
       if (s.kind === "outcome") {
         const c = this.conformance.curesOf({ determination: s.determination, standard: s.standard, viewer: sightOf(viewer) });
-        if (!ok(c)) return { state: "undetermined", why: "the matter's cures could not be read" };
+        if (!ok(c)) return { state: "undetermined", why: word("plan-work.why.matter_cures_read") };
         const cure = standingCure(c, s.standard);
         if (cure) return { state: "fixed", cure };
       }
@@ -263,7 +264,7 @@ export class PlanWork {
       return { state: "none" };
     } catch (e) {
       if (e instanceof ProviderAbsent) throw e;
-      return { state: "undetermined", why: "a read the state needs failed" };
+      return { state: "undetermined", why: word("plan-work.why.read_state_needs") };
     }
   }
 
@@ -352,8 +353,9 @@ export class PlanWork {
                        to: dayOf(msOf(recurrence.dtstart) + 400 * DAY_MS) }) : null;
       /* DEC-49 REGION is-review-rhythm */
       if (!r || !Array.isArray(r.instances) || !r.instances.length)
-        return refusal("REVIEW_RHYTHM_REFUSED", !zone ? "no time zone was given and none is held for this place. Nothing was written."
-          : `a rhythm is {rrule, dtstart: YYYY-MM-DD, zone?} in the recurrence subset (weekly, monthly or yearly)${r && r.reason ? `: ${r.reason}` : ""}. Nothing was written.`);
+        return refusal("REVIEW_RHYTHM_REFUSED", !zone ? localize("plan-work.index.no_time_zone_was_given", "no time zone was given and none is held for this place. Nothing was written.")
+          : localize("plan-work.index.a_rhythm_is_recurrence", "a rhythm is {rrule, dtstart: YYYY-MM-DD, zone?} in the recurrence subset (weekly, monthly or yearly){why}. Nothing was written.",
+            { why: r && r.reason ? `: ${r.reason}` : "" }));
       /* END DEC-49 REGION is-review-rhythm */
       held = { rrule: recurrence.rrule, dtstart: recurrence.dtstart, zone };
     }
@@ -492,10 +494,10 @@ export class PlanWork {
     if (held.r) return held.r;
     /* DEC-49 REGION is-prep-item-open */
     if (held.done)
-      return refusal("PREP_ITEM_DONE", `${held.item} was marked done by ${held.done.by}. Nothing was written.`, { item: held.item });
+      return refusal("PREP_ITEM_DONE", localize("plan-work.index.item_was_marked_done_by", "{item} was marked done by {by}. Nothing was written.", { item: String(held.item), by: String(held.done.by) }), { item: held.item });
     /* END DEC-49 REGION is-prep-item-open */
     if (act === "take_up" && target !== undefined && target !== null && !isDay(target))
-      return refuseText(null, 10, "target", { says: "a target date is a day, written YYYY-MM-DD" });
+      return refuseText(null, 10, "target", { says: word("plan-work.says.target_date_day") });
     const at = this.now();
     this.record.transact(() => {
       const n = seqOf(this.#rows(`SELECT MAX(seq) AS n FROM pw_prep WHERE plan_id=?`, o.p.id));
@@ -510,7 +512,7 @@ export class PlanWork {
     const rows = typeof item === "string" ? this.#rows(`SELECT * FROM pw_prep WHERE plan_id=? AND item=? ORDER BY seq`, planId, item) : [];
     /* DEC-49 REGION is-prep-item-held */
     if (!rows.length || rows[0].act !== "add")
-      return { r: refusal("NO_SUCH_PREP_ITEM", "the plan holds no preparation item of that id. Nothing was written.",
+      return { r: refusal("NO_SUCH_PREP_ITEM", localize("plan-work.index.the_plan_holds_no_preparation", "the plan holds no preparation item of that id. Nothing was written."),
         { item: typeof item === "string" ? item.slice(0, 80) : null }) };
     /* END DEC-49 REGION is-prep-item-held */
     return prepView(rows);
@@ -560,8 +562,8 @@ export class PlanWork {
     else if (kind === "draft") found = this.#drafts(p, viewer).has(on.draft);
     /* DEC-49 REGION is-comment-target */
     if (!found)
-      return { r: refusal("COMMENT_TARGET_REFUSED", "a comment is on {option}, {action} or {draft} of this plan, one you can "
-        + "see. Nothing was written.") };
+      return { r: refusal("COMMENT_TARGET_REFUSED", localize("plan-work.index.a_comment_is_on_one",
+        "a comment is on an option, an action or a draft of this plan, one you can see. Nothing was written.")) };
     /* END DEC-49 REGION is-comment-target */
     return { kind, id: on[kind] };
   }
@@ -606,13 +608,13 @@ export class PlanWork {
 
   /* R9: the watches the plan set running with their end dates; `undetermined` when the reader throws or none is held. */
   #watches(planId, viewer) {
-    if (!this.watchReader) return { state: "undetermined", why: "no watch reader is registered on this instance" };
+    if (!this.watchReader) return { state: "undetermined", why: word("plan-work.why.watch_reader_registered") };
     try {
       const r = this.watchReader.fn({ plan: planId, viewer });
       const list = Array.isArray(r) ? r : r && Array.isArray(r.watches) ? r.watches : null;
-      if (!list) return { state: "undetermined", why: "the watch reader gave no list" };
+      if (!list) return { state: "undetermined", why: word("plan-work.why.watch_reader_gave") };
       return { state: "read", watches: list.map((w) => ({ ...w, source: { module: this.watchReader.module } })) };
-    } catch { return { state: "undetermined", why: "the watch reader could not read the plan's watches" }; }
+    } catch { return { state: "undetermined", why: word("plan-work.why.watch_reader_read") }; }
   }
 
   /** R7: where the plan stands at `nowMs`, as the reader may see it: each wait with its basis, the next dates (R3),
@@ -636,7 +638,7 @@ export class PlanWork {
       if (a.current_state === "awaiting_response") {
         const sent = (a.correspondence || []).filter((e) => e && e.direction === "sent").at(-1);
         waits.push({ action: a.id, option: option.id, waiting: "response", since: sent ? sent.at : null,
-                     basis: "the action awaits a response", source: { module: "actions", id: a.id } });
+                     basis: word("plan-work.basis.action_awaits_response"), source: { module: "actions", id: a.id } });
       }
       const ov = a.premise_override;
       if (ov && (ov.reason || ov.stated))
@@ -666,16 +668,16 @@ export class PlanWork {
   /* R7: the holds on the plan's project (`action-holds` R7) and those due on its actions or project (its R3). */
   #holds(p, acts, viewer) {
     const h = this.#maybe("actionHolds");
-    if (!h) return { state: "undetermined", why: "this instance holds no litigation-hold reads" };
+    if (!h) return { state: "undetermined", why: word("plan-work.why.instance_holds_litigation") };
     try {
       const project = h.projectHolds({ projects: [p.project], viewer: sightOf(viewer) });
       const ids = new Set(acts.map((x) => x.action.id));
       const due = h.holdsDue({ viewer: sightOf(viewer) });
       return { state: "read",
-               project: ok(project) ? project.projects || [] : { state: "undetermined", why: "the project's holds could not be read" },
-               due: ok(due) ? (due.items || []).filter((x) => ids.has(x.action) || x.project === p.project) : { state: "undetermined", why: "the holds due could not be read" },
+               project: ok(project) ? project.projects || [] : { state: "undetermined", why: word("plan-work.why.project_holds_read") },
+               due: ok(due) ? (due.items || []).filter((x) => ids.has(x.action) || x.project === p.project) : { state: "undetermined", why: word("plan-work.why.holds_due_read") },
                source: { module: "action-holds" } };
-    } catch { return { state: "undetermined", why: "the holds could not be read" }; }
+    } catch { return { state: "undetermined", why: word("plan-work.why.holds_read") }; }
   }
 
   /** R7 (action-plans R44): the closing summary, read at the instant of closing as the module's own read. */
@@ -834,9 +836,9 @@ export class PlanWork {
       const notLive = (o.subjects_liveness || []).length && !(o.subjects_liveness || []).some((b) => b.liveness && b.liveness.state === "live");
       const dated = checks.filter((x) => x.option === o.id && (x.check === "date_past" || x.check === "date_before_phase"));
       if (o.action && o.action.id === action)
-        add({ kind: "option_changed", option: o.id, why: `a response was recorded on ${action}, the action this option started` });
+        add({ kind: "option_changed", option: o.id, why: word("plan-work.why.response_recorded_action", { action: String(action) }) });
       else if (notLive)
-        add({ kind: "option_changed", option: o.id, why: "every matter this option serves is no longer live" });
+        add({ kind: "option_changed", option: o.id, why: word("action-plans.says.matter_option_serves") });
       else if (dated.length)
         add({ kind: "option_changed", option: o.id, why: dated[0].says ?? dated[0].check });
     }
@@ -844,7 +846,7 @@ export class PlanWork {
       if (sc.set_aside) continue;
       for (const ph of sc.phases || [])
         if (ph.started && !ph.judgement)
-          add({ kind: "phase_start_holds", scenario: sc.scenario, phase: ph.id, why: `the phase's start holds since ${ph.started_at ?? "now"}` });
+          add({ kind: "phase_start_holds", scenario: sc.scenario, phase: ph.id, why: word("plan-work.why.phase_start_holds", { now: String(ph.started_at ?? "now") }) });
     }
     const outcome = this.#outcomeAt(action, ord);
     const a = this.#actionOf(action, null);
@@ -857,7 +859,7 @@ export class PlanWork {
           if (isObj(it) && Array.isArray(it.after) && it.after.includes(outcome) && typeof it.route === "string" && !routes.includes(it.route))
             routes.push(it.route);
       if (routes.length)
-        add({ kind: "next_routes", routes: routes.slice(0, MARK_ROUTES_MAX), why: `the procedure guide's next routes for ${a.kind} after ${outcome}` });
+        add({ kind: "next_routes", routes: routes.slice(0, MARK_ROUTES_MAX), why: word("plan-work.why.procedure_guide_next", { kind: String(a.kind), outcome: String(outcome) }) });
     }
     return marks;
   }
@@ -878,15 +880,15 @@ export class PlanWork {
   async #openRun(planId, response, recorder, at) {
     const ai = this.#maybe("aiRuns");
     const who = str(recorder);
-    if (!ai || typeof ai.open !== "function") return { opened: false, why: "no assistant on this instance" };
-    if (!who || isMachineIdentity(who)) return { opened: false, why: "the response was not recorded by a member" };
+    if (!ai || typeof ai.open !== "function") return { opened: false, why: word("plan-work.why.assistant_instance") };
+    if (!who || isMachineIdentity(who)) return { opened: false, why: word("plan-work.why.response_recorded_member") };
     const p = this.#plan(planId, null);
-    if (!p) return { opened: false, why: "the plan could not be read" };
+    if (!p) return { opened: false, why: word("plan-work.why.plan_read") };
     const stamp = at ?? this.now();
     const run = `RXM-${stamp.slice(0, 10).replace(/-/g, "")}-${sha256HexSync(`${planId}|${response}`).slice(0, 12)}`;
     try {
       const r = await ai.open({ run, contextType: "project", contextId: p.project, mode: "plan", plan: planId,
-        origin: "reexamination", response, label: "re-examining the plan after a recorded response",
+        origin: "reexamination", response, label: word("plan-work.label.re_examining_plan"),
         principalPlane: who, principalClaude: who, skillVersion: REEXAM_SKILL, bounds: REEXAM_BOUNDS.map((b) => ({ ...b })),
         actor: who, viewer: who });
       if (r && r.started !== false && r.ok !== false) return { opened: true, run };
@@ -955,8 +957,7 @@ export class PlanWork {
     } catch (e) { if (e instanceof ProviderAbsent) throw e; found = null; }
     /* DEC-49 REGION is-item-seen */
     if (!found)
-      return { r: refusal("NO_SUCH_ITEM", "no deadline, checkpoint, proposed stage or hold you may see answers to that item. "
-        + "Nothing was written.") };
+      return { r: refusal("NO_SUCH_ITEM", localize("plan-work.index.no_deadline_checkpoint_proposed_stage", "no deadline, checkpoint, proposed stage or hold you may see answers to that item. Nothing was written.")) };
     /* END DEC-49 REGION is-item-seen */
     return { ...found, key: JSON.stringify(found.item) };
   }
@@ -1002,7 +1003,7 @@ export class PlanWork {
       if (!captures.size) return none;
       const sight = viewer === null || viewer === undefined ? DUTIES_INTERNAL : viewer;
       const r = this.duties.dutiesArisingIn({ captures: [...captures].slice(0, 200), asOf: iso(now), viewer: sight });
-      if (!ok(r)) return { ...none, captures: [...captures], undetermined: { why: "the duties could not be read" } };
+      if (!ok(r)) return { ...none, captures: [...captures], undetermined: { why: word("plan-work.why.duties_read") } };
       const duties = r.duties || [];
       const allMet = r.all_met === true;
       const met = allMet ? this.#metAt(duties, sight) : { met_at: null };
@@ -1011,7 +1012,7 @@ export class PlanWork {
     } catch (e) {
       if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider);
       return { ok: true, plan: plan ?? null, matter: matter ?? null, captures: [], duties: [], all_met: false, partial: false,
-               met_at: null, undetermined: { why: "the read failed" } };
+               met_at: null, undetermined: { why: word("case-disclosures.why.read_failed") } };
     }
   }
 
@@ -1022,22 +1023,22 @@ export class PlanWork {
   #metAt(duties, sight) {
     const no = (why) => ({ met_at: null, met_at_why: why });
     const d = this.duties;
-    if (typeof d.transitionsOf !== "function") return no("the duties' recorded readings cannot be read on this instance");
+    if (typeof d.transitionsOf !== "function") return no(word("plan-work.no.duties_recorded_readings"));
     let last = null;
     for (const duty of duties)
       for (const o of duty.occurrences || []) {
         let t;
         try { t = d.transitionsOf({ dutyId: duty.duty_id, occurrenceKey: o.key, viewer: sight }); }
-        catch { return no("the duties' recorded readings could not be read"); }
+        catch { return no(word("plan-work.no.duties_recorded_readings_read")); }
         const list = ok(t) && Array.isArray(t.transitions)
           ? t.transitions.filter((x) => x && x.duty_id === duty.duty_id && x.occurrence_key === o.key) : null;
-        if (!list) return no("the duties' recorded readings could not be read");
+        if (!list) return no(word("plan-work.no.duties_recorded_readings_read"));
         let start = null;
         for (const x of list) start = MET_STATES.includes(x.state) ? start ?? x : null;
-        if (!start || !Number.isFinite(msOf(start.as_of))) return no(`no reading of ${duty.duty_id} met is recorded yet`);
+        if (!start || !Number.isFinite(msOf(start.as_of))) return no(word("plan-work.no.reading_met_recorded", { duty_id: String(duty.duty_id) }));
         if (!last || msOf(start.as_of) > msOf(last)) last = start.as_of;
       }
-    return last ? { met_at: last } : no("no duty's occurrence is read");
+    return last ? { met_at: last } : no(word("plan-work.no.duty_occurrence_read"));
   }
 }
 
@@ -1063,8 +1064,8 @@ function reportFrom(from) {
   if (isObj(from) && from.assistant === true && Object.keys(from).every((k) => k === "assistant" || k === "as_of")
       && (asOf === undefined || asOf === null || (typeof asOf === "string" && ISO_TS_RE.test(asOf))))
     return { stored: JSON.stringify({ draft: "assistant", as_of: asOf ?? null }) };
-  return { r: refuseText(null, 200, "from", { says: "from is one line of your own, or {assistant: true, as_of?} when the "
-    + "text began as the assistant's draft" }) };
+  return { r: refuseText(null, 200, "from", { says: localize("plan-work.index.from_is_one_line_of_your",
+    "from is one line of your own, or {assistant: true, as_of?} when the text began as the assistant's draft") }) };
 }
 /* R8, R14, R16: a kept `from` as read back; the assistant's draft with R16's label, whatever label an earlier row held. */
 function fromOf(stored) {
@@ -1118,8 +1119,8 @@ export function refuseText(text, max, field, { line = false, says = null } = {})
   const good = typeof text === "string" && text.trim().length > 0 && text.length <= max && (!line || isLine(text, max));
   /* DEC-49 REGION is-text-written */
   if (!good)
-    return refusal("PLAN_WORK_TEXT_REFUSED", says ? `${says}. Nothing was written.`
-      : `${field} is 1 to ${max} characters${line ? " on one line, with no quotation mark or backslash" : ""}. Nothing was written.`,
+    return refusal("PLAN_WORK_TEXT_REFUSED", says ? localize("plan-work.index.says_nothing_was_written", "{says}. Nothing was written.", { says: String(says) })
+      : localize("plan-work.index.field_is_1_to_max", "{field} is 1 to {max} characters{v1}. Nothing was written.", { field: String(field), max: String(max), v1: String(line ? " on one line, with no quotation mark or backslash" : "") }),
       { field, max });
   /* END DEC-49 REGION is-text-written */
   return null;
@@ -1132,20 +1133,19 @@ export function refuseOthers(args, author) {
   if (k) return k;
   if (isObj(args) && args.for !== undefined && args.for !== null && memberOf(args.for) !== memberOf(author))
     return { ...refuseKeys({ for: args.for, assignee: args.for }), keys: ["for"],
-             detail: "a member takes an item up herself; nobody assigns anybody, so for may name only you. Nothing was written." };
+             detail: localize("plan-work.index.a_member_takes_an_item", "a member takes an item up herself; nobody assigns anybody, so for may name only you. Nothing was written.") };
   return null;
 }
 
 /** K248: a provider this host has not been given; the act or read refuses, naming it, never answering in part. */
 export function refuseProviderUnavailable(provider) {
   /* DEC-49 REGION is-provider-present */
-  return refusal("PLAN_WORK_PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not `
-    + "have; nothing is answered in its place.", { provider });
+  return refusal("PLAN_WORK_PROVIDER_UNAVAILABLE", localize("plan-work.index.this_answer_reads_the_provider", "this answer reads the {provider} module, which this instance does not have; nothing is answered in its place.", { provider: String(provider) }), { provider });
   /* END DEC-49 REGION is-provider-present */
 }
 
 class ProviderAbsent extends Error {
-  constructor(provider) { super(`plan-work: ${provider} was not given`); this.provider = provider; }
+  constructor(provider) { super(localize("plan-work.index.plan_work_provider_was_not", "plan-work: {provider} was not given", { provider: String(provider) })); this.provider = provider; }
 }
 
 for (const name of ["matterOutcomeSet", "matters", "planTimeline", "planReviewRhythm", "planReviewsDue", "planReviewOpen",
@@ -1198,9 +1198,9 @@ function register(i) {
   try { ap = i.actionPlans; } catch { ap = null; }
   try { ac = i.actions; } catch { ac = null; }
   out.close_snapshot = ap && typeof ap.registerCloseSnapshot === "function"
-    ? ap.registerCloseSnapshot("plan-work", (a) => i.closeSnapshot(a)) : { ok: false, why: "action-plans offers no close snapshot" };
+    ? ap.registerCloseSnapshot("plan-work", (a) => i.closeSnapshot(a)) : { ok: false, why: word("plan-work.why.action_plans_offers") };
   out.response_listener = ac && typeof ac.registerResponseListener === "function"
-    ? ac.registerResponseListener("plan-work", (e) => i.onResponse(e)) : { ok: false, why: "actions offers no response listener" };
+    ? ac.registerResponseListener("plan-work", (e) => i.onResponse(e)) : { ok: false, why: word("plan-work.why.actions_offers_response") };
   return out;
 }
 
@@ -1245,3 +1245,10 @@ export function planWorkOps(m, url, body) {
     matterpromiseduties: () => m.matterPromiseDuties(read({ matter: b.matter ?? pick("matter") })),
   };
 }
+
+/* R19 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  itemtakeup: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("plan-work.declared.itemtakeup", "a member routes a clock entry's, a checkpoint's, a proposed stage's or a hold's to-dos to herself from then; nobody assigns anybody (plan-work R11)"),
+    fields: { accepts: ["item","for"], requires: ["item"] } },
+});

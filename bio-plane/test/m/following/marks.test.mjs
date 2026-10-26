@@ -212,7 +212,9 @@ test("R34 at start the module registers once with retrieval's browse-marks door;
   assert.deepEqual(w.f.marksRegistered, { ok: true, module: "following" });
   assert.deepEqual(w.markReaders.map((x) => x.module), ["following"]);
   assert.throws(() => w.f.registerMarks(), /retrieval refused its marks read: LISTENER_DECLARED/, "a second registration is refused by the door, and reported");
-  const refusing = { registerBrowseMarks: () => ({ ok: false, reason: "LISTENER_DECLARED" }) };
+  /* the real retrieval, which following registered with at start: its answer to a second registration is the refusal */
+  const real = world({ realRetrieval: true }).retrieval;
+  const refusing = { registerBrowseMarks: (...a) => real.registerBrowseMarks(...a) };
   assert.throws(() => world({ door: refusing }), /retrieval refused its marks read: LISTENER_DECLARED/);
   const absent = world({ door: {} });
   assert.deepEqual(absent.f.marksRegistered, { ok: false, reason: "NO_BROWSE_DOOR" });

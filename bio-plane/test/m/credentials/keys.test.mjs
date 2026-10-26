@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../src/credentials/index.mjs";
 import { notAnAdmin, noSuchMember, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const listed = (w, k) => w.c.signerList().signers.find((s) => s.key_b64 === k);
 
@@ -27,13 +28,11 @@ test("R6 signerAdd: refusals in order, each writing nothing; a known key rebinds
   for (const keyB64 of [undefined, null, "", "ssh-ed25519 AAAA", "BBBBx", "AAAA x", 7]) {
     const r = w.c.signerAdd({ keyB64, memberId: "nobody", by: "admin" });
     assert.deepEqual(r, { ok: false, reason: "BAD_KEY", code: "BAD_KEY", check: "C-96.8",
-      translation: CREDENTIALS_CHECKS.BAD_KEY.translation, detail: "expected the base64 field of an ssh-ed25519 public key" },
+      translation: CREDENTIALS_CHECKS.BAD_KEY.translation, detail: localize("credentials.index.expected_the_base64_field", "expected the base64 field of an ssh-ed25519 public key") },
       String(keyB64));
   }
   assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "nobody", by: "admin" }), noSuchMember("nobody"),
     "membership R121's one answer (N793)");
-  assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "admin", by: "admin" }), noSuchMember("admin"),
-    "the founder holds no roster row, so no key is registered to them");
   const cal = w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "cal", by: "admin" });
   assert.deepEqual([cal.reason, cal.code, cal.check, cal.translation, cal.memberId, cal.member_status, cal.enrolled],
     ["SIGNER_MEMBER_NOT_ENROLLED", "SIGNER_MEMBER_NOT_ENROLLED", "C-63.1",
@@ -43,6 +42,9 @@ test("R6 signerAdd: refusals in order, each writing nothing; a known key rebinds
   assert.deepEqual([dee.reason, dee.check, dee.translation, dee.memberId, dee.member_status, dee.enrolled],
     ["SIGNER_MEMBER_NOT_ACTIVE", "C-63.2", SIGNER_ENROLMENT_CHECKS.SIGNER_MEMBER_NOT_ACTIVE.translation, "dee", "revoked", true]);
   assert.equal(w.snapshot(), before, "no refusal writes");
+  /* the founder, once the instance is claimed, is a member (R81, member-roster R76): a key is registered to them as to any */
+  assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAfounder", memberId: "admin", by: "admin" }),
+    { ok: true, keyB64: "AAAAfounder", memberId: "admin", by: "admin" });
   /* admitted: an active administrator (the founder included), a machine credential, an unstamped internal call */
   const a = w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "ann", comment: "laptop", by: "admin" });
   assert.deepEqual(a, { ok: true, keyB64: "AAAAkey1", memberId: "ann", by: "admin" });
@@ -54,7 +56,7 @@ test("R6 signerAdd: refusals in order, each writing nothing; a known key rebinds
   assert.equal(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "second", comment: "moved", by: "second" }).ok, true);
   assert.deepEqual(w.rows(`SELECT member_id, comment, status, status_by, origin, registered_by FROM signers WHERE key_b64='AAAAkey1'`),
     [{ member_id: "second", comment: "moved", status: "active", status_by: "second", origin: "admin", registered_by: "second" }]);
-  assert.equal(w.row(`SELECT COUNT(*) AS n FROM signers`).n, 4);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM signers`).n, 5);
 });
 
 test("R7 signerSet: NOT_AN_ADMIN, BAD_STATUS, NO_SUCH_KEY in order; activation refused as R6 for the owner; revoking never refused", async () => {
@@ -104,8 +106,8 @@ test("R8 R11 R19 signerList's attests is the one predicate, attests_why names a 
   assert.deepEqual([list.AAAAa.status_by, list.AAAAz.status_by, list.AAAAz.registered_by, list.AAAAz.origin],
     ["admin", "not recorded", "not recorded", "admin"]);
   for (const s of Object.values(list))
-    assert.deepEqual(Object.keys(s).sort(), ["added", "attests", "attests_why", "comment", "key_b64", "member_id",
-      "member_status", "origin", "registered_by", "status", "status_at", "status_by"], s.key_b64);
+    assert.deepEqual(Object.keys(s).sort(), ["added", "attests", "attests_why", "comment", "key_b64", "known_at",
+      "known_by", "member_id", "member_status", "origin", "registered_by", "status", "status_at", "status_by"], s.key_b64);
   /* attests is exactly: key active and member active (membership R68's status), and nothing else */
   for (const s of Object.values(list))
     assert.equal(s.attests, s.status === "active" && w.m.memberFacts(s.member_id)?.status === "active", s.key_b64);

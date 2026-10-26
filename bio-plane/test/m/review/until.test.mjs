@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { standard, P, V, SECRET, NOW } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_LIST_MAX, reviewOps, noReviewCopy } from "../../../src/review/index.mjs";
 import { migrateReview, REVIEW_SCHEMA } from "../../../src/review/schema.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DEAD = JSON.stringify(noReviewCopy());
 const HOUR = "2026-09-28T02:00:00.000Z", DAY = "2026-09-29T01:00:00.000Z";
@@ -93,7 +94,7 @@ test("R34: until in the past, equal to the act's instant, or not an instant in t
     assert.deepEqual(w.snapshot(), before, `${String(until)}: nothing written`);
   }
   assert.equal(REVIEW_COPY_CHECKS.REVIEW_BAD_UNTIL.translation,
-    "Choose an end date after today for this reader's link. Nothing was shared.");
+    word("refusal.REVIEW_BAD_UNTIL"));
   assert.equal(w.count("review_grants"), 0);
   /* both of the record's spellings, one instant after the act, are accepted and recorded as given */
   const a = grant(w, d, 1, "2026-09-28T01:00:01Z"), b = grant(w, d, 2, "2026-09-28T01:00:00.001Z");

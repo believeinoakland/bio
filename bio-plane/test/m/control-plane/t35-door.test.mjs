@@ -122,7 +122,7 @@ test("R58 (acquisition R38, R40; capture R73): `op=unpack` reaches capture's pas
   const { env, S } = world();
   for (const [token, cls, member] of [[S.ann, "member", "1"], [env.DAEMON_TOKEN, "daemon", "0"]]) {
     env.calls.length = 0;
-    const r = await call(env, { op: "unpack", token, method: "POST", params: { cls: "admin", member: "1", by: FORGED }, body: { archiveSha: "a".repeat(64) } });
+    const r = await call(env, { op: "unpack", token, method: "POST", params: { cls: "admin", member: "1", by: FORGED }, body: { archiveSha: "a".repeat(64), project: "PROJ-1" } });
     assert.equal(r.status, 200, r.text.slice(0, 200));
     const inner = opCalls(env).find((c) => c.route === "unpack");
     assert.deepEqual([inner.params.cls, inner.params.member], [cls, member], cls);

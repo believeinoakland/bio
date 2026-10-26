@@ -4,6 +4,7 @@ import test from "node:test";
 import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import assert from "node:assert/strict";
 import { boot, frame } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLE_DECLARATIONS } from "../../../src/setup.mjs";
 import * as S from "../../../src/setup.mjs";
 import { isLocale } from "../../../../jurisdictions/index.mjs";
@@ -31,7 +32,7 @@ test("R64 memberLanguageSet keeps any one well-formed BCP 47 tag as given, the m
     const r = w.m.memberLanguageSet({ language: ` ${tag} `, by: "ruth" });
     assert.deepEqual([r.ok, r.member, r.language], [true, "ruth", tag], tag);
   }
-  assert.match(w.m.memberLanguageSet({ language: "es", by: "ruth" }).note, /in English where none is/);
+  assert.equal(w.m.memberLanguageSet({ language: "es", by: "ruth" }).note, word("setup.note.screens_show_word"));
 });
 
 test("R64 memberLanguage answers the viewer's own {language, set_at}, latest first, and nobody else's; null clears the choice and is appended with when; a viewer with none, or a machine, reads null", async () => {
@@ -46,7 +47,7 @@ test("R64 memberLanguage answers the viewer's own {language, set_at}, latest fir
   t += 60_000;
   const cleared = w.m.memberLanguageSet({ language: null, by: "ruth" });
   assert.deepEqual([cleared.ok, cleared.language], [true, null]);
-  assert.match(cleared.note, /device's setting/);
+  assert.equal(cleared.note, word("setup.note.language_chosen_screens"));
   assert.deepEqual(w.m.memberLanguage({ viewer: "ruth" }), { ok: true, language: null, set_at: "2026-10-06T09:02:00.000Z" });
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM member_languages WHERE member='ruth'`).get().n, 2, "appended, never overwritten");
   for (const viewer of [null, "", "class:admin", "nobody"]) assert.equal(w.m.memberLanguage({ viewer }).language, null, String(viewer));

@@ -2,7 +2,8 @@
  * `build/requirements/public-read.md`; BIO_Publication_v0_1.md §1, §2, §3 rules 9–12 and 16). The public reads by hash,
  * by finding and by case, and the whole projection (R1–R4), and the evidence-package block beside a published case
  * (R8), and the named credential-free reads a later module registers (R18); beside a case, `docket`'s withdrawal stamp
- * and last entry (R20), and the docket and its feed served (R21); a case's criteria as `publication` froze them (R31).
+ * and last entry (R20), and the docket and its feed served (R21); a case's criteria as `publication` froze them (R31);
+ * what each published case froze for one question, with its signers and the pin check (R38).
  * It writes nothing (R16): every table it reads is `publication`'s, read under `publication` R40, and it reaches
  * `publication` and `docket` only through the services named below.
  *
@@ -31,6 +32,8 @@
  *                  `recordOf(host)`, reached at the read, so a world without it reads the stake undetermined).
  *   roster         `project-roster`, for its `projectStake` (its R32), read at the call, for R36's `matter_stake` (default:
  *                  `projectRosterOf(host)`, so a world without it reads the matter stake undetermined).
+ *   members        `membership`, for its `memberFacts` (`member-roster` R68, the founder's too), read at the call, for R41's
+ *                  handles (default: `membershipOf(host)`; a world without it names every member by the plain word).
  *   storage        the Durable Object's storage (default: the host's).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
@@ -40,14 +43,17 @@ import { publicationOf } from "../publication/index.mjs";
 import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
+import { membershipOf } from "../membership/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
-         LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
+         lensClosingSentencesOf, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
-import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
+import { caseFilePath, caseFileEntryOf, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
+import { caseFileStateOf } from "./casefile.mjs";
+export { CASEFILE_SENTENCES } from "./casefile-words.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS,
          DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
@@ -73,8 +79,7 @@ const signedParts = (doc) => {
 export const LABEL_KEY_MARKED = "photo.obscured.label";
 export const LABEL_KEY_UNMARKED = "photo.published.label";
 export const LABEL_KEY_CLEANED = "document.cleaned.label";
-export const CLEANED_LABEL_AT_MARKER = "Details of who made this file, and of its pictures, removed for publication; the "
-  + "group holds the original";
+export const CLEANED_LABEL_AT_MARKER = word("document.cleaned.label");
 const photoKeyOf = (obscured) => (obscured.marked === true ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
 const labelKeyOf = (obscured) => (obscured.kind === "document" ? LABEL_KEY_CLEANED
   : obscured.kind === "photo" ? photoKeyOf(obscured)
@@ -119,23 +124,49 @@ export function standingsOf(fm) {
   }
   return out;
 }
+/* R39 (C2): the words the signed case document states for each member's finding, `case_conclusions:` by target: its
+   `claim` and its `falsifier`, a string with letters in it or null. Null for a document stating no member blocks. */
+export function caseWordsOf(fm) {
+  if (!fm || !caseDocumentStatesMemberBlocks(fm)) return null;
+  const words = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  const out = new Map();
+  for (const r of Array.isArray(fm.case_conclusions) ? fm.case_conclusions : [])
+    if (r && typeof r === "object" && typeof r.target === "string")
+      out.set(r.target, { claim: words(r.claim), falsifier: words(r.falsifier) });
+  return out;
+}
 /* R23: a text held by `publication`'s `publishedMaterialText` (its R57), whichever shape it answers in. */
 const heldText = (v) => (typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null);
 const HEX64 = /^[0-9a-f]{64}$/;
+/* R28 (K5148): the case-file kinds that are the grammar's scaffolding and hold no member material of their own: the criteria, and a finding's facts files (a finding's own bytes are its `finding` kind). */
+const SCAFFOLD_KINDS = new Set(["criteria", "grading_facts", "passages"]);
 /* R5 (T46; N906, K2832): a SHA-256 of 64 hexadecimal digits in upper or mixed case is read as its lowercase form, by
    the store as by the Worker, never refused for its case; anything else is answered as given. */
 const lowerSha = (v) => (typeof v === "string" && /^[0-9a-fA-F]{64}$/.test(v) ? v.toLowerCase() : v);
 /* R28 with R32 (K2145): a carried archive member's archives hold its bytes, so when an order withholds a material's
    `document` file, every `archive` and `container` file the case file carries under that material's ref (its record and
-   each enclosing archive, outward) is withheld too, by the same orders. Mutates `withheld` (`withholdingOf`'s map). */
+   each enclosing archive, outward) is withheld too, by the same orders. Mutates `withheld` (`withholdingOf`'s map).
+   Fix round 6, G50 (B): a `document` file at a capture's own path (`materials/<ref>/<sha>/document`, only a `ref` on several
+   rows of a `/4` case file has one) sits one directory deeper than the ref's chain, so the directory prefix no longer
+   covers it. There only the first link is matched exactly, by the member in its path (the document's own `container`
+   record, `containers/<capture>.json`); every other link (every archive, every outward record) is not resolved here, so it
+   falls back to the ref level (everything under `materials/<ref>/`), except another capture's own first-link record, which
+   belongs to a document this order does not name. It may therefore over-withhold a sibling capture's outward chain and never
+   under-withholds. A one-row `ref` and every `/1`-`/3` file keep the directory prefix rule as it was. */
 function withholdChains(withheld, manifest) {
   const files = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+  const entryOf = (f) => (f && typeof f.path === "string" ? caseFileEntryOf(f.path) : null);
   for (const d of files) {
     if (!d || d.kind !== "document" || typeof d.path !== "string" || !withheld.has(d.sha256)) continue;
-    const under = d.path.slice(0, d.path.lastIndexOf("/") + 1);
+    const at = entryOf(d);
+    const captured = at && at.kind === "document" && at.capture ? at : null;
+    const under = captured ? `materials/${captured.ref}/` : d.path.slice(0, d.path.lastIndexOf("/") + 1);
+    const siblings = captured ? new Set(files.map(entryOf).filter((e) => e && e.kind === "document" && e.ref === captured.ref && e.capture
+      && e.capture !== captured.capture).map((e) => e.capture)) : null;
     const orders = withheld.get(d.sha256);
     for (const f of files) {
       if (!f || (f.kind !== "archive" && f.kind !== "container") || typeof f.path !== "string" || !f.path.startsWith(under)) continue;
+      if (siblings && f.kind === "container") { const e = entryOf(f); if (e && siblings.has(e.member)) continue; }
       const prev = withheld.get(f.sha256) || [];
       withheld.set(f.sha256, [...prev, ...orders.filter((o) => !prev.includes(o))]);
     }
@@ -219,13 +250,15 @@ export class PublicRead {
   #groupIdentity = null; // R34: {identity}, filled once
   #record; // R34: () => record-core, reached at the read
   #roster; // R36: () => project-roster, reached at the read
+  #members; // R41: () => membership, reached at the read
 
-  constructor({ storage, publication, docket, record = null, roster = null } = {}) {
+  constructor({ storage, publication, docket, record = null, roster = null, members = null } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
     this.docket = docket;
     this.#record = typeof record === "function" ? record : () => record;
     this.#roster = typeof roster === "function" ? roster : () => roster;
+    this.#members = typeof members === "function" ? members : () => members;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -252,15 +285,13 @@ export class PublicRead {
      unavailable, never as absent; with none registered the package says it carries no such block. */
   #evidencePackage(caseId, edition, findings) {
     if (!this.#evidenceBlock)
-      return { blocks: {}, detail: "no module provides an evidence-package block, so this package carries none; the "
-                                 + "evidence package is the published case edition itself" };
+      return { blocks: {}, detail: localize("public-read.index.no_module_provides_an_evidence", "no module provides an evidence-package block, so this package carries none; the evidence package is the published case edition itself") };
     const { name, module, fn } = this.#evidenceBlock;
     let value;
     try { value = fn({ caseId, edition, findings: findings.map((f) => f.bundle_id) }); }
-    catch (e) { value = { unavailable: true, detail: `${module} could not compute this block: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { value = { unavailable: true, detail: localize("public-read.index.could_not_compute_this_block", "{module} could not compute this block: {error}", { module, error: String(e && e.message || e).slice(0, 200) }) }; }
     return { blocks: { [name]: value ?? null },
-             detail: `each block is computed at this read by the module that provides it (${module}); it is not in the `
-                   + "case's signed bytes, and nothing of it is a claim the case makes" };
+             detail: localize("public-read.index.each_block_is_computed", "each block is computed at this read by the module that provides it ({module}); it is not in the case's signed bytes, and nothing of it is a claim the case makes", { module }) };
   }
 
 
@@ -273,10 +304,10 @@ export class PublicRead {
   registerGroupIdentity({ identity } = {}) {
     if (typeof identity !== "function")
       return { ok: false, reason: "PROVIDER_MALFORMED",
-               detail: "the group's identity source is registered with its door, identity(); nothing was registered" };
+               detail: "the team's identity source is registered with its door, identity(); nothing was registered" };
     if (this.#groupIdentity)
       return { ok: false, reason: "PROVIDER_DECLARED",
-               detail: "the group's identity source is already registered; the first stands, and nothing was registered" };
+               detail: "the team's identity source is already registered; the first stands, and nothing was registered" };
     this.#groupIdentity = { identity };
     return { ok: true };
   }
@@ -407,8 +438,7 @@ export class PublicRead {
       /* DEC-49 REGION is-public-read-not-registered
        * C-98.10 (K1149): the code a STRING LITERAL at its site, its row from this module's table (R17). */
       return { ok: false, reason: "PUBLIC_READ_NOT_REGISTERED", ...rowOf("PUBLIC_READ_NOT_REGISTERED"), name: n,
-               detail: `no public read named ${JSON.stringify(n)} is registered on this group's Civicsmith, so there `
-                     + "is nothing to serve under that name" };
+               detail: localize("public-read.index.no_public_read_named_stringify", "no public read named {stringify} is registered on this team's Civicsmith, so there is nothing to serve under that name", { stringify: String(JSON.stringify(n)) }) };
       /* END DEC-49 REGION is-public-read-not-registered */
     }
     const args = {};
@@ -453,6 +483,57 @@ export class PublicRead {
   /* R21: `publishedCase`'s answer for an absent case. Asked with no route, it resolves nothing, whatever the record
      holds, and so answers its `NOT_PUBLISHED` (C-98.8) from its one governed site. */
   #absentCase() { return this.publishedCase({}); }
+
+  /* R41 (3): how the page names a member. A value that is a member's id (bare, or as `member:<id>`) is her handle, the
+     founder with none held the design's word `member.founder.unnamed` and a member with none `shell.card.member`, as the
+     team's own screens name her (`interface-shell` R111), never her id. A value that is no member's id (an undetermined
+     deliverer, a review grant's id) stays as it is; a roster that cannot be read names her by the plain word, so no id
+     is left on the page. */
+  #handleOf(value, cache) {
+    if (typeof value !== "string" || !value) return value;
+    if (cache.has(value)) return cache.get(value);
+    const id = value.startsWith("member:") ? value.slice("member:".length) : value;
+    let named = value;
+    try {
+      const m = this.#members();
+      if (!m || typeof m.memberFacts !== "function") throw new Error("no roster");
+      const facts = m.memberFacts(id);
+      if (facts) named = typeof facts.handle === "string" && facts.handle ? facts.handle
+        : word(id === "admin" ? "member.founder.unnamed" : "shell.card.member");
+    } catch { named = word("shell.card.member"); }
+    cache.set(value, named);
+    return named;
+  }
+
+  /* R41 (3): a stamp (an object) with the members it names under `keys` named by handle, every other field as it is. */
+  #stampedByHandle(s, keys, cache) {
+    return s && typeof s === "object" && !Array.isArray(s)
+      ? { ...s, ...Object.fromEntries(keys.filter((k) => Object.hasOwn(s, k)).map((k) => [k, this.#handleOf(s[k], cache)])) } : s;
+  }
+
+  /* R41 (3): a completeness block with its writer, publisher and the members who read the statement named by handle. */
+  #completenessByHandle(c, cache) {
+    if (!c || typeof c !== "object" || Array.isArray(c)) return c;
+    return { ...this.#stampedByHandle(c, ["author", "statement_by"], cache),
+      ...(Array.isArray(c.acknowledgements)
+        ? { acknowledgements: c.acknowledgements.map((x) => (x && x.kind === "recipient" ? x : this.#stampedByHandle(x, ["by"], cache))) } : {}) };
+  }
+
+  /* R41 (3): `publishedCase`'s answer with each member it names, by handle: the case's writer and publisher and those who
+     read the statement (`completeness`), each finding's attestor and who delivered it, the case document's signer and
+     its deliverer, and who acknowledged each disclosed contradiction. The signed bytes (`document.text`), the manifest and
+     the blocks read from them are answered as signed. The same people are named as before and no others. */
+  #byHandle(a) {
+    const cache = new Map();
+    const stamp = (s, keys) => this.#stampedByHandle(s, keys, cache);
+    return { ...a,
+      completeness: this.#completenessByHandle(a.completeness, cache),
+      findings: a.findings.map((f) => ({ ...f, attestor: stamp(f.attestor, ["member"]), delivered_by: stamp(f.delivered_by, ["member"]) })),
+      document: a.document && typeof a.document === "object" && !a.document.withheld
+        ? { ...a.document, attestor: stamp(a.document.attestor, ["member"]), delivered_by: stamp(a.document.delivered_by, ["member"]) }
+        : a.document,
+      tensions: Array.isArray(a.tensions) ? a.tensions.map((t) => stamp(t, ["acknowledged_by"])) : a.tensions };
+  }
 
   /* R20 (DEC-116 item 7): the stamp of the docket withdrawal naming one edition of a case, or null when none names it
      (and for anything that is not a case). Read from `docket.withdrawalOf` (its R12), never composed: its `seq`, `date`
@@ -574,53 +655,23 @@ export class PublicRead {
          here as null and a reader cannot tell them apart without this sentence:
          a case nobody published as a project's production, a member nobody
          designated, and a member whose version nobody pinned. */
-      production: "DEC-72: a case is a PRODUCTION OF A PROJECT, and the standard of evidence it was "
-                + "held to is that project's, told to the publishing act at the time it was made. Where "
-                + "`project_id` is null NO PROJECT IS RECORDED as this case's publisher — the case was "
-                + "published before this model, and an absent owner is not a claim that it had none, it "
-                + "is this record saying it does not know. Where a member's `role` is null NOBODY "
-                + "DESIGNATED that member load-bearing or supporting, so nothing here says whether the "
-                + "case rests on it: a designation is authored by the publisher and is never derived, so "
-                + "the record will not supply one it was not given. Where `version_sha` is null the "
-                + "member was rostered without a version being pinned, and the finding it names may have "
-                + "moved since. None of the three is a gap in this answer; each is a state of the record. "
-                /* CASE-5 / DEC-72: the fourth null, and the ONE instruction a
-                   reconstructor cannot do without. `caseMembers[].edition` is the
-                   CASE's and `published[].edition` is the FINDING's, and they are
-                   no longer the same number — so the join between the two tables
-                   is `version_sha` to `bundle_sha` and NEVER edition to edition.
-                   Said here rather than left to be inferred because a join on the
-                   old equality does not error: it silently drops exactly the
-                   members the pin exists for, which is the defect IC-66 measures
-                   in this record's own UI. */
-                + "Where a case edition's `bar` is null NO STANDARD OF EVIDENCE IS RECORDED for it, and that "
-                + "is NOT a bar of zero: the edition predates the case carrying its own bar, or none was "
-                + "ever declared, and a case that cleared no declared standard says so. AND THE JOIN "
-                + "BETWEEN `caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO "
-                + "EDITION: `caseMembers.edition` is the CASE's edition and `published.edition` is the "
-                + "FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its "
-                + "own edition 1. A join on the two numbers does not fail — it silently drops the members "
-                + "the pin exists to name.",
+      /* CASE-5 / DEC-72: the fourth null, and the ONE instruction a
+         reconstructor cannot do without. `caseMembers[].edition` is the
+         CASE's and `published[].edition` is the FINDING's, and they are
+         no longer the same number — so the join between the two tables
+         is `version_sha` to `bundle_sha` and NEVER edition to edition.
+         Said here rather than left to be inferred because a join on the
+         old equality does not error: it silently drops exactly the
+         members the pin exists for, which is the defect IC-66 measures
+         in this record's own UI. */
+      production: localize("public-read.index.a_case_is_a_production", "DEC-72: a case is a PRODUCTION OF A PROJECT, and the standard of evidence it was held to is that project's, told to the publishing act at the time it was made. Where `project_id` is null NO PROJECT IS RECORDED as this case's publisher — the case was published before this model, and an absent owner is not a claim that it had none, it is this record saying it does not know. Where a member's `role` is null NOBODY DESIGNATED that member load-bearing or supporting, so nothing here says whether the case rests on it: a designation is authored by the publisher and is never derived, so the record will not supply one it was not given. Where `version_sha` is null the member was rostered without a version being pinned, and the finding it names may have moved since. None of the three is a gap in this answer; each is a state of the record. Where a case edition's `bar` is null NO STANDARD OF EVIDENCE IS RECORDED for it, and that is NOT a bar of zero: the edition predates the case carrying its own bar, or none was ever declared, and a case that cleared no declared standard says so. AND THE JOIN BETWEEN `caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO EDITION: `caseMembers.edition` is the CASE's edition and `published.edition` is the FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its own edition 1. A join on the two numbers does not fail — it silently drops the members the pin exists to name."),
       /* R23 (T38): the original of a material carried as its copy is not listed, as it is not served (`verifySha`). */
       shas: ((rows, originals) => rows.filter((r) => !originals.has(r.sha256)))(
         this.#rows(`SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
         this.#copiedOriginals([{ kind: "archive" }])),
-      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "
-               + "has a scope, a completeness assertion, a bias acknowledgement, editions and a container; "
-               + "it has no strength, and "
-               + "composing its members' pairs into one letter would be a claim the evidence does not "
-               + "support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET "
-               + "RATIFIED: it has no pair because nothing has been signed for it, which is a state of the "
-               + "record and not a gap in this answer. "
-               /* REC-170: the one null on a finding row that is not "nothing was signed". */
-               + "Since the frozen pair is stated in each CASE's document (a case's reading of the finding at "
-               + "that hash), a finding several cases pin may carry several pairs: where their documents "
-               + "disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and "
-               + "`strengthByCase` lists every ratified case edition's own pair, named by its case and "
-               + "edition. None of them is the finding's pair; each is that case's.",
-      detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or "
-            + "continued existence of this group's Civicsmith. Nothing unpublished appears, by construction: "
-            + "this reads the published projection and never the working corpus." };
+      /* REC-170: the one null on a finding row that is not "nothing was signed". */
+      altitudes: localize("public-read.index.a_frozen_strength_pair", "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer. Since the frozen pair is stated in each CASE's document (a case's reading of the finding at that hash), a finding several cases pin may carry several pairs: where their documents disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and `strengthByCase` lists every ratified case edition's own pair, named by its case and edition. None of them is the finding's pair; each is that case's."),
+      detail: localize("public-read.index.every_hash_here_is_verifiable", "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or continued existence of this team's Civicsmith. Nothing unpublished appears, by construction: this reads the published projection and never the working corpus.") };
   }
 
   /* REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b): EVERY RATIFIED CASE EDITION'S OWN FROZEN PAIR
@@ -712,7 +763,7 @@ export class PublicRead {
      divergence from DATA-MODEL 2.4.4 — so a public index is not N+1 reads of
      the bytes to learn what each case is called. */
   publishedList() {
-    const index = this.#withheldIndex();
+    const index = this.#withheldIndex(), handles = new Map(); // R41 (3): members named by handle
     return { bundles: this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, delivered_by, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`)
@@ -734,7 +785,8 @@ export class PublicRead {
       .map((r) => {
         const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
         const sole = this.publication.soleCase(cms);
-        return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
+        return withheldRow({ ...r, attestor_member: this.#handleOf(r.attestor_member, handles),
+                 delivered_by: this.#stampedByHandle(this.#deliveredBy(r), ["member"], handles),
                  case_id: sole ? sole.case_id : null, case_edition: sole ? sole.edition : null,
                  cases: cms }, index.bySha.get(r.bundle_sha));
       }),
@@ -758,7 +810,7 @@ export class PublicRead {
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
               delivered_by, gate_version, sig_armored, strength, required
        FROM published_bundles WHERE bundle_id=? ORDER BY edition`, bundleId);
-    const index = this.#withheldIndex();
+    const index = this.#withheldIndex(), handles = new Map(); // R41 (3): members named by handle
     /* REC-44: `completeness` is no longer here and that is the correction — it
        is a CASE assertion, so it is fetched from the case each edition belongs
        to rather than repeated on every member finding of it. */
@@ -789,7 +841,8 @@ export class PublicRead {
       /* R28: an edition an order withholds whole states no case content here; a finding whose bytes are withheld
          states no title. */
       const caseWhole = !!(cm && (index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`) || {}).whole);
-      return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
+      return withheldRow({ ...r, attestor_member: this.#handleOf(r.attestor_member, handles),
+               delivered_by: this.#stampedByHandle(this.#deliveredBy(r), ["member"], handles),
                case_id: cid, case_edition: cm ? cm.edition : null, cases: cms,
                bar: c && c.bar ? safeJson(c.bar) : null,
                /* The container's manifest is the CASE edition's, so it is
@@ -802,12 +855,107 @@ export class PublicRead {
                               : {}),
                scope: c && !caseWhole ? (c.scope ?? null) : null,
                bias_acknowledgement: c && !caseWhole ? (c.bias_acknowledgement ?? null) : null,
-               completeness: c && c.completeness && !caseWhole ? JSON.parse(c.completeness) : null,
+               completeness: c && c.completeness && !caseWhole ? this.#completenessByHandle(JSON.parse(c.completeness), handles) : null,
                ...(caseWhole ? { case_withheld: { orders: index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`).orders,
                                                   detail: WITHHELD_SENTENCE } } : {}),
                strength: r.strength ? JSON.parse(r.strength) : null,
                required: r.required ? JSON.parse(r.required) : null }, index.bySha.get(r.bundle_sha));
     }) };
+  }
+
+  /** R42 (fix round 4, C48/N6; RC-R10): the one builder of a published case's public address, `/app/published/<case>/<edition>`
+   *  written as the shell's route opens it (the subject one encoded part, as the screens' own links write it). `null` for a case
+   *  or an edition that holds no row in the published projection (an edition prepared or signed and not published is none), and
+   *  for a case or edition not named. Reads the projection only (R10). */
+  publishedAddress({ case: caseId = null, edition = null } = {}) {
+    const id = typeof caseId === "string" ? caseId.trim() : "";
+    const n = typeof edition === "number" || (typeof edition === "string" && /^\d+$/.test(edition.trim())) ? Number(edition) : NaN;
+    if (!id || !Number.isInteger(n) || n < 1) return null;
+    if (!this.#one(`SELECT case_id FROM published_cases WHERE case_id=? AND edition=? LIMIT 1`, id, n)) return null;
+    return "/app/published/" + encodeURIComponent(`${id}/${n}`);
+  }
+
+  /** R38 (T51-75; DEC-330 A37): what each published case froze for one question. `id` is the question's record id, the
+   *  `bundle_id` of the finding published from it. One entry for every published case edition whose roster pins a
+   *  published edition of that finding, in `case_id` then case `edition` order (an edition waiting to be published has
+   *  no row in the published projection and is not listed, R29): the case, its `project`, `signed_at` and `published_at`
+   *  (R29) and `withdrawn` (R20); `finding`, the published finding edition the pin names (the member's own edition, never
+   *  the case's), `version_sha` (what the case pinned) and `pinned` (true when they are the same bytes, false when not,
+   *  null when the case pinned none: never true by default, R13); `strength`, that case's frozen pair read from the
+   *  signed case document where it states one (else the member's own, `strength_from`), `{capture, connection}` and
+   *  `testimony` where the pair carries one, each axis as `publication` R53 gives it, never combined across cases (R11);
+   *  `signed_by` (the case document's signer) and `delivered_by` beside it (R12) and `finding_signed_by`. An edition a
+   *  court order withholds whole, or whose case document one withholds, states `withheld` and no pair or signer (R28).
+   *  A finding in no case answers `cases: []`; no id is `NO_ID`; an id nothing published answers is `publishedCase`'s
+   *  `NOT_PUBLISHED` for an absent case, byte for byte (R14). One set-based read of the pins and one `caseEditionState` per
+   *  case edition; no finding's bytes are fetched. Reads the published projection only (R10, R16), writes nothing and
+   *  never throws on what it reads. */
+  publishedFrozen({ id = null } = {}) {
+    const want = str(id);
+    if (!want) return { ok: false, reason: "NO_ID", detail: "publishedfrozen requires ?id=" };
+    if (!this.#one(`SELECT 1 AS x FROM published_bundles WHERE bundle_id=? LIMIT 1`, want)) return this.#absentCase();
+    const index = this.#withheldIndex();
+    const pins = this.#rows(
+      `SELECT m.case_id, m.edition, m.version_sha FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.bundle_id=? ORDER BY m.case_id, m.edition`, want);
+    const cases = [], handles = new Map();
+    for (const pin of pins) {
+      const ced = Number(pin.edition);
+      const state = this.publication.caseEditionState(pin.case_id, ced);
+      if (!state) continue;
+      const held = (state.findings || []).find((f) => f.bundle_id === want) || null;
+      /* The finding edition the pin names. A pin that names nothing published leaves the member awaiting; the edition the
+         signed case document states for it (`case_roles[].edition`), when that edition is published at other bytes, is
+         the finding whose bytes the pin does not match (`pinned: false`); a pin and a document naming nothing published
+         pin no published edition of this finding, and the case is not listed. */
+      const stated = held ? null : (this.publication.caseDocMemberFrozen(pin.case_id, ced) || new Map()).get(want) || null;
+      const row = held ? null : Number.isInteger(stated && stated.edition)
+        ? this.#one(`SELECT edition, bundle_sha, attestor_key, attestor_member, strength FROM published_bundles
+                      WHERE bundle_id=? AND edition=?`, want, stated.edition) : null;
+      if (!held && !row) continue;
+      const finding = held
+        ? { edition: Number(held.edition), bundle_sha: held.bundle_sha }
+        : { edition: Number(row.edition), bundle_sha: row.bundle_sha };
+      const pair = held ? held.strength : stated.strength;
+      const from = held ? held.frozen_from : "case_document";
+      const attestor = held ? held.attestor : { member: row.attestor_member, key_b64: row.attestor_key };
+      const version = pin.version_sha ?? null;
+      const dates = this.#one(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`,
+                              pin.case_id, ced);
+      const mine = index.editions.get(`${pin.case_id}\u0000${ced}`);
+      const docBy = state.document ? index.bySha.get(state.document.doc_sha) : null;
+      const withheld = (mine && mine.whole) || docBy
+        ? { whole: !!(mine && mine.whole), document: true, orders: mine && mine.whole ? mine.orders : docBy,
+            detail: WITHHELD_SENTENCE } : null;
+      const rows = Array.isArray(pair) ? pair.filter((a) => a && typeof a.axis === "string") : [];
+      const strength = withheld || !rows.length ? null
+        : { capture: rows.find((a) => a.axis === "capture") ?? null, connection: rows.find((a) => a.axis === "connection") ?? null,
+            ...(rows.some((a) => a.axis === "testimony") ? { testimony: rows.find((a) => a.axis === "testimony") } : {}) };
+      /* R41 (3), as `publishedCase` names a member: by her handle, never her id (the page that draws the question names its
+         signers from here). */
+      const signer = (a) => (a && (a.member != null || a.key_b64 != null)
+        ? this.#stampedByHandle({ member: a.member ?? null, key_b64: a.key_b64 ?? null }, ["member"], handles) : null);
+      const signedBy = withheld || !state.document ? null : signer(state.document.attestor);
+      const findingBy = signer(attestor);
+      cases.push({
+        case_id: pin.case_id, edition: ced, project: state.project ?? null,
+        signed_at: dates ? dates.signed_at ?? null : null, published_at: dates ? dates.published_at ?? null : null,
+        withdrawn: this.#withdrawnStamp(pin.case_id, ced),
+        finding, version_sha: version, pinned: version === null ? null : version === finding.bundle_sha,
+        strength, strength_from: strength ? from : null,
+        ...(!withheld && !rows.length ? { strength_detail: word("public-read.frozen.strength_detail.none") } : {}),
+        signed_by: signedBy,
+        delivered_by: withheld || !state.document ? null : this.#stampedByHandle(state.document.delivered_by ?? null, ["member"], handles),
+        finding_signed_by: findingBy,
+        ...(!withheld && (!signedBy || !findingBy)
+          ? { signer_detail: word("public-read.frozen.signer_detail.unstated") } : {}),
+        withheld });
+    }
+    return { ok: true, id: want, cases,
+             detail: cases.length
+               ? word("public-read.frozen.detail.cases")
+               : word("public-read.frozen.detail.none") };
   }
 
   /* REC-22: ONE PUBLISHED EDITION, everything the public read path can say about
@@ -952,9 +1100,7 @@ export class PublicRead {
     if (!state) {
       /* DEC-49 REGION is-not-published */
       return { ok: false, reason: "NOT_PUBLISHED", ...rowOf("NOT_PUBLISHED"),
-               detail: "no published edition answers to that. A case that was never published, an edition "
-                     + "that does not exist and an id that never existed are one answer here, because the "
-                     + "published projection is the only thing this read can see." };
+               detail: localize("public-read.index.no_published_edition_answers", "no published edition answers to that. A case that was never published, an edition that does not exist and an id that never existed are one answer here, because the published projection is the only thing this read can see.") };
       /* END DEC-49 REGION is-not-published */
     }
 
@@ -975,7 +1121,8 @@ export class PublicRead {
        bytes, each file of the manifest, the manifest itself. A whole edition withheld answers its identity, its editions
        and its orders, and none of its content. */
     const cRow = theCase
-      ? this.#one(`SELECT manifest, signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed)
+      ? this.#one(`SELECT manifest, signed_at, published_at, casefile_state, casefile_attempts, casefile_attempted_at, casefile_why
+                   FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed)
       : null;
     const manifestHeld = cRow && cRow.manifest ? safeJson(cRow.manifest) : null;
     const index = this.#withheldIndex();
@@ -1042,16 +1189,19 @@ export class PublicRead {
       const by = withheldBy(fnd.bundle_sha);
       if (by)
         return { ...fnd, title: null, serves: [], names: [], unresolved: [],
+                 /* R28 (K5148): the row's other content is the case document's (its strength pair, grounds, exclusion
+                    text) or the member's `required`; identity facts (hash, signer, attestor, role, edition) stay. */
+                 case_excludes: null, strength: null, grounds: null, required: null,
                  division: { parent: null, siblings: [], detail: WITHHELD_SENTENCE },
                  parts: (fnd.parts || []).map((p) => ({ ...p, withheld: true })),
                  withheld: { orders: by, detail: WITHHELD_SENTENCE } };
       return { ...fnd, serves, names, unresolved,
+               /* R28 (K5153): under a seal of the case document, the row's document-derived content is withheld with it. */
+               ...(docWithheld ? { case_excludes: null, strength: null, grounds: null, required: null } : {}),
                division: {
                  parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
                  siblings: names.filter((n) => n.kind === "division_sibling").map((n) => n.to).sort(),
-                 detail: "a division's parent and siblings are NAMED and never served: the parent is terminal and "
-                       + "can never be published, a sibling may not be, and a reader who can see one half of a "
-                       + "divided question is entitled to know the other half exists (R4).",
+                 detail: localize("public-read.index.a_divisions_parent_and_siblings", "a division's parent and siblings are NAMED and never served: the parent is terminal and can never be published, a sibling may not be, and a reader who can see one half of a divided question is entitled to know the other half exists (R4)."),
                } };
     });
 
@@ -1062,8 +1212,8 @@ export class PublicRead {
       ? caseTensionsOf(heldDocument.text)
       : { tensions: null, highlighted: null, members: {}, unread: null,
           detail: docWithheld ? WITHHELD_SENTENCE
-            : theCase ? "no signed case document is held for this edition, so it states no disclosure here"
-                      : "this is not a case, so it discloses no contradiction" };
+            : theCase ? localize("public-read.index.no_signed_case_document_disclosure", "no signed case document is held for this edition, so it states no disclosure here")
+                      : localize("public-read.index.not_a_case_discloses", "this is not a case, so it discloses no contradiction") };
     for (const f of findings) f.tensions = disclosed.tensions === null ? null : disclosed.members[f.bundle_id] || [];
     /* R3 (N364; `case-grammar` R1): the `captures:` and `sources:` blocks as signed, from the same bytes and never live: what
        the document states of a source is what `publishableAt` answered at the commit (`publication` R51), and nothing is added. */
@@ -1071,8 +1221,8 @@ export class PublicRead {
       ? caseDocumentBlocks(heldDocument.text)
       : { captures: null, sources: null,
           detail: docWithheld ? WITHHELD_SENTENCE
-            : theCase ? "no signed case document is held for this edition, so it states no capture or source here"
-                      : "this is not a case, so it states no capture or source" };
+            : theCase ? localize("public-read.index.no_signed_case_document_capture", "no signed case document is held for this edition, so it states no capture or source here")
+                      : localize("public-read.index.not_a_case_capture", "this is not a case, so it states no capture or source") };
     const manifest = manifestWithheld ? null : manifestHeld;
     const signed = signedParts(heldDocument);
     const said = this.#editionStatements(signed, theCase, ed, editions, { docWithheld, index });
@@ -1100,6 +1250,10 @@ export class PublicRead {
        none). It composes no case-level strength (R11): one line per member, never one for the case. */
     const standings = signed ? standingsOf(signed.fm) : null;
     for (const f of findings) f.standing = standings ? (standings.get(f.bundle_id) ?? null) : null;
+    /* R39 (C2): the claim and falsifier the signed document states for each member, for the Worker's `body.conclusion` and
+       `body.falsifies` to carry before the finding's own bytes' words; null where the document states none. */
+    const stated = signed ? caseWordsOf(signed.fm) : null;
+    for (const f of findings) f.case_words = stated ? (stated.get(f.bundle_id) ?? null) : null;
     /* R3 (DEC-112): a `/6` document's `method` and `materials` blocks, as signed, each copy's row with its `label_key`
        (T41; DEC-185 (1)); null for any other document. */
     const six = !!(signed && caseDocumentRequiresMaterials(signed.fm));
@@ -1108,7 +1262,7 @@ export class PublicRead {
        bytes through its `lastEntryOf` (K1276), null when the case has no public entry. */
     const withdrawn = theCase ? new Map(editions.map((e) => [Number(e.edition), this.#withdrawnStamp(theCase, e.edition)]))
                               : new Map();
-    return { ok: true, caseId: theCase, edition: ed,
+    const answer = { ok: true, caseId: theCase, edition: ed,
              /* R20: the withdrawal stamp at the top of the answer, linked to its entry; null when no withdrawal names
                 this edition. */
              withdrawn: withdrawn.get(Number(ed)) ?? null,
@@ -1136,11 +1290,10 @@ export class PublicRead {
                 signed document with `case-grammar`'s one reading, never live; null when it names none or is not `/5`. */
              project_reference: signed ? workingOnOf(signed.fm) : null,
              bar: state.bar ?? null,
-             bar_detail: state.bar
-               ? "the standard of evidence this case was held to, read from its publishing project at the "
-               + "moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches "
-               + "to any finding, and nothing composed it across projects. Each member's own derived pair is "
-               + "printed beside it inside findings[], and a member may exceed it."
+             /* D-M6 (K5265): the standard is named only when the case DECLARES one; a bar object that declares none
+                (`declared: false`) answers the no-bar words, as a null bar does. */
+             bar_detail: state.bar && (state.bar.declared === true || state.bar.declared === "true")
+               ? localize("public-read.index.the_standard_of_evidence_this", "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it.")
                : word("public-read.bar_recorded_case"),
              bias_acknowledgement: whole ? null : (state.bias_acknowledgement ?? null),
              /* R3 (DEC-103): the lens this edition was produced under, read from its signed document, never live. */
@@ -1156,9 +1309,9 @@ export class PublicRead {
              /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                 the instant the case edition was opened, and NOTHING read it —
                 re-measured across the whole repository rather than inherited
-                from the item that found it: zero reads in `civicos-ui`, in
-                `newgroup`, in `docprofile`, in `pdf-worker`, in `tools`, and not
-                one assertion in the test battery of the day. The surface renders `ratified_at`,
+                from the item that found it: no screen of the interface reads it
+                (`screens-publish`, which draws this answer, holds no read of it),
+                and no test of the day asserted it. The surface renders `ratified_at`,
                 which is the instant the record can actually stand behind.
                 Removed rather than blanked, on REC-41's precedent: there is no
                 key in the answer for a later refactor to re-expose and a caller
@@ -1235,6 +1388,12 @@ export class PublicRead {
              /* R8: the evidence package's block, computed at this read by the module that provides it. */
              evidence_package: this.#evidencePackage(theCase, ed, findings),
              manifest_sha: state.manifest_sha, manifest,
+             /* G54 (K4426, K4565): the case file's state and a stable code only, never a sentence, a step, an error or a detail
+                (the op is public; those stay in the row and the log). Null for a ratified bundle that is no case. The page's
+                words for each state and code are `screens-publish`'s. */
+             case_file: theCase && cRow ? caseFileStateOf({ complete: state.complete, manifest_sha: state.manifest_sha ?? null,
+               state: cRow.casefile_state ?? null, attempts: cRow.casefile_attempts ?? null, attempted_at: cRow.casefile_attempted_at ?? null,
+               why: cRow.casefile_why ?? null }) : null,
              files,
              editions: editions.map((e) => e.edition),
              /* R20: each case edition's row carries its own stamp, or null, so a reader of any edition sees which
@@ -1245,17 +1404,10 @@ export class PublicRead {
              /* R34: the group's identity and declared stake as they stand now, labeled current; never read from or
                 written into the signed document or the case file (R23). */
              group_fields: { ...this.groupFields({ project: state.project ?? null }), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
-             case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
-                        + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
-                        + "the case carries the scope that brought them together, the completeness "
-                        + "assertion, and the group's acknowledgement of the bias the case was produced "
-                        + "under — the last of these is a DISCLOSURE the reader weighs, never a verdict this "
-                        + "group's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
-                        + "composing two findings' strengths into one letter is the substitution R2 forbids.",
-             graph_detail: "each finding's serves[] is what this surface may hand over — every entry names a "
-                         + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
-                         + "classified servable at publication with no published edition behind it now, stated "
-                         + "rather than dropped; it should be empty." };
+             case_detail: localize("public-read.index.a_published_case_is_a", "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the team's acknowledgement of the bias the case was produced under — the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids."),
+             graph_detail: localize("public-read.index.each_finding_serves", "each finding's serves[] is what this surface may hand over — every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty.") };
+    /* R41 (3): each member the answer names, by handle. */
+    return this.#byHandle(answer);
   }
 
   /** R37 (T50; DEC-310 (6); K3683, K3725): the `publishedcase` op's answer, `publishedCase`'s with `corrections` beside it,
@@ -1309,6 +1461,9 @@ export class PublicRead {
    *    such an original answers `original_of_copy` and nothing of its bytes;
    *  - `obscured` (T37; N757): each row stating `obscured` (`case-grammar` R12), never an included material: its ref, the
    *    copy's SHA-256 and label as signed, and whether the commit registered the copy under that ref (`registered`);
+   *  - (G50) in `materials` and `obscured`, an entry of a `ref` on two or more rows of the document also carries `capture`,
+   *    the row's `sha` lower-cased (a copied row's is its original's), or `capture: null` with `capture_invalid: true` for
+   *    a sha that is not 64 hex; an entry of a `ref` on one row carries neither;
    *  - `criteria`: the edition's frozen criteria rows, or null when not recorded (R33);
    *  - `attestations`: each `material_attestations:` row of included material, a `member` row with its signed account
    *    from the document (when the row may name one), a `co_attestation` row with each token `publication` held for
@@ -1359,13 +1514,24 @@ export class PublicRead {
       .map((x) => String(x && x.sha != null ? x.sha : "").toLowerCase()).filter((s) => HEX64.test(s)));
     const pool = this.#archivePool([...included, ...copied].map((m) => m.ref), text, heldHere);
     const originals = new Set(copied.map((m) => String(m.sha ?? "").toLowerCase()).filter((s) => HEX64.test(s)));
+    /* Fix round 6, G50 (B): a `ref` on two or more rows of the document (counted over all rows, carried or not, as G47
+       counts) names each of its files by the row's capture (`case-grammar` R13's `/4`): the entry carries `capture`, the
+       row's `sha` lower-cased (a copied row's is its original's), or `capture: null` with `capture_invalid: true` for a sha
+       that is not 64 hex, which `buildCaseFile` never spells plain. A `ref` on one row adds no key. */
+    const several = new Set(rows.filter((r, i) => r && typeof r.ref === "string" && rows.findIndex((x) => x && x.ref === r.ref) !== i).map((r) => r.ref));
+    const captureFields = (m) => {
+      if (!several.has(m.ref)) return {};
+      const c = String(m.sha ?? "").toLowerCase();
+      return HEX64.test(c) ? { capture: c } : { capture: null, capture_invalid: true };
+    };
     /* The narrower walk (kept, K2223): what any edition registered shows which archives hold a copy-carried original. */
     const holdsOriginal = this.#archivesHolding(originals, this.#archivePool([...included, ...copied].map((m) => m.ref), text));
     const materials = included.map((m) => originals.has(String(m.sha ?? "").toLowerCase())
-      ? { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null, original_of_copy: true, archives: [] }
+      ? { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null, original_of_copy: true, archives: [],
+          ...captureFields(m) }
       : { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null,
           bytes_text: text(m.sha), extracted_text: m.kind === "document" ? text(m.text_sha) : null,
-          archives: m.kind === "document" ? this.#archiveChain(m.sha, pool, holdsOriginal) : [] });
+          archives: m.kind === "document" ? this.#archiveChain(m.sha, pool, holdsOriginal) : [], ...captureFields(m) });
     /* R23 (T37): each copy, at the SHA-256 the row names, read by that hash from the published projection only: it is
        carried when the commit registered it under the row's ref as kind `obscured` (`publication` R57, through
        `case-carriage` R1), its bytes read from the published bucket, where `ratification` R39 copies them. */
@@ -1373,22 +1539,37 @@ export class PublicRead {
       const copy = String(m.obscured && m.obscured.copy != null ? m.obscured.copy : "").toLowerCase();
       const registered = HEX64.test(copy) && !!this.#one(`SELECT 1 AS x FROM published_shas WHERE sha256=? AND bundle_id=?
         AND kind='obscured' AND path=('materials/' || sha256) LIMIT 1`, copy, m.ref);
-      return { ref: m.ref, copy: HEX64.test(copy) ? copy : null, label: m.obscured ? m.obscured.label ?? null : null, registered };
+      return { ref: m.ref, copy: HEX64.test(copy) ? copy : null, label: m.obscured ? m.obscured.label ?? null : null, registered,
+               ...captureFields(m) };
     });
     const refs = new Set(included.map((m) => m.ref));
     const accounts = (caseDocumentBlocks(state.document.text).captures || [])
       .flatMap((cap) => (cap.accounts || []).map((a) => ({ capture: cap.capture, ...a })));
+    /* R23 (fix round 6, G47): a row states the capture it attests (`sha`, `case-grammar` R12) only where its `ref` has two
+       or more captures in the document; it then joins that capture's material and is listed only if that capture is
+       included, so an excluded capture of an included `ref` is excluded. A row stating none joins by `ref`, as every
+       document written before does. */
+    const lower = (s) => String(s ?? "").toLowerCase();
+    const captureOf = (a) => (HEX64.test(lower(a.sha)) ? lower(a.sha) : null);
+    const materialOf = (a) => included.find((m) => m.ref === a.ref && (captureOf(a) === null || lower(m.sha) === captureOf(a)));
     const attestations = (Array.isArray(mats.attestations) ? mats.attestations : [])
-      .filter((a) => a && refs.has(a.ref)).map((a) => {
+      .filter((a) => a && refs.has(a.ref) && materialOf(a)).map((a) => {
         const named = a.by_kind === "member" && !["group", "project"].includes(a.level);
-        const material = included.find((m) => m.ref === a.ref);
+        const material = materialOf(a);
         const account = named ? accounts.find((x) => x.by === a.by && material && x.capture === material.sha) ?? null : null;
         /* K1315: each timestamp token or co-archive record `publication` held for this material (its R57), by its own
            hash, registered under the material's ref with kind `attestation`. */
+        /* G47t: a row stating its capture (`sha`, 64 hex; any other value reads as none) carries the tokens `publication`
+           held for that capture and those held for no one capture (`capture_sha` null: shared, or registered before the
+           column); a row stating none carries every token of the `ref`, as before. */
+        const cap = captureOf(a);
         const held = a.by_kind !== "co_attestation" ? [] : this.#rows(
           `SELECT sha256 FROM published_shas WHERE bundle_id=? AND kind='attestation' AND path=('materials/' || sha256)
-            ORDER BY sha256`, a.ref).map((r) => ({ sha: r.sha256, text: text(r.sha256) }));
-        return { row: a, account: account ? { by: account.by, at: account.at, text: account.text,
+            ${cap ? "AND (capture_sha IS NULL OR capture_sha=?)" : ""} ORDER BY sha256`, a.ref, ...(cap ? [cap] : []))
+          .map((r) => ({ sha: r.sha256, text: text(r.sha256) }));
+        /* a row stating no capture (`sha: null` as the reader answers it) is carried as it always was: no key added */
+        const { sha: stated, ...plain } = a;
+        return { row: stated == null ? plain : a, account: account ? { by: account.by, at: account.at, text: account.text,
                                               signature: account.signature } : null,
                  held };
       });
@@ -1508,7 +1689,7 @@ export class PublicRead {
                        statements: l.statements.map((x) => ({ bundle: x.bundle, id: x.id, kind: x.kind,
                          subject: x.subject, text: x.text, justification: x.justification,
                          citations: x.citations, withheld: x.withheld })),
-                       closing: print ? LENS_CLOSING_SENTENCES.filter((c) => print.includes(c)) : [],
+                       closing: print ? lensClosingSentencesOf(doc.fm).filter((c) => print.includes(c)) : [],
                        print } };
     }
     if (!doc) return { what_changed, successor, lens: null, lens_fingerprint: null,
@@ -1546,20 +1727,36 @@ export class PublicRead {
     if (HEX64.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
     const files = manifest && Array.isArray(manifest.files) ? manifest.files
       : manifest && Array.isArray(manifest.parts) ? manifest.parts : [];
-    /* R28 with R23 (T37; K2145's reading): an obscured copy is the material's own copy (a photo with areas covered, a
-       member document cleaned), so an order naming the material (its `document` path under the row's ref, or its
-       original's hash) withholds the copy too. */
-    const originalOf = new Map();
+    /* R28 with R23 (T37; K2145's reading; fix round 6, G50 (A)): an obscured copy is the material's own copy (a photo with
+       areas covered, a member document cleaned), so an order naming the material (its `document` path under the row's ref)
+       or an original it was made from (that original's hash) withholds the copy too. A copy is joined to its originals by
+       its OWN hash, from the signed rows, never by `ref`: a `ref` on two copied rows has two originals, and an order
+       naming one capture's original withholds that capture's copy and no other. A `Set`, so that two rows with the same
+       copy bytes withhold both originals' copy. */
+    const originalsOfCopy = new Map();
     if (files.some((f) => f && f.kind === "obscured")) {
       const signed = signedParts(doc);
       const rows = signed ? (materialsOf(signed.fm) || {}).materials : null;
-      for (const r of Array.isArray(rows) ? rows : []) if (r && r.obscured != null && typeof r.ref === "string") originalOf.set(r.ref, r.sha);
+      for (const r of Array.isArray(rows) ? rows : []) {
+        if (!r || r.obscured == null) continue;
+        const copy = String(r.obscured.copy ?? "").toLowerCase(), original = String(r.sha ?? "").toLowerCase();
+        if (!HEX64.test(copy) || !HEX64.test(original)) continue;
+        if (!originalsOfCopy.has(copy)) originalsOfCopy.set(copy, new Set());
+        originalsOfCopy.get(copy).add(original);
+      }
     }
     for (const f of files) {
       if (!f || typeof f.sha256 !== "string") continue;
-      const ref = f.kind === "obscured" && typeof f.path === "string" ? f.path.split("/")[1] : null;
-      items.push({ sha256: f.sha256, paths: ref ? [f.path, caseFilePath("document", ref),
-        ...(HEX64.test(String(originalOf.get(ref) ?? "")) ? [originalOf.get(ref)] : [])] : [f.path] });
+      const entry = typeof f.path === "string" ? caseFileEntryOf(f.path) : null;
+      const ref = f.kind === "obscured" && entry && entry.kind === "obscured" ? entry.ref : null;
+      /* G50 (B): a file at a capture's own path is also known by its kind's ref-level path, so an order naming the ref's
+         path reaches every capture's file; a copy is also known by its capture's `document` path. A file without a
+         capture in its path is known as it was. */
+      const capture = entry && entry.capture ? entry.capture : null;
+      items.push({ sha256: f.sha256, scaffold: !!(entry && SCAFFOLD_KINDS.has(entry.kind)), paths: ref ? [f.path, caseFilePath("document", ref),
+        ...(capture ? [caseFilePath("document", [ref, capture])] : []),
+        ...(originalsOfCopy.get(f.sha256.toLowerCase()) || [])]
+        : capture ? [f.path, caseFilePath(entry.kind, entry.ref)] : [f.path] });
     }
     for (const f of (state && state.findings) || []) {
       if (typeof f.bundle_sha === "string")
@@ -1575,34 +1772,48 @@ export class PublicRead {
      object, so bytes an order withholds under one edition are withheld wherever they would be served (J1 (5)). The
      stamps are one read (`#stampedEditions`); only an edition with a stamp is opened. */
   #withheldIndex() {
-    const editions = new Map(), bySha = new Map();
+    const editions = new Map(), bySha = new Map(), scaffoldBy = new Map();
     const stamped = this.#stampedEditions();
-    if (!stamped.size) return { editions, bySha };
+    if (!stamped.size) return { editions, bySha, scaffoldBy };
     for (const e of this.#rows(`SELECT case_id, edition, manifest_sha, manifest FROM published_cases ORDER BY case_id, edition`)) {
       const stamps = stamped.get(`${e.case_id}\u0000${Number(e.edition)}`);
       if (!stamps) continue;
       const state = this.publication.caseEditionState(e.case_id, Number(e.edition));
       const manifest = safeJson(e.manifest);
-      const w = withholdingOf(e.case_id, stamps, this.#editionItems(e.case_id, state, e.manifest_sha, manifest), docketAddress);
+      const items = this.#editionItems(e.case_id, state, e.manifest_sha, manifest);
+      const w = withholdingOf(e.case_id, stamps, items, docketAddress);
       withholdChains(w.withheld, manifest);
       editions.set(`${e.case_id}\u0000${Number(e.edition)}`, w);
+      /* R28 (K5148): a hash this edition holds only as scaffolding (bytes the case-file grammar generates, no member's
+         material: the default `criteria.json`, a finding's facts files when it has no rows to state) is this case's own,
+         however many cases share the bytes. */
+      for (const it of items) if (it.scaffold && !items.some((o) => o.sha256 === it.sha256 && !o.scaffold)) {
+        if (!scaffoldBy.has(it.sha256)) scaffoldBy.set(it.sha256, new Set());
+        scaffoldBy.get(it.sha256).add(e.case_id);
+      }
       for (const [sha, orders] of w.withheld) {
         const prev = bySha.get(sha) || [];
         bySha.set(sha, [...prev, ...orders.map((o) => ({ case: e.case_id, edition: Number(e.edition), ...o }))]);
       }
     }
-    return { editions, bySha };
+    return { editions, bySha, scaffoldBy };
   }
 
   /** R28 (`op=withheld&sha256=<hash>[,<hash>…]`, for the Worker's `op=publishedbytes`; internal, routed by no door): of
    *  the hashes asked, each a court order in force withholds, with each order (its case, edition, effect, parts and
-   *  docket entry). `{ok: true, withheld: {<sha256>: [order…]}}`; a hash nothing withholds is not listed. Writes nothing. */
-  withheldOf(shas) {
+   *  docket entry). `{ok: true, withheld: {<sha256>: [order…]}}`; a hash nothing withholds is not listed. Writes nothing.
+   *  (K5148) With `zip`, a case edition's manifest hash, the answer is for that case's zip: a hash that another case holds
+   *  only as scaffolding counts under that case's orders alone, and material (a finding, a capture, a document) under any
+   *  case's. */
+  withheldOf(shas, zip = null) {
     const want = (Array.isArray(shas) ? shas : String(shas ?? "").split(","))
       .map((s) => String(s).trim().toLowerCase()).filter((s) => HEX64.test(s));
     if (!want.length) return { ok: true, withheld: {} };
-    const { bySha } = this.#withheldIndex();
-    return { ok: true, withheld: Object.fromEntries(want.filter((s) => bySha.has(s)).map((s) => [s, bySha.get(s)])) };
+    const { bySha, scaffoldBy } = this.#withheldIndex();
+    const forCase = zip && HEX64.test(String(zip).toLowerCase())
+      ? this.#one(`SELECT case_id FROM published_cases WHERE manifest_sha=?`, String(zip).toLowerCase())?.case_id ?? null : null;
+    const counted = (sha) => (bySha.get(sha) || []).filter((o) => !zip || o.case === forCase || !scaffoldBy.get(sha)?.has(o.case));
+    return { ok: true, withheld: Object.fromEntries(want.map((s) => [s, counted(s)]).filter(([, os]) => os.length)) };
   }
 
   /* ---------------------------------------------------------------- R26, R27: calculations and the timeline */
@@ -1706,11 +1917,7 @@ export class PublicRead {
                           strength: r.strength ? JSON.parse(r.strength) : null,
                           required: r.required ? JSON.parse(r.required) : null,
                           parts: r.parts ? JSON.parse(r.parts) : [] }],
-             detail: "this is a RATIFIED RECORD that is not a member of any published case: it was never "
-                   + "published as a finding, so it carries no case identity, no scope statement, no "
-                   + "completeness assertion and no bias acknowledgement — those are claims a CASE makes, "
-                   + "and this is not one. Its bytes are verifiable by hash exactly as any other ratified "
-                   + "bytes are." };
+             detail: localize("public-read.index.a_ratified_record_that_is", "this is a RATIFIED RECORD that is not a member of any published case: it was never published as a finding, so it carries no case identity, no scope statement, no completeness assertion and no bias acknowledgement — those are claims a CASE makes, and this is not one. Its bytes are verifiable by hash exactly as any other ratified bytes are.") };
   }
 
   /* D-309: THE READ SURFACE'S HALF OF CLAUSE 6 — one case to serve, chosen by the
@@ -1750,10 +1957,7 @@ export class PublicRead {
     /* DEC-49 REGION is-finding-in-several-cases */
     return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", ...rowOf("FINDING_IN_SEVERAL_CASES"), target: bundleId, cases,
              memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
-             detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). `
-                   + `A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact `
-                   + `with its own scope and completeness assertion — so this read cannot choose one for `
-                   + `you. Ask again naming the case you mean.` };
+             detail: localize("public-read.index.bundleid_is_a_published_finding", "{bundleId} is a published finding of {length} cases ({cases}). A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact with its own scope and completeness assertion — so this read cannot choose one for you. Ask again naming the case you mean.", { bundleId: String(bundleId), length: String(cases.length), cases: String(cases.join(", ")) }) };
     /* END DEC-49 REGION is-finding-in-several-cases */
   }
 
@@ -1861,7 +2065,9 @@ export function publicReadOf(host, deps) {
     const record = d.record || (() => recordOf(host));
     /* R36: project-roster, reached at the read (a throw there reads the matter stake undetermined). */
     const roster = d.roster || (() => projectRosterOf(host));
-    r = new PublicRead({ storage, publication, docket, record, roster });
+    /* R41: membership, reached at the read (a throw there names every member by the plain word). */
+    const members = d.members || (() => membershipOf(host));
+    r = new PublicRead({ storage, publication, docket, record, roster, members });
     instances.set(host, r);
   }
   return r;
@@ -1874,6 +2080,8 @@ export function publicReadOps(r, url) {
   const q = (k) => url.searchParams.get(k);
   return {
     publishededitions: () => r.publishedEditions(q("id")),
+    /* R38: what each published case froze for a question, by the question's id; no credential (R10). */
+    publishedfrozen: () => r.publishedFrozen({ id: q("id") }),
     /* REC-22: the public read path's store side. */
     publishedcase: () => r.publishedCaseWithCorrections({ id: q("id"), edition: q("edition"), caseId: q("caseId") || null,
                                            sha256: (q("sha256") || "").toLowerCase() || null }),
@@ -1888,6 +2096,15 @@ export function publicReadOps(r, url) {
     /* R23: what a case edition's case file carries, for the Worker's assembly (R6); internal, routed by no door. */
     casefilefacts: () => r.caseFileFacts(q("caseId"), q("edition")),
     /* R28: which of these hashes a court order in force withholds, for the Worker's `publishedbytes`; internal. */
-    withheld: () => r.withheldOf(q("sha256")),
+    withheld: () => r.withheldOf(q("sha256"), q("zip")),
   };
 }
+
+/* R40 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  verify: { classes: null, mutating: false, weight: "read", description: "act.verify.label.published",
+    fields: { accepts: ["sha256"], requires: [] } },
+  publishedcase: { classes: null, mutating: false, weight: "read", description: "act.publishedcase.label.published",
+    fields: { accepts: ["id", "edition", "caseId", "sha256"], requires: [] } },
+});

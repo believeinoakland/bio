@@ -2,6 +2,7 @@
    key, R3's rendering of a stance, and the gate that keeps a K5 candidate unshown until its arm is measured (K488). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, sha, MACHINE, MEMBER, OUTSIDER } from "./fixture.mjs";
 import { judgementSide, renderJudgementInput, JUDGEMENT_PROMPT, K5_GATE_MEASURED, K5_INQUIRIES_EXAMINED,
          CONTRADICTION_KEYS } from "../../../src/contradiction/index.mjs";
@@ -28,8 +29,8 @@ test("R8 (K5): two projects whose stances on one inquiry are both concluded, ado
   assert.deepEqual(p.a, { kind: "stance", inquiry: "INQ-2026-0001-fee", project: "PROJ-2026-0001-a", version: "v1", claim: "the fee rose" });
   assert.deepEqual(p.b, { kind: "stance", inquiry: "INQ-2026-0001-fee", project: "PROJ-2026-0002-b", version: "v2", claim: "the fee fell" });
   assert.deepEqual([q.a.project, q.b.project], ["PROJ-2026-0002-b", "PROJ-2026-0003-c"]);
-  assert.match(p.why, /plurality/);
-  assert.equal(CONTRADICTION_KEYS.K5.name, "one question, two projects' conclusions");
+  assert.equal(p.why, word("contradiction.why.two_projects_concluded"));
+  assert.equal(CONTRADICTION_KEYS.K5.name, word("contradiction.name.question_two_projects"));
   /* a stance that is not concluded (withdrawn, never) is no side */
   const n = world(); n.inquiry("INQ-2026-0001-fee"); n.project("PROJ-2026-0001-a", ["m1"]); n.project("PROJ-2026-0002-b", ["m1"]);
   n.stance("PROJ-2026-0001-a", "INQ-2026-0001-fee", "the fee rose"); n.draws("INQ-2026-0001-fee", "PROJ-2026-0002-b");

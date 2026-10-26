@@ -9,6 +9,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, MACHINE } from "./fixture.mjs";
 import { machinePassageUnchecked, INQUIRY_PASSAGE_CHECKS, inquiryOf } from "../../../src/inquiry/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ROW = INQUIRY_PASSAGE_CHECKS.MACHINE_PASSAGE_UNCHECKED;
 const Q = "INQ-2026-6201-q";
@@ -130,9 +131,9 @@ test("R62 not asked: a machine's own promotion, a migration replay, and any prom
 
 test("R62 machinePassageUnchecked is the one pure spelling: its row, its detail, the caller's extra fields never replacing them", () => {
   assert.equal(ROW.check, "C-2.20");
-  const r = machinePassageUnchecked("the read failed", { version: 3, reason: "OTHER", check: "C-9.9" });
+  const r = machinePassageUnchecked(word("case-disclosures.why.read_failed"), { version: 3, reason: "OTHER", check: "C-9.9" });
   assert.deepEqual(r, { version: 3, ok: false, reason: "MACHINE_PASSAGE_UNCHECKED", code: "MACHINE_PASSAGE_UNCHECKED",
-                        check: "C-2.20", translation: ROW.translation, detail: "the read failed" });
+                        check: "C-2.20", translation: ROW.translation, detail: word("case-disclosures.why.read_failed") });
   assert.match(machinePassageUnchecked().detail, /could not be read/);
   for (const a of [[], [null, null], [7, "x"]]) assert.doesNotThrow(() => machinePassageUnchecked(...a));
   assert.deepEqual(machinePassageUnchecked("d"), machinePassageUnchecked("d"), "pure");

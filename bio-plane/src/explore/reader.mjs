@@ -8,9 +8,10 @@
    so nothing here can count them (R7). */
 import { hubBoundOf } from '../connection-grammar/index.mjs';
 import { isObj, isRefusal } from './answer.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 /** What a hub is called in an answer (R5). */
-export const HUB_WORDS = 'too common to walk';
+export const HUB_WORDS = word('explore.hub_words');
 
 /** Group kinds by their owner, in the order asked. @param {any} registry @param {string[]} kinds */
 export function kindsByOwner(registry, kinds) {
@@ -63,11 +64,11 @@ export function makeReader(ctx, q) {
       }
       if (a.hub) return { hub: a.hub };
       items.push(...a.items);
-      if (a.truncated) s.fanout.push({ node, owner, why: `${owner} answered only part of this node's connections` });
+      if (a.truncated) s.fanout.push({ node, owner, why: word('explore.why.answered_part_node', { owner: String(owner) }) });
       if (a.next === undefined || a.next === null) break;
       if (items.length > most) break; // past every asked kind's bound: the rest would not be walked
       const key = JSON.stringify(a.next);
-      if (seenPages.has(key)) { s.refusals.push({ owner, node, refused: 'PAGING_REPEATS', why: `${owner}'s paging repeats a page` }); return null; }
+      if (seenPages.has(key)) { s.refusals.push({ owner, node, refused: 'PAGING_REPEATS', why: localize('explore.reader.owner_s_paging_repeats_a', '{owner}\'s paging repeats a page', { owner: String(owner) }) }); return null; }
       seenPages.add(key);
       page = a.next;
     }
@@ -84,7 +85,7 @@ export function makeReader(ctx, q) {
     }
     for (const kind of over) {
       const bound = hubBoundOf(kind);
-      s.fanout.push({ node, owner, kind, bound, why: `more than ${bound} connections of ${kind}; the first ${bound} in ${owner}'s order were followed` });
+      s.fanout.push({ node, owner, kind, bound, why: word('explore.why.connections_first_order', { bound: String(bound), kind: String(kind), owner: String(owner) }) });
     }
     return kept;
   }

@@ -4,19 +4,22 @@
    `casefilespec`, credential-free on the public path through public-read's door read (its R18), by their own names and
    as `op=publicread&name=`, with no store route of this module's. Driven through `makeFetch(hooks)`, R48's form
    (`r48-routes.test.mjs`); the store's door through `dispatch` over case-import's own map. */
+import "./register-declared.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, aik, cred, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
-const { caseImportOps } = await import("../../../src/case-import/index.mjs");
+const { caseImportOps, CASE_IMPORT_OPS } = await import("../../../src/case-import/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 const D = await import("../../../src/store-door/dispatch.mjs");
+const { importedCaseAnswer, importedCasesAnswer } = await import("../case-import/fixtures.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");
 const IMPORT_MAP = Object.keys(caseImportOps(null, U, null));
-const ACTS = ["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw", "importflag", "importflagclear"];
-const READS = ["importedcases", "importedcase"];
-const MEMBER_OPS = [...ACTS, ...READS];
+/* case-import's own list of its ops (K4219), split by the op table's `mutating`: never a list typed here (K3268) */
+const MEMBER_OPS = [...CASE_IMPORT_OPS];
+const ACTS = MEMBER_OPS.filter((op) => OPS[op].mutating);
+const READS = MEMBER_OPS.filter((op) => !OPS[op].mutating);
 const PUBLIC_READS = ["casechecker", "casefilespec"];
 const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "proposer", "principal", "owner", "member", "mintedBy"])];
 
@@ -30,14 +33,13 @@ function sessions() {
 }
 const stampsOf = (op, c) => (ACTS.includes(op) ? { viewer: c.viewer, by: c.identity } : { viewer: c.viewer });
 
-test("R49, R2, R26: each of case-import's eight ops is declared, a route of case-import's own map, a member's session's alone, and routed through the door's general path to that route in bio, with the caller's own parameters and body, for a member's session and the founder's (negative control: a name no owner serves is `unknown op`, nothing forwarded)", async () => {
-  /* the map holds R49's eight and R52's two watch acts (`r52-routes.test.mjs`), and nothing else */
-  assert.deepEqual([...IMPORT_MAP].sort(), [...MEMBER_OPS, "importwatch", "importunwatch"].sort(),
-                   "case-import's map is the eight member ops and the two watch acts");
+test("R49, R114, R2, R26: each of case-import's ops (K4219) is declared, a route of case-import's own map, a member's session's alone, and routed through the door's general path to that route in bio, with the caller's own parameters and body, for a member's session and the founder's (negative control: a name no owner serves is `unknown op`, nothing forwarded)", async () => {
+  /* the map holds case-import's own ops (R52's watch acts among them, `r52-routes.test.mjs`), and nothing else */
+  assert.deepEqual([...IMPORT_MAP].sort(), [...MEMBER_OPS].sort(), "case-import's map is its own list of ops");
   for (const op of MEMBER_OPS) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is declared`);
     assert.deepEqual([OPS[op].classes, OPS[op].machineClasses], [["admin", "member"], []], op);
-    assert.equal(OPS[op].mutating, ACTS.includes(op), `${op}: an act mutates, a read does not`);
+    assert.equal(typeof OPS[op].mutating, "boolean", `${op}: its row says whether it mutates`);
   }
   const { w, list } = sessions();
   for (const c of list) for (const op of MEMBER_OPS) {
@@ -116,7 +118,8 @@ test("R49, R28 (case-import R1, R4, R8; admission R8–R10): each case-import op
 
 test("R49, R27: `importedcases` and `importedcase` are among the reads naming no project, each with its reason, so the store's door runs no existence answer for either (an import is no bundle); no import op is classified as naming a project (negative control: a read that names a project is still asked)", async () => {
   const { PROJECT_NAMING_READS: NAMES, PROJECT_NAMING_READS_NOT: NOT } = D;
-  for (const op of READS) {
+  /* R27 names these two; the later reads (R49 of T51, `importregrade` and `rerunread`) are the store door's to classify */
+  for (const op of ["importedcases", "importedcase"]) {
     assert.equal(typeof NOT[op], "string", op);
     assert.match(NOT[op], /import/, op);
     assert.match(NOT[op], /R4/, op);
@@ -126,19 +129,23 @@ test("R49, R27: `importedcases` and `importedcase` are among the reads naming no
   const ran = [], asked = [];
   const membership = () => ({ visibilityOf: (id) => { asked.push(id); return id === P ? "discoverable" : "hidden"; },
                                existenceAct: (id) => (id === P ? { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", project: id } : null) });
-  const store = { routes: () => ({ importedcase: () => { ran.push(1); return { ok: true, editions: [] }; },
+  // fixtures-own: synthetic a route table the store door dispatches: only that it runs the route named and relays or awaits its answer is under test
+  /* case-import's own answer to `importedcase` (its published fixture), carried by the table's route */
+  const { answer: held } = await importedCaseAnswer();
+  const store = { routes: () => ({ importedcase: () => { ran.push(1); return held; },
                                    notices: () => ({ ok: true }) }), membership };
   const r = await (await D.dispatch(new Request(`http://do/importedcase?viewer=member:ann&import=${P}&project=${P}&id=${P}`), store)).json();
-  assert.deepEqual([r.ok, r.result, ran, asked], [true, { ok: true, editions: [] }, [1], []]);
+  assert.deepEqual([r.ok, r.result, ran, asked], [true, JSON.parse(JSON.stringify(held)), [1], []]);
   const n = await (await D.dispatch(new Request(`http://do/notices?viewer=member:ann&project=${P}`), store)).json();
   assert.equal(n.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });
 
 test("R49, R26, R25 (K1324): case-import's map answers promises (`caseimport`, `caseimportdocument` reach case-checker's WebCrypto), and the store's door awaits each — the envelope carries the settled answer, never a promise — and a rejected one is the store's internal error with a correlation id, never its message (negative control: a plain answer is enveloped the same)", async () => {
-  const settled = { ok: true, import: "IMP-1", existed: false };
+  const { answer: listed } = await importedCasesAnswer();
+  const settled = { ok: true, import: listed.imports[0].import, existed: false };
   const routes = { caseimport: () => Promise.resolve(settled),
                    caseimportdocument: () => new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: "IMPORT_DOCUMENT_NOT_MISSING" }), 5)),
-                   importedcases: () => ({ ok: true, imports: [] }),
+                   importedcases: () => listed,
                    importflag: () => Promise.reject(new Error("secret /path/to/file.mjs:12")) };
   const store = { routes: () => routes, membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }) };
   const go = async (op, method = "POST") => {
@@ -148,7 +155,7 @@ test("R49, R26, R25 (K1324): case-import's map answers promises (`caseimport`, `
   };
   assert.deepEqual((await go("caseimport")).json, { ok: true, result: settled });
   assert.deepEqual((await go("caseimportdocument")).json, { ok: true, result: { ok: false, reason: "IMPORT_DOCUMENT_NOT_MISSING" } });
-  assert.deepEqual((await go("importedcases", "GET")).json, { ok: true, result: { ok: true, imports: [] } });
+  assert.deepEqual((await go("importedcases", "GET")).json, { ok: true, result: JSON.parse(JSON.stringify(listed)) });
   const errors = console.error;
   console.error = () => {};
   let thrown;

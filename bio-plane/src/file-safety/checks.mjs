@@ -12,7 +12,7 @@
  * and names travel in the answer's own fields. One term each (R42a, DEC-200 (5)): "file scanner", never "virus
  * scanner"; "safe view", never "safe-view maker" or "safe-copy maker". */
 import { rowWord, REASON_KEYS, PROVIDER_REASON_KEYS } from "./words.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/file-safety/index.mjs ${fn} > ${region}`;
 const row = (check, where, translation) => Object.freeze({ check, where, translation });
@@ -90,13 +90,27 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   /* R43 (T47; N941, K231): a renderer is bound, but the files waiting for a safe view could not be read. New at T47
      (T47-12); the row awaits promotion's stamp (plan T47). */
   RENDER_QUEUE_UNREADABLE: row('C-140.43', at("renderBatch", "is-render-queue-readable"), rowWord('RENDER_QUEUE_UNREADABLE')),
+  /* R49 (fix round 3, C84; K4356): a check for signatures was made under fifteen minutes ago, so no run was started. New at
+     fix round 3 of T51; the row awaits promotion's stamp; its words are the design's (DEC-412, `refusal.SIGNATURES_RUN_RECENT`). */
+  SIGNATURES_RUN_RECENT: row('C-140.44', at("scanMirror", "is-signature-run-due"), rowWord('SIGNATURES_RUN_RECENT')),
+  /* R50 (fix round 4, C84; K4429): the scanner shows a run alive (its stage under fifteen minutes old), so no second one was started.
+     Words owed by the design stream as `refusal.SIGNATURES_RUN_UNDER_WAY`; a stand-in sentence until its row lands. */
+  SIGNATURES_RUN_UNDER_WAY: row('C-140.45', at("scanMirror", "is-signature-run-under-way"), localize("refusal.SIGNATURES_RUN_UNDER_WAY",
+    "Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.")),
 });
 
 /* R6 (DEC-169 (1)): each reason a file is high risk, in the words "Opening a file" shows beside the mark, each the words of
    its key (`words.mjs`). `active` is the words of a kind of active content no row below names (a reader's newer kind), so
    no reason is ever shown blank. */
 const reason = (key) => Object.freeze({ translation: word(key) });
-export const THREAT_REASONS = Object.freeze(Object.fromEntries(Object.entries(REASON_KEYS).map(([code, key]) => [code, reason(key)])));
+export const THREAT_REASONS = Object.freeze({
+  ...Object.fromEntries(Object.entries(REASON_KEYS).map(([code, key]) => [code, reason(key)])),
+  /* R54 (fix round 9, G136a, G136d): a file the file scanner could not read to its end (a limit, or a kind it cannot open) counts as not
+     checked, never as clean; the limit or kind travels in the reason's own field. A stand-in owed to the design stream
+     (`file-safety.checks.the_file_scanner_could_not_read`); the sentence is read by key. */
+  unscannable: Object.freeze({ translation: localize("file-safety.checks.the_file_scanner_could_not_read",
+    "The file scanner could not read all of this file, so it counts as not checked. The reason is stated beside it.") }),
+});
 
 /* R27 (DEC-169 (6)): why a service is not offered, or held back, in member words, by the catalogue's reason. */
 export const PROVIDER_REASON_WORDS = Object.freeze(Object.fromEntries(Object.entries(PROVIDER_REASON_KEYS).map(([code, key]) => [code, word(key)])));

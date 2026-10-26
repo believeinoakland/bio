@@ -137,7 +137,7 @@ test("R18 noSuchAction(actionId, extra?) is this module's: R43's body and behavi
   const row = grammar.ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
   const r = records.noSuchAction("ACTN-2026-0001-a");
   assert.deepEqual(r, { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check, translation: row.translation,
-    action: "ACTN-2026-0001-a", detail: "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way." });
+    action: "ACTN-2026-0001-a", detail: records.NO_SUCH_ACTION_DETAIL });
   assert.equal(row.check, "C-117.2");
   assert.equal(records.noSuchAction().action, null);
   assert.equal(records.noSuchAction(null).action, null);

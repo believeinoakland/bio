@@ -63,7 +63,7 @@ test("R43 R51 adopted with a recorded through, the standard binds up to through 
   const b = (date) => w.s.bindsAt({ standard: std, body, date, viewer: V("carol") });
   const on = b("2026-09-01");
   assert.equal(on.state, "binds");
-  assert.ok(on.why.includes(WORD("standard.inforce.known", { through: "2026-09-01", author: V("bob"),
+  assert.ok(on.why.includes(WORD("standard.inforce.known", { through: "2026-09-01", author: "bob",
     source: WORD("standard.source.capture", { capture: src.capSha.slice(0, 12), extent: "page 1" }) })), "names the record it rests on");
   assert.equal(b("2022-01-01").state, "binds");
   const after = b("2026-09-02");

@@ -18,23 +18,16 @@
 
 import { OBSERVATION_LEVELS, OBSERVATION_SUBJECT_KINDS, MEANING_EVIDENCE_IS_ONE_SIDED } from "../observation-log/index.mjs";
 import { SEARCHED_SUBJECT_SOURCES } from "../ratification/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R17: what a level's answer can be. `no_subjects` and `undetermined` exist so the other three cannot be reached
  *  dishonestly. */
 export const SEARCHED_LEVEL_OUTCOMES = Object.freeze({
-  searched:     "every subject this case names at this level has an observation: the record can say "
-              + "what was looked for and what came of it",
-  partial:      "some of this case's subjects at this level have an observation and some do not, or "
-              + "some could not be identified at all -- the coverage is stated and is not complete",
-  never_looked: "no subject this case names at this level has ever been looked at, and cause (3) of "
-              + "section 5.1 is ESTABLISHED for every one of them. This is the one outcome that "
-              + "licenses a positive statement about the absence",
-  undetermined: "no subject this case names at this level has an observation, and the pre-log or "
-              + "purge cause cannot be excluded -- so whether anybody looked is not knowable from "
-              + "this record, and that is stated rather than resolved in either direction",
-  no_subjects:  "this case names no subject this level could be computed over. This is NOT coverage: "
-              + "zero of zero is not 100%, and a level that reports it is saying the question was "
-              + "not askable here rather than that it was answered",
+  searched:     localize("case-authoring.searched.every_subject_this_case_names", "every subject this case names at this level has an observation: the record can say what was looked for and what came of it"),
+  partial:      localize("case-authoring.searched.some_of_this_cases_subjects", "some of this case's subjects at this level have an observation and some do not, or some could not be identified at all -- the coverage is stated and is not complete"),
+  never_looked: localize("case-authoring.searched.no_subject_this_case_names", "no subject this case names at this level has ever been looked at, and cause (3) of section 5.1 is ESTABLISHED for every one of them. This is the one outcome that licenses a positive statement about the absence"),
+  undetermined: localize("case-authoring.searched.no_subject_has_an_observation", "no subject this case names at this level has an observation, and the pre-log or purge cause cannot be excluded -- so whether anybody looked is not knowable from this record, and that is stated rather than resolved in either direction"),
+  no_subjects:  localize("case-authoring.searched.this_case_names_no_subject", "this case names no subject this level could be computed over. This is NOT coverage: zero of zero is not 100%, and a level that reports it is saying the question was not askable here rather than that it was answered"),
 });
 
 /** R17: the section, computed. Pure; touches no table.
@@ -48,16 +41,13 @@ export const SEARCHED_LEVEL_OUTCOMES = Object.freeze({
  *  cannot say what was searched fails the ceremony rather than publishing a blank. */
 export function searchedSection({ at = null, subjectSource = null, levels = null } = {}) {
   if (typeof at !== "string" || at.trim() === "")
-    return { ok: false, why: "a searched section requires the time it was computed at" };
+    return { ok: false, why: word("case-authoring.why.searched_section_requires") };
   if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(subjectSource)))
     return { ok: false,
-             why: `a searched section requires a subject source this vocabulary names (got `
-                + `'${subjectSource}'; known: ${Object.keys(SEARCHED_SUBJECT_SOURCES).join(", ")}). `
-                + `THE SUBJECT SET IS THE FENCE: a section computed over the observation log's own `
-                + `subjects is 100% searched by construction and is a statement about the log `
-                + `rather than about the case` };
+             why: localize("case-authoring.searched.a_searched_section_requires_a", "a searched section requires a subject source this vocabulary names (got '{got}'; known: {known}). THE SUBJECT SET IS THE FENCE: a section computed over the observation log's own subjects is 100% searched by construction and is a statement about the log rather than about the case",
+                           { got: String(subjectSource), known: Object.keys(SEARCHED_SUBJECT_SOURCES).join(", ") }) };
   if (!Array.isArray(levels))
-    return { ok: false, why: "a searched section requires a levels array, empty if the case names none" };
+    return { ok: false, why: word("case-authoring.why.searched_section_requires_levels") };
 
   const out = [];
   let totalSubjects = 0, totalLooked = 0, totalUnidentified = 0;
@@ -66,9 +56,9 @@ export function searchedSection({ at = null, subjectSource = null, levels = null
     const level = entry && entry.level;
     const kind = entry && entry.subject_kind;
     if (!Object.prototype.hasOwnProperty.call(OBSERVATION_LEVELS, String(level)))
-      return { ok: false, why: `a searched section names a level this vocabulary does not: '${level}'` };
+      return { ok: false, why: word("case-authoring.why.searched_section_names", { level: String(level) }) };
     if (!Object.prototype.hasOwnProperty.call(OBSERVATION_SUBJECT_KINDS, String(kind)))
-      return { ok: false, why: `a searched section names a subject kind this vocabulary does not: '${kind}'` };
+      return { ok: false, why: word("case-authoring.why.searched_section_names_subject", { kind: String(kind) }) };
 
     const subjects = Array.isArray(entry.subjects) ? entry.subjects : [];
     const unidentified = Math.max(0, Math.floor(Number(entry.unidentified) || 0));
@@ -121,15 +111,10 @@ export function searchedSection({ at = null, subjectSource = null, levels = null
       /* What the numbers mean, in the document, for a reader outside this project. */
       detail: SEARCHED_LEVEL_OUTCOMES[outcome]
             + (coerced
-                 ? `. ${coerced} subject(s) could not be reported as never-looked-at because at this `
-                 + `level and subject kind the evidence of a look exists only where the answer was `
-                 + `YES: a look that found nothing leaves no trace, so *nobody looked* and *somebody `
-                 + `looked and found nothing* are indistinguishable over the window before the log `
-                 + `carried this level. They are reported as undetermined`
+                 ? localize("case-authoring.searched.coerced_subjects_not_reported", ". {coerced} subject(s) could not be reported as never-looked-at because at this level and subject kind the evidence of a look exists only where the answer was YES: a look that found nothing leaves no trace, so *nobody looked* and *somebody looked and found nothing* are indistinguishable over the window before the log carried this level. They are reported as undetermined", { coerced: String(coerced) })
                  : "")
             + (unidentified
-                 ? `. ${unidentified} referent(s) this case rests on could not be resolved to a `
-                 + `subject at this level at all, so nothing is claimed about them either way`
+                 ? localize("case-authoring.searched.unidentified_referents_not_resolved", ". {unidentified} referent(s) this case rests on could not be resolved to a subject at this level at all, so nothing is claimed about them either way", { unidentified: String(unidentified) })
                  : ""),
     });
   }

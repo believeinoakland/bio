@@ -5,9 +5,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, contract, shareDetector, ALICE, ADMIN_BOB } from "./fixture.mjs";
 import { HINT_MARK, NOTICED, moneyChecksOps } from "../../../src/money-checks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* DEC-131's words, character for character: "Hint", a space, the middle dot U+00B7, a space, "machine work". */
-const DEC_131 = "Hint · machine work";
+const DEC_131 = word("mark.hint.label");
 const P = "PROJ-2026-0001-alpha";
 const ops = (w, query = {}, body = null) => {
   const url = new URL("https://x/");
@@ -72,7 +73,7 @@ test("R17: op=moneyjunction — the answer and each junction check carry the mar
   const awardCap = w.held("INFO-2026-0101-award", "a".repeat(64)), signedCap = w.held("INFO-2026-0102-signed", "b".repeat(64));
   w.resolution(awardCap, "INFO-2026-0101-award", k.id);
   w.resolution(signedCap, "INFO-2026-0102-signed", k.id);
-  w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the group's reading", declaredBy: ALICE,
+  w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the team's reading", declaredBy: ALICE,
     stages: [{ key: "award", cardinality: "1", required: "always" }, { key: "signed", after: "award", cardinality: "1", required: "always" }] });
   await w.progressions.threadInstance({ progressionKey: "proc", entityId: k.id, threadedBy: ALICE,
     placements: [{ stageKey: "award", captureSha: awardCap }, { stageKey: "signed", captureSha: signedCap }] });

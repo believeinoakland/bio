@@ -8,6 +8,7 @@ import { PROJECTS_DRAWING_MAX, PROJECTS_PAGE_MAX, PROJECTS_PAGE_DEFAULT, PROJECT
   from "../../../src/leg-earning/index.mjs";
 import { ARCHIVE_VIA, UPLOAD_VIA, DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING, BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q = "INQ-2026-4101-q";
 
@@ -236,13 +237,13 @@ test("R16 the authored note names each route in words: the doorbell's receipt, a
   const [b0] = w.doc(BOTH, ["b0", "b1"], { via: null });
   w.prov.recordReceipt({ address: `upload:${BOTH}`, addressNorm: `upload:${BOTH}`, captureSha: b0, retrieved: "2026-09-27T00:00:00Z",
                          via: UPLOAD_VIA, by: "member:sam", statement: "Mine too." });
-  assert.deepEqual(AUTHORED_ROUTE_WORDS, { doorbell: "received through the doorbell", upload: "uploaded by a member",
-                                           unrecorded: "no fetch route recorded" });
+  assert.deepEqual(AUTHORED_ROUTE_WORDS, { doorbell: word("leg-earning.freeze.received_through_doorbell"), upload: word("leg-earning.freeze.uploaded_member"),
+                                           unrecorded: word("leg-earning.unrecorded") });
   const cap = w.k.earned(null, [BELL, UP, NONE, BOTH]).earned.capture;
   const words = (id) => /\(([^)]*)\), so a leg on it keeps/.exec(cap[id].why)?.[1];
-  assert.equal(words(BELL), "received through the doorbell");
-  assert.equal(words(UP), "uploaded by a member");
-  assert.equal(words(NONE), "no fetch route recorded");
+  assert.equal(words(BELL), word("leg-earning.freeze.received_through_doorbell"));
+  assert.equal(words(UP), word("leg-earning.freeze.uploaded_member"));
+  assert.equal(words(NONE), word("leg-earning.unrecorded"));
   assert.equal(words(BOTH), "uploaded by a member; no fetch route recorded");
   assert.doesNotMatch(cap[UP].why, /doorbell/, "an upload is never worded as the doorbell");
   for (const [id, basis] of [[BELL, ["CAPTURE_RECEIVED_NOT_FETCHED"]], [UP, ["CAPTURE_RECEIVED_NOT_FETCHED"]],

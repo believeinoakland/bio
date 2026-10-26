@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { Membership, MEMBERSHIP_CHECKS, noSuchProject, notAParticipant }
   from "../../../src/membership/index.mjs";
 
@@ -66,11 +67,10 @@ const ACTS = {
   projectvisibilityset: { ask: (id) => `projectId=${id}&setting=hidden&by=cal`, want: (id) => noSuchProject(id) },      // R45, R78
   projectjoin: { ask: (id) => `projectId=${id}&by=cal`,
     want: () => ({ ok: false, reason: "NOT_INVITED",
-                   detail: "a member joins a project they were invited to. Being uninvited is not a refusal you can see." }) }, // R34
+                   detail: localize("membership.index.a_member_joins_a_project", "a member joins a project they were invited to. Being uninvited is not a refusal you can see.") }) }, // R34
   projectleave: { ask: (id) => `projectId=${id}&by=cal`, want: (id) => notAParticipant(id, "cal") },                     // R35, R87
   projectremove: { ask: (id) => `projectId=${id}&handle=bob&by=cal`, want: () => ({ ok: false, reason: "NOT_THE_OWNER",
-    detail: "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an "
-          + "administrator removed and an owner could not." }) },                                                        // R36
+    detail: localize("membership.index.only_an_owner_of_this_2", "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an administrator removed and an owner could not.") }) },                                                        // R36
   projectownerarith: { ask: (id) => `projectId=${id}`, want: (id) => ({ ok: true,
     table: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => Membership.ownerMath(n)), live: Membership.ownerMath(0), projectId: id }) }, // R38
   projectclaimowner: { internal: true, body: (id) => ({ projectId: id, memberId: "cal" }), want: (id) => noSuchProject(id) }, // R31

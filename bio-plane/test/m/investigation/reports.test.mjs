@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, BOB, DAN, OUT, AI, P1, PH, Q1, Q2, Q3 } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* A fixed instant, an hour before the fixture's clock (NOW), declared before every test that uses it: no test depends
    on the wall clock or on the order the tests are declared in. */
@@ -40,7 +41,7 @@ test("R6: reportDraft composes by code, with no AI, the steps taken and ended (o
   assert.ok(sec("waiting").some((l) => l.source.kind === "document-wait"), "a document set aside (inquiry R58)");
   assert.ok(sec("waiting").some((l) => l.source.kind === "milestone"), "an open milestone");
   for (const l of d.lines) assert.ok(l.source && l.source.kind && l.source.id, "each line cites its source");
-  assert.ok(d.text.includes("Steps taken") && d.text.includes("What is waiting"));
+  assert.ok(d.text.includes("Steps taken") && d.text.includes(word("investigation.waiting")));
   /* a report on one question carries that question's lines only */
   const q = w.inv.reportDraft({ project: P1, question: Q2, viewer: ANN });
   assert.equal(q.lines.some((l) => l.text.includes("The award followed the rule.")), false);

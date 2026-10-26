@@ -13,7 +13,8 @@
  * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows
  * were taken by the stamp 1.49.0 (T19's promotion job). T22 (R52, K1019): C-18.11–C-18.15, the refusals of an address's
  * frequency setting (`FREQUENCY_CHECKS`), taken by 1.53.0 (T23's promotion job). T47 (R74, N969): C-18.20 and
- * C-18.21, the refusals of a member's act setting a bundle's monitoring (`MONITOR_SET_CHECKS`), awaiting T48's stamp.
+ * C-18.21, the refusals of a member's act setting a bundle's monitoring (`MONITOR_SET_CHECKS`), awaiting T48's stamp. T51 (R75, K4189): C-18.22 and C-18.23, the refusals of a member's act planting or revising one
+ * named request (`NAMED_REQUEST_CHECKS`), awaiting the stamp.
  *
  * T24 (N506, K1159): the link sweep's arms of C-18.5 (`sweepErrors`, its fields, cadences and bounds, the term matcher)
  * left with the sweep for `link-sweep`, a later module, which hands them back at composition through R66's registration
@@ -23,6 +24,7 @@
 
 import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
 import { ISO_TS_RE, idPattern } from "../record-grammar/ids.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 /* The catalogue's finding shape (legacy-checks' private `f`), for the check that moved here. */
 function f(check, severity, message, extra) {
@@ -34,6 +36,7 @@ function asText(v) {
 }
 
 const at = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
+const atNamed = (fn, region) => `src/monitoring/named-requests.mjs ${fn} > ${region}`;
 
 /* D-472 — THE SHELL, ON A TICK, AND WHY IT IS ITS OWN CODE RATHER THAN C-48.5
    FIRING FROM A SECOND PLACE. A capture that meets the shell has captured
@@ -51,10 +54,7 @@ export const DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
     check: 'C-48.8',
     where: at('monitor', 'is-drive-tick-export'),
-    translation: 'The check of that Google Drive document did not run: the export address answered '
-      + 'with a web page rather than a document, which is what Drive does when a file stops being '
-      + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
-      + 'changed — what is known is that your group\'s Civicsmith could not see the document today.',
+    translation: word('refusal.DRIVE_TICK_EXPORT_IS_THE_SHELL'),
   }),
   /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
      declared type and the first kibibyte are two different pieces of evidence,
@@ -65,10 +65,7 @@ export const DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
     check: 'C-48.9',
     where: at('monitor', 'is-drive-tick-bytes'),
-    translation: 'The check of that Google Drive document did not run: the export address said it '
-      + 'was sending a document and sent a web page instead. Your group\'s Civicsmith reads the bytes rather '
-      + 'than the label, so the application page was recognised and not compared against the '
-      + 'captured document — comparing it would report a change on every visit that nobody made.',
+    translation: localize('monitoring.checks.the_check_of_that_google', 'The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. Your team\'s Civicsmith reads the bytes rather than the label, so the application page was recognised and not compared against the captured document — comparing it would report a change on every visit that nobody made.'),
   }),
 });
 
@@ -79,9 +76,7 @@ export const GATHERING_CHECKS = Object.freeze({
   GATHERING_REFUSED: Object.freeze({
     check: 'C-18.10',
     where: at('gatheringCheck', 'is-gathering-refused'),
-    translation: 'This was not saved: the list of things to gather that it carries is not written the way the record '
-      + 'writes them, and a gathering request is shown to members as data, so it must stay within its grammar. The '
-      + 'findings beside this say which requests and what is wrong with each. Nothing was changed.',
+    translation: word('refusal.GATHERING_REFUSED'),
   }),
 });
 
@@ -92,32 +87,27 @@ export const FREQUENCY_CHECKS = Object.freeze({
   MACHINE_CANNOT_SET_FREQUENCY: Object.freeze({
     check: 'C-18.11',
     where: at('addressFrequencySet', 'is-frequency-member'),
-    translation: 'How often an address is checked is set by a named member, with the member\'s reason. An assistant '
-      + 'or a machine may suggest it; it may not set it. Nothing was changed.',
+    translation: word('refusal.MACHINE_CANNOT_SET_FREQUENCY'),
   }),
   NO_SUCH_ADDRESS: Object.freeze({
     check: 'C-18.12',
     where: at('addressFrequencySet', 'is-frequency-address'),
-    translation: 'No monitored document you can see is checked at that address, so there is no check whose frequency '
-      + 'could be set there. Nothing was changed.',
+    translation: word('refusal.NO_SUCH_ADDRESS'),
   }),
   BAD_FREQUENCY: Object.freeze({
     check: 'C-18.13',
     where: at('addressFrequencySet', 'is-frequency-word'),
-    translation: 'That is not a frequency this record knows. Choose one of the listed frequencies, or none to return '
-      + 'the address to the frequency its documents set. Nothing was changed.',
+    translation: word('refusal.BAD_FREQUENCY'),
   }),
   NOT_A_SOURCE_OWNER: Object.freeze({
     check: 'C-18.14',
     where: at('addressFrequencySet', 'is-frequency-owner'),
-    translation: 'The frequency of an address is set by an owner of a project that holds a monitored document there, '
-      + 'and you own none of them. Ask an owner of one of those projects. Nothing was changed.',
+    translation: word('refusal.NOT_A_SOURCE_OWNER'),
   }),
   FREQUENCY_NO_REASON: Object.freeze({
     check: 'C-18.15',
     where: at('addressFrequencySet', 'is-frequency-reason'),
-    translation: 'A frequency is set with a reason: one of the listed reasons, or your own words of up to 2,000 '
-      + 'characters. Nothing was changed.',
+    translation: word('refusal.FREQUENCY_NO_REASON'),
   }),
 });
 
@@ -129,8 +119,7 @@ export const WATCH_END_CHECKS = Object.freeze({
   WATCH_END_REFUSED: Object.freeze({
     check: 'C-18.19',
     where: at('addressWatchEnd', 'is-watch-end-day'),
-    translation: 'A watch ends on a calendar day, today or later, or has no end date. That day could not be used. '
-      + 'Nothing was changed.',
+    translation: word('refusal.WATCH_END_REFUSED'),
   }),
 });
 
@@ -141,25 +130,39 @@ export const MONITOR_SET_CHECKS = Object.freeze({
   MACHINE_CANNOT_SET_MONITORING: Object.freeze({
     check: 'C-18.20',
     where: at('monitorSet', 'is-monitor-set-member'),
-    translation: 'Only a member asks for a document to be watched, and this came from an automated credential. '
-      + 'Nothing was changed.',
+    translation: localize('monitoring.checks.only_a_member_asks_for', 'Only a member asks for a document to be watched, and this came from an automated credential. Nothing was changed.'),
   }),
   MONITOR_SET_REFUSED: Object.freeze({
     check: 'C-18.21',
     where: at('monitorSet', 'is-monitor-set-shape'),
-    translation: 'Say whether this document is watched, yes or no, and, if you give one, how often, as one of the '
-      + 'listed frequencies. Nothing was changed.',
+    translation: localize('monitoring.checks.say_whether_this_document_is', 'Say whether this document is watched, yes or no, and, if you give one, how often, as one of the listed frequencies. Nothing was changed.'),
+  }),
+});
+
+/* C-18.22 and C-18.23 — R75's refusals of a member's act planting or revising one named request (T51; K4189; UC-035),
+   each with nothing written: the next free rows of the C-18 family this table holds (`link-sweep` took C-18.24), awaiting
+   the stamp. The translations are BOB's drafts, the UX stream's to re-word. */
+export const NAMED_REQUEST_CHECKS = Object.freeze({
+  MACHINE_CANNOT_SET_REQUEST: Object.freeze({
+    check: 'C-18.22',
+    where: atNamed('namedRequestSet', 'is-named-request-member'),
+    translation: localize('monitoring.checks.only_a_member_plants', 'Only a member asks for a document to be gathered, and this came from an automated credential. Nothing was changed.'),
+  }),
+  NAMED_REQUEST_REFUSED: Object.freeze({
+    check: 'C-18.23',
+    where: atNamed('namedRequestSet', 'is-named-request-shape'),
+    translation: localize('monitoring.checks.this_request_was_not', 'This request was not saved: something it says is not in a form the record can keep. The parts to put right are named. Nothing was changed.'),
   }),
 });
 
 /** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
 export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS,
-                                                 ...WATCH_END_CHECKS, ...MONITOR_SET_CHECKS });
+                                                 ...WATCH_END_CHECKS, ...MONITOR_SET_CHECKS, ...NAMED_REQUEST_CHECKS });
 
 /** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail.
- *  R52's rows, R71's (which shares R52's first two) and R74's. */
+ *  R52's rows, R71's (which shares R52's first two), R74's and R75's. */
 export function frequencyRefusal(code, detail, extra) {
-  const row = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code] || MONITOR_SET_CHECKS[code];
+  const row = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code] || MONITOR_SET_CHECKS[code] || NAMED_REQUEST_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 }
 
@@ -245,7 +248,7 @@ export function checkGatheringGrammar(ctx, findings, sweepArm = null) {
     let errs;
     try { errs = sweepArm.grammar(s, ids); } catch (e) { errs = e instanceof Error ? e : new Error(String(e)); }
     if (!Array.isArray(errs)) {
-      const why = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : 'answered no list of findings';
+      const why = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : word('monitoring.answered_list_findings');
       findings.push(f('C-18.5', 'error', `gathering.json sweeps[${i}] could not be checked: the sweep grammar ${String(sweepArm.module)} `
         + `registered ${why}, so the entry is refused, never admitted`));
       continue;

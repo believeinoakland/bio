@@ -1,5 +1,5 @@
 /* record-core: the DDL of the module's own tables (bundles, files, history, manifest, leases,
-   seq, minted_ids, settings, and T33's tombstones and derived_stale), run by this module's own `migrate()`, first (R71). Whole-line
+   seq, minted_ids, settings, T33's tombstones and derived_stale, and fix round 8's bookkeeping_tally), run by this module's own `migrate()`, first (R71). Whole-line
    `--` comments only and no semicolon inside a comment: `migrate` strips comment lines and splits
    the text on semicolons. */
 export const RECORD_SCHEMA = `CREATE TABLE IF NOT EXISTS bundles (
@@ -159,4 +159,10 @@ CREATE TABLE IF NOT EXISTS derived_stale (
   marked_at   TEXT NOT NULL,
   PRIMARY KEY (module, table_name, key_json)
 );
+
+-- R91 (fix round 8, G115): THE TALLY OF BOOKKEEPING ROWS. One row, stepped by the triggers writeCount() keeps on the tables of the
+-- bookkeeping list (a session's last_active, the door window, the ledger), so the write counter can leave those rows out.
+-- Exempt from purge, never exported, read by no route; n has meaning only as a difference from the connection's start.
+-- Made whole by CREATE TABLE AS, which counts no row, so a record nothing has written reads 0.
+CREATE TABLE IF NOT EXISTS bookkeeping_tally AS SELECT 1 AS id, 0 AS n;
 `;

@@ -61,7 +61,7 @@ test("R23: a PRESENT at a subject a step's look found absent gives the step a la
   assert.equal(lf.length, 1);
   assert.equal(lf[0].look, Number(lookRow.seq));
   assert.deepEqual(w.rows(`SELECT * FROM observation_log WHERE seq = ?`, lookRow.seq)[0], lookRow, "the earlier look stays as it was");
-  assert.equal(w.s.step({ step: id, viewer: ANN }).outcomes[0].outcome, "undetermined", "no outcome moves by itself");
+  assert.equal(w.s.step({ step: id, viewer: ANN }).outcomes[0].outcome, "undetermined", "the outcome stays where it was");
   for (const v of [ANN, BOB, DAN, CAT]) assert.equal(w.s.laterFound({ viewer: v }).found.length, 1, v);
   assert.deepEqual(w.s.laterFound({ viewer: OUT }).found, [], "not a recipient and not the doer");
   const k = w.s.laterFound({ viewer: ANN }).found[0].key;

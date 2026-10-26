@@ -7,6 +7,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, prepare, post, sign, V, NOW } from "./fixture.mjs";
 import * as nn from "../../../src/network-notices/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { noKeyInstanceSign } from "../attestation/fixtures.mjs";
 
 const A = V("alice");
 /* "this/the/your … copy|instance|plane", and "server", as DEC-149's grep reads them (`plan/draft-T34-dec149.md`). */
@@ -28,8 +30,7 @@ test("R1 (DEC-149) NOTICE_NO_GROUP_SLUG and NOTICE_NO_INSTANCE_KEY tell the memb
   noSlug.P = noSlug.project("budget", "alice");
   const slug = await prepare(noSlug);
   assert.equal(slug.reason, "NOTICE_NO_GROUP_SLUG");
-  assert.equal(slug.translation, "Your group has no name recorded yet, and a notice is never anonymous. Record the group's name "
-    + "first. Nothing was published.");
+  assert.equal(slug.translation, word("refusal.NOTICE_NO_GROUP_SLUG"));
   noOldName(slug, "C-127.4");
 
   const noKey = world({ key: false });
@@ -38,16 +39,15 @@ test("R1 (DEC-149) NOTICE_NO_GROUP_SLUG and NOTICE_NO_INSTANCE_KEY tell the memb
   const key = await prepare(noKey);
   assert.equal(key.reason, "NOTICE_NO_INSTANCE_KEY");
   assert.equal(key.check, "C-127.5");
-  assert.equal(key.translation, "Your group's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
-    + "notice is always published with. The operator binds one. Nothing was published.");
-  assert.equal(key.detail, "your group's Civicsmith holds no signing key of its own, and a notice is never published without "
-    + "its signed level");
+  assert.equal(key.translation, word("refusal.NOTICE_NO_INSTANCE_KEY"));
+  assert.equal(key.detail, nn.NO_INSTANCE_KEY_DETAIL);
   noOldName(key, "C-127.5");
 
   /* the post's own key check (R4, R13) answers the same words: the key goes between prepare and post */
   const w = seeded();
   const p = await prepare(w);
-  w.attestation.instanceSign = async () => ({ ok: false, reason: "RECEIPT_NO_KEY" });
+  const keyRefusal = await noKeyInstanceSign();
+  w.attestation.instanceSign = async () => keyRefusal;
   const late = await w.nn.postNotice({ digest: p.digest, signature: sign(p), acknowledged: true, by: A, viewer: A });
   assert.deepEqual([late.reason, late.translation, late.detail], ["NOTICE_NO_INSTANCE_KEY", key.translation, key.detail]);
   /* negative control: with a slug and a key the same call is answered, and says nothing of either */
@@ -60,8 +60,7 @@ test("R4 (DEC-149) NOTICE_STALE says your group's Civicsmith holds no prepared n
   const stale = await w.nn.postNotice({ digest: "0".repeat(64), signature: sign(p), acknowledged: true, by: A, viewer: A });
   assert.equal(stale.reason, "NOTICE_STALE");
   assert.equal(stale.check, "C-127.12");
-  assert.equal(stale.translation, "Your group's Civicsmith holds no prepared notice from you with this fingerprint, or it was "
-    + "prepared more than an hour ago. Prepare it again and sign what it shows. Nothing was published.");
+  assert.equal(stale.translation, word("refusal.NOTICE_STALE"));
   noOldName(stale, "C-127.12");
   /* past its hour: the same row */
   w.clock.now = NOW + 3600000 + 1000;
@@ -73,13 +72,13 @@ test("R21 (DEC-149) groupKeysPublic labels each key of the group's own Civicsmit
   const w = seeded();
   await post(w);
   const keys = w.nn.groupKeysPublic();
-  assert.equal(nn.COPY_KEY_LABEL, "this group's Civicsmith key");
+  assert.equal(nn.COPY_KEY_LABEL, word("network-notices.group_civicsmith_key"));
   assert.equal(keys.copy.length, 1);
-  assert.equal(keys.copy[0].label, "this group's Civicsmith key");
+  assert.equal(keys.copy[0].label, word("network-notices.group_civicsmith_key"));
   for (const k of keys.copy) assert.doesNotMatch(k.label, /copy|instance|plane|server|your/i);
   noOldName(keys, "groupkeyspublic");
   /* served the same with no credential (public-read R18) */
-  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), ["this group's Civicsmith key"]);
+  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), [word("network-notices.group_civicsmith_key")]);
 });
 
 test("R1 R4 R21 (DEC-149) no row, refusal or answer of this module calls the group's Civicsmith this copy, this instance or the plane", async () => {
@@ -96,6 +95,6 @@ test("R1 R4 R21 (DEC-149) no row, refusal or answer of this module calls the gro
   /* negative control: the pattern catches the old words wherever they sit */
   for (const old of ["This copy holds no prepared notice", "this copy's key", "no key of this instance", "the plane signs", "a server"])
     assert.throws(() => noOldName({ nested: [old] }, "control"), /control/);
-  assert.doesNotThrow(() => noOldName(["nothing: copy these fields, or open them", "a review copy"], "control"),
+  assert.doesNotThrow(() => noOldName([word("network-notices.nothing_copy_fields"), "a review copy"], "control"),
                       "copy in its other meanings stays");
 });

@@ -18,6 +18,8 @@
  * reason, so no code would back a `reasoned` rung (`affordances` R19; R37 as K3144 words it).
  * N955 adds no op: `credentials`' `aiRunCredentialMint` is in-plane and the door's op stays `airundispatch` (R33). */
 
+import { word } from "../setup-words/index.mjs";
+
 const R = (s) => `read: ${s}; writes nothing`;
 const GROUP_SETTING = (s) => `setting: ${s}; an administrator's act, a later one replacing it; moves no bundle`;
 const SESSION_OWN = (s) => `session-directed: ${s}; moves no bundle`;
@@ -58,8 +60,7 @@ export const T47_NON_ACTS = {
   projectquestions: R("the questions one project draws on, as the viewer may see them, paged (basis-versions R50)"),
   drawquestion: "project-directed: keyed by a project and one question; draws the question into the project as a "
     + "confirmed `cites` edge and promotes the project; moves the project's bundle",
-  projectbarset: "project-directed: keyed by a project; the project's own required strength, set with the member's "
-    + "reason; never the group's bar, and it gates nothing (`strength` R21)",
+  projectbarset: word("strength.declared.projectbarset"),
   monitorset: "bundle-directed: whether a captured document is watched, and how often; a member's own revision of the "
     + "bundle; fetches nothing",
   /* R37 */

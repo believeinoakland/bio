@@ -542,13 +542,16 @@ test("R13 no clock, no randomness, nothing written to disk: with the clock and e
     const ALL = (${ALL_FIXTURES.toString()})();
     process.stdout.write(JSON.stringify(ALL.map(sha)));
   `;
-  const r = spawnSync(process.execPath, ["--input-type=module", "-e", body], { cwd, env: { ...process.env, TMPDIR: tmp }, encoding: "utf8" });
+  /* Node warns on stderr when it cannot read NODE_EXTRA_CA_CERTS, as a uid that is not root cannot read the proxy's bundle; the child is handed none. */
+  const env = { ...process.env, TMPDIR: tmp };
+  delete env.NODE_EXTRA_CA_CERTS;
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", body], { cwd, env, encoding: "utf8" });
   assert.equal(r.status, 0, r.stderr);
   assert.equal(r.stderr, "");
   assert.deepEqual(JSON.parse(r.stdout), want, "the same bytes with no clock, randomness or disk");
   assert.deepEqual(readdirSync(cwd), [], "nothing in the working directory");
   assert.deepEqual(readdirSync(tmp), [], "nothing in the temporary directory");
-  const i = spawnSync(process.execPath, ["--input-type=module", "-e", `await import(${JSON.stringify(MAKE_ZIP_URL)});`], { cwd, env: { ...process.env, TMPDIR: tmp }, encoding: "utf8" });
+  const i = spawnSync(process.execPath, ["--input-type=module", "-e", `await import(${JSON.stringify(MAKE_ZIP_URL)});`], { cwd, env, encoding: "utf8" });
   assert.deepEqual([i.status, i.stdout, i.stderr, readdirSync(cwd), readdirSync(tmp)], [0, "", "", [], []], "importing has no side effect");
 });
 

@@ -3,6 +3,7 @@
    `{entity}` order reads them. Driven at the module's interface over a record laid down in the fixture. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, k4World, sha, MACHINE, MEMBER, OUTSIDER } from "./fixture.mjs";
 import { RUN, PRINCIPAL, M1 } from "./seed.mjs";
 import { CONTRADICTION_ABSENCE, CONTRADICTION_KEYS, renderJudgementInput, JUDGEMENT_PROMPT } from "../../../src/contradiction/index.mjs";
@@ -27,7 +28,7 @@ test("R8 K6: two money facts with the same payer and payee entities, kind, phase
   const k = byKey(r, "K6");
   assert.deepEqual([k.ran, k.formed, k.truncated, k.absence, k.undetermined, k.consistent], [true, 1, false, null, 0, 0]);
   for (const f of ["key", "name", "feeds", "join", "why"]) assert.equal(k[f], CONTRADICTION_KEYS.K6[f]);
-  assert.equal(CONTRADICTION_KEYS.K6.name, "two amounts for one transfer");
+  assert.equal(CONTRADICTION_KEYS.K6.name, word("contradiction.name.two_amounts_transfer"));
   const p = r.pairs[0];
   assert.deepEqual([p.key, p.payer, p.payee], ["K6", "E-PAYER", "E-PAYEE"]);
   assert.deepEqual(Object.keys(p.a).sort(), ["amount", "capture_sha", "fact", "kind", "period", "ref", "stage"]);

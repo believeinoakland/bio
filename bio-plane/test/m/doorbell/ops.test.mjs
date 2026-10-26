@@ -10,6 +10,7 @@ import { doorbellPublicOp } from "../../../src/doorbell/door.mjs";
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
   return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
+// fixtures-contract: answer-envelope door-helpers
 const h = { json, doAnswer, storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
             requiredArgument: (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }) };
 const stubOf = (c) => ({ calls: [], async fetch(req) {

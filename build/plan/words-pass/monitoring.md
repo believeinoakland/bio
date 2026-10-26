@@ -1,0 +1,33 @@
+# monitoring: the words check after the conversion (K3949)
+
+Layer 10. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/monitoring/index.mjs:1145` "— fetched {}, the OpenDocument export composed"
+- inline `bio-plane/src/monitoring/index.mjs:1200` [copy] "no reason given"
+- inline `bio-plane/src/monitoring/index.mjs:2554` "The document served at {}, gathered by the daemon for the named req..."
+- inline `bio-plane/src/monitoring/index.mjs:3094` [copy] "an objective and a published finding"
+- inline `bio-plane/src/monitoring/index.mjs:3095` [copy] "a published finding"
+- inline `bio-plane/src/monitoring/index.mjs:920` [copy] "no content type"
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:14` [part] "The check of that Google Drive document did not run: the export add..." — part test copy
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:15` [part] "rather than a document, which is what Drive does when a file stops ..." — part test copy
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:16` [part] "Nothing was compared and nothing about the record changed — what is..." — part test copy
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:17` [part] "not see the document today." — part test copy
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:18` [part] "The check of that Google Drive document did not run: the export add..." — part test copy
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:19` [part] "document and sent a web page instead. Your team's Civicsmith reads ..."
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:21` [part] "change on every visit that nobody made."
+- testcopy `bio-plane/test/m/monitoring/watch.test.mjs:45` [part] "the objective states no condition"
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('monitoring.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/monitoring/index.mjs:1682` "address's end date; it is watched until it can be"
+- plain `bio-plane/src/monitoring/index.mjs:1924` "every earlier setting stays readable"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/monitoring/fixture.mjs:304` "\"' is not unique within the file\""
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:20` "\"application page was recognised and not compared against the captur...\""
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:49` "\"A shape your team's Civicsmith cannot read is a shape it cannot pro...\""

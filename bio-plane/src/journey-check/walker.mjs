@@ -7,7 +7,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { designRule, groupIn, senseKeys, withoutGroupSense } from "./group-words.mjs";
-import { wordPattern } from "./words.mjs";
+import { wordPattern, pageZero } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* The interface page's mark: every document the copy serves to a browser is `interfacePage`, which links the shell's own
    stylesheet (interface-shell R1). A document without it is an old page. */
@@ -18,6 +19,8 @@ export const LEGACY_UI_WORKER = "civicos";
 
 export const FAIL = Object.freeze({ REFUSED: "refused", HTTP: "http", SCRIPT: "script", OLD_PAGE: "old-page", ADDRESS: "address",
   NOT_DRAWN: "not-drawn", STEP: "step", REFUSAL: "refusal",
+  /* R21: a carried state the local arm, which makes its own data, could not reach */
+  STATE: "state",
   /* R5: a role signed in that `whoami` does not answer as that role, or acts only an administrator is drawn not drawn */
   ROLE: "role",
   /* R6: a working screen the design mock does not draw, and the limits of a live page (design.mjs' LIMIT) */
@@ -25,7 +28,13 @@ export const FAIL = Object.freeze({ REFUSED: "refused", HTTP: "http", SCRIPT: "s
   /* R7: `admin` drawn as a person's name or handle */
   ADMIN_NAME: "admin-name",
   /* R17: a page that says "group" for a team */
-  GROUP: "group" });
+  GROUP: "group",
+  /* R23: a page numbered 0 drawn */
+  PAGE_ZERO: "page-zero",
+  /* R28: a title, an explanation, a weight mark, a name or a graph the DEC-340 checks (checks.mjs) fail */
+  DEC340: "dec340",
+  /* R27: a sentence that escaped the word list in the pseudo-locale walk */
+  PSEUDO: "pseudo" });
 
 const slugOf = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
@@ -41,7 +50,7 @@ export function documentKind(html) {
 /* R8 (D29): the refusals an answer carries, anywhere in it: `[{code, how, at}]`, `at` the path to the object that
    carries it ("" at the top). A refusal is an object holding `ok: false`, `started: false`, `dispatched: false` or
    `found: false`, or a non-empty `withheld`; its code is its own `code` or `reason`, else what it says. Each object
-   counts once, under its first sign. */
+   counts once, under its first sign. A reading's own `found` (whether the reader found entities) is not one (K4486). */
 export const REFUSAL_FLAGS = Object.freeze(["ok", "started", "dispatched", "found"]);
 export function refusalsIn(body) {
   const out = [];
@@ -50,7 +59,10 @@ export function refusalsIn(body) {
     if (!v || typeof v !== "object" || depth > 64 || seen.has(v)) return;
     seen.add(v);
     if (Array.isArray(v)) { v.forEach((x, i) => visit(x, `${at}[${i}]`, depth + 1)); return; }
-    const flag = REFUSAL_FLAGS.find((k) => v[k] === false);
+    /* K4486: inside a reading (`{content_type, reader_version, found, entities, …}`), `found` is the reader's statement of whether it
+       found entities: data, never a refusal. Elsewhere `found: false` says the op found no subject. */
+    const reading = v.reader_version !== undefined && Array.isArray(v.entities);
+    const flag = REFUSAL_FLAGS.find((k) => v[k] === false && !(reading && k === "found"));
     const w = v.withheld;
     const withheld = w === true || (Array.isArray(w) && w.length > 0) || (w && typeof w === "object" && !Array.isArray(w) && Object.keys(w).length > 0)
       || (typeof w === "string" && w.length > 0);
@@ -89,6 +101,13 @@ export class Walk {
     mkdirSync(out, { recursive: true });
   }
 
+  /* R20 (K3717, K3747): a step that needs the assistant, which does not work, is reported as not walked, never as failed */
+  notWalked(name) {
+    const note = localize("journey-check.walker.name_not_walked_the_assistant", "{name}: not walked, the assistant does not work (K3717)", { name: String(name) });
+    this.notes.push(note);
+    return note;
+  }
+
   keepSecret(v) { if (typeof v === "string" && v.length >= 6) this.secrets.push(v); return v; }
   redact(s) { let t = String(s ?? ""); for (const v of this.secrets) t = t.split(v).join("[secret]"); return t; }
   fail(kind, detail) {
@@ -100,11 +119,17 @@ export class Walk {
   /* Watch one page (each browser context's pages are watched as they open). */
   watch(page) {
     page.on("pageerror", (e) => this.fail(FAIL.SCRIPT, `${this.redact(page.url())}: ${e.message}`));
-    page.on("response", (res) => this.pending.push(this.#onResponse(res).catch(() => {})));
+    /* answers are judged in the order they arrive: a reading's pending state (`#pendingReadings`) is learned from the answer before it */
+    page.on("response", (res) => { const p = this.#answers.then(() => this.#onResponse(res)).catch(() => {}); this.#answers = p; this.pending.push(p); });
     /* JOURNEY_DEBUG=1 prints each request's method, address and status, never a body or a header */
     if (process.env.JOURNEY_DEBUG) page.on("response", (res) => process.stderr.write(this.redact(`${res.status()} ${res.request().method()} ${res.url().replace(/#.*$/, "")}`) + "\n"));
     return page;
   }
+
+  /* K4473 (RC-R1): the digests of captures the walk made whose answer stated the reading pending (`reading_pending: true`), until a
+     reading of the digest is read; `op=reading`'s `found: false` for one of these is not a refusal. */
+  #pendingReadings = new Set();
+  #answers = Promise.resolve();
 
   async #onResponse(res) {
     const url = new URL(res.url());
@@ -121,27 +146,39 @@ export class Walk {
     if (url.searchParams.get("op") === "whoami" && body && body.ok === true && body.result && body.result.session) this.whoami = body.result;
     /* R8: every refusal the answer carries, at any depth, whatever its status. One the step expects is excused by its
        code wherever it sits, and excuses the answer's status; each other is one failure, naming where it sits. */
-    const refusals = refusalsIn(body);
+    const op = url.searchParams.get("op");
+    const inner = body && typeof body === "object" && body.result && typeof body.result === "object" ? body.result : body;
+    if (inner && inner.reading_pending === true) {
+      const sha = inner.document?.capture?.sha256 ?? inner.capture?.sha256;
+      if (typeof sha === "string" && /^[0-9a-f]{64}$/.test(sha)) this.#pendingReadings.add(sha);
+    }
+    const readSha = op === "reading" ? url.searchParams.get("sha256") : null;
+    const pendingRead = readSha !== null && this.#pendingReadings.has(readSha);
+    if (pendingRead && inner && (inner.found === true || inner.reading?.found === true)) this.#pendingReadings.delete(readSha);
+    const refusals = refusalsIn(body).filter((r) => !(pendingRead && r.how === "found: false"));
     const matches = (e, code) => (e instanceof RegExp ? e.test(code) : e === code);
     /* an expectation is a code (a string or a pattern), or `{at, code}`: that code where its path matches `at` */
     const expected = (r) => expect.some((e) => (e && typeof e === "object" && !(e instanceof RegExp)
       ? e.at.test(r.at) && matches(e.code, r.code) : matches(e, r.code)));
     const unexcused = refusals.filter((r) => !expected(r));
     const why = (r) => (r.check || r.said ? ` [${[r.check, r.said].filter(Boolean).join(": ")}]` : "");
-    for (const r of unexcused)
-      this.fail(FAIL.REFUSED, (r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
-        : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`) + why(r));
+    for (const r of unexcused) {
+      const vars = { where: String(where), code: String(r.code), status: String(res.status()), how: String(r.how), at: String(r.at || "its top") };
+      this.fail(FAIL.REFUSED, (r.at === "" && r.how === "ok: false"
+        ? localize("journey-check.walker.where_answered_ok_false_code", "{where} answered ok: false ({code}, HTTP {status})", vars)
+        : localize("journey-check.walker.where_answered_how_at_code", "{where} answered {how} at {at} ({code}, HTTP {status})", vars)) + why(r));
+    }
     /* JOURNEY_DEBUG=bodies prints each answer that carries a refusal, JOURNEY_DEBUG_OP=<op> every answer of that op,
        redacted, to diagnose them; never into the report */
     if (process.env.JOURNEY_DEBUG_OP && url.searchParams.get("op") === process.env.JOURNEY_DEBUG_OP)
-      process.stderr.write(`BODY ${where} (HTTP ${res.status()}, ${type}): ${this.redact(body ? JSON.stringify(body) : "(not JSON)").slice(0, 6000)}\n`);
+      process.stderr.write(localize("journey-check.walker.body_where_http_status_type", "BODY {where} (HTTP {status}, {type}): {redact}\n", { where: String(where), status: String(res.status()), type: String(type), redact: String(this.redact(body ? JSON.stringify(body) : "(not JSON)").slice(0, 6000)) }));
     if (process.env.JOURNEY_DEBUG === "bodies" && refusals.length) process.stderr.write(`BODY ${where}: ${this.redact(JSON.stringify(body)).slice(0, 4000)}\n`);
     const excused = refusals.some((r) => expected(r)) || (!refusals.length && expect.includes(res.status()));
     if (!unexcused.length && res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
       const kind = documentKind(await res.text().catch(() => null));
-      if (kind === "setup-page") this.fail(FAIL.OLD_PAGE, `${url.pathname} is the setup page`);
-      else if (kind !== "interface") this.fail(FAIL.OLD_PAGE, `${url.pathname} is not the interface page`);
+      if (kind === "setup-page") this.fail(FAIL.OLD_PAGE, localize("journey-check.walker.pathname_is_the_setup_page", "{pathname} is the setup page", { pathname: String(url.pathname) }));
+      else if (kind !== "interface") this.fail(FAIL.OLD_PAGE, localize("journey-check.walker.pathname_is_not_the_interface", "{pathname} is not the interface page", { pathname: String(url.pathname) }));
     }
   }
 
@@ -168,17 +205,24 @@ export class Walk {
       this.group ||= { rule: designRule() };
       this.group.patterns ||= senseKeys({ rule: this.group.rule }).flatMap((k) => { try { return [wordPattern(k)]; } catch { return []; } });
       const found = groupIn(withoutGroupSense(text, this.group.patterns), { rule: this.group.rule });
-      for (const f of found.slice(0, 5)) this.fail(FAIL.GROUP, `${url.pathname} says group for a team: …${f.at}…`);
+      for (const f of found.slice(0, 5)) this.fail(FAIL.GROUP, localize("journey-check.walker.pathname_uses_the_retired_word", "{pathname} uses the retired word for a team: …{at}…", { pathname: String(url.pathname), at: String(f.at) }));
     } catch (e) {
-      if (!this.groupUnread) { this.groupUnread = true; this.fail(FAIL.GROUP, `the design's rule for "group" could not be read: ${e.message.split("\n")[0]}`); }
+      if (!this.groupUnread) { this.groupUnread = true; this.fail(FAIL.GROUP, localize("journey-check.walker.the_designs_rule_for_the_retired", "the design's rule for the retired word could not be read: {v1}", { v1: String(e.message.split("\n")[0]) })); }
     }
+  }
+
+  /* R23: no screen draws a page numbered 0, as no screen draws a slug (R6). */
+  async #scanPageZero(page) {
+    let url, text;
+    try { url = new URL(page.url()); text = await page.evaluate(() => (document.body ? document.body.innerText : "")); } catch { return; }
+    for (const f of pageZero(text).slice(0, 5)) this.fail(FAIL.PAGE_ZERO, localize("journey-check.walker.pathname_draws_a_page_numbered_0", "{pathname} draws a page numbered 0: …{at}…", { pathname: String(url.pathname), at: String(f.at) }));
   }
 
   /* A request the walk's router refused: an address outside the walk. */
   foreign(url) {
     const u = new URL(url);
     if (u.host.split(".")[0] === LEGACY_UI_WORKER) return this.fail(FAIL.OLD_PAGE, `${u.host} is legacy-ui`);
-    return this.fail(FAIL.ADDRESS, `${u.host}${u.pathname} is outside the walk`);
+    return this.fail(FAIL.ADDRESS, localize("journey-check.walker.host_pathname_is_outside_the", "{host}{pathname} is outside the walk", { host: String(u.host), pathname: String(u.pathname) }));
   }
 
   /* One step: `fn(page)` performs it; `expect` names the refusal codes (a string or a pattern, or `{at, code}` for a code
@@ -193,6 +237,7 @@ export class Walk {
     await settle(page);
     await Promise.all(this.pending.splice(0));
     await this.#scanGroup(page);
+    await this.#scanPageZero(page);
     try { await page.screenshot({ path: join(this.out, file), fullPage: true,
       mask: this.mask.map((sel) => page.locator(sel)) }); } catch { /* a closed page has none */ }
     const failed = this.failures.filter((f) => f.step === label && f.journey === this.journey);
@@ -203,11 +248,11 @@ export class Walk {
   }
 
   report() {
-    const lines = [`journey-check (${this.arm}): ${this.steps.length} steps, ${this.failures.length} failures`];
+    const lines = [localize("journey-check.walker.journey_check_arm_length_steps", "journey-check ({arm}): {length} steps, {length_2} failures", { arm: String(this.arm), length: String(this.steps.length), length_2: String(this.failures.length) })];
     for (const s of this.steps) lines.push(`${s.ok ? "ok  " : "FAIL"} ${s.journey} · ${s.label} (${s.screenshot})`);
-    for (const f of this.failures) lines.push(`  ${f.kind}: ${f.journey} · ${f.step ?? "between steps"}: ${f.detail}`);
+    for (const f of this.failures) lines.push(localize("journey-check.walker.kind_journey_v1_detail", "  {kind}: {journey} · {v1}: {detail}", { kind: String(f.kind), journey: String(f.journey), v1: String(f.step ?? "between steps"), detail: String(f.detail) }));
     for (const n of this.notes) lines.push(`note: ${n}`);
-    if (this.pairs.length) lines.push(`${this.pairs.length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):`, ...this.pairs.map((p) => `  ${p}`));
+    if (this.pairs.length) lines.push(localize("journey-check.walker.length_pairs_live_beside_design", "{length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):", { length: String(this.pairs.length) }), ...this.pairs.map((p) => `  ${p}`));
     const text = this.redact(lines.join("\n")) + "\n";
     writeFileSync(join(this.out, "report.txt"), text);
     writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures, pairs: this.pairs, notes: this.notes }, null, 1)));
@@ -216,7 +261,7 @@ export class Walk {
 }
 
 export class StepFailed extends Error {
-  constructor(label, cause) { super(`step "${label}" failed: ${cause.message.split("\n")[0]}`); this.cause = cause; }
+  constructor(label, cause) { super(localize("journey-check.walker.step_label_failed_v1", "step \"{label}\" failed: {v1}", { label: String(label), v1: String(cause.message.split("\n")[0]) })); this.cause = cause; }
 }
 
 /* Settled: the document loaded, the network quiet for a moment, no loading state drawn. */

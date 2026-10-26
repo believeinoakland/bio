@@ -13,11 +13,19 @@
    whose capture no bundle holds (pulled through the doorbell's own route) is promoted by this door's next pull. */
 import { createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* The id's stem is record-core's `INFO-<year>-NNNN`; the slug says where the material came from. */
 export const PULL_BUNDLE_SLUG = "doorbell-knock";
 
 const hexOf = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/* The knock's instant as a date a member reads ("30 September 2026"), from its ISO instant; an instant that does not parse is
+   given as written, never a knock id. */
+function dateOf(instant) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(instant ?? ""));
+  return m && MONTHS[+m[2] - 1] ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : String(instant ?? "");
+}
 const enc = (text) => {
   const b = new TextEncoder().encode(text);
   return { text, bytes: b.length, sha256: createSha256().update(b).hex() };
@@ -29,7 +37,9 @@ const enc = (text) => {
 function filing(record, doc, { knockId, by, identity, viewer, at }) {
   const cap = doc.capture || {};
   const id = `${record.allocId("INFO", at.slice(0, 4)).id}-${PULL_BUNDLE_SLUG}`;
-  const title = `Material handed in at the doorbell (${knockId})`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+  /* R7 (K5129): the title names the knock's instant, never its id (`screens-intake` R32 (3)): every list draws the stored title. */
+  const date = dateOf((doc.source && doc.source.receipt && doc.source.receipt.received) || doc.retrieved || at);
+  const title = localize("store-door.title.material_handed_doorbell_on", "Material handed in at the doorbell on {date}", { date }).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
   const md = ["---",
     `id: ${id}`, "object_type: information", "schema: information@2",
     `title: ${JSON.stringify(title)}`, "current_state: collected", "prior_state: null",
@@ -43,12 +53,9 @@ function filing(record, doc, { knockId, by, identity, viewer, at }) {
     `  retrieved: ${doc.retrieved || at}`,
     "monitoring:", "  enabled: false", "  frequency: none",
     "---", "", "## Summary", "",
-    `Material handed to the group at its doorbell as knock ${knockId} by an unnamed knocker, and brought into the `
-    + `record by ${by}. Its bytes are \`${doc.file}\`, exactly as received; nothing here summarises them.`, "",
+    localize("store-door.pull.material_handed_to_the_team", "Material handed to the team at its doorbell as knock {knockId} by an unnamed knocker, and brought into the record by {by}. Its bytes are `{file}`, exactly as received; nothing here summarises them.", { knockId: String(knockId), by: String(by), file: String(doc.file) }), "",
     "## Provenance Notes", "",
-    `Received, not fetched from any address: its digest was taken as it arrived at the doorbell. The knocker's note `
-    + `travels in data/provenance.json as the knocker's words, not as evidence of their truth. Filed at collected and `
-    + `never higher: releasing it is a named member's decision.`, "",
+    word("store-door.md.received_fetched_address"), "",
     "## Session Log", "",
     `### Session ${at} | Collected | ${by}`,
     `Trigger: knock ${knockId} brought in`,
@@ -88,7 +95,19 @@ function promoteOrFault(deps, doc, who) {
 
 const bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
 
-/** R7: `op=inboxpull`. `deps` is `{doorbell, promotion, record, provenance}` of one record (T42, N826: the doorbell's
+/* R18 (fix round 4b, F6; K4487): the pull files a document the doorbell built with no reading, and `projectPromotion`
+   skips a document with none, so the answer names the document's digest and whether it is still unread: the door reads a
+   pending one (control-plane R123). A document carrying a reading, or one `deps.extraction` already holds a reading for,
+   is not pending. */
+function readingOfAnswer(deps, answer) {
+  const sha = (answer.capture && answer.capture.sha256) || (answer.document && answer.document.capture && answer.document.capture.sha256) || null;
+  if (typeof sha !== "string" || !sha) return {};
+  const held = (answer.document && answer.document.reading)
+    || (deps.extraction && typeof deps.extraction.readingOf === "function" && deps.extraction.readingOf(sha));
+  return { sha, reading_pending: !held };
+}
+
+/** R7: `op=inboxpull`. `deps` is `{doorbell, promotion, record, provenance, extraction?}` of one record (T42, N826: the doorbell's
  *  instance, `doorbellOf`, never capture's copy); `by`, `identity` and `viewer` are the control plane's stamps. Answers
  *  the doorbell's pull answer with `bundle: {bundleId, bundleSha}` beside it, or the first refusal, with nothing written.
  *  `resolve` marks `op=inboxresolve` at `pulled` (doorbell R3, DEC-88 (2)): the same pull reached as the doorbell's
@@ -104,22 +123,21 @@ export async function pullAndFile(deps, { knockId, by, identity, viewer, resolve
   const who = { knockId, by, identity, viewer, at };
   /* The pull and its promotion, one transaction (doorbell R13's `within`): a refusal of either writes nothing. */
   const within = (doc) => promoteOrFault(deps, doc, who);
-  const pulled = await (resolve ? doorbell.inboxResolve({ knockId, status: "pulled", by, reason, at, within })
-                                : doorbell.pullKnock({ knockId, by, at, within }));
+  const pulled = await (resolve ? doorbell.inboxResolve({ knockId, status: "pulled", by, reason, at, within, viewer })
+                                : doorbell.pullKnock({ knockId, by, at, within, viewer }));
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
-  if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
+  if (!pulled.existed) return { ...answer, ...readingOfAnswer(deps, answer), bundle: bundleOf(filed) };
   /* A knock already pulled: its bundle is the one holding its capture. */
   const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
-  if (home) return { ...answer, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
+  if (home) return { ...answer, ...readingOfAnswer(deps, answer), bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
   /* A pulled knock no bundle holds (pulled through the doorbell's own route, or before N380): its document is promoted now,
      in a transaction of its own; the knock is already pulled, so a refusal leaves it as it was. */
   if (!pulled.document) return { ...answer, bundle: null };
   let again;
   try { again = promoteIn(deps, pulled.document, { ...who, at: pulled.pulled_at || at }); }
-  catch { again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: "the promotion did not complete." }; }
-  if (again && again.ok === true) return { ...answer, bundle: bundleOf(again) };
+  catch { again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: localize("store-door.pull.the_promotion_did_not_complete", "the promotion did not complete.") }; }
+  if (again && again.ok === true) return { ...answer, ...readingOfAnswer(deps, answer), bundle: bundleOf(again) };
   return { ...(again || { ok: false, reason: "PROMOTE_FAILED" }), ok: false, knockId,
-           detail: `the knock was already brought in, and its record was not filed; nothing was written. `
-                 + String((again && again.detail) || "").slice(0, 300) };
+           detail: localize("store-door.pull.the_knock_was_already_brought", "the knock was already brought in, and its record was not filed; nothing was written. {String}", { String: String(String((again && again.detail) || "").slice(0, 300)) }) };
 }

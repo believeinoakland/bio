@@ -4,12 +4,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V } from "./fixture.mjs";
 import { SCREEN_REGISTRY, CIVICSMITH_LIBRARY } from "../../../src/wizard-scripts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* a local op table: every act and owed op the carried registry names, so the carried library is registered whole */
 const OPS = [...new Set(SCREEN_REGISTRY.flatMap((s) => [...s.acts, ...(s.owed || []).map((o) => o.op)]))];
 const ADMIN_ACTS = ["groupdescriptionset", "memberadd", "membercaps", "websitekeycreate"];
 const ADMIN_SCREENS = ["updates"];
-const SETUP = ["Say who your team is", "Invite a member", "Update your team's Civicsmith"];   /* DEC-281's team pass renamed two (R42) */
+const SETUP = [word("wizard.WIZ-4d42b0233d48913f.name"), word("wizard.WIZ-8e7e2fac33d069f8.name"), word("wizard.WIZ-7de505135a9ecd4f.name")];   /* DEC-281's team pass renamed two (R42) */
 const named = (r) => r.scripts.map((s) => s.name);
 
 function world(extra = { adminActs: ADMIN_ACTS, adminScreens: ADMIN_SCREENS }) {
@@ -26,7 +27,7 @@ test("R40 a plain member's startFrom omits \"Say who your team is\", \"Invite a 
     assert.ok(!named(member).includes(n), `${n} is not offered to a plain member`);
     assert.ok(named(admin).includes(n), `${n} is offered to an administrator`);
   }
-  for (const n of ["Get a record", "Connect your Claude account", "Your ties"]) assert.ok(named(member).includes(n), `${n} stays offered to a plain member`);
+  for (const n of [word("wizard.WIZ-cb0ad18a17a04233.name"), word("wizard.WIZ-74328804ddae3503.name"), "Your ties"]) assert.ok(named(member).includes(n), `${n} stays offered to a plain member`);
   assert.ok(named(member).length < named(admin).length);
   const ids = new Set(CIVICSMITH_LIBRARY.filter((e) => SETUP.includes(e.name)).map((e) => e.id));
   for (const d of member.doors) for (const id of d.scripts) assert.ok(!ids.has(id), "no door of a plain member names a setup script");
@@ -46,5 +47,5 @@ test("R40 with no administrator acts registered nothing is withheld, and the reg
   assert.ok(SETUP.every((n) => named(w.wz.startFrom({ viewer: V("frank") })).includes(n)));
   const v = world({ adminActs: ["groupdescriptionset"], adminScreens: [] });
   const r = named(v.wz.startFrom({ viewer: V("frank") }));
-  assert.ok(!r.includes("Say who your team is") && r.includes("Invite a member") && r.includes("Update your team's Civicsmith"));
+  assert.ok(!r.includes(word("wizard.WIZ-4d42b0233d48913f.name")) && r.includes(word("wizard.WIZ-8e7e2fac33d069f8.name")) && r.includes(word("wizard.WIZ-7de505135a9ecd4f.name")));
 });

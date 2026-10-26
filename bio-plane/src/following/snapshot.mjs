@@ -103,3 +103,27 @@ export function diffRows(before, after, key) {
   for (const [k, row] of a.by) if (!doubtful.has(k) && !b.by.has(k)) removed.push({ key: k, row });
   return { added, removed, changed, undetermined };
 }
+
+/** R10 (G46): a portal snapshot's rows JSON up to this many bytes is stored whole in `portal_snapshots.rows`; above it the
+ *  text lies in `portal_snapshot_parts` and `rows` holds `{parts, bytes, rows}`. A stored value stays under 1 MiB (K4639). */
+export const PORTAL_ROWS_INLINE_MAX = 524288;
+/** R10 (G46): characters in one piece (256 Ki; at most 3 bytes each, so a piece is under 1 MiB), never splitting a surrogate pair. */
+export const PORTAL_PART_CHARS = 262144;
+
+/** R10 (G46): how a snapshot's rows are stored: `{value, pieces}`. At or below `PORTAL_ROWS_INLINE_MAX` bytes of JSON, `value`
+ *  is that JSON byte for byte and `pieces` is empty; above it, `value` is the marker `{"parts","bytes","rows"}` and `pieces`
+ *  are the JSON in order, each at most `PORTAL_PART_CHARS` characters and none ending in half a surrogate pair. */
+export function storedRows(rows) {
+  const text = JSON.stringify(rows);
+  const size = new TextEncoder().encode(text).length;
+  if (size <= PORTAL_ROWS_INLINE_MAX) return { value: text, pieces: [] };
+  const pieces = [];
+  for (let i = 0; i < text.length;) {
+    let end = Math.min(i + PORTAL_PART_CHARS, text.length);
+    const last = text.charCodeAt(end - 1);
+    if (end < text.length && last >= 0xD800 && last <= 0xDBFF) end--;
+    pieces.push(text.slice(i, end));
+    i = end;
+  }
+  return { value: JSON.stringify({ parts: pieces.length, bytes: size, rows: rows.length }), pieces };
+}

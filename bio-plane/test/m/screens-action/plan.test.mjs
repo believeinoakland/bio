@@ -3,7 +3,9 @@
    help, its run and refusals, the plan's titles, its picked references and its categories. Every sentence is asserted by
    its key through `setup-words` (R19): no test here holds a sentence's English. */
 import test from "node:test";
+import { storeSilentParsed } from "../answer-envelope/fixtures.mjs";
 import assert from "node:assert/strict";
+import { actionWorld, openIn, planOn, untitledQuestion } from "./world-D.mjs";
 import { open, main, text, ops, press, last, ok, button, fill, refusedIn, beside, W, D, PAGE, hasWord, DATA_PLANE, ROUTES, PLAN, PLAN_ID, PROPOSALS, ESC, DET, PROJECT,
   QUESTION, QUESTION_TITLE, PROJECT_QUESTIONS, DETERMINATIONS } from "./page.mjs";
 
@@ -229,6 +231,7 @@ test("R13: a closed plan offers no ask; the ask is drawn only while the assistan
 test("R18 (D5, D29): an answer of ok: true that carries started: false (no run already asked), dispatched: false or withheld is drawn as its refusal, never as a run looking for options", async () => {
   const carried = [
     ["started: false", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "AI_RUN_MODE_NOT_DEPLOYED", translation: "Planning runs are not deployed." }, W("refusal.AI_RUN_MODE_NOT_DEPLOYED")],
+    // fixtures-generic: CODE_NO_ONE_HAS_A_WORD_FOR (a code the design has no word for, on purpose)
     ["started: false, a code with no design word", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "CODE_NO_ONE_HAS_A_WORD_FOR", translation: "Planning runs are not deployed." }, "Planning runs are not deployed."],
     ["dispatched: false", { ok: true, plan: PLAN_ID, run: RUN, started: true, dispatched: false, code: "AI_NO_ACCOUNT", translation: "No account pays for this run." }, W("refusal.AI_NO_ACCOUNT")],
     ["withheld", { ok: true, plan: PLAN_ID, run: RUN, started: true, withheld: "AGENT_WORKER_UNBOUND", translation: "The worker is not bound." }, W("refusal.AGENT_WORKER_UNBOUND")],
@@ -257,7 +260,8 @@ test("R18: 'looking for options' is drawn only while airun answers the run as ru
   await press(ended, "planask", { reason: "ask" });
   unsaid(ended, "screen.plan.ask.running");
   said(ended, "screen.plan.ask.ended");
-  const unanswered = await open(ROUTES.plan, asking({ status: "running" }, { more: { airun: { status: 502, json: { ok: false, reason: "STORE_DID_NOT_ANSWER" } } } }));
+  const silent = async (op) => { const { status, body } = await storeSilentParsed(op); return { status, json: body }; };
+  const unanswered = await open(ROUTES.plan, asking({ status: "running" }, { more: { airun: await silent("airun") } }));
   await press(unanswered, "planask", { reason: "ask" });
   unsaid(unanswered, "screen.plan.ask.running");
   unsaid(unanswered, "screen.plan.ask.ended");
@@ -278,7 +282,12 @@ test("R18 (D20): the plan names its project and its questions by their titles, e
   // the questions are read from the project's own list, once
   assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project), [PROJECT]);
   // control: a question whose title the record does not give is not named by its reference
-  const none = await open(ROUTES.plan, { ...DATA_PLANE, projectquestions: ok({ ok: true, project: PROJECT, items: [], cursor: null }) });
+  const { world, me, project } = await actionWorld();
+  const untitled = await untitledQuestion(world, me, project);
+  const held = await planOn(me, project, untitled, "A plan on a question with no title");
+  assert.equal((await me.read("projectquestions", { query: { project } })).items.find((x) => x.inquiry === untitled).title, null, "the record gives it no title");
+  const none = await openIn(world, me, `/app/plan/${held}`);
+  assert.ok(text(none).includes("A plan on a question with no title"), "the real plan is drawn");
   assert.doesNotMatch(text(none), /INQ-|inquiry:/);
 });
 
@@ -287,7 +296,7 @@ test("R18: a reference is picked from a list the record answers, never typed; wh
   const field = p.doc.getElementById("plan-subject-id");
   assert.equal(field.tagName.toLowerCase(), "select", "a choice, not a typed field");
   const offered = field.querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent.trim()]);
-  assert.deepEqual(offered, [["inquiry:INQ-2026-9999999999999999", "Who signed the closure memo?"], [`outcome:${DET}#STD-2`, "The 2024 rent adjustment · STD-2"]],
+  assert.deepEqual(offered, [["inquiry:INQ-2026-9999999999999999", "Who signed the closure memo?"], [`outcome:${DET}#STD-2`, `${D("2024-03-01")} · City Administrator, City · Lease §9.1`]],
     "the project's other question, and the determination's other standard: the matters the plan holds are left out");
   assert.equal(p.doc.getElementById("plan-subject-standard"), null, "the standard is picked with the determination, not typed");
   await press(p, "plansubjectadd", { values: { "plan-subject-id": "inquiry:INQ-2026-9999999999999999", "plan-subject-reason": "it decides the memo" } });
@@ -308,7 +317,8 @@ test("R18: categories are drawn by their words, never as lowercase codes: a cate
   const story = cells.find((c) => c.includes("Story with a reporter"));
   assert.ok(story.includes(W("screen.plan.category.other")));
   assert.ok(!story.includes("zzcode"));
-  for (const c of ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"]) assert.ok(hasWord(`screen.plan.category.${c}`), c);
+  for (const c of ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"]) assert.ok(hasWord(`screen.plan.category.${c}`) && hasWord(`screen.plan.option.kind.${c}`), c);
+  // DEC-387 (B424): the add form's options read the design's `screen.plan.option.kind.*` rows
   const choices = p.doc.getElementById("plan-opt-category").querySelectorAll("option").map((o) => o.textContent.trim());
-  assert.deepEqual(choices, ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"].map((c) => W(`screen.plan.category.${c}`)));
+  assert.deepEqual(choices, ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"].map((c) => W(`screen.plan.option.kind.${c}`)));
 });

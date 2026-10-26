@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUT, BOSS, MACHINE, PRESET_PERSONS } from "./fixture.mjs";
 import { SHIPPED_CHECKS, GATE_RATE_MAX, HINT_MARK, peopleOps } from "../../../src/people/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const span = (from, to) => ({ from, to });
 const RD = { from: { line: "holds", sector: "government" }, to: { line: "holds" }, join: { lines: ["oversees", "contracts_with"] }, order: { after: true, within_days: 730 }, hops: 0 };
@@ -208,7 +209,7 @@ test("R24 (T35; DEC-131) each answered result, wherever it reaches a member (op=
   assert.equal(told.length, 1);
   const sentence = "Hint · machine work. A check noticed this hint, a pattern in held facts, worth a look. It is not a finding and says nothing about anyone.";
   for (const r of [answered[0], told[0]]) {
-    assert.equal(r.mark, "Hint · machine work", "DEC-131's words, exactly");
+    assert.equal(r.mark, word("mark.hint.label"), "DEC-131's words, exactly");
     assert.equal(r.mark, HINT_MARK);
     assert.equal(r.detail, sentence);
     assert.ok(r.detail.startsWith(r.mark));

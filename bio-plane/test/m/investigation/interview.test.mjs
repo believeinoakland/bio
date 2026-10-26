@@ -6,6 +6,7 @@ import { world, ANN, BOB, DAN, OUT, AI, P1, P2, PH, Q1 } from "./fixture.mjs";
 import { INTAKE_QUESTIONS as SKILLS_QUESTIONS } from "../../../src/skilldoctrine.mjs";
 import { INTAKE_QUESTIONS, INVESTIGATION_CHECKS } from "../../../src/investigation/index.mjs";
 import { inquiryMd } from "../steps/fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SIX = ["The campus closed.", "The school district, at its board.", "Since June.", "One school year, the district said.", "A newsletter.", "The campus reopened."];
 
@@ -40,8 +41,8 @@ test("R10: milestones, reports, the interview, claims and proposals are working 
 test("R11: INTAKE_QUESTIONS is skills' one frozen list of six, read from there and never re-listed; the by-hand page asks exactly these", () => {
   assert.equal(INTAKE_QUESTIONS, SKILLS_QUESTIONS, "the same object: read from skills, not a copy");
   assert.equal(Object.isFrozen(INTAKE_QUESTIONS), true);
-  assert.deepEqual([...INTAKE_QUESTIONS], ["what happened", "which public body, and where", "since when",
-    "what was promised or expected, and by whom", "what you already have", "what you want to come of it"]);
+  assert.deepEqual([...INTAKE_QUESTIONS], ["what happened", word("skilldoctrine.intake.which_body"), "since when",
+    word("skilldoctrine.intake.promised"), word("skilldoctrine.intake.already_have"), word("skilldoctrine.intake.want")]);
   const w = world();
   const f = w.inv.interviewForm({ project: P1, viewer: BOB });
   assert.deepEqual(f.questions.map((q) => q.question), [...SKILLS_QUESTIONS]);
@@ -86,7 +87,7 @@ test("R12: an interview is never evidence or a leg target: the check registered 
   const r = w.inv.check({ docFm: docFm(a.step) });
   assert.equal(r.reason, "BASIS_REFUSED");
   assert.deepEqual(r.findings.map((f) => [f.code, f.check, f.target]), [["INTERVIEW_NOT_A_LEG", "C-146.26", a.step]]);
-  assert.equal(r.findings[0].translation, "An interview is a member's own account, which says where to look and is never what a finding rests on. Rest the finding on what was found in the record. Nothing was written.", "its translation kept");
+  assert.equal(r.findings[0].translation, word("refusal.INTERVIEW_NOT_A_LEG"), "its translation kept");
   assert.equal(INVESTIGATION_CHECKS.INTERVIEW_NOT_A_LEG.check, "C-146.26");
   assert.equal(INVESTIGATION_CHECKS.NARRATIVE_NOT_A_LEG, undefined, "hypotheses' code (a shared note) is not minted here");
   assert.equal(JSON.stringify(r).includes("NARRATIVE_NOT_A_LEG"), false, "the negative control: the old code is not answered");

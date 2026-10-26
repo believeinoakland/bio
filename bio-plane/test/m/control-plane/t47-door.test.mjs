@@ -19,7 +19,7 @@ import { credentialsOps } from "../../../src/credentials/index.mjs";
 
 const { OPS } = O;
 const U = new URL("http://do/x");
-const routesOf = (f) => Object.keys(f(null, U, null, {}));
+const routesOf = (f) => Object.keys(f({}, U, null, {}));
 /* the stamps a caller tries to set on every request below: R17's in the address (`QUERY_STAMPS`, every one deleted for
    every op) and in the body (`BODY_STAMPS`); `principal`, set by the door for the run productions (`capturerequest`) */
 const FORGED_QUERY = { viewer: FORGED, identity: FORGED, author: FORGED, by: FORGED, actor: FORGED, who: FORGED, origin: FORGED,
@@ -229,7 +229,7 @@ test("R89 (K3104, K3137; op-declarations R61; people R37): `peopledirectory` rea
 /* ================================================================ R79: clockpropose (K3145) */
 
 test("R79 (T47; K3145; action-clocks R2): `clockpropose` is declared and reaches its store route through the door for any credential its row admits, `proposer` the door's label (a session its member, a machine `class:<cls>`) and `viewer` its sight, none taken from the caller; the route is the door's own map's (`owner-ops.mjs`), so no route is `unknown op`", async () => {
-  const { controlPlaneOwnerOps } = await import("../../../src/control-plane/owner-ops.mjs");
+  const { ownerOps: controlPlaneOwnerOps } = await import("../../../src/store-assembly/owner-ops.mjs");
   assert.ok(OPS.clockpropose, "declared");
   assert.ok(Object.keys(controlPlaneOwnerOps({}, U, null)).includes("clockpropose"), "a route of the door's own map");
   const { env, S } = world();

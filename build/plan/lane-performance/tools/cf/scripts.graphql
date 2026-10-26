@@ -1,0 +1,6 @@
+{ viewer { accounts(filter:{accountTag:"ACCOUNT"}) {
+  workersInvocationsAdaptive(limit:50, filter:{datetime_geq:"2026-10-23T11:01:00Z", datetime_leq:"2026-10-23T14:00:00Z"}) {
+    dimensions { scriptName status }
+    sum { requests errors subrequests }
+    quantiles { cpuTimeP50 cpuTimeP99 wallTimeP50 wallTimeP99 durationP50 durationP99 }
+  } } } }

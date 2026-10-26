@@ -11,6 +11,8 @@ import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
 import { actionProducersOf } from "../../../src/action-producers/index.mjs";
+import { escalationsDue as escalationsDueFixture } from "../escalation/fixtures.mjs";
+import { planRead as planReadFixture } from "../action-plans/fixtures.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -110,6 +112,21 @@ export function world(fakes = {}) {
   return w;
 }
 
+/* escalation's and action-plans' published fixtures (K4990): their real answers, made by their real code the first time a test
+   asks, shaped by them and never by this file. A test routes an answer to this world's members and projects by naming the
+   fields it changes (`project`, `opened_by`, `id`); every other field is the provider's own. */
+let escalationReal = null, planReal = null;
+const escalationFixture = () => (escalationReal ||= escalationsDueFixture());
+const planFixture = () => (planReal ||= planReadFixture());
+/** escalation R16's answer when no escalation is due. */
+export const noEscalations = () => escalationFixture().none;
+/** escalation R16's answer with one item per argument: the real item, the fields given set over it. */
+export const escalationsAnswer = (...items) => ({ ...escalationFixture().due, items: items.map((x) => ({ ...escalationFixture().due.items[0], ...x })) });
+/** action-plans R6's answer for a plan the viewer sees: the real read, the id and project of this world's plan set over it. */
+export const planAnswer = (id, project) => ({ ...planFixture().read, id, project });
+/** action-plans R1's answer for a plan that is unknown or not seen. */
+export const noSuchPlan = () => planFixture().unknownAnswer;
+
 /** Every provider the producers reach, answering nothing until a test says otherwise. */
 export function defaultFakes() {
   const none = () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null });
@@ -117,10 +134,10 @@ export function defaultFakes() {
     actionClocks: { overdueClocks: none, remindersDue: none, pendingClocks: () => ({ ok: true, before: "9999-12-31", items: [], limit: 500, truncated: false, cursor: null }),
                     remindersFor: ({ action }) => ({ ok: true, action, reminders: [], truncated: false }),
                     calendarFactsRead: () => ({ ok: true, as_of: "2026-09-01", paths: [], actions_limit: 500, truncated: false }) },
-    escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
+    escalation: { escalationsDue: () => noEscalations() },
     actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }),
                    plansToLookAgain: () => ({ ok: true, items: [], limit: 500, truncated: false }),
-                   planRead: ({ id }) => ({ ok: false, reason: "NO_SUCH_PLAN", id }) },
+                   planRead: () => noSuchPlan() },
     planWork: { takeUpsFor: () => ({ ok: true, items: [], truncated: false, cursor: null, limit: 500 }),
                 planReviewsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     /* actions R12's place: the active profiles' combined view, of which this module reads the `time_zone` (R18, R20) */

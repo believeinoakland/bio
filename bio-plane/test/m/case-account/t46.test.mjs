@@ -88,8 +88,6 @@ test("R16 C-153.2 ADVOCACY_NOT_OWN_PROJECT takes its translation from words.json
   const key = "refusal.ADVOCACY_NOT_OWN_PROJECT";
   assert.equal(CASE_ACCOUNT_CHECKS.ADVOCACY_NOT_OWN_PROJECT.translation, WORD(key));
   assert.equal(ADVOCACY_WORDS[key], WORD(key));
-  assert.equal(WORD(key), "Your own text is checked only in your own project: a hidden project set as yours, with you its one "
-    + "member. Nothing was written.");
   assert.deepEqual(Object.keys(ADVOCACY_WORDS), [key], "only the codes words.json holds");
   assert.deepEqual([CASE_ACCOUNT_CHECKS.ADVOCACY_NOT_OWN_PROJECT.check, CASE_ACCOUNT_CHECKS.ADVOCACY_NOT_OWN_PROJECT.where],
                    ["C-153.2", "src/case-account/index.mjs advocacyCheck > is-advocacy-own-project"]);
@@ -110,7 +108,7 @@ test("R16 the keyed refusal reached at the interface answers words.json's words 
   const r = w.cacc.advocacyCheck({ project: TEAM, sentences: TEXT, author: V("alice"), viewer: V("alice") });
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.project],
                    [false, "ADVOCACY_NOT_OWN_PROJECT", "ADVOCACY_NOT_OWN_PROJECT", "C-153.2", WORD("refusal.ADVOCACY_NOT_OWN_PROJECT"), TEAM]);
-  assert.match(r.detail, /Nothing was written\./);
+  assert.equal(r.detail, WORD("refusal.ADVOCACY_NOT_OWN_PROJECT"), "R17: the key's words");
   assert.deepEqual(w.snapshot(), before, "nothing written");
   assert.equal(w.cacc.advocacyCheck({ project: MINE, sentences: TEXT, author: V("alice"), viewer: V("alice") }).ok, true);
 });

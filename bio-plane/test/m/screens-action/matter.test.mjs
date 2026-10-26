@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { open, main, text, ops, press, last, ok, button, W, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, CONSEQUENCES } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, button, W, D, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, CONSEQUENCES, COMPLIANCE_SAYS } from "./page.mjs";
 
 /* N1073 (K3268): the acts the screen draws are read against the declarations that own them, never a list of them written here:
    the design's registry for this screen and `op-declarations`' `OPS`; a state's acts are then checked one by one. (Reading
@@ -22,7 +22,7 @@ test("R6: the determination: each standard, what it requires and what the act di
   const p = await open(AT, DATA_PLANE);
   assert.equal(p.byOp("determination")[0].query.id, DET);
   const t = text(p);
-  for (const s of ["The 2024 rent adjustment", W("screen.matter.by", { actor: "City Administrator, City" }), W("screen.matter.outcome.noncompliant"), W("screen.matter.outcome.compliant"),
+  for (const s of [`vote · ${D("2024-03-01")}`, W("screen.matter.by", { actor: "City Administrator, City" }), W("screen.matter.outcome.noncompliant"), W("screen.matter.outcome.compliant"),
     `${W("screen.matter.requires", { requires: "a council vote" })} · ${W("screen.matter.did", { did: "adjusted without a vote" })}`,
     `${W("screen.matter.requires", { requires: "notice within 30 days" })} · ${W("screen.matter.did", { did: "noticed on day 21" })}`, W("screen.matter.samecare")]) assert.ok(t.includes(s), s);
 });
@@ -47,7 +47,7 @@ test("R6: the escalation: the seven stages, the proposed next stage and its trig
   const t = text(p);
   for (const s of [1, 2, 3, 4, 5, 6, 7].map((n) => W(`screen.matter.stage.${n}`)).concat([
     `${W("screen.matter.proposed", { stage: W("screen.matter.stage.3") })} · its trigger was met 5 days ago`, W("screen.matter.endswhen"),
-    `${W("screen.matter.exit.compliance")} · no live compliant determination`, `${W("screen.matter.exit.consequences")} · not every part addressed`,
+    `${W("screen.matter.exit.compliance")} · ${COMPLIANCE_SAYS}`, `${W("screen.matter.exit.consequences")} · not every part addressed`,
     W("screen.matter.atstage", { stage: W("screen.matter.stage.2") })])) assert.ok(t.includes(s), s);
   assert.equal(main(p).querySelector('[aria-current="step"]').textContent, W("screen.matter.stage.2"));
   assert.ok(main(p).querySelector('a[href^="/app/action/ACTN-"]'));
@@ -56,7 +56,7 @@ test("R6: the escalation: the seven stages, the proposed next stage and its trig
   assert.ok(draws(p, "escalationstoppursuing"));
   assert.equal(drawn(p).length, 3, "an open escalation: these acts and no other");
   assert.ok(!draws(p, "escalationreopen") && !draws(p, "escalationopen"), "control: no reopening, no second opening");
-  assert.ok(button(p, "escalationadvance").textContent.includes(W("screen.matter.advance", { n: "3" })));
+  assert.ok(button(p, "escalationadvance").textContent.includes(W("screen.matter.advance", { stage: W("screen.matter.stage.3") })));
   await press(p, "escalationadvance", { reason: "no reply" });
   assert.deepEqual(last(p, "escalationadvance").body, { id: ESC, to: 3, reason: "no reply" });
   await press(p, "escalationstoppursuing", { reason: "the group moved on" });

@@ -221,6 +221,12 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-ladder > span { flex: 1 1 80px; min-width: 0; padding: 5px 8px; font: 600 var(--t-xs)/1.2 var(--f-sans); color: var(--c-ink);
                     border: 1.5px solid var(--c-rule); background: transparent; border-radius: var(--r-1); }
 .cs-ladder > span:not(.on) { color: var(--c-muted); }
+/* B411 B2: the code draws the ladder as an ordered list; each step is its own box, the step's state on its own line, never printed over its neighbor */
+ol.cs-ladder { list-style: none; margin: 0; padding: 0; }
+.cs-ladder > li { flex: 1 1 120px; min-width: 0; padding: 5px 8px; font: 600 var(--t-xs)/1.3 var(--f-sans); color: var(--c-muted);
+                  border: 1.5px solid var(--c-rule); background: transparent; border-radius: var(--r-1); overflow-wrap: anywhere; }
+.cs-ladder > li.on { color: var(--c-ink); }
+.cs-ladder > li > .meta { display: block; font-weight: 400; }
 .cs-ladder[data-ladder="stage"] > .on { border-color: var(--c-stage); background: color-mix(in srgb, var(--c-stage) 22%, var(--c-surface)); }
 .cs-ladder[data-ladder="ready"] > .on { border-color: var(--c-ready); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c-ready) 26%, var(--c-surface)) 0 6px, color-mix(in srgb, var(--c-ready) 12%, var(--c-surface)) 6px 12px); }
 .cs-ladder[data-ladder="ident"] > .on { border: 1.5px dotted var(--c-ident); background: color-mix(in srgb, var(--c-ident) 18%, var(--c-surface)); }
@@ -319,6 +325,10 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-tip .why { display: block; margin-top: 4px; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; }
 .cs-ref:hover, .cs-ref:focus-visible { color: var(--c-accent-strong); }
+/* DEC-412 (C81; WCAG 2.5.8, the inline exception): a link inside running text (p, li) is exempt from the 44 px target rule, because a 44 px box
+   would overlap the lines above and below it; it still gets padding so its target is at least 24 px high. A stand-alone link or button
+   keeps 44 px (--tap). The selector outweighs the shell's `.cs-main a.cs-ref` 44 px rule, which an inline box cannot honour anyway. */
+.cs-main p a.cs-ref, .cs-main li > a.cs-ref:not(:only-child) { display: inline; padding-block: 3px; min-height: 0; min-width: 0; }
 
 /* ============================================================
    The security screen (K1875, DEC-165): the level against the group's usual, and a map of kinds over time.

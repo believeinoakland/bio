@@ -43,7 +43,7 @@ test("R59 the pure test: a person in no public role the text names (by label or 
   /* negative controls */
   for (const [text, entities, why] of [
     ["Did Janet Roesler sign?", [roe], "not the name as whole words"],
-    ["Did Jane Roe sign?", [{ ...roe, public_role: true }], "a person in a public role"],
+    ["Did Jane Roe sign?", [{ ...roe, public_role: true }], "the public_role flag set"],
     ["Did Jane Roe sign?", [{ ...roe, kind: "body" }], "not a person"],
     ["Was the budget cut?", [roe], "named nowhere"],
     ["Did Jane Roe sign?", [], "no facts"]])

@@ -5,9 +5,10 @@
    control (K874). Providers are fakes in their requirements' shapes; membership is real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
+import { world, byId, NOW, iso, page, ofKind, DAY, day, planAnswer } from "./world.mjs";
 import { WORD, FILLED } from "./words.mjs";
-import { ACTION_WORDS, WORDS_CANON, KEPT } from "../../../src/action-producers/index.mjs";
+import { ACTION_KEYS, WORDS_CANON, KEPT } from "../../../src/action-producers/index.mjs";
+import { word, localize, hasWord } from "../../../src/setup-words/index.mjs";
 
 function people(fakes) {
   const w = world(fakes);
@@ -30,7 +31,7 @@ test("R21, R11: R1's item offers actioncorrespond, then the met-or-waived door (
   const door = it.options[1];
   assert.deepEqual(door, { id: "promote", label: WORD("door.clockentrystate"), weight: "single",
     revision: { action: "ACT-1", entry: 0, field: "status", to: ["met", "waived"] } }, "the door is the action's revision of that entry's status");
-  assert.equal(door.label, "Mark it met or waived");
+  assert.equal(door.label, word("door.clockentrystate"));
   /* the door keys each item to its own entry */
   entries = [entry(), entry({ ord: 4 })];
   assert.deepEqual(byId(w.read("alice"))["CONDITION::action-clock-overdue::ACT-1::4"].options[1].revision,
@@ -57,7 +58,7 @@ test("R22: an entry carrying noticed_by raises R1's item once its duty's watch h
   assert.ok(it, "the watch was stopped yesterday: R1's item is drawn");
   assert.deepEqual(asked.at(-1), "DUT-2026-0001", "following is asked of the entry's duty");
   assert.deepEqual(it.recipients, ["alice"]); assert.equal(it.basis.recipients_rule, "author");
-  assert.equal(it.summary, "Noticed: no reply recorded by 29 August");
+  assert.equal(it.summary, localize("action-producers.words.noreply_canon", "Noticed: no reply recorded by {date}", { date: "August 29" }));
   assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - 2 * DAY)}T00:00:00Z`, ms: 2 * DAY, days: 2 });
   assert.deepEqual(it.basis.noticed_by, noticed); assert.equal(it.basis.duty_watch_end, day(NOW - DAY));
   assert.deepEqual(ids(w.read("olga")), [], "R1's recipients, nobody else");
@@ -103,7 +104,7 @@ function keyed() {
         relied_on: false, offered: ["keep", "stop"], recipients: ["alice"] },
       { link: 2, plan: "PLN-1", matters: [], watch: { kind: "address", id: "https://x.example/a", ends: "2026-12-31" }, due_at: iso(NOW),
         cause: "closed", relied_on: true, offered: [], recipients: ["alice"] }] }) },
-    actionPlans: { planRead: ({ id }) => ({ ok: true, id, project: "PRJ-1" }),
+    actionPlans: { planRead: ({ id }) => planAnswer(id, "PRJ-1"),
       plansToLookAgain: () => ({ ok: true, limit: 500, truncated: false, items: [
         { plan: "PLN-2", project: "PRJ-1", title: "Library hours", look_again: day(NOW), paused_by: "alice", paused_at: iso(NOW - DAY), reason: "r" }] }) },
     planWork: { takeUpsFor: () => ({ ok: true, items: [], truncated: false, cursor: null }),
@@ -122,7 +123,7 @@ test("R23: each item's sentence is its words.json key's words filled from the it
   assert.equal(left.summary_key, "queue.member-left-items.summary");
   assert.equal(left.summary, FILLED("queue.member-left-items.summary", { member: "bob", n: 1 }));
   assert.equal(left.detail_key, "queue.member-left-items.detail");
-  assert.equal(left.detail, FILLED("queue.member-left-items.detail", { member: "bob", place: "the group",
+  assert.equal(left.detail, FILLED("queue.member-left-items.detail", { member: "bob", place: "the team",
     items: `the clock entry 0 on ACT-2 (${day(NOW - 3 * DAY)})` }));
   /* R10: the summary on every entry; the detail by key where watchanswer is offered; the relied-on entry keeps its own */
   const kept = m["OBLIGATION::watch-keep-or-stop::1"];
@@ -169,18 +170,18 @@ test("R23, R11: each door's label is words.json's door.<op> where it holds one; 
     assert.ok(seen.has(op), `the world offers ${op}`);
     assert.equal(seen.get(op), WORD(key), `${op}: ${key}`);
   }
-  assert.equal(seen.get("actionholdrelease"), "Record that no hold is needed, with a reason", "control: no door.actionholdrelease, its label stays");
+  assert.equal(seen.get("actionholdrelease"), word("action-producers.label.record_hold_needed"), "control: no door.actionholdrelease, its label stays");
   assert.throws(() => WORD("door.actionholdrelease"), /holds no word/);
   assert.throws(() => WORD("door.factconfirm"), /holds no word/);
 });
 
 test("R23: every sentence this module holds by key is words.json's en, verbatim, but canon's question R23 keeps unchanged; the kept sentences are named", () => {
-  for (const [key, en] of Object.entries(ACTION_WORDS)) {
-    if (WORDS_CANON.includes(key)) continue;
-    assert.equal(en, WORD(key), key);
-  }
-  /* control: the canon key differs from words.json's, and is the one held apart */
-  assert.notEqual(ACTION_WORDS["queue.action-clock-overdue.noreply"], WORD("queue.action-clock-overdue.noreply"));
+  for (const key of ACTION_KEYS) assert.ok(hasWord(key), key);
+  /* control: canon's question is words.json's key, its own words held apart, and the one key so held */
+  const [canon] = WORDS_CANON;
+  assert.ok(hasWord(canon), canon);
+  assert.notEqual(localize("action-producers.words.noreply_canon", "Noticed: no reply recorded by {date}", { date: "August 29" }),
+    word(canon, { date: "August 29" }));
   for (const k of ["queue.action-clock-overdue.theirs.detail", "queue.plan-look-again.detail", "queue.litigation-hold.docket.detail"]) {
     assert.ok(KEPT.includes(k), k);
     assert.equal(typeof WORD(k), "string", `${k} is words.json's, kept and returned to BOB`);

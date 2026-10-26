@@ -14,6 +14,9 @@
  *   checkRequests, checksOf                          the requester's read of their requests, and the checks on a target (R16).
  *   signRequest                                      "Ask an owner to sign" (T47; DEC-207 (8)): a prepared case edition put in
  *                  each owner's To do, closed by that owner or when the edition is signed (R19).
+ *   taskDecide                                       (T51; K4169, UC-046) the member's decision on an authority task: recorded through
+ *                  provenance and the task resolved in one transaction (R20); R21's `resolved_undecided` for the task put aside.
+ *   DECLARED_OPS                                     the whole declaration of each op the screens send, read from its arm (R22, R23).
  *
  * REACHED as `tasksOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call. At that
  * call it seeds its TASK ledger row (R5) and declares its table to record-core's purge (R8). When the declaration holds,
@@ -41,6 +44,7 @@ import { schedulerOf } from "../scheduler/index.mjs";
 import { PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { TASKS_SCHEMA, TASKS_TABLES } from "./schema.mjs";
 import { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, TASK_EVENT_KIND, checkInboxGrammar } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { TASKS_SCHEMA, TASKS_TABLES, tasksOwns } from "./schema.mjs";
 export { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, TASK_EVENT_KIND, checkInboxGrammar } from "./checks.mjs";
@@ -67,6 +71,8 @@ const CHECK_VERDICTS = Object.freeze(["check", "concern"]);
 const CHECK_NOTE_MAX = 1000, CHECK_REASON_MAX = 4000;
 /* R19 (DEC-207 (8)): the task kind an owner's To do to sign a prepared edition carries. */
 export const SIGN_TASK_KIND = "sign-requested";
+/* R24 (K4210): the doors an authority task offers, the one a screen leads with first; queue R12 reads them. */
+const AUTHORITY_DOOR = ["taskdecide", "taskforward", "taskresolve"];
 /* membership R21's normalisation of a label (trimmed, whitespace collapsed, at most 120), so the label recorded on a
    request is the one membership R106 addressed by. */
 const normLabel = (label) => String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
@@ -151,12 +157,12 @@ export class Tasks {
      bundle (taskDrain keeps those, it does not drop them), and retrying that at
      the short cadence would be a hot loop against work that only a later promote
      can unblock. BATCH bounds one tick; a deeper backlog re-arms and continues.
-     (R18; SCHEDULER #29 J1 (2), K2029, K2038) The backstop backs off: an event tried `a`
+     (R18; SCHEDULER #29 J1 (2), K2029, K2038; R25, K4488) The backstop backs off: an event tried `a`
      times is next due BACKSTOP × 2^(a−1) after its last try (capture R45's durable
-     `attempts` and `lastTry`), and one tried RETRY_LIMIT times wants no wake at
-     all, so an unfiled capture costs a bounded number of timed retries and then an
-     otherwise idle instance holds no timer (scheduler R15). It stays queued, never
-     dropped, and is retried by every drain that runs for another reason; an
+     `attempts` and `lastTry`), never more than MAX_WAIT (one hour); from RETRY_LIMIT tries on it is
+     due MAX_WAIT after its last try, every time. An unfiled capture is never dropped and never stops
+     being retried by count: it waits on the filing, which re-arms the drain at once (promotion), and
+     until then it is retried hourly at most. It is retried by every drain that runs for another reason; an
      enqueue (capture R44) and a committed promotion (promotion R45: only a
      promotion files a capture, provenance R1, R4) re-arm the drain at DELAY.
      DELAY is overridable per instance through TASK_DRAIN_DELAY_MS: production
@@ -166,6 +172,8 @@ export class Tasks {
   static TASK_DRAIN_BACKSTOP_MS = 60000;
   static TASK_DRAIN_ALARM_BATCH = 200;
   static TASK_DRAIN_RETRY_LIMIT = 8;
+  /* R25 (K4488): the longest the back-off waits between tries of an event still queued. */
+  static TASK_DRAIN_MAX_WAIT_MS = 60 * 60 * 1000;
 
   /** The RULED routing order, resolved at write time by the consumer.
    *
@@ -188,7 +196,14 @@ export class Tasks {
     };
     if (b && b.object_type === "project") {
       const o = ownerOf(bundleId);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: "owner of the referred project" };
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: word("tasks.why.owner_referred_project") };
+    }
+    /* R1 (K5148): a document filed in a project states it in its front matter (promotion R53; `record-core`'s
+       `bundleInfo().project`, its R34), and no `cites` edge need exist, so the project it is filed in comes before the
+       citing ones. Its owner, if none is active, leaves the next arm to try. */
+    if (info && info.project) {
+      const o = ownerOf(info.project);
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: word("tasks.why.owner_referred_project") };
     }
     /* D-280, site (b), and it is D-267's own harm one op over: `refs` carries
        the RELATION and DROPS the STATUS, so the project this arm hands the
@@ -214,7 +229,7 @@ export class Tasks {
       !kinds.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null)));
     if (cite) {
       const o = ownerOf(cite[0]);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this record` };
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: word("tasks.why.owner_cites_record", { cite: String(cite[0]) }) };
     }
     /* membership's active administrators (its R86), in the order the roster holds them, the founder (who is no member
        row, and holds no task) aside: the earliest that membership R80 admits to the subject (K2575, D54: an
@@ -223,11 +238,11 @@ export class Tasks {
     const first = this.#membership.activeAdmins()
       .find((m) => m !== "admin" && this.#membership.inSight(bundleId, `member:${m}`));
     const adm = first ? { member_id: first } : null;
-    if (adm) return { assignee: adm.member_id, assignee_role: "group-admin", basis: "no project manager; the RULED fallback to a group admin" };
+    if (adm) return { assignee: adm.member_id, assignee_role: "group-admin", basis: "no project manager; the RULED fallback to a team admin" };
     /* Named honestly rather than assigned to someone who does not exist. An
        unassigned task is still visible and still routable by hand; a task
        addressed to a phantom is not. */
-    return { assignee: "unassigned", assignee_role: "group-admin", basis: "no project manager and no active administrator who can see it" };
+    return { assignee: "unassigned", assignee_role: "group-admin", basis: word("tasks.why.project_manager_active") };
   }
 
   /** A stored row as the grammar's task: the shape `taskList` gives (R2) and R6's reads give. */
@@ -244,6 +259,7 @@ export class Tasks {
       ...(row.resolved_at ? { resolved_at: row.resolved_at } : {}),
       history,
       ...(row.kind === SIGN_TASK_KIND ? { sign: this.#signOf(row.id) } : {}),
+      ...(row.kind === TASK_EVENT_KIND ? { door: [...AUTHORITY_DOOR] } : {}),
     };
   }
 
@@ -701,7 +717,9 @@ export class Tasks {
       return { ok: true, id, status: "resolved", resolved_at: at };
     }
     const task = this.#taskOf(row);
-    task.history.push({ at, event: "resolved", actor });
+    /* R21 (K4169): an authority task put aside leaves the document undetermined, and its history says the question was
+       closed without an answer; only R20's decision leaves `resolved`. */
+    task.history.push({ at, event: row.kind === TASK_EVENT_KIND ? "resolved_undecided" : "resolved", actor });
     task.status = "resolved";
     task.resolved_at = at;
     const bad = this.#refuseUngrammatical(task);
@@ -709,6 +727,46 @@ export class Tasks {
     this.sql.exec(`UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`,
       task.status, at, JSON.stringify(task.history), id);
     return { ok: true, id, status: "resolved", resolved_at: at };
+  }
+
+  /** Decide an authority task (R20; K4169, UC-046): the member's decision on who issued the captured document, recorded
+   *  through provenance's `declareAuthority` (its R65) and the task resolved in the one transaction, so either both happen
+   *  or neither. The refusals are R3's, in R3's order, with the two of this act's own, then provenance's, carried as they
+   *  come. A machine is refused by shape before the task is read (as C-32.10, C-32.11). */
+  taskDecide({ id = null, outcome = null, authority = null, basis = null, actor = null, now = null } = {}) {
+    if (!actor) return { ok: false, reason: "NO_ACTOR", detail: localize("tasks.decide.no_actor", "a decision is recorded under the member who made it") };
+    if (isMachineStamp(actor))
+      /* DEC-49 REGION is-machine-decide */
+      return Tasks.#checkRefusal("MACHINE_CANNOT_DECIDE",
+        localize("tasks.decide.machine_refused", "deciding who issued a document is a named member's judgement, and this caller is no member's session; nothing was written"));
+      /* END DEC-49 REGION is-machine-decide */
+    const row = typeof id === "string" && id ? this.#one(`SELECT * FROM tasks WHERE id=?`, id) : null;
+    if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
+    if (row.kind !== TASK_EVENT_KIND || typeof row.capture_sha !== "string" || !row.capture_sha)
+      /* DEC-49 REGION is-authority-task */
+      return Tasks.#checkRefusal("TASK_NOT_AN_AUTHORITY_TASK",
+        localize("tasks.decide.not_authority_task", "only a task that asks who issued a captured document is decided; nothing was written"));
+      /* END DEC-49 REGION is-authority-task */
+    if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
+    const fenced = this.#refuseNotYours(row, actor, "decide");
+    if (fenced) return fenced;
+    const at = this.#instant(now);
+    const task = this.#taskOf(row);
+    task.history.push({ at, event: "decided", actor, outcome: typeof outcome === "string" ? outcome : null },
+                      { at, event: "resolved", actor });
+    task.status = "resolved";
+    task.resolved_at = at;
+    const bad = this.#refuseUngrammatical(task);
+    if (bad) return bad;
+    /* provenance R65 and this task's resolution in one unit: a refusal writes nothing there and the task is untouched; a
+       failure after the decision is recorded rolls it back with the task's own write */
+    return this.#atomically(() => {
+      const made = this.#provenance.declareAuthority({ bundle: row.refers_to, capture: row.capture_sha, outcome, authority, basis,
+                                                      by: actor, viewer: `member:${actor}` });
+      if (!made || made.ok !== true) return made || { ok: false, reason: "AUTHORITY_REFUSED" };
+      this.sql.exec(`UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`, task.status, at, JSON.stringify(task.history), id);
+      return { ok: true, id, status: "resolved", resolved_at: at, outcome };
+    });
   }
 
   /* ------------------------------------------------------------------ "Ask for a check" (R13–R17; DEC-135, Bob's)
@@ -762,7 +820,7 @@ export class Tasks {
     const id = this.#record.mintOpaqueId("TASK", at.slice(0, 4), "-check",
       (x) => !!this.#one(`SELECT 1 AS x FROM tasks WHERE id=?`, x));
     if (!id) throw Object.assign(new Error("MINT_EXHAUSTED"), { exhausted: true });
-    const subject = req.label ? `A check is asked: ${req.label}` : "A check is asked of you by name";
+    const subject = req.label ? word("tasks.check_asked", { label: String(req.label) }) : word("tasks.check_asked_name");
     this.sql.exec(
       `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
                           assignee, assignee_role, status, created, resolved_at, history)
@@ -1081,7 +1139,7 @@ export class Tasks {
         const first = this.#one(`SELECT request FROM sign_requests WHERE case_id=? AND edition=?`, caseId, ed);
         if (!first || first.request !== request) return;
         won = true;
-        const subject = `Edition ${ed} of ${caseId} is prepared and ready to sign`;
+        const subject = word("tasks.edition_prepared_ready", { ed: String(ed), case_id: String(caseId) });
         for (const m of owners) {
           this.seedLedger();
           const id = this.#record.mintOpaqueId("TASK", at.slice(0, 4), "-sign",
@@ -1129,11 +1187,13 @@ export class Tasks {
     let at = null;
     this.#eachQueued(() => Tasks.TASK_DRAIN_ALARM_BATCH, (e) => {
       const a = Number(e.attempts) || 0;
-      if (a >= Tasks.TASK_DRAIN_RETRY_LIMIT) return;
       const last = Date.parse(e.lastTry);
+      /* R25 (K4488): every try waits no longer than MAX_WAIT; from RETRY_LIMIT tries on, it is MAX_WAIT every time */
+      const gap = a >= Tasks.TASK_DRAIN_RETRY_LIMIT ? Tasks.TASK_DRAIN_MAX_WAIT_MS
+                                                   : Math.min(Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1), Tasks.TASK_DRAIN_MAX_WAIT_MS);
       /* never tried by a drain (an event a mint could not yet take, R1): the plain backstop from now */
       const due = a < 1 || !Number.isFinite(last) ? now + Tasks.TASK_DRAIN_BACKSTOP_MS
-                                                  : Math.max(now, last + Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1));
+                                                  : Math.max(now, last + gap);
       if (at === null || due < at) at = due;
     });
     return at;
@@ -1217,17 +1277,47 @@ export function tasksOf(ctx, deps = {}) {
   return t;
 }
 
+/* R22, R23 (K4168, K4202): the whole declaration of each op of this module that a screen sends or this tranche adds, read from
+   the op's arm above, whole. `accepts` is every field the arm reads from the address and the body, the stamps (`viewer`, `by`,
+   and the task acts' `actor`, which the control plane writes into the body) aside; `requires` the ones it refuses without,
+   a list where any of several satisfies it. Class, mutating, weight and description are copied from the op's rows in
+   `op-declarations` and `op-grades`, which agree; `taskdecide` has none, and is declared here alone. */
+export const DECLARED_OPS = Object.freeze({
+  taskdecide: Object.freeze({ classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reasoned",
+    refusal: "AUTHORITY_NO_BASIS", needs: null, stamps: [],
+    description: localize("tasks.declared.taskdecide", "task act, assignee-fenced; records the member's decision on who issued a captured document, with its basis, and resolves the task in the same act"),
+    fields: Object.freeze({ accepts: ["id", "outcome", "authority", "basis"], requires: ["id", "outcome", "basis"] }) }),
+  taskforward: Object.freeze({ classes: ["admin", "member"], mutating: true, weight: "reversible",
+    description: localize("tasks.declared.taskforward", "task act, assignee-fenced; travels with the task via op=tasks"),
+    fields: Object.freeze({ accepts: ["id", "to", "items"], requires: [["id", "items"], "to"] }) }),
+  taskresolve: Object.freeze({ classes: ["admin", "member"], mutating: true, weight: "reversible",
+    description: localize("tasks.declared.taskresolve", "task act, assignee-fenced; travels with the task via op=tasks"),
+    fields: Object.freeze({ accepts: ["id", "items"], requires: [["id", "items"]] }) }),
+  checkrequest: Object.freeze({ classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    needs: "contribute", stamps: ["viewer", "by"],
+    description: localize("tasks.declared.checkrequest", "check-directed: keyed by a held object and its addressees, reached from the object; writes tasks' rows and moves no bundle"),
+    fields: Object.freeze({ accepts: ["target", "label", "member", "note"], requires: ["target", ["label", "member"]] }) }),
+  signrequest: Object.freeze({ classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "reversible",
+    needs: "contribute", stamps: ["viewer", "by"],
+    description: localize("tasks.declared.signrequest", "case-directed: keyed by a prepared case edition; a member asks its project's owners to sign it, each given a To do; moves no bundle"),
+    fields: Object.freeze({ accepts: ["case", "edition"], requires: ["case", "edition"] }) }),
+});
+
 /* The ops this module answers, as entries of the plane's one op map (K3), which control-plane's routes spread in
    (`control-plane/dispatch.mjs`). `viewer` is the control plane's stamp, read from the URL so a body never supplies one
    (R10); the task acts' actor rides in the body, stamped there by the control plane; the check acts' `by` is the URL's. */
 export function tasksOps(t, url, body) {
   const s = (k) => url.searchParams.get(k);
+  /* the instance's clock stamps an act on a task: a body's own `now` is not read, so no caller dates a history entry */
+  const act = (b) => { const { now: _now, ...rest } = b || {}; return rest; };
   return {
     taskdrain: () => t.taskDrain(body || {}),
     tasks: () => t.taskList({ assignee: s("assignee"), status: s("status"), refersTo: s("refers"),
                               limit: s("limit"), viewer: s("viewer") }),
-    taskforward: () => t.taskForward(body || {}),
-    taskresolve: () => t.taskResolve(body || {}),
+    taskforward: () => t.taskForward(act(body)),
+    taskresolve: () => t.taskResolve(act(body)),
+    /* R20 (K4169): `actor` the control plane's stamp in the body, as the two above; the decision the body's */
+    taskdecide: () => t.taskDecide({ id: body?.id, outcome: body?.outcome, authority: body?.authority, basis: body?.basis, actor: body?.actor }),
     /* R13–R16 (T34; DEC-135): the stamps (`by`, `viewer`) from the query, read after the body so a body's copy never wins
        (R10); the request's own fields from the body. op-declarations R23 declares these and control-plane R55 routes them. */
     checkrequest: () => t.checkRequest({ target: body?.target, label: body?.label, member: body?.member, note: body?.note,

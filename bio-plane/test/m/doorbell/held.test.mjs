@@ -1,20 +1,18 @@
 /* doorbell R13 (T50; N1194; JOURNEYS V4 B-40): a knock whose bytes the record already holds is marked pulled to the
    holder, names it only to a viewer who may see it, and writes nothing else. At the module's interface (`pullKnock`,
-   `inboxResolve`, and the routes), over fixture.mjs; provenance's `homeOf` (its R4) stood in on its contract. */
+   `inboxResolve`, and the routes), over fixture.mjs; provenance's real `homeOf` (its R4, `homeOfOver`) answers over the same storage. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha, register } from "./fixture.mjs";
 import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { homeOfOver } from "../provenance/fixtures.mjs";
 
 /* provenance R4 as the doorbell reaches it: the register row, only while its bundle exists. */
 function setup() {
   const b = bucket();
   const f = fresh({ evidence: b, env: { INSTANCE_NAME: "inst" } });
-  f.c.provenance.homeOf = (captureSha) => {
-    const r = [...f.s.sql.exec(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, captureSha)][0];
-    return r ? { bundleId: r.bundle_id } : null;
-  };
+  f.c.provenance.homeOf = homeOfOver({ host: f.ctx, record: f.core }).homeOf;
   return { ...f, b, prov: f.c.provenance };
 }
 const everything = (rows) => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)

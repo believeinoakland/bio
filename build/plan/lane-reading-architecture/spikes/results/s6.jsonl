@@ -1,0 +1,10 @@
+miniflare http://127.0.0.1:40521/
+{"label":"MF count bytes, content-length 150MiB","status":200,"body":"{\"op\":\"count\",\"cl\":\"157286400\",\"te\":null,\"bytes\":157286400}","ms":836,"rssBaseMB":58,"rssPeakMB":122}
+{"label":"MF count bytes, chunked (no length)","status":200,"body":"{\"op\":\"count\",\"cl\":null,\"te\":\"chunked\",\"bytes\":157286400}","ms":762,"rssBaseMB":122,"rssPeakMB":142}
+{"label":"MF R2.put(request.body) content-length 150MiB","status":200,"body":"{\"op\":\"putdirect\",\"cl\":\"157286400\",\"te\":null,\"size\":157286400}","ms":3817,"rssBaseMB":142,"rssPeakMB":179}
+{"label":"MF R2.put(request.body) chunked","clientError":"ECONNRESET","ms":31,"rssBaseMB":180,"rssPeakMB":180}
+{"label":"MF R2.put via FixedLengthStream, content-length 150MiB","status":200,"body":"{\"op\":\"putfixed\",\"cl\":\"157286400\",\"te\":null,\"size\":157286400}","ms":4608,"rssBaseMB":183,"rssPeakMB":221}
+{"label":"MF R2.put via FixedLengthStream, chunked, len=150MiB from query","status":200,"body":"{\"op\":\"putfixed\",\"cl\":null,\"te\":\"chunked\",\"size\":157286400}","ms":4542,"rssBaseMB":217,"rssPeakMB":250}
+{"label":"MF req.arrayBuffer() 150MiB","status":200,"body":"{\"op\":\"arraybuffer\",\"cl\":\"157286400\",\"te\":null,\"bytes\":157286400}","ms":1439,"rssBaseMB":251,"rssPeakMB":571}
+{"label":"raw workerd (old-space 128) count 150MiB content-length","status":200,"body":"{\"op\":\"count\",\"cl\":\"157286400\",\"te\":null,\"bytes\":157286400}","ms":882,"rssBaseMB":42.30078125,"rssPeakMB":99.875}
+{"label":"raw workerd (old-space 128) arraybuffer 150MiB content-length","status":200,"body":"{\"op\":\"arraybuffer\",\"cl\":\"157286400\",\"te\":null,\"bytes\":157286400}","ms":374,"rssBaseMB":42.33203125,"rssPeakMB":364.640625}

@@ -10,6 +10,11 @@ import { followingOf, FOLLOWING_CHECKS } from "../../../src/following/index.mjs"
 import { MONITORING_CHECKS } from "../../../src/monitoring/index.mjs";
 import { world as planWorld, V, by, option, choose, OFFICE } from "../plan-work/fixture.mjs";
 import { INTERNAL as DUTIES_INTERNAL } from "../../../src/duties/index.mjs";
+import { standardsIn as standardsInFixture } from "../standards/fixtures.mjs";
+import { AS_OF } from "../duties/fixtures.mjs";
+
+/* standards' real answer for a record that holds no standard (its published fixture), the read these worlds stand on */
+const NO_STANDARDS = standardsInFixture();
 
 /* T0 is 2026-10-06T12:00Z; the test profile's zone is America/Halifax (UTC−3), so today is 2026-10-06 and its end
    is 2026-10-07T03:00Z. */
@@ -317,7 +322,7 @@ test("R27 with the real plan-work: a link's question is due on promises_met at t
   let occurrenceReads = 0;
   const f = followingOf(p.host, { record: p.record, membership: p.membership, actionPlans: p.ap, planWork: p.pw, monitoring: stub,
     duties: { readDuty: () => ({ ok: true, found: false }), occurrencesOf: () => (occurrenceReads++, { ok: false }) },
-    answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) }, standards: { standardsIn: () => ({ ok: true, items: [] }) },
+    answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) }, standards: { standardsIn: () => NO_STANDARDS },
     view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => Date.parse(p.clock.now) });
   const fl = f.followRegister({ address: REG(1), ...by("alice") });
   /* the matter the promises answer: the plan's outcome on S1 (its other matters hold no promise) */
@@ -447,7 +452,7 @@ test("R25 each kind stopped: a follow ended now with ended_reason answer by the 
   assert.deepEqual(w.addressEnds, [{ address: PAGE, until: "2026-10-06", by: MEMBER }]);
   assert.equal(w.f.dutyWatchEnd("DUT-1"), "2026-10-06");
   assert.equal(w.duties.readDuty({ dutyId: "DUT-1", viewer: MEMBER }).found, true, "the duty stays held");
-  assert.equal(w.duties.occurrencesOf({ dutyId: "DUT-1", viewer: MEMBER }).occurrences.length, 1, "its occurrences still derived and read");
+  assert.equal(w.duties.occurrencesOf({ dutyId: "DUT-1", asOf: AS_OF, viewer: MEMBER }).occurrences.length, 1, "its occurrences still derived and read");
   assert.notEqual(w.questions.get("STQ-2026-0001").ended, null);
   /* stopped by a recipient who did not make the follow: the owner, once the author has left */
   const w2 = planned();
@@ -589,7 +594,7 @@ test("R26 with the real plan-work and action-plans: where it stands lists the pl
                  sweepHost: () => ({}), schedule: () => ({ unscheduled: [] }) };
   const f = followingOf(p.host, { record: p.record, membership: p.membership, actionPlans: p.ap, planWork: p.pw, monitoring: stub,
     duties: { readDuty: () => ({ ok: true, found: false }), occurrencesOf: () => ({ ok: false }) },
-    answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) }, standards: { standardsIn: () => ({ ok: true, items: [] }) },
+    answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) }, standards: { standardsIn: () => NO_STANDARDS },
     view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => Date.parse(p.clock.now),
     retrieval: { registerBrowseMarks: (module) => ({ ok: true, module }) } });
   assert.deepEqual(f.registered, { ok: true, module: "following" });
@@ -632,7 +637,7 @@ test("R23 R24 R25 R26 an address watch over the real monitoring: linked as monit
   const f = followingOf(m.host, { record: m.record, membership: m.membership, monitoring: m.m, actionPlans,
     planWork: { registerWatchReader: (mod, fn) => (readers.push(fn), { ok: true, module: mod }), matterPromiseDuties: () => ({ ok: true, duties: [], all_met: false }) },
     duties: { readDuty: () => ({ ok: true, found: false }) }, answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) },
-    standards: { standardsIn: () => ({ ok: true, items: [] }) }, view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => m.clock.ms });
+    standards: { standardsIn: () => NO_STANDARDS }, view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => m.clock.ms });
   const carol = MV("carol");
   const la = f.watchLink({ plan: "PL-1", watch: { kind: "address", id: ADDR }, author: carol, viewer: carol });
   const lo = f.watchLink({ plan: "PL-1", watch: { kind: "address", id: "https://RECORDS.example.org/other" }, author: carol, viewer: carol });

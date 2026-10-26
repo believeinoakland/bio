@@ -1,4 +1,4 @@
-/* The per-screen references (DEC-160, widened 6 October): for each screen, the things it names, what each is, and why it
+/* The per-screen references (DEC-160, widened October 6): for each screen, the things it names, what each is, and why it
    matters to what the member is doing there. Merged into REFS from mock-shell.js; GLOBAL_REFS cover things named everywhere. */
 const SCREEN_REFS = {
   "archive": [
@@ -7,7 +7,7 @@ const SCREEN_REFS = {
   "find-in": [
     ["Report to council: street maintenance performance","document","<b>Report to council: street maintenance performance</b> · 2026 · capture B · the city's own account of its repair times","Where the money figure and the claim about closed reports were found."],
     ["Public Works work orders, FY2025","document","<b>Public Works work orders, FY2025</b> · CSV, 903 rows · captured from the city's open-data portal","A table: its dates are counted through a calculation, not recorded one by one."],
-    ["Mai's observation, 4 October","document","<b>Mai's observation, 4 October</b> · testimony, grade D · what she saw at 6012 Seminary Ave","Its dates are hers, as she recorded them."],
+    ["Mai's observation, October 4","document","<b>Mai's observation, October 4</b> · testimony, grade D · what she saw at 6012 Seminary Ave","Its dates are hers, as she recorded them."],
     ["K. Osei",null,"<b>K. Osei</b> · named in the council report · a person your team does not follow yet","Search does not know this name; the assistant's proposals, later, would."]
   ],
   "install": [
@@ -37,7 +37,7 @@ const SCREEN_REFS = {
     ["Draft · the assistant's",null,"<b>Draft · the assistant's</b> · a label on words the assistant wrote · stays until a member edits and keeps them","Nothing here is saved as the team's own until a member keeps it."]
   ],
   "join": [
-    ["13 October 2026",null,"<b>Expires 13 October 2026</b> · an invitation lasts seven days · this one created by Rosa on 6 October · works once","After that the link stops working and Rosa must create a new one."],
+    ["October 13, 2026",null,"<b>Expires October 13, 2026</b> · an invitation lasts seven days · this one created by Rosa on October 6 · works once","After that the link stops working and Rosa must create a new one."],
     ["contribute",null,"<b>Contribute</b> · what this invitation lets you do · add to the record, open questions, take part in projects","It sets what you can do once you join; an administrator can change it later."],
     ["handle",null,"<b>Handle</b> · the name the record shows on your work · not your legal name unless you choose · chosen when you join and never changed","No other member can ever take it, so a handle always means the same person."],
     ["pen name",null,"<b>Pen name</b> · a handle that is not the name people know you by · the administrators still know who you are","Shields you from pressure if a published case names your work."],
@@ -46,8 +46,8 @@ const SCREEN_REFS = {
   ],
   "home": [
     ["3 photos you captured on Seminary Avenue","held","<b>Photos · Seminary Avenue</b> · captured by you for Pothole repairs · capture B · held, not yet vouched for","Until you vouch for them they cannot support the pothole question."],
-    ["records request","action","<b>Records request: inspection logs</b> · to the Office of the City Clerk · sent 2 October by Mai · acknowledged 3 October, ref. R26-0412","The reply decides the next step of the pothole plan."],
-    ["due 14 October","due-date","<b>Due 14 October</b> · the 10-day public records window from 2 October · rolled past a Sunday and a city holiday","If no reply is recorded by then, your queue says so once and the plan can move on."],
+    ["records request","action","<b>Records request: inspection logs</b> · to the Office of the City Clerk · sent October 2 by Mai · acknowledged October 3, ref. R26-0412","The reply decides the next step of the pothole plan."],
+    ["due October 14","due-date","<b>Due October 14</b> · the 10-day public records window from October 2 · rolled past a Sunday and a city holiday","If no reply is recorded by then, your queue says so once and the plan can move on."],
     ["Rents and leases on city land, and the streets we live on.","group-identity","<b>Your team's focus</b> · written by Rosa in Who your team is · seen by members only","It shapes which starting points Home offers you first."]
   ],
   "members": [
@@ -65,7 +65,7 @@ const SCREEN_REFS = {
     ["signing key",null,"<b>Signing key</b> · a key held in this browser · signs what you approve under your handle, such as a case you own","Without one registered here you cannot sign; revoking it ends this browser's key for good."]
   ],
   "connect": [
-    ["the team's key",null,"<b>The team's API key</b> · held by Lakeshore Tenants · switched on by Rosa, 6 October · the team pays Anthropic for each use","It serves you now; your own account, if you connect one, replaces it for you alone."],
+    ["the team's key",null,"<b>The team's API key</b> · held by Lakeshore Tenants · switched on by Rosa, October 6 · the team pays Anthropic for each use","It serves you now; your own account, if you connect one, replaces it for you alone."],
     ["Anthropic",null,"<b>Anthropic</b> · the company that makes Claude · receives your question and the material read to answer it, only when you ask","This is where your questions go, under whichever account serves you."],
     ["$5.00 a day for each member",null,"<b>Daily limit · $5.00</b> · set by your administrators for every member on the team's key","You have used $0.80 of it today; when it is reached the assistant stops serving you until the next day."],
     ["Workers Paid",null,"<b>Workers Paid</b> · the Cloudflare plan your team's Civicsmith can run on · $5 a month, paid by the team","Signing in with a subscription needs it; without it, connect with an API key instead."],
@@ -88,7 +88,7 @@ const SCREEN_REFS = {
     ["Nobody looked","finder","<b>Nobody looked</b> · a gap mark · no member has searched a source for this yet","Members act on it, so the Spanish must read as a gap, not as a finding."],
     ["needs a second check",null,"<b>Second check</b> · a protected word changed by one speaker waits for another granted speaker or an administrator","Until Teo or Rosa confirms it, members reading Español see the English."],
     ["Held together","finder","<b>Held together</b> · a set of documents a member holds in Find to count, cite or act on as one","Still untranslated: members reading Español see it in English."],
-    ["Reasoned",null,"<b>Reasoned</b> · the mark on an act that asks for a reason, which becomes part of the record","Ana's suggestion, “Justificado”, waits for a granted speaker to keep it or explain why not."]
+    ["Asks for a reason",null,"<b>Asks for a reason</b> · the mark on an act that asks for a reason, which becomes part of the record","Ana's suggestion, “Pide un motivo”, waits for a granted speaker to keep it or explain why not."]
   ],
   "wizards": [
     ["Get a record, Oakland style","request","<b>Get a record, Oakland style</b> · your team's copy of Civicsmith's Get a record · approved by Rosa","Civicsmith's original changed since the copy; a wizard editor decides whether to bring the change across."],
@@ -97,8 +97,8 @@ const SCREEN_REFS = {
     ["Check a pothole report","capture","<b>Check a pothole report</b> · a draft wizard by Dev · for visiting a closed report and recording what you see","Not offered to members until it is submitted and approved."]
   ],
   "queue": [
-    ["The Coliseum lease","project","<b>The Coliseum lease</b> · project · owner: Dev · 3 items for you here","Waiting on you: a decision on the newer lease amendment; also a disagreement on dates and a reply due 9 October with none recorded."],
-    ["Pothole repairs","project","<b>Pothole repairs</b> · project · whether potholes are repaired within the seven days Administrative Instruction 4.12 sets · 6 items for you here","Waiting on you: Ana's request to check the 812 of 903 count, due 16 October."],
+    ["The Coliseum lease","project","<b>The Coliseum lease</b> · project · owner: Dev · 3 items for you here","Waiting on you: a decision on the newer lease amendment; also a disagreement on dates and a reply due October 9 with none recorded."],
+    ["Pothole repairs","project","<b>Pothole repairs</b> · project · whether potholes are repaired within the seven days Administrative Instruction 4.12 sets · 6 items for you here","Waiting on you: Ana's request to check the 812 of 903 count, due October 16."],
     ["the rent adjustment","matter","<b>The 2024 rent adjustment</b> · a matter in The Coliseum lease · signed by the City Administrator, March 2024, without a council vote","Two documents disagree on its date; a member must judge which one holds."],
     ["A council member","explore","<b>J. Ortega</b> · Council District 3 since 2023 · his Form 700 for 2025 lists income from Bayline Properties","A lead, never a finding: nothing is evidence until a member opens a question and cites the documents."],
     ["38 disclosure filings",null,"<b>38 disclosure filings</b> · <span class=mk-data>Form 700 statements of economic interests</span> your team holds · council members' filings","The hint is only as complete as these filings; a missing year would hide a match."],
@@ -106,11 +106,11 @@ const SCREEN_REFS = {
     ["standing question","finder","<b>Standing question</b> · a search kept running for you · “pothole work orders” · reports new matches in what your team holds","Its 3 new documents may change the input of the count Ana asked you to check."]
   ],
   "finder": [
-    ["data.oaklandca.gov",null,"<b>data.oaklandca.gov</b> · the City of Oakland's open-data portal · where Dev captured the work orders on 2 October","A copy from the city's own portal holds up better than one found elsewhere."],
+    ["data.oaklandca.gov",null,"<b>data.oaklandca.gov</b> · the City of Oakland's open-data portal · where Dev captured the work orders on October 2","A copy from the city's own portal holds up better than one found elsewhere."],
     ["passage 3","document","<b>Passage 3</b> of Administrative Instruction 4.12 · “within seven calendar days of the report, weather permitting”","The words your search matched; cite this passage, not the whole policy."],
     ["within seven calendar days","standard","<b>Repair reported potholes within seven calendar days</b> · a standard · Administrative Instruction 4.12, §3 · in force since 2023","The rule the city is checked against; the work orders show how often it was met."],
     ["public archive copy",null,"<b>Public archive copy</b> · captured from a public web archive, not the city's own site · hence capture C","Capture it from the city's site before relying on it; that copy would hold up better."],
-    ["2 documents held together",null,"<b>2 documents held together</b> · <span class=mk-data>the FY2025 work orders and Administrative Instruction 4.12</span> · held for you until 16:40 today","A held set can be counted, cited or acted on as one; let it go when you are done."]
+    ["2 documents held together",null,"<b>2 documents held together</b> · <span class=mk-data>the FY2025 work orders and Administrative Instruction 4.12</span> · held for you until 4:40 PM today","A held set can be counted, cited or acted on as one; let it go when you are done."]
   ],
   "capture": [
     ["the office's own site",null,"<b>The office's own site</b> · the website of the office that issued the document · for Oakland, <span class=mk-data>oaklandca.gov</span>","A copy fetched there carries its source with it, so a reader can fetch the same page and compare."],
@@ -119,18 +119,18 @@ const SCREEN_REFS = {
     ["grade D",null,"<b>Grade D</b>: A is easiest to check; D rests on a person's word. A grade never says whether something is true.","D does not mean doubtful: it tells a reader your account can be checked only by asking you."]
   ],
   "held": [
-    ["Agenda packet, City Council, 14 May 2024 (ZIP)","archive","<b>Agenda packet, City Council, 14 May 2024</b> · a ZIP archive · 41 entries · captured by Ana from the city's meeting site, capture B","Its 36 files wait here beside it; vouching for the archive does not vouch for them."],
-    ["Photo · Seminary Ave at 60th","document","<b>Photo · Seminary Ave at 60th</b> · a held capture · taken 4 October · capture B · Pothole repairs","Picked for this batch: vouching for it lets it stand beside Mai's account of the unrepaired pothole."],
-    ["Photo · Seminary Ave at 61st","document","<b>Photo · Seminary Ave at 61st</b> · a held capture · taken 4 October · capture B · Pothole repairs","Picked for this batch with the 60th Street photo; both are vouched for in one act."],
+    ["Agenda packet, City Council, May 14, 2024 (ZIP)","archive","<b>Agenda packet, City Council, May 14, 2024</b> · a ZIP archive · 41 entries · captured by Ana from the city's meeting site, capture B","Its 36 files wait here beside it; vouching for the archive does not vouch for them."],
+    ["Photo · Seminary Ave at 60th","document","<b>Photo · Seminary Ave at 60th</b> · a held capture · taken October 4 · capture B · Pothole repairs","Picked for this batch: vouching for it lets it stand beside Mai's account of the unrepaired pothole."],
+    ["Photo · Seminary Ave at 61st","document","<b>Photo · Seminary Ave at 61st</b> · a held capture · taken October 4 · capture B · Pothole repairs","Picked for this batch with the 60th Street photo; both are vouched for in one act."],
     ["vouched for",null,"<b>Vouching</b> · a member signs that a capture is what it says it is · until then it is held and counts toward nothing","Nothing on this list supports or cuts against any question until a member vouches for it."],
     ["Were the FY2022 transfers authorized?","question","<b>Were the FY2022 transfers authorized?</b> · Ana's question in Sewer fund transfers · waiting on the FY2024–25 budget","Setting the budget aside sends your reason to Ana on this question."],
-    ["FY2024–25 budget","document","<b>City budget FY2024–25, adopted</b> · PDF, 412 pages · captured 2 October · held, not yet vouched for","The third row above, not picked: vouching for it would end Ana's wait."],
+    ["FY2024–25 budget","document","<b>City budget FY2024–25, adopted</b> · PDF, 412 pages · captured October 2 · held, not yet vouched for","The third row above, not picked: vouching for it would end Ana's wait."],
     ["crucial to a finding",null,"<b>Crucial to a finding</b> · a capture a finding would fall without · vouched for one at a time, never in a batch","The March 2024 amendment carries a finding in The Coliseum lease, so it gets its own look."]
   ],
   "document": [
     ["Public Works",null,"<b>Public Works</b> · a city department · <span class=mk-data>repairs streets and fills potholes</span> · headed by the Director of Public Works, today L. Chen","The department that issued this instruction is the one it binds."],
     ["oaklandca.gov",null,"<b>oaklandca.gov</b> · the City of Oakland's own website · where the city publishes its policies","Captured from the issuer's own site, so a reader can fetch the same page and compare its fingerprint."],
-    ["revised 2023",null,"<b>Revised 2023</b> · the version this copy holds · the version in force when captured on 2 October 2026","FY2025 repairs are tested against this version, so a later revision would not change past counts."],
+    ["revised 2023",null,"<b>Revised 2023</b> · the version this copy holds · the version in force when captured on October 2, 2026","FY2025 repairs are tested against this version, so a later revision would not change past counts."],
     ["The Director",null,"<b>The Director</b> · in this instruction, the Director of Public Works · held today by L. Chen","Passage 3 puts the seven-day duty on an office, so it binds whoever holds the post."],
     ["seven calendar days","standard","<b>Seven calendar days</b> · the standard passage 3 sets · weekends and holidays count · held as a standard in Pothole repairs","The window the 812 of 903 count is measured against."],
     ["weather permitting",null,"<b>Weather permitting</b> · the instruction's own exception to the seven days · nothing shown here says how it is recorded","A late repair may fall under it; check the work order for a weather note before counting it against the city."],
@@ -146,26 +146,26 @@ const SCREEN_REFS = {
     ["seven working days",null,"<b>Seven working days</b> · a looser count than the seven calendar days Administrative Instruction 4.12 sets · skips weekends and holidays","If the city counted working days, its 90% would not test the instruction's standard."]
   ],
   "question": [
-    ["2024 budget PDF","held","<b>City budget FY2024–25, adopted</b> · PDF, 412 pages · a held capture · set aside by Ben, 6 October","This question waits on it; restoring it returns it to the held list for a member to vouch for."],
-    ["Ben","members","<b>Ben</b> · member of your team","Set the budget PDF aside on 6 October; the reason, \"wrong year\", stays on the record."],
+    ["2024 budget PDF","held","<b>City budget FY2024–25, adopted</b> · PDF, 412 pages · a held capture · set aside by Ben, October 6","This question waits on it; restoring it returns it to the held list for a member to vouch for."],
+    ["Ben","members","<b>Ben</b> · member of your team","Set the budget PDF aside on October 6; the reason, \"wrong year\", stays on the record."],
     ["seven calendar days","standard","<b>Seven calendar days</b> · the standard Administrative Instruction 4.12 sets in passage 3 · weekends and holidays count","The standard this question tests the city against."],
     ["passage 3","document","<b>Passage 3</b> of Administrative Instruction 4.12 · \"The Director shall repair each reported pothole within seven calendar days of the report, weather permitting.\"","The passage Dev cited as support."],
     ["computed fact",null,"<b>Computed fact</b> · a figure worked out from captured data by a stated method · recomputed when an input changes","Anyone can rerun the 812 from the city's work orders and get the same count."],
-    ["Ana","members","<b>Ana</b> · member of your team · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Checked the 812 of 903 calculation on 5 October."],
-    ["marked closed on 15 September",null,"<b>Report at 6012 Seminary Ave</b> · reported 12 September · marked closed 15 September · still open when Mai visited on 4 October","A closed report that was not repaired: the kind of case the 812 cannot show."],
-    ["Mai","members","<b>Mai</b> · member of your team · translates Español · joined 2 October","Visited 6012 Seminary Ave on 4 October; that account cuts against the count as testimony, grade D."],
+    ["Ana","members","<b>Ana</b> · member of your team · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Checked the 812 of 903 calculation on October 5."],
+    ["marked closed on September 15",null,"<b>Report at 6012 Seminary Ave</b> · reported September 12 · marked closed September 15 · still open when Mai visited on October 4","A closed report that was not repaired: the kind of case the 812 cannot show."],
+    ["Mai","members","<b>Mai</b> · member of your team · translates Español · joined October 2","Visited 6012 Seminary Ave on October 4; that account cuts against the count as testimony, grade D."],
     ["Hunch",null,"<b>Hunch</b>: a member's suspicion, labeled as one. Never evidence, and it never moves a finding.","Dev's hunch is what the records request for inspection logs is meant to test."]
   ],
   "assistant": [
     ["812 of 903 reports closed within 7 days","calculation","<b>Reports closed within seven days, FY2025</b> · a calculation from the city's work orders · checked by Ana","Ask the assistant how it was counted; it answers from the method and the work orders your team holds."],
-    ["2024 budget PDF","held","<b>City budget FY2024–25, adopted</b> · PDF, 412 pages · a held capture · set aside by Ben, 6 October","The assistant can search what your team holds for another source; restoring this one is a member's act."],
+    ["2024 budget PDF","held","<b>City budget FY2024–25, adopted</b> · PDF, 412 pages · a held capture · set aside by Ben, October 6","The assistant can search what your team holds for another source; restoring this one is a member's act."],
     ["Ben","members","<b>Ben</b> · member of your team","Ben's reason, \"wrong year\", is on the record; ask the assistant which year this question needs."],
     ["seven calendar days","standard","<b>Seven calendar days</b> · the standard Administrative Instruction 4.12 sets in passage 3 · weekends and holidays count","Ask the assistant whether the city's 2026 report counted calendar or working days; it says where it looked."],
     ["passage 3","document","<b>Passage 3</b> of Administrative Instruction 4.12 · \"The Director shall repair each reported pothole within seven calendar days of the report, weather permitting.\"","Ask the assistant to set it beside passage 5, which says when a report counts as closed."],
     ["computed fact",null,"<b>Computed fact</b> · a figure worked out from captured data by a stated method · recomputed when an input changes","The assistant can explain the method; only a member's check, like Ana's, is recorded as a check."],
-    ["Ana","members","<b>Ana</b> · member of your team · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Checked the count on 5 October; the assistant's work is labeled machine work and is not a check."],
-    ["marked closed on 15 September",null,"<b>Report at 6012 Seminary Ave</b> · reported 12 September · marked closed 15 September · still open when Mai visited on 4 October","Ask the assistant for this report's work order: it would show what the crew recorded on 15 September."],
-    ["Mai","members","<b>Mai</b> · member of your team · translates Español · joined 2 October","Mai's account is testimony; the assistant can find related records but cannot raise its grade."],
+    ["Ana","members","<b>Ana</b> · member of your team · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Checked the count on October 5; the assistant's work is labeled machine work and is not a check."],
+    ["marked closed on September 15",null,"<b>Report at 6012 Seminary Ave</b> · reported September 12 · marked closed September 15 · still open when Mai visited on October 4","Ask the assistant for this report's work order: it would show what the crew recorded on September 15."],
+    ["Mai","members","<b>Mai</b> · member of your team · translates Español · joined October 2","Mai's account is testimony; the assistant can find related records but cannot raise its grade."],
     ["Hunch",null,"<b>Hunch</b>: a member's suspicion, labeled as one. Never evidence, and it never moves a finding.","Ask the assistant what records would test Dev's hunch; it stays a hunch until a source supports it."]
   ],
   "answers": [
@@ -174,7 +174,7 @@ const SCREEN_REFS = {
     ["812 were closed within 7 calendar days","calculation","<b>Reports closed within seven days, FY2025</b> · a calculation · 812 of 903 · checked by Ana","The same count as the calculation; open it to see the method rather than rely on this answer."],
     ["passage 5","document","<b>Passage 5</b> of Administrative Instruction 4.12 · \"Repairs are recorded as closed when the crew reports the work complete.\"","Why the answer warns that it counts \"closed\" as the city records it."],
     ["14 documents","finder","<b>14 documents</b> · what the assistant searched for this answer · all held by your team","None of them is an inspection record, so the answer cannot say whether closed reports were repaired."],
-    ["inspection records","action","<b>Records request: inspection logs</b> · to the Office of the City Clerk · sent 2 October by Mai · response due 14 October","What this answer lacks; the request asks the city for them."],
+    ["inspection records","action","<b>Records request: inspection logs</b> · to the Office of the City Clerk · sent October 2 by Mai · response due October 14","What this answer lacks; the request asks the city for them."],
     ["812 with closed − reported ≤ 7 days","calculation","<b>Reports closed within seven days, FY2025</b> · a calculation · 812 of 903 · checked by Ana","The count behind the question's 812 of 903; open it for the method and Ana's check."],
     ["your queue","queue","<b>Your queue</b> · what waits on you · new matches arrive there as one list","Keep asking this sends new matching rows there instead of interrupting you."]
   ],
@@ -195,7 +195,7 @@ const SCREEN_REFS = {
     ["month known",null,"<b>Month known</b> · the source gives a month but no day · never guessed to a day","Why this event and the April notice cannot be put in order."],
     ["Council",null,"<b>Council</b> · Oakland City Council · its votes are recorded in minutes on Legistar","Approved amendment 1 in January 2024; no vote of the council is recorded for the March rent change."],
     ["City Administrator",null,"<b>City Administrator</b> · an office · <span class=mk-data>runs the city's departments and answers to the council</span>","Signed the March 2024 adjustment; no vote of the council stands behind it in this record."],
-    ["We requested the rent schedules","action","<b>Request: the rent schedules</b> · a records request to the Office of the City Clerk · 4 September 2026 · answered 18 September","The team's own act, in its own lane, beside the reply it got."],
+    ["We requested the rent schedules","action","<b>Request: the rent schedules</b> · a records request to the Office of the City Clerk · September 4, 2026 · answered September 18","The team's own act, in its own lane, beside the reply it got."],
     ["April notice",null,"<b>April notice</b> · <span class=mk-data>the city's notice of the new rent</span> · dated April 2024, month only","Its order against the March adjustment is undetermined; a source dated to the day would help order them."],
     ["Memo on rent indexing","document","<b>Memo on rent indexing</b> · a document · no date on its face","Kept apart until a source dates it; it may show how the 2024 rent was set."]
   ],
@@ -212,14 +212,14 @@ const SCREEN_REFS = {
   "calculation": [
     ["812 of 903",null,"<b>812 of 903</b> · <span class=mk-data>reports whose closed date is within 7 calendar days of the reported date</span> · FY2025","It counts \"closed\" as the city records it: when the crew reports the work complete, not after an inspection."],
     ["7 calendar days","standard","<b>Seven calendar days</b> · the standard Administrative Instruction 4.12 sets in passage 3 · weekends and holidays count","The window the method counts from report to close."],
-    ["Public Works work orders FY2025","document","<b>Public Works work orders, FY2025</b> · CSV, 903 rows · from the city's open-data portal · captured 2 October","The only input; if the city changes the file, the count is recomputed and your queue says so."],
+    ["Public Works work orders FY2025","document","<b>Public Works work orders, FY2025</b> · CSV, 903 rows · from the city's open-data portal · captured October 2","The only input; if the city changes the file, the count is recomputed and your queue says so."],
     ["CPA, confirmed",null,"<b>CPA, confirmed</b> · Ana's declared expertise, <span class=mk-data>certified public accountant</span> · confirmed in the team","Ana's check is the second member's check; the result still needs a member to accept it."],
     ["recorded random draw",null,"<b>Recorded random draw</b> · a sample picked from a recorded seed · anyone with the seed gets the same picks","It keeps members from visiting only the reports they expect to fail."],
     ["40 of 812 closed reports",null,"<b>40 of 812</b> · the closed reports drawn for members to visit · seed 2026-10-05-7f31","Visits like Mai's on Seminary Ave test whether closed reports were repaired."]
   ],
   "explore": [
     ["Coliseum lease","project","<b>The Coliseum lease</b> · a project · whether the city kept the terms of its lease of the Coliseum land · owner: Dev","The end point of this search; each chain found ends in a payment under the lease."],
-    ["voted for",null,"<b>Voted for</b> · a step from <span class=mk-data>the council minutes of 12 January 2024, item 7</span> · 5 for, 2 against","The step that ties J. Ortega to the amendment, cited to the vote record."],
+    ["voted for",null,"<b>Voted for</b> · a step from <span class=mk-data>the council minutes of January 12, 2024, item 7</span> · 5 for, 2 against","The step that ties J. Ortega to the amendment, cited to the vote record."],
     ["paid under",null,"<b>Paid under</b> · a step from <span class=mk-data>the city's annual financial report, FY2024</span> · capture B","Ties the amendment to the $1.2M paid; open the report to check the line."],
     ["weakest step B",null,"<b>Weakest step</b> · a chain is graded by its weakest link · here B on connection","No single strong step carries the chain; each must hold."],
     ["declared, not evidenced",null,"<b>Declared, not evidenced</b> · a link someone stated with no source attached · connection D","Attaching a source could raise this step; until then the chain is a lead."],
@@ -230,18 +230,18 @@ const SCREEN_REFS = {
     ["a neutral label",null,"<b>Neutral label</b> · a short name for a proceeding that takes no side · used wherever the case is named","Members and readers see \"the lease rent case\", not either party's framing."],
     ["Lakeshore Tenants Association",null,"<b>Lakeshore Tenants Association</b> · the petitioner · the name your team, Lakeshore Tenants, is a party under","Your team is a party, so its own filings belong on this register."],
     ["City of Oakland",null,"<b>City of Oakland</b> · the respondent · the party the court's orders bind here","The party ordered to produce the 2024 rent schedules."],
-    ["Hon. M. Ferris","person","<b>Hon. M. Ferris</b> · a person the record follows · judge of the Superior Court · from the court's register","Issued the 1 October order on demurrer."],
-    ["Order on demurrer",null,"<b>Order on demurrer</b> · 1 October 2026 · the ruling on whether the petition states a claim the court can hear","New on the register; the order to produce the rent schedules is held from it."],
-    ["Opposition filed",null,"<b>Opposition</b> · 14 September 2026 · a written answer to the demurrer","The filing the 1 October order ruled on, with the demurrer."],
-    ["The City shall produce the 2024 rent schedules",null,"<b>Order to produce the 2024 rent schedules</b> · held as an obligation on the city · reply due 30 October","Held as an obligation, a missed date reaches your queue like any other."]
+    ["Hon. M. Ferris","person","<b>Hon. M. Ferris</b> · a person the record follows · judge of the Superior Court · from the court's register","Issued the October 1 order on demurrer."],
+    ["Order on demurrer",null,"<b>Order on demurrer</b> · October 1, 2026 · the ruling on whether the petition states a claim the court can hear","New on the register; the order to produce the rent schedules is held from it."],
+    ["Opposition filed",null,"<b>Opposition</b> · September 14, 2026 · a written answer to the demurrer","The filing the October 1 order ruled on, with the demurrer."],
+    ["The City shall produce the 2024 rent schedules",null,"<b>Order to produce the 2024 rent schedules</b> · held as an obligation on the city · reply due October 30","Held as an obligation, a missed date reaches your queue like any other."]
   ],
   "due-date": [
-    ["your records request","action","<b>Records request: inspection logs</b> · to the Office of the City Clerk · sent 2 October by Mai · acknowledged 3 October, reference R26-0412","The request this date belongs to; a reply recorded there meets it."],
+    ["your records request","action","<b>Records request: inspection logs</b> · to the Office of the City Clerk · sent October 2 by Mai · acknowledged October 3, reference R26-0412","The request this date belongs to; a reply recorded there meets it."],
     ["public records law",null,"<b>Public records act</b> · the law named in your team's profile · sets the time an office has to respond","The basis of this count; a different law would give a different date."],
-    ["10-day response window",null,"<b>10-day response window</b> · counted in calendar days from the day the office receives the request","Counted from 2 October, the day you recorded sending it."],
+    ["10-day response window",null,"<b>10-day response window</b> · counted in calendar days from the day the office receives the request","Counted from October 2, the day you recorded sending it."],
     ["your team's profile","group-identity","<b>Your team's profile</b> · names the law your requests go under and your city's holidays","The 10 days come from it; correct it there if the law is wrong."],
-    ["your profile","group-identity","<b>Your team's profile</b> · names the law your requests go under and your city's holidays","The 13 October holiday comes from it; correct it there if the date is wrong."],
-    ["close of business",null,"<b>Close of business</b> · the end of the office's working day on the due date","A reply that arrives after then on 14 October is late."],
+    ["your profile","group-identity","<b>Your team's profile</b> · names the law your requests go under and your city's holidays","The October 13 holiday comes from it; correct it there if the date is wrong."],
+    ["close of business",null,"<b>Close of business</b> · the end of the office's working day on the due date","A reply that arrives after then on October 14 is late."],
     ["your queue","queue","<b>Your queue</b> · what waits on you","Once confirmed, this date waits there and is flagged once if no reply comes."]
   ],
   "standard": [
@@ -256,7 +256,7 @@ const SCREEN_REFS = {
   ],
   "plan": [
     ["Scenario A",null,"<b>Scenario A · Records first</b> · the scenario laid out so far · phase 1: the records request, then a checkpoint judged by a member","The check above is about this scenario: it has no branch for a refusal or a stall."],
-    ["hostile response",null,"<b>Hostile response</b> · a refusal, obstruction or retaliation in answer to an action · for example a blanket denial, or silence past the due date","Scenario A says nothing about what follows one; a branch can be added before the reply is due on 14 October."],
+    ["hostile response",null,"<b>Hostile response</b> · a refusal, obstruction or retaliation in answer to an action · for example a blanket denial, or silence past the due date","Scenario A says nothing about what follows one; a branch can be added before the reply is due on October 14."],
     ["Is the city repairing…?","question","<b>Is the city repairing reported potholes within seven days?</b> · question · capture B, connection C · short on connection","The inquiry this plan comes from; its weak link is why the plan starts with records."],
     ["Pothole reports marked closed before repair","question","<b>Subject 1</b> · the suspected breach this plan addresses · against passage 3 of Administrative Instruction 4.12 · rests on the question whether “closed” means “repaired”","Every option is chosen against it; if the logs show closed means repaired, the plan has nothing to address."],
     ["hypothetical: not yet shown",null,"<b>Hypothetical</b> · a matter the plan assumes · no finding supports it yet","The options here rest on something unproven; the inspection logs could show it or rule it out."],
@@ -265,7 +265,7 @@ const SCREEN_REFS = {
     ["agendize",null,"<b>Agendize</b> · to put an item on a public meeting's agenda · a council committee can discuss and act only on what is on it","The assistant's suggestion: a way to get repair performance discussed in public, not yet in the plan."],
     ["B · Go public",null,"<b>Scenario B · Go public</b> · an alternative scenario, not laid out yet · would start with the story with a reporter","The fallback if the City Clerk refuses or stalls on the records request."],
     ["logs show inspection dates",null,"<b>Checkpoint</b> · “logs show inspection dates” · judged by a member, with a reason, once the reply comes","Dates of inspection and repair are what would show whether a report was closed before the repair."],
-    ["Response due 14 Oct","due-date","<b>Due 14 October 2026</b> · close of business · 10 calendar days under the public records law the team's profile names, rolled past a Sunday and a city holiday","Phase 1's checkpoint can't be judged before the reply, or before this date passes without one."]
+    ["Response due 14 Oct","due-date","<b>Due October 14, 2026</b> · close of business · 10 calendar days under the public records law the team's profile names, rolled past a Sunday and a city holiday","Phase 1's checkpoint can't be judged before the reply, or before this date passes without one."]
   ],
   "start-send": [
     ["records request",null,"<b>Records request</b> · a kind of action · asks an office for copies of public records under the public records law · the office must reply within its window","This action only asks for records; it accuses no one."],
@@ -286,21 +286,21 @@ const SCREEN_REFS = {
   ],
   "action": [
     ["Office of the City Clerk",null,"<b>Office of the City Clerk</b> · <span class=mk-data>keeps the city's records and answers records requests</span> · held today by Asha Rao · 4 requests from your team, 3 answered on time","The office that must reply; its record with your team so far is 3 of 4 on time."],
-    ["sent 2 October",null,"<b>Sent 2 October 2026</b> · recorded by Mai on the day it was sent","The response clock counts from this date."],
+    ["sent October 2",null,"<b>Sent October 2, 2026</b> · recorded by Mai on the day it was sent","The response clock counts from this date."],
     ["Mai","members","<b>Mai</b> · member of your team · owns Pothole repairs · sent this request and recorded the sending","A reply that reaches her by mail or in person should be recorded here, so the clock stops."],
-    ["Response due 14 October","due-date","<b>Due 14 October 2026</b> · close of business · 10 calendar days from receipt on 2 October, rolled past Sunday 12 October and a city holiday on 13 October","If no reply is recorded by then, the queue says so once; the plan's checkpoint waits on it."],
-    ["City Clerk",null,"<b>City Clerk</b> · an office · <span class=mk-data>keeps the city's records and answers records requests</span> · held today by Asha Rao","Its reply, or its silence by 14 October, decides the plan's next step."],
-    ["acknowledgment",null,"<b>Acknowledgment</b> · a reply · the office confirms it received the request · not an answer","It is not the records: the 14 October due date stands unless the office gives notice of an extension."],
-    ["R26-0412",null,"<b>R26-0412</b> · the City Clerk's reference for this request · from its acknowledgment of 3 October","Quote it in any follow-up so the office can find the request."]
+    ["Response due October 14","due-date","<b>Due October 14, 2026</b> · close of business · 10 calendar days from receipt on October 2, rolled past Sunday October 12 and a city holiday on October 13","If no reply is recorded by then, the queue says so once; the plan's checkpoint waits on it."],
+    ["City Clerk",null,"<b>City Clerk</b> · an office · <span class=mk-data>keeps the city's records and answers records requests</span> · held today by Asha Rao","Its reply, or its silence by October 14, decides the plan's next step."],
+    ["acknowledgment",null,"<b>Acknowledgment</b> · a reply · the office confirms it received the request · not an answer","It is not the records: the October 14 due date stands unless the office gives notice of an extension."],
+    ["R26-0412",null,"<b>R26-0412</b> · the City Clerk's reference for this request · from its acknowledgment of October 3","Quote it in any follow-up so the office can find the request."]
   ],
   "matter": [
     ["noncompliant",null,"<b>Noncompliant</b> · a determination · the act did not meet the rule it is measured against · recorded by a member, with a reason","What the team has determined from its evidence, not what a court has decided."],
     ["established",null,"<b>Established</b> · the determination is settled on the record · its finding meets the project's bar, B/B","Strong enough to act on: escalating does not wait for more evidence."],
     ["lease §7.2","document","<b>Lease §7.2</b> · a clause of the Coliseum lease · a change to the rent needs a council vote","The rule this matter is measured against; the 2024 adjustment had no vote."],
-    ["Notification","action","<b>Stage 2 · Notification</b> · the city has been told · the letter “Demand to rescind”, sent to the City Administrator 19 September · reply due 9 October","The stage the matter is at; its reply decides whether stage 3 is needed."],
-    ["Clock starts",null,"<b>Stage 3 · Clock starts</b> · the next stage · a deadline the city must answer by starts running, tracked in your queue","Advancing to it is the next act offered here; it normally follows the reply due 9 October, or its absence."],
+    ["Notification","action","<b>Stage 2 · Notification</b> · the city has been told · the letter “Demand to rescind”, sent to the City Administrator September 19 · reply due October 9","The stage the matter is at; its reply decides whether stage 3 is needed."],
+    ["Clock starts",null,"<b>Stage 3 · Clock starts</b> · the next stage · a deadline the city must answer by starts running, tracked in your queue","Advancing to it is the next act offered here; it normally follows the reply due October 9, or its absence."],
     ["$38,000 in rent above the schedule","calculation","<b>Rent above the schedule, 2024–2026</b> · a calculation · $38,000 · from the rent schedules, capture B","The consequence the team would cite on escalating; check it still holds before stage 3."],
-    ["the rent schedules","document","<b>Rent schedules</b> · released by the City Clerk on 18 September in answer to the team's request · capture B","The source of the $38,000: a different schedule would change the figure."]
+    ["the rent schedules","document","<b>Rent schedules</b> · released by the City Clerk on September 18 in answer to the team's request · capture B","The source of the $38,000: a different schedule would change the figure."]
   ],
   "case-editor": [
     ["Shared for review","review-copy","<b>Shared for review</b> · the next step · a named outside reader gets a view you can stop at any time · nothing public yet","After this draft, an outside reader can catch what the team missed before it is permanent."],
@@ -310,17 +310,17 @@ const SCREEN_REFS = {
     ["the 2019 negotiation",null,"<b>The 2019 negotiation</b> · the talks that produced the Coliseum lease · before the scope, January 2024 to September 2026","Left out on purpose; readers see that it was considered and set aside."],
     ["City Administrator",null,"<b>City Administrator</b> · an office · <span class=mk-data>runs the city's departments and answers to the council</span>","Named by title, not by name: the case concerns the office's act, whoever held the post."],
     ["signed the March 2024 adjustment","timeline","<b>March 2024: rent adjusted without a vote</b> · an event on the timeline · signed by the City Administrator · capture B · dated by month only","The reason the office is named; a reason must come from the case's own evidence."],
-    ["J. Ortega","person","<b>J. Ortega</b> · Council District 3 since 2023 · voted for Lease amendment 1 on 12 January 2024 · his Form 700 for 2025 lists income from Bayline Properties","A person named needs a reason the findings show; a lead from a hint is not one."],
+    ["J. Ortega","person","<b>J. Ortega</b> · Council District 3 since 2023 · voted for Lease amendment 1 on January 12, 2024 · his Form 700 for 2025 lists income from Bayline Properties","A person named needs a reason the findings show; a lead from a hint is not one."],
     ["reason missing",null,"<b>Reason missing</b> · every person a case names needs the reason, drawn from its evidence","The case can't pass its checks until J. Ortega has a reason or is taken out."],
     ["Edition 1","published","<b>Edition 1</b> of The Coliseum lease · a published case · stays public, marked as corrected, once Edition 2 is published","Its readers see “what changed” first: say what is new and what it corrects."]
   ],
   "review-copy": [
-    ["can read until 20 October",null,"<b>Review copy ends 20 October</b> · after that the reader's view stops · you can stop it sooner","Comments must come in by then; a later reading needs a new review copy."],
+    ["can read until October 20",null,"<b>Review copy ends October 20</b> · after that the reader's view stops · you can stop it sooner","Comments must come in by then; a later reading needs a new review copy."],
     ["Teo","members","<b>Teo</b> · member of your team · a reporter at the Bay Courier · declared expertise: journalism","The advance copy goes to his newsroom, so his tie to it is declared on the case."],
     ["embargoed advance copy",null,"<b>Embargoed advance copy</b> · a newsroom may read it before publication but not report on it until it is public","The Bay Courier can prepare its story; nothing runs before Edition 2 is published."],
     ["Finding 2",null,"<b>Finding 2</b> of Edition 2 · that two rent adjustments had no council vote · meets the bar, B/B","The reviewer asks it to name its schedule; answer or change it before publishing."],
-    ["which schedule the council approved","document","<b>The schedule the council approved</b> · the rent terms in Lease amendment 1, approved 12 January 2024 · Council minutes, item 7","Naming it lets a reader compare the approved rent with the March 2024 rent directly."],
-    ["Prof. Iyer",null,"<b>Prof. N. Iyer</b> · housing-law professor · an outside reader named by Dev · can read until 20 October","An outside reader, not a member: the comment advises, and the team decides."],
+    ["which schedule the council approved","document","<b>The schedule the council approved</b> · the rent terms in Lease amendment 1, approved January 12, 2024 · Council minutes, item 7","Naming it lets a reader compare the approved rent with the March 2024 rent directly."],
+    ["Prof. Iyer",null,"<b>Prof. N. Iyer</b> · housing-law professor · an outside reader named by Dev · can read until October 20","An outside reader, not a member: the comment advises, and the team decides."],
     ["Published","published","<b>Published</b> · the last step · permanent and public · corrected only by a new edition","Deal with reviewers' comments before this step; after it, any change needs Edition 3."]
   ],
   "ceremony": [
@@ -336,16 +336,16 @@ const SCREEN_REFS = {
     ["owner of the project",null,"<b>Owner of The Coliseum lease</b> · Dev · only an owner signs the project's cases","Your signature stands for the team; readers see “signed by an owner of the project”."]
   ],
   "published": [
-    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 18 September 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
+    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published September 18, 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
     ["Lakeshore Tenants",null,"<b>Lakeshore Tenants</b> · the team that made this case · <span class=mk-data>tenants near the Oakland Coliseum, meeting since 2025</span>","The authors; the case is signed by one of them and can be checked without them."],
     ["council vote the lease requires",null,"<b>Lease §7.2</b> · a clause of the Coliseum lease · a change to the rent needs a council vote","The rule this finding measures the rent adjustments against."],
     ["this project's bar",null,"<b>The project's bar</b> · the least capture and connection a finding needs to be relied on · here B for both grades","This finding meets it; the bar is the team's own, set before publishing."],
     ["capture B",null,"<b>Capture grade B</b> · how well a document is held, A to D · A is easiest to check; D rests on a person's word","A grade says how checkable the documents are, never whether the finding is true."],
     ["connection B",null,"<b>Connection grade B</b> · how firmly the documents are linked to the claim, A to D","The link from these documents to the finding is firm, though not the firmest."],
     ["What we did",null,"<b>The team's lane</b> · what the team itself did, kept apart from what the government did","The team's own acts are never mixed in with the city's."],
-    ["Council approves amendment 1",null,"<b>Lease amendment 1</b> · approved by the city council on 12 January 2024 · recorded in the council minutes, item 7","The change the council did vote on; the March 2024 rent adjustment had no vote of its own."],
+    ["Council approves amendment 1",null,"<b>Lease amendment 1</b> · approved by the city council on January 12, 2024 · recorded in the council minutes, item 7","The change the council did vote on; the March 2024 rent adjustment had no vote of its own."],
     ["Rent adjusted",null,"<b>The March 2024 rent adjustment</b> · signed by the City Administrator · dated by month only in the documents","The act finding 1 is about."],
-    ["We requested the schedules",null,"<b>The team's records request</b> · for the rent schedules · made 4 September 2026 · the City Clerk released them 18 September","How the team got its documents: anyone can make the same request."],
+    ["We requested the schedules",null,"<b>The team's records request</b> · for the rent schedules · made September 4, 2026 · the City Clerk released them September 18","How the team got its documents: anyone can make the same request."],
     ["by title",null,"<b>Named by title</b> · the office, not the person who held it","The finding concerns the office's act, not who held the post in March 2024."]
   ],
   "imported": [
@@ -360,7 +360,7 @@ const SCREEN_REFS = {
   "docket": [
     ["withdrawals",null,"<b>Withdrawal</b> · the team withdraws a finding or a whole case, publicly · the earlier edition stays visible, marked withdrawn","None so far for this case."],
     ["superseding",null,"<b>Superseding</b> · Edition 2 replaced Edition 1 as the current edition · Edition 1 stays public, marked as corrected","Every new edition is a docket entry; this is the case's first."],
-    ["Order of 2 October","proceeding","<b>Order of 2 October 2026</b> · Superior Court · in the lease rent case · captured by a member","It binds the team's published case; posting it here is how the team complies in the open."],
+    ["Order of October 2","proceeding","<b>Order of October 2, 2026</b> · Superior Court · in the lease rent case · captured by a member","It binds the team's published case; posting it here is how the team complies in the open."],
     ["Superior Court","proceeding","<b>Superior Court</b> · the state trial court for Alameda County · hears the lease rent case, RG26-114502","Its orders reach what the team publishes as well as what it files."],
     ["exhibit 4",null,"<b>Exhibit 4</b> · a document in Edition 2's evidence · contains a tenant's address · the order seals it","Sealing removes that address from the public case; the next edition says what was sealed and why."],
     ["not yet posted",null,"<b>Not yet posted</b> · a draft docket entry · public only once a member posts it, signed","Readers of the public case can't see this entry until it is posted."],
@@ -368,9 +368,9 @@ const SCREEN_REFS = {
   ],
   "inbox": [
     ["doorbell","doorbell","<b>Your doorbell</b> · the team's public page where anyone can hand over material, without an account","Everything here came through it, so the sender may be anyone."],
-    ["3 PDFs",null,"<b>3 PDFs</b> · handed in 3 October · not yet in the record","Nothing in them counts until a member moves them into the record and they are graded like any other document."],
-    ["inspection sheets","action","<b>Inspection sheets</b> · what the sender calls these files · claimed, not checked · the team's records request asks the City Clerk for inspection logs, due 14 October","Compare them with what the City Clerk releases; sheets that match would raise their standing."],
-    ["same knocker as 12 September",null,"<b>Same knocker</b> · recognized by the secret phrase the sender added · the sender also handed in material on 12 September","Still unnamed, but how the earlier material held up tells you something about this."],
+    ["3 PDFs",null,"<b>3 PDFs</b> · handed in October 3 · not yet in the record","Nothing in them counts until a member moves them into the record and they are graded like any other document."],
+    ["inspection sheets","action","<b>Inspection sheets</b> · what the sender calls these files · claimed, not checked · the team's records request asks the City Clerk for inspection logs, due October 14","Compare them with what the City Clerk releases; sheets that match would raise their standing."],
+    ["same knocker as September 12",null,"<b>Same knocker</b> · recognized by the secret phrase the sender added · the sender also handed in material on September 12","Still unnamed, but how the earlier material held up tells you something about this."],
     ["Same knocker",null,"<b>Same knocker</b> · where this source stands · recognized across deliveries, nothing more known","Weigh the material by what can be checked in it, not by who might have sent it."],
     ["Partly known",null,"<b>Partly known</b> · the next step · a member records what is known of the source, such as role or access, without naming them","Recording it helps weigh the material without exposing who sent it."]
   ],
@@ -386,42 +386,45 @@ for (const [k, v] of Object.entries(SCREEN_REFS)) REFS[k] = (REFS[k] || []).conc
 
 /* Guidance (proposed information level 2, question S8): what each screen is and what a member can do there, on its heading;
    and what each section of the rail holds. */
-// What a screen's title names, when it names a particular thing: its explanation leads with that thing (Bob, 7 October:
+// What a screen's title names, when it names a particular thing: its explanation leads with that thing (Bob, October 7:
 // titles' mouseovers lacked context); the screen's own purpose (SCREEN_HELP) follows in lighter type.
 const TITLE_HELP = {
-  "join": "<b>You're invited to Lakeshore Tenants</b>: Rosa's invitation for you to contribute to the team. This link works once and expires on 13 October 2026.",
+  "join": "<b>You're invited to Lakeshore Tenants</b>: Rosa's invitation for you to contribute to the team. This link works once and expires on October 13, 2026.",
   "home": "<b>Lakeshore Tenants</b>: your team, <span class=mk-data>tenants near the Coliseum meeting since 2025</span>, six members. Its focus: <span class=mk-data>rents and leases on city land, and the streets members live on</span>.",
-  "archive": "<b><span class=mk-data>Agenda packet, City Council, 14 May 2024</span></b>: a ZIP archive Ana captured from the city's meeting site on 2 October 2026, for Sewer fund transfers. Every file inside is listed with what happened to it: filed, held for review, or set aside.",
-  "open-file": "<b><span class=mk-data>Pothole repair policy, Administrative Instruction 4.12</span></b>: the city's PDF that Dev captured from its website on 2 October. Before it opens, this says how risky opening it is and why.",
-  "document": "<b><span class=mk-data>Pothole repair policy, Administrative Instruction 4.12</span></b>: <span class=mk-data>Public Works' policy, revised 2023</span>, captured by Dev from oaklandca.gov on 2 October 2026. It holds <span class=mk-data>the seven-day repair rule</span> the Pothole repairs project tests the city against.",
+  "archive": "<b><span class=mk-data>Agenda packet, City Council, May 14, 2024</span></b>: a ZIP archive Ana captured from the city's meeting site on October 2, 2026, for Sewer fund transfers. Every file inside is listed with what happened to it: filed, held for review, or set aside.",
+  "open-file": "<b><span class=mk-data>Pothole repair policy, Administrative Instruction 4.12</span></b>: the city's PDF that Dev captured from its website on October 2. Before it opens, this says how risky opening it is and why.",
+  "document": "<b><span class=mk-data>Pothole repair policy, Administrative Instruction 4.12</span></b>: <span class=mk-data>Public Works' policy, revised 2023</span>, captured by Dev from oaklandca.gov on October 2, 2026. It holds <span class=mk-data>the seven-day repair rule</span> the Pothole repairs project tests the city against.",
   "project": "<b>Pothole repairs</b>: your team's project asking <span class=mk-data>whether the city repairs reported potholes as its own policy requires</span>. Its questions, how strong each is against the project's bar, its members and its plan are here.",
-  "question": "<b><span class=mk-data>Is the city repairing reported potholes within seven days?</span></b>: Dev's question in Pothole repairs, opened 3 October. It tests the city against its own seven-day rule in Administrative Instruction 4.12; what supports it and what cuts against it are listed below.",
-  "assistant": "<b><span class=mk-data>Is the city repairing reported potholes within seven days?</span></b>: Dev's question in Pothole repairs, opened 3 October, with the assistant beside it. It answers only from what your team holds and never concludes, signs or sends.",
+  "question": "<b><span class=mk-data>Is the city repairing reported potholes within seven days?</span></b>: Dev's question in Pothole repairs, opened October 3. It tests the city against its own seven-day rule in Administrative Instruction 4.12; what supports it and what cuts against it are listed below.",
+  "assistant": "<b><span class=mk-data>Is the city repairing reported potholes within seven days?</span></b>: Dev's question in Pothole repairs, opened October 3, with the assistant beside it. It answers only from what your team holds and never concludes, signs or sends.",
   "person": "<b><span class=mk-data>L. Chen</span></b>: Director of Public Works since March 2022, named in 14 documents your team holds. Every fact about them here cites the document it comes from.",
   "timeline": "<b>Timeline of The Coliseum lease</b>: what happened in the lease, in order, the city's acts and your team's in two lanes.",
-  "money": "<b>Sewer fund transfers, FY2022</b>: Ana's money trail of three figures read from the city's budget and its financial report, following money out of the Sewer Fund, mostly to the General Fund, in fiscal year 2022 (1 July 2021 to 30 June 2022).",
-  "calculation": "<b><span class=mk-data>Reports closed within seven days, FY2025</span></b>: a fact your team worked out from the Public Works work orders for fiscal year 2025: <span class=mk-data>812 of 903 pothole reports (89.9%) were marked closed within seven calendar days of being reported</span>. Its method is shown below, Ana checked it on 5 October, and it is worked out again if an input changes. <span class=mk-data>It counts reports closed, not potholes repaired.</span>",
+  "money": "<b>Sewer fund transfers, FY2022</b>: Ana's money trail of three figures read from the city's budget and its financial report, following money out of the Sewer Fund, mostly to the General Fund, in fiscal year 2022 (July 1, 2021 to June 30, 2022).",
+  "calculation": "<b><span class=mk-data>Reports closed within seven days, FY2025</span></b>: a fact your team worked out from the Public Works work orders for fiscal year 2025: <span class=mk-data>812 of 903 pothole reports (89.9%) were marked closed within seven calendar days of being reported</span>. Its method is shown below, Ana checked it on October 5, and it is worked out again if an input changes. <span class=mk-data>It counts reports closed, not potholes repaired.</span>",
   "explore": "<b>Explore connections</b>: chains from J. Ortega to the Coliseum lease, through money and votes, as of 2026, each step cited and graded.",
   "proceeding": "<b><span class=mk-data>Lakeshore Tenants Assn. v. City, RG26-114502</span></b>: a Superior Court case the record follows, shown under a neutral label, \"the lease rent case\". Its parties, filings and orders, with their dates, are here.",
-  "due-date": "<b>Due 14 October 2026</b>: the day the City Clerk must reply to your team's records request. The law it comes from and how the days were counted are below.",
+  "due-date": "<b>Due October 14, 2026</b>: the day the City Clerk must reply to your team's records request. The law it comes from and how the days were counted are below.",
   "standard": "<b><span class=mk-data>Repair reported potholes within seven calendar days</span></b>: a requirement the city set itself, in Administrative Instruction 4.12 §3, a Public Works policy in force since 2023. Your team's questions test the city against it.",
-  "plan": "<b><span class=mk-data>Repairs: closed is not repaired</span></b>: Dev's action plan, opened 3 October when the inquiry began, about <span class=mk-data>reports marked closed when the pothole may not be repaired</span>. Its options, the order to try them and what to check are here.",
+  "plan": "<b><span class=mk-data>Repairs: closed is not repaired</span></b>: Dev's action plan, opened October 3 when the inquiry began, about <span class=mk-data>reports marked closed when the pothole may not be repaired</span>. Its options, the order to try them and what to check are here.",
   "start-send": "<b>Start \"Records request: inspection logs\"</b>: the first step of that option in the plan. Nothing is sent until you confirm; this shows what it will say and what it rests on.",
-  "action": "<b>Records request: inspection logs</b>: your team's request to the Office of the City Clerk, sent by Mai on 2 October. What was sent, when the reply is due and what came back are here.",
+  "action": "<b>Records request: inspection logs</b>: your team's request to the Office of the City Clerk, sent by Mai on October 2. What was sent, when the reply is due and what came back are here.",
   "matter": "<b><span class=mk-data>The 2024 rent adjustment, made without a council vote</span></b>: what your team is pursuing about this one problem, judged noncompliant with lease §7.2 and established, from the first letter to the outcome.",
   "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your team's published case. Nothing here is public until an owner signs and publishes it.",
-  "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
+  "review-copy": "<b>Share this edition for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
   "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Publishing makes this edition permanent and public. It can be corrected by a new edition, never removed.",
-  "published": "<b>The Coliseum lease</b>: your team's published case as anyone reads it: Edition 2, published 18 September 2026, which corrects Edition 1.",
-  "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on 1 October. Nothing in it counts for your team until a member accepts it.",
+  "published": "<b>The Coliseum lease</b>: your team's published case as anyone reads it: Edition 2, published September 18, 2026, which corrects Edition 1.",
+  "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on October 1. Nothing in it counts for your team until a member accepts it.",
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the team documents or information, without an account. It says exactly what happens to what is sent.",
 };
 const SCREEN_HELP = {
+  bias: 'The lens your team reads evidence through, stated so a reader can discount it. Write a set, draft one from an outside policy, adopt it, and settle work made under an earlier lens.',
   site: 'Civicsmith\'s own website: what it is, a team\'s published work, the teams that chose to be listed, and how to start a team.',
   install: 'Creates your team\'s Civicsmith in a Cloudflare account your team controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
   update: 'Updates your team\'s Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.',
   updates: 'Administrators only: the release your team\'s Civicsmith runs, the release ready to install and what changes in it, and the choice: Update, Not now or Skip this version.',
   front: 'Your team\'s own page: who it is, what it has published, how to hand it material and how it works, with members\' sign-in beside it.',
+  glossary: 'What the terms and marks in the record mean, in plain words: money terms, how the record is kept honest, and what each state allows.',
+  actionnew: 'Start an action of any kind: who it goes to, what it asks, how carefully to act, what it rests on, and when it is due and why.',
   'help-records': 'What the law requires of the office you ask for records, the faster request, and what the city\'s portal shows.',
   tour: 'How your team works, in six short steps, for anyone: no account needed, nothing recorded.',
   reset: 'Choose a new password from the one-time reset link an administrator made for you.',
@@ -461,6 +464,17 @@ const SCREEN_HELP = {
   'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
   document: 'One document as captured: its words by page, its copy\'s grade, its versions beside each other, the links it carries, the people and organizations it names, and what cites it. Cite from here.',
   project: 'A project: its questions, their strength against the project\'s bar, its members and its stage. Open a question or a plan from here.',
+  leads: 'Write down something you were told, record who looked into it and what they found, and share it with a project.',
+  registers: 'The public registers your team holds: bring one in whole, search it and cite a row, watch a filer, license or docket by its number, and connect outside alerts.',
+  aiproviders: 'The team\'s AI: the accounts in use in order, budgets and alerts, the seven privacy and origin checks, what members may use, and the catalogue of providers and their plans.',
+  aiconnect: 'One plan, connected step by step: what it is sent and which terms bind your use, signing up, giving the key, what you accept, a test, and turning it on.',
+  aimine: 'Your own AI: what serves you now, your choices among what the team allows, your own accounts, the checks in force for you and what you have used.',
+  aiproject: 'The AIs this project uses, its budget and order, and the checks that apply to the work done directly in it.',
+  aimoments: 'What the assistant shows when an account reaches its limit, a provider stops answering, a model is retired or material is about to go to a new provider.',
+  aitest: 'Test a custom endpoint or an unlisted plan before it is used: the cost first, the result by part, and exactly what would be sent.',
+  airesults: 'What other teams\' tests found for each AI: the parts it passed, its limits, its speed and cost, and the grade.',
+  watching: 'Every address your team watches: what is due to be checked, pausing the watching, and the sweeps that look through a site.',
+  contradiction: 'Two passages in your team\'s record that are in tension: see both as written, then settle it by saying how they differ or that one is wrong, take it up as a question, conclude it, or dismiss it as a lead.',
   question: 'One question: what supports it and what cuts against it, its strength against the bar, and what would change the answer.',
   answers: 'Ask in plain words, with the assistant, or find and count without it. Answers come only from what your team holds, and show where they looked.',
   assistant: 'A question with the assistant beside it. It answers only from what your team holds and never concludes, signs or sends.',
@@ -484,6 +498,10 @@ const SCREEN_HELP = {
   published: 'A case your team published, as anyone reads it: findings, their strength, the evidence, and how to check it without the team.',
   imported: 'Another team\'s published case, recreated here. Nothing in it counts for your team until a member accepts it with a reason.',
   docket: 'The public record of every edition, correction and withdrawal of your team\'s cases.',
+  hold: 'Where a legal threat reached the team and what it keeps because of it: any member who can see the action or the case places a hold, with a reason.',
+  holdnotice: 'The notice that tells members what to keep outside Civicsmith. You send it yourself; Civicsmith records that you did and nothing about anyone else.',
+  counsel: 'A packet for the team\'s lawyer: what the record holds on one action, as it stands, for a claim or for a defense. It is never published or filed.',
+  grouprules: 'A deadline or a legal fact your jurisdiction\'s profile lacks, drafted by one member and applied only after another member confirms it.',
   'docket-public': 'Lets anyone check what happened to a published case after it was published, without an account. Your team files and posts its entries on its own Docket.',
   inbox: 'Material handed to your team through its doorbell. Move it into the record, or discard it with a reason.',
   doorbell: 'Hand material to the team. You need no account; the page says what will happen to what you send.',
@@ -500,6 +518,10 @@ const RAIL_HELP = {
 
 // What each table column shows, by screen and heading: the heading's explanation, at the level of names (always on).
 const COL_HELP = {
+  'finder|Item': 'The item\'s own title, as your team holds it. Open it to read it.',
+  'finder|Kind': 'What sort of item it is: a document, a question, an action or a case.',
+  'finder|State': 'Where the item stands in your team\'s work. Rest on a state to see what it means and what it allows.',
+  'finder|Updated': 'The day the item last changed in your team\'s record, not the day it was written.',
   'members|Member': 'Each member by the handle the record shows, and whether they are an administrator.',
   'members|May do': 'What each member may do here, as the administrators set it: add and revise work, start projects, sign and publish cases. An administrator may do all of it, and also looks after the team\'s Civicsmith.',
   'members|Expertise': 'What a member says they know, such as accounting or engineering, so others can ask them to check work in that field. Each member declares it in their account; an administrator can confirm it.',

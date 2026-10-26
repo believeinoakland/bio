@@ -73,6 +73,8 @@ import { materialsOf, extractedTextOf, acceptedWorkOf as acceptedWorkBlocksOf, c
          sourceRowsStanding } from "../case-grammar/index.mjs";
 import { CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES, migrateCaseCarriage } from "./schema.mjs";
 import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
 export { CASE_CARRIAGE_SCHEMA, CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES } from "./schema.mjs";
 export { CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
@@ -96,28 +98,34 @@ export const MARKS_LAPSED_MAX = 200;
 export const obscuredKey = (store, sha) => `${store}/obscured/${sha}`;
 /** R15: the most queued documents one `copyBatch` derives: its default and its bound. */
 export const DOCUMENT_COPY_BATCH_MAX = 10;
+/** R15 (T51; K4570 G9): the most `copyNow` reads of one document, 2 MiB; a larger one is the alarm's. */
+export const COPY_NOW_MAX_BYTES = boundOf("case", "copy_now_bytes");
+/** R15 (T51; fix round 10, R24 b2; K5057): the size above which a document's bytes are digested by the platform's native
+ *  SHA-256, not the one-shot pure-JS hash that holds the object's thread for the length of a large file. */
+export const NATIVE_DIGEST_MIN_BYTES = 1024 * 1024;
 /** R15: how long after a failed read of the evidence store a queued document is tried again. */
 export const DOCUMENT_COPY_RETRY_MS = 300000;
 
 /* R9, R10: a photo is told by the type recorded with its capture, else its register path's extension (synchronous). */
+const IMAGE_FORMATS = new Set(["jpeg", "jpg", "png", "gif", "webp", "heic", "heif", "avif", "tiff", "tif", "bmp"]);
 const IMAGE_EXT = /\.(jpe?g|jfif|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i;
 /* R8 (K2291 (2)): an entry of an archive's listing that is itself an archive never opened. */
 const ARCHIVE_EXT = /\.zip$/i;
 /* R1, R8 (T38; N779): why a photo, or an archive holding an image, is not carried. */
-export const PHOTO_ONLY_AS_COPY = "a photo travels only as its copy";
-export const ARCHIVE_HOLDS_IMAGE = "the archive holds an image, and an image leaves only as its copy";
+export const PHOTO_ONLY_AS_COPY = word("case-carriage.photo_only_as_copy");
+export const ARCHIVE_HOLDS_IMAGE = word("case-carriage.archive_holds_image");
 /* R1, R8, R13 (T39; N806, K2333): why a member document carried whole, or a member's archive, is not carried. */
-export const MEMBER_DOCUMENT_ONLY_AS_COPY = "a member's document travels only as its copy";
-export const ARCHIVE_SUPPLIED_BY_MEMBER = "the archive was supplied by a member, and a member's file leaves only as its copy";
+export const MEMBER_DOCUMENT_ONLY_AS_COPY = word("case-carriage.member_document_only_as_copy");
+export const ARCHIVE_SUPPLIED_BY_MEMBER = word("case-carriage.archive_supplied_by_member");
 /* R13: why a member document's row lapses when its state cannot be read. */
-const DOCUMENT_UNREAD = "the document's copy could not be read, so it cannot be confirmed";
+const DOCUMENT_UNREAD = word("case-carriage.document_unread");
 /* R13: why a photo's row lapses when its marks cannot be read. */
-const MARKS_UNREAD = "the photo's marks could not be read, so its copy cannot be confirmed";
+const MARKS_UNREAD = word("case-carriage.marks_unread");
 /* R20 (T46; N907): why a row lapses over the interval since a check. */
-export const COPY_CHANGED_SINCE = "the copy changed since the check was made, so the check no longer holds";
-const SINCE_UNREAD = "the instant the check was made cannot be read, so its copy cannot be confirmed since";
-const MARKS_HISTORY_UNREAD = "the photo's marks since the check could not be read, so its copy cannot be confirmed";
-const DOCUMENT_HISTORY_UNREAD = "the document's copies since the check could not be read, so its copy cannot be confirmed";
+export const COPY_CHANGED_SINCE = word("case-carriage.copy_changed_since");
+const SINCE_UNREAD = word("case-carriage.since_unread");
+const MARKS_HISTORY_UNREAD = word("case-carriage.marks_history_unread");
+const DOCUMENT_HISTORY_UNREAD = word("case-carriage.document_history_unread");
 /* R19: the page asked of accepted-work's withdrawals (case-import's bound), and the most pages one read walks. */
 const WITHDRAWAL_PAGE = 1000, WITHDRAWAL_PAGES_MAX = 1000;
 /* R21 (T47): the page asked of a source's changes (sources R20's bound), and the most pages one source's read walks. */
@@ -150,6 +158,12 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 const te = new TextEncoder();
 const digestOf = (v) => String(v ?? "").trim().replace(/^sha256:/i, "").toLowerCase();
+/* R15 (T51; R24 b2): the platform's SHA-256 of `bytes` as lower-case hex; the same digest the pure-JS hash answers. */
+const nativeSha256 = async (bytes) => {
+  const d = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, "0")).join("");
+};
+const jsSha256 = (bytes) => createSha256().update(bytes).hex();
 const shaOf = (text) => createSha256().update(te.encode(String(text))).hex();
 /* R1, R13 (case-grammar R12): the `obscured` a row states, `{copy}` with the copy's digest read lower-case, or null. */
 const obscuredOf = (m) => {
@@ -166,13 +180,15 @@ export class CaseCarriage {
 
   constructor({ storage, record, membership = null, promotion = null, host = null, extraction = null, sources = null,
                 acceptedWork = null, now = null, bucket = null, store = null, cover = null, provenance = null,
-                clean = null } = {}) {
+                clean = null, nativeDigest = null, jsDigest = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.bucket = bucket && typeof bucket.put === "function" ? bucket : null;
     this.store = store;
     this.cover = typeof cover === "function" ? cover : coverAreas;
     this.clean = typeof clean === "function" ? clean : cleanDocument;
+    this.nativeDigest = typeof nativeDigest === "function" ? nativeDigest : nativeSha256;   // R15: a test counts the work
+    this.jsDigest = typeof jsDigest === "function" ? jsDigest : jsSha256;
     this.provenance = provenance;
     this.record = record;
     this.membership = membership;
@@ -224,13 +240,21 @@ export class CaseCarriage {
     let rows = null;
     try { const m = materialsOf(fm); rows = m && Array.isArray(m.materials) ? m.materials : null; } catch { rows = null; }
     rows = Array.isArray(rows) ? rows.filter((m) => m && typeof m === "object") : [];
-    const seen = new Set(), named = new Set();
+    const seen = new Set(), named = new Map(), stamped = new Map();
+    let capture = null;   // G47t: the capture the material being held is for (an archive's tokens: the member's)
     const hold = (ref, kind, sha, text, bytes, derived = false) => {
       const inline = typeof text === "string";
       const size = inline ? te.encode(text).length : Number.isInteger(bytes) ? bytes : null;
-      if (!named.has(`${sha}\u0000${ref}`)) {
-        named.add(`${sha}\u0000${ref}`);
-        files.push({ sha256: sha, ref, path: `materials/${sha}`, kind, bytes: size });
+      const key = `${sha}\u0000${ref}`;
+      if (!named.has(key)) {
+        const entry = { sha256: sha, ref, path: `materials/${sha}`, kind, bytes: size };
+        if (kind === "attestation") { entry.capture_sha = capture; stamped.set(key, new Set([capture])); }
+        named.set(key, entry);
+        files.push(entry);
+      } else if (kind === "attestation") {
+        /* G47t: a token two different captures name is shared (null), whatever the order they name it in */
+        const by = stamped.get(key);
+        if (by) { by.add(capture); if (by.size > 1) named.get(key).capture_sha = null; }
       }
       if (seen.has(sha)) return;
       seen.add(sha);
@@ -240,6 +264,7 @@ export class CaseCarriage {
     const images = new Map();   // R8: archive → whether it holds an image, judged once per call
     for (const m of rows) {
       const ref = str(m.ref), sha = str(m.sha).toLowerCase(), kind = m.kind;
+      capture = sha;
       if (!(m.included === true || m.included === "true")) {
         const ob = obscuredOf(m);
         if (ob) this.#holdCopy(ref, sha, ob, hold, unheld);
@@ -256,10 +281,10 @@ export class CaseCarriage {
       const inlineOk = !!inline && shaOf(inline.content) === sha;
       if (kind === "observation") {
         if (inlineOk) hold(ref, "observation", sha, inline.content);
-        else miss("observation", "your group's Civicsmith holds no text of that observation at its digest");
+        else miss("observation", word("case-carriage.miss.group_civicsmith_holds"));
         continue;
       }
-      if (!inlineOk && !(home && !inline)) { miss("document", "your group's Civicsmith holds no bytes of that document at its digest"); continue; }
+      if (!inlineOk && !(home && !inline)) { miss("document", word("case-carriage.miss.group_civicsmith_holds_bytes")); continue; }
       /* (T39; N806, K2333) a member document is carried whole only when it carries nothing doc-clean removes */
       const member = this.#memberOf(sha);
       if (member && member.state !== "clean") { miss("document", MEMBER_DOCUMENT_ONLY_AS_COPY); continue; }
@@ -274,7 +299,7 @@ export class CaseCarriage {
           text = extractedTextOf(u.units);
       } catch { text = null; }
       if (typeof text === "string" && HEX64.test(textSha) && shaOf(text) === textSha) hold(ref, "extracted_text", textSha, text);
-      else miss("extracted_text", "your group's Civicsmith holds no whole extracted text of that document at its stated digest");
+      else miss("extracted_text", word("case-carriage.miss.group_civicsmith_holds_whole"));
       /* its timestamp tokens, as the capture's home provenance names them (K1315, K1322) */
       this.#holdTokens(ref, home, sha, hold, unheld);
       /* R8 (N688; K1844): a member of a captured archive, carried with its archive, outward to the outermost; (T39) a
@@ -295,7 +320,7 @@ export class CaseCarriage {
     } catch {
       /* Nothing written can be answered as held: every item is named unheld instead, never refused. */
       return { materials: [], files: [], unheld: [...files.map((f) => ({ ref: f.ref || null, kind: f.kind, sha256: f.sha256,
-        why: "your group's Civicsmith could not record it" })), ...unheld].slice(0, UNHELD_MAX) };
+        why: word("case-carriage.why.group_civicsmith_record") })), ...unheld].slice(0, UNHELD_MAX) };
     }
     return { materials, unheld: unheld.slice(0, UNHELD_MAX), files };
   }
@@ -307,7 +332,7 @@ export class CaseCarriage {
       const f = this.#fileRow(home.bundle_id, t);
       if (f && typeof f.text === "string") hold(ref, "attestation", shaOf(f.text), f.text);
       else if (f && typeof f.blobSha === "string" && HEX64.test(f.blobSha)) hold(ref, "attestation", f.blobSha, null, f.bytes);
-      else unheld.push({ ref: ref || null, kind: "attestation", sha256: sha, why: `the timestamp token ${t} is not held` });
+      else unheld.push({ ref: ref || null, kind: "attestation", sha256: sha, why: word("case-carriage.why.timestamp_token_held", { t: String(t) }) });
     }
   }
 
@@ -330,7 +355,7 @@ export class CaseCarriage {
       const c = entry.container;
       const archive = str(c.archive_sha256).toLowerCase();
       if (digestOf(c.member_sha256) !== cur || !HEX64.test(archive)) {
-        unheld.push({ ref: ref || null, kind: "container", sha256: cur, why: "the container record does not name this document" });
+        unheld.push({ ref: ref || null, kind: "container", sha256: cur, why: word("case-carriage.why.container_record_name") });
         return;
       }
       const record = canonicalJson(c);
@@ -341,7 +366,7 @@ export class CaseCarriage {
       const inline = aHome ? this.#fileText(aHome.bundle_id, aHome.path) : null;
       const inlineOk = !!inline && shaOf(inline.content) === archive;
       if (!inlineOk && !(aHome && !inline)) {
-        unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: "the archive is not held" });
+        unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: word("case-carriage.why.archive_held") });
         return;
       }
       if (this.#fetched(archive) !== true) {
@@ -712,7 +737,7 @@ export class CaseCarriage {
           || this.#one(`SELECT bytes FROM document_copies WHERE capture=? AND sha256=? AND state='copy' LIMIT 1`, sha, ob.copy);
     } catch { r = null; }
     if (r) hold(ref, "obscured", ob.copy, null, Number.isInteger(r.bytes) ? r.bytes : null, true);
-    else unheld.push({ ref: ref || null, kind: "obscured", sha256: ob.copy || null, why: "the obscured copy is not held" });
+    else unheld.push({ ref: ref || null, kind: "obscured", sha256: ob.copy || null, why: word("case-carriage.why.obscured_copy_held") });
   }
 
   /* R1, R8, R13 (T38; N779): whether a capture is a photo (R9's term), judged over every home the record holds it on,
@@ -720,9 +745,25 @@ export class CaseCarriage {
      any home's register path has an image's extension. */
   #isPhoto(sha) {
     const homes = this.#homes(sha);
-    const types = homes.flatMap((h) => this.#entriesFor(h, sha)).map((d) => str(d.capture.content_type).toLowerCase()).filter(Boolean);
+    return this.#judgePhoto(homes.flatMap((h) => this.#entriesFor(h, sha)), homes.map((h) => h.path));
+  }
+
+  /* R1 (K5148): the one rule for a photo, over the provenance documents of a capture and its register paths. An image
+     when a document's `capture.content_type` is an image type; else when its `profile.format.format` names an image
+     (an upload records no content type, only the profile of its bytes), or, with no format, its
+     `profile.source_content_type` is an image type; else, when nothing states a type or a format, by the path's
+     extension. A format or a type that is not an image wins over the extension. */
+  #judgePhoto(docs, paths) {
+    const types = docs.map((d) => str(d.capture?.content_type).toLowerCase()).filter(Boolean);
     if (types.some((t) => t.startsWith("image/"))) return true;
-    return !types.length && homes.some((h) => IMAGE_EXT.test(String(h.path || "")));
+    let stated = types.length > 0;
+    for (const d of docs) {
+      const fmt = str(d.profile?.format?.format).toLowerCase(), declared = str(d.profile?.source_content_type).toLowerCase();
+      if (IMAGE_FORMATS.has(fmt)) return true;
+      if (fmt && fmt !== "undetermined") stated = true;
+      else if (declared) { if (declared.startsWith("image/")) return true; stated = true; }
+    }
+    return !stated && paths.some((x) => IMAGE_EXT.test(String(x || "")));
   }
 
   /* R1, R8: every register row homing a capture on a bundle that exists (provenance R48, record-core R37). */
@@ -778,10 +819,10 @@ export class CaseCarriage {
 
   /* R9, R10: the photo `sha` as `viewer` may see it: `{ok: true, sha, photo}` or NO_SUCH_PHOTO. Held means a register
      row homes it on a bundle that exists; seen means membership's sight admits `viewer` to one such bundle. A photo is
-     told by the `capture.content_type` its home's provenance records, else its register path's extension. */
+     told as R1 tells it (`#judgePhoto`). */
   #photo(captureSha, viewer) {
     const sha = digestOf(captureSha);
-    const none = () => refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: HEX64.test(sha) ? sha : null });
+    const none = () => refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: HEX64.test(sha) ? sha : null });
     if (!HEX64.test(sha) || typeof viewer !== "string" || !viewer.trim()) return none();
     let homes = [];
     try {
@@ -795,8 +836,7 @@ export class CaseCarriage {
       if (ok) { seen = h; break; }
     }
     if (!seen) return none();
-    const types = this.#entriesFor(seen, sha).map((d) => str(d.capture.content_type).toLowerCase()).filter(Boolean);
-    const photo = types.length ? types[0].startsWith("image/") : IMAGE_EXT.test(String(seen.path || ""));
+    const photo = this.#judgePhoto(this.#entriesFor(seen, sha), [seen.path]);
     return { ok: true, sha, photo };
   }
 
@@ -838,7 +878,7 @@ export class CaseCarriage {
       const { marks, last } = this.#marksOf(p.sha);
       return { ok: true, capture: p.sha, photo: true, ...CaseCarriage.#view(marks, last), marks };
     } catch {
-      return refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: null });
+      return refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: null });
     }
   }
 
@@ -850,30 +890,30 @@ export class CaseCarriage {
   async obscureMark({ captureSha, areas, by } = {}) {
     try {
       if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
-        return refusal("MACHINE_CANNOT_MARK_PHOTO", "a mark is made by a member; an assistant's proposal of areas is not a mark");
+        return refusal("MACHINE_CANNOT_MARK_PHOTO", localize("case-carriage.index.a_mark_is_made_by", "a mark is made by a member; an assistant's proposal of areas is not a mark"));
       const p = this.#photo(captureSha, by);
       if (!p.ok) return p;
-      if (!p.photo) return refusal("NOT_A_PHOTO", "that capture is not an image", { capture: p.sha });
+      if (!p.photo) return refusal("NOT_A_PHOTO", localize("case-carriage.index.that_capture_is_not", "that capture is not an image"), { capture: p.sha });
       const bad = (area, detail) => refusal("MARK_MALFORMED", detail, { capture: p.sha, area });
-      if (!Array.isArray(areas)) return bad(null, "areas is not a list");
-      if (areas.length > MARK_AREAS_MAX) return bad(null, `a mark holds at most ${MARK_AREAS_MAX} areas`);
+      if (!Array.isArray(areas)) return bad(null, localize("case-carriage.index.areas_is_not_a_list", "areas is not a list"));
+      if (areas.length > MARK_AREAS_MAX) return bad(null, localize("case-carriage.index.a_mark_holds_at_most", "a mark holds at most {MARK_AREAS_MAX} areas", { MARK_AREAS_MAX: String(MARK_AREAS_MAX) }));
       const clean = [];
       for (const [i, a] of areas.entries()) {
-        if (!a || typeof a !== "object" || Array.isArray(a)) return bad(i, `area ${i} is not an object {rect, kind, reason?}`);
+        if (!a || typeof a !== "object" || Array.isArray(a)) return bad(i, localize("case-carriage.index.area_i_is_not_an", "area {i} is not an object {rect, kind, reason?}", { i: String(i) }));
         const r = a.rect;
         if (!Array.isArray(r) || r.length !== 4 || !r.every((v) => Number.isSafeInteger(v)) || !(r[0] < r[2] && r[1] < r[3]))
           return bad(i, `area ${i}'s rect is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1`);
-        if (!MARK_KINDS.includes(a.kind)) return bad(i, `area ${i}'s kind is not one of ${MARK_KINDS.join(", ")}`);
+        if (!MARK_KINDS.includes(a.kind)) return bad(i, localize("case-carriage.index.area_i_s_kind_is", "area {i}'s kind is not one of {MARK_KINDS}", { i: String(i), MARK_KINDS: String(MARK_KINDS.join(", ")) }));
         clean.push({ rect: [...r], kind: a.kind, ...(a.reason !== undefined ? { reason: a.reason } : {}) });
       }
       for (const [i, a] of clean.entries())
         if (a.kind === "staff" && !(typeof a.reason === "string" && a.reason.trim() && a.reason.length <= STAFF_REASON_MAX))
-          return refusal("STAFF_MARK_NO_REASON", `area ${i} obscures a staff member with no reason of 1 to ${STAFF_REASON_MAX} characters`,
+          return refusal("STAFF_MARK_NO_REASON", localize("case-carriage.index.area_i_obscures_a_staff", "area {i} obscures a staff member with no reason of 1 to {STAFF_REASON_MAX} characters", { i: String(i), STAFF_REASON_MAX: String(STAFF_REASON_MAX) }),
                          { capture: p.sha, area: i });
       for (const a of clean) if (a.kind !== "staff") delete a.reason;
       return await this.#serially(p.sha, () => this.#mark(p.sha, clean, by.trim()));
     } catch {
-      return refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: null });
+      return refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: null });
     }
   }
 
@@ -885,13 +925,13 @@ export class CaseCarriage {
   async obscureMarkWithdraw({ captureSha, mark, reason, by } = {}) {
     try {
       if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
-        return refusal("MACHINE_CANNOT_WITHDRAW_MARK", "a mark is withdrawn by a member, never by an assistant or the daemon");
+        return refusal("MACHINE_CANNOT_WITHDRAW_MARK", localize("case-carriage.index.a_mark_is_withdrawn", "a mark is withdrawn by a member, never by an assistant or the daemon"));
       const p = this.#photo(captureSha, by);
       if (!p.ok) return p;
       const id = typeof mark === "string" && /^\d+$/.test(mark.trim()) ? Number(mark.trim()) : mark;
       return await this.#serially(p.sha, () => this.#withdraw(p.sha, id, reason, by.trim()));
     } catch {
-      return refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: null });
+      return refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: null });
     }
   }
 
@@ -901,13 +941,13 @@ export class CaseCarriage {
     const own = Number.isSafeInteger(id) && id > 0
       ? this.#one(`SELECT mark FROM photo_marks WHERE capture=? AND mark=?`, sha, id) : null;
     /* (T40; DEC-187 (3)) the words' `{photo}` is the photo named, carried beside them */
-    if (!own) return refusal("NO_SUCH_MARK", "no mark of that number is on that photo",
+    if (!own) return refusal("NO_SUCH_MARK", localize("case-carriage.index.no_mark_of_that", "no mark of that number is on that photo"),
                              { capture: sha, mark: Number.isSafeInteger(id) ? id : null, photo: sha });
     const prior = this.#one(`SELECT withdrawal, by, at FROM photo_mark_withdrawals WHERE mark=?`, id);
-    if (prior) return refusal("MARK_ALREADY_WITHDRAWN", `mark ${id} was withdrawn at ${prior.at} by ${prior.by}`,
+    if (prior) return refusal("MARK_ALREADY_WITHDRAWN", localize("case-carriage.index.mark_id_was_withdrawn_at", "mark {id} was withdrawn at {at} by {by}", { id: String(id), at: String(prior.at), by: String(prior.by) }),
                               { capture: sha, mark: id, withdrawn: { by: prior.by, at: prior.at }, member: prior.by, date: prior.at });
     if (!(typeof reason === "string" && reason.trim() && reason.length <= WITHDRAW_REASON_MAX))
-      return refusal("WITHDRAW_NO_REASON", `a withdrawal gives a reason of 1 to ${WITHDRAW_REASON_MAX} characters`, { capture: sha, mark: id });
+      return refusal("WITHDRAW_NO_REASON", localize("case-carriage.index.a_withdrawal_gives_a_reason", "a withdrawal gives a reason of 1 to {WITHDRAW_REASON_MAX} characters", { WITHDRAW_REASON_MAX: String(WITHDRAW_REASON_MAX) }), { capture: sha, mark: id });
     const { marks } = this.#marksOf(sha);
     const standing = marks.filter((m) => !m.withdrawn && m.mark !== id);
     const derivation = standing.length ? await this.#derive(sha, standing.flatMap((m) => m.areas).map((a) => a.rect), Infinity) : null;
@@ -964,13 +1004,13 @@ export class CaseCarriage {
       let c = null;
       try { c = await this.cover(original.bytes, { areas: rects }); } catch { c = null; }
       if (c && c.ok === false && c.code === "AREA_OUTSIDE" && rects.length > before)
-        return { refusal: refusal("AREA_OUTSIDE", typeof c.detail === "string" ? c.detail : "an area lies wholly outside the picture",
+        return { refusal: refusal("AREA_OUTSIDE", typeof c.detail === "string" ? c.detail : localize("case-carriage.index.an_area_lies_wholly", "an area lies wholly outside the picture"),
                                   { capture: sha, ...areaOf(c.detail, before) }) };
       if (c && c.ok === false && COVER_REFUSED.has(c.code)) {
         row.refused_code = c.code;
         row.refused_detail = typeof c.detail === "string" ? c.detail : null;
       } else if (c && c.ok === true && c.bytes instanceof Uint8Array) {
-        const copySha = createSha256().update(c.bytes).hex();
+        const copySha = await this.#digest(c.bytes);
         if (await this.#holdCopyBytes(copySha, c.bytes, sha, rects.length > 0))
           Object.assign(row, { sha256: copySha, bytes: c.bytes.length, covered: c.covered, width: c.width, height: c.height });
       }
@@ -998,7 +1038,7 @@ export class CaseCarriage {
       if (!o || typeof o.arrayBuffer !== "function") return null;
       const bytes = new Uint8Array(await o.arrayBuffer());
       if (bytes.length > COVER_MAX_BYTES) return { tooLarge: true, size: bytes.length };
-      return createSha256().update(bytes).hex() === sha ? { bytes } : null;
+      return (await this.#digest(bytes)) === sha ? { bytes } : null;
     } catch { return null; }
   }
 
@@ -1018,6 +1058,16 @@ export class CaseCarriage {
       await this.bucket.put(obscuredKey(ns, copySha), bytes, { sha256: copySha, customMetadata });
       return true;
     } catch { return false; }
+  }
+
+  /* R11, R15 (T51; R24 b2, K5057): the SHA-256 of a read file's bytes: the platform's native digest over
+     NATIVE_DIGEST_MIN_BYTES, the pure-JS hash for a smaller input or when the native digest fails or answers no digest.
+     Both answer the same lower-case hex; an identifier, so nothing stored changes. */
+  async #digest(bytes) {
+    if (bytes.length > NATIVE_DIGEST_MIN_BYTES) {
+      try { const h = await this.nativeDigest(bytes); if (typeof h === "string" && HEX64.test(h)) return h; } catch { /* the JS hash decides */ }
+    }
+    return this.jsDigest(bytes);
   }
 
   /* R9: record-core's instant, from the module's clock. */
@@ -1077,7 +1127,7 @@ export class CaseCarriage {
       try { s = this.#documentState(sha); } catch { s = UNDETERMINED; }
       if (s.state === "undetermined") return { ref, sha, kind: "document", why: DOCUMENT_UNREAD };
       if (!(s.state === "copy" && s.copy === ob.copy))
-        return { ref, sha, kind: "document", why: "the document's copy is no longer the one the case names, so the case must be prepared again" };
+        return { ref, sha, kind: "document", why: word("case-carriage.why.document_copy_longer") };
       return null;
     }
     let view = null;
@@ -1087,7 +1137,7 @@ export class CaseCarriage {
     } catch { view = null; }
     if (!view) return { ref, sha: sha || null, kind: "photo", why: MARKS_UNREAD };
     if (!(view.copy && view.copy.sha256 === ob.copy))
-      return { ref, sha, kind: "photo", why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" };
+      return { ref, sha, kind: "photo", why: word("case-carriage.why.mark_photo_added") };
     return null;
   }
 
@@ -1186,12 +1236,12 @@ export class CaseCarriage {
     try {
       const p = this.provenance;
       r = p && typeof p.onReceipt === "function" ? p.onReceipt("case-carriage", (e) => this.#onReceipt(e))
-        : { ok: false, reason: "NO_RECEIPT_NOTICE", detail: "no provenance onReceipt to register the receipt listener with" };
+        : { ok: false, reason: "NO_RECEIPT_NOTICE", detail: localize("case-carriage.index.no_provenance_onreceipt", "no provenance onReceipt to register the receipt listener with") };
     } catch (e) {
       r = { ok: false, reason: "REGISTRATION_THREW", detail: String((e && e.message) || e) };
     }
     if (!(r && typeof r === "object" && r.ok === true)) {
-      const refused = r && typeof r === "object" ? r : { ok: false, reason: "REGISTRATION_UNANSWERED", detail: `the registration answered ${String(r)}` };
+      const refused = r && typeof r === "object" ? r : { ok: false, reason: "REGISTRATION_UNANSWERED", detail: localize("case-carriage.index.the_registration_answered_string", "the registration answered {String}", { String: String(String(r)) }) };
       this.#fault("onReceipt", refused);
       return refused;
     }
@@ -1253,18 +1303,26 @@ export class CaseCarriage {
     let ev = null;
     try { ev = this.record.evidenceStore(); } catch { ev = null; }
     if (!ev || !this.bucket)
-      return refusal("DOCUMENT_COPY_NO_STORE", "no evidence store is bound to read a member's document from and hold its copy in");
+      return refusal("DOCUMENT_COPY_NO_STORE", localize("case-carriage.index.no_evidence_store_is", "no evidence store is bound to read a member's document from and hold its copy in"));
     const n = Number.isSafeInteger(limit) && limit > 0 ? Math.min(limit, DOCUMENT_COPY_BATCH_MAX) : DOCUMENT_COPY_BATCH_MAX;
     const now = this.#nowMs();
     const due = this.#rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`)
       .filter((q) => q.tried == null || !(Date.parse(q.tried) + DOCUMENT_COPY_RETRY_MS > now)).slice(0, n);
-    const out = { ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0 };
+    const { skipped, ...out } = await this.#copyRows(due, ev, Infinity);   // nothing is skipped without a bound
+    return { ...out, remaining: this.#queued() };
+  }
+
+  /* R15: the outcomes of `due`, each recorded as it is made: `{ok, copied, clean, public, refused, failed, skipped}`.
+     A document over `maxBytes` (its register count, or the store's size) is `skipped`, left queued and untouched. */
+  async #copyRows(due, ev, maxBytes) {
+    const out = { ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0, skipped: 0 };
     for (const q of due) {
       let r = null;
-      try { r = await this.#copyOne(q.capture, ev); } catch { r = null; }
+      try { r = await this.#copyOne(q.capture, ev, maxBytes); } catch { r = null; }
       try {
         const at = this.#when(null);
-        if (!r || r.failed) {
+        if (r && r.skipped) out.skipped++;
+        else if (!r || r.failed) {
           this.sql.exec(`UPDATE document_copy_queue SET tried=? WHERE capture=?`, at, q.capture);
           out.failed++;
         } else this.record.transact(() => {
@@ -1277,7 +1335,32 @@ export class CaseCarriage {
         });
       } catch { out.failed++; }
     }
-    return { ...out, remaining: this.#queued() };
+    return out;
+  }
+
+  /** R15 (T51; K4570 G9): the awaited, bounded `copyBatch` for named documents, for an act that must not answer
+   *  `pending` for a small file (`case-authoring`'s prepare). Of `shas` it takes those queued (R15, R16), each as
+   *  `copyBatch` makes it, except a document over `maxBytes` (default and bound COPY_NOW_MAX_BYTES), by its register
+   *  byte count or the store's size: that is answered `skipped`, not read, and stays queued for the alarm. It ignores
+   *  the retry delay (the act asked) and is serial with `copyBatch`. Answers `{ok: true, copied, clean, public, refused,
+   *  failed, skipped, remaining}`, or DOCUMENT_COPY_NO_STORE as `copyBatch` does. Never rejects; `documentCopy` stays
+   *  synchronous. */
+  copyNow(args) {
+    const { shas = [], maxBytes = COPY_NOW_MAX_BYTES } = args && typeof args === "object" ? args : {};
+    return this.#serially("\u0000copyBatch", () => this.#copyNow(shas, maxBytes)).catch(() =>
+      ({ ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0, skipped: 0, remaining: this.#queued() }));
+  }
+
+  async #copyNow(shas, maxBytes) {
+    let ev = null;
+    try { ev = this.record.evidenceStore(); } catch { ev = null; }
+    if (!ev || !this.bucket)
+      return refusal("DOCUMENT_COPY_NO_STORE", localize("case-carriage.index.no_evidence_store_is", "no evidence store is bound to read a member's document from and hold its copy in"));
+    const bound = Number.isFinite(maxBytes) && maxBytes > 0 ? Math.min(maxBytes, COPY_NOW_MAX_BYTES) : COPY_NOW_MAX_BYTES;
+    const named = new Set((Array.isArray(shas) ? shas : []).map(digestOf).filter((d) => HEX64.test(d)));
+    const due = this.#rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`)
+      .filter((q) => named.has(q.capture));
+    return { ...(await this.#copyRows(due, ev, bound)), remaining: this.#queued() };
   }
 
   /* R15: the count of documents still queued (null when it cannot be read). */
@@ -1286,24 +1369,30 @@ export class CaseCarriage {
   }
 
   /* R15: one queued capture's outcome: `{photo}`, `{state, ...}` to record, or `{failed}` to try again later. */
-  async #copyOne(sha, ev) {
+  async #copyOne(sha, ev, maxBytes = Infinity) {
     if (this.#isPhoto(sha)) return { photo: true };
     const fetched = this.#fetched(sha);
     if (fetched === null) return { failed: true };
     if (fetched) return { state: "public" };
     const tooLarge = (size) => ({ state: "refused", code: "DOCUMENT_TOO_LARGE",
-      detail: `the document is ${size} bytes, over the ${CLEAN_MAX_BYTES} a copy is made from` });
+      detail: localize("case-carriage.index.the_document_is_size_bytes", "the document is {size} bytes, over the {CLEAN_MAX_BYTES} a copy is made from", { size: String(size), CLEAN_MAX_BYTES: String(CLEAN_MAX_BYTES) }) });
     const stated = Math.max(-1, ...this.#homes(sha).map((h) => Number(h.bytes)).filter(Number.isFinite));
+    if (stated > maxBytes) return { skipped: true };   // `copyNow`'s bound: left queued, for the alarm
     if (stated > CLEAN_MAX_BYTES) return tooLarge(stated);
     let bytes = null;
     try {
       const h = await ev.head(sha);
+      if (h && Number.isFinite(h.size) && h.size > maxBytes) return { skipped: true };
       if (h && Number.isFinite(h.size) && h.size > CLEAN_MAX_BYTES) return tooLarge(h.size);
       const o = await ev.get(sha);
       if (o && typeof o.arrayBuffer === "function") bytes = new Uint8Array(await o.arrayBuffer());
     } catch { bytes = null; }
-    if (!bytes || createSha256().update(bytes).hex() !== sha) return { failed: true };
+    if (!bytes || (await this.#digest(bytes)) !== sha) return { failed: true };
+    if (bytes.length > maxBytes) return { skipped: true };
     if (bytes.length > CLEAN_MAX_BYTES) return tooLarge(bytes.length);
+    /* G136c (X21): the attempt is stamped BEFORE the clean, so a cleaner that dies mid-clean is not re-run on every wake;
+       the back-off (DOCUMENT_COPY_RETRY_MS) then applies to it as to a failed read. */
+    try { this.sql.exec(`UPDATE document_copy_queue SET tried=? WHERE capture=?`, this.#when(null), sha); } catch { return { failed: true }; }
     const c = await this.clean(bytes);
     if (!c || typeof c !== "object") return { failed: true };
     if (c.ok === false)
@@ -1311,7 +1400,7 @@ export class CaseCarriage {
     const format = typeof c.format === "string" ? c.format : null;
     if (c.ok === true && c.clean === true) return { state: "clean", format };
     if (!(c.ok === true && c.bytes instanceof Uint8Array)) return { failed: true };
-    const copySha = createSha256().update(c.bytes).hex();
+    const copySha = await this.#digest(c.bytes);
     if (!(await this.#putDerived(copySha, c.bytes, { derived: "cleaned", original: sha, label: COPY_CLEANED_LABEL })))
       return { failed: true };
     return { state: "copy", sha256: copySha, bytes: c.bytes.length, format };
@@ -1393,3 +1482,12 @@ export function caseCarriageOps(cc, url, body) {
     obscuremarkwithdraw: () => cc.obscureMarkWithdraw({ captureSha: sha(), mark: b.mark, reason: b.reason, by: q("by") }),
   };
 }
+
+/* R23 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  obscuremark: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("case-carriage.declared.obscuremark", "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to obscure in the published copy; withdrawn only by a reasoned act, never erased (R28); moves no bundle"),
+    fields: { accepts: ["captureSha","capture","areas"], requires: [["captureSha","capture"],"areas"] } },
+  obscuremarkwithdraw: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("case-carriage.declared.obscuremarkwithdraw", "photo-directed: keyed by a photo's capture and one mark, reached from the Photos step; a member's reasoned withdrawal of a mark, recorded beside it, never erased; moves no bundle"),
+    fields: { accepts: ["captureSha","capture","mark","reason"], requires: [["captureSha","capture"],"mark","reason"] } },
+});

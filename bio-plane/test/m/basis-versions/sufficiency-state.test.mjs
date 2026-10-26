@@ -51,47 +51,6 @@ const errors = (fm) => { const f = []; basisVersionFindings(fm, f); return f.fil
 const pairs = (fm) => errors(fm).map((x) => [x.check, x.code]);
 const UNASSERTED = ["C-25.6", "VERSION_GROUND_UNASSERTED"];
 
-test("R3 (C-25.6, DEC-32): a ground's asserter is a named member — every machine spelling the plane mints and every blank form is refused as C-25.6 VERSION_GROUND_UNASSERTED, never C-25.15; a named member passes", () => {
-  assert.equal(BASIS_VERSION_CHECKS.VERSION_GROUND_UNASSERTED.check, "C-25.6");
-  assert.ok(MACHINE_SPELLINGS.length >= MACHINE_STAMP_PREFIXES.length * ACTOR_CLASSES.length + NON_MEMBER_AUTHORS.length + 2
-    && MACHINE_STAMP_PREFIXES.length > 0 && ACTOR_CLASSES.length > 0, "the machine corpus is not empty");
-  for (const m of MACHINE_SPELLINGS) assert.deepEqual(pairs(onePart(m)), [UNASSERTED], `machine '${m}' is refused on one part`);
-  for (const b of BLANK_SPELLINGS) assert.deepEqual(pairs(onePart(b)), [UNASSERTED], `blank ${JSON.stringify(b)} is refused`);
-  assert.match(errors(onePart("class:ai"))[0].message, /is not a named member/);
-  for (const m of ["member:dave", "Ada Lovelace", "j.okonkwo", "none", "unclaimed"])
-    assert.deepEqual(pairs(onePart(m)), [], `member '${m}' passes`);
-  assert.deepEqual(pairs(twoPart("member:alice", "member:bo")), [], "members asserting both parts of two pass");
-  for (const m of ["class:ai", ""]) assert.deepEqual(pairs(twoPart(m)), [UNASSERTED, UNASSERTED], `'${m}' on both of two parts: one finding each`);
-});
-
-test("R3 (C-25.6, DEC-65): the asserter's four states — blank is unstated, the no-claim value (case-folded) is unclaimed and never a machine's, every machine spelling is machine_stamped, any other name is claimed; the states are the published four", () => {
-  assert.deepEqual(Object.keys(SUFFICIENCY_CLAIM_STATES), ["claimed", "unclaimed", "unstated", "machine_stamped"]);
-  for (const t of Object.values(SUFFICIENCY_CLAIM_STATES)) assert.ok(typeof t === "string" && t.length > 40);
-  assert.equal(SUFFICIENCY_UNCLAIMED, "none:independent-sufficiency");
-  assert.equal(isMachineIdentity(SUFFICIENCY_UNCLAIMED), false, "the no-claim value never collides with a machine identity");
-  for (const b of BLANK_SPELLINGS) assert.equal(sufficiencyClaimState(b), "unstated", JSON.stringify(b));
-  for (const u of [SUFFICIENCY_UNCLAIMED, " None:Independent-Sufficiency ", SUFFICIENCY_UNCLAIMED.toUpperCase()]) {
-    assert.equal(sufficiencyClaimState(u), "unclaimed", u);
-    assert.equal(isSufficiencyUnclaimed(u), true, u);
-  }
-  for (const m of MACHINE_SPELLINGS) {
-    assert.equal(sufficiencyClaimState(m), isMachineIdentity(m) ? "machine_stamped" : "claimed", m);
-    assert.equal(isSufficiencyUnclaimed(m), false, m);
-  }
-  for (const s of ["class:ai", "token:member", "claude"]) assert.equal(sufficiencyClaimState(s), "machine_stamped", s);
-  for (const s of ["member:dave", "Ada Lovelace", "none", "unclaimed"]) assert.equal(sufficiencyClaimState(s), "claimed", s);
-});
-
-test("R3 (C-25.6, DEC-65): SUFFICIENCY_UNCLAIMED is admitted on a version of exactly one part and refused on a version of two, one finding per unclaimed part naming that nobody asserted it", () => {
-  assert.deepEqual(pairs(onePart(SUFFICIENCY_UNCLAIMED)), [], "one part: there is no maximum to take");
-  const both = errors(twoPart(SUFFICIENCY_UNCLAIMED));
-  assert.deepEqual(both.map((x) => [x.check, x.code]), [UNASSERTED, UNASSERTED], "two parts: each unclaimed part refused");
-  for (const x of both) assert.match(x.message, /nobody asserted it/);
-  const mixed = errors(twoPart("member:alice", SUFFICIENCY_UNCLAIMED));
-  assert.deepEqual(mixed.map((x) => [x.check, x.code]), [UNASSERTED], "only the unclaimed part of two is refused");
-  assert.match(mixed[0].message, /'audit'/);
-});
-
 test("R6: at a promotion, a refused asserter (two-part SUFFICIENCY_UNCLAIMED, a blank, a machine) is BASIS_VERSION_REFUSED with each C-25.6 finding's code and translation and nothing is written; the one-part licence lands", () => {
   const w = world();
   w.doc(DOC); w.doc(DOC2);

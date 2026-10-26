@@ -62,14 +62,17 @@
  * not evaluate the recommendation and does not treat the report's account of a fact as
  * the fact.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
-         vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, enactmentNumber, codePatterns,
+import { CONFIDENCE, CONTRACT, diffEntities, flatten, alsoSatisfies,
+         vocabulary, vocabRegex, vocabPatterns, enactmentPatterns, enactmentNumber, codePatterns,
          IN_PROSE } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
+import { eachLine, lineTable, flatPrefix, flatFirst, scanFlatMany, rawMergedHits, referenceBook, counted, spend } from "./windows.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
    see `memoHeader`. */
 const MEMO_LABEL = /\b(TO|FROM|SUBJECT|DATE)\s*:/gi;
+const MEMO_PREFIX = 4096, MEMO_BEYOND = 3000;
 
 /* The report template's sections are the JURISDICTION'S house template (the view's
    `report_sections`, N3): a report of this kind states what it recommends, why, what it
@@ -85,6 +88,8 @@ const RECOMMENDATION_HEADING = /^RECOMMENDATIONS?(?![A-Za-z0-9])/i;
    happens to open with one of these words is not a section. 64 characters admits
    `ACTION REQUESTED OF THE CITY COUNCIL` (36) with room and excludes prose. */
 const HEADING_MAX = 64;
+/* The one bound that stays on the recommendation (R39): what is kept when no heading follows it. */
+const RECOMMENDATION_MAX = 50000;
 
 const SIGNOFF = /\bRespectfully\s+submitted\b/i;
 const PREPARED = /\bPrepared\s+by\s*:/i;
@@ -104,7 +109,17 @@ const reportTitlePatterns = (ctx) => vocabPatterns(ctx, "report_titles");
  *
  *  So the test is the span AND the position, never the presence of the labels. Returns
  *  the block's fields when one is found, else null. */
-function memoHeader(flat) {
+function memoHeader(text) {
+  /* R37: only the top of the document is read. A header is found within the first 2,500 flattened characters, its
+     fields end within 200 of their label, and the only fact about the rest of the text a field's end depends on is
+     whether a label stands anywhere past 3,000: so the first 4,096 flattened characters are matched, and the rest
+     is asked that one question when it is needed. */
+  const flat = flatPrefix(text, MEMO_PREFIX);
+  let beyond = null;
+  const labelBeyond = () => {
+    if (beyond === null) { beyond = false; scanFlatMany(text, [{ re: MEMO_LABEL, on: () => (beyond = true) }], { fromAbs: MEMO_BEYOND }); }
+    return beyond;
+  };
   const hits = [...flat.matchAll(MEMO_LABEL)].map((m) => ({ i: m.index, k: m[1].toUpperCase() }));
   for (let a = 0; a < hits.length; a++) {
     if (hits[a].i > 2500) break;              /* a memorandum header is at the TOP */
@@ -127,10 +142,11 @@ function memoHeader(flat) {
          `June 19, 2020 City Administrator Approval Date: RECOMMENDATION Staff
          Recommends...`. The document's own next label (`Approval Date:`) is the
          boundary it actually has. */
-      const all = hits.map((h) => h.i);
+      const all = hits.map((h) => h.i).filter((x) => x < MEMO_BEYOND);
       const at = {};
       for (const [k, i] of seen) {
-        const next = all.find((x) => x > i);
+        const near = all.find((x) => x > i);
+        const next = near != null ? near : (hits.some((h) => h.i >= MEMO_BEYOND) || (flat.length >= MEMO_PREFIX && labelBeyond()) ? MEMO_BEYOND : null);
         const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160)
           .replace(/^\s*\w+\s*:\s*/, "");
         at[k.toLowerCase()] = rest.trim() || null;
@@ -144,12 +160,12 @@ function memoHeader(flat) {
 /** Which of the template's sections appear as HEADINGS in this document. */
 function reportSections(raw, sections) {
   const found = [];
-  for (const line of String(raw || "").split(/\r?\n/)) {
+  eachLine(raw, (line) => {
     const l = line.trim();
-    if (!l || l.length > HEADING_MAX) continue;
+    if (!l || l.length > HEADING_MAX) return;
     for (let i = 0; i < sections.length; i++)
       if (sections[i].test(l) && !found.includes(i)) found.push(i);
-  }
+  });
   return found;
 }
 
@@ -172,9 +188,9 @@ function reportConfirmed(a, b) {
   return { entries: (b.entities || []).length, intact, recommendation_unchanged: recommendation };
 }
 
-export default {
+export default counted({
   key: "staff_report",
-  label: "a staff report to a public body",
+  label: localize("doctypes.staff-report.label", "a staff report to a public body"),
   version: 1,
   /* A narrative document making a case, not a list, so what matters is its SUBSTANCE.
      Declared on the content type (CONSTRUCTS Step 0 #4). */
@@ -193,18 +209,19 @@ export default {
    *  appears as a heading in one set of minutes. */
   detect(ctx) {
     const t = String(ctx.text || "");
-    const flat = flatten(t);
     const signals = [];
 
-    const memo = memoHeader(flat);
-    if (memo) signals.push(`a memorandum header of ${memo.labels} labels in ${memo.span} characters at the top`);
+    const memo = memoHeader(t);
+    if (memo) signals.push(localize("doctypes.staff-report.memo_header", "a memorandum header of {labels} labels in {span} characters at the top", { labels: String(memo.labels), span: String(memo.span) }));
     const secs = reportSections(t, reportSectionPatterns(ctx));
-    if (secs.length) signals.push(`${secs.length} report template section heading(s)`);
-    const signoff = SIGNOFF.test(flat) || PREPARED.test(flat);
+    if (secs.length) signals.push(localize("doctypes.staff-report.template_sections", "{count} report template section heading(s)", { count: String(secs.length) }));
+    /* Both phrases bridge words with `\s+` only, so they are tested on the text as it stands (R37: no flattened copy). */
+    spend(t.length * 2);
+    const signoff = SIGNOFF.test(t) || PREPARED.test(t);
     if (signoff) signals.push("a staff sign-off");
     const titles = reportTitlePatterns(ctx);
-    const titled = String(t).split(/\r?\n/).some((l) => titles.some((re) => re.test(l.trim())));
-    if (titled) signals.push("names itself as a report on a line of its own");
+    const titled = eachLine(t, (l) => titles.some((re) => re.test(l.trim())));
+    if (titled) signals.push(localize("doctypes.staff-report.titled", "names itself as a report on a line of its own"));
 
     if (memo && secs.length >= 3) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     /* LIKELY on the evidence a report in a house style this type has not met can still
@@ -233,33 +250,44 @@ export default {
    *  reference this reader never saw must not read as one the document lacks. */
   parse(ctx) {
     const raw = String(ctx.text || "");
-    const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
 
-    const memo = memoHeader(flat);
+    const memo = memoHeader(raw);
     const f = (memo && memo.fields) || {};
     const sections = reportSectionPatterns(ctx);
     const secs = reportSections(raw, sections);
 
     /* THE RECOMMENDATION, which is the point of the document. Read from the
-       `RECOMMENDATION` heading forward to the next heading — bounded, so it can never
-       swallow the rest of the report — or from the `Staff Recommends That` sentence
-       where the house style has no heading. Null is first-class and means this reader
-       could not find one, never that the report recommends nothing. */
-    let recommendation = null;
+       `RECOMMENDATION` heading forward to the next heading, whole (G23, K4571): a
+       member is never told it recommends less than it does. One bound stays, for a
+       recommendation with no heading after it, which would swallow the rest of the
+       report: `RECOMMENDATION_MAX` characters are kept, the answer says
+       `recommendation_cut: true`, and `recommendation_length` is the full length to
+       the next heading or the end (raw characters, a line break counted as one).
+       Or from the `Staff Recommends That` sentence where the house style has no
+       heading. Null is first-class and means this reader could not find one, never
+       that the report recommends nothing. */
+    let recommendation = null, recommendationLength = null, recommendationCut = false;
     {
-      const lines = raw.split(/\r?\n/);
+      const lines = lineTable(raw);
       for (let i = 0; i < lines.length; i++) {
-        const h = lines[i].trim();
+        const h = lines.get(i);
         if (!RECOMMENDATION_HEADING.test(h) || h.length > HEADING_MAX || !sections.some((re) => re.test(h))) continue;
         const body = [];
-        for (let j = i + 1; j < lines.length && body.join(" ").length < 600; j++) {
-          const l = lines[j].trim();
+        let kept = 0, total = 0;
+        for (let j = i + 1; j < lines.length; j++) {
+          const l = lines.get(j);
           if (!l) continue;
           if (l.length <= HEADING_MAX && !RECOMMENDATION_HEADING.test(l) && sections.some((re) => re.test(l))) break;
-          body.push(l);
+          total += l.length + 1;
+          if (kept < RECOMMENDATION_MAX) { body.push(l); kept += l.length + 1; }
         }
-        if (body.length) recommendation = flatten(body.join(" ")).slice(0, 600).trim();
+        if (body.length) {
+          const whole = flatten(body.join(" ")).trim();
+          recommendationLength = total - 1;
+          recommendationCut = whole.length > RECOMMENDATION_MAX;
+          recommendation = recommendationCut ? whole.slice(0, RECOMMENDATION_MAX).trim() : whole;
+        }
         break;
       }
       /* Where the house style has no heading: the sentence opened by the words the
@@ -268,10 +296,10 @@ export default {
         let best = null;
         for (const e of vocabulary(ctx, "recommendation_openers")) {
           const re = vocabRegex(e.pattern, (s) => `(?<![A-Za-z0-9])(?:${s})(?![A-Za-z0-9])[^.]{0,500}\\.`);
-          const m = re && re.exec(flat);
-          if (m && (!best || m.index < best.index)) best = m;
+          const m = re && flatFirst(raw, re);
+          if (m && (!best || m.abs < best.abs)) best = m;
         }
-        if (best) recommendation = best[0].trim();
+        if (best) recommendation = best.m[0].trim();
       }
     }
 
@@ -280,36 +308,38 @@ export default {
        person's name. A reference cited twice is one reference; the FIRST sighting
        carries `source`, and D-454: every sighting, the first included, is kept in
        `occurrences` once there is a second, so a later one is not lost. */
-    const entities = [];
-    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */
-    const seen = new Map();
-    const take = (key, kind, label, facts, offset) => {
-      if (seen.has(key)) { readAgain(seen.get(key), locate(offset)); return; }
-      const e = entity(key, kind, label, facts, locate(offset));
-      seen.set(key, e);
-      entities.push(e);
-    };
-    for (const { m, tag } of allMatches(enactmentPatterns(ctx), raw)) {
+    /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped; R40: up to the bounds
+       ./windows.mjs `referenceBook` states, past which the answer says what it did not keep. */
+    const book = referenceBook(locate);
+    const { entities, take } = book;
+    /* R40: each kind of reference is met a window of the text at a time (./windows.mjs `rawMergedHits`), in the order
+       and with the overlap rule `allMatches` gives over all of it, so 400,000 citations are never a list of 400,000
+       matches. */
+    rawMergedHits(raw, enactmentPatterns(ctx), ({ m, tag }) => {
       const n = enactmentNumber(tag.forms, m.groups && m.groups.num);
-      if (!n) continue;
+      if (!n) return;
       take(`${tag.kind}:${n}`, "instrument", `${tag.kind[0].toUpperCase()}${tag.kind.slice(1)} No. ${n}`,
            { instrument: tag.kind, number: n }, m.index);
-    }
-    for (const { m } of allMatches(reportFileRefs(ctx), raw))
+    });
+    rawMergedHits(raw, reportFileRefs(ctx), ({ m }) => {
       take(`file:${m[1]}`, "legislation", `legislation ${m[1]}`, { file: m[1] }, m.index);
-    for (const { m, tag } of allMatches(codePatterns(ctx), raw))
+    });
+    rawMergedHits(raw, codePatterns(ctx), ({ m, tag }) => {
       take(`${tag.key}:${m.groups.sec}`, "code_section", `${tag.label} ${m.groups.sec}`,
            { code: tag.key, section: m.groups.sec }, m.index);
+    });
 
     return {
       entities,
+      ...book.state(),
       to: f.to || null,
       from: f.from || null,
       subject: f.subject || null,
       date: f.date || null,
       recommendation,
+      ...(recommendationCut ? { recommendation_cut: true, recommendation_length: recommendationLength } : {}),
       sections: secs.length,
-      signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
+      signed_off: (spend(raw.length * 2), SIGNOFF.test(raw) || PREPARED.test(raw)),
       also_satisfies: alsoSatisfies(ctx, "staff_report"),
       at: ctx.at || null,
     };
@@ -323,8 +353,7 @@ export default {
     const readNothing = (x) => !(x.entities || []).length && !x.recommendation;
     if (readNothing(a) || readNothing(b))
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               why: "nothing could be read from this report this time, so nothing is claimed "
-                  + "about it either way" };
+               why: localize("doctypes.staff-report.unread_either", "nothing could be read from this report this time, so nothing is claimed about it either way") };
 
     const events = [];
     /* THE RECOMMENDATION MOVING IS THE SERIOUS ONE. A staff report is the document a
@@ -333,29 +362,30 @@ export default {
     if (String(a.recommendation || "") !== String(b.recommendation || ""))
       events.push(event("recommendation_changed", {
         was: a.recommendation || null, now: b.recommendation || null,
-        why: "what this report recommends the body do is not what it recommended before" }));
+        why: localize("doctypes.staff-report.recommendation_changed", "what this report recommends the body do is not what it recommended before") }));
     /* The memorandum header moving is worth showing and is not the same fact. */
     for (const k of ["to", "from", "subject", "date"])
       if (String(a[k] || "") !== String(b[k] || ""))
         events.push(event("item_changed", { key: k, label: k, moved: [{ fact: k, was: a[k], now: b[k] }],
-          why: `this report's ${k} changed` }));
+          why: localize("doctypes.staff-report.field_changed", "this report's {field} changed", { field: k }) }));
 
     const d = diffEntities(a.entities || [], b.entities || []);
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "an instrument or code section this report pointed at is no longer cited in it" }));
+        why: localize("doctypes.staff-report.pulled", "an instrument or code section this report pointed at is no longer cited in it") }));
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "this report now points at an instrument or code section it did not cite before" }));
+        why: localize("doctypes.staff-report.added", "this report now points at an instrument or code section it did not cite before") }));
 
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
       confirmed: reportConfirmed(a, b),
       why: events.length
-        ? `${events.length} change(s): ${d.gone.length} citation(s) gone, ${d.appeared.length} added`
-          + (String(a.recommendation || "") !== String(b.recommendation || "") ? ", and the recommendation moved" : "")
-        : "this report says what it said, and points at the same instruments",
+        ? (String(a.recommendation || "") !== String(b.recommendation || "")
+          ? localize("doctypes.staff-report.changes_and_recommendation", "{count} change(s): {gone} citation(s) gone, {added} added, and the recommendation moved", { count: String(events.length), gone: String(d.gone.length), added: String(d.appeared.length) })
+          : localize("doctypes.staff-report.changes", "{count} change(s): {gone} citation(s) gone, {added} added", { count: String(events.length), gone: String(d.gone.length), added: String(d.appeared.length) }))
+        : localize("doctypes.staff-report.unchanged", "this report says what it said, and points at the same instruments"),
     };
   },
-};
+});

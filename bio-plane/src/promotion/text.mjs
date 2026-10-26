@@ -3,6 +3,7 @@
  * place and every other byte is left alone. `withProducingGroup` moved here whole from the catalogue in T18 (K636). */
 
 import { parseFrontmatter } from "../record-grammar/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** Append one entry to `state_history`, for the inline-empty, absent and populated shapes. Null when the block is in
  *  a shape this grammar cannot extend, so the caller refuses rather than guesses. */
@@ -52,7 +53,7 @@ export function quotedScalar(text) {
 /** Add a Session Log entry after the `## Session Log` heading's section, opening the section when absent. */
 export function appendSessionLog(text, entry) {
   const at = text.indexOf("## Session Log");
-  if (at < 0) return text + "\n## Session Log\n\n" + entry;
+  if (at < 0) return localize("promotion.text.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", { text: String(text), entry: String(entry) });
   const nxt = text.indexOf("\n## ", at + 1);
   const cutAt = nxt === -1 ? text.length : nxt + 1;
   return text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
@@ -76,7 +77,7 @@ export function spliceReferences(text, additions) {
   const end = lines.indexOf("---", 1);
   if (end === -1) return null;
   const block = additions.map((a) =>
-    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`);
+    localize("promotion.text.rel_rel_target_target_status", "  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: \"{v1}\"", { rel: String(a.rel), target: String(a.target), status: String(a.status), v1: String(a.note ?? "") }));
   let ref = -1;
   for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
   if (ref === -1) return [...lines.slice(0, end), "references:", ...block, ...lines.slice(end)].join("\n");

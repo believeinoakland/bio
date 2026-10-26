@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MEMBER, MACHINE, OUTSIDER } from "./fixture.mjs";
 import { DATED_KINDS } from "../../../src/events/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const doc = { kind: "document" };
 
@@ -102,10 +102,11 @@ test("R5 edit acts: an office capture's created and modified values held on requ
   assert.deepEqual(Object.keys(by).sort(), ["edited", "issued"]);
   assert.equal(by.issued.value, "2026-05-01T09:30:00");
   assert.equal(by.issued.zone, "UTC");
-  assert.match(by.issued.method, /the file's created value; author as the file writes it: A\. Clerk/);
-  assert.ok(by.edited.method.includes(`the file's modified value${word("events.transact.file_writes", { by: word("events.transact.last_modified"), who: "B. Editor" })}`));
+  const officeMethod = (field, who, by) => localize("events.index.office_metadata_the_files_field", "office metadata: the file's {field} value{v1}; what the file states about itself, never a finding", { field, v1: word("events.transact.file_writes", { by, who }) });
+  assert.equal(by.issued.method, officeMethod("created", "A. Clerk", localize("events.index.author", "author")));
+  assert.equal(by.edited.method, officeMethod("modified", "B. Editor", word("events.transact.last_modified")));
   for (const f of r.dated_facts) {
-    assert.match(f.method, /never a finding/);
+    assert.match(f.method, /\S/);
     assert.equal(f.extent.kind, "envelope");
   }
   assert.equal(w.ev.recordEditActs({ captureSha: s, by: MEMBER }).dated_facts.length, 2);

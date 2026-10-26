@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, openSync, closeSync, readdirSync, readFileSync,
-  statSync, writeFileSync,
+  rmSync, statSync, writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
@@ -27,12 +27,22 @@ const MARK = "@@RESULT@@";
 /** A fresh, empty host directory for one child to use as its $TMPDIR. */
 const host = () => mkdtempSync(join(tmpdir(), "host-"));
 
+/** The environment a child is handed: this process's, plus `extra`, without
+ *  NODE_EXTRA_CA_CERTS. Node reads that file at start and warns on stderr when it
+ *  cannot, which a uid that is not root does for the proxy's CA bundle; a child's
+ *  silence is then the warning's, not the module's. */
+const childEnv = (extra) => {
+  const env = { ...process.env, ...extra };
+  delete env.NODE_EXTRA_CA_CERTS;
+  return env;
+};
+
 /** Runs `body` (module code) in a child with $TMPDIR = `hostDir`. `body` may
  *  call `report(obj)` to send one JSON result line on stdout. */
 function child(body, { hostDir, stdio, env = {}, cwd } = {}) {
   const code = `const report = (o) => process.stdout.write(${JSON.stringify(MARK)} + JSON.stringify(o) + "\\n");\n${body}`;
   const r = spawnSync(process.execPath, ["--input-type=module", "-e", code], {
-    env: { ...process.env, TMPDIR: hostDir, ...env }, encoding: "utf8", stdio, cwd,
+    env: childEnv({ TMPDIR: hostDir, ...env }), encoding: "utf8", stdio, cwd,
     maxBuffer: 64 * 1024 * 1024, timeout: 60_000,
   });
   const line = (r.stdout ?? "").split("\n").find((l) => l.startsWith(MARK));
@@ -222,6 +232,31 @@ const READ_ONLY = `
 
 const NOBODY = 65534;
 
+/** Whether this host can run R2's non-root case at all. Not root, the case
+ *  needs nothing more. As root it needs `setpriv` on PATH, the right to change
+ *  a directory's owner (childNotRoot hands the host directory to NOBODY) and
+ *  the right to drop to NOBODY; a root that lacks any of them cannot make a
+ *  child that is not root, so that case is skipped by name rather than failed.
+ *  Probed once, and only as far as the case itself goes. */
+const DROP = (() => {
+  if (process.getuid() !== 0) return { ok: true };
+  const dir = mkdtempSync(join(tmpdir(), "drop-"));
+  try {
+    chownSync(dir, NOBODY, NOBODY);
+  } catch (e) {
+    return { ok: false, reason: `this root cannot change a directory's owner (${e.code})` };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const r = spawnSync("setpriv", [`--reuid=${NOBODY}`, `--regid=${NOBODY}`, "--clear-groups",
+    process.execPath, "-e", "process.stdout.write(String(process.getuid()))"], { encoding: "utf8", timeout: 60_000 });
+  if (r.error) return { ok: false, reason: `setpriv cannot be run (${r.error.code})` };
+  if (r.status !== 0 || r.stdout !== String(NOBODY)) {
+    return { ok: false, reason: `this root cannot drop to uid ${NOBODY}: ${(r.stderr || "").trim() || `exit ${r.status}`}` };
+  }
+  return { ok: true };
+})();
+
 /** Runs `body` like child(), but as a user that is not root: this process's
  *  own user when it is not root, else uid and gid 65534 through `setpriv`.
  *  A dropped child cannot traverse this process's 0700 sandbox to reach its
@@ -246,7 +281,8 @@ function childNotRoot(body, hostDir) {
   return { ...r, result: line ? JSON.parse(line.slice(MARK.length)) : undefined };
 }
 
-test("R2 a tree a test left read-only is removed, also when the process does not run as root, by every ending", () => {
+test("R2 a tree a test left read-only is removed, also when the process does not run as root, by every ending", (t) => {
+  if (!DROP.ok) return t.skip(`the non-root case cannot run here: ${DROP.reason}`);
   for (const [name, ending] of Object.entries(ENDINGS)) {
     const H = host();
     const r = childNotRoot(`
@@ -326,6 +362,28 @@ test("R3 importing more than once in one process (static, dynamic, via stdio fir
   assert.equal(new Set(r.result.all).size, 1, "every import sees the same directory");
   assert.equal(r.result.entries.length, 1, "one directory created");
   assert.deepEqual(readdirSync(H), [], "and removed");
+});
+
+test("R3 and R6 a child the suite starts is not handed NODE_EXTRA_CA_CERTS: with it set to an unreadable path the child runs silent and does not see the variable, while an unstripped child warns", () => {
+  const H = host();
+  const unreadable = join(H, "no-such-ca.pem");
+  const saved = process.env.NODE_EXTRA_CA_CERTS;
+  process.env.NODE_EXTRA_CA_CERTS = unreadable;
+  try {
+    /* The control: a child given the variable as it is warns, so silence below is the strip's doing. Node 26 reads the
+       extra certificates only when a TLS context is first made, so the control makes one; the stripped child below
+       makes one too. */
+    const bare = spawnSync(process.execPath, ["-e", 'require("node:tls").createSecureContext()'], { env: { ...process.env, TMPDIR: H }, encoding: "utf8" });
+    assert.notEqual(bare.stderr, "", "an unstripped child reads the unreadable file and warns");
+    const r = child(`(await import("node:tls")).createSecureContext(); report({ seen: "NODE_EXTRA_CA_CERTS" in process.env });`, { hostDir: H });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.stderr, "", "the child warns about nothing");
+    assert.deepEqual(r.result, { seen: false }, "the variable is absent in the child");
+  } finally {
+    if (saved === undefined) delete process.env.NODE_EXTRA_CA_CERTS;
+    else process.env.NODE_EXTRA_CA_CERTS = saved;
+  }
+  assert.deepEqual(readdirSync(H), [], "nothing is left under the host temp directory");
 });
 
 /* ------------------------------------------------------------------ R4 */
@@ -420,7 +478,7 @@ test("R6 synchronousStdio() makes stdout and stderr synchronous through a pipe: 
     const H = host();
     const got = await new Promise((resolve, reject) => {
       const p = spawn(process.execPath, ["--input-type=module", "-e", FLOOD(STDIO_URL, total, chunk)],
-        { env: { ...process.env, TMPDIR: H }, stdio: ["ignore", "pipe", "pipe"] });
+        { env: childEnv({ TMPDIR: H }), stdio: ["ignore", "pipe", "pipe"] });
       const out = [], err = [];
       /* A slow reader: pause between chunks so the child's writes outrun it. */
       p.stdout.on("data", (b) => { out.push(b); p.stdout.pause(); setTimeout(() => p.stdout.resume(), 1); });

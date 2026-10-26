@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET } from "./fixture.mjs";
 import { noReviewCopy } from "../../../src/review/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DEAD = JSON.stringify(noReviewCopy());
 const END = "2026-09-29T07:59:59.000Z";
@@ -61,6 +62,36 @@ test("R35: the profiles' own zone is the fallback, and two profiles of different
   assert.deepEqual([bc.ok, bc.grants[0].zone], [true, null]);
 });
 
+test("R35: a member's copy of a draft with no grant answers the governing zone at its top level, whether or not it has a grant", () => {
+  const w = zoneWorld({ zones: { p1: "America/Los_Angeles" }, profileZone: "UTC" });
+  const d = w.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
+  const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  assert.deepEqual([c.ok, c.reader, c.zone, c.grants], [true, "member", "America/Los_Angeles", []]);
+  /* the profiles' own zone is the fallback here too */
+  const fb = zoneWorld({ profileZone: "Europe/Paris" });
+  const fd = fb.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
+  assert.equal(fb.r.copy({ draft: fd.draftId, viewer: V("ann") }).zone, "Europe/Paris");
+  const before = w.snapshot();
+  w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  assert.deepEqual(w.snapshot(), before);
+});
+
+test("R35: control: with no zone held the top-level zone is null, not UTC; a draft with a grant answers the same zone as its roster rows; the recipient door has none at its top level", () => {
+  for (const w of [zoneWorld({ profiles: null }), zoneWorld({ zones: {} }), zoneWorld({ profiles: [], profileZone: "UTC" })]) {
+    const d = w.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
+    const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+    assert.equal("zone" in c, true);
+    assert.equal(c.zone, null);
+  }
+  const w = zoneWorld({ zones: { p1: "America/Chicago" } });
+  const { d } = withGrant(w, END);
+  const m = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  assert.deepEqual([m.zone, ...m.grants.map((g) => g.zone)], ["America/Chicago", "America/Chicago"]);
+  const rc = w.r.copy({ secretSha: SECRET(1), bySecret: true });
+  assert.equal("zone" in rc, false);
+  assert.equal(rc.grant.zone, "America/Chicago");
+});
+
 /* R36 */
 const INQ = ["INQ-1", "INQ-2", "INQ-3"];
 const conclusionDoc = (w, rows) => {
@@ -85,11 +116,11 @@ test("R36: draft takes the chosen concluded questions as targets, a first case n
   assert.deepEqual(before.concluded.map((c) => [c.inquiry, c.title, c.concluded_at, c.concluded_by]),
     [["INQ-1", "INQ-1", "2026-09-26T00:00:00Z", "ann"], ["INQ-2", "INQ-2", "2026-09-27T00:00:00Z", "bea"]]);
   assert.deepEqual(before.concluded[0].findings, [{ target: "INQ-1", present: true, object_type: "inquiry", state: "concluded",
-                                                    role: null, text: "finding of INQ-1" }]);
+                                                    role: null, text: "finding of INQ-1", statement: "finding of INQ-1", falsifier: null, title: "INQ-1", concluded: true, not_concluded: null }]);
   assert.equal(before.concluded_truncated, false);
   const d = w.r.act({ act: "draft", author: "ed", project: P, targets: ["INQ-1", "INQ-2"] });
   assert.deepEqual([d.ok, d.caseId, d.edition], [true, null, null]);
-  assert.match(d.caseIdentity, /^a case this draft does not name and publication DERIVES/);
+  assert.equal(d.caseIdentity, word("review.index.derived_case_identity"));
   const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
   assert.deepEqual(c.findings.map((f) => [f.target, f.present, f.text]), [["INQ-1", true, "finding of INQ-1"], ["INQ-2", true, "finding of INQ-2"]]);
   assert.deepEqual(w.r.list({ project: P, viewer: V("ann") }).concluded.map((x) => x.inquiry), ["INQ-1", "INQ-2"]);

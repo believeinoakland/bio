@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, testView, MEMBER, OUTSIDER } from "./fixture.mjs";
 import { LIMIT_MAX, eventsOps } from "../../../src/events/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { reasonText } from "../../../src/events/reasons.mjs";
 
 const doc = { kind: "document" };
 
@@ -150,9 +151,11 @@ test("R31 sequence: before, after or undetermined with why, through civil-time.c
   assert.equal(s(b, c).answer, "before");
   const band = s(a, b);
   assert.equal(band.answer, "undetermined");
-  assert.match(band.why, /overlap|precision/);
-  assert.match(s(a, a2).why, /both are 2026-07-01/);
-  assert.match(s(a, n).why, /placed nowhere/);
+  assert.equal(typeof band.why.key, "string", "the reason is a key with its fills");
+  assert.ok(reasonText(band.why).length > 0);
+  assert.equal(typeof s(a, a2).why.key, "string");
+  assert.deepEqual(s(a, n).why, { key: "events.why.placed_nowhere_event", vars: {} });
+  assert.equal(word(s(a, n).why.key, s(a, n).why.vars), word("events.why.placed_nowhere_event"));
   assert.equal(s(a, "EVT-2026-aaaaaaaaaaaaaaaa").reason, "NO_SUCH_EVENT");
   const stored = w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name).filter((x) => !x.startsWith("sqlite_") && /sequence|order/.test(x));
   assert.deepEqual(stored, []);
@@ -165,12 +168,12 @@ test("R32 whoWasSent: a communication, issuance or meeting's senders, recipients
     { entityId: s1, role: "sender", attestation: 0 }, { entityId: r1, role: "recipient", attestation: 0 },
     { entityId: c1, role: "copied", attestation: 0 }, { entityId: x1, role: "subject", attestation: 0 }] }).event_id;
   const r = w.ev.whoWasSent({ eventId: e, viewer: MEMBER });
-  assert.deepEqual(r.participants.map((p) => [p.entity_id, p.words]), [[s1, "sent by"], [r1, "sent to"], [c1, "copied"]]);
+  assert.deepEqual(r.participants.map((p) => [p.entity_id, p.words]), [[s1, word("events.sent.by")], [r1, word("events.sent.to")], [c1, word("events.sent.copied")]]);
   assert.ok(r.participants.every((p) => p.attestation && p.attestation.attestation_id));
   assert.ok(!/\b(knew|saw)\b/.test(JSON.stringify(r.participants)));
   assert.equal(w.ev.whoWasSent({ eventId: w.event({ kind: "payment", value: "2026-08-02" }).event_id, viewer: MEMBER }).reason, "NOT_A_COMMUNICATION");
   const m = w.event({ kind: "meeting", value: "2026-08-03", participants: [{ entityId: x1, role: "present", attestation: 0 }] }).event_id;
-  assert.deepEqual(w.ev.whoWasSent({ eventId: m, viewer: MEMBER }).participants.map((p) => p.words), ["present"]);
+  assert.deepEqual(w.ev.whoWasSent({ eventId: m, viewer: MEMBER }).participants.map((p) => p.words), [word("events.sent.present")]);
 });
 
 test("R33 statementsOf: an entity's statement and communication events as speaker, sender, author or actor, in R31's order, bounded as R27", () => {
@@ -199,11 +202,11 @@ test("R34 proceedingStatusAt refuses NO_ENTITY, NO_SUCH_ENTITY, NOT_A_PROCEEDING
   assert.equal(w.ev.proceedingStatusAt({ proceeding: "", at: "2026-01-01", viewer: MEMBER }).reason, "NO_ENTITY");
   assert.equal(st("2026-01-01", "ENT-2026-9999").reason, "NO_SUCH_ENTITY");
   assert.equal(st("2026-01-01", person).reason, "NOT_A_PROCEEDING");
-  assert.match(st("2026-01-01").why, /no held event/);
-  assert.match(st("2026-01-01", other).why, /no active profile holds a flow/);
+  assert.equal(st("2026-01-01").why, word("events.und.held_event_bears"));
+  assert.equal(st("2026-01-01", other).why, word("events.und.active_profile_holds", { kind: "harbour_inquiry" }));
   const filed = w.event({ kind: "filing", value: "2026-02-01", concerns: [proc] }).event_id;
   w.event({ kind: "hearing", value: "2026-03-10", concerns: [proc] });
-  assert.match(st("2026-01-15").why, /no held event/);
+  assert.equal(st("2026-01-15").why, word("events.und.held_event_bears"));
   const a = st("2026-02-15");
   assert.deepEqual([a.stage, a.label, a.rests_on.map((x) => x.event_id), a.citation], ["filed", "filed", [filed], "Marlow Ct. R. 2"]);
   assert.equal(st("2026-04-01").stage, "heard");

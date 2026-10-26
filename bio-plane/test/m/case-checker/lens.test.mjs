@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import * as CC from "../../../src/case-checker/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
-import { caseFile, gradingFacts, byId, A, B, C, MINUTES } from "./fixture.mjs";
+import { W, caseFile, gradingFacts, byId, A, B, C, MINUTES } from "./fixture.mjs";
 
 const G = (grade) => ({ state: "graded", grade });
 const UNRATED = { state: "unrated", grade: null };
@@ -27,7 +27,7 @@ test("R23: as_published (the default) answers each pair as published, R5's, with
     assert.deepEqual(results(r), ALL_RECREATED);
     assert.deepEqual(r.lens, { name: "as_published", statements: null, departure: null, not_applied: [] });
     assert.equal(r.lens_statement, CC.LENS_LIMIT_STATEMENT);
-    assert.equal(r.lens_statement, "A re-check re-weighs the analysis that exists; it cannot write what another lens would have written.");
+    assert.equal(r.lens_statement, W("case-checker.lens_limit_statement"));
     for (const f of r.findings) {
       assert.deepEqual(Object.keys(f), ["finding", "role", "result", "missing", "differs", "pair", "bar_met"]);
       assert.deepEqual(f.pair, byId(plain)[f.finding].pair, f.finding);
@@ -98,9 +98,9 @@ test("R23: a reader's own lens applies its applications (a grade lowered to to; 
   const scrutiny = { finding: A, ord: null, target: "conclusion", statement: "S9", effect: "scrutiny_raised", from: null, to: null };
   const n = await run(cf, { statements: ["S1", "S9"], applications: [stray, ghost, scrutiny] });
   assert.deepEqual(n.lens.not_applied.map((x) => [x.statement, x.target, x.ord, x.why]), [
-    ["S7", "leg", 0, "its statement is not among the lens's statements"],
-    ["S9", "leg", 9, "it names no leg this case file carries, so it moves no grade here"],
-    ["S9", "conclusion", null, "it is recorded at a conclusion's claim and moves no grade"]]);
+    ["S7", "leg", 0, W("case-checker.why.statement_among_lens")],
+    ["S9", "leg", 9, W("case-checker.why.names_leg_case")],
+    ["S9", "conclusion", null, W("case-checker.why.recorded_conclusion_claim")]]);
   for (const f of n.findings) assert.deepEqual(f.pair, f.as_published.pair, f.finding);
 });
 
@@ -110,7 +110,7 @@ test("R23 R16: a lens that is none of the three is answered as published with th
                      { statements: ["S1"], applications: [{ ...PUBLISHED, target: MINUTES }] }]) {
     const r = await run(cf, bad);
     assert.equal(r.lens.name, "as_published");
-    assert.match(r.lens.departure, /not as_published, removed, or a reader's own/);
+    assert.equal(r.lens.departure, W("case-checker.departure.lens_given_published"));
     assert.equal(r.lens_statement, CC.LENS_LIMIT_STATEMENT);
     assert.deepEqual(results(r), ALL_RECREATED);
   }
@@ -186,7 +186,7 @@ test("R23 (K2529): reweigh({parts, documents, answer, lens}) is the same re-weig
   const lacking = caseFile({ docLines: applicationsLines([PUBLISHED]), edit: (b) => b.delete(DOC) });
   const docBytes = withApplications().bytesOf.get(DOC);
   const without = CC.reweigh({ parts: lacking.parts, answer, lens: "removed" });
-  assert.match(without.lens.departure, /case document is not carried/);
+  assert.equal(without.lens.departure, W("case-checker.departure.case_document_carried"));
   assert.ok(without.findings.every((f) => f.pair === null));
   const filled = CC.reweigh({ parts: lacking.parts, documents: [docBytes], answer, lens: "removed" });
   assert.equal(filled.lens.departure, null);

@@ -1,0 +1,45 @@
+<title>Stale-Test Rule Text</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* layout: one reading column; each proposed change is a quoted block marked "added" */
+:root{--bg:#f7f8f6;--fg:#1d2420;--muted:#5d6a62;--rule:#d5dcd7;--add-bg:#e6f2ea;--add-edge:#2f7a4b;
+--serif:"Source Serif 4",Georgia,serif;--sans:"IBM Plex Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151a17;--fg:#e4ebe6;--muted:#9aa8a0;--rule:#2e3833;--add-bg:#1d2e24;--add-edge:#5fbf84;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151a17;--fg:#e4ebe6;--muted:#9aa8a0;--rule:#2e3833;--add-bg:#1d2e24;--add-edge:#5fbf84;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--serif);font-size:17px;line-height:1.6}
+main{max-width:44rem;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:22px}
+h1,h2{font-family:var(--sans);text-wrap:balance;margin:0}
+h1{font-size:1.6rem}h2{font-size:1.05rem;margin-top:10px}
+.lede,.where{color:var(--muted);margin:0}
+.where{font-family:var(--sans);font-size:.85rem;letter-spacing:.03em;text-transform:uppercase}
+.add{background:var(--add-bg);border-left:3px solid var(--add-edge);padding:14px 18px;margin:0}
+.add p{margin:0}.add p+p{margin-top:10px}
+ol{margin:0;padding-left:1.3rem}
+.ask{font-family:var(--sans);border-top:1px solid var(--rule);padding-top:18px}
+code{font-size:.9em}
+</style>
+<main>
+<h1>The stale-test rule, as it would read</h1>
+<p class="lede">On 2026-10-21 you ruled that BOB fixes stale tests itself, with no job session, and that a red test never holds a deploy unless it shows a member's operation failing (K4297). That ruling governs now. Below is the exact text it would add to the principles and the mechanics. Nothing else in either document changes.</p>
+
+<h2>1. Principles, P7 (one paragraph added at its end)</h2>
+<p class="where">PROCESS-DESIGN.md · after "A mechanical change is one pass"</p>
+<blockquote class="add"><p><strong>A stale test is fixed without a job.</strong> A test that disagrees with correct code and with its requirement is stale. BOB, or a worker whose change BOB reviews, fixes it in BOB's own session: test files only, never a source file or a requirement line. The module's tests and the tests of every module the change reaches pass, and the checks read clean, before it is committed; one ruling names each module, file and commit. A change to product code stays a job's.</p></blockquote>
+
+<h2>2. Mechanics, a new §6b</h2>
+<p class="where">PROCESS-MECHANICS.md · after §6a "The cause job"</p>
+<blockquote class="add"><p><strong>6b. A stale-test fix (P7).</strong></p>
+<ol>
+<li>BOB confirms the test, not the code, is wrong: the code meets its requirement line as written.</li>
+<li>BOB, or one worker (haiku, low), edits only the module's <code>tests</code> paths, on the tranche branch.</li>
+<li>The module's suite and its impact set pass; ownership (only <code>tests</code> paths touched), coverage and words read clean.</li>
+<li>BOB reads the diff, commits, and records one ruling naming each module, file and commit.</li>
+</ol></blockquote>
+
+<h2>3. Mechanics, §11 Release (one sentence added)</h2>
+<p class="where">PROCESS-MECHANICS.md · end of §11</p>
+<blockquote class="add"><p>A deploy to a test copy is not held by a red test unless that test shows a member's operation failing; the suite runs beside the deploy and the walk, never before them as a gate (P1, P11).</p></blockquote>
+
+<p class="ask">If this reads right, reply <strong>"I approve the stale-test text"</strong> and BOB will apply it to the process repository. If you want it worded differently, say how.</p>
+</main>

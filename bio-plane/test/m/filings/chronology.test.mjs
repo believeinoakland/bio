@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, F, CASE, WHY, sha } from "./fixture.mjs";
 import { CHRONOLOGY_MAX, LANE_WORDS, counselMarking, Filings } from "../../../src/filings/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+import { timelineRefusal } from "../events/fixtures.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const OFFICE_ARM = { state: "named", role: "Selectboard", body: "Port Ellery Selectboard", level: "city" };
@@ -35,8 +37,8 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   const ch = p.sections.chronology;
   /* the set, each member naming what it is and the record it was read from */
-  assert.deepEqual(ch.set, [{ id: ACT, is: "the act's event", source: x.D }, { id: x.OFFICE, is: "the counterparty office", source: A },
-                            { id: x.SUBJECT, is: "an entity a finding concerns", source: `${F}@${CASE}/1` }]);
+  assert.deepEqual(ch.set, [{ id: ACT, is: word("filings.the_act_s_event"), source: x.D }, { id: x.OFFICE, is: word("filings.counterparty_office"), source: A },
+                            { id: x.SUBJECT, is: word("filings.entity_finding_concerns"), source: `${F}@${CASE}/1` }]);
   assert.deepEqual([ch.title, ch.marking, ch.from, ch.to], ["Chronology", counselMarking(COUNSEL), "2026-03-02", "2026-09-28"]);
   /* the world's lane: events' own answer for that set and those dates, in its order, each item naming its source */
   const ids = ch.set.map((i) => i.id);
@@ -66,7 +68,7 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
   /* never interleaved: the world's lane holds events only, the sources' lane none */
   assert.ok([...w.items, ...w.placed_nowhere].every((i) => i.event_id && !("ref" in i)));
   assert.ok(ch.lanes.ours.sources.flatMap((s) => s.items || []).every((i) => !("event_id" in i)));
-  assert.match(ch.says, /never interleaved/);
+  assert.equal(ch.says, word("filings.says.world_events_group"));
   /* R9: the captures attesting each listed event are exhibits, cited by that event */
   const ledger = p.sections.exhibits.items.find((e) => e.sha256 === sha("the text of INFO-2026-0002-ledger"));
   for (const id of [ACT, e1, e2, e3, nowhere]) assert.ok(ledger.cited_by.includes(id), id);
@@ -77,7 +79,7 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
   assert.deepEqual(lines.map((l) => JSON.parse(l.slice(2))).map((i) => [i.lane, i.event_id ?? i.ref ?? i.error]),
                    [...[ACT, e1, e2, e3, nowhere].map((id) => [LANE_WORDS.world, id]),
                     ...ch.lanes.ours.sources.flatMap((s) => (s.error ? [[LANE_WORDS.ours, s.error]] : s.items.map((i) => [LANE_WORDS.ours, i.ref])))]);
-  assert.equal(e.bytes.split("\n")[e.bytes.split("\n").indexOf("## Chronology") + 2], counselMarking(COUNSEL));
+  assert.equal(e.bytes.split("\n")[e.bytes.split("\n").indexOf(`## ${localize("filings.index.chronology", "Chronology")}`) + 2], counselMarking(COUNSEL));
   /* read back unchanged */
   assert.deepEqual(f.counselPacketRead({ id: p.id, version: 1, viewer: V("bo") }).sections.chronology, ch);
   /* negative control: without an office entity on the addressee or the act, the set is the act's event and the subject */
@@ -114,14 +116,16 @@ test("R33 a truncated lane says so; a set the record cannot name, a timeline no 
     return { ...r, world: { ...r.world, truncated: true }, ...(r.ours ? { ours: { ...r.ours, sources: r.ours.sources.map((s) => ({ ...s, truncated: true })) } } : {}) };
   }, readEvent: (q) => real.readEvent(q) };
   const t = pack(x.filingsWith({ events: cut }), A).sections.chronology.lanes;
-  assert.deepEqual([t.world.truncated, t.world.says], [true, `more events than the ${CHRONOLOGY_MAX} this lane lists are held: the lane is truncated`]);
-  assert.ok(t.ours.sources.length && t.ours.sources.every((s) => s.truncated && /truncated/.test(s.says)));
+  assert.deepEqual([t.world.truncated, t.world.says], [true, word("filings.says.events_lane_lists", { chronology_max: String(CHRONOLOGY_MAX) })]);
+  assert.ok(t.ours.sources.length && t.ours.sources.every((s) => s.truncated && s.says === word("filings.says.acts_source_lists", { chronology_max: String(CHRONOLOGY_MAX) })));
   /* no module answering the timeline, and one refusing */
-  for (const [events, says] of [[{}, /no module answers the timeline/], [{ timeline: () => ({ ok: false, reason: "BAD_DATE" }) }, /could not be read \(BAD_DATE\)/],
-                                [{ timeline: () => { throw new Error("down"); } }, /could not be read/]]) {
+  const { badDate } = timelineRefusal();
+  for (const [events, says] of [[{}, word("filings.module_answers_timeline")],
+                                [{ timeline: () => badDate }, word("filings.timeline_read_chronology", { dated: " (BAD_DATE)" })],
+                                [{ timeline: () => { throw new Error("down"); } }, word("filings.timeline_read_chronology", { dated: "" })]]) {
     const c = pack(x.filingsWith({ events }), A).sections.chronology;
     assert.deepEqual([c.unread, c.lanes.world.items, c.lanes.ours.sources], [true, [], []]);
-    assert.match(c.says, says);
+    assert.equal(c.says, says);
   }
   /* an overridden premise with an addressee carrying no office entity: no set, said so, and nothing read */
   let calls = 0;
@@ -129,8 +133,8 @@ test("R33 a truncated lane says so; a set the record cannot name, a timeline no 
   const O = x.action({ kind: "commitment_claim", legs: [], breach: true, override: "The act is not yet established." });
   const c = pack(x.filingsWith({ events: counting }), O).sections.chronology;
   assert.deepEqual([c.set, c.from, c.lanes.world.items, calls], [[], null, [], 0]);
-  assert.match(c.says, /no set to read/);
-  assert.match(c.from_says, /earliest event/);
+  assert.equal(c.says, word("filings.record_names_act"));
+  assert.equal(c.from_says, word("filings.act_states_date"));
   /* negative control: the same reader with an office entity reads the timeline */
   pack(x.filingsWith({ events: counting }), A);
   assert.ok(calls > 0);

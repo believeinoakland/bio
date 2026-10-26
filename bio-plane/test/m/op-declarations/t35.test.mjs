@@ -4,6 +4,7 @@
    earlier modules R6 asks a spec of (events', duties', calculations', standards' and capture-requests'). Each spec, row,
    session set and stamp is compared whole at the exported tables, and each stamp is driven through its owner's own map,
    so a stamp named at a site the owner does not read is seen. Each comparison has a negative control. */
+import "./register-owners.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";

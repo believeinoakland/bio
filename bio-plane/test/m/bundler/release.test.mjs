@@ -13,16 +13,15 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { stripJsonc, parseJsonc } from "../../../scripts/jsonc.mjs";
 import { versionSites, resolveVersion } from "../../../scripts/resolve-version.mjs";
-import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "../../../scripts/derive-bindings.mjs";
+import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons } from "../../../scripts/derive-bindings.mjs";
 import { planeMember, discoverMembers, buildMember, manifestFrom, verifyStatic } from "../../../scripts/fleet-bundle.mjs";
 import {
   fleetStatement, NS_FLEET, NS_RELEASE, verifySshsig, NS_RELEASE_NOTICE, releaseNoticeStatement, verifyReleaseNotice,
 } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
-import { renderSignpage } from "../../../scripts/embed-signpage.mjs";
 import {
   makeRepo, addMember, addContainerMember, addScannerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig,
-  VERSION, ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses, NOTES,
+  VERSION, ACCOUNT, PLANE, PLANE_CRON, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses, NOTES,
 } from "./repo.mjs";
 
 const refused = (r, code) => {
@@ -200,26 +199,27 @@ test("R15: deriveLimits returns subrequests and cpu_ms, refusing a missing or no
 
 /* ------------------------------------------------------------------------ R16 */
 
-test("R16: npm run build renders the signer page, then writes the plane's bundle and manifest by R5 and prints size, SHA-256 and input counts", async () => {
-  const root = await makeRepo({ build: false, realPackageJson: true, members: {} });
+test("R16: npm run build writes the plane's bundle and manifest by R5 from the committed sources alone — it renders and embeds no signing page, even beside a stale one — and prints size, SHA-256 and input counts", async () => {
+  const root = await makeRepo({ build: false, members: {} });
   try {
     writeFileSync(join(root, "bio-plane/src/plane/index.mjs"),
-      'import { tag } from "../tag.mjs";\nimport { SIGN_HTML } from "../signpage.mjs";\n'
-      + "export default { fetch() { return new Response(tag + SIGN_HTML.length); } };\n");
+      'import { tag } from "../tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n');
     /* The old entry path, left beside the plane's own: the bundle must not start from it (T20, K846). */
     writeFileSync(join(root, "bio-plane/src/index.mjs"), 'export { default } from "./plane/index.mjs";\n');
+    /* A committed generated source that its generator would now render differently: a build that ran the generator
+       would rewrite it (R16: it calls no step that generates a source file). */
+    const stale = "export const SIGN_HTML = 'a committed file, whatever it says';\n";
+    writeFileSync(join(root, "bio-plane/src/signpage.mjs"), stale);
     const r = spawnSync("npm", ["run", "build"], { cwd: join(root, "bio-plane"), encoding: "utf8" });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    const rendered = readFileSync(join(root, "bio-plane/src/signpage.mjs"), "utf8");
-    assert.equal(rendered, renderSignpage(readFileSync(join(root, "bio-plane/src/sign-release.html"), "utf8")), "signatures R30's render");
-
+    assert.equal(readFileSync(join(root, "bio-plane/src/signpage.mjs"), "utf8"), stale, "no source file was generated or rewritten by the build");
     const plane = planeMember(root);
     const art = readFileSync(join(plane.abs, plane.bundle.outfile));
     const built = await buildMember(plane);
-    assert.ok(art.equals(built.bytes), "the written bundle is what the recipe builds from the rendered source");
+    assert.ok(art.equals(built.bytes), "the written bundle is what the recipe builds from the committed sources");
     const manifest = readJson(join(plane.abs, plane.bundle.manifest));
     assert.deepEqual(manifest, manifestFrom(plane, built));
-    assert.ok(manifest.inputs.some((i) => i.path === "src/signpage.mjs" && i.sha256 === hex(rendered)), "rendered before the bundle was cut");
+    assert.ok(!manifest.inputs.some((i) => i.path === "src/signpage.mjs"), "no signing page is an input of the bundle");
     assert.equal(manifest.recipe.entry, "src/plane/index.mjs", "the plane's own entry (plane R6)");
     assert.ok(manifest.inputs.some((i) => i.path === "src/plane/index.mjs"));
     assert.ok(!manifest.inputs.some((i) => i.path === "src/index.mjs"), "the old entry is not an input");
@@ -245,8 +245,11 @@ const CF = { CF_TOKEN: "cf-secret-token-value", CF_ACCT: ACCOUNT };
 const ASSET = "dist/bio-plane.bundled.mjs";
 const deploy = (root, { args = [SLUG, VERSION, ASSET], env = CF, stub } = {}) =>
   run(root, "bio-plane", ["scripts/deploy.mjs", ...args], { env, stub });
+// fixtures-own: platform the Cloudflare API's own answers to the deploy's account calls, a scripted-network double of the platform; no module answers for them
 const okStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { "alpha-worker": { settings: {} } }, ...extra });
-const puts = (r) => r.calls.filter((c) => c.method === "PUT");
+/** The script uploads: a deploy's schedules PUT (G1) is a PUT too, but is not an upload; `anyPut` counts both. */
+const puts = (r) => r.calls.filter((c) => c.method === "PUT" && !c.url.endsWith("/schedules"));
+const anyPut = (r) => r.calls.filter((c) => c.method === "PUT");
 /** The bindings R13 derives for the fixture plane, as an account that already holds them reads them back. */
 const derivedOnScript = (root) =>
   deriveBindings(parseJsonc(readFileSync(join(root, "bio-plane/wrangler.jsonc"), "utf8")), { slug: SLUG, version: VERSION });
@@ -265,12 +268,16 @@ test("R17: missing arguments or credentials exit 2 with the usage line; a skewed
     refused(arg, "VERSION_ARGUMENT_DISAGREES");
     assert.equal(arg.status, 1);
     assert.deepEqual(arg.calls, []);
-    for (const notPlane of ["civicos", "pdf-worker"]) {
+    for (const notPlane of ["pdf-worker"]) {
       const r = deploy(root, { args: [notPlane, VERSION, ASSET], stub: okStub() });
       assert.equal(r.status, 3, notPlane);
       assert.match(r.stderr, new RegExp(`\`${notPlane}\` is not a plane`));
       assert.deepEqual(r.calls, []);
     }
+    /* K3807: the old `civicos` Worker is deleted and no deploy names it: it is an ordinary slug, not a refused non-plane. */
+    const old = deploy(root, { args: ["civicos", VERSION, ASSET], stub: okStub() });
+    assert.notEqual(old.status, 3);
+    assert.doesNotMatch(old.stderr, /is not a plane|civicos-ui|deploy-ui/);
     const pj = join(root, "beta-worker/package.json");
     writeJson(pj, { ...readJson(pj), version: "1.2.2" });
     const skew = deploy(root, { stub: okStub() });
@@ -362,7 +369,7 @@ test("R18: bytes that never read back equal exit 1 after four attempts saying no
     assert.match(mis.stderr, /\[LIMITS_MISMATCH\]/);
     assert.doesNotMatch(mis.stdout, /rollout:/);
 
-    const und = deploy(root, { stub: okStub({ settingsAfterPut: {} }) });
+    const und = deploy(root, { stub: okStub({ settingsAfterPut: { observability: { enabled: true } } }) });
     assert.equal(und.status, 0);
     assert.match(und.stdout, /limits: UNDETERMINED — the script settings state no limits\.subrequests\. The ceiling sent \(500\) is NOT confirmed/);
     assert.doesNotMatch(und.stdout, /verified: limits/);
@@ -375,15 +382,15 @@ test("R18: already-deployed bytes serving the version with matching limits uploa
   try {
     const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
     const bindings = derivedOnScript(root);
-    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } },
+    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } }, schedules: [PLANE_CRON] } },
       serving: { [SLUG]: VERSION } }) });
     assert.equal(done.status, 0, done.stderr);
-    assert.deepEqual(puts(done), []);
-    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back AND every derived binding present; nothing to do/);
+    assert.deepEqual(anyPut(done), [], "nothing is uploaded and no schedule is set");
+    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back AND every derived binding present AND schedules \*\/5 \* \* \* \* held AND Workers Logs on; nothing to do/);
 
     for (const [label, scripts, serving] of [
-      ["serving an older version", { body, settings: { limits: { subrequests: 500 }, bindings } }, "1.2.2"],
-      ["limits not ours", { body, settings: { limits: { subrequests: 9 }, bindings } }, VERSION],
+      ["serving an older version", { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } } }, "1.2.2"],
+      ["limits not ours", { body, settings: { limits: { subrequests: 9 }, bindings, observability: { enabled: true } } }, VERSION],
     ]) {
       const r = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: scripts }, serving: { [SLUG]: serving } }) });
       assert.equal(r.status, 0, `${label}: ${r.stderr}`);
@@ -408,7 +415,7 @@ test("R34: a derived binding missing or different on the script makes a deploy o
     const full = derivedOnScript(root);
     const undeclared = { type: "plain_text", name: "JURISDICTION_PROFILES", text: "{\"ca\":1}" };
     const account = (bindings) => okStub({ scripts: { "alpha-worker": { settings: {} },
-      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } }, serving: { [SLUG]: VERSION } });
+      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } } } }, serving: { [SLUG]: VERSION } });
     const lacking = full.filter((b) => !(b.type === "service" && b.name === "AGENT"));
     assert.equal(lacking.length, full.length - 1);
     for (const [label, bindings, what] of [
@@ -462,10 +469,10 @@ test("R34 (control): with every derived binding present and the bytes matching, 
     const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
     const bindings = [...derivedOnScript(root), { type: "plain_text", name: "JURISDICTION_PROFILES", text: "p" }, { type: "secret_text", name: "INSTANCE_AI_TOKEN" }];
     const r = deploy(root, { env: { ...CF, INSTANCE_AI_TOKEN: "x" }, stub: okStub({ scripts: { "alpha-worker": { settings: {} },
-      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } }, serving: { [SLUG]: VERSION } }) });
+      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } }, schedules: [PLANE_CRON] } }, serving: { [SLUG]: VERSION } }) });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.deepEqual(puts(r), []);
-    assert.match(r.stdout, /AND every derived binding present; nothing to do/);
+    assert.deepEqual(anyPut(r), []);
+    assert.match(r.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held AND Workers Logs on; nothing to do/);
   } finally { rm(root); }
 });
 
@@ -482,6 +489,137 @@ test("R34 (control): settings of a script that exists that cannot be read refuse
       assert.equal(r.status, 1);
       assert.deepEqual(puts(r), []);
     }
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------------------ R18, schedules (G1; K4565, K4566, K4570) */
+
+/* A script PUT carries no cron schedule, and whether it keeps the ones the script holds is unconfirmed, so every deploy sets
+   the schedules wrangler.jsonc declares (`triggers.crons`) with `PUT .../schedules` after the upload, reads them back, and
+   refuses success on a failure or a mismatch. The fixture plane declares the one cron the real plane will (PLANE_CRON). */
+const schedules = (r) => r.calls.filter((c) => c.url.endsWith(`/scripts/${SLUG}/schedules`));
+/** The fixture plane's own script as an account that already holds everything this deploy would send, schedules aside. */
+const settledScript = (root, extra = {}) => ({ body: readFileSync(join(root, "bio-plane", ASSET), "utf8"),
+  settings: { limits: { subrequests: 500 }, bindings: derivedOnScript(root), observability: { enabled: true } }, ...extra });
+
+test("R18: after the script upload the schedules of wrangler.jsonc's triggers.crons are PUT, then read back, and success is stated only after the read-back matches, even where the script PUT clears them", async () => {
+  const root = await deployRepo();
+  try {
+    const r = deploy(root, { stub: okStub({ scriptPutClearsSchedules: true }) });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const at = (pred) => r.calls.findIndex(pred);
+    const upload = at((c) => c.method === "PUT" && c.url.endsWith(`/scripts/${SLUG}`));
+    const set = at((c) => c.method === "PUT" && c.url.endsWith("/schedules"));
+    const read = r.calls.findLastIndex((c) => c.method === "GET" && c.url.endsWith("/schedules"));
+    assert.ok(upload >= 0 && set > upload, "the schedules are PUT after the script is");
+    assert.ok(read > set, "and read back after they are PUT");
+    assert.deepEqual(r.calls[set].schedules, [{ cron: PLANE_CRON }], "the cron of the config, nothing else");
+    assert.ok(r.calls[set].url.endsWith(`/accounts/${ACCOUNT}/workers/scripts/${SLUG}/schedules`) && r.calls[set].bearer);
+    assert.match(r.stdout, /verified: schedules \*\/5 \* \* \* \* read back/);
+    assert.ok(r.stdout.indexOf("verified: schedules") < r.stdout.indexOf("rollout:"), "the rollout wait follows the verified schedules");
+    assert.equal(puts(r).length, 1);
+  } finally { rm(root); }
+});
+
+test("R18: a schedules PUT that fails, one that answers and keeps nothing, a read-back that lacks the cron, differs, or cannot be read each refuse success [SCHEDULES_NOT_SET | SCHEDULES_MISMATCH | SCHEDULES_UNREADABLE], exit 1, with no rollout wait and no verified line", async () => {
+  const root = await deployRepo();
+  try {
+    for (const [label, extra, code, what] of [
+      ["the PUT refused", { schedulesPut: "reject" }, "SCHEDULES_NOT_SET", /HTTP 403/],
+      ["the PUT unreachable", { unreachable: ["/schedules"] }, "SCHEDULES_NOT_SET", /fetch failed/],
+      ["the PUT answered and kept nothing, the script PUT having cleared them", { schedulesPut: "ignore", scriptPutClearsSchedules: true }, "SCHEDULES_MISMATCH", /holds none/],
+      ["the read-back differs", { schedulesStored: ["0 0 * * *"] }, "SCHEDULES_MISMATCH", /0 0 \* \* \*/],
+      ["the read-back holds the cron and another", { schedulesStored: [PLANE_CRON, "0 0 * * *"] }, "SCHEDULES_MISMATCH", /0 0 \* \* \*/],
+      ["the read-back cannot be read", { schedulesGet: 500 }, "SCHEDULES_UNREADABLE", /HTTP 500/],
+    ]) {
+      const r = deploy(root, { stub: okStub(extra) });
+      assert.equal(r.status, 1, `${label}\n${r.stdout}${r.stderr}`);
+      assert.match(r.stderr, new RegExp(`REFUSING TO REPORT SUCCESS \\[${code}\\]`), label);
+      assert.match(r.stderr, what, label);
+      assert.doesNotMatch(r.stdout, /verified: schedules|rollout:/, label);
+      assert.equal(puts(r).length, 1, `${label}: the bytes were uploaded and verified; only the schedules are refused`);
+    }
+  } finally { rm(root); }
+});
+
+test("R18: a plane whose wrangler.jsonc declares no cron sets its script's schedules to none and reads that back; an invalid cron list refuses [INVALID_CRONS] before any request", async () => {
+  const none = await makeRepo({ plane: { config: { services: [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }], triggers: null } } });
+  try {
+    const r = deploy(none, { stub: okStub({ scriptPutClearsSchedules: true }) });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(r.calls.find((c) => c.method === "PUT" && c.url.endsWith("/schedules")).schedules, [], "the config's own list: none");
+    assert.match(r.stdout, /schedules: wrangler\.jsonc declares no cron/);
+    assert.match(r.stdout, /verified: schedules none read back/);
+  } finally { rm(none); }
+  const services = [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }];
+  for (const [label, triggers] of [
+    ["a field short", { crons: ["*/5 * * *"] }], ["a field long", { crons: ["*/5 * * * * *"] }], ["words", { crons: ["every five minutes"] }],
+    ["a number", { crons: [5] }], ["not a list", { crons: "*/5 * * * *" }], ["four crons (three is the platform's limit)", { crons: ["0 * * * *", "1 * * * *", "2 * * * *", "3 * * * *"] }],
+    ["the same cron twice", { crons: [PLANE_CRON, PLANE_CRON] }], ["triggers not an object", ["*/5 * * * *"]],
+  ]) {
+    const root = await makeRepo({ plane: { config: { services, triggers } } });
+    try {
+      for (const flags of [[], ["--dry-run"]]) {
+        const r = deploy(root, { args: [SLUG, VERSION, ASSET, ...flags], stub: okStub() });
+        assert.notEqual(r.status, 0, label);
+        assert.match(r.stderr, /REFUSED \[INVALID_CRONS\]/, label);
+        assert.deepEqual(r.calls, [], `${label}${flags[0] ? " (dry-run)" : ""}: refused before any request`);
+      }
+    } finally { rm(root); }
+  }
+});
+
+test("R18: deriveCrons reads triggers.crons: none declared is the empty list, a valid list is returned as written, and each invalid shape is refused [INVALID_CRONS] naming the cron", () => {
+  assert.deepEqual(deriveCrons({}), []);
+  assert.deepEqual(deriveCrons({ triggers: {} }), []);
+  assert.deepEqual(deriveCrons({ triggers: { crons: [] } }), []);
+  assert.deepEqual(deriveCrons({ triggers: { crons: [PLANE_CRON] } }), [PLANE_CRON]);
+  assert.deepEqual(deriveCrons({ triggers: { crons: ["0 0 * * *", "17 3 * * 1-5", "*/10 * * * *"] } }), ["0 0 * * *", "17 3 * * 1-5", "*/10 * * * *"]);
+  for (const crons of [["*/5 * * *"], ["*/5 * * * * *"], [""], ["a b c d e f"], [7], [null], "*/5 * * * *", [PLANE_CRON, PLANE_CRON], ["0 * * * *", "1 * * * *", "2 * * * *", "3 * * * *"]])
+    assert.match(tryThrow(() => deriveCrons({ triggers: { crons } })).message, /^REFUSED \[INVALID_CRONS\]/, JSON.stringify(crons));
+  assert.match(tryThrow(() => deriveCrons({ triggers: ["*/5 * * * *"] })).message, /^REFUSED \[INVALID_CRONS\]/);
+  assert.match(tryThrow(() => deriveCrons({ triggers: { crons: ["*/5 * * *"] } })).message, /"\*\/5 \* \* \*"/, "names the cron");
+});
+
+test("R34: identical bytes serving the version with matching limits and bindings are still a metadata deploy while the script's schedules are not the config's; with them present it uploads nothing and sets nothing", async () => {
+  const root = await deployRepo();
+  try {
+    for (const [label, schedules_] of [["none held", []], ["another held", ["0 0 * * *"]], ["the cron and another held", [PLANE_CRON, "0 0 * * *"]]]) {
+      const r = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: schedules_ }) }, serving: { [SLUG]: VERSION } }) });
+      assert.equal(r.status, 0, `${label}: ${r.stdout}${r.stderr}`);
+      assert.match(r.stdout, /schedules differ on the script — a METADATA deploy proceeds/, label);
+      assert.doesNotMatch(r.stdout, /nothing to do/, label);
+      assert.equal(puts(r).length, 1, label);
+      assert.deepEqual(r.calls.find((c) => c.method === "PUT" && c.url.endsWith("/schedules")).schedules, [{ cron: PLANE_CRON }], label);
+    }
+    const held = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
+    assert.equal(held.status, 0, held.stdout + held.stderr);
+    assert.match(held.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held AND Workers Logs on; nothing to do/);
+    assert.deepEqual(held.calls.filter((c) => c.method === "PUT"), [], "nothing is uploaded and no schedule is set");
+    const unreadable = deploy(root, { stub: okStub({ schedulesGet: 500, scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
+    assert.doesNotMatch(unreadable.stdout, /nothing to do/, "schedules that cannot be read are not ones that match");
+    assert.equal(unreadable.status, 1);
+  } finally { rm(root); }
+});
+
+test("R40: --dry-run prints the schedules step with the crons it would set and what the script holds now, sends nothing but reads, and refuses as the real run does an invalid cron list and the schedules of a script that exist and cannot be read", async () => {
+  const root = await deployRepo();
+  try {
+    const dry = (stub) => deploy(root, { args: [SLUG, VERSION, ASSET, "--dry-run"], stub });
+    const first = dry(okStub());
+    assert.equal(first.status, 0, first.stdout + first.stderr);
+    assert.match(first.stdout, /schedules: after the upload PUT \.\.\.\/schedules sets \*\/5 \* \* \* \* and reads it back; a failure or a difference refuses success/);
+    assert.match(first.stdout, /schedules now: the script is not deployed, so it holds none/);
+    assert.match(first.stdout, /--dry-run: nothing was deployed/);
+    const exists = dry(okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: ["0 0 * * *"] }) } }));
+    assert.equal(exists.status, 0, exists.stdout + exists.stderr);
+    assert.match(exists.stdout, /schedules now: 0 0 \* \* \* \(not the config's\)/);
+    assert.deepEqual(first.calls.concat(exists.calls).filter((c) => c.method !== "GET"), [], "reads only");
+    const unreadable = dry(okStub({ schedulesGet: 500, scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root) } }));
+    refused(unreadable, "SCHEDULES_UNREADABLE");
+    assert.equal(unreadable.status, 1);
+    assert.deepEqual(unreadable.calls.filter((c) => c.method !== "GET"), []);
+    assert.doesNotMatch(unreadable.stdout, /nothing was deployed/);
   } finally { rm(root); }
 });
 
@@ -542,7 +680,9 @@ test("R19: refuses NO_MEMBER, NO_INSTANCE, NOT_A_FLEET_MEMBER, NO_CONFIG, UNPARS
     refused(fleet(root, []), "NO_MEMBER");
     refused(fleet(root, ["alpha-worker"]), "NO_INSTANCE");
     refused(fleet(root, ["alpha-worker", "--instance", ""]), "NO_INSTANCE");
-    refused(fleet(root, ["bio-plane", "--instance", SLUG]), "NOT_A_FLEET_MEMBER");
+    const notMember = fleet(root, ["bio-plane", "--instance", SLUG]);
+    refused(notMember, "NOT_A_FLEET_MEMBER");
+    assert.doesNotMatch(notMember.stderr, /civicos|deploy-ui/, "K3807: its message names no deploy for the old interface");
     refused(fleet(root, ["no-such", "--instance", SLUG]), "NOT_A_FLEET_MEMBER");
     addMember(root, "gamma-worker");
     rmSync(join(root, "gamma-worker/wrangler.jsonc"));
@@ -1021,6 +1161,7 @@ test("R25: a container member that declares no Worker bundle is left out of the 
   } finally { rm(root); }
 });
 
+// fixtures-own: platform the Cloudflare API's own answers to the container deploy's account calls, a scripted-network double of the platform; no module answers for them
 const containerStub = (extra = {}) => ({ subdomain: "sub", containers: 200, scripts: { [SLUG]: {} },
   serving: { runner: JSON.stringify({ version: VERSION }) }, ...extra });
 
@@ -1739,5 +1880,274 @@ test("R32 (amends R22, R30): no session command reads the seed or signs the noti
     const refusedSign = assemble(root, ["--sign"], { BIO_RELEASE_SEED: envelope() });
     refused(refusedSign, "NOT_SIGNING_ENVIRONMENT");
     assert.match(refusedSign.stderr, /--notice-sig <file>/, "the refusal names how a notice signed elsewhere completes the release");
+  } finally { rm(root); }
+});
+
+
+/* ----------------------------------------------------------------- R36, R37 */
+
+const containersCmd = (root, args) => run(root, ".", ["bio-plane/scripts/bundles.mjs", ...args]);
+const readText = (root, rel) => readFileSync(join(root, rel), "utf8");
+const NEW = "sha256:" + "7a".repeat(32);
+
+test("R37: the release assembly refuses CONTAINER_IMAGE_STALE, naming the member and the class, for a container member whose code changed under an unchanged digest, and for one that records nothing its digest was built from, before anything is written; control: the same member with its digest rewritten by R36 is assembled", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "control: every image is current");
+
+    /* the code of one class changes; its digest does not */
+    writeFileSync(join(root, "runner/container/app.mjs"), "export const app = 'changed';\n");
+    const before = snapshot(root);
+    const stale = assemble(root, ["--dry-run"]);
+    refused(stale, "CONTAINER_IMAGE_STALE");
+    assert.match(stale.stderr, /runner is a container member/);
+    assert.match(stale.stderr, /runner: .*class Runner/);
+    assert.doesNotMatch(stale.stderr, /scanner/, "only the member that is stale is named");
+    assert.deepEqual(snapshot(root), before, "nothing written");
+    const real = assemble(root, ["--emit-payload", join(root, "p.txt")]);
+    refused(real, "CONTAINER_IMAGE_STALE");
+    assert.equal(existsSync(join(root, "p.txt")), false);
+
+    /* R36's step records the digest the build produced; the same member is assembled */
+    const rec = containersCmd(root, ["--record-image", "runner", "Runner", NEW]);
+    assert.equal(rec.status, 0, rec.stdout + rec.stderr);
+    const ok = assemble(root, ["--dry-run"]);
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+
+    /* a class of a two-class member is named; the other class is not */
+    writeFileSync(join(root, "scanner/Dockerfile.safeviewrenderer"), "FROM docker.io/library/node@sha256:" + "5b".repeat(32) + "\nCOPY package.json ./\n");
+    const two = assemble(root, ["--dry-run"]);
+    refused(two, "CONTAINER_IMAGE_STALE");
+    assert.match(two.stderr, /class SafeViewRenderer/);
+    assert.doesNotMatch(two.stderr, /class FileScanner/);
+  } finally { rm(root); }
+});
+
+test("R37: a container member whose marker records no source its digest was built from is refused CONTAINER_IMAGE_STALE, as a digest nothing can prove current", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner", { sealed: false });
+    await buildAll(root);
+    const r = assemble(root, ["--dry-run"]);
+    refused(r, "CONTAINER_IMAGE_STALE");
+    assert.match(r.stderr, /records no `source_sha256`/);
+  } finally { rm(root); }
+});
+
+test("R36: bundles.mjs --containers lists the classes whose image the code has outrun and exits 1, writing nothing; --record-image writes the digest the build produced into the marker and the wrangler.jsonc container block, both agreeing, after which the list is empty and exit 0", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    const clean = containersCmd(root, ["--containers"]);
+    assert.equal(clean.status, 0, clean.stdout + clean.stderr);
+    assert.match(clean.stdout, /containers: 2 of 2 image\(s\) provably built/);
+
+    writeFileSync(join(root, "scanner/container/app.mjs"), "export const app = 'new';\n");
+    const before = snapshot(root);
+    const listed = containersCmd(root, ["--containers"]);
+    assert.equal(listed.status, 1);
+    assert.match(listed.stdout, /^STALE scanner FileScanner /m);
+    assert.match(listed.stdout, /^STALE scanner SafeViewRenderer /m);
+    assert.deepEqual(snapshot(root), before, "listing writes nothing");
+
+    const rec = containersCmd(root, ["--record-image", "scanner", "FileScanner", DIGEST_A.replace(/c3/g, "e5")]);
+    assert.equal(rec.status, 0, rec.stdout + rec.stderr);
+    const rec2 = containersCmd(root, ["--record-image", "scanner", "SafeViewRenderer", NEW]);
+    assert.equal(rec2.status, 0, rec2.stdout + rec2.stderr);
+    const marker = readJson(join(root, "scanner/fleet-member.json"));
+    assert.equal(marker.containers[0].image.digest, DIGEST_A.replace(/c3/g, "e5"));
+    assert.equal(marker.containers[1].image.digest, NEW);
+    const cfg = parseJsonc(readText(root, "scanner/wrangler.jsonc"));
+    assert.equal(cfg.containers[0].image, `docker.io/civicos/file-scanner@${DIGEST_A.replace(/c3/g, "e5")}`, "its own repository, the digest the build produced");
+    assert.equal(cfg.containers[1].image, `docker.io/civicos/safe-view@${NEW}`);
+    assert.equal(containersCmd(root, ["--containers"]).status, 0);
+  } finally { rm(root); }
+});
+
+test("R36: a change to a non-container member's code writes no digest: bundles.mjs --record-image refuses a worker member, an unknown member, a class it does not state and a digest that is not sha256:<64 hex>, leaving every file as it was; --containers is silent about workers", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    await buildAll(root);
+    writeFileSync(join(root, "alpha-worker/src/word.mjs"), "export const word = 'changed';\n");
+    const before = snapshot(root);
+    for (const [args, code] of [
+      [["alpha-worker", "Runner", NEW], "CONTAINER_UNDESCRIBED"], [["no-such", "Runner", NEW], "CONTAINER_UNDESCRIBED"],
+      [["runner", "Nope", NEW], "CONTAINER_UNDESCRIBED"], [["runner", "Runner", "sha256:short"], "CONTAINER_DIGEST_INVALID"],
+      [["runner", "Runner"], "CONTAINER_DIGEST_INVALID"]]) {
+      const r = containersCmd(root, ["--record-image", ...args]);
+      refused(r, code);
+      assert.equal(r.status, 1);
+    }
+    assert.deepEqual(snapshot(root), before);
+    const listed = containersCmd(root, ["--containers"]);
+    assert.equal(listed.status, 0, "the changed worker is no container image's concern");
+    assert.doesNotMatch(listed.stdout, /alpha-worker/);
+  } finally { rm(root); }
+});
+
+/* --------------------------------------------------------------------- R39 */
+
+test("R39: the release assembly refuses BINDING_NOT_EXPORTED, naming the member, the binding and the class, for a Durable Object binding to a class the other member's bundle lacks, before anything is written; control: with the class exported it assembles", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    editConfig(root, "alpha-worker", (c) => { c.durable_objects = { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "beta-worker" }] }; });
+    await buildAll(root);
+    const before = snapshot(root);
+    const dry = assemble(root, ["--dry-run"]);
+    refused(dry, "BINDING_NOT_EXPORTED");
+    assert.match(dry.stderr, /alpha-worker/);
+    assert.match(dry.stderr, /REMOTE/);
+    assert.match(dry.stderr, /RemoteSession/);
+    assert.match(dry.stderr, /beta-worker/);
+    assert.deepEqual(snapshot(root), before, "nothing written");
+    const real = assemble(root, ["--emit-payload", join(root, "p.txt")]);
+    refused(real, "BINDING_NOT_EXPORTED");
+    assert.equal(existsSync(join(root, "p.txt")), false, "no payload emitted either");
+
+    /* the class exported by the bundle that would ship: the same release assembles */
+    writeFileSync(join(root, "beta-worker/src/index.mjs"), readFileSync(join(root, "beta-worker/src/index.mjs"), "utf8") + "export class RemoteSession {}\n");
+    await buildAll(root);
+    const ok = assemble(root, ["--dry-run"]);
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+
+    /* exported by the SOURCE but not the bundle (a different name from the one bound) is still refused */
+    editConfig(root, "alpha-worker", (c) => { c.durable_objects.bindings[0].class_name = "RemoteSessions"; });
+    refused(assemble(root, ["--dry-run"]), "BINDING_NOT_EXPORTED");
+  } finally { rm(root); }
+});
+
+test("R39: a service naming no member of the release, a container class and a migration class that no bundle exports are each refused BINDING_NOT_EXPORTED, naming the member and the class; a service bound to the plane's templated name and an own Durable Object the bundle exports pass", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    /* passes: the phantom plane, another member, an own object the plane exports */
+    editConfig(root, "alpha-worker", (c) => { c.services = [{ binding: "PLANE", service: "bio-plane" }, { binding: "BETA", service: "beta-worker" }]; });
+    await buildAll(root);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0);
+
+    editConfig(root, "alpha-worker", (c) => { c.services = [{ binding: "GHOST", service: "ghost-worker" }]; });
+    const svc = assemble(root, ["--dry-run"]);
+    refused(svc, "BINDING_NOT_EXPORTED");
+    assert.match(svc.stderr, /alpha-worker/);
+    assert.match(svc.stderr, /GHOST/);
+    assert.match(svc.stderr, /ghost-worker/);
+    editConfig(root, "alpha-worker", (c) => { c.services = [{ binding: "PLANE", service: "bio-plane" }]; });
+
+    editConfig(root, "alpha-worker", (c) => { c.migrations = [{ tag: "v1", new_sqlite_classes: ["Unbuilt"] }]; });
+    const mig = assemble(root, ["--dry-run"]);
+    refused(mig, "BINDING_NOT_EXPORTED");
+    assert.match(mig.stderr, /alpha-worker/);
+    assert.match(mig.stderr, /Unbuilt/);
+    editConfig(root, "alpha-worker", (c) => { delete c.migrations; });
+
+    addContainerMember(root, "runner");
+    await buildAll(root);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "control: the container member's class is exported");
+    editConfig(root, "runner", (c) => { c.containers[0].class_name = "Missing"; });
+    const cont = assemble(root, ["--dry-run"]);
+    refused(cont, "BINDING_NOT_EXPORTED");
+    assert.match(cont.stderr, /runner/);
+    assert.match(cont.stderr, /Missing/);
+    assert.doesNotMatch(cont.stderr, /alpha-worker/, "only the member that is incoherent is named");
+  } finally { rm(root); }
+});
+
+/* --------------------------------------------------------------------- R40 */
+
+const TEST_ACCOUNT = "20b533579290b9b93168345edd3b7f72";
+const OTHER_ACCOUNT = "ffffffffffffffffffffffffffffffff";
+const COPY = "trial-copy";
+const OLD_BYTES = "// what the account holds now";
+/** A fixture fleet pinned to the test account, with no `release/` signature anywhere: the branch's built artifacts only. */
+const testFleet = () => makeRepo({ members: { "alpha-worker": { account: TEST_ACCOUNT }, "beta-worker": { account: TEST_ACCOUNT } },
+  plane: { config: { services: [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }] } } });
+const MARK = { CIVICSMITH_TEST_INSTANCE: COPY };
+// fixtures-own: platform the Cloudflare API's own answers to the test-instance deploy's account calls, a scripted-network double of the platform; no module answers for them
+const testStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { [COPY]: { body: OLD_BYTES }, "alpha-worker": { body: OLD_BYTES, settings: {} } },
+  serving: { "alpha-worker": JSON.stringify({ version: VERSION }), "beta-worker": JSON.stringify({ version: VERSION }) }, ...extra });
+const testFleetDeploy = (root, member, { env = { CF_TOKEN: "t", ...MARK }, flags = ["--test-instance", "--dry-run"], instance = COPY, stub = testStub() } = {}) =>
+  run(root, ".", ["bio-plane/scripts/deploy-fleet.mjs", member, "--instance", instance, ...flags], { env, stub });
+const testPlaneDeploy = (root, { env = { CF_TOKEN: "t", CF_ACCT: TEST_ACCOUNT, ...MARK }, flags = ["--test-instance", "--dry-run"], slug = COPY, stub = testStub() } = {}) =>
+  run(root, "bio-plane", ["scripts/deploy.mjs", slug, VERSION, ASSET, ...flags], { env, stub });
+
+test("R40: a marked test copy and the right account run every member in order and then the plane in the dry-run arm, from built artifacts with no release/ signature, each step with its log line and its rollback target and nothing deployed", async () => {
+  const root = await testFleet();
+  try {
+    assert.equal(existsSync(join(root, "release/RELEASE.json")), false, "no signed release exists in this fixture");
+    const names = discoverMembers(root).map((m) => m.name);
+    assert.deepEqual(names, ["alpha-worker", "beta-worker"], "the order the module lists the members in (R1)");
+    const before = snapshot(root);
+    for (const member of names) {
+      const r = testFleetDeploy(root, member);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.match(r.stdout, new RegExp(`^test deploy: ${member} to ${COPY} from dist/${member}\\.bundled\\.mjs sha256 [0-9a-f]{64}`, "m"));
+      assert.match(r.stdout, /no release\/ signature is read/);
+      assert.deepEqual(r.wrangler, [], "dry-run deploys nothing");
+      assert.deepEqual(r.calls.filter((c) => c.method !== "GET"), [], "and sends nothing but reads");
+    }
+    /* each member's rollback target is what the account holds under its name now */
+    const alpha = testFleetDeploy(root, "alpha-worker");
+    assert.match(alpha.stdout, new RegExp(`^rollback : alpha-worker was ${hex(OLD_BYTES).slice(0, 16)}`, "m"));
+    const beta = testFleetDeploy(root, "beta-worker");
+    assert.match(beta.stdout, /^rollback : beta-worker is not deployed in 20b533579290b9b93168345edd3b7f72/m);
+    const plane = testPlaneDeploy(root);
+    assert.equal(plane.status, 0, plane.stdout + plane.stderr);
+    assert.match(plane.stdout, new RegExp(`^test deploy: ${COPY} from ${ASSET} sha256 ${hex(readFileSync(join(root, "bio-plane", ASSET)))}`, "m"));
+    assert.match(plane.stdout, new RegExp(`^rollback : ${COPY} was ${hex(OLD_BYTES).slice(0, 16)}`, "m"));
+    assert.match(plane.stdout, /--dry-run: nothing was deployed/);
+    assert.deepEqual(plane.calls.filter((c) => c.method === "PUT"), [], "the plane's dry run uploads nothing");
+    assert.deepEqual(snapshot(root), before, "and writes nothing");
+
+    /* the same steps for real: the built artifacts go out unsigned, verified by the bytes read back */
+    const realFleet = testFleetDeploy(root, "alpha-worker", { flags: ["--test-instance"] });
+    assert.equal(realFleet.status, 0, realFleet.stdout + realFleet.stderr);
+    assert.equal(realFleet.wrangler.length, 1);
+    assert.match(realFleet.stdout, /^rollback : alpha-worker was /m);
+    const realPlane = testPlaneDeploy(root, { flags: ["--test-instance"] });
+    assert.equal(realPlane.status, 0, realPlane.stdout + realPlane.stderr);
+    assert.equal(puts(realPlane).length, 1);
+    assert.match(realPlane.stdout, /verified: deployed bytes are hash-identical to the signed asset/);
+  } finally { rm(root); }
+});
+
+test("R40: a copy the environment does not mark as a test instance, and an account other than the test account, are each refused naming it before any request is made, by deploy-fleet.mjs and by deploy.mjs", async () => {
+  const root = await testFleet();
+  try {
+    const attempts = [
+      [() => testFleetDeploy(root, "alpha-worker", { env: { CF_TOKEN: "t" } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testFleetDeploy(root, "alpha-worker", { env: { CF_TOKEN: "t", CIVICSMITH_TEST_INSTANCE: "another-copy" } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: TEST_ACCOUNT } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: TEST_ACCOUNT, CIVICSMITH_TEST_INSTANCE: "another-copy" } }), "NOT_A_TEST_INSTANCE", COPY],
+      [() => testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: OTHER_ACCOUNT, ...MARK } }), "WRONG_ACCOUNT", OTHER_ACCOUNT],
+    ];
+    for (const [go, code, named] of attempts) {
+      const r = go();
+      refused(r, code);
+      assert.ok(r.stderr.includes(named), `${code} names ${named}:\n${r.stderr}`);
+      assert.deepEqual(r.calls, [], `${code}: no request was made`);
+      assert.deepEqual(r.wrangler, []);
+    }
+    /* a member whose configuration pins another account */
+    addMember(root, "gamma-worker", { account: OTHER_ACCOUNT });
+    const wrong = testFleetDeploy(root, "gamma-worker");
+    refused(wrong, "WRONG_ACCOUNT");
+    assert.ok(wrong.stderr.includes(OTHER_ACCOUNT));
+    assert.deepEqual(wrong.calls, []);
+    assert.deepEqual(wrong.wrangler, []);
+    /* the order of the checks: the mark first, then the account */
+    const both = testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: OTHER_ACCOUNT } });
+    refused(both, "NOT_A_TEST_INSTANCE");
+
+    /* control: without the flag the signed-release path is unchanged: no mark is asked for and any account is served */
+    const plain = testPlaneDeploy(root, { env: { CF_TOKEN: "t", CF_ACCT: OTHER_ACCOUNT }, flags: [], stub: testStub() });
+    assert.equal(plain.status, 0, plain.stdout + plain.stderr);
+    assert.doesNotMatch(plain.stdout, /test deploy:|rollback :/);
+    const plainFleet = testFleetDeploy(root, "gamma-worker", { env: { CF_TOKEN: "t" }, flags: ["--dry-run"] });
+    assert.equal(plainFleet.status, 0, plainFleet.stdout + plainFleet.stderr);
+    assert.doesNotMatch(plainFleet.stdout, /test deploy:|rollback :/);
   } finally { rm(root); }
 });

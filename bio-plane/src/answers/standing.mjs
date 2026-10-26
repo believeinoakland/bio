@@ -24,6 +24,7 @@ import { refusal } from "./checks.mjs";
 import { checkAnswer } from "./check.mjs";
 import { ReadLog } from "./readlog.mjs";
 import { KEPT_AWAY_UNREADABLE } from "../ai-accounts/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R15: the cadences. */
 export const CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
@@ -32,7 +33,7 @@ export const STANDING_TICK_MAX = 50;
 /** R20: the most entries one read answers. */
 export const STANDING_ANSWERS_MAX = 200;
 /** R20 (DEC-94): the label a standing answer carries. */
-export const STANDING_LABEL = "machine work, from your standing question";
+export const STANDING_LABEL = word("answers.machine_work_standing");
 /** The copy's switch for the AI half (R19; off until the 150-question bar is met, plan Rules (7)). */
 export const STANDING_AI_SETTING = "answers_standing_ai";
 /** R30: the use a standing question's AI half is, for `accountFor`, `useCheck`, keep-away and its reads. */
@@ -48,7 +49,7 @@ export const STANDING_FIND_CAPTURES_MAX = 10000;
 /** R28 (DEC-164 (4)): a find's matches carry `origin: "search"` ("Found by search"), and so does its entry. */
 export const FIND_ORIGIN = "search";
 /** R20, R28: the label a standing find's entry carries in place of "machine work". */
-export const STANDING_FIND_LABEL = "found by search, from your standing question";
+export const STANDING_FIND_LABEL = word("answers.found_search_standing");
 /* retrieval's bounds (its R73; K1881): the most items a kind answers per call, and the most ids an enumerated scope
    holds (a selection is frozen into at most that many, K1982). */
 const FIND_ITEMS = 500;

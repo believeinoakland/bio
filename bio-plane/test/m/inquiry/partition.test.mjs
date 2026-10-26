@@ -52,13 +52,17 @@ test("R65 an ungrouped question answers grouped false and every ordinal ungroupe
   const r = P(w);
   assert.equal(r.ok, true); assert.equal(r.grouped, false);
   assert.deepEqual(r.groups, []); assert.deepEqual(r.ungrouped, [0, 1]); assert.deepEqual(r.changes, []);
-  /* a partition that leaves a leg out: that leg is ungrouped, and removing the grouping reads as ungrouped again */
-  assert.equal(g(w, { grounds: [{ ground: "g1", legs: [0] }] }).reason, "BASIS_REFUSED", "half-labelled is the grammar's");
-  assert.equal(g(w).ok, true);
+  assert.equal(r.answered, false, "never partitioned");
+  /* a partition that leaves a supporting leg out lands: that leg is a necessary leg beside the ground (R85), and ungrouped */
+  const part = g(w, { grounds: [{ ground: "g1", legs: [0] }] });
+  assert.equal(part.ok, true, JSON.stringify(part).slice(0, 300));
+  assert.deepEqual(P(w).ungrouped, [1]);
+  assert.equal(g(w, { reason: "both stand alone" }).ok, true);
   assert.equal(w.k.ground({ target: Q, grounds: [], reason: "back", viewer: "admin", author: V("alice") }).ok, true);
   const back = P(w);
   assert.equal(back.grouped, false); assert.deepEqual(back.ungrouped, [0, 1]); assert.deepEqual(back.groups, []);
-  assert.deepEqual(back.changes.map((c) => [c.act, c.groups]), [["authored", [{ ground: "g1", statement: null, asserted_by: V("alice"), at: back.changes[0].groups[0].at, legs: [0] }, { ground: "g2", statement: null, asserted_by: V("alice"), at: back.changes[0].groups[1].at, legs: [1] }]], ["restructured", []]]);
+  assert.equal(back.answered, true, "no ground is an answer, held as grounds: [] (R85)");
+  assert.deepEqual(back.changes.map((c) => [c.act, c.groups.map((x) => x.legs)]), [["authored", [[0]]], ["restructured", [[0], [1]]], ["restructured", []]]);
 });
 
 test("R65 control: a question the viewer may not see, or that is no question, answers as an absent one; a divided or published question is read", () => {

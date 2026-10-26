@@ -3,20 +3,24 @@
    pages, `cs.checks` over record data, more doors, explanations by the design's keys, a refusal in its own words, the look
    rows, the first load, a Reasoned act's reason, the public frame's cards, the phone layout. Every sentence is read through
    `setup-words`' `word` (R70); a test holds no English. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { feedWithItem } from "../queue/fixtures.mjs";
+import { fitSend, boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
+import { inWorld, bootAs, doorAs } from "./world.mjs";
 import { ALL, HOME, HELD, DOORBELL, PUBLISHED } from "./screens.fixture.mjs";
 
 const h = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const btn = (p, op) => p.root().querySelector(`button[data-act="${op}"]`);
 const gate = () => { let go; const p = new Promise((r) => { go = r; }); return { p, go }; };
-const stand = (id, ops, render, extra = {}) => ({ id, reads: () => ({}), acts: ops.map((op) => ({ op })), render, ...extra });
+const stand = (id, ops, render, extra = {}) => ({ id, reads: () => ({}), acts: ops.map((op) => ({ op, send: fitSend(op) })), render, ...extra });
 const audio = (p) => {
   const made = [];
   p.win.AudioContext = class { constructor() { this.destination = {}; this.currentTime = 0; }
@@ -28,7 +32,8 @@ const audio = (p) => {
 /* ---------- R73 ---------- */
 
 test("R73 the registry is the design's: RE_POINTS holds only the named exception and none the registry lists; every act of the nine screen modules' real SCREENS composes; a stand-in naming an op neither lists throws; RE_POINTS is not consulted for an op the registry lists", async () => {
-  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"] });
+  /* R117 (fix round 3) named two more re-points, which G53 (fix round 6) removed: the registry lists both now */
+  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"], document: ["readheld", "resolve"], person: ["linecurrentthrough"], setup: ["factconfirm"], question: ["leggrade"], queue: ["signerknown"] });
   for (const [id, ops] of Object.entries(RE_POINTS)) for (const op of ops) {
     const reg = SCREEN_REGISTRY.find((r) => r.id === id);
     assert.ok(reg, id + " is a registry screen");
@@ -38,7 +43,7 @@ test("R73 the registry is the design's: RE_POINTS holds only the named exception
   const screens = []; let guide = null;
   for (const m of mods) { const x = await import(`../../../src/${m}/index.mjs`); screens.push(...x.SCREENS); if (x.GUIDE) guide = x.GUIDE; }
   assert.equal(checkScreens(screens), true, "every act of the nine modules' screens is admitted");
-  assert.ok(interfacePage(screens, { guide }).length > 100000);
+  assert.ok(interfaceScript(screens, { guide }).length > 100000);
   const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
   /* control: an op the registry lists on a screen is admitted whatever RE_POINTS holds; one neither lists throws, naming the screen */
   const reg = SCREEN_REGISTRY.find((s) => s.id === "queue");
@@ -93,7 +98,7 @@ test("R74 an act button answers the press: busy while the request is out, a seco
 
 test("R74 a Terminal, Signed, Irreversible or outward act is disabled after success and stays so until the screen is redrawn from a read", async () => {
   let hold = null;
-  const doc = { id: "document", reads: () => ({ x: { op: "image" } }), acts: [{ op: "retire" }, { op: "release", outward: true }], render: (cs) => cs.act("retire") + cs.act("release") };
+  const doc = { id: "document", reads: () => ({ x: { op: "image" } }), acts: [{ op: "retire", send: fitSend("retire") }, { op: "release", outward: true, send: fitSend("release") }], render: (cs) => cs.act("retire") + cs.act("release") };
   const p = await boot({ screens: [doc], path: "/app/document/x", plane: { image: async () => { if (hold) await hold.p; return ok({ title: "t" }); }, retire: ok({}), release: ok({}) } });
   hold = gate();
   await p.click(btn(p, "retire"));
@@ -158,8 +163,9 @@ test("R74 the Sounds setting is off for a new member and kept on the device, nev
 
 const ACCOUNT = { id: "account", reads: () => ({}), acts: [], render: (cs) => cs.title() };
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R75 the member's initial opens Your menu by the design's keys: who is signed in, a link to account, sign out (explained by shell.menu.signout_does, sending signout), the appearance control; the question after the first month is one note at the top of Home, asked once; the password dialog reads session.reauth.*", async () => {
-  const p = await boot({ screens: [...ALL, ACCOUNT] });
+  const p = await boot({ screens: [...ALL, ACCOUNT], plane: FRAME_ANSWERS });
   await p.click('[data-shell="menu"]');
   const menu = p.root().querySelector("#cs-menu");
   assert.ok(!menu.hidden);
@@ -190,10 +196,11 @@ test("R75 the member's initial opens Your menu by the design's keys: who is sign
   const other = await boot({ screens: [...ALL, ACCOUNT], path: "/app/account", local: first });
   assert.equal(other.root().querySelector('[data-level-note]'), null, "no other screen asks");
   /* the dialog: headed session.reauth.head, says session.reauth, Go on and Cancel explained; a wrong password resends nothing */
-  let wrong = true;
-  const r = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("REAUTH_DUE", null, 403), reauth: () => (wrong ? refused("BAD_PASSWORD", null, 403) : ok({ ok: true })) } });
-  r.doc.getElementById("home-title").value = "T";
-  await r.click(btn(r, "promote"));
+  /* the store's own REAUTH_DUE (adding an administrator always asks the password again) and its own refusal of a wrong password */
+  const { world, me } = await inWorld();
+  const adding = { ...ALL.find((x) => x.id === "members"), acts: [{ op: "memberadd", send: new Function("view", "el", "cs", 'return { body: { memberId: "new-admin", cover: "The new administrator", role: "admin" } };') }] };
+  const r = await bootAs(world, me, { screens: [adding], path: "/app/members" });
+  await r.click(btn(r, "memberadd"));
   const reason = r.root().querySelector('[data-slot="m:0"] textarea');
   if (reason) { reason.value = "because"; await r.click('[data-shell="reason-send"]'); }
   const dlg = r.root().querySelector('[data-overlay="reauth"]');
@@ -205,10 +212,10 @@ test("R75 the member's initial opens Your menu by the design's keys: who is sign
   r.doc.getElementById("cs-reauth-pw").value = "wrong";
   await r.click('[data-shell="reauth"]');
   assert.equal(r.root().querySelector("[data-overlay-refusal]").textContent, word("session.reauth.wrong"));
-  assert.equal(r.byOp("promote").length, 1, "a wrong password resends nothing");
+  assert.equal(r.byOp("memberadd").length, 1, "a wrong password resends nothing");
   await r.click('[data-shell="reauth-cancel"]');
   assert.equal(r.root().querySelector('[data-overlay="reauth"]'), null);
-  assert.equal(r.byOp("promote").length, 1, "Cancel sends nothing");
+  assert.equal(r.byOp("memberadd").length, 1, "Cancel sends nothing");
   assert.equal(r.byOp("reauth").length, 1);
 });
 
@@ -216,7 +223,9 @@ test("R75 the member's initial opens Your menu by the design's keys: who is sign
 
 test("R76 the masthead's explanations button names itself and its setting (shell.level.button.prompt / .pause); at the phone width every masthead icon keeps its accessible name, shown on a tap, and the team's name wraps whole; a button's explanation never repeats its label or the sentence beside it; control: at 1280 px the labels are drawn", async () => {
   const LONG = "The Neighbourhood Association of the River Town Flats";
-  const p = await boot({ screens: ALL, phone: true, plane: { groupidentity: ok({ ok: true, display_name: LONG }), assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  const { world, me } = await inWorld();
+  await me.act("groupnameset", { body: { name: LONG } });
+  const p = await bootAs(world, me, { screens: ALL, phone: true, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const mast = p.root().querySelector(".cs-mast");
   assert.equal(mast.querySelector(".mk-grp").textContent, LONG, "the name complete, never cut");
   const lvl = mast.querySelector('[data-shell="level"]');
@@ -228,7 +237,7 @@ test("R76 the masthead's explanations button names itself and its setting (shell
     assert.ok(name && name.trim(), "an accessible name: " + el.outerHTML.slice(0, 80));
     assert.ok(String(el.getAttribute("data-tip") || "").startsWith("<b>" + name), "shown on a tap: " + name);
   }
-  assert.match(scriptOf(p.html) + p.html, /\.cs-mast \.mk-grp\{white-space:normal;overflow-wrap:anywhere/, "the name wraps onto a second line");
+  assert.ok(!/white-space:\s*nowrap/.test(((r) => r ? r[0] : "")(/\.mk-grp[^}]*\}/.exec(ASSET_FILES["shell.css"].body))), "the design's own rule lets the name wrap onto a second line (K4084)");
   /* no explanation of an act button equals its label or the sentence drawn beside it */
   for (const path of ["/app", "/app/document/c1", "/app/held"]) {
     const q = await boot({ screens: ALL, path, plane: { image: ok({ title: "A lease", pages: 1, grade: "B", why: "w", project: { id: "P1", title: "P" }, passages: [] }), heldcaptures: ok({ items: [{ id: "h1", title: "T", at: "2026-10-01" }] }) } });
@@ -242,7 +251,7 @@ test("R76 the masthead's explanations button names itself and its setting (shell
     }
   }
   /* control: at 1280 px the labels are drawn */
-  const w = await boot({ screens: ALL });
+  const w = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   assert.equal(w.root().querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"));
   assert.equal(w.root().querySelector('.mk-mastsearch').textContent, word("shell.search"));
 });
@@ -289,16 +298,16 @@ const streamed = (p, lines, type = "application/x-ndjson") => async () => {
 };
 const ASKER = {
   id: "answers", reads: () => ({}),
-  acts: [{ op: "ask", reasonField: "q", send: (view, el, cs) => ({ body: { q: cs.value("q") }, onEvent: (ev) => { window.__seen = (window.__seen || []).concat([ev]); } }),
+  acts: [{ op: "ask", reasonField: "question", send: (view, el, cs) => ({ body: { question: cs.value("question") }, onEvent: (ev) => { window.__seen = (window.__seen || []).concat([ev]); } }),
     done(view, answer, cs) { window.__whole = answer.length; cs.set("n", String(answer.length)); } }],
-  render: (cs) => cs.field("q", "shell.reason") + cs.act("ask") + '<p id="n">' + String((window.__seen || []).length) + "</p>",
+  render: (cs) => cs.field("question", "shell.reason") + cs.act("ask") + '<p id="n">' + String((window.__seen || []).length) + "</p>",
 };
 
 test("R78 a streamed answer is handed on as it arrives: onEvent is called with each complete line at the instant it arrives, in order, the screen redrawn at each; the promise still answers the whole list, the answer the last; control: an ok:false last line is still a refusal beside the act, and a body that is not ndjson is read whole", async () => {
   const p = await boot({ screens: [ASKER], path: "/app/answers" });
   const real = p.win.fetch;
   p.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(p, [{ event: "a" }, { event: "b" }, { ok: true, answer: "c" }])() : real(url, init));
-  p.doc.getElementById("q").value = "why";
+  p.doc.getElementById("question").value = "why";
   await p.click(btn(p, "ask"));
   const seen = () => (p.win.__seen || []).length;
   assert.equal(seen(), 0);
@@ -312,21 +321,22 @@ test("R78 a streamed answer is handed on as it arrives: onEvent is called with e
   /* control: an ok:false last line is a refusal drawn beside the act (R13) */
   const q = await boot({ screens: [ASKER], path: "/app/answers" });
   const realQ = q.win.fetch;
+  // fixtures-generic: ZZ_STOP
   q.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(q, [{ event: "a" }, { ok: false, code: "ZZ_STOP", translation: "Stopped." }])() : realQ(url, init));
-  q.doc.getElementById("q").value = "why";
+  q.doc.getElementById("question").value = "why";
   await q.click(btn(q, "ask"));
   await q.clock.tick(2000); await q.clock.tick(2000); await q.settle();
   assert.equal(q.root().querySelector('[data-slot="m:0"] [data-gap="refused"]').textContent, "Stopped.");
-  assert.equal(q.doc.getElementById("q").value, "why", "the form keeps what was typed");
+  assert.equal(q.doc.getElementById("question").value, "why", "the form keeps what was typed");
   /* control: a body that is not ndjson is read whole */
   const r = await boot({ screens: [ASKER], path: "/app/answers", plane: { ask: ok({ answer: "whole" }) } });
-  r.doc.getElementById("q").value = "why";
+  r.doc.getElementById("question").value = "why";
   await r.click(btn(r, "ask"));
   assert.equal(r.byOp("ask").length, 1);
   assert.equal(r.win.__seen, undefined, "no event for an answer that is not streamed");
   /* the harness's whole-text ndjson answer still reaches done as the list */
   const t = await boot({ screens: [ASKER], path: "/app/answers", plane: { ask: ndjson([{ event: "x" }, { ok: true }]) } });
-  t.doc.getElementById("q").value = "why";
+  t.doc.getElementById("question").value = "why";
   await t.click(btn(t, "ask"));
   assert.equal(t.win.__whole, 2);
 });
@@ -419,12 +429,14 @@ test("R81 R88 more doors: request, matter, action and dash-project open their sc
 /* ---------- R82 ---------- */
 
 test("R82 explanations read the design's keys: the To-do count by shell.queue.waiting then shell.queue.open, only when every fill is answered; the team's name by shell.group.open; a row's icon by shell.icon.<kind>; the path's earlier steps by shell.crumb.back; control: the queue read failing draws no count and no sentence", async () => {
-  const p = await boot({ screens: ALL });
+  const p = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   const todo = p.root().querySelector('.cs-mast [data-kind="todo"]');
-  assert.equal(todo.getAttribute("data-tip"), h(word("shell.queue.waiting", { n: 3, todo: 2, noticed: 1, status: 0 })) + '<span class="more">' + h(word("shell.queue.open")) + "</span>");
+  const FEED = feedWithItem().items;
+  const kind = (c) => FEED.filter((x) => x.class === c).length;
+  assert.equal(todo.getAttribute("data-tip"), h(word("shell.queue.waiting", { n: FEED.length, todo: kind("OBLIGATION"), noticed: kind("FINDING"), status: kind("CONDITION") })) + '<span class="more">' + h(word("shell.queue.open")) + "</span>");
   assert.ok(p.root().querySelector(".cs-mast .mk-grp").getAttribute("data-tip").includes(h(word("shell.group.open"))));
   const ICONS = stand("held", [], (cs) => ["capture", "group", "clock", "tension", "hold", "plan"].map((k) => cs.icon(k)).join(""));
-  const q = await boot({ screens: [ICONS], path: "/app/held" });
+  const q = await boot({ screens: [ICONS], path: "/app/held", plane: FRAME_ANSWERS });
   for (const [i, k] of ["capture", "group", "clock", "tension", "hold", "plan"].entries()) assert.equal(q.root().querySelectorAll("#cs-main .cs-card")[i].getAttribute("data-tip"), h(word("shell.icon." + k)), k);
   const doc = { ...ALL.find((s) => s.id === "document") };
   const d = await boot({ screens: [doc], path: "/app/document/c1", plane: { image: ok({ title: "A lease", pages: 1, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [] }) } });
@@ -435,21 +447,23 @@ test("R82 explanations read the design's keys: the To-do count by shell.queue.wa
   const f = await boot({ screens: ALL, plane: { queue: httpError(500) } });
   assert.equal(f.root().querySelector('.cs-mast [data-kind="todo"]'), null, "no count");
   assert.ok(![...f.root().querySelectorAll("[data-tip]")].some((e) => /\{|undefined|NaN/.test(e.getAttribute("data-tip"))), "no sentence with an empty fill");
-  const zero = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "FINDING" }] }) } });
+  const zero = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "OTHER" }] }) } });
   assert.equal(zero.root().querySelector('.cs-mast [data-kind="todo"]'), null, "R60: never a count at zero");
 });
 
 /* ---------- R83 ---------- */
 
 test("R83 a refusal is drawn in its own words and shell.unread is for no refusal: a coded refusal with no key and no translation is refusal.uncatalogued, its code and the reference; with a key its word alone; with a translation that alone; a 500 with no body draws shell.unread; control: the form keeps what was typed", async () => {
+  assert.equal(hasWord("refusal.UNHELD_CODE"), false, "the code is one no row holds, so the uncatalogued path is proved");
   const words = async (answer) => (await boot({ screens: [HELD], path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('#cs-main [data-state="failed"]').textContent;
-  assert.equal(await words(refused("NO_AMOUNT", null, 400, { trace: "0123456789abcdef" })), word("refusal.uncatalogued") + " NO_AMOUNT " + word("refusal.reference", { ref: "01234567" }));
-  assert.equal(await words(refused("NO_AMOUNT")), word("refusal.uncatalogued") + " NO_AMOUNT");
+  assert.equal(await words(refused("UNHELD_CODE", null, 400, { trace: "0123456789abcdef" })), word("refusal.uncatalogued") + " UNHELD_CODE " + word("refusal.reference", { ref: "01234567" }));
+  assert.equal(await words(refused("UNHELD_CODE")), word("refusal.uncatalogued") + " UNHELD_CODE");
   assert.equal(await words(refused("NOT_AN_ADMIN", "ignored")), word("refusal.NOT_AN_ADMIN"));
-  assert.equal(await words(refused("NO_AMOUNT", "Its own words.")), "Its own words.");
+  assert.equal(await words(refused("UNHELD_CODE", "Its own words.")), "Its own words.");
   assert.equal(await words(httpError(500)), word("shell.unread"));
+  // fixtures-generic: ZZ_REASON
   assert.equal(await words({ status: 200, json: { ok: false, reason: "ZZ_REASON" } }), word("refusal.uncatalogued") + " ZZ_REASON", "a reason as well as a code");
-  const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("NO_AMOUNT", null, 400) } });
+  const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("UNHELD_CODE", null, 400) } });
   p.doc.getElementById("home-title").value = "Typed";
   await p.click(btn(p, "promote"));
   const reason = p.root().querySelector('[data-slot="m:0"] textarea');
@@ -461,7 +475,7 @@ test("R83 a refusal is drawn in its own words and shell.unread is for no refusal
 /* ---------- R84 ---------- */
 
 test("R84 look: the tab's title is page.title ({screen}, {team}) and on a public page page.title.public; an explanation opens below what it explains (above when the room below is short), never over the next control, and closes on Escape; at 390 px a table has no header row and every control is at least 44 px; public pages carry no weight mark; control: at 1280 px a table keeps its header row", async () => {
-  const p = await boot({ screens: ALL });
+  const p = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   assert.equal(p.doc.title, word("page.title", { screen: word("screen.home.name"), team: "River Town" }));
   const d = await boot({ screens: [DOORBELL], path: "/app/doorbell", session: null });
   assert.equal(d.doc.title, word("page.title.public", { page: word("screen.doorbell.name"), team: word("shell.group.unnamed") }));
@@ -492,22 +506,28 @@ test("R84 look: the tab's title is page.title ({screen}, {team}) and on a public
 test("R86 a first load settles quickly: the working frame is drawn before the first answer; the shell's independent requests are in flight together and with the screen's own reads, sent on whoami's answer (M-T50-6: before, the screen's first read left after two round trips; now after one); control: with the session record absent no read is sent", async () => {
   const times = {};
   let p;
-  const slow = (op, value) => async () => { times[op] = p.clock.at(); await new Promise((r) => p.clock.setTimeout(r, 500)); return ok(value); };
-  const answers = { whoami: MEMBER, interfacewords: { ok: true, language: null, words: [] }, groupidentity: { ok: true, display_name: "River Town" }, queue: { items: [] }, infolevel: { level: "prompt" },
-    assistantstate: { on: false }, accountreference: { held: false }, subscriptionsignin: { connected: false }, groupkeystate: { on: false }, bootstrap: { test_instance: false }, projectdirectory: { projects: [] } };
-  p = await boot({ screens: ALL, run: false, plane: Object.fromEntries(Object.entries(answers).map(([op, v]) => [op, slow(op, v)])) });
+  const { world, me } = await inWorld();
+  const door = doorAs(world, me).door;
+  /* each op the page asks is held 500 ms on the page's fake clock, then answered by the world's door */
+  const slow = (op) => async (req) => { times[op] = p.clock.at(); await new Promise((r) => p.clock.setTimeout(r, 500)); return door(req); };
+  const ops = [...SHELL_OPS, "bootstrap", "projectdirectory"];
+  p = await bootAs(world, me, { screens: ALL, run: false, plane: Object.fromEntries(ops.map((op) => [op, slow(op)])) });
   const base = Date.now();
   const FakeDate = class extends Date { static now() { return base + p.clock.at(); } };
-  new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(p.html))(p.win, p.clock.setTimeout, p.clock.clearTimeout, FakeDate);
+  new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(p.html, ALL))(p.win, p.clock.setTimeout, p.clock.clearTimeout, FakeDate);
   await settle();
   const frame = p.root().querySelector(".cs-frame");
   assert.ok(frame && frame.getAttribute("data-frame") === "working", "the working frame is drawn before the first answer");
   assert.ok(frame.querySelector(".cs-mast") && frame.querySelector(".cs-rail") && frame.querySelector(".cs-tabs") && frame.querySelector(".cs-band"));
-  assert.deepEqual(Object.keys(times).sort(), ["bootstrap", "whoami"], "the independent requests in flight together, nothing else sent before whoami answers");
+  /* G12b (R122): `bootstrap` is sent after the screen's first reads, never before them, so `whoami` goes alone and `bootstrap` with the rest on its answer */
+  assert.deepEqual(Object.keys(times).sort(), ["whoami"], "nothing else sent before whoami answers");
   assert.equal(times.whoami, 0);
-  assert.equal(times.bootstrap, 0);
   await p.clock.tick(500);
-  for (const op of ["interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "projectdirectory"]) assert.equal(times[op], 500, op + ": in flight on whoami's answer, with the others and the screen's reads");
+  assert.equal(times.bootstrap, 500, "bootstrap goes with the screen's reads, after the first of them");
+  /* everything else sent: the frame's own reads (the module's SHELL_OPS) and the screen's, all in flight on whoami's answer */
+  const rest = Object.keys(times).filter((op) => op !== "whoami" && op !== "bootstrap");
+  assert.equal(rest.filter((op) => SHELL_OPS.includes(op)).length, 8, "the frame's eight reads");
+  for (const op of rest) assert.equal(times[op], 500, op + ": in flight on whoami's answer, with the others and the screen's reads");
   assert.ok(times.projectdirectory < 1000, "the screen's first read leaves after one round trip, not two");
   await p.clock.tick(500);
   assert.ok(p.root().querySelector("#cs-main section"), "the screen settles on its reads");
@@ -577,7 +597,7 @@ test("R87 a Reasoned act asks its reason and is never sent without one: the shel
 /* ---------- R89 ---------- */
 
 test("R89 the phone layout as drawn: the rules for a row (auto minmax(0, 1fr), cells under their words), a label list in one column, a choice's words one block beside its box, tabs wrapping whole live in the shell's own layout and apply at the phone width only; control: a 1280 px row keeps its cells side by side", async () => {
-  const p = await boot({ screens: ALL });
+  const p = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   const style = /<style>([^]*?)<\/style>/.exec(p.html)[1];
   const at = style.indexOf("@media (max-width:760px)");
   assert.ok(at >= 0, "a phone-width block");

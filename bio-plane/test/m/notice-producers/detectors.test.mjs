@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, shareDetector, ALICE, ADMIN_BOB } from "../money-checks/fixture.mjs";
 import { producers, fresh, reader, ofKind, sentences, texts, JUDGMENT, hintFailures } from "./fixture.mjs";
 import { TAKE_UP, NOTICED_LABEL, HINT_MARK } from "../../../src/notice-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
 const P = "PROJ-2026-0001-alpha", Q = "PROJ-2026-0003-beta", H = "PROJ-2026-0002-hidden";
@@ -125,7 +126,7 @@ test("R11: a money-detector item is marked \"Hint · machine work\" in its summa
   assert.deepEqual(hintFailures(it, HINT_MARK), []);
   assert.ok(it.summary.startsWith("Hint · machine work: a pattern the detector "), it.summary);
   assert.match(it.detail, /^Hint · machine work\. A detector noticed this hint/);
-  assert.equal(it.options[0].label, "Take this hint up as your own hunch or hypothesis");
+  assert.equal(it.options[0].label, word("notice-producers.label.take_hint_hunch"));
   assert.equal(it.label, "noticed");
   assert.equal(it.kind, "money-detector-noticed");
   assert.equal(it.id, `FINDING::money-detector-noticed::${d.detector_id}::${it.subject.id}`);

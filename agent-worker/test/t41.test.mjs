@@ -14,6 +14,7 @@ import worker from "../src/index.mjs";
 import { CASCADE_ORDER, LEVEL_KINDS, resolveClaudeCascade, cascadeToken } from "../src/cascade.mjs";
 import { MEMBER } from "./account.mjs";
 import { remoteBindings } from "./remote.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -202,7 +203,7 @@ section("R6, R29, R71 · through POST /run: a project's account is taken, named 
     ["a project's account whose project is not a string", { ...PKEY(), project: ["PRJ-41"] }, 400, "BAD_ACCOUNT"],
     ["a project's account naming a project of over 200 characters", { ...PKEY(), project: "P".repeat(201) }, 400, "BAD_ACCOUNT"],
     ["a member's own account carrying a project", { ...MKEY(), project: PROJECT }, 400, "BAD_ACCOUNT"],
-    ["the group's API key carrying a project", { kind: "apikey", level: "group", secret: MEMBER_KEY, member: MEMBER, project: PROJECT }, 400, "BAD_ACCOUNT"],
+    ["the team's API key carrying a project", { kind: "apikey", level: "group", secret: MEMBER_KEY, member: MEMBER, project: PROJECT }, 400, "BAD_ACCOUNT"],
     ["a project's sign-in carrying no secret (R82, T47)", { ...PSIGNIN(), secret: undefined }, 409, "SIGNIN_NOT_HELD"],
     ["a project's sign-in carrying an empty secret (R82, T47)", { ...PSIGNIN(), secret: "" }, 409, "SIGNIN_NOT_HELD"],
     ["a project's sign-in with suggestions not a boolean (T46)", { ...PSIGNIN(), suggestions: "on" }, 400, "BAD_ACCOUNT"],
@@ -269,7 +270,7 @@ section("R26 (T41 B6) · a tick the plane answers `found: false` (no such run) a
 {
   /* The plane's own answer for a run it does not hold (ai-runs: `{run, found: false, note}`, no `ok: false`): the REC-100
      fixture's run was never opened (AI_RUN_MODE_NOT_DEPLOYED) and every tick answered so, yet `logged` read 1. */
-  const NO_RUN = { run: "RUN-41", found: false, note: "no such run: it either never existed or was purged" };
+  const NO_RUN = { run: "RUN-41", found: false, note: word("ai-runs.note.run_either_existed") };
   const look = { judgements: [{ targets: [], level: "document", observed: "LOOKED_INDETERMINATE" }] };
   const sent = (r) => r.plane.filter((c) => c.op === "airuntick").reduce((n, c) => n + (c.body?.log || []).length, 0);
   const tickRefusals = (o) => (o?.refusals || []).filter((x) => x.at === "airuntick" && x.plane?.result?.found === false);

@@ -35,7 +35,7 @@ const fullInquiryMd = (id, { question = QUESTION, state = "open" } = {}) => ["--
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
   "surfaced_by: agent", 'disposition_reason: ""', "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
-  "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+  "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "",
   "## Session Log", "", "### Session 2026-07-02T00:00:00Z | Formation | agent", "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 
@@ -112,7 +112,8 @@ test("R1 R20 R21 R2 dispose moves inquiry@1 and a legacy surfaced problem alike:
   assert.deepEqual(await w.k.checkEntry(w.text(LEGACY)), [], "and it is judged conformant under its own vocabulary afterwards");
   assert.deepEqual(w.raisedCalls.map((c) => [c.target, c.cause]), [[LEGACY, "deferred"]], "the deferral raises for it as for any inquiry");
   /* negative controls: deferred -> deferred is not an edge; a document that is not an inquiry is still refused */
-  const again = w.k.dispose({ handle: "l", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") });
+  w.select("l-again", [LEGACY]);   /* the first selection moved with the act (retrieval R20) */
+  const again = w.k.dispose({ handle: "l-again", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") });
   assert.equal(again.reason, "ILLEGAL_TRANSITION"); assert.deepEqual(again.offenders.map((o) => o.id), [LEGACY]);
   w.doc(A); w.select("x", [A]);
   const ni = w.k.dispose({ handle: "x", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") });

@@ -450,7 +450,61 @@ CREATE TABLE IF NOT EXISTS captured_for (
   at          TEXT NOT NULL,
   PRIMARY KEY (capture_sha, question, asker)
 );
-CREATE INDEX IF NOT EXISTS captured_for_question ON captured_for (question)`;
+CREATE INDEX IF NOT EXISTS captured_for_question ON captured_for (question);
+-- R104 (fix round 6; G2; K4562): a large capture fetched in the background and filed: one row per capture session, written once when
+-- the delivery files the document, never rewritten or removed but by purge. A stated read contract for notice-producers, which tells
+-- the opener once (fetchesDone). session the capture session id; document the filed document's bundle id; opener the member's
+-- stamp (member:ID); project the project it was filed under, null for none; at the whole-second UTC instant it was recorded.
+CREATE TABLE IF NOT EXISTS fetch_done (
+  session  TEXT PRIMARY KEY,
+  document TEXT NOT NULL,
+  opener   TEXT NOT NULL,
+  project  TEXT,
+  at       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS fetch_done_at ON fetch_done (at, session);
+-- R100 (T51 fix round 3; C9; Intake Doctrine section 8): the projects a held document was filed in as a REFERENCE: one row per
+-- (capture, project), written once at the first instant, never rewritten or removed but by purge. A reference and not a second
+-- home: the document keeps the one home provenance records (its R2), so no row here moves, copies or re-homes anything. A stated
+-- read contract, as links is (R57): a later module may join it in its own SQL, and this module changes none of its columns' names or
+-- meaning without a change to R100. capture_sha is the digest of the capture; project the project's id as the member's screen gave it
+-- (this module decides nothing about it); by the member's id (R69's spelling, no member: prefix); at the whole-second UTC instant
+-- first recorded.
+CREATE TABLE IF NOT EXISTS seen_in (
+  capture_sha TEXT NOT NULL,
+  project     TEXT NOT NULL,
+  by          TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, project)
+);
+CREATE INDEX IF NOT EXISTS seen_in_project ON seen_in (project);
+-- R113 (fix round 9; G127f; K4891): a file sent in parts through the Worker is one upload session until it is completed or abandoned. One row per
+-- upload: upload the id handed to the member's browser (this module's, never R2's); sha256 the whole file's digest as the member declared it at
+-- the begin (the key of the object, verified at the completion against the digest of all the bytes hashed in order); bytes the declared size;
+-- part_bytes the size of every part but the last; by the member's stamp, the only one who may put, complete or abort it; statement, name and
+-- type what the begin was given, kept for the filing; r2 the id of R2's own multipart upload (null when the whole was already held); state
+-- 'open' until R2's upload is completed, then 'completed' until the filing is done (a retry of the completion then files, and completes nothing
+-- twice); parts the JSON list of the parts put so far, in order, each {sha256, etag, bytes}; hash_state the running SHA-256 of those parts in order (a few
+-- hundred characters, written with the part that advanced it: G173), so the object taken out of memory between two parts loses nothing; created and expires
+-- whole-second UTC instants. The row is removed when the upload is filed, aborted or expired; it holds no byte of the file.
+CREATE TABLE IF NOT EXISTS parted_uploads (
+  upload     TEXT PRIMARY KEY,
+  sha256     TEXT NOT NULL,
+  bytes      INTEGER NOT NULL,
+  part_bytes INTEGER NOT NULL,
+  by         TEXT NOT NULL,
+  statement  TEXT NOT NULL,
+  name       TEXT,
+  type       TEXT,
+  r2         TEXT,
+  state      TEXT NOT NULL DEFAULT 'open',
+  parts      TEXT NOT NULL DEFAULT '[]',
+  hash_state TEXT,
+  created    TEXT NOT NULL,
+  expires    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS parted_uploads_expires ON parted_uploads (expires);
+CREATE INDEX IF NOT EXISTS parted_uploads_by_sha ON parted_uploads (by, sha256)`;
 
 /* Columns an older store's tables gained after they were first written, added at boot (never back-filled; each
    reason is where the column is read). Moved from the legacy store's additive list. */
@@ -459,6 +513,7 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
   ["site_asset_refs", "reused_from", "TEXT"],        // CAP-14
   ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],   // D-492: 0 is the measured truth
   ["links", "chrome_basis", "TEXT"],                 // D-340: the region a contained link sat in
+  ["parted_uploads", "hash_state", "TEXT"],          // G173: the running digest of the parts put so far, kept beside them
 ];
 
 /* A derived table whose KEY changed shape is dropped and rebuilt rather than altered: `links` gained
@@ -471,5 +526,5 @@ export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
    corpus-derived. The doorbell's tables are `doorbell`'s to declare (T43; N849, N864). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
-  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions", "captured_for"];
+  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions", "captured_for", "seen_in", "fetch_done", "parted_uploads"];
 export const CAPTURE_EXEMPT_TABLES = ["capture_limits", "render_allowance", "render_slots"];

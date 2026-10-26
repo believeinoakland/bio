@@ -11,6 +11,8 @@ import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
 import { timelineBodyLines } from "../../../src/case-authoring/document.mjs";
 import { timelineOf } from "../../../src/case-grammar/index.mjs";
 import { peopleOf, memberTiesOf } from "../../../src/case-disclosures/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { timelineRefusal } from "../events/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const SUBJ = "ENT-2026-0001-council", E1 = "EVT-2026-0001-a", E2 = "EVT-2026-0002-b", E3 = "EVT-2026-0003-c", E4 = "EVT-2026-0004-d";
@@ -97,7 +99,7 @@ test("R57: the timeline: block writes the world's lane (they_did) and the regist
 test("R57: the body's timeline section prints each lane as its own list and says how many items were left out; with no item and none left out there is no section", () => {
   assert.deepEqual(timelineBodyLines([], 0), []);
   const lines = timelineBodyLines([{ lane: "we_did", ord: 1, when: "2026-05-01", label: "asked", ref: "R1", source: "s" }], 2);
-  assert.ok(lines.includes("Nothing in this lane."), "the empty world lane is stated, not dropped");
+  assert.ok(lines.includes(word("case-authoring.document.lane")), "the empty world lane is stated, not dropped");
   assert.ok(lines.includes("1. 2026-05-01 — asked (R1; source s)"));
   assert.ok(lines.includes("2 item(s) had no source this record could cite and are left out."));
 });
@@ -180,13 +182,13 @@ test("R57, R26: a lane events cut at its limit (truncated) is stated as stopping
     ours: { ...r.ours, sources: r.ours.sources.map((s) => (s.source === "docket" ? { ...s, truncated: true } : s)) } }; };
   const c = setup({ events: cutEvents });
   const body = bodyOf(docOf(c.w, publish(c.w, c.P)));
-  assert.ok(body.includes("The list of what they did stops at its bound: the record holds more than this case lists."));
+  assert.ok(body.includes(word("case-authoring.cuts.map.list_did_stops")));
   assert.ok(body.includes("What we did, from docket, stops at its bound: that source holds more than this case lists."));
   /* negative control: nothing cut, nothing said of a bound */
   const whole = setup();
   assert.equal(bodyOf(docOf(whole.w, publish(whole.w, whole.P))).includes("stops at its bound"), false);
   /* a read that fails */
-  const failing = { ...eventsStandIn(), timeline: () => ({ ok: false, reason: "NO_SET" }) };
+  const failing = { ...eventsStandIn(), timeline: () => timelineRefusal().noSet };
   const f = setup({ events: failing });
   const fr = publish(f.w, f.P);
   assert.equal(fr.ok, true, JSON.stringify(fr).slice(0, 300));
@@ -217,7 +219,7 @@ test("R57 (T45; v0.2 rules 15, 17): the we_did lane is the case's published reco
   assert.deepEqual(r.timeline, { we_did: 2, withheld: 2 });
   for (const hidden of ["ACT-2026-0001", "met counsel", "ACT-2026-0003", "drafted a reply"])
     assert.equal(text.includes(hidden), false, `${hidden} is never written`);
-  assert.ok(bodyOf(text).includes("2 of the group's own act(s) were not marked public by the record that holds them and are left out of this published record of what we did."));
+  assert.ok(bodyOf(text).includes("2 of the team's own act(s) were not marked public by the record that holds them and are left out of this published record of what we did."));
   /* control: one item without the mark and one with it: only the second is written, withheld: 1 */
   const c = [];
   const one = eventsStandIn(c);

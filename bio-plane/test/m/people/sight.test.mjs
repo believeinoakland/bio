@@ -127,3 +127,23 @@ test("R31 sight: the registry is group-wide; a fact follows its document's visib
   for (const r of [w.p.personAt({ entityId: p, at: "2020-01-01" }), w.p.careerOf({ entityId: p }), w.p.identityOf({ entityId: p })])
     assert.equal(r.ok, false);
 });
+
+test("R21 (K5148) the read by source takes source_id (source is a door stamp the door deletes from every query), reads the link to a listed member and none to another; a read naming neither source_id nor person is refused, never answered as empty", () => {
+  const w = world();
+  const p = w.person("Quinn Roe");
+  w.S.add("SRC-2026-1234abcd");
+  assert.equal(w.p.linkSourceToPerson({ source: "SRC-2026-1234abcd", person: p, evidence: "the same handwriting", sight: ["member:ann"], by: ANN }).ok, true);
+  const read = (query) => peopleOps(w.p, new URL(`https://plane.example/?${query}`), null).sourcepersonlinks();
+  const listed = read(`source_id=SRC-2026-1234abcd&viewer=${encodeURIComponent(ANN)}`);
+  assert.equal(listed.count, 1);
+  assert.equal(listed.links[0].person, p);
+  assert.equal(read(`source_id=SRC-2026-1234abcd&viewer=${encodeURIComponent(OUT)}`).count, 0, "control: a member the sight list does not name reads none");
+  assert.equal(read(`person=${p}&viewer=${encodeURIComponent(ANN)}`).count, 1, "the read by person is unchanged");
+  for (const q of [`viewer=${encodeURIComponent(ANN)}`, `source=SRC-2026-1234abcd&viewer=${encodeURIComponent(ANN)}`]) {
+    const r = read(q);
+    assert.equal(r.ok, false, q);
+    assert.equal(r.reason, "NO_LINK_SUBJECT", q);
+    assert.ok(typeof r.detail === "string" && r.detail.length > 0);
+  }
+  assert.equal(w.p.sourceLinksOf({ viewer: ANN }).reason, "NO_LINK_SUBJECT");
+});

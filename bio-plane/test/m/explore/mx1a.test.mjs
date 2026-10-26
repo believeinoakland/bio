@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import { exploreOf } from "../../../src/explore/index.mjs";
 import { BOUNDS, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 import { ZONE, valid, ent, evt, conn, world, byOwner } from "./fixtures/owners.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /** A small seeded generator, so every run builds the same world. */
 function rng(seed) {
@@ -126,7 +127,7 @@ test("M-X1a R5 the 5,000-node walk at real volumes: it finishes within the budge
   t.diagnostic(`M-X1a dense walk: visited ${a.visited}; owner calls ${a.owner_calls}; elapsed ${a.elapsed_ms} ms of ${a.budget_ms}; paths ${a.paths.length}; hubs ${a.hubs.map((h) => `${h.node}(${h.set_size})`).join(" ") || "none"}; ${a.truncated ? `truncated: ${a.why}` : "not truncated"}`);
   if (a.truncated) {
     assert.equal(a.undetermined, true);
-    assert.ok(["the walk used its time budget before it was done", `the walk visited its bound of ${BOUNDS.nodes} nodes before it was done`].includes(a.why));
+    assert.ok([word("connection-grammar.walk_used_time"), word("connection-grammar.walk_visited_bound", { nodes: String(BOUNDS.nodes) })].includes(a.why));
   } else assert.ok(a.elapsed_ms <= a.budget_ms);
   assert.ok(a.visited <= BOUNDS.nodes);
   assert.ok(a.elapsed_ms <= a.budget_ms + 2000, "the budget is checked between owner calls, so a walk overruns it by at most one read");

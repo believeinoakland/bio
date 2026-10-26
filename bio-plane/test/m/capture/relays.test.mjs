@@ -48,7 +48,9 @@ const read = async (r) => ({ status: r.status, text: await r.text() });
 
 test("R64 (N339): each relay answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never as STORE_DID_NOT_ANSWER, whether or not storeRefusal is handed", async () => {
   const refusals = [
+    // fixtures-contract: store-door store-replies
     [{ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400],
+    // fixtures-contract: answer-envelope door-helpers
     [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: links", translation: "t" }, 404],
     [{ ok: false, error: "unknown op: acquire" }, 404],
   ];
@@ -67,6 +69,7 @@ test("R64: a relay handed storeRefusal answers through it, and its answer is byt
   for (const [name, relay] of Object.entries(RELAYS)) {
     const seen = [];
     const spy = (out) => { seen.push(out.reply.status); return storeRefusal(out); };
+    // fixtures-contract: store-door store-replies
     const body = { ok: false, reason: "BAD_JSON", error: "the body is not JSON" };
     const via = await read(await relay(stub(body, 400), { json, storeSilent, storeRefusal: spy, doAnswer }));
     const own = await read(await relay(stub(body, 400), { json, storeSilent, doAnswer }));
@@ -83,6 +86,7 @@ test("R64 (N349): a reply that is no answer is 502 STORE_DID_NOT_ANSWER naming t
       assert.deepEqual([stack.status, sb.reason, sb.op], [502, "STORE_DID_NOT_ANSWER", name], `${name} ${label}: a 500 is a silence`);
       assert.ok(!stack.text.includes("Store.fetch") && !("error" in sb), `${name} ${label}: no stack`);
       assert.equal("correlation" in sb, false, `${name} ${label}: no correlation where the store gave none`);
+      // fixtures-contract: store-door store-replies
       const withId = JSON.parse((await read(await relay(stub({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: CORRELATION }, 500), h))).text);
       assert.deepEqual([withId.reason, withId.op, withId.correlation], ["STORE_DID_NOT_ANSWER", name, CORRELATION], `${name} ${label}: the store's correlation`);
       const noId = await read(await relay(stub({ ok: false, reason: "STORE_INTERNAL_ERROR" }, 500), h));

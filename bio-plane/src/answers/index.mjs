@@ -37,6 +37,7 @@ import { aiAccountsOf, AI_ACCOUNT_CHECKS } from "../ai-accounts/index.mjs";
 import { savedForm } from "../query.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 import { ANSWERS_TABLES, migrateAnswers } from "./schema.mjs";
 import { refusal } from "./checks.mjs";
 import { askAdmits, scrubRead } from "./scope.mjs";
@@ -226,13 +227,20 @@ export class Answers {
     return { ok: true, on: on === true };
   }
 
+  /** R7 (K5131): whether the rule services are on, for any signed-in member (the control plane's class gate admits the
+   *  caller), so a screen draws their control only while on. A read: writes nothing; the services stay off until the
+   *  administrator's switch (K1505 (14)). */
+  ruleServicesState() {
+    return { ok: true, on: this.record.getSetting(RULE_SERVICES_SETTING) === true };
+  }
+
   /** R7: one rule service's answer, as of `at` (now when absent), recorded in the read log of the grant it was asked
    *  under. Non-mutating; never throws. (R35; K3089) `use` (`ask` or `draft`; absent or any other: `ask`) opens the
    *  grant's read log with it when this is the grant's first read, so a draft grant first read by `op=rule` is scrubbed
    *  as a draft (R30); a log already open keeps the use it opened with. */
   async ruleAnswer({ service = null, args = null, viewer = null, at = null, grant = null, use = "ask" } = {}) {
     if (this.record.getSetting(RULE_SERVICES_SETTING) !== true)
-      return refusal("RULE_SERVICES_OFF", "the rule services are switched off in your group's Civicsmith");
+      return refusal("RULE_SERVICES_OFF", localize("answers.index.the_rule_services_are_switched", "the rule services are switched off in your team's Civicsmith"));
     const fn = BUILT_IN_SERVICES[service] || this.services.get(service);
     if (typeof fn !== "function" || !Object.hasOwn(BUILT_IN_SERVICES, service) && !this.services.has(service))
       return refusal("RULE_SERVICE_UNKNOWN", `no rule service is named ${service}`, { service: service ?? null });

@@ -72,7 +72,8 @@ export const STEP_ORDER = Object.freeze((() => {
 export async function record({ step = false, probes = {}, sealSecret = null } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...a) { const st = db.prepare(q); return cursor(st.columns().length ? st.all(...a.map(bind)).map((r) => ({ ...r })) : (st.run(...a.map(bind)), [])); },
-                get databaseSize() { return 0; } };
+                get databaseSize() { return size; } };
+  let size = 0;   /* G42: settable, so a test sets the object's measured size (`setSize(n)`; null states none) */
   let n = 0;
   const transactionSync = (fn) => {
     const sp = `sp${n++}`;
@@ -143,5 +144,5 @@ export async function record({ step = false, probes = {}, sealSecret = null } = 
     const r = await dispatch(new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) }), store);
     return { status: r.status, json: await r.json() };
   };
-  return { ctx, db, env, go, objects, promotion };
+  return { ctx, db, env, go, objects, promotion, setSize: (n) => { size = n; } };
 }

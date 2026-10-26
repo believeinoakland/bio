@@ -21,6 +21,8 @@ import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { dayRange } from "../../../src/civil-time/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import * as eventsFixtures from "../events/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -92,6 +94,7 @@ export function progressionsProvider() {
  *  every other read is the real module's. `hide(eventId, viewer)` keeps a use from one viewer (R40's sight). */
 export function usesProvider(w) {
   const uses = [];
+  let kindRefusal = null;
   const hidden = new Map();
   const seen = (e, viewer) => !(hidden.get(e.event_id) || new Set()).has(viewer);
   let n = 0;
@@ -119,7 +122,7 @@ export function usesProvider(w) {
     },
     usesOf({ provision = null, decider = null, subject = null, kinds = null, after = null, limit = 100, viewer = null } = {}) {
       if (Array.isArray(kinds) && kinds.some((k) => !["discretion", "waiver", "assessment"].includes(k)))
-        return { ok: false, reason: "KIND_NOT_DISCRETION", detail: "a use is of kind discretion, waiver or assessment" };
+        return (kindRefusal ??= eventsFixtures.usesOf().refused);   /* events' own refusal, made by its real code (K5044) */
       const has = (e, role, id) => e.participants.some((p) => p.role === role && p.entity_id === id);
       const pv = (e) => e.use.provision;
       let list = uses.filter((e) => seen(e, viewer) && (!kinds || kinds.includes(e.kind))
@@ -160,17 +163,17 @@ export function standardsProvider(w) {
     inForceAt({ standard = null, date = null, viewer = null, ...rest } = {}) {
       const s = held.get(standard);
       if (!s) return w.standards.inForceAt({ standard, date, viewer, ...rest });
-      if (s.held !== "text") return { state: "undetermined", why: "its text is not held, so it is not a measure", standard };
+      if (s.held !== "text") return { state: "undetermined", why: localize("standards.why.text_held_measure", "its text is not held, so it is not a measure"), standard };
       const { from, to } = s.period;
       if ((from && day(date) < from) || (to && day(date) > to)) return { state: "not_in_force", why: `${date} is outside ${from ?? "…"}–${to ?? "…"}`, standard };
-      if (!to) return { state: "undetermined", why: "no end is stated", standard };
+      if (!to) return { state: "undetermined", why: localize("civil-time.end_stated", "no end is stated"), standard };
       return { state: "in_force", why: `${date} is within ${from}–${to}`, standard, version: standard };
     },
     isMeasure(id, viewer = null) { void viewer; const s = held.get(id); return !!s && s.held === "text"; },
     bindsAt({ standard = null, body = null, date = null } = {}) {
       const s = held.get(standard);
       const state = s && s.binds ? s.binds[body] : undefined;
-      return state ? { state, why: `as the test records it on ${date}` } : { state: "undetermined", why: "whether this law binds the body is not recorded" };
+      return state ? { state, why: `as the test records it on ${date}` } : { state: "undetermined", why: localize("standards.whether_law_binds", "whether this law binds the body is not recorded") };
     },
     forcesOf({ standard = null } = {}) { const s = held.get(standard); return { ok: true, forces: s && s.force ? [s.force] : [] }; },
   };
@@ -199,6 +202,8 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     readingOf: (s) => (ex.readings[s] ? { reading: { page_boxes: null, ...(ex.readings[s].reading || {}) }, chain: null, pageCount: 3, textContainer: null, captureFormat: null, ...ex.readings[s] } : null),
     unitsOf: (s) => ex.units[s] || { units: [], state: null },
     capturesReadFor: () => [],
+    /* G41: the ranged cells of a held sheet, answered by `ex.cellsOf` when a test sets one (the real extraction's), else none */
+    cellsOf: (...a) => (ex.cellsOf ? ex.cellsOf(...a) : undefined),
     onReading: () => ({ ok: true }),
   };
   const content = contentOf(host, { record, membership, extraction, now: () => clock.now });
@@ -229,6 +234,9 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     summable: (a) => realMoney.summable(a),
     onFactChanged: (m, fn) => realMoney.onFactChanged(m, fn),
     withdrawFact: (a) => realMoney.withdrawFact(a),
+    markIngest: (k, open) => realMoney.markIngest(k, open),
+    checkConstant: (a) => realMoney.checkConstant(a),
+    factBySource: (a) => realMoney.factBySource(a),
   };
   const duties = dutiesOf(host, { record, membership, entities, standards, events, money: realMoney, provenance: prov, content, now: () => clock.now });
   if (typeof duties.migrate === "function") duties.migrate();
@@ -341,7 +349,7 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     /** A standard declared by bob (standards R1) over a fresh passage, in force over `period`: its id. */
     standard(period) {
       const r = standards.standardDeclare({ cite: `Test Bylaw § ${++n}`, kind: "ordinance", issuer: "The Selectboard", text: [w.passage(`bylaw ${n}`)],
-        period, reason: "the group holds the town to its own bylaw", author: V("bob"), viewer: V("bob") });
+        period, reason: "the team holds the town to its own bylaw", author: V("bob"), viewer: V("bob") });
       if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 300)}`);
       return r.id;
     },

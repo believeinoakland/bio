@@ -11,6 +11,7 @@ import * as M from "../../../src/ratification/index.mjs";
 import * as CC from "../../../src/case-catalogue/checks.mjs";
 import * as RG from "../../../src/record-grammar/index.mjs";
 import { world } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M1 = "INQ-2026-0001-first";
 
@@ -84,22 +85,13 @@ test("R14, R46: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.11, C-65.1 a
 /* R14's two new rows (K1058), stamped by 1.53.0 (PROMOTION #24, T23 layer 2): their translations are R14's, word for word. */
 test("R14, R22, R35, R2: C-58.4 CONTESTED_IN_BATCH, C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED and C-92.10 ATTRIBUTION_UNCHOSEN carry R14's translations word for word (C-58.5 and C-92.10 as re-worded at T28), minted where R22, R35 and R2 refuse", () => {
   assert.deepEqual(R.rowOf("CONTESTED_IN_BATCH"), { code: "CONTESTED_IN_BATCH", check: "C-58.4",
-    translation: "Some of these documents are contested: a contradiction touching each is not yet resolved, and "
-      + "contested material is never released in a batch. They are named. Nothing was released." });
+    translation: word("refusal.CONTESTED_IN_BATCH") });
   assert.deepEqual(R.rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"), { code: "ANONYMOUS_TESTIMONY_UNCORROBORATED",
     check: "C-58.5",
-    translation: "This edition rests on testimony, or on material from an unnamed source attested by a member, "
-      + "credited only to the group or the project, with no independent leg corroborating it. Such testimony or "
-      + "evidence counts as an anonymous tip and supports a finding only beside an independent corroborating leg. "
-      + "Each such member, observation and document is named. Corroborate the claim with an independent leg, ask "
-      + "the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing "
-      + "was signed." });
+    translation: word("refusal.ANONYMOUS_TESTIMONY_UNCORROBORATED") });
   /* T28 (N523): C-92.10 re-worded, word for word R14's */
   assert.deepEqual(R.rowOf("ATTRIBUTION_UNCHOSEN"), { code: "ATTRIBUTION_UNCHOSEN", check: "C-92.10",
-    translation: "This case edition uses a member's firsthand observation, or material from an unnamed source a "
-      + "member attests, and that member has not yet chosen how they are credited, so it cannot be signed. Publishing "
-      + "it at any level would be choosing for them. Ask that member to choose, or prepare the edition without the "
-      + "finding that rests on it." });
+    translation: word("refusal.ATTRIBUTION_UNCHOSEN") });
   assert.equal(R.RATIFY_SCOPE_CHECKS.CONTESTED_IN_BATCH.where, "src/ratification/release.mjs release > is-release-contested");
   assert.equal(R.RATIFY_SCOPE_CHECKS.ANONYMOUS_TESTIMONY_UNCORROBORATED.where,
                "src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony");
@@ -108,11 +100,11 @@ test("R14, R22, R35, R2: C-58.4 CONTESTED_IN_BATCH, C-58.5 ANONYMOUS_TESTIMONY_U
 /* R46 (DEC-147 (3)) and R47 (DEC-149): the translations as the requirements word them, word for word. */
 test("R46: C-58.6–C-58.10 carry R46's translations word for word, each minted at its one site", () => {
   const want = {
-    SCHEDULE_UNCHECKABLE: ["C-58.6", "Publishing at a set time means checking again at that time everything checked now, and part of it cannot be read now. It is named. Nothing was signed. You can publish now, or try again later."],
-    SCHEDULED_SOURCES_CHANGED: ["C-58.7", "This edition was not published at its set time: a source it rests on changed since it was signed. It is named. Nothing was published. Prepare and sign the edition again to publish it."],
-    SCHEDULED_TIES_CHANGED: ["C-58.8", "This edition was not published at its set time: a member who signed it has declared or withdrawn a tie to someone the case names since signing, so their confirmation of no undeclared tie may no longer hold. Nothing was published. Prepare and sign the edition again to publish it."],
-    SCHEDULED_HOLD_CHANGED: ["C-58.9", "This edition was not published at its set time: a hold on the case or its project changed since it was signed. It is named. Nothing was published. Prepare and sign the edition again to publish it."],
-    SCHEDULED_CHECK_REFUSED: ["C-58.10", "This edition was not published at its set time: a check made when it was signed no longer passes, or could not be made. The reason is given. Nothing was published. Prepare and sign the edition again to publish it."],
+    SCHEDULE_UNCHECKABLE: ["C-58.6", word("refusal.SCHEDULE_UNCHECKABLE")],
+    SCHEDULED_SOURCES_CHANGED: ["C-58.7", word("refusal.SCHEDULED_SOURCES_CHANGED")],
+    SCHEDULED_TIES_CHANGED: ["C-58.8", word("refusal.SCHEDULED_TIES_CHANGED")],
+    SCHEDULED_HOLD_CHANGED: ["C-58.9", word("refusal.SCHEDULED_HOLD_CHANGED")],
+    SCHEDULED_CHECK_REFUSED: ["C-58.10", word("refusal.SCHEDULED_CHECK_REFUSED")],
   };
   for (const [code, [check, translation]] of Object.entries(want))
     assert.deepEqual(R.rowOf(code), { code, check, translation }, code);
@@ -122,9 +114,9 @@ test("R46: C-58.6–C-58.10 carry R46's translations word for word, each minted 
 
 test("R47: C-32.14's and C-32.15's translations say \"one of the operator's access tokens for your group's Civicsmith\", nothing else changed, and no row of this module calls it this copy, this instance or this plane", () => {
   assert.deepEqual(R.rowOf("OPERATOR_TOKEN_CANNOT_RATIFY"), { code: "OPERATOR_TOKEN_CANNOT_RATIFY", check: "C-32.14",
-    translation: "Ratifying puts a finding into the published record under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your group's Civicsmith, not a person: a valid signature does not change that, because the credential that carries it in decides when the record changes. Sign in as the member whose key signed it and ratify it there." });
+    translation: word("refusal.OPERATOR_TOKEN_CANNOT_RATIFY") });
   assert.deepEqual(R.rowOf("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"), { code: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", check: "C-32.15",
-    translation: "Ratifying a case commits the group's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your group's Civicsmith, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there." });
+    translation: word("refusal.OPERATOR_TOKEN_CANNOT_RATIFY_CASE") });
   const rows = [R.RATIFY_MACHINE_FENCE_CHECKS, R.RATIFY_TESTIMONY_CHECKS, R.RATIFY_ATTRIBUTION_CHECKS,
                 R.CASE_CONCLUSION_CHECKS, R.RATIFY_SCOPE_CHECKS, R.RELEASE_CHECKS, R.RATIFY_REGISTRATION_CHECKS]
     .flatMap((f) => Object.values(f).map((r) => r.translation));

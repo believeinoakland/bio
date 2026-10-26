@@ -166,6 +166,7 @@ test("R4: a relayed store answer answers the store's own status and its envelope
                   [JSON.stringify({ ok: true }), 200], [JSON.stringify({ ok: "true", result: 1 }), 200], [JSON.stringify({ ok: false }), 500],
                   [JSON.stringify({ ok: false, reason: "BAD_JSON", detail: "d" }), 400], [JSON.stringify({ ok: false, error: "e" }), 200],
                   [JSON.stringify({ ok: 1, result: 2 }), 200], ["", 200], ["null", 200], [JSON.stringify([{ ok: true }]), 200],
+                  // fixtures-generic: WRONG_PASSWORD
                   [JSON.stringify({ ok: true, result: { ok: false, reason: "WRONG_PASSWORD" } }), 200],
                   [JSON.stringify({ ok: false, error: "x" }), 503], [JSON.stringify({}), 200]];
   for (const op of ["claim", "login", "invitelook", "enroll"])
@@ -261,7 +262,7 @@ test("R8, R16: this module's table holds exactly the rows of the checks the door
       assert.ok(src.includes(`function ${where.split(" ")[1]}(`), `${code}: ${where}`);
     }
   }
-  assert.equal(digest(rows.PURGE_HOLD_IN_PLACE.translation), "3c0738c95a098d30");
+  assert.equal(digest(rows.PURGE_HOLD_IN_PLACE.translation), "ae6bd47138c83f85");
   /* the families read these rows, and each decorates with its own words */
   for (const [code, row] of Object.entries(rows)) assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
   /* store-door's two rows are DISPATCH_CHECKS' */
@@ -287,9 +288,9 @@ test("R8, R16: this module's table holds exactly the rows of the checks the door
   assert.deepEqual(c69.map(([c, r]) => `${r.check} ${c}`).sort(), ["C-69.1 UNKNOWN_OP", "C-69.2 STORE_DID_NOT_ANSWER", "C-69.3 PLANE_INTERNAL_ERROR",
     "C-69.4 STORE_INTERNAL_ERROR", "C-69.5 PURGE_HOLD_IN_PLACE", "C-69.7 SIGNINTRACE_NOT_TEST"]);
   /* C-61.1's one raiser: the argument complaint, its error passed through byte for byte, nothing changed */
-  const a = M.requiredArgument("capture", "sha256", "<64 lowercase hex>", "requires sha256=<64 lowercase hex>");
+  const a = M.requiredArgument("capture", "sha256", "<64 lowercase hex>", "a complaint the store made");
   assert.deepEqual(a, { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", code: "REQUIRED_ARGUMENT_MISSING", check: "C-61.1",
-    translation: M.REQUIRED_ARGUMENT_CHECKS.REQUIRED_ARGUMENT_MISSING.translation, error: "requires sha256=<64 lowercase hex>",
+    translation: M.REQUIRED_ARGUMENT_CHECKS.REQUIRED_ARGUMENT_MISSING.translation, error: "a complaint the store made",
     op: "capture", argument: "sha256", shape: "<64 lowercase hex>",
     detail: "op=capture needs 'sha256' in the shape <64 lowercase hex>, and this request carried none the operation could use. Nothing was changed." });
 });

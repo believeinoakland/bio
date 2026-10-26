@@ -15,7 +15,7 @@ async function projectWorld() {
   w.project("B", "ann", "discoverable");
   w.project("H", "ann");
   for (const [id, project, title] of [["recA", "A", "a record of A"], ["recB", "B", "a record of B"], ["recNone", null, "a record of none"]])
-    w.db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project) VALUES (?, 'finding', ?, ?)`).run(id, title, project);
+    w.core.addBundle(id, "finding", title, project);
   for (const id of ["second", "ann", "bob"])
     assert.equal((await w.c.accountReferenceSet({ member: id, kind: "apikey", secret: `sk-${id}`, by: id })).ok, true);
   w.session = {};

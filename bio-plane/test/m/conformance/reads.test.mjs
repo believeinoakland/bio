@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { scene, V, U, MACHINE, F, DOC } from "./fixture.mjs";
 import { Conformance, CONFORMANCE_CHECKS, DETERMINATIONS_PAGE_MAX, FLAG_SAYS,
          noSuchDetermination } from "../../../src/conformance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -27,11 +28,11 @@ test("R9 R19 R25: determinationRead answers R1's fields, the act's event with wh
     "questions", "reason", "standards", "superseded_by", "supersedes"]);
   /* N345: no cause stated reads "cause not established" (R22); one standard, so the outcomes do not differ (R9) */
   assert.deepEqual([r.cause, r.cause_says, r.outcomes_differ, r.outcomes_differ_says],
-    [null, "cause not established", false, null]);
+    [null, word("conformance.cause_established"), false, null]);
   assert.deepEqual(r.outcomes, [{ standard: std, outcome: "noncompliant" }]);
   assert.deepEqual(r.act, { id: act, event: act,
     actor: { role: "Director of Parks", body: "Parks Department", entity_id: null,
-             entity_why: "no office entity is held for this role and body, so the actor stands as the office's role and body only" },
+             entity_why: word("conformance.office_entity_held") },
     evidence: [ev.content], when: { start: "2026-03-02T00:00:00Z", end: "2026-03-03T00:00:00Z", precision: "day", zone: "UTC",
                                     value: "2026-03-02" } });
   /* R25: the act's event as events reads it, and the signer beside it as who took part, never the actor */

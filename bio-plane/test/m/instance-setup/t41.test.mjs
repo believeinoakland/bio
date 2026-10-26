@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
 import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 import { INSTANCE_SETUP_CHECKS } from "../../../src/setup.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { WIZARD_SCRIPTS_CHECKS } from "../../../src/wizard-scripts/index.mjs";
 
 /* The door's codes (T40) and the retired ceiling codes they replace. */
@@ -61,7 +62,7 @@ test("R65 (T40) a draft carries no project: a project's account handed in (level
   for (const account of PROJECT_ACCOUNTS) {
     const r = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: { on: true, account }, viewer: "admin", by: "admin" });
     assert.deepEqual([r.ok, r.reason, r.check], [false, "ASSISTANT_DRAFT_UNAVAILABLE", WIZARD_SCRIPTS_CHECKS.ASSISTANT_DRAFT_UNAVAILABLE.check], JSON.stringify(account));
-    assert.match(r.detail, /a draft carries no project/);
+    assert.equal(r.detail, localize("instance-setup.setup.a_draft_carries_no_project", "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.", { what: localize("instance-setup.setup.fields_as_they_were", "the fields are as they were") }));
     assert.equal("focus" in r || "purpose" in r, false);
   }
   assert.equal(w.asked.length, 0, "the turn is never asked on a project's account");

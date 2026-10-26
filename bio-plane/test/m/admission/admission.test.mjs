@@ -9,10 +9,10 @@ const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDE
 const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
 const SESSION_CODES = ["SESSION_ROLE_CANNOT_REACH_OP", "MACHINE_CREDENTIAL_REQUIRED", "SESSION_ROUTE_NOT_RECORDED"];
 
-test("R8: a session reaching a mutating op outside its kind's set is refused 403 by why — SESSION_ROLE_CANNOT_REACH_OP (C-38.7) naming reachedBy, MACHINE_CREDENTIAL_REQUIRED (C-38.3) citing the decision, SESSION_ROUTE_NOT_RECORDED (C-38.8); capture's GET is a read; a session asking export is refused ROOT_OF_TRUST_REQUIRED (C-38.4)", async () => {
+test("R8: a session reaching a mutating op outside its kind's set is refused 403 by why — SESSION_ROLE_CANNOT_REACH_OP (C-38.7) naming reachedBy, MACHINE_CREDENTIAL_REQUIRED (C-38.3) citing the decision, SESSION_ROUTE_NOT_RECORDED (C-38.8); capture's GET is a read; export is reached by the ADMIN_TOKEN bearer and the founder's session alone, and every other session is refused ROOT_OF_TRUST_REQUIRED (C-38.4)", async () => {
   const { env, S } = world();
-  /* the founder's set alone: a member's session is told the founder's session reaches it */
-  const onlyAdmin = GATED.filter((k) => OPS[k].mutating && SESSION_OPS.admin.has(k) && !SESSION_OPS.member.has(k));
+  /* the founder's set alone (export apart: its own refusal, below): a member's session is told the founder's session reaches it */
+  const onlyAdmin = GATED.filter((k) => OPS[k].mutating && k !== "export" && SESSION_OPS.admin.has(k) && !SESSION_OPS.member.has(k));
   assert.ok(onlyAdmin.includes("governorconfig"));
   for (const op of onlyAdmin) {
     env.calls.length = 0;
@@ -36,11 +36,11 @@ test("R8: a session reaching a mutating op outside its kind's set is refused 403
     const body = refused(await gate(env, { op, token: t }), 403, "MACHINE_CREDENTIAL_REQUIRED", "C-38.3");
     assert.equal(body.recorded, recorded);
   }
-  /* no decision recorded: export (no session set, no decision; at the door, its own refusal answers first), and purge
-     with its decision removed from an arranged copy */
+  /* no decision recorded: purge, which no session set holds, with its decision removed from an arranged copy */
+  const undecided = arranged((m, a, d) => { delete d.purge; });
   for (const kind of ["member", "admin"]) {
-    const body = refused({ refusal: A.sessionOpGate(kind, "export", OPS.export, "POST") }, 403, "SESSION_ROUTE_NOT_RECORDED", "C-38.8");
-    assert.deepEqual([body.recorded, body.op], [undefined, "export"]);
+    const body = refused({ refusal: A.sessionOpGate(kind, "purge", OPS.purge, "POST", undecided) }, 403, "SESSION_ROUTE_NOT_RECORDED", "C-38.8");
+    assert.deepEqual([body.recorded, body.op], [undefined, "purge"]);
   }
   refused(await gate(env, { op: "purge", token: S.ann, tables: arranged((m, a, d) => { delete d.purge; }) }), 403, "SESSION_ROUTE_NOT_RECORDED", "C-38.8");
   refused({ refusal: A.sessionOpGate("member", "nosuchverb", { mutating: true }, "POST") }, 403, "SESSION_ROUTE_NOT_RECORDED", "C-38.8");
@@ -60,14 +60,25 @@ test("R8: a session reaching a mutating op outside its kind's set is refused 403
   const noCapture = arranged((m, a) => { m.delete("capture"); a.delete("capture"); });
   assert.ok((await gate(env, { op: "capture", token: S.ann, method: "GET", tables: noCapture })).caller);
   refused(await gate(env, { op: "capture", token: S.ann, method: "POST", tables: noCapture }), 403, "SESSION_ROUTE_NOT_RECORDED", "C-38.8");
-  /* export: every session, the founder's included; the root of trust's binding is admitted */
-  for (const t of [S.ann, S.founder, S.bare]) {
+  /* export (R8; Membership v2 §4.6): the root of trust has two forms, the ADMIN_TOKEN holder's bearer and the founder's
+     session. Every other session, an enrolled administrator's included, is refused ROOT_OF_TRUST_REQUIRED. */
+  assert.ok(SESSION_OPS.admin.has("export") && !SESSION_OPS.member.has("export"));
+  for (const t of [S.ann, S.admin, S.bare]) {
     env.calls.length = 0;
     const body = refused(await gate(env, { op: "export", token: t }), 403, "ROOT_OF_TRUST_REQUIRED", "C-38.4", [t]);
     assert.equal(body.op, "export");
     assert.equal(opCalls(env).length, 0);
   }
-  assert.equal((await gate(env, { op: "export", token: env.ADMIN_TOKEN })).caller.cls, "admin");
+  for (const t of [S.founder, env.ADMIN_TOKEN]) {
+    const got = await gate(env, { op: "export", token: t });
+    assert.equal(got.refusal, undefined, "the founder's session and the ADMIN_TOKEN bearer reach export");
+    assert.equal(got.caller.cls, "admin");
+  }
+  assert.equal((await gate(env, { op: "export", token: S.founder })).caller.viaSession, true);
+  /* every other credential is refused: the member's key is retired, the probe and daemon bindings are not export's class */
+  assert.equal((await gate(env, { op: "export", token: env.MEMBER_TOKEN })).refusal.body.reason, "MEMBER_TOKEN_RETIRED");
+  for (const t of [env.PROBE_TOKEN, env.DAEMON_TOKEN])
+    assert.equal((await gate(env, { op: "export", token: t })).refusal.body.reason, "CLASS_FORBIDDEN");
 });
 
 test("R9: a binding class not in the op's classes is refused 403 CLASS_FORBIDDEN (C-38.2); a caller not arriving by a session is judged by machineClasses where the spec gives it", async () => {
@@ -203,7 +214,7 @@ test("R5–R12, R20: the admission runs in one order — R1, R20's address gate,
   /* the public ops before R5–R7: an unknown token does not stop one */
   assert.equal((await gate(env, { op: "knock", token: "garbage" })).public, true);
   /* R8 before R9: a member session asking a founder-only op whose classes also lack member */
-  const both = GATED.find((k) => OPS[k].mutating && SESSION_OPS.admin.has(k) && !SESSION_OPS.member.has(k) && !OPS[k].classes.includes("member"));
+  const both = GATED.find((k) => OPS[k].mutating && k !== "export" && SESSION_OPS.admin.has(k) && !SESSION_OPS.member.has(k) && !OPS[k].classes.includes("member"));
   assert.equal(await code({ op: both, token: S.ann }), "SESSION_ROLE_CANNOT_REACH_OP");
   /* export's refusal before R9 and R11 for a session lacking every capability */
   assert.equal(await code({ op: "export", token: S.bare }), "ROOT_OF_TRUST_REQUIRED");

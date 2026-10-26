@@ -15,6 +15,7 @@ import { inflateRawSync } from "node:zlib";
 import { world, caseFm, sha, NOW } from "./fixture.mjs";
 import { makeZip, crc32 } from "../../make-zip.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const ARCH = "INFO-2026-0010-archive", MEM = "INFO-2026-0011-member", OUTER = "INFO-2026-0012-outer";
@@ -73,7 +74,7 @@ const setProvenance = (w, bundleId, documents) =>
   w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`, JSON.stringify({ documents }), bundleId);
 const unpackedEntry = (container, extra = {}) => ({ file: `snapshots/zip-${container.archive_sha256}-${container.index}`,
   locator: `https://example.org/a.zip#zip:${container.index}`, retrieved: NOW, authority_state: "undetermined",
-  authority_basis: "a file cut out of an archive", capture: { method: "unpacked", grade: "B", actor_class: "daemon",
+  authority_basis: word("acquisition.authority_basis.file_cut_out", { at: String(container.index) }), capture: { method: "unpacked", grade: "B", actor_class: "daemon",
   sha256: container.member_sha256, encoding: "binary", bytes: container.uncompressed }, container,
   origin: { kind: "named_request" }, attestation_attempts: [], ...extra });
 
@@ -125,7 +126,7 @@ test("R8 an included member is carried with its container record, its archive an
     { sha256: memberSha, ref: MEM, path: `materials/${memberSha}`, kind: "document", bytes: Buffer.byteLength(MEMBER_TEXT) },
     { sha256: sha(record), ref: MEM, path: `materials/${sha(record)}`, kind: "container", bytes: Buffer.byteLength(record) },
     { sha256: archiveSha, ref: MEM, path: `materials/${archiveSha}`, kind: "archive", bytes: zip.length },
-    { sha256: hex(token), ref: MEM, path: `materials/${hex(token)}`, kind: "attestation", bytes: token.length }]);
+    { sha256: hex(token), ref: MEM, path: `materials/${hex(token)}`, kind: "attestation", bytes: token.length, capture_sha: memberSha }]);
   /* only the extracted text is unheld (no index was set): nothing of R8 is */
   assert.deepEqual(r.unheld.map((u) => u.kind), ["extracted_text"]);
   /* the container record is the block as stated, in canonical JSON, readable by R3 under its kind */
@@ -209,13 +210,13 @@ test("R8 a member of a nested archive is carried outward to the outermost: each 
 test("R8 each it cannot carry is answered in unheld, never refused: a container naming another document or no archive digest, an archive not held, an archive token not held", () => {
   const cases = [
     ["member_sha256 names another document", (c) => ({ ...c, member_sha256: sha("another") }),
-     [["container", "member", "the container record does not name this document"]]],
+     [["container", "member", word("case-carriage.why.container_record_name")]]],
     ["archive_sha256 not 64 hex digits", (c) => ({ ...c, archive_sha256: "zip-1" }),
-     [["container", "member", "the container record does not name this document"]]],
+     [["container", "member", word("case-carriage.why.container_record_name")]]],
     ["archive_sha256 absent", (c) => { const { archive_sha256, ...rest } = c; void archive_sha256; return rest; },
-     [["container", "member", "the container record does not name this document"]]],
+     [["container", "member", word("case-carriage.why.container_record_name")]]],
     ["an archive the record does not hold", (c) => ({ ...c, archive_sha256: sha("an archive never captured") }),
-     [["archive", sha("an archive never captured"), "the archive is not held"]]],
+     [["archive", sha("an archive never captured"), word("case-carriage.why.archive_held")]]],
   ];
   for (const [label, change, want] of cases) {
     const w = world();
@@ -248,7 +249,7 @@ test("R8 each it cannot carry is answered in unheld, never refused: a container 
                  fake, ARCH, `snapshots/${ARCH}.txt`, NOW);
   const m2 = holdMember(w2, MEM, MEMBER_TEXT, { ...containerOf(zip, 0, "m.txt", MEMBER_TEXT), archive_sha256: fake });
   const r2 = w2.cc.holdMaterials(caseFm({ materials: [docRow(MEM, m2)] }), { caseId: CASE, edition: 1, at: NOW });
-  assert.deepEqual(r2.unheld.filter((u) => u.kind === "archive").map((u) => [u.sha256, u.why]), [[fake, "the archive is not held"]]);
+  assert.deepEqual(r2.unheld.filter((u) => u.kind === "archive").map((u) => [u.sha256, u.why]), [[fake, word("case-carriage.why.archive_held")]]);
 });
 
 test("R8 an archive held inline as text at its digest is held inline under kind archive; read back by R3", () => {

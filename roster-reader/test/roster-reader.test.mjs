@@ -7,6 +7,7 @@ import { CONFIDENCE, CONTRACT, EVENTS, makeRegistry, entity } from "../../docpro
 import { registerRosterTypes, ROSTER_TYPES, staffRoster, orgChart, rosterColumns, ROLES, directoryPersonRefs, NAME_GRADE,
          ROSTER_FLOOR } from "../index.mjs";
 import { ROSTER_DOCS, FW20, FW18, FIRST, HARBOR, EMPTY, ctxOf, allDocs, freeze } from "./fixtures.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const D = ROSTER_DOCS.documents;
 const ROSTERS = ["roster_committee", "roster_committee_rev", "roster_rps", "roster_wdb"];
@@ -37,13 +38,13 @@ test("R1 staff_roster: the measured rosters match, CERTAIN only where a short li
     const d = staffRoster.detect(ctxOf(D[k], FIRST));
     assert.equal(d.match, true, k);
     assert.equal(d.confidence, CONFIDENCE.CERTAIN, k);
-    assert.ok(d.signals.some((s) => /names itself a roster/.test(s)), k);
+    assert.ok(d.signals.some((s) => s.startsWith(localize("roster-reader.staff-roster.it_names_itself_a_roster", "it names itself a roster (\"{text}\")", { text: "" }).split(" (")[0])), k);
   }
   /* The board roster never names itself in its text: its rows alone make it LIKELY. */
   const wdb = staffRoster.detect(ctxOf(D.roster_wdb, FIRST));
   assert.equal(wdb.match, true);
   assert.equal(wdb.confidence, CONFIDENCE.LIKELY);
-  assert.match(wdb.why, /no short line names it a roster/);
+  assert.equal(wdb.why, localize("roster-reader.staff-roster.no_short_line_names_it_a", "no short line names it a roster with the view's words, so it is read as a roster on its rows alone"));
   /* The same board roster the staff directory refuses (its neg_wdb) is the positive here. */
   assert.equal(staffRoster.detect(ctxOf(FW20.documents.neg_wdb, FIRST)).match, true);
 });
@@ -70,12 +71,12 @@ test("R1 staff_roster: the floor, the contact-point and the dated-rows rules hol
   assert.equal(at.confidence, CONFIDENCE.CERTAIN);
   /* Contact points on half the rows: a contact list. */
   const contacts = Array.from({ length: 6 }, (_, i) => `Jane${"abcdef"[i]}a Doe${"abcdef"[i]}b Director${i % 2 ? "" : ` 510-555-01${i}${i}`}`).join("\n");
-  assert.match(staffRoster.detect(synth(`Staff Roster\n${contacts}`)).why, /contact point/);
+  assert.equal(staffRoster.detect(synth(`Staff Roster\n${contacts}`)).why, localize("roster-reader.staff-roster.contactlines_line_s_carry_a", "{contactLines} line(s) carry a contact point beside {paired} row(s): a directory or contact list, not a roster", { contactLines: "3", paired: "6" }));
   /* Dates as many as half the rows: a schedule that names people. */
   const dated = Array.from({ length: 6 }, (_, i) => `Jane${"abcdef"[i]}a Doe${"abcdef"[i]}b Director`).join("\n") + "\nMarch 3\nApril 7\nMay 5";
-  assert.match(staffRoster.detect(synth(`Staff Roster\n${dated}`)).why, /dated events/);
+  assert.equal(staffRoster.detect(synth(`Staff Roster\n${dated}`)).why, localize("roster-reader.staff-roster.dates_date_s_beside_paired", "{dates} date(s) beside {paired} row(s): the rows are dated events that name people, not a roster", { dates: "3", paired: "6" }));
   /* A roster that names itself only as a chart is not matched as a roster. */
-  assert.match(staffRoster.detect(synth(`Organizational Chart\n${rows(8)}`)).why, /as a chart and not as a roster/);
+  assert.equal(staffRoster.detect(synth(`Organizational Chart\n${rows(8)}`)).why, localize("roster-reader.staff-roster.it_names_itself_with_the_views", "it names itself, with the view's words, as a chart and not as a roster"));
 });
 
 test("R1 the two types register through the seam, in order, once per register function, and the registry picks each measured document's type", () => {
@@ -119,9 +120,11 @@ test("R2 staff_roster parse: rows as the lines state them, a post's title and un
   /* The board roster prints a name beside an organisation, which no staff title divides: every row whole. */
   const w = staffRoster.parse(ctxOf(D.roster_wdb, FIRST));
   assert.equal(w.rows.length, 18);
-  for (const r of w.rows) { assert.ok(!("name" in r)); assert.match(r.why, /not divided by guess/); }
+  const notDivided = [localize("roster-reader.staff-roster.the_line_opens_with_a", "the line opens with a name but what follows it is not one of the view's staff titles, so where the name ends is not divided by guess"),
+                      localize("roster-reader.staff-roster.the_line_prints_staff", "the line prints staff titles and names that do not divide into one name beside its title, so it is not paired by guess")];
+  for (const r of w.rows) { assert.ok(!("name" in r)); assert.ok(notDivided.includes(r.why)); }
   assert.equal(w.as_of, null);
-  assert.match(w.as_of_why, /states a date/);
+  assert.equal(w.as_of_why, localize("roster-reader.staff-roster.no_line_among_the_documents_first", "no line among the document's first eight, or beside its self-naming line, states a date"));
   assert.equal(w.organisation.text, "Oakland Workforce Development Board");
   /* A title before or after one name divides; two names beside a title, or a name between two titles,
      do not. */
@@ -148,7 +151,7 @@ test("R3 org_chart parse: units and posts as read, a name beside a post only on 
     assert.ok(p.units.some((x) => x.label === u), u);
   for (const x of [...p.units, ...p.posts]) { assert.equal(typeof x.label, "string"); assert.equal(x.source.kind, "pdf-page"); }
   assert.deepEqual(p.reports_to, []);
-  assert.match(p.pairs_why, /boxes and connecting lines are a drawing that text does not carry/);
+  assert.equal(p.pairs_why, localize("roster-reader.org-chart.no_reporting_relation_is_stated", "no reporting relation is stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read"));
   assert.equal(p.organisation.text, "Oakland Police Department");
   assert.equal(p.as_of.date, "2021-03-20");
   /* Every measured chart: no pair is read, because none states one in words. */
@@ -218,7 +221,7 @@ test("R6 rosterColumns names each column's role from the view's header words, co
   assert.equal(r.roster, true);
   assert.equal(r.why, null);
   assert.deepEqual(r.roles.map((c) => c.role), ["name", "unit", null]);
-  assert.match(r.roles[2].why, /no header word in the view names a role/);
+  assert.equal(r.roles[2].why, localize("roster-reader.columns.no_header_word_in_the_view", "no header word in the view names a role for it"));
   const all = rosterColumns(["Employee ID", "Job Title", "Department", "Start Date", "End Date", "As of", "Phone", "Email", "Home Address"], FIRST);
   assert.deepEqual(all.roles.map((c) => c.role), ["employee_id", "title", "unit", "start", "end", "as_of", "contact", "contact", "contact"]);
   assert.equal(all.roster, true);
@@ -226,7 +229,7 @@ test("R6 rosterColumns names each column's role from the view's header words, co
   /* No name and no employee id: not a roster, with why. */
   const not = rosterColumns(["Title", "Department", "Phone"], FIRST);
   assert.equal(not.roster, false);
-  assert.match(not.why, /no column is named `name` or `employee_id`/);
+  assert.equal(not.why, localize("roster-reader.columns.no_column_is_named_name", "no column is named `name` or `employee_id`, so this table is not read as a roster{v1}", { v1: "" }));
   /* The output is about the header alone: every key is the column's, nothing else. */
   for (const c of all.roles) assert.deepEqual(Object.keys(c).sort(), ["header", "index", "role", "why"]);
   assert.deepEqual(Object.keys(all).sort(), ["roles", "roster", "why"]);
@@ -234,7 +237,7 @@ test("R6 rosterColumns names each column's role from the view's header words, co
   const twice = rosterColumns(["Name"], { vocabulary: { roster_headers: [
     { pattern: { re: "^Name$" }, role: "name", basis: "TEST", profile: "t" }, { pattern: { re: "Name" }, role: "title", basis: "TEST", profile: "t" }] } });
   assert.equal(twice.roles[0].role, null);
-  assert.match(twice.roles[0].why, /more than one role/);
+  assert.equal(twice.roles[0].why, localize("roster-reader.columns.its_header_matches_the_views", "its header matches the view's words for more than one role ({hit}), so no role is named by guess", { hit: "name, title" }));
   assert.equal(rosterColumns("Name, Title", FIRST).roster, false);
 });
 
@@ -270,7 +273,7 @@ test("R7 directoryPersonRefs keeps each reference keyed by its address and reads
   /* Two people's text on one line (the two-column sheet) gives no name. */
   const two = directoryPersonRefs([entity("a@x.example", "contact", "", { line: "Jane Doe a@x.example John Roe b@x.example" })], FIRST);
   assert.equal(two[0].name, undefined);
-  assert.match(two[0].why, /2 name-shaped spans/);
+  assert.equal(two[0].why, localize("roster-reader.directory-refs.length_name_shaped_spans_remain", "{length} name-shaped spans remain on the entry's line, which may hold more than one person's text, so no name is read", { length: "2" }));
   /* The view's staff titles are removed before the name is read. */
   const titled = directoryPersonRefs([entity("a@x.example", "contact", "", { line: "Analyst II Jane Doe a@x.example 510-555-0101" })], FIRST);
   assert.equal(titled[0].name, "Jane Doe");
@@ -343,9 +346,9 @@ test("R11 every no says which no and why: no match, no name, no pair, no role, n
     for (const row of p.rows || []) if (!row.name) assert.ok(row.why, `${k} row`);
     if (t === orgChart) assert.ok(p.pairs_why, `${k} pairs`);
   }
-  assert.match(staffRoster.detect(ctxOf(D.unread_pbd, FIRST)).why, /no text was read/);
+  assert.equal(staffRoster.detect(ctxOf(D.unread_pbd, FIRST)).why, localize("roster-reader.staff-roster.no_text_was_read_so", "no text was read, so there are no rows to recognise"));
   for (const c of rosterColumns(["", "Nonsense"], FIRST).roles) assert.ok(c.why);
-  assert.match(rosterColumns(["Name"], EMPTY).roles[0].why, /supplies no roster header words/);
-  assert.match(directoryPersonRefs([entity("a@x.example", "contact", "", { line: "" })], FIRST)[0].why, /no line/);
+  assert.equal(rosterColumns(["Name"], EMPTY).roles[0].why, localize("roster-reader.columns.the_view_supplies_no_roster", "the view supplies no roster header words, so no column's role can be named"));
+  assert.equal(directoryPersonRefs([entity("a@x.example", "contact", "", { line: "" })], FIRST)[0].why, localize("roster-reader.directory-refs.the_entry_carries_no_line", "the entry carries no line to read a name from"));
   assert.match(staffRoster.assess({ rows: [] }, { rows: [] }).why, /either time/);
 });

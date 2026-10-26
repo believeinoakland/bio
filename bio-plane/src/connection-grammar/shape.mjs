@@ -2,11 +2,12 @@
 /* connection-grammar: the one shape every relationship the record holds is presented in (R1), and the derived id a
    leg cites and a checker re-derives (R11). Pure: nothing here reads a store, the network or a clock (R16). */
 import { BASIS_GRADES, idPattern, canonicalJson, sha256HexSync } from '../record-grammar/index.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 /** The four classes of kind, closed (R2). None is a measure of how connected a node is (R17). */
 export const CLASSES = Object.freeze(['evidentiary', 'derived', 'declared', 'hunch']);
 /** The label a declared connection carries (R1). */
-export const DECLARED_LABEL = 'declared, not evidenced';
+export const DECLARED_LABEL = localize('connection-grammar.shape.label_declared', 'declared, not evidenced');
 /** The label a hunch connection carries (R1). */
 export const HUNCH_LABEL = 'hunch';
 /** The lowest grade, which a declared assertion carries and a declared hop gives a chain (R1, R12). */
@@ -91,7 +92,7 @@ export function derivedId(f) {
  * @returns {{field: string, why: string}[]}
  */
 export function connectionErrors(c, kindOf) {
-  if (!isObj(c)) return [{ field: 'connection', why: 'a connection is an object' }];
+  if (!isObj(c)) return [{ field: 'connection', why: word('connection-grammar.why.connection_object') }];
   const errors = [];
   const err = (field, why) => errors.push({ field, why });
   for (const f of FIELDS) if (!(f in c)) err(f, `${f} is absent; every field of the shape is present`);
@@ -118,7 +119,7 @@ export function connectionErrors(c, kindOf) {
       if (c.grade !== null) err('grade', 'a hunch carries no grade');
     } else if (!isObj(c.grade) || !BASIS_GRADES.includes(c.grade.assertion) || !Array.isArray(c.grade.ends)
       || c.grade.ends.length !== 2 || !c.grade.ends.every((g) => BASIS_GRADES.includes(g))) {
-      err('grade', `grade is not {assertion, ends: [from_grade, to_grade]} in the letters ${BASIS_GRADES.join(' ')}`);
+      err('grade', localize('connection-grammar.shape.grade_shape', 'grade is not {shape} in the letters {letters}', { shape: '{assertion, ends: [from_grade, to_grade]}', letters: BASIS_GRADES.join(' ') }));
     } else if (cls === 'declared' && c.grade.assertion !== LOWEST_GRADE) {
       err('grade', `a declared connection's assertion carries the lowest grade, ${LOWEST_GRADE}`);
     }

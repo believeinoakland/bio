@@ -8,6 +8,9 @@ import assert from "node:assert/strict";
 import { world, call, opCalls, sha, FORGED } from "./harness.mjs";
 const { caseInputsOps, STATEMENT_ACK_CHECKS } = await import("../../../src/case-inputs/index.mjs");
 const { noReviewCopy } = await import("../../../src/review/index.mjs");
+/* case-inputs' own published fixture (K4990): the answers its real `statementack` gives, so the stand-in states no shape of its own */
+const { statementAck } = await import("../case-inputs/fixtures.mjs");
+const REAL = statementAck();
 
 /* The stand-in: case-inputs' own route reads the inner request; its act refuses as case-authoring's R19 does. */
 function standIn() {
@@ -18,17 +21,16 @@ function standIn() {
       seen.push(args);
       if (args.draft === "D-DEAD" || (!args.bySecret && !String(args.viewer ?? "").startsWith("member:"))) return noReviewCopy();
       if (typeof args.reason !== "string" || !args.reason.trim()) {
-        const row = STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON;
-        return { ok: false, reason: "STATEMENT_ACK_NO_REASON", code: "STATEMENT_ACK_NO_REASON", check: row.check, translation: row.translation };
+        return REAL.noReason;
       }
-      return { ok: true, acknowledged: true, reason: args.reason };
+      return { ...REAL.ok, acknowledgement: { ...REAL.ok.acknowledgement, reason: args.reason } };
     } };
     return new Response(JSON.stringify({ ok: true, result: caseInputsOps(act, c.url, c.body).statementack() }));
   };
   return { seen, answer };
 }
 
-test("R20 (DEC-88; case-inputs R1, was case-authoring R19): op=statementack carries the acknowledger's `reason` to the store on both doors — a recipient's secret and a member's session — as case-inputs' arm reads it, verbatim; the inner request holds the door's own keys and that, nothing else of the caller's", async () => {
+test("R20 (DEC-88; case-inputs R1, was case-authoring R19): op=statementack carries the acknowledger's `reason` to the store on both doors — a recipient's secret and a member's session — as case-inputs' arm reads it, verbatim; the recipient's inner request holds the door's own keys and that, nothing else of the caller's (a member's is `store-request`'s whole, R138)", async () => {
   const s = standIn();
   const { env, S } = world({ answer: s.answer });
   const reason = "  I read it: the case leaves out the 2019 audit, and says so.  ";
@@ -36,9 +38,9 @@ test("R20 (DEC-88; case-inputs R1, was case-authoring R19): op=statementack carr
     ["secret", { op: "statementack", params: { secret: "sekret", reason, draft: "D1", by: FORGED, viewer: FORGED, extra: "x" } },
      { draft: "D1", bySecret: "1", reason }],
     ["session", { op: "statementack", token: S.ann, params: { draft: "D1", reason, author: FORGED, viewer: FORGED, extra: "x" } },
-     { draft: "D1", viewer: "member:ann", reason }],
+     { draft: "D1", viewer: "member:ann", reason, extra: "x" }],
     ["session, a case document", { op: "statementack", token: S.ann, params: { case: "CASE-1", edition: "2", reason, extra: "x" } },
-     { case: "CASE-1", edition: "2", viewer: "member:ann", reason }],
+     { case: "CASE-1", edition: "2", viewer: "member:ann", reason, extra: "x" }],
     /* a POST body's reason, where the query names none */
     ["session, POST", { op: "statementack", token: S.ann, params: { draft: "D1" }, method: "POST", body: { reason, by: FORGED, extra: "x" } },
      { draft: "D1", viewer: "member:ann", reason }],
@@ -47,7 +49,8 @@ test("R20 (DEC-88; case-inputs R1, was case-authoring R19): op=statementack carr
     env.calls.length = 0; s.seen.length = 0;
     const r = await call(env, drive);
     assert.equal(r.status, 200, `${name}: ${r.text.slice(0, 200)}`);
-    assert.deepEqual([r.json.ok, r.json.reason], [true, reason], name);
+    assert.deepEqual([r.json.ok, r.json.acknowledgement?.reason], [true, reason], name);
+    assert.equal("acknowledged" in r.json, false, `${name}: the real answer states \`acknowledgement\`, never \`acknowledged\``);
     const [inner] = opCalls(env);
     assert.deepEqual(inner.params, want, name);
     /* R64 (N761; case-inputs R5, was case-authoring R62): the secret door's digest in the internal request's body alone */

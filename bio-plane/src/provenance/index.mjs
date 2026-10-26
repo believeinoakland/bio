@@ -36,11 +36,13 @@ import { ARCHIVE_DEPTH_MAX } from "../ooxml.mjs";
 import { migrateProvenance } from "./schema.mjs";
 import { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
 import { REGISTER_ENTRY_CHECKS, TESTIMONY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
 /** The tables this module owns (R41): no other module declares, writes or reshapes them. */
-export const PROVENANCE_TABLES = ["register", "captured_locators", "origin_declarations"];
+export const PROVENANCE_TABLES = ["register", "register_parts", "captured_locators", "origin_declarations", "authority_decisions"];
 export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN, UNPACKED_METHOD, UPLOAD_ORIGIN,
          UPLOADED_METHOD } from "./register-checks.mjs";
 export { REGISTER_ENTRY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, TESTIMONY_CHECKS } from "./checks.mjs";
@@ -62,6 +64,84 @@ const receiptRow = (r) => ({ ...r, reputation: typeof r.reputation === "string" 
                              uploads: uploadsOf(r.uploads) });
 /* A digest as the register keys it: a `sha256:` prefix and case ignored (R5). */
 const bareSha = (v) => (typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null);
+/* SQLite's order over text with nulls first, so a grade read in code ranks receipts as the statement it replaced did. */
+const cmp = (a, b) => (a === b ? 0 : a == null ? -1 : b == null ? 1 : a < b ? -1 : 1);
+
+const statedBytes = (n) => Number.isSafeInteger(n) && n >= 0;
+
+/* R72: the captures a register document states as held in parts, each as the register row of its whole sha: the
+   document's `capture.sha256` beside a non-empty list of `parts`, every part with a 64-hex digest. The row has no file
+   of its own: its `path` is the file the document names for the whole (which the bundle does not hold), its `bytes`
+   the size the document states, else the parts' sum. A document whose parts are malformed registers nothing here
+   (C-18.1 refuses it at the write); `skip` is the digests the promotion already registers by its own entry. */
+function wholesOf(reg, skip = new Set()) {
+  const out = [], seen = new Set();
+  for (const d of Array.isArray(reg?.documents) ? reg.documents : []) {
+    if (!isObj(d) || !Array.isArray(d.parts) || !d.parts.length || !isObj(d.capture)) continue;
+    const sha256 = bareSha(d.capture.sha256);
+    if (!sha256 || !/^[0-9a-f]{64}$/.test(sha256) || skip.has(sha256) || seen.has(sha256)) continue;
+    const shas = d.parts.map((p) => (isObj(p) ? bareSha(p.sha256) : null));
+    if (shas.some((x) => !x || !/^[0-9a-f]{64}$/.test(x))) continue;
+    const sum = d.parts.reduce((n, p) => n + (statedBytes(p.bytes) ? p.bytes : NaN), 0);
+    if (!Number.isSafeInteger(sum)) continue;
+    const parts = d.parts.map((p, i) => ({ sha256: shas[i], bytes: p.bytes, path: typeof p.file === "string" ? p.file : "" }));
+    const bytes = statedBytes(d.capture.bytes) ? d.capture.bytes : sum;
+    seen.add(sha256);
+    out.push({ sha256, parts, bytes,
+               path: typeof d.file === "string" && d.file ? d.file : String(d.parts[0].file ?? ""),
+               encoding: typeof d.capture.encoding === "string" && d.capture.encoding ? d.capture.encoding : "binary" });
+  }
+  return out;
+}
+/* R75, R77: the register list a promotion carries, folded to its wholes. A row is a whole `{sha256, path, encoding, bytes,
+   parts?}`; a multipart document's row carries `parts: [{sha256, path, bytes}]` in order (R75). A part sent as its own row
+   (the old shape, R77) is a row whose digest is a file's `blobSha` and whose `path` is `<name>.partNNN`: it is read as a
+   part of the whole row whose path is `<name>`, in the order of its number, and is no row of its own. A digest that the
+   package's own `data/provenance.json` states as a capture's is that capture's whole, however its path is spelled (a
+   document of one part). Answers `{wholes}` or `{fault}`: the first entry that cannot be read, `{kind, index, part?,
+   sha256, path}`, so nothing is written for it. */
+const PART_NAME = /^(.+)\.part(\d{3,})$/;
+const HEX64 = /^[0-9a-f]{64}$/;
+function foldRegister(register, files) {
+  const list = Array.isArray(register) ? register : [];
+  const blobs = new Set((Array.isArray(files) ? files : []).map((f) => (f && typeof f.blobSha === "string" ? f.blobSha : null)).filter(Boolean));
+  const prov = Array.isArray(files) ? files.find((f) => f && f.path === "data/provenance.json") : null;
+  const doc = prov && typeof prov.text === "string" ? safeJson(prov.text) : null;
+  const stated = new Set((Array.isArray(doc?.documents) ? doc.documents : []).map((d) => (isObj(d) && isObj(d.capture) ? bareSha(d.capture.sha256) : null)).filter(Boolean));
+  const wholes = [], legacy = [];
+  list.forEach((e, index) => {
+    if (!isObj(e) || typeof e.sha256 !== "string") return;
+    const m = e.parts === undefined && typeof e.path === "string" ? PART_NAME.exec(e.path) : null;
+    if (m && blobs.has(e.sha256) && !stated.has(e.sha256)) legacy.push({ index, e, name: m[1], n: Number(m[2]) });
+    else wholes.push({ index, e, parts: null });
+  });
+  for (const w of wholes) {
+    const { e, index } = w;
+    if (e.parts === undefined || e.parts === null) continue;
+    if (!Array.isArray(e.parts)) return { fault: { kind: "digest", index, part: null, sha256: null, path: String(e.path ?? "") } };
+    const parts = [];
+    for (let part = 0; part < e.parts.length; part++) {
+      const p = e.parts[part];
+      const sha256 = isObj(p) && typeof p.sha256 === "string" ? p.sha256 : null;
+      const path = isObj(p) && typeof p.path === "string" ? p.path : "";
+      if (!sha256 || !HEX64.test(sha256)) return { fault: { kind: "digest", index, part, sha256, path } };
+      if (!statedBytes(p.bytes)) return { fault: { kind: "bytes", index, part, sha256, path, bytes: p.bytes } };
+      parts.push({ sha256, path, bytes: p.bytes });
+    }
+    w.parts = parts.length ? parts : null;
+  }
+  for (const l of legacy) {
+    const w = wholes.find((x) => x.e.path === l.name);
+    if (!w) return { fault: { kind: "orphan", index: l.index, sha256: l.e.sha256, path: l.e.path } };
+    if (w.parts !== null) continue;                    /* the whole states its own parts: the old rows repeat them */
+    (w.old ??= []).push(l);
+  }
+  for (const w of wholes) {
+    if (w.parts === null && w.old) w.parts = w.old.sort((x, y) => (x.n - y.n) || (x.index - y.index))
+      .map((l) => ({ sha256: l.e.sha256, path: l.e.path, bytes: l.e.bytes }));
+  }
+  return { wholes: wholes.map((w) => ({ sha256: w.e.sha256, path: w.e.path, encoding: w.e.encoding, bytes: w.e.bytes, parts: w.parts })) };
+}
 
 /* D-15: the bundle gate compiled over a QUALIFIED column (the legacy store's `#bundleGate`), for reads that join a
    row carrying a bundle id to the viewer predicate (membership R43) over record-core's `bundles` (its R37). */
@@ -280,7 +360,7 @@ function observedMs(v) {
    D-556 (BOB #34, 2026-09-25 00:00Z): THREE READERS, ONE RULE. The ratify gate asks it of a whole-hash register row
    held in parts before admitting it, and publication asks it again of the PUBLISHED bucket after copying the parts
    across, so `keyOf` names the bucket's key for a part's hash rather than this function assuming the working one. */
-export const PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
+export const PART_VERIFY_READ_MAX = boundOf("provenance", "part_verify_bytes");
 export async function partsHeld(bucket, keyOf, parts) {
   const missing = [], disagree = [], unverified = [];
   for (const p of parts) {
@@ -293,7 +373,7 @@ export async function partsHeld(bucket, keyOf, parts) {
       const o = await bucket.get(keyOf(p.sha256));
       if (o) digest = hexBytes(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
     }
-    if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
+    if (!digest) unverified.push({ ...name, why: word("provenance.why.stored_checksum_too") });
     else if (digest !== p.sha256) disagree.push({ ...name, stored_sha256: digest });
   }
   return { missing, disagree, unverified };
@@ -313,8 +393,8 @@ export async function registerAuditReport(r, evidence) {
   const canProbe = !!(evidence && typeof evidence.head === "function");
   const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
   for (const { named_parts: named, ...row } of r.unresolved || []) {
-    if (row.class === "orphan") { unbacked.push({ ...row, why: "the record itself is absent" }); continue; }
-    if (!canProbe) { unbacked.push({ ...row, why: "no capture bucket is configured to check" }); continue; }
+    if (row.class === "orphan") { unbacked.push({ ...row, why: word("provenance.why.record_itself_absent") }); continue; }
+    if (!canProbe) { unbacked.push({ ...row, why: word("provenance.why.capture_bucket_configured") }); continue; }
     const h = await evidence.head(row.capture_sha);
     if (h) {
       if (typeof row.bytes === "number" && h.size !== row.bytes)
@@ -329,18 +409,16 @@ export async function registerAuditReport(r, evidence) {
        ("held in parts, all present"); a missing part is NAMED; and a row resolving neither way is
        UNDETERMINED, counted outside `sound`, never inside it. */
     if (named?.state === "unreadable") { undetermined.push({ ...row, why: named.why }); continue; }
-    if (named?.state !== "named") { unbacked.push({ ...row, why: "no bytes in the working bucket" }); continue; }
+    if (named?.state !== "named") { unbacked.push({ ...row, why: word("provenance.why.bytes_working_bucket") }); continue; }
     const v = await partsHeld(evidence, (s) => s, named.parts);
     const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
     if (v.missing.length)
-      unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names `
-                                 + `are not in the working bucket`, missing_parts: v.missing });
+      unbacked.push({ ...row, why: word("provenance.why.parts_record_names", { missing: String(v.missing.length), parts: String(named.parts.length) }), missing_parts: v.missing });
     else if (v.disagree.length || (typeof row.bytes === "number" && sum !== row.bytes))
       mismatched.push({ ...row, registered: row.bytes, stored: sum,
                         ...(v.disagree.length ? { disagreeing_parts: v.disagree } : {}) });
     else if (v.unverified.length)
-      undetermined.push({ ...row, why: `every part the record names is present, but the digest of `
-                                     + `${v.unverified.length} could not be verified`, unverified_parts: v.unverified });
+      undetermined.push({ ...row, why: word("provenance.why.part_record_names", { unverified: String(v.unverified.length) }), unverified_parts: v.unverified });
     else heldInParts.push(row);
   }
   return {
@@ -412,7 +490,79 @@ class Provenance {
   /** This module's tables (R41), created or brought up to shape. Called by the host at every boot; idempotent. */
   migrate() {
     migrateProvenance(this.#sql);
+    this.repairParts();
     return { ok: true };
+  }
+
+  /** R72, R79 (R-OLD): the repair at the plane's wake, or when asked. For every bundle whose own `data/provenance.json`
+   *  states a capture held in parts: the whole's row is written once when no bundle that exists holds it (`whole` 1, the
+   *  first registration of its parts as its instants; one capture, one home, R2, so a row held by another record is left
+   *  as it is and a row whose home is gone is registered afresh); the bundle's `register_parts` rows are written from the
+   *  document; and each `register` row that is a part of that whole, not the digest of a whole and not of a file the
+   *  bundle holds whole, is moved out of `register` (R74). Answers `{moved, left}`: the part rows moved, and the rows
+   *  named as a part (`<name>.partNNN`) that are still in `register` because no document accounts for them, left and
+   *  never deleted. Idempotent: a second run writes nothing. A store without the record's tables (a module test over
+   *  this module alone) has nothing to repair. */
+  repairParts() {
+    const table = (t) => this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = ?`, t);
+    let moved = 0;
+    if (table("files") && table("bundles")) {
+      const stated = this.#rows(`SELECT f.bundle_id, f.content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                                  WHERE f.path = 'data/provenance.json' AND f.content LIKE '%"parts"%'`);
+      for (const { bundle_id: bundleId, content } of stated) {
+        for (const w of wholesOf(safeJson(content))) {
+          const holder = this.#one(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, w.sha256);
+          if (holder && holder.bundle_id !== bundleId) continue;
+          const json = JSON.stringify(w.parts.map((p) => p.sha256));
+          const old = this.#rows(`SELECT capture_sha, registered FROM register WHERE bundle_id = ? AND whole = 0 AND capture_sha IN (SELECT value FROM json_each(?))`,
+                                 bundleId, json);
+          if (!holder) {
+            const first = old.map((r) => r.registered).filter(Boolean).sort()[0];
+            const at = first || this.#now();
+            this.#putWhole(bundleId, w, at, at, 0);
+          }
+          this.#putParts(bundleId, w);
+          const paths = JSON.stringify(w.parts.map((p) => p.path));
+          for (const r of old) {
+            if (this.#one(`SELECT 1 AS x FROM files WHERE bundle_id = ? AND sha256 = ? AND path NOT IN (SELECT value FROM json_each(?)) LIMIT 1`,
+                          bundleId, r.capture_sha, paths)) continue;
+            this.#sql.exec(`DELETE FROM register WHERE capture_sha = ? AND bundle_id = ? AND whole = 0`, r.capture_sha, bundleId);
+            moved++;
+          }
+        }
+      }
+    }
+    const left = this.#one(`SELECT COUNT(*) AS n FROM register WHERE whole = 0 AND path GLOB '*.part[0-9][0-9][0-9]'`).n;
+    return { moved, left };
+  }
+
+  /* R74: the bundle's `register_parts` rows for one whole, replaced by the document's: a revision that states other
+     parts leaves no row of the old ones, and no other bundle's row is read or written. A write only when they differ. */
+  #putParts(bundleId, w) {
+    const want = JSON.stringify(w.parts.map((p, i) => [i, p.sha256, p.bytes, p.path]));
+    const have = JSON.stringify(this.#rows(`SELECT idx, part_sha, bytes, path FROM register_parts WHERE bundle_id = ? AND whole_sha = ? ORDER BY idx`,
+                                           bundleId, w.sha256).map((r) => [r.idx, r.part_sha, r.bytes, r.path]));
+    if (want === have) return;
+    this.#sql.exec(`DELETE FROM register_parts WHERE bundle_id = ? AND whole_sha = ?`, bundleId, w.sha256);
+    w.parts.forEach((p, i) => this.#sql.exec(
+      `INSERT INTO register_parts (bundle_id, whole_sha, idx, part_sha, bytes, path) VALUES (?,?,?,?,?,?)`,
+      bundleId, w.sha256, i, p.sha256, p.bytes, p.path));
+  }
+
+  /* R72: the whole's register row. A re-registration under the bundle that holds it keeps `registered` when `revising`
+     (R1); a row held by another bundle that exists is never moved (`held`: only a home that is gone is replaced). */
+  #putWhole(bundleId, w, registered, last, revising) {
+    this.#sql.exec(
+      `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,whole)
+       VALUES (?,?,?,?,?,?,?,0,1)
+       ON CONFLICT(capture_sha) DO UPDATE SET
+         registered=CASE WHEN register.bundle_id = excluded.bundle_id AND ? = 1
+                         THEN register.registered ELSE excluded.registered END,
+         bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding, bytes=excluded.bytes,
+         last_registered=excluded.last_registered, authored=0, author=NULL, observed_at=NULL, whole=1
+       WHERE register.bundle_id = excluded.bundle_id
+          OR NOT EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = register.bundle_id)`,
+      w.sha256, bundleId, w.path, w.encoding, w.bytes, registered, last, revising);
   }
 
   /* ===================================================================== *
@@ -425,8 +575,10 @@ class Provenance {
     const { pkg, bundleId, files, register, head, promotedType, replay } = c;
     const unstated = this.#registerEntries(bundleId, register);
     if (unstated) return unstated;
+    const folded = foldRegister(register, files);
+    if (folded.fault) return this.#registerFault(bundleId, folded.fault);
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
-    const fenced = this.#testimonyFence(bundleId, files, register, testimony,
+    const fenced = this.#testimonyFence(bundleId, files, folded.wholes, testimony,
       { identity: pkg ? pkg.actorIdentity ?? null : null, viewer: pkg ? pkg.actorViewer ?? null : null });
     if (fenced) return fenced;
     return this.#registerArms({ bundleId, files, head, promotedType, replay, docFm: c.docFm });
@@ -449,7 +601,7 @@ class Provenance {
       const shown = typeof bytes === "string" ? JSON.stringify(bytes).slice(0, 40)
                   : bytes !== null && typeof bytes === "object" ? (Array.isArray(bytes) ? "a list" : "an object")
                   : String(bytes);
-      const said = bytes === undefined ? "states no bytes" : `states bytes ${shown}`;
+      const said = bytes === undefined ? word("provenance.states_bytes") : `states bytes ${shown}`;
       /* DEC-49 REGION is-register-bytes */
       return refusal("REGISTER_BYTES_UNSTATED",
         `register[${i}] (${sha256 ? `capture ${sha256.slice(0, 16)}…` : "no capture named"}, `
@@ -459,6 +611,31 @@ class Provenance {
       /* END DEC-49 REGION is-register-bytes */
     }
     return null;
+  }
+
+  /* R75, R77: an entry of the register list that cannot be read as a whole or as a part of one, refused by name before
+     anything is written. A part's size is R50's rule (C-53.14, naming the part); a part's digest that is not 64 lowercase
+     hex, and a part sent as its own row whose whole the list does not name, carry no catalogue row (as NO_SUCH_BUNDLE). */
+  #registerFault(bundleId, f) {
+    const extra = { bundleId, index: f.index, part: f.part ?? null, sha256: f.sha256 ?? null, path: f.path ?? null };
+    const shown = typeof f.bytes === "string" ? JSON.stringify(f.bytes).slice(0, 40)
+                : f.bytes !== null && typeof f.bytes === "object" ? (Array.isArray(f.bytes) ? "a list" : "an object")
+                : String(f.bytes);
+    if (f.kind === "bytes")
+      return rowRefusal(REGISTER_ENTRY_CHECKS)("REGISTER_BYTES_UNSTATED",
+        localize("provenance.index.register_part_bytes",
+                 "register[{index}] part {part} ({sha}) {said}: a part states its size as a whole number of bytes at least 0. Nothing was written",
+                 { index: String(f.index), part: String(f.part), sha: String(f.sha256.slice(0, 16)),
+                   said: f.bytes === undefined ? word("provenance.states_bytes") : `states bytes ${shown}` }), extra);
+    if (f.kind === "digest")
+      return { ok: false, reason: "REGISTER_PART_MALFORMED", code: "REGISTER_PART_MALFORMED", ...extra,
+               detail: localize("provenance.index.register_part_digest",
+                                "register[{index}] part {part} names {digest}: a part is named by its SHA-256, 64 lowercase hex characters. Nothing was written",
+                                { index: String(f.index), part: String(f.part ?? "(parts)"), digest: JSON.stringify(f.sha256).slice(0, 80) }) };
+    return { ok: false, reason: "REGISTER_PART_WITHOUT_WHOLE", code: "REGISTER_PART_WITHOUT_WHOLE", ...extra,
+             detail: localize("provenance.index.register_part_without_whole",
+                              "register[{index}] ({sha}, path {path}) is a part of a capture whose whole the list does not name: a part is registered under its whole, which the list names. Nothing was written",
+                              { index: String(f.index), sha: String(String(f.sha256).slice(0, 16)), path: String(f.path).slice(0, 120) }) };
   }
 
   /* R42–R46 at the write (K72 (4)): the C-18 arms over the promoted package, for an information bundle whose register
@@ -503,11 +680,12 @@ class Provenance {
   /** R42 · N688: the record's answers an `unpacked` document is judged against (`register-checks.mjs`'
    *  `checkContainer`), at the write, in the audit, and for a caller of `withRegisterChecks` that holds this module:
    *  whether the archive is held (R5), what entry `index` of it earns (R59, read through the archive from the top, as
-   *  a receipt `zip:<sha>!<index>` would be), and the origin of the archive's own document in its home's register. */
+   *  a receipt `zip:<sha>!<index>` would be), and the origin of the archive's own document in its home's register; and
+   *  (R66, C-18.9) the standing decision on a capture's content authority, which the arm reads before the document's own. */
   containerResolver() {
     return {
       holds: (a) => { const h = this.registerHolds({ sha: a }); return h.registered === true || h.acquired === true; },
-      gradeVia: (a, index) => this.#unpacked(`zip:${a}!${index}`, 0),
+      gradeVia: (a, index) => this.#unpacked(`zip:${a}!${index}`, 0, new Map()),
       archiveOrigin: (a) => {
         const home = this.homeOf(a);
         const f = home ? this.#record.readFile(home.bundleId, "data/provenance.json") : null;
@@ -516,6 +694,14 @@ class Provenance {
           .find((x) => isObj(x) && isObj(x.capture) && bareSha(x.capture.sha256) === a);
         return doc ? { found: true, origin: doc.origin } : { found: false };
       },
+      /* R66: the standing decision a member made on the capture's content authority, or null where none has: C-18.9 reads
+         a document's authority state, issuer and basis from it before the document's own. */
+      authority: (a) => {
+        const sha = bareSha(a);
+        const home = sha ? this.homeOf(sha) : null;
+        const standing = home ? this.authorityOf(home.bundleId, sha) : null;
+        return standing && standing.history.some((e) => e.source === "decision") ? standing : null;
+      },
     };
   }
 
@@ -523,7 +709,7 @@ class Provenance {
      capture's FIRST registration and `last_registered` its clock at this write; the authored columns are written from
      the testimony path's own key and never from the entry a caller sent. */
   #project(c) {
-    const { pkg, bundleId, register, head } = c;
+    const { pkg, bundleId, register, head, files } = c;
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
     /* MK-1 / IC-134: the three authored columns are written FROM THE
        TESTIMONY PATH'S OWN KEY and never from the entry a caller sent — `c`
@@ -542,12 +728,13 @@ class Provenance {
        held) is a capture registering afresh (R2), and both instants start anew. */
     const at = this.#now();
     const revising = head ? 1 : 0;
-    for (const r of Array.isArray(register) ? register : []) {
-      if (!r || typeof r.sha256 !== "string") continue;
+    /* R74, R75: the register's rows are wholes. A part is a row of `register_parts` under the bundle that holds the whole,
+       replaced by this promotion's own list and never another bundle's. */
+    for (const r of foldRegister(register, files).wholes ?? []) {
       const own = !!(testimony && testimony.captureSha === r.sha256);
       this.#sql.exec(
-        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,author,observed_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?)
+        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,author,observed_at,whole)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(capture_sha) DO UPDATE SET
            registered=CASE WHEN register.bundle_id = excluded.bundle_id AND ? = 1
                            THEN register.registered ELSE excluded.registered END,
@@ -555,9 +742,11 @@ class Provenance {
            bytes=excluded.bytes, last_registered=excluded.last_registered,
            authored=MAX(register.authored, excluded.authored),
            author=COALESCE(excluded.author, register.author),
-           observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
+           observed_at=COALESCE(excluded.observed_at, register.observed_at),
+           whole=excluded.whole`,
         r.sha256, bundleId, r.path, r.encoding ?? "utf8", r.bytes, at, at,
-        own ? 1 : 0, own ? testimony.author : null, own ? testimony.observedAt : null, revising);
+        own ? 1 : 0, own ? testimony.author : null, own ? testimony.observedAt : null, r.parts ? 1 : 0, revising);
+      this.#putParts(bundleId, { sha256: r.sha256, parts: r.parts ?? [] });
     }
     return null;
   }
@@ -693,17 +882,17 @@ class Provenance {
     const f = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
     if (!f) return { state: "none" };
     if (typeof f.text !== "string")
-      return { state: "unreadable", why: "the record's data/provenance.json is held as a blob, which the store cannot read" };
+      return { state: "unreadable", why: word("provenance.why.record_data_provenance") };
     let reg;
     try { reg = JSON.parse(f.text); } catch {
-      return { state: "unreadable", why: "the record's data/provenance.json does not parse" };
+      return { state: "unreadable", why: word("provenance.why.record_data_provenance_json") };
     }
     const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
       .find((d) => d && bareSha(d.capture?.sha256) === bareSha(sha) && d.parts !== undefined);
     if (!doc) return { state: "none" };
     const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) =>
       p && /^[0-9a-f]{64}$/.test(bareSha(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
-    if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
+    if (!ok) return { state: "unreadable", why: word("provenance.why.register_document_names") };
     return { state: "named", parts: doc.parts.map((p) => ({ file: typeof p.file === "string" ? p.file : null,
                                                             sha256: bareSha(p.sha256), bytes: p.bytes })) };
   }
@@ -831,28 +1020,53 @@ class Provenance {
                  authored: Number(r.authored) === 1 } : null;
   }
 
-  /** R11 — every register row whose home is `bundleId`, in `capture_sha` order. */
+  /** R11, R73 — every register row whose home is `bundleId`, in `capture_sha` order: wholes only (R74), each with `whole`
+   *  (1 for a whole held in parts, else 0) and, for a whole held in parts, `parts: [{sha256, path, bytes}]` in order, read
+   *  from `register_parts`. */
   registeredFor(bundleId) {
-    return this.#rows(`SELECT capture_sha, path, bytes, encoding, registered, authored FROM register
-                        WHERE bundle_id = ? ORDER BY capture_sha`, String(bundleId ?? ""))
+    const id = String(bundleId ?? "");
+    const parts = new Map();
+    for (const p of this.#rows(`SELECT whole_sha, part_sha, path, bytes FROM register_parts WHERE bundle_id = ? ORDER BY whole_sha, idx`, id)) {
+      if (!parts.has(p.whole_sha)) parts.set(p.whole_sha, []);
+      parts.get(p.whole_sha).push({ sha256: p.part_sha, path: p.path, bytes: p.bytes });
+    }
+    return this.#rows(`SELECT capture_sha, path, bytes, encoding, registered, authored, whole FROM register
+                        WHERE bundle_id = ? ORDER BY capture_sha`, id)
       .map((r) => ({ capture_sha: r.capture_sha, path: r.path, bytes: r.bytes, encoding: r.encoding,
-                     registered: r.registered, authored: Number(r.authored) === 1 }));
+                     registered: r.registered, authored: Number(r.authored) === 1, whole: Number(r.whole) === 1 ? 1 : 0,
+                     ...(Number(r.whole) === 1 ? { parts: parts.get(r.capture_sha) ?? [] } : {}) }));
   }
 
-  /** R12 · D-580 — the bundle's captures in the order the record first held them. `held_at` is the earlier of the
+  /** R78 — the parts of a whole in order, `[{sha256, bytes}]`, as `register_parts` names them (R74): a function of the
+   *  whole's bytes, so the same list whichever bundle holds it. `null` when no row names the whole (a capture held whole,
+   *  one the register does not hold, a part's own digest) and for a malformed digest. `acquisition`'s `readRange` is its
+   *  reader; no other module resolves parts. Reads only; never throws. */
+  partsOf(sha) {
+    const s = bareSha(sha);
+    if (!s || !HEX64.test(s)) return null;
+    const home = this.#one(`SELECT p.bundle_id FROM register_parts p JOIN bundles b ON b.bundle_id = p.bundle_id
+                             WHERE p.whole_sha = ? ORDER BY p.bundle_id LIMIT 1`, s);
+    if (!home) return null;
+    return this.#rows(`SELECT part_sha, bytes FROM register_parts WHERE bundle_id = ? AND whole_sha = ? ORDER BY idx`, home.bundle_id, s)
+      .map((r) => ({ sha256: r.part_sha, bytes: r.bytes }));
+  }
+
+  /** R12, R73 · D-580 — the bundle's captures in the order the record first held them. `held_at` is the earlier of the
    *  row's `registered` and its earliest receipt's `first_retrieved`, both this instance's clock, compared as
    *  instants and never as strings (`…:00Z` is before `…:00.123Z`). A document's own stated date never orders them,
-   *  and no other clock is put in the column. Ties break on the capture's digest, so the order is total. */
+   *  and no other clock is put in the column. Ties break on the capture's digest, so the order is total. The register
+   *  holds wholes only (R74), so a capture held in parts is listed once, by its whole, and a part is no capture. */
   capturesOf(bundleId) {
+    const id = String(bundleId ?? "");
     const rows = this.#rows(
       `SELECT r.capture_sha, r.registered,
               (SELECT MIN(cl.first_retrieved) FROM captured_locators cl WHERE cl.capture_sha = r.capture_sha) AS first
-         FROM register r WHERE r.bundle_id = ?`, String(bundleId ?? ""));
+         FROM register r WHERE r.bundle_id = ?`, id);
     const ms = (v) => (typeof v === "string" && v ? Date.parse(v) : NaN);
     return rows.map((r) => {
       const a = ms(r.registered), b = ms(r.first);
-      const held = Number.isFinite(b) && (!Number.isFinite(a) || b < a) ? r.first : r.registered;
-      return { capture_sha: r.capture_sha, held_at: held, t: ms(held) };
+      const at = Number.isFinite(b) && (!Number.isFinite(a) || b < a) ? r.first : r.registered;
+      return { capture_sha: r.capture_sha, held_at: at, t: ms(at) };
     }).sort((x, y) => ((Number.isFinite(x.t) ? x.t : Infinity) - (Number.isFinite(y.t) ? y.t : Infinity))
                       || (x.capture_sha < y.capture_sha ? -1 : x.capture_sha > y.capture_sha ? 1 : 0))
       .map(({ capture_sha, held_at }) => ({ capture_sha, held_at }));
@@ -987,79 +1201,109 @@ class Provenance {
    *  R59: when the receipts name more than one route, each route answers and the strongest answer stands (`#strongest`);
    *  a file cut out of an archive answers its archive's answer (`#unpacked`). */
   captureGrade(captureSha) {
-    return this.#grade(bareSha(captureSha), 0);
+    return this.#grade(bareSha(captureSha), 0, new Map());
+  }
+
+  /** `captureGrades(captureShas) → [answer, …]`, one answer per digest asked, in order, each exactly what
+   *  `captureGrade` answers for that digest. The register rows and receipts of every capture asked, and of the
+   *  archives their answers walk through, are read in one statement per level of archive nesting (none when no
+   *  digest is cut out of an archive), so a list of captures costs one read, not one per capture. A digest the
+   *  record does not hold answers as `captureGrade` answers it; a value that is not a list answers `[]`. Writes
+   *  nothing. */
+  captureGrades(captureShas) {
+    if (!Array.isArray(captureShas)) return [];
+    const asked = captureShas.map(bareSha);
+    const facts = new Map();
+    let next = asked;
+    for (let level = 0; level <= ARCHIVE_DEPTH_MAX && next.length; level++) {
+      this.#loadFacts(next, facts);
+      next = [...new Set([...facts.values()].flatMap((f) => f.locs).filter((l) => l.via === UNPACKED_VIA)
+        .map((l) => UNPACKED_LOCATOR.exec(typeof l.retrieval_locator === "string" ? l.retrieval_locator : ""))
+        .filter((m) => m).map((m) => m[1].toLowerCase()))].filter((a) => !facts.has(a));
+    }
+    return asked.map((s) => this.#grade(s, 0, facts));
+  }
+
+  /* R24–R27, R51, R59, R63: what one grade reads of the record, `facts` filling as digests are read: the capture's
+     register `authored` flag (null when unregistered) and its receipts. One statement for any number of digests. */
+  #loadFacts(shas, facts) {
+    const want = [...new Set(shas.filter((s) => typeof s === "string" && !facts.has(s)))];
+    if (!want.length) return;
+    for (const s of want) facts.set(s, { authored: null, locs: [] });
+    const json = JSON.stringify(want);
+    for (const r of this.#rows(`SELECT 'r' AS k, capture_sha, authored, NULL AS via, NULL AS retrieval_locator, NULL AS address,
+                                       NULL AS address_norm, NULL AS first_retrieved
+                                  FROM register WHERE capture_sha IN (SELECT value FROM json_each(?))
+                                UNION ALL
+                                SELECT 'l', capture_sha, NULL, via, retrieval_locator, address, address_norm, first_retrieved
+                                  FROM captured_locators WHERE capture_sha IN (SELECT value FROM json_each(?))`, json, json)) {
+      const f = facts.get(r.capture_sha);
+      if (r.k === "r") f.authored ??= r.authored;
+      else f.locs.push({ via: r.via, retrieval_locator: r.retrieval_locator, address: r.address,
+                         address_norm: r.address_norm, first_retrieved: r.first_retrieved });
+    }
   }
 
   /* One capture's answer; `depth` is how many archives a file's answer has already been read through (R59). */
-  #grade(s, depth) {
-    const reg = s ? this.#one(`SELECT authored FROM register WHERE capture_sha = ?`, s) : null;
+  #grade(s, depth, facts) {
+    if (s && !facts.has(s)) this.#loadFacts([s], facts);
+    const f = s ? facts.get(s) : { authored: null, locs: [] };
+    const reg = f.authored === null ? null : { authored: f.authored };
     /* R27: a member's authored observation earns no capture letter: the axis measures the act of reading a
        document in, which did not happen. Its grade is testimony, which nothing raises. */
     if (reg && Number(reg.authored) === 1)
       return { grade: null, route: "authored", determined: false, basis: "CAPTURE_AXIS_AUTHORED",
                testimony: TESTIMONY_GRADE,
-               why: "a member's own words were not read in from anywhere, so the capture axis earns no letter; the "
-                  + `observation is graded as testimony, ${TESTIMONY_GRADE}, and nothing raises that` };
-    const vias = s ? this.#rows(`SELECT DISTINCT via FROM captured_locators WHERE capture_sha = ? ORDER BY via`, s)
-      .map((r) => r.via) : [];
+               why: word("provenance.why.member_words_read", { testimony_grade: String(TESTIMONY_GRADE) }) };
+    const vias = [...new Set(f.locs.map((l) => l.via))].sort(cmp);
     /* R26 · D-709: no recorded route at all: stated, never guessed. A leg on it keeps its author's letter, under the
        ceiling, and that letter is the author's account, not a measurement. */
     if (!vias.length)
       return { grade: null, route: "unrecorded", determined: false, basis: "CAPTURE_ROUTE_UNRECORDED",
                ceiling: EARNED_CAPTURE_CEILING,
-               why: "no fetch route is recorded for these bytes (bytes a provenance document carried), so no "
-                  + "capture grade is measured from how they were fetched. A leg on them keeps the "
-                  + `letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored` };
+               why: word("provenance.why.fetch_route_recorded", { earned_capture_ceiling: String(EARNED_CAPTURE_CEILING) }) };
     const answers = [];
     /* R24 · D-177: a capture fetched `direct` earns the ceiling, measured. */
     if (vias.includes("direct"))
       answers.push({ grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured",
-                     why: `your group's Civicsmith fetched these bytes directly from their address, so their capture `
-                        + `grade is ${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account` });
+                     why: word("provenance.why.group_civicsmith_fetched", { earned_capture_ceiling: String(EARNED_CAPTURE_CEILING) }) });
     /* R25 · D-693: read only through an archive replay: one rank below, measured. */
     if (vias.includes(ARCHIVE_VIA))
       answers.push({ grade: ARCHIVE_CAPTURE_GRADE, route: "archive", determined: ARCHIVE_CAPTURE_GRADE !== null,
                      basis: "measured",
-                     why: `your group's Civicsmith fetched these bytes only through an archive replay (${ARCHIVE_VIA}), `
-                        + `never from their publisher: one more party stands between the record and the publisher, so `
-                        + `their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture` });
+                     why: word("provenance.why.group_civicsmith_fetched_bytes", { archive_via: String(ARCHIVE_VIA), archive_capture_grade: String(ARCHIVE_CAPTURE_GRADE) }) });
     /* R59 · N688 (K1852 (1)): a file cut out of an archive the record holds: one answer per receipt, each its
        archive's, in the receipts' locator order so that between two equal archives the answer is always the same. */
     if (vias.includes(UNPACKED_VIA))
-      for (const r of this.#rows(`SELECT DISTINCT retrieval_locator FROM captured_locators
-                                   WHERE capture_sha = ? AND via = ? ORDER BY retrieval_locator`, s, UNPACKED_VIA))
-        answers.push(this.#unpacked(r.retrieval_locator, depth));
+      for (const loc of [...new Set(f.locs.filter((l) => l.via === UNPACKED_VIA).map((l) => l.retrieval_locator))].sort(cmp))
+        answers.push(this.#unpacked(loc, depth, facts));
     /* R51 · N364 (K509 (3)): received through the doorbell, not fetched. A fetched route, when one was also
        recorded, is measured and answers first; with none, the bytes earn no fetched letter: a leg on them keeps its
        author's letter under the ceiling, stated as authored. What the receipt DOES prove is existence: the record
        held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
        the knock's receipt), so the earliest such receipt is named. */
     if (vias.includes(DOORBELL_VIA))
-      answers.push(this.#received(s, DOORBELL_VIA, "handed to the group through the doorbell and brought in by a member"));
+      answers.push(this.#received(f, DOORBELL_VIA, word("provenance.handed_group_through")));
     /* R63 · K2425 (4): a file a member holds, brought in by her upload: received, not fetched, graded exactly as the
        doorbell's material (R51), its existence at the upload's instant proven by the receipt the upload wrote. */
     if (vias.includes(UPLOAD_VIA))
-      answers.push(this.#received(s, UPLOAD_VIA, "brought in by a member who holds the file"));
+      answers.push(this.#received(f, UPLOAD_VIA, word("provenance.brought_member_holds")));
     if (answers.length) return this.#strongest(answers);
     /* R26: a route no ruling grades is NAMED, and the grade is undetermined. It answers only when no ruled route
        does (R59: it never outranks a ruled one). */
     return { grade: null, route: vias.join(","), determined: false, basis: "CAPTURE_GRADE_VIA_UNRULED",
              ceiling: EARNED_CAPTURE_CEILING,
-             why: `these bytes were served by a route no ruling grades (${vias.join(", ")}), so what they earn on the `
-                + "capture axis is UNDETERMINED" };
+             why: word("provenance.why.bytes_served_route", { vias: String(vias.join(", ")) }) };
   }
 
   /* R51, R63: the answer of material RECEIVED by route `via` (`doorbell` or `upload`), never fetched: no letter, the
      member's authored letter under the ceiling, and the earliest such receipt named as the proof of existence. */
-  #received(s, via, how) {
-    const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
-                          WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`, s, via);
+  #received(f, via, how) {
+    const r = f.locs.filter((l) => l.via === via)
+      .sort((x, y) => cmp(x.first_retrieved, y.first_retrieved) || cmp(x.address_norm, y.address_norm))[0];
     return { grade: null, route: via, determined: false, basis: RECEIVED_NOT_FETCHED, ceiling: EARNED_CAPTURE_CEILING,
              received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
-             why: `these bytes were ${how}, never fetched from an address, so no capture grade is measured from how `
-                + "they were fetched. A leg on them keeps the letter its author gave, under the ceiling "
-                + `(${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} `
-                + `is proven by the receipt your group's Civicsmith itself made at ${r.address}` };
+             why: word("provenance.why.bytes_fetched_address", { how: String(how), earned_capture_ceiling: String(EARNED_CAPTURE_CEILING), first_retrieved: String(r.first_retrieved), address: String(r.address) }) };
   }
 
   /* R59: the strongest of several routes' answers: a determined grade before an undetermined one, a higher letter
@@ -1080,7 +1324,7 @@ class Provenance {
      first), and that archive's own route and basis. An archive that is itself unpacked is read the same way, through
      at most `ARCHIVE_DEPTH_MAX` archives (`ooxml` R30); past that, or with a locator not of that form, the answer is
      undetermined and says why. */
-  #unpacked(locator, depth) {
+  #unpacked(locator, depth, facts) {
     const unresolved = (why) => ({ grade: null, route: "unpacked", determined: false, basis: UNPACKED_UNRESOLVED, why });
     const m = UNPACKED_LOCATOR.exec(typeof locator === "string" ? locator : "");
     const index = m ? Number(m[2]) : NaN;
@@ -1090,20 +1334,16 @@ class Provenance {
         + "entry's number>, so the archive they came from cannot be read and what they earn on the capture axis is "
         + "UNDETERMINED");
     if (depth + 1 > ARCHIVE_DEPTH_MAX)
-      return unresolved(`these bytes were cut out of archives nested more than ${ARCHIVE_DEPTH_MAX} deep, past the `
-        + "depth your group's Civicsmith reads an archive's grade through, so what they earn on the capture axis is "
-        + "UNDETERMINED");
+      return unresolved(word("provenance.bytes_cut_archives", { archive_depth_max: String(ARCHIVE_DEPTH_MAX) }));
     const archiveSha = m[1].toLowerCase();
-    const a = this.#grade(archiveSha, depth + 1);
+    const a = this.#grade(archiveSha, depth + 1, facts);
     if (a.basis === UNPACKED_UNRESOLVED) return unresolved(a.why);
     const { route, basis, why, archive: inner, ...rest } = a;
     const archive = route === "unpacked"
       ? { sha256: inner.sha256, through: [...inner.through, index], route: inner.route, basis: inner.basis }
       : { sha256: archiveSha, through: [index], route, basis };
     return { ...rest, route: "unpacked", basis: UNPACKED_FROM_ARCHIVE, archive,
-             why: `these bytes are entry ${index} of an archive the record holds (${archiveSha.slice(0, 16)}…), cut `
-                + "out of it, so on the capture axis they earn exactly what that archive earns, never more and never "
-                + `less. Of the archive: ${why}` };
+             why: word("provenance.why.bytes_entry_archive", { index: String(index), archive_sha: String(archiveSha.slice(0, 16)), why: String(why) }) };
   }
 
   /** R62 · N806 (K2333): whether this copy fetched the capture itself, the one definition of the source condition
@@ -1179,12 +1419,142 @@ class Provenance {
     return { ok: true, bundleId, system: sys, by: who, at, seq };
   }
 
+  /** R70 — every declaration of a document's origin, oldest first (`seq` order), the standing one (R30) the last: the
+   *  declared systems a screen lists. Gated by sight and refused as R64's are; writes nothing. */
+  originsOf({ bundleId = "", viewer = null } = {}) {
+    const id = typeof bundleId === "string" ? bundleId.trim() : "";
+    if (!id) return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
+    const info = this.#record.bundleInfo(id);
+    if (!info || !this.#membership.inSight(id, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: id,
+               detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    if (String(info.type).toLowerCase() !== "information")
+      return actRefusal("ORIGIN_NOT_A_DOCUMENT",
+        `this record is a ${String(info.type).slice(0, 40)}; only a document came from a system`, { bundleId: id });
+    return { ok: true, bundleId: id,
+             origins: this.#rows(`SELECT seq, system, by, at FROM origin_declarations WHERE bundle_id = ? ORDER BY seq`, id)
+               .map((r) => ({ seq: r.seq, system: r.system, by: r.by, at: r.at })) };
+  }
+
   /** R30 — the standing declaration (the latest), or null. A reader of a document's origin asks this before any
    *  system derived from its host. */
   originOf(bundleId) {
     const r = this.#one(`SELECT system, by, at FROM origin_declarations WHERE bundle_id = ? ORDER BY seq DESC LIMIT 1`,
                         String(bundleId ?? ""));
     return r ? { system: r.system, by: r.by, at: r.at } : null;
+  }
+
+  /* =====================================================================
+   * R65, R66, R67 · K4169 (C62; UC-046): A MEMBER'S DECISION ON A CAPTURED DOCUMENT'S CONTENT AUTHORITY. Who issued a
+   * document is a different fact from who served its bytes (AUTHORITY-AND-TRUST.md: authority is three-valued, and
+   * undetermined is a task), and a person's to decide: a machine or an assistant may propose an issuer and never
+   * decides one. Per document, dated, append-only, the latest standing, as the declared origin is (R29).
+   * ===================================================================== */
+
+  /** R65 — a member's decision: `determined` with the issuing party, or `undetermined_after_review` (the member looked and
+   *  could not tell; no issuer is invented), each with the basis. Nothing is written by a refusal. */
+  declareAuthority({ bundle = "", capture = "", outcome = "", authority = null, basis = "", by = null, viewer = null } = {}) {
+    const who = String(by ?? "").trim();
+    /* DEC-49 REGION is-authority-act
+       The door (C-103.8): a named member decides. */
+    if (!who || isMachineIdentity(who))
+      return actRefusal("AUTHORITY_NOT_A_MEMBER",
+        who ? localize("provenance.index.who_is_a_machine_credential",
+                       "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides", { who: String(who.slice(0, 60)) })
+            : localize("provenance.index.deciding_who_issued_a_document",
+                       "deciding who issued a document is a named member's act, and this call carries nobody"));
+    /* END DEC-49 REGION is-authority-act */
+    const bundleId = typeof bundle === "string" ? bundle.trim() : "";
+    const info = bundleId ? this.#record.bundleInfo(bundleId) : null;
+    if (!info || !this.#membership.inSight(bundleId, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: bundleId || null,
+               detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    const sha = bareSha(capture);
+    /* DEC-49 REGION is-authority-document
+       The document (C-103.9): a capture the register holds in this bundle. */
+    if (!sha || !this.#one(`SELECT capture_sha FROM register WHERE capture_sha = ? AND bundle_id = ?`, sha, bundleId))
+      return this.#notADocument(sha, bundleId);
+    /* END DEC-49 REGION is-authority-document */
+    const oneLine = (v) => String(v ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
+    const why = oneLine(basis), issuer = oneLine(authority);
+    /* DEC-49 REGION is-authority-statement
+       The statement (C-103.10–C-103.12): how the member knows, the issuer when there is one, and which of the two outcomes. */
+    if (!why || why.length > 2000)
+      return actRefusal("AUTHORITY_NO_BASIS", localize("provenance.index.say_how_you_know_or", "say how you know, or what you tried, in at most 2000 characters"));
+    if (outcome === "determined" && (!issuer || issuer.length > 500))
+      return actRefusal("AUTHORITY_NO_ISSUER", localize("provenance.index.name_the_party_that_issued", "name the party that issued the document, in at most 500 characters"));
+    if (outcome !== "determined" && outcome !== "undetermined_after_review")
+      return actRefusal("AUTHORITY_OUTCOME_UNKNOWN", "the outcome is 'determined' or 'undetermined_after_review'");
+    /* END DEC-49 REGION is-authority-statement */
+    const at = secondOf(this.#now());
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS m FROM authority_decisions WHERE bundle_id = ? AND capture_sha = ?`,
+                           bundleId, sha).m || 0) + 1;
+    const named = outcome === "determined" ? issuer : null;
+    this.#sql.exec(`INSERT INTO authority_decisions (bundle_id, capture_sha, seq, outcome, authority, basis, by, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                   bundleId, sha, seq, outcome, named, why, who, at);
+    return { ok: true, bundle: bundleId, capture: sha, outcome, authority: named, basis: why, by: who, at, seq };
+  }
+
+  /* C-103.9: the refusal of a capture that is no document of the bundle, as R65 and R80 raise it. */
+  #notADocument(sha, bundleId) {
+    return actRefusal("AUTHORITY_NOT_A_DOCUMENT",
+      localize("provenance.index.capture_is_not_a_document", "capture {capture} is not a document this record's register holds in {bundle}",
+               { capture: String(sha ? `${sha.slice(0, 16)}…` : "(none)"), bundle: String(bundleId) }), { bundleId });
+  }
+
+  /** R80 (T51; K5148, WALK-FINAL-04B R146; amends R66) — the read a member uses for a document's authority: for each capture
+   *  of the bundle the register holds (the wholes, `capturesOf`'s order), the standing value `authorityOf` answers (state,
+   *  issuer, dated basis, `reviewed`, the history), so that a decision made by `declareAuthority` is stated wherever a
+   *  document's authority is read and never the acquisition-time `undetermined` the bundle's own `data/provenance.json`
+   *  keeps. With `capture` it answers that one, or `AUTHORITY_NOT_A_DOCUMENT` where the bundle does not hold it. Gated by
+   *  sight and refused as R64's are (a bundle absent or unseen alike). Writes nothing. */
+  authoritiesOf({ bundleId = "", capture = null, viewer = null } = {}) {
+    const id = typeof bundleId === "string" ? bundleId.trim() : "";
+    if (!id) return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
+    if (!this.#record.bundleInfo(id) || !this.#membership.inSight(id, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId: id,
+               detail: "no document of that name is in the record, or none this viewer may see; the two answer alike" };
+    const asked = capture === null || capture === undefined || capture === "" ? null : bareSha(capture);
+    const rows = new Map(this.registeredFor(id).map((r) => [r.capture_sha, r]));
+    if (capture !== null && capture !== undefined && capture !== "" && !(asked && rows.has(asked))) return this.#notADocument(asked, id);
+    const shas = asked ? [asked] : this.capturesOf(id).map((c) => c.capture_sha);
+    return { ok: true, bundleId: id,
+             captures: shas.map((s) => ({ capture_sha: s, path: rows.get(s)?.path ?? null, authority: this.authorityOf(id, s) })) };
+  }
+
+  /** R66 — the document's standing content authority and its whole history, the register's acquisition-time value first
+   *  and the decisions after it; null for a capture with neither. Writes nothing; never throws. */
+  authorityOf(bundle, capture) {
+    const bundleId = typeof bundle === "string" ? bundle.trim() : "";
+    const sha = bareSha(capture);
+    if (!bundleId || !sha) return null;
+    const history = [];
+    const stated = this.#registerAuthority(bundleId, sha);
+    if (stated) history.push(stated);
+    for (const r of this.#rows(`SELECT seq, outcome, authority, basis, by, at FROM authority_decisions
+                                 WHERE bundle_id = ? AND capture_sha = ? ORDER BY seq`, bundleId, sha))
+      history.push({ source: "decision", outcome: r.outcome, authority_state: r.outcome === "determined" ? "determined" : "undetermined",
+                     authority: r.authority ?? null, basis: r.basis, by: r.by, at: r.at, seq: r.seq });
+    if (!history.length) return null;
+    const last = history[history.length - 1];
+    return { authority_state: last.authority_state, authority: last.authority, basis: last.basis, by: last.by, at: last.at,
+             reviewed: last.source === "decision" && last.outcome === "undetermined_after_review", history };
+  }
+
+  /* R66: the authority the bundle's own register states for the capture at acquisition (`authority_state`, `authority`,
+     `authority_basis`; a document from before the three-valued ruling carries an authority and no state, which reads
+     `determined`), or null where the register states none. */
+  #registerAuthority(bundleId, sha) {
+    const f = this.#record.readFile(bundleId, "data/provenance.json");
+    const reg = f && typeof f.text === "string" ? safeJson(f.text) : null;
+    const d = (Array.isArray(reg?.documents) ? reg.documents : []).find((x) => isObj(x) && isObj(x.capture) && bareSha(x.capture.sha256) === sha);
+    if (!d) return null;
+    const named = typeof d.authority === "string" && d.authority.trim() !== "";
+    const state = d.authority_state === "determined" || d.authority_state === "undetermined" ? d.authority_state : named ? "determined" : null;
+    if (!state) return null;
+    return { source: "register", authority_state: state, authority: state === "determined" && named ? d.authority : null,
+             basis: typeof d.authority_basis === "string" ? d.authority_basis : null, by: null,
+             at: typeof d.retrieved === "string" ? d.retrieved : null };
   }
 
   /** PL-10 / D-220 — EVERY VERSION AT AN ADDRESS, IN DATE ORDER, WITH ITS
@@ -1217,8 +1587,8 @@ class Provenance {
    *  values survive into the answer, so the distinction the key preserves is
    *  reported rather than flattened away.
    *
-   *  ORDER IS `first_retrieved` — WHEN WE FIRST HELD THESE BYTES — and never
-   *  `last_retrieved`, which moves every time the target holds still and would
+   *  ORDER IS `first_retrieved` — WHEN WE FIRST HELD THESE BYTES — then, for versions first held in the same second,
+   *  the register's own row order (R17: the order the record registered them), and never `last_retrieved`, which moves every time the target holds still and would
    *  reorder a settled history as a side effect of re-checking it. `capture_sha`
    *  is the tiebreak, so the order is TOTAL and `offset` paging cannot repeat or
    *  skip a version. The record cannot say when the SOURCE published a version;
@@ -1285,7 +1655,8 @@ class Provenance {
                r.path                           AS path,
                r.encoding                       AS encoding,
                r.bytes                          AS bytes,
-               r.registered                     AS registered
+               r.registered                     AS registered,
+               r.rowid                          AS reg_seq
           FROM captured_locators cl
           JOIN register r ON r.capture_sha = cl.capture_sha
          WHERE cl.address_norm = ?
@@ -1303,7 +1674,7 @@ class Provenance {
       bytes: r.bytes, registered: r.registered,
     });
     const versions = this.#rows(
-      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, capture_sha LIMIT ? OFFSET ?`,
+      `${CHAIN} SELECT * FROM chain ORDER BY first_retrieved, reg_seq, capture_sha LIMIT ? OFFSET ?`,
       ...args, cap, from).map(shape);
 
     /* THE PREDECESSOR, when an anchor was given. Two seeks, both on the same
@@ -1313,18 +1684,20 @@ class Provenance {
        failed. */
     let anchorRow = null, predecessor = null, atIndex = null;
     if (anchor) {
-      anchorRow = shape(this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
+      const anchorRaw = this.#one(`${CHAIN} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor);
+      anchorRow = shape(anchorRaw);
       if (!anchorRow)
         return refuse("VERSION_CHAIN_NO_SUCH_VERSION",
           `no version with capture ${anchor.slice(0, 12)}… is held at ${addr}. A capture the record does `
           + "not hold, one filed at a different address, and one inside a project you were not invited to "
           + "answer identically here, deliberately.");
-      const before = `first_retrieved < ? OR (first_retrieved = ? AND capture_sha < ?)`;
-      const beforeArgs = [anchorRow.first_retrieved, anchorRow.first_retrieved, anchorRow.capture_sha];
+      const before = `first_retrieved < ? OR (first_retrieved = ? AND (reg_seq < ? OR (reg_seq = ? AND capture_sha < ?)))`;
+      const beforeArgs = [anchorRaw.first_retrieved, anchorRaw.first_retrieved, anchorRaw.reg_seq, anchorRaw.reg_seq,
+                          anchorRaw.capture_sha];
       atIndex = this.#one(`${CHAIN} SELECT COUNT(*) AS n FROM chain WHERE ${before}`,
         ...args, ...beforeArgs)?.n ?? 0;
       predecessor = shape(this.#one(
-        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1`,
+        `${CHAIN} SELECT * FROM chain WHERE ${before} ORDER BY first_retrieved DESC, reg_seq DESC, capture_sha DESC LIMIT 1`,
         ...args, ...beforeArgs)) || null;
     }
 
@@ -1470,6 +1843,8 @@ class Provenance {
        control plane sets beside `actorIdentity` (membership's `inSight`, fail-closed on a stamped identity with
        no viewer). An unstamped write is not a caller (the store's own writes, fixtures driven at the
        store) and is told the holder, on the legacy store's `#rosterInSight` precedent. */
+    /* R74, R76: `register` is the list folded to its wholes (R75): the digest of a part is no key, so only a whole has a
+       home to be held by another bundle, and a part two documents share is no conflict. */
     const shas = [...new Set(regs.map((c) => c.sha256))];
     const homes = shas.length ? this.#rows(
       `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
@@ -1484,7 +1859,7 @@ class Provenance {
         `this promotion registers capture ${h.capture_sha.slice(0, 16)}… under ${bundleId}, and those bytes are `
         + `already registered under ${named ? h.bundle_id : "another record"}. One capture has one home, the `
         + `original's; registering it here would move that record's register row`,
-        { bundleId, capture_sha: h.capture_sha, holder: named ? h.bundle_id : null });
+        { bundleId, capture_sha: h.capture_sha, kind: "whole", holder: named ? h.bundle_id : null });
     }
     /* END DEC-49 REGION is-register-home */
     return null;
@@ -1542,7 +1917,7 @@ class Provenance {
        the id it allocated, so no id is spent on a document that is not written. */
     const heading = (typeof title === "string" ? title : "")
       .replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200)
-      || `Firsthand observation, observed ${obs}`;
+      || word("provenance.firsthand_observation_observed", { obs: String(obs) });
     /* THE CANONICAL ID (`BUNDLE_ID_RE`) carries a slug after the allocated
        number. It is the fixed word `observation` rather than one derived from
        the title or the words, so an id — which travels further than a document
@@ -1566,7 +1941,7 @@ class Provenance {
          refusal itself is made below, outside it (is-testify-bytes). */
       if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha)) return { spent: { id, sha } };
       const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
-      const locator = "a member's firsthand observation, authored in this record";
+      const locator = word("provenance.member_firsthand_observation");
       /* MK-6 (§4.1): every file below names the author by this reference, never
          by `who`. `who` goes to the register row and the private rows beside it
          (the content row's minter, the log's actor), which no publication carries. */
@@ -1584,8 +1959,7 @@ class Provenance {
         `  retrieved: ${recorded}`,
         "monitoring:", "  enabled: false", "  frequency: none",
         "---", "", "## Summary", "",
-        `A member's firsthand observation. Their words are \`${file}\`, below its canonical header, exactly as written; nothing here `
-        + `paraphrases or summarises them.`, "",
+        localize("provenance.index.a_members_firsthand_observation_their", "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.", { file: String(file) }), "",
         "## Provenance Notes", "",
         `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, `
         + `by this record's clock. The author is taken from the signed-in session, not from the request. It stands on `
@@ -1593,7 +1967,7 @@ class Provenance {
         "## Session Log", "",
         `### Session ${recorded} | Authored | ${observer}`,
         "Trigger: testify",
-        "Changes: created as a member's authored observation.", "",
+        word("provenance.changes_created_member"), "",
         "## Review Notes", ""].join("\n");
       const doc = {
         file, locator, retrieved: recorded,
@@ -1602,7 +1976,7 @@ class Provenance {
            not this field); the author is the STAMP, recorded in the register and
            named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
         authored: true, author: observer, observed_at: obs, recorded_at: recorded,
-        authority: "the observing member", authority_state: "determined",
+        authority: word("provenance.observing_member"), authority_state: "determined",
         authority_basis: `the author of these bytes is the signed-in member taken from the session `
                        + `at op=testify, ${recorded}; the request could not name it`,
         provenance_chain: [{
@@ -1662,10 +2036,10 @@ class Provenance {
       author: who, observed_at: obs, recorded_at: recorded,
       axes: {
         capture: { grade: null, determined: false, undetermined_because: "CAPTURE_AXIS_AUTHORED",
-                   why: "the capture axis measures the act of reading a document in, and a member's own "
-                      + "words were not read in from anywhere, so it earns no letter here" },
+                   why: localize("provenance.index.capture_axis_authored",
+                     "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here") },
         connection: { grade: null, determined: false,
-                      why: "no reader ran over these words and nothing resolved them to a subject" },
+                      why: word("provenance.why.reader_ran_words") },
         /* MK-2 / IC-142: the letter is the registry's own constant, so this answer and a leg's refusal cannot
            name different letters. */
         testimony: { grade: TESTIMONY_GRADE, determined: true,
@@ -1675,9 +2049,7 @@ class Provenance {
                         + "nothing raises it — another member agreeing is a co-signature, not a second "
                         + "observation" },
       },
-      says: `${who} recorded a firsthand observation, observed ${obs}. The words are held exactly as `
-          + `written and are the document; they stand on ${who}'s trust. This record takes the author from `
-          + `the signed-in account and never from the request.`,
+      says: word("provenance.says.recorded_firsthand_observation", { who: String(who), obs: String(obs), who_2: String(who) }),
     };
   }
 
@@ -1698,7 +2070,7 @@ export function provenanceOf(host, deps) {
     const promotion = d.promotion || promotionOf(host);
     p = new Provenance({ ...d, storage: d.storage || host.storage, record, membership, promotion });
     instances.set(host, p);
-    record.declarePurge("provenance", ["register", "origin_declarations", { name: "captured_locators", keys: [] }]);
+    record.declarePurge("provenance", ["register", "register_parts", "origin_declarations", "authority_decisions", { name: "captured_locators", keys: [] }]);
     p.joinPromotion();
     /* N92, record-core R59 (K130): the C-18 register arms (R42–R46) join the audit over the same image the catalogue
        reads, so the audit judges each bundle once, whole, and loses none of them. */

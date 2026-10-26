@@ -6,10 +6,13 @@
   "main": "src/index.mjs",
   "compatibility_date": "2026-07-01",
   // No binding beyond the four plain-text deploy values (R10): no storage, no logs, no counters. Each deploy is
-  // Bob's approval in session (K1715). Until the release, INSTALLER_ADDRESS and STEWARDS_ADDRESS stay unset, so the
-  // site answers every page with X-Robots-Tag: noindex (R6, K3296).
+  // Bob's approval in session (K1715). STEWARDS_ADDRESS stays unset until Bob names it, so the site answers every page
+  // with X-Robots-Tag: noindex (R6, K3296).
   "observability": { "enabled": false },
   "vars": {
+    // INSTALLER_ADDRESS is the released installer's first page (installer R50, as deployed today); "Create your group"
+    // opens it (R7). Set here, so every deploy from this directory carries it (K5175).
+    "INSTALLER_ADDRESS": "https://newgroup.believeinoakland.workers.dev",
     // FEATURED_CASE is unset (null: R5's section is not drawn) until the stewards name a real published edition.
     "LISTED_GROUPS": []
   }

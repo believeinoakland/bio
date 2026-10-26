@@ -12,6 +12,8 @@ import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { readFileSync } from "node:fs";
+import { localize, word as listed } from "../../../src/setup-words/index.mjs";
+import { preflightRefusal } from "../ratification/fixtures.mjs";
 /* words.json's words, read by key (K2220). */
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const word = (key) => WORDS.words.find((x) => x.key === key).en;
@@ -44,7 +46,7 @@ function setup(opts) {
 }
 const lateRow = (w, capture, seq, o) => w.st.sql.exec(`INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at,
   by, outcome) VALUES (?, ?, ?, ?, ?, ?, 'alice', ?)`, capture, seq, o.kind, o.service, o.ok ? 1 : 0, o.at,
-  JSON.stringify({ late: true, proves: `proves the bytes existed by ${o.at}, not at capture`, ...o }));
+  JSON.stringify({ late: true, proves: localize("capture.text.proves_bytes_existed", "proves the bytes existed by {at}, not at capture", { at: String(o.at) }), ...o }));
 
 test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its pre-flight', moved with their translations to case-disclosures (its R22), re-exported here as that one table, each naming its raising method there", () => {
   assert.equal(CASE_DISCLOSURE_CHECKS, DISCLOSURES.CASE_DISCLOSURE_CHECKS, "the one table, re-exported, never a copy");
@@ -53,10 +55,10 @@ test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its
     [["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4"], ["SELF_ATTESTED_NO_REASON", "C-120.5"],
      ["SELF_ATTESTATION_NOT_STANDING", "C-120.6"], ["UNCLEARED_HUNCH", "C-120.7"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
-    "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written.",
-    "Publishing a document as self-attested only says why. Give the reason. Nothing was written.",
-    "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.",
-    "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."]);
+    localize("refusal.CO_ATTESTATION_UNACKNOWLEDGED", "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written."),
+    localize("refusal.SELF_ATTESTED_NO_REASON", "Publishing a document as self-attested only says why. Give the reason. Nothing was written."),
+    listed("case-disclosures.checks.a_document_acknowledged_as_self"),
+    localize("refusal.UNCLEARED_HUNCH", "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.")]);
   assert.deepEqual(rows.map(([, v]) => v.where), [
     "src/case-disclosures/index.mjs selfAttestedJudged > is-co-attestation-acknowledged",
     "src/case-disclosures/index.mjs selfAttestedJudged > is-self-attested-reasoned",
@@ -91,21 +93,21 @@ test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-
     ["DOCUMENT_COPY_PENDING", "C-120.21", "src/case-disclosures/index.mjs materialsJudged > is-document-copy-made"],
     ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "src/case-disclosures/index.mjs materialsJudged > is-document-cleanable"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
-    "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
-    "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
-    "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
-    "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
-    "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published.",
-    "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written.",
-    "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written.",
-    "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.",
+    localize("refusal.RELIED_ON_NOT_PRESENTABLE", "A finding this case relies on rests on material your team's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written."),
+    localize("refusal.ACCEPTED_WORK_NOT_IN_FORCE", "A finding in this case rests on another team's finding, and this team's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written."),
+    localize("refusal.FLAG_NOT_DISCLOSED", "Another team's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published."),
+    localize("refusal.FLAGS_UNDETERMINED", "The flags on another team's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published."),
+    localize("refusal.FLAG_DISCLOSURE_NOT_STANDING", "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."),
+    localize("refusal.PERSON_BASIS_UNRECORDED", "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written."),
+    localize("refusal.PERSON_BASIS_NOT_STANDING", "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written."),
+    localize("refusal.TIE_ATTESTATION_MISSING", "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written."),
     word("photo.refused.format"),
-    "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written.",
+    localize("refusal.PHOTO_MARKS_UNDETERMINED", "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written."),
     word("photo.refused.unchecked"),
     /* T39 (N806): case-disclosures R22's drafts, word for word, until words.json holds their keys */
-    "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written.",
-    "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.",
-    "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."]);
+    localize("refusal.DOCUMENT_COPY_UNDETERMINED", "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written."),
+    listed("document.refused.pending", { document: "{document}" }),
+    listed("document.refused.clean", { document: "{document}" })]);
 });
 
 test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
@@ -207,8 +209,8 @@ test("R55 (case-disclosures R2): the grade that needs co-attestation or an ackno
   assert.deepEqual([row.grade, row.co_attested, row.self_attested_only], [ARCHIVE_CAPTURE_GRADE, false, false]);
   /* the document's words name the ceiling from the same definition */
   const acked = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b, reason: REASON }] });
-  assert.ok(bodyOf(docOf(w, acked).text).includes(`A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; `
-    + "one that is not is published only as self-attested"));
+  assert.ok(bodyOf(docOf(w, acked).text).includes(listed("case-disclosures.document.each_document_this_cases_findings",
+    { EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING) })));
 });
 
 test("R55 (case-disclosures R2): a document leg names its content row's capture, else every capture its target registers; an inquiry leg names none; one level deep", () => {
@@ -289,8 +291,7 @@ test("R55 (case-disclosures R3): an acknowledged capture is marked self_attested
   assert.deepEqual([row.self_attested_only, row.acknowledgement],
     [true, { reason: REASON, acknowledged_by: "alice", at: w.clock.now, sentence: SELF_ATTESTED_SENTENCE }]);
   assert.deepEqual(row.accounts, [{ by: "alice", at: "2026-09-27T12:00:00Z", text, signature }], "exact bytes");
-  assert.equal(SELF_ATTESTED_SENTENCE, "Without co-attestation an outsider can verify the copy has not changed since capture "
-    + "and can follow the reasoning, but cannot independently verify that the source served those bytes, or when.");
+  assert.equal(SELF_ATTESTED_SENTENCE, listed("case-disclosures.without_attestation_outsider"));
   const body = bodyOf(doc);
   for (const s of [SELF_ATTESTED_SENTENCE, `SELF-ATTESTED ONLY, acknowledged by alice on ${w.clock.now}: ${REASON}`, text, signature])
     assert.ok(body.includes(s), s.slice(0, 40));
@@ -334,7 +335,7 @@ test("R55 (case-disclosures R4): a capture given to the group states only what s
   assert.match(caseDocumentBlocks(text).sources[0].stated, /Pat Q\. Example/);
   assert.equal(w.ratify(r2).ok, true, "the consented statement holds at the commit");
   for (const leak of [sourceId, name.entry, role.entry, "clerk"]) assert.equal(text.includes(leak), false, `names ${leak}`);
-  assert.ok(bodyOf(text).includes("## Sources Of Material Given To The Group"));
+  assert.ok(bodyOf(text).includes(localize("case-disclosures.sources_material_given", "## Sources Of Material Given To The Team")));
 });
 
 test("R14: the /5 document states the captures and sources blocks, always, empty included, read back through publication's caseDocumentBlocks", () => {
@@ -344,7 +345,7 @@ test("R14: the /5 document states the captures and sources blocks, always, empty
   assert.equal(n.ok, true, JSON.stringify(n).slice(0, 300));
   const blocks = caseDocumentBlocks(docOf(w, n).text);
   assert.deepEqual([blocks.captures, blocks.sources, blocks.detail], [[], [], null]);
-  assert.ok(bodyOf(docOf(w, n).text).includes("This case's findings rest on no document the record holds a capture of"));
+  assert.ok(bodyOf(docOf(w, n).text).includes(listed("case-disclosures.case_findings_rest")));
 });
 
 /* ---- R34 ---- */
@@ -405,14 +406,14 @@ test("R34: first is exactly the refusal op=publish would give, and blockers ever
   assert.deepEqual([ready.ready, ready.first, ready.blockers], [true, null, []], JSON.stringify(ready.blockers).slice(0, 300));
 });
 
-test("R34: ratification R18's list is folded into blockers; its undetermined answer is itself a blocker; with no pre-flight offered the list is stated as not reached, and ready is false", () => {
-  const refusal = { ok: false, reason: "NO_ATTESTING_KEY", code: "NO_ATTESTING_KEY", detail: "register a key" };
+test("R34: ratification R18's list is folded into blockers; its undetermined answer is itself a blocker; with no pre-flight offered the list is stated as not reached, and ready is false", async () => {
+  const { refusal } = await preflightRefusal();
   const one = setup({ ratification: ratifyWith({ ok: true, ready: false, refusals: [refusal] }) });
   const a = (s) => args(s.P, [Q], { selfAttested: [{ capture: s.b, reason: REASON }] });
   const r1 = one.w.ca.publishPreflight(a(one));
   assert.deepEqual([r1.ready, r1.first, r1.blockers, r1.steps[7].ratification], [false, null, [refusal],
     { reached: true, refusals: [refusal] }]);
-  const und = { ok: false, reason: "PREFLIGHT_UNDETERMINED", detail: "the gate could not be read" };
+  const und = { ok: false, reason: "PREFLIGHT_UNDETERMINED", detail: localize("question-explorer.gate_read", "the gate could not be read") };
   const two = setup({ ratification: ratifyWith(und) });
   const r2 = two.w.ca.publishPreflight(a(two));
   assert.deepEqual([r2.ready, r2.blockers], [false, [und]]);
@@ -427,8 +428,8 @@ test("R34, R67, R68: steps gives the eight steps' content — what becomes perma
   w.knocked(b);
   const excluded = [{ description: "the side letter", reason: "not in hand" }];
   const pre = w.ca.publishPreflight(args(P, [Q], { excluded, selfAttested: [{ capture: b, reason: REASON }] }));
-  assert.deepEqual(pre.steps.map((s) => [s.step, s.name]), [[1, "what becomes permanent"], [2, "what this rests on"],
-    [3, "what you are leaving out"], [4, "photos"], [5, "the edition this creates"], [6, "the account"], [7, "approvals"],
+  assert.deepEqual(pre.steps.map((s) => [s.step, s.name]), [[1, localize("case-authoring.name.becomes_permanent", "what becomes permanent")], [2, localize("case-authoring.name.rests", "what this rests on")],
+    [3, localize("case-authoring.name.leaving_out", "what you are leaving out")], [4, "photos"], [5, localize("case-authoring.name.edition_creates", "the edition this creates")], [6, "the account"], [7, "approvals"],
     [8, "sign"]]);
   const [one, two, three, photos, four, account, approvals, five] = pre.steps;
   /* R67: with no account written, the step lists the four statements' rows, each judged (case-disclosures R30) */

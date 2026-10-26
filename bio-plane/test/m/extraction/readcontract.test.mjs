@@ -105,11 +105,11 @@ test("R58 R22: capture_text_skipped: one row per run of consecutive skipped unit
   assert.deepEqual(rows, [{ capture_sha: S1, bundle_id: "B-1", first_seq: 50, last_seq: 52, units: 3,
     first_extent: canonicalExtent(wireRun.first), first_ref: "page 51", last_extent: canonicalExtent(wireRun.last),
     last_ref: "page 53", side: "wire" }]);
-  /* the store's own runs, and a rewrite replaces the capture's rows */
+  /* (fix round 9, G128f; R22 amended) the store skips nothing (no bound of units cuts a write), and a rewrite replaces the capture's rows */
   const many = Array.from({ length: 4100 }, (_, i) => u(i));
-  w.x.indexUnits("B-1", S1, many, layer);
+  const x = w.x.indexUnits("B-1", S1, many, layer);
   const st = w.rows(`SELECT first_seq, last_seq, units, side FROM capture_text_skipped WHERE capture_sha=?`, S1).map((r) => ({ ...r }));
-  assert.deepEqual(st, [{ first_seq: 4096, last_seq: 4099, units: 4, side: "store" }]);
+  assert.deepEqual([st, x.written, w.one(`SELECT count(*) n FROM capture_text WHERE capture_sha=?`, S1).n], [[], 4100, 4100]);
 });
 
 test("R59: normAlias trims, collapses whitespace, lower-cases and cuts to 200 characters, diacritics kept; labelTerms is its distinct terms split on non-letter non-digit runs, in order, at most 24", () => {
@@ -143,7 +143,7 @@ test("R58 R19 (N151): reading_text_source: one row per capture whose reading car
   assert.equal(w.one(`SELECT chain FROM reading_text_source WHERE capture_sha=?`, S1), null);
 });
 
-test("R58 R22 R61 (T42; N839): capture_text: one row per indexed unit, capture_sha and bundle_id the writer's, extent content's canonicalExtent of the unit, seq its reading order, text the unit's text capped per unit with truncated marking a cut unit; a replaced reading replaces the rows, and an authored observation (R61) is one row at the whole document", () => {
+test("R58 R22 R61 (T42; N839): capture_text: one row per indexed unit, capture_sha and bundle_id the writer's, extent content's canonicalExtent of the unit, seq its reading order, text the unit's text whole (R22 as fix round 9 amends it: no unit cut), truncated only a wire's cut; a replaced reading replaces the rows, and an authored observation (R61) is one row at the whole document", () => {
   const w = fresh();
   bundle(w.s, "B-1"); bundle(w.s, "B-2");
   const long = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 5);
@@ -155,8 +155,8 @@ test("R58 R22 R61 (T42; N839): capture_text: one row per indexed unit, capture_s
     .map((r) => ({ ...r }));
   assert.deepEqual(rows, [
     { capture_sha: S1, bundle_id: "B-1", extent: canonicalExtent(units[1].extent), seq: 0, text: "Page one", truncated: 0 },
-    { capture_sha: S1, bundle_id: "B-1", extent: canonicalExtent(units[0].extent), seq: 2, text: long.slice(0, CAPTURE_TEXT_UNIT_CAP), truncated: 1 },
-  ], "a blank unit is no row; the long one is cut and marked");
+    { capture_sha: S1, bundle_id: "B-1", extent: canonicalExtent(units[0].extent), seq: 2, text: long, truncated: 0 },
+  ], "a blank unit is no row; (fix round 9, G128d; R22 amended) the long one is stored whole, never cut");
   /* control: a unit that fits is not marked */
   assert.equal(rows[0].truncated, 0);
   w.x.writeReading({ bundleId: "B-2", captureSha: S1, reading: reading(), textUnits: [units[1]] });

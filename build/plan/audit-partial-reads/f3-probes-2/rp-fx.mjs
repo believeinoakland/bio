@@ -1,0 +1,404 @@
+/* run-productions over the modules it uses, the real record-core, membership and
+   content, on a real SQLite database (node:sqlite) standing in for a Durable Object's storage.
+   The other providers are stand-ins the test controls, each written to its requirements' Provides, as
+   `runProductionsOf`'s deps take them (K61, K120): ai-runs (R28 `runFor`, R29 `boundOf`/`consumeBound`), strength
+   (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
+   `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
+   and content's own two providers (extraction's readings, provenance's `capturesOf`), extraction's units (its R36),
+   leg-earning's `earned` (its R1, the capture ceiling R21 reads), steps (its R9 `recordProduct`, with a stand-in of the observation log it registers with) and ai-accounts (its R21, R22 material limits; T48, was credentials') are the real modules, reached through
+   their factories. Every stand-in records the calls
+   made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
+   later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
+   here in their stated columns (inquiry_basis is leg-earning's since K1505 (2), its R12), and extraction's own tables from its schema (so a test can show a production writes
+   none of them, N201). The storage answers at the plane's shape (K316): a cursor, and workerd's 50-byte cap on a LIKE
+   or GLOB pattern (K313). Every test drives `run-productions` at its interface. */
+import { DatabaseSync } from "node:sqlite";
+import { createHash } from "node:crypto";
+import { recordOf, RECORD_SCHEMA } from "/home/user/bio/bio-plane/src/record-core/index.mjs";
+import { membershipOf } from "/home/user/bio/bio-plane/src/membership/index.mjs";
+import { contentOf } from "/home/user/bio/bio-plane/src/content/index.mjs";
+import { aiAccountsOf } from "/home/user/bio/bio-plane/src/ai-accounts/index.mjs";
+import { stepsOf } from "/home/user/bio/bio-plane/src/steps/index.mjs";
+import { captureBound } from "/home/user/bio/bio-plane/src/textchain.mjs";
+import { strengthOf } from "/home/user/bio/bio-plane/src/strength/index.mjs";
+import { citationOf } from "/home/user/bio/bio-plane/src/citation/index.mjs";
+import { inquiryOf } from "/home/user/bio/bio-plane/src/inquiry/index.mjs";
+import { versionsIn, basisVersionsOf as realBasisVersionsOf } from "/home/user/bio/bio-plane/src/basis-versions/index.mjs";
+import { EXTRACTION_SCHEMA } from "/home/user/bio/bio-plane/src/extraction/schema.mjs";
+import { runProductionsOf } from "/home/user/bio/bio-plane/src/run-productions/index.mjs";
+
+export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+
+export const V = (id) => `member:${id}`;
+export const ALICE = "member:alice", ALICE_TOKEN = "member:alice/tok1", BOB = "member:bob";
+export const MACHINE = "class:ai";
+export const NOW = "2026-09-28T01:00:00Z";
+export const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r", PROJ = "PROJ-2026-0001-p";
+export const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", HIDDEN_PROJ = "PROJ-2026-0009-h";
+export const RUN = "RUN-1", XRUN = "RUN-X";
+
+/* workerd's `sql.exec` answers a cursor, never an array (`[0]` and `.length` of it are undefined), and refuses a LIKE
+   or GLOB pattern over 50 bytes ("LIKE or GLOB pattern too complex"), which node:sqlite does not (K313, K316). */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
+export function storage() {
+  const db = new DatabaseSync(":memory:");
+  let n = 0;
+  const patterns = [];
+  const sql = {
+    exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      patterns.push(...literal, ...bound);
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
+      const st = db.prepare(q);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
+    },
+  };
+  return {
+    db, sql, patterns,
+    transactionSync(fn) {
+      const sp = `sp${n++}`;
+      db.exec(`SAVEPOINT ${sp}`);
+      try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
+      catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
+    },
+  };
+}
+
+/** A text layer's chain, unscoped (content's fixture's). */
+export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }];
+
+/* The read contracts of the later modules this one joins (leg-earning R12's `inquiry_basis`, basis-versions R38), and
+   provenance's (its R48) the extracted strength joins for its origin trace, in their stated columns. `inquiry_basis`
+   holds every column leg-earning's table holds (N627), so leg-earning's own migration, run when the real strength and
+   citation reach inquiry, finds the columns its indexes name. */
+const CONTRACT_TABLES = `
+CREATE TABLE IF NOT EXISTS register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT, encoding TEXT,
+  bytes INTEGER, registered TEXT, authored INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS captured_locators (capture_sha TEXT, address_norm TEXT);
+CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL,
+  target_type TEXT NOT NULL, role TEXT NOT NULL, grade TEXT, grade_axis TEXT, grade_source TEXT, note TEXT, at TEXT,
+  ground TEXT, content_id TEXT, PRIMARY KEY (bundle_id, ord));
+CREATE TABLE IF NOT EXISTS inquiry_basis_versions (bundle_id TEXT, name TEXT, ord INTEGER, state TEXT, hidden INTEGER,
+  claim TEXT, relationship TEXT, derived_from TEXT, run TEXT, kind TEXT, composition TEXT, leg_count INTEGER);
+CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT, ord INTEGER, target_id TEXT,
+  target_type TEXT, role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, ground TEXT, content_id TEXT);
+`;
+
+const q = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim()}"`;
+
+/** An inquiry's document with its versions, in the restricted frontmatter grammar. */
+export function inquiryMd(id, versions = []) {
+  const vs = versions.length
+    ? ["basis_versions:", ...versions.flatMap((v) => [`  - name: ${q(v.name)}`, `    state: "suggested"`])]
+    : [];
+  return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
+          "current_state: open", "prior_state: null", `created: "2026-09-27T00:00:00Z"`,
+          `last_updated: "2026-09-27T00:00:00Z"`, "surfaced_by: human", "references: []", "state_history: []", ...vs, "---", "",
+          "## Question", "", "What happened?", "", "## Session Log", ""].join("\n");
+}
+export function infoMd(id, state = "collected") {
+  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
+          `current_state: ${state}`, "prior_state: null", `created: "2026-09-27T00:00:00Z"`,
+          `last_updated: "2026-09-27T00:00:00Z"`, "references: []", "state_history: []", "criticality: supporting",
+          "---", "", "## Summary", "", "A document.", ""].join("\n");
+}
+/** basis-versions' one composer (its R5), the module's own pure `versionsIn`. */
+export const basisVersionsOf = (fm) => versionsIn(fm);
+
+/** `real`: strength and citation are the extracted modules themselves (reached through their factories, as the
+ *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
+ *  capture ceilings the test sets in `w.ceilings`. `aiRuns: null` leaves ai-runs to this module's factory (the real
+ *  module, over its own tables). */
+export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, realInquiry = false,
+                        realBasisVersions = false } = {}) {
+  const st = storage();
+  const host = { storage: st };
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  st.db.exec(CONTRACT_TABLES);
+  for (const t of EXTRACTION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
+    if (t.trim()) st.db.exec(t);
+  const clock = { now: NOW };
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  /* provenance's `capturesOf` (its R48), as content reads it: the captures registered to a bundle, first-held first. */
+  const registered = {};
+  const prov = globalThis.REALPROV ? { capturesOf: (b) => globalThis.REALPROV.capturesOf(b) } : { capturesOf: (b) => (registered[b] || []).map((capture_sha) => ({ capture_sha })) };
+  const ex = { readings: {}, readFor: {}, units: {}, unitsAsked: [] };
+  const extraction = {
+    readingOf: (s) => (ex.readings[s] ? { reading: { page_boxes: null }, chain: null, pageCount: null,
+                                          textContainer: null, captureFormat: null, ...ex.readings[s] } : null),
+    /* extraction R36's shape: the capture's units in seq order and the index's state; null state when never indexed. */
+    unitsOf: (s) => { ex.unitsAsked.push(s); return ex.units[s] ? { capture_sha: s, units: ex.units[s], state: "whole" } : { capture_sha: s, units: [], state: null }; },
+    capturesReadFor: (b) => (ex.readFor[b] || []).map((capture_sha) => ({ capture_sha, at: null })),
+    onReading: () => ({ ok: true }),
+  };
+  const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
+  content.migrate();
+  /* ai-accounts, the real module over its own tables (its R21 `aiKeepAwayState` and R22 `projectsKeptAway`, read by
+     R24; T48, N996 §5). */
+  const aiAccounts = aiAccountsOf(host, { record, membership });
+  aiAccounts.migrate();
+
+  const calls = [];
+  const note = (name, a) => { calls.push({ name, a }); };
+  const runs = new Map();
+  const bounds = new Map();
+  const aiRuns = {
+    runFor(run, viewer) {
+      note("runFor", { run, viewer });
+      const r = typeof run === "string" ? runs.get(run.trim()) : null;
+      if (!r) return null;
+      if (!membership.inSight(r.context_id, viewer)) return null;
+      const { run: id, status, mode, context_type, context_id, principal_plane } = r;
+      return { run: id, status, mode, context_type, context_id, principal_plane };
+    },
+    boundOf(run, bound) {
+      note("boundOf", { run, bound });
+      const b = bounds.get(`${run}|${bound}`);
+      return b ? { ...b } : null;
+    },
+    consumeBound(run, bound, n) {
+      note("consumeBound", { run, bound, n });
+      if (!Number.isSafeInteger(n) || n < 0) return { ok: false, code: "AI_RUN_CONSUME_INVALID" };
+      if (n === 0) return null;
+      const k = `${run}|${bound}`;
+      const b = bounds.get(k) || { allowed: 0, consumed: 0 };
+      bounds.set(k, { ...b, consumed: b.consumed + n });
+      return null;
+    },
+  };
+  const pair = strengthPair || {
+    capture: { axis: "capture", state: "unrated", grade: null },
+    connection: { axis: "connection", state: "unrated", grade: null },
+    testimony: { axis: "testimony", state: "unrated", grade: null },
+  };
+  const strength = {
+    pair, independence: null, error: null,
+    candidatePair(a) { note("candidatePair", a); return strength.error ? { pair: null, error: strength.error } : { pair: strength.pair, error: null }; },
+    candidateIndependence(a) {
+      note("candidateIndependence", a);
+      return strength.independence || { checked: a.parts > 1, parts: a.parts, shared: [], complete: a.parts > 1 ? true : null, limit: 200 };
+    },
+  };
+  const retired = new Set();
+  const citation = { retiredNotCitable: (id) => { note("retiredNotCitable", { id }); return retired.has(id); } };
+  const cites = {};
+  const connections = { citesInto: (id) => ({ confirmed: [...(cites[id] || [])].sort(), severed: [] }) };
+
+  const candidateSources = [];
+  /* R25: what registers with inquiry's R62 and basis-versions' R49 `onMachinePassage` slots. */
+  const machinePassageSlots = [];
+  /* `realInquiry`: inquiry's own factory, so R25 registers with its real R62 slot. */
+  const inquiry = realInquiry ? inquiryOf(host, { record, membership, content })
+    : { onMachinePassage(module, fn) { machinePassageSlots.push({ slot: "inquiry", module, fn }); return { ok: true }; } };
+  const basisVersions = {
+    unsplice: false,
+    appended: [],
+    onCandidates(module, fn) { candidateSources.push({ module, fn }); return { ok: true }; },
+    /* R25: basis-versions' R49 slot, recorded as the candidate source is. */
+    onMachinePassage(module, fn) { machinePassageSlots.push({ slot: "basis-versions", module, fn }); return { ok: true }; },
+    basisVersions({ id, limit, viewer }) {
+      note("basisVersions", { id, limit, viewer });
+      const rows = [...st.sql.exec(`SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord LIMIT ?`, id, limit)];
+      return { ok: true, total: rows.length, truncated: false,
+               versions: rows.map((r) => ({ name: r.name, kind: r.kind, run: r.run, state: r.state,
+                                            author: r.author_for_test ?? w.authors[`${id}|${r.name}`] ?? null,
+                                            at: w.ats[`${id}|${r.name}`] ?? null, composition: r.composition,
+                                            legs: w.legsOf[`${id}|${r.name}`] ?? [], leg_count: r.leg_count,
+                                            legs_complete: true, grounds: w.groundsOf[`${id}|${r.name}`] ?? [],
+                                            composition_grades: "authored" })) };
+    },
+    /* basis-versions R28's call; the stand-in re-promotes the question's document with the version added. */
+    appendVersion(a) {
+      note("appendVersion", a);
+      basisVersions.appended.push(a);
+      if (basisVersions.unsplice) return { ok: false, reason: "UNSPLICEABLE_BASIS" };
+      if (basisVersions.refuse) return basisVersions.refuse;
+      const held = w.versions[a.target] || (w.versions[a.target] = []);
+      held.push({ name: a.version.name });
+      const r = put(a.target, "inquiry", inquiryMd(a.target, held) + (a.log || ""));
+      const fm = { basis_versions: [{ ...a.version, state: "suggested", hidden: false }],
+                   basis_version_grounds: a.grounds.map((g) => ({ version: a.version.name, ...g })),
+                   basis_version_legs: a.legs.map((l) => ({ version: a.version.name, ...l })) };
+      const v = basisVersionsOf(fm)[0];
+      st.sql.exec(`INSERT INTO inquiry_basis_versions (bundle_id, name, ord, state, hidden, claim, relationship,
+                     derived_from, run, kind, composition, leg_count) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                  a.target, a.version.name, held.length - 1, "suggested", 0, a.version.claim ?? null,
+                  a.version.relationship, a.version.derived_from ?? null, a.version.run, a.version.kind ?? null,
+                  v.composition, a.legs.length);
+      w.authors[`${a.target}|${a.version.name}`] = a.author;
+      w.ats[`${a.target}|${a.version.name}`] = a.at;
+      w.legsOf[`${a.target}|${a.version.name}`] = a.legs.map((l, ord) => ({ ord, ...l }));
+      w.groundsOf[`${a.target}|${a.version.name}`] = [...new Set(a.legs.map((l) => l.ground).filter(Boolean))].sort();
+      return r;
+    },
+  };
+
+  const ceilings = new Map();
+  if (real) {
+    const inquiry = {
+      basisFor: (id) => ({ ok: true, bundleId: id, legs: [] }),
+      earned: (subject, targets) => ({ subject_entity: subject || null, subject_known: !!subject,
+        earned: { capture: Object.fromEntries(targets.filter((t) => ceilings.has(t)).map((t) => [t, { mode: "ceiling", ...ceilings.get(t) }])),
+                  connection: {}, testimony: {} } }),
+      legCapped: () => null,
+      subjectEntityOf: () => null,
+    };
+    strengthOf(host, { record, membership, inquiry, producingGroup: () => "g", now: () => clock.now });
+    citationOf(host, { record, membership, content });
+  }
+  /* steps, the real module over its own tables (its R9 `recordProduct`, reached through its factory, B4). */
+  /* observation-log is not this module's use: steps is handed a stand-in of the registrations it makes there (its
+     R37 `onLookAnswered`, R13's authority) and the two reads `productsOf` asks, holding no look. */
+  const observationLog = { registerAuthority: () => ({ ok: true }), onLookAnswered: () => ({ ok: true }),
+                           byAuthority: () => [], rowVisible: () => false };
+  const steps = stepsOf(host, { record, membership, observationLog });
+  /* leg-earning's `earned` (its R1), as R21 reads it (K2496): per document, the capture ceiling the record can earn,
+     the weaker of its route's grade (provenance R25/R26; `routes[id]`, B a direct fetch by default) and its
+     transcription's measured fidelity (`text-chain.captureBound`), null when undetermined; absent with no bytes. */
+  const routes = {};
+  const legEarning = {
+    earned(subject, targets) {
+      note("earned", { subject, targets });
+      const capture = {};
+      for (const id of targets) {
+        const sha0 = content.captureFor(id);
+        if (!sha0) continue;
+        const bound = captureBound(ex.readings[sha0]?.chain ?? null, routes[id] ?? "B");
+        capture[id] = { mode: "ceiling", grade: bound,
+                        ...(routes[id] && routes[id] !== "B" ? { bounded_by: "CAPTURE_BOUNDED_BY_ROUTE" } : {}) };
+      }
+      return { subject_entity: subject, earned: { capture, connection: {} } };
+    },
+  };
+  const p = runProductionsOf(host, { record, membership, content, connections, extraction, legEarning,
+                                     ...(aiRunsGiven === null ? {} : { aiRuns }),
+                                     /* `realBasisVersions`: its own factory, so R25 registers with its real R49 slot. */
+                                     basisVersions: realBasisVersions
+                                       ? realBasisVersionsOf(host, { record, membership, content, inquiry }) : basisVersions,
+                                     inquiry, steps,
+                                     ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
+  p.migrate();
+
+  /** A bundle and its files as record-core holds them (its R37 read contract): a new `bundle_sha` on every write. */
+  let rev = 0;
+  const put = (id, type, text, { state = null, files = [] } = {}) => {
+    const cur = [...st.sql.exec(`SELECT row_version FROM bundles WHERE bundle_id=?`, id)][0];
+    const bsha = sha(`${id}#${++rev}#${text}`);
+    const fm = { inquiry: "open", information: "collected" };
+    if (cur) st.sql.exec(`UPDATE bundles SET bundle_sha=?, row_version=row_version+1 WHERE bundle_id=?`, bsha, id);
+    else st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
+                      VALUES (?, ?, 'g', ?, ?, 't', 't', ?)`, id, type, id, state || fm[type] || "forming", bsha);
+    for (const f of [{ path: "bundle.md", text }, ...files])
+      st.sql.exec(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, ?, ?, ?, ?)
+                   ON CONFLICT(bundle_id, path) DO UPDATE SET content=excluded.content, bytes=excluded.bytes, sha256=excluded.sha256`,
+                  id, f.path, f.text, Buffer.byteLength(f.text), sha(f.text));
+    membership.reindexProjectSight(id);
+    return { ok: true, bundleSha: bsha, rowVersion: (cur ? cur.row_version : 0) + 1 };
+  };
+
+  const w = {
+    st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
+    citation, retired, connections, cites, basisVersions, candidateSources, machinePassageSlots, ceilings, steps, aiAccounts, routes, legEarning,
+    versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
+    row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
+    rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],
+    count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
+    sha: (id) => [...st.sql.exec(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, id)][0]?.bundle_sha ?? null,
+    md: (id) => [...st.sql.exec(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id)][0]?.content ?? null,
+    /** Every table's rows, to prove an act wrote nothing. */
+    snapshot() {
+      const out = {};
+      for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM ${name}`)]);
+      return out;
+    },
+    inquiry(id, versions = []) { w.versions[id] = versions.slice(); return put(id, "inquiry", inquiryMd(id, versions)); },
+    /** A project, written as record-core's `bundles` read contract holds it (a project's id is the plane's to mint). */
+    project(id, participants = []) {
+      st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
+                   VALUES (?, 'project', 'g', ?, 'forming', 't', 't', 'sha')`, id, id);
+      for (const m of participants)
+        st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
+                     VALUES (?, ?, 'joined', 0, 't', 't')`, id, m);
+      membership.reindexProjectSight(id);
+      return id;
+    },
+    /** An information bundle holding one capture of `text`, registered to it (provenance's first-held order). */
+    doc(id, text = `bytes of ${id}`, { state = "collected", read = true, pageCount = 3 } = {}) {
+      const s = sha(text);
+      put(id, "information", infoMd(id, state), { state, files: [{ path: `snapshots/${id}.txt`, text }] });
+      (registered[id] || (registered[id] = [])).push(s);
+      st.sql.exec(`INSERT OR IGNORE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered)
+                   VALUES (?, ?, ?, 'utf8', ?, ?)`, s, id, `snapshots/${id}.txt`, Buffer.byteLength(text), clock.now);
+      if (read) ex.readings[s] = { chain: LAYER, pageCount };
+      /* extraction R58's `readings` read contract: the capture's row names its bundle. */
+      st.sql.exec(`INSERT OR IGNORE INTO readings (capture_sha, bundle_id, reading, at) VALUES (?, ?, '{}', ?)`, s, id, clock.now);
+      return s;
+    },
+    /** the multipart doc: real chain rows (parts + whole) installed, the reading keyed by the whole */
+    mpdoc(id, chain, { pageCount = 2 } = {}) {
+      put(id, "information", infoMd(id, "collected"), { state: "collected", files: [{ path: "x.txt", text: "x" }] });
+      for (const r of chain.register) st.sql.exec(`INSERT OR IGNORE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, ?, ?, ?)`, r.capture_sha, id, r.path, r.encoding, r.bytes, r.registered);
+      const wh = chain.m.whole;
+      ex.readings[wh] = { chain: LAYER, pageCount };
+      st.sql.exec(`INSERT OR IGNORE INTO readings (capture_sha, bundle_id, reading, at) VALUES (?, ?, '{}', ?)`, wh, id, clock.now);
+      return wh;
+    },
+    /** The capture's text units as extraction R36 holds them: `pages` a list of page texts (pdf), or `units` given whole. */
+    units(capture, pagesOrUnits) {
+      ex.units[capture] = pagesOrUnits.map((u, i) => (typeof u === "string"
+        ? { extent: { kind: "pdf-page", page: i, rect: null }, ref: `page ${i + 1}`, text: u, truncated: false, seq: i, chain_kind: null }
+        : { truncated: false, chain_kind: null, seq: i, ...u }));
+    },
+    /** A run as ai-runs holds it (its Terms), and its declared bounds. */
+    run(id, { status = "running", mode = "check", context_type = "inquiry", context_id = Q, principal_plane = ALICE_TOKEN,
+              mints = null, pages = null } = {}) {
+      runs.set(id, { run: id, status, mode, context_type, context_id, principal_plane });
+      if (mints !== null) bounds.set(`${id}|mints`, { allowed: mints, consumed: 0 });
+      if (pages !== null) bounds.set(`${id}|pages`, { allowed: pages, consumed: 0 });
+      return id;
+    },
+    /** A step on a question, made by a member through steps' own act (its R1). */
+    step(question = Q, by = ALICE) {
+      const r = steps.stepCreate({ place: { questions: [question] }, work: `read what ${question} rests on`, by });
+      if (!r.ok) throw new Error(`step: ${JSON.stringify(r)}`);
+      return r.step;
+    },
+    suggest(over = {}) {
+      return p.suggest({ target: Q, kind: "basis-version", run: RUN, name: "a reading",
+                         description: "the ledger shows the transfer was approved twice",
+                         claim: "the transfer was approved twice", relationship: "and",
+                         legs: [], grounds: [], author: ALICE, viewer: ALICE, caller: ALICE, ...over });
+    },
+  };
+  return w;
+}
+
+/** A graded pair, every axis resolved (strength's answer shape). */
+export const GRADED = {
+  capture: { axis: "capture", state: "graded", grade: "B", weakest: { target: DOC } },
+  connection: { axis: "connection", state: "unrated", grade: null },
+  testimony: { axis: "testimony", state: "unrated", grade: null },
+};

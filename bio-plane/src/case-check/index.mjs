@@ -40,6 +40,7 @@ import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { parseFrontmatter, createSha256 } from "../record-grammar/index.mjs";
 import { CASE_CHECK_CHECKS } from "./checks.mjs";
 import { CASE_CHECK_TABLES, migrateCaseCheck } from "./schema.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { CASE_CHECK_CHECKS } from "./checks.mjs";
 export { CASE_CHECK_SCHEMA, CASE_CHECK_TABLES } from "./schema.mjs";
@@ -65,8 +66,7 @@ function refusal(code, detail, extra) {
 /** R2: NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER, built from no argument so its bytes vary with nothing. */
 export function noSuchCase() {
   /* DEC-49 REGION is-case-check-case */
-  return refusal("NO_SUCH_CASE", "no case by that name answers this read: a case being prepared in a project the "
-                 + "viewer has no standing in is answered exactly as one that does not exist.");
+  return refusal("NO_SUCH_CASE", localize("case-check.index.no_case_by_that_name", "no case by that name answers this read: a case being prepared in a project the viewer has no standing in is answered exactly as one that does not exist."));
   /* END DEC-49 REGION is-case-check-case */
 }
 
@@ -120,7 +120,8 @@ export class CaseCheck {
       const pre = this.caseAuthoring.publishPreflight(given, calculationFacts);
       if (!pre || pre.ready !== true) {
         const first = pre?.first ?? null, blockers = Array.isArray(pre?.blockers) ? pre.blockers : [];
-        const lead = first || blockers[0] || { reason: "PREFLIGHT_UNDETERMINED", detail: "the pre-flight gave no answer" };
+        const lead = first || blockers[0] || { reason: "PREFLIGHT_UNDETERMINED",
+                                               detail: localize("case-check.index.the_pre_flight_gave_no_answer", "the pre-flight gave no answer") };
         const { ok: _ok, ...shown } = lead;
         return { ...shown, ok: false, ready: false, held: false, first, blockers };
       }
@@ -143,7 +144,7 @@ export class CaseCheck {
       const stored = this.#one(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=?`, caseId, edition);
       if (!stored || !stored.doc_sha)
         return { ok: false, reason: "PREPARATION_UNDETERMINED",
-                 detail: "the preparation was not found where publication stores it, so no check was recorded" };
+                 detail: localize("case-check.index.the_preparation_was_not_found_where_publication_stores_it", "the preparation was not found where publication stores it, so no check was recorded") };
       const roles = prepared.roles && typeof prepared.roles === "object" ? prepared.roles : {};
       const members = (Array.isArray(prepared.findings) ? prepared.findings : [])
         .map((f) => ({ bundle_id: f.target, version_sha: f.bundleSha ?? null, role: f.role ?? roles[f.target] ?? null }));
@@ -285,7 +286,7 @@ export class CaseCheck {
     const id = str(finding);
     if (!id) {
       /* DEC-49 REGION is-case-check-finding */
-      return refusal("NO_ID", "a finding's id is required; nothing was read.");
+      return refusal("NO_ID", localize("case-check.index.a_findings_id_is_required", "a finding's id is required; nothing was read."));
       /* END DEC-49 REGION is-case-check-finding */
     }
     const v = str(version), p = str(project);

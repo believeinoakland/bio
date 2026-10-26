@@ -9,6 +9,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -180,6 +181,6 @@ export function inquiryMd(id, legs = [], question = `Is ${id} answered?`) {
     "surfaced_by: human", 'disposition_reason: ""',
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role || "supports"}`,
       ...(l.target_edition !== undefined ? [`    target_edition: ${l.target_edition}`] : [])])] : []),
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }

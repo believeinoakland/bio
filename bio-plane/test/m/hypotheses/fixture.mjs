@@ -8,6 +8,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { hypothesesOf, HYPOTHESES_TABLES, NOTES_TABLES, NOTE_NUMBERS_TABLE, PROPOSALS_TABLE, SHARES_TABLE } from "../../../src/hypotheses/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -123,6 +124,6 @@ export function inquiryMd(id, legs = []) {
       const { target, ...rest } = l;
       return [`  - target: ${target}`, ...Object.entries({ role: "supports", ...rest }).map(([k, v]) => `    ${k}: ${scalar(v)}`)];
     })] : []),
-    "---", "", "## Question", "", `Is ${id} answered?`, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", `Is ${id} answered?`, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }

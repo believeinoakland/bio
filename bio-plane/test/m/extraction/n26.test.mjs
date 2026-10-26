@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { fresh, bundle, hold, wp, wr, wtbl, box, alt, docx, doc, bucket } from "./fixture.mjs";
 import { n26MigratedReading, n26Marked, renumberingMoves, N26_READER_MARK, Extraction } from "../../../src/extraction/index.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { docxRenumbering } from "../../../src/docx.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
 
@@ -113,9 +114,14 @@ test("R66: a pre-N26 docx reading is migrated once: re-read from its bytes, ever
   const hist = f.rows(`SELECT reading FROM reading_history WHERE capture_sha=? ORDER BY seq`, f.digest);
   assert.deepEqual(hist.map((h) => JSON.parse(h.reading)), [f.old, got]);
   /* the text units rebuilt by R22 at N26's numbering, no duplicated branch; the references' places moved. */
-  assert.deepEqual(f.rows(`SELECT extent, text FROM capture_text WHERE capture_sha=? ORDER BY seq`, f.digest)
-                     .map((u) => [JSON.parse(u.extent).para, u.text]),
-                   NEW_PARAS.map((t, i) => [i, t]).filter(([, t]) => t.length));
+  /* (fix round 9, K4896) the text box's text is also its own `doc-part` unit (reading-pipeline R47, G134d: every part marked with its kind), beside
+     the paragraph units, which are N26's numbering */
+  const units = f.rows(`SELECT extent_kind, extent, text FROM capture_text WHERE capture_sha=? ORDER BY seq`, f.digest);
+  assert.deepEqual(units.filter((u) => u.extent_kind === "doc-para").map((u) => [JSON.parse(u.extent).para, u.text]),
+                   /* (K4985, G166) a text box's paragraphs (1 and 4) are its `doc-part` unit only, never also a body paragraph */
+                   NEW_PARAS.map((t, i) => [i, t]).filter(([i, t]) => t.length && i !== 1 && i !== 4));
+  assert.deepEqual(units.filter((u) => u.extent_kind !== "doc-para").map((u) => [u.extent_kind, u.text]), [["doc-part", "boxed"], ["doc-part", "t in box"]]);
+  /* K4929: both text boxes are their own units since office-readers R38 gives each its own `ref` (before, the second shared `ref: null` and was dropped as already written) */
   assert.deepEqual(f.rows(`SELECT occurrence FROM reading_refs WHERE ref='item:1' ORDER BY seq`).map((r) => r.occurrence),
                    [2, 1, 0, 5].map((p) => `doc-para:${JSON.stringify({ para: p, run: null })}`));
   /* R19's listeners ran once, the plane's act, with the chain before and after differing (content R22 stales on it). */
@@ -205,7 +211,7 @@ test("R66 (DEC-149): with no evidence store set up, the stored reading is left a
   f.core.evidenceStore = () => null;
   const out = await f.x.migrateDocxReadings();
   assert.deepEqual(out.skipped.map((s) => s.why),
-                   ["your group's Civicsmith has no evidence store set up, so the stored bytes cannot be read again"]);
+                   [localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again")]);
   assert.deepEqual(f.x.readingFor(f.digest).reading, f.old);
 });
 
@@ -300,8 +306,12 @@ test("R66 (T38, N786): a stored reading carrying a .docx cell's `paras`, its las
     bundle(w.s, "INFO-1");
     /* two old readings, so the first batch takes the cutoff and leaves the migration not done */
     const old = await oldReading();
-    for (const c of ["0".repeat(64), "f".repeat(64)])
+    for (const c of ["0".repeat(64), "f".repeat(64)]) {
       w.x.writeReading({ bundleId: "INFO-1", captureSha: c, reading: old, profileFormat: "docx", composed: true });
+      /* R82 (F12): bytes held, so neither waits for them (a candidate whose bytes are not held keeps the migration open); the
+         docx entry cannot read these, which is a reason of its own */
+      await w.evidence.put(`bio/captures/${c}`, new Uint8Array([1, 2, 3]));
+    }
     const first = await w.x.migrateDocxReadings({ limit: 1 });
     assert.deepEqual([first.done, first.examined], [false, 1]);
     /* the paras reading, written after the cutoff (a promotion after the migration started) */

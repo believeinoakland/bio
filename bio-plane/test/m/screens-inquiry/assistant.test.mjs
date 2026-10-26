@@ -5,7 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, SESSION } from "../interface-shell/harness.mjs";
-import { open, plane, button, fill, says, word, P, Q, D } from "./fixtures.mjs";
+import { airunDispatchRefusal, airunOpenRefusal } from "../ai-runs/fixtures.mjs";
+import { keepAwayState } from "../ai-accounts/fixtures.mjs";
+import { open, plane, button, fill, says, word, day, storeWorld, P, Q, D } from "./fixtures.mjs";
 
 const UNTESTED = { kind: "untested", part: "check", set: "s", set_version: 1, words: "ai.label.untested" };
 const SESSION_HEADER = "Bearer " + SESSION.t;
@@ -32,7 +34,7 @@ function stub({ untested = UNTESTED, dispatch = null, open: opened = null, runs 
       groupkeystate: ok({ held: true, on: true }),
       aiusage: ok({ ok: true, today: { used: "$0.42", limit: "$2.00" } }),
       agentpack: ok({ ok: true, pack: { version: "civicsmith@3+ab12cd" } }),
-      aikeepawaystate: ok({ ok: true, on: false }),
+      aikeepawaystate: ok(OFF),
       airuns: (r) => ok({ ok: true, context: { type: r.query.contextType, id: r.query.contextId }, runs, count: runs.length }),
       airunopen: (r) => opened || ok(openRule(r.body) || { run: r.body.run, started: true, status: "running", ticks: 1, untested }),
       airundispatch: (r) => dispatch || ok({ run: r.body.run, found: true, dispatched: true, status: "running" }),
@@ -54,6 +56,8 @@ const panel = (p) => p.root().querySelector(".cs-dock");
 const dockActs = (p) => panel(p).querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
 const workOn = async (p) => { await p.click(button(p, "airunopen", panel(p))); await p.settle(); };
 const CREDENTIAL_OPS = ["aicredentialmint", "aicredentialrevoke"];
+/* ai-accounts' real keep-away answers, off and on (a court order the administrator gave): played back where the page reads `aikeepawaystate` */
+const { kept: KEPT, off: OFF } = await keepAwayState({ reason: "court order" });
 
 test("R4 the panel says once what it is and never does, and whose account serves her (ai.account.*)", async () => {
   const p = await dock(Q, stub());
@@ -66,7 +70,14 @@ test("R4 the panel says once what it is and never does, and whose account serves
 });
 
 test("R4 a project's own account serves her in its project; a document's run is its project's", async () => {
-  const p = await dock(D, stub(), { projectaccountstate: ok({ ok: true, on: true, serving: "project" }) });
+  /* the project's own account, by the real acts of its owner (her password again, the project's key set and switched on), as the world answers it to her */
+  const world = await storeWorld({ ai: true });
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  await ann.act("reauth", { body: { password: ann.password } });
+  await ann.act("projectkeyset", { body: { project, key: "sk-ant-api03-" + "7".repeat(40) } });
+  await ann.act("projectaccountswitch", { body: { project, on: true } });
+  const p = await dock(D, stub(), { projectaccountstate: ok(await ann.read("projectaccountstate", { query: { project } })) });
   assert.ok(says(panel(p), "ai.account.project.inline"));
   const b = button(p, "airunopen", panel(p));
   assert.deepEqual([b.getAttribute("data-ctx-type"), b.getAttribute("data-ctx-id")], ["project", P]);
@@ -110,7 +121,7 @@ test("R33 controls: started: false is a refusal by its words and no dispatch fol
   assert.ok(says(panel(no).querySelector('[data-refusal="airunopen"]'), "refusal.AI_RUN_BOUND_NO_ALLOWANCE"));
   assert.ok(!says(panel(no), "dock.run.yours"), "never working");
   for (const code of ["MEMBER_PRINCIPAL_RUN", "AGENT_WORKER_UNBOUND", "NAMESPACE_UNDETERMINED", "CREDENTIAL_RECORD_SILENT"]) {
-    const p = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "running", withheld: code, note: "Nothing was sent" }) }));
+    const p = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "running", withheld: code }) }));
     await workOn(p);
     const said = panel(p).querySelector('[data-refusal="airundispatch"]');
     assert.ok(says(said, "dock.withheld." + code), code);
@@ -187,39 +198,59 @@ test("R6 R13 the door's refusals drawn by their words, beside the act", async ()
   const cases = [["MEMBER_RUN_MODE_NOT_ADMITTED", "refusal.MEMBER_RUN_MODE_NOT_ADMITTED"], ["AI_RUN_NOT_PRINCIPAL", "refusal.AI_RUN_NOT_PRINCIPAL"],
     ["ACCOUNT_MEMBER_NOT_ACTIVE", "refusal.ACCOUNT_MEMBER_NOT_ACTIVE"], ["AI_RUN_CREDENTIAL_MALFORMED", "refusal.AI_RUN_CREDENTIAL_MALFORMED"]];
   for (const [code, key] of cases) {
-    const p = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: code, code } } } }));
+    const p = await dock(Q, stub({ dispatch: ok(await airunDispatchRefusal(code)) }));
     await workOn(p);
     assert.ok(says(panel(p).querySelector('[data-refusal="airundispatch"]'), key), code);
   }
   const k = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, code: "AI_KEPT_AWAY", keep_away: keep }) }));
   await workOn(k);
-  assert.ok(says(panel(k).querySelector('[data-refusal="airundispatch"]'), "ai.refused.keptaway", { member: "rosa", date: "2 October 2026", reason: "court order" }));
+  assert.ok(says(panel(k).querySelector('[data-refusal="airundispatch"]'), "ai.refused.keptaway", { member: "rosa", date: day("2026-10-02T09:00:00Z", { year: true }), reason: "court order" }));
   const ended = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "completed" }) }));
   await workOn(ended);
   assert.ok(says(panel(ended).querySelector('[data-refusal="airundispatch"]'), "refusal.AI_RUN_NOT_RUNNING"));
 });
 
+test("R13 a refusal of the door with no word and no translation is drawn as refusal.uncatalogued with its code, never the answer's detail; one with a word, its word alone", async () => {
+  const DETAIL = "zz-detail-9";
+  // fixtures-generic: NO_SUCH_DOOR_CODE (a code made up on purpose: no module answers it, so the door's refusal with no word and no translation is drawn as uncatalogued)
+  const un = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_SUCH_DOOR_CODE", code: "NO_SUCH_DOOR_CODE", detail: DETAIL } } } }));
+  await workOn(un);
+  const said = panel(un).querySelector('[data-refusal="airundispatch"]');
+  assert.ok(says(said, "refusal.uncatalogued") && said.textContent.includes("NO_SUCH_DOOR_CODE"));
+  assert.ok(!panel(un).textContent.includes(DETAIL), "the builder's detail is not drawn");
+  /* controls: a held word is drawn alone, without the code or the detail; a translation is drawn as it came */
+  const held = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL", detail: DETAIL } } } }));
+  await workOn(held);
+  const h = panel(held).querySelector('[data-refusal="airundispatch"]');
+  assert.ok(says(h, "refusal.AI_RUN_NOT_PRINCIPAL") && !says(h, "refusal.uncatalogued") && !panel(held).textContent.includes(DETAIL));
+  // fixtures-generic: NO_SUCH_DOOR_CODE (the same made-up code, here with a translation)
+  const tr = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_SUCH_DOOR_CODE", code: "NO_SUCH_DOOR_CODE", translation: "zz-translated-9", detail: DETAIL } } } }));
+  await workOn(tr);
+  assert.ok(panel(tr).querySelector('[data-refusal="airundispatch"]').textContent.includes("zz-translated-9"));
+  assert.ok(!panel(tr).textContent.includes(DETAIL));
+});
+
 test("R4 refusals of the open by their words: mode not deployed, kept away, no account, use switched off, limit reached", async () => {
-  const fields = { whose: "your", period: "daily", use: "Runs", when: "tomorrow" };
-  const cases = [["AI_RUN_MODE_NOT_DEPLOYED", "ai.refused.notdeployed", {}], ["AI_NO_ACCOUNT", "ai.refused.noaccount", {}],
-    ["AI_LIMIT_REACHED", "ai.refused.limit", fields]];
-  for (const [code, key, vars] of cases) {
-    const p = await dock(Q, stub({ open: { status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...fields } } } }));
+  const cases = [["AI_RUN_MODE_NOT_DEPLOYED", "ai.refused.notdeployed"], ["AI_NO_ACCOUNT", "ai.refused.noaccount"], ["AI_LIMIT_REACHED", "ai.refused.limit"]];
+  for (const [code, key] of cases) {
+    const answer = await airunOpenRefusal(code);
+    const p = await dock(Q, stub({ open: ok(answer) }));
     await workOn(p);
-    assert.ok(says(panel(p), key, vars), code);
+    /* the words' fields are the answer's own (`whose`, `period`, `use`, `when` of the limit), blank where it states none */
+    assert.ok(says(panel(p), key, { whose: answer.whose ?? "", period: answer.period ?? "", use: answer.use ?? "", when: answer.when ?? "" }), code);
     assert.ok(dockActs(p).includes("airunopen"), "the panel stays, the act stays");
   }
 });
 
 test("R42 where the assistant cannot work, the other reasons by key and whose account serves her; control: a reachable assistant with nothing refused draws none", async () => {
-  const p = await dock(Q, stub(), { aikeepawaystate: ok({ ok: true, on: false }) });
+  const p = await dock(Q, stub(), { aikeepawaystate: ok(OFF) });
   assert.equal(panel(p).querySelector('[data-reasons="assistant"]'), null);
   const w = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "running", withheld: "AGENT_WORKER_UNBOUND" }) }),
-    { aikeepawaystate: ok({ ok: true, on: true, reason: "court order", set_by: "member:rosa", set_at: "2026-10-02T09:00:00Z" }) });
+    { aikeepawaystate: ok(KEPT) });
   await workOn(w);
   const r = panel(w).querySelector('[data-reasons="assistant"]');
   assert.ok(says(r, "question.ai.other"));
-  assert.ok(says(r, "ai.refused.keptaway", { member: "rosa", date: "2 October 2026", reason: "court order" }), "kept away");
+  assert.ok(says(r, "ai.refused.keptaway", { member: KEPT.set_by, date: day(KEPT.set_at, { year: true }), reason: KEPT.reason }), "kept away");
   assert.ok(says(r, "dock.withheld.AGENT_WORKER_UNBOUND"), "not installed");
   assert.ok(says(r, "question.ai.whose") && says(r, "ai.account.own.inline"), "whose account serves her");
   const none = await dock(Q, stub(), { accountreference: ok({ held: false }), groupkeystate: ok({ held: true, on: true }), agentpack: refusedIn("PACK_UNDETERMINED") });

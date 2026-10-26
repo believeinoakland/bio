@@ -23,6 +23,7 @@
  * "XX XX 21") is kept as written with `date: null` and why, never completed. A field not read is
  * absent and named in `missing`. Whether this copy is in force is not this reader's question. */
 import { readerView, vocabulary, vocabRegex } from "../docprofile/doctypes/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const HEADER_FIELDS = Object.freeze(["type", "number", "title", "effective", "supersedes", "reference",
                                             "coordinator", "review_due", "revision_cycle"]);
@@ -224,7 +225,7 @@ export function readHeader(ctx, raw, locate = () => null) {
   const series = policySeries(ctx);
   const labels = headerLabels(ctx);
   if (!series.length && !labels.length)
-    return { header: null, why: "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read" };
+    return { header: null, why: localize("doctypes.policy-header.no_series_or_labels", "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read") };
   const all = anchors(raw, series, labels);
   const first = all[0] || null;
   let best = readAt(raw, labels, first, locate);
@@ -237,28 +238,71 @@ export function readHeader(ctx, raw, locate = () => null) {
   return best;
 }
 
-/** The header block read from one anchor (or, with none, from the first label). */
+/** The lines of `raw` from `lo` (a line's start) to the end of the line holding `hi`, offsets absolute (`full` when
+ *  the text ends there). */
+function linesBetween(raw, lo, hi) {
+  const nl = hi >= raw.length ? -1 : raw.indexOf("\n", hi);
+  const stop = nl < 0 ? raw.length : nl;
+  const out = [];
+  let at = lo;
+  for (const text of raw.slice(lo, stop).split("\n")) { out.push({ start: at, end: at + text.length, text }); at += text.length + 1; }
+  return { lines: out, full: nl < 0 };
+}
+const REGION = 1 << 16;
+/* How far into a text a header's first label is looked for when no series anchors one, and how far past its anchor a
+   header block runs (R40; protective, K4868): a header stands on the first page. */
+const HEADER_SCAN = 1 << 14;
+const HEADER_BLOCK = 1 << 16;
+
+/** The header block read from one anchor (or, with none, from the first label). R37: a header is read from the lines
+ *  around its anchor (14 above it, and as far below as the block and its title run), widened until the reading stays
+ *  inside them, so a large text is never cut into a list of all its lines; the answer is the whole text's. */
 function readAt(raw, labels, a, locate) {
-  const lines = linesOf(raw);
+  if (!a) return readAtLines(raw, labels, null, locate, null, true).result;
+  let lo = a.start > 0 ? raw.lastIndexOf("\n", a.start - 1) + 1 : 0;
+  for (let k = 0; k < 14 && lo > 0; k++) lo = lo - 1 > 0 ? raw.lastIndexOf("\n", lo - 2) + 1 : 0;
+  for (let hi = a.start + REGION; ; hi *= 2) {
+    const { lines, full } = linesBetween(raw, lo, hi);
+    const r = readAtLines(raw, labels, a, locate, lines, full);
+    if (full || !r.exhausted) return r.result;
+  }
+}
+
+/** `readAt` over the given lines; `exhausted` says the reading ran to the last of them without `full` text behind it. */
+function readAtLines(raw, labels, a, locate, given, full) {
+  let lines = given;
+  let exhausted = false;
   const from = a ? blockStart(lines, a.start) : 0;
   /* The block's end: the first line after the anchor (or, with none, after the first label)
      that is page furniture, an outline heading or body text. */
-  const firstLabel = (() => {
+  /* R40: with no anchor the first label is looked for in the first HEADER_SCAN characters and no further, so a text of
+     blank lines is not tried for a label from each of them (the labels' patterns may begin with `^\s*`, which reads on
+     through every blank line it meets). */
+  const firstLabel = a ? null : (() => {
     let best = null;
-    for (const l of labels) { l.re.lastIndex = from; const m = l.re.exec(raw); if (m && (!best || m.index < best)) best = m.index; }
+    const head = raw.length > HEADER_SCAN ? raw.slice(0, HEADER_SCAN) : raw;
+    for (const l of labels) { l.re.lastIndex = from; const m = l.re.exec(head); if (m && (!best || m.index < best)) best = m.index; }
     return best;
   })();
   const after = a ? (a.number ? a.number.end : a.end) : firstLabel;
   if (after === null || after === undefined)
-    return { header: null, why: "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it" };
+    return { result: { header: null, why: raw.length > HEADER_SCAN
+      ? localize("doctypes.policy-header.no_block_window", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in its first {chars} characters, where a header stands", { chars: String(HEADER_SCAN) })
+      : localize("doctypes.policy-header.no_block", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it") } };
+  if (!lines) lines = linesOf(raw);
   let end = raw.length, endLine = lines.length;
+  let stopped = false, blockCut = false;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     if (l.start <= after) continue;
+    /* R40: a header block runs no further than HEADER_BLOCK characters past its anchor (a page holds a header, not a
+       hundred thousand lines of blanks), and the answer says when the block was cut there. */
+    if (l.start - after > HEADER_BLOCK) { end = l.start; endLine = i; stopped = true; blockCut = true; break; }
     if (FURNITURE.test(l.text) || OUTLINE.test(l.text) || (isBody(l.text) && !labels.some((x) => { x.re.lastIndex = 0; const m = x.re.exec(l.text); return m && m.index <= l.text.length - l.text.trimStart().length; }))) {
-      end = l.start; endLine = i; break;
+      end = l.start; endLine = i; stopped = true; break;
     }
   }
+  if (!full && !stopped) exhausted = true;
 
   /* Every label printed in the block, longest first where two begin together, never two
      overlapping; the anchor and its number are boundaries too. */
@@ -289,7 +333,7 @@ function readAt(raw, labels, a, locate) {
       const beside = field(raw, s.end, vEnd, locate);
       if (beside && !readDate(beside.text) && isPlaceholder(beside.text)) {
         header[s.field] = { ...beside, date: null,
-          why: "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed" };
+          why: localize("doctypes.policy-header.placeholder_date", "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed") };
         continue;
       }
       /* Beside its label; else, as a boxed layout prints it, below labels that are not dates, up to the next date
@@ -306,8 +350,8 @@ function readAt(raw, labels, a, locate) {
         header[s.field] = { text: d.text, date: d.date, start, end: start + d.text.length, source: locate(start) || null };
         continue;
       }
-      why[s.field] = beside ? "its label is printed with no calendar date beside it or below it in the header"
-        : "its label is printed with nothing beside it";
+      why[s.field] = beside ? localize("doctypes.policy-header.no_date_beside", "its label is printed with no calendar date beside it or below it in the header")
+        : localize("doctypes.policy-header.nothing_beside", "its label is printed with nothing beside it");
       continue;
     }
     /* A value printed beside its label ends at its line where the next line is set in capitals and the value is not:
@@ -322,7 +366,7 @@ function readAt(raw, labels, a, locate) {
       }
     }
     const f = field(raw, s.end, vEnd, locate);
-    if (f) header[s.field] = f; else why[s.field] = "its label is printed with nothing beside it";
+    if (f) header[s.field] = f; else why[s.field] = localize("doctypes.policy-header.nothing_beside", "its label is printed with nothing beside it");
   }
 
   /* The series and number: the anchor's, or a number label's value in the series' form. */
@@ -336,7 +380,7 @@ function readAt(raw, labels, a, locate) {
   if (header.number && a) {
     const m = a.series.numberOnly ? a.series.numberOnly.exec(header.number.text.trim()) : null;
     if (!m) {
-      why.number = `"${header.number.text}" is printed as the number, and ${a.series.labelText} does not read a number in that form`;
+      why.number = localize("doctypes.policy-header.number_form", "\"{number}\" is printed as the number, and {series} does not read a number in that form", { number: String(header.number.text), series: String(a.series.labelText) });
       delete header.number;
     } else header.number.normal = normalOf(a.series.normal, m);
   }
@@ -362,9 +406,11 @@ function readAt(raw, labels, a, locate) {
   if (!(header.title && header.title.inline)) {
     let i = endLine;
     while (i < lines.length && (FURNITURE.test(lines[i].text) || !lines[i].text.trim())) i++;
+    if (!full && i >= lines.length - 1) exhausted = true;
     if (i < lines.length && !OUTLINE.test(lines[i].text) && caps(lines[i].text)) {
       let j = i;
       while (j + 1 < lines.length && caps(lines[j + 1].text) && !OUTLINE.test(lines[j + 1].text) && !FURNITURE.test(lines[j + 1].text)) j++;
+      if (!full && j + 1 >= lines.length - 1) exhausted = true;
       const f = field(raw, lines[i].start, lines[j].end, locate);
       if (f) header.title = f;
     }
@@ -395,7 +441,13 @@ function readAt(raw, labels, a, locate) {
   for (const f of BELOW_TARGET) if (header[f]) header[f].measured = "below_target";
   const missing = HEADER_FIELDS.filter((f) => !header[f]);
   for (const f of missing) if (!why[f]) why[f] = f === "type"
-    ? "no line of this text opens with a policy series the active jurisdiction profiles name"
-    : "no label the active jurisdiction profiles give for this field is printed in the header block";
-  return { header: { ...header, missing, missing_why: why, start: from, end }, why: null };
+    ? localize("doctypes.policy-header.no_series_type", "no line of this text opens with a policy series the active jurisdiction profiles name")
+    : localize("doctypes.policy-header.no_label", "no label the active jurisdiction profiles give for this field is printed in the header block");
+  return { exhausted, result: { header: { ...header, missing, missing_why: why, start: from, end, ...(blockCut ? { block_cut: true } : {}) }, why: null } };
+}
+
+/** Does any line of `raw` open with a policy series' label of the view's, with the header labels near it (R26)? The
+ *  header's `type` is read only from such an anchor, so with none a text is no policy's. */
+export function headerAnchored(ctx, raw) {
+  return anchors(String(raw || ""), policySeries(ctx), headerLabels(ctx)).length > 0;
 }

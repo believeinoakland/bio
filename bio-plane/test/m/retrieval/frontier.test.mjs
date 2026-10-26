@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { world, V, MACHINE, VOCAB, T0 } from "./fixture.mjs";
 import { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE } from "../../../src/retrieval/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LATER = "2026-09-26T00:00:00Z";           /* after T0, before the fixture's clock (every capture's registration) */
 const digest = (o) => createHash("sha256").update(JSON.stringify(o)).digest("hex");
@@ -98,7 +99,7 @@ test("R42, R44: content entries are each capture's latest extract row (read by a
   const ex = (cap, state, extra = {}) => w.observe({ level: "content", subject_kind: "capture", subject: cap.sha, authority_kind: "extract", authority: "INFO-1", state, ...extra });
   const ix = (cap, state) => w.observe({ level: "content", subject_kind: "capture", subject: cap.sha, authority_kind: "derive", authority: "INFO-1", state });
   ex(a, "PRESENT"); ix(a, "PRESENT");
-  ex(b, "LOOKED_INDETERMINATE", { condition: "no engine bound" });
+  ex(b, "LOOKED_INDETERMINATE", { condition: word("workbooks.why.engine_bound") });
   ex(c, "PRESENT");                       /* no index observation */
   ix(b, "LOOKED_ABSENT");                 /* a derive row written LAST must not become b's entry */
   w.drift = Object.assign([{ capture_sha: c.sha, superseded_calibration: "cal-7" }], { truncated: true });
@@ -109,7 +110,7 @@ test("R42, R44: content entries are each capture's latest extract row (read by a
   assert.deepEqual([by[a.sha].state, by[a.sha].indexed, by[a.sha].indexed_determined, by[a.sha].tier3_candidate, by[a.sha].recandidate],
     ["PRESENT", "indexed_full", true, false, false]);
   assert.deepEqual([by[b.sha].state, by[b.sha].condition, by[b.sha].indexed, by[b.sha].tier3_candidate, by[b.sha].recandidate],
-    ["LOOKED_INDETERMINATE", "no engine bound", "indexed_none", true, true]);
+    ["LOOKED_INDETERMINATE", word("workbooks.why.engine_bound"), "indexed_none", true, true]);
   assert.deepEqual([by[c.sha].indexed, by[c.sha].indexed_determined, by[c.sha].calibration_drifted, by[c.sha].calibration_id, by[c.sha].recandidate],
     ["undetermined", false, true, "cal-7", true]);
   assert.equal(typeof by[c.sha].indexed_why, "string");

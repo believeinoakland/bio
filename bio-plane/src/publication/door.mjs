@@ -11,6 +11,8 @@
  * goes on. The request's body reaches it through the helpers as `body`: the parsed JSON object, or a function answering
  * it (or a Promise of it), the control plane's to pass (R73; F1, K1874). */
 
+import { localize } from "../setup-words/index.mjs";
+
 /* R73: the request body's `secret`, a non-empty string, or null: a body that is absent, unreadable or not an object
    carries none. The address is never read for it: a request naming `secret` or `token` there is refused
    `CREDENTIAL_IN_ADDRESS` before this door runs (admission's gate, its R20, which the control plane runs first). */
@@ -61,7 +63,7 @@ export async function publicationDoorOp(op, url, stub, { json, storeSilent, stor
     const ed = url.searchParams.get("edition");
     if (!caseId || !ed)
       return json({ ok: false, reason: "MALFORMED",
-                    detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>" }, 400);
+                    detail: localize("publication.door.casedocument_requires_case_caseyyyynnnn_and", "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>") }, 400);
     /* REC-130: the viewer is STAMPED here from the credential and never read
        from the request — the inner URL is built from nothing of the caller's
        but the two keys. The store answers an unsigned document to standing

@@ -100,7 +100,7 @@ const withLines = (opts, lines) => {
 };
 
 test("R14 (T45) the complete edition prints R29's outcomes after the claims and before the findings, each with its kind, its date, its text and its cites, in the order carried", () => {
-  assert.equal(CG.OUTCOMES_HEADING, "Outcomes since the last edition");
+  assert.equal(sha(CG.OUTCOMES_HEADING), "8bafcad4e21e987ae121efa8cb43323155b62b0c7ed9c52f0cfa7d342b162095", "the heading's bytes are pinned");
   const { html, input } = withLines({}, CG.outcomesLines(OUTCOMES));
   assert.deepEqual(heads(html).map(([, h]) => h).slice(0, 3), ["The claims", CG.OUTCOMES_HEADING, "The findings"]);
   assert.deepEqual(heads(html).map(([n]) => n), heads(html).map((_, i) => i + 1), "numbered as rendered");
@@ -129,7 +129,7 @@ test("R14 (T45) controls: an edition whose document carries no outcomes: block r
   const { html } = withLines({}, CG.outcomesLines([]));
   assert.equal(html.includes(CG.OUTCOMES_HEADING), false, "no outcome carried: no block written, no section");
   const empty = withLines({}, ["outcomes: []"]).html;
-  assert.equal(section(empty, CG.OUTCOMES_HEADING).includes(esc("No outcome is carried into this edition.")), true);
+  assert.equal(section(empty, CG.OUTCOMES_HEADING).includes(esc(CG.SENTENCES.noOutcome)), true);
   const v5 = CG.completeEditionOf({ files: [{ path: "case.md", content: `---\nformat: bio-case-document/5\ncase_id: X\n${CG.outcomesLines(OUTCOMES).join("\n")}\n---\n` }] });
   assert.equal(v5.includes(CG.OUTCOMES_HEADING), false, "an older format's block is not read");
   /* the words are escaped, and nothing is a script */

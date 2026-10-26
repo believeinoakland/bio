@@ -4,16 +4,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, inbox, ev, host, NOW, iso } from "./world.mjs";
+import { world, inbox, ev, host, NOW, iso, projectOf } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { tasksOf, tasksOps, Tasks, TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 import { noSuchMember, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { Connections } from "../../../src/connections/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
-const DOC = "INFO-2026-0001-doc", PRJ = "PROJ-2026-0001-team", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
-const HOMES = { a1: DOC, a2: PRJ, a3: DOC2 };
+const DOC = "INFO-2026-0001-doc", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
+const TEAM = projectOf("Team", ["a2"]);   // a2 is registered in the project the record mints, by provenance's real creation
+const PRJ = TEAM.projectId;
+const HOMES = { a1: DOC, a2: TEAM, a3: DOC2 };
 const box = (events = []) => inbox(events, HOMES);
 
 test("R1: drain takes queued events in order; unfiled waits, a live task folds, a new one is routed owner, citing owner, admin, unassigned", () => {
@@ -28,10 +32,10 @@ test("R1: drain takes queued events in order; unfiled waits, a live task folds, 
   assert.equal(r.waiting[0].detail, "the capture is not yet filed in any record; the event is kept, not dropped");
   assert.deepEqual(w.log.filter(([k]) => k === "attempt"), [["attempt", "zz"]], "the unfiled event's attempt is counted, not removed");
   const route = Object.fromEntries(r.created.map((c) => [c.refers_to, [c.assignee, c.assignee_role, c.basis]]));
-  assert.deepEqual(route[PRJ], ["olga", "project-manager", "owner of the referred project"], "an active owner of the project itself");
-  assert.deepEqual(route[DOC], ["olga", "project-manager", `owner of ${PRJ}, which cites this record`],
+  assert.deepEqual(route[PRJ], ["olga", "project-manager", word("tasks.why.owner_referred_project")], "an active owner of the project itself");
+  assert.deepEqual(route[DOC], ["olga", "project-manager", word("tasks.why.owner_cites_record", { cite: String(PRJ) })],
     "an active owner of the first project with a live cites edge");
-  assert.deepEqual(route[DOC2], ["ada", "group-admin", "no project manager; the RULED fallback to a group admin"],
+  assert.deepEqual(route[DOC2], ["ada", "group-admin", "no project manager; the RULED fallback to a team admin"],
     "the earliest active administrator");
   for (const c of r.created) assert.match(c.id, /^TASK-2026-\d{4}-subject$/);
   // the stored task is the grammar's
@@ -68,12 +72,36 @@ test("R1: drain takes queued events in order; unfiled waits, a live task folds, 
   for (const [asked, got] of [[0, 1], [9999, 500], [null, 50], ["", 50], ["x", 50]]) assert.equal(box().t.taskDrain({ limit: asked }).limit, got);
 });
 
+test("R1 (K5148, WALK-FINAL-04B R146): a document filed in a project routes to that project's active owner with no cites edge, before a citing project; with no project and no edge the administrator rule stands", () => {
+  const w = box([ev("a1"), ev("a3")]);
+  w.member("olga"); w.member("gone", { status: "revoked" }); w.member("ada", { role: "admin" });
+  w.bundle(PRJ, "project"); w.join(PRJ, "gone", { owner: true }); w.join(PRJ, "olga", { owner: true });
+  w.bundle(DOC, "information", { project: PRJ });     // filed in PRJ by its front matter: no `cites` edge, no project-type bundle
+  w.bundle(DOC2);                                      // filed in nothing, cited by nothing
+  const route = Object.fromEntries(w.t.taskDrain({ actor: "alarm" }).created.map((c) => [c.refers_to, [c.assignee, c.assignee_role, c.basis]]));
+  assert.deepEqual(route[DOC], ["olga", "project-manager", word("tasks.why.owner_referred_project")], "the filed-in project's first active owner, not the administrator");
+  assert.deepEqual(route[DOC2], ["ada", "group-admin", "no project manager; the RULED fallback to a team admin"], "control: the administrator rule");
+  // the filed-in project comes before a citing project
+  const OTHER = projectOf("Other").projectId;
+  const w1 = box([ev("a1")]);
+  w1.member("olga"); w1.member("dave");
+  w1.bundle(PRJ, "project"); w1.bundle(OTHER, "project"); w1.join(PRJ, "olga", { owner: true }); w1.join(OTHER, "dave", { owner: true });
+  w1.bundle(DOC, "information", { project: PRJ }); w1.cite(OTHER, DOC);
+  assert.deepEqual(w1.t.taskDrain({}).created.map((c) => [c.assignee, c.assignee_role]), [["olga", "project-manager"]], "filed-in before cited-by");
+  // a filed-in project with no active owner falls through to the cites arm, then the administrator
+  const w2 = box([ev("a1")]);
+  w2.member("dave"); w2.member("ada", { role: "admin" });
+  w2.bundle(PRJ, "project"); w2.bundle(OTHER, "project"); w2.join(OTHER, "dave", { owner: true });
+  w2.bundle(DOC, "information", { project: PRJ }); w2.cite(OTHER, DOC);
+  assert.deepEqual(w2.t.taskDrain({}).created.map((c) => [c.assignee, c.assignee_role]), [["dave", "project-manager"]], "no owner in the filed-in project: the citing one");
+});
+
 test("R1 (d280-strengthbar §5): with connections' own edgeSevered over real citing documents, a withdrawn first citer is passed over and the obligation goes to the next live citer's owner", () => {
   const w = box([ev("a1")]);
   /* the real predicate (connections R22), reading each citing project's `bundle.md` through record-core */
   const real = new Connections({ storage: w.host.storage, record: w.record, membership: w.membership });
   w.fakes.connections.edgeSevered = (...a) => real.edgeSevered(...a);
-  const GONE = "PROJ-2026-0001-gone", HERE = "PROJ-2026-0002-here";   // the withdrawn one sorts first by id
+  const [GONE, HERE] = [projectOf("Gone").projectId, projectOf("Here").projectId].sort();   // the withdrawn one sorts first by id
   w.member("carol"); w.member("dave"); w.member("ada", { role: "admin" });
   w.bundle(DOC); w.bundle(GONE, "project"); w.bundle(HERE, "project");
   w.join(GONE, "carol", { owner: true }); w.join(HERE, "dave", { owner: true });
@@ -87,7 +115,7 @@ test("R1 (d280-strengthbar §5): with connections' own edgeSevered over real cit
   const made = w.t.taskDrain({ actor: "consumer", now: iso(NOW) }).created;
   assert.deepEqual(made.map((c) => [c.refers_to, c.assignee, c.assignee_role]), [[DOC, "dave", "project-manager"]],
     "not carol, whose project withdrew, though it sorts first");
-  assert.equal(made[0].basis, `owner of ${HERE}, which cites this record`, "the basis names the project used, never the withdrawn one");
+  assert.equal(made[0].basis, word("tasks.why.owner_cites_record", { cite: String(HERE) }), "the basis names the project used, never the withdrawn one");
   // with both withdrawn, no citer routes: the administrator fallback
   const w2 = box([ev("a1")]);
   const real2 = new Connections({ storage: w2.host.storage, record: w2.record, membership: w2.membership });
@@ -107,7 +135,7 @@ test("R1, R3 (queue suite's share): a task routed with no manager and no adminis
   const r = w.t.taskResolve({ id: made.id, actor: "dave", note: "checked; unchanged", now: iso(NOW + 1000) });
   assert.deepEqual(r, { ok: true, id: made.id, status: "resolved", resolved_at: iso(NOW + 1000) });
   const row = w.all(`SELECT * FROM tasks WHERE id=?`, made.id)[0];
-  assert.deepEqual(JSON.parse(row.history).map((h) => [h.event, h.actor]), [["created", "consumer"], ["resolved", "dave"]]);
+  assert.deepEqual(JSON.parse(row.history).map((h) => [h.event, h.actor]), [["created", "consumer"], ["resolved_undecided", "dave"]]); // R21: an authority task put aside
   assert.equal(JSON.stringify(row).includes("checked"), false, "the note is not stored");
   assert.equal(w.t.taskResolve({ id: made.id, actor: "dave" }).already, true, "resolved once");
 });
@@ -124,6 +152,28 @@ test("R1 (N329): with no project manager the task goes to the earliest active ad
   assert.deepEqual(w.membership.activeAdmins(), ["admin", "bea", "zed", "ada"]);
   const r = w.t.taskDrain({ actor: "alarm" });
   assert.deepEqual(r.created.map((c) => [c.assignee, c.assignee_role]), [["bea", "group-admin"]]);
+});
+
+test("R1 (K4218; member-roster R76, R29): a claimed founder is an active member and still takes no routed task; the task goes to the first administrator after her, and with none it is unassigned (control: unclaimed)", async () => {
+  const route = async ({ claimed, admins = [] }) => {
+    const w = box([ev("a3")]);
+    w.bundle(DOC2);
+    for (const a of admins) w.member(a, { role: "admin" });
+    if (claimed) assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);
+    return { w, made: w.t.taskDrain({ actor: "alarm" }).created.map((c) => [c.assignee, c.assignee_role]) };
+  };
+  /* claimed: memberFacts answers her as an active member, and activeAdmins leads with her */
+  const a = await route({ claimed: true });
+  assert.equal(a.w.membership.memberFacts("admin").status, "active");
+  assert.equal(a.w.membership.activeAdmins()[0], "admin");
+  assert.deepEqual(a.made, [["unassigned", "group-admin"]], "the founder alone is no routing target");
+  const b = await route({ claimed: true, admins: ["ada"] });
+  assert.deepEqual(b.made, [["ada", "group-admin"]], "the first administrator after the founder");
+  /* control: unclaimed, memberFacts("admin") is null and the routing is the same */
+  const c = await route({ claimed: false });
+  assert.equal(c.w.membership.memberFacts("admin"), null);
+  assert.deepEqual(c.made, [["unassigned", "group-admin"]]);
+  assert.deepEqual((await route({ claimed: false, admins: ["ada"] })).made, [["ada", "group-admin"]]);
 });
 
 test("R1 (N322): an exhausted task id space keeps the event, its waiting entry carrying record-core R62's code, check and detail", () => {
@@ -161,8 +211,8 @@ test("R1, R3: an act given no instant stamps the instance's clock, not the wall'
   // the instance binding, when no clock is given
   const h = host();
   const t = tasksOf(h.host, { record: h.record, membership: h.membership, start: false, env: { BIO_NOW_MS: String(Date.parse("2030-01-02T03:04:05Z")) },
-    capture: { taskEvents: () => [ev("a3")], taskEventCount: () => 0, taskEventRemove: () => true },
-    provenance: { homeOf: () => ({ bundleId: DOC2 }) }, connections: { edgeSevered: () => false } });
+    capture: { taskEvents: () => [ev(sha("a3"))], taskEventCount: () => 0, taskEventRemove: () => true },
+    provenance: homeOfHomed({ [sha("a3")]: DOC2 }), connections: { edgeSevered: () => false } });
   t.migrate();
   h.db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
                 VALUES (?,?,?,?,?,?,?,?)`).run(DOC2, "information", "g", "t", "collected", iso(NOW), iso(NOW), "sha");
@@ -236,7 +286,7 @@ test("R1 (T35; K1951, K1974): the drain and every count ask capture only for kin
   assert.deepEqual([...new Set(reads.map(([, kind]) => kind))], ["authority-undetermined"]);
 });
 
-test("R18 (K2038): after a tick that drains nothing the wake backs off by each event's own attempts, and past the retry limit an unfiled capture holds no timer", async () => {
+test("R18 (K2038): after a tick that drains nothing the wake backs off by each event's own attempts, and past the retry limit an unfiled capture is retried hourly, never dropped", async () => {
   const w = box([ev("zz")]);
   const c = w.t.drainConsumer();
   const at = (ms) => Date.parse(iso(ms));     // the drain stamps whole seconds
@@ -250,24 +300,24 @@ test("R18 (K2038): after a tick that drains nothing the wake backs off by each e
     assert.equal(w.queue[0].attempts, a);
     const next = c.wake(t);
     if (a < Tasks.TASK_DRAIN_RETRY_LIMIT) {
-      assert.equal(next, at(t) + Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1), `after try ${a}`);
+      assert.equal(next, at(t) + Math.min(Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1), Tasks.TASK_DRAIN_MAX_WAIT_MS), `after try ${a}`);
       wakes.push((next - t) / 60000);
       t = next;
-    } else assert.equal(next, null, "at the limit: no timer, though the event waits");
+    } else assert.equal(next, at(t) + Tasks.TASK_DRAIN_MAX_WAIT_MS, "at the limit: one hour, and the event still waits");
   }
-  assert.deepEqual(wakes, [1, 2, 4, 8, 16, 32, 64], "minutes between timed retries");
+  assert.deepEqual(wakes, [1, 2, 4, 8, 16, 32, 60], "minutes between timed retries, capped at one hour");
   assert.equal(w.queue.length, 1, "kept, never dropped");
   // a wake asked early on a backed-off event is the event's own due instant, never sooner than now
   w.queue[0].attempts = 3;
   assert.equal(c.wake(at(t) + 1000), at(t) + 4 * 60000);
   assert.equal(c.wake(at(t) + 10 * 60000), at(t) + 10 * 60000, "overdue: due now");
   w.queue[0].attempts = 9;
-  // an enqueue re-arms at the delay; another drain still retries it; then no timer again
+  // an enqueue re-arms at the delay; another drain still retries it; then an hour on
   await w.t.armDrain();
   assert.equal(c.wake(t), t + Tasks.TASK_DRAIN_DELAY_MS);
   c.tick(t);
   assert.equal(w.queue[0].attempts, 10, "retried by the drain that ran");
-  assert.equal(c.wake(t), null);
+  assert.equal(c.wake(t), at(t) + Tasks.TASK_DRAIN_MAX_WAIT_MS);
   // the earliest of several: an event never tried by a drain wants the plain backstop
   w.queue.push(ev("yy"));
   assert.equal(c.wake(t), t + Tasks.TASK_DRAIN_BACKSTOP_MS);
@@ -278,6 +328,26 @@ test("R18 (K2038): after a tick that drains nothing the wake backs off by each e
   await w.t.armDrain();
   assert.equal(c.tick(t).drain.created.length, 1);
   assert.equal(c.wake(t), null);
+});
+
+test("R25 (K4488): an event whose capture is filed after its eighth try is run at the next wake, never dropped by a count", () => {
+  const w = inbox([ev("a3")], {});
+  w.bundle(DOC2);
+  const c = w.t.drainConsumer();
+  let t = NOW;
+  for (let a = 1; a <= Tasks.TASK_DRAIN_RETRY_LIMIT; a++) {
+    w.now = t;
+    c.tick(t);
+    t = c.wake(t);
+  }
+  assert.equal(w.queue[0].attempts, Tasks.TASK_DRAIN_RETRY_LIMIT, "eight tries came back unfiled");
+  assert.notEqual(t, null, "still queued: a wake remains, however many tries it has had");
+  assert.ok(t - Date.parse(w.queue[0].lastTry) <= Tasks.TASK_DRAIN_MAX_WAIT_MS, "backed off to at most one hour");
+  w.home("a3", DOC2);     // the capture is filed after its eighth try
+  w.now = t;
+  const r = c.tick(t).drain;
+  assert.deepEqual(r.created.map((x) => x.refers_to), [DOC2]);
+  assert.equal(w.queue.length, 0, "run, and the event leaves the queue");
 });
 
 test("R1 (T36): the drain reads capture's queue in pages past each page's last cursor; a waiting event does not use up limit, so limit waiting events at the head never hide a filed one behind them", () => {
@@ -355,11 +425,11 @@ test("R18 (T36): the wake's reading of the waiting events pages with after as R1
   assert.deepEqual(w.reads.map((x) => x.after), [null, `place-${B}`, `place-${2 * B}`], "each past the last cursor read");
   const got = w.reads.flatMap((x) => x.got);
   assert.equal(new Set(got).size, events.length, "each waiting event read once");
-  // on the third, short page likewise; and at the retry limit everywhere, no wake
+  // on the third, short page likewise; and at the retry limit everywhere, one hour on
   w.queue[B + 77].attempts = 6; w.queue[2 * B + 10].attempts = 1;
   assert.equal(c.wake(NOW), at(NOW) + Tasks.TASK_DRAIN_BACKSTOP_MS);
   for (const e of w.queue) e.attempts = Tasks.TASK_DRAIN_RETRY_LIMIT;
-  assert.equal(c.wake(NOW), null);
+  assert.equal(c.wake(NOW), at(NOW) + Tasks.TASK_DRAIN_MAX_WAIT_MS);
   // exactly one full page: the next read comes back empty and ends it
   const w2 = box(Array.from({ length: B }, (_, i) => ev(`v${i}`)));
   const c2 = w2.t.drainConsumer();
@@ -404,7 +474,8 @@ test("R2: taskList lists visible tasks newest first, filtered, bounded with trun
   assert.deepEqual([all.limit, all.truncated], [200, false]);
   assert.deepEqual(all.tasks[0], { id: "TASK-2026-0004-d", kind: "authority-undetermined", refers_to: DOC,
     subject: { text: `about ${DOC}` }, assignee: "unassigned", assignee_role: "group-admin", status: "resolved",
-    created: iso(NOW - 500), resolved_at: iso(NOW), history: [{ at: iso(NOW - 500), event: "created", actor: "alarm" }] });
+    created: iso(NOW - 500), resolved_at: iso(NOW), history: [{ at: iso(NOW - 500), event: "created", actor: "alarm" }],
+    door: ["taskdecide", "taskforward", "taskresolve"] });
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", assignee: "alice" }).tasks.map((t) => t.id), ["TASK-2026-0001-a"]);
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", status: "resolved" }).tasks.map((t) => t.id), ["TASK-2026-0004-d"]);
   assert.deepEqual(w.t.taskList({ viewer: "member:alice", refersTo: PRJ }).tasks, []);
@@ -463,7 +534,7 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   const done = res({ id: "TASK-2026-0001-a", actor: "alice", now: iso(NOW) });
   assert.deepEqual(done, { ok: true, id: "TASK-2026-0001-a", status: "resolved", resolved_at: iso(NOW) });
   const r2 = w.all(`SELECT status, resolved_at, history FROM tasks WHERE id='TASK-2026-0001-a'`)[0];
-  assert.deepEqual([r2.status, r2.resolved_at, JSON.parse(r2.history).at(-1)], ["resolved", iso(NOW), { at: iso(NOW), event: "resolved", actor: "alice" }]);
+  assert.deepEqual([r2.status, r2.resolved_at, JSON.parse(r2.history).at(-1)], ["resolved", iso(NOW), { at: iso(NOW), event: "resolved_undecided", actor: "alice" }]); // R21
   // the set form, each item on its own through record-core's perItem, the actor forced on every item
   w.task("TASK-2026-0005-e", DOC3);
   const set = w.t.taskResolve({ items: [{ id: "TASK-2026-0005-e", actor: "token:daemon" }, { id: "TASK-NONE" }], actor: "bob" });
@@ -673,7 +744,7 @@ test("R10: the viewer comes only from the control plane's stamp in the URL, neve
   const body = { viewer: "class:admin", actor: "alice", id: "TASK-1", to: "bob", limit: 3 };
   const ops = tasksOps(t, url, body);
   assert.deepEqual(Object.keys(ops).sort(), ["checkrecord", "checkrequest", "checkrequests", "checksof", "checktake",
-                                             "signrequest", "taskdrain", "taskforward", "taskresolve", "tasks"]);
+                                             "signrequest", "taskdecide", "taskdrain", "taskforward", "taskresolve", "tasks"]);
   ops.tasks(); ops.taskdrain(); ops.taskforward(); ops.taskresolve();
   assert.deepEqual(seen, [
     ["taskList", { assignee: "alice", status: "open", refersTo: "D", limit: "5", viewer: "member:alice" }],
@@ -725,10 +796,10 @@ test("R1 (K2575, D54): the administrator fallback picks the earliest active admi
     setup(w);
     return w.t.taskDrain({ actor: "alarm", now: iso(NOW) }).created.map((c) => [c.assignee, c.assignee_role, c.basis]);
   };
-  assert.deepEqual(route(() => {}), [["unassigned", "group-admin", "no project manager and no active administrator who can see it"]],
+  assert.deepEqual(route(() => {}), [["unassigned", "group-admin", word("tasks.why.project_manager_active")]],
     "hidden, neither administrator invited nor joined: unassigned, never handed to one who cannot see it");
   assert.deepEqual(route((w) => w.join(PRJ, "cal", { state: "invited" })),
-    [["cal", "group-admin", "no project manager; the RULED fallback to a group admin"]], "the earliest one admitted, passing over bea");
+    [["cal", "group-admin", "no project manager; the RULED fallback to a team admin"]], "the earliest one admitted, passing over bea");
   // negative controls: the project discoverable, or both admitted: the earliest administrator, as before
   assert.deepEqual(route((w) => {
     // set discoverable by its owner while active, the owner then revoked, so no owner routes it

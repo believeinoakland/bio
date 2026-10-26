@@ -692,9 +692,9 @@
   },
   {
    "key": "refusal.CHECKPOINT_REFUSED",
-   "en": "A judgment names a scenario of the plan, one of its phases that has a checkpoint, met or not_met, and a note of up to 500 characters. Nothing was written.",
+   "en": "A judgment names a scenario of the plan, one of its phases that has a checkpoint, whether it was met or not met, and a note of up to 500 characters. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: action-plans' translation, keyed by its code"
+   "note": "DEC-260: action-plans' translation, keyed by its code; B411 E1: plain words"
   },
   {
    "key": "refusal.CLAIM_BAD_SOURCE",
@@ -4088,7 +4088,7 @@
   },
   {
    "key": "action-plans.why.suspected_matter_inquiry",
-   "en": "a suspected matter: an inquiry still open, not a determination",
+   "en": "a suspected matter: a question still open, nothing decided yet",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4310,7 +4310,7 @@
   },
   {
    "key": "action-plans.says.addresses_someone_outside",
-   "en": "{id} addresses someone outside the team and rests only on suspected matters: nothing it serves is determined yet",
+   "en": "{id} addresses someone outside the team and rests only on suspected matters: nothing it serves is decided yet",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4334,13 +4334,13 @@
   },
   {
    "key": "action-plans.says.phase_checkpoint_leads",
-   "en": "phase {id}'s checkpoint leads nowhere when judged {miss}",
+   "en": "{id}: its checkpoint has nowhere to go when it is judged {miss}",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "action-plans.says.phase_addresses_someone",
-   "en": "phase {id} addresses someone outside the team and has no branch for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose not_met judgment leads somewhere",
+   "en": "{id} addresses someone outside the team and has no step for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose \"not met\" judgment leads somewhere",
    "protected": false,
    "note": "DEC-260"
   },

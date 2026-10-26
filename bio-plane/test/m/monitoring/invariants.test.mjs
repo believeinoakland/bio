@@ -2,7 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
-import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS,
+import { acquireRefusals } from "../acquisition/fixtures.mjs";
+import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS, NAMED_REQUEST_CHECKS,
          WATCH_END_CHECKS, MONITOR_SET_CHECKS }
   from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
@@ -24,7 +25,8 @@ test("R36 the daemon fetches only what store state authorizes: op=monitor takes 
   assert.deepEqual(w.net.seen, [LOC], "only the document's own locator was fetched");
   /* the archive fire's body names only the document address (R20's test drives the whole tick) */
   const calls = [];
-  w.capture.acquire = async (body) => { calls.push(body); return { status: 409, body: { ok: false, reason: "NOT_ELIGIBLE" } }; };
+  const notEligible = await acquireRefusals({ kind: "not_eligible" });
+  w.capture.acquire = async (body) => { calls.push(body); return notEligible; };
   for (let i = 0; i < 3; i++) await w.capture.recordSourceOutcome({ addressNorm: "https://gone.example.org/p", outcome: "fetch_failed", at: "2026-09-20T00:00:00Z" });
   await w.m.archiveTick(NOW_MS);
   assert.deepEqual(calls, [{ via: "archive.org", address: "https://gone.example.org/p" }]);
@@ -35,6 +37,7 @@ test("R37 detecting change is mechanical: a tick writes only monitor-tick's fiel
   const id = "INFO-2026-0810-mech";
   const b = w.monitored(id, LOC, "mech-v1");
   const before = w.text(id);
+  const baselineEntry = JSON.parse(w.record.readFile(id, "data/provenance.json").text).documents[0];
   w.net.routes[LOC] = serve("mech-v2");
   const r = await tick(w, id);
   assert.equal(r.body.status, "modified");
@@ -52,9 +55,11 @@ test("R37 detecting change is mechanical: a tick writes only monitor-tick's fiel
   walk(fb, fa, "");
   assert.ok(moved.length > 0);
   for (const m of moved) assert.ok(allowed.includes(m), `${m} is not in monitor-tick's field set (${allowed.join(", ")})`);
-  /* the register still names the baseline as the document's capture: the new bytes are a snapshot, not the current hash */
+  /* the register still names the baseline as the document's capture, first and unchanged: the new bytes are a later copy filed beside
+     it with its own entry (R79), not the current hash */
   const reg = JSON.parse(w.record.readFile(id, "data/provenance.json").text);
-  assert.deepEqual(reg.documents.map((d) => d.capture.sha256), [b.cap]);
+  assert.deepEqual(reg.documents.map((d) => d.capture.sha256), [b.cap, sha("mech-v2")]);
+  assert.deepEqual(reg.documents[0], baselineEntry);
   assert.equal(fa.reeval_pending.flag, true, "a change raises a flag for a member");
   assert.equal(w.manifest(id).at(-1).writer, "mechanical");
 });
@@ -62,7 +67,8 @@ test("R37 detecting change is mechanical: a tick writes only monitor-tick's fiel
 test("R38 an equality that costs nothing is not evidence: a shell's match never reads unchanged; a rendered capture's content is undetermined on every tick; a plain document still reads unchanged", async () => {
   const w = world();
   const loc = "https://spa.example.org/a";
-  const shell = `<!DOCTYPE html><html><head><title>A</title><script src="/static/js/main.1.js"></script></head><body><div id="root"></div><noscript>You need to enable JavaScript to run this app.</noscript></body></html>`;
+  /* a CERTAIN empty frame (site-profiles R2): a mount point, a framework state and no readable text */
+  const shell = `<html><head><script src="/app.1.js"></script></head><body><div id="root"></div><script>window.__INITIAL_STATE__={}</script><!--${"x".repeat(2400)}--></body></html>`;
   w.monitored("INFO-2026-0820-shell", loc, shell);
   w.net.routes[loc] = serve(shell, "text/html");
   const s = await tick(w, "INFO-2026-0820-shell");
@@ -105,7 +111,7 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   const w = world();
   assert.deepEqual(MONITORING_TABLES.map((t) => [t.name, t.keys]),
     [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []], ["monitor_address_frequency", []],
-     ["monitor_address_end", []], ["monitor_gathering_run", ["bundle_id"]]]);
+     ["monitor_address_end", []], ["monitor_address_look", []], ["monitor_gathering_run", ["bundle_id"]]]);
   /* the link sweep's tables are link-sweep's (N506): this module neither creates nor declares them */
   assert.deepEqual(w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('sweep_runs', 'sweep_filed')`), []);
   const id = "INFO-2026-0850-purge";
@@ -122,7 +128,8 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
                                           authority: "Town Clerk", criticality: "crucial", status: "open" }] });
   assert.equal(w.promote(gid, infoMd(gid, "https://records.example.org/h", { enabled: false }),
     { files: [{ path: "data/gathering.json", text: g, bytes: Buffer.byteLength(g), sha256: sha(g) }] }).ok, true);
-  w.capture.acquire = async () => ({ status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } });
+  const refused = await acquireRefusals({ kind: "source_refused" });
+  w.capture.acquire = async () => refused;
   const real = w.m.monitor;
   w.m.monitor = async () => { throw new Error("down"); };
   await w.m.cadenceTick(NOW_MS + 2 * 86400000);   /* fails: its claim and epoch stay; the request is attempted */
@@ -138,11 +145,11 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   assert.deepEqual(all(), [0, 0, 0, 0, 0, 0]);
 });
 
-test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's; C-18.19 is R71's WATCH_END_REFUSED; C-18.20 and C-18.21 are R74's; C-18.16 to C-18.18 left with the link sweep, whose grammar and fence mint them (N506, K1206)", () => {
+test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's; C-18.19 is R71's WATCH_END_REFUSED; C-18.20 and C-18.21 are R74's; C-18.22 and C-18.23 are R75's; C-18.16 to C-18.18 left with the link sweep, whose grammar and fence mint them (N506, K1206)", () => {
   assert.deepEqual(Object.keys(MONITORING_CHECKS).sort(),
     ["BAD_FREQUENCY", "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_TICK_EXPORT_IS_THE_SHELL", "FREQUENCY_NO_REASON",
-     "GATHERING_REFUSED", "MACHINE_CANNOT_SET_FREQUENCY", "MACHINE_CANNOT_SET_MONITORING", "MONITOR_SET_REFUSED",
-     "NOT_A_SOURCE_OWNER", "NO_SUCH_ADDRESS", "WATCH_END_REFUSED"]);
+     "GATHERING_REFUSED", "MACHINE_CANNOT_SET_FREQUENCY", "MACHINE_CANNOT_SET_MONITORING", "MACHINE_CANNOT_SET_REQUEST",
+     "MONITOR_SET_REFUSED", "NAMED_REQUEST_REFUSED", "NOT_A_SOURCE_OWNER", "NO_SUCH_ADDRESS", "WATCH_END_REFUSED"]);
   assert.deepEqual(Object.fromEntries(Object.entries(MONITORING_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
     DRIVE_TICK_EXPORT_IS_THE_SHELL: ["C-48.8", "src/monitoring/index.mjs monitor > is-drive-tick-export"],
     DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: ["C-48.9", "src/monitoring/index.mjs monitor > is-drive-tick-bytes"],
@@ -155,6 +162,8 @@ test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, n
     WATCH_END_REFUSED: ["C-18.19", "src/monitoring/index.mjs addressWatchEnd > is-watch-end-day"],
     MACHINE_CANNOT_SET_MONITORING: ["C-18.20", "src/monitoring/index.mjs monitorSet > is-monitor-set-member"],
     MONITOR_SET_REFUSED: ["C-18.21", "src/monitoring/index.mjs monitorSet > is-monitor-set-shape"],
+    MACHINE_CANNOT_SET_REQUEST: ["C-18.22", "src/monitoring/named-requests.mjs namedRequestSet > is-named-request-member"],
+    NAMED_REQUEST_REFUSED: ["C-18.23", "src/monitoring/named-requests.mjs namedRequestSet > is-named-request-shape"],
   });
   for (const r of Object.values(MONITORING_CHECKS)) {
     assert.equal(typeof r.translation, "string");
@@ -162,7 +171,7 @@ test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, n
     assert.ok(Object.isFrozen(r));
   }
   assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...WATCH_END_CHECKS,
-                                        ...MONITOR_SET_CHECKS });
+                                        ...MONITOR_SET_CHECKS, ...NAMED_REQUEST_CHECKS });
   /* no code is held twice: none of this module's rows is acquisition's, and no C-48 row of acquisition's is this module's */
   for (const code of Object.keys(MONITORING_CHECKS)) assert.equal(code in ACQUISITION_CHECKS, false, code);
   assert.deepEqual(Object.values(ACQUISITION_CHECKS).map((r) => r.check).filter((c) => c === "C-48.8" || c === "C-48.9"), []);

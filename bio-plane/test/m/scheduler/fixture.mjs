@@ -1,9 +1,21 @@
 /* scheduler's test world: a Durable Object storage that holds the one alarm and a key-value map and logs every call,
    and owners whose services answer what a test sets and record every call made to them. */
 import { Scheduler } from "../../../src/scheduler/index.mjs";
+import { world as monitoringWorld, NOW_MS as MONITORING_NOW } from "../monitoring/fixture.mjs";
+import { batchTickAnswers } from "../file-safety/fixtures.mjs";
+import { recordTransitionsAnswers } from "../duties/fixtures.mjs";
+
+/* What each owner answers when a test sets nothing, taken from the owner's own code: monitoring's ticks over an empty world,
+   file-safety's five batches on an empty store, duties' finished pass over an empty record. Cloned at every answer. */
+const monitoringIdle = monitoringWorld();
+const MONITORING = { archiveTick: await monitoringIdle.m.archiveTick(MONITORING_NOW, null), cadenceTick: await monitoringIdle.m.cadenceTick(MONITORING_NOW, null),
+                     deadlineRecheck: await monitoringIdle.m.deadlineRecheck(MONITORING_NOW) };
+const FILE_IDLE = await batchTickAnswers();
+const DUTIES_IDLE = recordTransitionsAnswers().empty;
 
 export function storage() {
   const kv = new Map();
+  const beat = new Map();
   const log = [];
   let alarm = null;
   return {
@@ -13,8 +25,11 @@ export function storage() {
     async getAlarm() { log.push(["getAlarm"]); return alarm; },
     async setAlarm(t) { log.push(["setAlarm", t]); alarm = t; },
     async deleteAlarm() { log.push(["deleteAlarm"]); alarm = null; },
-    async get(k) { log.push(["get", k]); return kv.has(k) ? structuredClone(kv.get(k)) : undefined; },
-    async put(k, v) { log.push(["put", k]); kv.set(k, structuredClone(v)); },
+    async get(k) { if (k === "sched_beat") return beat.get(k); log.push(["get", k]); return kv.has(k) ? structuredClone(kv.get(k)) : undefined; },
+    /* the heartbeat (R28, R29) is the one value every firing writes; it is kept in `beat`, outside `kv` and `log`, so the tests
+       that say what else a path writes or holds (R17, R18) keep saying it; the R28 tests read and seed `beat.get("sched_beat")` */
+    beat,
+    async put(k, v) { if (k === "sched_beat") { beat.set(k, v); return; } log.push(["put", k]); kv.set(k, structuredClone(v)); },
   };
 }
 
@@ -37,14 +52,14 @@ export function owners(set = {}) {
       archiveDue: (now) => rec("monitoring.archiveDue", [now], v("archive-monitor", "due", now, now)),
       archiveWake: (now) => rec("monitoring.archiveWake", [now], v("archive-monitor", "wake", now)),
       archiveTick: async (now, rank) => rec("monitoring.archiveTick", [now, rank], v("archive-monitor", "tick", now,
-        { configured: true, at: null, checked: 0, epoch: null, eligible: [], fired: [], failed: [], skipped: [] })),
+        structuredClone(MONITORING.archiveTick))),
       cadenceDue: (now) => rec("monitoring.cadenceDue", [now], v("monitor-cadence", "due", now)),
       cadenceWake: (now) => rec("monitoring.cadenceWake", [now], v("monitor-cadence", "wake", now)),
-      cadenceTick: async (now, rank) => rec("monitoring.cadenceTick", [now, rank], v("monitor-cadence", "tick", now, { ticked: [] })),
+      cadenceTick: async (now, rank) => rec("monitoring.cadenceTick", [now, rank], v("monitor-cadence", "tick", now, structuredClone(MONITORING.cadenceTick))),
       deadlineRecheckDue: (now) => rec("monitoring.deadlineRecheckDue", [now], v("deadline-recheck", "due", now)),   /* R50 */
       deadlineRecheckWake: (now) => rec("monitoring.deadlineRecheckWake", [now], v("deadline-recheck", "wake", now)),
       deadlineRecheck: async (now) => rec("monitoring.deadlineRecheck", [now], v("deadline-recheck", "tick", now,
-        { ok: true, at: null, marked: [], failed: [], truncated: false, escalations: null })),   /* R34, R35 */
+        structuredClone(MONITORING.deadlineRecheck))),   /* R34, R35 */
     },
     linkSweep: {   /* link-sweep R4 */
       sweepDue: (now) => rec("linkSweep.sweepDue", [now], v("gathering-sweep", "due", now)),
@@ -107,7 +122,7 @@ export function owners(set = {}) {
         { configured: true, at: now, epoch: null, read: 0, captured: 0, unscheduled: [], member_act_required: [], failed: [], paused: false })),
     },
     duties: { recordTransitions: (a) => rec("duties.recordTransitions", [a], v("duty-transitions", "tick", a,
-      { ok: true, as_of: a.asOf, duties_read: 0, recorded: 0, cursor: null, done: true })) },
+      { ...structuredClone(DUTIES_IDLE), as_of: a.asOf })) },
     people: { evaluateChecks: (a) => rec("people.evaluateChecks", [a], v("interest-checks", "tick", a, { ok: true, evaluated: 0, remaining: false })) },
     moneyChecks: { runDetectors: (a) => rec("moneyChecks.runDetectors", [a], v("money-detectors", "tick", a,
       { ok: true, written: 0, unchanged: 0, raised: 0, skipped: {}, persons_skipped: 0, detectors: 0, remaining: false, cursor: null })) },
@@ -147,11 +162,10 @@ export function owners(set = {}) {
         if (r && r.ok) this.listeners.push(fn);
         return rec("fileSafety.onFileWork", [module], r);
       },
-      scanBatch: async (a) => rec("fileSafety.scanBatch", [a], v("file-scan", "tick", a, { ok: true, scanned: 0, found: 0, not_scanned: 0, remaining: 0 })),
-      renderBatch: async (a) => rec("fileSafety.renderBatch", [a], v("file-render", "tick", a,
-        { ok: true, rendered: 0, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0 }, remaining: 0 })),
-      deeperBatch: async (a) => rec("fileSafety.deeperBatch", [a], v("file-deeper", "tick", a, { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 })),
-      forwardSecurityCounts: async (a) => rec("fileSafety.forwardSecurityCounts", [a], v("file-forward", "tick", a, { ok: true, sent: [], failed: [] })),
+      scanBatch: async (a) => rec("fileSafety.scanBatch", [a], v("file-scan", "tick", a, structuredClone(FILE_IDLE.scan))),
+      renderBatch: async (a) => rec("fileSafety.renderBatch", [a], v("file-render", "tick", a, structuredClone(FILE_IDLE.render))),
+      deeperBatch: async (a) => rec("fileSafety.deeperBatch", [a], v("file-deeper", "tick", a, structuredClone(FILE_IDLE.deeper))),
+      forwardSecurityCounts: async (a) => rec("fileSafety.forwardSecurityCounts", [a], v("file-forward", "tick", a, structuredClone(FILE_IDLE.forward))),
     },
     /* T39-15 (R25): a stand-in shaped as case-carriage R15 and R17: `copyWake(now)` (the `document-copy` consumer's `wake`
        in `set`, the instant in ms or null, none by default), `copyBatch({limit})` answering a Promise, and `onCopyWork`,
@@ -165,6 +179,21 @@ export function owners(set = {}) {
         const r = v("copy-work", "tick", null, { ok: true, module });
         if (r && r.ok) this.listeners.push(fn);
         return rec("caseCarriage.onCopyWork", [module], r);
+      },
+    },
+    /* G55 (R7, R24): a stand-in shaped as calculations R14 states its background ingest: `ingestDue(now)` and `ingestWake(now)`
+       (the `ingest` consumer's `due` and `wake` in `set`; none by default), `ingestTick(now)` answering a Promise, and
+       `onIngestWork(module, fn)`, whose listeners it keeps and whose answer is `set["ingest-work"].tick` ({ok: true, module}). */
+    calculations: {
+      listeners: [],
+      ingestDue: (now) => rec("calculations.ingestDue", [now], v("ingest", "due", now)),
+      ingestWake: (now) => rec("calculations.ingestWake", [now], v("ingest", "wake", now)),
+      ingestTick: async (now) => rec("calculations.ingestTick", [now], v("ingest", "tick", now,
+        { ok: true, ingest: null, state: "ingesting", rows_done: 0, finished: 0 })),
+      onIngestWork(module, fn) {
+        const r = v("ingest-work", "tick", null, { ok: true, module });
+        if (r && r.ok) this.listeners.push(fn);
+        return rec("calculations.onIngestWork", [module], r);
       },
     },
     inquiry: {
@@ -189,8 +218,11 @@ export const COPY_CONSUMER = "document-copy";
 /** R26's consumer: a world includes `question-explorer` only when a test asks (`explore`), or names it in `set`. */
 export const EXPLORE_CONSUMER = "question-explore";
 
+/** G55's consumer: a world includes `calculations` only when a test asks (`ingest`), or names it in `set`. */
+export const INGEST_CONSUMER = "ingest";
+
 /** A scheduler over a fresh storage and the owners above; `env` its bindings; `zone` the group's time zone. */
-export function world(set = {}, env = null, { daily = false, files = false, copies = false, explore = false, zone = null, st = null } = {}) {
+export function world(set = {}, env = null, { daily = false, files = false, copies = false, explore = false, ingest = false, zone = null, st = null } = {}) {
   const store = st || storage();
   const w = owners(set || {});
   const of = { ...w.of };
@@ -198,6 +230,7 @@ export function world(set = {}, env = null, { daily = false, files = false, copi
   if (!files && !FILE_CONSUMERS.some((n) => set && n in set)) delete of.fileSafety;
   if (!copies && !(set && COPY_CONSUMER in set)) delete of.caseCarriage;
   if (!explore && !(set && EXPLORE_CONSUMER in set)) delete of.questionExplorer;
+  if (!ingest && !(set && INGEST_CONSUMER in set)) delete of.calculations;
   const s = new Scheduler({ storage: store, env, owners: of, zone: () => zone });
   return { s, st: store, calls: w.calls, o: w.o, set };
 }
@@ -215,3 +248,7 @@ export function consumer(name, { key, due = null, wake = null, tick = null } = {
 /** The storage calls other than the probe seam's value: the alarm calls alone, for a test that nothing else is written. */
 export const writes = (st) => st.log.filter(([m]) => m === "setAlarm" || m === "deleteAlarm" || m === "put");
 export const NOW = Date.parse("2026-09-28T12:00:00Z");
+
+/** Pins the real clock at `NOW` for the test `t`, so an `arm` a notice makes (it reads `Date.now()`) sees the fixed instants
+ *  these tests seed their alarms and wakes at: an alarm more than a minute behind the clock is spent, not armed (R4, R11). */
+export function pinNow(t) { t.mock.method(Date, "now", () => NOW); }

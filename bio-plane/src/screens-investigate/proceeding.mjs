@@ -6,6 +6,7 @@
 
 import { PARTS } from "./parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
+import { rereading } from "./rereads.mjs";
 
 function reads(view) {
   const id = String(view.subject || "");
@@ -22,7 +23,7 @@ function reads(view) {
     parties: { op: "partiesof", query: { proceeding: id } },
     dates: { op: "proceedingdates", query: { proceeding: id } },
     follows: { op: "follows", query: {} },
-    docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
     people: { op: "peopledirectory", query: { limit: "200" } },
     standards: { op: "standards", query: { limit: "200" } },
   });
@@ -44,12 +45,17 @@ function render(cs, view) {
   const failedRead = ["courts", "institutions"].find((n) => view.data[n] && view.data[n].state === "failed");
   const chosenForum = forums.find((f) => f.value === view.ui["choice:pr-forum"]) || forums[0] || null;
   const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
+  /* R47: the kinds `affordances` answers (`proceeding_kinds`, its R67: `[{kind, label, forum_kind}]`, read at each call) for the forum
+     chosen, each worded `proceeding.kind.<kind>` where the key is held and by the profile's own `label` (record data) otherwise;
+     an answer without the key is a read that failed, `[]` (or none for this forum) is empty, and neither is read as the other */
   const profileKinds = vocab && vocab.vocabularies && Array.isArray(vocab.vocabularies.proceeding_kinds) ? vocab.vocabularies.proceeding_kinds.filter((k) => k && typeof k.kind === "string") : null;
-  const fallback = { court: ["civil", "writ", "appeal"], commission: ["complaint"] };
-  const keyed = ["civil", "writ", "appeal", "complaint"];
-  const kindList = (profileKinds
-    ? profileKinds.filter((k) => !chosenForum || !chosenForum.forumKind || !k.forum_kind || k.forum_kind === chosenForum.forumKind).map((k) => ({ value: k.kind, text: keyed.includes(k.kind) ? P.plain(cs, "proceeding.kind." + k.kind) : String(k.label || k.kind) }))
-    : (fallback[chosenForum && chosenForum.forumKind] || keyed).map((k) => ({ value: k, text: P.plain(cs, "proceeding.kind." + k) })));
+  const heldKind = (k) => cs.w("proceeding.kind." + k) !== cs.esc("proceeding.kind." + k);
+  const kindList = (profileKinds || []).filter((k) => !chosenForum || !chosenForum.forumKind || !k.forum_kind || k.forum_kind === chosenForum.forumKind)
+    .map((k) => ({ value: k.kind, text: heldKind(k.kind) ? P.plain(cs, "proceeding.kind." + k.kind) : String(k.label || k.kind) }));
+  const kindField = view.data.vocab && view.data.vocab.state === "ok" && !profileKinds ? cs.state({ state: "failed", value: null, refusal: null }, () => "")
+    : view.data.vocab && view.data.vocab.state !== "ok" ? cs.state(view.data.vocab, () => "")
+    : kindList.length ? cs.choice("pr-kind", "screen.proceeding.kind", [{ value: "", text: "" }].concat(kindList), {}) + `<p class="mk-small">${cs.w("proceeding.kind.help")}</p>`
+    : cs.state({ state: "empty", value: null, refusal: null }, () => "");
   const addCourt = (summary) => `<details class="mk-details" open><summary>${cs.w(summary)}</summary>`
     + (summary === "screen.proceeding.court.none.summary" ? `<p>${cs.w("court.none")}</p>` : "")
     + cs.field("pr-court-name", "court.add.name", { help: "court.add.help" })
@@ -58,7 +64,7 @@ function render(cs, view) {
   const create = (failedRead ? cs.state(failedRead, view, () => "") : "") + (forums.length ? cs.choice("pr-forum", "screen.proceeding.forum", forums, { acts: {} }) + `<p class="mk-small">${cs.w("screen.proceeding.court.help")}</p>` : "")
     + (!forums.length && settled ? addCourt("screen.proceeding.court.none.summary") : forums.length ? addCourt("court.add") : "")
     + courtAdded
-    + cs.choice("pr-kind", "screen.proceeding.kind", kindList, {}) + `<p class="mk-small">${cs.w("proceeding.kind.help")}</p>`
+    + kindField
     + cs.field("pr-number", S + "number", {}) + cs.field("pr-label", S + "label", { help: S + "label.help" })
     + cs.field("pr-note", S + "note", { area: true, rec: true })
     + cs.act("entitycreate", { label: "act.entitycreate.label.proceeding", tone: "primary" });
@@ -100,8 +106,8 @@ function render(cs, view) {
       P.refOf(cs, x.party, x.party, []), x.line && x.line.citation ? P.refOf(cs, x.line.citation.captureSha || x.line.citation.capture_sha || "", cs.w(S + "cited"), [], "capture") : "")).join(""))
     : ""))
     + cs.choice("pr-party", S + "party", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
-    + cs.choice("pr-role", S + "rolepick", ["petitioner", "respondent", "plaintiff", "defendant", "appellant", "appellee", "intervenor", "amicus", "other"].map((r) => [r, S + "roles." + r]), {})
-    + P.docChoice(cs, view, "pr-doc")
+    + cs.choice("pr-role", S + "rolepick", [{ value: "", text: "" }].concat(["petitioner", "respondent", "plaintiff", "defendant", "appellant", "appellee", "intervenor", "amicus", "other"].map((r) => [r, S + "roles." + r])), {})
+    + P.docChoice(cs, view, "pr-doc", { passage: false, drive: true }) + P.passagePick(cs, view, "pr-doc", "pr-passage", P.later)
     + cs.act("recordline", { label: "act.recordline.label.proceeding" })));
   out.push(cs.sec(S + "register.head", cs.state("follows", view, (v) => {
     const regs = (v.items || []).filter((x) => x.kind === "register" && x.subject && x.subject.proceeding === id);
@@ -117,6 +123,10 @@ function render(cs, view) {
   const orders = parties.map((x) => ({ party: x.party, d: P.later(cs, view, "duties:" + x.party, "dutiesof", { query: { entity: x.party, as: "obligor" } }) }));
   const held = orders.flatMap((o) => (o.d.state === "ok" ? (o.d.value.duties || []).filter((u) => !u.withdrawn && (u.arising_in === id || (u.source && u.source.kind === "court"))) : []));
   const loading = orders.find((o) => o.d.state !== "ok");
+  /* R34 (K5148; WALK-FINAL-08 D3): the passage that says a decision interprets a law is one of the decision's own, chosen by its words, never a content id */
+  const courtSel = String(view.ui["choice:pr-court"] || "");
+  const cq = courtSel ? P.later(cs, view, "std:" + courtSel, "standard", { query: { id: courtSel } }) : null;
+  const courtPassages = cq && cq.state === "ok" && cq.value ? P.textOptions(cs, view, cq.value.texts) : [];
   out.push(cs.sec(S + "orders", (held.length
     ? cs.sheet(held.map((u) => cs.row(cs.mark("kind", "todo"), `${cs.esc((u.performance && u.performance.act) || "")} <span class="mk-small">${P.refOf(cs, u.obligor, u.obligor, [])} · ${cs.esc((u.adoption && u.adoption.clause) || "")}</span>`,
       u.time && u.time.date ? cs.due(u.time.date, u.in_force && u.in_force.state === "met" ? "met" : "") : cs.mark("gap", "undetermined", { reason: cs.w(S + "nodue") }))).join(""))
@@ -124,15 +134,17 @@ function render(cs, view) {
     + cs.choice("pr-obligor", S + "obligor", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {}) + cs.field("pr-act", S + "act", { area: true, rec: true })
     + cs.field("pr-clause", S + "clause", {}) + cs.field("pr-due", S + "due", { type: "date" })
     + cs.act("declare", { label: "act.declare.label.proceeding" })
-    + cs.choice("pr-court", S + "court", view.parts.options(view, "standards", (v) => v.items, (x) => ({ value: x.id, text: x.cite || x.id })), {}) + cs.choice("pr-law", S + "law", view.parts.options(view, "standards", (v) => v.items, (x) => ({ value: x.id, text: x.cite || x.id })), {}) + cs.field("pr-citation", S + "citation", {})
-    + cs.choice("pr-type", S + "type", ["interprets", "applies", "holds_invalid", "requires"].map((k) => [k, S + "type." + k]), {})
+    + cs.choice("pr-court", S + "court", [{ value: "", text: "" }].concat(view.parts.options(view, "standards", (v) => v.items, (x) => ({ value: x.id, text: x.cite || x.id }))), { acts: {} })
+    + cs.choice("pr-law", S + "law", [{ value: "", text: "" }].concat(view.parts.options(view, "standards", (v) => v.items, (x) => ({ value: x.id, text: x.cite || x.id }))), {})
+    + cs.choice("pr-citation", "form.choose.passage", [{ value: "", text: "" }].concat(courtPassages), {})
+    + cs.choice("pr-type", S + "type", [{ value: "", text: "" }].concat(["interprets", "applies", "holds_invalid", "requires"].map((k) => [k, S + "type." + k])), {})
     + cs.act("courtlink", { label: "act.courtlink.label.proceeding" })
     + `<p class="mk-note">${cs.w(S + "facts")}</p>`));
   out.push(cs.sec(S + "register", create));
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
   /* "Register the proceeding" from its caption: the court, the number, a neutral label (the note: the member's own words) */
   { op: "entitycreate", label: "act.entitycreate.label.proceeding", reasonField: "note",
     send(view, el, cs) {
@@ -146,7 +158,8 @@ const acts = [
       const forum = String(cs.value("pr-forum") || "").trim(), number = String(cs.value("pr-number") || "").trim();
       const kind = String(cs.value("pr-kind") || "").trim(), label = String(cs.value("pr-label") || "").trim(), note = String(cs.value("pr-note") || "").trim();
       if (!forum || !number || !kind || !note) return { refuse: "screen.proceeding.create.empty" };
-      return { body: Object.assign({ kind: "proceeding", note, proceeding: { forum, kind, number } }, label ? { label, aliases: [label] } : {}) };
+      /* `label` is required by `entitycreate`: the neutral label she gave, else the case number as the caption states it */
+      return { body: Object.assign({ kind: "proceeding", label: label || number, note, proceeding: { forum, kind, number } }, label ? { aliases: [label] } : {}) };
     },
     done(view, answer, cs) {
       const r = answer && answer.result !== undefined ? answer.result : answer;
@@ -162,9 +175,9 @@ const acts = [
   { op: "recordline", label: "act.recordline.label.proceeding",
     send(view, el, cs) {
       const from = String(cs.value("pr-party") || "").trim();
-      const basis = view.parts.chosen(cs, "pr-doc");
-      if (!from || !basis) return { refuse: "screen.proceeding.party.empty" };
-      return { body: { kind: "party_to", from, to: String(view.subject || ""), role: String(cs.value("pr-role") || "other"), basis } };
+      const basis = view.parts.chosen(cs, "pr-doc", "pr-passage"), role = String(cs.value("pr-role") || "").trim();
+      if (!from || !basis || !role) return { refuse: "screen.proceeding.party.empty" };
+      return { body: { kind: "party_to", from, to: String(view.subject || ""), role, basis } };
     } },
   /* "Follow its register": a register needing a login brings new filings only by a member's own capture */
   { op: "followregister", label: "act.followregister.label.proceeding",
@@ -178,17 +191,20 @@ const acts = [
     send(view, el, cs) {
       const obligor = String(cs.value("pr-obligor") || "").trim(), act = String(cs.value("pr-act") || "").trim();
       const clause = String(cs.value("pr-clause") || "").trim(), date = String(cs.value("pr-due") || "").trim();
-      if (!obligor || !act || !clause) return { refuse: "screen.proceeding.order.empty" };
-      return { body: Object.assign({ modality: "duty", obligor, performance: { act }, source: { kind: "court" }, clause, arising_in: String(view.subject || "") },
+      /* the order is the court standard chosen in "pr-court": the store refuses a court source naming none (duties R30) */
+      const order = String(cs.value("pr-court") || "").trim();
+      if (!obligor || !act || !clause || !order) return { refuse: "screen.proceeding.order.empty" };
+      return { body: Object.assign({ modality: "duty", obligor, performance: { act }, source: { kind: "court", standard: order }, clause, arising_in: String(view.subject || "") },
         date ? { trigger: { kind: "date", date }, time: { basis: "window", date } } : { trigger: { kind: "source" }, time: { basis: "window" } }) };
     } },
   { op: "courtlink", label: "act.courtlink.label.proceeding",
     send(view, el, cs) {
       const from = String(cs.value("pr-court") || "").trim(), to = String(cs.value("pr-law") || "").trim(), citation = String(cs.value("pr-citation") || "").trim();
-      if (!from || !to || !citation) return { refuse: "screen.proceeding.link.empty" };
-      return { body: { type: String(cs.value("pr-type") || "interprets"), from, to, citation } };
+      const type = String(cs.value("pr-type") || "").trim();
+      if (!from || !to || !citation || !type) return { refuse: "screen.proceeding.link.empty" };
+      return { body: { type, from, to, citation } };
     } },
-];
+], ["courts", "institutions", "vocab", "entity", "parties", "dates", "follows", "people", "standards"]);
 
 const PROCEEDING_KEYS = [
   "screen.proceeding.none", "screen.proceeding.caption", "screen.proceeding.parties", "screen.proceeding.role", "screen.proceeding.roles.plaintiff",
@@ -200,7 +216,7 @@ const PROCEEDING_KEYS = [
   "screen.proceeding.new", "screen.proceeding.read", "screen.proceeding.notread", "screen.proceeding.gated", "screen.proceeding.register.address",
   "screen.proceeding.login", "screen.proceeding.login.yes", "screen.proceeding.login.note", "screen.proceeding.orders", "screen.proceeding.nodue",
   "screen.proceeding.obligor", "screen.proceeding.act", "screen.proceeding.clause", "screen.proceeding.due", "screen.proceeding.court",
-  "screen.proceeding.law", "screen.proceeding.citation", "screen.proceeding.type", "screen.proceeding.type.interprets",
+  "screen.proceeding.law", "screen.proceeding.type", "screen.proceeding.type.interprets",
   "screen.proceeding.type.applies", "screen.proceeding.type.holds_invalid", "screen.proceeding.type.requires", "screen.proceeding.facts",
   "screen.proceeding.register", "screen.proceeding.forum", "screen.proceeding.number", "screen.proceeding.kind", "screen.proceeding.kind.help",
   "screen.proceeding.label", "screen.proceeding.label.help", "screen.proceeding.note", "screen.proceeding.create.empty",

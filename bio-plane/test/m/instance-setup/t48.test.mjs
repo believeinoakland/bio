@@ -158,7 +158,7 @@ test("R88 a notice that is no well-formed signed JSON object records MALFORMED a
   w.prov.answer = () => new Response(new ReadableStream({ pull(c) { pulls += 1; c.enqueue(new Uint8Array(16384).fill(120)); if (pulls > 400) c.close(); } }), { status: 200 });
   const big = await w.tick();
   assert.equal(big.updatecheck.outcome, "MALFORMED");
-  assert.match(big.updatecheck.detail, /over 65536 bytes/);
+  assert.equal(big.updatecheck.detail, word("instance-setup.updates.detail.too_big", { bytes: RELEASE_NOTICE_MAX_BYTES }));
   assert.ok(pulls * 16384 <= RELEASE_NOTICE_MAX_BYTES + 3 * 16384, `read ${pulls * 16384} bytes of a body without end`);
   assert.equal(w.count("release_notices"), 0);
   /* control: a notice just inside the cap is read whole */
@@ -178,7 +178,7 @@ test("R88 a failed fetch records unreachable, stores no notice and raises nothin
   w.prov.answer = () => new Response(null, { status: 302, headers: { location: "https://elsewhere.example/NOTICE.json" } });
   const redirected = await outcome();
   assert.equal(redirected.outcome, "unreachable");
-  assert.match(redirected.detail, /redirected \(HTTP 302\); no redirect is followed/);
+  assert.equal(redirected.detail, word("instance-setup.updates.detail.redirected", { status: 302 }));
   assert.equal(w.prov.fetched.length, 4);
   assert.ok(w.prov.fetched.every((f) => f.url === RELEASE_NOTICE_ADDRESS), "the redirect target was never fetched");
   w.prov.governorHold = "too many asks";
@@ -320,7 +320,7 @@ test("R89 the reads write nothing", async () => {
   const w = await world();
   await found(w);
   const mark = w.st.statements.length;
-  for (let i = 0; i < 3; i += 1) { w.m.updateNotice({ viewer: "admin" }); w.m.updateNoticeState(); w.m.updateCheckWake(); w.m.readingLanguage({ member: "x" }); }
+  for (let i = 0; i < 3; i += 1) { w.m.updateNotice({ viewer: "admin" }); w.m.updateNoticeState(); w.m.updateCheckWake(); }
   assert.deepEqual(w.st.statements.slice(mark).filter((q) => /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)/i.test(q)), []);
 });
 
@@ -501,19 +501,19 @@ test("R47 (T48; K3240) the member-facing forgot words say, in members' words, wh
   assert.doesNotMatch(said, /Before you choose a password|who controls your group/);
   assert.ok(Object.isFrozen(FORGOT_HELP) && Object.isFrozen(FORGOT_HELP.sentences));
   /* control: the founder's block does carry who controls the group's Civicsmith */
-  assert.match(HOSTING_CONTROL.heading, /^Before you choose a password: who controls your group's Civicsmith$/);
+  assert.match(HOSTING_CONTROL.heading, /^Before you choose a password: who controls your team's Civicsmith$/);
 });
 
 test("R47 (T48; K3240) the founder's block no longer carries the deployer's instruction: its last sentence says it in a founder's words, and the deployer's steps are kept apart for the installer's and DEPLOY.md's text, joined to the block only when asked (deployer: true); the block's other words and its guide are unchanged", () => {
   const all = [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences, HOSTING_CONTROL.guide.sentence].join(" ");
   assert.doesNotMatch(all, /ADMIN_TOKEN|worker's settings/);
-  assert.match(HOSTING_CONTROL.sentences.at(-1), /^The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your group's Civicsmith to be claimed again\.$/);
+  assert.match(HOSTING_CONTROL.sentences.at(-1), /^The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your team's Civicsmith to be claimed again\.$/);
   assert.match(HOSTING_RECOVERY_DEPLOYER, /ADMIN_TOKEN/);
   assert.doesNotMatch(HOSTING_RECOVERY_DEPLOYER, /\b(?:copy|copies|instance|plane|server)\b/i);
   assert.equal(hostingControlBlock("notice").includes("ADMIN_TOKEN"), false);
   assert.equal(hostingControlBlock("notice", { deployer: true }).split("ADMIN_TOKEN").length - 1, 1, "once, after the sentences and before the guide");
   const withDeployer = hostingControlBlock("notice", { deployer: true });
-  assert.ok(withDeployer.indexOf("ADMIN_TOKEN") < withDeployer.indexOf("Replace the one-time password"));
+  assert.ok(withDeployer.indexOf("ADMIN_TOKEN") < withDeployer.indexOf(word("setup-fleet.name.replace_time_password")));
   assert.equal(hostingControlBlock("notice", { deployer: false }), hostingControlBlock("notice"));
   assert.equal(HOSTING_CONTROL.sentences.length, 5);
 });

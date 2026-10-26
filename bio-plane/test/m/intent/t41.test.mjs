@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { INTENT_CHECKS, NONE_EXISTS_SAYS } from "../../../src/intent/index.mjs";
 import { INQUIRY_WARNINGS } from "../../../src/inquiry/index.mjs";
 import { seeded, V, MACHINE, projMd } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COND_STAGES = { progression: "proc", entity: "ENT-1", relation: "member_of",
                       required: { grade: null, stages: ["need", "award"] }, satisfied: { share: 50 } };
@@ -147,7 +148,7 @@ test("R33 R4 R6 an instance short of a required stage meets it when the record h
   assert.deepEqual(meeting, ["ENT-2", "ENT-4"], "ENT-2's award met by the answer");
   assert.deepEqual(r.instances.meeting.find((x) => x.entity_id === "ENT-2").none_exists,
                    [{ stage: "award", action: "ACT-2026-0001-records", ord: 3, at: "2026-09-20T00:00:00Z", says: NONE_EXISTS_SAYS }]);
-  assert.equal(NONE_EXISTS_SAYS, "answered: none exists");
+  assert.equal(NONE_EXISTS_SAYS, word("intent.answered_none_exists"));
   assert.equal(r.instances.meeting.find((x) => x.entity_id === "ENT-4").none_exists, undefined, "a placed stage is not asked");
   /* negative control: ENT-3, whose request the reader does not answer, stays short of award */
   assert.deepEqual(r.short.map((x) => [x.entity_id, x.why]), [["ENT-3", { stages_missing: ["award"] }]]);

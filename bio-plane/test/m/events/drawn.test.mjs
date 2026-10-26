@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, MEMBER, OUTSIDER, MACHINE, ZONE } from "./fixture.mjs";
 import { ITEM_PARTICIPANTS_MAX } from "../../../src/events/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const doc = { kind: "document" };
 const PROJ = "PROJ-2026-0001-f";
@@ -91,7 +91,7 @@ test("R50 an item placed nowhere answers grade null with grade_why saying no att
     const it = item(t, id);
     assert.ok(t.world.placed_nowhere.includes(it), id);
     assert.equal(it.grade, null);
-    assert.match(it.grade_why, /no attestation you can see dates this event/);
+    assert.deepEqual(it.grade_why, { key: "events.why.grade_placed_nowhere", vars: {} });
     assert.equal(it.participants_total, 1);
   }
   /* control: the member who may see the governing attestation is answered its grade */
@@ -99,8 +99,8 @@ test("R50 an item placed nowhere answers grade null with grade_why saying no att
   const dated = w.event({ value: "2026-06-02", participants: part }).event_id;
   w.st.sql.exec(`UPDATE event_when_cache SET value='2020-01-01' WHERE event_id=?`, dated);
   const stale = item(w.ev.timeline({ set: [p], viewer: MEMBER }), dated);
-  assert.deepEqual([stale.grade, stale.why], [null, "cache stale"]);
-  assert.match(stale.grade_why, /cache stale/);
+  assert.deepEqual([stale.grade, stale.why], [null, { key: "events.why.cache_stale", vars: {} }]);
+  assert.deepEqual(stale.grade_why, { key: "events.why.grade_time_unread", vars: {} });
 });
 
 test("R40 a role is answered only through an attestation in sight: a role resting on a hidden capture is not answered beside a visible one (eventsFor, timeline)", () => {
@@ -133,7 +133,7 @@ test("R51 two meetings with day-precision whens on the same day, related precede
   const q = w.ev.sequence({ a, b, viewer: MEMBER });
   assert.deepEqual([q.answer, q.basis, q.relation_id], ["before", "cited", r.relation.relation_id]);
   assert.deepEqual(q.grade, r.relation.grade);
-  assert.match(q.dates_why, /./, "why the dates do not settle it");
+  assert.equal(typeof q.dates_why.key, "string", "why the dates do not settle it, a key with its fills");
   const back = w.ev.sequence({ a: b, b: a, viewer: MEMBER });
   assert.deepEqual([back.answer, back.basis, back.relation_id], ["after", "cited", r.relation.relation_id]);
   /* testimony is a citation too, graded D (R17) */
@@ -178,7 +178,7 @@ test("R51 two standing relations ordering the pair both ways answer undetermined
   assert.equal(chain.basis, undefined);
   const ba = w.ev.relate({ from: b, to: a, kind: "precedes", attestation: { captureSha: t, extent: doc }, by: MEMBER }).relation.relation_id;
   const q = w.ev.sequence({ a, b, viewer: MEMBER });
-  assert.deepEqual([q.answer, q.why, q.relation_ids], ["undetermined", word("events.why.cited_orders_disagree"), [ab, ba]]);
+  assert.deepEqual([q.answer, q.why, q.relation_ids], ["undetermined", { key: "events.why.cited_orders_disagree", vars: {} }, [ab, ba]]);
   w.ev.withdrawRelation({ relationId: ba, reason: "the second source misread it", by: MEMBER });
   assert.deepEqual([w.ev.sequence({ a, b, viewer: MEMBER }).answer, w.ev.sequence({ a, b, viewer: MEMBER }).relation_id], ["before", ab]);
   w.ev.withdrawRelation({ relationId: ab, reason: "withdrawn", by: MEMBER });
@@ -242,7 +242,7 @@ test("R52 R34's NOT_A_PROCEEDING is entities.notAProceeding's answer (its R53): 
   const w = world();
   const person = w.entity("Kim");
   const r = w.ev.proceedingStatusAt({ proceeding: person, at: "2026-01-01", viewer: MEMBER });
-  assert.deepEqual(r, notAProceeding("status as of a date is read of an entity of kind proceeding", { entity_id: person }));
+  assert.deepEqual(r, notAProceeding(localize("events.index.status_as_of_a_date", "status as of a date is read of an entity of kind proceeding"), { entity_id: person }));
   assert.deepEqual([r.ok, r.reason, r.code, r.entity_id], [false, "NOT_A_PROCEEDING", "NOT_A_PROCEEDING", person]);
   assert.equal(r.translation, notAProceeding().translation);
   assert.equal(r.check, notAProceeding().check);
@@ -251,4 +251,17 @@ test("R52 R34's NOT_A_PROCEEDING is entities.notAProceeding's answer (its R53): 
   assert.equal(w.rows(`SELECT * FROM events`).length, 0);
   const proc = w.proceeding("Suit one");
   assert.notEqual(w.ev.proceedingStatusAt({ proceeding: proc, at: "2026-01-01", viewer: MEMBER }).reason, "NOT_A_PROCEEDING");
+});
+
+test("R50 the event view's why for a dated attestation the viewer cannot see is {key, vars}, key events.why.dated_attestation_see; control: a viewer who may see it is given no why", () => {
+  const w = world();
+  const p = w.entity("Una");
+  const hidden = fenced(w, "gov");
+  const hf = w.ev.recordDatedFact({ captureSha: hidden, extent: doc, kind: "meeting", value: "2026-06-01", method: "m", by: MEMBER }).dated_fact.dated_fact_id;
+  const half = w.ev.createEvent({ kind: "meeting", attestations: [{ datedFactId: hf }, { captureSha: w.capture("seen"), extent: doc }], by: MEMBER,
+    participants: [{ entityId: p, role: "present", attestation: 1 }] }).event_id;
+  const seen = w.ev.readEvent({ eventId: half, viewer: OUTSIDER }).event;
+  assert.equal(seen.when, null);
+  assert.deepEqual(seen.why, { key: "events.why.dated_attestation_see", vars: {} });
+  assert.equal(w.ev.readEvent({ eventId: half, viewer: MEMBER }).event.why, undefined);
 });

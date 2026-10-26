@@ -129,8 +129,9 @@ const read = async (r) => ({ status: r.status, text: await r.text() });
 
 test("R24 (N339): the knock's handler answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never as STORE_DID_NOT_ANSWER, through storeRefusal when handed, byte for byte the same without it", async () => {
   for (const [label, h] of Object.entries(handed))
+    // fixtures-contract: store-door store-replies
     for (const [body, status] of [[{ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400],
-                                  [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: knock", translation: "t" }, 404]]) {
+                                  [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: knock" }, 404]]) {
       const store = stub(body, status);
       const r = await read(await knock(store, h));
       assert.equal(store.calls, 1);
@@ -138,6 +139,7 @@ test("R24 (N339): the knock's handler answers the store's own refusal (ok false 
     }
   const seen = [];
   const spy = (out) => { seen.push(out.reply.status); return storeRefusal(out); };
+  // fixtures-contract: store-door store-replies
   const body = { ok: false, reason: "BAD_JSON", error: "the body is not JSON" };
   assert.deepEqual(await read(await knock(stub(body, 400), { json, storeSilent, storeRefusal: spy, doAnswer })),
                    await read(await knock(stub(body, 400), { json, storeSilent, doAnswer })));
@@ -154,6 +156,7 @@ test("R24 (N349): a reply that is no answer is 502 STORE_DID_NOT_ANSWER naming k
       assert.equal(JSON.parse((await read(await knock(bad, h))).text).reason, "STORE_DID_NOT_ANSWER", label);
   }
   /* the door's relay and capture's relayUnanswered answer the same for the same reply */
+  // fixtures-contract: store-door store-replies
   const out = await doAnswer(json({ ok: false, reason: "BAD_JSON" }, 400));
   assert.deepEqual(await read(relayUnanswered(out, "knock", handed["without it"])),
                    await read(await knock(stub({ ok: false, reason: "BAD_JSON" }, 400), handed["without it"])));

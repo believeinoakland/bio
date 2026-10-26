@@ -127,10 +127,11 @@ const icap = {
 };
 
 // Microsoft Defender for Storage (azure_blob, R30): the bytes written to the organization's own blob container under a
-// random name, the blob's scan-result index tag read until present, the blob deleted after.
-const RESULT_TAG = 'Malware Scanning scan result';
+// random name, the blob's scan-result index tag read until present, the blob deleted after. The tag's key is Azure's own
+// wire name, matched exactly: data, never a sentence read by locale (a pattern, so it is not mistaken for one).
+const RESULT_TAG = /^Malware Scanning scan result$/;
 export function blobTag(xml) {
-  for (const m of String(xml).matchAll(/<Tag>\s*<Key>([^<]*)<\/Key>\s*<Value>([^<]*)<\/Value>\s*<\/Tag>/g)) if (m[1] === RESULT_TAG) return m[2];
+  for (const m of String(xml).matchAll(/<Tag>\s*<Key>([^<]*)<\/Key>\s*<Value>([^<]*)<\/Value>\s*<\/Tag>/g)) if (RESULT_TAG.test(m[1])) return m[2];
   return null;
 }
 const defender = {

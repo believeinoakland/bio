@@ -18,7 +18,22 @@ import { zipStored } from "../../../src/workbooks/xlsxwrite.mjs";
 export const sha = (s) => createHash("sha256").update(s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
-function cursor(rows) {
+/* A cursor over a statement's rows that reads them as they are asked for, as a Durable Object's `sql.exec` cursor does:
+   a statement is stepped a row at a time, never answered whole (R20: the module under test must not depend on a
+   materialised answer). Statements are kept by their text; one still being stepped is not reused. */
+function lazyCursor(it, release) {
+  let done = false;
+  const step = () => { if (done) return { done: true, value: undefined }; const n = it.next(); if (n.done) { done = true; release(); return { done: true, value: undefined }; } return { done: false, value: { ...n.value } }; };
+  const c = {
+    next: step,
+    return() { if (!done) { done = true; it.return?.(); release(); } return { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = []; for (let n = step(); !n.done; n = step()) out.push(n.value); return out; },
+    one() { const r = c.toArray(); if (r.length !== 1) throw new Error(`Expected exactly one result, got ${r.length}`); return r[0]; },
+  };
+  return c;
+}
+function eager(rows) {
   let i = 0;
   const c = {
     next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
@@ -32,10 +47,16 @@ function cursor(rows) {
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
+  const pool = new Map();
   const sql = {
     exec(q, ...args) {
-      const st = db.prepare(q);
-      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
+      const slots = pool.get(q) ?? pool.set(q, []).get(q);
+      let slot = slots.find((s) => !s.busy);
+      if (!slot) { slot = { st: db.prepare(q), busy: false }; slots.push(slot); }
+      const { st } = slot, bound = args.map(bind);
+      if (!st.columns().length) { st.run(...bound); return eager([]); }
+      slot.busy = true;
+      return lazyCursor(st.iterate(...bound)[Symbol.iterator](), () => { slot.busy = false; });
     },
   };
   return {
@@ -128,7 +149,7 @@ export function bucket() {
   const m = new Map();
   return {
     m,
-    async head(k) { return m.has(k) ? { key: k } : null; },
+    async head(k) { return m.has(k) ? { key: k, size: m.get(k).byteLength } : null; },
     async get(k) {
       if (!m.has(k)) return null;
       const b = m.get(k);
@@ -190,18 +211,19 @@ export function world({ recompute = undefined, now = NOW } = {}) {
                    VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
     },
     /** A captured document holding `data` (bytes or text), in `project` when given: its capture sha and bundle. */
-    capture(data, { name = `cap${++n}`, project = null, direct = false, cap = null } = {}) {
+    capture(data, { name = `cap${++n}`, project = null, direct = false, cap = null, parts = null } = {}) {
       const buf = typeof data === "string" ? new TextEncoder().encode(data) : data;
       const capSha = sha(buf);
       const id = `INFO-2026-${String(++n).padStart(4, "0")}-${name}`;
       const text = `capture ${name} ${capSha}`;
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${n}`, author: V("alice"), ...(project ? { project } : {}),
         files: [{ path: "bundle.md", text: infoMd(id, project) }, { path: `snapshots/${name}.txt`, text },
-                { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(`snapshots/${name}.txt`, capSha)] }) }],
+                { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(`snapshots/${name}.txt`, capSha, parts ? parts.map((x, i) => ({ file: `p${i}`, sha256: sha(x), bytes: x.length })) : undefined)] }) }],
         meta: { object_type: "information" },
         register: [{ sha256: capSha, path: `snapshots/${name}.txt`, encoding: "utf8", bytes: buf.length }] });
       if (!r.ok) throw new Error(`fixture capture refused: ${JSON.stringify(r).slice(0, 400)}`);
-      ev.m.set(capSha, buf);
+      /* a capture held in parts is stored only as its parts, each under its own hash (D-533) */
+      if (parts) for (const x of parts) ev.m.set(sha(x), x); else ev.m.set(capSha, buf);
       ex.readings[capSha] = { chain: cap ? [{ ...LAYER[0], cap }] : LAYER, pageCount: 3 };
       if (direct) prov.recordReceipt({ address: `https://example.org/${name}`, addressNorm: `example.org/${name}`, captureSha: capSha, retrieved: "2026-09-01T00:00:00Z" });
       return { capSha, bundleId: id };
@@ -274,8 +296,8 @@ function infoMd(id, project) {
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
 
-function provDoc(file, capSha) {
-  return { file, locator: `https://example.org/${file}`, retrieved: "2026-09-27T00:00:00Z",
+function provDoc(file, capSha, parts) {
+  return { file, ...(parts ? { parts } : {}), locator: `https://example.org/${file}`, retrieved: "2026-09-27T00:00:00Z",
            authority: "the publisher", authority_state: "determined", authority_basis: "named on the document",
            capture: { method: "acquire", grade: "B", actor_class: "session", sha256: capSha, encoding: "utf8", bytes: 1 },
            origin: { kind: "named_request" } };

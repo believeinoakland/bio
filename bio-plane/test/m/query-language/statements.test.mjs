@@ -5,6 +5,7 @@ import { compile, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, MEANING, PROV
          LIMIT_DEFAULT, LIMIT_MAX, IDS_MAX, MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX, MEANING_AXIS_CAP,
          RANK_ATOMS_MAX } from "../../../src/query.mjs";
 import * as membership from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const V = "class:member";
 const sorted = (a) => [...a].sort();
@@ -137,7 +138,7 @@ test("R11 relevance is over the rows the viewer may see, only the order is publi
   }
   assert.ok(!w.run(ann).rows.some((r) => r.bundle_id === "P1"), "a member who is no administrator: unchanged");
   const many = compile({ q: "a b c d e f g h i", viewer: V });
-  assert.ok(many.warnings.includes(`relevance weighs these 9 terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`));
+  assert.ok(many.warnings.includes(word("query.relevance_weighs_terms", { all_terms: 9, rank_atoms_max: RANK_ATOMS_MAX })));
   assert.deepEqual(compile({ q: "a b c d e f g h", viewer: V }).warnings, []);
   assert.equal(RANK_ATOMS_MAX, 8);
   w.bundle("M", { body: "a b c d e f g h i" });
@@ -172,7 +173,7 @@ test("R14 the bundle-grain shapes: page, count, ids, snapshot, facets and facetS
   w.bundle("B", { body: "water", current_state: "open", criticality: null, bundle_sha: "s2" });
   w.bundle("C", { body: "dry", current_state: "closed", criticality: "low", bundle_sha: "s3" });
   const page = w.run({ q: "", viewer: V }).rows;
-  assert.deepEqual(Object.keys(page[0]), [...PROVENANCE_COLS, "snippet", "snippet_from"], "R33 adds snippet_from, always a column");
+  assert.deepEqual(Object.keys(page[0]), [...PROVENANCE_COLS, "snippet", "snippet_from", "snippet_unit"], "R33 adds snippet_from and R34 snippet_unit, always columns");
   assert.ok(page.every((r) => r.snippet === null && r.snippet_from === null), "null when there is no term");
   const hit = w.run({ q: "water", viewer: V }).rows;
   assert.ok(hit.every((r) => /\[water\]/.test(r.snippet)));
@@ -403,4 +404,15 @@ test("R32 rows=leg ignores bare words, with the warning; text:, negations and se
   const b = compile({ q: "crosswalk", viewer: V });
   assert.deepEqual(b.terms, ["crosswalk"]);
   assert.ok(!b.warnings.includes(WARN));
+});
+
+test("R14 an ids list binds one variable whatever its count: 5,000 ids answer the ones held, under the plane's variable ceiling", () => {
+  const w = world();
+  for (const id of ["P1", "P2", "P3"]) w.bundle(id, { body: "water" });
+  const ids = Array.from({ length: 5000 }, (_, i) => `X${i}`);
+  ids[0] = "P1"; ids[2500] = "P2"; ids[4999] = "P3";
+  assert.deepEqual(sorted(w.ids({ q: "", viewer: V, ids })), ["P1", "P2", "P3"]);
+  assert.deepEqual(sorted(w.ids({ q: "water", viewer: V, ids })), ["P1", "P2", "P3"]);
+  /* Control: the same answer for a short list, so the count is the only thing that moved. */
+  assert.deepEqual(sorted(w.ids({ q: "", viewer: V, ids: ["P2", "X1"] })), ["P2"]);
 });

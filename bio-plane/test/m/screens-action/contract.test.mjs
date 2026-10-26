@@ -2,6 +2,7 @@
    (`SCREENS`, `SCREEN_WORDS`) and on the real served page (interface-shell's harness). The registry is the design
    stream's `registry.json` as merged into `tranche/T47` at PR #33's head (wizard-scripts R35). */
 import test from "node:test";
+import { actionWorld, openIn } from "./world-B.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -9,16 +10,16 @@ import { dirname, join } from "node:path";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-action/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS, hasWord, word } from "../../../src/setup-words/index.mjs";
-import { checkScreens, interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
+import { checkScreens, interfacePage, interfaceScript, interfaceScriptHash, scriptPath, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
 import { open, main, crumbs, text, ops, ok, refused, textNodes, wordChecker, servedClasses, MEMBER, DATA_PLANE, ROUTES, PLAN_ID, ACTION_ID, DET, ESC, PROJECT, PLAN, ACTION, DETERMINATION,
-  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE, ADMIN, STAKE, FUTURE_ACTION, PROFILES_WITH_HELP, draft } from "./page.mjs";
+  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE, ADMIN, STAKE, FUTURE_ACTION, PROFILES_WITH_HELP, draft, COMPLIANCE_SAYS } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const REGISTRY = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/registry.json"), "utf8")).screens;
 const WORD_KEYS = new Set(WORD_ROWS.map((r) => r[0]));
 const EN = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
-const IDS = ["plan", "start-send", "request", "action", "matter", "help-records"];
+const IDS = ["plan", "start-send", "request", "action", "matter", "help-records", "actionnew", "hold", "holdnotice", "counsel", "dash-action"];
 
 test("R1–R6, R9 (interface-shell R21): SCREENS is the registry screens plan, start-send, request, action, matter, help-records, each {id, reads, render, acts, words}", () => {
   assert.deepEqual(SCREENS.map((s) => s.id), IDS);
@@ -33,12 +34,11 @@ test("R1–R6, R9 (interface-shell R21): SCREENS is the registry screens plan, s
 
 test("R1–R6 (interface-shell R21, R38): each screen's acts are exactly its registry acts, every op in OPS, each with its send", () => {
   // An owed act (`owed:<op> K…`) is that op once declared (wizard-scripts R13): one whose op OPS does not hold is not yet an act
-  // (`actionstake`, `actioninquiry`, T50). `writinghelp` is not wanted on start-send in T49 (BOB, K3369).
+  // (`actionstake`, `actioninquiry`, T50). T51 (FR-31): `writinghelp` is drawn on every screen the registry lists it on, `start-send`,
+  // `plan` and `matter` included (the registry test names it, entry 17).
   const NOT_YET = (a) => a.status === "owed" && !Object.hasOwn(OPS, String(a.op).replace(/^owed:/, "").split(" ")[0]);
-  const NOT_WANTED = { "start-send": ["writinghelp"] };
   for (const s of SCREENS) {
-    const reg = REGISTRY.find((r) => r.id === s.id).acts.filter((a) => !NOT_YET(a)).map((a) => String(a.op).replace(/^owed:/, "").split(" ")[0])
-      .filter((op) => !(NOT_WANTED[s.id] || []).includes(op));
+    const reg = REGISTRY.find((r) => r.id === s.id).acts.filter((a) => !NOT_YET(a)).map((a) => String(a.op).replace(/^owed:/, "").split(" ")[0]);
     const mine = s.acts.map((a) => a.op);
     assert.deepEqual([...mine].sort(), [...reg].sort(), s.id);
     for (const a of s.acts) {
@@ -108,6 +108,8 @@ test("R7 (action-producers R19): every member-facing sentence calls a plan's sub
   for (const s of SCREENS) for (const w of s.words) {
     const en = EN.get(w);
     if (en === undefined) continue;
+    // R39: the design's words for naming what a records request concerns (an entity the record follows), never a plan's subject
+    if (/^screen\.person\.keeper\.subject\./.test(w)) continue;
     assert.ok(!/\bsubjects?\b/i.test(en), `${s.id}: ${w} says "${en}"`);
   }
 });
@@ -116,7 +118,7 @@ test("R7 (interface-shell R23): no place is named in the words this module reads
   for (const k of SCREEN_WORDS) assert.ok(!/California|Oakland|Alameda|NextRequest|Sunshine Ordinance|Government Code/.test(EN.get(k) || ""), k);
 });
 
-const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's counsel", "Pothole repairs", "Repairs: closed is not repaired", "INQ-2026-ffffffffffffffff", DET, "STD-1", "STD-2", ESC, ACTION_ID, PLAN_ID, PROJECT,
+const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's counsel", "Pothole repairs", "Repairs: closed is not repaired", "INQ-2026-ffffffffffffffff", DET, "STD-1", "STD-2", "Lease §7.2", "Lease §9.1", ESC, ACTION_ID, PLAN_ID, PROJECT,
   "a suspected matter", "determined", "Records request: inspection logs", "Story with a reporter", "Complaint to the auditor",
   "first, to see what closed means", "Records first", "Phase 1", "opt-1", "Scenario 1: no branch answers a hostile response to the records request.",
   "Ask the committee to agendize repair performance", "the committee oversees repairs", "machine work", `inquiry:INQ-2026-ffffffffffffffff`, `outcome:${DET}#STD-1`,
@@ -124,13 +126,19 @@ const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's c
   "fourteen more days", "Gov. Code § 7922.535", "Gov. Code § 7922.535(b)", "Mun. Code § 2.20.230", "Gov. Code § 7922.535(b); Gov. Code § 7922.535(c); Mun. Code § 2.20.230",
   "The 2024 rent adjustment", "City Administrator, City", "a council vote", "adjusted without a vote", "notice within 30 days", "noticed on day 21",
   "Tenants of the district", "class", "38000 USD", "from the rent schedules", "The repair program", "program", "its trigger was met 5 days ago",
-  "no live compliant determination", "not every part addressed", "the records law's ten days", "1", "2", "3", "10", "14", "notification", "Open",
+  COMPLIANCE_SAYS, W("filings.why.record_holds_value"), "not every part addressed", "the records law's ten days", "1", "2", "3", "10", "14", "notification", "Open",
   "12 October 2026", "26 October 2099", "2 October 2026", "3 October 2026", "4 October 2026", "20 October 2026", "30 November 2026", "20 December 2026", "24 October 2026", "1 March 2024",
   QUESTION_TITLE, "Who signed the closure memo?", "Gov. Code § 7922.535(b)", "Open meetings law", "agent:claude", "claude", "asha", "the office has fought requests before",
-  "Some members rent from landlords the city licenses.", "Two members live in buildings on the city's list of slow repairs.", "dev", "9 October 2026", "Testville", "Director of Public Works, Public Works"];
+  "Some members rent from landlords the city licenses.", "Two members live in buildings on the city's list of slow repairs.", "dev", "9 October 2026", "Testville", "Director of Public Works, Public Works", "Hearing statement", "Ask in writing, naming the records", "the office says within 10 days whether it will release them", "Call the clerk's desk first", "a name for the file",
+  "Records request, with our follow-up questions", "@records-request", "A special motion to strike generally must be filed within 60 days of being served with the complaint.",
+  "Code Civ. Proc. § 425.16", "a notice of claim", "a letter from the owner's lawyer", "The rent dispute", "Closed means repaired", "ana", "30 September 2026", "1 October 2026", "9 October 2026"];
 
 test("R1–R6, R9 (interface-shell R8, R21): the shell serves the six screens: each route draws its screen under its path, from its own source", async () => {
-  assert.match(interfacePage(SCREENS), /<script nonce="__CSP_NONCE__">/);
+  // interface-shell R1, R2: the page loads the shell as one external versioned script with its hash; no inline script and no nonce
+  const page = interfacePage(SCREENS, { version: "0.0.1" });
+  assert.ok(page.includes(`<script src="${scriptPath("0.0.1")}" integrity="${interfaceScriptHash(SCREENS)}"></script>`));
+  assert.ok(!/<script(?![^>]*\ssrc=)/.test(page) && !page.includes("nonce"), "no inline script and no nonce");
+  assert.ok(interfaceScript(SCREENS).length > 1000, "the screens are the script's");
   for (const [id, path] of Object.entries(ROUTES)) {
     const p = await open(path, DATA_PLANE);
     assert.ok(main(p).querySelector("nav.cs-crumbs [aria-current]"), `${id} under its path`);
@@ -186,7 +194,7 @@ test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, nev
 test("R7 (interface-shell R13): each refusal word an act names is a listed word", () => {
   for (const s of SCREENS) {
     const listed = new Set(s.words.map((w) => (typeof w === "string" ? w : w[0])));
-    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
+    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(typeof key === "function" || listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
   }
 });
 
@@ -269,13 +277,17 @@ test("R14: a section, list or reading that holds nothing is not drawn, and no co
     plan: ok({ ...PLAN, subjects: [], options: [], scenarios: [], offers: [], checks: [] }),
     action: ok({ ...ACTION, clock: [], correspondence: [], entries: [], reply_owed: { owed: false }, governing_laws: { state: "undetermined", laws: [], by: null, at: null, stated: "x" }, governing_laws_proposals: { proposals: [] }, risk_tier: "undetermined", risk_tier_history: { revisions: [] }, risk_tier_proposals: { proposals: [] } }),
     determination: ok({ ...DETERMINATION, standards: [], outcomes: [] }), consequencesof: ok({ ...CONSEQUENCES, parts: [] }),
-    escalationstatus: ok(STATUS_NONE), escalation: ok({}), pressurefor: ok({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
+    escalationstatus: ok(STATUS_NONE), escalation: ok({}),
     profiles: ok({ ...PROFILES, view: { deadlines: [] } }),
   };
   const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), planproposals: ok({ plan: PLAN_ID, run: "RUN-1", proposals: [], says: "x" }) };
+  const { world, me, action } = await actionWorld();
   for (const [path, extra] of [[ROUTES.plan, reach], [ROUTES.plan, {}], [ROUTES.action, {}], [ROUTES.matter, {}], [ROUTES["help-records"], {}], [ROUTES.request, {}], [`/app/start-send/${ACTION_ID}`, {}],
     [`/app/request/${PROJECT}`, { addresseesuggest: ok({ subject: PROJECT, offices: [], suggestion: true }), whoami: ok(ADMIN) }]]) {
-    const p = await open(path, { ...DATA_PLANE, ...empty, ...extra });
+    /* the action's marks are the store's: `pressurefor` is read from the world's real action, which no act has marked (the action's page is opened at its real id) */
+    const p = path === ROUTES.action ? await openIn(world, me, `/app/action/${action}`, { ...DATA_PLANE, ...empty, ...extra, action: ok({ ...empty.action.json.result, id: action }) })
+      : await open(path, { ...DATA_PLANE, ...empty, ...extra });
+    if (path === ROUTES.action) assert.deepEqual(p.byOp("pressurefor").map((r) => r.query.action), [action], "the marks were read from the store");
     for (const sec of main(p).querySelectorAll("section.cs-section")) {
       const head = (sec.querySelector("h2") || { textContent: "" }).textContent;
       assert.ok(sec.textContent.replace(head, "").trim() || sec.querySelector("button, input, select, textarea"), `${path}: an empty section "${sec.textContent.trim().slice(0, 40)}"`);

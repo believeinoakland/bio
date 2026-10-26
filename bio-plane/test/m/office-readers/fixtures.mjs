@@ -17,7 +17,8 @@ function cat(parts) {
   return out;
 }
 
-/** members: [{ name, data, method = 8, cd: {usize, crc} }] -> ZIP bytes. */
+/** members: [{ name, data, method = 8, cd: {usize, crc}, ld: {usize} }] -> ZIP bytes (`ld` states the declared size in
+ *  the local header too, so a member can claim a size both headers agree on). */
 export function zip(members) {
   const out = [];
   let offset = 0;
@@ -29,7 +30,7 @@ export function zip(members) {
     const name = enc(m.name);
     const crc = zcrc32(data) >>> 0;
     const local = cat([u32(0x04034b50), u16(20), u16(0x0800), u16(method), u16(0), u16(0),
-      u32(crc), u32(comp.length), u32(data.length), u16(name.length), u16(0), name, comp]);
+      u32(crc), u32(comp.length), u32(m.ld?.usize ?? data.length), u16(name.length), u16(0), name, comp]);
     out.push(local);
     const cd = { crc, usize: data.length, ...(m.cd ?? {}) };
     central.push(cat([u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(method), u16(0), u16(0),
@@ -185,8 +186,11 @@ export const tablePart = (name, ref) => `<?xml version="1.0"?><table ${S} id="1"
 
 /** A member whose CRC is declared wrong, so readPart refuses it (crc_mismatch). */
 export const CORRUPT = { crc: 0x12345678 };
-/** A declared uncompressed size over the 20 MiB bound (the bytes themselves are small). */
-export const OVER = { usize: 20 * 1024 * 1024 + 1 };
+/** A declared uncompressed size over the streamed ceiling, 32 MiB (R12, R35: the text is neither held nor read in
+ *  pieces); the bytes themselves are small. */
+export const OVER = { usize: 32 * 1024 * 1024 + 1 };
+/** One over the 20 MiB bound a reader holds whole: such a part is read in pieces (R35). */
+export const OVER_WHOLE = { usize: 20 * 1024 * 1024 + 1 };
 
 /* ------------------------------------------------------------------ VBA (R32) */
 

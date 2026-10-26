@@ -150,7 +150,9 @@ test("R5 the rescue's first three refusals are membership's rescueRefusal (R75),
   assert.deepEqual(Object.keys(r).sort(), ["by", "check", "code", "detail", "message", "ok", "reason", "remedy", "translation"]);
   assert.deepEqual([r.reason, r.check, r.by], ["NOT_AN_ADMIN", "C-96.1", "cal"]);
   assert.equal(r.message, `${MEMBERSHIP_CHECKS.NOT_AN_ADMIN.translation} ${r.remedy}`);
-  const phrase = r.detail.slice(0, r.detail.indexOf(" is an administrator's act"));
+  /* the act's phrase is the detail less membership's own wording round it, found by asking for a marked one (K3810) */
+  const marker = "\u0001", tail = notAnAdmin("cal", marker, { remedy: r.remedy }).detail.split(marker)[1];
+  const phrase = r.detail.slice(0, r.detail.length - tail.length);
   assert.deepEqual(r, notAnAdmin("cal", phrase, { remedy: r.remedy }));
   assert.equal(act("PROJ-P", "bob").remedy, r.remedy, "one fixed remedy, whoever asks");
   // asked after sight (R19): a caller who cannot see the project is answered as an id naming nothing, first

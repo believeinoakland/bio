@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/checks.mjs";
 import { noEntity } from "../../../src/entities/index.mjs";
@@ -53,7 +54,7 @@ test("R1 (N285): a request naming no entity id (absent, not a string, or empty) 
     assert.deepEqual(r, noEntity(r.detail), `the helper's own answer, whole (${label})`);
     assert.equal(r.ok, false); assert.equal(r.reason, "NO_ENTITY"); assert.equal(r.code, one.code);
     assert.equal(r.check, one.check); assert.equal(r.translation, one.translation, "the member's translation is entities' row");
-    assert.match(r.detail, /derived among the documents that concern one entity, by its id \(op=connect&id=/, "this act's sentence");
+    assert.equal(r.detail, localize("connections.index.derive_names_entity", "a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)"), "this act's sentence");
   }
   assert.equal(w.k.derive().reason, "NO_ENTITY", "no arguments at all");
   assert.deepEqual(w.snapshot(["connections", "connection_dirty", "connection_pair_choices"]), before, "nothing written");

@@ -13,6 +13,8 @@ import assert from "node:assert/strict";
 import { world, stubOf, bucket, V, NOW, KEY, SIG, legacyCaseCommit } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { DELIVERER_UNDETERMINED_DETAIL } from "../../../src/deliverer.mjs";
 
 class StoreSilent extends Error { constructor(op) { super(op); this.op = op; } }
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -31,14 +33,17 @@ const route = async (w, env, op, q) => {
 
 const FOUNDER_IS = { kind: "founder", member: null };
 const MEMBER_IS = (m) => ({ kind: "member", member: m });
-const UNDETERMINED = /not inferred from the signer/;
 const isUndetermined = (d) => !!d && d.kind === "undetermined" && d.member === null
-  && typeof d.detail === "string" && UNDETERMINED.test(d.detail);
+  && d.detail === DELIVERER_UNDETERMINED_DETAIL;
 const kindOf = (d) => (d && typeof d === "object") ? (d.kind === "member" ? `member:${d.member}` : d.kind) : `ABSENT(${JSON.stringify(d)})`;
 
 const CASE = "CASE-2026-0001", LEGACY_CASE = "CASE-2026-0002";
 const LEAD = "INQ-2026-0001", OLD_LEAD = "INQ-2026-0002";
 const LOOSE = "INFO-2026-0001", OLD_LOOSE = "INFO-2026-0002";
+/* The container's verify sentence: the tamper-evidence statement, then the member-pair sentence, which a case document
+   that states member blocks adds (both cases here are prepared with a strength pair). */
+const VERIFY = localize("public-read.worker.verify_tamper_evident", "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero — the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this team's Civicsmith — the authenticated session that performed the act, a member or its founder — and it is this team's Civicsmith's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it.")
+  + localize("public-read.worker.verify_member_pair_in_document", " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes.");
 
 /* One case edition's commit, as ratification makes it; `deliveredBy` omitted is a legacy commit (no deliverer). */
 function commitCase(w, caseId, project, roster, deliveredBy) {
@@ -99,19 +104,19 @@ test("R2 (deliverer) publishedList and publishedEditions name the signer and, be
   for (const list of [w.pr.publishedList(), w.read("publishedlist")]) {
     const row = (id) => list.bundles.find((b) => b.bundle_id === id);
     assert.deepEqual(list.bundles.map((b) => b.bundle_id).sort(), [LOOSE, OLD_LOOSE, LEAD, OLD_LEAD].sort());
-    assert.deepEqual([row(LEAD).attestor_member, row(LEAD).delivered_by], ["iris", MEMBER_IS("gus")]);
-    assert.deepEqual([row(LOOSE).attestor_member, row(LOOSE).delivered_by], ["iris", FOUNDER_IS]);
+    assert.deepEqual([row(LEAD).attestor_member, row(LEAD).delivered_by], ["h_iris", MEMBER_IS("h_gus")]);
+    assert.deepEqual([row(LOOSE).attestor_member, row(LOOSE).delivered_by], ["h_iris", FOUNDER_IS]);
     for (const id of [OLD_LEAD, OLD_LOOSE]) {
-      assert.equal(row(id).attestor_member, "iris", "the signer is still named");
+      assert.equal(row(id).attestor_member, "h_iris", "the signer is still named, by her handle (R41)");
       assert.ok(isUndetermined(row(id).delivered_by), `${id}: undetermined, never back-filled from iris: ${JSON.stringify(row(id).delivered_by)}`);
     }
     /* THE TABLE: no determined deliverer equals its signer */
     assert.deepEqual(list.bundles.filter((b) => kindOf(b.delivered_by) === `member:${b.attestor_member}`).map((b) => b.bundle_id), []);
   }
-  for (const [id, want] of [[LEAD, "member:gus"], [LOOSE, "founder"], [OLD_LEAD, "undetermined"], [OLD_LOOSE, "undetermined"]]) {
+  for (const [id, want] of [[LEAD, "member:h_gus"], [LOOSE, "founder"], [OLD_LEAD, "undetermined"], [OLD_LOOSE, "undetermined"]]) {
     for (const eds of [w.pr.publishedEditions(id), w.read("publishededitions", { id })]) {
       assert.equal(eds.ok, true);
-      assert.deepEqual(eds.editions.map((e) => [e.edition, e.attestor_member, kindOf(e.delivered_by)]), [[1, "iris", want]]);
+      assert.deepEqual(eds.editions.map((e) => [e.edition, e.attestor_member, kindOf(e.delivered_by)]), [[1, "h_iris", want]]);
       if (want === "undetermined") assert.ok(isUndetermined(eds.editions[0].delivered_by));
     }
   }
@@ -124,8 +129,10 @@ test("R3 (deliverer) publishedCase states who delivered its case document and ea
   for (const pc of [w.pr.publishedCase({ caseId: CASE }), w.pr.publishedCase({ id: LEAD }), w.read("publishedcase", { id: CASE })]) {
     assert.equal(pc.ok, true);
     const f = pc.findings[0];
-    assert.deepEqual([f.bundle_id, f.attestor.member, f.delivered_by], [LEAD, "iris", MEMBER_IS("gus")]);
-    assert.deepEqual([pc.document.attestor.member, pc.document.delivered_by], ["iris", FOUNDER_IS]);
+    /* R41 (3): the answer names each member by her handle (the fixture's `h_<id>`); the manifest it serves is the stored
+       bytes, hash-pinned, and says what it was signed with */
+    assert.deepEqual([f.bundle_id, f.attestor.member, f.delivered_by], [LEAD, "h_iris", MEMBER_IS("h_gus")]);
+    assert.deepEqual([pc.document.attestor.member, pc.document.delivered_by], ["h_iris", FOUNDER_IS]);
     /* the manifest it serves beside the findings: the case document's deliverer is read there, the finding's too */
     assert.equal(pc.manifest_sha, out.manifest_sha);
     assert.deepEqual([pc.manifest.case_document.attestor.member, pc.manifest.case_document.delivered_by], ["iris", FOUNDER_IS]);
@@ -134,21 +141,21 @@ test("R3 (deliverer) publishedCase states who delivered its case document and ea
   /* the loose edition: in no case, delivered by the founder */
   const loose = w.pr.publishedCase({ id: LOOSE });
   assert.deepEqual([loose.ok, loose.caseId, loose.findings[0].attestor.member, loose.findings[0].delivered_by],
-                   [true, null, "iris", FOUNDER_IS]);
+                   [true, null, "h_iris", FOUNDER_IS]);
   /* the legacy rows: signer named, deliverer undetermined, on the finding, the document and the served manifest */
   const lc = w.pr.publishedCase({ caseId: LEGACY_CASE });
   assert.equal(lc.manifest_sha, legacyOut.manifest_sha);
-  for (const [who, d] of [["finding", lc.findings[0]], ["document", lc.document], ["manifest document", lc.manifest.case_document],
-                          ["manifest finding", lc.manifest.findings[0]]]) {
-    assert.equal(d.attestor.member, "iris", `${who}: the signer is still named`);
+  for (const [who, d, named] of [["finding", lc.findings[0], "h_iris"], ["document", lc.document, "h_iris"],
+                                 ["manifest document", lc.manifest.case_document, "iris"], ["manifest finding", lc.manifest.findings[0], "iris"]]) {
+    assert.equal(d.attestor.member, named, `${who}: the signer is still named`);
     assert.ok(isUndetermined(d.delivered_by), `${who}: undetermined, not iris: ${JSON.stringify(d.delivered_by)}`);
   }
   const oldLoose = w.pr.publishedCase({ id: OLD_LOOSE });
-  assert.equal(oldLoose.findings[0].attestor.member, "iris");
+  assert.equal(oldLoose.findings[0].attestor.member, "h_iris");
   assert.ok(isUndetermined(oldLoose.findings[0].delivered_by));
   /* the Worker's public case read relays the same */
   const r = await (await route(w, env, "publishedcase", { id: CASE })).json();
-  assert.deepEqual([kindOf(r.findings[0].delivered_by), kindOf(r.manifest.case_document.delivered_by)], ["member:gus", "founder"]);
+  assert.deepEqual([kindOf(r.findings[0].delivered_by), kindOf(r.manifest.case_document.delivered_by)], ["member:h_gus", "founder"]);
 });
 
 test("R6 (deliverer) the container a stranger holds carries delivered_by beside every attestor, and its verify sentence says which field the signature covers and which is this group's Civicsmith's record (T34-87, DEC-149: no \"this instance\")", async () => {
@@ -166,13 +173,8 @@ test("R6 (deliverer) the container a stranger holds carries delivered_by beside 
                     man.findings[0].attestor.member, kindOf(man.findings[0].delivered_by)],
                    ["bio-case-container/6", "iris", "founder", "iris", "member:gus"]);
   assert.equal(typeof man.verify, "string");
-  assert.match(man.verify, /`attestor` is who SIGNED/);
-  assert.match(man.verify, /`delivered_by` is who DELIVERED/);
-  assert.match(man.verify, /not covered by any\s+signature/i);
-  assert.match(man.verify, /`undetermined` there means the delivery was not recorded; it never means the signer delivered it/);
   /* T34-87 (DEC-149; K1821): the voice for a reader with no credential, at worker.mjs' three rows of this sentence */
-  assert.match(man.verify, /makes one detectable by anyone holding it, without the cooperation of this group's Civicsmith\. /);
-  assert.match(man.verify, /DELIVERED that signature to this group's Civicsmith — the authenticated session that performed the act, a member or its founder — and it is this group's Civicsmith's record, not covered by any signature/);
+  assert.equal(man.verify, VERIFY);
   assert.doesNotMatch(man.verify, /this instance|the instance's|this copy|this plane/i);
   const legacy = await readManifest((await assemble(w, env, LEGACY_CASE)).manifest_sha);
   assert.equal(legacy.format, "bio-case-container/6");
@@ -180,5 +182,5 @@ test("R6 (deliverer) the container a stranger holds carries delivered_by beside 
     assert.equal(d.attestor.member, "iris");
     assert.ok(isUndetermined(d.delivered_by), `the legacy container states undetermined: ${JSON.stringify(d.delivered_by)}`);
   }
-  assert.match(legacy.verify, /not covered by any\s+signature/i);
+  assert.equal(legacy.verify, VERIFY);
 });

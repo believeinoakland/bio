@@ -6580,7 +6580,7 @@
    {
     "file": "capture-requests/index.mjs",
     "line": 521,
-    "text": "the tie to the step did not complete and your group's Civicsmith did not record why",
+    "text": "the tie to the step did not complete and your team's Civicsmith did not record why",
     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
    },
    {
@@ -6598,7 +6598,7 @@
    {
     "file": "capture-requests/index.mjs",
     "line": 662,
-    "text": "no daemon credential is bound: your group's Civicsmith drains nothing and holds no alarm for it",
+    "text": "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm for it",
     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
    },
    {
@@ -6700,7 +6700,7 @@
    {
     "file": "capture-requests/index.mjs",
     "line": 982,
-    "text": "no scope check is registered in your group's Civicsmith, so nothing can say that ${…} is ratified, not held and reaches ${…}",
+    "text": "no scope check is registered in your team's Civicsmith, so nothing can say that ${…} is ratified, not held and reaches ${…}",
     "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
    },
    {
@@ -6736,7 +6736,7 @@
    {
     "file": "capture-requests/index.mjs",
     "line": 1143,
-    "text": "the promotion did not complete and your group's Civicsmith did not record why",
+    "text": "the promotion did not complete and your team's Civicsmith did not record why",
     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
    },
    {
@@ -6862,7 +6862,7 @@
    {
     "file": "capture-requests/index.mjs",
     "line": 1733,
-    "text": "is not a sweep your group's Civicsmith holds",
+    "text": "is not a sweep your team's Civicsmith holds",
     "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
    },
    {

@@ -200,7 +200,7 @@ test("R56 while unattended capture is not configured (R11) a member's answer car
   const cold = world({ configured: () => false }).scene();
   const a = mine(cold);
   assert.deepEqual([a.ok, a.drains, a.detail], [true, false, MEMBER_REQUEST_WAITS]);
-  assert.match(a.detail, /waits until your group's Civicsmith captures unattended/);
+  assert.match(a.detail, /waits until your team's Civicsmith captures unattended/);
   const again = mine(cold);
   assert.deepEqual([again.already, again.drains, again.detail], [true, false, MEMBER_REQUEST_WAITS]);
   const warm = world().scene();

@@ -183,3 +183,23 @@ test("R27: a hook never runs inside read: read's answer, for a text capture, a P
   assert.equal(calls.length, 3);
   assert.equal(await readAll(), before);
 });
+
+test("R43: wants(captureClass) answers true exactly when a registered hook's classes include the class; false for null, a non-string, a class no hook holds and an empty registry; it runs nothing and registers nothing", async () => {
+  const h = new ReadHooks();
+  assert.equal(h.wants("minutes"), false, "no hook registered");
+  const calls = [];
+  assert.equal(h.onRead("events", (e) => calls.push(e), { captureClasses: ["minutes", "agenda"] }).ok, true);
+  assert.equal(h.wants("minutes"), true);
+  assert.equal(h.wants("agenda"), true);
+  assert.equal(h.wants("generic"), false);
+  assert.equal(h.wants(null), false);
+  assert.equal(h.wants(undefined), false);
+  assert.equal(h.wants(42), false);
+  assert.equal(h.wants(["minutes"]), false);
+  assert.equal(h.wants(""), false);
+  assert.deepEqual(calls, [], "nothing ran");
+  assert.equal(h.onRead("lines", noop, { captureClasses: [] }).code, "LISTENER_MALFORMED");
+  assert.equal(h.wants("generic"), false, "a refused registration holds no class");
+  assert.deepEqual(await h.afterRead({ captureSha: "s", captureClass: "generic", reading: {}, committed: true }), { ran: [], failed: [] });
+  assert.equal(readHooksOf({ storage: {} }).wants("minutes"), false);
+});

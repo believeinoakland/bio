@@ -3,7 +3,7 @@
    body, so a body's `by`, `viewer` or `principal` never wins (R29). Negative controls throughout (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/owner-ops.mjs";
 
 const FORGED = "member:forged-by-caller";
 /* A recording owner: every method answers `{ok: true, method, args}` and is logged. */
@@ -17,7 +17,7 @@ function recorder(answers = {}) {
 /* Each getter of `of` answers one shared recorder, and each asking is logged by the getter's name in `asked`, so a test
    sees which owner an op reached. `caseAuthoring` is offered too, so a route through it would be seen (R71, K2656). */
 const GETTERS = ["aiUse", "aiRuns", "caseAccount", "caseAuthoring", "review", "legEarning", "capture", "steps",
-                 "investigation", "questionExplorer", "actionClocks"];
+                 "investigation", "questionExplorer", "actionClocks", "filings", "actionPlans"];
 function owners(answers) {
   const r = recorder(answers);
   const asked = [];
@@ -147,7 +147,7 @@ test("R72 (capture R86; T42, K2631, K2656): `captureupload` hands the request's 
   const { log, asked } = serve("captureupload", { query: { by: "ann", statement: "she gave it to me", name: "a.pdf", within: "PRJ-1" }, body: stream });
   assert.deepEqual([log.length, log[0].method, asked], [1, "uploadCapture", ["capture"]]);
   assert.equal(log[0].args.bytes, stream);
-  assert.deepEqual(Object.keys(log[0].args).sort(), ["by", "bytes", "name", "statement"], "exactly the four fields capture R86 takes from a request");
+  assert.deepEqual(Object.keys(log[0].args).sort(), ["by", "bytes", "ledger", "name", "statement"], "exactly the four fields capture R86 takes from a request");
   assert.deepEqual([log[0].args.by, log[0].args.statement, log[0].args.name], ["ann", "she gave it to me", "a.pdf"]);
   assert.equal("within" in log[0].args, false, "a `within` in the address reaches nothing");
   /* without a `within` in the address the call is the same: the address never decides it */
@@ -183,4 +183,14 @@ test("R79 (T47; K3145; action-clocks R2): `clockpropose` calls action-clocks' `c
     assert.deepEqual(asked, ["actionClocks"]);
     assert.deepEqual(log, [{ method: "clockPropose", args: { target: "ACT-1", rule: "r-30", proposer: "ann", viewer: "member:ann" } }]);
   }
+});
+
+test("R110 (T51; K4073; screens-action R30): `approvedunsent` calls filings' `approvedUnsent` with the door's `viewer`, and `checkpointsdue` action-plans' `checkpointsDue` with only a `limit`, never an instant the caller sends (controls: a body's `viewer` loses; a `nowMs`, `at` or `now` in the address or body reaches nothing; no limit passes none)", () => {
+  const a = serve("approvedunsent", { query: { viewer: "member:ann" }, body: { viewer: FORGED } });
+  assert.deepEqual(a.asked, ["filings"]);
+  assert.deepEqual(a.log, [{ method: "approvedUnsent", args: { viewer: "member:ann" } }]);
+  const c = serve("checkpointsdue", { query: { limit: "5", nowMs: "1", at: "2020-01-01", now: "1" }, body: { nowMs: 1, limit: 7 } });
+  assert.deepEqual(c.asked, ["actionPlans"]);
+  assert.deepEqual(c.log, [{ method: "checkpointsDue", args: { limit: 7 } }]);
+  assert.deepEqual(serve("checkpointsdue").log, [{ method: "checkpointsDue", args: {} }]);
 });

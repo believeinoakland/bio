@@ -8,6 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { homeOfHomed, sha } from "../provenance/fixtures.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { MACHINE_AUTHOR_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
@@ -20,7 +21,7 @@ function corpus() {
   const w = world({
     governor: { governorHolding: ({ now }) => holds.filter((h) => h.cooloff_until > now) },
     capture: { liveCaptureSessions: () => [...sessions] },
-    provenance: { homeOf: (sha) => (sha === "cap88" ? { bundleId: "INFO-88" } : sha === "capP" ? { bundleId: "PRJ-1" } : null) } });
+    provenance: homeOfHomed({ [sha("cap88")]: "INFO-88", [sha("capP")]: "PRJ-1" }) });
   w.member("carol"); w.member("dave");
   w.bundle("INFO-88", "information", { title: "Controller memo" });
   w.bundle("INQ-2", "inquiry"); w.bundle("INQ-1", "inquiry"); w.bundle("PRJ-1", "project");
@@ -47,8 +48,8 @@ test("R2: governor-holding-host is the governor's own cool-off, read at the read
     ["determined", [["INQ-1", 2], ["INQ-2", 1], ["PRJ-1", 1]]], "homed through the walk from the documents behind it");
   assert.deepEqual([gov.basis.source, gov.basis.host, gov.basis.refusals, gov.basis.last_refusal_status, gov.basis.cooloff_until,
     gov.basis.retry_in_ms, gov.basis.last_refusal_at], ["host_governor", HOST, 1, 429, NOW + 90000, 90000, NOW - 30000]);
-  assert.deepEqual([gov.basis.detail.includes("OUR OWN machinery"), gov.summary.includes("PACED, not broken"),
-    gov.detail.includes("Nothing about the source is being claimed")], [true, true, true],
+  assert.deepEqual([gov.basis.detail.includes("OUR OWN machinery"), gov.summary.includes("paced, not broken"),
+    gov.detail.includes(HOST)], [true, true, true],
     "what a condition is for: our machinery, distinguishable from the source failing (D-104)");
   assert.deepEqual([gov.subject.kind, gov.subject.host, gov.subject.id, gov.subject.bundles], ["host", HOST, null, ["INFO-88"]]);
   assert.deepEqual(gov.options, [{ id: "opt", on: ["INFO-88"] }], "the acts on the documents behind it, and none of its own");
@@ -63,18 +64,40 @@ test("R2: governor-holding-host is the governor's own cool-off, read at the read
   }
 });
 
+test("R2 (T51 A-04): the governor-holding-host item says it in plain words: its summary is the design's reviewed sentence, its detail the wait in minutes and seconds, with no status code, no milliseconds and no internal term", () => {
+  const { w, holds } = corpus();
+  holds.push({ host: HOST, cooloff_until: NOW + 90000, refusals: 1, last_refusal_status: 429, last_refusal_at: NOW - 30000,
+               appetite_per_min: 60, granted: 4, refused_total: 1 });
+  const gov = byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`];
+  const key = "observation-log.vocabulary.condition_governor_holding_host";
+  assert.equal(hasWord(key), true, "the design's reviewed sentence is a held word");
+  assert.equal(gov.summary, word(key), "the summary is that sentence, read by key");
+  assert.match(gov.detail, /^[A-Z]/, "the detail starts with a capital letter");
+  assert.match(gov.detail, /again in 1 minute and 30 seconds\./, "the wait is in minutes and seconds, rounded up to the second");
+  assert.match(gov.detail, new RegExp(HOST.replace(/\./g, "\\.")), "the detail names the host");
+  for (const s of [gov.summary, gov.detail])
+    assert.doesNotMatch(s, /governor|cool-?off|PACED|\d+ ?ms|\b4\d\d\b/, `no internal term, unit or status code: "${s}"`);
+  // a wait under a minute, and a wait of whole minutes, read the same way
+  holds[0].cooloff_until = NOW + 45000;
+  assert.match(byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`].detail, /again in 45 seconds\./);
+  holds[0].cooloff_until = NOW + 120000;
+  assert.match(byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`].detail, /again in 2 minutes\./);
+  // the numbers stay in the basis, where a member's record keeps them
+  assert.equal(byId(w.read("carol"))[`CONDITION::governor-holding-host::${HOST}`].basis.retry_in_ms, 120000);
+});
+
 test("R2: partial-capture-outstanding is the capture ledger's own row, about the document its bytes were registered under; withheld whole from a viewer who may not see it; gone when the session is", () => {
   const { w, sessions } = corpus();
-  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: "cap88", created: iso(NOW - 5000), updated: iso(NOW),
+  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: sha("cap88"), created: iso(NOW - 5000), updated: iso(NOW),
                   expires: iso(NOW + 60000), ticks: 2, state: { queue: ["a", "b", "c"], discovered: 41, spent: 45 } });
-  sessions.push({ session: "cs_project", locator: `https://${HOST}/packet.pdf`, primarySha: "capP", created: iso(NOW), updated: iso(NOW),
+  sessions.push({ session: "cs_project", locator: `https://${HOST}/packet.pdf`, primarySha: sha("capP"), created: iso(NOW), updated: iso(NOW),
                   expires: iso(NOW + 60000), ticks: 1, state: { queue: ["z"] } });
   const c = byId(w.read("carol")), d = w.read("dave");
   const p = c["CONDITION::partial-capture-outstanding::cs_partial"];
   assert.deepEqual([p.subject.kind, p.subject.id], ["bundle", "INFO-88"]);
   assert.deepEqual([p.basis.source, p.basis.session, p.basis.primary_sha, p.basis.bundle_id, p.basis.outstanding,
-    p.basis.discovered, p.basis.state_readable], ["capture_sessions", "cs_partial", "cap88", "INFO-88", 3, 41, true]);
-  assert.deepEqual([p.detail.includes("primary document is captured"), p.basis.detail.includes("SCRATCH and not record")], [true, true],
+    p.basis.discovered, p.basis.state_readable], ["capture_sessions", "cs_partial", sha("cap88"), "INFO-88", 3, 41, true]);
+  assert.deepEqual([p.detail.includes(`tick ${p.basis.ticks}`), p.basis.detail.includes("SCRATCH and not record")], [true, true],
     "a partial capture is not a broken one");
   assert.ok(c["CONDITION::partial-capture-outstanding::cs_project"], "carol, who owns the project, gets the condition about its capture");
   assert.equal(byId(d)["CONDITION::partial-capture-outstanding::cs_project"], undefined, "dave gets nothing about it: withheld whole");
@@ -82,6 +105,23 @@ test("R2: partial-capture-outstanding is the capture ledger's own row, about the
   sessions.length = 0;
   for (const who of ["carol", "dave"])
     assert.ok(!w.read(who).items.some((i) => i.kind === "partial-capture-outstanding"), `the session dropped, it clears for ${who}`);
+});
+
+test("R2: partial-capture-outstanding is not raised for a large fetch parked as owed work (fetch_pending, no primary yet); control: a real partial capture still is, beside it (G25, K4577)", () => {
+  const { w, sessions } = corpus();
+  const NO_PRIMARY = "0".repeat(64);
+  sessions.push({ session: "cs_parked", locator: `https://${HOST}/big.pdf`, primarySha: NO_PRIMARY, created: iso(NOW - 5000), updated: iso(NOW),
+                  expires: iso(NOW + 60000), ticks: 0,
+                  state: { queue: ["https://x.example/a"], opened_by: "carol", fetch_pending: { since: iso(NOW - 5000), declared_bytes: 16000000, why: "large" } } });
+  sessions.push({ session: "cs_failed", locator: `https://${HOST}/bigger.pdf`, primarySha: NO_PRIMARY, created: iso(NOW - 5000), updated: iso(NOW),
+                  expires: iso(NOW + 60000), ticks: 0,
+                  state: { queue: ["https://x.example/b"], fetch_pending: { since: iso(NOW - 5000), declared_bytes: 30000000, why: "large", failed: "TOO_BIG" } } });
+  assert.deepEqual(w.read("carol").items.filter((i) => i.kind === "partial-capture-outstanding"), [],
+    "a parked fetch, or one that ended in a stated refusal, has captured nothing: no ceiling was reached, so no partial capture");
+  sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: sha("cap88"), created: iso(NOW - 5000), updated: iso(NOW),
+                  expires: iso(NOW + 60000), ticks: 2, state: { queue: ["a", "b", "c"], discovered: 41, spent: 45 } });
+  assert.deepEqual(w.read("carol").items.filter((i) => i.kind === "partial-capture-outstanding").map((i) => i.id),
+    ["CONDITION::partial-capture-outstanding::cs_partial"], "control: the real partial capture is still raised, and only it");
 });
 
 test("R2: capture-completed-unattended is the manifest's sequence, a person's document then a machine's revision, its writer named by the catalogue's one prefix; it clears when a person authors again", () => {
@@ -111,7 +151,7 @@ test("R2: capture-completed-unattended is the manifest's sequence, a person's do
 test("R2, R1: the conditions report and never mutate: two reads answer the same items, and clearing one wrote nothing", () => {
   const { w, holds, sessions, manifest } = corpus();
   holds.push({ host: HOST, cooloff_until: NOW + 1000, refusals: 2 });
-  sessions.push({ session: "s", locator: AGENDA, primarySha: "cap88", created: iso(NOW), updated: iso(NOW), expires: iso(NOW + 1), ticks: 1, state: {} });
+  sessions.push({ session: "s", locator: AGENDA, primarySha: sha("cap88"), created: iso(NOW), updated: iso(NOW), expires: iso(NOW + 1), ticks: 1, state: {} });
   manifest("k1", "carol", iso(NOW - 2)); manifest("k2", `${MACHINE_AUTHOR_PREFIX}member`, iso(NOW - 1));
   const before = w.statements.length;
   const a = w.read("dave").items.map((i) => i.id), b = w.read("dave").items.map((i) => i.id);

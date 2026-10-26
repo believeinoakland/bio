@@ -12,12 +12,14 @@
  * stores nothing, as ai-accounts' own tests do. The limits (`ai-use.useCheck`) and the AI itself are the caller's and
  * are scripted here. */
 import { test } from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
+import { accountForRefused } from "../ai-accounts/fixtures.mjs";
 import { derivationCap, captureBound, checkChain, describeChain } from "../../../src/textchain.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, withEntry, i2, noText, folio, member, ocrAnswer } from "./fixture.mjs";
@@ -77,7 +79,7 @@ function ai(answer) {
   return { calls, transcribe: async (q) => { calls.push(q); return typeof answer === "function" ? answer(q) : answer; } };
 }
 const model = (pages, extra = {}) => ({ ok: true, engine: "vision-model", version: "3",
-  pages: pages.map((p) => ({ page: p, text: `the AI read page ${p}` })), ...extra });
+  pages: pages.map((p) => ({ page: p, text: `the AI read page ${p}` })), asked: pages, sent: pages, owed: [], ...extra });
 
 /* A scanned PDF as the pdf entry reads it: page 0 a text layer, page 1 a scan, page 2 an image filling the page with
    its folio "12". Tier 3 is not bound, so pages 1 and 2 stay unread. */
@@ -128,7 +130,8 @@ test("R29 R23: a member's act on her own account, within its limits: the pages C
   /* labelled: the basis says it, the chain's sentence says it */
   assert.match(r.basis, /pages 2-3 that Civicsmith's own text recognition could not read were transcribed by the AI \(vision-model 3\) at a member's request, on the account that pays for it: this text is the AI's reading, not yet determined/);
   assert.match(r.basis, /page 3 already held a little text of its own \(a folio\), which was kept, and the AI's reading was appended after it/);
-  assert.match(describeChain(c0), /the AI's reading of the page \(vision-model 3\) \(pages 1-2\)/, "the chain's own sentence (text-chain's 0-based pages)");
+  /* re-recorded at fix round 9 (K4861 (3), K4863): text-chain R39 spells the pages 1-based, as a reader counts */
+  assert.match(describeChain(c0), /the AI's reading of the page \(vision-model 3\) \(pages 2-3\)/, "the chain's own sentence (text-chain's 1-based pages)");
   assert.doesNotMatch(r.basis, /\binstance\b|\bthe plane\b/i, "DEC-149's words");
   /* R18: pages the AI read are tier 4, named by the model; the folio page has both producers */
   const pg = Object.fromEntries(r.provenance.pages.map((p) => [p.page, p]));
@@ -169,6 +172,7 @@ test("R29 (negative controls, K874): no account, the use switched off, the group
     ["project keeps it away", async (w) => { assert.equal(w.acc.projectAiKeepAwaySet({ project: "P1", on: true, uses: ["transcribe"], reason: "not this matter", by: "ann" }).ok, true);
                                              return { member: "ann", project: "P1" }; }, /PROJECT_AI_KEPT_AWAY/],
     ["a project he cannot see", async (w) => ({ member: "dee", project: "P1" }), /NO_SUCH_PROJECT/],
+    // fixtures-contract: ai-use use-check
     ["limit reached", async (w) => ({ member: "ann", useCheck: async () => ({ ok: false, code: "AI_LIMIT_REACHED", detail: "this month's use is spent" }) }), /AI_LIMIT_REACHED: this month's use is spent/],
     ["no limits checked", async (w) => ({ member: "ann", useCheck: null }), /limits of the account that would pay for it could not be checked/],
     ["no member's act", async (w) => ({ member: null }), /only at a member's own act/],
@@ -255,14 +259,15 @@ const unchanged = (t4, label) => {
   assert.match(t4.aiNote, /^the AI was not asked to transcribe pages 2-3: /, label);
 };
 
-test("R29 (N853a): a stub accountFor answering NO_ACCOUNT and a stub useCheck answering AI_LIMIT_REACHED are each answered as given in aiRefusal, beside aiNote; nothing is filled and the AI is not asked", async () => {
-  const noAccount = { ok: false, code: "NO_ACCOUNT", check: "C-29.1", translation: "no account serves this act", detail: "nothing was used" };
+test("R29 (N853a): an accountFor answering NO_ACCOUNT and a useCheck answering AI_LIMIT_REACHED are each answered as given in aiRefusal, beside aiNote; nothing is filled and the AI is not asked", async () => {
+  /* the refusal is the real ai-accounts' (a member who holds no account), taken from its published fixture and from the real accounts that answer it */
+  const noAccount = await accountForRefused({ member: "dee", act: { kind: "transcribe", member: "dee" } });
+  assert.equal(noAccount.code, "NO_ACCOUNT");
   const a1 = ai(() => { throw new Error("the AI must not be asked"); });
   const lim1 = limits(null);
-  const r1 = await t4On({ member: "ann", accounts: { accountFor: async () => noAccount }, useCheck: lim1.useCheck, transcribe: a1.transcribe });
-  assert.equal(r1.aiRefusal, noAccount, "the refusal as given, not a copy or a re-wording");
-  assert.deepEqual(r1.aiRefusal, { ok: false, code: "NO_ACCOUNT", check: "C-29.1", translation: "no account serves this act", detail: "nothing was used" });
-  assert.match(r1.aiNote, /NO_ACCOUNT: nothing was used/);
+  const r1 = await t4On({ member: "dee", accounts: (await group()).acc, useCheck: lim1.useCheck, transcribe: a1.transcribe });
+  assert.deepEqual(r1.aiRefusal, noAccount, "the refusal as given, not a re-wording");
+  assert.match(r1.aiNote, /NO_ACCOUNT: /);
   assert.deepEqual([a1.calls.length, lim1.asked.length], [0, 0], "no limit asked after the account refused");
   unchanged(r1, "NO_ACCOUNT");
 
@@ -314,6 +319,8 @@ test("R29 (N853a): every refusal the real ai-accounts.accountFor answers for the
 test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRefusal key: a declining AI, an unreachable AI, an answer naming no model, no text returned, no member's act, no accounts, an accountFor or useCheck that throws, no limits checked, no AI set up, no page left; and a filled reading carries none", async () => {
   const { acc } = await group();
   const base = { member: "ann", accounts: acc, useCheck: async () => null };
+  // fixtures-generic: busy
+  // fixtures-contract: store-assembly transcribe-answer
   const stops = [
     ["a declining AI", { ...base, transcribe: async () => ({ ok: false, reason: "busy" }) }, /the AI declined \(busy\)/],
     ["an unreachable AI", { ...base, transcribe: async () => { throw new Error("down"); } }, /could not be reached/],
@@ -341,6 +348,7 @@ test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRe
 });
 
 /* R31 (T48; N996; K3101): the paying account is asked of `ai-accounts`, handed in as `transcription.accounts`. */
+// fixtures-own: harness a recording wrapper around the real ai-accounts' accountFor (the test's own harness: it records the question asked and delegates; it answers nothing itself)
 const asking = (inner) => { const asked = []; return { asked, accountFor: async (q) => { asked.push(q); return inner(q); } }; };
 
 test("R31: a transcription whose accounts (ai-accounts) answers NO_ACCOUNT answers that refusal as given in aiRefusal and fills nothing; control: one whose accounts.accountFor answers an account transcribes the asked pages as before, the same act asked", async () => {
@@ -574,6 +582,6 @@ test("R30 (negative control): a stored reading with only OCR parts is seeded as 
   assert.ok(!t3.chain.some((s) => s.step === "ai_transcription"));
   /* and with no seed, a member-less re-read says what it always said */
   const none = await tier3Extend({}, { sha: "d", storeName: "bio", i2text: i2(SCAN4), wiredTier: 1, tier2PerPage: null, fmt: "pdf" });
-  assert.equal(none.ocrNote, "this document has no text layer to read and no OCR engine is installed in your group's Civicsmith, so nothing is claimed about what it says");
+  assert.equal(none.ocrNote, word("reading-pipeline.document_text_layer"));
   assert.deepEqual([none.chainSet, none.wiredTier, none.seeded], [false, 1, []]);
 });

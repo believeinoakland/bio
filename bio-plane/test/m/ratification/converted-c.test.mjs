@@ -22,6 +22,8 @@ import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/
 import { checkCaseDocument, CASE_DOCUMENT_FAMILY, caseConclusionRowLines } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+import { recordReuseVerdicts } from "../capture/fixtures.mjs";
 
 /* ================================================================ a /6 case document, in op=publish's shape */
 
@@ -77,19 +79,18 @@ function publishedCaseText({ caseId, edition = 1, project, members, conclusions 
   const body = [
     `# Case ${caseId} — edition ${edition}`, "", "## Scope", "", SCOPE, "", "## Findings In This Case", "",
     ...members.map((m, i) => `${i + 1}. ${m.id} — ${m.role === "load_bearing" ? "LOAD-BEARING" : "supporting"}, frozen at version ${m.pin}`),
-    "", "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
-    "A SUPPORTING finding travels with the case and is not presented as carrying it.", "",
+    "", word("case-authoring.body.load_bearing_finding"),
+    word("case-authoring.body.supporting_finding_travels"), "",
     "## What This Excludes", "", STMT, "", `- ${LEFT} — ${EXCL_D}: ${EXCL_R}`, "",
     `Position on putting this case to its subject: sought_and_answered. ${JUST}`, "",
     "## What Was Searched", "", "- **document level** (referent): PARTIAL.", "",
     "## What Each Finding Reached, As Read For This Case", "",
     ...members.map((m) => `- **${m.id}** (its edition 1): capture UNRATED; connection grade D, no stronger than ${MEMO}.`), "",
-    "## Bias Manifest", "", `NO MANIFEST WAS IN FORCE for ${project} when this case was published.`, "",
-    "## Citations", "", "This case's project cited nothing when it was published.", "",
+    "## Bias Manifest", "", word("case-authoring.body.manifest_force_case", { scope_id: project }), "",
+    "## Citations", "", word("case-authoring.body.case_project_cited"), "",
     "## Bias Acknowledgement", "", BACK, "",
-    "## Standard Of Evidence", "", `This case is ${project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. `
-      + "An absent bar is not a bar of zero.", "",
-    "## Session Log", "", `### Session ${at} | Case published | alice`, `Trigger: op=publish, case ${caseId} edition ${edition}`, ""];
+    "## Standard Of Evidence", "", word("case-authoring.body.case_production_standard", { project, bar: "" }), "",
+    "## Session Log", "", `### Session ${at} | Case published | alice`, localize("case-authoring.document.trigger_op_publish_case", "Trigger: op=publish, case {caseId} edition {edition}", { caseId: String(caseId), edition: String(edition) }), ""];
   return fm.join("\n") + body.join("\n");
 }
 
@@ -221,8 +222,8 @@ function findingMd(id, refs = []) {
           "state_history: []", "annotations_open: 0", "reeval_pending: false", "visuals: []",
           "recheck_triggers:", "  - text: Revisit after the next budget cycle",
           "    description: The adopted budget may restate the transfer basis.",
-          "---", "", "## Question", "", "Was the transfer authorised?", "", "## What It Rests On", "", "## Conclusion", "",
-          "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+          "---", "", "## Question", "", "Was the transfer authorised?", "", word("conformance.rests"), "", "## Conclusion", "",
+          word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 function pinned(w, P, id, caseId = "CASE-2026-0001") {
   w.st.sql.exec(`INSERT OR IGNORE INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, caseId, P, NOW);
@@ -266,7 +267,7 @@ test("R8 (d442 §5): over a /6 document in op=publish's shape, with its body and
   assert.deepEqual(errorsOf(checkCaseDocument({ ...fm, format: "bio-case-document/1", case_strength: undefined,
                                                 case_strength_grounds: undefined }, ctx)), [],
     "rule 12 (e): a legacy /1 document's format is accepted and the member arms are not asked of it");
-  assert.ok(errorsOf(checkCaseDocument({ ...fm, format: "bio-case-document/9" }, ctx)).includes("C-41.1"));
+  assert.ok(errorsOf(checkCaseDocument({ ...fm, format: "bio-case-document/10" }, ctx)).includes("C-41.1"));
 });
 
 /* ================================================================ ratify-authority */
@@ -368,6 +369,8 @@ const BODIES = new Map([["/one.css", "body{color:#111}"], ["/two.css", ".a{margi
 const PARTS = [...BODIES].map(([path, text], i) => ({ address: `https://${HOST}${path}`, primary_sha: String(i).repeat(64),
                                                         host: HOST, address_norm: `${HOST}${path}`, reused_sha: sha(text) }));
 
+const REUSE_DOC = "INFO-2026-7301-envelope";
+
 /** An information bundle a ratified case's finding rests on, ratified by its owner at the Worker half, with the
  *  outbound GET the re-fetch makes answered from BODIES (and counted). */
 async function reuseRun({ ops = {}, env = {} } = {}) {
@@ -375,7 +378,7 @@ async function reuseRun({ ops = {}, env = {} } = {}) {
   const key = await newKey();
   w.member("alice", { signer: key });
   const P = w.project("Team", "alice");
-  const DOC = "INFO-2026-7301-envelope";
+  const DOC = REUSE_DOC;
   w.promote(DOC, cleanInfoMd(DOC), "information");
   w.pub.resting.set(DOC, [{ case_id: "CASE-2026-0001", finding: "INQ-2026-0001-finding", project: P }]);
   Object.assign(w.ops, ops);
@@ -410,19 +413,19 @@ test("R6 (ratify-envelope site 2): a bundle that genuinely reused nothing carrie
 });
 
 test("R6 (ratify-envelope site 2): a budget-bounded report — two reused parts under a budget of one: one re-fetched with a plain GET and confirmed by our own hash, one not_attempted with a basis naming the ceiling; the answered ceiling is stated and every outcome is handed to the record", async () => {
-  const recorded = [];
-  const r = await reuseRun({ env: BUDGET_ONE, ops: { reusedparts: () => ({ parts: PARTS }),
-                                                     recordreuseverdicts: (url, body) => { recorded.push(body); return { ok: true }; } } });
+  /* capture's own reused parts and its own recorder (its `fixtures.mjs`, made by its real code), read back from its record */
+  const rv = recordReuseVerdicts({ bundleId: REUSE_DOC, host: HOST, parts: [...BODIES].map(([path, text]) => ({ address: `https://${HOST}${path}`, text })) });
+  const r = await reuseRun({ env: BUDGET_ONE, ops: rv.ops });
   assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
   assert.deepEqual([r.body.reuse.reused_parts, r.body.reuse.budget, r.body.reuse.confirmed, r.body.reuse.changed,
                     r.body.reuse.unavailable, r.body.reuse.not_attempted], [2, 1, 1, 0, 0, 1]);
-  assert.deepEqual(r.fetched, [PARTS[0].address], "one GET, the budget's one");
+  assert.deepEqual(r.fetched, [rv.parts[0].address], "one GET, the budget's one");
   assert.deepEqual(r.body.reuse.outcomes.map((o) => [o.address_norm, o.verdict, o.observed_sha]),
-    [[PARTS[0].address_norm, "confirmed", PARTS[0].reused_sha], [PARTS[1].address_norm, "not_attempted", null]]);
+    [[rv.parts[0].address_norm, "confirmed", rv.parts[0].reused_sha], [rv.parts[1].address_norm, "not_attempted", null]]);
   assert.match(notAttempted(r), /none observed/);
   assert.deepEqual(["ceiling" in r.body.reuse, r.body.reuse.ceiling, "ceiling_unread" in r.body.reuse, "recorded" in r.body.reuse],
     [true, null, false, false]);
-  assert.deepEqual(recorded.map((b) => [b.bundleId, b.verdicts.map((v) => v.verdict)]), [[r.DOC, ["confirmed", "not_attempted"]]]);
+  assert.deepEqual(rv.recorded().map((v) => v.verdict).sort(), ["confirmed", "not_attempted"], "capture's record holds the two verdicts");
 });
 
 test("R6 (ratify-envelope site 7): a capturelimit silence does not write `none observed` — the not_attempted basis says the ceiling was UNREAD and the budget our own appetite; `ceiling` gives way to `ceiling_unread`; it still ratifies", async () => {
@@ -465,7 +468,8 @@ test("R4 (ratify-envelope site 1): a reference the store genuinely does not hold
   };
   const dangling = await run(DANGLER);
   assert.deepEqual([dangling.status, dangling.body.reason, dangling.body.findings.map((x) => x.check)], [409, "GATE_REFUSED", ["C-6.2"]]);
-  assert.ok(dangling.body.findings.some((x) => x.detail.includes("does not resolve in the store")));
+  assert.ok(dangling.body.findings.some((x) => x.detail.includes(localize("record-grammar.bundle.references_i_target_t_does_2",
+    "references[{i}].target '{t}' does not resolve in the store", { i: "0", t: "INFO-2026-9999-never-existed" }))));
   w.ops.list = () => SILENT;
   const silent = await run(CITER);
   assert.deepEqual([silent.status, silent.body.op, "findings" in silent.body], [502, "ratify/list", false]);

@@ -3,7 +3,7 @@
  * with every earlier text still readable; the grants that let named members translate; the assistant's drafts, stored as
  * labeled machine work that no member outside the workspace sees; the second check a protected word waits for; the undo;
  * the marks "this translation looks wrong"; the words in a member's language, never blank; and which language a passage
- * is read in. Requirements: build/requirements/translations.md (R1–R16). Built by copy from `instance-setup` (R67–R75,
+ * is read in. Requirements: build/requirements/translations.md (R1–R20). Built by copy from `instance-setup` (R67–R75,
  * R87; K624, N1084, P6; `build/extraction/translations.md`), its SQL unchanged; `instance-setup`'s copy is deleted in its
  * own job (T50-23).
  *
@@ -23,7 +23,8 @@ import { WIZARD_SCRIPTS_CHECKS } from "../wizard-scripts/index.mjs";
 import { proposalLabel, isMachineIdentity } from "../record-grammar/index.mjs";
 /* R2 (T39, N807): the interface's word list is setup-words' (its R1, R2), read, never copied; every sentence this module
    answers to a member is read by key (R15). */
-import { WORD_ROWS, WORDS_COMMIT, word } from "../setup-words/index.mjs";
+import { WORD_ROWS, WORDS_COMMIT, localize } from "../setup-words/index.mjs";
+import { say, why } from "./words.mjs";
 import { TRANSLATIONS_CHECKS } from "./checks.mjs";
 import { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, TRANSLATIONS_SCHEMA } from "./schema.mjs";
 export { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, TRANSLATIONS_SCHEMA };
@@ -32,10 +33,13 @@ export { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, TRANSLATIONS_SCHEMA
  * R2 (DEC-179; K2200 (4); N807): THE INTERFACE'S WORD LIST, setup-words' `WORD_ROWS` in its order, each exported as a
  * frozen `{key, en, note, means, protected}`; this module holds no copy of the list.
  * ===================================================================== */
-export const INTERFACE_WORDS = Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
-  Object.freeze({ key, en, note, means, protected: prot })));
+/* Built once, at the first call, never at import (fix round 7 G84, K4753: the plane's top level is budgeted). */
+let wordList = null;
+export const interfaceWords = () => (wordList ??= Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
+  Object.freeze({ key, en, note, means, protected: prot }))));
 export const INTERFACE_WORDS_COMMIT = WORDS_COMMIT;
-const WORD_BY_KEY = new Map(INTERFACE_WORDS.map((w) => [w.key, w]));
+let byKey = null;
+const wordByKey = () => (byKey ??= new Map(interfaceWords().map((w) => [w.key, w])));
 /* R1 (K2201): at most this many words a draft; R4: a kept word's bounds; R7: a mark's note. */
 export const TRANSLATION_DRAFT_MAX = 100;
 export const TRANSLATION_TEXT_MAX = 2000;
@@ -77,8 +81,7 @@ const draftAccount = (assistant) => {
   const { project: _none, ...account } = a;
   return { account };
 };
-const projectAccount = (what) => draftUnavailable(`a draft carries no project, and the account resolved for this one is `
-  + `a project's, so nothing was drafted and ${what}.`);
+const projectAccount = (what) => draftUnavailable(localize("translations.index.a_draft_carries_no_project", "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.", { what: String(what) }));
 
 /* =====================================================================
  * THE MODULE ON ONE DURABLE OBJECT'S STORAGE (K61, R12): `translationsOf(ctx, deps)`.
@@ -140,10 +143,10 @@ export class Translations {
   registerMemberLanguageRead(read) {
     if (typeof read !== "function")
       return { ok: false, reason: "PROVIDER_MALFORMED",
-               detail: "the member's language source is registered as a function, read({viewer}); nothing was registered" };
+               detail: localize("translations.index.the_member_language_source_is_a_function", "the member's language source is registered as a function that takes the viewer. Nothing was registered.") };
     if (this.#memberLanguageRead)
       return { ok: false, reason: "PROVIDER_DECLARED",
-               detail: "the member's language source is already registered; the first stands, and nothing was registered" };
+               detail: localize("translations.index.the_member_language_source_is_registered", "the member's language source is already registered, so the first stands. Nothing was registered.") };
     this.#memberLanguageRead = read;
     return { ok: true };
   }
@@ -167,8 +170,8 @@ export class Translations {
     try { return this.#aiAccounts().aiKeptAway(); }
     catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `whether your team keeps its material away from every assistant did not answer (${String(e && e.message || e)
-                 .slice(0, 160)}), so no ask is put to an assistant and no run starts.` };
+               detail: localize("translations.index.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({String}), so no ask is put to an assistant and no run starts.", { String: String(String(e && e.message || e)
+                 .slice(0, 160)) }) };
     }
   }
 
@@ -211,8 +214,7 @@ export class Translations {
     const who = typeof by === "string" ? by.trim() : "";
     /* DEC-49 REGION is-translation-actor */
     if (!who || isMachineIdentity(who))
-      return refusal("MACHINE_CANNOT_TRANSLATE", "translating the screens is a member's own act, from their own "
-        + "signed-in session. Nothing was changed.", { by: by ?? null });
+      return refusal("MACHINE_CANNOT_TRANSLATE", localize("translations.index.translating_the_screens_is_a", "translating the screens is a member's own act, from their own signed-in session. Nothing was changed."), { by: by ?? null });
     /* END DEC-49 REGION is-translation-actor */
     return null;
   }
@@ -221,19 +223,21 @@ export class Translations {
     const tag = typeof language === "string" ? language.trim() : "";
     /* DEC-49 REGION is-translation-language */
     if (!isLocale(tag))
-      return { refused: refusal("LANGUAGE_MALFORMED", `${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no "
-        + "language, and one is named as"} one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.`) };
+      return { refused: refusal("LANGUAGE_MALFORMED", tag
+        ? localize("translations.index.tag_is_not_a_well_formed_language_tag", "'{tag}' is not one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.", { tag: tag.slice(0, 40) })
+        : localize("translations.index.no_language_named_for_a_tag", "the request names no language, and a language is named by one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.")) };
     /* END DEC-49 REGION is-translation-language */
     return { tag: canonicalTag(tag) };
   }
   /* R2: a word of the list by its key, or NO_SUCH_WORD. */
   #translationWord(key) {
     const k = typeof key === "string" ? key.trim() : "";
-    const w = WORD_BY_KEY.get(k);
+    const w = wordByKey().get(k);
     /* DEC-49 REGION is-translation-word */
     if (!w)
-      return { refused: refusal("NO_SUCH_WORD", `${k ? `'${k.slice(0, 80)}' is not` : "the request names no word, and "
-        + "one is named by"} a key of the interface's word list. Nothing was changed.`, { key: k || null }) };
+      return { refused: refusal("NO_SUCH_WORD", k
+        ? localize("translations.index.key_is_not_a_word_key", "'{key}' is not a key of the interface's word list. Nothing was changed.", { key: k.slice(0, 80) })
+        : localize("translations.index.no_word_named_for_a_key", "the request names no word, and a word is named by a key of the interface's word list. Nothing was changed."), { key: k || null }) };
     /* END DEC-49 REGION is-translation-word */
     return { word: w };
   }
@@ -262,8 +266,7 @@ export class Translations {
   #translationSpeaker(by, tag) {
     /* DEC-49 REGION is-translation-speaker */
     if (!this.translationGranted({ member: by, language: tag }))
-      return refusal("TRANSLATION_NOT_GRANTED", `working on the words of ${tag} is for the administrators and the members `
-        + "an administrator has asked to translate it. Nothing was changed.", { by, language: tag });
+      return refusal("TRANSLATION_NOT_GRANTED", localize("translations.index.working_on_the_words_of", "working on the words of {tag} is for the administrators and the members an administrator has asked to translate it. Nothing was changed.", { tag: String(tag) }), { by, language: tag });
     /* END DEC-49 REGION is-translation-speaker */
     return null;
   }
@@ -274,7 +277,7 @@ export class Translations {
   translationGrant({ member = null, language = null, revoke = false, by = null } = {}) {
     const machine = this.#translationActor(by);
     if (machine) return machine;
-    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, "asking a member to translate the screens");
+    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, localize("translations.index.asking_a_member_to_translate", "asking a member to translate the screens"));
     const lang = this.#translationLanguage(language);
     if (lang.refused) return lang.refused;
     const who = typeof member === "string" ? member.trim() : "";
@@ -327,8 +330,7 @@ export class Translations {
     const h = this.#wordHistory(tag, entry.key);
     /* DEC-49 REGION is-translation-awaiting */
     if (h.state !== "awaiting")
-      return { refused: refusal("TRANSLATION_NOT_AWAITING", `${entry.key} is ${h.state === "missing" ? "not translated" : "shown"} `
-        + `in ${tag}, so it is not waiting for a second check. Nothing was changed.`, { key: entry.key, language: tag, state: h.state }) };
+      return { refused: refusal("TRANSLATION_NOT_AWAITING", localize("translations.index.key_is_v1_in_tag", "{key} is {v1} in {tag}, so it is not waiting for a second check. Nothing was changed.", { key: String(entry.key), v1: String(h.state === "missing" ? "not translated" : "shown"), tag: String(tag) }), { key: entry.key, language: tag, state: h.state }) };
     /* END DEC-49 REGION is-translation-awaiting */
     return { history: h };
   }
@@ -370,7 +372,7 @@ export class Translations {
     const tag = lang.tag;
     if (direction === "to_english") {
       if (!this.#isAdmin(by))
-        return { refused: notAnAdmin(by ?? null, word("setup.refused.asking_assistant_read")) };
+        return { refused: notAnAdmin(by ?? null, say("setup.refused.asking_assistant_read")) };
       const w = this.#translationWord(key);
       if (w.refused) return w;
       const aw = this.#translationAwaiting(tag, w.word);
@@ -383,8 +385,7 @@ export class Translations {
     /* DEC-49 REGION is-translation-draft */
     if (keys !== undefined && keys !== null && (!Array.isArray(keys) || keys.length < 1 || keys.length > TRANSLATION_DRAFT_MAX
         || keys.some((k) => typeof k !== "string" || !k.trim()) || new Set(keys.map((k) => k.trim())).size !== keys.length))
-      return { refused: refusal("TRANSLATION_KEYS_MALFORMED", `the words to draft are a list of 1 to ${TRANSLATION_DRAFT_MAX} `
-        + "different keys, or none for the first words still missing. Nothing was sent.") };
+      return { refused: refusal("TRANSLATION_KEYS_MALFORMED", localize("translations.index.the_words_to_draft_are", "the words to draft are a list of 1 to {TRANSLATION_DRAFT_MAX} different keys, or none for the first words still missing. Nothing was sent.", { TRANSLATION_DRAFT_MAX: String(TRANSLATION_DRAFT_MAX) })) };
     /* END DEC-49 REGION is-translation-draft */
     const shown = this.#shownAdoptions(tag);
     let asked;
@@ -395,13 +396,12 @@ export class Translations {
         if (w.refused) return w;
         /* DEC-49 REGION is-translation-draft */
         if (shown.has(w.word.key))
-          return { refused: refusal("TRANSLATION_NOT_MISSING", `${w.word.key} already has a kept translation in ${tag}, so the `
-            + "assistant does not draft it. Nothing was sent.", { key: w.word.key, language: tag }) };
+          return { refused: refusal("TRANSLATION_NOT_MISSING", localize("translations.index.key_already_has_a_kept", "{key} already has a kept translation in {tag}, so the assistant does not draft it. Nothing was sent.", { key: String(w.word.key), tag: String(tag) }), { key: w.word.key, language: tag }) };
         /* END DEC-49 REGION is-translation-draft */
         asked.push(w.word);
       }
     } else {
-      asked = INTERFACE_WORDS.filter((w) => !shown.has(w.key));
+      asked = interfaceWords().filter((w) => !shown.has(w.key));
     }
     const names = this.#localNames(tag);
     const offered_official = [], words = [];
@@ -413,8 +413,9 @@ export class Translations {
     }
     /* DEC-49 REGION is-translation-draft */
     if (!words.length)
-      return { refused: refusal("TRANSLATION_NOTHING_TO_DRAFT", `every word asked for is ${asked.length ? "an official name, "
-        + "shown as it is" : "translated already"} in ${tag}, so there is nothing to draft. Nothing was sent.`,
+      return { refused: refusal("TRANSLATION_NOTHING_TO_DRAFT", asked.length
+        ? localize("translations.index.every_word_asked_for_is_official", "every word asked for is an official name, shown as it is, in {tag}, so there is nothing to draft. Nothing was sent.", { tag })
+        : localize("translations.index.every_word_asked_for_is_translated", "every word asked for is translated already in {tag}, so there is nothing to draft. Nothing was sent.", { tag }),
         { language: tag, offered_official }) };
     /* END DEC-49 REGION is-translation-draft */
     return { direction, tag, words, offered_official };
@@ -449,7 +450,7 @@ export class Translations {
       return req.refused || null;
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the words to draft could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was sent.` };
+               detail: localize("translations.index.the_words_to_draft_could", "the words to draft could not be read ({String}). Nothing was sent.", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -467,8 +468,7 @@ export class Translations {
     const off = this.#assistantGate();
     if (off) return off;
     if (draftAccount(assistant).project) return projectAccount("nothing is sent");
-    const out = draftUnavailable("the draft is asked of the assistant by the door with these words; nothing is drafted or "
-      + "saved here.");
+    const out = draftUnavailable(localize("translations.index.the_draft_is_asked_by_the_door", "the door asks the assistant for the draft with these words. Nothing is drafted or saved here."));
     return req.direction === "to_english"
       ? { ...out, direction: req.direction, language: req.tag, key: req.key, words: req.words }
       : { ...out, direction: req.direction, language: req.tag, words: req.words, offered_official: req.offered_official };
@@ -487,35 +487,35 @@ export class Translations {
       ? words.map((w) => (w && typeof w.key === "string" ? w.key : null)).filter(Boolean) : keys;
     const req = this.#draftRequest({ language, direction, keys: asked, key, by });
     if (req.refused) return req.refused;
-    const unavailable = (why) => draftUnavailable(`${why} Nothing was saved.`);
+    const unavailable = (why) => draftUnavailable(localize("translations.index.why_nothing_was_saved", "{why} Nothing was saved.", { why: String(why) }));
     const at = this.#iso();
     const askedBy = this.#nameOf(by);
     if (req.direction === "to_english") {
       if (!draft || typeof draft !== "object" || draft.key !== req.key || typeof draft.english !== "string" || !draft.english.trim())
-        return unavailable("the assistant did not answer a reading of this word back into English.");
+        return unavailable(localize("translations.index.the_assistant_did_not_answer", "the assistant did not answer a reading of this word back into English."));
       const sent = Array.isArray(words) && words[0] && words[0].key === req.key && typeof words[0].text === "string"
         ? words[0].text : req.words[0].text;
       this.#sql.exec(`INSERT INTO translation_readings (language, key, text_sha256, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?)`,
                      req.tag, req.key, await sha256Hex(sent), by, askedBy, at);
       return { ok: true, key: req.key, language: req.tag, english: draft.english,
                label: { kind: "machine", asked_by: askedBy },
-               note: word("setup.note.machine_work_reading") };
+               note: say("setup.note.machine_work_reading") };
     }
     const got = draft && typeof draft === "object" && Array.isArray(draft.words) ? draft.words : null;
-    if (!got) return unavailable("the assistant did not answer a draft of these words.");
+    if (!got) return unavailable(localize("translations.index.the_assistant_did_not_answer_2", "the assistant did not answer a draft of these words."));
     const label = proposalLabel(TRANSLATION_DRAFTER, "translation");
     const drafted = [], refusedHere = [];
     const answered = new Map();
     for (const d of got) if (d && typeof d.key === "string" && !answered.has(d.key)) answered.set(d.key, d.text);
     for (const w of req.words) {
-      if (!answered.has(w.key)) { refusedHere.push({ key: w.key, why: "the assistant did not draft it" }); continue; }
+      if (!answered.has(w.key)) { refusedHere.push({ key: w.key, why: why("translations.not_drafted.not_answered") }); continue; }
       const text = answered.get(w.key);
       if (typeof text !== "string" || !text.trim() || [...text].length > TRANSLATION_TEXT_MAX || !oneLine(text)) {
-        refusedHere.push({ key: w.key, why: `the draft is not one line of 1 to ${TRANSLATION_TEXT_MAX} characters, so it is not stored` });
+        refusedHere.push({ key: w.key, why: why("translations.not_drafted.not_one_line", { max: TRANSLATION_TEXT_MAX }) });
         continue;
       }
       if (!samePlaceholders(text, w.en)) {
-        refusedHere.push({ key: w.key, why: "the draft's placeholders in braces differ from the English's, so it is not stored" });
+        refusedHere.push({ key: w.key, why: why("translations.not_drafted.placeholders_differ") });
         continue;
       }
       const r = this.#rows(`INSERT INTO translation_drafts (language, key, en, text, label, asked_by, asked_name, at)
@@ -524,9 +524,9 @@ export class Translations {
     }
     const theirs = (Array.isArray(not_drafted) ? not_drafted : []).map((x) => (typeof x === "string" ? x : x && x.key))
       .filter((k) => typeof k === "string" && req.words.some((w) => w.key === k));
-    for (const r of refusedHere) if (theirs.includes(r.key)) r.why = word("setup.why.assistant_draft");
+    for (const r of refusedHere) if (theirs.includes(r.key)) r.why = why("setup.why.assistant_draft");
     return { ok: true, language: req.tag, drafted, not_drafted: refusedHere, offered_official: req.offered_official,
-             note: word("setup.note.drafts_labeled_machine") };
+             note: say("setup.note.drafts_labeled_machine") };
   }
 
   /** R4, op=translationadopt: a granted speaker keeps a word's translation, typed or from a stored draft. */
@@ -547,17 +547,15 @@ export class Translations {
       d = Number.isSafeInteger(id) ? this.#one(`SELECT seq, text FROM translation_drafts WHERE seq = ? AND language = ? AND key = ?`, id, tag, entry.key) : null;
       /* DEC-49 REGION is-translation-adopt */
       if (!d)
-        return refusal("NO_SUCH_DRAFT", `there is no stored draft ${String(draft).slice(0, 40)} of ${entry.key} in ${tag}. `
-          + "Nothing was changed.", { key: entry.key, language: tag, draft });
+        return refusal("NO_SUCH_DRAFT", localize("translations.index.there_is_no_stored_draft", "there is no stored draft {String} of {key} in {tag}. Nothing was changed.", { String: String(String(draft).slice(0, 40)), key: String(entry.key), tag: String(tag) }), { key: entry.key, language: tag, draft });
       /* END DEC-49 REGION is-translation-adopt */
     }
     /* DEC-49 REGION is-translation-adopt */
     if (typeof text !== "string" || !text.trim() || [...text].length > TRANSLATION_TEXT_MAX || !oneLine(text)
         || !samePlaceholders(text, entry.en))
       return refusal("TRANSLATION_TEXT_REFUSED", typeof text === "string" && text.trim() && [...text].length <= TRANSLATION_TEXT_MAX && oneLine(text)
-        ? `the text's placeholders (${placeholdersOf(text).map((x) => `{${x}}`).join(", ") || "none"}) differ from the English's `
-          + `(${placeholdersOf(entry.en).map((x) => `{${x}}`).join(", ") || "none"}). Nothing was changed.`
-        : `a translated word is one line of 1 to ${TRANSLATION_TEXT_MAX} characters. Nothing was changed.`, { key: entry.key, language: tag });
+        ? localize("translations.index.the_texts_placeholders_v1_differ", "the text's placeholders ({v1}) differ from the English's ({v2}). Nothing was changed.", { v1: String(placeholdersOf(text).map((x) => `{${x}}`).join(", ") || "none"), v2: String(placeholdersOf(entry.en).map((x) => `{${x}}`).join(", ") || "none") })
+        : localize("translations.index.a_translated_word_is_one", "a translated word is one line of 1 to {TRANSLATION_TEXT_MAX} characters. Nothing was changed.", { TRANSLATION_TEXT_MAX: String(TRANSLATION_TEXT_MAX) }), { key: entry.key, language: tag });
     /* END DEC-49 REGION is-translation-adopt */
     const h = this.#wordHistory(tag, entry.key);
     /* DEC-157 (3), (4); K2200 (1): an ordinary word shows once kept; a protected one only when kept exactly as drafted. */
@@ -567,7 +565,7 @@ export class Translations {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, tag, entry.key, h.actN + 1, text, entry.en, state, d ? d.seq : null,
                    h.adoption ? h.adoption.seq : null, h.adoption ? h.adoption.text : null, by, this.#nameOf(by), at);
     return { ok: true, language: tag, key: entry.key, state, replaced: h.adoption ? h.adoption.text : null, at,
-             note: word(state === "shown" ? "setup.note.member_reading_language" : "setup.note.protected_word_changed") };
+             note: state === "shown" ? say("setup.note.member_reading_language") : say("setup.note.protected_word_changed") };
   }
 
   /** R5, op=translationconfirm: an awaiting protected word confirmed, then shown: by a granted speaker who did not keep
@@ -590,8 +588,7 @@ export class Translations {
     const self = adoption.by_member === by;
     /* DEC-49 REGION is-translation-confirm */
     if (self && !admin)
-      return refusal("TRANSLATION_CONFIRM_SELF", `you kept this translation of ${w.word.key}, so its second check is `
-        + "someone else's. Nothing was changed.", { key: w.word.key, language: tag });
+      return refusal("TRANSLATION_CONFIRM_SELF", localize("translations.index.you_kept_this_translation_of", "you kept this translation of {key}, so its second check is someone else's. Nothing was changed.", { key: String(w.word.key) }), { key: w.word.key, language: tag });
     /* END DEC-49 REGION is-translation-confirm */
     const secondSpeaker = !self && this.#liveGrant(by, tag) && this.#isActiveMember(by);
     let readBack = null;
@@ -601,8 +598,7 @@ export class Translations {
                             ORDER BY seq DESC LIMIT 1`, tag, w.word.key, by, sha);
       /* DEC-49 REGION is-translation-confirm */
       if (!readBack)
-        return refusal("TRANSLATION_NOT_READ_BACK", `${w.word.key} has not been read back into English for its current text `
-          + `in ${tag}. Read it back into English first, then confirm. Nothing was changed.`, { key: w.word.key, language: tag });
+        return refusal("TRANSLATION_NOT_READ_BACK", localize("translations.index.key_has_not_been_read", "{key} has not been read back into English for its current text in {tag}. Read it back into English first, then confirm. Nothing was changed.", { key: String(w.word.key), tag: String(tag) }), { key: w.word.key, language: tag });
       /* END DEC-49 REGION is-translation-confirm */
     }
     const at = this.#iso();
@@ -617,7 +613,7 @@ export class Translations {
   translationRevert({ language = null, key = null, by = null } = {}) {
     const machine = this.#translationActor(by);
     if (machine) return machine;
-    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, "undoing a translation of the screens");
+    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, localize("translations.index.undoing_a_translation_of_the_screens", "undoing a translation of the screens"));
     const lang = this.#translationLanguage(language);
     if (lang.refused) return lang.refused;
     const tag = lang.tag;
@@ -626,7 +622,7 @@ export class Translations {
     const h = this.#wordHistory(tag, w.word.key);
     /* DEC-49 REGION is-translation-revert */
     if (!h.latest)
-      return refusal("TRANSLATION_NOTHING_TO_UNDO", `${w.word.key} has never been translated into ${tag}. Nothing was changed.`,
+      return refusal("TRANSLATION_NOTHING_TO_UNDO", localize("translations.index.key_has_never_been_translated", "{key} has never been translated into {tag}. Nothing was changed.", { key: String(w.word.key), tag: String(tag) }),
         { key: w.word.key, language: tag });
     /* END DEC-49 REGION is-translation-revert */
     const from = h.adoption ? h.adoption.seq : null;
@@ -653,11 +649,11 @@ export class Translations {
     const h = this.#wordHistory(tag, w.word.key);
     /* DEC-49 REGION is-translation-mark */
     if (h.state !== "shown")
-      return refusal("TRANSLATION_NOT_SHOWN", `${w.word.key} shows no translation in ${tag}. Nothing was recorded.`,
+      return refusal("TRANSLATION_NOT_SHOWN", localize("translations.index.key_shows_no_translation_in", "{key} shows no translation in {tag}. Nothing was recorded.", { key: String(w.word.key), tag: String(tag) }),
         { key: w.word.key, language: tag });
     const n = note === null || note === undefined ? null : typeof note === "string" ? note.trim() : undefined;
     if (n === undefined || (n !== null && [...n].length > TRANSLATION_NOTE_MAX))
-      return refusal("TRANSLATION_NOTE_REFUSED", `a note is text of at most ${TRANSLATION_NOTE_MAX} characters. Nothing was recorded.`,
+      return refusal("TRANSLATION_NOTE_REFUSED", localize("translations.index.a_note_is_text_of", "a note is text of at most {TRANSLATION_NOTE_MAX} characters. Nothing was recorded.", { TRANSLATION_NOTE_MAX: String(TRANSLATION_NOTE_MAX) }),
         { key: w.word.key, language: tag });
     /* END DEC-49 REGION is-translation-mark */
     const notMember = this.#translationMember(by);
@@ -669,7 +665,7 @@ export class Translations {
     this.#sql.exec(`INSERT INTO translation_marks (language, key, act_n, note, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
                    tag, w.word.key, h.actN, n || null, by, this.#nameOf(by), at);
     return { ok: true, existed: false, language: tag, key: w.word.key, note: n || null, at,
-             note_for_you: word("setup.note_for_you.members_asked_translate") };
+             note_for_you: say("setup.note_for_you.members_asked_translate") };
   }
 
   /** R8, op=translations: the workspace for a granted speaker of `language`: every word in the list's order with its
@@ -686,7 +682,7 @@ export class Translations {
       if (speaker) return speaker;
       const hist = new Map(this.#languageHistories(tag).map((h) => [h.key, h]));
       const counts = { missing: 0, shown: 0, awaiting: 0 };
-      const words = INTERFACE_WORDS.map((w) => {
+      const words = interfaceWords().map((w) => {
         const g = hist.get(w.key) || { adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] };
         const c = Translations.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
         counts[c.state] += 1;
@@ -710,17 +706,20 @@ export class Translations {
       return { ok: true, language: tag, words_commit: INTERFACE_WORDS_COMMIT, counts, local_names: this.#localNames(tag), words };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the translation workspace could not be read (${String(e && e.message || e).slice(0, 160)}).` };
+               detail: localize("translations.index.the_translation_workspace_could_not", "the translation workspace could not be read ({String}).", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
-  /** R8, op=interfacewords: every word for `language` (by default the viewer's own, `instance-setup` R64, read through
-   *  R11), the team's shown translation where one is held and the English otherwise (`fallback: true`), never blank, with
-   *  `en` beside it. An awaiting word answers the English. Writes nothing; never throws. */
+  /** R8, R19, op=interfacewords: the words for `language` (by default the viewer's own, `instance-setup` R64, read through
+   *  R11). With no `language` named, only the words the team shows in the viewer's language (`fallback: false`), so with
+   *  none held the answer holds no word; with a `language` named (the settings screen's translation read), every word, the
+   *  team's shown translation where one is held and the English otherwise (`fallback: true`), never blank, `en` beside it.
+   *  An awaiting word is the English. Writes nothing; never throws. */
   interfaceWords({ language = undefined, viewer = null } = {}) {
+    const named = language !== undefined && language !== null && language !== "";
     try {
       let tag = null;
-      if (language !== undefined && language !== null && language !== "") {
+      if (named) {
         const lang = this.#translationLanguage(language);
         if (lang.refused) return lang.refused;
         tag = lang.tag;
@@ -734,13 +733,25 @@ export class Translations {
           const c = Translations.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
           if (c.state === "shown") shown.set(g.key, c.adoption.text);
         }
-      return { ok: true, language: tag, words: INTERFACE_WORDS.map((w) => (shown.has(w.key)
+      const word = (w) => (shown.has(w.key)
         ? { key: w.key, text: shown.get(w.key), en: w.en, fallback: false }
-        : { key: w.key, text: w.en, en: w.en, fallback: true })) };
+        : { key: w.key, text: w.en, en: w.en, fallback: true });
+      return { ok: true, language: tag, words_version: this.wordsVersion(), words: named ? interfaceWords().map(word)
+        : interfaceWords().filter((w) => shown.has(w.key)).map(word) };
     } catch {
-      return { ok: true, language: null, words: INTERFACE_WORDS.map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
-               detail: "the team's translations could not be read, so every word is shown in English." };
+      return { ok: true, language: null, words_version: this.wordsVersion(), words: named ? interfaceWords().map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })) : [],
+               detail: localize("translations.index.the_teams_translations_could_not", "the team's translations could not be read, so every word is shown in English.") };
     }
+  }
+
+  /** R20, in-process: `words_version`, a short string that names no member and no word and changes whenever a translation
+   *  of the team is adopted, confirmed or undone (the three tables are append-only, so the highest row number of each
+   *  only grows); otherwise the same across requests and isolates, being read from the storage alone. Never throws. */
+  wordsVersion() {
+    try {
+      const top = (t) => this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM ${t}`).n;
+      return `${top("translation_adoptions")}.${top("translation_confirmations")}.${top("translation_undos")}`;
+    } catch { return "0.0.0"; }
   }
 
   /* =====================================================================
@@ -763,13 +774,14 @@ export class Translations {
       const tag = typeof own === "string" && isLocale(own) ? canonicalTag(own) : null;
       /* DEC-49 REGION is-reading-language */
       if (!tag)
-        return refusal("LANGUAGE_NOT_SET", `${typeof member === "string" && member.trim() ? "this member has" : "the request names no member and"} `
-          + "no language chosen for the screens, and the request names none. Nothing was translated.");
+      return refusal("LANGUAGE_NOT_SET", typeof member === "string" && member.trim()
+        ? localize("translations.index.this_member_has_no_language_chosen", "this member has no language chosen for the screens, and the request names none. Nothing was translated.")
+        : localize("translations.index.no_member_and_no_language_named", "the request names no member and no language, so no language for the screens is chosen. Nothing was translated."));
       /* END DEC-49 REGION is-reading-language */
       return { ok: true, language: tag, source: "member" };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the language could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was translated.` };
+               detail: localize("translations.index.the_language_could_not_be", "the language could not be read ({String}). Nothing was translated.", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }}
 
@@ -806,3 +818,24 @@ export function translationsOps(m, url, body) {
     interfacewords: () => m.interfaceWords({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
   };
 }
+
+/* R18 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  /* R18 (K5195): the assistant's draft door, which the screens' translations page sends. Writes labelled drafts (to_language) or
+     the fact of a reading (to_english) through the door's record route; `by` is the door's stamp, `assistant` is the door's own. */
+  translationdraft: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that writes nothing (`to_english`); moves no bundle",
+    fields: { accepts: ["language","direction","keys","key"], requires: ["language","direction"] } },
+  translationgrant: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("translations.declared.translationgrant", "setting: a named member's grant for one language, an administrator's act; moves no bundle"),
+    fields: { accepts: ["member","language","revoke"], requires: ["member","language"] } },
+  translationadopt: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationadopt", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),
+    fields: { accepts: ["language","key","text","draft"], requires: ["language","key","text"] } },
+  translationconfirm: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationconfirm", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),
+    fields: { accepts: ["language","key"], requires: ["language","key"] } },
+  translationrevert: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("translations.declared.translationrevert", "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle"),
+    fields: { accepts: ["language","key"], requires: ["language","key"] } },
+  /* R21 (fix round 10; K5046 (c)): the read of R8, declared here, no longer in `control-plane`'s owner map. `viewer` is the door's stamp,
+     never a field a caller sends; `v` is the release version the door keys the answer's cache on; with no `language` the viewer's own is read. */
+  interfacewords: { classes: ["admin","member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read", description: localize("translations.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"),
+    fields: { accepts: ["language","v"], requires: [] } },
+});

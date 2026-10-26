@@ -9,6 +9,8 @@ import { world } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, REPUBLISH_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { DEPTH_BOUND } from "../../../src/strength/index.mjs";
 import { acceptedWorkOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { openFlagsUnread } from "../case-import/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -120,7 +122,7 @@ test("R55 (case-disclosures R13): with no acceptance in force at the leg's editi
   assert.equal(w.publish(P, "alice", [Q]).ok, true);
 });
 
-test("R55 (case-disclosures R14): an open flag on the edition is FLAG_NOT_DISCLOSED (C-120.11) until listed in flagsDisclosed, then it publishes — disclose, never block; a listed flag not open is FLAG_DISCLOSURE_NOT_STANDING (C-120.13); a failed or incomplete read FLAGS_UNDETERMINED (C-120.12); a malformed list R3's BAD_COMPLETENESS", () => {
+test("R55 (case-disclosures R14): an open flag on the edition is FLAG_NOT_DISCLOSED (C-120.11) until listed in flagsDisclosed, then it publishes — disclose, never block; a listed flag not open is FLAG_DISCLOSURE_NOT_STANDING (C-120.13); a failed or incomplete read FLAGS_UNDETERMINED (C-120.12); a malformed list R3's BAD_COMPLETENESS", async () => {
   const { w, P } = onTheirs();
   w.imports.flag(IMP, 2, { flag: "IMPFLAG-1", finding: THEIRS, issue: "page 3 is misread" });
   const before = w.snapshot();
@@ -132,7 +134,8 @@ test("R55 (case-disclosures R14): an open flag on the edition is FLAG_NOT_DISCLO
                                [[{ flag: "IMPFLAG-1", words: 'a "q"' }], "flagsDisclosed[0].words"]])
     assert.deepEqual(Object.values((({ reason, field: f }) => ({ reason, f }))(w.publish(P, "alice", [Q], { flagsDisclosed: list }))),
                      ["BAD_COMPLETENESS", field]);
-  for (const answer of [{ ok: true, complete: false, flags: [] }, { ok: false, reason: "NO_SUCH_IMPORT" }, null]) {
+  const { flags: unreadFlags } = await openFlagsUnread();
+  for (const answer of [{ ok: true, complete: false, flags: [] }, unreadFlags, null]) {
     w.imports.flagsRead = () => answer;
     refused(w.publish(P, "alice", [Q], { flagsDisclosed: [{ flag: "IMPFLAG-1" }] }), "FLAGS_UNDETERMINED");
   }
@@ -156,13 +159,12 @@ test("R53, R34: the pre-flight's blockers gain R55 (case-disclosures R6)'s, R55 
   assert.equal(pre.first.reason, "FLAG_NOT_DISCLOSED", "exactly op=publish's refusal");
   const [one, two, three] = pre.steps;
   assert.ok(one.says.includes(REPUBLISH_SENTENCE));
-  assert.equal(REPUBLISH_SENTENCE, "The published case republishes in full every document it includes, and judging whether "
-    + "they may be republished, copyright included, is the group's.");
+  assert.equal(REPUBLISH_SENTENCE, word("case-authoring.republish_sentence"));
   assert.deepEqual(two.accepted_work.map((x) => [x.member, x.leg_of, x.ref, x.group, x.case, x.edition, x.finding, x.result,
                                                  x.accepted_by, x.reason]),
     [[Q, Q, ref, "other-group", "CASE-2026-0900", 2, THEIRS, "recreated", "alice", "We recreated it whole."]]);
   assert.deepEqual(two.accepted_work[0].pair, { capture: "B", connection: "C" });
-  assert.equal("checked" in two.accepted_work[0], false, "what was checked stays inside the group");
+  assert.equal("checked" in two.accepted_work[0], false, "what was checked stays inside the team");
   assert.deepEqual([three.flags.count, three.flags.open.map((f) => [f.flag, f.ref, f.edition, f.issue])],
     [1, [["IMPFLAG-1", ref, 2, "page 3 is misread"]]]);
   assert.match(three.flags.says, /never blocked/);
@@ -197,9 +199,9 @@ test("R55 (case-disclosures R13, R14), R14: the document's accepted_work: row st
     accepted_by: "alice", accepted_at: "2026-09-27T00:00:00Z", reason: "We recreated it whole." }]);
   assert.deepEqual(back.flags, [{ ref, edition: 2, flag: "IMPFLAG-1", issue: "page 3 is misread", flagged_at: "2026-09-27T00:00:00Z",
     words: "we checked page 3 ourselves", acknowledged_by: "alice", acknowledged_at: w.clock.now }]);
-  assert.equal(text.includes("every passage"), false, "what was checked stays inside the group");
+  assert.equal(text.includes("every passage"), false, "what was checked stays inside the team");
   const body = text.slice(text.indexOf("\n---\n", 4) + 5);
-  assert.ok(body.includes("## Another Group's Work This Case Rests On"));
+  assert.ok(body.includes(word("case-disclosures.group_work_case")));
   const block = body.slice(body.indexOf("## Findings In This Case"), body.indexOf("## The Conclusions"));
   assert.ok(block.includes("open flag, disclosed with this case: page 3 is misread (flag IMPFLAG-1)"));
   /* negative control: a case reaching no other group's work carries neither block */

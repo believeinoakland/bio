@@ -145,7 +145,7 @@ test("R8 publishableAt answers each entry that may be shown to the audience, wit
   assert.equal(p.entries.find((x) => x.entry === cited.entry).basis, "public_elsewhere");
   const h = p.entries.find((x) => x.entry === hostile.entry);
   assert.equal(h.confirmed, false);
-  assert.equal(h.claim, "named by a tabloid on 2026-09-20; not confirmed by the group", "a hostile entry answers as R3's claim sentence");
+  assert.equal(h.claim, "named by a tabloid on 2026-09-20; not confirmed by the team", "a hostile entry answers as R3's claim sentence");
   assert.equal(p.entries.find((x) => x.entry === cited.entry).value, "Pat Q. Example", "each publishable entry with its value");
   assert.equal(h.value, "nurse");
   const reads = w.count("source_reads");

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { storage } from "./fixture.mjs";
+import { promotionOver } from "../promotion/fixtures.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
@@ -17,7 +18,6 @@ import { progressionsOf } from "../../../src/progressions/index.mjs";
 
 const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const MEMBER = "class:member", ALICE = "member:alice";
-const promotionStub = () => ({ registerStep() { return { ok: true }; }, registerFact() { return { ok: true }; }, onCommitted() { return { ok: true }; } });
 
 function realWorld() {
   const st = storage();
@@ -29,7 +29,7 @@ function realWorld() {
   record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const promotion = promotionStub();
+  const promotion = promotionOver({ record, membership, host });
   const x = extractionOf(host, { record, membership, promotion });
   x.migrate();
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });

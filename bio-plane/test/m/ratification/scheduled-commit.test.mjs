@@ -15,6 +15,7 @@ import { caseConclusionRowLines, rowOf } from "../../../src/ratification/index.m
 import { rowOf as publicationRowOf } from "../../../src/publication/checks.mjs";
 import { materialsLines } from "../../../src/case-grammar/index.mjs";
 import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* DEC-187 (4): the words C-122.6 answers after signing, read by key from the design stream's `words.json` */
 const SIGNED_WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url))).words
@@ -146,7 +147,7 @@ const PHOTO_REFUSAL = { ok: false, ...publicationRowOf("PHOTO_MARKS_CHANGED_SINC
   detail: "1 photo(s) this case document carries cannot be published as prepared" };
 const DOCUMENT_REFUSAL = { ok: false, reason: "DOCUMENT_COPY_CHANGED_SINCE", code: "DOCUMENT_COPY_CHANGED_SINCE",
   check: "C-122.7", translation: "A document's publication copy changed after this case was prepared.",
-  documents: [{ ref: "INFO-2026-0030-letter", sha: "cd".repeat(32), why: "its copy is no longer the one the case names" }],
+  documents: [{ ref: "INFO-2026-0030-letter", sha: "cd".repeat(32), why: word("document.refused.changed") }],
   detail: "1 member document(s) this case document carries cannot be published as prepared" };
 const BOTH = { ...PHOTO_REFUSAL, caseId: CASE, edition: 1, refusals: [PHOTO_REFUSAL, DOCUMENT_REFUSAL] };
 

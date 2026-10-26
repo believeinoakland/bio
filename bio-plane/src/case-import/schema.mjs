@@ -1,4 +1,4 @@
-/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9 (R4's group fields, T46), R12, R13, R17, R18, R21).
+/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9 (R4's group fields, T46), R12, R13, R17, R18, R21, R29, R30).
  *
  * APPEND-ONLY (R12): no act of this module updates or deletes a row. An import, an edition, its files, each recreation
  * (one `case_import_checks` row and its results and calculations per run: the import's, then each completion's), each acceptance,
@@ -229,6 +229,30 @@ CREATE TABLE IF NOT EXISTS case_import_docket_entries (
   recorded_at   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS case_import_docket_entries_import ON case_import_docket_entries (import_id, seq, rn);
+-- R29 (T51; K4169): a project of this group declared a rerun of an imported edition. Never edited; one per project and edition.
+CREATE TABLE IF NOT EXISTS case_import_reruns (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  project       TEXT NOT NULL,
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_reruns_project ON case_import_reruns (project, import_id, edition);
+-- R30 (T51; K4169): a member's pairing of one source finding with one of the project's own, or its withdrawal. Append-only;
+-- the latest entry for a pair stands.
+CREATE TABLE IF NOT EXISTS case_import_rerun_pairs (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  project       TEXT NOT NULL,
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  source_finding TEXT NOT NULL,
+  own_finding   TEXT NOT NULL,
+  withdrawn     INTEGER NOT NULL,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_rerun_pairs_project ON case_import_rerun_pairs (project, import_id, edition, rn);
 `;
 
 /** The tables, every one cleared by the whole-store purge only (R13). */
@@ -237,7 +261,7 @@ export const CASE_IMPORT_TABLES = Object.freeze(["case_imports", "case_import_ed
   "case_import_documents",
   "case_import_acceptances", "case_import_withdrawals", "case_import_flags", "case_import_clears",
   "case_import_edition_keys", "case_import_group_fields", "case_import_watches", "case_import_watch_ends", "case_import_docket_reads",
-  "case_import_docket_entries"]);
+  "case_import_docket_entries", "case_import_reruns", "case_import_rerun_pairs"]);
 
 /** Creates the tables; idempotent. */
 export function migrateCaseImport(sql) {

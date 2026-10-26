@@ -4,8 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh } from "./fixture.mjs";
 import { noSha, NO_SHA_DETAIL, EXTRACTION_CHECKS, REEXTRACT_CHECKS, extractionOps } from "../../../src/extraction/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
-const TRANSLATION = "This read is about one captured document, named by its fingerprint, and none was named.";
+const TRANSLATION = word("refusal.NO_SHA");
 const KEYS = ["check", "code", "detail", "ok", "reason", "translation"];
 
 test("R63: noSha answers {ok: false, reason: NO_SHA, code, check, translation, detail}: exactly those keys, its own row's check and translation, the caller's sentence as detail", () => {

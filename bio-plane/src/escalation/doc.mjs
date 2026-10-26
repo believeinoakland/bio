@@ -4,6 +4,7 @@
  * section, where the front matter's grammar has no escapes). The module's tables are projections of this log. */
 
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const ESCALATION = "escalation";
 export const LOG = "Escalation Log";
@@ -36,7 +37,7 @@ export function escalationDoc({ id, project, determination, act, standards, auth
     `act: ${act ? tok(act) : "null"}`, "stage: 1", `standards: [${standards.map(tok).join(", ")}]`,
     `opened_by: ${tok(author)}`, ...CORE_TAIL, "---", "", `## ${LOG}`, "", logText(1, entry), "",
     "## Session Log", "", `### Session ${at} | Escalation opened | ${author}`,
-    "Changes: escalation opened at stage 1.", ""].join("\n");
+    word("escalation.changes_escalation_opened"), ""].join("\n");
 }
 
 const logText = (seq, entry) => `### ${seq} | ${entry.kind} | ${entry.author} | ${entry.at}\n${JSON.stringify(entry)}`;

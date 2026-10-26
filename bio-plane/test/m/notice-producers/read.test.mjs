@@ -5,11 +5,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world } from "../money-checks/fixture.mjs";
+import { homeOfHomed } from "../provenance/fixtures.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX,
-  ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX, WATCHED_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
+  ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX, WATCHED_ITEMS_MAX, FETCH_DONE_MAX, FETCH_DONE_DAYS, INGEST_NOTICE_MAX, INGEST_NOTICE_DAYS, READING_ENDED_MAX, READING_ENDED_DAYS } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
 const P = "PROJ-2026-0001-alpha", H = "PROJ-2026-0002-hidden";
@@ -46,14 +48,14 @@ function providers(calls = []) {
       securityToolEvents: () => ({ ok: true, truncated: false, cursor: "2", events: [{ tool_id: "scanii-1", event: "added", at: "2026-10-01T00:00:00Z" },
         { tool_id: "scanii-1", event: "switched_off", at: "2026-10-05T00:00:00Z" }] }),
       securityTools: () => ({ ok: true, tools: [{ tool_id: "scanii-1", provider_id: "scanii", state: "off", off_reason: "PRIVATE_MODE_NOT_HONOURED" }] }) },
-    provenance: { homeOf: () => ({ bundleId: P }) },
+    provenance: homeOfHomed({ ["c".repeat(64)]: "INFO-2026-0001-scan" }),
     /* R16 (ai-use R5, R9) and R17 (steps, question-explorer, investigation, review): one entry each, as each answers */
     aiUse: { exploreAsksPending: () => ({ ok: true, asks: [{ key: `explore-ask:project:${P}:2026-10-06`, owner: `project:${P}`, day: "2026-10-06",
-        what: ["What did the council vote?"], asked_at: NOW, estimate: "not known yet" }] }),
+        what: ["What did the council vote?"], asked_at: NOW, estimate: word("question-explorer.known") }] }),
       limitsReached: () => ({ ok: true, reached: [{ key: "ai-limit:group:ask:usd:day:2026-10-06", owner: "group", scope: "ask", unit: "usd",
         period: "day", period_start: "2026-10-06", reached_at: NOW }] }) },
     questionExplorer: { findsFor: () => ({ ok: true, truncated: false, finds: [{ key: "explore-find:F1:INQ-1", find: "F1", question: "INQ-1",
-      kind: "page", label: "machine", by: "system", says: "The system found this while exploring the question.", at: NOW }] }) },
+      kind: "page", label: "machine", by: "system", says: "FIND-MARK: a page the question led to.", at: NOW }] }) },
     steps: { laterFound: () => ({ ok: true, found: [{ step: "STP-1", look: 1, observation: 2, at: NOW, questions: ["INQ-1"], key: "k-later" }] }),
       stepsDue: () => ({ ok: true, due: [{ step: "STP-1", work: "ask the clerk", kind: "past_date", date: "2026-10-01", key: "k-date" },
         { step: "STP-1", work: "ask the clerk", kind: "reminder", date: "2026-10-06", key: "k-rem" }] }),
@@ -115,7 +117,10 @@ test("R1: every item R2–R6, R12–R17 and R24 derive for this member and viewe
     step_due: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, step_cost_shared: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
     step_cost_message: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, milestone: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
     project_quiet: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
-    watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false }, failed: [] });
+    watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false },
+    fetch_done: { bound: FETCH_DONE_MAX, days: FETCH_DONE_DAYS, truncated: false },
+    ingest: { bound: INGEST_NOTICE_MAX, days: INGEST_NOTICE_DAYS, truncated: false },
+    reading_ended: { bound: READING_ENDED_MAX, days: READING_ENDED_DAYS, truncated: false }, failed: [] });
   /* R16's and R17's items each carry the class queue R1 takes for its kind */
   assert.deepEqual(Object.fromEntries(r.items.filter((i) => !/::(interest|money|standing|temporal|inquiry|security|policy|scan)/.test(i.id))
     .map((i) => [i.kind, i.class])), { "explore-ask": "FINDING", "ai-limit-reached": "FINDING", "project-account-suspended": "FINDING",

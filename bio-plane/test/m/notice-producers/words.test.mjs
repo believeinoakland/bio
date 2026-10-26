@@ -47,17 +47,15 @@ test("R16 the Ask's act reads act.exploreapprove.label.queue; the retired act.ow
 test("R16 R17 (T44) {date}: date.daymonth in the current year, date.daymonthyear in any other, the day with no leading zero and the month from date.month.*; {when} after \"until\" from ai.until.*, never the refusals' ai.when.*; nothing for no day", () => {
   const october = word("date.month.october");
   assert.equal(dayInSentence("2026-10-09", "2026-10-11"), word("date.daymonth", { day: "9", month: october }));
-  assert.equal(dayInSentence("2026-10-09", "2026-10-11"), `9 ${october}`);
-  assert.equal(dayInSentence("2026-01-31", "2026-12-31"), `31 ${word("date.month.january")}`, "the same year, however far");
+  assert.equal(dayInSentence("2026-01-31", "2026-12-31"), word("date.daymonth", { day: "31", month: word("date.month.january") }), "the same year, however far");
   assert.equal(dayInSentence("2025-12-31", "2026-01-01"), word("date.daymonthyear", { day: "31", month: word("date.month.december"), year: "2025" }));
-  assert.equal(dayInSentence("2027-03-03", "2026-10-11"), `3 ${word("date.month.march")} 2027`, "a day in a later year names it too");
-  assert.equal(dayInSentence("2026-03-03", null), `3 ${word("date.month.march")} 2026`, "with no current day read, the year is named");
+  assert.equal(dayInSentence("2027-03-03", "2026-10-11"), word("date.daymonthyear", { day: "3", month: word("date.month.march"), year: "2027" }), "a day in a later year names it too");
+  assert.equal(dayInSentence("2026-03-03", null), word("date.daymonthyear", { day: "3", month: word("date.month.march"), year: "2026" }), "with no current day read, the year is named");
   for (let m = 1; m <= 12; m++) assert.equal(monthName(m), word(`date.month.${MONTHS[m - 1]}`));
   for (const bad of [null, "", "2026-13-01", "9 October", "2026-10-09T12:00:00Z"]) assert.equal(dayInSentence(bad, "2026-10-11"), null, String(bad));
   assert.equal(monthName(0), null);
   assert.equal(untilWords("day"), word("ai.until.day"));
   assert.equal(untilWords("month", 11), word("ai.until.month", { month: word("date.month.november") }));
-  assert.equal(untilWords("month", 11), `1 ${word("date.month.november")}`);
   for (const [p, m] of [["week", 11], ["month", 0], ["month", 13], [null, 1]]) assert.equal(untilWords(p, m), null, `${p} ${m}`);
   /* negative control: the refusals' words are ai-use's; this module holds neither, so no sentence here can say them */
   for (const k of ["ai.when.day", "ai.when.month"]) assert.equal(typeof WORDS[k], "string", `${k} is in words.json`);

@@ -27,7 +27,7 @@
 
 import { SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { DISPOSITIONS } from "../promotion/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** The two decisions a member may record about a derived question (D-79): `promotion`'s one list (its R51), the same
  *  frozen array, re-exported here (R35; N340). Adopting one authors a focus instead. */
@@ -157,8 +157,7 @@ export function generic(code, detail, extra = {}) {
 }
 
 /* R35: the fixed sentence `notADisposition` answers with, true at every site that calls it. */
-const NOT_A_DISPOSITION_DETAIL = "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up "
-  + "is a different act and is not a disposition";
+const NOT_A_DISPOSITION_DETAIL = localize("progressions.checks.not_a_disposition_detail", "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition");
 
 /** R35 (N285, K275): THE one answer to one condition, a disposition word other than `deferred` or `dismissed`
  *  (`DISPOSITIONS`, compared exactly: a caller trims by its own rule first). `null` for either word; else

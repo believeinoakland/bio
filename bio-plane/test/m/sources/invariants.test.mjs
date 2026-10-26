@@ -3,8 +3,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, SECRET } from "./fixture.mjs";
-import { SOURCES_CHECKS, SOURCES_TABLES, SOURCES_TABLE_CLASSES, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT, NOT_RECORDED, claimSentence,
-         sourcesOps } from "../../../src/sources/index.mjs";
+import { SOURCES_CHECKS, SOURCES_TABLES, SOURCES_TABLE_CLASSES, SOURCES_OP_NAMES, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT, NOT_RECORDED,
+         claimSentence, sourcesOps } from "../../../src/sources/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const VALUE = "Unmistakable Value 7731";
 /** A table another module declares to record-core (its R21), so a `source…` table of an earlier module is not taken
@@ -71,16 +72,16 @@ test("R13 a value is never written to a log, an error or a listener payload", as
 
 test("R14 C-121.1–C-121.10 are held in this module's own table with their requirement's codes and translations (R16's four with them), and no place is named in its behaviour or outward text", async () => {
   const rows = {
-    NO_SUCH_SOURCE: ["C-121.1", "No source you can see answers to that id. Nothing was written."],
-    BAD_DISCLOSURE: ["C-121.2", "A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written."],
-    NO_EVIDENCE: ["C-121.3", "What is recorded about a source is recorded with its evidence. Name the evidence. Nothing was written."],
-    NO_SIGHT_LIST: ["C-121.4", "A detail about a source that is stored can be read only by the members listed for it, and none is listed. List at least one member, or record that the detail is known without storing it. Nothing was written."],
-    CONSENT_NOT_STANDING: ["C-121.5", "That consent cannot be recorded: the detail it names is not in this source's history, or consent to a wider audience already stands. Nothing was written."],
-    SECRET_NOT_RECOGNISED: ["C-121.6", "That secret was not recognised, so nothing was recorded. Check it and try again."],
-    MACHINE_CANNOT_MARK: ["C-121.7", "Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written."],
-    NOT_YOUR_CAPTURE: ["C-121.8", "Only the member who captured a result can mark it as from their own account on a paid service. Nothing was written."],
-    NO_SUCH_CAPTURE: ["C-121.9", "No capture the record holds answers to that digest. Nothing was written."],
-    NO_SERVICE: ["C-121.10", "A result from a paid or account-gated service names the service it came from. Name it. Nothing was written."],
+    NO_SUCH_SOURCE: ["C-121.1", word("refusal.NO_SUCH_SOURCE")],
+    BAD_DISCLOSURE: ["C-121.2", word("refusal.BAD_DISCLOSURE")],
+    NO_EVIDENCE: ["C-121.3", word("refusal.NO_EVIDENCE")],
+    NO_SIGHT_LIST: ["C-121.4", word("refusal.NO_SIGHT_LIST")],
+    CONSENT_NOT_STANDING: ["C-121.5", word("refusal.CONSENT_NOT_STANDING")],
+    SECRET_NOT_RECOGNISED: ["C-121.6", localize("sources.checks.that_secret_was_not_recognised", "That secret was not recognised, so nothing was recorded. Check it and try again.")],
+    MACHINE_CANNOT_MARK: ["C-121.7", localize("sources.checks.only_a_member_acting_for", "Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written.")],
+    NOT_YOUR_CAPTURE: ["C-121.8", word("refusal.NOT_YOUR_CAPTURE")],
+    NO_SUCH_CAPTURE: ["C-121.9", word("refusal.NO_SUCH_CAPTURE")],
+    NO_SERVICE: ["C-121.10", word("refusal.NO_SERVICE")],
   };
   assert.deepEqual(Object.keys(SOURCES_CHECKS).sort(), Object.keys(rows).sort(), "exactly the ten rows");
   for (const [code, [check, translation]] of Object.entries(rows)) {
@@ -101,8 +102,7 @@ test("R14 the ops: sourcedisclose, sourcelink, sourceconsent, sourceconsentwithd
   const { sourceId, row } = await w.pulled({ secret: SECRET });
   const url = (q) => new URL(`http://do/x?${new URLSearchParams(q)}`);
   const ops = (q, body) => sourcesOps(w.s, url(q), body);
-  assert.deepEqual(Object.keys(ops({}, {})).sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose",
-    "sourcekeyed", "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+  assert.deepEqual(Object.keys(ops({}, {})).sort(), [...SOURCES_OP_NAMES].sort(), "the ops the module declares, and no others");
   const d = ops({ by: "carol" }, { source: sourceId, revealed: { kind: "name", value: "Pat" }, how: "self", knownTo: "group",
                                    evidence: "e", sight: ["carol"], by: "bob" }).sourcedisclose();
   assert.equal(d.by, "carol", "the stamp wins over the body's by");

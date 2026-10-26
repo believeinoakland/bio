@@ -113,7 +113,7 @@ test("R11 every code is answered by its act, with its row, naming no place (each
     assert.doesNotMatch(`${r.translation} ${r.detail}`, PLACES, "no place is named in outward text");
   };
   const own = w.draft(), grp = w.groupGuide();
-  see(w.g.guideDraft({ kind: "staff_report", items: [item("L", "Ask the assistant")], by: ANN }));
+  see(w.g.guideDraft({ kind: "staff_report", items: [item("L", "Ask the model")], by: ANN }));
   see(w.g.guideDraft({ kind: "staff_report", items: [], by: ANN }));
   see(w.g.guideDraft({ kind: "staff_report", items: ITEMS, by: MACHINE }));
   see(w.g.guideDraft({ kind: "x", items: ITEMS, by: ANN }));

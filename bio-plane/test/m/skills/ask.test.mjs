@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { DEC27_LIMIT } from "../../../src/skilldoctrine.mjs";
 import { renderPack, SOURCING } from "../../../src/skillpack.mjs";
 import { askLayer, suggestionsLayer, ASK_CLAUSES, SUGGESTION_CLAUSES, ANSWER_CHECKS_KEY, LADDERS_SOURCE, ROLES_SOURCE,
          controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
@@ -25,7 +26,7 @@ const sections = () => {
            [ROLES_SOURCE]: { "§3": section(read(ROLES_SOURCE), "3. The rules") } };
 };
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
-const DEC27 = "The assistant may only structure what the member SAID";
+const DEC27 = DEC27_LIMIT.text;
 
 test("R34 R5 the ask layer, in disclosed after legal_lookup: authored, its load_when R34's sentence, its body the clauses of ladders §9.4 and §10 and DEC-27's limit, each found by R21's normaliser", () => {
   const { disclosed, resident } = renderPack(published({ [ANSWER_CHECKS_KEY]: CHECKS }));

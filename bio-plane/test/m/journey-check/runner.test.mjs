@@ -117,7 +117,7 @@ test("R11: the fake model answers by the tool the conversation names, else the o
   assert.equal(answerTool({ prompt: "… Answer by calling judge_compose.", tools: TOOLS }), "judge_compose");
   /* the transcript carries every earlier row's prompt: the one named last is this turn's */
   assert.equal(answerTool({ prompt: "STEP plan: … Answer by calling judge_plan.\n…\nSTEP compose: … Answer by calling judge_compose.", tools: TOOLS }), "judge_compose");
-  assert.equal(answerTool({ prompt: "Search, then report.", system: "Search with the meaningrows tool, then call report once.",
+  assert.equal(answerTool({ prompt: "Search, then report.", system: "Look through the rows, then call report once.",
     tools: [{ name: "meaningrows" }, { name: "report" }] }), "report");
   assert.equal(answerTool({ prompt: "Ask.", tools: [{ name: "search" }, { name: "answer" }] }), "answer");
   const read = gather([{ citations: [{ address: "https://www.lakeshore-city.example/housing/notices/2026-118" }],

@@ -110,6 +110,7 @@
  */
 
 import { BASIS_GRADES, EARNED_CAPTURE_CEILING, isMachineIdentity, canonicalJson } from "./record-grammar/index.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 
 /* ------------------------------------------------------------------ *
  * The vocabulary
@@ -131,17 +132,17 @@ export const STEP_KINDS = {
      enacted resolutions carry somebody else's machine OCR as their text layer.
      The record has been reading those as authored text. It now says what they
      are. */
-  layer:    { role: "derivation", label: "the document's own text layer", tier: "step" },
+  layer:    { role: "derivation", label: word("textchain.label.document_text_layer"), tier: "step" },
   /* A page turned into pixels — rendered, or (CPDF-12's observation, to be
      verified across the corpus) EXTRACTED, where a scanned page is one
      full-page embedded image and rasterising it would be work nobody needs. */
-  pixels:   { role: "derivation", label: "the page as pixels", tier: 3 },
+  pixels:   { role: "derivation", label: word("textchain.label.page_pixels"), tier: 3 },
   /* An OCR engine over those pixels. Names engine and version, because that
      pair is what a calibration is of and what a re-run would need. */
-  ocr:      { role: "derivation", label: "optical character recognition", tier: 3, machine: true },
+  ocr:      { role: "derivation", label: word("textchain.label.optical_character_recognition"), tier: 3, machine: true },
   /* A model that rewrote the text — cleaning, joining, correcting. THE STEP
      THIS WHOLE MODULE IS MOST AFRAID OF, and rule 2 is pointed at it. */
-  ai:       { role: "derivation", label: "a model rewrote the text", tier: null, machine: true },
+  ai:       { role: "derivation", label: word("textchain.label.model_rewrote_text"), tier: null, machine: true },
   /* N820 / D21 (R104) — AN AI READ A PAGE THAT IS ONLY A PICTURE. Not `ai`: that kind REWROTE text
      another step produced; this one PRODUCED it, from pixels the plane's own text recognition could
      not read (reading-pipeline R29, at a member's act on the paying account). So it is a rung on the
@@ -158,11 +159,11 @@ export const STEP_KINDS = {
                     one route to a letter is a measurement. This module holds none (no import).
 
      A member who checks a passage against the page raises it through `gradeCeiling`, unchanged. */
-  ai_transcription: { role: "derivation", label: "the AI's reading of the page", tier: 4, machine: true,
+  ai_transcription: { role: "derivation", label: word("textchain.label.ai_reading_page"), tier: 4, machine: true,
                       names: ["engine"], unmeasured: "undetermined", letter: "calibrated" },
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
-  attested: { role: "verification", label: "a member checked it against the image", tier: null },
+  attested: { role: "verification", label: word("textchain.label.member_checked_against"), tier: null },
   /* CAP-10 / DEC-75 / IC-122 — A CONVERSION OF THE DOCUMENT, MADE BY WHOEVER
      SERVED IT, BEFORE ANY TEXT WAS READ OUT OF IT. The case it exists for is a
      Google Drive export: the record fetched Google's OpenDocument RENDERING of
@@ -198,7 +199,7 @@ export const STEP_KINDS = {
 
      `tier: null` — a conversion is not a rung on the extraction ladder. It is
      how the BYTES came to be; the `layer` step after it is the extraction. */
-  convert:  { role: "derivation", label: "the document as converted by the host that served it",
+  convert:  { role: "derivation", label: word("textchain.label.document_converted_host"),
               tier: null, names: ["engine", "format"], unmeasured: "undetermined", letter: "calibrated" },
   /* REC-87 / IC-127 — A MEMBER TYPED THE TEXT (Bob's 5.2, CONTENT-EXTENT-DESIGN-
      SPACE.md §5.2). The case it exists for is his: a hundred-year-old title, a
@@ -246,7 +247,7 @@ export const STEP_KINDS = {
      (content-arm.test and meaningquery.test went red on exactly that). The
      handle still rides the step's `member` field, so the notation is
      `typed(member)`. */
-  typed:    { role: "derivation", label: "a member typed the text",
+  typed:    { role: "derivation", label: word("textchain.label.member_typed_text"),
               tier: null, names: ["member"], unmeasured: "undetermined", letter: "never" },
 };
 
@@ -345,9 +346,10 @@ function partKeyOf(step) {
   return Number.isInteger(e && e.part) ? `#${e.part}` : extentOf(step).join(",");
 }
 
-/** "page 3" / "pages 0-2" / "pages 0-1, 4" — contiguous runs collapsed, because
+/** "page 4" / "pages 1-3" / "pages 1-2, 5" — contiguous runs collapsed, because
  *  a scanned exhibit is a RUN of pages and a chain sentence listing forty of
- *  them individually is one nobody reads. */
+ *  them individually is one nobody reads. The stored numbers are 0-based; the
+ *  SENTENCE spells them as a reader counts (R39, G141): stored 0 reads "page 1". */
 function pageList(pages) {
   const runs = [];
   for (const p of pages) {
@@ -355,7 +357,7 @@ function pageList(pages) {
     if (last && p === last[1] + 1) last[1] = p; else runs.push([p, p]);
   }
   return `${pages.length === 1 ? "page" : "pages"} `
-       + runs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(", ");
+       + runs.map(([a, b]) => (a === b ? `${a + 1}` : `${a + 1}-${b + 1}`)).join(", ");
 }
 
 /** Does this step cover this page? An unscoped step covers every page; an
@@ -396,8 +398,8 @@ export function stepCovers(step, page) {
 export function mergedChain(parts) {
   if (!Array.isArray(parts) || parts.length === 0) return null;
   if (parts.length === 1) {
-    const bad = checkChain(parts[0] && parts[0].chain);
-    return bad || parts[0].chain;
+    const bad = checkedChain(parts[0] && parts[0].chain);
+    return bad || remember(parts[0].chain);
   }
   const out = [];
   const pagesOf = (part) => (part && Array.isArray(part.pages)
@@ -409,7 +411,7 @@ export function mergedChain(parts) {
   for (const part of parts)
     for (const p of pagesOf(part)) { if (seen.has(p)) overlap = true; seen.add(p); }
   for (const [index, part] of parts.entries()) {
-    const bad = checkChain(part && part.chain);
+    const bad = checkedChain(part && part.chain);
     if (bad) return bad;
     const pages = pagesOf(part);
     for (const step of part.chain) {
@@ -421,7 +423,7 @@ export function mergedChain(parts) {
         : { ...step });
     }
   }
-  return out;
+  return remember(out);
 }
 
 /* =========================================================================
@@ -454,37 +456,29 @@ export const TEXT_CHAIN_CHECKS = {
   TEXT_CHAIN_COLLAPSED: {
     check: 'C-35.1',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'This says the text came from a machine but not which one, or through how many '
-      + 'hands. A scanned document can pass through a scanner, a reader and a clean-up pass before '
-      + 'anyone sees it, and each one can change what it says — so the record keeps the whole '
-      + 'sequence rather than a single word for it.',
+    translation: word("refusal.TEXT_CHAIN_COLLAPSED"),
   },
   TEXT_CHAIN_EMPTY: {
     check: 'C-35.2',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'Nothing here says where this text came from. Text with no stated origin looks '
-      + 'exactly like text a publisher typed, and the difference is the whole reason this record '
-      + 'is worth trusting.',
+    translation: word("refusal.TEXT_CHAIN_EMPTY"),
   },
   TEXT_CHAIN_STEP_SHAPE: {
     check: 'C-35.3',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'One of the steps that produced this text is not readable as a step.',
+    translation: word('refusal.TEXT_CHAIN_STEP_SHAPE'),
   },
   TEXT_CHAIN_STEP_UNKNOWN: {
     check: 'C-35.4',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'One step in this text\'s history is of a kind the record does not know. It cannot '
-      + 'tell whether that step produced the text or checked it, and those are very different '
-      + 'things, so it will not guess.',
+    translation: word("refusal.TEXT_CHAIN_STEP_UNKNOWN"),
   },
   /* Rule 1 arriving one level down: the chain is an array and one of its
      entries is still just a label. */
   TEXT_CHAIN_STEP_UNNAMED: {
     check: 'C-35.5',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'This says a machine read the text but not which machine. Two readers of the same '
-      + 'scan disagree, and knowing which one produced a line is what lets anybody check it later.',
+    translation: word("refusal.TEXT_CHAIN_STEP_UNNAMED"),
   },
   /* RULE 2, and the translation carries the distinction the rule turns on,
      because the member who trips this will believe they improved the text —
@@ -492,51 +486,38 @@ export const TEXT_CHAIN_CHECKS = {
   TEXT_CHAIN_STRENGTHENS: {
     check: 'C-35.6',
     where: 'src/textchain.mjs appendStep > is-text-chain-monotone',
-    translation: 'This step claims the text became more reliable by being processed further. '
-      + 'Cleaning up a garbled line makes it easier to READ, not more likely to be what the page '
-      + 'actually said — so a later step can only ever be as trustworthy as what it was given.',
+    translation: word("refusal.TEXT_CHAIN_STRENGTHENS"),
   },
   /* RULE 3. Note the fence is on the BASIS, not on the number: a self-reported
      0.99 and a computed 0.99 are the same bytes. */
   TEXT_CONFIDENCE_PSEUDO: {
     check: 'C-35.7',
     where: 'src/textchain.mjs checkConfidence > is-text-region-confidence',
-    translation: 'This confidence figure is the machine\'s own opinion of itself. A reader that '
-      + 'measures how clearly each character resolved is saying something checkable; a model asked '
-      + 'how sure it is will answer confidently either way, and that number cannot be used as a '
-      + 'threshold. Where an engine reports no confidence, the record says so plainly instead.',
+    translation: word("refusal.TEXT_CONFIDENCE_PSEUDO"),
   },
   TEXT_CONFIDENCE_SHAPE: {
     check: 'C-35.8',
     where: 'src/textchain.mjs checkConfidence > is-text-region-confidence',
-    translation: 'The confidence on this region is not readable. Note that saying "this engine '
-      + 'reports no confidence" is a real answer here — an absent one is not the same thing.',
+    translation: word("refusal.TEXT_CONFIDENCE_SHAPE"),
   },
   /* The anchor. Without it there is no way to point a reader at the pixels, and
      an unverifiable transcription is the thing this item refuses to ship. */
   TEXT_ANCHOR_MISSING: {
     check: 'C-35.9',
     where: 'src/textchain.mjs checkAnchor > is-text-anchor',
-    translation: 'Text a machine read off an image has to say WHERE on the page it came from, so '
-      + 'anyone can look at that part of the scan and see for themselves. Without it the reading '
-      + 'cannot be checked against the document at all.',
+    translation: localize("text-chain.textchain.text_a_machine_read_off", "Text a machine read off an image has to say WHERE on the page it came from, so anyone can look at that part of the scan and see for themselves. Without it the reading cannot be checked against the document at all."),
   },
   /* Attestation, (a): a member act, refusable to a machine credential. */
   TEXT_ATTEST_MACHINE: {
     check: 'C-35.10',
     where: 'src/textchain.mjs checkAttestation > is-text-attestation',
-    translation: 'Attesting is a person saying they compared this text against the image of the '
-      + 'page and it matches. The credential that asked here is an automated one: it can run the '
-      + 'reader and lay the two side by side, and it cannot be the one who says they agree. Sign '
-      + 'in and attest it yourself.',
+    translation: word("refusal.TEXT_ATTEST_MACHINE"),
   },
   /* Attestation, (b): scoped to what was actually checked. */
   TEXT_ATTEST_EXTENT: {
     check: 'C-35.11',
     where: 'src/textchain.mjs checkAttestation > is-text-attestation',
-    translation: 'An attestation has to say how much of the document you checked — this region, '
-      + 'this page, or all of it. Checking one table and having that stand behind an entire scanned '
-      + 'report is exactly what this record will not do on your behalf.',
+    translation: word("refusal.TEXT_ATTEST_EXTENT"),
   },
   /* CPDF-13 / D-253. The calibration REFERENCE, and note carefully what this
      row does NOT refuse: a step with a `cap` and no calibration is the
@@ -548,9 +529,7 @@ export const TEXT_CHAIN_CHECKS = {
   TEXT_CHAIN_CAL_REF: {
     check: 'C-35.12',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'This step points at the measurement its fidelity rests on, but the pointer is not '
-      + 'readable as one. A measurement nobody can look up is not a measurement this record can '
-      + 'stand behind — and a broken pointer is worse than none, because it looks like one that works.',
+    translation: word("refusal.TEXT_CHAIN_CAL_REF"),
   },
   /* CAP-10 / DEC-75 / IC-122. A step kind that declares its letter must be
      CALIBRATED (`STEP_KINDS[k].letter`) — `convert`, a conversion the serving
@@ -562,11 +541,7 @@ export const TEXT_CHAIN_CHECKS = {
   TEXT_CHAIN_LETTER_UNCALIBRATED: {
     check: 'C-35.13',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'This step says how faithful a conversion of the document, or an AI\'s reading of a '
-      + 'page, was, but nobody has measured that. When a site hands us its own converted copy of a '
-      + 'file, or an AI reads a scan, the record cannot tell what was changed or misread until it has '
-      + 'compared the result against the original — so until then it says "not yet determined" '
-      + 'rather than giving a grade it has not earned.',
+    translation: word("refusal.TEXT_CHAIN_LETTER_UNCALIBRATED"),
   },
   /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
      (`STEP_KINDS[k].letter === "never"`) — today only `typed`, a member typing
@@ -576,9 +551,7 @@ export const TEXT_CHAIN_CHECKS = {
   TEXT_CHAIN_LETTER_ON_PERSON: {
     check: 'C-35.14',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'This says how faithful a member\'s own typing of the page is. Nobody grades their '
-      + 'own transcription: what a member typed stays "not yet determined" until a different member '
-      + 'checks it against the page and says it matches.',
+    translation: word("refusal.TEXT_CHAIN_LETTER_ON_PERSON"),
   },
 };
 
@@ -622,40 +595,29 @@ export function checkChain(chain) {
      labels rather than "expected an array". */
   if (typeof chain === "string")
     return refusal("TEXT_CHAIN_COLLAPSED",
-      `text_source is '${chain}', a single label. A transcription's provenance is a CHAIN — `
-      + `each step naming what performed it — because 'ocr' does not say which engine, and an `
-      + `engine is what a re-run and a calibration are OF`);
+      localize("text-chain.textchain.text_source_is_chain_a", "text_source is '{chain}', a single label. A transcription's provenance is a CHAIN — each step naming what performed it — because 'ocr' does not say which engine, and an engine is what a re-run and a calibration are OF", { chain: String(chain) }));
   if (!Array.isArray(chain) || chain.length === 0)
     return refusal("TEXT_CHAIN_EMPTY",
-      `a transcription must name at least one step that produced it; `
-      + `${chain == null ? "nothing" : "an empty chain"} was given, and text with no stated `
-      + `provenance is indistinguishable from text a publisher typed`);
+      localize("text-chain.textchain.a_transcription_must_name_at", "a transcription must name at least one step that produced it; {v1} was given, and text with no stated provenance is indistinguishable from text a publisher typed", { v1: String(chain == null ? "nothing" : "an empty chain") }));
   for (const [i, step] of chain.entries()) {
     if (!step || typeof step !== "object" || Array.isArray(step))
-      return refusal("TEXT_CHAIN_STEP_SHAPE", `step ${i} is not an object`);
+      return refusal("TEXT_CHAIN_STEP_SHAPE", localize("text-chain.textchain.step_i_is_not_an", "step {i} is not an object", { i: String(i) }));
     if (!Object.prototype.hasOwnProperty.call(STEP_KINDS, step.step))
       return refusal("TEXT_CHAIN_STEP_UNKNOWN",
-        `step ${i} is '${step.step == null ? "(absent)" : String(step.step)}', which is not one of `
-        + `${Object.keys(STEP_KINDS).join(", ")}. A step nobody classified is neither a derivation `
-        + `nor a verification, and this record will not guess which`);
+        localize("text-chain.textchain.step_i_is_v1_which", "step {i} is '{v1}', which is not one of {keys}. A step nobody classified is neither a derivation nor a verification, and this record will not guess which", { i: String(i), v1: String(step.step == null ? "(absent)" : String(step.step)), keys: String(Object.keys(STEP_KINDS).join(", ")) }));
     /* An OCR or AI step that does not name what performed it is the collapse of
        rule 1 arriving one level down: the chain is an array, and one of its
        entries is still just a label. */
     if ((step.step === "ocr" || step.step === "ai") && !(typeof step.engine === "string" && step.engine))
       return refusal("TEXT_CHAIN_STEP_UNNAMED",
-        `the ${step.step} step names no engine. What performed a derivation is the fact the chain `
-        + `exists to carry — a calibration is OF an engine and a version, and neither can be `
-        + `recovered from the word '${step.step}'`);
+        localize("text-chain.textchain.the_step_step_names_no", "the {step} step names no engine. What performed a derivation is the fact the chain exists to carry — a calibration is OF an engine and a version, and neither can be recovered from the word '{step_2}'", { step: String(step.step), step_2: String(step.step) }));
     /* CAP-10 / IC-122: a kind that DECLARES the fields it must name. Read from
        `STEP_KINDS`, so the rule follows the kind rather than a spelling. */
     const mustName = STEP_KINDS[step.step].names || [];
     const unnamed = mustName.filter((f) => !(typeof step[f] === "string" && step[f].trim()));
     if (unnamed.length)
       return refusal("TEXT_CHAIN_STEP_UNNAMED",
-        `the ${step.step} step does not name its ${unnamed.join(" or ")}. Who performed a `
-        + `derivation, and what it produced, are the facts the chain exists to carry — a `
-        + `calibration is OF a named producer and format, and neither can be recovered from the `
-        + `word '${step.step}'`);
+        localize("text-chain.textchain.the_step_step_does_not", "the {step} step does not name its {unnamed}. Who performed a derivation, and what it produced, are the facts the chain exists to carry — a calibration is OF a named producer and format, and neither can be recovered from the word '{step_2}'", { step: String(step.step), unnamed: String(unnamed.join(" or ")), step_2: String(step.step) }));
     /* CPDF-13 / D-253 — THE CALIBRATION REFERENCE. Optional, and read the
        comment on `TEXT_CHAIN_CAL_REF` above for why it is optional rather than
        required: every chain written before this rule existed carries a `cap`
@@ -667,10 +629,7 @@ export function checkChain(chain) {
     if (step.calibration != null
         && !(typeof step.calibration === "string" && step.calibration.trim()))
       return refusal("TEXT_CHAIN_CAL_REF",
-        `step ${i} names a calibration that is not a readable identifier `
-        + `(${JSON.stringify(step.calibration)}). A transcription names the MEASUREMENT its grade `
-        + `rests on so a superseded measurement can name exactly the transcriptions resting on it; `
-        + `a pointer nothing can resolve breaks that join while looking like it works`);
+        localize("text-chain.textchain.step_i_names_a_calibration", "step {i} names a calibration that is not a readable identifier ({stringify}). A transcription names the MEASUREMENT its grade rests on so a superseded measurement can name exactly the transcriptions resting on it; a pointer nothing can resolve breaks that join while looking like it works", { i: String(i), stringify: String(JSON.stringify(step.calibration)) }));
     /* CAP-10 / DEC-75: a kind whose letter must be CALIBRATED may carry one only
        beside the calibration it rests on. An unmeasured step may not claim a
        letter — the move Bob's 5.8 forbids is a letter now, lowered later under
@@ -679,34 +638,58 @@ export function checkChain(chain) {
     if (STEP_KINDS[step.step].letter === "calibrated" && step.cap != null
         && !(typeof step.calibration === "string" && step.calibration.trim()))
       return refusal("TEXT_CHAIN_LETTER_UNCALIBRATED",
-        `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)} and names no calibration. `
-        + `A ${step.step} step's cap is UNDETERMINED until a measurement of it exists, and a letter `
-        + `written here without one would be the record claiming a fidelity nobody measured`);
+        localize("text-chain.textchain.the_step_step_claims_fidelity", "the {step} step claims fidelity {stringify} and names no calibration. A {step_2} step's cap is UNDETERMINED until a measurement of it exists, and a letter written here without one would be the record claiming a fidelity nobody measured", { step: String(step.step), stringify: String(JSON.stringify(step.cap)), step_2: String(step.step) }));
     /* REC-87 / IC-127: a kind whose letter is NEVER a caller's to write (`member`).
        A person's typing has no calibration, so a letter here could only be the
        transcriber grading their own act — the equality that costs nothing, one
        altitude below the attestation fence that refuses the same thing by name. */
     if (STEP_KINDS[step.step].letter === "never" && step.cap != null)
       return refusal("TEXT_CHAIN_LETTER_ON_PERSON",
-        `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)}. What a member typed is `
-        + `UNDETERMINED until a SECOND member attests it against the page; a letter on the step itself `
-        + `would be the typist grading their own work`);
+        localize("text-chain.textchain.the_step_step_claims_fidelity_2", "the {step} step claims fidelity {stringify}. What a member typed is UNDETERMINED until a SECOND member attests it against the page; a letter on the step itself would be the typist grading their own work", { step: String(step.step), stringify: String(JSON.stringify(step.cap)) }));
   }
   /* END DEC-49 REGION is-text-chain-shape */
   return null;
+}
+
+/* R106 — A CHAIN THIS MODULE RETURNED IS KNOWN WELL-FORMED, and what is known of it is remembered, so that
+   appending to it does work in the new step alone. `KNOWN` maps a returned array to `{len, last, acc}`: its length
+   and last step (an array pushed to or truncated since it was returned is no longer the array that was checked, and
+   is checked whole again), and `acc`, the running state of `derivationCap`'s whole-document question
+   (`foldCap`/`capOf`) over its first `acc.len` steps, built on the first append that needs it. One `acc` is shared
+   down a line of appends, each advancing it in place; a chain that is no longer the tip of its line (a second append
+   to an older chain) finds `acc.len` differs from its own length and rebuilds, so a branch is answered exactly as a
+   whole check would answer it. A chain built by hand is in no map and is checked whole, as before. */
+const KNOWN = new WeakMap();
+function known(chain) {
+  const k = Array.isArray(chain) ? KNOWN.get(chain) : undefined;
+  return k && k.len === chain.length && k.last === chain[chain.length - 1] ? k : undefined;
+}
+function remember(chain, acc = null) {
+  KNOWN.set(chain, { len: chain.length, last: chain[chain.length - 1], acc });
+  return chain;
+}
+/* `checkChain`, except that a chain this module returned is not walked again. */
+function checkedChain(chain) {
+  return known(chain) ? null : checkChain(chain);
 }
 
 /** Append a step, enforcing rule 2. Returns the NEW chain, or a refusal.
  *
  *  THE INPUT CHAIN IS NEVER MUTATED. A caller holding the pre-append chain is
  *  holding what it held; this is the shape a reading assembly wants and it also
- *  means a refused append leaves nothing half-extended. */
+ *  means a refused append leaves nothing half-extended.
+ *
+ *  LINEAR OVER A CHAIN'S LIFE (R106): see `KNOWN`. A chain this module returned is not re-checked and its cap
+ *  is not re-derived from every earlier step; the refusals and results are the whole check's. */
 export function appendStep(chain, step) {
-  const bad = checkChain(chain);
+  const bad = checkedChain(chain);
   if (bad) return bad;
   const one = checkChain([step]);
   if (one) return one;
   const role = STEP_KINDS[step.step].role;
+  const k = known(chain);
+  let acc = k && k.acc && k.acc.len === chain.length ? k.acc : null;
+  if (!acc) { acc = newCapAcc(); for (const s of chain) foldCap(acc, s); if (k) k.acc = acc; }
   if (role === "derivation") {
     /* DEC-49 REGION is-text-chain-monotone
        RULE 2, and it is computed rather than trusted. The incoming step's cap
@@ -715,16 +698,16 @@ export function appendStep(chain, step) {
        plausible mistake here is not malice — it is an author who genuinely
        believes their clean-up improved the text. It did. It improved the
        READABILITY. Reliability is bounded by the worst thing that touched it. */
-    const have = derivationCap(chain);
+    const have = capOf(acc);
     if (step.cap != null && have != null && rank(step.cap) != null && rank(step.cap) < rank(have))
       return refusal("TEXT_CHAIN_STRENGTHENS",
-        `this ${step.step} step claims fidelity ${step.cap}, stronger than the ${have} the chain `
-        + `already carries. A derivation can only weaken what it received: text that was cleaned `
-        + `is more READABLE, not more RELIABLE, and the hazard of this whole capability is output `
-        + `that looks better than its input`);
+        localize("text-chain.textchain.this_step_step_claims_fidelity", "this {step} step claims fidelity {cap}, stronger than the {have} the chain already carries. A derivation can only weaken what it received: text that was cleaned is more READABLE, not more RELIABLE, and the hazard of this whole capability is output that looks better than its input", { step: String(step.step), cap: String(step.cap), have: String(have) }));
     /* END DEC-49 REGION is-text-chain-monotone */
   }
-  return [...chain, { ...step }];
+  const copy = { ...step };
+  const out = [...chain, copy];
+  foldCap(acc, copy);
+  return remember(out, acc);
 }
 
 /** The chain a document's OWN text layer produces (FW-15's case, restated as a
@@ -734,7 +717,7 @@ export function layerChain(args) {
   /* Never throws (R83): a `null` or non-object argument is every default, not a TypeError. */
   const { tier = null, container = null, cap = null, measured_by = null, calibration = null } =
     args && typeof args === "object" ? args : {};
-  return [{ step: "layer", tier, container, cap, measured_by, calibration }];
+  return remember([{ step: "layer", tier, container, cap, measured_by, calibration }]);
 }
 
 /** CAP-10 / DEC-75 / IC-122 — PUT A CONVERSION AT THE HEAD OF A CHAIN.
@@ -759,14 +742,14 @@ export function layerChain(args) {
 export function convertedChain(step, chain) {
   const one = checkChain([step]);
   if (one) return one;
-  const bad = checkChain(chain);
+  const bad = checkedChain(chain);
   if (bad) return bad;
   for (const s of chain) {
     if (STEP_KINDS[s.step].role !== "derivation") continue;
     const r = appendStep([step], s);
     if (!Array.isArray(r)) return r;
   }
-  return [{ ...step }, ...chain.map((s) => ({ ...s }))];
+  return remember([{ ...step }, ...chain.map((s) => ({ ...s }))]);
 }
 
 /* ------------------------------------------------------------------ *
@@ -805,6 +788,45 @@ export function calibrationsOf(chain) {
  * Reading a chain
  * ------------------------------------------------------------------ */
 
+/* `derivationCap`'s measured letter of a step, or null. */
+const measuredCap = (s) => (s.cap != null && rank(s.cap) != null ? s.cap : null);
+
+/* The whole-document question of `derivationCap`, as a running state a step is folded into once (R106). `cap` is
+   the weakest measured letter of the unscoped steps; `parts` each scoped part's own weakest (null while it has
+   none), `nullParts` the parts still at null and `weakest` the weakest letter over the parts; `unreadable` an extent
+   nobody could read or an unmeasured head conversion; `len` the number of steps folded. */
+function newCapAcc() {
+  return { cap: null, unreadable: false, parts: new Map(), nullParts: 0, weakest: null, len: 0 };
+}
+function foldCap(acc, step) {
+  acc.len++;
+  if (STEP_KINDS[step.step].role !== "derivation") return;
+  const ext = extentOf(step);
+  if (ext === "unreadable") { acc.unreadable = true; return; }
+  const m = measuredCap(step);
+  /* CAP-10 / DEC-75: the kind that declares `unmeasured: "undetermined"` — see `derivationCap`. */
+  if (STEP_KINDS[step.step].unmeasured === "undetermined" && m == null) acc.unreadable = true;
+  if (ext === "all") {
+    if (m) acc.cap = acc.cap == null ? m : weaker(acc.cap, m);
+    return;
+  }
+  const key = partKeyOf(step);
+  if (!acc.parts.has(key)) { acc.parts.set(key, null); acc.nullParts++; }
+  if (m) {
+    const was = acc.parts.get(key);
+    const now = was == null ? m : weaker(was, m);
+    acc.parts.set(key, now);
+    if (was == null) acc.nullParts--;
+    acc.weakest = acc.weakest == null ? now : weaker(acc.weakest, now);
+  }
+}
+/* The answer for the whole document: an unreadable extent, or a part with no measured cap, is undetermined. */
+function capOf(acc) {
+  if (acc.unreadable || acc.nullParts) return null;
+  if (acc.weakest == null) return acc.cap;
+  return acc.cap == null ? acc.weakest : weaker(acc.cap, acc.weakest);
+}
+
 /** The strongest transcription fidelity the DERIVATION steps support: the
  *  weakest link, computed here. Returns null when NO derivation step carries a
  *  measured cap — and null means UNDETERMINED, stated, never "fine".
@@ -812,19 +834,25 @@ export function calibrationsOf(chain) {
  *  A verification step is skipped deliberately and that is rule 2 holding: see
  *  the header. `gradeCeiling` is where an attestation is allowed to matter. */
 export function derivationCap(chain, target = null) {
-  if (checkChain(chain)) return null;
+  if (checkedChain(chain)) return null;
   const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
-  const measured = (s) => (s.cap != null && rank(s.cap) != null ? s.cap : null);
+  if (page == null) {
+    /* THE WHOLE DOCUMENT: the weakest over the unscoped steps and the parts, and a part with NO measured cap
+       makes the whole undetermined — a text layer's `null` is never resolved into an OCR pass's letter (see the
+       header of D-252). An extent this module could not read covers nothing it can name, so it could be a stretch
+       nothing else measured; and CAP-10: an unmeasured head conversion, whose later steps measured only its
+       output, bounds nothing — the flag is shared because the answer is the same sentence. */
+    const acc = newCapAcc();
+    for (const step of chain) foldCap(acc, step);
+    return capOf(acc);
+  }
   let cap = null, unreadable = false;
-  /* D-252: the parts, collected by the pages they cover. A document whose steps
-     are all unscoped has none of these and takes the original path exactly. */
-  const parts = new Map();
   for (const step of chain) {
     if (STEP_KINDS[step.step].role !== "derivation") continue;
     const ext = extentOf(step);
     if (ext === "unreadable") { unreadable = true; continue; }
     /* CAP-10 / DEC-75 — A KIND THAT DECLARES `unmeasured: "undetermined"`, and
-       the one place the sequence rule below does NOT hold. That rule says an
+       the one place the sequence rule does NOT hold. That rule says an
        unmeasured step neither raises nor lowers, because the text it touched
        is still bounded by a step that WAS measured. A conversion at the head
        of the chain breaks the premise: every step after it measured the
@@ -835,48 +863,18 @@ export function derivationCap(chain, target = null) {
        measurement lets a calibration row raise it. Today the `layer` step's
        own cap is null too, so this changes no value the record holds; it is
        what keeps the answer honest the day a text-layer letter is measured. */
-    if (STEP_KINDS[step.step].unmeasured === "undetermined" && measured(step) == null
-        && (page == null || ext === "all" || ext.includes(page)))
+    if (STEP_KINDS[step.step].unmeasured === "undetermined" && measuredCap(step) == null
+        && (ext === "all" || ext.includes(page)))
       unreadable = true;
-    if (page != null) {
-      /* ASKING ABOUT ONE PAGE. Only a step that covers it bounds it — which is
-         the read a basis leg citing that page needs, and the reason a mixed
-         document is still usable: the OCR'd exhibit answers C and the text-layer
-         report answers undetermined, each about itself. */
-      if (ext !== "all" && !ext.includes(page)) continue;
-      const m = measured(step);
-      if (m) cap = cap == null ? m : weaker(cap, m);
-      continue;
-    }
-    if (ext === "all") {
-      const m = measured(step);
-      if (m) cap = cap == null ? m : weaker(cap, m);
-      continue;
-    }
-    /* WITHIN a part the steps are sequential, so the landed rule holds
-       unchanged: an unmeasured step neither raises nor lowers, and the part's
-       cap is the weakest MEASURED step in it. A part with no measured step at
-       all is the undetermined one. */
-    const key = partKeyOf(step);
-    const m = measured(step);
-    if (!parts.has(key)) parts.set(key, null);
-    if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
+    /* ASKING ABOUT ONE PAGE. Only a step that covers it bounds it — which is
+       the read a basis leg citing that page needs, and the reason a mixed
+       document is still usable: the OCR'd exhibit answers C and the text-layer
+       report answers undetermined, each about itself. */
+    if (ext !== "all" && !ext.includes(page)) continue;
+    const m = measuredCap(step);
+    if (m) cap = cap == null ? m : weaker(cap, m);
   }
-  /* An extent this module could not read covers nothing it can name, so it could
-     be covering the page in hand or a stretch of the document nothing else
-     measured. Either way the answer is UNDETERMINED, stated. (CAP-10: so does an
-     unmeasured head conversion, above — the flag is shared because the answer is
-     the same sentence.) */
-  if (unreadable) return null;
-  if (page != null) return cap;
-  /* THE MIXED DOCUMENT'S CAP: the weakest over the parts, and a part with NO
-     measured cap makes the whole undetermined — see the header. This is the step
-     that refuses to resolve a text layer's `null` into an OCR pass's letter. */
-  for (const partCap of parts.values()) {
-    if (partCap == null) return null;
-    cap = cap == null ? partCap : weaker(cap, partCap);
-  }
-  return cap;
+  return unreadable ? null : cap;
 }
 
 /** Does this chain contain a derivation this record did not author — i.e. is
@@ -1026,7 +1024,7 @@ export function chainKindFor(chain, target) {
  *  it cannot describe a chain other than the one it was given — the drift that
  *  a hand-written summary beside a structured field always eventually has. */
 export function describeChain(chain) {
-  if (checkChain(chain)) return "this text's provenance was not recorded";
+  if (checkChain(chain)) return word("textchain.text.text_provenance_recorded");
   return chain.map((s) => {
     const base = STEP_KINDS[s.step].label;
     /* CAP-10: a kind that declares a `format` says what it produced, beside who
@@ -1066,14 +1064,10 @@ export function checkConfidence(confidence) {
   if (confidence === "none") return null;
   if (!confidence || typeof confidence !== "object")
     return refusal("TEXT_CONFIDENCE_SHAPE",
-      `a region's confidence is either the stated string 'none' or {value, basis}; `
-      + `an absent confidence is not the same claim as a stated absent one`);
+      localize("text-chain.textchain.a_region_confidence_is_either", "a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one"));
   if (!Object.prototype.hasOwnProperty.call(CONFIDENCE_BASES, confidence.basis))
     return refusal("TEXT_CONFIDENCE_PSEUDO",
-      `confidence basis '${confidence.basis == null ? "(absent)" : String(confidence.basis)}' is not `
-      + `${Object.keys(CONFIDENCE_BASES).join(" or ")}. A number a model reported about itself is not a `
-      + `calibrated confidence and may not be thresholded as one — it costs nothing to produce, which `
-      + `is exactly what makes it worthless as evidence`);
+      localize("text-chain.textchain.confidence_basis_v1_is_not", "confidence basis '{v1}' is not {keys}. A number a model reported about itself is not a calibrated confidence and may not be thresholded as one — it costs nothing to produce, which is exactly what makes it worthless as evidence", { v1: String(confidence.basis == null ? "(absent)" : String(confidence.basis)), keys: String(Object.keys(CONFIDENCE_BASES).join(" or ")) }));
   if (confidence.basis === "engine"
       && !(typeof confidence.value === "number" && confidence.value >= 0 && confidence.value <= 1))
     return refusal("TEXT_CONFIDENCE_SHAPE",
@@ -1117,8 +1111,7 @@ export function applyConfidenceFloor(regions, floor) {
     const c = region.confidence;
     if (c !== "none" && typeof floor === "number" && c.value < floor) {
       out.push(undeterminedRegion(region,
-        `this region decoded at ${c.value} against a floor of ${floor}, so what it says is `
-        + `undetermined; the record does not offer a best guess at a number nobody could read`));
+        word("textchain.undetermined_region.region_decoded_against", { value: String(c.value), floor: String(floor) })));
       floored++; undetermined++;
       continue;
     }
@@ -1151,18 +1144,16 @@ export function checkAnchor(source) {
   /* DEC-49 REGION is-text-anchor */
   if (!source || typeof source !== "object")
     return refusal("TEXT_ANCHOR_MISSING",
-      `text produced by a machine carries the image region a reader can check it against; `
-      + `without one, nothing in the record can be verified against the pixels it came from`);
+      localize("text-chain.textchain.a_machine_reading_carries_its_anchor", "text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from"));
   if (source.kind !== "pdf-page")
     return refusal("TEXT_ANCHOR_MISSING",
-      `the anchor names kind '${String(source.kind)}'; a transcription's anchor is a pdf-page `
-      + `reference (I2 IC-1), because that is the arm carrying page and rect`);
+      localize("text-chain.textchain.the_anchor_names_kind_string", "the anchor names kind '{String}'; a transcription's anchor is a pdf-page reference (I2 IC-1), because that is the arm carrying page and rect", { String: String(String(source.kind)) }));
   if (!Number.isInteger(source.page) || source.page < 0)
-    return refusal("TEXT_ANCHOR_MISSING", `the anchor names no page (0-based integer required)`);
+    return refusal("TEXT_ANCHOR_MISSING", localize("text-chain.textchain.the_anchor_names_no_page", "the anchor names no page (0-based integer required)"));
   if (!Array.isArray(source.rect) || source.rect.length !== 4
       || !source.rect.every((n) => typeof n === "number" && Number.isFinite(n)))
     return refusal("TEXT_ANCHOR_MISSING",
-      `the anchor names no rect; a page alone is not a region a reader can be pointed at`);
+      localize("text-chain.textchain.the_anchor_names_no_rect", "the anchor names no rect; a page alone is not a region a reader can be pointed at"));
   /* END DEC-49 REGION is-text-anchor */
   return null;
 }
@@ -1194,26 +1185,22 @@ export function checkAttestation(att) {
      shape of an extent it should never have been composing. */
   if (isMachineIdentity(a.member))
     return refusal("TEXT_ATTEST_MACHINE",
-      `'${String(a.member)}' is a machine credential. Attesting is a person saying they checked this `
-      + `text against the image — an act with a name behind it. A machine cannot perform it, and `
-      + `recording one would put a claim on the record that nobody holds`);
+      localize("text-chain.textchain.string_is_a_machine_credential", "'{String}' is a machine credential. Attesting is a person saying they checked this text against the image — an act with a name behind it. A machine cannot perform it, and recording one would put a claim on the record that nobody holds", { String: String(String(a.member)) }));
   if (!(typeof a.member === "string" && a.member.trim()))
     return refusal("TEXT_ATTEST_MACHINE",
-      `an attestation names no member. Nobody said this, and unattributed is not the same as attested`);
+      localize("text-chain.textchain.an_attestation_names_no_member", "an attestation names no member. Nobody said this, and unattributed is not the same as attested"));
   if (!(typeof a.at === "string" && a.at.trim()))
-    return refusal("TEXT_ATTEST_EXTENT", `an attestation carries the date it was made`);
+    return refusal("TEXT_ATTEST_EXTENT", localize("text-chain.textchain.an_attestation_carries_the_date", "an attestation carries the date it was made"));
   const e = a.extent;
   if (!e || typeof e !== "object" || !Object.prototype.hasOwnProperty.call(EXTENT_KINDS, e.kind))
     return refusal("TEXT_ATTEST_EXTENT",
-      `an attestation is scoped to what was actually checked — one of `
-      + `${Object.keys(EXTENT_KINDS).join(", ")}. An unscoped attestation would be read as covering `
-      + `the whole document, which is the generous reading of a claim nobody made`);
+      localize("text-chain.textchain.an_attestation_is_scoped_to", "an attestation is scoped to what was actually checked — one of {keys}. An unscoped attestation would be read as covering the whole document, which is the generous reading of a claim nobody made", { keys: String(Object.keys(EXTENT_KINDS).join(", ")) }));
   if (e.kind === "page" && !(Number.isInteger(e.page) && e.page >= 0))
-    return refusal("TEXT_ATTEST_EXTENT", `a page extent names which page (0-based)`);
+    return refusal("TEXT_ATTEST_EXTENT", localize("text-chain.textchain.a_page_extent_names_which_page", "a page extent names which page (0-based)"));
   if (e.kind === "region") {
     const bad = checkAnchor(e.source);
     if (bad) return refusal("TEXT_ATTEST_EXTENT",
-      `a region extent names the region that was checked: ${bad.detail}`);
+      localize("text-chain.textchain.a_region_extent_names_the", "a region extent names the region that was checked: {detail}", { detail: String(bad.detail) }));
   }
   /* END DEC-49 REGION is-text-attestation */
   return null;
@@ -1284,7 +1271,7 @@ export function gradeCeiling(chain, target, attestations = []) {
   if (covering.length) {
     return { ceiling: EARNED_CAPTURE_CEILING, determinant: "attestation",
              by: covering.map((a) => a.member),
-             why: `a member checked this text against the image over the extent it cites` };
+             why: word("textchain.why.member_checked_text") };
   }
   /* D-252: the cap is asked ABOUT THE TARGET, not about the document. On an
      unscoped chain that is the same question and the same answer. On a MIXED
@@ -1295,10 +1282,8 @@ export function gradeCeiling(chain, target, attestations = []) {
   const cap = derivationCap(chain, target);
   return { ceiling: cap, determinant: "derivation", by: [],
            why: cap == null
-             ? `no step in this text's provenance carries a measured fidelity${
-                 target && Number.isInteger(target.page) ? ` for page ${target.page}` : ""
-               }, so what it may support is undetermined — which is a statement, not a permission`
-             : `bounded by the weakest step that produced it (${describeChain(chain)})` };
+             ? word("textchain.why.step_text_provenance", { page: String(target && Number.isInteger(target.page) ? ` for page ${target.page + 1}` : "") })
+             : word("textchain.why.bounded_weakest_step", { chain: String(describeChain(chain)) }) };
 }
 
 /* ------------------------------------------------------------------ *
@@ -1560,14 +1545,14 @@ function a1Range(s) {
  *  `extent_kind` is the one vocabulary a row is addressed in; what sets it apart is `cited_as`
  *  (`contentCitedAs`). */
 export const CONTENT_EXTENT_KINDS = {
-  document:      { landed: true,  human: "the whole document" },
+  document:      { landed: true,  human: word("content.why.whole_document") },
   "pdf-page":    { landed: true,  human: "a page of a PDF" },
-  "sheet-cell":  { landed: true,  human: "a cell of a spreadsheet" },
-  "slide-shape": { landed: true,  human: "a shape on a slide" },
-  "doc-para":    { landed: true,  human: "a paragraph of a document" },
-  "sheet-range": { landed: true,  human: "a range of cells in a spreadsheet" },
-  "doc-table":   { landed: true,  human: "a table in a document" },
-  image:         { landed: true,  human: "an image in a document" },
+  "sheet-cell":  { landed: true,  human: word("textchain.text.cell_spreadsheet") },
+  "slide-shape": { landed: true,  human: word("textchain.text.shape_deck") },
+  "doc-para":    { landed: true,  human: word("textchain.text.paragraph_document") },
+  "sheet-range": { landed: true,  human: word("textchain.text.range_cells_spreadsheet") },
+  "doc-table":   { landed: true,  human: word("textchain.text.table_document") },
+  image:         { landed: true,  human: word("textchain.text.image_document") },
 };
 
 /** A CELL IN A1 NOTATION (R93), as the container emits it and as a member may paste it. `$` markers and
@@ -1642,6 +1627,9 @@ const trimmedOrNull = (s) => (typeof s === "string" && s.trim() ? s.trim() : nul
 const canonicalCell = (c) => (typeof c === "string" && CONTENT_EXTENT_A1_RE.test(c.trim())
   ? c.trim().replace(/\$/g, "").toUpperCase() : null);
 const intOrNull = (n) => (Number.isInteger(n) ? n : null);
+/* A chunk's own address (R97, K4913): `run` joins a unit's address only when it is an integer, so an extent with none
+   keeps the bytes it always had and every content id already minted stays. */
+const runOf = (e) => (Number.isInteger(e.run) ? { run: e.run } : {});
 
 /** The CANONICAL form of an extent — the bytes the content address is taken over (R97). Two members who mean
  *  the same passage must produce the same string, or dedup-by-construction is a claim rather than a
@@ -1654,22 +1642,26 @@ export function canonicalExtent(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
   if (e.kind === "document") return canonicalJson({ kind: "document" });
   if (e.kind === "pdf-page")
-    return canonicalJson({ kind: "pdf-page", page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null });
+    return canonicalJson({ kind: "pdf-page", page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null, ...runOf(e) });
   if (e.kind === "sheet-cell")
     return canonicalJson({ kind: "sheet-cell", sheet: trimmedOrNull(e.sheet), cell: canonicalCell(e.cell) });
   if (e.kind === "slide-shape")
-    return canonicalJson({ kind: "slide-shape", slide: intOrNull(e.slide), shape: intOrNull(e.shape) });
+    return canonicalJson({ kind: "slide-shape", slide: intOrNull(e.slide), shape: intOrNull(e.shape), ...runOf(e) });
   if (e.kind === "doc-para")
     return canonicalJson({ kind: "doc-para", para: intOrNull(e.para), run: intOrNull(e.run) });
   if (e.kind === "sheet-range")
     return canonicalJson({ kind: "sheet-range", sheet: trimmedOrNull(e.sheet),
-      range: typeof e.range === "string" ? canonicalRange(e.range) : null });
+      range: typeof e.range === "string" ? canonicalRange(e.range) : null, ...runOf(e) });
   if (e.kind === "doc-table")
     return canonicalJson({ kind: "doc-table", table: intOrNull(e.table), cell: canonicalCell(e.cell) });
   if (e.kind === "image")
     return canonicalJson({ kind: "image", cited_as: contentCitedAs(e),
       part: typeof e.part === "string" ? e.part.trim().toLowerCase() : null,
       page: intOrNull(e.page), rect: isFourFinite(e.rect) ? minMaxRect(e.rect) : null });
+  /* A non-body part of a document (a footnote, a header, a comment; `reading-pipeline` R47): the package part and the
+     element reference are its address, so every part has its own. */
+  if (e.kind === "doc-part")
+    return canonicalJson({ kind: "doc-part", part: trimmedOrNull(e.part), ref: trimmedOrNull(e.ref) });
   return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
 }
 
@@ -1680,39 +1672,45 @@ export function canonicalExtent(extent) {
  *  describe alike and address apart — under-describing, never over-claiming. */
 export function describeExtent(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
+  /* A part's `ref` is its element reference, an address field and no authored sentence (R97), so it is read before the
+     authored-`ref` rule. */
+  if (e.kind === "doc-part") {
+    const ref = trimmedOrNull(e.ref);
+    return ref ? localize("text-chain.textchain.part_ref", "part {ref}", { ref }) : word("textchain.text.part_document_record");
+  }
   if (typeof e.ref === "string" && e.ref.trim()) return e.ref.trim();
-  if (e.kind === "document") return "the whole document";
+  if (e.kind === "document") return word("content.why.whole_document");
   if (e.kind === "pdf-page") {
-    if (!Number.isInteger(e.page)) return "a page of this document";
-    return Array.isArray(e.rect) && e.rect.length === 4 ? `page ${e.page + 1}, a region of it` : `page ${e.page + 1}`;
+    if (!Number.isInteger(e.page)) return word("textchain.text.page_document");
+    return Array.isArray(e.rect) && e.rect.length === 4 ? word("textchain.text.page_region", { page: String(e.page + 1) }) : `page ${e.page + 1}`;
   }
   if (e.kind === "sheet-cell") {
     const sheet = trimmedOrNull(e.sheet), cell = trimmedOrNull(e.cell);
-    return sheet && cell ? `${sheet}!${cell}` : "a cell of this spreadsheet";
+    return sheet && cell ? `${sheet}!${cell}` : word("textchain.text.cell_spreadsheet");
   }
   if (e.kind === "doc-para")
-    return Number.isInteger(e.para) ? `¶${e.para + 1}` : "a paragraph of this document";
+    return Number.isInteger(e.para) ? `¶${e.para + 1}` : word("textchain.text.paragraph_document");
   if (e.kind === "slide-shape")
-    return Number.isInteger(e.slide) ? `slide ${e.slide}` : "a shape in this deck";
+    return Number.isInteger(e.slide) ? `slide ${e.slide}` : word("textchain.text.shape_deck");
   if (e.kind === "sheet-range") {
     const sheet = trimmedOrNull(e.sheet);
     const range = typeof e.range === "string" ? canonicalRange(e.range) : null;
-    return sheet && range ? `${sheet}!${range}` : "a range of cells in this spreadsheet";
+    return sheet && range ? `${sheet}!${range}` : word("textchain.text.range_cells_spreadsheet");
   }
   if (e.kind === "doc-table") {
-    if (!Number.isInteger(e.table)) return "a table in this document";
+    if (!Number.isInteger(e.table)) return word("textchain.text.table_document");
     const cell = typeof e.cell === "string" && e.cell.trim() ? e.cell.trim().replace(/\$/g, "").toUpperCase() : null;
     return `table ${e.table + 1}${cell ? `, ${cell}` : ""}`;
   }
   if (e.kind === "image") {
     if (typeof e.part === "string" && e.part.trim()) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
-    if (Number.isInteger(e.page)) return `an image on page ${e.page + 1}`;
-    return "an image in this document";
+    if (Number.isInteger(e.page)) return word("pdfstructure.image_page", { page: String(e.page + 1) });
+    return word("textchain.text.image_document");
   }
   /* Own keys only: a kind such as `constructor` is not a kind, and reads as one nobody can name. */
   const row = typeof e.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, e.kind)
     ? CONTENT_EXTENT_KINDS[e.kind] : null;
-  return row ? row.human : "a part of this document the record cannot name";
+  return row ? row.human : word("textchain.text.part_document_record");
 }
 
 /*__CPDF20_PER_PAGE_START__*/
@@ -1813,10 +1811,7 @@ export function describeExtent(extent) {
 
 /** The rule in one sentence, so the probe, the suite and any report quote ONE
  *  spelling of it rather than three that drift. */
-export const TIER_RULE =
-  "per page, tier 2 replaces tier 1 only when it has strictly fewer undetermined "
-+ "characters AND strictly more decoded GLYPHS — non-whitespace code points, so "
-+ "neither tier's whitespace policy can move the award; anything else keeps tier 1";
+export const TIER_RULE = word("textchain.tier_rule");
 
 const undeterminedChars = (page) =>
   (page && Array.isArray(page.undetermined))
@@ -1887,9 +1882,14 @@ const undeterminedChars = (page) =>
  * a judgment about whether a document holds decoded text is read off THE TEXT IN
  * HAND, never off a producer's counter. The counter is a claim; the string is the
  * fact, and the two disagree by exactly the whitespace. */
-const WHITESPACE = /\s/u;
+/* The whitespace `\s` matches above U+00A0, spelled out so the count needs no per-character regexp (G48):
+   U+00A0, 1680, 2000-200A, 2028, 2029, 202F, 205F, 3000, FEFF (R73). */
+const isWideSpace = (c) =>
+  c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a) || c === 0x2028 || c === 0x2029 ||
+  c === 0x202f || c === 0x205f || c === 0x3000 || c === 0xfeff;
 /**
- * The glyphs a string holds: non-whitespace CODE POINTS, D-501's unit and the
+ * The glyphs a string holds: non-whitespace CODE POINTS other than NUL and U+FFFD (a decode's failures, G131g),
+ * D-501's unit and the
  * one counter every reader that judges "is there decoded text here" must read
  * (D-514). Exported for those readers; the award's own counter, `decodedChars`
  * below, stays unexported, and this module's suite states the award's cases
@@ -1907,7 +1907,20 @@ export function glyphCount(s) {
      once. A lone surrogate counts once too, which is the honest answer for a
      thing that is not a glyph either way. */
   let n = 0;
-  for (const ch of s) if (!WHITESPACE.test(ch)) n++;
+  const len = s.length;
+  for (let i = 0; i < len; i++) {
+    const c = s.charCodeAt(i);
+    if (c === 0x20 || (c >= 0x9 && c <= 0xd)) continue;
+    /* R73 (G131g): a decode's failures are not glyphs — NUL and the replacement character U+FFFD. */
+    if (c === 0 || c === 0xfffd) continue;
+    if (c >= 0xa0 && isWideSpace(c)) continue;
+    n++;
+    /* A high surrogate followed by a low one is one code point: step over the low. */
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < len) {
+      const d = s.charCodeAt(i + 1);
+      if (d >= 0xdc00 && d <= 0xdfff) i++;
+    }
+  }
   return n;
 }
 /* The AWARD's counter — one page's glyphs. The loop moved into `glyphCount`
@@ -1974,12 +1987,9 @@ export function mergeTier2Text(base, t2) {
     const reported = (base && base.counts && Number.isFinite(base.counts.chars)) ? base.counts.chars : 0;
     if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return { ok: false, replaced: [], kept: [], perPageTier: null,
-               why: `this document's tier-1 reading has no per-page grain and already holds `
-                  + `${baseGlyphs === null
-                        ? `${reported} character(s) its producer counted and no text this merge can read`
-                        : `${baseGlyphs} decoded glyph(s)`}`
-                  + `, so a tier-2 decode was refused rather `
-                  + `than allowed to replace text page by page it cannot be compared against` };
+               why: word("textchain.why.document_tier_reading", { held: baseGlyphs === null
+                        ? localize("text-chain.textchain.reported_characters_no_text_read", "{reported} character(s) its producer counted and no text this merge can read", { reported: String(reported) })
+                        : localize("text-chain.textchain.decoded_glyphs_held", "{count} decoded glyph(s)", { count: String(baseGlyphs) }) }) };
     /* Nothing to lose — the wholly-unread document. Tier 2 takes it whole, and
        the per-page statement says so honestly rather than inventing pages. */
     return { ok: true, text: t2, wholesale: true, perPageTier: null,
@@ -1989,7 +1999,13 @@ export function mergeTier2Text(base, t2) {
   const byPage = new Map();
   for (const p of t2Pages) if (p && Number.isInteger(p.page)) byPage.set(p.page, p);
 
-  const pages = [], undetermined = [], replaced = [], kept = [];
+  /* D-633 / D-665 / D-697: what tier 2 says of a page it wins, and what is carried onto it. */
+  const isImage = (u) => u && typeof u.reason === "string" && u.reason.startsWith("image_content_");
+  const sameMark = (x, y) => x && y && x.reason === y.reason
+    && JSON.stringify(x.rect ?? null) === JSON.stringify(y.rect ?? null);
+  const textOf = (c) => (typeof c.text === "string" ? c.text : "");
+
+  const pages = [], replaced = [], kept = [];
   for (const b of usable) {
     const cand = byPage.get(b.page) || null;
     const winner = perPageTierWinner(b, cand);
@@ -2003,28 +2019,46 @@ export function mergeTier2Text(base, t2) {
          A field so named on the page itself is carried too. */
       const own = Array.isArray(cand.undetermined) ? cand.undetermined : [];
       const had = Array.isArray(b.undetermined) ? b.undetermined : [];
-      const isImage = (u) => u && typeof u.reason === "string" && u.reason.startsWith("image_content_");
       /* D-665 / D-697 (N102) — AND WHAT IT SAID ABOUT EACH IMAGE IT COULD NOT READ. `image_unread`
          (one marker per painted image, `pdf-reader`) is as true after tier 2 as before, since tier 2
          reads no image. Each is carried after tier 2's own markers unless tier 2 states the same
          one (same reason and rect); it counts 0 undetermined characters, so no award moves. */
-      const sameMark = (x, y) => x && y && x.reason === y.reason
-        && JSON.stringify(x.rect ?? null) === JSON.stringify(y.rect ?? null);
       const tier2Images = own.some(isImage);
       const images = had.filter((u) => (isImage(u) && !tier2Images)
         || (u && u.reason === "image_unread" && !own.some((o) => sameMark(o, u))));
       const fields = Object.fromEntries(Object.entries(b).filter(([k]) => k.startsWith("image_content_")));
-      pages.push({ ...fields, page: b.page,
-                   text: typeof cand.text === "string" ? cand.text : "",
+      pages.push({ ...fields, page: b.page, text: textOf(cand),
                    undetermined: images.length ? [...own, ...images] : own,
                    tier: 2 });
     } else {
       kept.push(b.page);
       pages.push({ ...b, tier: 1 });
     }
-    for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
   }
 
+  /* R105 — NO PAGE IS DROPPED. A base page with no integer `page` is not one this merge can compare, and it is
+     not one it may lose: it is kept as tier 1, after the numbered pages and in its own order, listed in `kept`
+     as `null` (it has no number to list). A tier-2 page the base lacks is adopted as tier 2 at its page number
+     (listed in `replaced`); tier 2 reads what tier 1 did not, so nothing is owed to compare it with. Of two
+     tier-2 pages with one number the later is the page (the map above). A tier-2 page with no integer `page`
+     is adopted after the numbered pages, in its own order, listed in `replaced` as `null`. */
+  const adopt = (c) => ({ page: c.page, text: textOf(c), undetermined: Array.isArray(c.undetermined) ? c.undetermined : [], tier: 2 });
+  const held = new Set(usable.map((b) => b.page));
+  for (const [number, c] of [...byPage].sort((x, y) => x[0] - y[0])) {
+    if (held.has(number)) continue;
+    const at = pages.findIndex((q) => q.page > number);
+    pages.splice(at < 0 ? pages.length : at, 0, adopt(c));
+    replaced.push(number);
+  }
+  for (const b of basePages) if (b && typeof b === "object" && !Number.isInteger(b.page)) {
+    pages.push({ ...b, tier: 1 }); kept.push(null);
+  }
+  for (const c of t2Pages) if (c && typeof c === "object" && !Number.isInteger(c.page)) {
+    pages.push(adopt(c)); replaced.push(null);
+  }
+
+  const undetermined = [];
+  for (const p of pages) for (const u of p.undetermined || []) undetermined.push(u);
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
   const text = { ...base, document, pages, undetermined,
                  counts: { chars: document.length, undetermined: undetermined.length } };
@@ -2043,10 +2077,9 @@ export function tier2Note(m) {
   if (m.wholesale) return null;
   const say = [];
   if (m.replaced.length)
-    say.push(`${m.replaced.length} page(s) were re-read by the tier-2 decoder, which recovered text `
-           + `tier 1 could not map and more of it; the other ${m.kept.length} page(s) kept tier 1's reading`);
+    say.push(word("textchain.say.push.page_re_read", { replaced: String(m.replaced.length), kept: String(m.kept.length) }));
   if (m.replaced.length && m.kept.length)
-    say.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
+    say.push(word("textchain.say.push.document_text_layer"));
   return say.length ? say.join("; ") : null;
 }
 /*__CPDF20_PER_PAGE_END__*/

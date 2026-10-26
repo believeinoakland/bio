@@ -6,6 +6,7 @@ import { seeded, BASIC, V } from "./fixture.mjs";
 import { workbooksOps, WORKBOOKS_OPS } from "../../../src/workbooks/index.mjs";
 import { METHOD } from "../../../src/calc-grammar/index.mjs";
 import { idPattern } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const url = (q) => new URL(`https://plane/x?${new URLSearchParams(q)}`);
 
@@ -36,7 +37,7 @@ test("R15 workbooksOps publishes one route arm per act and read, each answering 
   assert.equal((await act("workbooksecondcheck", { ...w.at, outcome: "agrees", by: V("bob") })).reason, "SELF_CHECK");
   assert.equal((await act("workbooksecondcheck", { ...w.at, outcome: "agrees", by: V("carol") })).ok, true);
   const read = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
-  assert.deepEqual([read.bindings.length, read.method_notes.length, read.checks.length, read.recompute.status], [1, 1, 1, "not recomputed here"]);
+  assert.deepEqual([read.bindings.length, read.method_notes.length, read.checks.length, read.recompute.status], [1, 1, 1, word("workbooks.recomputed")]);
   assert.equal(read.lint[0].notes[0].by, V("bob"));
   /* the export: bytes as base64 */
   const recipe = { method: METHOD, inputs: [{ name: "x", kind: "table" }], steps: [{ op: "sum", as: "s", from: "x", field: "amount" }], output: "s" };

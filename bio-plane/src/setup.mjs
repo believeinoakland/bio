@@ -1,9 +1,11 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R66, R76–R86, R88–R94; R67–R75 and R87 are `translations`', R94).
+/* instance-setup: what a team's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R66, R76–R86,
+ * R88–R101; R67–R75 and R87 are `translations`', R94).
  *
- * THE PAGE AT THE ROOT is gone (R83, R86; N1002, K3171): `/` answers the interface, so this module composes and serves no
- * page and exports none (`setupPage`, `groupLine` and `SETUP_HTML` removed, with every use of `setup-page`). What stays
- * is R47's one holder of the words on who controls the group's Civicsmith, `HOSTING_CONTROL` (in `setup-fleet.mjs`,
- * re-exported here), which `screens-entry` and the installer read.
+ * `/` answers the interface (R83, R86; N1002, K3171), so this module composes and serves no page and exports none. What it
+ * keeps is R47's one holder of the words on who controls the team's Civicsmith (`HOSTING_CONTROL`, in `setup-fleet.mjs`,
+ * re-exported here), which `screens-entry` and the installer read. Every sentence it answers that a member or an
+ * administrator reads is read by key (R96): `word(key, vars)` for a row of the design's list, `localize(id, en, vars)`
+ * for one written first here.
  */
 
 /* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
@@ -27,22 +29,25 @@ import { captureOf } from "./capture/index.mjs";
 import { entitiesOf } from "./entities/index.mjs";
 import { linesOf, CAPACITIES as LINE_CAPACITIES } from "./lines/index.mjs";
 import { provenanceOf } from "./provenance/index.mjs";
-import { normAlias as termFold } from "./extraction/index.mjs";
+import { normAlias as termFold, extractionOf } from "./extraction/index.mjs";
 import { parse as legistarParse, readPages as legistarPages, readBodyName as legistarBodyName, KEY as LEGISTAR_KEY,
          BASIS as LEGISTAR_BASIS } from "../../legistar-reader/index.mjs";
 /* R65 (K1837): the no-added-fact check and the one row both assistant drafts answer until the model turn lands are
    wizard-scripts' (its R25, its rows), read there and never copied. */
 import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
 /* R63 (T50; N1116, K3366): each row's sentence is read by its key from setup-words, never held here. */
-import { word } from "./setup-words/index.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
+/* R102 (fix round 7 G83; runtime-limits R27, R28): the team's room is obtained only through the one helper, which passes the
+   configured location hint and names the room by its generation. */
+import { storeStub, storeHint, storeGeneration } from "./store-place.mjs";
 import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "./setup-fleet.mjs";
 /* A machine is told apart by record-grammar's one predicate, never by a reading of this module's own. */
 import { isMachineIdentity } from "./record-grammar/index.mjs";
-/* R94 (T50; N1084): the translation workspace is `translations`'; this module keeps its delegates, the registration of the
-   member's language (R64) and, for `store-door`'s test until it re-points, a re-export of the word list. */
+/* R94 (T50; N1084; CR-12; R99): the translation workspace is `translations'`; this module keeps the registration of the member's
+   language (R64) and, for `store-door`'s test until it re-points, a re-export of the word list. */
 import { translationsOf } from "./translations/index.mjs";
 import { TRANSLATIONS_CHECKS } from "./translations/checks.mjs";
 /* R76 (T45; grammar doubt 11): whether a records law's stages are stages of a records request is action-grammar's check
@@ -56,7 +61,7 @@ import { AiRuns } from "./ai-runs/index.mjs";
 /* R47, R83: the words on who controls the group's Civicsmith, held once in the leaf the installer imports, re-exported for
    the screens that show them (`screens-entry`). */
 export { HOSTING_CONTROL, hostingControlBlock };
-export { INTERFACE_WORDS } from "./translations/index.mjs";
+export { interfaceWords } from "./translations/index.mjs";
 
 /* ============================================================================================================
  * THE INSTANCE: WHAT A GROUP'S CIVICSMITH IS AND WHOSE IT IS (instance-setup R1–R42). The module's own store-side and
@@ -98,7 +103,7 @@ async function askMemberVersion(env, member, binding) {
     ]);
     const j = await r.json().catch(() => null);
     if (!r.ok || !j || typeof j.version !== "string" || !j.version)
-      return { report: { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` }, body: null };
+      return { report: { binding, state: "SILENT", why: localize("instance-setup.setup.answered_http_status_without_a", "answered HTTP {status} without a version", { status: String(r.status) }) }, body: null };
     if (j.name !== member)
       return { report: { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version }, body: null };
     return { report: { binding, state: "SERVING", version: j.version }, body: j };
@@ -120,7 +125,7 @@ function runnerReport(host) {
   const runner = host.body ? host.body.runner : undefined;
   if (runner === true) return { ...via, state: "SERVING", version: host.report.version };
   if (runner === false) return { ...via, state: "UNBOUND" };
-  return { ...via, state: "SILENT", why: `${RUNNER_HOST} answered its version without saying whether the runner is bound` };
+  return { ...via, state: "SILENT", why: localize("instance-setup.setup.runner_host_answered_its_version", "{RUNNER_HOST} answered its version without saying whether the runner is bound", { RUNNER_HOST: String(RUNNER_HOST) }) };
 }
 
 export async function memberVersions(env) {
@@ -146,8 +151,19 @@ export async function memberVersions(env) {
    `SERVING` true, `UNBOUND` false, otherwise null. No reason beyond the part. */
 export const PARTS = Object.freeze([["part_signin", RUNNER_MEMBER], ["part_scanner", "file-scanner"], ["part_safe_view", "file-scanner"]]);
 const presentOf = (report) => (report && report.state === "SERVING" ? true : report && report.state === "UNBOUND" ? false : null);
-export async function partsReport(env, versions = null) {
-  const v = versions || {};
+/* R104 (fix round 8, G118; fix round 9, G118b; K4817, K4853: 60 s, BOB's figure): the fleet's versions are asked at most once a minute
+   for the whole copy. `op=bootstrap` is every screen's frame, and its two asks of the fleet (agent-worker and file-scanner, each
+   bounded at 4 s) were awaited on every call. A Worker is served from many isolates, so an isolate's memory alone could keep them
+   only once a minute per isolate: the answer is also kept in the team's object, which every isolate visits, as a value with the
+   object's own time (the object answers its age, so no two isolates' clocks are compared). The isolate's `WeakMap` stays as the
+   first look; a call that finds neither asks the fleet itself, and then tells the object, once. A call that finds the ask still
+   running shares it, never starts a second. The first after a cold object waits as before. A read given its `versions`
+   (`members=1`, which asks the whole fleet itself) is not kept: it asks nothing here. */
+export const PARTS_KEPT_MS = 60_000;
+const keptParts = new WeakMap();
+const PART_KEYS = Object.freeze(PARTS.map(([key]) => key));
+const NO_PARTS = Object.freeze(Object.fromEntries(PART_KEYS.map((k) => [k, null])));
+const askParts = async (env, v) => {
   const need = [...new Set(PARTS.map(([, m]) => m))].filter((m) => !v[m]);
   if (need.length) {
     const host = need.includes(RUNNER_MEMBER) ? FLEET_BINDINGS.find(([m]) => m === RUNNER_HOST) : null;
@@ -159,7 +175,78 @@ export async function partsReport(env, versions = null) {
     }));
   }
   return Object.fromEntries(PARTS.map(([key, m]) => [key, presentOf(v[m])]));
+};
+/* The parts as the object keeps them: exactly the three flat keys, each `true`, `false` or `null`; anything else is no parts. */
+const flatParts = (v) => (v && typeof v === "object" && !Array.isArray(v) && PART_KEYS.every((k) => v[k] === true || v[k] === false || v[k] === null)
+  ? Object.fromEntries(PART_KEYS.map((k) => [k, v[k]])) : null);
+/* Whether asking the fleet cost anything here: with neither member bound the ask is answered at once, `UNBOUND`, and the object is not told. */
+const fleetBound = (env) => !!env && [RUNNER_HOST, "file-scanner"].some((m) => {
+  const b = env[(FLEET_BINDINGS.find(([x]) => x === m) || [])[1]];
+  return !!b && typeof b.fetch === "function";
+});
+/* The first look: this isolate's entry for `env` when it is live (`owner` false), else a new entry this call owns (`owner` true). */
+function claimParts(env, now) {
+  const at = now();
+  const held = keptParts.get(env);
+  if (held && at - held.at < PARTS_KEPT_MS && at >= held.at) return { entry: held, owner: false };
+  const entry = { at, parts: null, asking: null, how: null, askMs: 0 };
+  keptParts.set(env, entry);
+  return { entry, owner: true };
 }
+/* The owner's work: the object's kept parts first (`readKept` answers `{parts, age_ms}` or null), else the fleet, told to the
+   object afterwards (`writeKept`). It never rejects: a failure leaves no entry and answers every part `null`. */
+function runOwner(entry, env, now, { readKept, writeKept }) {
+  entry.asking = (async () => {
+    try {
+      let kept = null;
+      try { kept = await readKept(); } catch { kept = null; }
+      const shared = kept ? flatParts(kept.parts) : null;
+      if (shared && Number.isFinite(kept.age_ms) && kept.age_ms >= 0 && kept.age_ms < PARTS_KEPT_MS) {
+        entry.at -= kept.age_ms; entry.how = "shared"; entry.parts = shared;
+        return shared;
+      }
+      const t = now();
+      const parts = await askParts(env, {});
+      entry.askMs = Math.max(0, now() - t); entry.how = "asked"; entry.parts = parts;
+      if (fleetBound(env)) { try { await writeKept(parts); } catch { /* the object not told is only a later isolate asking again */ } }
+      return parts;
+    } catch {
+      if (keptParts.get(env) === entry) keptParts.delete(env);
+      return { ...NO_PARTS };
+    }
+  })();
+}
+/* `{parts, kept, ms}`: `kept` is true when no ask of the fleet was made or awaited by this call (the answer was already held, here or in the
+   object); `ms` the time this call spent on the fleet. */
+async function partsResult(claim, env, versions, now, since) {
+  if (!claim) return { parts: await askParts(env, versions ? { ...versions } : {}), kept: false, ms: Math.max(0, now() - since) };
+  const e = claim.entry;
+  if (claim.owner) { const parts = await e.asking; return { parts: { ...parts }, kept: e.how === "shared", ms: e.how === "asked" ? e.askMs : 0 }; }
+  if (e.parts) return { parts: { ...e.parts }, kept: true, ms: 0 };
+  const parts = await e.asking;
+  return { parts: { ...parts }, kept: false, ms: Math.max(0, now() - since) };
+}
+const claimable = (env, versions) => !versions && !!env && typeof env === "object";
+/* `partsReport(env, versions, {now, stub, doAnswer})`: the parts alone. With the object (`stub`, `doAnswer`) the keep is shared with every
+   isolate as `bootstrap` shares it; without, it is this isolate's. */
+export async function partsReport(env, versions = null, { now = () => Date.now(), stub = null, doAnswer = null } = {}) {
+  const since = now();
+  const claim = claimable(env, versions) ? claimParts(env, now) : null;
+  if (claim && claim.owner) {
+    const shared = stub && typeof doAnswer === "function";
+    runOwner(claim.entry, env, now, {
+      readKept: async () => (shared ? (await bootstrapFactsOf(stub, doAnswer, { facts: false, viewer: null, parts: true })).kept : null),
+      writeKept: async (parts) => { if (shared) await keepPartsOf(stub, doAnswer, parts); },
+    });
+  }
+  return (await partsResult(claim, env, versions, now, since)).parts;
+}
+/* G118b (R-LOG): which isolate answered. The id is made once per isolate, at its first use; the age is its own. */
+let isolateMark = null;
+const isolateOf = (now) => {
+  if (!isolateMark) isolateMark = { id: Array.from(globalThis.crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, "0")).join(""), at: now() };
+  return isolateMark;
+};
 
 /* R80 (T46; N897 (2); ai-runs R78): whether this is a test instance, asked of `ai-runs`' own `testInstance` over this
    isolate's environment (the one computation, never a copy of its condition); a read that throws is `false`. */
@@ -325,8 +412,8 @@ const scriptRefusal = (code, detail) => {
 };
 const draftUnavailable = (detail) => scriptRefusal("ASSISTANT_DRAFT_UNAVAILABLE", detail);
 const draftRefused = (checked) => (checked && typeof checked.code === "string"
-  ? scriptRefusal(checked.code, "the draft did not pass the check that it adds no fact, so nothing is offered.")
-  : draftUnavailable("the draft could not be checked, so nothing is offered."));
+  ? scriptRefusal(checked.code, localize("instance-setup.setup.the_draft_did_not_pass", "the draft did not pass the check that it adds no fact, so nothing is offered."))
+  : draftUnavailable(localize("instance-setup.setup.the_draft_could_not_be", "the draft could not be checked, so nothing is offered.")));
 /* R65, R67 (T40: N812, K2373): a draft carries no project. The door resolves the account for a draft with no project
    (`credentials` R56, `store-door` R10), so an account it hands in that is a project's (`level: "project"`, or naming a
    `project`) serves no draft here: `{project: true}`, and nothing is drafted. Otherwise the account handed on is the
@@ -338,8 +425,7 @@ const draftAccount = (assistant) => {
   const { project: _none, ...account } = a;
   return { account };
 };
-const projectAccount = (what) => draftUnavailable(`a draft carries no project, and the account resolved for this one is `
-  + `a project's, so nothing was drafted and ${what}.`);
+const projectAccount = (what) => draftUnavailable(localize("instance-setup.setup.a_draft_carries_no_project", "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.", { what: String(what) }));
 
 /* R60: the longest name a place is given, in characters. R65: the answers' bounds, and membership R109's limits on
    the focus and the purpose a draft must fit. */
@@ -446,7 +532,7 @@ export const INSTANCE_SETUP_TABLE_DECLARATIONS = Object.freeze([
 ]);
 export const INSTANCE_SETUP_SCHEMA = `
 -- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG, ONE VALUE FOR THE WHOLE
--- INSTANCE. Every bundle this instance writes names it as its group, in the bytes that get signed, and nothing else may
+-- INSTANCE. Every bundle this instance writes names it as its team, in the bytes that get signed, and nothing else may
 -- supply that name: not a literal in the code, and not a deploy-time variable, which a redeploy could move silently.
 -- One row, id=1, WRITTEN ONCE: every writer is an INSERT that does nothing on conflict, and no statement anywhere
 -- updates or deletes it (R26).
@@ -575,7 +661,7 @@ CREATE TABLE IF NOT EXISTS seed_bodies (
   seeded_at    TEXT NOT NULL,
   PRIMARY KEY (profile, role, body)
 );
--- R60 (DEC-150 (1)): the place the group works in that no held profile covers, named by an administrator; the latest row
+-- R60 (DEC-150 (1)): the place the team works in that no held profile covers, named by an administrator; the latest row
 -- is the name, and a row with name NULL clears it. Held only here: nothing reads it outward. Append-only.
 CREATE TABLE IF NOT EXISTS place_wanted (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -619,7 +705,7 @@ CREATE TABLE IF NOT EXISTS member_info_levels (
   asked_at  TEXT,
   set_at    TEXT NOT NULL
 );
--- R77, R11 (T45; N892 (d)): each set or clear of the group's declared stake, with who and when, appended after
+-- R77, R11 (T45; N892 (d)): each set or clear of the team's declared stake, with who and when, appended after
 -- record-core's setting 'declared_stake' recorded it (the value public-read reads). stake NULL is a clear. Append-only.
 CREATE TABLE IF NOT EXISTS declared_stake_history (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -627,7 +713,7 @@ CREATE TABLE IF NOT EXISTS declared_stake_history (
   set_by  TEXT NOT NULL,
   set_at  TEXT NOT NULL
 );
--- R84 (T47; DEC-205 (2)): the group's logo, each set or clear by an administrator appended; the latest row is the logo,
+-- R84 (T47; DEC-205 (2)): the team's logo, each set or clear by an administrator appended; the latest row is the logo,
 -- and a row with data NULL clears it. 'data' is the picture's bytes in base64, 'type' read from its magic bytes.
 CREATE TABLE IF NOT EXISTS group_logos (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -739,16 +825,16 @@ async function bytesOfLogo(raw) {
   return null;
 }
 async function readLogo(raw, rawType) {
-  if (raw === undefined) return { why: "the logo is sent as the file's bytes, and none was sent" };
+  if (raw === undefined) return { why: word("setup.why.logo_sent_file") };
   const bytes = await bytesOfLogo(raw);
-  if (!bytes) return { why: "the logo sent is not a file's bytes" };
-  if (!bytes.length) return { why: "the logo sent is empty" };
-  if (bytes.length > GROUP_LOGO_MAX_BYTES) return { why: `the logo is over ${GROUP_LOGO_MAX_BYTES} bytes` };
+  if (!bytes) return { why: word("setup.why.logo_sent_file_bytes") };
+  if (!bytes.length) return { why: word("setup.why.logo_sent_empty") };
+  if (bytes.length > GROUP_LOGO_MAX_BYTES) return { why: word("setup.why.logo_over_bytes", { group_logo_max_bytes: String(GROUP_LOGO_MAX_BYTES) }) };
   const kind = GROUP_LOGO_TYPES.find((t) => bytes.length > t.magic.length && t.magic.every((b, i) => bytes[i] === b));
-  if (!kind) return { why: "the logo is neither a PNG nor a JPEG picture" };
+  if (!kind) return { why: word("setup.why.logo_neither_png") };
   const said = typeof rawType === "string" ? rawType.split(";")[0].trim().toLowerCase() : rawType == null ? "" : null;
   if (said === null || (said && said !== kind.type))
-    return { why: `the logo is a ${kind.type === "image/png" ? "PNG" : "JPEG"} picture sent as ${String(rawType).slice(0, 40)}` };
+    return { why: word("setup.why.logo_picture_sent", { jpeg: String(kind.type === "image/png" ? "PNG" : "JPEG"), raw_type: String(String(rawType).slice(0, 40)) }) };
   return { raw: bytes, type: kind.type, bytes: bytes.length };
 }
 const base64Of = (bytes) => { let t = ""; for (let i = 0; i < bytes.length; i += 0x8000) t += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(t); };
@@ -758,8 +844,7 @@ const base64Of = (bytes) => { let t = ""; for (let i = 0; i < bytes.length; i +=
    version of the words is a new `version`, and a member shown only an earlier one reads `shown: false` until shown again. */
 export const ASSISTANT_DISCLOSURE = Object.freeze({
   version: "D311-1",
-  meaning: "your questions and the material read to answer them, people's facts included, go to Anthropic under your "
-    + "own account",
+  meaning: word("setup.meaning.questions_material_read"),
 });
 
 /* R50–R52: the machine's stamp on what it seeds (DEC-52), and the Legistar schemes the profiles declare for a body's
@@ -807,11 +892,7 @@ const unitOfMetric = (metric) => (/_bytes$/.test(String(metric)) ? "bytes" : "ms
  * ===================================================================== */
 
 /* What a store recording no group SAYS, in ONE copy: the credentialed read and the public reads both answer with it. */
-export const NO_GROUP_RECORDED = "no producing group is recorded for this store. A store records it once: at its first "
-  + "boot, from the slug its installer bound, or — on a store that already held documents when the value "
-  + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
-  + "name its producing group is given no default: a caller's own statement of its group is kept "
-  + "as the caller's, and a write stating none is refused.";
+export const NO_GROUP_RECORDED = localize("instance-setup.setup.no_producing_team_is_recorded", "no producing team is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or — on a store that already held documents when the value arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing team is given no default: a caller's own statement of its team is kept as the caller's, and a write stating none is refused.");
 
 /* REC-164 — THE DISPLAY NAME AND THE DOMAIN (R5–R11): the bounds and the file. */
 export const GROUP_DISPLAY_NAME_MAX = 120;
@@ -833,6 +914,22 @@ function instanceAddress(origin) {
     const u = new URL(String(origin ?? ""));
     return (u.protocol === "https:" || u.protocol === "http:") ? `${u.protocol}//${u.host}`.toLowerCase() : null;
   } catch { return null; }
+}
+
+/* R100 (C11, DEC-374; K4164): the one website file the verifier accepts for a claim, `{path, body: {instance, group}}`, from the
+   address the claim was made from and the producing slug; null when either is missing. The verifier's comparison (R8) and the
+   answers of `groupdomainset` and `groupidentity` (R7, R11) all read it here, so the file shown and the file accepted cannot
+   drift. The path is the current file's; the file from before T31 (R8) is read with the same body. */
+function groupWellKnownFile(address, slug) {
+  if (typeof address !== "string" || !address || typeof slug !== "string" || !slug) return null;
+  return { path: GROUP_WELL_KNOWN_PATH, body: { instance: address, group: slug } };
+}
+/* R8, R100: why a claim has no file to look for, the verdict's own reason by key: no producing slug, else no recorded address. */
+const wellKnownWhy = (slug) => (!slug ? word("instance-setup.domain.detail.no_team_name") : word("instance-setup.domain.detail.no_address"));
+/* R100: the answers' `well_known`: the file, or null with `well_known_detail`, the reason. */
+function wellKnownOf(address, slug) {
+  const file = groupWellKnownFile(address, slug);
+  return file ? { well_known: file } : { well_known: null, well_known_detail: wellKnownWhy(slug) };
 }
 
 /* At most `max` bytes of a response body, decoded as UTF-8; the rest is never read (R8: at most 16 KiB). */
@@ -904,7 +1001,7 @@ function cmpVersion(a, b) {
  * `sleep`; each defaults to the module's own factory on the same `ctx`.
  * ===================================================================== */
 export class InstanceSetup {
-  #ctx; #env; #deps; #sql; #started = false; #languageRegistered = null;
+  #ctx; #env; #deps; #sql; #started = false; #languageRegistered = null; #fleetKept = null;
 
   constructor(ctx, env = {}, deps = {}) {
     this.#ctx = ctx;
@@ -930,7 +1027,15 @@ export class InstanceSetup {
   #fetch(...a) { return (this.#deps.fetch ?? globalThis.fetch)(...a); }
   #sleep(ms) { return this.#deps.sleep ? this.#deps.sleep(ms) : new Promise((s) => setTimeout(s, ms)); }
   #now() { return this.#deps.now ? this.#deps.now() : Date.now(); }
-  #iso() { return new Date(this.#now()).toISOString(); }
+  /* The instance clock (K5132): an injected clock, then `env.BIO_NOW_MS`, then the wall. Every instant the module records
+     reads it; a measured duration reads `#now()`, which stays on the wall. An absent value falls through, never the epoch. */
+  #instant() {
+    if (this.#deps.now) return this.#deps.now();
+    const raw = this.#env.BIO_NOW_MS;
+    if (raw !== undefined && raw !== null && raw !== "") { const v = Number(raw); if (Number.isFinite(v) && v >= 0) return v; }
+    return Date.now();
+  }
+  #iso() { return new Date(this.#instant()).toISOString(); }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -979,9 +1084,9 @@ export class InstanceSetup {
     out.updateCheck = this.#scheduler().register("instance-setup", { name: "update-check", key: "updatecheck",
       due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: (now) => this.updateCheckTick(now) });
     try { out.slot = { minute: this.#checkMinute() }; }   /* the group's minute of the day is drawn at its first start and kept */
-    catch (e) { out.slot = { drawn: false, detail: `the minute of the day could not be drawn: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { out.slot = { drawn: false, detail: localize("instance-setup.setup.the_minute_of_the_day", "the minute of the day could not be drawn: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     try { out.running = this.#recordRunning(); }
-    catch (e) { out.running = { recorded: false, detail: `the running release could not be recorded: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { out.running = { recorded: false, detail: localize("instance-setup.setup.the_running_release_could_not", "the running release could not be recorded: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     out.compute = this.#capture().on("compute", "instance-setup",
       (m) => this.recordRuntimeObservation({ metric: m && m.metric, ms: m && m.value, detail: m && m.detail,
                                             unit: unitOfMetric(m && m.metric) }));
@@ -992,16 +1097,16 @@ export class InstanceSetup {
       /* R50: at setup, the offices the profiles just recorded name are seeded (the machine's act, DEC-52). */
       if (out.profiles && out.profiles.recorded === true) {
         try { out.offices = this.officesSeed({ boot: true }); }
-        catch (e) { out.offices = { ok: false, detail: `the offices could not be seeded at setup: ${String(e && e.message || e).slice(0, 200)}` }; }
+        catch (e) { out.offices = { ok: false, detail: localize("instance-setup.setup.the_offices_could_not_be", "the offices could not be seeded at setup: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
       }
     }
     /* R62: at each start, with a place named, the profiles that arrived for it; and once, the read `queue-producers`
        raises the administrators' one Status item from (its R38), read as the plane. */
     try { out.places = this.#comparePlaces(); }
-    catch (e) { out.places = { compared: false, detail: `the place could not be compared: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { out.places = { compared: false, detail: localize("instance-setup.setup.the_place_could_not_be", "the place could not be compared: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     out.arrivals = this.#registerArrivals();
     out.identity = this.#registerIdentity();
-    out.language = this.#registerLanguage(this.#translations());
+    out.language = this.#registerLanguage();
     /* The instance's start reconciles (scheduler R11), now that this consumer is registered: never `arm`, the producers'
        door, which would start the test seam's probe at every boot (K419). */
     try { out.armed = await this.#scheduler().start(); } catch { out.armed = null; /* the next arm reconciles */ }
@@ -1022,7 +1127,7 @@ export class InstanceSetup {
      answering R10's `groupIdentityPublic`. A refusal or a throw is answered in the start's report, never thrown. */
   #registerIdentity() {
     let pr = null;
-    try { pr = this.#publicRead(); } catch (e) { return { ok: false, detail: `public-read could not be reached: ${String(e && e.message || e).slice(0, 200)}` }; }
+    try { pr = this.#publicRead(); } catch (e) { return { ok: false, detail: localize("instance-setup.setup.public_read_could_not_be", "public-read could not be reached: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     if (!pr || typeof pr.registerGroupIdentity !== "function") return { ok: false, detail: "no public-read to register with" };
     try { return pr.registerGroupIdentity({ identity: () => this.groupIdentityPublic() }); }
     catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
@@ -1062,23 +1167,20 @@ export class InstanceSetup {
     const s = typeof slug === "string" ? slug.trim() : "";
     /* DEC-49 REGION is-instance-group-seed */
     if (!GROUP_SLUG_RE.test(s))
-      return refusal("GROUP_SLUG_MALFORMED",
-        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a group is recorded as"} a slug in the `
-        + `installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). `
-        + `Nothing was recorded.`);
+      return refusal("GROUP_SLUG_MALFORMED", s
+        ? localize("instance-setup.setup.slug_not_in_grammar", "'{slug}' is not a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.", { slug: s.slice(0, 60) })
+        : localize("instance-setup.setup.slug_none_given", "The request names no slug. A team is recorded under a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded."));
     const held = this.#one(`SELECT slug, recorded_at, source FROM instance_group WHERE id=1`);
     if (held)
       return refusal("GROUP_ALREADY_RECORDED",
-        `this store has recorded its producing group since ${held.recorded_at} (${held.source}), and it is `
-        + `recorded once. Nothing was changed.`, { group: held.slug, recorded_at: held.recorded_at, source: held.source });
+        localize("instance-setup.setup.this_store_has_recorded_its", "this store has recorded its producing team since {recorded_at} ({source}), and it is recorded once. Nothing was changed.", { recorded_at: String(held.recorded_at), source: String(held.source) }), { group: held.slug, recorded_at: held.recorded_at, source: held.source });
     /* END DEC-49 REGION is-instance-group-seed */
     const at = this.#iso();
     const who = typeof author === "string" && author.trim() ? author.trim() : null;
     this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
                     VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at, who);
     return { ok: true, group: s, recorded_at: at, source: "seed", recorded_by: who,
-             note: "every document this store writes from now on names this group. Documents already written are "
-                 + "NOT rewritten: whatever group their bytes name is what they were signed under." };
+             note: word("setup.note.document_store_writes") };
   }
 
   /* =====================================================================
@@ -1108,9 +1210,7 @@ export class InstanceSetup {
     /* DEC-49 REGION is-group-identity-admin */
     if (!by || !this.#membership().isAdministrator(by))
       return refusal("GROUP_IDENTITY_NOT_ADMIN",
-        "setting the group's display name or claiming its domain is an administrator's act (Publication §7), and "
-        + "your group's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This "
-        + "caller is not one of the active administrators.", { by: by ?? null });
+        localize("instance-setup.setup.setting_the_teams_display_name", "setting the team's display name or claiming its domain is an administrator's act (Publication §7), and your team's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators."), { by: by ?? null });
     /* END DEC-49 REGION is-group-identity-admin */
     return null;
   }
@@ -1137,15 +1237,15 @@ export class InstanceSetup {
     const chars = [...s].length;
     /* DEC-49 REGION is-group-display-name */
     if (!s || chars > GROUP_DISPLAY_NAME_MAX || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
-      return refusal("GROUP_DISPLAY_NAME_MALFORMED",
-        `${s ? `a name of ${chars} characters` : "the request names no display name, and it is set as"} `
-        + `one line of 1 to ${GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.`);
+      return refusal("GROUP_DISPLAY_NAME_MALFORMED", s
+        ? localize("instance-setup.setup.name_not_one_line", "A name of {chars} characters is not one line of 1 to {max} characters with no control characters. Nothing was set.", { chars, max: GROUP_DISPLAY_NAME_MAX })
+        : localize("instance-setup.setup.name_none_given", "The request names no display name. A display name is one line of 1 to {max} characters with no control characters. Nothing was set.", { max: GROUP_DISPLAY_NAME_MAX }));
     /* END DEC-49 REGION is-group-display-name */
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by) VALUES ('display_name', ?, ?, ?)`,
                    s, at, by);
     return { ok: true, display_name: s, set_at: at, set_by: by, history: this.#identityHistory("display_name"),
-             note: "presentation only: no signed bytes carry it, and every public surface shows it beside the slug." };
+             note: word("setup.note.presentation_signed_bytes") };
   }
 
   /** R7, op=groupdomainset — §7 point 3. `by` and `origin` are the control plane's stamps: `origin` is the address the
@@ -1157,9 +1257,9 @@ export class InstanceSetup {
     const d = typeof domain === "string" ? domain.trim().toLowerCase().replace(/\.$/, "") : "";
     /* DEC-49 REGION is-group-domain */
     if (!GROUP_DOMAIN_RE.test(d))
-      return refusal("GROUP_DOMAIN_MALFORMED",
-        `${d ? `'${d.slice(0, 80)}' is not` : "the request names no domain, and one is claimed as"} a bare host `
-        + `name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.`);
+      return refusal("GROUP_DOMAIN_MALFORMED", d
+        ? localize("instance-setup.setup.domain_not_bare_host", "'{domain}' is not a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.", { domain: d.slice(0, 80) })
+        : localize("instance-setup.setup.domain_none_given", "The request names no domain. A domain is claimed as a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded."));
     /* END DEC-49 REGION is-group-domain */
     const address = instanceAddress(origin);
     const at = this.#iso();
@@ -1168,7 +1268,8 @@ export class InstanceSetup {
     const check = await this.#checkGroupDomain("set");
     try { await this.#scheduler().arm(); } catch { /* the check above stands; the next arm reconciles */ }
     return { ok: true, domain: d, set_at: at, set_by: by, instance_address: address, check,
-             shown_publicly: !!check && check.verdict === "verified", history: this.#identityHistory("domain") };
+             shown_publicly: !!check && check.verdict === "verified", history: this.#identityHistory("domain"),
+             ...wellKnownOf(address, this.producingGroup()) };
   }
 
   /** R8, THE VERIFIER: a governed fetch of the current claim's well-known file, the file from before T31 fetched the
@@ -1181,14 +1282,13 @@ export class InstanceSetup {
     const address = cur.instance_address || null;
     let verdict = "undetermined", status = null, detail;
     if (!slug || !address) {
-      detail = !slug ? "this store records no producing group, so there is no slug for the file to name"
-                     : "the claim carries no instance address for the file to name";
+      detail = wellKnownWhy(slug);
     } else {
       const first = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH, address, slug);
       let answer = first;
       if (first.verdict === "absent") {
         const before = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH_BEFORE_T31, address, slug);
-        answer = { ...before, detail: `${first.detail}; read instead: ${before.detail}` };
+        answer = { ...before, detail: word("instance-setup.domain.detail.both_paths", { first: first.detail, second: before.detail }) };
       }
       ({ verdict, status, detail } = answer);
     }
@@ -1203,10 +1303,10 @@ export class InstanceSetup {
   async #readWellKnown(domain, path, address, slug) {
     let g;
     try { g = this.#governor().governorAdmit({ host: domain }); }
-    catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
+    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer", "the governor did not answer ({reason})", { reason: String(String(e && e.message || e).slice(0, 120)) }) }; }
     if (!g || !g.admitted)
       return { verdict: "undetermined", status: null,
-               detail: `the per-host governor held ${domain} (${g && g.reason}); this says nothing about the domain` };
+               detail: word("instance-setup.domain.detail.held", { domain, reason: String(g && g.reason) }) };
     if (g.wait_ms) await this.#sleep(g.wait_ms);
     let res = null;
     try {
@@ -1215,29 +1315,30 @@ export class InstanceSetup {
     } catch { res = null; }
     if (!res)
       return { verdict: "undetermined", status: null,
-               detail: `the fetch of ${path} did not complete, and why was not recorded` };
+               detail: word("instance-setup.domain.detail.not_finished", { path }) };
     const status = res.status;
     try { this.#governor().governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
     if (status === 404 || status === 410 || (status >= 300 && status < 400))
       return { verdict: "absent", status,
-               detail: status < 400 ? `the domain redirected ${path} (HTTP ${status}); the file is read on the claimed domain itself`
-                                    : `the domain serves no ${path} (HTTP ${status})` };
+               detail: status < 400 ? word("instance-setup.domain.detail.redirected", { path, status })
+                                    : word("instance-setup.domain.detail.no_file", { path, status }) };
     if (!(status >= 200 && status < 300))
       return { verdict: "undetermined", status,
-               detail: `the domain answered ${path} with HTTP ${status}, which is neither the file nor its absence` };
+               detail: word("instance-setup.domain.detail.other_answer", { path, status }) };
     const text = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
     let f = null;
     try { f = JSON.parse(text); } catch { f = null; }
     const isObject = !!f && typeof f === "object" && !Array.isArray(f);
     const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
     const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
-    if (inst === address && grp === slug)
-      return { verdict: "verified", status, detail: `${path} names your group's Civicsmith (${address}) and its slug (${slug})` };
+    const want = groupWellKnownFile(address, slug).body;
+    if (inst === want.instance && grp === want.group)
+      return { verdict: "verified", status, detail: word("instance-setup.domain.detail.verified", { path, address, slug }) };
     return { verdict: "mismatched", status,
              detail: !isObject
-               ? `${path} is not the JSON object your group's Civicsmith reads ({ instance, group })`
-               : `${path} gives the address ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and the group `
-                 + `${JSON.stringify(grp).slice(0, 60)}; your group's Civicsmith is ${address} and its slug is ${slug}` };
+               ? word("instance-setup.domain.detail.not_json", { path })
+               : word("instance-setup.domain.detail.mismatch", { path, found_address: JSON.stringify(inst ?? f.instance ?? null).slice(0, 120),
+                                                                  found_team: JSON.stringify(grp).slice(0, 60), address, slug }) };
   }
 
   /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest
@@ -1284,7 +1385,8 @@ export class InstanceSetup {
              display_name_history: this.#identityHistory("display_name"),
              domain_claim: dom ? { domain: dom.value, set_at: dom.set_at, set_by: dom.set_by,
                                    instance_address: dom.instance_address ?? null,
-                                   latest: this.#domainLatestCheck(dom.value) } : null,
+                                   latest: this.#domainLatestCheck(dom.value),
+                                   ...wellKnownOf(dom.instance_address ?? null, this.producingGroup()) } : null,
              domain_history: this.#identityHistory("domain"),
              domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
              domain_checks_limit: max, domain_checks_truncated: checks.length > max,
@@ -1317,16 +1419,18 @@ export class InstanceSetup {
   declaredStakeSet({ stake = undefined, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(by ?? null, "declaring what your group has at stake");
+      return notAnAdmin(by ?? null, localize("instance-setup.setup.what_declaring_stake", "declaring what your team has at stake"));
     let value = null;
     if (stake !== null) {
       const s = typeof stake === "string" ? stake.trim() : "";
       const chars = [...s].length;
       /* DEC-49 REGION is-declared-stake */
       if (!s || chars > DECLARED_STAKE_MAX || !oneLine(s))
-        return refusal("STAKE_MALFORMED", `${typeof stake !== "string" ? "the request names no stake, and one is declared as"
-          : !s ? "an empty stake is not one, and one is declared as" : `a stake of ${chars} characters${oneLine(s) ? "" : " over more than one line"} is not`} `
-          + `one line of 1 to ${DECLARED_STAKE_MAX} characters with no control characters; null clears it. Nothing was changed.`);
+        return refusal("STAKE_MALFORMED", typeof stake !== "string"
+          ? localize("instance-setup.setup.stake_none_given", "The request names no stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { max: DECLARED_STAKE_MAX })
+          : !s ? localize("instance-setup.setup.stake_empty", "An empty stake is not a stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { max: DECLARED_STAKE_MAX })
+          : oneLine(s) ? localize("instance-setup.setup.stake_too_long", "A stake of {chars} characters is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { chars, max: DECLARED_STAKE_MAX })
+          : localize("instance-setup.setup.stake_many_lines", "A stake of {chars} characters over more than one line is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { chars, max: DECLARED_STAKE_MAX }));
       /* END DEC-49 REGION is-declared-stake */
       value = s;
     }
@@ -1336,10 +1440,8 @@ export class InstanceSetup {
     this.#sql.exec(`INSERT INTO declared_stake_history (stake, set_by, set_at) VALUES (?, ?, ?)`, value, who, at);
     return { ok: true, stake: value, set_by: who, set_at: at, history: this.#declaredStake().declared_stake_history,
              note: value === null
-               ? "no stake is declared from now on: what your group sends or publishes says it has declared none. "
-                 + "Nothing already sent or published changes."
-               : "carried beside your group's public identity on everything it sends or publishes from now on. Nothing "
-                 + "already signed, sent or published changes." };
+               ? word("setup.note.stake_declared_now")
+               : word("setup.note.carried_beside_group") };
   }
 
   /* =====================================================================
@@ -1362,12 +1464,12 @@ export class InstanceSetup {
   async groupLogoSet({ raw = undefined, rawType = null, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(by ?? null, "setting your group's logo");
+      return notAnAdmin(by ?? null, localize("instance-setup.setup.what_setting_logo", "setting your team's logo"));
     let logo = null;
     if (raw !== null) {
       const read = await readLogo(raw, rawType);
       /* DEC-49 REGION is-group-logo */
-      if (read.why) return refusal("LOGO_REFUSED", `${read.why}. Nothing was changed.`);
+      if (read.why) return refusal("LOGO_REFUSED", localize("instance-setup.setup.why_nothing_was_changed", "{why}. Nothing was changed.", { why: String(read.why) }));
       /* END DEC-49 REGION is-group-logo */
       logo = { ...read, data: base64Of(read.raw), sha256: await sha256OfBytes(read.raw) };
     }
@@ -1376,8 +1478,8 @@ export class InstanceSetup {
                    logo ? logo.data : null, logo ? logo.type : null, logo ? logo.bytes : null, logo ? logo.sha256 : null, who, at);
     return { ok: true, logo: !!logo, ...(logo ? { type: logo.type, bytes: logo.bytes, sha256: logo.sha256 } : {}),
              set_by: who, set_at: at,
-             note: logo ? "shown beside your group's name on its page, its masthead and its published cases from now on."
-                        : "no logo from now on: your group's name stands alone." };
+             note: logo ? word("setup.note.shown_beside_group")
+                        : word("setup.note.logo_now_group") };
   }
 
   /** R84, in-process: `{ok: true, logo: {type, bytes, sha256, data, set_at}}` with the picture in base64, or `logo: null`
@@ -1409,20 +1511,22 @@ export class InstanceSetup {
   groupLanguagesSet({ languages = undefined, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(by ?? null, "setting the languages your group's members use");
+      return notAnAdmin(by ?? null, localize("instance-setup.setup.what_setting_languages", "setting the languages your team's members use"));
     const tags = Array.isArray(languages) ? languages.map((t) => (typeof t === "string" ? t.trim() : t)) : null;
     const bad = tags ? tags.find((t) => typeof t !== "string" || !isLocale(t)) : undefined;
     if (!tags || tags.length < 1 || tags.length > GROUP_LANGUAGES_MAX || bad !== undefined)
-      return languageMalformed(`${!tags ? "the languages are sent as a list of" : tags.length < 1
-        ? "an empty list names no language, and the languages are" : tags.length > GROUP_LANGUAGES_MAX
-        ? `a list of ${tags.length} names too many, and the languages are` : `'${String(bad).slice(0, 40)}' is not one of`} `
-        + `1 to ${GROUP_LANGUAGES_MAX} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.`);
+      return languageMalformed(!tags
+        ? localize("instance-setup.setup.languages_not_a_list", "The languages are sent as a list of 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.", { max: GROUP_LANGUAGES_MAX })
+        : tags.length < 1
+        ? localize("instance-setup.setup.languages_empty_list", "An empty list names no language. The languages are 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.", { max: GROUP_LANGUAGES_MAX })
+        : tags.length > GROUP_LANGUAGES_MAX
+        ? localize("instance-setup.setup.languages_too_many", "A list of {count} names is too many. The languages are 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.", { count: tags.length, max: GROUP_LANGUAGES_MAX })
+        : localize("instance-setup.setup.languages_bad_tag", "'{tag}' is not a well-formed BCP 47 language tag (en, es, zh-Hant). The languages are 1 to {max} of them. Nothing was changed.", { tag: String(bad).slice(0, 40), max: GROUP_LANGUAGES_MAX }));
     const list = [...new Set(tags.map(canonicalTag))];
     const set = this.#record().setSetting(GROUP_LANGUAGES_SETTING, list, who);
     if (!set || set.ok !== true) return set;
     return { ...this.groupLanguages(), set_by: who,
-             note: "Civicsmith's own words are shown in each of these languages, and members choose among them when they "
-               + "join. The places whose rules apply are not changed." };
+             note: word("setup.note.civicsmith_words_shown") };
   }
 
   /** R85, R86, op=grouplanguages (public): `{ok: true, languages: [tags]}`, the list an administrator set, or, while none
@@ -1445,7 +1549,7 @@ export class InstanceSetup {
       return { ok: true, languages: out };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the languages could not be read (${String(e && e.message || e).slice(0, 160)}).` };
+               detail: localize("instance-setup.setup.the_languages_could_not_be", "the languages could not be read ({reason}).", { reason: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -1476,8 +1580,8 @@ export class InstanceSetup {
     const { ids, unknown, tests } = this.#checkProfileList(raw.split(",").map((s) => s.trim()).filter(Boolean));
     const unique = [...new Set(ids)];
     let why = null;
-    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your group's Civicsmith does not hold`;
-    else if (tests.length) why = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
+    if (unknown.length) why = word("setup.why.installer_bound_group", { x: String(unknown.map((x) => JSON.stringify(x)).join(", ")) });
+    else if (tests.length) why = word("setup.why.installer_bound_profile", { tests: String(tests.join(", ")) });
     const core = this.#record();
     if (why) {
       core.setSetting(InstanceSetup.PROFILES_BOOT_NOTE, { bound: raw, recorded: false, why, at: this.#iso() }, "bootstrap");
@@ -1505,8 +1609,7 @@ export class InstanceSetup {
                   ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices,
                   ...this.#stageFindings(combined) };
     if (!ids.length) {
-      out.detail = "no active profile: your group's Civicsmith reads no local facts, which is valid, and every fact that needs one "
-        + "is answered as undetermined until an administrator chooses";
+      out.detail = word("instance-setup.profiles.detail.none_active");
       const note = core.getSetting(InstanceSetup.PROFILES_BOOT_NOTE);
       if (note && note.recorded === false && typeof note.why === "string")
         out.boot = { recorded: false, why: note.why, bound: note.bound ?? null };
@@ -1535,8 +1638,7 @@ export class InstanceSetup {
         }
       }
     } catch (e) {
-      return { stage_findings: null, stage_findings_detail: `whether the records laws' stages are known could not be checked `
-        + `(${String(e && e.message || e).slice(0, 160)}), so it is not known; the profiles stay active as chosen` };
+      return { stage_findings: null, stage_findings_detail: word("instance-setup.profiles.detail.stages_unchecked", { why: String(e && e.message || e).slice(0, 160) }) };
     }
     return { stage_findings: out };
   }
@@ -1546,30 +1648,28 @@ export class InstanceSetup {
     /* DEC-49 REGION is-profiles-admin */
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return refusal("PROFILES_NOT_ADMIN",
-        "choosing the jurisdiction profiles is an administrator's act, and your group's Civicsmith stamps who is asking from the "
-        + "signed-in session. This caller is not one of the active administrators.", { by: by ?? null });
+        localize("instance-setup.setup.choosing_the_jurisdiction_profiles_is", "choosing the jurisdiction profiles is an administrator's act, and your team's Civicsmith stamps who is asking from the signed-in session. This caller is not one of the active administrators."), { by: by ?? null });
     /* END DEC-49 REGION is-profiles-admin */
     /* DEC-49 REGION is-profiles-list */
     if (!Array.isArray(profiles))
-      return refusal("NOT_A_LIST", "the profiles are sent as a list of profile ids, in the order they are read; an "
-        + "empty list chooses none. Nothing was changed.");
+      return refusal("NOT_A_LIST", localize("instance-setup.setup.the_profiles_are_sent_as", "the profiles are sent as a list of profile ids, in the order they are read; an empty list chooses none. Nothing was changed."));
     const { ids, unknown, tests } = this.#checkProfileList(profiles);
     if (unknown.length)
-      return refusal("UNKNOWN_PROFILE", `your group's Civicsmith holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. `
-        + "Nothing was changed.", { profiles: unknown });
+      return refusal("UNKNOWN_PROFILE", localize("instance-setup.setup.your_teams_civicsmith_holds_no", "your team's Civicsmith holds no profile {map}. Nothing was changed.", { map: String(unknown.map((x) => JSON.stringify(x)).join(", ")) }), { profiles: unknown });
     if (tests.length)
-      return refusal("PROFILE_IS_TEST", `${tests.join(", ")} ${tests.length > 1 ? "are profiles" : "is a profile"} made up `
-        + "for testing. Nothing was changed.", { profiles: tests });
+      return refusal("PROFILE_IS_TEST", tests.length > 1
+        ? localize("instance-setup.setup.profiles_made_up_for_testing", "{tests} are profiles made up for testing. Nothing was changed.", { tests: tests.join(", ") })
+        : localize("instance-setup.setup.profile_made_up_for_testing", "{tests} is a profile made up for testing. Nothing was changed.", { tests: tests.join(", ") }), { profiles: tests });
     /* END DEC-49 REGION is-profiles-list */
     const unique = [...new Set(ids)];
     const set = this.#record().setSetting("jurisdiction_profiles", unique, by);
     if (!set || set.ok !== true) return set;
     /* R62: an arrival leaves when an administrator makes that profile active. */
-    this.#leaveArrivals("the profile was made active", this.#iso(), unique);
+    this.#leaveArrivals(word("setup.leave_arrivals.profile_made_active"), this.#iso(), unique);
     return { ...this.profiles(), set_by: by, ...(unique.length < ids.length ? { collapsed: true } : {}),
              note: unique.length
-               ? "local facts are read from these profiles, in this order, from now on; what was recorded before is unchanged"
-               : "no profile is active from now on: every local fact is answered as undetermined" };
+               ? word("setup.note.local_facts_read")
+               : word("setup.note.profile_active_now") };
   }
 
   /* =====================================================================
@@ -1612,11 +1712,11 @@ export class InstanceSetup {
      system a machine's identifier rests on (entities R43, K1443). */
   static #identWhy(p, ident, kind) {
     const sch = InstanceSetup.#scheme(p, ident.scheme);
-    if (!sch) return `the profile declares no identifier scheme ${ident.scheme}`;
+    if (!sch) return word("setup.text.profile_declares_identifier", { scheme: String(ident.scheme) });
     if (!(Array.isArray(sch.entity_kinds) && sch.entity_kinds.includes(kind)))
-      return `the scheme ${ident.scheme} identifies ${(sch.entity_kinds || []).join(", ") || "no kind"}, not a ${kind}`;
+      return word("setup.text.scheme_identifies", { scheme: String(ident.scheme), kind: String((sch.entity_kinds || []).join(", ") || "no kind"), kind3: String(kind) });
     if (!(Array.isArray(sch.systems) && sch.systems.length))
-      return `the scheme ${ident.scheme} names no system that issues it, which a machine's identifier rests on`;
+      return word("setup.text.scheme_names_system", { scheme: String(ident.scheme) });
     return null;
   }
 
@@ -1631,7 +1731,7 @@ export class InstanceSetup {
     let held = null;
     try { held = E.entityByIdentifier({ scheme: ident.scheme, id: ident.id }); } catch { held = null; }
     if (held && held.undetermined)
-      return { state: "unseeded", why: `more than one entity holds ${ident.scheme} ${ident.id}; which one is meant is a member's to settle`,
+      return { state: "unseeded", why: word("setup.why.entity_holds_meant", { scheme: String(ident.scheme), id: String(ident.id) }),
                candidates: held.candidates ?? [] };
     if (held && typeof held.entity_id === "string") {
       if (!mine) this.#ledgerEntity(ident, held.entity_id, kind, label, source);
@@ -1641,7 +1741,7 @@ export class InstanceSetup {
     if (!entityId) {
       const made = E.createEntity({ kind, label, note, declaredBy: SEED_MACHINE, ...(sector ? { sector } : {}),
                                     ...(forumKind ? { forum_kind: forumKind } : {}) });
-      if (!made || made.ok !== true) return { state: "unseeded", why: `the registry refused the entity: ${made && (made.reason || made.detail)}` };
+      if (!made || made.ok !== true) return { state: "unseeded", why: word("setup.why.registry_refused_entity", { made: String(made && (made.reason || made.detail)) }) };
       entityId = made.entity_id;
       this.#ledgerEntity(ident, entityId, kind, label, source);
     }
@@ -1650,7 +1750,7 @@ export class InstanceSetup {
                                  basis: { system: sch.systems[0], row } });
     if (!id || id.ok !== true)
       return { state: "unseeded", entity_id: entityId,
-               why: `the registry refused the identifier ${ident.scheme} ${ident.id}: ${id && (id.reason || id.detail)}; the entity is kept and a later seeding holds it again` };
+               why: word("setup.why.registry_refused_identifier", { scheme: String(ident.scheme), id: String(ident.id), id3: String(id && (id.reason || id.detail)) }) };
     return { state: id.already ? "already" : "seeded", entity_id: entityId };
   }
   #ledgerEntity(ident, entityId, kind, label, source) {
@@ -1665,7 +1765,7 @@ export class InstanceSetup {
     if (held) return { state: "already", line_id: held.line_id };
     const r = this.#lines().recordLine({ kind, from, to, ...(capacity ? { capacity } : {}), ...(valid ? { valid } : {}),
                                          basis, by: SEED_MACHINE });
-    if (!r || r.ok !== true) return { state: "unseeded", why: `the lines refused it: ${r && (r.reason || r.detail)}` };
+    if (!r || r.ok !== true) return { state: "unseeded", why: word("setup.why.lines_refused", { r: String(r && (r.reason || r.detail)) }) };
     this.#sql.exec(`INSERT INTO seed_lines (key, kind, from_entity, to_entity, line_id, seeded_at) VALUES (?, ?, ?, ?, ?, ?)`,
                    key, kind, from, to, r.line_id, this.#iso());
     return { state: "seeded", line_id: r.line_id };
@@ -1677,13 +1777,13 @@ export class InstanceSetup {
    *  at setup the boot runs it once after R13 (`boot: true`). Answers what was seeded, already held, and could not be. */
   officesSeed({ by = null, boot = false } = {}) {
     if (!boot && (typeof by !== "string" || !by || !this.#membership().isAdministrator(by)))
-      return notAnAdmin(by ?? null, "seeding the offices the jurisdiction profiles name");
+      return notAnAdmin(by ?? null, localize("instance-setup.setup.what_seeding_offices", "seeding the offices the jurisdiction profiles name"));
     const out = { ok: true, seeded: [], already: [], unseeded: [], by: boot ? SEED_MACHINE : by };
     const put = (r, item) => { out[r.state === "seeded" ? "seeded" : r.state === "already" ? "already" : "unseeded"].push(
       { ...item, ...(r.entity_id ? { entity_id: r.entity_id } : {}), ...(r.line_id ? { line_id: r.line_id } : {}),
         ...(r.why ? { why: r.why } : {}), ...(r.candidates ? { candidates: r.candidates } : {}) }); };
     const active = this.#activeProfiles();
-    if (!active.length) out.detail = "no profile is active, so no office is named and nothing is seeded";
+    if (!active.length) out.detail = word("instance-setup.offices.detail.no_profile");
     for (const { id: profile, p } of active) {
       const cps = Array.isArray(p.counterparties) ? p.counterparties : [];
       cps.forEach((cp, i) => {
@@ -1694,13 +1794,14 @@ export class InstanceSetup {
         const ids = cp && cp.ids && typeof cp.ids === "object" ? cp.ids : {};
         const officeId = InstanceSetup.#ident(ids.office), bodyId = InstanceSetup.#ident(ids.body);
         const source = { profile, entry };
-        const cite = `jurisdiction profile ${profile}, ${entry}${cp.basis ? ` (basis: ${cp.basis})` : ""}`;
+        const cite = cp.basis
+          ? localize("instance-setup.setup.cite_office_basis", "jurisdiction profile {profile}, {entry} (basis: {basis})", { profile, entry, basis: String(cp.basis) })
+          : localize("instance-setup.setup.cite_office", "jurisdiction profile {profile}, {entry}", { profile, entry });
         /* Each entity is seeded when, and only when, the profile gives its own identifier for it: the body under
            `ids.body` whether or not the office has one, the office under `ids.office` (K1682's reading 1; N613). */
-        const noIdent = (what, field) => ({ state: "unseeded", why: `the profile names no identifier for this ${what} `
-          + `(${field}), so it is not seeded: an entity is seeded only under the profile's own identifier, never by its name` });
+        const noIdent = (what, field) => ({ state: "unseeded", why: word("setup.why.profile_names_identifier", { what: String(what), field: String(field) }) });
         const b = bodyId ? this.#seedEntity({ p, ident: bodyId, kind: "body", label: body, sector: "government", source,
-          row: `${profile}/${entry}/body`, note: `The body the office "${role}" belongs to, as the active ${cite} names it; seeded at setup.` })
+          row: `${profile}/${entry}/body`, note: word("setup.note.body_office_belongs", { role: String(role), cite: String(cite) }) })
           : noIdent("body", "ids.body");
         put(b, { what: "body", ...where, ...(bodyId ? { ident: bodyId } : {}) });
         const bodyHeld = !!b.entity_id && b.state !== "unseeded";
@@ -1709,7 +1810,7 @@ export class InstanceSetup {
                           VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
                          profile, role, body, entry, b.entity_id, this.#iso());
         const o = officeId ? this.#seedEntity({ p, ident: officeId, kind: "office", label: `${role}, ${body}`, source,
-          row: `${profile}/${entry}/office`, note: `An office an action may be addressed to, as the active ${cite} names it; seeded at setup.` })
+          row: `${profile}/${entry}/office`, note: word("setup.note.office_action_addressed", { cite: String(cite) }) })
           : noIdent("office", "ids.office");
         put(o, { what: "office", ...where, ...(officeId ? { ident: officeId } : {}) });
         const officeHeld = !!o.entity_id && o.state !== "unseeded";
@@ -1727,28 +1828,26 @@ export class InstanceSetup {
                                from: o.entity_id, to: b.entity_id, valid: zone, basis: rule({ from: officeId, to: bodyId }) }),
               { what: "post_in", ...where });
         else if (officeHeld || bodyHeld)
-          put({ state: "unseeded", why: `its ${officeHeld ? "body" : "office"} is not held under an identifier, so the line has `
-            + "only one identified end" }, { what: "post_in", ...where });
+          put({ state: "unseeded", why: word("setup.why.held_under_identifier", { office: String(officeHeld ? "body" : "office") }) }, { what: "post_in", ...where });
         if (!bodyHeld) return;
         const within = cp.within && typeof cp.within === "object" ? cp.within : null;
         const withinId = within ? InstanceSetup.#ident(within.ids) : null;
         if (!within) {
-          put({ state: "unseeded", why: "the profile names no organisation this body is within, so no part_of line is seeded" },
+          put({ state: "unseeded", why: word("setup.why.profile_names_organization") },
               { what: "part_of", ...where });
           return;
         }
         const wLabel = typeof within.label === "string" && within.label.trim() ? within.label.trim() : null;
         const wKind = ["institution", "body", "movement"].includes(within.kind) ? within.kind : "institution";
         if (!withinId || !wLabel) {
-          put({ state: "unseeded", why: `the profile names the organisation this body is within with no ${!wLabel ? "label" : "identifier (within.ids)"}, `
-            + "so it is not seeded and no part_of line is" }, { what: "part_of", ...where });
+          put({ state: "unseeded", why: word("setup.why.profile_names_organization_body", { ids: !wLabel ? "label" : "identifier (within.ids)" }) }, { what: "part_of", ...where });
           return;
         }
         const w = this.#seedEntity({ p, ident: withinId, kind: wKind, label: wLabel, sector: "government", source,
-          row: `${profile}/${entry}/within`, note: `The organisation the body "${body}" is part of, as the active ${cite} names it; seeded at setup.` });
+          row: `${profile}/${entry}/within`, note: word("setup.note.organization_body_part", { body, cite }) });
         put(w, { what: "organisation", ...where, label: wLabel, ident: withinId });
         if (!w.entity_id || w.state === "unseeded") {
-          put({ state: "unseeded", why: "the organisation is not held under its identifier, so the line has no identified ends" },
+          put({ state: "unseeded", why: word("setup.why.organization_held_under") },
               { what: "part_of", ...where });
           return;
         }
@@ -1779,8 +1878,7 @@ export class InstanceSetup {
       const where = { what: "forum", label, forum_kind: f.forum_kind };
       const idents = (Array.isArray(f.ids) ? f.ids : []).map((x) => InstanceSetup.#ident(x)).filter(Boolean);
       if (!idents.length) {
-        const r = { state: "unseeded", why: "the profile names no identifier for this forum (ids), so it is not seeded: an entity is "
-          + "seeded only under the profile's own identifier, never by its name" };
+        const r = { state: "unseeded", why: word("setup.why.profile_names_identifier", { what: "forum", field: "ids" }) };
         put(r, where); listed.push({ ...where, state: r.state, why: r.why });
         continue;
       }
@@ -1788,9 +1886,11 @@ export class InstanceSetup {
       const first = owner(idents[0]);
       const source = { profile: first.id, forum: label };
       const row = `${first.id}/forums/${f.forum_kind}/${label}`;
-      const cite = `jurisdiction profile ${first.id}, forum ${label}${f.basis ? ` (basis: ${f.basis})` : ""}`;
+      const cite = f.basis
+        ? localize("instance-setup.setup.cite_forum_basis", "jurisdiction profile {id}, forum {label} (basis: {basis})", { id: first.id, label, basis: String(f.basis) })
+        : localize("instance-setup.setup.cite_forum", "jurisdiction profile {id}, forum {label}", { id: first.id, label });
       let r = this.#seedEntity({ p: first.p, ident: idents[0], kind: "body", label, sector: "government", source, row, forumKind: f.forum_kind,
-        note: `The ${f.forum_kind} ${label}, a forum as the active ${cite} names it; seeded at setup.` });
+        note: localize("instance-setup.setup.the_forum_kind_label_a", "The {forum_kind} {label}, a forum as the active {cite} names it; seeded at setup.", { forum_kind: String(f.forum_kind), label: String(label), cite: String(cite) }) });
       for (const more of idents.slice(1)) {
         if (!r.entity_id || r.state === "unseeded") break;
         const o = owner(more);
@@ -1799,7 +1899,7 @@ export class InstanceSetup {
         const sch = InstanceSetup.#scheme(o.p, more.scheme);
         const got = this.#entities().addIdentifier({ entityId: r.entity_id, scheme: more.scheme, id: more.id, by: SEED_MACHINE,
                                                      basis: { system: sch.systems[0], row } });
-        if (!got || got.ok !== true) r = { state: "unseeded", entity_id: r.entity_id, why: `the registry refused the identifier ${more.scheme} ${more.id}: ${got && (got.reason || got.detail)}` };
+        if (!got || got.ok !== true) r = { state: "unseeded", entity_id: r.entity_id, why: word("setup.why.registry_refused_identifier", { scheme: more.scheme, id: more.id, id3: String(got && (got.reason || got.detail)) }) };
         else if (!got.already && r.state === "already") r = { state: "seeded", entity_id: r.entity_id };
       }
       put(r, { ...where, ident: idents[0] });
@@ -1880,8 +1980,7 @@ export class InstanceSetup {
         const near = hits.length > 1 ? hits.flatMap((h) => groups.get(h))
           : [...groups.values()].flat().filter((g) => terms.length && terms.every((t) => termFold(g.name).includes(t)));
         out.push({ profile, entry, role, body, matched: false, candidates: near.slice(0, 20).map((g) => ({ BodyId: g.BodyId, name: g.name })),
-          why: hits.length > 1 ? "its normalised forms equal more than one Legistar body's; it is never resolved by choosing one, and a member may match it by their own act"
-                               : "no Legistar body's normalised form equals it; it is never matched by a near name, and a member may match it by their own act" });
+          why: hits.length > 1 ? word("setup.why.normalized_forms_equal") : word("setup.why.legistar_body_normalized") });
       });
     }
     return out;
@@ -1892,7 +1991,7 @@ export class InstanceSetup {
    *  on the body entity, and each seat on a matched body seeded with its holder (R52). An administrator's act. */
   async seatsSeed({ bodies = null, persons = null, officerecords = null, by = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "seeding the seats Legistar records");
+      return notAnAdmin(by ?? null, localize("instance-setup.setup.what_seeding_seats", "seeding the seats Legistar records"));
     const active = this.#activeProfiles();
     const want = { bodies: [bodies], persons: [persons], officerecords: Array.isArray(officerecords) ? officerecords : [officerecords] };
     const parsed = {};
@@ -1900,13 +1999,13 @@ export class InstanceSetup {
       const list = shas.filter((x) => x !== null && x !== undefined);
       /* DEC-49 REGION is-seed-capture */
       if (!list.length || list.some((x) => typeof x !== "string" || !x.trim()))
-        return refusal("SEED_CAPTURE_UNREADABLE", `the request names no capture of Legistar's ${endpoint}. Nothing was seeded.`, { endpoint });
+        return refusal("SEED_CAPTURE_UNREADABLE", localize("instance-setup.setup.the_request_names_no_capture", "the request names no capture of Legistar's {endpoint}. Nothing was seeded.", { endpoint: String(endpoint) }), { endpoint });
       const pages = [];
       for (const sha of list) {
         let cap = null;
         try { cap = await this.#readCapture(sha.trim().toLowerCase()); } catch { cap = null; }
         if (!cap || typeof cap.text !== "string")
-          return refusal("SEED_CAPTURE_UNREADABLE", `the record holds no readable capture ${sha.slice(0, 64)}. Nothing was seeded.`,
+          return refusal("SEED_CAPTURE_UNREADABLE", localize("instance-setup.setup.the_record_holds_no_readable", "the record holds no readable capture {sha}. Nothing was seeded.", { sha: String(sha.slice(0, 64)) }),
                          { endpoint, capture: sha });
         let one = null;
         try {
@@ -1914,8 +2013,11 @@ export class InstanceSetup {
                                 view: { vocabulary: Object.assign({}, ...active.map(({ p }) => p.vocabulary || {})) } });
         } catch (e) { one = { why: String(e && e.message || e) }; }
         if (!one || one.why || one.endpoint !== endpoint)
-          return refusal("SEED_CAPTURE_NOT_LEGISTAR", `capture ${sha.slice(0, 64)} is not a Legistar ${endpoint} list`
-            + `${one && one.why ? ` (${one.why.slice(0, 200)})` : one && one.endpoint ? ` (it is ${one.endpoint})` : ""}. Nothing was seeded.`,
+          return refusal("SEED_CAPTURE_NOT_LEGISTAR", one && one.why
+            ? localize("instance-setup.setup.capture_not_legistar_why", "capture {sha} is not a Legistar {endpoint} list ({why}). Nothing was seeded.", { sha: sha.slice(0, 64), endpoint, why: one.why.slice(0, 200) })
+            : one && one.endpoint
+            ? localize("instance-setup.setup.capture_not_legistar_other", "capture {sha} is not a Legistar {endpoint} list (it is {found}). Nothing was seeded.", { sha: sha.slice(0, 64), endpoint, found: one.endpoint })
+            : localize("instance-setup.setup.capture_not_legistar", "capture {sha} is not a Legistar {endpoint} list. Nothing was seeded.", { sha: sha.slice(0, 64), endpoint }),
             { endpoint, capture: sha });
         /* END DEC-49 REGION is-seed-capture */
         pages.push({ ...one, sha: sha.trim().toLowerCase(), at: cap.at ?? null });
@@ -1927,7 +2029,7 @@ export class InstanceSetup {
     const put = (r, item) => { out[r.state === "seeded" ? "seeded" : r.state === "already" ? "already" : "unseeded"].push(
       { ...item, ...(r.entity_id ? { entity_id: r.entity_id } : {}), ...(r.line_id ? { line_id: r.line_id } : {}),
         ...(r.why ? { why: r.why } : {}) }); };
-    if (!active.length) { out.detail = "no profile is active, so no body is named and nothing is seeded"; return out; }
+    if (!active.length) { out.detail = word("instance-setup.bodies.detail.no_profile"); return out; }
     const bodiesCap = parsed.bodies[0];
     const instant = (at) => (typeof at === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d/.test(at) ? `${at.slice(0, 19)}Z` : null);
     /* R51: the matches, each BodyId held on the profile's seeded body entity. */
@@ -1940,8 +2042,8 @@ export class InstanceSetup {
       const match = { profile: m.profile, entry: m.entry, role: m.role, body: m.body, form: m.form,
                       bodies: m.bodies.map((b) => ({ BodyId: b.BodyId, name: b.name })) };
       out.matches.push(match);
-      if (!office) { match.why = "the profile's body is not seeded (R50: the profile names no identifier for it, ids.body), so its BodyIds are held on no entity"; continue; }
-      if (!sch) { match.why = `the profile declares no identifier scheme ${LEGISTAR_SCHEMES.body}, so its BodyIds are held on no entity`; continue; }
+      if (!office) { match.why = word("setup.why.profile_names_identifier", { what: "body", field: "ids.body" }); continue; }
+      if (!sch) { match.why = word("setup.why.profile_declares_identifier", { body: String(LEGISTAR_SCHEMES.body) }); continue; }
       for (const b of m.bodies) {
         const ident = { scheme: LEGISTAR_SCHEMES.body, id: String(b.BodyId) };
         const why = InstanceSetup.#identWhy(p, ident, "body");
@@ -1951,7 +2053,7 @@ export class InstanceSetup {
           const got = this.#entities().addIdentifier({ entityId: office.body_entity, scheme: ident.scheme, id: ident.id, by: SEED_MACHINE,
                                                        basis: { system: sch.systems[0], row: `legistar:body:${b.BodyId}` } });
           r = got && got.ok === true ? { state: got.already ? "already" : "seeded", entity_id: office.body_entity }
-            : { state: "unseeded", why: `the registry refused the identifier: ${got && (got.reason || got.detail)}` };
+            : { state: "unseeded", why: word("setup.why.registry_refused_identifier_2", { got: String(got && (got.reason || got.detail)) }) };
           if (r.state !== "unseeded") {
             this.#ledgerEntity(ident, office.body_entity, "body", m.body, { capture: bodiesCap.sha, row: b.source });
             seatBodies.set(b.BodyId, { entity: office.body_entity, p, profile: m.profile, label: m.body, ident,
@@ -1981,7 +2083,7 @@ export class InstanceSetup {
       const memberType = typeof f.role === "string" ? f.role.trim() : "";
       const seat = this.#seedEntity({ p: sb.p, ident: seatIdent, kind: "office", label: `${memberType || "Seat"}, ${sb.label}`,
         source: { capture: page.sha, row: row.source }, row: row.key,
-        note: `A seat on ${sb.label}, Legistar office record ${f.OfficeRecordId}, ${LEGISTAR_BASIS} (its MemberType: ${memberType || "not given"}).` });
+        note: word("setup.note.seat_legistar_office", { label: String(sb.label), office_record_id: String(f.OfficeRecordId), legistar_basis: String(LEGISTAR_BASIS), given: String(memberType || "not given") }) });
       const where = { OfficeRecordId: f.OfficeRecordId, BodyId: f.BodyId, PersonId: f.PersonId ?? null };
       put(seat, { what: "seat", ...where });
       if (!seat.entity_id || seat.state === "unseeded") continue;
@@ -1992,17 +2094,17 @@ export class InstanceSetup {
       const pr = people.get(f.PersonId);
       if (!Number.isInteger(f.PersonId) || !pr) {
         out.holders_undetermined.push({ ...where, why: Number.isInteger(f.PersonId)
-          ? `the persons capture holds no PersonId ${f.PersonId}, so the holder is not seeded` : "the office record names no PersonId" });
+          ? word("setup.why.persons_capture_holds", { person_id: String(f.PersonId) }) : word("setup.why.office_record_names") });
         continue;
       }
-      const name = pr.facts.name_normal || pr.facts.name || `Legistar person ${f.PersonId}`;
+      const name = pr.facts.name_normal || pr.facts.name || word("setup.text.legistar_person", { person_id: f.PersonId });
       const others = Array.isArray(pr.same_name_as) ? pr.same_name_as : [];
       const personIdent = { scheme: LEGISTAR_SCHEMES.person, id: String(f.PersonId) };
       const person = this.#seedEntity({ p: sb.p, ident: personIdent, kind: "person", label: name,
         source: { capture: parsed.persons[0].sha, row: pr.source }, row: pr.key,
-        note: `Legistar person ${f.PersonId}, ${LEGISTAR_BASIS}.` + (others.length
-          ? ` Legistar also lists ${others.map((x) => `PersonId ${x}`).join(", ")} under the same name; they are held as `
-            + "separate persons and never merged here: whether they are one person is a member's claim." : "") });
+        note: others.length
+          ? `${word("setup.note.legistar_person", { person_id: f.PersonId, basis: LEGISTAR_BASIS })} ${word("setup.note.legistar_lists_under", { x: others.map((x) => `PersonId ${x}`).join(", ") })}`
+          : word("setup.note.legistar_person", { person_id: f.PersonId, basis: LEGISTAR_BASIS }) });
       if (others.length && !out.same_names.some((s2) => s2.PersonId === f.PersonId))
         out.same_names.push({ PersonId: f.PersonId, name, same_name_as: others });
       put(person, { what: "person", ...where });
@@ -2015,8 +2117,7 @@ export class InstanceSetup {
       const capacity = map && LINE_CAPACITIES.includes(map.capacity) ? map.capacity : null;
       if (!capacity) {
         out.holders_undetermined.push({ ...where, person: person.entity_id, seat: seat.entity_id,
-          why: `the profile maps no capacity for the MemberType ${JSON.stringify(memberType)}${sb.organisation ? ` on ${sb.organisation}` : " on this body"} `
-            + "or on all bodies, so the holder's capacity is undetermined and no holds line is recorded" });
+          why: word("setup.why.profile_maps_capacity", { member_type: String(JSON.stringify(memberType)), body: sb.organisation ? ` on ${sb.organisation}` : ` ${word("setup.why.body")}` }) });
         continue;
       }
       const zone = zoneOf(sb.p) ?? undefined;
@@ -2028,7 +2129,7 @@ export class InstanceSetup {
     }
     for (const [bodyId, sb] of seatBodies)
       if (!seen.has(bodyId)) out.bodies_without_records.push({ BodyId: bodyId, body: sb.label,
-        why: "Legistar holds no office record for this body (as for the boards and commissions), so no seat is seeded" });
+        why: word("setup.why.legistar_holds_office") });
     out.counts = { matched: out.matches.length, unmatched: out.unmatched.length, seeded: out.seeded.length,
                    already: out.already.length, unseeded: out.unseeded.length, holders_undetermined: out.holders_undetermined.length };
     return out;
@@ -2056,8 +2157,7 @@ export class InstanceSetup {
     if (k && k.on === true)
       return { ok: true, on: false, set_by: k.set_by ?? null, set_at: k.set_at ?? null, reason: k.reason ?? null };
     return { ok: true, on: false, set_by: null, set_at: null, reason: null, read: false,
-             detail: "whether your group keeps its material away from every assistant could not be read, so it is read "
-               + "as kept away and the assistant is off" };
+             detail: word("instance-setup.assistant.detail.keep_away_unread") };
   }
 
   /** R55 (T37; N765, K231, K2201; T48, N996): `ai-accounts.aiKeptAway()` (its R7) as given: null while the group does not keep its
@@ -2069,8 +2169,8 @@ export class InstanceSetup {
     try { return this.#aiAccounts().aiKeptAway(); }
     catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `whether your group keeps its material away from every assistant did not answer (${String(e && e.message || e)
-                 .slice(0, 160)}), so no ask is put to an assistant and no run starts.` };
+               detail: localize("instance-setup.setup.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({reason}), so no ask is put to an assistant and no run starts.", { reason: String(String(e && e.message || e)
+                 .slice(0, 160)) }) };
     }
   }
 
@@ -2082,11 +2182,11 @@ export class InstanceSetup {
     const v = typeof version === "string" ? version.trim() : "";
     /* DEC-49 REGION is-disclosure-shown */
     if (!m || !v)
-      return refusal("DISCLOSURE_MALFORMED", `${!m ? "the request names no member" : "the request names no version of "
-        + "the disclosure's words"}. Nothing was recorded.`);
+      return refusal("DISCLOSURE_MALFORMED", !m
+        ? localize("instance-setup.setup.disclosure_no_member", "The request names no member. Nothing was recorded.")
+        : localize("instance-setup.setup.disclosure_no_version", "The request names no version of the disclosure's words. Nothing was recorded."));
     if (typeof by !== "string" || by !== m || /^class:/.test(by))
-      return refusal("DISCLOSURE_NOT_THE_MEMBERS", "the disclosure is recorded by the member it was shown to, from "
-        + "their own signed-in session. Nothing was recorded.", { member: m, by: by ?? null });
+      return refusal("DISCLOSURE_NOT_THE_MEMBERS", localize("instance-setup.setup.the_disclosure_is_recorded_by", "the disclosure is recorded by the member it was shown to, from their own signed-in session. Nothing was recorded."), { member: m, by: by ?? null });
     /* END DEC-49 REGION is-disclosure-shown */
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO assistant_disclosures (member, version, shown_by, shown_at) VALUES (?, ?, ?, ?)`,
@@ -2111,8 +2211,7 @@ export class InstanceSetup {
     } catch { r = null; }
     return r ? { ok: true, member: m, version: v, shown: true, shown_at: r.shown_at }
              : { ok: true, member: m || null, version: v, shown: false, shown_at: null,
-                 detail: m ? "no disclosure at this version is recorded as shown to this member"
-                           : "the request names no member, so no disclosure is recorded as shown" };
+                 detail: m ? word("instance-setup.disclosure.detail.not_shown") : word("instance-setup.disclosure.detail.no_member") };
   }
 
   /* =====================================================================
@@ -2153,16 +2252,16 @@ export class InstanceSetup {
    *  it with `name: null`. `by` is the control plane's stamp (R29). Each set or clear is appended with who and when. */
   placeWantedSet({ name = undefined, by = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "naming the place your group works in");
+      return notAnAdmin(by ?? null, localize("instance-setup.setup.what_naming_place", "naming the place your team works in"));
     let value = null;
     if (name !== null) {
       const s = typeof name === "string" ? name.trim() : "";
       const chars = [...s].length;
       /* DEC-49 REGION is-place-name */
       if (!s || chars > PLACE_NAME_MAX || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
-        return refusal("PLACE_NAME_MALFORMED", `${s ? `a name of ${chars} characters` : "the request names no place, and "
-          + "one is named as"} one line of 1 to ${PLACE_NAME_MAX} characters with no control characters; null clears it. `
-          + "Nothing was changed.");
+        return refusal("PLACE_NAME_MALFORMED", s
+          ? localize("instance-setup.setup.place_not_one_line", "A name of {chars} characters is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { chars, max: PLACE_NAME_MAX })
+          : localize("instance-setup.setup.place_none_given", "The request names no place. A place is named in one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { max: PLACE_NAME_MAX }));
       /* END DEC-49 REGION is-place-name */
       value = s;
     }
@@ -2172,20 +2271,19 @@ export class InstanceSetup {
     /* R62: the open arrivals leave when the name is cleared or changed; the profiles held now are what a later start
        compares against, so a profile already held when the name is set is not an arrival. */
     if (before && before.name !== null && before.name !== value)
-      this.#leaveArrivals(value === null ? "the name was cleared" : "the name was changed", at);
+      this.#leaveArrivals(value === null ? word("setup.leave_arrivals.name_cleared") : word("setup.leave_arrivals.name_changed"), at);
     this.#seePlaces(at);
     return { ok: true, name: value, set_by: by, set_at: at,
              history: this.#rows(`SELECT name, set_by, set_at FROM place_wanted ORDER BY seq`).map((r) => ({ ...r })),
              note: value === null
-               ? "no place is named. Nothing about it was ever sent anywhere."
-               : "the name is kept only in your group's Civicsmith and sent nowhere. When an installed update brings a "
-                 + "profile for it, the administrators are told once and may choose it under Places." };
+               ? word("setup.note.place_named_ever")
+               : word("setup.note.name_kept_group") };
   }
 
   /** R60, op=placewantedstate: the named place, to an administrator only, with R62's open arrivals as `matches`. */
   placeWanted({ viewer = null } = {}) {
     if (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer))
-      return notAnAdmin(viewer ?? null, "reading the place your group named");
+      return notAnAdmin(viewer ?? null, localize("instance-setup.setup.what_reading_place", "reading the place your team named"));
     const cur = this.#placeCurrent();
     return { ok: true, name: cur ? cur.name : null, set_by: cur ? cur.set_by : null, set_at: cur ? cur.set_at : null,
              matches: this.placeArrivals({ viewer }).arrivals };
@@ -2243,22 +2341,22 @@ export class InstanceSetup {
     const who = typeof by === "string" ? by.trim() : "";
     /* DEC-49 REGION is-member-language */
     if (!who || /^class:/.test(who))
-      return refusal("MACHINE_CANNOT_SET_LANGUAGE", "the language of the screens is set by the member, from their own "
-        + "signed-in session. Nothing was changed.", { by: by ?? null });
+      return refusal("MACHINE_CANNOT_SET_LANGUAGE", localize("instance-setup.setup.the_language_of_the_screens", "the language of the screens is set by the member, from their own signed-in session. Nothing was changed."), { by: by ?? null });
     let tag = null;
     if (language !== null) {
       tag = typeof language === "string" ? language.trim() : "";
       if (!isLocale(tag))
-        return languageMalformed(`${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no language, and "
-          + "one is chosen as"} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.`);
+        return languageMalformed(tag
+          ? localize("instance-setup.setup.language_not_a_tag", "'{tag}' is not a well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.", { tag: tag.slice(0, 40) })
+          : localize("instance-setup.setup.language_none_given", "The request names no language. A language is chosen as one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.", {}));
     }
     /* END DEC-49 REGION is-member-language */
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO member_languages (member, language, set_at) VALUES (?, ?, ?)`, who, tag, at);
     return { ok: true, member: who, language: tag, set_at: at,
              note: tag === null
-               ? "no language is chosen: the screens follow your device's setting again."
-               : "the screens show each word in this language where a translation is held, and in English where none is." };
+               ? word("setup.note.language_chosen_screens")
+               : word("setup.note.screens_show_word") };
   }
 
   /** R64, op=memberlanguage: the viewer's own choice, `{language, set_at}`, and nobody else's. Writes nothing. */
@@ -2288,23 +2386,22 @@ export class InstanceSetup {
     const who = typeof by === "string" ? by.trim() : "";
     /* DEC-49 REGION is-info-level */
     if (!who || isMachineIdentity(who))
-      return refusal("MACHINE_CANNOT_SET_INFO_LEVEL", "how quickly explanations open is set by the member, from their own "
-        + "signed-in session. Nothing was changed.", { by: by ?? null });
+      return refusal("MACHINE_CANNOT_SET_INFO_LEVEL", localize("instance-setup.setup.how_quickly_explanations_open_is", "how quickly explanations open is set by the member, from their own signed-in session. Nothing was changed."), { by: by ?? null });
     if (!INFO_LEVELS.includes(level))
-      return refusal("INFO_LEVEL_UNKNOWN", `${typeof level === "string" && level ? `'${level.slice(0, 40)}' is not`
-        : "the request names no level, and one is chosen as"} one of ${INFO_LEVELS.join(" or ")}. Nothing was changed.`);
+      return refusal("INFO_LEVEL_UNKNOWN", typeof level === "string" && level
+        ? localize("instance-setup.setup.level_not_one_of", "'{level}' is not one of {levels}. Nothing was changed.", { level: level.slice(0, 40), levels: INFO_LEVELS.join(" or ") })
+        : localize("instance-setup.setup.level_none_given", "The request names no level. A level is chosen as one of {levels}. Nothing was changed.", { levels: INFO_LEVELS.join(" or ") }));
     /* K2996: `asked` is absent, `true` or `false`; anything else is no answer to the first-month question. */
     if (asked !== undefined && asked !== null && asked !== true && asked !== false)
-      return refusal("INFO_LEVEL_UNKNOWN", "whether this set answers the first-month question is said as true or false, "
-        + "or not at all. Nothing was changed.");
+      return refusal("INFO_LEVEL_UNKNOWN", localize("instance-setup.setup.whether_this_set_answers_the", "whether this set answers the first-month question is said as true or false, or not at all. Nothing was changed."));
     /* END DEC-49 REGION is-info-level */
     const before = this.#infoLevelRow(who);
     const at = this.#iso();
     const askedAt = before && before.asked_at ? before.asked_at : asked === true ? at : null;
     this.#sql.exec(`INSERT INTO member_info_levels (member, level, asked_at, set_at) VALUES (?, ?, ?, ?)`, who, level, askedAt, at);
     return { ok: true, member: who, level, set_at: at, asked_at: askedAt,
-             note: level === "prompt" ? "explanations open promptly on your screens."
-               : "explanations open on a longer pause, so less opens while you move; nothing is hidden." };
+             note: level === "prompt" ? word("setup.note.explanations_open_promptly")
+               : word("setup.note.explanations_open_longer") };
   }
 
   #infoLevelRow(who) {
@@ -2332,12 +2429,12 @@ export class InstanceSetup {
    *  not answer is the store's silence (R43), never `met: false`. Writes nothing and never throws. */
   adminRecoveryStep({ viewer = null } = {}) {
     const silent = (what, e) => ({ ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-      detail: `${what} did not answer (${String(e && e.message || e).slice(0, 160)}), so whether the step is met is not known` });
+      detail: localize("instance-setup.setup.what_did_not_answer_string", "{what} did not answer ({reason}), so whether the step is met is not known", { what: String(what), reason: String(String(e && e.message || e).slice(0, 160)) }) });
     const who = typeof viewer === "string" ? viewer.trim() : "";
     let admin;
     try { admin = !!who && !/^class:/.test(who) && this.#membership().isAdministrator(who) === true; }
     catch (e) { return silent("the membership read of who is an administrator", e); }
-    if (!admin) return notAnAdmin(viewer ?? null, "reading the step of two administrators holding recovery codes");
+    if (!admin) return notAnAdmin(viewer ?? null, localize("instance-setup.setup.what_reading_recovery_step", "reading the step of two administrators holding recovery codes"));
     let admins, codes;
     try { admins = this.#membership().activeAdmins(); }
     catch (e) { return silent("the membership read of the administrators", e); }
@@ -2371,27 +2468,24 @@ export class InstanceSetup {
    *  `/draft` (`{answers, account, holdings}` → `{focus, purpose, readLog}`), else the one this module was built with. */
   async groupDescriptionDraft({ answers = undefined, assistant = null, viewer = null, by = null, turn = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "asking the assistant to draft your group's description");
+      return notAnAdmin(by ?? null, localize("instance-setup.setup.what_asking_draft", "asking the assistant to draft your team's description"));
     const off = this.assistantGate();
     if (off) return off;
     /* The door resolved no assistant for this request (store-door R10's `{on}`), though the gate now answers open: the
        keep-away changed between the two reads, so no draft is asked for and nothing is minted here (K231). */
     if (assistant && typeof assistant === "object" && assistant.on === false)
-      return draftUnavailable("the assistant was not on when this request was resolved, so nothing was drafted and the "
-        + "fields are as they were.");
+      return draftUnavailable(localize("instance-setup.setup.the_assistant_was_not_on", "the assistant was not on when this request was resolved, so nothing was drafted and the fields are as they were."));
     const served = draftAccount(assistant);
-    if (served.project) return projectAccount("the fields are as they were");
+    if (served.project) return projectAccount(localize("instance-setup.setup.fields_as_they_were", "the fields are as they were"));
     /* DEC-49 REGION is-group-draft-answers */
     const given = Array.isArray(answers) && answers.length <= GROUP_DRAFT_ANSWERS_MAX ? answers : null;
     if (!given || given.some((a) => !a || typeof a !== "object" || typeof a.question !== "string"
                                     || typeof a.text !== "string" || [...a.text].length > GROUP_DRAFT_ANSWER_MAX))
-      return refusal("GROUP_DRAFT_ANSWERS_MALFORMED", `the answers are a list of at most ${GROUP_DRAFT_ANSWERS_MAX} `
-        + `{question, text}, each text at most ${GROUP_DRAFT_ANSWER_MAX} characters. Nothing was saved.`);
+      return refusal("GROUP_DRAFT_ANSWERS_MALFORMED", localize("instance-setup.setup.draft_answers_malformed", "The answers are a list of at most {max_answers} {question, text}, each text at most {max_text} characters. Nothing was saved.", { max_answers: GROUP_DRAFT_ANSWERS_MAX, max_text: GROUP_DRAFT_ANSWER_MAX }));
     if (given.every((a) => !a.text.trim()))
-      return refusal("GROUP_DRAFT_NO_ANSWERS", "every answer is empty, so there is nothing to draft from. Nothing was saved.");
+      return refusal("GROUP_DRAFT_NO_ANSWERS", localize("instance-setup.setup.every_answer_is_empty_so", "every answer is empty, so there is nothing to draft from. Nothing was saved."));
     /* END DEC-49 REGION is-group-draft-answers */
-    const unavailable = () => draftUnavailable("the assistant could not serve a draft of the group's description, so "
-      + "nothing was drafted and the fields are as they were.");
+    const unavailable = () => draftUnavailable(localize("instance-setup.setup.the_assistant_could_not_serve", "the assistant could not serve a draft of the team's description, so nothing was drafted and the fields are as they were."));
     const draftTurn = typeof turn === "function" ? turn : this.#deps.groupDraftTurn;
     if (typeof draftTurn !== "function") return unavailable();
     const account = served.account;
@@ -2413,7 +2507,7 @@ export class InstanceSetup {
       out[field] = { text: checked.text, label: { kind: "machine", asked_by: askedBy } };
       out.withheld.push(...(checked.withheld || []).map((w) => ({ field, ...w })));
     }
-    out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
+    out.note = word("setup.note.draft_saved_until");
     return out;
   }
 
@@ -2429,41 +2523,26 @@ export class InstanceSetup {
 
 
   /* =====================================================================
-   * THE TRANSLATION WORKSPACE IS `translations`' (R94; T50; N1084; K3696). These delegates answer what it answers, as
-   * given, for the callers that have not re-pointed (`store-door`'s `translationdraft` route, the plane's draft door, the
-   * nine routes below); each goes when its last caller does. The workspace's code, tables and rows are its own.
+   * THE TRANSLATION WORKSPACE IS `translations`' (R94; T50; N1084; K3696; R99). No delegate remains: the routes and the
+   * plane's reading of a member's language are `translations`' own.
    * ===================================================================== */
 
-  /* R94: `translations`' one instance on this storage, built over this module's own record, membership, ai-accounts,
-     profiles and clock, and given the member's language (R64) on its first construction, so a built and not yet started
-     InstanceSetup answers its delegates with the member's language. */
-  #translations() {
+  /* R94, R64: `memberLanguage` registered once with `translations` (its R11), at start, so the translations read the member's
+     own language through it; a second registration is only `PROVIDER_DECLARED`, harmless. Answered in the start's report. */
+  #translationsSvc() {
     const me = this;
     /* `aiAccounts` is a getter: `translations` asks for it only when a draft reaches the keep-away gate. */
-    const t = this.#deps.translations ?? translationsOf(this.#ctx, { record: this.#record(), membership: this.#membership(),
+    return this.#deps.translations ?? translationsOf(this.#ctx, { record: this.#record(), membership: this.#membership(),
       get aiAccounts() { return me.#aiAccounts(); }, jurisdictions: this.#deps.jurisdictions, now: this.#deps.now });
-    this.#registerLanguage(t);
-    return t;
   }
-  /* R94, R64: `memberLanguage` registered once with `translations` (its R11), which reads the member's own language
-     through it; a second registration is only `PROVIDER_DECLARED`, harmless. Answered in the start's report. */
-  #registerLanguage(t) {
+  #registerLanguage() {
     if (this.#languageRegistered) return this.#languageRegistered;
-    try { this.#languageRegistered = t.registerMemberLanguageRead(({ viewer = null } = {}) => this.memberLanguage({ viewer })); }
-    catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
+    try {
+      const t = this.#translationsSvc();
+      this.#languageRegistered = t.registerMemberLanguageRead(({ viewer = null } = {}) => this.memberLanguage({ viewer }));
+    } catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
     return this.#languageRegistered;
   }
-  translationDraftRefusal(a) { return this.#translations().translationDraftRefusal(a); }
-  translationDraft(a) { return this.#translations().translationDraft(a); }
-  readingLanguage(a) { return this.#translations().readingLanguage(a); }
-  translationDraftRecord(a) { return this.#translations().translationDraftRecord(a); }
-  translationGrant(a) { return this.#translations().translationGrant(a); }
-  translationAdopt(a) { return this.#translations().translationAdopt(a); }
-  translationConfirm(a) { return this.#translations().translationConfirm(a); }
-  translationRevert(a) { return this.#translations().translationRevert(a); }
-  translationMark(a) { return this.#translations().translationMark(a); }
-  translations(a) { return this.#translations().translations(a); }
-  interfaceWords(a) { return this.#translations().interfaceWords(a); }
 
   /* =====================================================================
    * UPDATES OF THE GROUP'S CIVICSMITH (R88–R91; T48; N1047; K3158, Bob's; DEC-226; K3189; `build/plan/draft-updates.md`).
@@ -2517,7 +2596,7 @@ export class InstanceSetup {
     const at = Number.isFinite(now) ? new Date(now).toISOString() : this.#iso();
     let got;
     try { got = await this.#askNotice(); }
-    catch (e) { got = { outcome: "unreachable", detail: `the check did not complete (${String(e && e.message || e).slice(0, 160)})` }; }
+    catch (e) { got = { outcome: "unreachable", detail: localize("instance-setup.setup.check_did_not_complete", "The check did not complete ({why}).", { why: String(e && e.message || e).slice(0, 160) }) }; }
     this.#sql.exec(`INSERT INTO update_checks (at, outcome, version, detail) VALUES (?, ?, ?, ?)`,
                    at, got.outcome, got.version ?? null, got.detail ? String(got.detail).slice(0, 300) : null);
     return { at, outcome: got.outcome, ...(got.version ? { version: got.version } : {}), ...(got.detail ? { detail: got.detail } : {}) };
@@ -2531,43 +2610,43 @@ export class InstanceSetup {
     const host = new URL(RELEASE_NOTICE_ADDRESS).host;
     let g;
     try { g = this.#governor().governorAdmit({ host }); }
-    catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
+    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer_2", "the governor did not answer ({reason})", { reason: String(String(e && e.message || e).slice(0, 120)) }) }; }
     if (!g || !g.admitted)
-      return { outcome: "unreachable", detail: `the per-host governor held ${host} (${g && g.reason}); nothing was asked` };
+      return { outcome: "unreachable", detail: word("instance-setup.updates.detail.held", { host, reason: String(g && g.reason) }) };
     if (g.wait_ms) await this.#sleep(g.wait_ms);
     let res = null;
     try {
       res = await this.#fetch(RELEASE_NOTICE_ADDRESS, { method: "GET", redirect: "manual",
         headers: { accept: "application/json", "user-agent": UPDATE_CHECK_USER_AGENT } });
     } catch { res = null; }
-    if (!res) return { outcome: "unreachable", detail: "the release notice could not be fetched" };
+    if (!res) return { outcome: "unreachable", detail: word("instance-setup.updates.detail.not_fetched") };
     const status = res.status;
     try { this.#governor().governorReport({ host, status }); } catch { /* an unrecorded outcome is not a verdict */ }
     if (!(status >= 200 && status < 300))
       return { outcome: "unreachable", detail: status >= 300 && status < 400
-        ? `the address redirected (HTTP ${status}); no redirect is followed` : `the address answered HTTP ${status}` };
+        ? word("instance-setup.updates.detail.redirected", { status }) : word("instance-setup.updates.detail.answered", { status }) };
     const read = await boundedBytes(res, RELEASE_NOTICE_MAX_BYTES);
-    if (read.over) return { outcome: "MALFORMED", detail: `the notice is over ${RELEASE_NOTICE_MAX_BYTES} bytes` };
+    if (read.over) return { outcome: "MALFORMED", detail: word("instance-setup.updates.detail.too_big", { bytes: RELEASE_NOTICE_MAX_BYTES }) };
     let f = null;
     try { f = JSON.parse(new TextDecoder().decode(read.bytes)); } catch { f = null; }
-    if (!f || typeof f !== "object" || Array.isArray(f)) return { outcome: "MALFORMED", detail: "the notice is not a JSON object" };
-    if (typeof f.sig !== "string" || !f.sig) return { outcome: "MALFORMED", detail: "the notice carries no signature" };
+    if (!f || typeof f !== "object" || Array.isArray(f)) return { outcome: "MALFORMED", detail: word("instance-setup.updates.detail.not_object") };
+    if (typeof f.sig !== "string" || !f.sig) return { outcome: "MALFORMED", detail: word("instance-setup.updates.detail.no_signature") };
     const v = await verifyReleaseNotice({ version: f.version, date: f.date, manifest: f.manifest, security: f.security, notes: f.notes },
                                         f.sig, running, this.#deps.releaseKeys ?? RELEASE_KEYS);
     if (!v.ok) {
       /* the release the feed names is the one running: nothing newer, which is the steady state; an older one is a replay */
       if (v.reason === "NOT_NEWER" && v.version === v.running)
-        return { outcome: "none", version: v.version, detail: "the newest release published is the one running" };
+        return { outcome: "none", version: v.version, detail: word("instance-setup.updates.detail.up_to_date") };
       return { outcome: String(v.reason), ...(typeof v.version === "string" ? { version: v.version } : {}),
-               detail: v.reason === "MALFORMED" ? `not a well-formed notice (${String(v.field ?? "notice").slice(0, 40)})`
-                 : v.reason === "NOT_NEWER" ? `an older release than the ${v.running} that runs` : String(v.detail ?? v.reason).slice(0, 160) };
+               detail: v.reason === "MALFORMED" ? word("instance-setup.updates.detail.malformed", { field: String(v.field ?? "notice").slice(0, 40) })
+                 : v.reason === "NOT_NEWER" ? word("instance-setup.updates.detail.older_than_running", { running: String(v.running) }) : String(v.detail ?? v.reason).slice(0, 160) };
     }
     const n = v.notice;
     const held = this.#noticeRows()[0] ?? null;
     if (held) {
       const c = cmpVersion(n.version, held.version);
-      if (c === 0) return { outcome: "none", version: n.version, detail: "this release is held already" };
-      if (c < 0) return { outcome: "NOT_NEWER", version: n.version, detail: `an older release than the ${held.version} held` };
+      if (c === 0) return { outcome: "none", version: n.version, detail: word("instance-setup.updates.detail.already_held") };
+      if (c < 0) return { outcome: "NOT_NEWER", version: n.version, detail: word("instance-setup.updates.detail.older_than_held", { held: String(held.version) }) };
     }
     this.#sql.exec(`INSERT INTO release_notices (version, date, manifest, security, notes, sig, found_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
                    n.version, n.date, n.manifest, n.security ? 1 : 0, JSON.stringify(n.notes), f.sig, this.#iso());
@@ -2618,9 +2697,77 @@ export class InstanceSetup {
     const by = this.#one(`SELECT by_member, by_name FROM update_decisions WHERE version = ? AND kind = 'start' ORDER BY seq DESC LIMIT 1`, version);
     return { version, installed_at: seen ? seen.first_seen_at : null, allowed_by: by ? by.by_name ?? by.by_member : null };
   }
+  /* R106: the release the copy was set up with, the oldest `running_releases` records (R88's first sighting), or null. */
+  #setupOut() {
+    const first = this.#one(`SELECT version, first_seen_at FROM running_releases ORDER BY seq ASC LIMIT 1`);
+    return first ? { version: first.version, installed_at: first.first_seen_at } : null;
+  }
+  /** R95 (T51; N1239; K3777): what this copy already holds, as the seven flat scalars `op=bootstrap` states to a
+   *  credentialed caller (the door's to ask, `bootstrapReport`). The team's name as its members read it (R10); the instant
+   *  the running release was first seen (R88); the newest activity of any session held (`credentials` R65); and the
+   *  copy's own projects, documents, published case editions and active members, each taken whole, never through a
+   *  viewer's sight. A fact that cannot be read now is `null`, never omitted and never `0`; no value names a member,
+   *  handle or role, and none is nested. Writes nothing; never throws. */
+  /** R105 (fix round 10, K5170; extraction R110): each migration's counts, read only, as extraction states them. The Worker's
+   *  `selftest` asks this through the store's route, for an administrator; the store is the only place extraction is held. */
+  selftestMigrations() { return extractionOf(this.#ctx).migrationCounts(); }
+
+  bootstrapFacts({ facts = true, viewer = null, parts = false } = {}) {
+    const read = (f) => { try { return f(); } catch { return null; } };
+    const text = (f) => { const v = read(f); return typeof v === "string" && v ? v : null; };
+    const count = (f) => { const n = read(f); return Number.isInteger(n) && n >= 0 ? n : null; };
+    /* R103: a signed-in viewer's own screen language (R64) and the stamp of the team's adoptions (`translations` R20), in the
+       same answer so `bootstrap` makes one hop for both; a stamp that cannot be read is `null`, never guessed. */
+    const viewerOut = viewer ? { language: text(() => this.memberLanguage({ viewer }).language),
+                                 words_version: text(() => this.#translationsSvc().wordsVersion()) } : {};
+    /* R104 (G118b): the fleet's parts the object keeps, in the same visit, only when asked; the default answer is unchanged. */
+    const keptOut = parts ? { kept_parts: this.keptFleetParts() } : {};
+    if (!facts) return { ...viewerOut, ...keptOut };
+    return {
+      ...viewerOut,
+      ...keptOut,
+      team_name: text(() => this.groupIdentityPublic().display_name),
+      installed_at: text(() => this.#runningOut().installed_at),
+      last_used_at: text(() => this.#credentials().lastActivity()),
+      count_projects: count(() => this.#countProjects()),
+      count_documents: count(() => (this.#deps.provenance ?? provenanceOf(this.#ctx)).counts(null).register),
+      count_published: count(() => { const l = this.#publicRead().publishedList(); return Array.isArray(l && l.cases) ? l.cases.length : null; }),
+      count_members: count(() => { const l = this.#membership().memberList({ administer: false });
+        return Array.isArray(l && l.members) ? l.members.filter((x) => x && x.status === "active").length : null; }),
+    };
+  }
+  /** R104 (fix round 9, G118b; K4853): the fleet's parts, kept for every isolate. The isolate that asked the fleet tells the object
+   *  (`keepFleetParts`), by the three flat keys; the object keeps them with its own time, in memory (a restart loses them, and the
+   *  next call asks the fleet once). `keptFleetParts` answers them with their age by the object's clock, or `null` when none is
+   *  kept or they are past `PARTS_KEPT_MS`. Neither writes the record, throws, or answers any key but the three and the age. */
+  keptFleetParts() {
+    const k = this.#fleetKept;
+    if (!k) return null;
+    const age = this.#now() - k.at;
+    return age >= 0 && age < PARTS_KEPT_MS ? { ...k.parts, age_ms: age } : null;
+  }
+  keepFleetParts(parts) {
+    const flat = flatParts(parts);
+    if (!flat) return { ok: false, reason: "PARTS_NOT_KEPT" };
+    this.#fleetKept = { at: this.#now(), parts: flat };
+    return { ok: true };
+  }
+  /* R95: every project the record holds, paged whole through record-core's `listByType`. */
+  #countProjects() {
+    const record = this.#record();
+    let n = 0, after = "";
+    for (;;) {
+      const page = record.listByType({ type: "project", after, limit: 200 });
+      if (!page || !Array.isArray(page.ids)) return null;
+      n += page.ids.length;
+      if (!page.ids.length || !page.cursor) return n;
+      after = page.cursor;
+    }
+  }
+
   #updateSilence(what, e) {
     return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-             detail: `${what} could not be read (${String(e && e.message || e).slice(0, 160)}), so it is not known.` };
+             detail: localize("instance-setup.setup.what_could_not_be_read", "{what} could not be read ({reason}), so it is not known.", { what: String(what), reason: String(String(e && e.message || e).slice(0, 160)) }) };
   }
 
   /** R89, op=updatenotice: to an administrator only (`NOT_AN_ADMIN`, a machine included), what Settings › Updates draws:
@@ -2630,7 +2777,7 @@ export class InstanceSetup {
   updateNotice({ viewer = null } = {}) {
     const who = typeof viewer === "string" ? viewer.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(viewer ?? null, "reading the updates of your group's Civicsmith");
+      return notAnAdmin(viewer ?? null, localize("instance-setup.setup.what_reading_updates", "reading the updates of your team's Civicsmith"));
     try {
       const running = this.#runningOut();
       const last = this.#one(`SELECT at, outcome FROM update_checks ORDER BY seq DESC LIMIT 1`);
@@ -2659,9 +2806,9 @@ export class InstanceSetup {
           viewerHolds = holder ? this.#namesMember(holder.holders, who) : false;
         }
       } catch { holder = null; viewerHolds = null; }
-      return { ok: true, running, last_check: last ? { at: last.at, outcome: last.outcome } : null, ready, earlier,
+      return { ok: true, running, setup: this.#setupOut(), last_check: last ? { at: last.at, outcome: last.outcome } : null, ready, earlier,
                earlier_limit: UPDATE_EARLIER_MAX, earlier_truncated: rest.length > UPDATE_EARLIER_MAX, holder, viewer_holds: viewerHolds };
-    } catch (e) { return this.#updateSilence("the updates of your group's Civicsmith", e); }
+    } catch (e) { return this.#updateSilence(localize("instance-setup.setup.what_the_updates", "the updates of your team's Civicsmith"), e); }
   }
 
   /* R89: whether the text a group recorded as who holds the hosting account names `id`, by the member's id or handle as a
@@ -2681,7 +2828,7 @@ export class InstanceSetup {
       const readyRow = this.#readyNotice();
       return { ok: true, running: this.#runningOut(), ready: readyRow ? this.#readyOut(readyRow) : null,
                decisions: readyRow ? this.#decisionsOf(readyRow.version) : [] };
-    } catch (e) { return this.#updateSilence("the updates of your group's Civicsmith", e); }
+    } catch (e) { return this.#updateSilence(localize("instance-setup.setup.what_the_updates", "the updates of your team's Civicsmith"), e); }
   }
 
   /* R90: an update act is an administrator's (`by` the control plane's stamp, R29): `{who}`, or `NOT_AN_ADMIN` first, a
@@ -2697,8 +2844,10 @@ export class InstanceSetup {
     const ready = this.#readyNotice();
     /* DEC-49 REGION is-update-ready */
     if (!ready || !v || ready.version !== v)
-      return { refused: refusal("UPDATE_NOT_READY", `${v ? `'${v.slice(0, 40)}'` : "the request names no version, and a release is decided by its version;"} `
-        + `${ready ? `the release ready to install is ${ready.version}` : "no release is ready to install"}. Nothing was recorded.`,
+      return { refused: refusal("UPDATE_NOT_READY", !ready
+          ? localize("instance-setup.setup.update_none_ready", "No release is ready to install. Nothing was recorded.")
+          : v ? localize("instance-setup.setup.update_not_the_ready_one", "'{version}' is not the release ready to install, which is {ready}. Nothing was recorded.", { version: v.slice(0, 40), ready: ready.version })
+          : localize("instance-setup.setup.update_no_version", "The request names no version, and a release is decided by its version. The release ready to install is {ready}. Nothing was recorded.", { ready: ready.version }),
         { version: v || null }) };
     /* END DEC-49 REGION is-update-ready */
     return { ready };
@@ -2713,24 +2862,24 @@ export class InstanceSetup {
   /** R90, op=updatestart: an administrator chooses to update to the release ready, and gets the installer's update page
    *  set to that release and no other. Nothing is installed by this act, which carries no credential, slug or member. */
   updateStart({ version = null, by = null } = {}) {
-    const a = this.#updateActor(by, "choosing to update your group's Civicsmith");
+    const a = this.#updateActor(by, localize("instance-setup.setup.what_choosing_update", "choosing to update your team's Civicsmith"));
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;
     const at = this.#decide(r.ready.version, "start", a.who);
     return { ok: true, version: r.ready.version, kind: "start", by: a.who, at,
              address: `${INSTALLER_UPDATE_ADDRESS}?version=${encodeURIComponent(r.ready.version)}`,
-             note: "nothing is installed by this: whoever holds your group's hosting account installs it, through Cloudflare's own consent." };
+             note: word("setup.note.installed_whoever_holds") };
   }
 
   /** R90, op=updatelater: an administrator sets the release ready aside: for 14 days, or, for a security release, until
    *  the start of the next local day (`civil-time`, the profile's zone, else UTC). A newer release replaces it at once. */
   updateLater({ version = null, by = null } = {}) {
-    const a = this.#updateActor(by, "setting aside an update of your group's Civicsmith");
+    const a = this.#updateActor(by, localize("instance-setup.setup.what_setting_aside_update", "setting aside an update of your team's Civicsmith"));
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;
-    const now = this.#now();
+    const now = this.#instant();
     let until, zone = null;
     if (r.ready.security === 1) ({ until, zone } = this.#nextLocalDay(now));
     else until = new Date(now + UPDATE_LATER_DAYS * 86_400_000).toISOString();
@@ -2754,15 +2903,18 @@ export class InstanceSetup {
   /** R90, op=updateskip: an administrator skips the release ready, with a reason (1 to 1,000 characters on one line):
    *  recorded with who and when and never erased; the release is never ready again, and the next one is offered. */
   updateSkip({ version = null, reason = null, by = null } = {}) {
-    const a = this.#updateActor(by, "skipping an update of your group's Civicsmith");
+    const a = this.#updateActor(by, localize("instance-setup.setup.what_skipping_update", "skipping an update of your team's Civicsmith"));
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;
     const why = typeof reason === "string" ? reason.trim() : "";
     /* DEC-49 REGION is-update-skip */
     if (!why || [...why].length > UPDATE_SKIP_REASON_MAX || !oneLine(why))
-      return refusal("UPDATE_SKIP_NO_REASON", `${typeof reason !== "string" || !why ? "no reason was given" : `a reason of ${[...why].length} characters${oneLine(why) ? "" : " over more than one line"} is not`} `
-        + `one line of 1 to ${UPDATE_SKIP_REASON_MAX} characters, and a release is skipped with one. Nothing was recorded.`, { version: r.ready.version });
+      return refusal("UPDATE_SKIP_NO_REASON", typeof reason !== "string" || !why
+          ? localize("instance-setup.setup.skip_no_reason", "No reason was given. A release is skipped with a reason of one line of 1 to {max} characters. Nothing was recorded.", { max: UPDATE_SKIP_REASON_MAX })
+          : oneLine(why) ? localize("instance-setup.setup.skip_reason_too_long", "A reason of {chars} characters is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.", { chars: [...why].length, max: UPDATE_SKIP_REASON_MAX })
+          : localize("instance-setup.setup.skip_reason_many_lines", "A reason of {chars} characters over more than one line is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.", { chars: [...why].length, max: UPDATE_SKIP_REASON_MAX }),
+        { version: r.ready.version });
     /* END DEC-49 REGION is-update-skip */
     const at = this.#decide(r.ready.version, "skip", a.who, { reason: why });
     return { ok: true, version: r.ready.version, kind: "skip", by: a.who, at, reason: why };
@@ -2807,9 +2959,7 @@ export class InstanceSetup {
                ...(unit === "ms" ? { peak_ms: r.peak_ms, last_ms: r.last_ms, total_ms: r.total_ms, mean_ms: mean } : {}) };
     });
     return { metrics,
-      note: "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute "
-          + "segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak "
-          + "is the run that would die first if a ceiling were near; a mean would hide it." };
+      note: localize("instance-setup.setup.each_metric_is_stated_in", "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak is the run that would die first if a ceiling were near; a mean would hide it.") };
   }
 
   /** R40: a probe run begins. Its steps are numbered and timed from this run's own start. */
@@ -2871,15 +3021,14 @@ export class InstanceSetup {
       rows, runs: runOut,
       note: !rows.length
         ? "the probe has never run, so nothing is known about the ceiling by measurement"
-        : `a run completed a step ${top.elapsed_ms} ms into its own isolate, so the ceiling lies above `
-          + `elapsed_at_highest_ms. `
-          + (cut.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last "
-                        + "completed step's elapsed time and below what its next step would have cost."
-                        : "No run has been cut off yet, so the ceiling is above everything tried.") };
+        : cut.length
+          ? localize("instance-setup.setup.probe_cut_off", "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost.", { elapsed_ms: top.elapsed_ms })
+          : localize("instance-setup.setup.probe_none_cut_off", "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. No run has been cut off yet, so the ceiling is above everything tried.", { elapsed_ms: top.elapsed_ms }) };
   }
 }
 
-/* R12 (N420): the three facts of the active profiles' combined view that `agent-worker` R51 reads: `deadlines` and
+/* R12 (N420): the three facts of the active profiles' combined view that `agent-worker` R51 reads (and, since fix round
+   4, `records_laws`, `records_help` and `name` for the screens): `deadlines` and
    `legal_organisations` as `jurisdictions.combine` gives them (its R29, R34), and `venues`, each `{kind, venue}` of a
    combined `action_kinds` entry that gives one (its R25, R29). A fact no active profile states, or that `combine`
    withholds (a conflict) or cannot give (its errors), is ABSENT, never an empty list: the reader then reads it
@@ -2894,6 +3043,10 @@ function profileView(combined) {
     .filter((k) => k && typeof k.kind === "string" && k.venue && typeof k.venue === "object")
     .map((k) => ({ kind: k.kind, venue: k.venue }));
   if (venues.length) view.venues = venues;
+  /* (fix round 4, C64-law) the law picker, "Change the law" and the records help read these three, as `combine` gives them */
+  if (Array.isArray(v.records_laws) && v.records_laws.length) view.records_laws = v.records_laws;
+  if (v.records_help && typeof v.records_help === "object") view.records_help = v.records_help;
+  if (typeof v.name === "string" && v.name) view.name = v.name;
   return view;
 }
 
@@ -2951,6 +3104,13 @@ export function instanceSetupOps(m, url, body) {
     infolevelset: () => m.infoLevelSet({ ...(body || {}), by: q("by") }),
     infolevel: () => m.infoLevel({ viewer: q("viewer") }),
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
+    /* R95 (T51): the seven facts `op=bootstrap` states to a credentialed caller; a store-internal route (no spec), asked
+       by `bootstrapReport` only for such a caller. */
+    /* R105 (fix round 10, K5170): the migrations' counts `op=selftest` states to an administrator; a store-internal route (no spec). */
+    selftestmigrations: () => m.selftestMigrations(),
+    bootstrapfacts: () => (body && typeof body === "object" && !Array.isArray(body) && body.keep !== undefined
+      ? m.keepFleetParts(body.keep)
+      : m.bootstrapFacts({ facts: q("facts") !== "0", viewer: q("viewer"), parts: q("parts") === "1" })),
     /* R84, R85 (T47; DEC-205): the group's logo and languages; `grouplogo` is the read control-plane serves. */
     /* R86: the logo's bytes are the request's body (a stream or bytes as the door hands them on, with `rawType` its
        content-type stamped in the query), or a JSON `{raw, rawType}` (`raw` base64, or null to clear). */
@@ -2963,16 +3123,6 @@ export function instanceSetupOps(m, url, body) {
     grouplanguages: () => m.groupLanguages(),
     /* R77 (T45): the administrators' act setting the group's declared stake. */
     declaredstakeset: () => m.declaredStakeSet({ ...(body || {}), by: q("by") }),
-    /* R94: the translation ops and the door's store-internal record route (no spec), served through the delegates. */
-    translationdraft: () => m.translationDraft({ ...(body || {}), by: q("by") }),
-    translationdraftrecord: () => m.translationDraftRecord({ ...(body || {}), by: q("by") }),
-    translationgrant: () => m.translationGrant({ ...(body || {}), by: q("by") }),
-    translationadopt: () => m.translationAdopt({ ...(body || {}), by: q("by") }),
-    translationconfirm: () => m.translationConfirm({ ...(body || {}), by: q("by") }),
-    translationrevert: () => m.translationRevert({ ...(body || {}), by: q("by") }),
-    translationmark: () => m.translationMark({ ...(body || {}), by: q("by") }),
-    translations: () => m.translations({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
-    interfacewords: () => m.interfaceWords({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
     /* R89, R90 (T48; N1047): the update notice and the administrators' three choices; `by` and `viewer` are the stamps. */
     updatenotice: () => m.updateNotice({ viewer: q("viewer") }),
     updatestart: () => m.updateStart({ ...(body || {}), by: q("by") }),
@@ -2980,6 +3130,66 @@ export function instanceSetupOps(m, url, body) {
     updateskip: () => m.updateSkip({ ...(body || {}), by: q("by") }),
   };
 }
+
+/* R101 (T51 fix round; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send,
+   declared by their owner beside the ops map. Each row's classes, machine classes and mutating are the op's rows in
+   `op-declarations`, its weight and description the op's in `op-grades` (copied, never chosen); its fields are what the arm
+   reads from the request: the stamps (`viewer`, `by`, `origin`) are the control plane's and are no field, and a field a call
+   cannot do without is one the arm refuses without, `null` being an answer where it clears (`stake`, `raw`, `language`,
+   `name` of a place). `runtime` and `selftest` are answered at the Worker (`instanceSetupOp`) and read nothing from the
+   request; they are reads, so their weight is `read`. `officesseed` forces its own `boot`. */
+const ADMIN_ACT = Object.freeze(["admin", "member"]);
+const STAMPED_ACT = Object.freeze(["admin", "member", "probe"]);
+export const DECLARED_OPS = Object.freeze({
+  declaredstakeset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.declaredstakeset", "setting: the group's declared stake in its own words, carried beside its public identity on what it sends or publishes from then; an administrator's act, every earlier value kept; moves no bundle"),
+    fields: { accepts: ["stake"], requires: ["stake"] } },
+  disclosureshown: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "caller-owned",
+    description: localize("instance-setup.declared.disclosureshown", "personal state, keyed by member: the assistant's disclosure shown to them, with its version"),
+    fields: { accepts: ["member", "version"], requires: ["member", "version"] } },
+  groupdomainset: { classes: STAMPED_ACT, mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.groupdomainset", "the group's claimed domain — the subject is the instance's identity, not a bundle"),
+    fields: { accepts: ["domain"], requires: ["domain"] } },
+  grouplanguagesset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.grouplanguagesset", "setting: the languages the group works in; an administrator's act, a later one replacing it; moves no bundle"),
+    fields: { accepts: ["languages"], requires: ["languages"] } },
+  grouplogoset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.grouplogoset", "setting: the group's logo, PNG or JPEG, or none; an administrator's act, a later one replacing it; moves no bundle"),
+    fields: { accepts: ["raw", "rawType"], requires: ["raw"] } },
+  groupnameset: { classes: STAMPED_ACT, mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.groupnameset", "the group's public display name — the subject is the instance's identity, not a bundle"),
+    fields: { accepts: ["name"], requires: ["name"] } },
+  infolevelset: { classes: STAMPED_ACT, machineClasses: [], mutating: true, weight: "caller-owned",
+    description: localize("instance-setup.declared.infolevelset", "personal state, keyed by member: how quickly explanations open, promptly or after a longer pause; nothing is hidden"),
+    fields: { accepts: ["level", "asked"], requires: ["level"] } },
+  memberlanguageset: { classes: STAMPED_ACT, machineClasses: [], mutating: true, weight: "caller-owned",
+    description: localize("instance-setup.declared.memberlanguageset", "personal state, keyed by member: the language the interface speaks to them"),
+    fields: { accepts: ["language"], requires: ["language"] } },
+  officesseed: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.officesseed", "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's"),
+    fields: { accepts: [], requires: [] } },
+  placewanted: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.placewanted", "the instance's configuration: the place the group wants its profile for; an administrator's"),
+    fields: { accepts: ["name"], requires: ["name"] } },
+  profilesset: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("instance-setup.declared.profilesset", "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator"),
+    fields: { accepts: ["profiles"], requires: ["profiles"] } },
+  runtime: { classes: STAMPED_ACT, mutating: false, weight: "read",
+    description: localize("instance-setup.declared.runtime", "read: what the instance was measured to cost and where its limits lie (the runtime's measurements, the CPU probe's trail, the subrequest ceiling)"),
+    fields: { accepts: [], requires: [] } },
+  selftest: { classes: STAMPED_ACT, mutating: false, weight: "read",
+    description: localize("instance-setup.declared.selftest", "read: whether the deployment is healthy (its bindings, the store's stats and a storage round trip); it never returns a secret"),
+    fields: { accepts: [], requires: [] } },
+  updatelater: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.updatelater", "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)"),
+    fields: { accepts: ["version"], requires: ["version"] } },
+  updateskip: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reasoned", refusal: "UPDATE_SKIP_NO_REASON",
+    description: localize("instance-setup.declared.updateskip", "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)"),
+    fields: { accepts: ["version", "reason"], requires: ["version", "reason"] } },
+  updatestart: { classes: ADMIN_ACT, machineClasses: [], mutating: true, weight: "reversible",
+    description: localize("instance-setup.declared.updatestart", "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)"),
+    fields: { accepts: ["version"], requires: ["version"] } },
+});
 
 /* ============================================================================================================
  * THE INSTANCE'S REPORTS, WORKER SIDE (R17–R19, R37, R38). The credential, the namespace and the envelope are the
@@ -3006,7 +3216,7 @@ export const PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "g
 export async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic", doAnswer) {
   if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: undefined };
   let stub = null;
-  try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
+  try { stub = storeStub(env, storeName); } catch { stub = null; }
   if (!stub) return { answered: false, result: undefined };
   return doAnswer(stub.fetch(`http://do/${projection}`));
 }
@@ -3016,7 +3226,7 @@ export async function publicInstanceGroup(env, storeName, projection = "instance
 export async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, io) {
   const { json, doAnswer } = io;
   if (viewer) {
-    const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
+    const out = await doAnswer(storeStub(env, storeName).fetch("http://do/instancegroup"));
     if (!out.answered) return notAnswered(out, "instancegroup", io);
     return json({ ok: true, result: out.result, store: storeName, tokenClass: cls }, 200);
   }
@@ -3028,7 +3238,7 @@ export async function instanceGroupOp(env, storeName, { viewer = null, cls = nul
 /** R10, R11 over the wire: the credentialed read (R11) or the public projection (R10). */
 export async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, io) {
   const { json, doAnswer } = io;
-  const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+  const out = await doAnswer(storeStub(env, storeName)
     .fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
   if (!out.answered) return notAnswered(out, "groupidentity", io);
   return json({ ok: true, result: out.result, store: storeName, ...(viewer ? { tokenClass: cls } : {}) }, 200);
@@ -3039,7 +3249,7 @@ export async function groupIdentityOp(env, storeName, { viewer = null, cls = nul
  *  is a silence (R43). */
 export async function groupLogoAsset(env, storeName, io) {
   let res = null;
-  try { res = await env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/grouplogo"); } catch { res = null; }
+  try { res = await storeStub(env, storeName).fetch("http://do/grouplogo"); } catch { res = null; }
   const type = res ? String(res.headers.get("content-type") || "").split(";")[0].trim() : "";
   if (res && res.status === 200 && GROUP_LOGO_TYPES.some((t) => t.type === type))
     return new Response(res.body, { status: 200, headers: { "content-type": type, "cache-control": "no-store",
@@ -3050,19 +3260,95 @@ export async function groupLogoAsset(env, storeName, io) {
 
 /** R17, op=bootstrap: this isolate's `version`, `bootstrapConfigured` (a live ADMIN_TOKEN), membership's
  *  `bootstrapState` and the store's own `storeVersion` from the Durable Object's route, and with `members` each
- *  member's own build (D-116: THREE BUILDS, EACH READ FROM WHERE IT RUNS — `storeVersion` is never written here). */
-export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal }) {
-  const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
-  if (!out.answered) return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal });
+ *  member's own build (D-116: THREE BUILDS, EACH READ FROM WHERE IT RUNS — `storeVersion` is never written here).
+ *  R95 (T51): to a credentialed `caller` only (`{cls: "admin"}` for an admin-class token, `{administrator: true}` for an
+ *  administrator's signed-in session, as the control plane resolved it) it adds the seven flat facts of the copy, read from
+ *  the store's own `bootstrapfacts` route; a caller with none, or of another class, is answered exactly R132's key set. */
+export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null, stateTiming = null, now = () => Date.now() }) {
+  /* R104: `stateTiming(name, ms)`, when the door hands one, is told `fleet` (the time of the parts' ask, 0 when kept) and `facts` (the
+     time of this report's hops to the store), which the door states in `Server-Timing` (`fleet;dur`, `facts;dur`). G118b (R-LOG): and
+     `isolate`, this isolate's age, with its id as the third argument (`desc`), so a deploy shows how many isolates answer. */
+  const tell = (name, ms, desc) => { try { if (typeof stateTiming === "function") stateTiming(name, Math.max(0, Math.round(ms)), desc); } catch { /* a sink never fails the report */ } };
+  const tellIsolate = () => { const iso = isolateOf(now); tell("isolate", now() - iso.at, iso.id); };
+  let storeMs = 0;
+  const hop = async (f) => { const t = now(); try { return await f(); } finally { storeMs += now() - t; } };
+  /* The first look at the parts is made before the hops. A signed-in caller's call that must ask the fleet reads the object's keep in the
+     one visit it already makes for the facts, and tells the object once after an ask (K4870); a stranger's keeps to this isolate and makes
+     no visit of its own for it, and a call that finds this isolate's entry reads none. */
+  const since = now();
+  const claim = !members && claimable(env, null) ? claimParts(env, now) : null;
+  const owner = !!claim && claim.owner;
+  const signedIn = credentialedCaller(caller) || !!signedInViewer(caller);
+  const outHop = hop(() => doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`))));
+  const factsHop = hop(() => bootstrapFactsOf(stub, doAnswer, { facts: credentialedCaller(caller), viewer: signedInViewer(caller), parts: owner && signedIn }));
+  if (owner) runOwner(claim.entry, env, now, {
+    readKept: async () => (signedIn ? (await factsHop).kept : null),
+    writeKept: async (parts) => { if (signedIn) await hop(() => keepPartsOf(stub, doAnswer, parts)); },
+  });
+  const out = await outHop;
+  if (!out.answered) { await factsHop; tell("facts", storeMs); tellIsolate(); return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal }); }
   const versions = members ? await memberVersions(env) : null;
   /* R80, R82: the deployment's facts are this isolate's alone, so a store answer naming any of them sets nothing, and
-     the retired nested `parts` (R81) is never relayed. */
-  const { parts: _retired, test_instance: _t, part_signin: _s, part_scanner: _c, part_safe_view: _v, ...store } =
+     the retired nested `parts` (R81) is never relayed. R95: nor does it set any of the seven facts, which only a
+     credentialed caller is told, from the store's own route for them; R103: nor `language` or `words_version`. */
+  const { parts: _retired, test_instance: _t, part_signin: _s, part_scanner: _c, part_safe_view: _v, ...held } =
     out.result && typeof out.result === "object" ? out.result : {};
+  const store = Object.fromEntries(Object.entries(held).filter(([k]) => !BOOTSTRAP_FACT_KEYS.includes(k) && !BOOTSTRAP_VIEWER_KEYS.includes(k)));
+  const [parts, facts] = await Promise.all([partsResult(claim, env, versions, now, since), factsHop]);
+  tell("fleet", parts.ms);
+  tell("facts", storeMs);
+  tellIsolate();
   return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
                 bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...store,
-                test_instance: testInstanceOf(env), ...(await partsReport(env, versions ? { ...versions } : null)),
+                test_instance: testInstanceOf(env), ...parts.parts, ...facts.out,
                 ...(members ? { memberVersions: versions } : {}) }, 200);
+}
+
+/* R95: the seven facts of a copy, by the wire names the installer reads (`newgroup/src/account.mjs`' `FACT_KEYS`). */
+export const BOOTSTRAP_FACT_KEYS = Object.freeze(["team_name", "installed_at", "last_used_at", "count_projects",
+  "count_documents", "count_published", "count_members"]);
+/* R95: a caller the door admits as the deployer's or an administrator's: an `admin`-class token (`cls`), or an
+   administrator's signed-in session (`administrator`). The control plane hands both in as it resolved them; a caller that
+   presented no credential, or one of another class, is told none of the seven. */
+const credentialedCaller = (caller) => !!caller && typeof caller === "object" && (caller.cls === "admin" || caller.administrator === true);
+/* R103 (fix round 8, G114): the keys of a signed-in caller, the viewer's screen language (R64) and the words stamp
+   (`translations` R20); never in a stranger's answer. */
+export const BOOTSTRAP_VIEWER_KEYS = Object.freeze(["language", "words_version"]);
+/* R103: a caller the door signed in as a member: the control plane's `viewer` stamp, a member's id (never a machine identity). */
+const signedInViewer = (caller) => {
+  const v = caller && typeof caller === "object" && typeof caller.viewer === "string" ? caller.viewer.trim() : "";
+  return v && !isMachineIdentity(v) ? v : null;
+};
+/* R95, R103: the store's answer, in one hop. With `facts` the seven, each key a non-empty string or a non-negative integer,
+   else `null`; with a `viewer` the viewer's `language` and the `words_version`, each a non-empty string or `null`. A read
+   that does not answer states every key asked `null`, never leaving a key out and never inventing a count; nothing asked,
+   no hop. R104 (G118b): with `parts` the same visit also asks the fleet's parts the object keeps for every isolate, answered
+   as `kept`: `{parts, age_ms}` (the three flat keys and the age by the object's own clock), or `null` when none is kept, they
+   are past the minute, or the visit was not answered. `{out, kept}`: `out` is what the answer states, `kept` is read by the owner of the ask. */
+async function bootstrapFactsOf(stub, doAnswer, { facts = true, viewer = null, parts = false } = {}) {
+  if (!facts && !viewer && !parts) return { out: {}, kept: null };
+  let got = null;
+  try {
+    const q = new URLSearchParams({ facts: facts ? "1" : "0", ...(viewer ? { viewer } : {}), ...(parts ? { parts: "1" } : {}) });
+    const a = await doAnswer(stub.fetch(new Request(`http://do/bootstrapfacts?${q}`)));
+    got = a.answered && a.result && typeof a.result === "object" ? a.result : null;
+  } catch { got = null; }
+  const text = (v) => (typeof v === "string" && v !== "" ? v : null);
+  const out = {};
+  if (facts) for (const k of BOOTSTRAP_FACT_KEYS) {
+    const v = got ? got[k] : null;
+    const ok = k === "team_name" || k === "installed_at" || k === "last_used_at" ? typeof v === "string" && v !== "" : Number.isInteger(v) && v >= 0;
+    out[k] = ok ? v : null;
+  }
+  if (viewer) for (const k of BOOTSTRAP_VIEWER_KEYS) out[k] = text(got ? got[k] : null);
+  const k = parts && got && got.kept_parts && typeof got.kept_parts === "object" ? got.kept_parts : null;
+  const flat = k ? flatParts(k) : null;
+  return { out, kept: flat && Number.isFinite(k.age_ms) ? { parts: flat, age_ms: k.age_ms } : null };
+}
+/* R104 (G118b): the owner of an ask tells the object what the fleet answered, the three flat keys, so every other isolate reads it. */
+async function keepPartsOf(stub, doAnswer, parts) {
+  const a = await doAnswer(stub.fetch(new Request("http://do/bootstrapfacts", { method: "POST", body: JSON.stringify({ keep: parts }) })));
+  return a.answered === true;
 }
 
 /** R18, op=selftest: deployment health as JSON, so "did the deploy work" is a link rather than a command. It
@@ -3088,6 +3374,12 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
         ? await liveToken(env.DAEMON_TOKEN) : "not configured",
     },
     r2Configured,
+    /* R102: what this copy is configured with for its team's room: the location hint it asks the platform for when the room is
+       first created (`null` when none is configured) and the generation of the room it uses. Configuration only, never where
+       the room runs, and never a secret. */
+    store_location: storeHint(env),
+    store_generation: storeGeneration(env),
+    store_place_note: localize("instance-setup.selftest.store_place_note", "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs."),
   };
   /* Half a fence is a defect, not an option. */
   if ((typeof env.CAPTURES?.get === "function") !== (typeof env.PUBLISHED?.get === "function")) {
@@ -3096,11 +3388,20 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
   }
   try {
     /* REC-52: a store that answered `ok:false`, or did not answer, is a failure of the health check, never healthy. */
-    const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+    const sOut = await doAnswer(storeStub(env, storeName)
       .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(viewer ?? "")}`));
     if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
     else out.store = sOut.result;
   } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
+  /* R105 (K5170; extraction R110): an administrator is told each migration's counts, read only; a store that does not answer
+     states none, which is not a health failure. */
+  if (cls === "admin") {
+    out.migrations = null;
+    try {
+      const mOut = await doAnswer(storeStub(env, storeName).fetch("http://x/selftestmigrations"));
+      if (mOut.answered && mOut.result && Array.isArray(mOut.result.migrations)) out.migrations = mOut.result.migrations;
+    } catch { out.migrations = null; }
+  }
   if (r2Configured) {
     try {
       const key = `${scratch}/selftest-${Date.now()}`;
@@ -3184,10 +3485,8 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
   return json({ ok: true, run: { ...r, id }, state: afterOut.result, trail_complete: complete,
     ...(complete ? {} : { last_confirmed_step: confirmed }),
     note: complete
-      ? "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last "
-        + "recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms."
-      : `the store did not confirm step ${confirmed + 1}, so the probe stopped there and burned nothing more: the `
-        + `trail is incomplete, and the last step the store confirmed is ${confirmed}.` });
+      ? localize("instance-setup.setup.this_run_returned_so_the", "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.")
+      : localize("instance-setup.setup.the_store_did_not_confirm", "the store did not confirm step {next}, so the probe stopped there and burned nothing more: the trail is incomplete, and the last step the store confirmed is {confirmed}.", { next: confirmed + 1, confirmed }) });
 }
 
 /* ============================================================================================================
@@ -3204,7 +3503,7 @@ export const INSTANCE_SETUP_OPS = Object.freeze(["selftest", "livefire", "runtim
 export async function instanceSetupOp(op, url, env, storeName, { cls = null, viewer = "", scratch = "scratch", json,
                                                                   doAnswer, storeSilent, storeRefusal } = {}) {
   const io = { json, doAnswer, storeSilent, storeRefusal };
-  const store = () => env.STORE.get(env.STORE.idFromName(storeName));
+  const store = () => storeStub(env, storeName);
   /* selftest reports deployment health as JSON, so "did the deploy work" is a
      link rather than a command. It asserts every binding is present and that
      the store answers, and it never returns a secret. */
@@ -3245,7 +3544,7 @@ export async function instanceSetupOp(op, url, env, storeName, { cls = null, vie
  *  bootstrap flag and NOTHING the store knows — an instance answering "here is what I am" while unable to say
  *  anything about itself. The installer and `newgroup` both read this op, so the false success reached a caller
  *  deciding whether an instance was ready. `members=1` adds each member's own build. */
-export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer }) {
+export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller = null, stateTiming = null }) {
   return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent,
-                                    storeRefusal, doAnswer });
+                                    storeRefusal, doAnswer, caller, stateTiming });
 }

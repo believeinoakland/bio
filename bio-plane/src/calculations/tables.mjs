@@ -7,11 +7,15 @@
 import { FIELD_TYPES, parseFigure } from "../calc-grammar/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
 import { sha256HexSync, createSha256 } from "../record-grammar/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
+import { separatorsOf } from "./money-cells.mjs";
 
-/** R1: the bounds of a table, in bytes of canonical CSV and in cells (N571: a held table is evaluated as calc-grammar's
- *  streamed table, its R22, read row by row from its canonical text, so 1,000,000 cells fit a Worker's heap). */
-export const TABLE_MAX_BYTES = 20 * 1024 * 1024;
-export const TABLE_MAX_CELLS = 1_000_000;
+/** R1, R46 (fix round 9, G124): the bounds of a table, in bytes of canonical CSV and in cells, quoted from `READ_BOUNDS` (N571: a held
+ *  table is evaluated as calc-grammar's streamed table, its R22, read row by row from its canonical text, so 1,000,000 cells fit a
+ *  Worker's heap). */
+export const TABLE_MAX_BYTES = boundOf("table", "bytes");
+export const TABLE_MAX_CELLS = boundOf("table", "cells");
 /** R1: how many undetermined cells a declaration lists by place (the count is always whole). */
 export const UNDETERMINED_LISTED = 200;
 
@@ -34,8 +38,8 @@ const SHA = /^[0-9a-f]{64}$/;
 // ---- RFC 4180 ----
 
 /* The rows of CSV text, one array of strings at a time (RFC 4180: quoted fields, doubled quotes, CRLF or LF line ends,
-   a leading BOM dropped); its return value is `{rows}` (the count) or `{error}` naming the first fault. */
-function* csvScan(text) {
+   a leading BOM dropped; `sep` the separator's char code); its return value is `{rows}` (the count) or `{error}` naming the first fault. */
+function* csvScan(text, sep = 44) {
   if (typeof text !== "string") return { error: "the source is not text" };
   const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const n = s.length;
@@ -56,13 +60,13 @@ function* csvScan(text) {
       }
       field = parts.join("");
       const c = s.charCodeAt(i);
-      if (i < n && c !== 44 && c !== 10 && c !== 13)
+      if (i < n && c !== sep && c !== 10 && c !== 13)
         return { error: `a quoted field on line ${count + 1} is followed by text before its separator` };
     } else {
       let j = i;
       while (j < n) {
         const c = s.charCodeAt(j);
-        if (c === 44 || c === 10 || c === 13) break;
+        if (c === sep || c === 10 || c === 13) break;
         if (c === 34) return { error: `a quote opens inside an unquoted field on line ${count + 1}` };
         j++;
       }
@@ -71,7 +75,7 @@ function* csvScan(text) {
     }
     row.push(field);
     if (i >= n) { yield row; return { rows: count + 1 }; }
-    if (s.charCodeAt(i) === 44) {
+    if (s.charCodeAt(i) === sep) {
       i++;
       if (i >= n) { row.push(""); yield row; return { rows: count + 1 }; }
       continue;
@@ -85,9 +89,11 @@ function* csvScan(text) {
 }
 
 /** Reads CSV text row by row, handing each row, a list of strings, to `onRow` as it is read, so a large table is never
- *  held twice. `{rows}` (the count) or `{error}` naming the first fault. Never throws, unless `onRow` does. */
-export function scanCsv(text, onRow) {
-  const it = csvScan(text);
+ *  held twice. `delimiter` is the one-character separator (default a comma; G64: a source may use a tab, a semicolon or a
+ *  pipe, the canonical bytes stay comma). `{rows}` (the count) or `{error}` naming the first fault. Never throws, unless
+ *  `onRow` does. */
+export function scanCsv(text, onRow, delimiter = ",") {
+  const it = csvScan(text, delimiter.charCodeAt(0));
   for (;;) {
     const s = it.next();
     if (s.done) return s.value;
@@ -119,21 +125,22 @@ export const shaOf = (text) => sha256HexSync(text);
 /** R1: `null` when the schema is a Table Schema over the declared header, else `{field, why}` naming the field. */
 export function schemaFault(schema, header) {
   if (!plain(schema) || !Array.isArray(schema.fields) || !schema.fields.length)
-    return { field: null, why: "a Table Schema is {fields: [{name, type}]} with one field per column" };
+    return { field: null, why: localize("calculations.tables.a_table_schema_is", "a Table Schema is {fields: [{name, type}]} with one field per column") };
   const extra = Object.keys(schema).filter((k) => k !== "fields");
-  if (extra.length) return { field: extra[0], why: "not a part of the Table Schema this module holds" };
+  if (extra.length) return { field: extra[0], why: word("calculations.why.part_table_schema") };
   if (schema.fields.length !== header.length)
-    return { field: null, why: `the schema has ${schema.fields.length} fields and the header ${header.length} columns` };
+    return { field: null, why: word("calculations.why.schema_fields_header", { fields: String(schema.fields.length), header: String(header.length) }) };
   for (let i = 0; i < schema.fields.length; i++) {
     const f = schema.fields[i];
     if (!plain(f)) return { field: `fields[${i}]`, why: "a field is {name, type}" };
-    const bad = Object.keys(f).filter((k) => !["name", "type", "unit", "currency", "zone", "title"].includes(k));
-    if (bad.length) return { field: String(f.name ?? `fields[${i}]`), why: `"${bad[0]}" is not a part of a field` };
-    if (f.name !== header[i]) return { field: String(f.name ?? `fields[${i}]`), why: `the header names column ${i + 1} "${header[i]}"` };
-    if (!FIELD_TYPES.includes(f.type)) return { field: f.name, why: `its type is one of ${FIELD_TYPES.join(", ")}` };
+    const bad = Object.keys(f).filter((k) => !["name", "type", "unit", "currency", "zone", "title", "locale"].includes(k));
+    if (bad.length) return { field: String(f.name ?? `fields[${i}]`), why: word("calculations.why.part_field", { bad: String(bad[0]) }) };
+    if (f.name !== header[i]) return { field: String(f.name ?? `fields[${i}]`), why: word("calculations.why.header_names_column", { n: String(i + 1), header: String(header[i]) }) };
+    if (!FIELD_TYPES.includes(f.type)) return { field: f.name, why: word("calculations.why.type", { field_types: String(FIELD_TYPES.join(", ")) }) };
     for (const k of ["unit", "currency", "zone", "title"])
-      if (f[k] !== undefined && (typeof f[k] !== "string" || !f[k].trim())) return { field: f.name, why: `its ${k} is text` };
-    if (f.currency !== undefined && !/^[A-Z]{3}$/.test(f.currency)) return { field: f.name, why: "its currency is a three-letter code" };
+      if (f[k] !== undefined && (typeof f[k] !== "string" || !f[k].trim())) return { field: f.name, why: word("calculations.why.text", { key: String(k) }) };
+    if (f.locale !== undefined && (typeof f.locale !== "string" || !separatorsOf(f.locale))) return { field: f.name, why: localize("calculations.tables.a_locale_is_a", "a locale is a well-formed BCP 47 language tag, such as en-GB") };
+    if (f.currency !== undefined && !/^[A-Z]{3}$/.test(f.currency)) return { field: f.name, why: word("calculations.why.currency_three_letter") };
   }
   return null;
 }
@@ -154,21 +161,21 @@ export function rolesFault(roles, header) {
   if (!plain(roles)) return { field: "roles", why: "roles map a column to {role, space?, scheme?, crosswalk?}" };
   const seen = new Map();
   for (const [col, r] of Object.entries(roles)) {
-    if (!header.includes(col)) return { field: col, why: "not a column of the declared header" };
+    if (!header.includes(col)) return { field: col, why: word("calculations.why.column_declared_header") };
     if (!plain(r)) return { field: col, why: "a role is {role, space?, scheme?, crosswalk?}" };
     const bad = Object.keys(r).filter((k) => !["role", "space", "scheme", "crosswalk"].includes(k));
-    if (bad.length) return { field: col, why: `"${bad[0]}" is not a part of a role` };
-    if (!ROLES.includes(r.role)) return { field: col, why: `its role is one of ${ROLES.join(", ")}` };
-    if (seen.has(r.role)) return { field: col, why: `the role ${r.role} is already held by "${seen.get(r.role)}"` };
+    if (bad.length) return { field: col, why: word("calculations.why.part_role", { bad: String(bad[0]) }) };
+    if (!ROLES.includes(r.role)) return { field: col, why: word("calculations.why.role", { roles: String(ROLES.join(", ")) }) };
+    if (seen.has(r.role)) return { field: col, why: word("calculations.why.role_already_held", { role: String(r.role), role_2: String(seen.get(r.role)) }) };
     seen.set(r.role, col);
     const ways = ["space", "scheme", "crosswalk"].filter((k) => r[k] !== undefined);
     if (r.role === "fund") {
-      if (ways.length > 1) return { field: col, why: "the role fund names at most one way it resolves to a registered fund" };
+      if (ways.length > 1) return { field: col, why: word("calculations.why.role_fund_names") };
     } else if (RESOLVED_ROLES.includes(r.role)) {
-      if (ways.length !== 1) return { field: col, why: `the role ${r.role} names exactly one way it resolves: an id space, an entity scheme or a captured crosswalk` };
-    } else if (ways.length) return { field: col, why: `the role ${r.role} names no way of resolving` };
+      if (ways.length !== 1) return { field: col, why: word("calculations.why.role_names_exactly", { role: String(r.role) }) };
+    } else if (ways.length) return { field: col, why: word("calculations.why.role_names_way", { role: String(r.role) }) };
     for (const k of ["space", "scheme"])
-      if (r[k] !== undefined && (typeof r[k] !== "string" || !r[k].trim())) return { field: col, why: `its ${k} is a name` };
+      if (r[k] !== undefined && (typeof r[k] !== "string" || !r[k].trim())) return { field: col, why: word("calculations.why.name", { key: String(k) }) };
     if (r.crosswalk !== undefined) {
       const c = r.crosswalk;
       if (!plain(c) || !SHA.test(c.table ?? "") || typeof c.from !== "string" || typeof c.to !== "string")
@@ -226,11 +233,11 @@ export function cellFault(field, raw) {
  *  the cells that do not read as their types listed; the canonical bytes (`canonicalCsv`'s, line by line) and their
  *  SHA-256, made as the rows arrive so the rows are never held whole. `finish()` answers `{bytes, sha, rows,
  *  undetermined, count}`, or `{fault}` / `{tooLarge}`. */
-export function tableBuilder(header, fields, { maxCells = TABLE_MAX_CELLS, maxBytes = TABLE_MAX_BYTES } = {}) {
+export function tableBuilder(header, fields, { maxCells = TABLE_MAX_CELLS, maxBytes = TABLE_MAX_BYTES, headerSeen = false } = {}) {
   const enc = new TextEncoder();
   const hash = createSha256();
   const chunks = [];
-  let lines = [], size = 0, rows = 0, cells = 0, count = 0, first = true, fault = null, tooLarge = null, blank = [];
+  let lines = [], size = 0, rows = 0, cells = 0, count = 0, first = !headerSeen, fault = null, tooLarge = null, blank = [];
   const undetermined = [];
   const width = header.length;
   const flush = () => {
@@ -246,7 +253,7 @@ export function tableBuilder(header, fields, { maxCells = TABLE_MAX_CELLS, maxBy
   line(header);
   const take = (r) => {
     if (r.length > width && r.slice(width).some((x) => x.trim() !== "")) {
-      fault = fault || { field: null, why: `data row ${rows + 1} has ${r.length} cells, and the header ${width}` };
+      fault = fault || { field: null, why: word("calculations.why.data_row_cells", { rows: String(rows + 1), row: String(r.length), width: String(width) }) };
       return;
     }
     const row = new Array(width);
@@ -311,5 +318,16 @@ export function textTable(fields, text, size) {
       yield o;
     }
   }
-  return { fields: held, size, text, arrays, objects, streamed: () => ({ fields: held, rows: arrays }) };
+  /* R48: the rows `from` to `from + limit`, as arrays of strings, the rest of the text scanned past and never built */
+  function page(from, limit) {
+    const out = [];
+    let n = 0;
+    for (const row of arrays()) {
+      if (n >= from + limit) break;
+      if (n >= from) out.push(names.map((_, k) => String(row[k] ?? "")));
+      n++;
+    }
+    return out;
+  }
+  return { fields: held, size, text, arrays, objects, page, streamed: () => ({ fields: held, rows: arrays }) };
 }

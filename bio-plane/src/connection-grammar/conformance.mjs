@@ -12,6 +12,7 @@ import { canonicalJson } from '../record-grammar/index.mjs';
 import { createRegistry } from './registry.mjs';
 import { answerFailures, isRefusal } from './reads.mjs';
 import { hubBoundOf } from './bounds.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 /** The most pages the battery follows before it calls the paging unbounded. */
 const PAGE_LIMIT = 10000;
@@ -29,7 +30,7 @@ const statesDates = (v) => isObj(v) && ((v.from !== null && v.from !== undefined
 function hubsShown(items) {
   const n = new Map();
   for (const i of items) n.set(i.kind, (n.get(i.kind) ?? 0) + 1);
-  return [...n].filter(([k, c]) => c > hubBoundOf(k)).map(([k, c]) => `${c} items of ${k}, more than its hub bound of ${hubBoundOf(k)}`);
+  return [...n].filter(([k, c]) => c > hubBoundOf(k)).map(([k, c]) => word('connection-grammar.items_hub_bound', { count: String(c), key: String(k), key_2: String(hubBoundOf(k)) }));
 }
 
 /**
@@ -55,8 +56,8 @@ export function ownerConformance(arg) {
   }
   const undated = declares?.undated === true;
   const groupWide = declares?.group_wide === true;
-  if (undated) inapplicable.push({ check: 'at', why: `${owner} declares its kinds undated: they state no valid, so no connection is in or out at a date` });
-  if (groupWide) inapplicable.push({ check: 'sight', why: `${owner} declares it holds no fenced item, so no item can be shown fenced from one viewer; the missing viewer is still checked` });
+  if (undated) inapplicable.push({ check: 'at', why: word('connection-grammar.why.declares_kinds_undated', { owner: String(owner) }) });
+  if (groupWide) inapplicable.push({ check: 'sight', why: word('connection-grammar.why.declares_holds_fenced', { owner: String(owner) }) });
 
   const reg = createRegistry();
   const r = reg.registerOwner({ owner, kinds, neighbours });
@@ -83,7 +84,7 @@ export function ownerConformance(arg) {
     for (let i = 0; i < PAGE_LIMIT; i++) {
       const a = call({ node, kinds: ks, at, page, viewer, scope: sc });
       if (a === null) return null;
-      if (isRefusal(a)) { fail('answer', `refused ${a.refused} for viewer ${String(viewer)}: ${a.why}`); return null; }
+      if (isRefusal(a)) { fail('answer', localize('connection-grammar.conformance.refused_refused_for_viewer_string', 'refused {refused} for viewer {String}: {why}', { refused: String(a.refused), String: String(String(viewer)), why: String(a.why) })); return null; }
       const f = answerFailures(a, { ...ctx(node, sc), at, kinds: ks });
       if (f.length) { failures.push(...f); return null; }
       items.push(...a.items);
@@ -93,7 +94,7 @@ export function ownerConformance(arg) {
       pages.add(key);
       page = a.next;
     }
-    fail('paging', `paging did not end within ${PAGE_LIMIT} pages`);
+    fail('paging', localize('connection-grammar.conformance.paging_did_not_end_within', 'paging did not end within {PAGE_LIMIT} pages', { PAGE_LIMIT: String(PAGE_LIMIT) }));
     return null;
   };
 
@@ -109,20 +110,20 @@ export function ownerConformance(arg) {
   if (!same) fail('determinism', 'two identical calls gave different answers');
 
   const sees = collect(fx.viewers.sees, scope);
-  if (sees) for (const why of hubsShown(sees.items)) fail('hub', `${fx.node} is a hub shown as items: ${why}; a hub is named, never shown`);
+  if (sees) for (const why of hubsShown(sees.items)) fail('hub', localize('connection-grammar.conformance.node_is_a_hub_shown', '{node} is a hub shown as items: {why}; a hub is named, never shown', { node: String(fx.node), why: String(why) }));
   if (sees) {
     const ids = sees.items.map((i) => i.id);
     if (new Set(ids).size !== ids.length) fail('paging', 'an item is answered on two pages');
-    if (!sameSet(ids, fx.expected)) fail('paging', `the pages joined (${ids.length} items) are not the complete set the fixture expects (${fx.expected.length})`);
+    if (!sameSet(ids, fx.expected)) fail('paging', localize('connection-grammar.conformance.the_pages_joined_length_items', 'the pages joined ({length} items) are not the complete set the fixture expects ({length_2})', { length: String(ids.length), length_2: String(fx.expected.length) }));
     const byId = new Map(sees.items.map((i) => [i.id, i]));
     // R6: the date rule, one connection in, one out, one undetermined; unless the owner declares its kinds undated.
     if (undated) {
       const dated = sees.items.find((i) => statesDates(i.valid));
-      if (dated) fail('declares', `${owner} declares its kinds undated, yet ${dated.id} states a valid bound`);
+      if (dated) fail('declares', localize('connection-grammar.conformance.owner_declares_its_kinds_undated', '{owner} declares its kinds undated, yet {id} states a valid bound', { owner: String(owner), id: String(dated.id) }));
     } else {
-      if (!byId.has(fx.in) || byId.get(fx.in).undetermined !== undefined) fail('at', `${fx.in} (in at the date) is not returned unmarked`);
-      if (byId.has(fx.out) || !filled(fx.out)) fail('at', `${fx.out} (out at the date) is returned, or the fixture names none`);
-      if (!byId.has(fx.undetermined) || !isObj(byId.get(fx.undetermined).undetermined)) fail('at', `${fx.undetermined} (undetermined at the date) is not returned marked undetermined`);
+      if (!byId.has(fx.in) || byId.get(fx.in).undetermined !== undefined) fail('at', localize('connection-grammar.conformance.in_in_at_the_date', '{in} (in at the date) is not returned unmarked', { in: String(fx.in) }));
+      if (byId.has(fx.out) || !filled(fx.out)) fail('at', localize('connection-grammar.conformance.out_out_at_the_date', '{out} (out at the date) is returned, or the fixture names none', { out: String(fx.out) }));
+      if (!byId.has(fx.undetermined) || !isObj(byId.get(fx.undetermined).undetermined)) fail('at', localize('connection-grammar.conformance.undetermined_undetermined_at_the_date', '{undetermined} (undetermined at the date) is not returned marked undetermined', { undetermined: String(fx.undetermined) }));
     }
     // R7: the fenced item reaches the viewer who may see it, and nothing of it reaches the one who may not; unless the
     // owner declares it holds no fenced item, when the other viewer gets the complete set. The missing viewer is
@@ -130,14 +131,14 @@ export function ownerConformance(arg) {
     if (groupWide) {
       if (fx.viewers.blind !== undefined) {
         const other = collect(fx.viewers.blind, scope);
-        if (other && !sameSet(other.items.map((i) => i.id), fx.expected)) fail('declares', `${owner} declares it holds no fenced item, yet the other viewer's pages are not the complete set`);
+        if (other && !sameSet(other.items.map((i) => i.id), fx.expected)) fail('declares', localize('connection-grammar.conformance.owner_declares_it_holds_no', '{owner} declares it holds no fenced item, yet the other viewer\'s pages are not the complete set', { owner: String(owner) }));
       }
     } else {
-      if (!byId.has(fx.fenced)) fail('sight', `${fx.fenced} (fenced) is not returned to the viewer who may see it`);
+      if (!byId.has(fx.fenced)) fail('sight', localize('connection-grammar.conformance.fenced_fenced_is_not_returned', '{fenced} (fenced) is not returned to the viewer who may see it', { fenced: String(fx.fenced) }));
       const blind = collect(fx.viewers.blind, scope);
       if (blind) {
         const bids = blind.items.map((i) => i.id);
-        if (bids.includes(fx.fenced)) fail('sight', `${fx.fenced} (fenced) is returned to the viewer who may not see it`);
+        if (bids.includes(fx.fenced)) fail('sight', localize('connection-grammar.conformance.fenced_fenced_is_returned_to', '{fenced} (fenced) is returned to the viewer who may not see it', { fenced: String(fx.fenced) }));
         if (!sameSet(bids, fx.expected.filter((x) => x !== fx.fenced))) fail('sight', 'the other viewer\'s pages are not the complete set less the fenced item');
       }
     }
@@ -147,7 +148,7 @@ export function ownerConformance(arg) {
   for (const k of asked) {
     const got = collect(fx.viewers.sees, scope, fx.node, fx.at, [k]);
     if (got && sees && !sameSet(got.items.map((i) => i.id), sees.items.filter((i) => i.kind === k).map((i) => i.id))) {
-      fail('kinds', `asking ${k} alone does not give exactly the ${k} items of the whole set`);
+      fail('kinds', localize('connection-grammar.conformance.asking_k_alone_does_not', 'asking {k} alone does not give exactly the {k_2} items of the whole set', { k: String(k), k_2: String(k) }));
     }
   }
 
@@ -155,10 +156,10 @@ export function ownerConformance(arg) {
   if (kinds.some((k) => k.class === 'hunch')) {
     if (!filled(fx.hunch) || !filled(fx.scope)) fail('scope', 'an owner of hunch kinds names a hunch and its working inquiry in its fixture');
     else {
-      if (sees && !sees.items.some((i) => i.id === fx.hunch)) fail('scope', `${fx.hunch} (hunch) is not returned within its inquiry`);
+      if (sees && !sees.items.some((i) => i.id === fx.hunch)) fail('scope', localize('connection-grammar.conformance.hunch_hunch_is_not_returned', '{hunch} (hunch) is not returned within its inquiry', { hunch: String(fx.hunch) }));
       for (const sc of [null, OTHER_SCOPE]) {
         const got = collect(fx.viewers.sees, sc);
-        if (got && got.items.some((i) => reg.kindOf(i.kind)?.class === 'hunch')) fail('scope', `a hunch is returned with scope ${sc}`);
+        if (got && got.items.some((i) => reg.kindOf(i.kind)?.class === 'hunch')) fail('scope', localize('connection-grammar.conformance.a_hunch_is_returned_with', 'a hunch is returned with scope {sc}', { sc: String(sc) }));
       }
     }
   }

@@ -14,8 +14,8 @@ export const findIn = Object.freeze({
   reads: function (view) {
     const s = String(view.subject || "").split("/")[0];
     const out = {
-      // The team's time zone, as `factstatus` lists it (R47): the bounds of a person fact are counted in it.
-      zone: { op: "factstatus" },
+      // The team's time zone, read by its own path (local-facts R21): the bounds of a person fact are counted in it.
+      zone: { op: "factstatus", query: { path: "@team/time_zone" } },
     };
     // R48 (7): the questions a result may be recorded for: the project's own when the scope is a project, else those the member may see.
     if (s.indexOf("PROJ-") === 0) {
@@ -25,6 +25,8 @@ export const findIn = Object.freeze({
         op: "search", query: { q: "type:inquiry", limit: "200" },
         empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
       };
+      // C35: each question is told by its project's name (a hit names none); the projects are read here and each one's questions in `render`.
+      out.projects = { op: "projectlist", empty: function () { return false; } };
     }
     // R26: a project scope is named by the project's title, read from its document.
     if (s.indexOf("PROJ-") === 0) out.project = { op: "image", query: { id: s } };
@@ -50,6 +52,7 @@ export const findIn = Object.freeze({
     if (ui.question === undefined && routed) ui.question = routed;
     const form = !s ? "" : s.indexOf("PROJ-") === 0 ? "project" : s.indexOf("sel-") === 0 ? "held" : "document";
     const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
+    const PARTS = ["footnote", "endnote", "header", "footer", "comment", "tracked_deletion", "text_box", "speaker_note", "master_text", "cell_note"];
     const RECORD = { people: "recordpersonfact", money: "recordfact", dates: "recorddatedfact", events: "recorddatedfact", requirements: "standarddeclare", term: "cite" };
     // The forms each recording act asks the member (R47, R48), drawn in place in a disclosure with the act and read by its `send`.
     const recordAct = function (op, ki, ii, it) {
@@ -101,14 +104,37 @@ export const findIn = Object.freeze({
     // the find was opened with, with no "None yet"; when there are none, `screen.document.cite.noquestion` says to open one first.
     const pq = view.data.projectquestions && view.data.projectquestions.state === "ok" && view.data.projectquestions.value && Array.isArray(view.data.projectquestions.value.items)
       ? view.data.projectquestions.value.items.map(function (x) { return { bundle_id: String(x.inquiry), title: x.title }; }) : null;
-    const qs = pq || (view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
-      ? view.data.questions.value.hits : []);
+    const hits = view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
+      ? view.data.questions.value.hits : [];
+    // C35: whose project each question is in: each project's questions read once (page memory `qs:<id>`); a question no read names stays by its title.
+    const ownerOf = {};
+    const pl = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.projects) ? view.data.projects.value.projects : [];
+    if (!pq) pl.forEach(function (p) {
+      const id = String(p.id);
+      const m = ui["qs:" + id];
+      if (!m) {
+        ui["qs:" + id] = { state: "loading", items: [] };
+        cs.call("projectquestions", { query: { project: id, limit: "200" } }).then(function (a) {
+          const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+          cs.set("qs:" + id, v && v.ok !== false && Array.isArray(v.items) ? { state: "ok", items: v.items.map(function (x) { return String(x.inquiry); }) } : { state: "failed", items: [] });
+        }, function () { cs.set("qs:" + id, { state: "failed", items: [] }); });
+      } else {
+        m.items.forEach(function (q) { ownerOf[q] = String(p.name || id); });
+      }
+    });
+    const seen = {};
+    const qs = pq || hits.filter(function (h) { const k = String(h.bundle_id); if (seen[k]) return false; seen[k] = true; return true; });
     // R39 (K3562): the question the route chose stays chosen, though the list of questions does not name it.
     const routedQ = ui.question && !qs.some(function (h) { return String(h.bundle_id) === String(ui.question); }) ? [{ value: String(ui.question), text: String(ui.question) }] : [];
     // None is preselected unless the find was opened with one: the first line only asks to choose (it is not a "None yet" choice).
-    const options = (ui.question ? [] : [{ value: "", text: cs.w("findin.question.choose") }]).concat(routedQ, qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) }; }));
+    const options = (ui.question ? [] : [{ value: "", text: cs.w("findin.question.choose") }]).concat(routedQ, qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) + (ownerOf[String(h.bundle_id)] ? " · " + ownerOf[String(h.bundle_id)] : "") }; }));
+    // G20: the lists are bounded (200); one that stops there says how many it shows (a held row's nearest stand-in: the people list's).
+    const pqv = view.data.projectquestions && view.data.projectquestions.state === "ok" ? view.data.projectquestions.value : null;
+    const qv = view.data.questions && view.data.questions.state === "ok" ? view.data.questions.value : null;
+    const cut = (pqv && pqv.cursor) || (qv && typeof qv.total === "number" && qv.total > hits.length);
     const question = routedQ.length || qs.length
       ? cs.choice("findin-question", "findin.question.choose", options, { value: ui.question || "" }) + '<p class="mk-small muted">' + cs.w("screen.find-in.question.help") + "</p>"
+        + (cut ? '<p class="mk-small">' + cs.w("screen.people.more", { n: String(qs.length) }) + "</p>" : "")
       : '<p class="mk-note">' + cs.w("screen.document.cite.noquestion") + "</p>";
     const acts = '<div class="mk-acts">' + cs.act("findin", { label: "act.findin.label.find-in", tone: "primary" })
       + cs.act("standingquestionset", { label: "act.standingquestionset.label.find-in" }) + "</div>"
@@ -134,21 +160,23 @@ export const findIn = Object.freeze({
           const p = extent.passage !== undefined ? extent.passage : extent.paragraph;
           // R26, R49: the result by its document's title and its place in it; a document the answer does not title is not named by its digest.
           const dt = typeof it.title === "string" && it.title.trim() ? it.title : it.document && typeof it.document.title === "string" && it.document.title.trim() ? it.document.title : null;
+          // R17a (retrieval-browse R21): a term item lying outside the document's body says which part: its kind, by the held word
+          // (`content.part_kind.<kind>`, the nearest row until the design gives its own). `body`, a unit stored without a kind (null) and a kind
+          // outside the closed list draw none, and a kind is never guessed.
+          const part = typeof it.part === "string" && it.part !== "body" && PARTS.indexOf(it.part) >= 0 && cs.w("content.part_kind." + it.part) !== "content.part_kind." + it.part
+            ? ' <span class="mk-small" data-part-kind="' + it.part + '">' + cs.w("content.part_kind." + it.part) + "</span>" : "";
           const where = (dt && it.capture_sha ? cs.ref("document", String(it.capture_sha), dt, []) + " " : "")
-            + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "");
+            + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "") + part;
           // R48 (8): a match in a sheet says its sheet and row and draws its cells apart; a formula the file never calculated says so;
           // a person named in the passage by a held alias says so.
-          const rowOf = function () {
-            if (typeof it.row === "number" || typeof it.row === "string") return String(it.row);
-            const text = Object.keys(extent).map(function (x) { return typeof extent[x] === "string" ? extent[x] : ""; }).join(" ");
-            const m = /[A-Z]+(\d+)/.exec(text);
-            return m ? m[1] : "";
-          };
-          const sheet = typeof it.sheet === "string" && it.sheet ? '<span class="meta">' + cs.w("findin.match.sheet", { sheet: it.sheet, row: rowOf() }) + "</span>"
+          // R62: the row is the match's own `row` (retrieval-browse R8), never parsed from its extent; a match answering none (a
+          // column result, or a match in a unit's own text) draws the sheet and its cells without a row number.
+          const hasRow = typeof it.row === "number" || (typeof it.row === "string" && it.row !== "");
+          const sheet = typeof it.sheet === "string" && it.sheet ? '<span class="meta">' + (hasRow ? cs.w("findin.match.sheet", { sheet: it.sheet, row: String(it.row) }) : cs.w("findin.match.sheet.norow", { sheet: it.sheet })) + "</span>"
             + (Array.isArray(it.cells) ? '<span class="meta">' + it.cells.map(function (c) {
               return c && c.value === null && c.cached === null ? '<span class="muted">' + cs.w("findin.cell.uncalculated", { cell: String(c.cell || "") }) + "</span>"
                 : "<span>" + cs.esc(String(c && c.value !== undefined && c.value !== null ? c.value : "")) + "</span>";
-            }).join(" · ") + "</span>" : "") : "";
+            }).join(" · ") + (it.cells_truncated === true ? " · " + cs.w("find.browse.more") : "") + "</span>" : "") : "";
           const aliased = it.correspondence === "name_in_passage" ? '<span class="meta">' + cs.w("findin.match.nameinpassage") + "</span>" : "";
           const rec = Array.isArray(it.recorded) && it.recorded.length ? it.recorded[0] : null;
           const op = it.table || it.kind === "table" ? "tabledeclare" : RECORD[k.kind];
@@ -157,20 +185,25 @@ export const findIn = Object.freeze({
           const count = (Array.isArray(it.recorded) ? it.recorded.length : 0) + (ack ? ack.n : 0);
           // R39, R48 (5): a passage keeps its acts after a fact is recorded from it and says how many facts it has; an already-cited
           // passage says so. Its cite act stays beside who recorded it: it is cited into the question chosen, not recorded again.
-          const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : "")
+          const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: cs.memberName(rec.by || rec.member || rec.who) }) : "")
             + (op ? recordAct(op, ki, ii, it) : "");
           return cs.row(cs.mark("origin", "search"), '<span class="rec">' + cs.w("screen.find-in.quote", { words: String(it.words || it.as_read || "") }) + "</span>"
             + '<span class="meta">' + where + "</span>" + sheet + aliased
             + (ack ? '<span class="meta" role="status">' + ack.html + "</span>" : "")
             + (count ? '<span class="meta">' + (count === 1 ? cs.w("passage.facts.count.one") : cs.w("passage.facts.count", { count: String(count) })) + "</span>" : ""), right, "");
         }).join("")) + notRead;
-      const more = k.kind === "term" && k.truncated
-        ? '<div class="mk-acts">' + cs.act("search", { label: "act.search.label.find-in", data: { term: String(found.term || "") } }) + "</div>" : "";
+      // G16 (S5): a kind cut at its bound says so, whichever kind it is; the term's also offers the whole search in Find.
+      const more = k.truncated ? '<p class="mk-note">' + cs.w("find.browse.more") + "</p>"
+        + (k.kind === "term" ? '<div class="mk-acts">' + cs.act("search", { label: "act.search.label.find-in", data: { term: String(found.term || "") } }) + "</div>" : "") : "";
       return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + body + more + "</section>";
     }).join("") + (found.term && !found.kinds.some(function (k) { return k.kind === "term" && k.truncated; })
       ? '<div class="mk-acts">' + cs.act("search", { label: "act.search.label.find-in", data: { term: String(found.term) } }) + "</div>" : "");
 
-    return head + scope + what + term + question + acts + results + '<p class="mk-note">' + cs.w("screen.find-in.note") + "</p>";
+    // G16 (S5): a find reads at most 200 documents a call; while more of the scope is left it says how many it has searched and continues.
+    const total = found && found.scope && typeof found.scope.captures === "number" ? found.scope.captures : null;
+    const searched = found && found.next && total !== null ? '<p class="mk-note">' + cs.w("screen.held.archivemore", { shown: String(found.read || 0), total: String(total) }) + '</p><div class="mk-acts">'
+      + cs.act("findin", { label: "find.browse.showmore", data: { cont: String(found.next) } }) + "</div>" : "";
+    return head + scope + what + term + question + acts + searched + results + '<p class="mk-note">' + cs.w("screen.find-in.note") + "</p>";
   },
 
   acts: [
@@ -197,13 +230,31 @@ export const findIn = Object.freeze({
         const fd = pj && Array.isArray(pj.documents) && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : "";
         const cap = /^[0-9a-f]{64}$/.test(fd) ? fd : s;
         const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: cap };
-        const body = { scope: scope, kinds: kinds };
+        let body = { scope: scope, kinds: kinds };
         if (kinds.indexOf("term") >= 0) body.term = term;
+        // G16: "Show more" continues the same find from the cursor the last answer gave (its scope, kinds and term as first asked).
+        const prior = (view.ui || {}).lastFind;
+        if (el.dataset.cont && prior) body = Object.assign({}, prior, { cursor: el.dataset.cont });
+        else cs.set("lastFind", body);
+        cs.set("findCont", !!(el.dataset.cont && prior));
         return { body: body };
       },
       done: function (view, answer, cs) {
         const a = answer && Array.isArray(answer.kinds) ? answer : (answer && answer.result) || {};
-        cs.set("found", { kinds: Array.isArray(a.kinds) ? a.kinds : [], term: (view.ui || {}).term || "", scope: a.scope || null });
+        const kinds = Array.isArray(a.kinds) ? a.kinds : [];
+        const had = (view.ui || {}).found;
+        const read = typeof a.captures_read === "number" ? a.captures_read : 0;
+        if ((view.ui || {}).findCont && had && Array.isArray(had.kinds)) {
+          // The later pages add to each kind below what is drawn, so the results already drawn keep their places (the recording acts name them).
+          const merged = had.kinds.map(function (k, i) {
+            const more = kinds.filter(function (x) { return x && x.kind === k.kind; })[0] || {};
+            return Object.assign({}, k, { items: (k.items || []).concat(more.items || []), count: (k.items || []).length + (more.items || []).length,
+              truncated: !!(k.truncated || more.truncated), nothing: false, not_read: (k.not_read || []).concat(more.not_read || []) });
+          });
+          cs.set("found", Object.assign({}, had, { kinds: merged, read: (had.read || 0) + read, next: a.next || null }));
+          return;
+        }
+        cs.set("found", { kinds: kinds, term: (view.ui || {}).term || "", scope: a.scope || null, read: read, next: a.next || null });
         cs.set("recorded", {});
       } },
     // Keep finding over the scope as documents arrive (answers R15's `find` form); the member's question, if chosen.
@@ -237,7 +288,7 @@ export const findIn = Object.freeze({
       done: function (view, answer, cs) { cs.set("keeping", true); } },
     // R47, R48: the recording acts, each its form's body from the result's passage (`view.parts.forms`); the result it was drawn on
     // is kept for the acknowledgement `findin.recorded` (R48 (4)), and the passage keeps its acts and counts its facts.
-    { op: "recordpersonfact", label: "act.recordpersonfact.label.find-in",
+    { op: "recordpersonfact", label: "act.recordpersonfact.label.find-in", rereads: [],
       refusals: { BAD_VALIDITY: "refusal.BAD_VALIDITY" },
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
@@ -259,7 +310,7 @@ export const findIn = Object.freeze({
         all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: { html: fact }, screen: { html: link } }) };
         return all;
       })()); } },
-    { op: "recorddatedfact", label: "act.recorddatedfact.label.find-in",
+    { op: "recorddatedfact", label: "act.recorddatedfact.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -276,7 +327,7 @@ export const findIn = Object.freeze({
         return all;
       })()); } },
     // The member's own words why the group holds the city to it are the act's reason (interface-shell R11, K3002).
-    { op: "standarddeclare", label: "act.standarddeclare.label.find-in", reasonField: "reason",
+    { op: "standarddeclare", label: "act.standarddeclare.label.find-in", rereads: [], reasonField: "reason",
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -294,7 +345,7 @@ export const findIn = Object.freeze({
         all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: target ? cs.ref("standard", String(target), cs.w("screen.standard.name"), []) : cs.w("screen.standard.name") } }) };
         return all;
       })()); } },
-    { op: "recordfact", label: "act.recordfact.label.find-in",
+    { op: "recordfact", label: "act.recordfact.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -312,7 +363,7 @@ export const findIn = Object.freeze({
         all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: target ? cs.ref("money", String(target), cs.w("screen.money.name"), []) : cs.w("screen.money.name") } }) };
         return all;
       })()); } },
-    { op: "tabledeclare", label: "act.tabledeclare.label.find-in",
+    { op: "tabledeclare", label: "act.tabledeclare.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
@@ -329,7 +380,7 @@ export const findIn = Object.freeze({
         return all;
       })()); } },
     // Cites the passage in the chosen question (citation's `found` form; every argument in the query).
-    { op: "cite", label: "act.cite.label.find-in",
+    { op: "cite", label: "act.cite.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const ui = view.ui || {};
         const k = (ui.found || {}).kinds[Number(el.dataset.k)];

@@ -64,7 +64,8 @@ test("R17: every stamp an op declares is the server's value from the authenticat
         assert.equal(forged[i][k], v, `${where}: the caller's value replaced the server's`);
         assert.notEqual(v, FORGED, where);
         const f = k.slice(1);
-        if (f === "viewer" || f === "actorViewer") assert.equal(v, c.viewer, where);
+        if (op === "translations" && f === "viewer") assert.ok(c.own.includes(v), `${where}: the bare member id (store-request R7)`);
+        else if (f === "viewer" || f === "actorViewer") assert.equal(v, c.viewer, where);
         else if (f === "identity" || f === "actorIdentity") assert.equal(v, c.identity, where);
         else if (f === "administer") assert.equal(v, c.administer, where);
         else if (f === "origin") assert.equal(v, ORIGIN, where);
@@ -148,7 +149,7 @@ async function forgedSweep(onlyDeclaring) {
 }
 
 /* the ops whose request body is a file's raw bytes, not fields (R72) */
-const RAW_BODY_OPS = ["captureupload"];
+const RAW_BODY_OPS = ["captureupload", "captureuploadpart"];   /* a part of an upload sent in parts is raw bytes as well (R113) */
 
 test("R17: for every op, every stamp the caller sends (query or body) is deleted before the op's declared stamps are set", async () => {
   const { ops, leaks } = await forgedSweep(false);

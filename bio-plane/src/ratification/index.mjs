@@ -13,7 +13,8 @@
  * catalogue and rows in `./checks.mjs`. The legacy code's comments moved with it, shortened where they only restated
  * the code; the commit's own SQL is `publication`'s (its R22) and its comments went with it. In T18 (N400, K636) the
  * bulk release (`Store.release`, R20–R27) moved here from `store.mjs` as `./release.mjs`, and in T19 (K653 BOB-3) the
- * bulk retirement (`Store.retire`, R28–R31, R33) as `./retire.mjs`.
+ * bulk retirement (`Store.retire`, R28–R31, R33) as `./retire.mjs`. In T51 (G54, R57) `./casefile.mjs` holds the case-file
+ * sweep (`caseFileSweep`, `caseFileWake`), which builds the case file of a complete edition every completing path left owed.
  *
  * REACHED as `ratificationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
  * first call. At creation it creates `publish-schedule` and registers R42 as its publisher (its R2; R43 here), and it
@@ -76,15 +77,18 @@ import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, r
          unreadableStop } from "./schedule.mjs";
 import { copyMaterials } from "./ops.mjs";
 import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reuseCheck, statedIn,
-         editionsToAssemble } from "./finding.mjs";
+         editionsToAssemble, owesCaseFile, assembleEdition, priorOf, errorText } from "./finding.mjs";
+import { sweepCaseFiles, wakeOfCaseFiles, outcomeOf } from "./casefile.mjs";
 import { verifySshsig, caseRatifyStatement, ratifyStatement, NS_RATIFY } from "../sshsig.mjs";
-import { assembleCaseContainer } from "../publication/worker.mjs";
+import * as casefile from "../publication/worker.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export * from "./checks.mjs";
 export { RELEASE_ACK_MAX, CLASS_REASONS } from "./release.mjs";
 export { EDGE_REASON_MAX } from "./retire.mjs";
 export { CHECKED_PARTS, keyFingerprint } from "./schedule.mjs";
+export { CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES } from "./casefile.mjs";
 
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
 const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
@@ -253,8 +257,7 @@ export class Ratification {
                         version: own.version ?? null, detail: null },
                falsifier: own.falsifier ?? "", falsifier_override: own.falsifier_override ?? null,
                by: own.by ?? null, at: own.at ?? null,
-               detail: `${pid} concluded this question on reading '${own.version ?? "(unnamed)"}' and still `
-                     + `stands on it, so this case records that project's own adopted claim (7.1 items 1-2).` };
+               detail: localize("ratification.index.pid_concluded_this_question_on", "{pid} concluded this question on reading '{v1}' and still stands on it, so this case records that project's own adopted claim (7.1 items 1-2).", { pid: String(pid), v1: String(own.version ?? "(unnamed)") }) };
 
     const np = bearing ? this.basisVersions.noProjectConclusionOf(inq) : null;
     if (np)
@@ -296,10 +299,7 @@ export class Ratification {
              inquiry_state: currentState ?? null,
              concluded_elsewhere: others,
              concluded_elsewhere_bounds: { projects_bound: othersBound, projects_truncated: othersTruncated,
-                                           detail: "a bounded number of projects drawing on this question are "
-                                                 + "read, and only those this viewer may see. A conclusion "
-                                                 + "reported here is still true; an ABSENCE over a truncated "
-                                                 + "or gated set is not." } };
+                                           detail: localize("ratification.index.a_bounded_number_of_projects", "a bounded number of projects drawing on this question are read, and only those this viewer may see. A conclusion reported here is still true; an ABSENCE over a truncated or gated set is not.") } };
   }
 
   /* ===== REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9 (BOB #19, 2026-09-21) —
@@ -528,7 +528,10 @@ export class Ratification {
         return { present: false, bytes: 0, ...(held && held.acquired === true ? { heldInParts: true } : {}) };
       },
     });
-    return { ...gate, parted };
+    /* B5 (T51; K4219; provenance R66): the C-18 register arms run here, where this host's provenance is, with its resolver,
+       so a member's recorded decision on a capture's authority is read before the document's own. The Worker holds no
+       provenance and runs no register arm of its own. */
+    return { ...withRegisterChecks(image || {}, gate, this.provenance.containerResolver()), parted };
   }
 
   /* ---- R2: the case document's catalogue, on the promotion instance (K233) ----
@@ -543,7 +546,7 @@ export class Ratification {
     if (!facts || !facts.ok) return facts || { ok: false, reason: "NO_CASE_DOCUMENT" };
     if (facts.doc.doc_sha !== docSha)
       return { ok: false, reason: "CASE_RATIFY_STALE", expected: facts.doc.doc_sha, got: docSha ?? null,
-               detail: "the case document has changed since it was reviewed; read it again and re-sign" };
+               detail: localize("ratification.index.the_case_document_has_changed_since", "the case document has changed since it was reviewed; read it again and re-sign") };
     /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): the body (C-3.1's section) and each member's basis at the
        pinned bytes (C-2.8's testimony and per-ground arms), both from the one facts read. */
     return this.#caseGateOver(facts.doc.case_id, Number(facts.doc.edition), parseFrontmatter(facts.doc.text),
@@ -662,28 +665,42 @@ export class Ratification {
       return { ok: true, ready: refusals.length === 0, refusals, publish_at: this.#publishAtOffer() };
     } catch {
       return { ok: false, reason: "PREFLIGHT_UNDETERMINED",
-               detail: "part of what signing would be refused for could not be read, so whether this document can be "
-                     + "signed is undetermined; nothing is claimed either way, and nothing was written. Ask again." };
+               detail: localize("ratification.index.part_of_what_signing_would", "part of what signing would be refused for could not be read, so whether this document can be signed is undetermined; nothing is claimed either way, and nothing was written. Ask again.") };
     }
   }
 
   /* R44 (DEC-147; T50, N1203): whether the ceremony's last step offers "Publish at…", and in which zone: the group's
      governing zone as `publish-schedule` R1 reads it, which is `retrieval` R69's (`local-facts`' governing value of
      `time_zone` first, else the active profiles' through `jurisdictions.combine`). Should retrieval be unreadable, the
-     profiles alone answer, as before. No zone held offers only "Publish now"; the time is never read as UTC. */
+     profiles alone answer, as before. No zone held offers only "Publish now"; the time is never read as UTC.
+     R58 (T51 fix round 7, G62; K4736): the answer also says where an offered zone came from (`source`: retrieval's
+     `local-facts` or `profiles`, `profiles` also when retrieval was unreadable) and, when none is offered, why (`source`
+     `none`, `why` retrieval's own, or `UNREADABLE`); one structured log line says the same, never the zone's text. A
+     zone retrieval answers none for is final: two profiles that govern different zones govern none, and `publish-schedule`
+     R1 would refuse a time offered in one of them. */
   #publishAtOffer() {
-    let zone = null;
+    let got = null, unreadable = false;
     try {
-      zone = this.retrieval.zone();
+      got = this.retrieval.zone({ why: true });
     } catch {
+      unreadable = true;
+    }
+    if (!unreadable && !(got && typeof got === "object")) got = { zone: got, source: null, why: null };
+    let zone = unreadable ? null : got.zone, source = unreadable ? null : got.source, why = unreadable ? "UNREADABLE" : got.why;
+    if (unreadable) {
       try {
         const list = this.record.getSetting("jurisdiction_profiles");
         const c = combineProfiles(Array.isArray(list) ? list : []);
         zone = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+        if (typeof zone === "string" && zone) { source = "profiles"; why = null; }
       } catch { zone = null; }
     }
     zone = typeof zone === "string" && zone ? zone : null;
-    return zone ? { offered: true, zone } : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" };
+    source = zone ? (typeof source === "string" && source ? source : null) : "none";
+    why = typeof why === "string" && why ? why : null;
+    try { console.log(JSON.stringify({ event: "publish_at", offered: !!zone, source, why })); } catch { /* a log changes nothing */ }
+    return zone ? { offered: true, zone, source }
+                : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE", source, why };
   }
 
   /* R35 (DEC-102 items 1, 2; K1074): each roster member's testimony legs on an observation whose level in force for
@@ -726,7 +743,7 @@ export class Ratification {
   registerApprovalReader(reader) {
     if (this.#approvalReader)
       return { ok: false, reason: "APPROVAL_READER_DECLARED",
-               detail: "a reader of the group's approvals is already registered; there is one, registered once at start" };
+               detail: localize("ratification.index.a_reader_of_the_teams_approvals", "a reader of the team's approvals is already registered; there is one, registered once at start") };
     if (!reader || typeof reader.rule !== "function" || typeof reader.approvals !== "function")
       return { ok: false, reason: "MALFORMED", detail: "registerApprovalReader takes {rule(), approvals({case, edition, docSha})}" };
     this.#approvalReader = reader;
@@ -755,7 +772,7 @@ export class Ratification {
     try {
       const read = this.#approvals(caseArg ?? caseId, Number(edition), docSha ?? null);
       if (read && read.unreadable)
-        return { ok: false, reason: "APPROVALS_UNREADABLE", detail: `${read.unreadable} could not be read` };
+        return { ok: false, reason: "APPROVALS_UNREADABLE", detail: localize("ratification.index.unreadable_could_not_be_read", "{unreadable} could not be read", { unreadable: String(read.unreadable) }) };
       return read ? { ok: true, rule: { approvers: read.approvers }, approvals: read.approvals, missing: read.missing }
                   : { ok: true, rule: null, approvals: [], missing: [] };
     } catch (e) {
@@ -781,7 +798,7 @@ export class Ratification {
   registerHoldReader(reader) {
     if (this.#holdReader)
       return { ok: false, reason: "HOLD_READER_DECLARED",
-               detail: "a reader of litigation holds is already registered; there is one, registered once at start" };
+               detail: localize("ratification.index.a_reader_of_litigation_holds", "a reader of litigation holds is already registered; there is one, registered once at start") };
     if (!reader || typeof reader.holdsOn !== "function")
       return { ok: false, reason: "MALFORMED", detail: "registerHoldReader takes {holdsOn({project})}" };
     this.#holdReader = reader;
@@ -833,17 +850,45 @@ export class Ratification {
     if (!w) return null;
     return { ok: false, reason: "PUBLISH_AT_ALREADY_SET", caseId: id, edition: ed, at: w.at ?? null,
              publish_at: w.publish_at ?? null, waiting: w,
-             detail: `case ${id} edition ${ed} is signed and waits to be published at its set time. To publish it now, `
-                   + `an owner cancels the set time (op=publishatcancel) and signs again. Nothing was written.` };
+             detail: localize("ratification.index.case_id_edition_ed_is", "case {id} edition {ed} is signed and waits to be published at its set time. To publish it now, an owner cancels the set time (op=publishatcancel) and signs again. Nothing was written.", { id: String(id), ed: String(ed) }) };
   }
 
-  /* R6 for a retry: a complete edition whose container was never assembled (R42's commit without the Worker). */
+  /* R6, R57 for a retry: a complete edition whose case file is still owed (its container never assembled, as after R42's
+     commit without the Worker, or an attempt that did not end built). */
   #completedCase(id, ed) {
-    let st = null;
-    try { st = typeof this.publication.caseEditionState === "function" ? this.publication.caseEditionState(id, ed) : null; }
-    catch { st = null; }
-    return st && st.complete && !st.manifest_sha ? { completedCase: st } : {};
+    const st = this.#editionState(id, ed);
+    return owesCaseFile(st) ? { completedCase: st } : {};
   }
+
+  /* An edition's state as the commit answers it, which names the publishing group: the `group` field of the first roster
+     member's bytes at its pin (publication R22). The assembly writes it into the case file's manifest, so a state read
+     any other way would build a manifest of another group. Null when the edition is unknown or unreadable. */
+  #editionState(id, ed) {
+    try {
+      if (typeof this.publication.caseEditionState !== "function") return null;
+      const doc = this.#caseDocumentRow(id, ed);
+      const fm = doc ? parseFrontmatter(doc.text).data || {} : {};
+      const first = (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim()).find(Boolean);
+      const row = (Array.isArray(fm.case_roles) ? fm.case_roles : [])
+        .find((r) => r && typeof r === "object" && String(r.target ?? "").trim() === first);
+      const text = first ? this.record.textAtSha(first, row && typeof row.version_sha === "string" ? row.version_sha : null) : null;
+      return this.publication.caseEditionState(id, ed, text ? (parseFrontmatter(text).data || {}).group ?? null : null);
+    } catch { return null; }
+  }
+
+  /** R57 (G54): one tick of the case-file sweep at `now` (ms): the oldest owed editions, up to the tick's bound, each
+   *  copied and assembled (`./casefile.mjs`). Answers what it did; never throws. */
+  async caseFileSweep(now) {
+    const w = this.#deps.worker;
+    return sweepCaseFiles({ publication: this.publication, stateOf: (id, ed) => this.#editionState(id, ed),
+      materialsOf: (id, ed) => copiedMaterials(this.publication.heldMaterialsOf?.(id, ed)), worker: w, now,
+      assemble: (w && w.assembleCaseContainer) || casefile.assembleCaseContainer,
+      recordFailure: (w && w.recordCaseFileFailure) || casefile.recordCaseFileFailure,
+      textAt: typeof this.record.textAtSha === "function" ? (b, h) => this.record.textAtSha(b, h) : undefined });
+  }
+
+  /** R57 (G54): when the sweep next has work, in ms, or null; see `./casefile.mjs`. */
+  caseFileWake(now) { return wakeOfCaseFiles({ publication: this.publication, worker: this.#deps.worker, now }); }
 
   /** R40: `op=publishat`'s store half. Every refusal R3 answers before its commit writes, in R3's order; then every
    *  refusal publication's commit would answer for the document now (the commit is made and rolled back, so the answer
@@ -858,8 +903,7 @@ export class Ratification {
       return { ok: false, reason: "MALFORMED" };
     if (!sigArmored || !attestorKey || !gateVersion)
       return { ok: false, reason: "CASE_UNSIGNED", caseId: id, edition: ed,
-               detail: `case ${id} edition ${ed} is published at a set time only under a member's signature, and this `
-                     + `request carries none. Nothing was written.` };
+               detail: localize("ratification.index.case_id_edition_ed_is_2", "case {id} edition {ed} is published at a set time only under a member's signature, and this request carries none. Nothing was written.", { id: String(id), ed: String(ed) }) };
     const signer = attestorMember ?? null;
     const args = { case: id, edition: ed, docSha, signature: sigArmored, signer, deliveredBy: deliveredBy ?? null,
                    at: { date: at.date ?? null, time: at.time ?? null }, by: signer };
@@ -896,7 +940,7 @@ export class Ratification {
    *  published_at}`, with R6's assembly, R37's sealed weeks and R39's copy after the commit. Never throws. */
   async publishScheduled(entry, now) {
     try { return await this.#publishScheduled(entry || {}, now); }
-    catch (e) { return { stopped: [unreadableStop(`the check itself failed (${String((e && e.message) || e).slice(0, 160)})`)] }; }
+    catch (e) { return { stopped: [unreadableStop(word("ratification.stopped.check_itself_failed", { e: String(String((e && e.message) || e).slice(0, 160)) }))] }; }
   }
 
   async #publishScheduled(entry, now) {
@@ -908,13 +952,13 @@ export class Ratification {
     const at = typeof now === "number" ? new Date(now).toISOString() : typeof now === "string" && now ? now
       : stampInstant("millisecond");
     if (!id || !Number.isInteger(ed) || !docSha || typeof sig !== "string")
-      return { stopped: [unreadableStop("the waiting edition (its case, edition, document or signature)")] };
+      return { stopped: [unreadableStop(word("ratification.stopped.waiting_edition_case"))] };
     const stopped = [];
     /* the signature, against the signers active now */
     const signers = this.credentials.attestingKeys();
     let attestor = null, keyB64 = null;
     if (!signers.length)
-      stopped.push(refusedStop({ reason: "NO_SIGNERS", detail: "no active registered signing keys" }));
+      stopped.push(refusedStop({ reason: "NO_SIGNERS", detail: localize("ratification.index.no_active_registered_signing_keys", "no active registered signing keys") }));
     else {
       const sv = await verifySshsig(sig, caseRatifyStatement(id, ed, docSha), NS_RATIFY, signers.map((k) => k.key_b64));
       if (!sv.ok) stopped.push(refusedStop({ reason: `SIG_${sv.reason}`, detail: sv.detail }));
@@ -968,7 +1012,7 @@ export class Ratification {
         else for (const d of checkedDiffers(entry.checked, read.checked))
           stopped.push(d.part === "approvals"   /* R50: a changed approval or rule */
             ? scheduledStop(d.code, { cause: { code: "APPROVALS_CHANGED" }, changed: d.changed })
-            : d.code === "SCHEDULED_CHECK_REFUSED" ? unreadableStop(`what signing recorded of ${d.part}`)
+            : d.code === "SCHEDULED_CHECK_REFUSED" ? unreadableStop(word("ratification.unreadable_stop.signing_recorded", { part: String(d.part) }))
             : scheduledStop(d.code, { changed: d.changed }));
       }
       if (stopped.length || !plan.plan) return { ok: false, stopped };
@@ -998,8 +1042,10 @@ export class Ratification {
     /* R6 after R52: the case editions complete now, the case's own or one its members' commits completed */
     const toAssemble = editionsToAssemble(out.completedCase, commits);
     if (w && w.env && w.storeName) {
+      /* R57 (G54): a copy that throws is stated in `after` and handed to the assembly (`prior`), which records the attempt */
+      let copyError = null;
       try { after.materials_copied = await copyMaterials(w.env, w.storeName, out.evidenceMaterials || []); }
-      catch (e) { after.materials_copied = { ok: false, reason: "COPY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+      catch (e) { copyError = e; after.materials_copied = { ok: false, reason: "COPY_FAILED", detail: errorText(e) }; }
       /* R52: each member's bytes copied and its reused parts re-fetched as op=ratify does (R6) */
       if (commits.length) {
         after.members = [];
@@ -1008,7 +1054,7 @@ export class Ratification {
           try { const cp = await copyFinding(w.env, w.storeName, members[i]);
                 row.published = { shas: members[i].shas.length, copied: cp.copied, alreadyPresent: cp.present, r2: cp.r2state,
                                   ...(cp.partsPublished ? { parts: cp.partsPublished } : {}) }; }
-          catch (e) { row.published = { ok: false, reason: "COPY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+          catch (e) { copyError ??= e; row.published = { ok: false, reason: "COPY_FAILED", detail: errorText(e) }; }
           if (w.stub) {
             const rep = await reuseCheck({ env: w.env, ask: askDoor(w.stub), bundleId: c.bundleId,
                                            silentReason: "STORE_DID_NOT_ANSWER", silentDetail: "the store did not answer" })
@@ -1018,24 +1064,35 @@ export class Ratification {
           after.members.push(row);
         }
       }
-      if (toAssemble.length && w.stub)
-        for (const cs of toAssemble)
-          try { after.container = await assembleCaseContainer({ env: w.env, stub: w.stub, storeName: w.storeName,
-                                                                cs, via: "publishscheduled" }); }
-          catch (e) { after.container = { ok: false, reason: "ASSEMBLY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
-    } else
+      /* R6, R57 (G54): every edition this commit completed is assembled and every outcome kept, in `after.containers` (one
+         `{case, edition, built, code?}` each, for `publish-schedule` R2 to state at settle); `after.container` stays the last
+         one's statement. An edition not reached here is owed in publication's ledger and the sweep builds it. */
+      if (toAssemble.length) {
+        after.containers = [];
+        for (const cs of toAssemble) {
+          if (w.stub) {
+            after.container = await assembleEdition({ assemble: w.assembleCaseContainer || casefile.assembleCaseContainer,
+              recordFailure: w.recordCaseFileFailure || casefile.recordCaseFileFailure, env: w.env, stub: w.stub,
+              storeName: w.storeName, cs, via: "publishscheduled",
+              prior: priorOf({ missing: after.materials_copied && Array.isArray(after.materials_copied.missing)
+                                 ? after.materials_copied.missing : [], copyError }) });
+            after.containers.push(outcomeOf(cs, after.container));
+          } else after.containers.push(outcomeOf(cs, null));
+        }
+      }
+    } else {
+      if (toAssemble.length) after.containers = toAssemble.map((cs) => outcomeOf(cs, null));
       after.not_done = { materials: (out.evidenceMaterials || []).length, container: toAssemble.length > 0,
         ...(commits.length ? { members: commits.map((c) => c.bundleId) } : {}),
-        detail: "the published bucket is not reachable from here, so the materials held in the evidence store were not "
-              + "copied and a complete edition's container was not assembled; a re-sent op=caseratify with the same "
-              + "signature does both (R39, R6). The edition is published and this answer stands."
-              + (commits.length ? " The members committed with it were not copied either; re-sending each one's "
-                                  + "op=ratify with the same signature copies it (R6)." : "") };
+        detail: localize("ratification.index.the_published_bucket_is_not", "the published bucket is not reachable from here, so the materials held in the evidence store were not copied and a complete edition's container was not assembled; a re-sent op=caseratify with the same signature does both (R39, R6). The edition is published and this answer stands.{v1}", { v1: String(commits.length ? " The members committed with it were not copied either; re-sending each one's "
+                                  + "op=ratify with the same signature copies it (R6)." : "") }) };
+    }
     return { published: true, published_at: out.ratified_at, caseId: id, edition: ed, after };
   }
 
-  /* Each roster member's `basis` at the bytes its `case_roles` row pins (record-core R60), for the case gate's C-2.8
-     arms; a member whose pinned bytes the record cannot produce is absent, so those arms are left unasked for it
+  /* Each roster member's `{basis, references}` at the bytes its `case_roles` row pins (record-core R60), for the case
+     gate's C-2.8 arms (case-catalogue R6: a severed reference at the pinned bytes drops its leg there, as on the member's
+     own arm); a member whose pinned bytes the record cannot produce is absent, so those arms are left unasked for it
      (publication's `caseDocumentFacts` builds the act's the same way). */
   #memberBasisAtPins(fm) {
     const out = {};
@@ -1044,7 +1101,8 @@ export class Ratification {
       const text = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
       if (text === null) continue;
       const mfm = parseFrontmatter(text).data || {};
-      out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
+      out[r.target] = { basis: Array.isArray(mfm.basis) ? mfm.basis : [],
+                        references: Array.isArray(mfm.references) ? mfm.references : [] };
     }
     return out;
   }
@@ -1097,12 +1155,7 @@ export class Ratification {
     if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return { ok: false, reason: "MALFORMED" };
     if (!sigArmored || !attestorKey || !gateVersion)
       return { ok: false, reason: "CASE_UNSIGNED", caseId: id, edition: ed,
-               detail: `a case's own assertions — its identity, its producing project, its scope, its `
-                     + `roster, its load-bearing partition, its bias acknowledgement and its standard of `
-                     + `evidence — are committed from BYTES A MEMBER SIGNED and from nothing else. This `
-                     + `request carries no signature over case ${id} edition ${ed}, so committing it would `
-                     + `mean this plane asserting a group's case on their behalf. Review the case document `
-                     + `(op=casedocument) and ratify it (op=caseratify).` };
+               detail: localize("ratification.index.a_cases_own_assertions_its", "a case's own assertions — its identity, its producing project, its scope, its roster, its load-bearing partition, its bias acknowledgement and its standard of evidence — are committed from BYTES A MEMBER SIGNED and from nothing else. This request carries no signature over case {id} edition {ed}, so committing it would mean this plane asserting a team's case on their behalf. Review the case document (op=casedocument) and ratify it (op=caseratify).", { id: String(id), ed: String(ed) }) };
     const hold = { seals: null };
     /* R52: the sitting's members (each `publish`'s arguments, verified by the Worker), committed after the case in this
        one transaction; a member's refusal rolls the case back with it, so nothing is written. A retry of the case's own
@@ -1135,8 +1188,7 @@ export class Ratification {
     if (doc.doc_sha !== docSha)
       return { ok: false, reason: "CASE_RATIFY_STALE", caseId: id, edition: ed,
                expected: doc.doc_sha, got: docSha,
-               detail: `the case document has changed since it was reviewed. Read it again and re-sign: a `
-                     + `signature over the previous bytes says nothing about these.` };
+               detail: localize("ratification.index.the_case_document_has_changed", "the case document has changed since it was reviewed. Read it again and re-sign: a signature over the previous bytes says nothing about these.") };
     /* OUT OF THE SIGNED BYTES. Parsed here rather than at the control plane
        for `publish()`'s own reason: the bytes are in this store, and re-reading
        them at the layer that already verified a hash over them is where the
@@ -1192,10 +1244,7 @@ export class Ratification {
                  /* R6: and assembles a complete edition's container if the commit's assembly never ran (R42) */
                  ...this.#completedCase(id, ed) };
       return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
-               detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
-                     + `edition is a separate document and answers forever — a second attestation over the `
-                     + `same number would leave a reader unable to say who stood behind what they read. `
-                     + `Publish a new edition instead.` };
+               detail: localize("ratification.index.case_id_edition_ed_is_3", "case {id} edition {ed} is already ratified under a different signature. An edition is a separate document and answers forever — a second attestation over the same number would leave a reader unable to say who stood behind what they read. Publish a new edition instead.", { id: String(id), ed: String(ed) }) };
     }
     /* ===== REC-167 / INVESTIGATIVE-SESSION.md §7.1 items 4 and 9 — THE CONCLUSION A PREPARATION
        RECORDS MUST STILL BE THE ONE ITS PROJECT STANDS ON WHEN IT IS SIGNED ======================
@@ -1240,27 +1289,19 @@ export class Ratification {
       const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : null;
       const pub = c && typeof c.author === "string" && c.author.trim() ? c.author.trim() : "(unnamed)";
       if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by"))
-        return { by: null, stated: "this case document says nothing about who wrote its exclusion "
-                                 + "statement: it was authored before the record told the statement's "
-                                 + "writer apart from the case's publisher (BIO_Publication §3 rule 13), "
-                                 + `and ${pub}, who prepared and published it, is not evidence of either.` };
+        return { by: null, stated: localize("ratification.index.this_case_document_says_nothing", "this case document says nothing about who wrote its exclusion statement: it was authored before the record told the statement's writer apart from the case's publisher (BIO_Publication §3 rule 13), and {pub}, who prepared and published it, is not evidence of either.", { pub: String(pub) }) };
       const by = typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
       if (!by)
-        return { by: null, stated: "UNDETERMINED: this case document states that who wrote its exclusion "
-                                 + "statement could not be established, and it is NOT read off "
-                                 + `${pub}, who prepared and published the case (BIO_Publication §3 rule 13).` };
+        return { by: null, stated: localize("ratification.index.undetermined_this_case_document_states", "UNDETERMINED: this case document states that who wrote its exclusion statement could not be established, and it is NOT read off {pub}, who prepared and published the case (BIO_Publication §3 rule 13).", { pub: String(pub) }) };
       return { by, stated: by === pub
-        ? `${by} wrote this case's exclusion statement, and prepared and published the case — two acts, `
-          + `one member.`
-        : `${by} wrote this case's exclusion statement; ${pub} prepared and published the case — two acts, `
-          + `two names (BIO_Publication §3 rule 13).` };
+        ? word("ratification.stated.wrote_case_exclusion", { by: String(by) })
+        : localize("ratification.index.by_wrote_this_cases_exclusion", "{by} wrote this case's exclusion statement; {pub} prepared and published the case — two acts, two names (BIO_Publication §3 rule 13).", { by: String(by), pub: String(pub) }) };
     })();
     const owner = this.#caseOwner(id);
     if (owner && owner.project_id !== project)
       return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", caseId: id, edition: ed,
                declared: owner.project_id, signed: project,
-               detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
-                     + `${project}. A case does not change hands between editions (DEC-72).` };
+               detail: localize("ratification.index.case_id_is_project_id", "case {id} is {project_id}'s production and this signed case document names {project}. A case does not change hands between editions (DEC-72).", { id: String(id), project_id: String(owner.project_id), project: String(project) }) };
     /* THE COMMIT, through publication (its R22), in this transaction and from the signed bytes only (R13): the
        case's owner at its first edition, the edition's scope, completeness and bar, the roster with its roles and
        pins in the roster's own order (the authored publish order), and the signature, signer and deliverer on the
@@ -1401,7 +1442,7 @@ export class Ratification {
     const id = m && typeof m.id === "string" ? m.id : null;
     const stop = (r) => { const s = refusedStop(r); return { stop: { ...s, cause: { ...s.cause, member: id } } }; };
     if (!id || typeof m.sha !== "string" || typeof m.signature !== "string")
-      return { stop: unreadableStop(`a held member's signature (${id ?? "unnamed"})`) };
+      return { stop: unreadableStop(word("ratification.stop.held_member_signature", { unnamed: String(id ?? "unnamed") })) };
     const viewer = `member:${signer}`;
     const facts = this.gateFacts(id, viewer);
     if (!facts || !facts.ok) return stop(facts || { reason: "ABSENT" });
@@ -1416,7 +1457,7 @@ export class Ratification {
       registers: facts.registers, publishedRegistry: facts.publishedRegistry,
       publishedCaseRegistry: facts.publishedCaseRegistry, earnedRegistry: facts.earnedRegistry });
     const partedRows = new Map(Array.isArray(parted) ? parted : []);
-    const gate = withCaseMemberChecks(image, withRegisterChecks(image, registerGate), parseFrontmatter);
+    const gate = withCaseMemberChecks(image, registerGate, parseFrontmatter);
     if (!gate.ok) return stop({ reason: "GATE_REFUSED", findings: gate.findings });
     const { shas, partShaSet } = await findingShas(image, partedRows, facts.registers);
     return { prepared: { shas, partShaSet, partedRows,
@@ -1427,8 +1468,7 @@ export class Ratification {
   /* R37: `openSeals`' answer, or, when it refuses, throws or rejects, the failure stated; never a throw. */
   #openSeals(caseId, edition) {
     const unopened = (reason, detail) => ({ ok: false, opened: false, reason,
-      detail: `the sealed weeks of case ${caseId} edition ${edition} were not opened at this act (${detail}). The edition `
-            + `is committed and this answer stands; the working-on-attest consumer retries the opening.` });
+      detail: localize("ratification.index.the_sealed_weeks_of_case", "the sealed weeks of case {caseId} edition {edition} were not opened at this act ({detail}). The edition is committed and this answer stands; the working-on-attest consumer retries the opening.", { caseId: String(caseId), edition: String(edition), detail: String(detail) }) });
     let p;
     try { p = Promise.resolve(this.networkNotices.openSeals({ case: caseId, edition })); } catch (e) { p = Promise.reject(e); }
     return p.then((r) => (r && typeof r === "object" && r.ok !== false ? r
@@ -1483,7 +1523,7 @@ export class Ratification {
         let refused = null;
         for (const pid of [...byProject.keys()].sort()) {
           const denied = this.membership.caseAuthority({ project: pid, deliveredBy, signer: attestorMember, act: "ratify",
-            subject: `finding ${bundleId}, a member of case ${byProject.get(pid).join(", ")},`,
+            subject: word("ratification.subject.finding_member_case", { bundle_id: String(bundleId), pid: String(byProject.get(pid).join(", ")) }),
             extra: { bundleId } });
           if (!denied) { refused = null; break; }
           refused = refused || denied;
@@ -1542,22 +1582,15 @@ export class Ratification {
           /* DEC-49 REGION is-ratify-outside-a-case */
           if (head && normalizeType(head.type) === "inquiry")
             return refusal("RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE",
-              `${bundleId} at ${String(bundleSha).slice(0, 12)} is not a finding any RATIFIED case pins, and a `
-              + `finding is published only as a member of a ratified case (BIO_Publication_v0_1.md §3 rule 2). `
-              + `Publish it into a case from its project (op=publish), have an owner of that project sign the `
-              + `case document (op=caseratify) FIRST, and then ratify this finding at the version the case `
-              + `pinned. Nothing was published.`);
+              localize("ratification.index.bundleid_at_string_is_not", "{bundleId} at {String} is not a finding any RATIFIED case pins, and a finding is published only as a member of a ratified case (BIO_Publication_v0_1.md §3 rule 2). Publish it into a case from its project (op=publish), have an owner of that project sign the case document (op=caseratify) FIRST, and then ratify this finding at the version the case pinned. Nothing was published.", { bundleId: String(bundleId), String: String(String(bundleSha).slice(0, 12)) }));
           return refusal("RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE",
-            `no finding of a RATIFIED case rests on ${bundleId}, and anything that is not a finding crosses only `
-            + `as the evidence a ratified case's finding rests on (BIO_Publication_v0_1.md §3 rule 2). Cite it from `
-            + `a finding, publish that finding's case and have an owner sign the case document (op=caseratify); `
-            + `then an owner of that project may sign this. Nothing was published.`);
+            localize("ratification.index.no_finding_of_a_ratified", "no finding of a RATIFIED case rests on {bundleId}, and anything that is not a finding crosses only as the evidence a ratified case's finding rests on (BIO_Publication_v0_1.md §3 rule 2). Cite it from a finding, publish that finding's case and have an owner sign the case document (op=caseratify); then an owner of that project may sign this. Nothing was published.", { bundleId: String(bundleId) }));
           /* END DEC-49 REGION is-ratify-outside-a-case */
         }
         if (!admitted) {
           const pid = [...byProject.keys()].sort()[0];
           return this.membership.caseAuthority({ project: pid, deliveredBy, signer: attestorMember, act: "ratify",
-            subject: `${bundleId}, the evidence ${byProject.get(pid).join(", ")} rests on,`,
+            subject: word("ratification.subject.evidence_rests", { bundle_id: String(bundleId), pid: String(byProject.get(pid).join(", ")) }),
             extra: { bundleId } }); /* D-431 (b) */
         }
       }
@@ -1589,8 +1622,7 @@ export class Ratification {
     const errs = caseMemberFindings(fm).filter((x) => x.severity === "error");
     if (!errs.length) return null;
     return { ok: false, reason: "CASE_MEMBER_REFUSED", ...rowOf("CASE_MEMBER_REFUSED"),
-             detail: "this document's bytes claim to be a published case member (a frozen published_strength block) "
-                   + "and do not carry what a case member must carry. Nothing was written.",
+             detail: localize("ratification.index.this_documents_bytes_claim_to", "this document's bytes claim to be a published case member (a frozen published_strength block) and do not carry what a case member must carry. Nothing was written."),
              findings: errs.map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) })) };
   }
 
@@ -1689,7 +1721,11 @@ export function ratificationOps(r, url, body) {
   const act = (k) => (typeof b[k] === "string" ? b[k] : q(k));
   return {
     gatefacts: () => r.gateFacts(q("id"), q("viewer") ?? null),
-    ratifygate: () => r.ratifyGate(b),
+    /* R52 / R60 (fix round 10): a sitting's members are gated in one call, `{members: [gate body, ...]}`, each answered as its own
+       body would be, in the sitting's order; a single body is answered as before. */
+    ratifygate: async () => (Array.isArray(b.members)
+      ? { members: await Promise.all(b.members.map((m) => r.ratifyGate(m))) }
+      : r.ratifyGate(b)),
     casegate: () => r.caseGate({ caseId: b.caseId ?? q("case"), edition: Number(b.edition ?? q("edition")),
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: typeof b.secretSha === "string" && b.secretSha ? b.secretSha : null }),
@@ -1704,3 +1740,21 @@ export function ratificationOps(r, url, body) {
                              author: q("author") }),
   };
 }
+
+/* R53 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  release: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.release.does",
+    fields: { accepts: ["handle","acknowledgment","mitigation"], requires: ["handle","acknowledgment","mitigation"] } },
+  retire: { classes: ["admin","member","probe"], mutating: true, weight: "terminal", description: "act.retire.does",
+    fields: { accepts: ["handle","reason"], requires: ["handle","reason"] } },
+  /* R54 (T51; K4206): the case ceremony's door op, its Worker half (`caseRatifyOp`) and its store half (`caseratify`). Its
+     `publish` is case-authoring's (its own row, the state act); this module's `publish` arm is the store's internal committer. */
+  caseratify: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: "act.caseratify.does",
+    fields: { accepts: ["caseId","edition","expectedSha","sig","members"], requires: ["caseId","edition","expectedSha","sig"] } },
+  /* R53 (K5196; BOB's B23): `publishat`, the case ceremony's "Publish at…" door op (R40), served here and sent by the screens. Its
+     class, weight and description are op-declarations' and op-grades' rows (weight `irreversible`), its fields are the caseratify
+     payload plus `at`, which `publishat` requires. */
+  publishat: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "irreversible", description: localize("ratification.declared.publishat", "case-directed: keyed by a case edition (case, edition), reached from the publication ceremony's last step; signs now and publishes at the set time only if every check passes again then"),
+    fields: { accepts: ["caseId","edition","expectedSha","sig","members","at"], requires: ["caseId","edition","expectedSha","sig","at"] } },
+});

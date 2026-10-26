@@ -7,5 +7,26 @@
   ],
   "crons": [
     "17 4 * * *"
-  ]
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCANNER",
+        "class_name": "FileScanner"
+      },
+      {
+        "name": "RENDERER",
+        "class_name": "SafeViewRenderer"
+      }
+    ],
+    "migrations": [
+      {
+        "tag": "v1",
+        "classes": [
+          "FileScanner",
+          "SafeViewRenderer"
+        ]
+      }
+    ]
+  }
 }

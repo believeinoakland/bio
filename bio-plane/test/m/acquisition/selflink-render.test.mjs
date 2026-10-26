@@ -56,11 +56,13 @@ test("R19: a self-linking page's own link is handed to recordLinks with the page
   assert.deepEqual([mSelf.type, mSelf.held_at_capture], ["deferred", false], "deferred, not held at capture (this capture was not yet filed)");
   /* `as_of` is the walk's own clock (subresources R15), read after the page's retrieval, so it is never before it. */
   assert.ok(Date.parse(mSelf.as_of) >= Date.parse(r.body.document.retrieved), "as of the walk, never before the page's retrieval");
-  /* negative control: without `subresources: true` nothing is walked, so no links are handed in */
+  /* control (R123, which replaced R19's "no links without the walk"): without `subresources: true` nothing is walked, and the
+     same three links are still filed */
   const plain = world();
   const p = await run(plain, { [CAL]: () => page(CAL_PAGE) }, { locator: CAL });
   assert.equal(p.status, 200);
-  assert.deepEqual([plain.store.state.links.length, p.body.subresources, p.body.snapshot], [0, undefined, undefined]);
+  assert.deepEqual([plain.store.state.links.length, p.body.subresources, p.body.snapshot], [1, undefined, undefined]);
+  assert.deepEqual(plain.store.state.links[0].links.map((l) => l.address_norm).sort(), [CAL, B_URL, C_URL].map(normalizeAddress).sort());
 });
 
 /* d522's source: a client-rendered portal whose served document is only the frame. */

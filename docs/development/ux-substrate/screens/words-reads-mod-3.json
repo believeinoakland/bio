@@ -268,45 +268,22 @@
    "case-disclosures.taken_question",
    "case-grammar.account_heading",
    "case-grammar.agrees",
-   "case-grammar.block_unreadable_sentence",
-   "case-grammar.blocks_predate_sentence",
    "case-grammar.by.case_owner",
    "case-grammar.calculations_heading",
-   "case-grammar.capture",
-   "case-grammar.citations_undetermined_sentence",
-   "case-grammar.connection",
-   "case-grammar.cover",
-   "case-grammar.differs",
    "case-grammar.esc.group_finding",
    "case-grammar.esc.passages_relies",
    "case-grammar.explained_not_shown",
    "case-grammar.flat_map.ones_stated",
    "case-grammar.freeze.claims",
-   "case-grammar.freeze.declared_bias",
-   "case-grammar.freeze.disclosed_contradictions",
-   "case-grammar.freeze.documents_observations",
-   "case-grammar.freeze.everyone_investigates_looks",
    "case-grammar.freeze.findings",
-   "case-grammar.freeze.group_declares_lens",
-   "case-grammar.freeze.how_check_case",
-   "case-grammar.freeze.how_grades_worked",
-   "case-grammar.freeze.searched",
-   "case-grammar.group",
-   "case-grammar.inference",
-   "case-grammar.lens_none_sentence",
-   "case-grammar.lens_undetermined_sentence",
    "case-grammar.li.accepted_edition_because",
    "case-grammar.li.approved",
    "case-grammar.li.archived_copy",
-   "case-grammar.li.case_states_acceptance",
-   "case-grammar.li.chain_stops_finding",
    "case-grammar.li.claim_undetermined",
    "case-grammar.li.conclusion_recorded",
    "case-grammar.li.extracted_text_fingerprint",
-   "case-grammar.li.finding_case_relies",
    "case-grammar.li.frozen_strength_recorded",
    "case-grammar.li.gaps_stated",
-   "case-grammar.li.included_whole_case",
    "case-grammar.li.inputs_stated",
    "case-grammar.li.justification_evidence_citations",
    "case-grammar.li.level_subject_looked",
@@ -324,95 +301,49 @@
    "case-grammar.li.source",
    "case-grammar.li.source_2",
    "case-grammar.li.statement_kind",
-   "case-grammar.li.supporting_findings_rest",
    "case-grammar.li.text",
    "case-grammar.line.asked_meet_project",
    "case-grammar.line.meets_project_bar",
    "case-grammar.line.project_bar",
    "case-grammar.line.project_declared_bar",
    "case-grammar.line.short_project_bar",
-   "case-grammar.line.standing_against_project",
    "case-grammar.load_bearing",
    "case-grammar.map.attributed_level_chosen",
    "case-grammar.map.cite_kind_stated",
    "case-grammar.map.level_chosen_edition",
    "case-grammar.map.record_names_producing",
-   "case-grammar.name.name_author_chose",
-   "case-grammar.not_recomputed",
    "case-grammar.one_line.received",
-   "case-grammar.p.account_publisher_sentence",
    "case-grammar.p.already_shown_chain",
-   "case-grammar.p.approval_recorded",
-   "case-grammar.p.approval_rule_force",
-   "case-grammar.p.calculation_reached_case",
-   "case-grammar.p.calculation_stated_anyone",
    "case-grammar.p.case",
-   "case-grammar.p.case_disclosed_contradiction",
-   "case-grammar.p.case_document_lists",
-   "case-grammar.p.case_document_state",
-   "case-grammar.p.case_document_state_grading",
-   "case-grammar.p.case_file_carries",
    "case-grammar.p.case_file_carries_grading",
-   "case-grammar.p.case_file_read",
    "case-grammar.p.case_graded_method",
-   "case-grammar.p.chain_goes_deeper",
    "case-grammar.p.check_case_yourself",
    "case-grammar.p.checked_under_catalog",
    "case-grammar.p.computed_over_subject",
-   "case-grammar.p.did_did_two",
-   "case-grammar.p.document_observation_reached",
-   "case-grammar.p.finding_graded_capture",
-   "case-grammar.p.finding_recreated_recreated",
    "case-grammar.p.get_checker_file",
    "case-grammar.p.group_rule_force",
-   "case-grammar.p.how_many_reviewers",
-   "case-grammar.p.named",
-   "case-grammar.p.outcome_carried_edition",
    "case-grammar.p.project_bar",
    "case-grammar.p.published_signed",
    "case-grammar.p.publisher_acknowledgment",
-   "case-grammar.p.publisher_included_reviewer",
-   "case-grammar.p.recreating_case_shows",
    "case-grammar.p.rests",
    "case-grammar.p.reviewer_comment_left",
-   "case-grammar.p.run_checker_part",
-   "case-grammar.p.stated_lane",
-   "case-grammar.pattern",
-   "case-grammar.project",
-   "case-grammar.review_comments_heading",
    "case-grammar.said.record_establish_claim",
    "case-grammar.said.stated",
-   "case-grammar.scrutiny",
-   "case-grammar.tension_depth_sentence",
-   "case-grammar.tensions_predate_sentence",
-   "case-grammar.tensions_unreadable_sentence",
-   "case-grammar.testimony",
    "case-grammar.text.acknowledgment_stated",
    "case-grammar.text.attestation_kind_rendering",
    "case-grammar.text.attested",
    "case-grammar.text.attested_member_group",
-   "case-grammar.text.bar_declared",
    "case-grammar.text.case_produced_under",
    "case-grammar.text.case_rests_directly",
-   "case-grammar.text.case_states_account",
    "case-grammar.text.co_attested",
    "case-grammar.text.framing_follows_declared",
    "case-grammar.text.held_record",
-   "case-grammar.text.location_stated",
    "case-grammar.text.made",
    "case-grammar.text.outcome_kind_stated",
    "case-grammar.text.person",
    "case-grammar.text.rests",
-   "case-grammar.text.role_case_stated",
-   "case-grammar.text.unreadable_location",
-   "case-grammar.text.unreadable_value",
    "case-grammar.text.vouched_group_under",
    "case-grammar.timeline_heading",
-   "case-grammar.title.case_file_read",
-   "case-grammar.title.case_file_readable",
-   "case-grammar.two_strengths_sentence",
-   "case-grammar.unbound",
-   "case-grammar.withheld_source_reason",
    "case.outcome.harm_addressed",
    "case.outcomes.head",
    "filings.date_stated",
@@ -705,7 +636,6 @@
    "case-authoring.why.searched_section_requires_levels",
    "case-authoring.why.searched_section_requires_subject",
    "case-grammar.agrees",
-   "case-grammar.differs",
    "refusal.CALCULATION_NOT_DISCLOSED",
    "refusal.CASE_EDITION_WAITING",
    "refusal.CASE_IDENTITY_AMBIGUOUS",
@@ -1329,6 +1259,9 @@
    "refusal.BAD_RENDER",
    "refusal.MACHINE_CANNOT_FOLLOW",
    "refusal.MACHINE_CANNOT_LINK_WATCH",
+   "refusal.MACHINE_CANNOT_MARK",
+   "refusal.MARK_NO_ITEM",
+   "refusal.MARK_NO_SUCH_ITEM",
    "refusal.NOT_GATED",
    "refusal.NOT_READ",
    "refusal.NOT_THE_AUTHOR",
@@ -1345,6 +1278,8 @@
    "refusal.NO_SUCH_WATCH",
    "refusal.PERSON_QUERY_NOT_NAMED",
    "refusal.PRICE_FIRST",
+   "refusal.SECOND_LOOK_NOT_OPEN",
+   "refusal.SECOND_LOOK_NO_NOTE",
    "refusal.WATCH_ENDED",
    "refusal.WATCH_NOT_ASKED",
    "refusal.WATCH_RELIED_ON"
@@ -1416,19 +1351,15 @@
  },
  "retrieval": {
   "reads": [
-   "monitoring.reason_given",
    "refusal.MEANING_ROWS_NO_ARM",
    "refusal.MEANING_ROWS_UNKNOWN_ARM",
    "refusal.NO_SUCH_SELECTION",
    "refusal.SET_MOVED",
    "retrieval.capture_text_skipped_says",
-   "retrieval.column_why",
-   "retrieval.extent_why",
    "retrieval.lead",
    "retrieval.note.content_axis_read",
    "retrieval.note.read_level_failed",
    "retrieval.note.record_holds_capture",
-   "retrieval.recorded_none_registered",
    "retrieval.syntax.bare_field_leg",
    "retrieval.syntax.bare_words_ranked",
    "retrieval.syntax.content_cap_apply",
@@ -1459,8 +1390,6 @@
    "retrieval.text.passage_matched_over",
    "retrieval.text.row_over_document",
    "retrieval.text.tally_covers_first",
-   "retrieval.unread.read_followed_people",
-   "retrieval.unread.read_followed_people_offices",
    "retrieval.why.answer_lists_indexed",
    "retrieval.why.anybody_looked_all",
    "retrieval.why.arm_answers_meaning",
@@ -1470,66 +1399,9 @@
    "retrieval.why.document_scope_hold_rows",
    "retrieval.why.document_scope_holds",
    "retrieval.why.finding_rests_rows",
-   "retrieval.why.matching_unit_over",
-   "retrieval.why.names_day_calendar",
-   "retrieval.why.offers_recordedby_read",
-   "retrieval.why.reachable",
-   "retrieval.why.read_answered_promise",
-   "retrieval.why.read_refused",
-   "retrieval.why.read_threw",
-   "retrieval.why.words_name_month",
-   "retrieval.why.words_write_day",
-   "state.empty"
+   "retrieval.why.matching_unit_over"
   ],
   "unkeyed": [
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "no later than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "not later than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "not more than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "no more than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 76,
-    "text": "one hundred twenty",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 76,
-    "text": "one hundred eighty",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 80,
-    "text": "is required to",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 80,
-    "text": "are required to",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
    {
     "file": "retrieval/frontier.mjs",
     "line": 317,
@@ -1574,6 +1446,77 @@
    }
   ],
   "renamed": {}
+ },
+ "retrieval-browse": {
+  "reads": [
+   "monitoring.reason_given",
+   "retrieval.column_why",
+   "retrieval.extent_why",
+   "retrieval.recorded_none_registered",
+   "retrieval.unread.read_followed_people",
+   "retrieval.unread.read_followed_people_offices",
+   "retrieval.why.names_day_calendar",
+   "retrieval.why.offers_recordedby_read",
+   "retrieval.why.reachable",
+   "retrieval.why.read_answered_promise",
+   "retrieval.why.read_refused",
+   "retrieval.why.read_threw",
+   "retrieval.why.words_name_month",
+   "retrieval.why.words_write_day",
+   "state.empty"
+  ],
+  "unkeyed": [
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "no later than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "not later than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "not more than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "no more than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 76,
+    "text": "one hundred twenty",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 76,
+    "text": "one hundred eighty",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 80,
+    "text": "is required to",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 80,
+    "text": "are required to",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   }
+  ],
+  "renamed": {},
+  "note": "split from retrieval (DEC-334; build/extraction/retrieval-browse.md, K3841): findin.mjs and browse.mjs move whole, the key names unchanged"
  },
  "case-checker": {
   "reads": [
@@ -1711,70 +1654,21 @@
  },
  "membership": {
   "reads": [
-   "court.statement",
-   "handle.changeable",
-   "handle.characters",
-   "handle.fixed",
-   "handle.formerly",
-   "handle.free",
-   "handle.refused.paused",
-   "handle.taken",
-   "membership.also_do",
-   "membership.door_warning",
-   "membership.handle_check_stated",
    "membership.remedy.active_administrator_group",
-   "membership.remedy.active_administrator_group_confirm",
-   "membership.says.member_enrolled_under",
-   "membership.says.member_holds_reserved",
    "membership.why.both_owners_agree",
    "membership.why.majority_all_owners",
    "membership.why.owner_floor_last",
-   "refusal.ADMIN_REQUIRES_VOTE",
-   "refusal.BAD_DAILY_CAP",
-   "refusal.BAD_EXPIRY",
-   "refusal.BAD_MEMBER_ID",
    "refusal.CASE_SIGNER_NOT_AN_OWNER",
-   "refusal.CONSENSUS_REQUIRED",
-   "refusal.COURT_NOTICE_UNKNOWN_CHOICE",
-   "refusal.ENROL_NOT_RECORDED",
-   "refusal.EXISTS",
-   "refusal.EXPERTISE_NO_LABEL",
-   "refusal.FOUNDER_HANDLE_NOT_FOUNDER",
-   "refusal.GROUP_DESCRIPTION_TOO_LONG",
-   "refusal.GROUP_KIND_OTHER_EMPTY",
-   "refusal.GROUP_KIND_UNKNOWN",
-   "refusal.GROUP_VISIBILITY_UNKNOWN",
-   "refusal.HANDLE_FIXED",
-   "refusal.JOIN_LINK_DAILY_CAP",
-   "refusal.JOIN_LINK_OFF",
-   "refusal.JOIN_LINK_ON",
-   "refusal.LAST_ADMIN",
    "refusal.LAST_COMMITTED_OWNER",
-   "refusal.LISTENER_DECLARED",
-   "refusal.LISTENER_MALFORMED",
-   "refusal.MEMBER_ID_RESERVED",
-   "refusal.NOT_AN_ADMIN",
    "refusal.NOT_A_PARTICIPANT",
-   "refusal.NOT_PROPOSED",
-   "refusal.NO_COVER",
-   "refusal.NO_HOLDERS",
-   "refusal.NO_SUCH_JOIN_LINK",
-   "refusal.NO_SUCH_MEMBER",
    "refusal.NO_SUCH_PROJECT",
-   "refusal.NO_UNUSED_INVITATION",
-   "refusal.NO_WEBSITE_KEY",
-   "refusal.PAIRING_NOT_YOURS",
    "refusal.PROJECT_ACT_NOT_A_PARTICIPANT",
    "refusal.PROJECT_ACT_NOT_THE_OWNER",
    "refusal.PROJECT_GUARD_UNCHECKED",
    "refusal.PROJECT_SEEN_NOT_A_PARTICIPANT",
    "refusal.PROJECT_VISIBILITY_NOT_THE_OWNER",
    "refusal.PROJECT_VISIBILITY_UNKNOWN_SETTING",
-   "refusal.TARGET_NOT_AN_ADMIN",
-   "refusal.TARGET_NOT_A_PARTICIPANT",
-   "refusal.WEBSITE_DAILY_CAP",
-   "refusal.WEBSITE_KEY_EXISTS",
-   "refusal.WEBSITE_KEY_UNKNOWN"
+   "refusal.TARGET_NOT_A_PARTICIPANT"
   ],
   "unkeyed": [
    {
@@ -1800,76 +1694,10 @@
     "line": 228,
     "text": "this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 §4.9, §7). Nothing was changed.",
     "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 337,
-    "text": "a listener names the module that registers it and its function",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 340,
-    "text": "${…} has already registered its listener",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 345,
-    "text": "this listener is already registered${…}, and it takes one registration",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 350,
-    "text": "the registration could not be read: ${…}",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 1977,
-    "text": "adding a member",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 2442,
-    "text": "setting a member's status",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 2668,
-    "text": "changing the website key",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 2681,
-    "text": "switching off the website key",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 2767,
-    "text": "changing the join link",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 2780,
-    "text": "replacing the join link",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "membership/index.mjs",
-    "line": 2791,
-    "text": "switching off the join link",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
    }
   ],
   "renamed": {},
-  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.CONSENSUS_REQUIRED, refusal.NO_COVER, refusal.PROJECT_VISIBILITY_NOT_THE_OWNER"
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.CONSENSUS_REQUIRED, refusal.NO_COVER, refusal.PROJECT_VISIBILITY_NOT_THE_OWNER DEC-345 (B345, K3972): member-roster split out; membership reads only its own keys."
  },
  "wizard-scripts": {
   "reads": [
@@ -2674,18 +2502,6 @@
    },
    {
     "file": "money/index.mjs",
-    "line": 524,
-    "text": "the capture named",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "money/index.mjs",
-    "line": 750,
-    "text": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "money/index.mjs",
     "line": 966,
     "text": "events is not wired here, so no event the fact concerns is read",
     "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
@@ -2695,12 +2511,6 @@
     "line": 1001,
     "text": "committed against paid is read for one contract (committedagainstpaid&contract=ENT-...)",
     "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "money/index.mjs",
-    "line": 1014,
-    "text": "events is not wired here, so the award and its change orders are not read",
-    "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
    },
    {
     "file": "money/index.mjs",
@@ -3585,5 +3395,124 @@
   ],
   "unkeyed": [],
   "renamed": {}
+ },
+ "member-roster": {
+  "reads": [
+   "court.statement",
+   "handle.characters",
+   "handle.free",
+   "handle.refused.paused",
+   "handle.taken",
+   "membership.also_do",
+   "membership.door_warning",
+   "membership.handle_check_stated",
+   "membership.remedy.active_administrator_group_confirm",
+   "membership.says.member_enrolled_under",
+   "membership.says.member_holds_reserved",
+   "refusal.ADMIN_REQUIRES_VOTE",
+   "refusal.BAD_DAILY_CAP",
+   "refusal.BAD_EXPIRY",
+   "refusal.BAD_MEMBER_ID",
+   "refusal.CONSENSUS_REQUIRED",
+   "refusal.COURT_NOTICE_UNKNOWN_CHOICE",
+   "refusal.ENROL_NOT_RECORDED",
+   "refusal.EXISTS",
+   "refusal.EXPERTISE_NO_LABEL",
+   "refusal.FOUNDER_HANDLE_NOT_FOUNDER",
+   "refusal.GROUP_DESCRIPTION_TOO_LONG",
+   "refusal.GROUP_KIND_OTHER_EMPTY",
+   "refusal.GROUP_KIND_UNKNOWN",
+   "refusal.GROUP_VISIBILITY_UNKNOWN",
+   "refusal.HANDLE_FIXED",
+   "refusal.JOIN_LINK_DAILY_CAP",
+   "refusal.JOIN_LINK_OFF",
+   "refusal.JOIN_LINK_ON",
+   "refusal.LAST_ADMIN",
+   "refusal.LISTENER_DECLARED",
+   "refusal.LISTENER_MALFORMED",
+   "refusal.MEMBER_ID_RESERVED",
+   "refusal.NOT_AN_ADMIN",
+   "refusal.NOT_PROPOSED",
+   "refusal.NO_COVER",
+   "refusal.NO_HOLDERS",
+   "refusal.NO_SUCH_JOIN_LINK",
+   "refusal.NO_SUCH_MEMBER",
+   "refusal.NO_UNUSED_INVITATION",
+   "refusal.NO_WEBSITE_KEY",
+   "refusal.PAIRING_NOT_YOURS",
+   "refusal.TARGET_NOT_AN_ADMIN",
+   "refusal.WEBSITE_DAILY_CAP",
+   "refusal.WEBSITE_KEY_EXISTS",
+   "refusal.WEBSITE_KEY_UNKNOWN"
+  ],
+  "unkeyed": [
+   {
+    "file": "member-roster/index.mjs",
+    "line": 337,
+    "text": "a listener names the module that registers it and its function",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 340,
+    "text": "${…} has already registered its listener",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 345,
+    "text": "this listener is already registered${…}, and it takes one registration",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 350,
+    "text": "the registration could not be read: ${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 1977,
+    "text": "adding a member",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 2442,
+    "text": "setting a member's status",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 2668,
+    "text": "changing the website key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 2681,
+    "text": "switching off the website key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 2767,
+    "text": "changing the join link",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 2780,
+    "text": "replacing the join link",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "member-roster/index.mjs",
+    "line": 2791,
+    "text": "switching off the join link",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "note": "DEC-345 (B345, K3972): split from membership; reads its WORD_KEYS; its unkeyed strings moved with its code (line numbers as at the split)."
  }
 }

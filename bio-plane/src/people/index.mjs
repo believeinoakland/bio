@@ -21,12 +21,13 @@ import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent, canonicalExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
-import { noSuchEntity, noEntity, entitiesOf, ORGANISATION_KINDS } from "../entities/index.mjs";
+import { noSuchEntity, noEntity, entitiesOf, ORGANISATION_KINDS, ENTITY_KINDS } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { PEOPLE_SCHEMA, PEOPLE_TABLES, CLUSTER_TABLE, ADDITIVE_COLUMNS } from "./schema.mjs";
 import { SHIPPED_CHECKS, CHECK_MACHINE, conditionError, hypothesisNamed, evaluatePerson } from "./checks.mjs";
 
@@ -40,8 +41,12 @@ export const CLAIM_KINDS = Object.freeze(["same_as", "not_same_as", "unsure"]);
 export const CLAIM_BASES = Object.freeze(["identifier", "corroborated_name", "name", "testimony"]);
 /* R2 (K1488): each basis earns exactly one grade. */
 export const BASIS_GRADE = Object.freeze({ identifier: "A", corroborated_name: "B", name: "C", testimony: "D" });
+/* R1, R7 (I-32, DEC-384): the entity kinds an identity claim can join: persons and the organisation kinds, two of one kind. */
+export const CLAIM_ENTITY_KINDS = Object.freeze(["person", ...ORGANISATION_KINDS]);
 export const FACT_KINDS = Object.freeze(["name", "birth", "death", "locality", "address", "contact"]);
 export const CONTACT_KINDS = Object.freeze(["address", "contact"]);
+/* R9 (C7, K4303): the fact kinds an organisation (institution, body, movement) takes; birth, death and locality are a person's. */
+export const ORGANISATION_FACT_KINDS = Object.freeze(["name", "address", "contact"]);
 export const TIE_KINDS = Object.freeze(["employer", "relative", "business", "other"]);
 /* R20 (K1490; case-disclosures R27): the attribution levels a member chooses for a tie's disclosure. */
 export const ATTRIBUTION_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
@@ -49,8 +54,8 @@ export const EXPUNGE_GROUNDS = Object.freeze(["unlawful", "confidential", "court
 /* R26 (K1486): the members' words for the identity kinds. */
 export const IDENTITY_KIND_WORDS = Object.freeze([
   { kind: "same_as", word: "same person?", class: "evidentiary" },
-  { kind: "not_same_as", word: "claimed not the same person", class: "evidentiary" },
-  { kind: "unsure", word: "unsure whether the same person", class: "evidentiary" },
+  { kind: "not_same_as", word: word("label.identityclaimkinds.not_same_as"), class: "evidentiary" },
+  { kind: "unsure", word: word("label.identityclaimkinds.unsure"), class: "evidentiary" },
 ]);
 /* R29 (K1471, K1473, K1486): words no outward text of this module uses. */
 export const FORBIDDEN_WORDS = Object.freeze(["knows", "conflict", "suspicious", "most connected"]);
@@ -68,15 +73,22 @@ export const RECORDED_BY_MAX = 500;
 export const DIRECTORY_DEFAULT = 50;
 export const DIRECTORY_MAX = 200;
 export const DIRECTORY_Q_MAX = 200;
-export const DIRECTORY_SHOW = Object.freeze(["both", "people", "organisations"]);
+/* R41 (DEC-330 A50): `show` also lists the record's other kinds; `everything` is every kind of entities R1 but `proceeding`, which
+   has its screen of its own. `both` (people and organisations) stays the default. */
+export const DIRECTORY_SHOW = Object.freeze(["both", "people", "organisations", "offices", "ordinances", "contracts", "funds", "sources", "everything"]);
+export const DIRECTORY_HOLDERS_MAX = 5;
 export const DIRECTORY_SINCE = Object.freeze([30, 90, 365]);
 const ORG_KINDS = ORGANISATION_KINDS;
+const SHOW_KINDS = Object.freeze({
+  people: ["person"], organisations: [...ORG_KINDS], both: ["person", ...ORG_KINDS], offices: ["office"], ordinances: ["ordinance"],
+  contracts: ["contract"], funds: ["fund", "program"], sources: ["source"], everything: ENTITY_KINDS.filter((k) => k !== "proceeding"),
+});
 /* R24 (K1504, M-C8): a machine check's results are shown only at a measured false-alarm rate at most this. */
 export const GATE_RATE_MAX = 0.2;
 /* R24 (DEC-131; N694, K1863): the mark every answered check result carries where it reaches a member, DEC-131's words
    exactly, and the member-facing sentence that begins with it. */
-export const HINT_MARK = "Hint · machine work";
-export const HINT_DETAIL = `${HINT_MARK}. A check noticed this hint, a pattern in held facts, worth a look. It is not a finding and says nothing about anyone.`;
+export const HINT_MARK = word("mark.hint.label");
+export const HINT_DETAIL = word("people.check_noticed_hint", { hint_mark: String(HINT_MARK) });
 /* R2 (K1488): the people line kinds a name match is corroborated by. */
 const STATEMENT_ROLES = Object.freeze(["decider", "signatory", "implementer", "author"]);
 const TEXT_MAX = 2000;
@@ -87,6 +99,19 @@ const filled = (v) => typeof v === "string" && v.trim() !== "";
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const clean = (v, max = TEXT_MAX) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+/* R40 (N1226): an undetermined answer's reason is a key with its fills, `{key, vars}`, drawn through `word(key, vars)`;
+   never English. A reason an owner answers (civil-time, lines, events, duties) is passed on as that owner answers it. */
+const why = (key, vars = {}) => ({ key, vars });
+const answered = (w) => filled(w) || (isObj(w) && filled(w.key));
+/* R40 (K3865): the sentence a reason reads as, through `word`, for a composed key's `{why}` fill (lines R21 takes its
+   owner's reason as text); an owner's sentence is itself, and a key `word` cannot read is null. */
+const sentenceOf = (w) => {
+  if (filled(w)) return w;
+  try { return isObj(w) && filled(w.key) ? word(w.key, w.vars ?? {}) : null; } catch { return null; }
+};
+/* R40 (connection-grammar R6): a hop's undetermined reason is a `{key, vars}`; an owner's reason that is no key is the
+   owner's failure to say why, answered with `key` instead. */
+const keyedReason = (w, key) => (isObj(w) && filled(w.key) ? w : why(key));
 /* N617: every act is recorded under the control plane's stamp; a row never carries a null `by`. */
 const noBy = (what) => refuse("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
 const json = (v) => { try { return JSON.parse(v); } catch { return null; } };
@@ -274,19 +299,29 @@ export class People {
       return refuse("NOT_A_PERSON", `${id} is registered as ${e ? `a ${e.kind}` : "something"}, not a person`, { entity_id: id, ...extra });
     return null;
   }
+  /* R1, R7 (I-32): the refusals for an end of a claim or a candidates read: NO_SUCH_ENTITY, then NOT_A_PERSON for a kind no
+     claim joins (the code is kept); the entity's kind answers `kind` on success. */
+  #claimableRefusal(id, end = null) {
+    const extra = end ? { end } : {};
+    if (!filled(id) || !this.#entities.has(id)) return noSuchEntity(id ?? null, extra);
+    const e = this.#entity(id);
+    if (!e || !CLAIM_ENTITY_KINDS.includes(e.kind))
+      return refuse("NOT_A_PERSON", localize("people.index.registered_no_claim_joins", "{id} is registered as {what}, which no identity claim joins (a person or an organisation)", { id: String(id), what: String(e ? `a ${e.kind}` : "something") }), { entity_id: id, ...extra });
+    return null;
+  }
   /* The live names of a person, as their aliases stand in the registry. */
   #names(id) {
     const e = this.#entity(id);
     return e && Array.isArray(e.aliases) ? e.aliases.filter((a) => !a.withdrawn).map((a) => a.alias) : [];
   }
-  /* The other persons holding a fold of one of `id`'s names (entities R6), with the name each shares. */
-  #sharingName(id) {
+  /* The other entities of the same kind holding a fold of one of `id`'s names (entities R6), with the name each shares. */
+  #sharingName(id, kind = "person") {
     const out = new Map();
     for (const name of this.#names(id)) {
       let r;
       try { r = this.#entities.entitiesByAlias({ alias: name }); } catch { r = null; }
       for (const e of r && Array.isArray(r.entities) ? r.entities : []) {
-        if (e.entity_id !== id && e.kind === "person" && !out.has(e.entity_id)) out.set(e.entity_id, name);
+        if (e.entity_id !== id && e.kind === kind && !out.has(e.entity_id)) out.set(e.entity_id, name);
       }
     }
     return out;
@@ -319,38 +354,40 @@ export class People {
      a date no later than it the line is `in`, and after it stays undetermined. Event bounds are read as their owner
      answers them, with the resolved edge as their `at`. */
   static #judge(valid, at, currentThrough = null) {
-    if (!isObj(valid)) return { undetermined: true, why: "no validity is stated" };
-    if (valid.undetermined) return { undetermined: true, why: filled(valid.why) ? valid.why : "its owner does not settle its validity" };
+    if (!isObj(valid)) return { undetermined: true, why: why("people.why.validity_stated") };
+    if (valid.undetermined) return { undetermined: true, why: answered(valid.why) ? valid.why : why("people.why.owner_settle_validity") };
     const v = { from: valid.from ?? null, to: valid.to ?? null, precision: valid.precision || "day", zone: valid.zone || "UTC" };
     const judge = (x) => {
       try {
         const r = validAt({ valid: x, basis: null }, People.#dateOf(at, x.zone));
         if (r === "in" || r === "out") return r;
-        if (r && r.refused) return { undetermined: true, why: r.why };
-        return { undetermined: true, why: (r && r.why) || "undetermined" };
-      } catch (e) { return { undetermined: true, why: String((e && e.message) || e) }; }
+        if (r && r.refused) return { undetermined: true, why: answered(r.why) ? r.why : why("people.why.owner_settle_validity") };
+        return { undetermined: true, why: r && answered(r.why) ? r.why : why("people.why.owner_settle_validity") };
+      } catch { return { undetermined: true, why: why("people.why.owner_settle_validity") }; }
     };
     const r = judge(v);
     if (r === "in" || r === "out" || !filled(currentThrough) || v.to !== null) return r;
     if (judge({ ...v, to: currentThrough, precision: "day" }) === "in") return "in";
-    return { undetermined: true, why: `${r.why}; it is stated current through ${currentThrough}, and the date is after that` };
+    /* lines R21's composed reason takes its owner's as text; an owner's key is passed on as it answered (R40) */
+    const owner = sentenceOf(r.why);
+    return { undetermined: true, why: owner !== null ? why("lines.why.stated_current_through", { why: owner, day: currentThrough }) : r.why };
   }
   /* R9: a validity as civil-time's value, or the bound it refuses. */
   static #validity(valid) {
     if (!isObj(valid)) return { refused: "valid", why: "a validity is {from, to, precision, zone}" };
     const precision = valid.precision || "day";
-    if (!["day", "minute", "second", "edtf"].includes(precision)) return { refused: "precision", why: `${precision} is not a precision` };
+    if (!["day", "minute", "second", "edtf"].includes(precision)) return { refused: "precision", why: word("people.why.precision", { precision: String(precision) }) };
     const zone = filled(valid.zone) ? valid.zone : "UTC";
     for (const side of ["from", "to"]) {
       const b = valid[side];
       if (b === null || b === undefined) continue;
       if (isObj(b)) {
-        if (b.value !== undefined && b.event !== undefined) return { refused: side, why: "a bound gives both a value and an event" };
+        if (b.value !== undefined && b.event !== undefined) return { refused: side, why: word("people.why.bound_gives_value") };
         if (filled(b.event) && ["start", "end"].includes(b.edge)) continue;
-        if (b.value === undefined) return { refused: side, why: "an event bound names its event and its edge" };
+        if (b.value === undefined) return { refused: side, why: word("people.why.event_bound_names") };
       }
       const value = isObj(b) ? b.value : b;
-      if (typeof value !== "string") return { refused: side, why: "a bound is a date value, an event bound or null" };
+      if (typeof value !== "string") return { refused: side, why: word("people.why.bound_date_value") };
       let r;
       try { r = bounds({ value, precision: isObj(b) && b.precision ? b.precision : precision, zone: isObj(b) && b.zone ? b.zone : zone }); }
       catch (e) { r = { refused: "DATE_INVALID", why: String((e && e.message) || e) }; }
@@ -400,7 +437,11 @@ export class People {
   claimIdentity({ a, b, kind, basis, evidence = null, project = null, note, by = null } = {}) {
     if (!filled(a) || !filled(b)) return refuse("NO_ENDS", "a claim names two person records by id: a and b");
     if (a === b) return refuse("SELF_CLAIM", "a claim is between two distinct person records");
-    for (const [id, end] of [[a, "a"], [b, "b"]]) { const r = this.#personRefusal(id, end); if (r) return r; }
+    for (const [id, end] of [[a, "a"], [b, "b"]]) { const r = this.#claimableRefusal(id, end); if (r) return r; }
+    /* I-32: a claim joins two entities of one kind; a person and an organisation, or two kinds of organisation, are not one thing */
+    const kindA = this.#entity(a).kind, kindB = this.#entity(b).kind;
+    if (kindA !== kindB)
+      return refuse("KIND_MISMATCH", localize("people.index.claim_joins_one_kind", "a claim joins two entities of one kind; {a} is a {kind_a} and {b} is a {kind_b}. Nothing was written", { a: String(a), kind_a: String(kindA), b: String(b), kind_b: String(kindB) }), { kinds: { a: kindA, b: kindB } });
     if (!CLAIM_KINDS.includes(kind))
       return refuse("UNKNOWN_CLAIM_KIND", `a claim's kind is one of ${CLAIM_KINDS.join(", ")}`, { kinds: [...CLAIM_KINDS] });
     if (!CLAIM_BASES.includes(basis))
@@ -450,51 +491,51 @@ export class People {
 
   /* R2 (K1488): Civicsmith's sentence, "claimed the same person, grade B, because ...", never "is the same person". */
   static #why(kind, grade, because) {
-    const said = kind === "same_as" ? "claimed the same person" : kind === "not_same_as" ? "claimed not the same person"
-      : "claimed unsure whether the same person";
-    return `${said}, grade ${grade}, because ${because}`;
+    const said = kind === "same_as" ? word("label.identityclaimkinds.same_as") : kind === "not_same_as" ? word("label.identityclaimkinds.not_same_as")
+      : word("people.claimed_unsure_whether");
+    return localize("people.index.said_grade_grade_because_because", "{said}, grade {grade}, because {because}", { said: String(said), grade: String(grade), because: String(because) });
   }
 
   /* R2: the grade's condition, met (`because`) or failed (`failed`, naming the condition). */
   #earn(basis, a, b, ev) {
-    if (basis === "testimony") return { because: "a member testified to it in their own words" };
-    const shared = this.#sharingName(a).get(b);
+    if (basis === "testimony") return { because: word("people.member_testified_words") };
+    const shared = this.#sharingName(a, this.#entity(a).kind).get(b);
     if (basis === "name") {
-      if (!shared) return { failed: "the two records share a name" };
-      return { because: `both records carry the name '${shared}'` };
+      if (!shared) return { failed: word("people.two_records_share") };
+      return { because: word("people.records_carry_name", { shared: String(shared) }) };
     }
     const dA = ev.a && ev.a.date, dB = ev.b && ev.b.date;
-    if (!isCalendarDate(dA)) return { failed: "the evidence states the date of a's cited record" };
-    if (!isCalendarDate(dB)) return { failed: "the evidence states the date of b's cited record" };
+    if (!isCalendarDate(dA)) return { failed: word("people.evidence_states_date") };
+    if (!isCalendarDate(dB)) return { failed: word("people.evidence_states_date_cited") };
     if (basis === "identifier") {
       const want = isObj(ev.identifier) && filled(ev.identifier.scheme) && filled(ev.identifier.id) ? ev.identifier : null;
-      if (!want) return { failed: "the evidence names the scheme identifier both records hold" };
+      if (!want) return { failed: word("people.evidence_names_scheme") };
       const norm = String(want.id).trim().toLowerCase();
       for (const [id, end, day] of [[a, "a", dA], [b, "b", dB]]) {
         const held = this.#identifiers(id).find((x) => x.scheme === want.scheme && x.normal === norm);
-        if (!held) return { failed: `${end} holds the scheme identifier ${want.scheme} ${want.id}` };
+        if (!held) return { failed: word("people.holds_scheme_identifier", { end: String(end), scheme: String(want.scheme), id: String(want.id) }) };
         if (held.valid && People.#judge(held.valid, day) !== "in")
-          return { failed: `the identifier ${want.scheme} ${want.id} is valid on ${end} at its record's date ${day}` };
+          return { failed: word("people.identifier_valid_record", { scheme: String(want.scheme), id: String(want.id), end: String(end), day: String(day) }) };
       }
-      return { because: `both records hold the identifier ${want.scheme} ${want.id}, valid at ${dA} and ${dB}` };
+      return { because: word("people.records_hold_identifier", { scheme: String(want.scheme), id: String(want.id), d_a: String(dA), d_b: String(dB) }) };
     }
     /* corroborated_name: a shared name and the same cited line (the same post, licence, filer or credential) held by
        each, valid at its record's date (civil-time.validAt). */
-    if (!shared) return { failed: "the two records share a name" };
+    if (!shared) return { failed: word("people.two_records_share") };
     const ls = isObj(ev.lines) ? ev.lines : null;
-    if (!ls || !filled(ls.a) || !filled(ls.b)) return { failed: "the evidence names the cited line held by each record (lines: {a, b})" };
+    if (!ls || !filled(ls.a) || !filled(ls.b)) return { failed: localize("people.index.evidence_names_cited_line", "the evidence names the cited line held by each record (lines: {a, b})") };
     const read = (id) => { try { const r = this.#lines.readLine({ lineId: id, viewer: MACHINE_VIEWER }); return r && r.found ? r.line ?? r : null; } catch { return null; } };
     const la = read(ls.a), lb = read(ls.b);
-    if (!la || la.withdrawn) return { failed: `the line ${ls.a} is held and not withdrawn` };
-    if (!lb || lb.withdrawn) return { failed: `the line ${ls.b} is held and not withdrawn` };
+    if (!la || la.withdrawn) return { failed: word("people.line_held_withdrawn", { first: String(ls.a) }) };
+    if (!lb || lb.withdrawn) return { failed: word("people.line_held_withdrawn", { first: String(ls.b) }) };
     const otherOf = (l, p) => (lineFrom(l) === p ? lineTo(l) : lineTo(l) === p ? lineFrom(l) : undefined);
     const oa = otherOf(la, a), ob = otherOf(lb, b);
-    if (oa === undefined) return { failed: `the line ${ls.a} has a at one end` };
-    if (ob === undefined) return { failed: `the line ${ls.b} has b at one end` };
-    if (la.kind !== lb.kind || oa !== ob) return { failed: "the two lines are the same fact: one kind, to the same entity" };
-    if (People.#judge(la.valid, dA, People.#through(la)) !== "in") return { failed: `the line ${ls.a} is valid at a's record date ${dA}` };
-    if (People.#judge(lb.valid, dB, People.#through(lb)) !== "in") return { failed: `the line ${ls.b} is valid at b's record date ${dB}` };
-    return { because: `both records carry the name '${shared}' and each holds a ${la.kind} line to ${oa} at its record's date (${dA}, ${dB})` };
+    if (oa === undefined) return { failed: word("people.line_end", { first: String(ls.a) }) };
+    if (ob === undefined) return { failed: word("people.the_line_has_b_at", { second: String(ls.b) }) };
+    if (la.kind !== lb.kind || oa !== ob) return { failed: word("people.two_lines_fact") };
+    if (People.#judge(la.valid, dA, People.#through(la)) !== "in") return { failed: word("people.line_valid_record", { first: String(ls.a), d_a: String(dA) }) };
+    if (People.#judge(lb.valid, dB, People.#through(lb)) !== "in") return { failed: word("people.line_valid_record_date", { second: String(ls.b), d_b: String(dB) }) };
+    return { because: word("people.records_carry_name_holds", { shared: String(shared), kind: String(la.kind), oa: String(oa), d_a: String(dA), d_b: String(dB) }) };
   }
 
   /** R4: a claim withdrawn, never edited or deleted; it links nothing after. No entities row moves (R28). */
@@ -545,7 +586,7 @@ export class People {
     if (!this.#one(`SELECT 1 AS x FROM identity_claims WHERE (a=? OR b=?) AND withdrawn_at IS NULL LIMIT 1`, entityId, entityId))
       return alone("linked");
     const held = this.#record.readDerived(MODULE, CLUSTER_TABLE, entityId);
-    if (!held || held.stale) return alone("undetermined", "the identity cluster's cache is stale or missing, so no cluster is answered until it is rebuilt");
+    if (!held || held.stale) return alone("undetermined", why("people.identity_cluster_cache"));
     const cached = new Set(this.#rows(`SELECT entity_id FROM identity_cluster WHERE component=?`, held.row.component).map((r) => r.entity_id));
     const live = new Set([entityId]);
     for (let frontier = [entityId]; frontier.length;) {
@@ -556,7 +597,7 @@ export class People {
       frontier = next;
     }
     const sameAs = cached.size === live.size && [...live].every((x) => cached.has(x));
-    if (!sameAs) return alone("undetermined", "the identity cluster's cache differs from its rebuild, so no cluster is answered until it is rebuilt");
+    if (!sameAs) return alone("undetermined", why("people.identity_cluster_cache_differs"));
     /* The viewer's own component: only the claims it may see join (R31), bounded (R5). */
     const seen = (c) => this.#seesProject(c.project, viewer);
     const members = new Set([entityId]), links = [], claimIds = new Set();
@@ -593,7 +634,7 @@ export class People {
     const apart = touching("not_same_as").filter(inside).map(People.#claimView);
     const unsure = touching("unsure").map(People.#claimView);
     return { state: apart.length ? "undetermined" : "linked",
-             ...(apart.length ? { why: `a not_same_as claim (${apart.map((c) => c.claim_id).join(", ")}) joins two members of this component, so the cluster is undetermined` } : {}),
+             ...(apart.length ? { why: why("people.why.claim_joins_two", { apart: apart.map((c) => c.claim_id).join(", ") }) } : {}),
              members: ids, links, unsure, not_same_as: apart, truncated };
   }
 
@@ -631,10 +672,11 @@ export class People {
   samePersonCandidates({ entityId, limit = CANDIDATES_DEFAULT, viewer = null } = {}) {
     if (!filled(entityId)) return noEntity("candidates are read for one person, by its entity id");
     if (this.#denied(viewer)) return People.#noViewer();
-    const bad = this.#personRefusal(entityId);
+    const bad = this.#claimableRefusal(entityId);
     if (bad) return bad;
+    const kind = this.#entity(entityId).kind;
     const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || CANDIDATES_DEFAULT, CANDIDATES_MAX));
-    const found = new Set(this.#sharingName(entityId).keys());
+    const found = new Set(this.#sharingName(entityId, kind).keys());
     for (const idf of this.#identifiers(entityId)) {
       let r;
       try { r = typeof this.#entities.entityByIdentifier === "function" ? this.#entities.entityByIdentifier({ scheme: idf.scheme, id: idf.id }) : null; }
@@ -643,7 +685,7 @@ export class People {
       const others = isObj(r) && Array.isArray(r.candidates) ? r.candidates
         : [isObj(r) ? r.entity_id ?? (isObj(r.entity) ? r.entity.entity_id : null) : typeof r === "string" ? r : null];
       for (const other of others)
-        if (filled(other) && other !== entityId) { const e = this.#entity(other); if (e && e.kind === "person") found.add(other); }
+        if (filled(other) && other !== entityId) { const e = this.#entity(other); if (e && e.kind === kind) found.add(other); }
     }
     const ids = [...found].sort();
     const mine = this.#profile(entityId, viewer);
@@ -698,9 +740,12 @@ export class People {
   recordPersonFact({ person, kind, value, valid, citation: given, question = null, by = null } = {}) {
     const citation = People.#cited(given);
     if (!filled(person)) return noSuchEntity(person ?? null);
-    const bad = this.#personRefusal(person);
-    if (bad) return bad;
+    /* R9: a person or an organisation; an organisation takes only ORGANISATION_FACT_KINDS (C7, K4303) */
+    const bad = this.#claimableRefusal(person);
+    if (bad) return bad.reason === "NOT_A_PERSON" ? this.#personRefusal(person) : bad;
     if (!FACT_KINDS.includes(kind)) return refuse("UNKNOWN_FACT_KIND", `a person fact is one of ${FACT_KINDS.join(", ")}`, { kinds: [...FACT_KINDS] });
+    if (this.#entity(person).kind !== "person" && !ORGANISATION_FACT_KINDS.includes(kind))
+      return refuse("NOT_A_PERSON", localize("people.index.org_fact_kinds", "{id} is an organisation, which takes a name, address or contact fact; a {kind} fact is a person's", { id: String(person), kind: String(kind) }), { entity_id: person });
     const contact = CONTACT_KINDS.includes(kind);
     /* R10 (K1485 row 9, K1493): an address or contact enters only by a member's act, never an import. */
     if (contact && (isMachineIdentity(by) || !memberOf(by)))
@@ -770,11 +815,11 @@ export class People {
              by: f.by_actor, at: f.at, withdrawn: f.withdrawn_at ? { by: f.withdrawn_by, at: f.withdrawn_at, reason: f.withdrawn_reason } : null,
              ...(contact ? { publishable: false } : {}) };
   }
-  /* R9, R10, R31: a person's unwithdrawn facts the viewer may see (each follows its citing capture). */
-  #factsOf(person, viewer) {
+  /* R9, R10, R31 (R44: `withdrawn` asks for the withdrawn ones instead): a person's unwithdrawn facts the viewer may see (each follows its citing capture). */
+  #factsOf(person, viewer, withdrawn = false) {
     const out = [];
     for (const [table, contact] of [["person_facts", false], ["person_contacts", true]])
-      for (const f of this.#rows(`SELECT * FROM ${table} WHERE person=? AND withdrawn_at IS NULL ORDER BY at, fact_id`, person))
+      for (const f of this.#rows(`SELECT * FROM ${table} WHERE person=? AND withdrawn_at IS ${withdrawn ? "NOT " : ""}NULL ORDER BY at, fact_id`, person))
         if (this.#seesCapture(f.capture_sha, viewer)) out.push(this.#factView(f, contact, viewer));
     return out;
   }
@@ -797,12 +842,16 @@ export class People {
     const why = clean(reason);
     if (!why) return refuse("NO_REASON", "a removal states its reason");
     const target = this.#expungeTarget(id);
-    if (!target) return refuse("NO_SUCH_ITEM", "no person fact, identity claim, member tie or source link answers to that id", { id: id ?? null });
+    if (!target) return refuse("PERSON_ITEM_NOT_HELD", localize("people.index.person_item_not_held", "No person fact, identity claim, member tie or source link here answers to that id. Nothing was removed."), { id: id ?? null });
     return this.#record.transact(() => {
+      /* R12 (K5148): the person a removed fact was on, kept apart from its value so the person read can show the marker */
+      const onPerson = target.table === "person_facts" || target.table === "person_contacts"
+        ? this.#one(`SELECT person FROM ${target.table} WHERE fact_id=?`, target.key.fact_id) : null;
       const r = this.#record.expunge({ module: MODULE, table: target.table, key: target.key, ground,
                                        ...(ground === "court_order" ? { order } : {}), ...(ground === "lawful_demand" ? { demandKind } : {}), by: who });
       if (!r || r.ok === false) return r;
       if (target.table === "identity_claims") this.#rebuildCluster();
+      if (onPerson) this.#sql.exec(`INSERT OR REPLACE INTO person_removals (fact_id, person, tbl) VALUES (?,?,?)`, target.key.fact_id, onPerson.person, target.table);
       /* N617: the link's replaced versions hold the same value, so they go with it, under the same ground */
       let removed = r.removed;
       if (target.table === "source_person_links"
@@ -814,6 +863,26 @@ export class People {
       }
       return { ok: true, removed, tombstone: r.tombstone, reason: why };
     });
+  }
+  /* R12 (K5148): a tombstone {ground, at, by} for each fact removed from any of `members`, never the value, in the order
+     removed. The tombstones are record-core's (R79); `person_removals` says whose they were. */
+  #removedOn(members) {
+    const ids = JSON.stringify(members);
+    const own = new Map(this.#rows(`SELECT fact_id, tbl FROM person_removals WHERE person IN (SELECT value FROM json_each(?))`, ids)
+      .map((r) => [r.fact_id, r.tbl]));
+    const out = [];
+    if (!own.size) return { items: out, truncated: false };
+    for (const table of ["person_facts", "person_contacts"]) {
+      for (let after = 0; ;) {
+        const page = this.#record.tombstones({ table, after, limit: 200 });
+        for (const t of page.tombstones) if (t.key && own.get(t.key.fact_id) === table) out.push({ ground: t.ground, at: t.at, by: t.by, seq: t.seq, table });
+        if (!page.cursor || page.tombstones.length < 200) break;
+        after = page.cursor;
+      }
+    }
+    out.sort((x, y) => (x.at < y.at ? -1 : x.at > y.at ? 1 : x.table.localeCompare(y.table) || x.seq - y.seq));
+    const r = bounded(out.map(({ ground, at, by }) => ({ ground, at, by })));
+    return { items: r.items, truncated: r.truncated };
   }
   #expungeTarget(id) {
     if (isObj(id) && filled(id.source) && filled(id.person)) {
@@ -968,17 +1037,20 @@ export class People {
         const state = isObj(x.in_force) ? x.in_force.state : null;
         if (state === "not_in_force") continue;
         if (state === "in_force") duties.push({ member: m, ...x });
-        else dutiesUnsettled.push({ member: m, ...x, undetermined: { why: isObj(x.in_force) && filled(x.in_force.why) ? x.in_force.why
-          : "whether its source is in force at the date is not settled" } });
+        else dutiesUnsettled.push({ member: m, ...x, undetermined: { why: isObj(x.in_force) && answered(x.in_force.why) ? x.in_force.why
+          : why("people.why.whether_source_force") } });
       }
     }
     const n = bounded(names), f = bounded(facts.held), p = bounded(postsAt.held, READ_LIST_MAX, posts.truncated);
     const d = bounded(duties, READ_LIST_MAX, dutiesTruncated);
     const u = bounded([...facts.undetermined, ...postsAt.undetermined, ...dutiesUnsettled]);
     const claims = this.#claimsOn(cluster.members, viewer);
+    const gone = this.#removedOn(members);
+    /* R44 (K5186): the withdrawn facts the viewer may see, kept apart from the standing ones, each marked `withdrawn` (R11) */
+    const w = bounded(members.flatMap((m) => this.#factsOf(m, viewer, true)));
     return { ok: true, found: true, entity_id: entityId, at, cluster, claims: claims.items, claims_truncated: claims.truncated,
-             names: n.items, facts: f.items, posts: p.items, duties: d.items, undetermined: u.items,
-             truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated },
+             names: n.items, facts: f.items, withdrawn_facts: w.items, posts: p.items, duties: d.items, undetermined: u.items, removed: gone.items,
+             truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated, removed: gone.truncated, withdrawn_facts: w.truncated },
              limit: READ_LIST_MAX,
              detail: "each item is cited, dated and graded, and names the cluster member it is held on; an item whose validity does "
                + "not settle the date is listed as undetermined, never as current; each identity claim on the cluster is listed "
@@ -993,12 +1065,12 @@ export class People {
     const ids = JSON.stringify(members);
     const items = [];
     let truncated = false;
-    for (const c of this.#sql.exec(`SELECT claim_id, a, b, kind, grade, why, project, by_actor, at FROM identity_claims
+    for (const c of this.#sql.exec(`SELECT claim_id, a, b, kind, basis, grade, why, project, by_actor, at FROM identity_claims
                                     WHERE withdrawn_at IS NULL AND (a IN (SELECT value FROM json_each(?)) OR b IN (SELECT value FROM json_each(?)))
                                     ORDER BY at, claim_id`, ids, ids)) {
       if (!this.#seesProject(c.project, viewer)) continue;
       if (items.length >= CLUSTER_CLAIMS_MAX) { truncated = true; break; }
-      items.push({ claim_id: c.claim_id, a: c.a, b: c.b, kind: c.kind, grade: c.grade, why: c.why, by: c.by_actor, at: c.at });
+      items.push({ claim_id: c.claim_id, a: c.a, b: c.b, kind: c.kind, basis: c.basis, grade: c.grade, why: c.why, by: c.by_actor, at: c.at });
     }
     return { items, truncated };
   }
@@ -1033,15 +1105,15 @@ export class People {
      name none or the issuer holds none, never a guess. */
   #issuerIdentifier(issuer, schemes) {
     const e = filled(issuer) ? this.#entity(issuer) : null;
-    if (!e) return { issuer_identifier: null, issuer_identifier_why: "the issuer is not a registered entity" };
+    if (!e) return { issuer_identifier: null, issuer_identifier_why: word("people.issuer_registered_entity") };
     const named = (Array.isArray(schemes) ? schemes : [])
       .filter((s) => isObj(s) && filled(s.scheme) && Array.isArray(s.entity_kinds) && s.entity_kinds.includes(e.kind)).map((s) => s.scheme);
     if (!named.length)
-      return { issuer_identifier: null, issuer_identifier_why: `the active jurisdiction profiles name no identifier scheme for an issuer of kind ${e.kind}` };
+      return { issuer_identifier: null, issuer_identifier_why: word("people.active_jurisdiction_profiles", { kind: String(e.kind) }) };
     const held = this.#identifiers(issuer).filter((x) => named.includes(x.scheme))
       .sort((x, y) => (named.indexOf(x.scheme) - named.indexOf(y.scheme)) || x.normal.localeCompare(y.normal));
     if (!held.length)
-      return { issuer_identifier: null, issuer_identifier_why: `the issuer holds no identifier under ${named.join(", ")}, the scheme${named.length > 1 ? "s" : ""} the active profiles name for its kind` };
+      return { issuer_identifier: null, issuer_identifier_why: word("people.issuer_holds_identifier", { named: String(named.join(", ")), plural: String(named.length > 1 ? "s" : "") }) };
     const one = ({ scheme, id, valid }) => ({ scheme, id, valid });
     return { issuer_identifier: one(held[0]), ...(held.length > 1 ? { issuer_identifiers: held.map(one) } : {}) };
   }
@@ -1106,7 +1178,7 @@ export class People {
       }
     }
     const items = [...byId.values()];
-    const seq = (a, b) => { try { return this.#events.sequence({ a: a.event_id, b: b.event_id }); } catch (e) { return { undetermined: true, why: String((e && e.message) || e) }; } };
+    const seq = (a, b) => { try { return this.#events.sequence({ a: a.event_id, b: b.event_id }); } catch { return { undetermined: true, why: why("people.why.record_settle_order") }; } };
     const memo = new Map();
     const order = (a, b) => {
       const k = `${a.event_id}\u0000${b.event_id}`;
@@ -1125,7 +1197,7 @@ export class People {
       const s = order(items[i - 1], items[i]);
       const v = typeof s === "string" ? s : isObj(s) ? s.order ?? s.answer ?? null : null;
       if (v !== "before" && v !== "after")
-        unsettled.push({ a: items[i - 1].event_id, b: items[i].event_id, why: isObj(s) && filled(s.why) ? s.why : "the record does not settle their order" });
+        unsettled.push({ a: items[i - 1].event_id, b: items[i].event_id, why: isObj(s) && answered(s.why) ? s.why : why("people.why.record_settle_order") });
     }
     const b = bounded(items, READ_LIST_MAX, truncated);
     return { ok: true, found: true, entity_id: entityId, cluster, items: b.items, order_undetermined: unsettled.filter((u) =>
@@ -1162,7 +1234,7 @@ export class People {
     const nowIso = this.#now();
     const today = nowIso.slice(0, 10);
     const member = viewerPredicate(viewer).member;
-    const kinds = shown === "people" ? ["person"] : shown === "organisations" ? [...ORG_KINDS] : ["person", ...ORG_KINDS];
+    const kinds = SHOW_KINDS[shown];
     const marks = kinds.map(() => "?").join(",");
     const followed = this.#rows(`SELECT entity_id, kind FROM entities WHERE kind IN (${marks}) ORDER BY entity_id`, ...kinds);
     /* The mentions the viewer may see (membership R88: one rule), each with its bundle's type and project and its
@@ -1219,14 +1291,14 @@ export class People {
     const page = rest.slice(0, cap).map((r) => {
       const look = r.look || this.#directoryLook({ entity_id: r.entity, kind: r.kind }, today, viewer);
       return { entity: r.entity, kind: r.kind, name: look.name, today: look.today, documents: r.t.documents.size,
-               questions: r.t.questions.size, projects: r.t.projects.size, newest_added: r.newest_added, mine: r.mine };
+               questions: r.t.questions.size, projects: r.t.projects.size, newest_added: r.newest_added, mine: r.mine,
+               ...(r.kind === "office" ? { holders: look.holders } : {}) };
     });
     const last = page.length ? rest[page.length - 1] : null;
     const truncated = rest.length > cap;
     return { ok: true, following: rows.length, in_your_projects: rows.filter((r) => r.mine).length, rows: page, limit: cap,
              truncated, cursor: truncated && last ? People.#cursorOf(last) : null,
-             detail: "the people and organisations the record follows, never the group's own members; each row counts the "
-               + "documents, questions and projects naming it among those you may see, and when the newest was added" };
+             detail: localize("people.index.directory_follows", "the people and organisations the record follows, never the team's own members; each row counts the documents, questions and projects naming it among those you may see, and when the newest was added") };
   }
 
   /* R37: the order: named in the viewer's projects first, then the newest added first (never added last), then by id. */
@@ -1261,7 +1333,8 @@ export class People {
     if (e.kind !== "person") {
       const noteBy = filled(ent.declared_by) ? ent.declared_by : null;
       return { name, words, posts: [], today: { kind: e.kind, sector: ent.sector ?? null, note: ent.note ?? null, note_by: noteBy,
-                                                machine: isMachineIdentity(noteBy) === true } };
+                                                machine: isMachineIdentity(noteBy) === true },
+               ...(e.kind === "office" ? { holders: this.#holdersOf(e.entity_id, today, viewer) } : {}) };
     }
     const label = (id) => { const x = filled(id) ? this.#entity(id) : null; return x ? { entity: id, label: x.label ?? null } : null; };
     const heldOn = (l) => !l.withdrawn && People.#judge(l.valid, today, People.#through(l)) === "in";
@@ -1276,6 +1349,20 @@ export class People {
     }
     for (const x of posts) for (const s of [x.office.label, x.body?.label, x.title]) if (filled(s)) words.push(s.trim().replace(/\s+/g, " ").toLowerCase());
     return { name, words, posts, today: { posts } };
+  }
+
+  /* R41: the persons holding an office today, at most DIRECTORY_HOLDERS_MAX, by entity id: a `holds` line to it whose
+     validity civil-time does not rule `out` at `today` (an open end is not out), as the viewer sees the line. */
+  #holdersOf(office, today, viewer) {
+    const found = new Map();
+    for (const l of listOf(this.#lines ? this.#lines.linesOf({ entity: office, kinds: ["holds"], direction: "to", limit: READ_LIST_MAX, viewer }) : null)) {
+      const who = lineFrom(l);
+      if (l.withdrawn || l.kind !== "holds" || lineTo(l) !== office || !filled(who) || found.has(who)) continue;
+      if (People.#judge(l.valid, today, People.#through(l)) === "out") continue;
+      const e = this.#entity(who);
+      if (e && e.kind === "person") found.set(who, { entity: who, label: e.label ?? null });
+    }
+    return [...found.values()].sort((a, b) => (a.entity < b.entity ? -1 : a.entity > b.entity ? 1 : 0)).slice(0, DIRECTORY_HOLDERS_MAX);
   }
 
   /* ===================================================================== *
@@ -1320,9 +1407,9 @@ export class People {
       }
     }
     const rosters = this.#roster.length ? this.#roster.map(({ module, fn }) => {
-      try { return { source: module, level: `held as a table, read by ${module}`, answer: fn({ organisation, at, viewer }) }; }
-      catch (e) { return { source: module, failed: true, level: `held as a table, read by ${module}`, error: String((e && e.message) || e).slice(0, 200) }; }
-    }) : [{ source: null, level: "held as a table, not read" }];
+      try { return { source: module, level: word("people.held_table_read", { module: String(module) }), answer: fn({ organisation, at, viewer }) }; }
+      catch (e) { return { source: module, failed: true, level: word("people.held_table_read", { module: String(module) }), error: String((e && e.message) || e).slice(0, 200) }; }
+    }) : [{ source: null, level: word("people.held_as_a_table_not") }];
     const h = bounded(held, READ_LIST_MAX, truncated), u = bounded(undetermined);
     return { ok: true, organisation, at, units, staff: h.items, undetermined: u.items, rosters,
              truncated: { staff: h.truncated, undetermined: u.truncated }, limit: READ_LIST_MAX };
@@ -1434,6 +1521,8 @@ export class People {
 
   /** R21: the links on a source or a person, to a listed member only; to anyone else exactly as if none were held. */
   sourceLinksOf({ source = null, person = null, viewer = null } = {}) {
+    if (!filled(source) && !filled(person))
+      return refuse("NO_LINK_SUBJECT", localize("people.index.link_read_names_source_or_person", "A source link is read for one source (source_id) or one person (person); this read names neither."));
     const v = viewerMember(viewer);
     const rows = filled(source) ? this.#rows(`SELECT * FROM source_person_links WHERE source=? ORDER BY person`, source)
       : filled(person) ? this.#rows(`SELECT * FROM source_person_links WHERE person=? ORDER BY source`, person) : [];
@@ -1666,7 +1755,7 @@ export class People {
       && (!filled(project) || this.#onIn(c.check_id, project)));
     const out = checks.map((c) => {
       const head = { check: c.check_id, version: Number(c.version), name: c.name, machine: !!Number(c.machine), denominator: c.denominator };
-      if (!this.#gateOpen(c)) return { ...head, gated: true, reason: `this check's false-alarm rate is not yet measured at or below ${GATE_RATE_MAX * 100}% on a gold set, so its results are not shown` };
+      if (!this.#gateOpen(c)) return { ...head, gated: true, reason: word("people.check_false_alarm", { gate_rate_max: String(GATE_RATE_MAX * 100) }) };
       const results = [];
       let truncated = false;
       for (const r of this.#rows(`SELECT * FROM interest_check_results WHERE check_id=? AND version=? ORDER BY result_id`, c.check_id, Number(c.version))) {
@@ -1718,7 +1807,7 @@ export class People {
    *  and grade the claim's. */
   neighbours({ node, kinds = null, at, page = null, viewer, scope = null, host: _host = null } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: localize("people.index.read_names_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     const want = Array.isArray(kinds) ? kinds.filter((k) => CLAIM_KINDS.includes(k)) : [...CLAIM_KINDS];
     if (!filled(node) || this.#denied(viewer) || !want.length) return { items: [] };
     const rows = this.#rows(`SELECT * FROM identity_claims WHERE (a=? OR b=?) AND withdrawn_at IS NULL ORDER BY claim_id`, node, node)
@@ -1732,12 +1821,14 @@ export class People {
       const cited = ["a", "b"].filter((e) => isObj(ev[e]) && filled(ev[e].captureSha))
         .map((e) => ({ source: ev[e].captureSha, extent: ev[e].extent ?? null, end: e }));
       const evidence = cited.length ? cited : [{ source: `testimony:${c.by_actor ?? "a member"}`, statement: c.note }];
+      /* R40 (N1226; connection-grammar R6): an undetermined hop's reason is its `{key, vars}`, passed on as civil-time answers it */
       items.push({ id: c.claim_id, from: c.a, to: c.b, kind: c.kind, owner: MODULE, valid, evidence,
                    grade: { assertion: c.grade, ends: [c.grade, c.grade] }, derived: null, why: c.why,
-                   ...(j === "in" ? {} : { undetermined: { why: j.why } }) });
+                   ...(j === "in" ? {} : { undetermined: { why: keyedReason(j.why, "people.why.owner_settle_validity") } }) });
     }
     if (items.length > BOUNDS.hub)
-      return { items: [], hub: { set_size: items.length, why: `this person is an end of more than ${BOUNDS.hub} identity claims you can see` } };
+      return { items: [], hub: { set_size: items.length, why: word("people.why.person_end_identity", { hub: BOUNDS.hub }),
+             why_key: why("people.why.person_end_identity", { hub: BOUNDS.hub }) } };
     const start = Number.isInteger(page) && page > 0 ? page : 0;
     const slice = items.slice(start, start + BOUNDS.fanout);
     return { items: slice, ...(start + BOUNDS.fanout < items.length ? { next: start + BOUNDS.fanout } : {}) };
@@ -1748,7 +1839,7 @@ export class People {
 defaultRegistry.registerOwner({ owner: MODULE, kinds: IDENTITY_KIND_WORDS.map((k) => ({ ...k })), neighbours: (args) => {
   const p = People.forHost(args && args.host);
   if (!p) return { refused: "OWNER_HOST_AMBIGUOUS",
-                   why: "people's neighbours needs the host it reads (args.host) when this isolate holds no single people instance" };
+                   why: word("people.why.people_neighbors_needs") };
   return p.neighbours(args);
 } });
 
@@ -1778,10 +1869,29 @@ export function peopleOps(p, url, body) {
     membertiewithdraw: () => p.withdrawTie(b()),
     memberties: () => p.tiesOf({ member: q("member"), viewer: q("viewer") }),
     sourcepersonlink: () => p.linkSourceToPerson(b()),
-    sourcepersonlinks: () => p.sourceLinksOf({ source: q("source"), person: q("person"), viewer: q("viewer") }),
+    sourcepersonlinks: () => p.sourceLinksOf({ source: q("source_id"), person: q("person"), viewer: q("viewer") }),
     interestcheckdefine: () => p.defineCheck(b()),
     interestcheckswitch: () => p.switchCheck(b()),
     interestchecks: () => p.checkResults({ project: q("project"), check: q("check"), viewer: q("viewer") }),
     interestcheckgate: () => p.recordCheckGate(b()),
   };
 }
+
+/* R42 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  identityclaim: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("people.declared.identityclaim", "person-directed: keyed by a new IDC- id between two persons; a claim that links and never merges"),
+    fields: { accepts: ["a","b","kind","basis","evidence","project","note"], requires: ["a","b","kind","basis","note"] } },
+  withdrawidentityclaim: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("people.declared.withdrawidentityclaim", "person-directed: keyed by claim; keeps it, shown withdrawn, and links nothing"),
+    fields: { accepts: ["claimId","reason"], requires: ["claimId","reason"] } },
+  recordpersonfact: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("people.declared.recordpersonfact", "person-directed: keyed by a new PFA- id on a person; holds one cited fact and moves no bundle"),
+    fields: { accepts: ["person","kind","value","valid","citation","question"], requires: ["person","kind","value","valid","citation"] } },
+  personexpunge: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("people.declared.personexpunge", "person-directed: keyed by a person fact, claim, tie or source link; an administrator removes its value on a listed ground and leaves a tombstone"),
+    fields: { accepts: ["id","ground","demandKind","order","reason"], requires: ["id","ground","reason"] } },
+  declaretie: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("people.declared.declaretie", "member-directed: keyed by a new MTI- id; the member's own declared tie, seen by them and administrators only"),
+    fields: { accepts: ["entity","kind","note","attribution"], requires: ["entity","kind","note","attribution"] } },
+  withdrawtie: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("people.declared.withdrawtie", "member-directed: keyed by tie; keeps it, shown withdrawn"),
+    fields: { accepts: ["tieId","reason"], requires: ["tieId","reason"] } },
+  sourcepersonlink: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("people.declared.sourcepersonlink", "source-directed: keyed by (source, person); a protected link seen only by its listed members"),
+    fields: { accepts: ["source","person","evidence","sight"], requires: ["source","person","evidence","sight"] } },
+});
