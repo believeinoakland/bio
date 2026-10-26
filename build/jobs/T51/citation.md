@@ -383,3 +383,11 @@ Deviation: I ran `mail start` before the fetch and merge that the START lists fi
 Commit trailer: I left out the model-named Co-Authored-By line, because the model-identity rule says not to put a model identifier in commit messages. The session trailer is in place.
 
 Size (session_01AKEgagoZYqWVJvoox2SvKQ): test runs 9, module lines 1760
+
+## J25 · REPORT
+
+For your placement (P17: BOB decides the boundary). CHANGE B19 asked for `citeimported` over case-import's real accepted import through `case-import/fixtures.mjs`. The architecture check refuses that: `case-import` is later than `citation` in the order, so `citation/fixtures.mjs` and `citation/fixtures.test.mjs` may not import its test support (3 failures, the first run after the merge). Passing that check needed the import out, so I removed the `citeimported` export and its test (commit after `db2cf35a73`). The rest is unchanged: `sever()` and `reinstate()` have no later-module import.
+
+What I did to make the answer real over a world (the approach I'd recommend): a module later than both, `case-import` itself, publishes `citeimported` in its own fixtures. It builds its real accepted import, opens a citation over that plane, and registers its own provider on that plane's accepted work (its real `findingFacts`, `openFlagsFacts`, `withdrawals`, `moves`, `flagHistoryFacts`). The viewer must be a member of both groups (alice), or the read is refused. A worked version is in my earlier commit `db2cf35a73`, in `bio-plane/test/m/citation/fixtures.mjs` (lines 55 to 81). You can take it from there.
+
+Alternatives for you to choose: (a) that, placed in `case-import`'s test folder; (b) a contract marker (`fixtures-contract`) with a contract id from case-import's `fixtures-run`, which needs a change in case-import.
