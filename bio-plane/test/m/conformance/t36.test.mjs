@@ -61,16 +61,16 @@ test("R27 R3: a determination noncompliant against a standard with no stated end
   assert.match(w.text(d.id), /Standard · binds Parks Department/);
 });
 
-test("R27: noncompliant on an act the day after the recorded through date is STANDARD_NOT_BINDING (C-113.32), bindingness undetermined, its detail saying no end is stated, writing nothing; noncompliant on an act within it is the negative control", () => {
+test("R27: noncompliant on an act the day after the recorded through date is STANDARD_BINDING_UNDETERMINED (C-113.45), bindingness undetermined, its detail saying no end is stated, writing nothing; noncompliant on an act within it is the negative control", () => {
   const { w, open, at } = throughScene();
   assert.equal(w.standards.bindsAt({ standard: open, body: "Parks Department", date: NEXT, viewer: V("olive") }).state, "undetermined");
   const asked = at(NEXT, "noncompliant");
   const r = nothing(w, () => w.c.determine(asked));
-  refused(r, "STANDARD_NOT_BINDING");
+  refused(r, "STANDARD_BINDING_UNDETERMINED");
   assert.deepEqual([r.standard, r.body, r.binds], [open, "Parks Department", "undetermined"]);
   assert.match(r.detail, /undetermined/);
   assert.match(r.detail, /does not state when it ceased to be in force/);
-  assert.equal(CONFORMANCE_CHECKS.STANDARD_NOT_BINDING.check, "C-113.32");
+  assert.equal(CONFORMANCE_CHECKS.STANDARD_BINDING_UNDETERMINED.check, "C-113.45");
   /* the negative control: the same standard and outcome on the act at the through date */
   assert.equal(w.c.determine(at(D, "noncompliant")).ok, true);
   /* a later record through a later date settles it: the act the day after then binds, and is recorded */
@@ -83,7 +83,7 @@ test("R27: noncompliant on an act the day after the recorded through date is STA
   assert.deepEqual([settled.ok, settled.standards[0].binds], [true, true], JSON.stringify(settled).slice(0, 300));
 });
 
-test("R27: once the member's record is withdrawn, noncompliant on the act at the through date is STANDARD_NOT_BINDING again, bindingness undetermined, writing nothing; a determination made before the withdrawal stands as recorded", () => {
+test("R27: once the member's record is withdrawn, noncompliant on the act at the through date is STANDARD_BINDING_UNDETERMINED again, bindingness undetermined, writing nothing; a determination made before the withdrawal stands as recorded", () => {
   const { w, open, rec, at } = throughScene();
   const before = w.c.determine(at(D, "noncompliant"));
   assert.equal(before.ok, true, JSON.stringify(before).slice(0, 300));
@@ -92,7 +92,7 @@ test("R27: once the member's record is withdrawn, noncompliant on the act at the
   assert.equal(wd.ok, true, JSON.stringify(wd).slice(0, 300));
   assert.equal(w.standards.bindsAt({ standard: open, body: "Parks Department", date: D, viewer: V("olive") }).state, "undetermined");
   const r = nothing(w, () => w.c.determine(at(D, "noncompliant")));
-  refused(r, "STANDARD_NOT_BINDING");
+  refused(r, "STANDARD_BINDING_UNDETERMINED");
   assert.deepEqual([r.standard, r.body, r.binds], [open, "Parks Department", "undetermined"]);
   assert.match(r.detail, /does not state when it ceased to be in force/);
   /* the determination recorded while the record stood is unchanged: R27's bindingness is held as read */

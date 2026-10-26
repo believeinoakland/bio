@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7431 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7432 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -21592,6 +21592,7 @@ export const WORD_ROWS = Object.freeze([
   ["conformance.checks.a_determination_is_recorded_only","A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written.",null,null,false,"code"],
   ["conformance.checks.a_determination_rests_on_findings","A determination rests on findings of three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by this project; or another team's finding this team has accepted at the edition named. The finding named is none of these. Nothing was written.",null,null,false,"code"],
   ["conformance.checks.an_act_is_compared_as","An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written.",null,null,false,"code"],
+  ["conformance.checks.civicsmith_cannot_yet_tell_whether","Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found noncompliant against it. Settle it in the standard first: when it was in force, and whom it binds. Nothing was written.",null,null,false,"code"],
   ["conformance.checks.that_determination_reads_undetermined_a","That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or the other team withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a determination resting on findings that stand. Nothing was written.",null,null,false,"code"],
   ["conformance.declared.determine","act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",null,null,false,"code"],
   ["conformance.index.a_determination_measures_the_act","a determination measures the act against at least one standard the record holds (R14). Nothing was written.",null,null,false,"code"],
@@ -25334,7 +25335,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue-producers.index.the_export_log_row_carries","the export log row carries an instant this producer cannot read",null,null,false,"code"],
   ["queue-producers.index.the_flag_carries_no_instant","the flag carries no instant this producer can read",null,null,false,"code"],
   ["queue-producers.index.the_item_carries_no_instant","the item carries no instant this producer can read for when it fell due",null,null,false,"code"],
-  ["queue-producers.index.the_key_is_credentials_own","the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",null,null,false,"code"],
+  ["queue-producers.index.the_key_is_credentials_own","the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator but the one who registered the key, and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",null,null,false,"code"],
   ["queue-producers.index.the_keys_row_carries_an","the key's row carries an added stamp this producer cannot read as an instant",null,null,false,"code"],
   ["queue-producers.index.the_lens_in_force_when","the lens in force when it opened",null,null,false,"code"],
   ["queue-producers.index.the_lens_it_was_handed","the lens it was handed",null,null,false,"code"],
