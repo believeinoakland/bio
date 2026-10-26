@@ -113,3 +113,7 @@ Fix round 10 batch 6 done. The 2 docket/docketEntryRead lines (due.test.mjs:29, 
 **Merge.** `origin/tranche/T51` (a4ce8a8de1) was merged into `job/T51/action-holds` (a merge, not a rebase) before the work.
 
 **Size (session_01JjBfGMNmBpVHmFVF6fEVJK): test runs 5, module lines 0.** (Test runs: the new file's runs, four; the module suite, one. Module lines: no `src` line changed; the two new test-side files are the whole change.)
+
+## J5 · COMPLETE
+
+Fix round 10 (START B5, K5175): holdsdue fixture published. bio-plane/test/m/action-holds/fixtures.mjs holdsDueAnswer() makes the door's op=holdsdue answer over the real holdsDue, fresh per call (no product change). Test bio-plane/test/m/action-holds/fixtures.test.mjs: 2 tests green; failing-first: ord 1 red, restored green. Module suite 52/52 green. Checks: fixtures 0, words 0 for action-holds, ownership 0 failures, impact 0 of 178 modules. Markers added: none. Not mine, for BOB: screens-publish t51.test.mjs:76 is the consumer to point at this answer; store-assembly wiring.mjs:78 and wizards.mjs:51 words findings. Record: build/jobs/T51/action-holds.md (Fix round 10 section). Commit b640284a1a pushed to job/T51/action-holds.
