@@ -698,3 +698,14 @@ Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3470
 ## J44 · COMPLETE
 
 COMPLETE for B44 (K5237; adds to B43). holdsplaced is added to the ACT_HELP_ABSENT read ground beside holdsdue (bio-plane/src/op-declarations/index.mjs, the read ground's list). Your R34 and R47 reds are gone: op-declarations suite 249 tests, 249 pass, 0 fail. Checks: format, architecture, coverage (82 of 82), fixtures (op-declarations --list, 0 failures), words, ownership: 0 failures. No fixtures marker added. Met ids: action-holds R22, R5, R6 on op-declarations' side, and op-declarations R34 and R47 for holdsplaced. Control-plane's R110 count (t51-door.test.mjs:22) is still the cross-module red reported in J42; not mine to change. Record: build/jobs/T51/op-declarations.md, section 'Fix round 10, item 116 (B44 CHANGE)'. Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3470
+
+## Fix round 10, item 149 (B45 START): work record
+
+Changed: `bio-plane/src/op-declarations/index.mjs` (the `unexplained` ground of `ACT_HELP_ABSENT`): `standardadoption`, `standardbenchmark`, `standardimpose`, `standardinforcethrough`, `standardinforcethroughwithdraw` leave it, since AFFORDANCES #52 explains them (with `leggrade`, never named here). `bio-plane/test/m/op-declarations/t35.test.mjs`: imports `./register-owners.mjs` first, as t36 does, so credentials' `signerknown` (R83, in its `DECLARED_OPS`) is read from the registered declarations and no hand list names it (K3268); red before (`signerknown` listed as a map op without a spec), green after (9 of 9).
+
+Red by name until affordances merges: `t36.test.mjs:306` (R34) and `t42.test.mjs:129` (R47, R34). Against `origin/job/T51/affordances` merged into a scratch copy of this branch, the whole suite is 249 tests, 247 pass, and the only two reds are those two, each naming `signerknown` alone (no text yet: AFFORDANCES #52 adds it on its CHANGE). I name it under no ground, since it would be both named and explained the moment affordances merges.
+
+Checks (absolute root): ownership 0; architecture 0; words 0; format 1 failure, `build/rulings.md:5301` (K5308's missing standing-list line, not my file); coverage and fixtures failures are other modules' (none names op-declarations).
+Deferred: nothing in my module.
+
+Size (session_01ET6tsyxXwxvXvyYHFZXgiU): test runs 6, module lines 3466
