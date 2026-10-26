@@ -907,3 +907,17 @@ Size (session_014DNpW1Q22zeKQnfdHbUNup): test runs 1, module lines 4479
 3. The 50 `contract-no-run` lines above: do they stay for this round, or is this job to wait for plane?
 
 Size (session_01P1BKBM3MEP7CiKCPBTV2fp): test runs 7, module lines 14486 (`bio-plane/src/acquisition/*.mjs` and `bio-plane/test/m/acquisition/*.mjs`, all lines)
+
+## J53 · COMPLETE
+
+**Done** for CHANGE B53 (OP-GRADES #30 merged): `origin/tranche/T51` merged into `job/T51/acquisition` (merge commit `b1b71fc485`, pushed; no rebase). No new code change; the B52 change (`017fe75023`, `7380147a00`) is unchanged.
+
+**Re-run after the merge**
+- Acquisition suite: 361 tests, 361 pass, 0 fail. Stores start again.
+- `format.mjs`: 0 failures. `architecture.mjs acquisition`: 0. `coverage.mjs acquisition`: 77 of 77.
+- `ownership.mjs … $(merge-base origin/tranche/T51 HEAD) HEAD`: 5 files, 0 failures. (Against the old tranche tip `91ad200fb6` it reports 69 files and 64 failures, because the merge brings in other modules' tranche changes. That is not this job's ownership.)
+- `fixtures.mjs /home/user/bio acquisition --list`: still 50 `contract-no-run` lines, as in my earlier COMPLETE. Same questions stand for BOB: do they stay this round?
+
+**Still open for BOB** (unchanged from J52): (1) the requirement line for K5132's clock rule (the test names R46 meanwhile); (2) whether to move about ten record instants to the instance clock; (3) the 50 `contract-no-run` lines.
+
+Size (session_01P1BKBM3MEP7CiKCPBTV2fp): test runs 8, module lines 14486
