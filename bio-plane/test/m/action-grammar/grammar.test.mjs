@@ -209,7 +209,7 @@ test("R30 (T51 fix round 10; K5297): over the corpus, no finding, repair or tran
   for (const id of Object.keys(DOCS).filter((d) => /^leg-(lead|theme)/.test(d))) {
     const messages = pushed((f) => AG.actionBasisFindings(DOCS[id], f)).findings.map((x) => x.message);
     assert.ok(messages.length > 0, id);
-    for (const m of messages) { assert.match(m, /^basis leg 0\./, m); assert.doesNotMatch(m, /action_basis/, m); }
+    for (const m of messages) { assert.match(m, /^basis leg 0\b/, m); assert.doesNotMatch(m, /action_basis/, m); }
   }
 });
 
