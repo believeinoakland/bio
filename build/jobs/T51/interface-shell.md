@@ -765,3 +765,7 @@ COMPLETE, interface-shell, T51 fix round 10 (item 149; B59): R134 (RE_POINTS: se
 COMPLETE, interface-shell, T51 fix round 10 (B60, K5310): R134's fourth re-point. Merged `origin/tranche/T51`; `index.mjs` `RE_POINTS` gains `queue: ["signerknown"]` (credentials R83; the registry lists it nowhere). `r134.test.mjs` gains the `signerknown` on `queue` case (served; control: on `explore`, and another unlisted op on `queue`, still throw); `design.test.mjs` and `t50.test.mjs` deepEquals updated. Red without the source line ("signerknown is a named re-point of queue"), green with it. interface-shell 385 of 385 pass. The rest of J42 (R135, other suites, checks) stands; the change adds one table entry.
 
 Size (session_011MRtDNeEfHW1QMz44tMXAY): test runs ~16, module lines unchanged but 1 table entry
+
+## J45 · COMPLETE
+
+COMPLETE after B60: RE_POINTS gains queue: signerknown (red without, green with, r134.test.mjs); module 385/385; ownership 0; coverage ok. Record J44. Pushed.
