@@ -512,6 +512,29 @@ test("R60 a team with no active place has no time zone: the hint (screen.timelin
 });
 if (!hasWord("screen.timeline.nozone")) test.todo("K5173 R60: screen.timeline.nozone is a word the table holds (hasWord), and it is drawn");
 
+test("R62 the walker's case: a team that stated its time zone with no place draws no hint; control: a team with neither draws it", async () => {
+  const s = await scene({ place: false });
+  assert.equal((await s.me.read("profiles", {})).profiles.length, 0, "the team has no active place");
+  assert.ok((await timelineOf(s)).world.placed_nowhere.length > 0, "the world places events nowhere");
+  await s.me.act("factconfirm", { body: { path: "@team/time_zone", act: "correct", value: "America/Los_Angeles",
+    source: "The council's own calendar", how: "I checked the city's meeting notice" } });
+  assert.equal(main(await pageOf(s)).querySelectorAll("[data-nozone]").length, 0, "a stated team zone governs, so no hint");
+  const bare = await scene({ place: false });
+  assert.equal(main(await pageOf(bare)).querySelectorAll("[data-nozone]").length, 1, "control: a team with neither a zone nor a place draws the hint");
+});
+
+test("R63 the walker's case: a party added to a payment event draws the entity's name and no ENT- id", async () => {
+  const s = await scene();
+  const roofing = (await s.me.act("entitycreate", { body: { kind: "institution", label: "Oak Roofing LLC", note: "The roofing contractor was paid for the repair." } })).entity_id;
+  const pay = (await s.me.act("createevent", { body: { kind: "payment", attestations: [{ datedFactId: s.f3 }], concerns: [s.org],
+    participants: [{ entityId: roofing, role: "party", attestation: 0 }] } })).event_id;
+  const ev = main(await pageOf(s)).querySelector(`[data-event="${pay}"]`);
+  assert.ok(ev, "the payment event is drawn on the timeline");
+  assert.ok(ev.textContent.includes("Oak Roofing LLC"), "the party is drawn by the entity's name");
+  assert.ok(!/ENT-\d{4}-\d{4}/.test(ev.textContent), "no ENT- id is drawn for the party");
+  assert.ok(!/ENT-\d{4}-\d{4}/.test(main(await pageOf(s)).textContent), "no ENT- id is drawn anywhere on the page");
+});
+
 test("K3996 an event placed nowhere draws its grade_why, {key, vars}, through its word; control: a bare string draws none of our English", async () => {
   const s = await scene();
   const nowhere = (await timelineOf(s)).world.placed_nowhere.find((i) => i.event_id === s.e9);

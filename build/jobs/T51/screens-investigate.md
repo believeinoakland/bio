@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01XAGfrWyN5W6h9CDFVRjtte · depth 2 · COMPLETE · handled B48
+**Status** · session_01M1XQEdaShKDY1Gho8Xh3FA · depth 2 · COMPLETE · handled B49
 
 ## J1 · QUESTION
 
@@ -569,3 +569,31 @@ Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 3,475
 ## J41 · COMPLETE
 
 COMPLETE (re B48, K5285): see J40 in my record. R10 timeline never hung: its pending-read cases waited the full 1500-round ceiling of world.mjs settled() (about 16.4 s each; world.mjs:27-37, openAs :23) because a read that never answers stays loading; a test cause, product screen right. Fixed in world.mjs (never-answering reads quiet when no further request); red 17,869 ms then green 486 ms (new test in common.test.mjs). Remaining cost was real CPU, so the R10 loop is split into states-a/states-b (universe.mjs shared), nothing dropped. Alone: common 9 tests 17 s, states-a 5 tests 46 s, states-b 6 tests 48 s (20 = 19 + 1 new). Whole module one run, exits by itself: 306 tests, 305 pass, 0 fail, 1 todo (money.test.mjs:127, existing). run.mjs: no finding in my files (89 before and after); ownership 0. REPORT: jurisdictions/index.mjs:1602 clone, :1622 canon, :1693 merge are about a third of every page-open's CPU in these tests. Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 3,475
+
+## J42 · REPORT
+
+REPORT (re B49, K5175: a cause outside my paths is reported the day it is found). The team's zone (`@team/time_zone`, local-facts R21) is not read by the owners below, so an event or a plan check is undetermined though a zone is stated. Verified by reading the lines; not reproduced by a test (not my paths).
+
+1. `events`: `bio-plane/src/events/index.mjs:249` `zone()` returns `this.view().time_zone`, the active profiles' zone only. An event dated by a fact, with a team zone stated and no place, is still placed nowhere. The screen's nozone hint is now correctly silent (R62), but the placement itself is still wrong. Owner: `events`.
+2. `action-plans` and `actions` (the shared root): `bio-plane/src/action-plans/index.mjs:1708` `#zone()` is `zoneOf(this.actions.place())`, and `bio-plane/src/actions/index.mjs:462` `place()` returns `#view()` (the profiles' combine, `actions/index.mjs:451`). With no place the zone is null, so `date_past` and `date_before_phase` answer undetermined though the team zone is stated. This is causes-rewalk §3 and §4 (walker E N2, E AP2), which I read whole. Owners: `actions` (the root) and `action-plans`.
+
+Also from `checks/run.mjs /home/user/bio` (not mine, for the owners): 4 coverage findings and 89 fixture findings, all in other modules (stub and contract markers on `jobRegistrarStub`, `registerJob`, `armJobs`). None is in `screens-investigate`.
+
+## J43 · COMPLETE
+
+COMPLETE (re B49, K5175, K5257): R62 and R63 applied in full. Read whole: `build/plan/walk-T51-alpha/causes-rewalk.md` (§3 and §4 for the zone cause; §1–§7 read in full), R62, R63 in `build/requirements/screens-investigate.md`, and rewalk-C finding 3 (`walk/T51-rewalk10-C`, C-M8).
+
+**Entries applied**
+- **R62** (`bio-plane/src/screens-investigate/timeline.mjs`, the nozone hint, `zq`): the hint reads `factstatus` of `@team/time_zone` as `find-in` reads it, and is drawn once above the placed-nowhere events only when that answer is `absent`. It was `timeline.mjs`:115-116, which read the profiles alone. Test `R62 the walker's case...` (`bio-plane/test/m/screens-investigate/timeline.test.mjs`): a team that stated its zone by `factconfirm` `correct` with no place draws no hint; control: a team with neither draws it, once. Red on the pre-fix screen (the hint is drawn, `actual 1`), green after.
+- **R63** (`timeline.mjs`, `nameOf`, used by `detail`): each participant is drawn by its entity's label, from one `entity` read per entity (cached in the view by `ent:<id>`), never its id. While the read is loading it draws `state.loading`; a read that does not answer a found label draws `connection.node.unnamed`. Test `R63 the walker's case...`: a `party` (Oak Roofing LLC) added to a `payment` event draws the name, and no `ENT-` id on the event or on the page. Red on the pre-fix screen (the name is not drawn), green after.
+
+**Deferred:** none in my paths. The zone cause in `events`, `actions` and `action-plans` is outside my paths: REPORTed in this round.
+
+**Tests and checks**
+- `timeline.test.mjs`: 27 pass, 0 fail (the red runs against the pre-fix `timeline.mjs` are above).
+- Module suite `bio-plane/test/m/screens-investigate/*.test.mjs`: 308 tests, 307 pass, 0 fail, 1 todo (`money.test.mjs:127`, pre-existing, not mine). Ran to completion, exit 0.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `checks/architecture.mjs /home/user/bio screens-investigate`: 0 failures. `checks/coverage.mjs /home/user/bio screens-investigate`: 63 of 63 live requirement ids named, 0 failures. `checks/ownership.mjs /home/user/bio screens-investigate c441f90f4747b5185fcb5ceab675251fdf28f118 HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding in `screens-investigate`. Its other findings (4 coverage, 89 fixtures) are in other modules, listed in the REPORT.
+- Commit `b396cffa2b`, pushed to `job/T51/screens-investigate`.
+
+Size (session_01M1XQEdaShKDY1Gho8Xh3FA): test runs 4, module lines 3484
