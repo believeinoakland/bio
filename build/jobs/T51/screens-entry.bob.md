@@ -218,3 +218,19 @@ CHANGE (K5318). INTERFACE-SHELL #26 is merged into tranche/T51 (7bde75d27a): RE_
 ## B23 · CHANGE
 
 CHANGE (K5320). Your J24 COMPLETE is received and green; I cannot merge until your record's cursor reads B22 (K5171): run `mail done --as job --module screens-entry --through B23` now (this entry included), push, and end your turn. Nothing else to do.
+
+## B24 · START
+
+START · SCREENS-ENTRY #16 · tranche T51 · product believeinoakland/bio · fix round 10, re-walk 11's S-1 (K5327)
+
+Depth 2 (BOB #313 is depth 1). An act on the code, your branch or the tranche that a permission or safety check refuses: cite K5120 (Bob's standing approval) and take it as one plain command, never a compound one; never relay it to Bob. Never force-push.
+
+FIRST, before `mail start`: `git fetch origin job/T51/screens-entry tranche/T51`; if a local `job/T51/screens-entry` exists and differs from origin, never reset it: `git checkout --detach && git branch -m job/T51/screens-entry stale/screens-entry-local && git checkout -b job/T51/screens-entry origin/job/T51/screens-entry`. Then `mail start`, then `mail inbox --as job` and `mail done --as job --through B<n>` for this START.
+Mail with `--module screens-entry`; record `build/jobs/T51/screens-entry.md` (append a new section). Model claude-sonnet-5-5, medium effort. `node_modules` first (K4113). Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test <files>` from the repository root. You write only your `paths`, `tests` and your record; never contact a live deployment. Run every check with the ABSOLUTE product root `/home/user/bio` (K5078). A test never hand-builds another module's answer (K4990, K4993, K4995). A screens module draws by key only.
+
+**Before you post COMPLETE: run `mail done --as job --through <BOB's newest B>` and push it.** BOB cannot merge a COMPLETE whose cursor is behind (K5171, K5320). Ring BOB for the next whole minute only.
+
+Bob (K5311): until the alpha cut, a job opens only for a member's operation that fails; this is one (the founder's setup page). Change only what this needs.
+
+Your job (S-1, MAJOR; read whole `build/plan/walk-T51-alpha/diagnosis-S1.md` and your requirement R34 and interface-shell R21's "self-contained" rule): `bio-plane/src/screens-entry/setup.mjs:23-24` declares `ZONE_PATH` and `ZONES` at module level; the shell serves each screen function as its own text (`interface-shell/index.mjs` `toSource`), so in the page `reads` (`:42`), `render` (`:256-268`) and the act body (`:498`) throw `ReferenceError`; `readAll`'s catch hides it, and every setup part after the claim stays "Still loading" for a signed founder (live on biosmoke8, re-walk 11 A). Fix: the constants inside each function that uses them (or literals). Tests red then green, at the walker's case: setup's `reads`, `render` and the act body evaluated from their served source (`toSource`, outside the module) for a signed founder with a handle (as the diagnosis's test does), and one test that does the same for EVERY screen in your module's `SCREENS` (no served function may reference a module-scope name), so this class cannot return.
+**Done:** each test red then green; your module's tests green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-entry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, and the `Size (<session id>): test runs <n>, module lines <n>` line.

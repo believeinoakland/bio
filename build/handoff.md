@@ -1,38 +1,39 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #312 (`session_01SBQoo2pCXzij9QryZw5Gen`, depth 1, parent ROOT #7; **Bob's primary account**) for BOB #313, 2026-10-26 ~17:50Z, at 42 % of its window; no step half done. **T51 is OPEN** on `tranche/T51`. ROOT is now **ROOT #10** `session_01XHjMEPkzmkLycoWtxb4yn6` (K5313). Read rulings K5308-K5316 whole, plan items 149-150 of `build/plan/fix-round-10-T51.md`, and `build/plan/walk-T51-alpha/alpha-cut.md` whole.
+**Status** · Replaced whole at each handoff. Written by BOB #313 (`session_018r9K5wgMTUrdGRUqami37X`, depth 1, parent ROOT #10; **Bob's primary account**) for BOB #314, 2026-10-26, at 40 % of its window; no step half done. **T51 is OPEN** on `tranche/T51`. ROOT is **ROOT #10** `session_01XHjMEPkzmkLycoWtxb4yn6`. Read rulings K5317-K5328 whole (they record today's diagnosis of why the process has been failing, and Bob's direction for fixing it), `build/plan/walk-T51-alpha/BRIEF-rewalk11.md`, `diagnosis-S1.md` and `alpha-cut.md` whole.
 
 ## Bob's direction now (all in `rulings-active.md`; run `node build/plan/bob-rulings-check.mjs` at takeover: it must print 0)
 
-- **The alpha is frozen (K5257, K5258, K5311):** no new job or worker unless a member's operation fails; no job or worker just to fix a test; a red test holds nothing. Bob (K5313): "Stay focused on getting alpha deployed (and the site and installer). There are many tasks backed up beind that release."
-- **After the alpha (K5313):** tests assert the word key, never the English; the sweep is the first T52 entry in `next.md`, with DEC-443 (K5315).
+- **The alpha first (K5311, K5313, K5319):** no new job unless a member's operation fails; running jobs merge; then artifacts, redeploy, re-walk, cut, each step checked before the next. "We can try, but let's we aware that we have problems." (K5319).
+- **Then the process redesign before T52 opens (K5319, K5323, K5326):** `build/plan/draft-process-redesign.md` and its inventory `draft-process-inventory.md` (140 rules classed CODE/SKILL/INDEX/PRODUCT/RETIRE). Bob: "Step that must aways happen belong in code, not instructions! Follow all of these best practices." No job cap unless usage risks running out (K5323; watch `get_session`'s `rate_limit_info.status`).
 - Releases are BOB's acts, never Bob's approval (K5293). Bob's one act in the cut: approving the `release-sign` run on GitHub (alpha-cut step 9).
 
-## First
+## Where the work stands
 
-1. Take over (§5.1). My timers: backstop `trig_019QAotPKa8aGZiH34hRKAXC` (18:05Z), WATCH #312 `trig_017uUNZ6ULGM4NDgGU2mo16X` (18:42Z into ROOT #10); delete both by id. Archive BOB #312 once idle; its `BOB-final` row under T51. Your WATCH goes into ROOT #10.
-2. Running: **INTERFACE-SHELL #26** (R134 four re-points incl. `queue: signerknown`, R135; B60 CHANGE). At its merge: CHANGE to **SCREENS-ENTRY #15** (merge the tranche, suite green without its local patch, COMPLETE) and **SCREENS-DAILY #28** (half 2, `signerknown`); then merge both. No CHANGE to screens-inquiry (its two through-the-page tests are test-only: not before the cut, K5311). JOURNEY-CHECK #16 was archived unmerged (K5311): leave its Jobs entry.
-3. Merge with `node build/plan/premerge.mjs <module> ...` (K5309), never hand-typed steps; then push, strike, ruling, archive with row, `mail retire`.
+- Fix round 10's jobs all merged (K5318 interface-shell, K5321 screens-entry R34, K5322 screens-daily R107). Artifacts regenerated `07a3dfe6a1`; biosmoke8 redeployed (run 40379661431, K5325).
+- **Re-walk 11** (`BRIEF-rewalk11.md`; records on `walk/T51-rewalk11-<A-E>`): B 2/2 fixed (one MINOR wording: the documents-count widen button reads only "Search": UX-DESIGN HANDOFF); D 3/4 (R135's unsaved line not drawn for the case editor's radios and tick: screens-publish lacks `typing: edited` at `case-editor.mjs:121,126,178`; MINOR, in `next.md`); A 2/3 and **S-1 MAJOR** (setup stays "Still loading" for a signed founder; K5327); C and E: see their records (they finished after this handoff was drafted if their branches exist; read them whole, place every NOT FIXED and new finding by K4426's four, a failing member operation as a job now, else `next.md`).
+- **Running: SCREENS-ENTRY #16** (`session_01HPbxRrBFoxDBNSYkhtnFYP`, START B24, S-1). At its COMPLETE: `node build/plan/premerge.mjs screens-entry`, push (one plain command), strike nothing (no new id), ruling, archive with row, `mail retire`. Then regenerate the artifacts (the plane bundle and `program.mjs` change), redeploy (`deploy-test/biosmoke8/dry-run` then `/deploy`, plain pushes after checking each is a fast-forward), re-walk S-1 and A's setup zone row at 1280 and 390.
 
 ## Then, in order (the cut: `alpha-cut.md`)
 
-1. Artifacts regenerated in the manifest's order (the plane bundle and `program.mjs` are stale), verified, committed; deploy biosmoke8 (K5120; `redeploy-walk-T51.md`); a targeted re-walk of items 143-150's rows.
-2. Finalize the notes from `build/plan/walk-T51-alpha/notes-0.87.0-draft.json` with what the re-walk shows; commit as `release/notes/0.87.0.json`.
-3. The cut 0.87.0, steps 0-17 of `alpha-cut.md`. Step 0 done at 17:40Z: wrangler sees only `20b533579290b9b93168345edd3b7f72`; rollback targets newgroup `fa4267b9-a38b-4302-8189-f7b233b1e45a`, civicsmith-site `97a23ece-8276-400b-9a24-3ee720abd6c2`. The rehearsal (step 14) runs on a fresh test copy in the project account, never Bob's throwaway (K5258). Then Bob's own install (K4935).
-4. T52 opens as the beta (K5257), `next.md` first: DEC-443 (K5315), the word-key test sweep (K5313).
+1. Merge the re-walk records (`walk/T51-rewalk11-*`) into the tranche.
+2. Finalize the notes from `build/plan/walk-T51-alpha/notes-0.87.0-draft.json` with what the re-walk shows (state the zone pass's limit, K5324, and R135's missing line plainly); commit as `release/notes/0.87.0.json`.
+3. The cut 0.87.0, steps 1-17 of `alpha-cut.md`, **with civicsmith.org (step 13) deployed only after the rehearsal (step 14) passes** (K5319's ordering). Rollback targets: newgroup `fa4267b9-a38b-4302-8189-f7b233b1e45a`, civicsmith-site `97a23ece-8276-400b-9a24-3ee720abd6c2`. The rehearsal runs on a fresh test copy in the project account, never Bob's throwaway (K5258). Then Bob's own install (K4935).
+4. The process redesign (`draft-process-redesign.md`), certified by dry run, then T52 opens as the beta (K5257), `next.md` first: DEC-443 (K5315), the zone pass (K5324), the served-source check (K5327), the word-key test sweep (K5313).
 
-## Open with Bob
+## How to wait (K5321)
 
-- **Automatic branch cleanup (K5308):** making `.github/workflows/prune-branches.yml` start itself (on every push to `main` and weekly; tip held by `main`, 3+ days untouched, not `tranche/*`, `claude/*`, an open tranche's `job/*`, protected or an open PR head; its list kept as the run's artifact). Auto mode refused BOB #312's edit ("[Git Destructive]"); it is an auto-mode refusal, so only Bob's approval typed in the refused session clears it, and BOB #312 asked him there. If he has not approved in BOB #312, ask him once in your own session with the line: "I approve editing .github/workflows/prune-branches.yml so it runs itself on every push to main and weekly, deleting only branches main already holds." Never retry it unapproved (K4696).
+- Never rely on doorbells alone: after a CHANGE or START, run `build/plan/watch-job.sh "<module>|<module>"` as a background task (it loops `mail check` every 30 s and exits when a job has a READ entry or is COMPLETE with nothing open); the doorbell is a backup. Before telling Bob a job is "waiting", read its session's events.
+- A job's COMPLETE with its cursor behind BOB's newest entry: post a one-line CHANGE asking `mail done` and ring (K5320).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - bio `main` moves only by T51's close PR (§5.7 (3), CLAUDE.md's standing direction); the design's MERGE first; DEC-443 is held until after the deployment (K5315).
-- Release acts: K5293. biosmoke8 deploys: K5120. Branch deletion: only by `prune-branches.yml` (K5300, K5302).
-- Process repository edits: refused (K5294); `premerge.mjs` and `bob-rulings-check.mjs` live in `build/plan/` until then (K5309, K5311).
+- Release acts: K5293. biosmoke8 deploys: K5120 (never `-f`: a typed force push was refused at K5325). Branch deletion: only by `prune-branches.yml` (K5300, K5302; it starts itself once on `main`, K5317).
+- Process repository edits: none yet this tranche; `premerge.mjs` and `bob-rulings-check.mjs` live in `build/plan/` (K5309, K5311); the redesign moves them into the tool.
 
 ## Tools and limits
 
-- `rulings-active.md` 78 lines, 25,506 bytes (NEAR): a new rule replaces or merges a line. `fix-round-10-T51.md` ~49.9 KB of 51.2 KB: move finished items whole to `archive/fix-round-10-T51-done-items.md` before additions.
-- A wait loop never uses `pgrep -f` on a string in its own command line (it matches itself; K5309).
-- Lanes: no new HANDOFF entries (W4, A41, H43 last). UX-DESIGN read through U486 (B539 ACK).
+- The mail tool with `retire`: `/home/user/cp-retire` = civicos-process `prep/retire-K5296` (`git -C /home/user/civicos-process worktree add /home/user/cp-retire origin/prep/retire-K5296` after fetching it).
+- `rulings-active.md` 78 lines, about 25,585 bytes of 25,600: a new rule replaces or merges a line. `fix-round-10-T51.md` ~49.9 KB of 51.2 KB.
+- Lanes: no new HANDOFF entries (W4, A41, H43 last). UX-DESIGN read through U486; it has read B539.
