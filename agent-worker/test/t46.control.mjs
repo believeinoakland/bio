@@ -9,13 +9,14 @@
  * in memory and written back in a `finally`, every restore is verified by sha256, and the suite's exit status is read
  * from `spawnSync().status`. `git checkout` is never used.
  */
+import { TREE_TEST_DIR } from "./mutation-tree.mjs";
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
-const DIR = dirname(fileURLToPath(import.meta.url));
+/* K5245: the control breaks a copy of the tree, never the tracked one (mutation-tree.mjs). */
+const DIR = TREE_TEST_DIR;
 const MEMBER = join(DIR, "..");
 const SUITE = join(DIR, "t46.test.mjs");
 const INDEX = join(MEMBER, "src/index.mjs");

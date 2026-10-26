@@ -31,14 +31,15 @@
  *    FINDING ABOUT THE ARM**, not smoothed away.
  */
 
+import { TREE_TEST_DIR } from "./mutation-tree.mjs";
 import { readFileSync, writeFileSync, mkdtempSync, rmSync, renameSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+/* K5245: the control breaks a copy of the tree, never the tracked one (mutation-tree.mjs). */
+const HERE = TREE_TEST_DIR;
 const MEMBER = join(HERE, "..");
 const REPO = join(MEMBER, "..");
 const PLANE = join(REPO, "bio-plane");
