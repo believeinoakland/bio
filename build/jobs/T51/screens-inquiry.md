@@ -718,3 +718,7 @@ COMPLETE (SCREENS-INQUIRY #32), B79 applied, pushed. b22-question takes citeimpo
 Tests: module 63 files, 594 pass, 0 fail (exits by itself); `r10-stated` 13/13. Checks: run.mjs findings in my files are the same 140 answer lines; words: 0 failures, unkeyed unchanged; ownership 0; impact (my change is one test file) 111 modules named by the shared table, none run as no source changed. Markers added: none.
 
 Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 4, module lines 7041
+
+## J53 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #33), B80 (1) done, pushed. A7/A8 root cause: the test helper (r10-stated.test.mjs:115 reasonOf ignored reading.ocr_refused[].reason); the page already draws refusal.NOTHING_TRANSCRIBED (document.mjs:540-551, R96/R130). Fixed in the test, red then green, 13/13. Module 594 pass 0 fail; fixtures 140 lines left, all waiting on STORE-REQUEST #7 (op-table lines); ownership 0; words 0 failures; no markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 4, module lines 7041
