@@ -143,7 +143,6 @@ test("R49, R27: `importedcases` and `importedcase` are among the reads naming no
 test("R49, R26, R25 (K1324): case-import's map answers promises (`caseimport`, `caseimportdocument` reach case-checker's WebCrypto), and the store's door awaits each — the envelope carries the settled answer, never a promise — and a rejected one is the store's internal error with a correlation id, never its message (negative control: a plain answer is enveloped the same)", async () => {
   const { answer: listed } = await importedCasesAnswer();
   const settled = { ok: true, import: listed.imports[0].import, existed: false };
-  // fixtures-own: synthetic a route table whose entries answer promises or reject: the door must await each and carry the settled answer
   const routes = { caseimport: () => Promise.resolve(settled),
                    caseimportdocument: () => new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: "IMPORT_DOCUMENT_NOT_MISSING" }), 5)),
                    importedcases: () => listed,
