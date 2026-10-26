@@ -1166,3 +1166,7 @@ COMPLETE (control-plane #66, B104). G109 (r8-seam-capture.mjs:195) is not load-d
 **Suite.** control-plane directory: 728 tests, 727 pass, 1 fail: `r9-seam` §5 (G127c, "red until provenance 21 merges"), red by name before this job. Checks: format 0 failures, architecture 0, words 0 (unkeyed 2), ownership 0 failures.
 **store-request `recipes-capture` todo:** the case is the one its `todo` carries (a member-opened render delivered by the alarm, filed under the shell's project, the held copy found); BOB places its un-todo.
 Size (session_01DVS83Uam7rrcVrohf78MUS): test runs 6, module lines 20
+
+## J69 · COMPLETE
+
+B105 done: deliverOwedRender (and keptInStore) read the opener as bare id or member:<id> and ask heldAt in the viewer form (index.mjs openerForms). Tests red first (6 of 14), then green; control-plane 728 tests, 727 pass, 1 named red (r9-seam §5, until provenance 21). Checks 0 failures. recipes-capture todo case is covered by the two new R124 (K5258) tests: BOB un-todos. Details in my record.
