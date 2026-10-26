@@ -110,6 +110,13 @@ export const provided = {
   casedetails: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetails(), (r) => r.recorded),
   casedetailsset: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetailsset(), (r) => r),
   casedetailspublic: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetailspublic(), (r) => r.published),
+  /** case-inputs' `casedetails` and `casedetailspublic` for a case whose `related` works are stated (`related`), or whose `relationships` standing is {none: true} (`none`): each the real answer, in the plane's shape. */
+  casedetailsRelated: async () => { const r = (await import("../case-inputs/fixtures.mjs")).casedetailsRelated(); return { recorded: ok(r.recorded), publicRead: ok(r.publicRead) }; },
+  casedetailsNone: async () => { const r = (await import("../case-inputs/fixtures.mjs")).casedetailsNone(); return { recorded: ok(r.recorded), publicRead: ok(r.publicRead) }; },
+  /** action-holds' real `holdsdue` answers on a docket entry carrying a legal mark: `answer` before a hold, `placed` after one; `entry`/`case`/`project` as the answer states them. */
+  holdsDueDocket: async () => { const r = (await import("../action-holds/fixtures.mjs")).holdsDueDocketAnswer(); const it = r.answer.items[0]; return { answer: ok(r.answer), placed: ok(r.placed), entry: it.arrived.docket_entry, case: it.arrived.case, project: it.project, note: it.note, marked_at: it.marked_at }; },
+  /** case-import's real refusal of a citation of a finding the team has not accepted (citation's BASIS_REFUSED carrying IMPORTED_NOT_ACCEPTED). */
+  citeimportedRefused: async () => ok((await (await import("../case-import/fixtures.mjs")).citeimportedRefusalAnswer()).answer),
   knockerconsent: say(async () => (await import("../sources/fixtures.mjs")).knockerconsent(), (r) => r.answer),
   signerregisterown: say(async (o) => (await import("../credentials/fixtures.mjs")).signerregisterown(o), (r) => r.answer),
   /** wizard-scripts' real `writinghelp` answers (K5212): the draft already held in the field, or the assistant unreachable. It never returns a draft. */

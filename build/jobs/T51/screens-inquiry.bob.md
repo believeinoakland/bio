@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J52
+**Read** · handled J54
 
 ## B1 · START
 
@@ -1004,3 +1004,15 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: (1) `r10-stated.test.mjs` A7 and A8 (the real plane, the real OCR member: a PNG with nothing to read, a PNG turned sideways) are red on the tranche: the reading answers `NOTHING_TRANSCRIBED` with its statement ("the OCR member declined to transcribe this document ... a reading over text nobody decoded would be an invented one") and the page does not draw that statement (`r10-stated.test.mjs:119`). Find the root cause with file:line (the page's drawing of a declined reading, or what the reading hands the page), failing first, and fix it in your paths or REPORT the owner the day found; a test that waits on time is fixed to assert the work (K4787). (2) Your 140 lines left wait on STORE-REQUEST #7's recipes (running): I CHANGE you when it merges; post COMPLETE after (1) with the lines named by provider.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio screens-inquiry --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B81 · CHANGE
+
+CHANGE (K5232). Extraction merged on the tranche: merge `origin/tranche/T51`. Add to your job: `fr28-document-acts.test.mjs:50` (`pdfstructure`) and `fr5-document.test.mjs:121` (`readheld`) hand-build extraction's answers: take extraction's published fixtures (`bio-plane/test/m/extraction/fixtures.mjs`); a state it does not publish, REPORT with file:line.
+
+## B82 · CHANGE
+
+CHANGE (K5233). R23 is struck on the tranche (met). R50 stays: its clauses "Written by" (`question.concluded.by`, `question.reading.by.member`), the 500-character bound, and `refusal.BAD_READING` and `NO_BASIS` drawn by key have no test naming them: add one each at your interface (expectations read from the word table and the owner's answer, K874), failing first where a mutation can show it; name R50 met in your COMPLETE.
+
+## B83 · CHANGE
+
+CHANGE (K5234; INTERFACE-SHELL #24 J38). `settle()` now waits on a forwarded answer only when it is wrapped in interface-shell's harness `counted`: wrap each forwarding function of your seam helper `forwarded` (`r10-question-seam.test.mjs:40` and the other four seam files) in `counted` once interface-shell merges (its branch: `counted` exported from `harness.mjs`); I CHANGE you at that merge to take it. Until then B81 and B82 stand; post COMPLETE with them done.
