@@ -314,6 +314,8 @@ export function pendingOf(ctx, deps = {}) {
     try {
       t.beat = clock();
       t.timer = setInterval(() => { const n = clock(); const gap = Math.max(0, n - t.beat - LAG_EVERY_MS); t.stretch = Math.max(t.stretch ?? 0, gap); t.beat = n; }, LAG_EVERY_MS);
+      /* R78 (K5200): an instrument, never work: a run abandoned in the middle (its isolate gone) must not keep the process alive */
+      if (typeof t.timer.unref === "function") t.timer.unref();
     } catch { t.timer = null; }
     meter.active = t;
     instruments.set(keyOf(row), t);
