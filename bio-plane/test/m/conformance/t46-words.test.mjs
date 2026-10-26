@@ -56,7 +56,7 @@ const KEPT_THREE = {
 };
 /* Every row R38 does not re-word (34: the three above among them; not C-113.6, R40), as T45 left them: their canonical JSON's sha256, so
    no check, where or translation of theirs moves. */
-const KEPT = { count: 34, sha256: "e19b29e2e575ef1fbbaf88b3f01f0863b1551f0fbe8e8404a4e57f1aee39f0d0" };
+const KEPT = { count: 34, sha256: "81bf3ddac1f1abce80d6a40b17077a90c8ec4d30bd3d5af64a54b42b9f251f5e" }; // DEC-438 rewords STANDARD_NOT_BINDING (K5300)
 /* T51 (R43) added C-113.45 STANDARD_BINDING_UNDETERMINED; it is held by t51-binding.test.mjs and left out of this set. */
 /* T48 (R40) re-worded C-113.6 NO_FINDINGS, and T50 reads it by key; it leaves this set, and the R40 test below holds it. */
 const R40 = ["C-113.6", AT("#pinFindings", "is-finding-named")];

@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19246 design words, 1157 protected; SHA-256
-   641148afcaa459ad607bdaebe5a1cd86dbcccbd88254a0b40dbf295751bcf83b) followed by 7473 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19286 design words, 1157 protected; SHA-256
+   13c84c3a83554e2d00b52f4a69abdea9701d01a0ab430f607d8b067f055c619d) followed by 7473 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "641148afca";
+export const WORDS_COMMIT = "13c84c3a83";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -11807,6 +11807,41 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.NO_PART","Type the value to count in that column. Nothing was written.","DEC-435: B523: calculations, the value not given",null,false,"design"],
   ["refusal.NO_SUCH_COLUMN","That column is not in the table. Choose one of its columns. Nothing was written.","DEC-435: B523: calculations, a column the table does not have",null,false,"design"],
   ["screen.timeline.nozone","Some times here are placed nowhere: your team has not chosen the places whose rules apply, so Civicsmith has no time zone to place them in. An administrator chooses them under Places and languages.","DEC-435: B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches",null,false,"design"],
+  ["act.standardinforcethrough.label.standard","Record a day it was still in force","DEC-438: standards R50 on Standard","Records, from a passage of a document your team holds, checked that day, that this standard was still in force through a day. Until one is recorded, Civicsmith cannot tell whether a standard with no stated end was in force after it began, and an act is not found out of conformance with it.",false,"design"],
+  ["act.standardinforcethroughwithdraw.label.standard","Withdraw this, with a reason","DEC-438: standards R51, beside a recorded day","Withdraws a day this standard was recorded as known in force through. The record is kept, marked withdrawn, with your reason.",false,"design"],
+  ["act.standardadoption.label.standard","Record that a body adopted it","DEC-438: standards R40 on Standard","Records that a body adopted an edition of this standard: the act that adopted it, how, and the passage of that act that says so.",false,"design"],
+  ["act.standardimpose.label.standard","Record a law that makes it binding","DEC-438: standards R43 on Standard","Records that a law your team holds makes this standard binding on a body, citing the passage of the law that says so.",false,"design"],
+  ["act.standardbenchmark.label.standard","Hold it only as a benchmark for a body","DEC-438: standards R43 on Standard","Records that this standard is used to measure a body against, not as a rule the body must follow. It never makes the standard binding, and an act is never found out of conformance with a benchmark.",false,"design"],
+  ["screen.standard.binds.head","Whom it binds, and until when","DEC-438: the section on Standard",null,false,"design"],
+  ["screen.standard.binds.help","An act is found out of conformance only with a standard that was in force on the act's day and binding on the body that acted. Record here what the documents show.","DEC-438: its help, once, under the head",null,false,"design"],
+  ["screen.standard.through.unknown","No end is stated, and no member has recorded a day it was still in force, so Civicsmith cannot tell whether it was in force after {from}.","DEC-438: {from} the day its period began; drawn when the period is open and no day is recorded",null,false,"design"],
+  ["screen.standard.through.recorded","Known to be in force through {through}, from {source}, recorded by {name}","DEC-438: a recorded day, as the read gives it",null,false,"design"],
+  ["screen.standard.binds.unknown","No adoption or law recorded here says whom it binds.","DEC-438: drawn when neither is recorded",null,false,"design"],
+  ["screen.standard.f.through","The last day it is known to be in force","DEC-438: standardinforcethrough: the day",null,false,"design"],
+  ["screen.standard.f.through.help","A day on or before the day the source was last checked.","DEC-438: its help",null,false,"design"],
+  ["screen.standard.f.source","Where it shows","DEC-438: standardinforcethrough: the passage",null,false,"design"],
+  ["screen.standard.f.source.help","Choose the passage, in a document your team holds, that shows it still in force.","DEC-438: its help",null,false,"design"],
+  ["screen.standard.f.body","The body","DEC-438: standardimpose, standardbenchmark: an office or organization chosen from the list",null,false,"design"],
+  ["screen.standard.f.body.help","Choose the office or organization. Your team's offices and bodies come from the places it chose, under Places and offices.","DEC-438: its help",null,false,"design"],
+  ["screen.standard.f.act","The act that adopted it","DEC-438: standardadoption: a held act or a dated event",null,false,"design"],
+  ["screen.standard.f.act.help","An ordinance, resolution or other act your team holds, or a dated event on the Timeline.","DEC-438: its help",null,false,"design"],
+  ["screen.standard.f.edition","The edition adopted","DEC-438: standardadoption",null,false,"design"],
+  ["screen.standard.f.edition.help","As the act names it, such as \"2021\" or \"Fourth edition\".","DEC-438: its help",null,false,"design"],
+  ["screen.standard.f.mode","How it was adopted","DEC-438: standardadoption: one of three",null,false,"design"],
+  ["screen.standard.mode.by_reference","Written into the act by reference","DEC-438: ADOPTION_MODES",null,false,"design"],
+  ["screen.standard.mode.voluntary","Taken up by choice","DEC-438: ADOPTION_MODES",null,false,"design"],
+  ["screen.standard.mode.by_accreditation","Required to keep an accreditation","DEC-438: ADOPTION_MODES",null,false,"design"],
+  ["screen.standard.f.passage","The passage that says so","DEC-438: standardadoption, standardimpose: the citation",null,false,"design"],
+  ["screen.standard.f.law","The law that makes it binding","DEC-438: standardimpose: a held law",null,false,"design"],
+  ["screen.standard.f.reason","Your reason","DEC-438: each of the four acts",null,false,"design"],
+  ["refusal.STANDARD_BINDING_UNDETERMINED","Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found out of conformance with it. Settle it on the standard's page, under \"Whom it binds, and until when\", then record the determination again. Nothing was written.","DEC-438: B531 item 6; conformance C-113.45 (K5274)",null,false,"design"],
+  ["screen.matter.f.body.help","Choose the office or body whose act this is, from your team's offices and bodies. They come from the places your team chose, under Places and offices.","DEC-438: C2a (a): the body is chosen, never typed, so it matches the standard's issuer",null,false,"design"],
+  ["screen.standard.through.none.summary","When no day is recorded","DEC-438: the mockup fold over the unknown state",null,false,"design"],
+  ["screen.matter.event.none.summary","When the project has no dated event","DEC-438: the mockup fold",null,false,"design"],
+  ["screen.matter.determine.needscase.summary","When no finding is published yet","DEC-438: the mockup fold",null,false,"design"],
+  ["screen.matter.event.none","This project has no dated event yet. Record the act on the project's Timeline, with its date, then choose it here.","DEC-438: C2a (1): the event picker when the project has none",null,false,"design"],
+  ["screen.matter.determine.needscase","No finding is here to rest on yet. Publish a case that carries this project's findings, or accept a finding from another team, then record the determination.","DEC-438: C2a (2): above Record a determination when the project has no published finding",null,false,"design"],
+  ["screen.matter.concluded.unpublished","Concluded. It becomes a finding once a case that carries it is published.","DEC-438: C-M11, B532 (2): a concluded question not yet in a published case",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -13487,7 +13522,7 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.SOURCE_MALFORMED","A source of proposals names its kind and gives a reader. This registration does not.","intent's translation, keyed by its code",null,false,"design"],
   ["refusal.STAGE_NOT_OF_DIRECTION","That stage does not belong to this kind of entry. A request, a fee-waiver request, an appeal or a court filing is something sent; an acknowledgment, a fee estimate, a decision, an extension notice, a production or a denial is something received. A non-response carries no stage.","action-grammar's translation, keyed by its code",null,false,"design"],
   ["refusal.STAGE_TAKES_NO_ACTION","Actions are attached at notification, legal tools and political accountability. The escalation's stage now takes none. Nothing was written.","escalation's translation, keyed by its code",null,false,"design"],
-  ["refusal.STANDARD_NOT_BINDING","This standard does not bind this body, so the act cannot be found nonconforming against it. Record it as a benchmark comparison: below, slower than, or above. Nothing was written.","conformance's translation, keyed by its code",null,false,"design"],
+  ["refusal.STANDARD_NOT_BINDING","This standard is held as a benchmark for this body, not a rule that binds it, so the act cannot be found out of conformance with it. To measure the act against it, ask the question on this project and cite the standard there. Nothing was written.","conformance's translation, keyed by its code; DEC-259: reworded",null,false,"design"],
   ["refusal.STANDARD_NOT_IN_FORCE","A standard named was not in force when the act was done, by the period the record states for it. An act is measured against the standards that applied to it. Nothing was written.","conformance's translation, keyed by its code",null,false,"design"],
   ["refusal.STANDARD_SIDE_UNNAMED","Name which side of the question states what the standard requires, a or b. Your team's Civicsmith never chooses it. Nothing was written.","conformance's translation, keyed by its code",null,false,"design"],
   ["refusal.STANDING_ENDED","This standing question has ended, and an ended question is never started again. Set a new one if you want it to keep running. Nothing was changed.","answers' translation, keyed by its code",null,false,"design"],
@@ -18740,6 +18775,11 @@ export const WORD_ROWS = Object.freeze([
   ["act.reevaluationrecord.does","Records that you looked again at a change under this question, and what you decided. That change stops being listed until something moves again.",null,null,false,"design"],
   ["act.reevaluations.does","Lists what this question rests on that has changed since it was written.",null,null,false,"design"],
   ["act.standardinforce.does","Asks whether this standard was in force on a day you choose, and why.",null,null,false,"design"],
+  ["act.standardinforcethrough.does","Records, from a passage of a document your team holds, checked that day, that this standard was still in force through a day. Until one is recorded, Civicsmith cannot tell whether a standard with no stated end was in force after it began, and an act is not found out of conformance with it.",null,null,false,"design"],
+  ["act.standardinforcethroughwithdraw.does","Withdraws a day this standard was recorded as known in force through. The record is kept, marked withdrawn, with your reason.",null,null,false,"design"],
+  ["act.standardadoption.does","Records that a body adopted an edition of this standard: the act that adopted it, how, and the passage of that act that says so.",null,null,false,"design"],
+  ["act.standardimpose.does","Records that a law your team holds makes this standard binding on a body, citing the passage of the law that says so.",null,null,false,"design"],
+  ["act.standardbenchmark.does","Records that this standard is used to measure a body against, not as a rule the body must follow. It never makes the standard binding, and an act is never found out of conformance with a benchmark.",null,null,false,"design"],
   ["act.hypothesishold.does","Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.",null,null,false,"design"],
   ["act.instance.does","Shows one matter followed through a progression: each step in order with the documents threaded to it, how sure the chain is, and any finding.",null,null,false,"design"],
   ["act.progression.does","Shows a progression: its steps, what each needs before it, how soon, whether it is required, its basis, and every version.",null,null,false,"design"],
