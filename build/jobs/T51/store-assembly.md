@@ -1,6 +1,6 @@
 # store-assembly (T51)
 
-**Status** · session_01MHfM4Jg8WvCFNaPQUvxaFk · depth 2 · COMPLETE · handled B21
+**Status** · session_01EKyG8kpV8RFkcK59ZucyPh · depth 2 · COMPLETE · handled B22
 
 ## J1 · QUESTION
 
@@ -308,3 +308,23 @@ Size (session_01MHfM4Jg8WvCFNaPQUvxaFk): test runs 6, module lines 3800
 ## J21 · COMPLETE
 
 COMPLETE (STORE-ASSEMBLY #7, B21, A-01). op=stats runs the FTS5 integrity check only on deep=1 with the capacity stamp (stats.mjs withDeepStats, assemble.mjs route spread) and in purge's proof; default answer has no textIndexOk. Test red then green (stats.test.mjs, counting sql.exec: zero checks by default, one with the flag) plus a purge-proof control. Module: 430 tests, 428 pass, 1 fail (R83 declarations: control-plane's owner-ops.mjs already deleted on the tranche; the DECLARED_OPS rename CHANGE B19 (4) has not reached me), 1 todo. Users naming stats: 170 tests, 1 fail, system/migrate-released.test.mjs (1106 s, cause not established; please check). Checks: format/architecture/coverage/ownership 0, words none new. REPORT: screens-settings group.mjs:25 should ask a size-only read; nothing sends deep=1 yet (op-declarations lists no parameter). Details in record J20. Size (session_01MHfM4Jg8WvCFNaPQUvxaFk): test runs 7, module lines 3800
+
+## J22 · COMPLETE
+
+COMPLETE (STORE-ASSEMBLY #8, B22, fix round 10, walk C C-M8). Commit 7b14c062a9 on job/T51/store-assembly.
+
+**What changed.** `bio-plane/src/store-assembly/assemble.mjs:277-288`: the assembly builds a `documents` reader and hands it to `exploreOf(ctx, { events, money, documents })`. Its `titlesOf({ids, viewer})` answers, for each id, the bundle's title from record-core's published `bundleInfo` (R34), and only where membership's published `inSight(id, viewer)` admits the viewer; otherwise the id is absent (no title). No module published a sight-aware `titlesOf` before this (queue's `#titleReader` is private), so the reader is composed here from those two published services. Decision for Bob: this composition, or a `titlesOf` published by record-core. I did not write build/rulings.md (outside my write scope); please record it there if you accept it.
+
+**Test, red then green.** New `bio-plane/test/m/store-assembly/explore-document-titles.test.mjs`, through the assembled store (`store()` fixture, `POST /exploregraph?viewer=member:ann`, centre an INFO- document). Red before the wiring: the centre `INFO-2026-0101-seen` is unnamed (label null) for a title "Council minutes, 10 February". Green after: named by that title. Control: `INFO-2026-0102-hidden` in project PROJ-sealed, which the viewer does not take part in, is unnamed and its title "Sealed settlement" does not appear in the answer.
+
+**Suite.** store-assembly module: 431 tests, 429 pass, 1 fail, 1 todo. The fail is R83 (declarations), unchanged from B21: the tranche has control-plane #65 deleting owner-ops.mjs; the DECLARED_OPS rename CHANGE (B19 (4)) has not reached me. Explore's own suite not run (not my paths).
+
+**Checks.** format: 178 modules, 0 failures. architecture store-assembly: 0 failures. coverage store-assembly: 99 of 99 live ids named, 0 failures. ownership (merge-base..HEAD): 0 failures (3 files: assemble.mjs, the new test, and my record). `checks/run.mjs /home/user/bio`: no finding in assemble.mjs or the new test; the findings listed are other modules' (orphan runs in store-assembly/r10-fixtures-run.test.mjs and a job-registrar stub), none from this change. `fixtures.mjs store-assembly --list` shows 12 failures, all of those other modules' markers (r10-fixtures-run.test.mjs, job-registrar-stub.mjs), not this change: I did not touch them and they are not in my paths, so this check is not at zero; reported as is.
+
+**Deferred.** None.
+
+**Found in another module.** None new. The graph's centre node is named only when the viewer may see it, which the test relies on; no cause outside my paths was found.
+
+**Commit trailer.** I omitted the Co-Authored-By line naming the model, per the system instruction not to put a model identifier in commit messages; the Claude-Session line is kept.
+
+Size (session_01EKyG8kpV8RFkcK59ZucyPh): test runs 3, module lines 3780

@@ -274,7 +274,18 @@ export function assembleStore(ctx, env, { deliver = null, releaseKeys = null } =
      of an organisation through the store's read composed here (roster-reader R12). */
   people.registerRosterSource("roster-reader", rosterSource(rosterReads({ sql: () => sql })));
   /* explore (K1566): the one read across the registered owners; it holds nothing, so it is kept for the route map. */
-  explore = exploreOf(ctx, { events, money });
+  /* explore R29 (T51 fix round 10; walk C C-M8): an `INFO-` node is named by its document's title. The title is record-core's
+     (`bundleInfo`, R34); the sight is membership's (`inSight`), so a viewer who may not see a document is answered no title. */
+  const documents = { titlesOf: ({ ids, viewer }) => {
+    const titles = {};
+    for (const id of ids) {
+      if (!membershipOf(ctx).inSight(id, viewer)) continue;
+      const info = recordOf(ctx).bundleInfo(id);
+      if (info && typeof info.title === "string" && info.title.trim() !== "") titles[id] = info.title;
+    }
+    return { titles };
+  } };
+  explore = exploreOf(ctx, { events, money, documents });
   /* retrieval: its projection and text index join every promotion; R21 (K1593): the projected fields' providers,
      each its owner's rule (`standards.standardsFor`, `lines.holderAt`). */
   const retrieval = retrievalOf(ctx, { now: () => nowMs(null),
