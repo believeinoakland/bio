@@ -529,13 +529,14 @@ async function outwardText() {
   /* the paying account is ai-accounts' real one (its published `accountsServing`: a member's own key referenced), and a real group with no account for the refusal */
   const serving = (await accountsServing()).accounts;
   const refusing = (await accountsWorld().group("ann")).a;
-  // fixtures-contract: content transcribe-answer
+  // fixtures-contract: store-assembly transcribe-answer
   const good = { member: "ann", accounts: serving, useCheck: () => null,
-                 transcribe: (q) => ({ ok: true, engine: "model", version: "1", pages: q.pages.map((p) => ({ page: p, text: `ai ${p}` })) }) };
+                 transcribe: (q) => ({ ok: true, engine: "model", version: "1", pages: q.pages.map((p) => ({ page: p, text: `ai ${p}` })),
+                                       asked: q.pages, sent: q.pages, owed: [] }) };
   const variants = [undefined, {}, { ...good, member: "" }, { ...good, accounts: {} }, { ...good, accounts: { accountFor: () => { throw new Error("x"); } } },
     { ...good, accounts: refusing }, { ...good, useCheck: undefined },
     { ...good, useCheck: () => ({ code: "AI_LIMIT_REACHED", detail: "limit" }) }, { ...good, useCheck: () => { throw new Error("x"); } },
-    // fixtures-contract: content transcribe-answer
+    // fixtures-contract: store-assembly transcribe-answer
     // fixtures-generic: no
     { ...good, transcribe: undefined }, { ...good, transcribe: () => { throw new Error("x"); } }, { ...good, transcribe: () => ({ ok: false, reason: "no" }) },
     { ...good, transcribe: () => ({ ok: true, pages: [] }) }, { ...good, transcribe: () => ({ ok: true, engine: "m", pages: [] }) },

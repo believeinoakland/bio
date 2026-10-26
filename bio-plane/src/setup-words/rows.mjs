@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19247 design words, 1158 protected; SHA-256
-   f306e086b4d5250a7c91719a0bece5755504e4b298e2cf1892d9a457ef8cbf78) followed by 7428 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   f306e086b4d5250a7c91719a0bece5755504e4b298e2cf1892d9a457ef8cbf78) followed by 7430 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19492,7 +19492,9 @@ export const WORD_ROWS = Object.freeze([
   ["action-holds.checks.a_hold_notice_is_recorded","A hold notice is recorded for a hold that is in place, and the hold at this place is not: none has been placed, or it was released. Nothing was written.",null,null,false,"code"],
   ["action-holds.checks.a_litigation_hold_is_placed","A litigation hold is placed at one place: an action, one entry of an action named by its position, or a project. This named more than one, or an entry that is not there, so nothing was written.",null,null,false,"code"],
   ["action-holds.checks.saying_whether_a_litigation_hold","Saying whether a litigation hold is in place is a member's judgement, and somebody answers for it. The credential that asked here is an automated one, so it cannot say. Sign in to record it yourself.",null,null,false,"code"],
+  ["action-holds.declared.actionholdpreview","read: what releasing one entry's hold would restart — the projects it alone covers that the viewer may see, and whether any is out of view — keyed by (action, entry ordinal); writes nothing",null,null,false,"code"],
   ["action-holds.declared.holdnoticesent","a member records that she sent the hold notice for a hold in place, held as the bytes sent or her account; it records no recipient and no one's compliance (action-holds R11)",null,null,false,"code"],
+  ["action-holds.declared.holdsplaced","read: every place a hold was stated that the member may see, with its latest hold and what prompted it; writes nothing (action-holds R22)",null,null,false,"code"],
   ["action-holds.index.a_field_is_at_most","{name} is at most {max} characters and cannot contain a quote, a backslash, or a newline",null,null,false,"code"],
   ["action-holds.index.a_hold_is_placed_at_exactly","a hold is placed at exactly one place: an action, an entry of one by its position (a whole number from zero), or a project. Nothing was written.",null,null,false,"code"],
   ["action-holds.index.a_hold_is_placed_at_one","a hold is placed at one place: pass target=<action id> (and ord=<entry position> for one entry), or project=<project id>",null,null,false,"code"],

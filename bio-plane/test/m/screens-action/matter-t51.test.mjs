@@ -6,7 +6,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { matterWorld, determine, consequences, escalate, inWorld, FINDING_TITLE } from "./world-A.mjs";
 import { openIn } from "./world.mjs";
-import { open, main, text, ops, press, last, ok, refused, button, choose, W, PAGE, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, PROJECT, ACTION_ID, READER, DETERMINATION, ACTIONS } from "./page.mjs";
+import { writingHelpDraftHeld, writingHelpUnreachable } from "../wizard-scripts/fixtures.mjs";
+import { open, main, text, ops, press, last, ok, refused, button, beside, choose, W, PAGE, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, PROJECT, ACTION_ID, READER, DETERMINATION, ACTIONS } from "./page.mjs";
 
 const AT = `/app/matter/${DET}~${ESC}`;
 const BARE = `/app/matter/${DET}`;
@@ -434,7 +435,7 @@ test("R45, R50, R51: the matter's acts are the registry's; each form's act is dr
 });
 
 test("R45, R50, R51 (writinghelp): the helper is drawn beside each field the design marks for it only while the assistant is reachable, and sends the words typed", async () => {
-  const plane = { ...DATA_PLANE, writinghelp: ok({ ok: true, text: "A clearer sentence." }) };
+  const plane = { ...DATA_PLANE, writinghelp: ok(writingHelpDraftHeld()) };
   const off = await open(AT, plane);
   for (const mode of ["determine", "consequencerecord", "consequencerevise", "addressedrecord", "successrecord", "escalationattach", "escalationdecline", "escalationsuspend"]) {
     await choose(off, "mt-mode", mode);
@@ -447,15 +448,22 @@ test("R45, R50, R51 (writinghelp): the helper is drawn beside each field the des
     assert.equal(ops(on).filter((o) => o === "writinghelp").length, n, mode);
   }
   await choose(on, "mt-mode", "escalationdecline");
-  await press(on, "writinghelp", { values: { "mt-h-why": "we wait" } });
+  const help = await press(on, "writinghelp", { values: { "mt-h-why": "we wait" } });
   assert.equal(last(on, "writinghelp").body.told, "we wait");
   assert.equal(last(on, "writinghelp").body.field, "reason");
   assert.equal(last(on, "writinghelp").body.op, "escalationdecline", "the help request carries the act the words are for (wizard-scripts R46)");
-  assert.equal(main(on).querySelector("#mt-h-why").value, "A clearer sentence.");
+  /* wizard-scripts' published answers (the real op never returns a draft: the door makes it, K5212): a refused help draws its words and leaves what she typed */
+  assert.equal(main(on).querySelector("#mt-h-why").value, "we wait", "a refusal replaces nothing she typed");
+  assert.ok(beside(on, help).includes(W("refusal.WRITING_HELP_DRAFT_HELD")), "the refusal is drawn by its key");
+  const unbound = await open(AT, { ...DATA_PLANE, ...REACH, writinghelp: ok(writingHelpUnreachable()) });
+  await choose(unbound, "mt-mode", "escalationdecline");
+  const gone = await press(unbound, "writinghelp", { values: { "mt-h-why": "we wait" } });
+  assert.equal(main(unbound).querySelector("#mt-h-why").value, "we wait");
+  assert.ok(beside(unbound, gone).includes(W("refusal.AGENT_WORKER_UNBOUND")), "the door's refusal with the assistant unbound is drawn by its key");
 });
 
 test("R45 (writinghelp control): a help button that names no act sends no help request", async () => {
-  const on = await open(AT, { ...DATA_PLANE, ...REACH, writinghelp: ok({ ok: true, text: "A clearer sentence." }) });
+  const on = await open(AT, { ...DATA_PLANE, ...REACH, writinghelp: ok(writingHelpDraftHeld()) });
   await choose(on, "mt-mode", "escalationdecline");
   const b = button(on, "writinghelp");
   b.removeAttribute("data-forop");

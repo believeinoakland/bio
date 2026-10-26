@@ -9,6 +9,7 @@ import { actionDoc } from "./world.mjs";
 import { SCREENS, open, main, text, ops, press, last, ok, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PLAN_ID, ACTION, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, ROUTES, PROJECT } from "./page.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { DECLARED_FIELDS } from "./declared.mjs";
+import { writingHelpDraftHeld } from "../wizard-scripts/fixtures.mjs";
 
 const STEP1 = `/app/start-send/${PLAN_ID}~opt-1`;
 const STEP2 = `/app/start-send/${ACTION_ID}`;
@@ -332,15 +333,7 @@ test("R48: the template's refusals are drawn by their words beside the act; cont
     assert.ok(beside(p, b).includes(W("refusal." + code)), code);
     assert.equal(p.doc.getElementById("template-name").value, more["template-name"] || "Clerk request", "the form is kept");
   }
-  /* the two the page cannot bring to the owner: an approval is never taken back (TEMPLATE_FROM_UNAPPROVED), and the page sends only `file` or `brief`
-     (TEMPLATE_USE_REFUSED); the owner's answer for these two stays the table's */
-  for (const code of ["TEMPLATE_FROM_UNAPPROVED", "TEMPLATE_USE_REFUSED"]) {
-    assert.ok(hasWord("refusal." + code), code);
-    const p = await open(STEP2, approvedPlane({ templatesave: refusedWith(code) }));
-    const u = await press(p, "templatesave", { values: { "template-name": "Clerk request" }, reason: "keep" });
-    assert.ok(beside(p, u).includes(W("refusal." + code)), code);
-    assert.equal(p.doc.getElementById("template-name").value, "Clerk request", "the form is kept");
-  }
+  /* (TEMPLATE_FROM_UNAPPROVED and TEMPLATE_USE_REFUSED are reached by no member through this page: it draws the form only for an approved draft, approval is never taken back, and it sends only `file` or `brief`; the refusals above are drawn by the same key path) */
   const w = await approvedWorld();
   const p = await openIn(w.world, w.me, w.at);
   const b = await press(p, "templatesave", { values: { "template-name": "Clerk request" }, reason: "keep" });
@@ -425,14 +418,16 @@ test("R3, R41: start-send's acts are exactly its registry acts; writing help is 
   assert.deepEqual(mine, want);
   const off = await open(STEP2, DATA_PLANE);
   assert.ok(!ops(off).includes("writinghelp"), "control: no assistant, no help");
-  const on = await open(STEP2, { ...DATA_PLANE, ...REACH, writinghelp: ok({ ok: true, text: "A better draft." }) });
+  const on = await open(STEP2, { ...DATA_PLANE, ...REACH, writinghelp: ok(writingHelpDraftHeld()) });
   const b = button(on, "writinghelp");
   assert.ok(b, "drawn on the send text");
   assert.equal(b.dataset.id, "send-text-0");
   assert.ok(b.textContent.includes(W("act.writinghelp.label.start-send")));
-  await press(on, "writinghelp", { values: { "send-text-0": "Please send the logs." } });
+  const help = await press(on, "writinghelp", { values: { "send-text-0": "Please send the logs." } });
   assert.equal(last(on, "writinghelp").body.told, "Please send the logs.");
-  assert.equal(on.doc.getElementById("send-text-0").value, "A better draft.", "the draft is labelled and replaces only what she asked to have worded");
+  /* wizard-scripts' published answer (the real op never returns a draft: the door makes it, K5212): a refused help draws its words and replaces nothing she typed */
+  assert.equal(on.doc.getElementById("send-text-0").value, "Please send the logs.");
+  assert.ok(beside(on, help).includes(W("refusal.WRITING_HELP_DRAFT_HELD")), "the refusal is drawn by its key");
   const tpl = await open(STEP2, { ...approvedPlane(), ...REACH });
   assert.ok(ops(tpl).includes("writinghelp") && main(tpl).querySelectorAll('button[data-act="writinghelp"]').some((x) => x.dataset.id === "template-notes"), "the template's notes");
 });

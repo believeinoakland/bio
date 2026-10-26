@@ -22,7 +22,8 @@ const OWNERS = {
   officeconfirm: ["entities R64", () => entitiesOps(null, here, null)],
   scanmirror: ["file-safety R49", () => fileSafetyOps(null, here, null, {})],
   moneysets: ["money R28", () => moneyOps(null, here, null)],
-  captureseenin: ["capture R101", () => captureOps(null, here, null, {})],
+  /* capture R115: a map handed the store's environment sets it on its owner (an empty stand-in lists the routes) */
+  captureseenin: ["capture R101", () => captureOps({}, here, null, {})],
   remindersfor: ["action-clocks R26", () => actionClocksOps(null, here, null)],
 };
 const refusesMachines = (op) => Array.isArray(OPS[op].machineClasses) && OPS[op].machineClasses.length === 0;

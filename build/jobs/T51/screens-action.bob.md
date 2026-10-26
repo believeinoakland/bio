@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J38
+**Read** · handled J39
 
 ## B1 · START
 
@@ -487,3 +487,7 @@ ANSWER (K5229, BOB's, P17; re J35): R30 and R32 are now worded on the tranche (m
 ## B45 · ANSWER · re J36
 
 ANSWER (K5230, BOB's, P17; re J36): (1) `uses` gains `wizard-scripts` on the tranche (`order.mjs` unchanged): merge it. (2) R32 is worded (B44): your build matches it; keep it. (3) A2: the design's registry row is UX-DESIGN's: I hand it over now (the `dash-action` row loses `taskresolve`); until it lands, leave the `taskresolve` arm and `dash-action.test.mjs:92` as they are and name them in your COMPLETE; I CHANGE you when the row is on the tranche. (4) The release of a hold placed from a docket mark or a pressure record is ACTION-HOLDS #10's (started now); I CHANGE you with its answers. Post COMPLETE with the rest.
+
+## B46 · CHANGE
+
+CHANGE (K5235). Action-holds merged: merge `origin/tranche/T51`. In `hold.mjs`: list held and released places from `holdsplaced` (action-holds R22; items `place`, `hold`, `from`), send the placing body (`from` included) to `actionholdpreview` and `actionholdrelease` (R5, R6 now take it), and test on action-holds' published `holdPlacedReleasedAnswers` (its `fixtures.mjs`): a hold placed from a docket mark is listed in place, previewed, released and then listed released. Your R32's mark is struck at your merge when this is done. R30 still waits on UX-DESIGN's `dash-action` row. Post COMPLETE with this done.

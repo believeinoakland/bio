@@ -29,7 +29,8 @@ import { ownerOps as controlPlaneOwnerOps } from "../../../src/store-assembly/ow
 
 const { OPS, OP_STAMPS } = O;
 const U = new URL("http://do/x");
-const routesOf = (f, ...rest) => Object.keys(f(null, U, null, ...rest));
+/* a map handed the store's environment sets it on its owner's instance (ai-use R17, member-roster's `m.env`), so it is built over one: an empty stand-in lists the routes and no arm runs */
+const routesOf = (f, ...rest) => Object.keys(f(rest.length ? {} : null, U, null, ...rest));
 const FORGED_QUERY = { viewer: FORGED, identity: FORGED, author: FORGED, by: FORGED, actor: FORGED, who: FORGED, origin: FORGED,
                        administer: "1" };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

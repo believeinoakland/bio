@@ -192,7 +192,7 @@ test("R47, R48, R27: `projectholds` is among the reads naming no project, with t
   assert.equal(Object.hasOwn(NAMES, "actionholdpreview"), false, "the preview's `target` is an action, not a project");
   /* the real store (store-request's world): a discoverable project of the founder's that ann has seen and is no participant of; the door's frame
      (store-door `dispatch`) over the real routes and the real membership, spied on to see what ran and what was asked */
-  const w = await storeWorld({ group: null });
+  const w = await storeWorld();
   const P = await w.recipes.project(await w.signIn("admin"), "Seen project");
   const ann = await w.signIn("ann");
   const ran = [], asked = [];

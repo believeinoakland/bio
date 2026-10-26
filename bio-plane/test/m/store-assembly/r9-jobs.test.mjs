@@ -12,10 +12,9 @@ import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
-/* the owners' published answers, made by their real code: extraction's `readHeldAnswer`, acquisition's `owedFetchAnswer`, reading-pipeline's `storeFailedTransient` */
+/* the owners' published answers, made by their real code: extraction's `readHeldAnswer`, acquisition's `owedFetchAnswer` */
 const { readHeldAnswer: { read: readDone, ...readHeld } } = await import("../extraction/fixtures.mjs");
 const { owedFetchAnswer } = await import("../acquisition/fixtures.mjs");
-const { storeFailedTransient } = await import("../reading-pipeline/fixtures.mjs");
 import { pendingOf, pendingOps, administersOf, JOB_KINDS, JOB_STATES, WATCHDOG_FIELDS, PAGE_KILLED_READER, NO_PROGRESS, UNIT_KILLS_MAX, unitOf, TICK_FIGURES }
   from "../../../src/store-assembly/pending.mjs";
 
@@ -297,6 +296,18 @@ test("R76 G129a: a step that advances nothing ends the row `final`, NO_PROGRESS,
   assert.deepEqual([pw.state, pw.final_why, x.read.filter((q) => q.sha === sha("pw")).length], ["final", "PASSWORD_REQUIRED", 1], "one tick, never 'being read' after");
 });
 
+test("R76 G129a: extraction's own answer for an OCR pass that read no glyph (`final: true`, NO_PROGRESS) ends the `ocr` row `final` on that tick, never retried; the ledger's `OCR_NOTHING_OWED` needs no word for it", async () => {
+  const ended = await readHeld.final("NO_PROGRESS");
+  assert.deepEqual([ended.final, ended.why], [true, NO_PROGRESS]);
+  const x = await world(undefined, { readAnswer: () => ended });
+  const d = sha("a scan whose pages hold no glyph");
+  x.jobs.registerJob({ kind: "ocr", sha: d });
+  let at = Date.now() + 1000;
+  for (let i = 0; i < 3; i++, at += 3_600_000) await x.s.onAlarm(at);
+  const r = x.jobs.jobRow({ sha: d, kind: "ocr" });
+  assert.deepEqual([r.state, r.final_why, x.read.filter((q) => q.sha === d).length], ["final", ended.why, 1], "asked once");
+});
+
 test("R76 (control): a row that advances by one unit each tick is never ended by the no-progress rule", async () => {
   const x = await world(undefined, { readAnswer: () => ({ ok: true, more: true, counters: { written: 1 } }) });
   x.jobs.registerJob({ kind: "ocr", sha: sha("a long scan") });
@@ -309,8 +320,10 @@ test("R76 G129b: a transient failure at tick 2 or later is tried again, never wr
   /* extraction's real pieces of a text of three (two `more`, then read), and its finishing answer with counters */
   const [p0, p1] = await readHeld.pieces(3);
   const done = await readHeld.finished();
+  const failed = await readHeld.failed();   /* extraction's real second tick over a store that fails: owed, `why` TRANSIENT, the cursor kept */
+  assert.deepEqual([failed.owed, failed.why], [true, "TRANSIENT"]);
   const answers = [p0, p1,
-                   await storeFailedTransient(), { ok: true, more: true, detail: { cursor: "c2" }, failure: "transient", reason: "R2_HICCUP" },   // fixtures-generic: R2_HICCUP   (a transient word no module gives: any transient failure is tried again)
+                   failed, { ok: true, more: true, detail: { cursor: "c2" }, failure: "transient", reason: "R2_HICCUP" },   // fixtures-generic: R2_HICCUP   (a transient word no module gives: any transient failure is tried again)
                    done.answer];
   const x = await world(undefined, { readAnswer: () => answers.shift() });
   const d = sha("a text whose store failed at tick 3");
@@ -320,6 +333,7 @@ test("R76 G129b: a transient failure at tick 2 or later is tried again, never wr
     await x.s.onAlarm(at);
     const r = x.jobs.jobRow({ sha: d, kind: "reading" });
     if (i === 2 || i === 3) assert.deepEqual([r.state === "final", r.state === "finished", r.final_why], [false, false, null], `tick ${i + 1}: retried, never ended`);
+    if (i === 2) assert.equal(r.last_why, failed.why, "the ledger states the reason the owner's answer gave");
   }
   const r = x.jobs.jobRow({ sha: d, kind: "reading" });
   assert.deepEqual([r.state, r.written, r.failed], ["finished", done.counters.written, 2]);
