@@ -840,6 +840,10 @@ function build() {
      (its R12), K516's precedent. */
   actionholdrelease:     "contribute",
   actionholdpreview:     null,
+  /* T51 (action-holds R22; K5235): `holdsplaced` is a session read: it lists the holds the member may see and writes
+     nothing, the release preview's posture, so NO CAPABILITY, PRESENT, null (K516's precedent: a stated null, never
+     an absent key, for a read that gates nothing). */
+  holdsplaced:           null,
   projectholds:          null,
   /* T27 (op-declarations R13; docket R1, R2, R5, R7): filing to the record, marking a threat, posting a signed entry and
      declining a submission each write the docket in a member's name — `contribute`, NO fifth capability token
