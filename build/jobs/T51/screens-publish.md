@@ -1691,3 +1691,7 @@ COMPLETE (B60, K5290; walk-T51-alpha A N-1 section 6). Share for review pressed 
 **Deferred.** None in my paths.
 
 Size (session_01RxWsaACDwtn8crGboLcaNB): test runs 9, module lines 3796 src
+
+## J56 · COMPLETE · re B61
+
+COMPLETE (re B61, R81, K5303). Drawn by key: case editor 'Save these details' (screen.case-editor.save) with the unsaved line on an edited text field, cleared by the save, and the nothing-left-out acknowledgement (ack.none, ack.none.help) (case-editor.mjs:79-90, :178-183, :398); review copy file-ready line (review-copy.mjs:96-98); public page: unrated/undetermined axis by key, never the served detail (published-parts.mjs:147-153, titled removed), verify.detail and bar.declared by key (published.mjs:90-92, :195-196); keys.mjs. Test r81.test.mjs 7 tests naming R81: 7 of 7 red before, green after. Three older assertions superseded by R81 changed (public.test.mjs C5 a, C5 e; walk-d D-M1 (2) retired with titled). Suite screens-publish 309 tests, 307 pass, 0 fail, 2 todo; 22 user files 179 pass. Checks at /home/user/bio: format 0, architecture 0, coverage 81/81, ownership 0, words 0, setup-words 0, fixtures --list 0 (accepted 6 unchanged), run.mjs no finding in my files. Markers added: none. REPORT outside my paths: the unsaved line is not drawn for a role/position radio or the nothing-left-out box, because cs.checks has no change hook (interface-shell/browser.mjs:843; field has typing at :785-786): interface-shell could add one. Size (session_01RxWsaACDwtn8crGboLcaNB): test runs 9, module lines 3796
