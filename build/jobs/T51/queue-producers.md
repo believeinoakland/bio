@@ -437,3 +437,9 @@ Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 3, module lines 0
 ## J24 · REPORT
 
 R55 applied in the producer (a row with known_by mints no signer-self-registered item; index.mjs #obligationsSignerSelfRegistered). Its test is test.todo naming R55 in action.test.mjs: credentials R83 (signerKnown, known_by) is not on the tranche yet, so no red-then-green is possible. Module tests 162 pass, 0 fail, 1 todo; run.mjs and ownership clean. Waiting on your CHANGE when CREDENTIALS #33 merges; then I write the test against its real code and post COMPLETE.
+
+## J-B21 · R55 against credentials R83's real code
+
+`action.test.mjs` R55 test (replaces the `test.todo`): two self-registered keys minted for ada, cy and `class:admin`; `w.credentials.signerKnown` (real) by ada on one; the next reads hold only the other, for all three. Red with the `known_by` filter removed (the item stayed), green with it. Module tests 163 run, 163 pass, 0 fail. `checks/run.mjs`: no finding in my files; ownership 0. No markers added. Key ids are `AAAA…`-shaped, as credentials' `signerKnown` requires.
+
+Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 6, module lines 0
