@@ -219,7 +219,7 @@ async function sendSafeView(view, el, cs) {
     const mb = (n) => (n / 1048576).toFixed(1), sized = a.renderer_reason === "TOO_LARGE" || a.renderer_reason === "PREVIEW_NOT_DRAWN", drawn = sized && Number.isFinite(a.size) && Number.isFinite(a.bound);
     /* F-B14 (R36): the refusal's sentence says the reason is stated beside it, so the renderer's reason (a code of the owner's) goes beside it, drawn by its key;
        the two size reasons are already said by the figures' sentence (or by the translation alone where the owner gave none) */
-    const reason = code === "SAFE_VIEW_FAILED" && !sized && typeof a.renderer_reason === "string" && /^[A-Z][A-Z0-9_]*$/.test(a.renderer_reason) ? a.renderer_reason : "";
+    const reason = code === "SAFE_VIEW_FAILED" && !sized && typeof a.renderer_reason === "string" && /^[A-Za-z][A-Za-z0-9_]*$/.test(a.renderer_reason) ? a.renderer_reason : "";
     cs.set("safeRefused", code === "NO_SAFE_VIEW" ? { key: "refusal.NO_SAFE_VIEW" } : code === "SAFE_VIEW_FAILED" && drawn ? { key: "screen.open-file.safe.notdrawn", vars: { size: mb(a.size), bound: mb(a.bound) } }
       : words ? { text: words, reason } : { key: "shell.unread" });
     return null;

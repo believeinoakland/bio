@@ -574,6 +574,10 @@ test("R36 F-B14 control: the reasons the size sentence already states draw no se
   assert.ok(hasWord("refusal.ENCRYPTED"));
   assert.equal(main(b.p).querySelectorAll('[data-renderer-reason="ENCRYPTED"]').length, 1);
   assert.ok(says(b.p, "refusal.ENCRYPTED"));
+  /* the owner's spreadsheet reasons are lower-case words (`renderer_reason: s.why`), drawn like the others */
+  const c = await mine({ safeview: refused("SAFE_VIEW_FAILED", "refused", 422, { renderer_reason: "no_sheets" }) });
+  await press(c.p, "safeview");
+  assert.equal(main(c.p).querySelectorAll('[data-renderer-reason="no_sheets"]').length, 1);
 });
 
 test("R36 F-B15 a kind the owner makes no safe view of says so once and is not sent to the safe view; every kind it does make one of still is", async () => {
