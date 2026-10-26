@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_0141YvoVpS4Rz4SNMfkcYzHh · depth 2 · COMPLETE · handled B57
+**Status** · session_01AF89gbL2B6HjsEmphSxMvw · depth 2 · COMPLETE · handled B58
 
 ## J1 · BLOCKED
 
@@ -717,3 +717,23 @@ Deferred: the seam wrap in screens-inquiry's five files (SCREENS-INQUIRY #33, K5
 Impact: 176 of 178 modules named by `build/plan/impact.mjs origin/tranche/T51 HEAD` (a shared table). Ran the screens-* per-module suites (the harness's users); the other modules' suites were not run.
 
 Size (session_0141YvoVpS4Rz4SNMfkcYzHh): test runs ~45, module lines 11828 (src 3389, tests 8439).
+
+## J41 · COMPLETE
+
+COMPLETE, interface-shell, T51 fix round 10 (plan item 136; K5271, B58): walk C C-M12 and C-M16, R133. Branch pushed.
+
+Changed: bio-plane/src/interface-shell/browser.mjs: new `foldsOf` and `openAround` (next to `draw`'s state, ~1436-1452); `draw()` records the folds open before the rebuild (`openFolds`, only for a redraw of the screen already shown) and, after the refusals are put back, opens every fold that was open, holds an act's slot with an answer, refusal or open reason box, or holds a control whose value differs from what the screen drew (the member's pick, text or tick); `besideAct` opens the folds around a slot it fills, so a refusal is seen when it is first drawn (C-M16, "Start the project" with no visibility); `ringDraw` uses `openAround` (same behaviour). A fold is known by its id, `data-fold`, `data-start` or summary, plus its place among those of that name; a fold with none of these is left as the screen drew it, and a fold the member closed that the screen draws closed stays closed. bio-plane/test/m/interface-shell/r133.test.mjs (new, 3 tests).
+
+Tests, red then green (stashed the browser.mjs change, ran, restored): (1) a fold holding a pressed act's refusal is open when the refusal is drawn and after a redraw; control: a fold holding nothing stays closed. Red: "the refusal is seen: its fold is open". (2) a pick and a field the member set in a fold keep their values and the fold open across a redraw; control: nothing set, closed. Red: "the fold stays open". (3) a fold the member opened stays open, one never opened stays closed, one the member closed stays closed. Red: "opened by the member". All three green.
+
+Suite: interface-shell 380 of 380 pass (377 plus the three). Users `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 13 modules, 432 files; the 391 outside interface-shell ran: 3374 tests, 16 failing names (15 counted by the runner), in control-plane r9-seam-documents.mjs, journey-check pseudo.test.mjs, screens-daily fix2/home/routed, screens-inquiry r10-stated, screens-investigate money.test.mjs. The same seven files run on a worktree of origin/tranche/T51 fail the same 16 names (diff of the name lists empty): none is caused by this change.
+
+Checks (absolute root /home/user/bio): format 0; architecture 0; coverage 128 of 128 live ids named, 0 failures (R133 named by r133.test.mjs); ownership 0 (3 files changed by interface-shell); `checks/run.mjs`: no finding in interface-shell's files (the 7 coverage and 89 fixtures failures it lists are other modules'; none names interface-shell).
+
+Met: R133, and R13, R109 as amended. The requirement line still reads "(not yet met: T51)": BOB's to change.
+
+Not done here, for BOB: the DOM stand-in has no real `<details>` toggle, so the open state is the attribute the test sets; no live deployment was contacted. The screens' own halves of C-M12 (screens-inquiry document.mjs:1285-1291: a line "Flags raised on this document"; `open` drawn by the screen) and C-M16 (screens-daily start-project.mjs:14) are not needed for the fold to stay open now, and are not mine.
+
+Markers: none added (the test's screen is its own harness input; it names no other module's answer).
+
+Size (session_01AF89gbL2B6HjsEmphSxMvw): test runs ~14, module lines 11920 (src 3419, tests 8501)
