@@ -234,6 +234,7 @@ function render(cs, view) {
         + P.docChoice(cs, view, "st-thr-doc", { label: S + "f.source", help: S + "f.source.help", passage: false, drive: true, project })
         + P.passagePick(cs, view, "st-thr-doc", "st-thr-passage", P.later))
       + fold("standardadoption", actChoice("st-ad-act", S + "f.act", S + "f.act.help", "st-ad-passage", true) + cs.field("st-ad-edition", S + "f.edition", { help: S + "f.edition.help" })
+        + cs.field("st-ad-from", S + "inforce.day.label", { type: "date", help: S + "inforce.day.help" })
         + cs.choice("st-ad-mode", S + "f.mode", blankFirst(["by_reference", "voluntary", "by_accreditation"].map((k) => [k, S + "mode." + k])), {}))
       + fold("standardimpose", bodyChoice("st-im-body") + actChoice("st-im-law", S + "f.law", "", "st-im-passage"))
       + fold("standardbenchmark", bodyChoice("st-bm-body")), { help: S + "binds.help" }));
@@ -315,10 +316,11 @@ const acts = rereading([
       const record = String((el && el.dataset && el.dataset.record) || "").trim();
       return record ? { body: { record } } : null;
     } },
-  /* the adopting act's own start is the day the adoption runs from (`from`, the owner's); an act that states none sends none, and the owner refuses it */
+  /* the day the adoption runs from (`from`, the owner's) is the day the member typed, else the adopting act's own start; with neither the screen says so and sends nothing */
   { op: "standardadoption", label: "act.standardadoption.label.standard",
     async send(view, el, cs) {
       const standard = String(view.subject || "").split("/")[0], act = String(cs.value("st-ad-act") || "").trim();
+      const typed = String(cs.value("st-ad-from") || "").trim();
       const base = { standard, act, edition: String(cs.value("st-ad-edition") || "").trim(), mode: String(cs.value("st-ad-mode") || "").trim() };
       const later = view.ui.later || {};
       if (/^EVT-/.test(act)) {
@@ -333,12 +335,13 @@ const acts = rereading([
           citation = r && r.ok !== false ? String(r.content_id || r.id || "") : "";
         }
         const day = ev && ev.when && /^\d{4}-\d{2}-\d{2}$/.test(String(ev.when.value || "")) ? ev.when.value : "";
-        return { body: Object.assign(base, { citation }, { from: day || { event: act, edge: "start" } }) };
+        return { body: Object.assign(base, { citation }, { from: typed || day || { event: act, edge: "start" } }) };
       }
-      /* the adopting act's own start is the day the adoption runs from (`from`, the owner's); an act that states none sends none, and the owner refuses it */
       const read = later["std:" + act];
-      const from = read && read.state === "ok" && read.value && read.value.period && typeof read.value.period.from === "string" ? read.value.period.from : "";
-      return { body: Object.assign(base, { citation: String(cs.value("st-ad-passage") || "").trim() }, from ? { from } : {}) };
+      const own = read && read.state === "ok" && read.value && read.value.period && typeof read.value.period.from === "string" ? read.value.period.from : "";
+      const from = typed || own;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) return { refuse: "screen.standard.inforce.refused.body2" };
+      return { body: Object.assign(base, { citation: String(cs.value("st-ad-passage") || "").trim(), from }) };
     } },
   { op: "standardimpose", label: "act.standardimpose.label.standard",
     send(view, el, cs) {

@@ -642,3 +642,20 @@ COMPLETE (re B55, K5308): R66 applied, amending R64, so R64 is now whole. Merged
 Markers: none new.
 
 Size (session_017vwgD1u3sEWkzivBQF15Ny): test runs 14, module lines 3,741
+
+## Fix round 10, re-walk 11 E: a standard's adoption (K5328; SCREENS-INVESTIGATE #26)
+
+**Entries applied** (B56): "Record that a body adopted it" no longer reaches the owner without a day.
+- `bio-plane/src/screens-investigate/standard.mjs:237` the adoption fold gains `st-ad-from`, a calendar day, drawn with the held rows `screen.standard.inforce.day.label` and `.day.help`.
+- `standard.mjs:320-345` the act sends the typed day as `from`, else the adopting act's own `period.from` (a dated event keeps its own day when none is typed); with neither it sends nothing and draws the held row `screen.standard.inforce.refused.body2` ("Choose a day that exists and ask again.") on the screen, never the owner's `STANDARD_FIELD_INVALID`. No new word row.
+
+**Tests (`standard-binds.test.mjs`), red on the previous screen, green on this one:**
+- `R64 R66 standardadoption: an act declared with no period…` the walker's case (act declared with no period, edition "2021", by reference, a passage chosen, day typed): `from` sent is the typed day, `editioninforce` answers "2021", the adoption is drawn as a `data-binding="adoption"` row with the day. Red before (no day field).
+- `R64 standardadoption: with no day typed and an act that states none…` nothing sent, the held row drawn, no owner refusal. Red before (the screen sent without `from`).
+- Control: the existing `R64 standardadoption: the act, the edition…` (act with `period.from`, no day typed) still sends its own start; it stayed green throughout.
+
+**Not mine:** the refusal sentence's missing field name (`refusal.STANDARD_FIELD_INVALID`) is the words' (design), as BOB said.
+
+**Tests and checks:** module suite one full run 324 tests, 324 pass, 0 fail. `explore.test.mjs` R2 "Check this chain" failed once in a run of that file alone (a null read in `fixtures.mjs:13`, an intermittent timing read; the file passes 15 of 15 on the untouched screen and the whole suite passes with my change; I touch nothing it reads). `checks/format` 0, `architecture` 0, `coverage` 66 of 66, `ownership` 0; `checks/run.mjs`: 89 failures all in other modules' stubs (none in screens-investigate).
+
+Size (session_01KcnPP3ksqA2VwJJfipTH1W): test runs 6, module lines 3,618

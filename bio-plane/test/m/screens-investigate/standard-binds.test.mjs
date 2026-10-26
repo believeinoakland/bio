@@ -192,3 +192,43 @@ test("R64 each owner's refusal is drawn by its key beside the act, and nothing i
   const noBody = refusedIn(q, "NO_SUCH_ENTITY");
   assert.ok(noBody && noBody.textContent.includes(word("refusal.NO_SUCH_ENTITY")), "no body, by its key");
 });
+
+/** The walker's case (re-walk 11 E): the adopting act is declared with no period, so only a day the member types can say when the adoption began. */
+async function noPeriodAct(world, me) {
+  const L = await laws(world, me);
+  const act = await declareStandard(me, { cite: "Resolution 2021-14", kind: "ordinance", sha: L.doc.sha, extent: L.du[1].extent });
+  const p = await openAs(world, me, `/app/standard/${L.pol}`);
+  fill(p, { "st-ad-act": act });
+  p.fire(p.doc.getElementById("st-ad-act"), "change");
+  await settled(p);
+  const text = (await me.read("standard", { query: { id: act } })).texts[0].content_id;
+  return { L, act, p, text };
+}
+
+test("R64 R66 standardadoption: an act declared with no period, the day the member types is sent as `from`, the adoption is recorded and drawn as a binding row", async () => {
+  const { world, me } = await inWorld();
+  const { L, act, p, text } = await noPeriodAct(world, me);
+  const day = p.doc.getElementById("st-ad-from");
+  assert.ok(day && main(p).textContent.includes(word("screen.standard.inforce.day.label")), "a day field, by the existing row");
+  fill(p, { "st-ad-edition": "2021", "st-ad-mode": "by_reference", "st-ad-passage": text, "st-ad-from": "2026-03-01" });
+  await press(p, "standardadoption", { reason: REASON });
+  await settled(p);
+  const sent = p.byOp("standardadoption");
+  assert.equal(sent.length, 1);
+  assert.deepEqual({ ...sent[0].body, reason: undefined }, { standard: L.pol, act, edition: "2021", mode: "by_reference", citation: text, from: "2026-03-01", reason: undefined });
+  assert.equal((await me.read("editioninforce", { query: { id: L.pol, body: "City Council", date: "2026-06-01" } })).edition, "2021", "recorded");
+  const row = main(p).querySelectorAll('[data-binding="adoption"]')[0];
+  assert.ok(row && row.textContent.includes(dayOf("2026-03-01")), "drawn as a binding row, from the typed day");
+  assert.equal(refusedIn(p, "STANDARD_FIELD_INVALID"), null, "the owner refuses nothing");
+});
+
+test("R64 standardadoption: with no day typed and an act that states none, the screen says so and sends nothing", async () => {
+  const { world, me } = await inWorld();
+  const { p, text } = await noPeriodAct(world, me);
+  fill(p, { "st-ad-edition": "2021", "st-ad-mode": "by_reference", "st-ad-passage": text });
+  await press(p, "standardadoption", { reason: REASON });
+  await settled(p);
+  assert.equal(p.byOp("standardadoption").length, 0, "nothing sent");
+  assert.ok(main(p).textContent.includes(word("screen.standard.inforce.refused.body2")), "said on the screen, by a held row");
+  assert.equal(refusedIn(p, "STANDARD_FIELD_INVALID"), null, "never the owner's refusal");
+});
