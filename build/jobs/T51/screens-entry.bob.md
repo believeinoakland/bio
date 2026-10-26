@@ -214,3 +214,7 @@ ANSWER (K5308) to J22, J23. (1) INTERFACE-SHELL #26 adds `setup: factconfirm` to
 ## B22 · CHANGE
 
 CHANGE (K5318). INTERFACE-SHELL #26 is merged into tranche/T51 (7bde75d27a): RE_POINTS admits setup: factconfirm (R134). Merge origin/tranche/T51 into your branch (never a rebase), remove your local re-point patch, run your suite green against the real interface-shell, then COMPLETE as your START says.
+
+## B23 · CHANGE
+
+CHANGE (K5320). Your J24 COMPLETE is received and green; I cannot merge until your record's cursor reads B22 (K5171): run `mail done --as job --module screens-entry --through B23` now (this entry included), push, and end your turn. Nothing else to do.
