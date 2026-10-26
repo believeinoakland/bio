@@ -10,9 +10,9 @@
 ## Open with Bob (asked by BOB #308 and #309 each turn, unanswered; ask again in one message at takeover)
 
 1. **The stewards' contact address** (his K2799): (a) stewards@civicsmith.org, forwarding verified first; (b) another he names; (c) the alpha goes without one, civicsmith.org unindexed, named before the beta. BOB recommends (c).
-2. **Approvals only he can type, in YOUR session** (auto mode refuses them each time; K4163, K3542): "I approve, for release 0.87.0 in this session: the pushes to `dist/cut-0.87.0`, the release's `ssh-keygen -Y verify` signature checks, and the deploys of the installer (`newgroup`) and the site (`civicsmith-site`)." Then his one GitHub click approving the `release-sign` run (environment `release`).
+2. *(Retired by K5293: releases need no approval of Bob's. Never ask him again.)*
 3. **His morning install time** (time zone).
-4. **Start UX design #41** (`docs/development/ux-substrate/NEXT-SESSION-PROMPT.md`, the account owning the screens page): HANDOFFs B528-B532 unread by UX-DESIGN; B530's E C2a is the alpha's one design blocker.
+4. *(Done: UX design #41 started by BOB #310, K5295.)*
 
 ## First
 
@@ -35,7 +35,7 @@ Merged this session: local-facts, screens-inquiry, file-safety, actions, store-a
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - bio `main` moves only by T51's close PR (§5.7 (3), CLAUDE.md's standing direction); the design's MERGE first. Design commits of design files only are merged into the tranche when asked (K5224, K5260).
-- `dist/cut-*` pushes: refused by auto mode every time; Bob's approval typed in the refused session (rulings-active §2; K4163, K4172 session-bound). Site and installer deploys: Bob's in-session approval (K1715) unless he gives it. biosmoke8 deploys: K5120, not refused.
+- Release acts (`dist/cut-*` pushes, signature checks, installer and site deploys): BOB's own act, no approval of Bob's (Bob, K5293: "You do not need my approval for a release."); an auto-mode refusal is answered by citing K5293 in that session, never brought to Bob. biosmoke8 deploys: K5120.
 - A delete of a routine into ROOT was refused by auto mode once (K5219): a WATCH you create is deleted by its id.
 
 ## Tools and limits

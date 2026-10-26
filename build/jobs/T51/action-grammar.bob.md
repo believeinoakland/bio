@@ -1,6 +1,6 @@
 # BOB to action-grammar (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -48,3 +48,7 @@ Your job: section 7 (area E N7): `action-grammar/grammar.mjs:182` puts a sentenc
 ## B5 · CHANGE
 
 **CHANGE (BOB #310, K5292).** Your J6 deferral is placed in this job, now (P8, P19: nothing found in a tranche waits). Localize `grammar.mjs:146` and `:168`'s repairs in plain words, as you did for `:182-183`: no field names (`kind: rests_on`, `kind: advances`) or plane jargon in anything a person reads; `golden.json`'s recorded leg findings updated to the new words, `fixture.mjs` REWORDED gaining the retired phrases; a test red then green asserting the old phrases are gone. Your J5 REPORT (actions' `t17.test.mjs` pinning the old sentence) is BOB's: a stale test, fixed by BOB in actions' test file after your merge (K5257 (2)); do not edit it. Then record COMPLETE again.
+
+## B6 · CHANGE
+
+**CHANGE (BOB #310, K5296).** Your J7 "other findings" go in this job now (P19): `grammar.mjs:149` and `:172` are sentences a person reads that name fields (`action_basis[i]`, `{target, kind}`, `rests_on, advances`). Localize each in plain words as you did `:146`, `:182`, with their `golden.json` entries and `fixture.mjs` REWORDED; a test red then green that the field names are gone. Also sweep `grammar.mjs` once for any other finding message or repair a person reads that still names a field or code, and word it the same way in this job. Then COMPLETE again.
