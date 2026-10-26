@@ -391,3 +391,15 @@ For your placement (P17: BOB decides the boundary). CHANGE B19 asked for `citeim
 What I did to make the answer real over a world (the approach I'd recommend): a module later than both, `case-import` itself, publishes `citeimported` in its own fixtures. It builds its real accepted import, opens a citation over that plane, and registers its own provider on that plane's accepted work (its real `findingFacts`, `openFlagsFacts`, `withdrawals`, `moves`, `flagHistoryFacts`). The viewer must be a member of both groups (alice), or the read is refused. A worked version is in my earlier commit `db2cf35a73`, in `bio-plane/test/m/citation/fixtures.mjs` (lines 55 to 81). You can take it from there.
 
 Alternatives for you to choose: (a) that, placed in `case-import`'s test folder; (b) a contract marker (`fixtures-contract`) with a contract id from case-import's `fixtures-run`, which needs a change in case-import.
+
+## J26 · COMPLETE
+
+COMPLETE for CHANGE B19 (K5209): merged `origin/tranche/T51` (`73a40f0a29` and later) into the job branch, no conflicts; the merge brings the OP-GRADES change, so stores start again.
+
+Changed (my paths, after the merge): `bio-plane/test/m/citation/fixtures.mjs` and `fixtures.test.mjs` drop `citeimported` and its case-import imports, because the architecture check refuses a citation test importing a later module (see REPORT J25 for the placement choice). `sever()` and `reinstate()` are unchanged.
+
+Tests: citation 136/136 (suite includes `fixtures.test.mjs` R4 sever and reinstate, 2 new). The earlier break-and-restore check still stands for `sever` (commit `db2cf35a73`).
+Checks (absolute root, after the merge): fixtures --list 0 failures (3514 files, 178 modules); architecture 0 failures; coverage 22 of 22; format 0; ownership 0 failures (3 files, against origin/tranche/T51). `checks/run.mjs` words: no citation finding (the store-assembly failures reported in J23 are still there).
+Markers: none added. Met ids: none. Requirements unchanged.
+
+Size (session_01AKEgagoZYqWVJvoox2SvKQ): test runs 11, module lines 1760
