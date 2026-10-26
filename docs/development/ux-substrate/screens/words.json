@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7804,
+  "screen": 7803,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -236,7 +236,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19359,
+  "total": 19358,
   "protected": 1157
  },
  "words": [
@@ -43582,7 +43582,7 @@
   },
   {
    "key": "queue.signer-self-registered.detail",
-   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and revoke the key.",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members"
@@ -80675,7 +80675,7 @@
   },
   {
    "key": "money.index.the_period_states_no_zone",
-   "en": "The period names no time zone, and your team has not set one. A member sets it under Settings, Your team.",
+   "en": "The period names no time zone, and your team has not set one. It is set under Settings, Your team.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-424: B495 money R29 detail drawn beside MONEY_BAD_PERIOD"
@@ -82117,7 +82117,7 @@
   },
   {
    "key": "screen.timeline.nozone",
-   "en": "Some times here are placed nowhere: your team has not set its time zone. A member sets it under Settings, Your team.",
+   "en": "Some times here are placed nowhere: your team has not set its time zone. It is set under Settings, Your team.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-435: B523: a hint on Timeline when the team has no active place (zone null); drawn once above the events it touches"
@@ -82179,13 +82179,6 @@
    "note": "DEC-438: {from} the day its period began; drawn when the period is open and no day is recorded"
   },
   {
-   "key": "screen.standard.through.recorded",
-   "en": "Known to be in force through {through}, from {source}, recorded by {name}",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-438: a recorded day, as the read gives it"
-  },
-  {
    "key": "screen.standard.binds.unknown",
    "en": "No adoption or law recorded here says whom it binds.",
    "protected": false,
@@ -82229,7 +82222,7 @@
   },
   {
    "key": "screen.standard.f.body.help",
-   "en": "Choose the office or organization. Your team's offices and bodies come from the places it chose, under Places and offices.",
+   "en": "Choose the office or body. Your team's offices and bodies come from the places it chose, under Settings › Places and offices.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-438: its help"
@@ -82320,7 +82313,7 @@
   },
   {
    "key": "screen.matter.f.body.help",
-   "en": "Choose the office or body whose act this is, from your team's offices and bodies. They come from the places your team chose, under Places and offices.",
+   "en": "Choose the office or body whose act this is, from your team's offices and bodies. They come from the places your team chose, under Settings › Places and offices.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-438: C2a (a): the body is chosen, never typed, so it matches the standard's issuer"
@@ -82383,7 +82376,7 @@
   },
   {
    "key": "screen.setup.zone.help",
-   "en": "Dates and deadlines are counted in it. You can skip this and set it later under Settings, Your team; until it is set, sharing for review, Money and dated searches wait for it.",
+   "en": "Dates and deadlines are counted in it. You can skip this and set it later under Settings, Your team.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: D-B1: its help"
@@ -82446,7 +82439,7 @@
   },
   {
    "key": "screen.case-editor.ack.none",
-   "en": "This case states that it leaves nothing material out. Acknowledge that you checked this and agree.",
+   "en": "This case states that it leaves nothing material out. Confirm that you checked this.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: D-M5: the acknowledgement when nothing is left out"
@@ -82467,14 +82460,14 @@
   },
   {
    "key": "screen.published.strength.unrated",
-   "en": "Not graded: no member has graded this yet.",
+   "en": "Not graded yet: no member has graded this.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: D-M6 (b): an unrated axis"
   },
   {
    "key": "screen.published.strength.undetermined",
-   "en": "Not known: what it rests on could not be read when the case was published.",
+   "en": "Undetermined: what it rests on could not be read when the case was published.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: D-M6 (b): an undetermined axis"
@@ -82530,14 +82523,14 @@
   },
   {
    "key": "screen.document.flag.recorded",
-   "en": "Flag recorded. The two passages are set side by side as a lead for the team to read.",
+   "en": "Flag raised. The two passages are set side by side as a lead for the team to read.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: C-M12: after \"Say these two contradict\""
   },
   {
    "key": "screen.document.flag.already",
-   "en": "These two passages are already set side by side as a contradiction. Nothing changed.",
+   "en": "These two passages are already set side by side as a contradiction. Nothing was written.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: C-M12: the answer's already"
@@ -82579,7 +82572,7 @@
   },
   {
    "key": "screen.due-date.nodeadlines",
-   "en": "Your places' rules list no deadline for this kind of action. A member can draft one as your team's own rule, under Your team's own rules.",
+   "en": "A member can draft a deadline as your team's own rule, under Your team's own rules.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: E H2: drawn when the refusal carries no deadlines"
@@ -82593,14 +82586,14 @@
   },
   {
    "key": "screen.request.office.nobody",
-   "en": "Your team has no body listed yet, so no office can be named here. Bodies come from the places your team chose, under Places and offices.",
+   "en": "Your team has no body listed yet, so no office can be named here. Bodies come from the places your team chose, under Settings › Places and offices.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: N3, R57: a team with no body entity"
   },
   {
    "key": "screen.request.office.undated",
-   "en": "An office named without a Since and an Until is recorded, but it is offered as an addressee only once both are stated.",
+   "en": "An office named without both a Since and an Until date is recorded, but it is offered as an addressee only once both are stated.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: R57: an undated office"
@@ -116070,7 +116063,7 @@
   },
   {
    "key": "action-plans.time_zone_held_place",
-   "en": "no time zone is held for your team, so the plan's dates cannot be checked against the day. A member sets it under Settings, Your team",
+   "en": "no time zone is held for your team, so the plan's dates cannot be checked against the day. It is set under Settings, Your team",
    "protected": false,
    "source": "DEC-260",
    "note": "DEC-259: reworded"
@@ -128128,7 +128121,7 @@
   },
   {
    "key": "act.standardinforcethrough.does",
-   "en": "Records, from a passage of a document your team holds, checked that day, that this standard was still in force through a day. Until one is recorded, Civicsmith cannot tell whether a standard with no stated end was in force after it began, and an act is not found out of conformance with it.",
+   "en": "Records, from a passage of a document your team holds, checked that day, that this standard was still in force through a day.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

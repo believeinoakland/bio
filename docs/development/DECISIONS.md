@@ -6800,3 +6800,16 @@ the design: every registered reader id gets a label, `screen.contradiction.docty
 verified: on tranche/T51 at its tip with these words files, rows.mjs regenerated: words 0, format 0; screens-inquiry's contradiction tests no failure.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-440's block).
 owed: BOB: merge this commit (MERGE); SCREENS-INQUIRY reads the labels by id and draws the list; the C-M12 ask in U481 is answered by B535 (the read exists).
+
+### DEC-441 · decided
+raised: 2026-10-26 · the UX design session with Bob (session_01FfxzNZtq7F8arhiJhGFggR, UX design #41) (the standing consistency read after DEC-438 to DEC-440)
+for: design (T51; the rows are not yet merged, so they are corrected before the jobs read them)
+question: A reading worker checked DEC-438 to DEC-440's rows against the words already held, for one fact worded twice, competing explanations and false pointers.
+why it is Bob's: it is not (P17).
+provisional: as below. alternative: park the findings for T52; not taken: the rows are unmerged, so correcting them costs nothing downstream.
+recommendation: as below. reversal cost: low. response: none needed (the design's detail).
+decided: 2026-10-26 · the design session (P17)
+the design: who sets the time zone is not claimed (the held rows say an administrator, K5282 says any member who may correct a fact): "It is set under Settings, Your team" in the three reworded rows; the setup help drops its list of what waits; "Settings › Places and offices", as the held rows write it; "withdraw" a signing key, as Members says, not "revoke"; "office or body" throughout Standard's body field; `screen.standard.through.recorded` dropped for the held `standard.inforce.known` ({author}); the in-force-through act's sentence keeps only what it records, the consequence said once (`screen.standard.through.unknown`); "Flag raised", and "Nothing was written." on the already-flagged pair; the no-deadlines line carries only the door, the refusal the cause; "Confirm that you checked this."; "Not graded yet" and "Undetermined", the held terms; the Request's undated office names its "Since" and "Until" dates. Kept: `screen.review_copy.*` (the held family's spelling).
+verified: on tranche/T51 at its tip with these words files, rows.mjs regenerated: words 0, format 0; action-plans, queue-producers, money no failure.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-acts.js`, `screens/mock-screens.js`.
+owed: BOB: merge this commit (MERGE) in place of U483's head; it carries DEC-438 to DEC-440.

@@ -366,7 +366,7 @@ const ACT_HELP = {
   reevaluationrecord: 'Records that you looked again at a change under this question, and what you decided. That change stops being listed until something moves again.',
   reevaluations: 'Lists what this question rests on that has changed since it was written.',
   standardinforce: 'Asks whether this standard was in force on a day you choose, and why.',
-  standardinforcethrough: 'Records, from a passage of a document your team holds, checked that day, that this standard was still in force through a day. Until one is recorded, Civicsmith cannot tell whether a standard with no stated end was in force after it began, and an act is not found out of conformance with it.',
+  standardinforcethrough: 'Records, from a passage of a document your team holds, checked that day, that this standard was still in force through a day.',
   standardinforcethroughwithdraw: 'Withdraws a day this standard was recorded as known in force through. The record is kept, marked withdrawn, with your reason.',
   standardadoption: 'Records that a body adopted an edition of this standard: the act that adopted it, how, and the passage of that act that says so.',
   standardimpose: 'Records that a law your team holds makes this standard binding on a body, citing the passage of the law that says so.',
