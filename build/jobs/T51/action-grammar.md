@@ -232,3 +232,7 @@ Checks (/home/user/bio): `checks/run.mjs`: format 0, architecture 0, no line nam
 Fixtures markers: none added (the provider functions are called for real).
 
 Size (session_01QDPfykDfUPkFmsWunhUzxd): test runs 4, module lines 2578
+
+## J12 · COMPLETE
+
+COMPLETE (fix round 10, K5310). Cause: my label to leadLegFindings/themeLegFindings was already the plain 'basis leg {i}'; R69 now words the finding around it, so R30's corpus test, R6 and R7 were red only on old provider wording. Changed: grammar.mjs:~156 label is now localize('action-grammar.grammar.basis_leg_label','basis leg {i}'); fixture.mjs providerLegFindings reads inquiry-grammar's and connections' own output for the same input; grammar.test.mjs R6, R7, R30 compare with it (no copied sentence). Red 3 of 84 (R6, R7, R30), green 84 of 84. Checks: run.mjs no line naming action-grammar; words 0; coverage 30/30; ownership 0; setup-words --check stale-rows note for the new id (yours to regenerate). Size (session_01QDPfykDfUPkFmsWunhUzxd): test runs 4, module lines 2578
