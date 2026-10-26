@@ -874,3 +874,24 @@ COMPLETE (SCREENS-INQUIRY #34), B89 (CHANGE K5271, plan item 136). Commit 6a5111
 3. C-M12's "Flags raised on this document" line is not done (needs a key and the candidate list).
 
 Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 9, module lines 7060
+
+## J63 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), B90 (CHANGE re J61, J62; K5276). Commit 7318e9c350 on `job/T51/screens-inquiry`.
+
+**Done**
+- **C-M12 and walk E S3 now have red tests** (`bio-plane/test/m/screens-inquiry/t51-fix12-b90.test.mjs`, 2 tests). Each fails on the pre-fix `document.mjs` (checked by restoring the file from before the B89 commit, then putting the current version back) and passes with the fix:
+  - C-M12: choosing the other document opens the contradiction fold; a passage picked before a redraw keeps its pick; control: no document chosen, fold shut.
+  - S3: a cited passage's "Cited" mark follows a line break; control: a passage not cited draws no mark.
+- **Tranche merged:** `origin/tranche/T51` merged into the job branch (a merge commit, no rebase). This brings in CITATION #23 and CONTRADICTION #18.
+- **C-M6 control:** no held key names "Put on the other side" (searched `rows.mjs`), so nothing is drawn for it. REPORT for the key follows.
+
+**Checks**
+- Module suite: 601 tests, 601 pass, 0 fail.
+- Format, architecture, coverage (136 of 136), ownership: 0 failures.
+
+**Still open from earlier rounds (already REPORTed in J62)**
+- Held keys needed from the design stream: the checked-by sentence (C-M2), the "No passage in a Yes-because-of part" refusal (C-M5), the member-lead sentence (C-M13), the "Put on the other side" control (C-M6), and the "Flags raised on this document" line (C-M12).
+- The C-M13 title refusal at `contradiction/index.mjs:2385` is in `contradiction`, not this module.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 13, module lines 7062
