@@ -106,7 +106,9 @@ test("R102 G93 L: a member's ordinary read (op=whoami) re-arms a lost alarm as w
   const r = await w.door(w.member, "whoami");
   assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 200));
   await firingEnded(w);   /* a read that starts a firing is read once it ends (scheduler R29) */
-  assert.ok(typeof (await w.get("counters")).alarm === "number", "the member's read armed the alarm");
+  /* B116: an alarm stands exactly when the store holds a live row, read at the same instant (the store's own read, never recomputed) */
+  const rows = await w.get("rows"), alarm = (await w.get("counters")).alarm, live = rows.pending.length;
+  assert.equal(alarm !== null, live > 0, `alarm ${alarm} with ${live} live row(s): ${JSON.stringify(rows.pending.map((p) => p.state)).slice(0, 200)}`);
 });
 
 test("R102 G93 L: a second read within five seconds makes no second look (the frame's calls on the platform's alarm do not move); a read after the five seconds looks again", { timeout: 180_000 }, async () => {
