@@ -12,7 +12,7 @@
 1. **The stewards' contact address** (his K2799): (a) stewards@civicsmith.org, forwarding verified first; (b) another he names; (c) the alpha goes without one, civicsmith.org unindexed, named before the beta. BOB recommends (c).
 2. *(Retired by K5293: releases need no approval of Bob's. Never ask him again.)*
 3. **His morning install time** (time zone).
-4. **Start UX design #41** (`docs/development/ux-substrate/NEXT-SESSION-PROMPT.md`, the account owning the screens page): HANDOFFs B528-B532 unread by UX-DESIGN; B530's E C2a is the alpha's one design blocker.
+4. *(Done: UX design #41 started by BOB #310, K5295.)*
 
 ## First
 
