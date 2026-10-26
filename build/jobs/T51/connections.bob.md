@@ -1,6 +1,6 @@
 # BOB to connections (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -119,3 +119,7 @@ Your job: connections R44 as amended (K5203; read it whole, its new clause marke
 ## B11 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `1907da1eb3`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B12 · CHANGE
+
+CHANGE (K5210), in this same job with B11 (merge the tranche): your J8 REPORT 2, confirmed: screens-inquiry hand-builds `connectionchoose` answers (`document.test.mjs:168`, `fr28-document.test.mjs:105`, `:115`, `:120`). Publish in your `fixtures.mjs` the real `connectionchoose` answers those lines need (read them for the states: the chosen connection, and each refusal they expect), made by your real code each call, with a test that each is your real answer. Then COMPLETE with both.
