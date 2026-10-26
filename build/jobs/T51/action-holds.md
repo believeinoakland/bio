@@ -209,3 +209,16 @@ Size (session_018Ug4LFHJzA9MxdVSoTNU9i): test runs 12, module lines 1331
 ## J10 · COMPLETE
 
 COMPLETE (B8). R22 built on my QUESTION J9 wording (no ANSWER read): release/preview take from, holdsOf takes {pressure}, new holdsPlaced/op=holdsplaced, fixtures published. Module tests 60/0; checks clean for action-holds. RED OWED BY OTHERS: op-declarations t45.test.mjs:222 'holdsplaced has no spec' (needs sessionread spec, op-grades/affordances/op-capabilities rows; actionholdpreview spec should accept from). Details and Size line in my record.
+
+## After ANSWER B9 (K5232)
+
+Merged `origin/tranche/T51` (BOB's R5, R6, R19, R22 wording; my duplicate R22 line removed, the file now equals the tranche's). As B9 says: `DECLARED_OPS` gains `actionholdpreview` (read; accepts `target, ord, project, case, from`; requires one of `target, project, case`) and `holdsplaced` (read, session only, `machineClasses: []`; accepts `after, limit`; requires nothing); `actionholdrelease` already accepts `from`. Tests: `declared-ops.test.mjs` x2 (R20 R22). Module tests 62 pass, 0 fail; format, architecture, coverage (22 of 22), words, fixtures 0 failures; screens-action 295/0.
+
+**What each later module must declare at my merge (named exactly).**
+- `op-declarations`: a spec for `holdsplaced` of kind `sessionread` beside `holdsdue` (`t51.mjs:43`: classes admin, member, probe; `machineClasses: []`; `viewer` stamped; `NEEDS` null; both session sets); `actionholdpreview` spec accepts `from` (and the release's). Red now: `t45.test.mjs:222` "holdsplaced has no spec".
+- `op-grades`: a read row and text for `holdsplaced` (as `t51.mjs:13` for `holdsdue`; "read: every place a hold was stated that the member may see, with its latest hold and what prompted it; writes nothing (action-holds R22)").
+- `affordances`: an `ACT_HELP` text or an `ACT_HELP_ABSENT` read-ground entry for `holdsplaced`. Red now in op-declarations' tests: "member ops with no text and no ground: holdsplaced", "holdsplaced: neither explained nor named".
+- `op-capabilities`: a `null` row for `holdsplaced` as for `actionholdpreview`.
+- `screens-action` (hold.mjs): send the placing body (`from` included) to `actionholdpreview` and `actionholdrelease`; read `holdsplaced` (items `place`, `hold`, `from`) to list held and released places; use the published fixture `holdPlacedReleasedAnswers` (`fixtures.mjs`).
+
+Size (session_018Ug4LFHJzA9MxdVSoTNU9i): test runs 16, module lines 1337
