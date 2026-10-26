@@ -14,5 +14,7 @@ export const WORDS = Object.freeze([
 export const EXTRA = Object.freeze({
   // R39: which name the records concern, asked before the offices (`screen.request.subject.*`, DEC-387); R46: the organization's page
   // C64: the act's label; a name left empty is asked for by `findin.fieldneeded`; her reason (`entities` R1's note) is the kit's reason field
-  request: ["screen.person.name", "screen.person.purpose", "act.entitycreate.label.request", "findin.fieldneeded", "shell.reason", "shell.reason.help"],
+  request: ["screen.person.name", "screen.person.purpose", "act.entitycreate.label.request", "findin.fieldneeded", "shell.reason", "shell.reason.help",
+    // R57: the body that holds the office (the Matter screen's own field), and from when to when (the person screen's two days and their note)
+    "screen.matter.f.body", "screen.person.keeper.from.label", "screen.person.keeper.to.label", "screen.person.keeper.dates.note.a", "screen.person.keeper.dates.note.b"],
 });
