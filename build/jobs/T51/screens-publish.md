@@ -1624,3 +1624,12 @@ Read whole: `causes-D.md`, the requirements, `ceremony.mjs`, `case-editor.mjs`, 
 **Checks (root /home/user/bio).** format 0 failures; architecture screens-publish 0; coverage 80 of 80, 0; ownership 0 (7 files, all mine); words 0 failures (testcopy 0); fixtures `--list` 0 (answer 0, stub 0, code 0, contract 0, accepted 6, none added by me); `run.mjs`: no finding naming screens-publish. Markers added: none.
 
 Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 10, module lines 3803 src
+
+## J53 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #27, session_01XJUFJNZiz3mKqghrzkmAZs), B58 applied; tranche/T51 merged. Detail: section 'Fix round 10 (B58 ...)' in build/jobs/T51/screens-publish.md.
+Applied: (1) D-M5(1) ceremony.mjs: a refused 'Confirm your ties' (both answer shapes) is said with the stop list and the pre-flight and other later reads are read again. (2) D-M5(2) case-editor.mjs: statementack offered whenever the draft has a statement. (3) D-M1(2) published-parts.mjs titled(): the unrated sentence is drawn as signed with each leg's document title beside its id. (4) D-M6 published.mjs: a case with bar.declared false draws bar.detail, not bar_detail.
+Red then green: walk-d.test.mjs, 4 tests. Changed one old assertion: fr30b.test.mjs R44 (it held the old gate).
+Suite: screens-publish 300 tests, 298 pass, 0 fail, 2 todo. Users (control-plane, plane; 121 files): 741 pass, 0 fail. Checks: format 0, architecture 0, coverage 80/80, ownership 0, words 0, fixtures --list 0, run.mjs no finding in my files. Markers added: none.
+REPORT (D-M6, sentences with no key, owners): bar_detail public-read/index.mjs:1293-1296 (also chosen by state.bar, not bar.declared); verification.detail publication/worker.mjs:961; strength[].detail strength/arithmetic.mjs:139,172-177 (ids frozen into the signed prose). Design stream: no sentence for the 'nothing left out' acknowledgement state.
+Size (session_01XJUFJNZiz3mKqghrzkmAZs): test runs 10, module lines 3803
