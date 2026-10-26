@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { ok, refusedIn, boot } from "../interface-shell/harness.mjs";
+import { connectionChooseMention } from "../connections/fixtures.mjs";
 import { documentScreen } from "../../../src/screens-inquiry/document.mjs";
 import { checkOutcome } from "../../../src/screens-intake/index.mjs";
 import { COMMON } from "../../../src/screens-inquiry/common.mjs";
@@ -98,11 +99,13 @@ const OTHER_SHA = "8".repeat(64);
 const MENTIONS = [{ ref: "c1", occurrence: "o1", grade: "A", position: { kind: "pdf-page", page: 0 } }, { ref: "c2", occurrence: "o2", grade: "B", position: { kind: "pdf-page", page: 2 } }];
 const NAMES = ok({ ok: true, names: [{ entity_id: "ENT-17", label: "L. Chen, Director of Public Works", kind: "person", grade: "A", established: true, needs_confirmation: false, matched_by: "identifier", mentions: 2 }],
   resolutions: [{ ref: "c1", entity_id: "ENT-17", grade: "A" }, { ref: "c2", entity_id: "ENT-17", grade: "B" }] });
+/* connections' real answer to a member's choice of one mention (R85) */
+const CHOSEN = connectionChooseMention();
 const CONNS = (mentions = MENTIONS) => ok({ ok: true, connections: [{ a_capture_sha: SHA, b_capture_sha: OTHER_SHA, entity_id: "ENT-17", entity_name: "L. Chen",
   on_point: { a: { ref: "c1", occurrence: { page: 1 }, chosen_by: "record" }, b: null }, occurrences: 2, mentions, mentions_truncated: false }] });
 
 test("R85 the mentions the connection lists are offered and the one chosen is sent with its ref and occurrence; the guard accepts it", async () => {
-  const p = await openWith(at, { plane: { resolutions: NAMES, connections: CONNS(), connectionchoose: ok({ ok: true }) } });
+  const p = await openWith(at, { plane: { resolutions: NAMES, connections: CONNS(), connectionchoose: ok(CHOSEN) } });
   const opts = p.doc.getElementById("document-mention-ENT-17").querySelectorAll("option");
   assert.equal(opts.length, 3, "none chosen, then the two mentions");
   assert.ok(text(opts[2]).includes("c2"), "each mention is named by its reference");
@@ -112,12 +115,12 @@ test("R85 the mentions the connection lists are offered and the one chosen is se
 });
 
 test("R85 control: the mention already chosen is not the default, and nothing chosen sends nothing; a mention with no occurrence sends no occurrence", async () => {
-  const p = await openWith(at, { plane: { resolutions: NAMES, connections: CONNS(), connectionchoose: ok({ ok: true }) } });
+  const p = await openWith(at, { plane: { resolutions: NAMES, connections: CONNS(), connectionchoose: ok(CHOSEN) } });
   assert.equal(p.doc.getElementById("document-mention-ENT-17").value, "", "the record's own choice (c1) is not preselected");
   const slot = await press(p, "connectionchoose");
   assert.equal(p.byOp("connectionchoose").length, 0, "nothing is sent");
   assert.ok(says(slot, "capture.fieldneeded", { field: word("act.connectionchoose.label.document") }));
-  const q = await openWith(at, { plane: { resolutions: NAMES, connections: CONNS([{ ref: "c1", occurrence: null, grade: "A", position: null }]), connectionchoose: ok({ ok: true }) } });
+  const q = await openWith(at, { plane: { resolutions: NAMES, connections: CONNS([{ ref: "c1", occurrence: null, grade: "A", position: null }]), connectionchoose: ok(CHOSEN) } });
   fill(q, { "document-mention-ENT-17": "0" });
   await press(q, "connectionchoose");
   assert.deepEqual(q.byOp("connectionchoose")[0].body, { capture: SHA, other: OTHER_SHA, entity: "ENT-17", ref: "c1" });

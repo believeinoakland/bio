@@ -10,6 +10,7 @@ import { COMMON } from "../../../src/screens-inquiry/common.mjs";
 import { dashProjectScreen } from "../../../src/screens-inquiry/dashproject.mjs";
 import { boot, ok, refused, refusedIn } from "../interface-shell/harness.mjs";
 import { storeWorld } from "./fixtures.mjs";
+import { reviewcopy } from "../review/fixtures.mjs";
 import { instant, hex } from "../store-request/door.mjs";
 
 
@@ -95,10 +96,12 @@ const open = async (t, o = {}, { as = t.mai, project = t.project, ...boots } = {
    (`casedrafts`, `reviewcopy`) and the timeline's events and the team's actions */
 const noticeOf = (t) => ({ id: "FINDING::newer-capture-affects-reference::N1", class: "FINDING", kind: "newer-capture-affects-reference",
   case: { ancestors: [{ id: t.qs[0], depth: 0 }, { id: t.project, depth: 1 }] }, subject: { kind: "notice", id: "N1", holder: t.qs[0], target: t.doc.bundle } });
+/* review's real review copy (its findings are what the page prepares from) */
+const COPY = reviewcopy();
 const draftsOf = (t) => ({
   casedrafts: ok({ ok: true, drafts: [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3 } }] }),
-  reviewcopy: ok({ ok: true, project: t.project, case: { case_id: "CASE-1", edition: 3, newCase: false }, findings: [{ target: t.qs[0] }, { target: t.qs[1] }] }),
-  publishpreflight: ok({ ok: true, ready: true, first: null, blockers: [], steps: [{ pinned: [{ target: t.qs[0] }, { target: t.qs[1] }] }] }),
+  reviewcopy: ok(COPY),
+  publishpreflight: ok({ ok: true, ready: true, first: null, blockers: [], steps: [{ pinned: COPY.findings.map((f) => ({ target: f.target })) }] }),
 });
 const TIMELINE = { timeline: ok({ ok: true,
   world: { items: [
@@ -154,7 +157,7 @@ test("R79 Next for you here: the vouch, the newer version and the ceremony, in t
   assert.equal(steps.length, 3);
   assert.ok(said(steps[0], "screen.dash-project.next.vouch", { count: "2", place: GATE }));
   assert.ok(said(steps[1], "screen.dash-project.next.newer", { document: "The 2024 lease amendment" }));
-  assert.ok(said(steps[2], "screen.dash-project.next.prepare", { edition: "3", count: "2" }));
+  assert.ok(said(steps[2], "screen.dash-project.next.prepare", { edition: "3", count: String(COPY.findings.length) }));
   assert.equal(steps[0].getAttribute("aria-current"), "step");
   assert.equal(steps[1].getAttribute("aria-current"), null);
   assert.deepEqual(acts(steps[0]), ["release"]);
@@ -163,7 +166,7 @@ test("R79 Next for you here: the vouch, the newer version and the ceremony, in t
   assert.ok(String(steps[2].querySelector(".cs-card").getAttribute("data-tip")).includes(word("shell.card.ceremony").replace(/<[^>]*>/g, "").slice(0, 20)), "its card is shell.card.ceremony");
   assert.equal(p.byOp("heldcaptures").filter((r) => r.query.member === "mai").length, 1, "her own held captures only");
   assert.equal(p.byOp("publishpreflight")[0].body.draft, "DRAFT-1");
-  assert.deepEqual(p.byOp("publishpreflight")[0].body.targets, [t.qs[0], t.qs[1]]);
+  assert.deepEqual(p.byOp("publishpreflight")[0].body.targets, COPY.findings.map((f) => f.target));
   /* the section stands under the head, above the glance */
   const h = heads(p);
   assert.ok(h.indexOf(word("screen.dash-project.next.heading")) < h.indexOf(word("screen.dash-project.glance.heading")));
