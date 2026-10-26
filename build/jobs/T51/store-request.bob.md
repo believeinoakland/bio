@@ -1,6 +1,6 @@
 # BOB to store-request (T51)
 
-**Read** · handled J18
+**Read** · handled J20
 
 ## B1 · START
 
@@ -187,3 +187,7 @@ Your job (read `build/plan/fix-round-10-T51.md` items 99 (2), 100 (2), 101 (4)(e
 ## B19 · RESUME
 
 RESUME (K5241). Your record's `RUNNING until 02:55Z` has passed and your session reads idle between runs. Set `RUNNING until` (at most 30 minutes) for what is still running, push, and post COMPLETE when the users' suites end; the screens' re-points (SCREENS-SETTINGS, SCREENS-INQUIRY, SCREENS-INTAKE, SCREENS-DAILY, SCREENS-INVESTIGATE) start at your merge.
+
+## B20 · CHANGE
+
+CHANGE (K5244). Your branch fails ownership: commit `8f2891741e` ("store-request record: size line") also carries `agent-steps/src/drive.mjs` and `agent-worker/src/index.mjs`, outside your paths (a `close` step's tick skipped). They are not yours and not wanted (K3717: no work on the assistant). Restore both to the tranche's content in a new commit (`git checkout origin/tranche/T51 -- agent-steps/src/drive.mjs agent-worker/src/index.mjs`, commit, push; never a rebase or force-push), check `git status` shows no other file outside your paths, and say in your record which command of yours wrote them, if you know (PLANE #64 saw the same files, and `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs`, changed in its container too). Then post COMPLETE again: I merge at once.

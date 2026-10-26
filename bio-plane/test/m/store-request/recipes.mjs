@@ -21,17 +21,17 @@ export async function page(world, as, name, { paragraphs = ["The council met on 
 }
 
 /** A PDF held and read: `pages` pages of `lines` text lines (pdfgen's seeded generator), so a leg can address a page (`pdf-page`). Answers `{sha, bundle, read, pages}`. */
-export async function pdf(world, as, name, { pages = 3, lines = 4, seed = slug(name), project: filed = "" } = {}) {
-  const bytes = await generate({ kind: "pdf", seed, size: { pages, lines }, kinds: ["text"] }).bytes();
+export async function pdf(world, as, name, { pages = 3, lines = 4, seed = slug(name), project: filed = "", fonts = null } = {}) {
+  const bytes = await generate({ kind: "pdf", seed, size: { pages, lines }, kinds: ["text"], ...(fonts ? { fonts } : {}) }).bytes();
   return { ...(await hold(world, as, name, bytes, filed, { type: "application/pdf", read: true })), pages };
 }
 
-const LEG_KEYS = ["grade", "grade_axis", "grade_source", "ground", "note", "extent_kind", "extent_page", "extent_para", "extent_part", "extent_ref"];
+const LEG_KEYS = ["grade", "grade_axis", "grade_source", "ground", "note", "extent_kind", "extent_page", "extent_para", "extent_part", "extent_ref", "extent_rect"];
 
 /** A question promoted into `projectId`, as the question wizard promotes it (`promote` of an inquiry with no base): the whole inquiry document the record's grammar asks (its core
  *  fields, the six headings in order, a recheck trigger), its id the minted one and a slug of the title. `legs` are `{target, role?, ...}` with the extent and grade keys the leg
  *  grammar reads; `draw: true` draws it into the project too (`drawquestion`). Answers the promotion's answer with `id`. */
-export async function question(world, as, projectId, { title = "A question", text = "Is it so?", legs = [], id = null, draw = false } = {}) {
+export async function question(world, as, projectId, { title = "A question", text = "Is it so?", legs = [], id = null, draw = false, subject = null } = {}) {
   const now = instant(world);
   const qid = id ?? (await as.read("allocid", { query: { prefix: "INQ", year: now.slice(0, 4) } })).id + (slug(title) !== "x" ? "-" + slug(title).slice(0, 40).replace(/-+$/, "") : "");
   const targets = [...new Set(legs.map((l) => l.target))];
@@ -39,10 +39,11 @@ export async function question(world, as, projectId, { title = "A question", tex
   const front = ["---", `id: ${qid}`, "object_type: inquiry", "schema: inquiry@1", `title: ${JSON.stringify(title)}`, "current_state: open", "prior_state: null", `created: "${now}"`,
     `last_updated: "${now}"`, "surfaced_by: human",
     ...(projectId ? [`project: ${projectId}`] : []),
+    ...(subject ? [`subject_entity: ${subject}`] : []),
     "produced_by:", "  mode: assisted", "  capability_tier: session", "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     ...(targets.length ? ["references:", ...targets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"])] : ["references: []"]),
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role ?? "supports"}`,
-      ...LEG_KEYS.filter((k) => l[k] !== undefined).map((k) => `    ${k}: ${l[k]}`)])] : []),
+      ...LEG_KEYS.filter((k) => l[k] !== undefined).map((k) => `    ${k}: ${Array.isArray(l[k]) ? "[" + l[k].join(", ") + "]" : l[k]}`)])] : []),
     "recheck_triggers:", "  - text: the sources change", "    description: a source this question rests on changes or is withdrawn",
     "---", ""];
   heads.forEach((h, i) => { front.push(h, ""); if (i === 0) front.push(text, ""); });
@@ -62,7 +63,7 @@ export async function questions(world, as, projectId, n, { legsOf = null } = {})
 
 /** The team's Claude account, by an administrator's real acts: her password again (`reauth`), the team's key set and switched on
  *  (`groupkeyset`, `groupkeyswitch`) and its notice read by her (`groupkeynoticeseen`). The key is a stand-in no call ever sends. */
-async function aiAccount(world, as) {
+export async function aiAccount(world, as) {
   if (world.__aiAccount) return;
   await as.act("reauth", { body: { password: as.password } });
   await as.act("groupkeyset", { body: { key: "sk-ant-api03-" + "w".repeat(40) } });
@@ -72,7 +73,7 @@ async function aiAccount(world, as) {
 }
 
 /** A run opened by `as` over a project (`airunopen`), under the account `aiAccount` set. Answers the run's id. */
-async function openRun(world, as, projectId) {
+export async function openRun(world, as, projectId) {
   const run = `RUN-${instant(world).slice(0, 4)}-${String(counter(world, "__runs")).padStart(4, "0")}-world`;
   const opened = await as.act("airunopen", { body: { run, contextType: "project", contextId: projectId, skillVersion: "contradiction@1",
     principalClaude: `member:${as.member}`, mode: "check" } });

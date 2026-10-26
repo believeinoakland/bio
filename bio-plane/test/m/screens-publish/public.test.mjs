@@ -3,7 +3,8 @@
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, openWorld, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, PUBLISHED_CASE, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
+import { groupName, open, openWorld, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, PUBLISHED_CASE, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
+const GROUP = await groupName();
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -17,7 +18,7 @@ test("R6 the published case at /app/published/<case>, in the public frame with n
   const t = text(p);
   assert.ok(drew(p, "screen.published.dated", { edition: "2", signed: day("2026-11-18"), published: day("2026-11-19") }));
   assert.ok(drew(p, "screen.published.edition", { n: "1" }), "the other edition");
-  assert.ok(drew(p, "screen.published.whose", { group: "River Town" }));
+  assert.ok(drew(p, "screen.published.whose", { group: GROUP }));
   assert.ok(drew(p, "screen.published.howtoread"));
   assert.ok(t.includes("The 2024 adjustments were made without the council vote the lease requires."));
   assert.ok(t.includes(word("mark.scale.capture.name") + "B") && t.includes(word("mark.scale.connection.name") + "C"), "two strengths");
@@ -209,7 +210,7 @@ test("R9 the doorbell at /app/doorbell with no session: headed by the group's pu
   assert.equal(p.byOp("whoami").length, 0);
   assert.ok(p.byOp("groupidentity").length > 0);
   const t = text(p);
-  assert.ok(drew(p, "screen.doorbell.heading", { group: "River Town" }));
+  assert.ok(drew(p, "screen.doorbell.heading", { group: GROUP }));
   for (const k of ["only", "reads", "phrase", "court"]) assert.ok(drew(p, `screen.doorbell.happens.${k}`), k);
   assert.ok(p.doc.getElementById("db-file") && p.doc.getElementById("db-note") && p.doc.getElementById("db-secret"));
 });

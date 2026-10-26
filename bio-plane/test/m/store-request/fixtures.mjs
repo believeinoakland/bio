@@ -3,8 +3,13 @@
    the real store, the real claim and sign-in, the page's door, recipes of real acts and a pinned clock. */
 import { storeWorld as assemblyWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_INSTANCE_NAME } from "../store-assembly/world.mjs";
 import { doorOf, bootOf, routeOf, signIn, admittedAs, hold, project, trail, profiles, queue, WORLD_UNREACHED, WORLD_ORIGIN } from "./door.mjs";
+import { WORLD_RELEASE_KEYS, WORLD_RUNNING_VERSION, worldDelivery, olderInstallation as olderOf, owed, lapsed, delivered, releaseNotice } from "./recipes-r10.mjs";
+import { readings, machineReading, graded, sharedOrigin } from "./recipes-states.mjs";
+import { holdAt, newerCapture, connection, partialPdf, unmatchedPerson, attested, paperFile, unretirable } from "./recipes-docs.mjs";
+import { unnamedFounder, timeline, titlelessProject, deepChain, connectedSignIn, investigating, mentionedTogether } from "./recipes-team.mjs";
 import { page, pdf, question, questions, contradiction, conflict, setAside, finding, signer, published, imported, cited, rerun, assistant, writingHelp, grantAdmit, parted, largeSheet, credential, projects, draftOnly, register } from "./recipes.mjs";
 
+export { WORLD_RELEASE_KEY } from "./recipes-r10.mjs";
 export { WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_UNREACHED, WORLD_ORIGIN, doorOf, bootOf, routeOf, signIn, admittedAs };
 
 /** The binding tokens a world's `env` holds (the classes an operator binds; `admission`'s `BINDINGS`), each live. */
@@ -24,11 +29,19 @@ export const WORLD_AI_SECRET = "world-account-seal-secret-3b9d71c4e0a5f628";
  *  `admitted(token, op?)` (admission's caller for a token) and `recipes.hold|project|trail|profiles` (R19), each of real acts;
  *  `store`, `ctx`, `sql`, `tick(ms)` are the world's own. The world binds `CAPTURES` (store-assembly's) and no `PUBLISHED`: `selftest` reads that as the owner does, one bucket bound without the other, and a test that unbinds
  *  `CAPTURES` leaves neither bound (SCREENS-SETTINGS #20 J37 (1); STORE-REQUEST #6 B15 (4)); `recipes.published` binds the published store when it publishes. */
-export async function storeWorld({ env = {}, ai = false, ...opts } = {}) {
+export async function storeWorld({ env = {}, ai = false, deliver = null, releaseKeys = null, ...opts } = {}) {
   const name = WORLD_GROUP;
-  const world = await assemblyWorld({ ...opts, env: { ...WORLD_TOKENS, ...(ai ? { ACCOUNT_SEAL_SECRET: WORLD_AI_SECRET, INSTANCE_NAME: name, CIVICSMITH_TEST_INSTANCE: name } : {}), ...env } });
+  const holder = {};
+  /* the world hands the owed-work ledger its own delivery (`worldDelivery`), as control-plane hands its `deliverOwedRender` (a later module) */
+  // fixtures-own: harness the world's delivery, made of earlier modules' real acts (the alarm's filing of an owed fetch)
+  const world = await assemblyWorld({ ...opts, ...(deliver === true ? { deliver: (a) => worldDelivery(holder.world)(a) } : deliver ? { deliver } : {}),
+    ...(releaseKeys === true ? { releaseKeys: WORLD_RELEASE_KEYS } : releaseKeys ? { releaseKeys } : {}),
+    env: { ...(releaseKeys === true ? { VERSION: WORLD_RUNNING_VERSION } : {}), ...WORLD_TOKENS, ...(ai ? { ACCOUNT_SEAL_SECRET: WORLD_AI_SECRET, INSTANCE_NAME: name, CIVICSMITH_TEST_INSTANCE: name } : {}), ...env } });
   const door = doorOf(world);
   const make = () => storeWorld();
+  holder.world = world;
+  world.__delivery = deliver === true;
+  world.__releaseKeys = releaseKeys === true;
   return Object.assign(world, {
     door: (req, as = null) => door(req, as),
     signIn: (handle, o) => signIn(world, handle, o),
@@ -65,6 +78,34 @@ export async function storeWorld({ env = {}, ai = false, ...opts } = {}) {
       projects: (as, n, o) => projects(world, as, n, o),
       draftOnly: (as, o) => draftOnly(world, as, o),
       register: (as, o) => register(world, as, o),
+      readings: (as, projectId, o) => readings(world, as, projectId, o),
+      machineReading: (admin, as, projectId, o) => machineReading(world, admin, as, projectId, o),
+      graded: (as, projectId, o) => graded(world, as, projectId, o),
+      sharedOrigin: (as, projectId, o) => sharedOrigin(world, as, projectId, o),
+      holdAt: (as, name, address, html, projectId) => holdAt(world, as, name, address, html, projectId),
+      newerCapture: (as, o) => newerCapture(world, as, o),
+      connection: (admin, as, o) => connection(world, admin, as, o),
+      partialPdf: (as, name, o) => partialPdf(world, as, name, o),
+      unmatchedPerson: (as, o) => unmatchedPerson(world, as, o),
+      attested: (as, o) => attested(world, as, o),
+      paperFile: (as, projectId) => paperFile(world, as, projectId),
+      unretirable: (as, projectId) => unretirable(world, as, projectId),
+      timeline: (as, projectId) => timeline(world, as, projectId),
+      titlelessProject: (as, title) => titlelessProject(world, as, title),
+      deepChain: (as, projectId, o) => deepChain(world, as, projectId, o),
+      connectedSignIn: (as, o) => connectedSignIn(world, as, o),
+      investigating: (as, projectId) => investigating(world, as, projectId),
+      mentionedTogether: (admin, as, projectId) => mentionedTogether(world, admin, as, projectId),
+      owed: (as, o) => owed(world, as, o),
+      lapsed: (as, o) => lapsed(world, as, o),
+      delivered: (as, o) => delivered(world, as, o),
+      releaseNotice: (as, o) => releaseNotice(world, as, o),
     },
   });
 }
+
+/** R19: an older installation (no producing team recorded: `groupidentity` answers `group: null`): `storeWorld` with a first boot that bound no `INSTANCE_NAME`. */
+export const olderInstallation = (opts = {}) => olderOf(storeWorld, opts);
+
+/** R19: a founder with no handle: an unclaimed world claimed with a password and no handle; `unnamed` is the founder signed in. */
+export const unnamedFounderWorld = (opts = {}) => unnamedFounder(storeWorld, opts);

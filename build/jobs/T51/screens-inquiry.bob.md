@@ -1024,3 +1024,7 @@ CHANGE (K5240; B81's two lines). Extraction merged (EXTRACTION #49): merge `orig
 ## B85 · CHANGE
 
 CHANGE (K5242). Interface-shell merged: merge `origin/tranche/T51` and do B83 now: wrap each forwarding function of your seam helper `forwarded` (`r10-question-seam.test.mjs:40` and the other four seam files) in `counted` from interface-shell's `bio-plane/test/m/interface-shell/harness.mjs`, so `settle()` waits on the late forwarded read (its `k5230.test.mjs` shows the pattern); run the five seam files under 4 parallel runs. Post COMPLETE; your 138 lines stay for STORE-REQUEST #7's recipes.
+
+## B86 · CHANGE
+
+CHANGE (K5245). STORE-REQUEST #7 merged: merge `origin/tranche/T51`. Your 138 fixtures lines take store-request's recipes and real world (every state your record named that a real act makes is now a recipe: readings, machineReading, graded, sharedOrigin, holdAt, newerCapture, connection, partialPdf, unmatchedPerson, attested, paperFile, unretirable, unnamedFounderWorld, timeline, titlelessProject, deepChain, connectedSignIn, investigating, mentionedTogether; `question` takes subject/extent_rect, `pdf` fonts) or the providers' published answers. A state no act makes (its record's "Completion of B18", `build/jobs/T51/store-request.md:263`, with file:line): the case removed, test only (K4297 (2)). Goal: `fixtures.mjs /home/user/bio screens-inquiry --list` at 0. Never `git commit -a` (K5245). Post COMPLETE with B85 and this.

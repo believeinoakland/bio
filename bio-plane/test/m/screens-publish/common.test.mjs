@@ -9,7 +9,8 @@ import { interfacePage, SHELL_OPS } from "../../../src/interface-shell/index.mjs
 import { OPS, BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
-import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, COPY, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
+import { groupName, open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, COPY, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
+const GROUP = await groupName();
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["screens-publish"];
@@ -154,11 +155,11 @@ test("R24 what each screen draws is the word's text read through setup-words, fi
     [`/app/case-editor/${P}`, {}, [["screen.case-editor.ladder"], ["screen.case-editor.leavesout"], ["screen.case-editor.ack.by", { who: "mai" }]]],
     [`/app/review-copy/${P}`, {}, [["screen.review-copy.heading", { case: "The Coliseum lease", edition: "2" }], ["screen.review-copy.share"]]],
     [`/app/ceremony/${P}/${DR}`, {}, [["screen.ceremony.heading", { case: "The Coliseum lease", edition: "2" }]]],
-    [`/app/published/${C}`, { session: null }, [["screen.published.howtoread"], ["screen.published.whose", { group: "River Town" }], ["published.check.title"], ["published.check.field.help"]]],
+    [`/app/published/${C}`, { session: null }, [["screen.published.howtoread"], ["screen.published.whose", { group: GROUP }], ["published.check.title"], ["published.check.field.help"]]],
     ["/app/imported/IMP-2026-0001", {}, [["screen.imported.findings"], ["screen.imported.result.part"]]],
     [`/app/docket/${P}/${C}`, {}, [["screen.docket.order"], ["screen.docket.sub", { case: C }]]],
-    ["/app/doorbell", { session: null }, [["screen.doorbell.heading", { group: "River Town" }], ["screen.doorbell.happens.court"]]],
-    ["/app/review", { session: null, hash: "#grant=" + GRANT_SECRET }, [["screen.review-outside.heading", { group: "River Town" }], ["screen.review-outside.comments.go"], ["review.statement.title"], ["review.statement.note.help"]]],
+    ["/app/doorbell", { session: null }, [["screen.doorbell.heading", { group: GROUP }], ["screen.doorbell.happens.court"]]],
+    ["/app/review", { session: null, hash: "#grant=" + GRANT_SECRET }, [["screen.review-outside.heading", { group: GROUP }], ["screen.review-outside.comments.go"], ["review.statement.title"], ["review.statement.note.help"]]],
   ];
   for (const [path, boot, keys] of draws) {
     const p = await open(path, { boot });
