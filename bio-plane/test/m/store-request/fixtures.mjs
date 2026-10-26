@@ -4,6 +4,9 @@
 import { storeWorld as assemblyWorld, WORLD_NOW, WORLD_PASSWORD, WORLD_FOUNDER_HANDLE, WORLD_INSTANCE_NAME } from "../store-assembly/world.mjs";
 import { doorOf, bootOf, routeOf, signIn, admittedAs, hold, project, trail, profiles, queue, WORLD_UNREACHED, WORLD_ORIGIN } from "./door.mjs";
 import { WORLD_RELEASE_KEYS, WORLD_RUNNING_VERSION, worldDelivery, olderInstallation as olderOf, owed, lapsed, delivered, releaseNotice } from "./recipes-r10.mjs";
+import { readings, machineReading, graded, sharedOrigin } from "./recipes-states.mjs";
+import { holdAt, newerCapture, connection, partialPdf, unmatchedPerson, attested, paperFile, unretirable } from "./recipes-docs.mjs";
+import { unnamedFounder, timeline, titlelessProject, deepChain, connectedSignIn, investigating, mentionedTogether } from "./recipes-team.mjs";
 import { page, pdf, question, questions, contradiction, conflict, setAside, finding, signer, published, imported, cited, rerun, assistant, writingHelp, grantAdmit, parted, largeSheet, credential, projects, draftOnly, register } from "./recipes.mjs";
 
 export { WORLD_RELEASE_KEY } from "./recipes-r10.mjs";
@@ -73,6 +76,24 @@ export async function storeWorld({ env = {}, ai = false, deliver = null, release
       projects: (as, n, o) => projects(world, as, n, o),
       draftOnly: (as, o) => draftOnly(world, as, o),
       register: (as, o) => register(world, as, o),
+      readings: (as, projectId, o) => readings(world, as, projectId, o),
+      machineReading: (admin, as, projectId, o) => machineReading(world, admin, as, projectId, o),
+      graded: (as, projectId, o) => graded(world, as, projectId, o),
+      sharedOrigin: (as, projectId, o) => sharedOrigin(world, as, projectId, o),
+      holdAt: (as, name, address, html, projectId) => holdAt(world, as, name, address, html, projectId),
+      newerCapture: (as, o) => newerCapture(world, as, o),
+      connection: (admin, as, o) => connection(world, admin, as, o),
+      partialPdf: (as, name, o) => partialPdf(world, as, name, o),
+      unmatchedPerson: (as, o) => unmatchedPerson(world, as, o),
+      attested: (as, o) => attested(world, as, o),
+      paperFile: (as, projectId) => paperFile(world, as, projectId),
+      unretirable: (as, projectId) => unretirable(world, as, projectId),
+      timeline: (as, projectId) => timeline(world, as, projectId),
+      titlelessProject: (as, title) => titlelessProject(world, as, title),
+      deepChain: (as, projectId, o) => deepChain(world, as, projectId, o),
+      connectedSignIn: (as, o) => connectedSignIn(world, as, o),
+      investigating: (as, projectId) => investigating(world, as, projectId),
+      mentionedTogether: (admin, as, projectId) => mentionedTogether(world, admin, as, projectId),
       owed: (as, o) => owed(world, as, o),
       lapsed: (as, o) => lapsed(world, as, o),
       delivered: (as, o) => delivered(world, as, o),
@@ -83,3 +104,6 @@ export async function storeWorld({ env = {}, ai = false, deliver = null, release
 
 /** R19: an older installation (no producing team recorded: `groupidentity` answers `group: null`): `storeWorld` with a first boot that bound no `INSTANCE_NAME`. */
 export const olderInstallation = (opts = {}) => olderOf(storeWorld, opts);
+
+/** R19: a founder with no handle: an unclaimed world claimed with a password and no handle; `unnamed` is the founder signed in. */
+export const unnamedFounderWorld = (opts = {}) => unnamedFounder(storeWorld, opts);
