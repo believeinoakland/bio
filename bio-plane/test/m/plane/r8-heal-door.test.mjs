@@ -63,7 +63,7 @@ async function world({ scanMs = 0 } = {}) {
 }
 /** the first firing has ended (a row is owed and the alarm stands armed or spent): the starting position of a lost alarm */
 async function settled(w) {
-  for (let i = 0; i < 120; i++) { const s = await w.get("rows"); if (s.health && s.health.last_run && !s.health.running_since && s.pending.length) return s; await sleep(250); }
+  for (let i = 0; i < 480; i++) { const s = await w.get("rows"); if (s.health && s.health.last_run && !s.health.running_since && s.pending.length) return s; await sleep(250); }   /* up to 120 s: a whole-directory run is loaded, and the first firing is slower there */
   assert.fail("the first firing did not end with a row owed");
 }
 async function lose(w) {   /* the alarm is lost: deleted, a row owed, and no firing in flight that re-arms it (K4787: a firing begun before the delete

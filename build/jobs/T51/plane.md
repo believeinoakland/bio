@@ -1260,3 +1260,11 @@ Your users' markers still read content transcribe-answer (extraction t48:29, rea
 **Deferred:** none.
 
 Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 6, module lines 371
+
+## Record (PLANE #64, whole-directory run; r8-heal-door R102 G93)
+
+**Whole directory** (`bio-plane/test/m/plane/*.test.mjs`): 303 tests, 302 pass, 1 fail: `r8-heal-door` "R102 G93 L: a row owed and the alarm deleted, one ordinary read by the founder (op=owedwork)". Its failure is the setup's `settled` helper: the first firing did not end with a row owed inside its 30 s wait, under the parallel load of the directory run. The test passes alone.
+
+**Applied (partial):** `settled` waits up to 120 s (480 polls of 250 ms) instead of 30 s. Assertions unchanged. Not verified: under load, two of the five loop runs still failed, so the flake is not fully resolved. Next: find out why a firing outlasts 120 s under load, or confirm with a directory run that the change holds.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 9, module lines 371
