@@ -309,3 +309,38 @@ test("R107 (F-B10 (a), DEC-439): the walker's passages-only widen draws `screen.
   assert.ok(!both.t.includes(word("screen.finder.widen.passages", { n: "9" })));
   assert.equal(label(both.act), word("act.search.label.finder").trim());
 });
+
+/* ---------- R107 (A-03, DEC-439; queue R96, credentials R83): "I know about this key" ---------- */
+
+/** A fresh Ed25519 signing key in the shape `signeradd` takes (an `ssh-ed25519` public-key blob, base64). */
+async function sshKey() {
+  const { webcrypto } = await import("node:crypto");
+  const kp = await webcrypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const raw = new Uint8Array(await webcrypto.subtle.exportKey("raw", kp.publicKey));
+  const part = (b) => Buffer.concat([Buffer.from([0, 0, 0, b.length]), Buffer.from(b)]);
+  return Buffer.concat([part(Buffer.from("ssh-ed25519")), part(raw)]).toString("base64");
+}
+
+test("R107 (A-03): an administrator's queue draws `queue.signer-self-registered.known` on a member's self-registered key; pressing it sends the key to the real `signerknown`, which records who knows it; control: another kind of item draws no such act", timeout, async () => {
+  const w = await storeWorld();
+  const rosa = await w.signIn("rosa", { admin: true });
+  const mai = await w.signIn("mai");
+  const keyB64 = await sshKey();
+  const reg = await mai.act("signerregisterown", { body: { keyB64, comment: "mai's laptop" } });
+  assert.equal(reg.ok, true, JSON.stringify(reg).slice(0, 300));
+  await w.tick(120_000);
+  const item = (await rosa.read("queue")).items.find((i) => i.kind === "signer-self-registered");
+  assert.ok(item, "the administrator holds the item");
+  const p = await openW(w, rosa, "/app/queue");
+  await settle();
+  const known = main(p).querySelectorAll('button[data-act="signerknown"]');
+  assert.equal(known.length, 1, "one act on the item");
+  assert.equal(known[0].textContent.trim(), word("queue.signer-self-registered.known").trim(), "labelled by its key");
+  await press(p, "signerknown");
+  assert.equal(last(p, "signerknown").body.keyB64, keyB64, "the key the item is about");
+  const row = (await rosa.read("signerlist")).signers.find((s) => s.key_b64 === keyB64);
+  assert.ok(row && row.known_by, "the plane records who knows it: " + JSON.stringify(row));
+  const hers = await openW(w, mai, "/app/queue");
+  await settle();
+  assert.equal(main(hers).querySelectorAll('button[data-act="signerknown"]').length, 0, "control: the member who registered it is told nothing of it, so has no such act");
+});

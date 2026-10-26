@@ -64,7 +64,7 @@ export const queue = Object.freeze({
       taskresolve: "taskresolve", taskforward: "taskforward", proposedispose: "proposedispose", queuesnooze: "queuesnooze",
       queuemute: "queuemute", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion",
       versionkeep: "keepversion", reminderanswer: "reminderanswer", promote: "promote", projectkeyset: "projectkeyset",
-      exploreapprove: "exploreapprove", updatelater: "updatelater", projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer", filingapprove: "filingapprove",
+      exploreapprove: "exploreapprove", signerknown: "signerknown", updatelater: "updatelater", projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer", filingapprove: "filingapprove",
     };
     const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "case";
     const ui = view.ui || {};
@@ -116,6 +116,8 @@ export const queue = Object.freeze({
         return cs.act(op, { label: "act.proposedispose.label.queue", data: Object.assign({}, data, { to: "dismissed" }) })
           + cs.act(op, { label: "screen.queue.defer", data: Object.assign({}, data, { to: "deferred" }) });
       }
+      // R107: the act that ends the signing-key item is labelled by the item's own word.
+      if (op === "signerknown") return own(cs.act(op, { label: "queue.signer-self-registered.known", data: data }));
       const fields = FIELDS[op];
       if (!fields) return OWN.indexOf(op) >= 0 ? own(cs.act(op, { label: "act." + op + ".label.queue", data: data })) : cs.act(op, { label: "act." + op + ".label.queue", data: data });
       const f = "qa-" + (seq++);
@@ -172,6 +174,8 @@ export const queue = Object.freeze({
         if (REGISTERED[id]) add(id); else if (id) other = true;
       });
       const d = it.disposition || {};
+      // R107 (A-03): the signing key a member registered for herself is answered "I know about this key" (`signerknown`, credentials R83).
+      if (it.kind === "signer-self-registered") add("signerknown");
       if (d.available && d.op) add(d.op);
       (Array.isArray(d.acts) ? d.acts : []).forEach(add);
       if (d.instead) add(d.instead);
@@ -528,6 +532,13 @@ export const queue = Object.freeze({
       },
       done: function (view, answer, cs) { cs.set("done", "projectrequestanswer"); } },
     // R19: Not now, for every administrator (instance-setup R90).
+    // R107 (credentials R83): "I know about this key" sends the key the item is about; the item leaves with the re-read (queue R55).
+    { op: "signerknown", label: "queue.signer-self-registered.known", rereads: ["queue"],
+      send: function (view, el) {
+        view.ui.doneFor = { op: "signerknown", label: "queue.signer-self-registered.known" };
+        return el.dataset.subject ? { body: { keyB64: el.dataset.subject } } : null;
+      },
+      done: function (view, answer, cs) { cs.set("done", "signerknown"); } },
     { op: "updatelater", label: "act.owed_updatelater.label.queue", rereads: ["queue"],
       send: function (view, el) { return el.dataset.version ? { body: { version: el.dataset.version } } : null; } },
     { op: "exploreapprove", label: "act.exploreapprove.label.queue", rereads: ["queue"],
