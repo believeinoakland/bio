@@ -150,7 +150,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 0.target 'THEME-2026-0101-abc123' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+     "message": "basis leg 0 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -163,7 +163,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 0.target 'THEME-2026-0101-abc123' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+     "message": "basis leg 0 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -176,7 +176,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 0.target 'THEME-2026-0101-abc123' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+     "message": "basis leg 0 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -191,7 +191,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 0.theme claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+     "message": "basis leg 0 claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -204,7 +204,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 0.theme claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+     "message": "basis leg 0 claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -217,7 +217,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 0.theme claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+     "message": "basis leg 0 claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -7952,7 +7952,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 1.target 'THEME-2026-0101-abc123' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+     "message": "basis leg 1 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -8059,7 +8059,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 1.target 'THEME-2026-0101-abc123' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+     "message": "basis leg 1 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
@@ -8166,7 +8166,7 @@
     {
      "check": "C-81.1",
      "severity": "error",
-     "message": "basis leg 1.target 'THEME-2026-0101-abc123' names a THEME, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+     "message": "basis leg 1 names a THEME, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
      "repairable": true,
      "repairs": [
       "cite the document or the passage itself — the theme is how you found it, not what it shows",
