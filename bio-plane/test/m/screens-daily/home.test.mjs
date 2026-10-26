@@ -70,7 +70,7 @@ async function busy() {
   await rosa.act("ailimitset", { body: { owner: "group", scope: "overall", unit: "usd", period: "month", amount: 60 } });
   await projectWith(w, rosa, "Pothole repairs", 1);
   await projectWith(w, rosa, "Odd", 0);
-  await new Promise((resolve) => setTimeout(resolve, 1100));   // (the look is stamped by the wall clock, the changes by the world's, both to the second)
+  w.tick(Math.max(0, Date.now() - w.now()) + 2000);   // (the look is stamped by the world's clock, a project's change by the wall's: the world's is put past it, so the look follows every change made so far)
   await rosa.read("lookedsince");           // her look at Home: what changes after it is "since you last looked"
   w.tick(3_600_000);                        // (an hour on, her session has locked: she signs in again)
   const [rosa2, mai2] = [await w.signIn("rosa"), await w.signIn("mai")];
