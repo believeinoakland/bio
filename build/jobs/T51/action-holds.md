@@ -162,3 +162,19 @@ CHANGE B6 (K5209) handled: merged origin/tranche/T51 into job/T51/action-holds (
 ## J7 · COMPLETE
 
 START B7 (K5222): `holdsDueDocketAnswer()` published in `bio-plane/test/m/action-holds/fixtures.mjs` (line 29). It takes docket's published `docketEntryRead()` world, so the mark is docket's real act. It answers the door's `op=holdsdue` answer for the legal mark (`arrived: {docket_entry, case}`), the module's direct read, and the same world after the hold is placed (items empty). Test: `fixtures.test.mjs` lines 27 and 39; failing-first with a deliberate wrong case id (red), restored (green). Suite 54/54 pass; fixtures 0 failures; format and words 0 for this module; impact 0 modules. Markers added: none. Not mine, for BOB: `screens-publish` `t51.test.mjs:76` is the consumer to point at this answer; `store-assembly` words findings `wiring.mjs:78` and `wizards.mjs:51`. Record: build/jobs/T51/action-holds.md, section "Fix round 10, START B7".
+
+## J8 · COMPLETE
+
+COMPLETE for START B7 (K5222; plan item 105).
+
+Changed: `bio-plane/test/m/action-holds/fixtures.mjs` (new `holdsDueDocketAnswer()`, line 29; beside `holdsDueAnswer`, line 14) and `bio-plane/test/m/action-holds/fixtures.test.mjs` (two tests, lines 27 and 39), plus the record `build/jobs/T51/action-holds.md` (section "Fix round 10, START B7"). Pushed as 8797b3fdad on job/T51/action-holds.
+
+What it publishes: over docket's published world `docketEntryRead()` (its real legal mark on an entry of project P, which alice manages), `answer` is the door's `op=holdsdue` answer before a hold, listing the mark as `{arrived: {docket_entry, case}}`; `direct` is the module's `holdsDue` read at the same moment; `placed` is the same world after `actionHold({project: P, from: {docket_entry}, hold: "in_place"})`, items empty. No product change.
+
+Failing-first: expected case id set wrong, red (1 fail); restored, green.
+
+Suites and checks: action-holds suite 54 pass, 0 fail (exited by itself). fixtures --list 0 failures. format 0. words (action-holds) 0. impact: 0 of 178 modules. run.mjs: no finding in this module's files; words total 15, unchanged from B5. Ownership: 0 failures. Markers added: none.
+
+Not mine, for BOB: screens-publish `t51.test.mjs:76` hand-builds the holdsdue answer (op-table finding); it is the consumer to take `holdsDueDocketAnswer()` in its own job. store-assembly `wiring.mjs:78` and `wizards.mjs:51` words findings, present since B5.
+
+Size (session_01T1F4v1RYnwRpGQBM5cYrRi): test runs 3, module lines 0.
