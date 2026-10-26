@@ -237,3 +237,24 @@ Size (session_017TrbRYp1J3suhTf9xgvcAT): test runs 6, module lines 3833
 ## J13 · COMPLETE
 
 COMPLETE for B11 (item 70, K5148). R61 is met (strike its mark). A passage with no content row, of a reading the viewer sees whose indexed units hold it and whose content context passes, is made citable by the flagging member (content.mint, minted_by the member) after every other refusal, then flagged; a page not in the reading, a hidden bundle and an unread capture stay FLAG_NO_PASSAGE, nothing minted or written. Failing-first test and why tests missed it are in J12. Module tests 153: 145 pass, 0 fail, 8 todo; format, architecture, coverage, words, fixtures, ownership 0 failures. REPORT: the through-the-door case (upload pair, findin, contradictionflag) belongs to control-plane (K5138); I added none. Size (session_017TrbRYp1J3suhTf9xgvcAT): test runs 6, module lines 3833.
+
+## J14 · COMPLETE
+
+B12 applied (walk C C-M13; K5271): take-up now writes the document's safe title into the envelope. Commit on job/T51/contradiction (tranche/T51 merged in first).
+
+What changed
+- `bio-plane/src/contradiction/index.mjs` `#takeUpDocument` (the return, after the document text): `title: fmSafe(title ?? question)`, the same form the document's `title:` line uses, so promotion's title comparison (`promotion/index.mjs` ENVELOPE_TITLE_DISAGREES) holds for a question holding `"` or `\` or a line break.
+- `bio-plane/test/m/contradiction/acts.test.mjs`: new test "R62: take up writes one title into the envelope and the document…". It takes up a K2 candidate with a quoted question, a K1 candidate with its default question (which holds quotes), and a K4 candidate with a backslash and a line break; asserts each answers `ok` and the quoted one's stored title reads with apostrophes. Red on the old code (`ENVELOPE_TITLE_DISAGREES`, the document titled 'Does the 'fee' rise…', the meta 'Does the "fee" rise…'), green after the fix. The plain-question controls already exist in the R35 tests.
+
+Why the tests missed it: every take-up test used a plain question with no quote; the default question holds quotes only through the word table in the member's own run.
+
+Met: R62.
+Reported: nothing outside my paths. Not mine, not done: the other half of C-M13 (words for a member-flagged lead, `screens-inquiry/contradiction.mjs`) belongs to screens-inquiry and the design stream.
+
+Tests and checks
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/contradiction/`: 154 tests, 146 pass, 0 fail, 8 todo (before: 153 / 145 pass).
+- Users that call take-up, run: case-authoring, screens-inquiry fr3/fr28-contradiction, queue, affordances, op-grades, conformance, reevaluation: 1272 tests, 1272 pass, 0 fail.
+- `node checks/run.mjs /home/user/bio`: format 0; architecture 0; words 0; coverage 7 failures and fixtures 89 failures, none in contradiction (fixtures lines name capture, doorbell, file-safety, monitoring, test-support).
+- `node checks/ownership.mjs /home/user/bio contradiction <merge-base> HEAD`: 3 files changed, 0 failures.
+
+Size (session_01H8qkBewgtVcTLapCydbWnZ): test runs 5, module lines 3699 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/).
