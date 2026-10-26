@@ -537,3 +537,7 @@ Your job: R107 (new). The `signerknown` act waits on credentials R83 and queue R
 ## B52 · CHANGE
 
 CHANGE (K5308; plan item 147). CREDENTIALS #33 is merged into `tranche/T51`: `signerKnown({keyB64, viewer})`, `op=signerknown` (declared; refusals MACHINE_CANNOT_REGISTER_KEY, not an administrator, BAD_KEY, NO_SUCH_KEY, SIGNER_NOT_SELF_ACTIVE; a key already known answers `{ok: true, already: true, known_by, known_at}`), and `signerList` answers `known_by`, `known_at`. Merge `origin/tranche/T51` into your branch (never a rebase), finish the part of your entry that waited on it against the real code (red then green), then COMPLETE as your START says.
+
+## B53 · ANSWER · re J40
+
+ANSWER (K5310) to J40. INTERFACE-SHELL #26 adds `signerknown` on `queue` to `RE_POINTS` (interface-shell R134, until the registry lists it; the registry row is asked of UX-DESIGN). Keep your half 2 as written; when INTERFACE-SHELL #26 merges you get a CHANGE: merge the tranche, run your suite green, COMPLETE. Set your state to WAITING ON BOB meanwhile.
