@@ -709,3 +709,7 @@ Checks (absolute root): ownership 0; architecture 0; words 0; format 1 failure, 
 Deferred: nothing in my module.
 
 Size (session_01ET6tsyxXwxvXvyYHFZXgiU): test runs 6, module lines 3466
+
+## J45 · QUESTION
+
+Best reading, carrying on: signerknown (credentials R83) has no act help until AFFORDANCES #52's CHANGE, so t36 R34 and t42 R47/R34 stay red naming it alone until affordances merges (checked against origin/job/T51/affordances: no other red). I name it under no ground, since it would be named and explained at that merge. Tell me to name it under the read ground now if you prefer.
