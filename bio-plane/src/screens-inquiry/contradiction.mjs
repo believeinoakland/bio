@@ -212,7 +212,9 @@ function render(cs, view) {
     { help: [S + "help.why.these.two.were.put.together", S + "help.the.sentence.in.quotes.is.the"] }));
   if (state === "closed") return hold("closed", out.join("") + note(S + "someone.already.closed.this.and.it"));
   if (state === "a" || state === "b")
-    out.push(cs.sec(S + "how.strongly.it.binds", `<p>${lead ? W(S + "this.is.a.lead.the.assistant") + " " + W(S + "it.asks.nothing.of.anyone.until")
+    /* T51 fix round 10 (B89, C-M13): a lead a member flagged is not the assistant's guess (`flagged_by` is the member's, above). No word is held for a member's lead,
+       so none is drawn here: REPORTed (the key needed), never the assistant's sentence */
+    out.push(cs.sec(S + "how.strongly.it.binds", `<p>${lead && !fb ? W(S + "this.is.a.lead.the.assistant") + " " + W(S + "it.asks.nothing.of.anyone.until")
       : duty ? W(S + "this.is.a.conflict.the.record") + " " + W(S + "it.stays.open.until.someone.resolves") : ""}</p>`));
 
   const drawnFor = (field) => drafted(field);
