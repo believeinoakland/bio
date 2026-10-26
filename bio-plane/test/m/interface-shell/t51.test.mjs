@@ -4,11 +4,13 @@
    before they are handed on, printing, browser acts, the new paths and the admin gate, every screen's title and no weight mark
    on a public page, and an explanation placed where it covers no other control. Every sentence is read through
    `setup-words`' `word` (R70); a test holds no English. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, webcrypto } from "node:crypto";
 import * as DECLARATIONS from "../../../src/op-declarations/index.mjs";
-import { interfacePage, checkScreens, ADMIN_ACTS, PATHS, HOOK_CLASSES, PUBLIC_PAGES, SHELL_OPS, browserActs } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, checkScreens, PATHS, HOOK_CLASSES, PUBLIC_PAGES, SHELL_OPS, browserActs } from "../../../src/interface-shell/index.mjs";
+import { ADMIN_ACTS } from "../../../src/wizard-scripts/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
@@ -622,6 +624,7 @@ test("R101 PATHS gains glossary, teamai and actionnew; ADMIN_ACTS gains signerad
 
 /* ---------- R102 ---------- */
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R102 every screen of the registry has its tab title (page.title with screen.<id>.name) and the nine named pages page.title.public; none of the nine draws a weight mark; a working screen keeps its marks; the team's name wraps", async () => {
   assert.equal(SCREEN_REGISTRY.length >= 73, true);
   for (const r of SCREEN_REGISTRY) assert.ok(hasWord("screen." + r.id + ".name"), r.id + " has its name");
@@ -631,7 +634,7 @@ test("R102 every screen of the registry has its tab title (page.title with scree
   for (const r of named.slice(0, 80)) {
     const pub = PUBLIC_PAGES.includes(r.id);
     const sessionless = PUBLIC_PAGES.includes(r.id) && r.id !== "join";
-    const p = await boot({ screens: [stand(r.id)], path: "/app/" + r.id + (r.id === "home" ? "" : ""), session: sessionless ? null : SESSION });
+    const p = await boot({ screens: [stand(r.id)], path: "/app/" + r.id + (r.id === "home" ? "" : ""), session: sessionless ? null : SESSION, plane: FRAME_ANSWERS });
     const team = sessionless ? word("shell.group.unnamed") : "River Town";
     const want = pub ? word("page.title.public", { page: word("screen." + r.id + ".name"), team }) : word("page.title", { screen: word("screen." + r.id + ".name"), team });
     assert.equal(p.doc.title, want, r.id);
@@ -660,7 +663,7 @@ test("R102 every screen of the registry has its tab title (page.title with scree
 /* ---------- R103 ---------- */
 
 test("R103 an explanation opens below what it explains, else above: the first that covers no other control and stays inside the page, never beside it; closes on Escape, on the next tap elsewhere and on a scroll; control: with room below it opens below", async () => {
-  const p = await boot({ screens: ALL });
+  const p = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   const el = p.root().querySelector('.cs-mast [data-kind="todo"]');
   const rect = (l, t, r, b) => () => ({ left: l, top: t, right: r, bottom: b, width: r - l, height: b - t });
   el.getBoundingClientRect = rect(300, 150, 360, 170);

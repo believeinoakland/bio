@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_0135BWD8XZpisnx9i7kU3v1o · depth 2 · COMPLETE · handled B47
+**Status** · session_0141YvoVpS4Rz4SNMfkcYzHh · depth 2 · COMPLETE · handled B57
 
 ## J1 · BLOCKED
 
@@ -606,3 +606,114 @@ Checks (absolute root /home/user/bio, tip 08f661ccb1): format 0; architecture 0;
 Tests: the interface-shell suite is 376 tests, 294 pass, 82 fail. The same 82 fail with the change reverted. The cause is outside my paths: store-assembly's world (K5149, 38536482fc) now binds INSTANCE_NAME, so the base world records the team, and store-request's storeWorld (fixtures.mjs:34) then fails GROUP_ALREADY_RECORDED on every call. Placement needed (REPORT 1 in the record). Until it lands, the interface-shell suite is not green.
 
 Record: build/jobs/T51/interface-shell.md, section J32. Size (session_0135BWD8XZpisnx9i7kU3v1o): test runs 5, module lines 3392.
+
+## J34 · REPORT
+
+K5202 (a) and (b) applied at c192bfcf0a (pushed; tranche T51 merged first, 30 commits).
+
+Changed:
+- `bio-plane/src/interface-shell/index.mjs:93-95`: re-export of `ADMIN_ACTS`, `ADMIN_SCREENS` deleted with its comment. The module's own use of them (lines 12, 171, 301, 323) stays.
+- `bio-plane/test/m/interface-shell/harness.mjs`: `interfacewords` (88), `groupidentity` (89), `queue` (90 comment, 91) and `signout` (97) removed from `FRAME`.
+- Importers of the re-export repointed to `wizard-scripts/index.mjs` (their owner): `design.test.mjs` (as the START named), `t51.test.mjs`, `fixround.test.mjs`, `kit.test.mjs`. Architecture check: 0 failures; no other importer named.
+- `cause3.test.mjs` R114: relied on the frame's `queue` default; now passes `queueOf(...)` from the harness. Passes as before.
+- `session.test.mjs` R24: relied on the frame's `groupidentity` default. See QUESTION below. Currently FAILS.
+
+Reliance on the removed defaults in screens modules (K5184 asks for this): the screens run is blocked by DECLARED_OP_DISAGREES (readtranslate description, every store), so no screens test has yet run to its assertions. The only failure in those runs that names a removed default is R24 above. Full screens run to be redone after the CHANGE; each module that relies on a default will be REPORTed by file:line then.
+
+Tests (interface-shell, 177 tests, same count as before): 158 pass / 19 fail, identical to the baseline with my change stashed. Failing set = DECLARED_OP_DISAGREES (not mine) plus the existing publishedcase FieldMismatch. Plus R24 (new, from the groupidentity removal). Failing-first: the deletions are not new behaviour; R24 and R114 were checked red-then-green on the removal.
+
+Checks: format 0; architecture 0 (interface-shell); ownership 0 (one file set vs. tranche merge-base; the 8 changed files are all mine); fixtures --list: harness 22, 23 (test-support's) and session 208 (the R24 finding below). t50 accepted(generic) x2 are accepted, not findings.
+
+Not done yet: COMPLETE waits for OP-GRADES #30 (I CHANGE) and a green run; and for the answer to the QUESTION.
+Size: record only.
+
+## J35 · QUESTION
+
+R24 (session.test.mjs:207-208, "nothing the shell does records who opened what") expects the frame to read `groupidentity` and keep its answer (R124: the frame's six constants). That answer came only from the FRAME default I was asked to delete (K5202 b). Passing it by hand in the test is a hand-built answer for instance-setup's op (fixtures check: op-table groupidentity, provider instance-setup, earlier), which the rule forbids; and instance-setup publishes no groupidentity fixture (`bio-plane/test/m/instance-setup/fixtures.mjs` has assistantState, instanceGroupAnswer, selftestAnswer, fleetReports, bootstrapFacts).
+
+Options:
+(1) Recommended: instance-setup publishes a `groupIdentityAnswer` fixture (its real `groupidentity` answer, checked by its fixtures.test.mjs); R24 takes it. Placement is yours: a REPORT to instance-setup.
+(2) R24 drops `groupidentity` from its expected frame reads. Smaller, but it weakens R124's check that the frame keeps its six constants.
+
+Until you decide, R24 stays red in my suite. Ringing you after this.
+
+## J36 · BLOCKED
+
+BLOCKED (cause: tests). CHANGE (K5209) applied: tranche merged at e2572fdb71 (pushed); stores run again.
+
+Suite (interface-shell, 376 tests): 362 pass, 14 fail. Tranche tip without my commits: 373 pass, 3 fail (R30, R5, R81: the `publishedcase` field mismatch, not mine). So 11 of my failures are caused by the four frame-default removals (K5202 b). Measured by restoring each set alone in my tree (then reverted; pushed tree is clean):
+
+- groupidentity alone restored: R43, R57, R65, R75, R102 pass. Dependents of the frame's group name and avatar.
+- interfacewords, queue, signout restored: R7, R10, R103 pass.
+- R82 and R84 pass only with all four restored.
+- R24 is the expected one (red by name, K5208).
+
+So, beyond R24, 10 tests need the removed answers. Two decisions for you:
+1. groupidentity: instance-setup #38's `groupIdentityAnswer()` (B49) would cover R43, R57, R65, R75, R102, R82 and R84. It is not in the tranche yet; I can't use it until it merges.
+2. interfacewords, queue, signout: R7, R10, R103 (and R82, R84) need answers. I cannot hand-build them (fixture rule). Please say which module publishes each (I did not verify owners), or whether these tests should take the frame's real answer.
+
+I have not restored any default. Until 1 and 2 are settled, the suite stays at 14 red. The job is not COMPLETE.
+
+## J37 · QUESTION
+
+CHANGE (K5219) applied at 4aeab426b9 (pushed). The frame's four reads now come from their owners' fixtures through `bio-plane/test/m/interface-shell/frame-answers.mjs` (the one place that imports them): groupidentity (instance-setup `groupIdentityAnswer`), interfacewords with no language (translations `interfaceWordsAnswer().default`), queue (`feedWithItem`, `countWithItem`), signout (credentials `signout().answer`). Tests read their expectations from those answers. The four defaults in harness.mjs are gone.
+
+Interface-shell suite: 376 tests, 373 pass, 3 fail: R30, R5 (the first, `publishedcase` FieldMismatch), R81. Those three also fail on the tranche tip without my commits (the `publishedcase` field mismatch is not mine).
+
+Checks: format 0; coverage 127/127; ownership 0; fixtures 0 failures (the two refusal builders in harness.mjs are `fixtures-own: input`, the test's own input). Architecture: 6 failures, all one question:
+
+QUESTION: interface-shell's tests import, and frame-answers.mjs imports, four modules it does not declare in `uses` (build/modules.json, interface-shell): `queue`, `translations`, `credentials`, `instance-setup`. All four are earlier in the order than interface-shell (queue 149, translations 150, instance-setup 151, credentials 40; interface-shell 161). Options:
+(1) Recommended: add those four to interface-shell's `uses` (test-only edges, all earlier, no code edge). I cannot edit build/modules.json; it is yours.
+(2) Another route you name.
+
+I will not commit or push further until you answer. Screens modules are being run against the new frame answers now; their reliance on removed defaults will follow in a REPORT.
+
+## J38 · REPORT
+
+K5230 (B55) and the CHANGE B54 are both in (merge fb0f6cd668 on my branch; pushed at 087708eaa4).
+
+Interface-shell suite: 377 tests, 377 pass. Checks: format, architecture, coverage (127/127), fixtures (0 failures), ownership 0.
+
+K5230: the seam's late forwarded read is now waited for by `settle()` ONLY when the forwarding answer is counted. I tried counting every plane-function answer in harness.mjs `fetch` (`counted(a)`): settle then hangs on any plane function that never resolves (the "never" answers in several tests), so I reverted it. The harness keeps `counted` exported. The new test `k5230.test.mjs` (K5230) wraps its forwarded answer in `counted`: red without the wrap (verified), green with it.
+
+Needed outside my paths: `screens-inquiry`'s seam helper `forwarded` (r10-question-seam.test.mjs:40, and the other four seam files) must wrap each forwarding function in `counted` from interface-shell's harness, to get the wait BOB's CHANGE describes. That is screens-inquiry's job; I have not edited it. The counting only works when the wrap is there.
+
+Screens REPORT (which screens modules relied on the removed frame defaults) follows when the per-module run finishes; I have the tranche-tip baseline running alongside it.
+
+## J39 · REPORT
+
+SCREENS REPORT (B56): the per-module screens runs, my tree (tranche merged through B54) against the tranche tip, each file run on its own. Both sides ran under heavy machine load, so the first full-process run was not usable: whole-file failures there were timeouts (settings, intake, investigate) and did not reproduce in isolation. Those files pass in isolation on my tree.
+
+Caused by removing the frame defaults (K5202 b, K5219), in other modules' tests, reading the frame's answers from my harness:
+- `bio-plane/test/m/screens-action/request.test.mjs:167` and `:185` (R21, two tests): the page draws the team's name and the test expects "River Town", which came from the removed `groupidentity` default. The test boots through `open()` with no group answer. Owner: screens-action; the answer is instance-setup's `groupIdentityAnswer()`.
+- `bio-plane/test/m/screens-publish/phone.mjs:30` spreads `FRAME` (my harness export, now without `groupidentity`, `interfacewords`, `queue`, `signout`). The publish tests that use it fail: `common.test.mjs:152` (R24), `print.test.mjs:28` and `:73` (R39), and `ceremony`, `fix2`, `public` and `review` (one or two tests each). Owner: screens-publish; the fix is the same provider answers, read from their fixtures.
+
+Not caused by the change (pass in isolation on my tree): settings, intake, and the rest of action and publish.
+
+Still running (restarted with a per-test timeout after the first runs hung): screens-daily and screens-inquiry. I will add their result to the COMPLETE. If either shows a failure that uses a removed default, I'll name it the same way.
+
+Other failures in my tree are the seam tests' `counted` wrap (screens-inquiry, SCREENS-INQUIRY #33) and nothing else in the interface-shell suite.
+
+## J40 · COMPLETE
+
+COMPLETE, interface-shell, T51 (K5202, K5209, K5217, K5219, K5221, K5226, K5230). Branch pushed; HEAD is the tranche merge after B57, with the K5230 test at 087708eaa4.
+
+Changed (paths): bio-plane/src/interface-shell/index.mjs (re-export of ADMIN_ACTS and ADMIN_SCREENS deleted, lines 93-95); bio-plane/test/m/interface-shell/: harness.mjs (four frame defaults deleted; refusal builders at 22-23 marked `fixtures-own: input`), frame-answers.mjs (new: groupidentity, interfacewords, queue and signout from their owners' fixtures), k5230.test.mjs (new), screens.fixture.mjs:128 (publishedcase queried by id: the fixture sent `case`, which the op does not accept), and the tests design, cause3, frame, session, t49, t50, t51, words, fixround, kit (each reads its frame answers from frame-answers.mjs; expectations derive from them).
+
+Met: all 127 live requirement ids named by a test (coverage 127/127). Failing-first: the new k5230 test is red without the counted wrap and green with it; R24 and R114 red on the removal, green after the fixture.
+
+Suite: interface-shell 377 of 377 pass.
+
+Checks: format 0; architecture 0 (after BOB's uses edges); coverage 0; fixtures 0 failures (accepted 4, which are t50's generic codes); ownership 0; run.mjs: no finding in interface-shell's files.
+
+Reds named: R30, R5's publishedcase field, R81: their cause was screens.fixture.mjs:128, my fixture (owner: interface-shell). Fixed in the commit above. None are red now.
+
+Markers: harness.mjs:22-23 `fixtures-own: input`: the refusal envelope the harness builds for a code the test feeds it (the code is the test's input, not a module's answer).
+
+Screens (other modules): per-module runs compared to the tranche tip. Reliance on the removed defaults is in the J39 REPORT (action request.test.mjs:167, :185; publish phone.mjs:30 and its tests). screens-daily and screens-inquiry: no failure that is not on the tranche tip too (daily 5 of 5 on the tip; inquiry 2 of 2, the OCR tests, on the tip).
+
+Deferred: the seam wrap in screens-inquiry's five files (SCREENS-INQUIRY #33, K5234).
+
+Impact: 176 of 178 modules named by `build/plan/impact.mjs origin/tranche/T51 HEAD` (a shared table). Ran the screens-* per-module suites (the harness's users); the other modules' suites were not run.
+
+Size (session_0141YvoVpS4Rz4SNMfkcYzHh): test runs ~45, module lines 11828 (src 3389, tests 8439).

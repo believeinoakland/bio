@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01RkSbN8aUrWKGhGQpRQEqD6 · depth 2 · COMPLETE · handled B42
+**Status** · session_012VgFd3nsMnWwNKMK8gzKu2 · depth 2 · COMPLETE · handled B44
 
 ## J1 · QUESTION
 
@@ -617,3 +617,84 @@ COMPLETE for B40, B41 and B42 (K5178; plan item 80 (2) and item 85 (2)). Commit 
 **Found in other modules (REPORT, with file:line).** (1) control-plane `test/m/control-plane/envelope.test.mjs:567`, the aggregate `answer` refusal check names op-declarations among earlier modules (see above). (2) Aggregate words failures: 16, in store-assembly (ask.mjs:389, 469, 502, 521, 522, 526, 531, 535, 540; wiring.mjs:49, 78, 103; wizards.mjs:51) and plane (declared.mjs:16 vs plane/declared.mjs:13, `plane.declared.readtranslate`'s en differs). Not measured by this job.
 
 Size (session_01RkSbN8aUrWKGhGQpRQEqD6): test runs 2, module lines 3470
+
+## Fix round 10, item 116 (B43): work record
+
+For B43 (K5235; fix round 10, plan item 116; action-holds R5, R6, R22). Merged `origin/tranche/T51` into the job branch first (16 tranche commits in; a merge, no local work lost).
+
+**What changed.**
+- `bio-plane/src/op-declarations/t51.mjs:13` (the doc line) and `:43`: `holdsplaced` (action-holds R22) joins the `action-holds` share as `sessionread`, beside `holdsdue`. It is a member's session read (classes admin, member, probe; `machineClasses: []`; `NEEDS` null; `viewer` stamped; both session sets), its spec and row from the kind.
+- `bio-plane/test/m/op-declarations/t49.test.mjs:153-163`: the pinned family-row and NEEDS counts go up by one (533 to 534 family rows; 15 to 16 T51 adds). The composition test counts every family row, so the new op moves them; no assertion is weakened.
+- `bio-plane/test/m/op-declarations/t51.test.mjs` (end of file): a new test "R22, R5, R6 (T51; K5232 ...)". It checks `holdsplaced`'s family, kind, spec, NEEDS row, session sets, stamp, admitted bearers (none), AI grant and unattended status, that action-holds' ops map serves it (through `keysOf`); that `declaredFields("holdsplaced")` is `{accepts: [after, limit], requires: []}`; that `actionholdpreview` and `actionholdrelease` accept `from` (with `target`, `ord`); and a negative control (`holdsdue`, which declares no fields, answers `undefined`).
+- `from` on `actionholdpreview` and `actionholdrelease` needs no change here: action-holds' own `DECLARED_OPS` (`index.mjs:1122-1125`) already accepts it and `registerDeclaredOps` (R80) takes it from there. The new test pins it.
+
+**Failing-first.** (1) The new t51 test, run with `t51.mjs` reverted to HEAD: red on `holdsplaced` (`OPS.holdsplaced` absent), 15 pass, 1 fail; with the change: 16 of 16. (2) The count pin: after the `t51.mjs` change alone, t49's R3 failed (534 != 533); the count update takes it green. Expected, not a regression.
+
+**Suite counts.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/op-declarations/*.test.mjs`: tests 249, pass 247, fail 2. The 2 are the expected reds, by name, until AFFORDANCES #51 merges:
+- `R34 (affordances R48)`: "holdsplaced: neither explained nor named".
+- `R47, R34 (N862 ...)`: "holdsplaced: neither explained nor named" (`t42.test.mjs:140`).
+Neither is fixed by adding `holdsplaced` to the read ground: that would break the "no op is both" rule once affordances' `ACT_HELP` text lands, so I left the partition alone as B43 says. Everything else is green.
+
+**Checks** (absolute product root `/home/user/bio`):
+- format: 178 modules, 178 requirements files, 0 failures.
+- architecture (op-declarations): 40 product files, 275 relative imports, 0 failures.
+- coverage (op-declarations): 82 of 82 live ids named by a test, 0 failures.
+- fixtures (op-declarations --list): 3539 test files read, 0 failures; no marker added.
+- words: 178 modules, 19247 words, 0 failures.
+- ownership (op-declarations, merge base with tranche/T51 to HEAD): 0 failures.
+- impact: `origin/tranche/T51` to HEAD, run after this commit (count in the next line of this record).
+- aggregate `checks/run.mjs`: exit 1 with 288 fixture failures, all in other modules' test files (acquisition, screens-action, stub files for plane/store-assembly and others). None names an op-declarations file. This matches the aggregate state J40 recorded (other modules' fixture reds).
+
+**Met ids.** R22, R5, R6 of action-holds are met on the op-declarations side (the `holdsplaced` declaration and the `from` acceptance). R34 and R47 are NOT met until AFFORDANCES #51 merges.
+
+**Deferred.** Nothing in my module. The `holdsplaced` read ground is not mine to set: it waits for affordances.
+
+**For other modules (REPORT).** Each named in action-holds' record "After ANSWER B9":
+1. `affordances` (AFFORDANCES #51, in parallel): an `ACT_HELP` text for `holdsplaced`. Until it merges, my R34 and R47 stay red by name.
+2. `op-grades`: a read row and text for `holdsplaced` (as `holdsdue` at `op-grades/t51.mjs:13`). Not checked by my suite.
+3. `op-capabilities`: action-holds' record asks for a null row for `holdsplaced`, as for `actionholdpreview`. The row is already supplied by the `sessionread` kind (the R3 composition test passes with `holdsplaced` in it), so no hand row is needed; the record's ask is satisfied by the kind. Flagging it so BOB can confirm.
+4. `screens-action` (hold.mjs): sends `from` to the preview and release, and reads `holdsplaced`. Not mine.
+
+**Impact run (after the commit, origin/tranche/T51 to HEAD).** `build/plan/impact.mjs` names 19 modules, 597 test files (no shared table changed; op-declarations 25 of 25). I ran the 572 test files of the 18 other modules; the run hit my 590-second limit and stopped partway, so it is incomplete. Of what ran (1095 tests: 649 pass, 4 fail), three failures are outside op-declarations and I did not establish whether they predate this change:
+- `control-plane` `t48-door.test.mjs:149`, R92: `TypeError: Cannot set properties of null (setting 'env')` in `ai-use/index.mjs:1001`, reached through `aiUseOps`. Not in any file I touched.
+- `capture` R101 (`captureseenin`, the R2/R26/R29 door check): failing; not in any file I touched.
+- `control-plane` `r8-seam-capture.mjs:206`, R8 (G109): the capture-title fallback row; not in any file I touched.
+- **Caused by this change:** `control-plane` `t51-door.test.mjs:22`, R110: `assert.equal(R110_STAMPED.length, 10)` got 11. That test derives its list from `op-declarations/t51.mjs`'s T51 shares, so `holdsplaced` (a stamped `viewer` read) adds one. It is control-plane's test, so I did not edit it; REPORT to BOB for control-plane to move its pin to 11 (or to name `holdsplaced` as R111-style, as it decides).
+
+**Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 7, module lines 3470 src and 6938 test**
+
+## J42 · REPORT
+
+REPORT (fix round 10, item 116; action-holds R22). holdsplaced is declared (t51.mjs, action-holds family, sessionread) and from is accepted by actionholdpreview and actionholdrelease (action-holds' DECLARED_OPS). Suite: 249 tests, 247 pass, 2 fail, both expected red by name until AFFORDANCES #51 merges: R34 (affordances R48) and R47 (t42.test.mjs:140), each 'holdsplaced: neither explained nor named'. CAUSED BY THIS CHANGE, IN ANOTHER MODULE: control-plane bio-plane/test/m/control-plane/t51-door.test.mjs:22, R110 (T51-123), asserts R110_STAMPED.length === 10; it derives from t51.mjs and now counts 11 because holdsplaced is a stamped viewer read. I did not edit it (control-plane's test). Control-plane should move that pin to 11 (or exclude holdsplaced as it decides). Other impact-run failures, not in my files and base state not established: control-plane t48-door.test.mjs:149 (R92, ai-use/index.mjs:1001 TypeError), capture R101 (captureseenin), control-plane r8-seam-capture.mjs:206 (R8 G109). Impact run was cut at 590 s (572 of 597 files). Also action-holds' record asks for an op-capabilities null row for holdsplaced: not needed, the sessionread kind supplies NEEDS null (R3 composition test passes). Commit ed659bac6d + the record commit on job/T51/op-declarations.
+
+## J43 · COMPLETE
+
+COMPLETE for B43 (K5235; fix round 10, item 116; action-holds R5, R6, R22). Commits ed659bac6d (the declaration and tests) and the record commits aa79972f23 and after, on job/T51/op-declarations (tranche/T51 merged in first, 16 commits).
+
+What changed: bio-plane/src/op-declarations/t51.mjs:43: holdsplaced (action-holds R22) joins the action-holds share as sessionread, beside holdsdue. bio-plane/test/m/op-declarations/t49.test.mjs:153-163: the pinned family-row and NEEDS counts move by one (534 family rows; 16 T51 adds). bio-plane/test/m/op-declarations/t51.test.mjs (end): new test 'R22, R5, R6 (T51; K5232 ...)'. from on actionholdpreview and actionholdrelease needs no change here: action-holds' DECLARED_OPS (index.mjs:1122-1125) accepts it; the new test pins it.
+
+Failing-first: the new t51 test with t51.mjs reverted to HEAD: red on holdsplaced, 15 of 16 pass; with the change: 16 of 16. The t49 count pin went red after the t51.mjs change alone (534 != 533) and is green after the count update.
+
+Suite (op-declarations, 249 tests): 247 pass, 2 fail, both expected red by name until AFFORDANCES #51 merges: R34 (affordances R48) and R47, R34 (t42.test.mjs:140), each 'holdsplaced: neither explained nor named'. Not fixed by adding holdsplaced to the read ground: that would break the no-op-both rule once affordances' ACT_HELP text lands.
+
+Checks (absolute root /home/user/bio): format 0 failures; architecture (op-declarations) 0; coverage (op-declarations) 82 of 82; fixtures (op-declarations --list) 0 failures, no marker added; words 0 failures; ownership 0 failures.
+
+Met ids: action-holds R5, R6, R22 are met on op-declarations' side (the declaration and the from acceptance). R34 and R47 are not met until AFFORDANCES #51 merges.
+
+Impact: origin/tranche/T51 to HEAD names 19 modules, 597 test files. Partial run (cut at 590 s): one failure is caused by this change, in control-plane (bio-plane/test/m/control-plane/t51-door.test.mjs:22, R110: 11 != 10; reported in J42); three others are outside my files, base state not established (recorded in the record's impact paragraph).
+
+Deferred: nothing in my module.
+
+Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 7, module lines 3470
+
+## Fix round 10, item 116 (B44 CHANGE): work record
+
+B44 (K5237) asked for `holdsplaced` in the `ACT_HELP_ABSENT` read ground beside `holdsdue`, since AFFORDANCES #51 holds no text for it. Changed: `bio-plane/src/op-declarations/index.mjs` (the read ground's list, `"holderat", "holdsdue", "holdsplaced", "hypotheses"`). The R34 and R47 reds are gone.
+
+Suite (op-declarations, 249 tests): 249 pass, 0 fail. Checks: format, architecture, coverage (82 of 82), fixtures (op-declarations --list, 0 failures), words, ownership: all 0 failures.
+
+Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3470
+
+## J44 · COMPLETE
+
+COMPLETE for B44 (K5237; adds to B43). holdsplaced is added to the ACT_HELP_ABSENT read ground beside holdsdue (bio-plane/src/op-declarations/index.mjs, the read ground's list). Your R34 and R47 reds are gone: op-declarations suite 249 tests, 249 pass, 0 fail. Checks: format, architecture, coverage (82 of 82), fixtures (op-declarations --list, 0 failures), words, ownership: 0 failures. No fixtures marker added. Met ids: action-holds R22, R5, R6 on op-declarations' side, and op-declarations R34 and R47 for holdsplaced. Control-plane's R110 count (t51-door.test.mjs:22) is still the cross-module red reported in J42; not mine to change. Record: build/jobs/T51/op-declarations.md, section 'Fix round 10, item 116 (B44 CHANGE)'. Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3470

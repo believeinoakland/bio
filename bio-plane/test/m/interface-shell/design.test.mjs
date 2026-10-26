@@ -2,11 +2,13 @@
    the frame and from first paint, the paths of `elsewhere` and `updates`, T48's re-points, the two stylesheets and the
    undefined class refused, the phone frame, the guide's marks in the title row, no zero and no slug, absence and a
    refusal's own words, fields and rows as designed, More as rows, and the rungless acts' marks. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { interfacePage, interfaceScript, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { ADMIN_SCREENS } from "../../../src/wizard-scripts/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
 import { fitSend, boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
@@ -113,8 +115,9 @@ test("R56 class literals: written classes are taken, every one of a class attrib
   assert.deepEqual([...stylesheetClasses("/* .nope */ .x{background:url(a.b.png)} .y .z:hover{content:\".q\"} @media (max-width:760px){.w{}}")].sort(), ["w", "x", "y", "z"]);
 });
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R57 the working frame is the design's page: at the phone width the masthead shows icons only (the mark and the group's name, search, the explanation control, the avatar), each label kept as its accessible name, and the tabs are drawn last inside the frame, which is fixed-height; control: at 1280 px the labels are drawn and the tabs hidden by the stylesheet", async () => {
-  const p = await boot({ screens: ALL, phone: true, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  const p = await boot({ screens: ALL, phone: true, plane: { ...FRAME_ANSWERS, assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const frame = p.root().querySelector(".cs-frame");
   assert.ok(frame.classList.contains("cs-frame") && frame.getAttribute("data-frame") === "working");
   const mast = frame.querySelector(".cs-mast");
@@ -137,7 +140,7 @@ test("R57 the working frame is the design's page: at the phone width the masthea
   assert.match(style, /#cs-root>\.cs-frame\{[^}]*flex:1 1 auto[^}]*overflow:hidden/);
   assert.match(style, /#cs-root>\.cs-frame>\.cs-main\{overflow:auto/);
   /* control: at 1280 px the labels are drawn, and civicsmith.css hides the tabs outside its 760 px query */
-  const q = await boot({ screens: ALL, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  const q = await boot({ screens: ALL, plane: { ...FRAME_ANSWERS, assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const m2 = q.root().querySelector(".cs-mast");
   assert.equal(m2.querySelector(".mk-mastsearch").textContent, word("shell.search"));
   assert.equal(m2.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"));

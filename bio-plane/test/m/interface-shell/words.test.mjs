@@ -1,5 +1,6 @@
 /* interface-shell R5, R6, R10: every drawn string a word read by key (or the record's own data), dates by their words,
    and every read in one of four states. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
@@ -11,6 +12,7 @@ import { inWorld, bootAs, translated } from "./world.mjs";
 const DATA = ["A lease", "3 pages", "B", "withheld", "Pothole repairs", "Closed", "Minutes", "Budget", "River Town", "Pothole", "2 questions", "M", "mai", "R"];
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "withheld", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 const HELD = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }, { id: "h2", title: "Budget", at: "2026-10-02" }] });
+const FRAME_ANSWERS = await frameAnswers();
 const PLANE = { image: IMAGE, heldcaptures: HELD, projectdirectory: ok({ projects: [{ id: "P1", title: "Pothole", questions: 2, due: "2026-10-20" }] }) };
 const PATHS_ = ["/app", "/app/held", "/app/document/c1", "/app/members", "/app/settings", "/app/people", "/app/more", "/app/nowhere"];
 
@@ -107,7 +109,7 @@ test("R6 dates are drawn by date.daymonthyear and date.daymonth with date.month.
 test("R10 R61 every read of every screen answered in turn as pending, empty, refused and failed (no answer) draws still loading, empty (or the screen's own sentence), a refusal's own words alone or, with none, \"could not be read\" naming no code, never one for another", async () => {
   const reads = [["/app", "projectdirectory", FIXTURE_WORDS.find((r) => r[0] === "screen.home.t.empty")[1]], ["/app/held", "heldcaptures", word("state.empty")]];
   for (const [path, op, emptyText] of reads) {
-    const st = async (answer) => { const p = await boot({ screens: ALL, path, plane: { ...PLANE, [op]: answer } }); return p.root().querySelector("#cs-main"); };
+    const st = async (answer) => { const p = await boot({ screens: ALL, path, plane: { ...FRAME_ANSWERS, ...PLANE, [op]: answer } }); return p.root().querySelector("#cs-main"); };
     const loading = await st(pending);
     assert.ok(loading.querySelector('[data-state="loading"]'), path);
     assert.ok(loading.textContent.includes(word("state.loading")));
