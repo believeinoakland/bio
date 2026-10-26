@@ -550,3 +550,20 @@ Found outside my paths (K5175: reported the day found).
 1. `tasks` publishes no fixture for the op `taskresolve`. `screens-action`'s `dash-action.test.mjs:92` gave that op a hand-built answer, which the fixtures check flags as a finding (provider `tasks`, earlier in the order). I removed the scripted answer in my test (the test reads only the request it sends). If you want the answer scripted, `tasks` needs to publish it as a fixture (`tasks` is not my module). This also means the registry row question in B45 (`dash-action` still lists `taskresolve`) stands as before.
 
 2. `checks/run.mjs /home/user/bio` reports 263 findings in other modules' tests (stubs and answers with `contract-no-run`, `earlier`/`later` provider failures: e.g. `doorbell/r9-t51.test.mjs:8`, `file-safety/r1-registrar.test.mjs:8`, `monitoring/tick.test.mjs:566`, `plane/r10-reading-ended.test.mjs:20`, `test-support/job-registrar-stub.mjs:23`). None is in `screens-action`. Listed for BOB to route; I changed none of them.
+
+## J41 · COMPLETE · re B47
+
+COMPLETE (re B47, K5242). Round 16 (fix round 10, item 123): the interface-shell frame's four defaults are gone from the harness, and my two tests that relied on them now take them from `frame-answers.mjs`.
+
+What changed (commit b7ac9a735f on job/T51/screens-action):
+- `bio-plane/test/m/screens-action/request.test.mjs:3` imports `frameAnswers` from `../interface-shell/frame-answers.mjs`; `:163-165` `FRAME_ANSWERS` and `TEAM` read from `FRAME_ANSWERS.groupidentity.json.result.display_name` (not copied); R21 tests at `:170` and `:195` spread `...FRAME_ANSWERS` into their planes. Before: 2 failing (`River Town` absent; `quiet` control), after: 11 of 11 pass.
+- `bio-plane/test/m/screens-action/dash-action.test.mjs:92` no longer scripts `taskresolve: ok({ok: true})`. Judgement call for BOB: B45 said keep this case until the registry row lands; the B47 "done" condition (fixtures at zero) needed it unscripted, and the test still asserts the request body (`Q-1`). Say if you want it back in some other form.
+
+Tests, failing-first: request.test.mjs red (2 failures) then green (11 of 11); dash-action fixtures finding red then gone (the file's 7 tests green before and after). Suite `bio-plane/test/m/screens-action/*.test.mjs`: 297 of 297 pass, no skip, exits by itself (no force-exit). Run twice.
+
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0; coverage 55 of 55 live ids named; ownership 0 (1 file changed by screens-action vs the tranche); words 0; fixtures `screens-action --list`: 0 failures (two accepted generic markers, both pre-existing). run.mjs: no finding in screens-action; 263 findings elsewhere (reported in J40). impact: `build/plan/impact.mjs` names 0 affected modules for HEAD (test-only change to my own tests).
+
+Met ids (BOB strikes the marks): R21 (request.test.mjs; the two R21 tests named). R30 still waits on the registry row (UX-DESIGN), not this round.
+fixtures-own / fixtures-generic markers added: none.
+
+Size (session_019xK27ZcDWwZa116GviHjg1): test runs 5, module lines 5121
