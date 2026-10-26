@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01S5w36nrjrT4X3cdJbAUkgi · depth 2 · COMPLETE · handled B55
+**Status** · session_012cgESZ9YBHzMAmvwKniVQ4 · depth 2 · COMPLETE · handled B56
 
 ## J1 · QUESTION
 
@@ -1550,3 +1550,23 @@ Merged `tranche/T51`. `fr30b.test.mjs:235` takes case-import's real `citeimporte
 COMPLETE (B55, K5221). Merged tranche/T51. fr30b:235 now takes case-import's real citeimportedAnswer(); its real refusal IMPORTED_REF_MALFORMED (no word held, the plane's translation drawn) is added to the same test. Correction to the record: suite is 296 tests, 294 pass, 0 fail, 2 todo (not 297). Ownership 0.
 Left, 4 lines (fixtures --list 35 -> 4): fr30b:257 IMPORTED_NOT_ACCEPTED (citeimportedAnswer publishes no not-accepted state; the screen's special wording imported.mjs:246 needs it: CASE-IMPORT, please publish it); fr30b:435 and :437 (case-inputs: related / relationships-none standings); t51:76 (action-holds: docket-entry arrival). modules.json uses still lacks entities, capture, citation, sources, credentials, wizard-scripts (J48).
 Markers added: none. Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 17, module lines 3754 src + 5313 tests
+
+## J51 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #25, session_012cgESZ9YBHzMAmvwKniVQ4), fix round 10 (K5230): the last four fixture lines taken from their providers; `fixtures.mjs screens-publish --list` is at 0 failures (answer 0, stub 0, code 0, contract 0; the 6 `accepted` markers are earlier jobs', unchanged). `tranche/T51` merged at the START.
+
+**Changed.**
+- `bio-plane/test/m/screens-publish/fixtures.mjs` (`provided`): `casedetailsRelated`, `casedetailsNone` (case-inputs, `{recorded, publicRead}` in the plane's shape), `holdsDueDocket` (action-holds: `answer`, `placed`, and the entry, case and project read from the answer), `citeimportedRefused` (case-import's `citeimportedRefusalAnswer()`).
+- `fr30b.test.mjs` R59: the refusal is case-import's real one, citation's `BASIS_REFUSED` with `findings[0].code` `IMPORTED_NOT_ACCEPTED`. R57: the editor draws each work of the real `casedetails` by its relation's key; `published` draws each work of the real `casedetailspublic` as stated (its `words`, read from the answer); the `{none: true}` standing is case-inputs' own answer; control: related works stated, no "none" row.
+- `t51.test.mjs` R43: the docket entry carrying the mark is the one action-holds' `holdsdue` lists; "no hold yet" is drawn from `answer`, and not drawn from `placed`.
+- **Defect found by the real answer, fixed in the module:** `bio-plane/src/screens-publish/imported.mjs:246` mapped a bare `IMPORTED_NOT_ACCEPTED` refusal, which no plane gives. The real refusal is `BASIS_REFUSED` with the code in `findings`; the screen drew nothing of its words. It now maps `BASIS_REFUSED`: a finding coded `IMPORTED_NOT_ACCEPTED` draws `screen.imported.citeimp.ref.notaccepted1` and `.notaccepted2`; any other draws the finding's own translation, else `refusal.uncatalogued` with the code.
+
+**Failing first, then green.** R59 ("IMPORTED_NOT_ACCEPTED is drawn by its words") was red on the real refusal before the `imported.mjs` change and green after. R57's published assertion was red on a draw of the relation word the page never draws (the page draws the work's url or case and its words), so the test now asserts what the page draws. R43 and R57's other lines were green on the real answers at once.
+
+**Suite.** `node --import ./test/platform-sqlite.mjs --test test/m/screens-publish/`: 296 tests, 294 pass, 0 fail, 2 todo (R35's two presses, K3717); exited by itself. The users `impact.mjs` names (control-plane, plane; 119 files): 761 tests, 758 pass, 3 fail, none mine; the same 3 fail with `imported.mjs` at the tranche tip: `control-plane/t51-routes.test.mjs:31` (`captureOps` sets `clockEnv` on null, `capture/index.mjs:3803`), `screens-intake` G109 "a second press of the same address", and `control-plane` R92 "(T48; N1026...)" (`aiuseovertime` etc.).
+**Checks.** `checks/run.mjs /home/user/bio`: no finding in screens-publish; words 0 failures (testcopy 0, missingkey 0, handlist 0, unkeyed 1991); the one FAIL line is `interface-shell` harness.mjs:88 (`interfacewords`, an op-table answer in another module). `coverage.mjs screens-publish`: 80 of 80. ownership 0 failures. `setup-words build.mjs --check`: rows match.
+
+**Met ids:** none newly met; the marks are as before (R49 unchanged). **Markers added:** no `fixtures-own`, `fixtures-generic` or `fixtures-contract`.
+**Found elsewhere (P9):** the three reds above, with `capture/index.mjs:3803` and `interface-shell/harness.mjs:88`.
+
+Size (session_012cgESZ9YBHzMAmvwKniVQ4): test runs 9, module lines 9

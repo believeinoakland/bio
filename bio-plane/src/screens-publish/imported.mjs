@@ -243,7 +243,13 @@ export const IMPORTED = Object.freeze({
       // shown; the plane judges whether the finding is accepted (`IMPORTED_NOT_ACCEPTED`), and this page offers it on accepted ones only.
       op: "citeimported", label: "act.owed_citeimported.label.imported", rereads: [],
       refusals: {
-        IMPORTED_NOT_ACCEPTED: function (r, cs) { return cs.w("screen.imported.citeimp.ref.notaccepted1") + " " + cs.w("screen.imported.citeimp.ref.notaccepted2"); },
+        /* citation's real refusal is BASIS_REFUSED, its findings carrying the code (C-21.4); a finding the plane worded otherwise is drawn by its translation */
+        BASIS_REFUSED: function (r, cs) {
+          const found = (Array.isArray(r.findings) ? r.findings : []).filter(function (f) { return f && typeof f === "object"; });
+          if (found.some(function (f) { return f.code === "IMPORTED_NOT_ACCEPTED"; })) return cs.w("screen.imported.citeimp.ref.notaccepted1") + " " + cs.w("screen.imported.citeimp.ref.notaccepted2");
+          const said = found.map(function (f) { return String(f.translation || ""); }).filter(Boolean)[0] || String(r.translation || "");
+          return said ? cs.esc(said) : cs.w("refusal.uncatalogued") + " <code>" + cs.esc(String(r.code || r.reason || "")) + "</code>";
+        },
       },
       send: function (view, el, cs) {
         const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;

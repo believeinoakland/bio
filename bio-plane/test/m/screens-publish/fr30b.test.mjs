@@ -253,8 +253,8 @@ test("R59 an accepted import's finding offers 'Rest one of your team's questions
   pick(bad, "im-ci-role-0", "cuts_against");
   await press(bad, "citeimported", { reason: "x" });
   assert.ok(!hasWord("refusal." + malformed.json.result.code) && text(bad).includes(malformed.json.result.translation), "no word is held for it: the plane's own translation is drawn");
-  /* IMPORTED_NOT_ACCEPTED: case-import's fixture publishes no such state (REPORTed); hand-built until it does */
-  const refused = await open(IMP, { plane: { ...IMPORT(true), citeimported: ok({ ok: false, code: "IMPORTED_NOT_ACCEPTED", reason: "IMPORTED_NOT_ACCEPTED" }) } });
+  /* IMPORTED_NOT_ACCEPTED: case-import's real refusal, citation's BASIS_REFUSED carrying it in findings[0].code */
+  const refused = await open(IMP, { plane: { ...IMPORT(true), citeimported: await provided.citeimportedRefused() } });
   fill(refused, { "im-ci-q-0": "INQ-2026-0001" });
   pick(refused, "im-ci-role-0", "cuts_against");
   await press(refused, "citeimported", { reason: "x" });
@@ -427,15 +427,16 @@ test("R57 the details are named by key, Not stated by key and 'Take out' by key;
   assert.ok(drew(pub, "screen.case-editor.details.name.area"));
 });
 
-/* The related works and the "no relationships" standing are not in case-inputs' published `casedetails` (its `recorded` states area and contact):
-   REPORTed to BOB (fix round 10, K5213), the hand-built answers below stay until case-inputs publishes them. */
+/* The related works and the "no relationships" standing are case-inputs' own published answers (`casedetailsRelated`, `casedetailsNone`). */
 test("R57 a related work is drawn by its relation's word; a published 'no relationships' is drawn by its key", async () => {
-  const stated = (value) => ({ stated: true, value, set_by: "dev", set_at: "2026-10-01T09:00:00Z" });
-  const d = DETAILS({ related: stated([{ relation: "builds_on", url: "https://example.org/a" }, { relation: "disagrees_with", url: "https://example.org/b" }]) });
-  const p = await open(EDITOR, { plane: { casedetails: ok({ ok: true, case: C, published: false, truncated: false, history: [], details: d }) } });
-  for (const k of ["builds_on", "disagrees_with"]) assert.ok(drew(p, `screen.case-editor.details.rel.${k}`), k);
-  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: ok({ ok: true, case: C, group: "river-town", sentence: "x", details: DETAILS_PUBLIC({
-    relationships: { stated: true, value: { none: true }, set_at: "2026-10-01T09:00:00Z" } }) }) } });
+  const related = await provided.casedetailsRelated();
+  const p = await open(EDITOR, { plane: { casedetails: related.recorded } });
+  for (const r of related.recorded.json.result.details.related.value) assert.ok(drew(p, `screen.case-editor.details.rel.${r.relation}`), r.relation);
+  const shown = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: related.publicRead } });
+  for (const r of related.publicRead.json.result.details.related.value) assert.ok(text(shown).includes(r.words), "published draws the work as stated: " + r.words);
+  assert.ok(!drew(shown, "screen.case-editor.details.ties.none"), "control: related works stated, no 'none' standing");
+  const none = await provided.casedetailsNone();
+  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: none.publicRead } });
   assert.ok(drew(pub, "screen.case-editor.details.ties.none"));
 });
 
