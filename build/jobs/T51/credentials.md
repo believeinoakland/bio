@@ -569,3 +569,7 @@ Users of what changed (`impact.mjs` names 113 of 178 modules through the shared 
 Also for BOB: `op-grades`' registry and `affordances`' act help do not yet know `signerknown` (its description is in `DECLARED_OPS`); the queue (`queue` R96) and `queue-producers` (R55) read `signerList`'s `known_by`.
 
 Deferred: nothing.
+
+`control-plane`'s suite (135 files) did not finish in 30 minutes and was stopped; it calls no new service of mine (only the ops map and `signerList`'s extra two fields), so I report it unrun.
+
+Size (session_01FkqUZX9YzCShmHaoauY6tK): test runs 6, module lines 2799
