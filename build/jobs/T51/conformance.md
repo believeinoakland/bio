@@ -178,3 +178,12 @@ B9 done (START #29, walk E C2a). R43 met: `determine` now answers its own code f
 2. Generated artifacts made stale: `bio-plane/src/setup-words/rows.mjs` (new `localize` id), `bio-plane/src/case-checker/program.mjs` and `bio-plane/dist/bio-plane.bundled.mjs` (they hold conformance's refusal table).
 
 Deferred: none. Size (session_01SB37ZomNUisnUzz3WLTSui): test runs 8, module lines 14 (source) + 20 fixture lines + 66 test lines
+
+## Round 10 · item 143 (B10) — CONFORMANCE #30 · re-walk area E N4 (causes-rewalk.md §2)
+
+**Changed** (`bio-plane/src/conformance/index.mjs`): `reasonText` helper (:2056) draws a `why` `{key, vars}` through the word table (civil-time's reasons fall back to its own `reasonText`); `Conformance.datesOf` (:626, :627) and `whenWords` (:2169, :2170) use it, so the act event's reason is words, never `[object Object]`; `#bindings` (:~810) now carries `body_label` and `cite` (read through `standards.standardRead`), and `determine` draws both refusals (`STANDARD_NOT_BINDING` :~1070, `STANDARD_BINDING_UNDETERMINED` :1079) with the body's label and the standard's citation, `b.why` through `reasonText`. The refusal's data fields (`standard`, `body`) still carry the ids.
+**Tests** (`test/m/conformance/t51-binding.test.mjs`, appended): the walker's case (noncompliant, body picked as an entity, act event placed nowhere) asserts no `[object Object]`, no `ENT-`/`STD-` id in `detail` or `translation`, the body's label and the standard's citation present; and a compliant determination of an act placed nowhere asserts none in its `in_force_why` or its document (`w.text`). Both red on the old code (pass 5 / fail 2), green now (7/7).
+**Suite:** conformance 134/134. Users run: consequences 73, actions 157, action-clocks 87, filings 168, escalation 103, action-plans 110, plan-work 52, screens-action 310, all green. `checks/run.mjs`: no finding in conformance; words 0 failures, count not risen. Ownership 0 failures.
+**Met ids:** R3, R17, R27, R43. **Markers added:** none. **REPORTed:** none. **Deferred:** none.
+
+Size (session_0194RwZ8cmBo7rAcUqnf6xx9): test runs 12, module lines 21 (source) + 29 test lines
