@@ -173,3 +173,21 @@ Fix round 10, item 97 (2) (K5198): the two fixtures lines in actions' tests. Com
 **Found in other modules**: none new. This closes REPORT items 1 and 2 of my earlier record (J8), now that conformance (#28) publishes these states. One note for BOB, not a defect: conformance's fixtures each number their determinations from 0001, so a test cannot put two of its states in one world. A single published fixture holding NC (both bases), CO, VO, SU and PUB with distinct ids would let t45 ground all five in one world without the split above.
 
 Size (session_01UPyQp2ZbB7wjPqmg4PELgH): test runs 8, module lines 3533
+
+## Completion (fix round 10, START B10: walk E H3, H1 (1); R111)
+
+**Entries applied**
+- `bio-plane/src/actions/index.mjs` `derived` (ledger, ~2612): each ledger row now also carries `stage, outcome, exemptions, due_by, due_cite, quote_amount, quote_currency, quote_basis`, read from `fm.correspondence[ord]` as the record holds it, null where the entry states none (R111 sentence 1).
+- `addresseeSuggest` (~2981): a subject that is an entity of kind `office` is answered as the office, `{state: named, kind: office, role, body, entity_id}` (body from its `post_in` line on the date; an office in no body is listed under `undetermined` with why, never dropped) (R111 sentence 2). The body lookup is now one private method `#officeBody` shared with the existing path.
+- Tests (red on the old code, green now): `t51.test.mjs` "R111 a recorded reply reads back ... stage fee_estimate, 12 USD in `correspondence[1]`" (plus denial outcome/exemptions); `t33.test.mjs` "R111 R62 addresseeSuggest given an office entity ... answers named". Both failed with src stashed.
+
+**Tests and checks**
+- actions suite 157 of 157 (was 155).
+- Impact set (`impact.mjs origin/tranche/T51 HEAD`: 43 modules, 973 files; 7494 tests): 37 failures. Compared at the base: the pseudo, families, following, store-assembly R83, OCR A7/A8, r9-seam failures fail identically at `origin/tranche/T51` (inherited; 24 + 4 + 1 as run). The screens-daily home/fix2 (C94 handle) and queue-producers failures were already fixed on the tranche tip: green after merging it. `r8-wave` G123g L is a timing test: fails under the 4-way load, 3/3 alone. After the merge: those files plus the actions suite, 213 of 215, the 2 reds are the inherited OCR A7/A8.
+- format 0, architecture 0, coverage 78 of 78, words 0 failures, ownership 0. `checks/fixtures.mjs` reports 89 failures across the product (none in actions' files named by this change).
+
+**REPORTed / found elsewhere**: nothing new. Not mine and not changed: the screen-side parts of H3/H1 (screens-action), and R62's text still says "offices custodian_of/responsible_for a subject": R111 amends it, BOB's.
+**Deferred**: none. **Met ids**: R111 (both sentences), R62 as amended.
+**Markers added**: none.
+
+Size (session_01C5J6cssani1eTzUn9iSHoK): test runs 14, module lines 3561
