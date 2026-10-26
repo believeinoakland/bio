@@ -683,3 +683,7 @@ REPORT for CHANGE B41 (OP-GRADES #30 merged). Merged origin/tranche/T51 into job
 **Found, not changed.** The R31 fix needed the case-catalogue, ratification and publication merges (B38), which I did not touch.
 
 **Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 4, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`; no source change this job).
+
+## J33 · COMPLETE
+
+COMPLETE for CHANGE B42 (K5214). Covers R31, R87 and B40. Merged origin/tranche/T51 (ratification #39 in). R31's chain test is green: severed chain clean, control unchanged. R87 (B39) built and green. B40's fixtures kept, each checked against a fresh real call. Module suite: 262 of 262 pass. format 0, architecture 0, coverage 59 of 59 live ids, ownership 0. Record: build/jobs/T51/case-authoring.md, 'Completion record for B42'.
