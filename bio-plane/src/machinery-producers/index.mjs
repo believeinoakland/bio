@@ -41,6 +41,17 @@ import { networkNoticesOf } from "../network-notices/index.mjs";
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
 
+/* A wait as a member reads it (T51 A-04): whole seconds, rounded up, in minutes and seconds; never milliseconds. */
+function waitInWords(ms) {
+  const secs = Math.ceil(ms / 1000);
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  const seconds = `${s} second${s === 1 ? "" : "s"}`;
+  if (m === 0) return seconds;
+  const minutes = `${m} minute${m === 1 ? "" : "s"}`;
+  return s === 0 ? minutes : `${minutes} and ${seconds}`;
+}
+
 export class MachineryProducers {
   #host; #deps;
   /* The read's two functions (R1), held for one synchronous `conditionItems` call and cleared after it. */
@@ -343,8 +354,8 @@ export class MachineryProducers {
         case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
         subject: { kind: "host", id: null, host: r.host,
                    bundles: subj.ids.slice(0, MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: word("machinery-producers.summary.pacing_holding_captures", { host: r.host }),
-        detail: localize("machinery-producers.index.the_per_host_governor_is", "the per-host governor is in cool-off for {host} for another {max}ms after {refusals} consecutive refusal{v1}{v2}. Nothing about the source is being claimed here.", { host: String(r.host), max: String(Math.max(0, r.cooloff_until - now)), refusals: String(r.refusals), v1: String(r.refusals === 1 ? "" : "s"), v2: String(r.last_refusal_status ? ` (last status ${r.last_refusal_status})` : "") }),
+        summary: word("observation-log.vocabulary.condition_governor_holding_host"),
+        detail: localize("machinery-producers.index.pacing_wait_in_words", "Civicsmith will try {host} again in {wait}. It has been turned away {refusals} time{v1} in a row, so it is waiting before it sends more. This says nothing about whether the site is working.", { host: String(r.host), wait: waitInWords(Math.max(0, r.cooloff_until - now)), refusals: String(r.refusals), v1: String(r.refusals === 1 ? "" : "s") }),
         basis: { source: "host_governor", host: r.host,
                  cooloff_until: r.cooloff_until, retry_in_ms: Math.max(0, r.cooloff_until - now),
                  refusals: r.refusals, last_refusal_status: r.last_refusal_status ?? null,

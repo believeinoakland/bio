@@ -278,7 +278,7 @@ test("R10: with no zone held, the day and the age are undetermined, stated, neve
 test("R2, R4, R5, R11 (T50; plan rule 6; K3366): each item's summary is read by key through setup-words' word, never composed", () => {
   const m = byId(busy().read("olga"));
   const w = (key, vars) => word(`machinery-producers.summary.${key}`, vars);
-  assert.equal(m["CONDITION::governor-holding-host::h.example"].summary, w("pacing_holding_captures", { host: "h.example" }));
+  assert.equal(m["CONDITION::governor-holding-host::h.example"].summary, word("observation-log.vocabulary.condition_governor_holding_host"));
   assert.equal(m["CONDITION::partial-capture-outstanding::S1"].summary, w("capture_did_finish", { locator: "https://x.example/" }));
   assert.equal(m["CONDITION::render-deferred::CR-R"].summary.startsWith(w("render_waiting", { address: "https://a.example/", words: "" }).trimEnd()), true);
   assert.equal(m[`CONDITION::archive-fallback-eligible::${READS.seeded.addresses.gone}`].summary, w("stopped_answering_often", { address: READS.seeded.addresses.gone }));
