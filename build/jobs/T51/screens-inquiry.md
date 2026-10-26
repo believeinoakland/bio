@@ -735,3 +735,10 @@ Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 9, module lines 7041
 ## J54 · COMPLETE
 
 COMPLETE (SCREENS-INQUIRY #33), B82 done: r50-own-reading.test.mjs (4 tests naming R50: Concluded by / Written by, the 500-character bound, BAD_READING, NO_BASIS by key; failing first by 4 mutations; stable 6/6); R50 met. Module 598 pass 0 fail; format, architecture, coverage, ownership, words 0 failures. B81 NOT done, needs BOB: (a) extraction is not in my uses (modules.json:172), so its fixtures cannot be imported; (b) unpublished: fr5-document.test.mjs:121 NO_WHOLE_OBJECT (extraction/fixtures.mjs:15 held(whole:false) is private; noHome at :97 is published for the NO_HOME half), fr28-document-acts.test.mjs:50 successful pdfstructure re-extraction (reextraction.performed; only unheldStructure at fixtures.mjs:184 is published). B83 waits on interface-shell's merge. Fixtures 140 lines unchanged. No markers added. Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 9, module lines 7041
+
+## B84 applied · SCREENS-INQUIRY #33
+
+Tranche merged. `fr5-document.test.mjs:121` takes extraction's `readHeldAnswer.noWholeObject()` and `noHome()` (`fixtures.mjs:79,109,98`), the expectation (`why`) read from each answer. `fr28-document-acts.test.mjs:50` takes `reextraction()` (`fixtures.mjs:192`): the press is its real `{status: 200, body}` answer (`performed: false`, `owed: true`), asserted as such with the pass's `performed: true` (the ledger's, no op of the page answers it); the page draws no refusal for an owed press and reads the reading again. Observation (not a requirement; R96 states none): after a successful owed press the page draws no outcome sentence for it; the plane's own `why` is English. Left as is.
+Tests: module 598 pass, 0 fail (exits by itself). Checks: format, architecture, coverage (136 of 136), ownership, words 0 failures; fixtures 140 -> 138 lines. Markers added: none.
+
+Size (session_016HoSKbnGfNRuDPcU18H4t8): test runs 14, module lines 7041
