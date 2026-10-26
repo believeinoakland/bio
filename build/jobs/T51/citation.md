@@ -403,3 +403,21 @@ Checks (absolute root, after the merge): fixtures --list 0 failures (3514 files,
 Markers: none added. Met ids: none. Requirements unchanged.
 
 Size (session_01AKEgagoZYqWVJvoox2SvKQ): test runs 11, module lines 1760
+
+## J27 · COMPLETE
+
+COMPLETE for B20 (fix round 10, plan item 136, walk C C-M6): citation R23 met.
+
+Changed (commit f7841e8b8b):
+- citation/index.mjs: `reinstate` takes an optional `role` (#edgeTransition, the role block after BAD_REASON; the log entry; the answer's `role` and `roleMoved`; the door reads `role` body-first; `DECLARED_OPS.reinstate.fields.accepts` gains `role`, `requires` unchanged).
+- citation/splice.mjs: new `setBasisRole` (exported), rewrites only the named legs' `role:` line.
+- Refusals: a role outside the vocabulary `BAD_ROLE`; on a case `ROLE_NOT_APPLICABLE`; both before anything is written. No new code or row. A role equal to the leg's own moves nothing and the entry is R15's. One new sentence by `localize` (citation.index.changes_basis_legs_role_moved).
+- Fixture: `reinstateOtherSide()` in test/m/citation/fixtures.mjs, the door's answer to a reinstate onto the other side over a question; its test in fixtures.test.mjs (control: a role the leg already has).
+
+Tests, red then green: new reinstate-role.test.mjs (4 tests naming R23) was red on the old code (the role was ignored) and green after; invariants.test.mjs route test updated (reinstate now reads `role`, control with none). Citation 141/141.
+Users: op-declarations 249/249, op-grades 155/155, affordances 289/289, interface-shell 355/355, screens-inquiry 592/594: the two failures are the real-OCR PNG tests (r10-stated A7, A8), which fail identically on tranche/T51's citation code, so not from this change.
+Checks (absolute root): format 0, architecture 0, words 0, ownership 0; coverage and fixtures failures are other modules' and on the tranche tip; none names citation, R23 is named by a test.
+
+For BOB: R23 mark can be struck. R19's line for `reinstate` lists accepts project, handle, reason; it now also accepts `role` (R23); amend if you want it stated there. Screens (screens-inquiry's "Put on the other side" control) send `role` with the reinstate. Nothing REPORTed about other modules. No fixtures-own or fixtures-generic markers added.
+
+Size (session_01KSgpcetRPBy4G8vkWj4hYi): test runs 9, module lines 1833
