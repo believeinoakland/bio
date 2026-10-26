@@ -636,3 +636,20 @@ Options:
 (2) R24 drops `groupidentity` from its expected frame reads. Smaller, but it weakens R124's check that the frame keeps its six constants.
 
 Until you decide, R24 stays red in my suite. Ringing you after this.
+
+## J36 · BLOCKED
+
+BLOCKED (cause: tests). CHANGE (K5209) applied: tranche merged at e2572fdb71 (pushed); stores run again.
+
+Suite (interface-shell, 376 tests): 362 pass, 14 fail. Tranche tip without my commits: 373 pass, 3 fail (R30, R5, R81: the `publishedcase` field mismatch, not mine). So 11 of my failures are caused by the four frame-default removals (K5202 b). Measured by restoring each set alone in my tree (then reverted; pushed tree is clean):
+
+- groupidentity alone restored: R43, R57, R65, R75, R102 pass. Dependents of the frame's group name and avatar.
+- interfacewords, queue, signout restored: R7, R10, R103 pass.
+- R82 and R84 pass only with all four restored.
+- R24 is the expected one (red by name, K5208).
+
+So, beyond R24, 10 tests need the removed answers. Two decisions for you:
+1. groupidentity: instance-setup #38's `groupIdentityAnswer()` (B49) would cover R43, R57, R65, R75, R102, R82 and R84. It is not in the tranche yet; I can't use it until it merges.
+2. interfacewords, queue, signout: R7, R10, R103 (and R82, R84) need answers. I cannot hand-build them (fixture rule). Please say which module publishes each (I did not verify owners), or whether these tests should take the frame's real answer.
+
+I have not restored any default. Until 1 and 2 are settled, the suite stays at 14 red. The job is not COMPLETE.
