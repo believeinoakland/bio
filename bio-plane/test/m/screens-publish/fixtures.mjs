@@ -11,6 +11,7 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 let storeWorld = null;
 try { ({ storeWorld } = await import("../store-request/fixtures.mjs")); } catch (e) { if (!/second registration|registered after the first read/.test(String(e && e.message))) throw e; }
 import { boot, counted, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
+import { frameAnswers } from "../interface-shell/frame-answers.mjs";
 
 export { SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
 
@@ -86,12 +87,14 @@ export const PUBLISHED_CASE = { caseId: C, edition: 2, scope: "The Coliseum leas
 /* K5207, K5213 (fix round 10): the reads the screens' default plane takes from their providers' published fixtures, each answer made by
  * the provider's real code. Loaded lazily (a provider's fixtures register nothing until a test asks), by `open` and `openDefaults`
  * before the page boots; `plane()` spreads whatever is loaded. */
+/** The group's display name as the frame's `groupidentity` answer states it (instance-setup's fixture): what a test expects a screen to draw. */
+export const groupName = async () => (await frameAnswers()).groupidentity.json.result.display_name;
 export const DEFAULT = {};
 export async function openDefaults() {
   if (DEFAULT.entitieskind) return DEFAULT;
   const [pr, ci, en] = await Promise.all([import("../public-read/fixtures.mjs"), import("../case-inputs/fixtures.mjs"), import("../entities/fixtures.mjs")]);
   const details = ci.casedetails().recorded, detailsPublic = ci.casedetailspublic().published;
-  Object.assign(DEFAULT, { docketpublic: ok(await pr.docketPublicOfCase()), casedetails: ok(details), casedetailspublic: ok(detailsPublic), entitieskind: ok(en.entitieskind()) });
+  Object.assign(DEFAULT, { ...(await frameAnswers()), docketpublic: ok(await pr.docketPublicOfCase()), casedetails: ok(details), casedetailspublic: ok(detailsPublic), entitieskind: ok(en.entitieskind()) });
   return DEFAULT;
 }
 

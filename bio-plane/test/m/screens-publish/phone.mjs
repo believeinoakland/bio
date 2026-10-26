@@ -10,6 +10,7 @@ import { interfacePage, interfaceScript, scriptPath } from "../../../src/interfa
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREENS, plane } from "./fixtures.mjs";
 import { FRAME } from "../interface-shell/harness.mjs";
+import { frameAnswers } from "../interface-shell/frame-answers.mjs";
 
 const root = (p) => fileURLToPath(new URL("../../../../" + p, import.meta.url));
 function engine() {
@@ -27,7 +28,7 @@ export async function measure(path, width, { answers = {}, waitFor = "#cs-main h
   assert.ok(pw && pw.chromium, "playwright-core is needed beside the product (`npm ci` in site/), with Chromium: this test cannot measure without them");
   assert.ok(existsSync(EXE), "Chromium is needed at CHROMIUM or /opt/pw-browsers/chromium");
   const html = interfacePage(SCREENS), script = interfaceScript(SCREENS);
-  const all = { ...FRAME, ...plane(answers) };
+  const all = { ...FRAME, ...(await frameAnswers()), ...plane(answers) };
   const browser = await pw.chromium.launch({ executablePath: EXE });
   try {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
