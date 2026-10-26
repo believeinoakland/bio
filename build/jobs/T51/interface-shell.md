@@ -653,3 +653,17 @@ So, beyond R24, 10 tests need the removed answers. Two decisions for you:
 2. interfacewords, queue, signout: R7, R10, R103 (and R82, R84) need answers. I cannot hand-build them (fixture rule). Please say which module publishes each (I did not verify owners), or whether these tests should take the frame's real answer.
 
 I have not restored any default. Until 1 and 2 are settled, the suite stays at 14 red. The job is not COMPLETE.
+
+## J37 · QUESTION
+
+CHANGE (K5219) applied at 4aeab426b9 (pushed). The frame's four reads now come from their owners' fixtures through `bio-plane/test/m/interface-shell/frame-answers.mjs` (the one place that imports them): groupidentity (instance-setup `groupIdentityAnswer`), interfacewords with no language (translations `interfaceWordsAnswer().default`), queue (`feedWithItem`, `countWithItem`), signout (credentials `signout().answer`). Tests read their expectations from those answers. The four defaults in harness.mjs are gone.
+
+Interface-shell suite: 376 tests, 373 pass, 3 fail: R30, R5 (the first, `publishedcase` FieldMismatch), R81. Those three also fail on the tranche tip without my commits (the `publishedcase` field mismatch is not mine).
+
+Checks: format 0; coverage 127/127; ownership 0; fixtures 0 failures (the two refusal builders in harness.mjs are `fixtures-own: input`, the test's own input). Architecture: 6 failures, all one question:
+
+QUESTION: interface-shell's tests import, and frame-answers.mjs imports, four modules it does not declare in `uses` (build/modules.json, interface-shell): `queue`, `translations`, `credentials`, `instance-setup`. All four are earlier in the order than interface-shell (queue 149, translations 150, instance-setup 151, credentials 40; interface-shell 161). Options:
+(1) Recommended: add those four to interface-shell's `uses` (test-only edges, all earlier, no code edge). I cannot edit build/modules.json; it is yours.
+(2) Another route you name.
+
+I will not commit or push further until you answer. Screens modules are being run against the new frame answers now; their reliance on removed defaults will follow in a REPORT.
