@@ -12,7 +12,7 @@ import { GOLDEN, run, plain } from "./fixture.mjs";
 const STD = "STD-2026-0001-law";
 const leg = (o) => ({ target: STD, role: "supports", ...o });
 const refs = [{ target: STD }];
-const basisOf = (l, label = "basis[0]") => plain(run((f) => IG.checkInquiryBasis({ object_type: "inquiry", references: refs, basis: [l] }, f, null, null)).findings);
+const basisOf = (l, label = "basis leg 0") => plain(run((f) => IG.checkInquiryBasis({ object_type: "inquiry", references: refs, basis: [l] }, f, null, null)).findings);
 
 test("R13 standardLegFindings is exported by name from the module and from its grammar file, the same binding, and is the checker R4's standard arm calls: same findings, same answer", () => {
   assert.equal(typeof IG.standardLegFindings, "function");
@@ -20,16 +20,16 @@ test("R13 standardLegFindings is exported by name from the module and from its g
   for (const l of [leg({ grade_axis: "connection", grade: "B", grade_source: "resolution" }), leg({ grade_axis: "testimony", grade: "D", grade_source: "testimony" }),
                    leg({ grade_axis: "capture", grade: "B", grade_source: "hunch", author: "a", date: "2026-07-01" }),
                    leg({ target_portion: "" }), leg({ target_portion: "x".repeat(2000) })]) {
-    const own = run((f) => IG.standardLegFindings("basis[0]", l, f));
+    const own = run((f) => IG.standardLegFindings("basis leg 0", l, f));
     const inBasis = basisOf(l).filter((x) => own.findings.some((y) => y.message === x.message));
     assert.deepEqual(inBasis, plain(own.findings), JSON.stringify(l));
     assert.equal(own.answer, own.findings.some((x) => x.code === "STANDARD_LEG_AXIS"));
   }
-  assert.equal(run((f) => IG.standardLegFindings("basis[0]", leg({ grade_axis: "connection" }), f)).answer, true);
+  assert.equal(run((f) => IG.standardLegFindings("basis leg 0", leg({ grade_axis: "connection" }), f)).answer, true);
 });
 
 test("R13 control: a capture-axis standard leg raises nothing of its own, and the answer is false", () => {
-  const r = run((f) => IG.standardLegFindings("basis[0]", leg({ grade_axis: "capture", grade: "B", grade_source: "capture", target_portion: "section 2" }), f));
+  const r = run((f) => IG.standardLegFindings("basis leg 0", leg({ grade_axis: "capture", grade: "B", grade_source: "capture", target_portion: "section 2" }), f));
   assert.deepEqual(r.findings, []);
   assert.equal(r.answer, false);
 });
@@ -102,9 +102,9 @@ test("R68 a cutting leg that names a ground is refused with its own finding nami
   assert.equal(r.length, 1);
   assert.equal(r[0].check, "C-2.8");
   assert.equal(r[0].severity, "error");
-  assert.ok(r[0].message.includes("basis[1]") && r[0].message.includes("'a'"), r[0].message);
+  assert.ok(r[0].message.includes("basis leg 1") && r[0].message.includes("'a'"), r[0].message);
   const alone = grounded([SUP({}), CUT({ ground: "b" })], [{ ...G_A, ground: "b" }]);
-  assert.ok(alone.some((x) => x.message.includes("basis[1]")), "the cutting leg is named");
+  assert.ok(alone.some((x) => x.message.includes("basis leg 1")), "the cutting leg is named");
   assert.equal(alone.length, 2, "the cutting leg's own finding, and the row whose label no supporting leg carries");
 });
 
@@ -115,7 +115,7 @@ test("R68 control: a basis with no cutting leg is judged as before, and a cuttin
 });
 
 /* R4 (fix round 9, G167; K4985): the leg's extent is judged by content's ten kinds, `doc-part` among them. */
-const extentOf = (l) => plain(run((f) => IG.checkLegExtentGrammar(l, "basis[0]", "C-2.8", f)).findings);
+const extentOf = (l) => plain(run((f) => IG.checkLegExtentGrammar(l, "basis leg 0", "C-2.8", f)).findings);
 const partLeg = (o) => ({ target: "INF-2026-0001-doc", role: "supports", extent_kind: "doc-part", ...o });
 
 test("R4 a citation of a footnote, header, comment or other part found by a search passes checkLegExtentGrammar (control-plane seam §10)", () => {

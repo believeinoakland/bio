@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01AF89gbL2B6HjsEmphSxMvw · depth 2 · COMPLETE · handled B58
+**Status** · session_011MRtDNeEfHW1QMz44tMXAY · depth 2 · COMPLETE · handled B60
 
 ## J1 · BLOCKED
 
@@ -737,3 +737,35 @@ Not done here, for BOB: the DOM stand-in has no real `<details>` toggle, so the 
 Markers: none added (the test's screen is its own harness input; it names no other module's answer).
 
 Size (session_01AF89gbL2B6HjsEmphSxMvw): test runs ~14, module lines 11920 (src 3419, tests 8501)
+
+## J42 · COMPLETE
+
+COMPLETE, interface-shell, T51 fix round 10 (plan item 149; K5308, B59): R134 and R135. Branch pushed.
+
+Changed: `bio-plane/src/interface-shell/index.mjs` `RE_POINTS` (~:150-165): `setup: ["factconfirm"]`, `question: ["leggrade"]`, and `resolve` added to `document` (`["readheld", "resolve"]`), each noted "until the registry lists it" (the registry lists `factconfirm` on `group` and `resolve` on `person` only, `leggrade` nowhere); `checkScreens` (:188) is unchanged and admits them through `RE_POINTS`. `browser.mjs` `cs.checks` (~:846-852): an option `typing` (as `cs.field`'s) is kept in `inst.typing[id]` and the fieldset is marked `data-typing-group`; the page's `change` listener (~:2371) hands the screen's handler `(cs, view, value)` at once, `value` the radio's chosen value or the list of values ticked, and runs before the redraw and keep branches, so a group with `redraw` also redraws. A group with no `typing` does nothing new.
+
+Tests, red then green (stashed the source change, ran, restored): new `r134.test.mjs`. R134 x3 (each re-point served on its screen; control: the same op on another screen and another unlisted op on its own screen still throw): red "factconfirm is a named re-point of setup" and the other two, green after. R135: a radio group and the nothing-left-out box tell the screen (the unsaved line drawn, with the chosen value and the ticked list); control: a group given no handler tells nothing. Red "the radio's change reached the screen", green after. `design.test.mjs` and `t50.test.mjs` updated: their `RE_POINTS` deepEqual now lists the three new entries.
+
+Suite: interface-shell 384 of 384 pass (380 plus four). Users (`impact.mjs`: 13 modules): screens-publish 307/0, screens-inquiry 604/0, screens-settings 273/0, screens-intake 390/0, screens-daily 321/0, screens-investigate 308/0, screens-action 322/0, screens-wizards 76/0 (pass/fail); screens-entry 96 pass, 2 fail ("R12 drawn over an empty team", "R1 each read in its four states"): the same two fail on a worktree of origin/tranche/T51, so not caused by this change. control-plane, plane and journey-check not run this round (they do not draw `cs.checks`; the round's Done list does not name them).
+
+Checks (absolute root): architecture 0; coverage 130 of 130 live ids named, 0 failures; ownership 0 (6 files changed by interface-shell); `checks/run.mjs`: no finding in interface-shell's files; format: 1 failure, `build/rulings.md:5301` (K5308 states no standing-list decision), BOB's file, not mine.
+
+Met: R134, R135 (the requirement lines still read "(not yet met: T51)": BOB's to change). `leggrade` is admitted now because the test registers the owners' declarations; the shipped `OPS` holds it only once op-declarations declares it (handoff: citation J28 (3)).
+
+Markers: none added (R135's stand-in screen is the test's own harness input, named `fixtures-own` in the file header).
+
+Size (session_011MRtDNeEfHW1QMz44tMXAY): test runs ~12, module lines 3437
+
+## J43 · COMPLETE
+
+COMPLETE, interface-shell, T51 fix round 10 (item 149; B59): R134 (RE_POINTS: setup factconfirm, question leggrade, document resolve) and R135 (cs.checks tells its screen of a change via a typing option). Tests red then green (r134.test.mjs, 4 tests); module 384/384; screens-publish/inquiry/settings/intake/daily/investigate/action/wizards all green; screens-entry 2 fail, identical on origin/tranche/T51. Checks: architecture, coverage 130/130, ownership 0, run.mjs no finding in my files; format has 1 failure in build/rulings.md:5301 (K5308, yours). Details in my record J42. Pushed job/T51/interface-shell.
+
+## J44 · COMPLETE
+
+COMPLETE, interface-shell, T51 fix round 10 (B60, K5310): R134's fourth re-point. Merged `origin/tranche/T51`; `index.mjs` `RE_POINTS` gains `queue: ["signerknown"]` (credentials R83; the registry lists it nowhere). `r134.test.mjs` gains the `signerknown` on `queue` case (served; control: on `explore`, and another unlisted op on `queue`, still throw); `design.test.mjs` and `t50.test.mjs` deepEquals updated. Red without the source line ("signerknown is a named re-point of queue"), green with it. interface-shell 385 of 385 pass. The rest of J42 (R135, other suites, checks) stands; the change adds one table entry.
+
+Size (session_011MRtDNeEfHW1QMz44tMXAY): test runs ~16, module lines unchanged but 1 table entry
+
+## J45 · COMPLETE
+
+COMPLETE after B60: RE_POINTS gains queue: signerknown (red without, green with, r134.test.mjs); module 385/385; ownership 0; coverage ok. Record J44. Pushed.

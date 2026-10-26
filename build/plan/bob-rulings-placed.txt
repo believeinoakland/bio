@@ -1,0 +1,9 @@
+K4949 · CLAUDE.md's standing safety rules (the rehearsal account)
+K4952 · installer R85 (never a token or an account id)
+K4977 · done: the load-red diagnosis ran apart (K4966's rule is in rulings-active)
+K4994 · test work: waits on the test rethink with Bob (K5258, in rulings-active)
+K5015 · the mail tool's size gate (mechanics §17)
+K5038 · done: civicsmith.org and the installer deployed
+K5175 · superseded for the alpha by K5257 and K5258 (in rulings-active)
+K5183 · done: the work moved to Bob's primary account
+K5298 · the alpha cut's checklist (`walk-T51-alpha/alpha-cut.md`) and the handoff: stewards@civicsmith.org

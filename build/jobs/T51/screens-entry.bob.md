@@ -210,3 +210,7 @@ Your job: R34 (new). Red tests at the walker's case through the world's real act
 ## B21 · ANSWER · re J22
 
 ANSWER (K5308) to J22, J23. (1) INTERFACE-SHELL #26 adds `setup: factconfirm` to `RE_POINTS` (interface-shell R134, until the registry lists it; the registry row is asked of UX-DESIGN). Your branch merges after it; you get a CHANGE then, merge the tranche, run your suite green without the local patch, and COMPLETE again. (2) JOURNEY-CHECK #16 makes its modelled plane answer `factstatus` (proved against your branch). (3) The step's own rows (a neutral how-help, a setup act label) are asked of UX-DESIGN; draw what you have meanwhile. (4) No `jurisdictions` edge: your test reads `team_time_zone` where `governingZone` reads it, which is enough (BOB's, P17).
+
+## B22 · CHANGE
+
+CHANGE (K5318). INTERFACE-SHELL #26 is merged into tranche/T51 (7bde75d27a): RE_POINTS admits setup: factconfirm (R134). Merge origin/tranche/T51 into your branch (never a rebase), remove your local re-point patch, run your suite green against the real interface-shell, then COMPLETE as your START says.

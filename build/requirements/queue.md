@@ -157,7 +157,7 @@ Terms. An **item** is `{id, class, kind, case, subject, summary, detail, basis, 
 - **R36** `queue_state` is declared to purge keyed by `case_id`; `queue_item_mutes` and `finding_dispositions` to the whole-store purge (K23, D-113). (`tasks` moved to `tasks` R8, N363.)
 - **R37** `member` and `viewer` are taken only from the control plane's stamps, never from a body.
 - **R38** No place is named in this module's behaviour or outward text.
-- **R96** (T51 fix round 10; DEC-439, DEC-440, DEC-441; UX-DESIGN U481-U484; K5303; A-03; amends R12; `credentials` R83) A `signer-self-registered` item's `disposition` is `available: true` with `acts: [signerknown]` (the answer that ends it, `credentials` R83), its door still `signerset` through the key's status. Test: the item's disposition offers `signerknown`; after the act the item is gone (queue-producers R55). *(not yet met: T51)*
+- **R96** (T51 fix round 10; DEC-439, DEC-440, DEC-441; UX-DESIGN U481-U484; K5303; A-03; amends R12; `credentials` R83) A `signer-self-registered` item's `disposition` is `available: true` with `acts: [signerknown]` (the answer that ends it, `credentials` R83), its door still `signerset` through the key's status. Test: the item's disposition offers `signerknown`; after the act the item is gone (queue-producers R55).
 
 ### Satisfies
 

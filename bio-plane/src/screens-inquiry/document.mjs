@@ -40,10 +40,15 @@
  * R55 (C40) `attest` asks the co-archive for a public https address and says which of the two confirmations is missing; R124 (C42) `adoptversion`
  * only where the newer copy was captured and has a reading chain (`moveOffer`); R3 (C95) the cite picker's search box, titles and dates; interface-shell
  * R111 (C94) members by `cs.memberName`; R96 (C17) "Read N of M words"; R126 (`resolvetestify`) and R127 (`contradictionflag`), DEC-394 (3d, 3e);
- * R117 (C41) a refused version names its unplaced legs by their documents' titles. */
+ * R117 (C41) a refused version names its unplaced legs by their documents' titles.
+ *
+ * T51 fix round 10 (R139; DEC-439 to DEC-441): `contradictionflag` is answered in the design's words (`screen.document.flag.recorded`, `.already`), the flags raised on the
+ * document are listed (`contradictioncandidates` by `bundle`), a typed page a second member checked says who and when (`screen.document.attest.checked`), and "Find the people and
+ * offices it names" (`resolve`, entities R11) is carried once the registry admits it (admit.mjs), saying `screen.document.people.none` when it matched none. */
 
 import { checkOutcome } from "../screens-intake/index.mjs";
 import { RE_POINTS } from "../interface-shell/index.mjs";
+import { admitted } from "./admit.mjs";
 
 /** R3: the reads that need only the document's id; the rest follow from its front matter. */
 function reads(view) {
@@ -743,8 +748,8 @@ function render(cs, view) {
       const ext = t.extent && typeof t.extent === "object" ? t.extent : null;
       const page = ext && Number.isInteger(ext.page) ? pg(ext.page) : null;
       const name = who(t.transcriber);
-      /* T51 fix round 10 (B89, C-M2; content R57): an attestation that `counts` is a second member's check of this typing. A typing so checked draws no "Not yet
-         checked" (false), and a member who has confirmed it is offered no form. The word for "checked by X on D" is not held; REPORTed, never drawn false */
+      /* T51 fix round 10 (B89, R139; C-M2; content R57; DEC-439): an attestation that `counts` is a second member's check of this typing. A typing so checked draws no "Not yet
+         checked" (false) but `screen.document.attest.checked` for each such check ({name}, {date}), and a member who has confirmed it is offered no form */
       const counted = (Array.isArray(t.attestations) ? t.attestations : []).filter((a) => a && a.counts);
       const iConfirmed = counted.some((a) => meIds.includes(String(a.attestor)));
       /* C17: the typed words are the page's reading: read from the typing (content R26's `transcription`) and drawn under the page typed */
@@ -752,7 +757,8 @@ function render(cs, view) {
       const words = tw.state === "ok" && tw.value && typeof tw.value.text === "string" && tw.value.text.trim()
         ? `<blockquote class="mk-passage rec" data-typed-text="1">\u201c${cs.esc(tw.value.text.trim())}\u201d</blockquote>` : "";
       return `<div data-typed="${cs.esc(String(t.content_id))}">` + cs.sheet(rowOf("", `<span class="rec">${W("screen.document.attest.row", { page: page !== null ? String(page) : String(t.ref || ""), name, date: { html: dayOf(t.at) } })}</span>`
-          + (counted.length ? "" : `<br><span class="mk-sub">${W("screen.document.attest.status", { name })}</span>`))) + words
+          + (counted.length ? counted.map((a) => `<br><span class="mk-sub" data-checked-by="1">${W("screen.document.attest.checked", { name: who(a.attestor), date: { html: dayOf(a.at) } })}</span>`).join("")
+            : `<br><span class="mk-sub">${W("screen.document.attest.status", { name })}</span>`))) + words
         + (mine || iConfirmed ? "" : cs.field("document-attest-note-" + String(t.content_id), "screen.document.attest.note", { area: true, rec: true, help: "screen.document.attest.note.help" })
           + `<p class="mk-note">${W("screen.document.attest.at")}</p>` + cs.act("transcriptionattest", { label: "act.transcriptionattest.label.document", data: { content: String(t.content_id) } })) + "</div>";
     }).join("") + own("transcriptionattest") + "</details>");
@@ -1300,8 +1306,12 @@ function render(cs, view) {
         + `<p class="mk-small">${W("screen.document.contradict.other.help")}</p>`
         + flagState + cs.field("document-flag-why", "screen.document.contradict.why", { area: true, rec: true, help: "screen.document.contradict.why.help" })
         + cs.act("contradictionflag", { data: { sha } }) + own("contradictionflag") + "</details>" : "";
+    /* R139 (T51 fix round 10; DEC-439; D-M3, C-M7; entities R11): "Find the people and offices it names" (`resolve` over this capture), drawn only where the screen carries
+       the act (`view.parts.resolve`: the registry admits it); after it finds no name to match, `screen.document.people.none` stands beside it (its outcome) */
+    const resolveHtml = view.parts.resolve ? cs.act("resolve", { label: "act.resolve.label.document", data: { sha }, tone: "quiet" }) + own("resolve") : "";
     const folds = testifyHtml + flagHtml;
     if (rs.state === "failed") out.push(cs.sec("document.names.title", cs.state(rs, () => ""), { help: "document.names.help" }));
+    else if (!names.length && resolveHtml) out.push(cs.sec("document.names.title", resolveHtml, { help: "document.names.help" }) + folds);
     else if (!names.length && folds) out.push(folds);
     else if (names.length) {
       const people = names.some((n) => n.kind === "person");
@@ -1344,8 +1354,29 @@ function render(cs, view) {
           + `<p class="mk-small">${W("screen.document.defect.which.help")}</p>`
           + cs.field("document-defect-why", "screen.document.defect.why", { area: true, rec: true, help: "screen.document.defect.why.help" })
           + `<p class="mk-note">${W("screen.document.defect.at")}</p>` + cs.act("resolutiondefect", { label: "act.resolutiondefect.label.document", data: { sha } }) + own("resolutiondefect") + "</details>" : "")
-        + folds + `<p class="mk-note">${W("screen.document.a31.the_grade_on_each_name_says_how_the_matc")} ${W("screen.document.a31.it_says_nothing_about_how_far_to_trust_t")} ${W("screen.document.a31.a_connection_to_another_document_takes_t")}</p>` + cs.act("explore", { label: "act.explore.label.document", data: { from: id } }), { help: "document.names.help" }));
+        + resolveHtml + folds + `<p class="mk-note">${W("screen.document.a31.the_grade_on_each_name_says_how_the_matc")} ${W("screen.document.a31.it_says_nothing_about_how_far_to_trust_t")} ${W("screen.document.a31.a_connection_to_another_document_takes_t")}</p>` + cs.act("explore", { label: "act.explore.label.document", data: { from: id } }), { help: "document.names.help" }));
     }
+  }
+
+  /* R138, R139 (K5292, K5303; DEC-440; contradiction R25, R61): "Flags raised on this document", from `contradictioncandidates` with this record (`bundle`): the
+     candidates a member flagged (`flagged_by`), each pair named by the two passages' documents, linked to its contradiction, who flagged it and when beneath
+     (`screen.contradiction.flagged.by`). Drawn only when a flag exists (R20); a read that fails is drawn failed, never as none. */
+  {
+    const fl = later("flags", "contradictioncandidates", { bundle: id });
+    const flagged = fl.state === "ok" && fl.value && Array.isArray(fl.value.candidates) ? fl.value.candidates.filter((c) => c && c.candidate && c.flagged_by && typeof c.flagged_by === "object") : [];
+    /* a passage is named by its document's title (its `image`), or by the question it states, never by an id */
+    const sideName = (side) => {
+      const src = side && side.source && typeof side.source === "object" ? side.source : {};
+      if (src.inquiry) return String(src.title || "") || T("state.undetermined", { reason: "" });
+      const im = src.bundle ? later("flagdoc:" + String(src.bundle), "image", { id: String(src.bundle) }) : null;
+      const t = im && im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? clean(view.parts.front(im.value["bundle.md"]).title) : "";
+      return t || T("state.undetermined", { reason: "" });
+    };
+    if (fl.state === "failed") out.push(cs.sec("screen.document.flags.head", cs.state(fl, () => "")));
+    else if (flagged.length)
+      out.push(cs.sec("screen.document.flags.head", `<div data-flags="1">` + cs.sheet(flagged.map((c) => `<div data-flag="${cs.esc(String(c.candidate))}">` + rowOf("",
+        cs.ref("contradiction", String(c.candidate), T("screen.document.flags.pair", { a: sideName(c.a), b: sideName(c.b) }), []), "",
+        W("screen.contradiction.flagged.by", { member: who(c.flagged_by.member), date: { html: c.flagged_by.at ? dayOf(c.flagged_by.at) : "" } })) + "</div>").join("")) + "</div>"));
   }
 
   /* R99 (C29; DEC-375): a member asserts a connection between this document and another one the team holds, by hand (`connectionassert`),
@@ -1546,6 +1577,20 @@ const readheldActs = Object.freeze(Array.isArray(RE_POINTS.document) && RE_POINT
       const key = why === "NO_HOME" ? "refusal.CAPTURE_NOT_HELD" : why === "NO_WHOLE_OBJECT" ? "transcribe.why.evidenceabsent" : "";
       cs.set("outcome", Object.assign({}, view.ui.outcome, { readheld: key ? { ok: false, html: cs.w(key) } : null }));
       cs.set("later", Object.assign({}, view.ui.later, { reading: null }));
+    } },
+] : []);
+
+/** R139 (T51 fix round 10; DEC-439; D-M3, C-M7; entities R11): "Find the people and offices it names", `resolve` over this copy's capture (`captureSha`). The names the reading holds
+ *  are matched to the subjects the record knows; the page then reads its names again, and says `screen.document.people.none` when the answer matched none. Held apart as
+ *  `readheldActs` is: carried only once the registry (or `RE_POINTS`) admits it (admit.mjs). Self-contained. */
+const resolveActs = Object.freeze(admitted("document", "resolve") ? [
+  { op: "resolve", label: "act.resolve.label.document", rereads: [],
+    send(view, el) { return { body: { captureSha: String(el.dataset.sha || "") } }; },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const n = r && Array.isArray(r.resolved) ? r.resolved.length : r && Number.isInteger(r.resolved) ? r.resolved : null;
+      cs.set("outcome", Object.assign({}, view.ui.outcome, { resolve: n === 0 ? { ok: true, html: cs.w("screen.document.people.none") } : null }));
+      cs.set("later", Object.assign({}, view.ui.later, { resolutions: null, connections: null }));
     } },
 ] : []);
 
@@ -1877,12 +1922,14 @@ const acts = [
       if (!reason) return { refuse: "refusal.FLAG_NO_REASON" };
       return { body: { here: { capture: String(el.dataset.sha || ""), extent: here.extent }, other: { capture: otherSha, extent: there.extent }, reason } };
     },
-    /* R138 (K5292; re-walk C, C-M12 new 4): the answer's own sentence is drawn beside the act, whether the flag was recorded (`wrote`) or the pair is
-       already held (`already`): the owner's words, escaped once here. The flag's place in the page's list of flags raised on it is not drawn yet: that
-       list needs a held key and a read, both REPORTed. */
+    /* R138, R139 (K5292, K5303; re-walk C, C-M12 new 4; DEC-439, DEC-440): the answer is drawn beside the act in the design's words, never the owner's
+       `says`: `screen.document.flag.recorded` for a flag the world recorded (`wrote`), `screen.document.flag.already` for a pair already held (`already`).
+       The list of flags raised on the document is read again, so the new flag is in it. */
     done(view, answer, cs) {
       const r = answer && answer.result !== undefined ? answer.result : answer;
-      cs.set("outcome", Object.assign({}, view.ui.outcome, { contradictionflag: { ok: true, html: cs.esc(String(r && r.says || "")) } }));
+      const key = r && r.already === true ? "screen.document.flag.already" : r && r.wrote === true ? "screen.document.flag.recorded" : "";
+      cs.set("outcome", Object.assign({}, view.ui.outcome, { contradictionflag: key ? { ok: true, html: cs.w(key) } : null }));
+      cs.set("later", Object.fromEntries(Object.entries(view.ui.later || {}).filter(([k]) => k !== "flags")));
     } },
   /* R108 (C23; DEC-381): the system this document came from, declared with her name and the date (provenance R64); a second declaration is
      added beside the first and never replaces it, so each answer is kept in the list the page draws */
@@ -1962,6 +2009,9 @@ const words = Object.freeze([
   "shell.card.document", "screen.held.name", "screen.document.retire.refused.illegal", "screen.document.retire.refused.cited", "shell.search", "act.resolvetestify.label.document", "act.contradictionflag.label.document", "screen.document.testify.how",
   ...["head", "note1", "note2", "note3", "which", "which.help", "who", "how", "how.help", "how.help2", "refused"].map((k) => "screen.document.testify." + k),
   ...["head", "note1", "note2", "here", "here.help", "other", "other.help", "why", "why.help"].map((k) => "screen.document.contradict." + k),
+  /* R139 (DEC-439, DEC-440): the flag's two sentences, the list of flags raised on the document, "Checked by", and the people the document names */
+  "screen.document.flag.recorded", "screen.document.flag.already", "screen.document.flags.head", "screen.document.flags.pair", "screen.contradiction.flagged.by",
+  "screen.document.attest.checked", "act.resolve.label.document", "screen.document.people.none",
   "refusal.FLAG_NO_PASSAGE", "refusal.FLAG_SAME_DOCUMENT", "refusal.FLAG_NO_REASON", "filings.trusted_timestamp_archive", "filings.archive_trusted_timestamp", "refusal.NO_ATTESTATION", "act.themewithdraw.label.document",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.scale.subject.name", "mark.scale.subject.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
@@ -2033,6 +2083,6 @@ const words = Object.freeze([
 export function documentScreen(parts) {
   /* R93: the one drawing of what a check found is `screens-intake`'s (its R42), imported and carried as this screen's part; R117: a refusal's
      first finding is drawn by `findingsRefusal` */
-  return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs, ...readheldActs],
-    words: Object.freeze([...words, ...parts.kinds.map((k) => "document.kind." + k),]), parts: Object.freeze({ ...parts, checkOutcome, findingsRefusal }) });
+  return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs, ...readheldActs, ...resolveActs],
+    words: Object.freeze([...words, ...parts.kinds.map((k) => "document.kind." + k),]), parts: Object.freeze({ ...parts, checkOutcome, findingsRefusal, resolve: resolveActs.length > 0 }) });
 }
