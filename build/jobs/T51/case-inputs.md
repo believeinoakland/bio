@@ -347,3 +347,37 @@ case-inputs now publishes both answers from its real code, in `bio-plane/test/m/
 - `casedetailsNone()` returns `{recorded, publicRead}` for a published case with `relationships: {none: true}`.
 
 Screens-publish can take them by calling `provided.casedetailsRelated()` and `provided.casedetailsNone()` in place of the hand-built objects at `fr30b.test.mjs:435` and `:437`. This is not case-inputs' change to make.
+
+## J18 · COMPLETE
+
+COMPLETE for B16 (fix round 10, K5222 / K5175): publish two more `casedetails` / `casedetailspublic` answers in `fixtures.mjs`. Pushed as e4fa4c0902 on job/T51/case-inputs.
+
+**Before `mail start`:** the local `job/T51/case-inputs` had one unpushed commit (c9177687ca, a status line written on a stale base); `git reset` moved the branch to origin, after a backup at `backup/case-inputs-local-c9177687`. The tranche was 8 commits ahead, merged (no rebase). The earlier `mail start` attempt hit a rebase conflict in the record, which the reset above resolved; `mail start` then wrote `session_01WehNcUZffFn8iev6Pzbh8X · depth 2`.
+
+**Changes (case-inputs' paths and tests only):**
+- `bio-plane/test/m/case-inputs/fixtures.mjs:109` `casedetailsRelated()`: a published case, `related` set to `[{relation: "builds_on", case_ref: {group: "river-town", case: "CASE-2026-0007", edition: 1}, words}, {relation: "disagrees_with", url: "https://example.org/housing-study", words}]` through `caseDetailsSet`. Answers `recorded` (the real `caseDetails` read by a joined member) and `publicRead` (the real `caseDetailsPublic` read).
+- `bio-plane/test/m/case-inputs/fixtures.mjs:121` `casedetailsNone()`: a published case, `relationships` set to `{none: true}`. Answers `recorded` and `publicRead`.
+- `bio-plane/test/m/case-inputs/fixtures.test.mjs`: the import, and four tests (R21, R23, R24): the `related` works in order with their values, `relationships` not stated (read); the public read with the team slug and no `set_by`; `relationships` stated `{none: true}` and `related` not stated (read and public).
+
+**Failing-first and break-once:** the two new fixtures are added with their tests together. Break once: changing `builds_on` to `responds_to` in `casedetailsRelated` turned the two `casedetailsRelated` read tests red (`fail 2`); restoring the file turned all 12 fixture tests green again. The `casedetailsNone` tests are green on the first run.
+
+**Suites:**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-inputs/*.test.mjs`: 85 tests, 85 pass, 0 fail (fixtures.test.mjs alone: 12/12).
+- The 16 test files that import the case-inputs fixtures (`case-inputs/` and `consequences/` plus the importers `grep` finds): 92 tests, 92 pass.
+- `impact.mjs origin/tranche/T51 HEAD` named 8 modules and 47 test files (the transitive importers of `fixtures.mjs`). I ran every test file of the 8 modules in one batch: it timed out at 590 s with 1221 pass, 5 fail, 92 cancelled. The 3 control-plane failures (R135 `owedwork`, R92, R2/R26/R29 `captureseenin` in `r135-job-state.test.mjs`, `t48-door.test.mjs`, `t51-routes.test.mjs`) and the Miniflare R75 `t46-e2e.test.mjs` fail the same way on origin/tranche/T51 without my commit (checked in a worktree). The t51-round9-seam file and the walk files timed out or failed under load; `r8-seam-capture` passes alone; the walk files I ran alone pass. The R9 seam §14 reds are the test's own "red until each quoting job below merges" rows, and the monitoring adoptversion failure is in `monitoring`, not in this module. I did not run the remaining walk and monitoring files alone; they are in control-plane, monitoring and escalation, not this module.
+
+**Checks (absolute root /home/user/bio):**
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio case-inputs`: 0 failures.
+- `checks/coverage.mjs /home/user/bio case-inputs`: 29 of 29 live requirement ids named by a test, 0 failures.
+- `checks/fixtures.mjs /home/user/bio case-inputs --list`: 0 failures (answer 0, contract 0, stub 0).
+- `checks/ownership.mjs /home/user/bio case-inputs <merge-base> HEAD`: 0 failures, only the two case-inputs test files are changed.
+- `checks/run.mjs /home/user/bio`: 15 failures, the same count as on the tranche base without my commit; none is in this module (the list spans store-assembly, acquisition, extraction, interface-shell, reading-pipeline and screens-publish `fr30b.test.mjs:435, 437`). The words count is 19247 before and after (no sentence added).
+
+**Met ids:** none new. The tests name R21, R23 and R24, which were already in the module's requirements; the list of met ids is unchanged (R20, R22, R23, R24).
+
+**Reported (not this module's paths):** `fr30b.test.mjs:435` and `:437` (screens-publish) hand-build these two answers; case-inputs now publishes them as `casedetailsRelated()` and `casedetailsNone()`. The full text is in the separate REPORT.
+
+**Markers:** none added. The new tests use the module's own values; the fixture answers are the real ones.
+
+**Size (session_01WehNcUZffFn8iev6Pzbh8X): test runs 9, module lines 1602** (`bio-plane/src/case-inputs/*.mjs`, unchanged; the new test lines are 35 in `fixtures.test.mjs` and 26 in `fixtures.mjs`).
