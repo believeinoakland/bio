@@ -130,3 +130,7 @@ Merged `origin/tranche/T51` (OP-GRADES #30 merged) into the job branch (merge `d
 No new markers. The two stays named in the CHANGE (`control-plane/r10-caseratify-chain.test.mjs`, `store-assembly/declarations.test.mjs` R83) are not mine and were not run here.
 
 Size (session_01JjBfGMNmBpVHmFVF6fEVJK): test runs 6, module lines 0 (the rerun on the merged head adds one suite run and the checks; no `src` line changed).
+
+## J6 · COMPLETE
+
+CHANGE B6 (K5209) handled: merged origin/tranche/T51 into job/T51/action-holds (merge d9ad534024; no rebase). Re-run on the merged head: action-holds suite 52/52 green; fixtures --list 0 failures; words 0 failures; format 0 failures; ownership 0 failures (3 files: fixtures.mjs, fixtures.test.mjs, record). No new markers. The two named reds (control-plane r10-caseratify-chain, store-assembly declarations R83) are not mine and were not run. Record: build/jobs/T51/action-holds.md, section 'Fix round 10, after CHANGE'. Pushed to origin/job/T51/action-holds.
