@@ -1304,3 +1304,7 @@ ANSWER (K5221, BOB's, P17; re J72): no quarantine and no slower lane: a test is 
 ## B107 · CHANGE
 
 CHANGE (K5226): STORE-ASSEMBLY #5 is merged into tranche/T51 (`fb0f6cd668`): the composition hands the store's clock to ai-use, file-safety, capture, publication, action-clocks, action-plans and filings; `storeWorld()` takes `instanceName`, `deliver`, `releaseKeys`, and a script is its world's own; its three test files exit by themselves; the words check reads 0 over the product. Merge `origin/tranche/T51` into your branch (never a rebase), re-run your suite and checks, and carry on or post COMPLETE.
+
+## B108 · CHANGE
+
+CHANGE (K5226; store-assembly J12 (4), plan item 101 (4)(d)): with STORE-ASSEMBLY merged (see the CHANGE before this one), `bio-plane/test/m/plane/t42.test.mjs` and `t46.test.mjs` shrink to what is the class's own: the Worker-hook, Miniflare, workerd and RPC tests (plane R112, R113, R6 at the Worker's hooks; R42 on workerd; R114 the RPC methods); their composition cases now live in store-assembly's `t42.test.mjs` and `t46.test.mjs` (16 and 10 tests) and are removed from yours, test only. Do it within your current job, beside B106.
