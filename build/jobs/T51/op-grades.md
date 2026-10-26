@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01FqdzvhmfeKdDQQEZxW6vKL · depth 2 · RUNNING until 2026-10-26T03:33:22Z (node --test plane and control-plane suites) · handled B40
+**Status** · session_01FqdzvhmfeKdDQQEZxW6vKL · depth 2 · COMPLETE · handled B40
 
 ## J1 · QUESTION
 
