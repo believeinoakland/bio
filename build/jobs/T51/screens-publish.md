@@ -1570,3 +1570,34 @@ COMPLETE (SCREENS-PUBLISH #25, session_012cgESZ9YBHzMAmvwKniVQ4), fix round 10 (
 **Found elsewhere (P9):** the three reds above, with `capture/index.mjs:3803` and `interface-shell/harness.mjs:88`.
 
 Size (session_012cgESZ9YBHzMAmvwKniVQ4): test runs 9, module lines 9
+
+## J52 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #26, session_01DimduLub16HP55LgN9zZ6R), B57 applied; `tranche/T51` merged (`6347d07342`); code commit `1868c88976`, pushed.
+
+**Applied (file:line)**
+1. `bio-plane/test/m/screens-publish/phone.mjs:13` imports `frameAnswers`; `:31` spreads it into the measurer's plane after the harness's `FRAME` (the four defaults now come from `interface-shell/frame-answers.mjs`).
+2. `bio-plane/test/m/screens-publish/fixtures.mjs:14` imports `frameAnswers`; `openDefaults()` (`:94`) spreads `frameAnswers()` into `DEFAULT`, so `open` gives the page its four answers. `:90-91` adds `groupName()`, which reads the group's display name from the `groupidentity` answer (no direct import of instance-setup, which `uses` does not declare).
+3. Expectations: the literal `"River Town"` in six tests (ceremony:133, fix2:127, common:158-162, print:47/82/89, public:21/213, review:129) is replaced by `GROUP`, read once per file as `await groupName()` (K4990).
+
+**Failing-first.** After change 1 alone the suite was red: 8 failing — ceremony:130 R12, common:152 R24, fix2:113 R70 C48, print:28 R39, print:73 R39, public:12 R6, public:207 R9, review:118 R17 (the frame's answers were missing from the plane). After change 2 (and 3) the same tests are green.
+
+**Met ids.** No requirement changed. Coverage: 80 of 80 live ids named by a test (module 80/80, no failures).
+
+**Suite:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/*.test.mjs`: 296 tests, 294 pass, 0 fail, 2 todo (R35's two press tests, K3717, not mine). Run without `--test-force-exit`, exits by itself.
+
+**Checks** (absolute root `/home/user/bio`):
+- format: 0 failures.
+- architecture screens-publish: 0 failures (one earlier failure, a direct import of instance-setup's fixtures from screens-publish's fixtures.mjs, was removed by change 2, not by editing `uses`).
+- coverage screens-publish: 80 of 80, 0 failures.
+- ownership `tranche/T51`: 8 files, all in my paths, 0 failures.
+- words: 0 failures; no new sentence, no new key.
+- fixtures screens-publish --list: 0 failures; 6 accepted `fixtures-generic`/op-table entries already in the module (ceremony.test:262, fixtures.mjs:49, g54-page:116, public:326, review:214, t50:115), none added by me. Markers added by me: none.
+- run.mjs: 264 findings repo-wide, none in screens-publish or interface-shell. Not checked against the base.
+- impact `origin/tranche/T51 HEAD`: screens-publish 26/26, control-plane 2/135 (the two files that import screens-publish's fixtures: `control-plane/r8-seam-misc.mjs`, `control-plane/t51-round7-seam.test.mjs`). Run: 19 tests, 19 pass.
+
+**Found in other modules (REPORT).** run.mjs's 264 findings sit in other modules: `screens-inquiry/fixtures.mjs:118-160` (op-table answers the provider does not publish), `acquisition/fixtures.mjs:60,111` (`owedLater` stand-in), `test-support/job-registrar-stub.mjs:23,35` (stand-in `registerJob`), `plane/r10-reading-ended.test.mjs:20` (`readHeld` stand-in). Not diagnosed further; for their owners.
+
+**Deferred:** none.
+
+Size (session_01DimduLub16HP55LgN9zZ6R): test runs 4, module lines 3760 (src/screens-publish .mjs; the module's tests are 5333 lines)
