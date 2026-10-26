@@ -1,6 +1,6 @@
 # store-assembly (T51)
 
-**Status** · session_01HLnCbbHSqPYo154Eb9QHxW · depth 2 · COMPLETE · handled B17
+**Status** · session_01HLnCbbHSqPYo154Eb9QHxW · depth 2 · WAITING ON BOB (J15) · handled B17
 
 ## J1 · QUESTION
 
