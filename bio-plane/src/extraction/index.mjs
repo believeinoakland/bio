@@ -1444,7 +1444,7 @@ export class Extraction {
       const sha = doc && doc.capture && doc.capture.sha256;
       const reading = doc && doc.reading;
       if (typeof sha !== "string" || !sha || !reading || typeof reading !== "object") continue;
-      if (this.#heldByReextraction(sha, reading)) continue;
+      if (this.#heldByReextraction(sha, reading) || this.#historyHolds(sha, reading)) continue;
       const prof = doc.profile && typeof doc.profile === "object" ? doc.profile : null;
       this.writeReading({ bundleId, captureSha: sha, reading,
         textUnits: Array.isArray(doc.text_units) ? doc.text_units : null,
@@ -1466,6 +1466,14 @@ export class Extraction {
     if (sameAt && n439Marked(prior) && !n439Marked(reading)) return true;
     if (reading && reading.reextracted) return false;
     return !!(prior && prior.reextracted && sameAt);
+  }
+
+  /** (T51 fix round 10, walk C C-M1; R112) The capture's `reading_history` already holds this very reading (its digest): an ordinary revision, a vouching
+   *  that re-promotes the bundle, re-submits the acquire-time reading `data/provenance.json` carries, which `#heldByReextraction` held only while the stored
+   *  reading's `at` equalled it as a string. A re-submitted kept reading writes nothing; a new acquire's reading has a new digest and is kept as before. */
+  #historyHolds(sha, reading) {
+    const { digest } = this.#serialOf(reading);
+    return !!this.#one(`SELECT 1 AS x FROM reading_history WHERE capture_sha=? AND reading_sha256=?`, sha, digest);
   }
 
   /** R19: the one writer promote and the re-read share, in one `record-core.transact`: the history (R23); the
