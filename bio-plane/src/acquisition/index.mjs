@@ -85,6 +85,12 @@ export { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+/* K5132's rule for the capture sessions this act reads and saves (K5205): a handed instant (milliseconds) answers first, then the store's
+   environment (`BIO_NOW_MS`), else the wall clock. Capture's sessions expire and list on the instant they are given. */
+const instantOf = (cap, at = null) => {
+  const handed = at ?? (cap && cap.env ? cap.env.BIO_NOW_MS : undefined);
+  return handed !== undefined && handed !== null && handed !== "" && Number.isFinite(Number(handed)) ? Number(handed) : Date.now();
+};
 
 /* Full 64-hex SHA-256 of a string or a byte view: what docprofile's `digests()` calls to name each normalised
    variant, over the SAME raw bytes for `identity`, which must equal the capture sha. */
@@ -797,7 +803,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
     }
   };
   /* The TimeGate. */
-  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked && asked.at ? asked.ms : Date.now()) });
+  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked && asked.at ? asked.ms : instantOf(cap)) });
   if (tg.fail) return tg.fail;
   if (tg.res.status === 429 || tg.res.status >= 500) { cancelBody(tg.res); return archiveRefused(tg.res, "TimeGate"); }
   const ga = readMementoAnswer({ url: ends.timegate, status: tg.res.status, headers: tg.res.headers });
@@ -913,7 +919,7 @@ async function coAttest(cap, { sha, locator, via, ev, coArchive = { on: true, by
      asked, `ok` whether it answered; attestation's instant and words are kept beside them. */
   const recorded = (a) => ({ ...a, service: String(a.service || a.kind || "attest"), attempted: true, ok: a.ok === true,
                              ...(typeof a.attempted === "string" ? { at: a.attempted } : {}) });
-  const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond(), note: why }];
+  const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond(instantOf(cap)), note: why }];
   /* R20, R43: the C-18.1 shape (`service`, `attempted`, `ok`) with `attempted: false`, so it reads as no attempt */
   const coNotAsked = via !== "archive.org" && !coArchive.on
     ? [{ service: "co_archive", kind: "co_archive", attempted: false, ok: false, asked: false, by: coArchive.by,
@@ -1152,14 +1158,14 @@ async function acquireRun(cap, body0, opts0, t) {
   /* R46 (K4853): a new press of an address whose parked fetch ended in a stated refusal replaces that session: its refusal is no longer listed */
   if (askingMember && typeof cap.liveCaptureSessions === "function") {
     try {
-      for (const x of cap.liveCaptureSessions(stampSecond()) || [])
+      for (const x of cap.liveCaptureSessions(instantOf(cap)) || [])
         if (x && x.locator === locator && x.state && x.state.fetch_pending && x.state.fetch_pending.failed && x.state.opened_by === askingMember)
           cap.dropCaptureSession({ session: x.session });
     } catch { /* a session that cannot be dropped stays listed until its day passes */ }
   }
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
-  const retrieved = stampSecond();
+  const retrieved = stampSecond(instantOf(cap));
   const pv = profileView(cap.core);
 
   /* R5, D-64 — THE RENDER ARM, ADMISSION. Every way a render cannot happen is decided HERE, before the shell is
@@ -1221,7 +1227,7 @@ async function acquireRun(cap, body0, opts0, t) {
      continuation fetches none and has returned above): the archive arm's `address`, the Drive link as given, else the
      locator. */
   const reputation = await timed(t, "reputation", () => addressReputation(archiveAsked || (driveCapture ? driveCapture.address : locator),
-    reputationToolOf(cap, reputationTool), fileScannerOf(cap, fileScanner)));
+    reputationToolOf(cap, reputationTool), fileScannerOf(cap, fileScanner), instantOf(cap)));
 
   /* R3, R32: the memento, found through the archive's TimeGate or TimeMap; its raw bytes are answered unread, so the
      bytes this call files are the bytes the choice is made over (`chooseMemento`, below). */
@@ -1359,10 +1365,10 @@ async function acquireRun(cap, body0, opts0, t) {
   let mayPark = !!fetchOwe && !!askingMember && !captureRequest && !archiveMemento && !renderAsked && opts.inlineFetch !== true;
   const parkFetch = async ({ declared, why }) => {
     try {
-      const live = typeof cap.liveCaptureSessions === "function" ? cap.liveCaptureSessions(stampSecond()) : [];
+      const live = typeof cap.liveCaptureSessions === "function" ? cap.liveCaptureSessions(instantOf(cap)) : [];
       const twin = Array.isArray(live) ? live.find((x) => x && x.locator === documentAddress && x.state && x.state.fetch_pending && x.state.opened_by === askingMember) : null;
       const fp = twin ? { session: twin.session, ...twin.state.fetch_pending }
-        : { session: `fp_${(await sha256Hex(`${documentAddress}\n${askingMember}`)).slice(0, 16)}_${Date.now().toString(36)}`, since: stampSecond(), declared_bytes: declared, why };
+        : { session: `fp_${(await sha256Hex(`${documentAddress}\n${askingMember}`)).slice(0, 16)}_${Date.now().toString(36)}`, since: stampSecond(instantOf(cap)), declared_bytes: declared, why };
       if (!twin) {
         const carried = {};
         for (const k of ["locator", "subresources", "authority", "file", "coArchive", "for", "project"]) if (body0 && body0[k] !== undefined) carried[k] = body0[k];
@@ -1370,7 +1376,7 @@ async function acquireRun(cap, body0, opts0, t) {
         const saved = cap.saveCaptureSession({ session: fp.session, locator: documentAddress, primarySha: NO_PRIMARY, primaryFile: "snapshots/pending-fetch", base: documentAddress,
           state: { queue: [{ fetch: true }], opened_by: askingMember, ...(project ? { project } : {}), cls, store: storeName,
                    fetch_pending: { since: fp.since, declared_bytes: fp.declared_bytes, why: fp.why }, body: carried },
-          ttlMs: OWED_SESSION_TTL_MS });
+          ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
         if (!(saved && saved.saved !== false) || !(await fetchOwe({ kind: "fetch", session: fp.session }))) {
           try { cap.dropCaptureSession({ session: fp.session }); } catch { /* harmless */ }
           return null;
@@ -1772,13 +1778,13 @@ async function acquireRun(cap, body0, opts0, t) {
       const owe = oweOf(cap, opts);
       const saved = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
         state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } },
-        ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
+        ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}), at: instantOf(cap) });
       /* R100: the render still to be finished is owed work too */
       if (owe && saved) owedRow = await owe({ kind: "subresources", sha, session: sid });
     } catch { /* the render still returns; the member captures again */ }
     /* R117: the row is the render's home; when the run returns its kept reply is written to the session the row names, so an object that restarts after it still finds it */
     renderDeferred.run.then((a) => persistRender(cap, sid, a, owedRow)).catch(() => {});
-    PENDING_RENDERS.set(sid, { run: renderDeferred.run, since: Date.now() });
+    PENDING_RENDERS.set(sid, { run: renderDeferred.run, since: instantOf(cap) });
     const forget = setTimeout(() => PENDING_RENDERS.delete(sid), PENDING_RENDER_TTL_MS);
     if (forget && typeof forget.unref === "function") forget.unref();
     renderPending = { session: sid, since: retrieved,
@@ -1825,7 +1831,7 @@ async function acquireRun(cap, body0, opts0, t) {
   let attestations;
   if (attested.done) attestations = attested.value;
   else {
-    const asking = stampSecond();
+    const asking = stampSecond(instantOf(cap));
     attestations = [{ service: "attest", attempted: true, ok: false, pending: true, at: asking,
       note: localize("acquisition.index.attestation_pending", "the timestamp and the co-archive were asked for after the document was kept, and had not answered when this capture was answered; their outcome is recorded when they do") }];
     attestAsked.then(async (attempts) => {
@@ -1965,7 +1971,7 @@ function persistRender(cap, sid, a, owed) {
     const st = ld && ld.found && ld.state && typeof ld.state === "object" ? ld.state : null;
     if (!st || !st.render_pending || st.render_pending.answer) return;
     cap.saveCaptureSession({ session: sid, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
-      state: { ...st, render_pending: { ...st.render_pending, answer } }, ...(owed ? { ttlMs: OWED_SESSION_TTL_MS } : {}) });
+      state: { ...st, render_pending: { ...st.render_pending, answer } }, ...(owed ? { ttlMs: OWED_SESSION_TTL_MS } : {}), at: instantOf(cap) });
   } catch { /* the render is begun afresh when it is finished */ }
 }
 
@@ -2018,9 +2024,9 @@ const reputationToolOf = (cap, given) => (given !== undefined ? given : cap && c
 const fileScannerOf = (cap, given) => given || (cap && cap.fileScanner) || (cap && cap.env && cap.env.FILE_SCANNER) || null;
 /* A spec as a reader may answer it: an object (the scanner judges its fields, R21); anything else is unreadable. */
 const isToolSpec = (t) => !!t && typeof t === "object" && !Array.isArray(t) && typeof t.then !== "function";
-async function addressReputation(address, given, scanner) {
+async function addressReputation(address, given, scanner, at = Date.now()) {
   const toolIdOf = (t) => (t && typeof t === "object" && typeof t.tool_id === "string" ? t.tool_id : null);
-  const unanswered = (code, t = null) => ({ tool: toolIdOf(t), listed: null, categories: [], checked_at: stampSecond(), unanswered: code });
+  const unanswered = (code, t = null) => ({ tool: toolIdOf(t), listed: null, categories: [], checked_at: stampSecond(at), unanswered: code });
   /* One bound over the reader and the lookup; whatever arrives after it is not read. */
   const LATE = Symbol("late");
   let timer = null;
@@ -2043,7 +2049,7 @@ async function addressReputation(address, given, scanner) {
       })());
     } catch { return unanswered("SCANNER_UNREACHABLE", tool); }
     if (out && out !== LATE && out.ok === true)
-      return { tool: toolIdOf(tool), listed: out.listed === true, categories: Array.isArray(out.categories) ? out.categories.filter((c) => typeof c === "string") : [], checked_at: stampSecond() };
+      return { tool: toolIdOf(tool), listed: out.listed === true, categories: Array.isArray(out.categories) ? out.categories.filter((c) => typeof c === "string") : [], checked_at: stampSecond(at) };
     if (out && out !== LATE && out.ok === false && typeof out.code === "string" && out.code) return unanswered(out.code, tool);
     return unanswered("SCANNER_UNREACHABLE", tool);
   } finally { clearTimeout(timer); }
@@ -2288,7 +2294,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
       /* R42: a supporting file on one of the group's own hosts is that file's outcome; the capture goes on. */
       if (onOwnHost(u, own)) return { ok: false, status: 0, reason: "OWN_HOST_REFUSED" };
       if (subHost && cap.governor) {
-        try { if (await cap.governor.isHeld(subHost, Date.now())) return { ok: false, status: 0, reason: "HOST_COOLING_OFF" }; }
+        try { if (await cap.governor.isHeld(subHost, instantOf(cap))) return { ok: false, status: 0, reason: "HOST_COOLING_OFF" }; }
         catch { /* an unreadable governor never blocks */ }
       }
       const stagger = cap.subresourceStaggerMs();
@@ -2323,7 +2329,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
        under `opened_by`; a session parked by any other caller records none. */
     const state = typeof openedBy === "string" && openedBy ? { ...subs.resumeState, opened_by: openedBy } : subs.resumeState;
     try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state,
-                                                  ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}) }); }
+                                                  ...(owe ? { ttlMs: OWED_SESSION_TTL_MS } : {}), at: instantOf(cap) }); }
     catch { /* the caller starts over; the capture did not fail */ }
     /* R100: what is outstanding is owed work, finished by the plane's alarm and never ended by the session's hour */
     if (owe && subs.session) await owe({ kind: "subresources", sha, session: sid });
@@ -2383,7 +2389,7 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
   /* R99 (fix round 4, C13b): a held run is trusted only as long as a live render can take (the renderer's own bound, reserved at
      admission, plus the wait): one not settled after that was begun by a request that has ended, and is lost. */
   const staleMs = opts && Number.isFinite(opts.renderStaleMs) ? opts.renderStaleMs : renderReserveMs(RENDER_DEFAULTS) + RENDER_WAIT_MS;
-  const stale = !!held && Date.now() - held.since >= staleMs;
+  const stale = !!held && instantOf(cap) - held.since >= staleMs;
   let resume = null, lost = !held && !persisted;
   if (held || persisted) {
     const got = held ? await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS))) : { done: true, value: persisted };
@@ -2413,9 +2419,9 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
       if (owing) {
         try {
           const state = { queue: [], ...(session.state && typeof session.state.opened_by === "string" ? { opened_by: session.state.opened_by } : {}),
-                          render_done: { sha256: out.body.document.capture.sha256, since: stampSecond(), document: out.body.document } };
+                          render_done: { sha256: out.body.document.capture.sha256, since: stampSecond(instantOf(cap)), document: out.body.document } };
           const saved = cap.saveCaptureSession({ session: session.session, locator: session.locator, primarySha: session.primarySha,
-            primaryFile: session.primaryFile, base: session.base, state, ttlMs: OWED_SESSION_TTL_MS });
+            primaryFile: session.primaryFile, base: session.base, state, ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
           kept = !!(saved && saved.saved !== false);
         } catch { kept = false; }
       }
@@ -2435,7 +2441,7 @@ async function continueCapture(cap, { body, session, cls, storeName, ev, own = n
   try { obj = await ev.head(session.primarySha); } catch { obj = null; }
   const size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : 0;
   const w = await timed(t, "subresources", () => walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
-    name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own,
+    name, locator: session.locator, base: session.base, retrieved: stampSecond(instantOf(cap)), resume: session.state, sessionId: session.session, own,
     /* R19: a session parked again keeps the member who began it, whoever continues it */
     openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null, owe }));
   return { status: 200, body: {
@@ -2589,18 +2595,18 @@ export async function owedFetch(cap, entry, opts = {}) {
           return { ok: true, done: false, outstanding: 1, reason };
         try {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
-            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason, failed_at: stampSecond() } }, ttlMs: OWED_SESSION_TTL_MS });
+            state: { ...st, fetch_pending: { ...st.fetch_pending, failed: reason, failed_at: stampSecond(instantOf(cap)) } }, ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
         } catch { /* the entry still ends, stated */ }
         return final(reason);
       }
-      made = { sha256: b.document.capture.sha256, since: stampSecond(), answer: { ok: true, existed: b.existed, document: b.document } };
+      made = { sha256: b.document.capture.sha256, since: stampSecond(instantOf(cap)), answer: { ok: true, existed: b.existed, document: b.document } };
       try {
         cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: b.document.capture.sha256, primaryFile: b.document.file, base: ld.base,
           state: { queue: [], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: storeName,
                    /* B33: the delivery reads `fetch_pending` to know this was a parked fetch (control-plane records the member's fetch-done by it); saving replaces the state whole, so it is kept */
                    ...(st.fetch_pending && typeof st.fetch_pending === "object" ? { fetch_pending: { since: st.fetch_pending.since, declared_bytes: st.fetch_pending.declared_bytes, why: st.fetch_pending.why } } : {}),
                    fetch_done: made },
-          ttlMs: OWED_SESSION_TTL_MS });
+          ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
       } catch { /* delivered below; a failed delivery then fetches again */ }
     }
     const given = await opts.deliver({ answer: made.answer, session: entry.session });
@@ -2613,8 +2619,8 @@ export async function owedFetch(cap, entry, opts = {}) {
         try {
           cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
             state: { queue: [{ fetch: true }], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: st.store,
-                     fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond() } },
-            ttlMs: OWED_SESSION_TTL_MS });
+                     fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why, failed_at: stampSecond(instantOf(cap)) } },
+            ttlMs: OWED_SESSION_TTL_MS, at: instantOf(cap) });
         } catch { /* the entry still ends, stated */ }
         return final(why, given);
       }
@@ -2652,8 +2658,8 @@ export function openCaptures(store, { by = null, now = undefined } = {}) {
   const none = { ok: true, captures: [], truncated: false };
   try {
     if (typeof by !== "string" || !by.trim() || isMachineIdentity(by) || !store || typeof store.liveCaptureSessions !== "function") return none;
-    const nowMs = typeof now === "string" && ISO_TS_RE.test(now) ? Date.parse(now) : Number.isFinite(Number(now)) && now !== null && now !== undefined ? Number(now) : Date.now();
-    const live = store.liveCaptureSessions(stampSecond(nowMs));
+    const nowMs = typeof now === "string" && ISO_TS_RE.test(now) ? Date.parse(now) : Number.isFinite(Number(now)) && now !== null && now !== undefined ? Number(now) : instantOf(store);
+    const live = store.liveCaptureSessions(nowMs);
     if (!Array.isArray(live)) return none;
     const mine = [];
     const asking = memberOfSpelling(by);

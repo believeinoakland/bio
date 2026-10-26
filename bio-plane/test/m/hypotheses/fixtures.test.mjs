@@ -2,8 +2,10 @@
    here against hypotheses' own catalogue row (`HYPOTHESES_CHECKS`) and its ok shape. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { holdAnswer, holdRefusals, reviseAnswer, reviseRefusals, withdrawAnswer, withdrawAlreadyAnswer, withdrawRefusals } from "./fixtures.mjs";
-import { HYPOTHESES_CHECKS } from "../../../src/hypotheses/index.mjs";
+import { holdAnswer, holdRefusals, reviseAnswer, reviseRefusals, withdrawAnswer, withdrawAlreadyAnswer, withdrawRefusals,
+         listWorld, listAnswer, emptyListAnswer } from "./fixtures.mjs";
+import { HYPOTHESES_CHECKS, hypothesesOps } from "../../../src/hypotheses/index.mjs";
+import { INQ, ANN } from "./fixture.mjs";
 
 /* A refusal is the real code's: its own code, the catalogue row's check and translation, and nothing written. */
 function assertRefusedAs(r, code) {
@@ -64,8 +66,31 @@ test("R2 withdrawRefusals: each refusal withdraw draws is the real code's, under
   for (const [code, r] of Object.entries(refusals)) assertRefusedAs(r, code);
 });
 
+test("R3 listAnswer: the list a question answers, a live hypothesis and a withdrawn one, each labelled a hypothesis and never a fact", () => {
+  const r = listAnswer();
+  assert.deepEqual(Object.keys(r).sort(), ["hypotheses", "inquiry", "label", "ok", "system_proposals"]);
+  assert.deepEqual([r.ok, r.inquiry, r.label], [true, INQ, "hypothesis"]);
+  assert.deepEqual(r.hypotheses.map((h) => h.status), ["live", "withdrawn"]);
+  for (const h of r.hypotheses) assert.deepEqual([h.label, h.fact, h.grade], ["hypothesis", false, null]);
+  assert.equal(r.hypotheses[1].history.at(-1).act, "withdraw", "the withdrawn one keeps its withdrawal in its history");
+  assert.deepEqual(r.system_proposals.items, [], "no system proposal in this world");
+});
+
+test("R3 listAnswer is the answer op=hypotheses gives for the same question over the same world", () => {
+  const w = listWorld();
+  const op = hypothesesOps(w.h, new URL(`https://bio.test/api?op=hypotheses&inquiry=${INQ}&viewer=${ANN}`), undefined);
+  assert.deepEqual(op.hypotheses(), listAnswer());
+});
+
+test("R3 emptyListAnswer: a question with no hypothesis answers the empty list, its proposals' heading beside it", () => {
+  const r = emptyListAnswer();
+  assert.deepEqual([r.ok, r.inquiry, r.hypotheses], [true, INQ, []]);
+  assert.deepEqual(r.system_proposals.items, []);
+});
+
 test("R1 R2 each fixture is made when it is called: two calls give two answers, never one stored value", () => {
   const a = holdAnswer(), b = holdAnswer();
   assert.notEqual(a, b);
   assert.notEqual(withdrawAnswer(), withdrawAnswer());
+  assert.notEqual(listAnswer(), listAnswer());
 });

@@ -10,9 +10,7 @@ export { CIVICSMITH_LIBRARY };
 /** The team: the founder's world with `rosa` (an administrator, who holds every capability), `mai` (contributes and starts projects) and
  *  `ivy` (contributes but is in no project) and `teo` (holds none, so reads only). `P1` is `mai`'s project, with `rosa` its second owner, `P2` `rosa`'s, each by the recipe. Nothing is a group wizard yet; `projects: false` starts none. */
 export async function team({ projects = true } = {}) {
-  /* `group: null`: the world already records its producing team from the installer's INSTANCE_NAME (store-assembly, K5149); a second
-     `instancegroupseed` is refused GROUP_ALREADY_RECORDED (reported to BOB for store-request) */
-  const world = await storeWorld({ group: null });
+  const world = await storeWorld();
   const rosa = await world.signIn("rosa", { admin: true });
   const mai = await world.signIn("mai", { capabilities: ["contribute", "create_projects"] });
   const teo = await world.signIn("teo", { capabilities: [] });

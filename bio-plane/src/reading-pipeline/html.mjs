@@ -146,6 +146,8 @@ function* tokenize(html, G) {
     return id;
   };
   D.intern = intern; D.HR = intern("hr");
+  D.text = (id) => html.slice(D.s[id], D.e[id]);
+  D.attr = (id) => (D.e[id] - 1 > D.as[id] ? html.slice(D.as[id], D.e[id] - 1) : "");
   const push = (k, s, e, nm = 0, as = 0, sc = 0) => { const i = D.n++; D.k[i] = k; D.s[i] = s; D.e[i] = e; D.nm[i] = nm; D.as[i] = as; D.sc[i] = sc; };
   let i = 0;
   while (i < n) {
@@ -191,7 +193,7 @@ function* tokenize(html, G) {
 /* ---- a stage's token list: ids into the page's tokens (>= 0), GAP and HR ---- */
 const kindOf = (D, id) => (id >= 0 ? D.k[id] : id === GAP ? K_GAP : K_START);
 const nameOf = (D, id) => (id >= 0 ? D.nm[id] : D.HR);
-const attrsOf = (D, id) => (id >= 0 && D.k[id] === K_START && D.e[id] - 1 > D.as[id] ? D.html.slice(D.as[id], D.e[id] - 1) : "");
+const attrsOf = (D, id) => (id >= 0 && D.k[id] === K_START ? D.attr(id) : "");
 const isClosable = (D, id) => id >= 0 && D.k[id] === K_START && !D.sc[id] && !D.isVoid[D.nm[id]];
 
 /* the pairing of the start and end tags of a name, by a stack per name: `match[i]` is the position of the end tag of a start tag (and the
@@ -288,7 +290,7 @@ function* summarize(D, ord, m, match, G) {
     if (id === HR) continue;
     if (id === GAP || D.k[id] === K_TEXT || D.k[id] === K_GAP) {   /* a run of text, the gaps in it spaces: one segment between two tags */
       let j = i, raw = "";
-      while (j < m && (ord[j] === GAP || (ord[j] >= 0 && (D.k[ord[j]] === K_TEXT || D.k[ord[j]] === K_GAP)))) { raw += ord[j] >= 0 && D.k[ord[j]] === K_TEXT ? D.html.slice(D.s[ord[j]], D.e[ord[j]]) : " "; j++; }
+      while (j < m && (ord[j] === GAP || (ord[j] >= 0 && (D.k[ord[j]] === K_TEXT || D.k[ord[j]] === K_GAP)))) { raw += ord[j] >= 0 && D.k[ord[j]] === K_TEXT ? D.text(ord[j]) : " "; j++; }
       const seg = decodeReferences(raw.replace(/\s+/g, " "));
       if (glyphCount(seg) > 0) addText(top, seg);
       i = j - 1; continue;
@@ -322,6 +324,9 @@ function* summarize(D, ord, m, match, G) {
 function* pass(html0, G) {
   const html = dropHead(html0);
   const D = yield* tokenize(html, G);
+  return yield* stages(D, G);
+}
+function* stages(D, G) {
   const ordAll = (n) => { const o = new Int32Array(n); for (let i = 0; i < n; i++) o[i] = i; return o; };
   let ord = ordAll(D.n), m = D.n;
   /* navigation goes with its contents */
@@ -375,7 +380,7 @@ function* pass(html0, G) {
     for (let j = i + 1; j < match[i] && j < i + 64 && said.length < 24; j++) {
       const t = ord[j];
       if (t === GAP) said += " ";
-      else if (t >= 0 && (D.k[t] === K_TEXT)) said += D.html.slice(D.s[t], D.e[t]);
+      else if (t >= 0 && (D.k[t] === K_TEXT)) said += D.text(t);
     }
     return /^skip to/i.test(decodeReferences(said).replace(/\s+/g, " ").trim());
   };
@@ -391,7 +396,7 @@ function* pass(html0, G) {
     if (id === GAP) { run += " "; continue; }
     if (id === HR) { flush(); out.push("\n\n"); continue; }
     const k = D.k[id];
-    if (k === K_TEXT) { const chunk = D.html.slice(D.s[id], D.e[id]); if (inCell > 0 && !cellWords && /\S/.test(chunk)) cellWords = true; run += chunk; continue; }
+    if (k === K_TEXT) { const chunk = D.text(id); if (inCell > 0 && !cellWords && /\S/.test(chunk)) cellWords = true; run += chunk; continue; }
     if (k === K_GAP) { run += " "; continue; }
     const nm = D.nm[id], name = D.names[nm];
     const rowPart = name === "table" || name === "tr" || name === "thead" || name === "tbody" || name === "tfoot";
@@ -420,13 +425,213 @@ function makeHolds(D, ord, match, budget) {
       const id = ord[q];
       if (id < 0) { text += " "; continue; }
       const k = D.k[id];
-      if (k === K_TEXT) text += D.html.slice(D.s[id], D.e[id]);
+      if (k === K_TEXT) text += D.text(id);
       else if (k === K_START && match[q] > q && NON_PROSE.has(D.names[D.nm[id]])) { q = match[q]; text += " "; }
       else text += " ";
       if (text.length > PROSE_SCAN_MAX) return true;
     }
     return SENTENCE.test(decodeReferences(text).replace(/\s+/g, " "));
   };
+}
+
+/* ---- the page in windows (R51, fix round 10; K5211) ---- */
+/* A page past a whole read is never held as one string: it arrives as decoded windows (strings), and the same pass makes the same visible text from them.
+   Two stages are fed window by window with a carry, and the rest (`stages`) is the whole pass over the tokens they leave:
+   - `dropHeadStream`: R32's unclosed-head rule (`dropHead`) over the stream. The text before the first `<head` goes on at once; from the first `<head` the page's rest is held
+     until `dropHeadStep` can say where the head ends (it answers NEED while the window ends inside what decides it), then goes on whole, the head cut as `dropHead` cuts it.
+   - `streamTokenizer`: `tokenize` over the stream. A token is made only when its end is in hand (a text run ends at a `<`, a tag at its `>`, a comment at its `-->`); what is not
+     finished is the carry, and a comment, a CDATA section or a raw-text element still open keeps only the few characters its end could straddle, its content being no token's. At
+     the end of the page what is unfinished is read as `tokenize` reads the end (an unclosed tag is text, an unclosed comment or raw element runs to the end). The tokens carry their
+     text and attributes as strings (`D.text`, `D.attr`), since the page is not there to slice. */
+const NEED = Symbol("NEED_MORE");
+
+function dropHeadStep(html, final) {
+  const open = /<head\b(?:"[^"]*"|'[^']*'|[^'">])*>/i.exec(html);
+  /* the text starts at the first candidate: a match elsewhere means the first did not (yet) match, and more of the page may make it */
+  if (!open) return final ? html : NEED;
+  if (!final && open.index > 0) return NEED;
+  let at = open.index + open[0].length;
+  const tag = /<(\/?)([A-Za-z][A-Za-z0-9:-]*)(?:"[^"]*"|'[^']*'|[^'">])*>/y;
+  for (;;) {
+    const ws = /^\s*/.exec(html.slice(at, at + 1024))[0].length;
+    at += ws;
+    if (at >= html.length) { if (!final) return NEED; break; }
+    if (!final && html.length - at < 4 && "<!--".startsWith(html.slice(at))) return NEED;
+    if (html.startsWith("<!--", at)) {
+      const e = html.indexOf("-->", at + 4);
+      if (e < 0) { if (!final) return NEED; at = html.length; continue; }
+      at = e + 3; continue;
+    }
+    if (html[at] !== "<") break;
+    tag.lastIndex = at;
+    const m = tag.exec(html);
+    if (!m) {
+      if (!final) {
+        const c = html.charCodeAt(at + 1), letter = (x) => (x >= 65 && x <= 90) || (x >= 97 && x <= 122);
+        const definite = at + 1 < html.length && !(c === 47 || letter(c)) || (c === 47 && at + 2 < html.length && !letter(html.charCodeAt(at + 2)));
+        if (!definite) return NEED;
+      }
+      break;
+    }
+    const name = m[2].toLowerCase();
+    if (m[1] && name === "head") { at = tag.lastIndex; break; }
+    if (m[1] || !HEAD_CONTENT.has(name)) break;
+    at = tag.lastIndex;
+    if (["title", "style", "script", "noscript", "template"].includes(name) && !m[0].endsWith("/>")) {
+      const end = new RegExp(`</${name}\\s*>`, "gi");
+      end.lastIndex = at;
+      const e = end.exec(html);
+      if (!e) { if (!final) return NEED; at = html.length; }
+      else at = e.index + e[0].length;
+    }
+  }
+  return html.slice(0, open.index) + " " + html.slice(at);
+}
+
+async function* dropHeadStream(chunks) {
+  let state = "scan", carry = "", h = "";
+  for await (const chunk of chunks) {
+    if (state === "pass") { yield chunk; continue; }
+    if (state === "scan") {
+      const s = carry + chunk;
+      carry = "";
+      const re = /<head/gi;
+      let p = -1, undecided = -1;
+      for (let m = re.exec(s); m; m = re.exec(s)) {
+        const next = s[m.index + 5];
+        if (next === undefined) { undecided = m.index; break; }
+        if (!/[A-Za-z0-9_]/.test(next)) { p = m.index; break; }
+      }
+      if (p < 0) {
+        const keep = undecided >= 0 ? undecided : Math.max(0, s.length - 4);   /* a `<head` may straddle the window's end */
+        if (keep > 0) yield s.slice(0, keep);
+        carry = s.slice(keep);
+        continue;
+      }
+      if (p > 0) yield s.slice(0, p);
+      h = s.slice(p); state = "head";
+    } else h += chunk;
+    const r = dropHeadStep(h, false);
+    if (r !== NEED) { yield r; state = "pass"; h = ""; }
+  }
+  if (state === "scan" && carry) yield carry;
+  else if (state === "head") yield dropHeadStep(h, true);
+}
+
+function streamTokenizer() {
+  let cap = 4096;
+  const D = { n: 0, k: new Uint8Array(cap), nm: new Int32Array(cap), sc: new Uint8Array(cap), names: [], nameId: new Map(), isVoid: [], block: [], cell: [],
+              tx: [], at: [] };
+  const intern = (name) => {
+    let id = D.nameId.get(name);
+    if (id === undefined) {
+      id = D.names.length; D.names.push(name); D.nameId.set(name, id);
+      const stem = /^[A-Za-z0-9_]*/.exec(name)[0];
+      D.isVoid.push(VOID.has(name)); D.block.push(BLOCK.has(stem)); D.cell.push(CELL.has(stem));
+    }
+    return id;
+  };
+  D.intern = intern; D.HR = intern("hr");
+  D.text = (id) => D.tx[id];
+  D.attr = (id) => D.at[id] ?? "";
+  const push = (k, nm = 0, sc = 0, text = null, attrs = null) => {
+    if (D.n === cap) {
+      cap *= 2;
+      const k2 = new Uint8Array(cap), nm2 = new Int32Array(cap), sc2 = new Uint8Array(cap);
+      k2.set(D.k); nm2.set(D.nm); sc2.set(D.sc); D.k = k2; D.nm = nm2; D.sc = sc2;
+    }
+    const i = D.n++;
+    D.k[i] = k; D.nm[i] = nm; D.sc[i] = sc;
+    if (text !== null) D.tx[i] = text;
+    if (attrs) D.at[i] = attrs;
+  };
+  let carry = "", gap = null;
+  const pushGap = () => push(K_GAP);
+  const pushText = (t) => push(K_TEXT, 0, 0, t);
+  function feed(chunk, final) {
+    let buf;
+    if (gap) {
+      const s = gap.tail + chunk;
+      let p = -1, len = 0;
+      if (gap.raw) { gap.raw.lastIndex = 0; const e = gap.raw.exec(s); if (e) { p = e.index; len = e[0].length; } }
+      else { p = s.indexOf(gap.end); len = gap.end.length; }
+      if (p < 0) {
+        if (final) { pushGap(); gap = null; return; }
+        gap.tail = gap.raw ? (s.lastIndexOf("<") >= 0 ? s.slice(s.lastIndexOf("<")) : "") : s.slice(Math.max(0, s.length - (gap.end.length - 1)));
+        return;
+      }
+      pushGap(); gap = null;
+      buf = s.slice(p + len);
+    } else buf = carry + chunk;
+    carry = "";
+    const n = buf.length;
+    let i = 0;
+    while (i < n) {
+      const at = buf.indexOf("<", i);
+      if (at < 0) { if (final) pushText(buf.slice(i)); else carry = buf.slice(i); break; }
+      if (at > i) pushText(buf.slice(i, at));
+      const c = buf.charCodeAt(at + 1);
+      if (!final && (at + 1 >= n || (c === 33 && n - at < 9))) { carry = buf.slice(at); break; }
+      if (c === 33) {
+        const comment = buf.startsWith("<!--", at), cdata = !comment && buf.startsWith("<![CDATA[", at);
+        if (comment || cdata) {
+          const end = comment ? "-->" : "]]>", from = at + (comment ? 4 : 9);
+          const e = buf.indexOf(end, from);
+          if (e >= 0) { pushGap(); i = e + 3; continue; }
+          if (final) { pushGap(); break; }
+          gap = { end, tail: buf.slice(Math.max(from, n - 2)) };
+          break;
+        }
+      }
+      if (c === 33 || c === 63) {
+        const e = buf.indexOf(">", at + 2);
+        if (e >= 0) { pushGap(); i = e + 1; continue; }
+        if (!final) { carry = buf.slice(at); break; }
+        pushText("<"); i = at + 1; continue;
+      }
+      const closing = c === 47;
+      NAME_RE.lastIndex = at + (closing ? 2 : 1);
+      const m = (closing || (c >= 65 && c <= 90) || (c >= 97 && c <= 122)) ? NAME_RE.exec(buf) : null;
+      if (!final && ((m && NAME_RE.lastIndex >= n) || (!m && closing && at + 2 >= n))) { carry = buf.slice(at); break; }
+      if (!m) { pushText("<"); i = at + 1; continue; }
+      const nameEnd = NAME_RE.lastIndex;
+      const gt = tagEnd(buf, nameEnd);
+      if (gt < 0) { if (final) pushText(buf.slice(at)); else carry = buf.slice(at); break; }
+      const name = m[0].toLowerCase();
+      const nm = intern(name);
+      const selfClosed = buf.charCodeAt(gt - 1) === 47 && gt - 1 >= nameEnd ? 1 : 0;
+      if (closing) { push(K_END, nm); i = gt + 1; continue; }
+      if (RAW.has(name)) {
+        const re = new RegExp(`</${name}\\s*>`, "gi");
+        re.lastIndex = gt + 1;
+        const e = re.exec(buf);
+        if (e) { pushGap(); i = e.index + e[0].length; continue; }
+        if (final) { pushGap(); break; }
+        const lt = buf.lastIndexOf("<");
+        gap = { raw: new RegExp(`</${name}\\s*>`, "i"), tail: lt > gt ? buf.slice(lt) : "" };
+        break;
+      }
+      push(K_START, nm, selfClosed, null, gt > nameEnd ? buf.slice(nameEnd, gt) : null);
+      i = gt + 1;
+    }
+  }
+  return { feed, doc: () => D };
+}
+
+/* the visible text of a page that arrives as decoded windows (an async iterable of strings), the same text `visibleTextOfHtml` makes of the whole */
+export async function visibleTextOfHtmlStream(chunks, { yieldNow, stretch = HTML_STRETCH, stats = null } = {}) {
+  const T = streamTokenizer();
+  for await (const c of dropHeadStream(chunks)) {
+    T.feed(c, false);
+    if (typeof yieldNow === "function") await yieldNow();
+  }
+  T.feed("", true);
+  const G = guard(stretch, stats);
+  const it = stages(T.doc(), G);
+  let r = it.next();
+  while (!r.done) { if (typeof yieldNow === "function") await yieldNow(); r = it.next(); }
+  G.close();
+  return r.value;
 }
 
 /* ---- runners ---- */

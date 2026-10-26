@@ -2,7 +2,7 @@
  * and checks the real answer. Named with the requirement each answer carries. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { entitiesWorld, namingInRefused, unreadable } from "./fixtures.mjs";
+import { entitiesWorld, namingInRefused, unreadable, entitieskind } from "./fixtures.mjs";
 import { NAMING_IN_CAPTURES_MAX, ENTITY_KINDS } from "../../../src/entities/index.mjs";
 
 test("R1 R43 entitiesWorld: the real createEntity refusals UNKNOWN_KIND, ENTITY_NO_LABEL, ENTITY_NO_NOTE, and the real addIdentifier refusals in their order", () => {
@@ -35,4 +35,16 @@ test("R51 unreadable: entitiesOfKind over a registry whose read throws answers U
   assert.deepEqual([r.ok, r.reason], [false, "UNREADABLE"]);
   assert.match(r.detail, /the registry could not be read/);
   assert.equal(r.entities, undefined);
+});
+
+test("R51 entitieskind: the real body listing holds the two bodies the fixture registers, in entity id order, nothing truncated", () => {
+  const r = entitieskind();
+  assert.deepEqual([r.ok, r.kind, r.count, r.truncated, r.next], [true, "body", 2, false, null]);
+  assert.equal(r.bodies.length, 2);
+  assert.deepEqual(r.entities.map((e) => e.entity_id), r.bodies);
+  for (const e of r.entities) {
+    assert.equal(e.kind, "body");
+    assert.equal(e.forum_kind, null);
+    assert.equal(typeof e.label, "string");
+  }
 });

@@ -1,6 +1,6 @@
 # notice-producers (T51)
 
-**Status** · session_01P5bsgjRaPhtyPChVVxk1mW · depth 2 · COMPLETE · handled B11
+**Status** · session_01VGCXrV2bt6soPPDTNLuJ76 · depth 2 · COMPLETE · handled B15
 
 ## J1 · COMPLETE
 
@@ -172,3 +172,57 @@ Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 14, module lines 1699
 ## J12 · COMPLETE
 
 COMPLETE (B11 applied; R29): the fixtures-contract marker now sits on readingsEnded's returned answer (reading-ended-seam.test.mjs:36). Module 155/155, format 0, ownership run after commit. The marker stays [idle] only until plane merges 'fixtures-run: notice-producers reading-ended'. REPORT for plane's run: contract id reading-ended; answer {ok:true, rows, next}; row {sha, kind:'reading', state refused|finished|final, why string|null, written, skipped, owed, failed (ints), ended_at epoch ms, member 'member:<id>'|null}; next '<ended_at>\u0001<sha>\u0001<kind>'|null; order ended_at,sha,kind; limit cap 500. Cases: refused (why 'pdf.bytes', counters 0), finished (why null, written 5), final (why PASSWORD_REQUIRED), final with member null, paged cursor. Met id: R29. Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 14, module lines 1699
+
+## J13 · BLOCKED
+
+BLOCKED (cause: needs Bob) on B12 (fix round 10, K5202): the marker placement cannot be done in my paths. No line of the seam is a candidate the fixtures check classes.
+
+What I checked:
+- The marker is at `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs:36` (`readingsEnded`'s return, B11). `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio notice-producers --list` lists exactly one line, that marker, `[idle]`. It lists no answer candidate at all, so there is no other line to move it to.
+- Plane's run is merged: `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30` carries `// fixtures-run: notice-producers reading-ended` (PLANE #63, B101).
+
+Why the check classes nothing: `checks/fixtures.mjs:884` skips any object literal with a `why` key and no `reason` key ("`why` is not the refusal key of any module's answer"). The ended rows that plane's `readingsEnded` returns (`bio-plane/src/store-assembly/pending.mjs:744`) carry the refusal or final reason in `why` (`pdf.bytes`, `PASSWORD_REQUIRED`) and `state`, never `reason`/`code`/`error`/`failure_class`/`refusal`. So the answer is skipped by design, and the marker covers nothing under any placement. The `{ok: true, rows, next}` envelope is not a refusal either.
+
+Options for Bob (one decision):
+1. (Recommended) The checker classes a row carrying `state` and `why` as the refusal answer of its provider, so the marker on `readingsEnded`'s return covers it. Process-repo change (`checks/fixtures.mjs`), not mine to make.
+2. Plane renames the row's reason key to `reason`. This changes plane's shape and its R98 paths; I would not recommend it.
+3. Drop the marker and keep the seam as data. This leaves `READING_ROWS` as hand-built answer data, which K4990 forbids, so I would not recommend it.
+
+Meanwhile: `notice-producers` tests run from the root, `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 pass, 0 fail. The OP-GRADES `DECLARED_OP_DISAGREES` red did not appear on this run. I have made no code change this round. Format, architecture, coverage and ownership checks are not yet run; I will run them once Bob decides, with the COMPLETE.
+
+Met ids: none new this round (R29 stays marked until the fixtures check classes its answer).
+
+## J14 · COMPLETE
+
+COMPLETE (B14 applied; R29). No code change this round: the marker stays at `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs:36` as BOB's K5204 answer says. The check (civicos-process main `8be32ff`, PR #9) now classes the `{ok: true, rows, next}` answer at `reading-ended-seam.test.mjs:37` as accepted (reading-ended), with plane's `fixtures-run` at `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30`.
+
+Checks, run from /home/user/bio:
+- fixtures `notice-producers --list`: 0 failures, accepted 1 (the reading-ended answer above); no `fixtures-own` or `fixtures-generic` marker added.
+- format: 178 modules, 0 failures.
+- architecture: 20 product files, 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test, 0 failures.
+- ownership (merge-base with tranche/T51 to HEAD): 0 failures.
+- module tests `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 tests, 155 pass, 0 fail.
+- `checks/run.mjs`: no finding in notice-producers files.
+
+Met ids: R29 (BOB strikes the mark). Found outside my paths, already reported at J11/J12: a refused row's `why` is a bound key (`pdf.bytes`) or REFUSED, so the notice reads "was not taken in: pdf.bytes" (plane/setup-words wording).
+
+Size (session_01VGCXrV2bt6soPPDTNLuJ76): test runs 2, module lines 1699
+
+## J15 · COMPLETE
+
+COMPLETE (B15 applied; R29). Merged `origin/tranche/T51` into the job branch (merge commit `778b8e0d22`, pushed; no rebase). OP-GRADES #30 is in, so the stores start again. No product code changed this round.
+
+Checks, run from /home/user/bio after the merge:
+- module tests `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 tests, 155 pass, 0 fail.
+- fixtures `notice-producers`: 0 failures, accepted 1 (the reading-ended answer at `reading-ended-seam.test.mjs:37`, covered by the marker at `:36`, run `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30`).
+- format: 178 modules, 0 failures.
+- architecture: 20 product files, 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test, 0 failures.
+- ownership (merge-base with tranche/T51 to HEAD): 0 failures.
+
+Not mine, not red in this module: `control-plane/r10-caseratify-chain.test.mjs` (until RATIFICATION #39) and `store-assembly/declarations.test.mjs` R83 (until STORE-ASSEMBLY #4), as BOB's B15 notes.
+
+Met ids: R29 (BOB strikes the mark).
+
+Size (session_01VGCXrV2bt6soPPDTNLuJ76): test runs 3, module lines 1699
