@@ -694,3 +694,7 @@ B44 (K5237) asked for `holdsplaced` in the `ACT_HELP_ABSENT` read ground beside 
 Suite (op-declarations, 249 tests): 249 pass, 0 fail. Checks: format, architecture, coverage (82 of 82), fixtures (op-declarations --list, 0 failures), words, ownership: all 0 failures.
 
 Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3470
+
+## J44 · COMPLETE
+
+COMPLETE for B44 (K5237; adds to B43). holdsplaced is added to the ACT_HELP_ABSENT read ground beside holdsdue (bio-plane/src/op-declarations/index.mjs, the read ground's list). Your R34 and R47 reds are gone: op-declarations suite 249 tests, 249 pass, 0 fail. Checks: format, architecture, coverage (82 of 82), fixtures (op-declarations --list, 0 failures), words, ownership: 0 failures. No fixtures marker added. Met ids: action-holds R22, R5, R6 on op-declarations' side, and op-declarations R34 and R47 for holdsplaced. Control-plane's R110 count (t51-door.test.mjs:22) is still the cross-module red reported in J42; not mine to change. Record: build/jobs/T51/op-declarations.md, section 'Fix round 10, item 116 (B44 CHANGE)'. Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 8, module lines 3470
