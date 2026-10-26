@@ -668,3 +668,7 @@ REPORT (SCREENS-INQUIRY #32), interim, pushed (74d206523d). Done: B70 (1)-(4) an
 **Tests and checks.** Module: ℹ tests 593, pass 591, fail 2 (r10-stated A7, A8, the real OCR member: failing before any change of mine on this container). Users (journey-check conclude-fields, control-plane t51-round7-seam, t46-app): 25 pass. format 0; coverage 136 of 136; ownership 0; architecture 4 (item a); fixtures --list 142 (was 163).
 
 Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 12, module lines 7041
+
+## J49 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #32), fix round 10 (B70-B74), pushed; details in my record ('Round 10 completed'). Applied: hypotheses', case-import's, inquiry's, connections' (themeReadWithPassage, connectionChooseMention) and wizard-scripts' (writingHelp*) answers re-pointed; R137 picker says more, never none, while a page is unread (failing first, red/green); R56/R78 placement handle fixed (screen read placer_handle, the read says placed_by_handle; failing first). Module 593 tests, 591 pass; the 2 failures are r10-stated A7/A8 (real OCR member), failing on this container before any change of mine. Users 25 pass. format 0, coverage 136/136, ownership 0, fixtures --list 163 -> 142 (each kept line's missing state in the record). NEEDS YOU: architecture has 4 failures: screens-inquiry.uses lacks connections and wizard-scripts (modules.json). HYPOTHESES #12's list answer is still awaited by CHANGE. Size (session_01UpU6NUvAWGMSdRjPPZHmMi): test runs 12.
