@@ -151,3 +151,7 @@ B6 (K5131) complete on job/T51/action-plans: a question concluded in the plan's 
 **REPORT for BOB.** (a) The design stream needs a `refusal.ADDRESSEE_INCOMPLETE` row in words.json; until then the sentence is `localize('action-plans.checks.an_addressee_names_its_role_and_organisation', …)` and t46's control lists it. (b) Preexisting reds outside this module: answer-envelope `families.test.mjs` and journey-check `pseudo.test.mjs` fail identically on the tranche tip. (c) Screens: `screens-action/plan.mjs:524` draws one fixed sentence for every addressee fault; it should draw `translation`/`detail` for the new code (screens-action's job).
 
 Size (session_014Agc8497kfuRj2581PQ8Yu): test runs 9, module lines 3390
+
+## J7 · COMPLETE
+
+Fix round 10 (R54) complete on job/T51/action-plans. optionStart now records the option's tier 1-3 as the action's first risk-tier history entry in its transaction (actions.actionRiskTier); new ADDRESSEE_INCOMPLETE (C-124.66) names an empty role or organisation, on add, revise and propose. Tests t51 red then green; module 109 pass; 9 impact-user modules 951 pass/17 fail identical on tranche tip; format, architecture, coverage 54/54, words, ownership, fixtures 0. REPORT: design stream needs a refusal.ADDRESSEE_INCOMPLETE row (t46 control allows its absence); screens-action plan.mjs:524 should draw the new code's text; answer-envelope families.test and journey-check pseudo.test are red on the tranche tip. Details in the record. I cut a full 824-file impact run short for time.
