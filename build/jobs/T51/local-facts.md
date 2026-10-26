@@ -124,3 +124,7 @@ D-B1 is done and J4 (COMPLETE) is already on origin/job/T51/local-facts; this an
 **Deferred:** none. R22's "(not yet met: T51)" mark in `build/requirements/local-facts.md` is BOB's to lift.
 
 Size (session_0173wYyJecMfho8UMa2bzEeh): test runs 10, module lines 1575
+
+## J6 · COMPLETE
+
+R22 done (fix round 10, item 144). A correction of @team/time_zone now also sets record-core setting team_time_zone in the same transaction (index.mjs:477 via #syncTeamZone :287); #active() (:316) backfills a copy with a correction and no setting at the first read or write (biosmoke8 case). Refused corrections set nothing. New r22.test.mjs, 5 tests: red (0/5) without the change, green with it. local-facts 88 pass 0 fail; direct users screens-settings, retrieval, review, publish-schedule, progressions, duties green. format/architecture/words/ownership 0 failures, coverage 22 of 22. R22's 'not yet met' mark is yours to lift. Size (session_0173wYyJecMfho8UMa2bzEeh): test runs 10, module lines 1575
