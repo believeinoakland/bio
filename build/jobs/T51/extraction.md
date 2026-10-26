@@ -974,3 +974,7 @@ Ran: extraction 399 of 399; promotion 170 of 170, ratification 340 of 340 (the c
 Met: R112 (BOB strikes the mark). No `fixtures-own` / `fixtures-generic` marker added. Nothing found in other modules.
 
 Size (session_018G7jTnRKMBhZmLg4NSMuEv): test runs 6, module lines 3495
+
+## J50 · COMPLETE
+
+COMPLETE fix round 10 (B66, C-M1). Mechanism: #heldByReextraction's sameAt (index.mjs:1463) needs equal string at; an acquire-time reading with at:null defeats it (reproduced). Fix: #historyHolds in projectPromotion (R112): a reading whose digest reading_history holds writes nothing. r112.test.mjs red (at null) then green, controls green. extraction 399/399, promotion 170/170, ratification 340/340, ownership 0, words 0. Met: R112. Record section 'EXTRACTION #50'. Live 'at: null' of the walker's scans not proved from the module.
