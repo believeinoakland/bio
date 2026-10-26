@@ -43582,7 +43582,7 @@
   },
   {
    "key": "queue.signer-self-registered.detail",
-   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and revoke the key. If you did, answer that you know about it.",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and revoke the key.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members"
