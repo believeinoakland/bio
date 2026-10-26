@@ -528,3 +528,7 @@ COMPLETE (re B43, B44). A1 (R32) and A2 (R30) built as K5229 words them; B's sev
 ## Round 14 addendum (re B45, K5230)
 
 Per B45 (3) A2 is reverted to the tranche's state: `dash-action.mjs` keeps the `taskresolve` arm and `dash-action.test.mjs:92` its scripted case, until the design's registry row (UX-DESIGN) is on the tranche; BOB then CHANGEs me to remove both. Merged `origin/tranche/T51` (`uses` gains wizard-scripts). Now: suite 296 of 296 pass; architecture 0; ownership 0; `fixtures.mjs screens-action --list`: 1 failure, `dash-action.test.mjs:92` (taskresolve, waits on the registry row). The contract test is green again (the registry and the screen both list `taskresolve`). R30's met mark waits on that CHANGE; R9 and R32 are met. Hold release from a docket mark or pressure record: ACTION-HOLDS #10's (B45 (4)).
+
+## J38 · COMPLETE
+
+COMPLETE (re B45). A2 reverted as you said: the taskresolve arm (dash-action.mjs) and dash-action.test.mjs:92 stay until the registry row lands; the last fixtures line is that one, named here. Merged the tranche (uses has wizard-scripts). Suite 296 of 296 pass; architecture 0, ownership 0, format 0, coverage 55/55, words 0, contract green. Met: R9, R32 (R30 waits on your CHANGE). Details in my record, Round 14 addendum. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 16, module lines 5210
