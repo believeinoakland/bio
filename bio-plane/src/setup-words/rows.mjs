@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19358 design words, 1157 protected; SHA-256
-   351528305b688e7c0bd6786ef68f15016866d16d307d6790edcaf3941a71f4d9) followed by 7473 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   351528305b688e7c0bd6786ef68f15016866d16d307d6790edcaf3941a71f4d9) followed by 7475 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19526,10 +19526,12 @@ export const WORD_ROWS = Object.freeze([
   ["action-clocks.index.this_call_carries_nobody","this call carries nobody: the proposer is stamped from the credential that asked.",null,null,false,"code"],
   ["action-clocks.index.this_clock_entry_is_proposed","this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) or states a clock entry by a revision of the action.",null,null,false,"code"],
   ["action-clocks.index.you_already_hold_a_reminder","you already hold a reminder on this entry for {day}. Nothing was changed.",null,null,false,"code"],
+  ["action-grammar.checks.a_decision_carries_its_outcome","A decision carries its outcome as the body gave it. If the body stated none, record none stated so the record says so rather than leaving it blank.",null,null,false,"code"],
   ["action-grammar.checks.a_records_law_in_the","A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has.",null,null,false,"code"],
   ["action-grammar.checks.a_risk_tier_tells_whoever","A risk tier tells whoever reads this action whether it is safe to file, needs caution, or must not be filed without a lawyer, and somebody has to be answerable for that judgement. The credential that asked here is an automated one: it can carry forward the tier a member set, and where no member has set one it can leave the tier unstated, but it cannot set, change or remove one. Sign in to state the tier yourself.",null,null,false,"code"],
   ["action-grammar.checks.action_kind_action_kind_is","action_kind '{action_kind}' is not a kind your team's Civicsmith offers",null,null,false,"code"],
   ["action-grammar.checks.an_action_says_who_it","An action says who it is addressed to: an office by its official role and the body it belongs to; a reporter, an organisation or another team by a role and the organisation; an audience described in words; or an undetermined addressee with a few words on what is known and what would settle it. This write carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at once, so nothing was written. Leaving the addressee out is allowed while the action is a draft.",null,null,false,"code"],
+  ["action-grammar.checks.an_outcome_is_one_of","An outcome is one of granted, denied, partial, reversed, affirmed, none exists (the body says no responsive record exists), or none stated (the body stated none).",null,null,false,"code"],
   ["action-grammar.checks.at_bearing_string_is_not","{at}.bearing '{String}' is not one of: {BEARINGS} (R24)",null,null,false,"code"],
   ["action-grammar.checks.at_carries_a_speaker_on","{at} carries a speaker on a '{String}' entry: a speaker spoke for the team in a sending (R22)",null,null,false,"code"],
   ["action-grammar.checks.at_carries_found_elsewhere_on","{at} carries found_elsewhere on a '{String}' entry: a response found elsewhere is something received (R22)",null,null,false,"code"],
@@ -21754,7 +21756,7 @@ export const WORD_ROWS = Object.freeze([
   ["conformance.index.no_office_entity_is_held","no office entity is held for this role and body, so the actor stands as the office's role and body only",null,null,false,"code"],
   ["conformance.index.only_a_member_who_has","only a member who has joined the project records its determinations. Nothing was written.",null,null,false,"code"],
   ["conformance.index.the_act_names_no_event","the act names no event: a government act is the event that records what was done. Nothing was written.",null,null,false,"code"],
-  ["conformance.index.whether_standard_binds_v1_is","whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.",null,null,false,"code"],
+  ["conformance.index.whether_standard_binds_v1_is","whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: settle it on the standard's page first. Nothing was written.",null,null,false,"code"],
   ["connection-grammar.conformance.a_hunch_is_returned_with","a hunch is returned with scope {sc}",null,null,false,"code"],
   ["connection-grammar.conformance.asking_k_alone_does_not","asking {k} alone does not give exactly the {k_2} items of the whole set",null,null,false,"code"],
   ["connection-grammar.conformance.fenced_fenced_is_not_returned","{fenced} (fenced) is not returned to the viewer who may see it",null,null,false,"code"],
@@ -21787,8 +21789,8 @@ export const WORD_ROWS = Object.freeze([
   ["connection-grammar.shape.grade_shape","grade is not {shape} in the letters {letters}",null,null,false,"code"],
   ["connection-grammar.shape.label_declared","declared, not evidenced",null,null,false,"code"],
   ["connections.checks.a_membership_is_taken_back","A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it.",null,null,false,"code"],
-  ["connections.checks.claims_leg_through_theme","{label}.{key} claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",null,null,false,"code"],
-  ["connections.checks.names_a_theme","{label}.{field} '{value}' names a THEME{membership}, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",null,null,false,"code"],
+  ["connections.checks.leg_claims_through_theme","{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",null,null,false,"code"],
+  ["connections.checks.leg_names_theme","{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",null,null,false,"code"],
   ["connections.checks.no_such_document","There is no document or record here by that id that you can see.",null,null,false,"code"],
   ["connections.checks.placing_a_document_in_a","Placing a document in a theme is a member's judgement that it passes the theme's test, recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch until a member confirms it. Sign in to place it, or propose it instead.",null,null,false,"code"],
   ["connections.checks.repair_cite_document","cite the document or the passage itself — the theme is how you found it, not what it shows",null,null,false,"code"],

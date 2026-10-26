@@ -72,6 +72,29 @@ test("R32 R12 R13 exclude closes a figure's open proposal exactly as include doe
   assert.deepEqual([r.inclusions.length, r.proposals.length], [1, 0]);
 });
 
+test("R33 a machine's proposal of a figure the set already includes or excludes holds no proposal: the member's latest act stands; control: a figure with no member act is held as a proposal", () => {
+  const s = seeded();
+  const set = s.m.createSet({ purpose: "trail", label: "t", by: ANN }).set_id;
+  const f = s.rec();
+  const g = s.rec();
+  const h = s.rec();
+  s.m.exclude({ setId: set, factId: f, reason: "a different project", by: ANN });
+  const after = s.m.proposeInclusion({ setId: set, factId: f, method: "same fund code and period", by: MACHINE });
+  assert.deepEqual([after.ok, after.already], [true, "excluded"]);
+  let r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [0, 0, 1]);
+  s.m.include({ setId: set, factId: g, reason: "checked the fund code", by: ANN });
+  const again = s.m.proposeInclusion({ setId: set, factId: g, method: "same fund code and period", by: MACHINE });
+  assert.deepEqual([again.ok, again.already], [true, "included"]);
+  r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [1, 0, 1]);
+  /* control: no member act, so the machine's proposal is held apart as before */
+  const held = s.m.proposeInclusion({ setId: set, factId: h, method: "same fund code and period", by: MACHINE });
+  assert.equal(held.already, undefined);
+  r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [1, 1, 1]);
+});
+
 test("R13 readSet answers only the facts the viewer may see", () => {
   const s = seeded();
   s.project("PROJ-1", "bob");

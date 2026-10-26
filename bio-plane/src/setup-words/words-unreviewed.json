@@ -1121,6 +1121,13 @@
       "line": 953
     },
     {
+      "id": "action-grammar.checks.a_decision_carries_its_outcome",
+      "en": "A decision carries its outcome as the body gave it. If the body stated none, record none stated so the record says so rather than leaving it blank.",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1414
+    },
+    {
       "id": "action-grammar.checks.a_records_law_in_the",
       "en": "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has.",
       "module": "action-grammar",
@@ -1147,6 +1154,13 @@
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
       "line": 1576
+    },
+    {
+      "id": "action-grammar.checks.an_outcome_is_one_of",
+      "en": "An outcome is one of granted, denied, partial, reversed, affirmed, none exists (the body says no responsive record exists), or none stated (the body stated none).",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1409
     },
     {
       "id": "action-grammar.checks.at_bearing_string_is_not",
@@ -16718,7 +16732,7 @@
     },
     {
       "id": "conformance.index.whether_standard_binds_v1_is",
-      "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.",
+      "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: settle it on the standard's page first. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
       "line": 1079
@@ -16948,18 +16962,18 @@
       "line": 285
     },
     {
-      "id": "connections.checks.claims_leg_through_theme",
-      "en": "{label}.{key} claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing",
+      "id": "connections.checks.leg_claims_through_theme",
+      "en": "{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",
       "module": "connections",
       "file": "bio-plane/src/connections/checks.mjs",
-      "line": 318
+      "line": 319
     },
     {
-      "id": "connections.checks.names_a_theme",
-      "en": "{label}.{field} '{value}' names a THEME{membership}, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it",
+      "id": "connections.checks.leg_names_theme",
+      "en": "{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",
       "module": "connections",
       "file": "bio-plane/src/connections/checks.mjs",
-      "line": 309
+      "line": 310
     },
     {
       "id": "connections.checks.no_such_document",
@@ -37350,56 +37364,56 @@
       "en": "read: the chain of authorising events toward the event a fact concerns, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1436
+      "line": 1439
     },
     {
       "id": "money.declared.committedagainstpaid",
       "en": "read: a contract's committed and paid facts with their sums and the difference, never a verdict; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1434
+      "line": 1437
     },
     {
       "id": "money.declared.createset",
       "en": "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1424
+      "line": 1427
     },
     {
       "id": "money.declared.exclude",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1428
+      "line": 1431
     },
     {
       "id": "money.declared.include",
       "en": "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1426
+      "line": 1429
     },
     {
       "id": "money.declared.moneysets",
       "en": "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1432
+      "line": 1435
     },
     {
       "id": "money.declared.reconcile",
       "en": "read: whether two money facts are consistent, or each dimension that differs; writes nothing",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1430
+      "line": 1433
     },
     {
       "id": "money.declared.recordfact",
       "en": "money-directed: keyed by a new MNY- id; holds one source's reading of one amount and moves no bundle",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1422
+      "line": 1425
     },
     {
       "id": "money.index.a_balance_class_is_read",
@@ -37420,7 +37434,7 @@
       "en": "a calculation is never a money fact's source",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1376
+      "line": 1379
     },
     {
       "id": "money.index.a_canonical_table_row_read",
@@ -37434,7 +37448,7 @@
       "en": "a chain of authority is read for one money fact (MNY-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1200
+      "line": 1203
     },
     {
       "id": "money.index.a_code_names_one_of",
@@ -37455,7 +37469,7 @@
       "en": "a duty is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1382
+      "line": 1385
     },
     {
       "id": "money.index.a_figure_states_how_it",
@@ -37476,28 +37490,28 @@
       "en": "a fund's type is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1291
+      "line": 1294
     },
     {
       "id": "money.index.a_funds_type_names_its",
       "en": "a fund's type names its basis: the source that states it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1292
+      "line": 1295
     },
     {
       "id": "money.index.a_hypothesis_is_never_named",
       "en": "a hypothesis is never named in a money fact ({k})",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1378
+      "line": 1381
     },
     {
       "id": "money.index.a_hypothesis_is_never_named_2",
       "en": "a hypothesis is never named in a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1387
+      "line": 1390
     },
     {
       "id": "money.index.a_kind_takes_a_stage",
@@ -37567,7 +37581,7 @@
       "en": "a money fact never concerns a duty",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1386
+      "line": 1389
     },
     {
       "id": "money.index.a_money_fact_never_names",
@@ -37623,7 +37637,7 @@
       "en": "a money set is read by its id (MSR-...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 988
+      "line": 991
     },
     {
       "id": "money.index.a_money_sets_purpose_is",
@@ -37637,7 +37651,7 @@
       "en": "a money set's purpose is {list}",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1017
+      "line": 1020
     },
     {
       "id": "money.index.a_proposal_names_the_method",
@@ -37721,7 +37735,7 @@
       "en": "a total is a calculation, never stored as a money fact",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1379
+      "line": 1382
     },
     {
       "id": "money.index.a_trail_concerns_one_id",
@@ -37756,7 +37770,7 @@
       "en": "after names no set in this list; start again without it",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1029
+      "line": 1032
     },
     {
       "id": "money.index.an_actual_amount_names_its",
@@ -37840,7 +37854,7 @@
       "en": "{contract} is not a registered contract",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1129
+      "line": 1132
     },
     {
       "id": "money.index.each_id_concerned_is_a",
@@ -37868,7 +37882,7 @@
       "en": "events is not wired here",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1205
+      "line": 1208
     },
     {
       "id": "money.index.fact_id_is_withdrawn_and",
@@ -37882,7 +37896,7 @@
       "en": "{fund} is not registered as a fund",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1295
+      "line": 1298
     },
     {
       "id": "money.index.id_is_not_a_line",
@@ -37917,7 +37931,7 @@
       "en": "money sets are listed by what they concern: name the id (moneysets&concerns=...)",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1015
+      "line": 1018
     },
     {
       "id": "money.index.name_the_money_facts_by",
@@ -37931,7 +37945,7 @@
       "en": "no authorising event is held for this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1231
+      "line": 1234
     },
     {
       "id": "money.index.no_money_fact_id_could",
@@ -38022,7 +38036,7 @@
       "en": "the authorising events held toward this event",
       "module": "money",
       "file": "bio-plane/src/money/index.mjs",
-      "line": 1231
+      "line": 1234
     },
     {
       "id": "money.index.the_capture_named",
@@ -49677,42 +49691,42 @@
       "en": "standard-directed: keyed by a court standard and a portion; writes standards' rows and moves no bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2851
+      "line": 2879
     },
     {
       "id": "standards.declared.lawrelate",
       "en": "standard-directed: keyed by a new relation between two standards or portions; writes standards' rows and moves no bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2849
+      "line": 2877
     },
     {
       "id": "standards.declared.standardadopt",
       "en": "proposal-directed: a member adopts a standard proposal, keyed by proposal id, with the adopter's own reason, now required (standards R10, through R1; DEC-88: `reasoned`) — the proposal's why is the proposer's; writes an STD- bundle naming it",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2847
+      "line": 2875
     },
     {
       "id": "standards.declared.standarddeclare",
       "en": "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one, with the declarer's reason for holding the government to it, now required (standards R1; DEC-88: `reasoned`); writes an STD- bundle",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2845
+      "line": 2873
     },
     {
       "id": "standards.declared.standardinforce",
       "en": "read: whether one standard was in force on a date, with why; writes nothing",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2843
+      "line": 2871
     },
     {
       "id": "standards.index.a_citation_is_at_most",
       "en": "a citation is at most {CITE_MAX} characters, and this one is {length}. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2709
+      "line": 2737
     },
     {
       "id": "standards.index.a_standard_held_held_holds",
@@ -49726,14 +49740,14 @@
       "en": "an adoption names the edition adopted, at most {EDITION_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1867
+      "line": 1895
     },
     {
       "id": "standards.index.citation_is_not_one_of",
       "en": "{citation} is not one of this standard's text passages. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1659
+      "line": 1687
     },
     {
       "id": "standards.index.cited_by_names_where_cited",
@@ -49747,14 +49761,14 @@
       "en": "documents whose readings cite it, as the readings state their references; a document you may not see is neither answered nor counted",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1558
+      "line": 1586
     },
     {
       "id": "standards.index.force_read_from_provision_words",
       "en": "a force is read from the provision's own words and confirmed by a member; a proposal moves nothing",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1796
+      "line": 1824
     },
     {
       "id": "standards.index.no_question_your_teams_record",
@@ -49768,7 +49782,7 @@
       "en": "no record of a version known in force through a date answers to that id here. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2186
+      "line": 2214
     },
     {
       "id": "standards.index.no_source_matches_citation",
@@ -49789,7 +49803,7 @@
       "en": "only an owner of the project its source material is filed in may release it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1816
+      "line": 1844
     },
     {
       "id": "standards.index.period_starts_after_captures",
@@ -49803,35 +49817,35 @@
       "en": " It is stored with no captured text, and cannot be adopted until a member names the captured passages that hold the standard's words (R9).",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2405
+      "line": 2433
     },
     {
       "id": "standards.index.proposed_force_moves_no_answer",
       "en": "this is a proposed force and not a force: it moves no answer until a member confirms it naming this proposal",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1736
+      "line": 1764
     },
     {
       "id": "standards.index.read_names_the_member_reading",
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2224
+      "line": 2252
     },
     {
       "id": "standards.index.sid_is_held_held_without",
       "en": "{sid} is held {held}, without its text, so nothing is read from its words. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2638
+      "line": 2666
     },
     {
       "id": "standards.index.sid_is_v1_seen_by",
       "en": "{sid} is {v1}seen by every member of your team. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1810
+      "line": 1838
     },
     {
       "id": "standards.index.side_is_held_passage",
@@ -49852,14 +49866,14 @@
       "en": "the act a proposal names is an id of at most {ACT_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2394
+      "line": 2422
     },
     {
       "id": "standards.index.the_source_was_last_retrieved",
       "en": "the source was last retrieved on {checkedDay}, and {through} is after it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2153
+      "line": 2181
     },
     {
       "id": "steps.index.basis_ord_rests_on_target",
