@@ -1,6 +1,6 @@
 # translations (T51)
 
-**Status** · session_013fsGnfsXmN9WkNCN2pULce · depth 2 · WORKING · handled B8
+**Status** · session_013fsGnfsXmN9WkNCN2pULce · depth 2 · COMPLETE · handled B8
 
 ## Change B4 (K4822, from control-plane J47)
 
