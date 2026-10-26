@@ -2,7 +2,7 @@
  * asserted by its key (R24); every request is compared with its owner's declaration by the harness (interface-shell R104). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, openWorld, main, drew, drewIn, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR } from "./fixtures.mjs";
+import { open, openWorld, main, drew, drewIn, ops, press, last, fill, choose, until, keptKey, ok, word, hasWord, COPY, PREFLIGHT, GRANT_SECRET, P, C, DR, importedCase } from "./fixtures.mjs";
 
 const tick = (p, id, v) => { p.doc.getElementById(id).querySelectorAll("input").forEach((b) => { if (b.value === v) b.checked = true; }); };
 const DOCKET = `/app/docket/${P}/${C}`;
@@ -38,23 +38,26 @@ test("R52 with no finding chosen, or no scope, nothing is sent and the refusal i
   assert.ok(main(p));
 });
 
-const IMPORT = (acc) => ({ importedcase: { status: 200, json: { ok: true, result: { import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "CASE-2026-3549", scope: "Port lease revenue",
-  edition: { edition: 2, findings: [{ finding: "FND-W-1", title: "Port lease revenue fell short", result: "recreated", origin: acc ? { acceptance: { by: "ana", at: "2026-10-02T09:00:00Z", reason: "checked", checked: "x" } } : {} }] } } } } });
+/* K5202: case-import's real `importedcase` answers: an accepted import (edition 2) and a bare one (edition 1) */
+const ACCEPTED = await importedCase({ accepted: true });
+const BARE = await importedCase({ accepted: false });
+const IMPORT = (acc) => ({ importedcase: (acc ? ACCEPTED : BARE).answer });
+const pageOf = (a) => `/app/imported/${a.import}/${a.edition}`;
 
 test("R55 an accepted import offers 'Withdraw this acceptance, with a reason' and the act sends the reason", async () => {
-  const p = await open("/app/imported/IMP-2026-0001/2", { plane: IMPORT(true) });
+  const p = await open(pageOf(ACCEPTED), { plane: IMPORT(true) });
   assert.ok(ops(p).includes("importacceptwithdraw"));
   await press(p, "importacceptwithdraw", { values: { "im-withdraw": "The schedule was later corrected." } });
   const body = last(p, "importacceptwithdraw").body;
-  assert.equal(body.import, "IMP-2026-0001");
-  assert.equal(body.edition, 2);
+  assert.equal(body.import, ACCEPTED.import);
+  assert.equal(body.edition, ACCEPTED.edition);
   assert.equal(body.reason, "The schedule was later corrected.");
 });
 
 test("R55 a non-accepted import offers no withdrawal, and a withdrawal with no reason sends nothing (controls)", async () => {
-  const none = await open("/app/imported/IMP-2026-0001/2", { plane: IMPORT(false) });
+  const none = await open(pageOf(BARE), { plane: IMPORT(false) });
   assert.ok(!ops(none).includes("importacceptwithdraw"));
-  const p = await open("/app/imported/IMP-2026-0001/2", { plane: IMPORT(true) });
+  const p = await open(pageOf(ACCEPTED), { plane: IMPORT(true) });
   await press(p, "importacceptwithdraw", { values: { "im-withdraw": "  " } });
   assert.equal(p.byOp("importacceptwithdraw").length, 0);
 });
@@ -89,7 +92,10 @@ test("R67 the receipt draws the knock's reference under the heading, by key; an 
   assert.ok(drew(withRef, "screen.doorbell.after.head"));
   assert.ok(withRef.answered("knock").knockId, "the doorbell answers a knockId");
   assert.ok(drew(withRef, "screen.doorbell.reference", { reference: withRef.answered("knock").knockId }), "the reference is the knockId the doorbell answers");
-  const without = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true } } } } });
+  /* the control: the real answer without its reference (the door always states one, so the field is taken off that answer) */
+  const bare = { ...withRef.answered("knock") };
+  delete bare.knockId;
+  const without = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: ok(bare) } });
   choose(without, "db-file", new Uint8Array([104, 105]));
   await press(without, "knock");
   assert.ok(without.doc.querySelector("[data-received]"));
@@ -134,7 +140,14 @@ test("R49 'Make one for me' sends generateSecret and no phrase, even with one ty
 });
 
 test("R49 an answer without the fingerprint, size, pseudonym or phrase draws none of them (control)", async () => {
-  const p = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: { status: 200, json: { ok: true, result: { ok: true, knockId: "KNOCK-1" } } } } });
+  /* the control: the real answer with those four taken off (the door always states them) */
+  const made = await openWorld("/app/doorbell");
+  choose(made, "db-file", new Uint8Array([104, 105]));
+  tick(made, "db-make", "make");
+  await press(made, "knock");
+  const bare = { ...made.answered("knock") };
+  for (const k of ["secret", "sha256", "pseudonym", "bytes"]) delete bare[k];
+  const p = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: ok(bare) } });
   choose(p, "db-file", new Uint8Array([104, 105]));
   await press(p, "knock");
   assert.ok(p.doc.querySelector("[data-received]") && p.doc.querySelector("[data-receipt]"));

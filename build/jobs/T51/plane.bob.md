@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J68
+**Read** · handled J70
 
 ## B1 · START
 
@@ -1292,3 +1292,7 @@ Your job: `bio-plane/test/m/plane/r10-reading-ended.test.mjs:20` hand-builds ext
 ## B104 · CHANGE
 
 CHANGE (K5202, plan item 101 (4)(a)), in this same job: add the runs `// fixtures-run: reading-pipeline transcribe-answer` and `// fixtures-run: extraction transcribe-answer` in a plane test, each running the users' marked answers against plane's real `aiPath` (`bio-plane/src/plane/transcribe.mjs`). The users' markers today read `fixtures-contract: content transcribe-answer` (`extraction/t48.test.mjs:29`, `reading-pipeline/text-units.test.mjs:531`, `:537`, `transcribe.test.mjs:323`); BOB renames them to `plane` in the round's mechanical pass, so the check pairs them then: name in COMPLETE the ids your runs use.
+
+## B105 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `8f913cced9`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

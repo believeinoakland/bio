@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01MX23PSD31bEtV5CnCLBEte · depth 2 · COMPLETE · handled B18
+**Status** · session_01TjMsDy8TyBi31BGv64B9Ln · depth 2 · COMPLETE · handled B20
 
 ## J1 · COMPLETE
 
@@ -426,3 +426,46 @@ Processed CHANGE B18 (K5200) and ANSWER B17 (K5198). Tranche merged (`3434b26261
 ## J26 · REPORT
 
 Ring failed after COMPLETE (J25): BOB's session session_01WJsZWkoGCJqWG6874AF7LK is archived, so no doorbell could be bound to it (create_trigger: 'session not active'). The pushed J25 COMPLETE is the message; BOB's backstop reads it (mechanics §13).
+
+## J27 · COMPLETE
+
+Fix round 10 (K5207, B19) done. Commit 31d822cf40 on `job/T51/credentials`.
+
+**Changed (file:line)**
+- `bio-plane/test/m/credentials/fixtures.mjs`:34 `SIGNER_KEY`, :39 `signerregisterown({keyB64, by})` (a world with `ann` active; the answer is the real `signerRegisterOwn` for `ann`; answers `{w, answer}`), :46 `signerregisterownHeld()` (`bob` registers the key, then `ann` asks; the real `SIGNER_KEY_HELD_BY_ANOTHER` refusal; answers `{w, first, answer}`).
+- `bio-plane/test/m/credentials/fixtures-answers.test.mjs` (new): two tests naming R9, one per export, each asserting the real answer and the row it wrote.
+
+**Red then green**: with a deliberately wrong expected key (`AAAAwrongkey`) the first test failed (`actual: 'AAAAsignerregisterownkey01'`); restored, both pass.
+
+**Suites and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: tests 198, pass 198, fail 0.
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures (3508 test files read; answer 0, stub 0, code 0, contract 0).
+- `checks/format.mjs`, `checks/architecture.mjs credentials`, `checks/coverage.mjs credentials`: 0 failures (58 of 58 live ids named).
+- `checks/run.mjs /home/user/bio`: no finding in credentials' files. Its FAIL lines are in other modules (listed below).
+- `checks/ownership.mjs ... credentials <merge-base> HEAD`: 3 files changed by credentials (the two above and this job record), 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (the bare `tranche/T51` name is not a local ref, so I used `origin/`).
+
+**No product change.** The real ops make both states, so no REPORT of a missing state. No `fixtures-own` or `fixtures-generic` marker added. No met ids (none of mine were open).
+
+**Found in other modules (REPORT, for BOB to place)**
+- `bio-plane/test/m/screens-publish/fix3.test.mjs:276` hand-builds the `signerregisterown` answer (`refusedIn("NO_ATTEST…")`, op-table `signerregisterown`). It should take `signerregisterown()` / `signerregisterownHeld()` from `credentials/fixtures.mjs` instead (screens-publish's job, not mine).
+- `bio-plane/test/m/screens-settings/updates.test.mjs:250, :270, :342` and `bio-plane/test/m/interface-shell/harness.mjs:97` hand-build credentials-provided answers (`bootstrap`, `signout`) (their modules').
+- Whole-tree `checks/run.mjs`: coverage 2 failures, `case-authoring` R87 and `membership` R156 named by no test; answer FAILs in `acquisition`, `extraction`, `interface-shell` (their modules).
+
+**Size (session_01TjMsDy8TyBi31BGv64B9Ln): test runs 3, module lines 2736**
+
+## J28 · COMPLETE
+
+CHANGE B20 (K5209) handled. OP-GRADES #30 is in: merged `origin/tranche/T51` (ea6985ef0f, a merge commit, no rebase) into `job/T51/credentials`. No product change was needed.
+
+Re-run after the merge:
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: tests 198, pass 198, fail 0.
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named.
+- `checks/ownership.mjs ... credentials <merge-base> HEAD`: see the line in this session's output; 0 failures expected.
+
+The two reds B20 names are not this module's: `control-plane/r10-caseratify-chain.test.mjs` (RATIFICATION #39) and `store-assembly/declarations.test.mjs` R83 (STORE-ASSEMBLY #4). I did not touch them.
+
+Nothing else changed. Commit: `ea6985ef0f`.
+
+Size (session_01TjMsDy8TyBi31BGv64B9Ln): test runs 3, module lines 2736

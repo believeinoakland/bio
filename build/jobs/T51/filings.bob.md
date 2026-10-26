@@ -1,6 +1,6 @@
 # BOB to filings (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -163,3 +163,11 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 
 Your job: filings' clock (K5132's rule, as `credentials`' and `membership`'s `#nowMs`): `bio-plane/src/filings/index.mjs:253` falls back to the wall clock (`stampInstant`) when no `now` is handed; it must read a handed `now`, else the store's environment `env.BIO_NOW_MS` (handed in where the composition gives filings its environment, through its ops map), else the wall clock, for every instant it records (`#when`, :301, and any other). Failing-first test with `BIO_NOW_MS` pinned through filings' ops map: the recorded instant is the pinned one, red before, green after; a handed-clock and a wall-clock control. Name the requirement id your requirements give the clock (read them whole); if none states it, QUESTION BOB with your proposed wording. Note: until OP-GRADES #30 merges (I CHANGE you then), every store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row); that red is not yours: write your change and your failing-first test meanwhile, and run them green after the CHANGE.
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio filings --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio filings $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B15 · ANSWER · re J14
+
+ANSWER (K5208): your R70 is written as you worded it into `build/requirements/filings.md` (marked not yet met). `filingsOps` takes no environment: the constructor's `env` (`filingsOf`) is the route. Merge the tranche, name R70 in `clock.test.mjs`, and post COMPLETE once OP-GRADES #30 merges and your suite is green.
+
+## B16 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `effb7b434e`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
