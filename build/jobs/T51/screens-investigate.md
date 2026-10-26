@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_01RdUoM7ohaxRHbCVfJZV9x3 · depth 2 · COMPLETE · handled B47
+**Status** · session_01XAGfrWyN5W6h9CDFVRjtte · depth 2 · COMPLETE · handled B48
 
 ## J1 · QUESTION
 
@@ -546,3 +546,26 @@ COMPLETE · screens-investigate · fix round 10, B47 (K5276): (d) and (e) fixed,
 **Met ids.** R61. **Markers.** none added.
 
 Size (session_01RdUoM7ohaxRHbCVfJZV9x3): test runs 20, module lines 3475
+
+## J40 · COMPLETE
+
+COMPLETE (re B48, K5285): `common.test.mjs` does not hang; it is slow. R10's `timeline` case passes alone in 119 s; the file did not reach its end inside BOB's 200 s because eleven such cases ran one after another.
+
+**Cause, with evidence.** `settled()` (`world.mjs:27-37`, called by `openAs` at :23) ends a page's wait when no `[data-state="loading"]` remains for 8 rounds. A read answered `pending` (the R10 loop's third variant) is drawn loading for good, so the loop ran its ceiling of 1500 rounds, each a `settle(20)` and a real 10 ms sleep: about 16.4 s per case. Timed per case on `timeline`: `refused` and `silent` 0.3-0.7 s each; `pending` 16.4-17.0 s for the six reads the page draws loading (`image`, `heldcaptures`, `affordances`, `instances`, `timeline`, `reading`), 0.5 s for the three it draws nothing for. The CPU profile of one case: 18.9 s of 24.7 s idle. It was not a read the screen waits on, a variant it never settles, or a node comparison: the product screen is right, the wait was the test world's.
+
+**Changed (test only).**
+- `world.mjs:19-37`: `openAs` passes `never` to `settled` when a scripted plane answer is `pending`; `settled(p, {never})` then counts the page quiet by "no further request for 8 rounds" and does not wait for loading to end.
+- `common.test.mjs` (last test): new, red then green: a page with `image` pending opens in under 6 s and draws the loading state (red: 17,869 ms; green: 486 ms after the world).
+- The remaining cost was real CPU (0.5 s a page open, about 190 opens), so the 11-screen R10 loop is split across two files, nothing dropped: shared world and helpers moved to `universe.mjs` (the lines that were `common.test.mjs` 31-107, exported), the loop to `states-a.test.mjs` (people, person, theme, explore, timeline) and `states-b.test.mjs` (money, calculation, proceeding, due-date, standard, ties), unchanged apart from the screens listed.
+
+**Proof.** Alone, each file runs to its end and reports every test: `common.test.mjs` 9 tests in 17 s, `states-a` 5 in 46 s, `states-b` 6 in 48 s; 9 + 5 + 6 = 20 = the 19 tests the file held before plus the new one. The whole module as one run without `--test-force-exit` exits by itself (exit 0, 447 s): 306 tests, 305 pass, 0 fail, 0 cancelled, 0 skipped, 1 todo (`money.test.mjs`:127, the REPORTED case of J-earlier, not changed).
+
+**Checks.** `checks/run.mjs /home/user/bio`: no line names screens-investigate; 89 failures before and after my change (other modules' stubs). `ownership` 0 failures.
+
+**REPORT (another module).** The time of a page open in these tests is mostly `jurisdictions/index.mjs`: `clone` (:1602, `JSON.parse(JSON.stringify())`) 5.8 s self of 24.7 s in the `proceeding` case, `canon` (:1622) 1.05 s, `merge` (:1693) 0.65 s; `combine` copies each profile entry on every call. If `combine` is called per request, a held, frozen combined result would cut about a third of every screen test's CPU. Also `store-assembly/assemble.mjs:747` `routes` 1.3 s and `store-assembly/world.mjs:59` `exec` 1.2 s.
+
+Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 3,475
+
+## J41 · COMPLETE
+
+COMPLETE (re B48, K5285): see J40 in my record. R10 timeline never hung: its pending-read cases waited the full 1500-round ceiling of world.mjs settled() (about 16.4 s each; world.mjs:27-37, openAs :23) because a read that never answers stays loading; a test cause, product screen right. Fixed in world.mjs (never-answering reads quiet when no further request); red 17,869 ms then green 486 ms (new test in common.test.mjs). Remaining cost was real CPU, so the R10 loop is split into states-a/states-b (universe.mjs shared), nothing dropped. Alone: common 9 tests 17 s, states-a 5 tests 46 s, states-b 6 tests 48 s (20 = 19 + 1 new). Whole module one run, exits by itself: 306 tests, 305 pass, 0 fail, 1 todo (money.test.mjs:127, existing). run.mjs: no finding in my files (89 before and after); ownership 0. REPORT: jurisdictions/index.mjs:1602 clone, :1622 canon, :1693 merge are about a third of every page-open's CPU in these tests. Size (session_01XAGfrWyN5W6h9CDFVRjtte): test runs 14, module lines 3,475
