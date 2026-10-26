@@ -177,3 +177,20 @@ Size (session_01DsN69dHjn1CmTE4K99844C): test runs 7, module lines 2942
 - `checks/run.mjs` still lists the two hand-built `knockerconsent` answers in `bio-plane/test/m/screens-publish/fr30.test.mjs` (lines 68 and 80 now). Not mine; screens-publish to take the export.
 
 Size (session_01DsN69dHjn1CmTE4K99844C): test runs 11, module lines 2942
+
+## J8 · COMPLETE
+
+COMPLETE for the fix round 11 START, with CHANGE B7 (K5209) handled. Supersedes my earlier COMPLETE (J7), which was posted before I read B7.
+
+Commits on job/T51/sources: fixtures 837147f43b; record a794500bca; merge of tranche/T51 5781eba4b8; record for B7 on the tip.
+
+Changed: bio-plane/test/m/sources/fixtures.mjs (`knockerconsent`, the real answer for a source with a pending consent entry: before = empty publishableAt for the group, answer = consentBySecret ok naming the entry, after = the entry shown with basis consent) and bio-plane/test/m/sources/fixtures.test.mjs (test naming R11 and R22).
+
+Failing-first: asserted basis changed to public_elsewhere, red; restored, green.
+
+After the merge: sources 47 of 47 pass; fixtures 0 failures; coverage 22 of 22; architecture, format 0; ownership 0 failures (3 files). Impacted modules (case-disclosures, consequences, actions, escalation, affordances, screens-action): 1031 of 1031 pass.
+
+Markers: none. Deferred: none.
+Outside sources, not changed: screens-publish/fr30.test.mjs (lines 68, 80) hand-builds the knockerconsent answer; screens-publish should take the export from this module.
+
+Size (session_01DsN69dHjn1CmTE4K99844C): test runs 11, module lines 2942
