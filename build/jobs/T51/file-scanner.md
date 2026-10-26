@@ -1,6 +1,6 @@
 # file-scanner (T51)
 
-**Status** · session_012m6NnUGLKSBYVyTshxCY6U · depth 2 · NEEDS BOB · handled B22
+**Status** · session_012m6NnUGLKSBYVyTshxCY6U · depth 2 · WORKING · handled B22
 
 ## J1 · QUESTION
 
