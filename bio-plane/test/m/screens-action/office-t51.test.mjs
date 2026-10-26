@@ -5,19 +5,20 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, ops, press, last, ok, refused, W, DATA_PLANE, ACTION_ID, PROJECT, PROFILES, ADMIN } from "./page.mjs";
 import { until } from "./real.mjs";
-import { naming, reach, BODY, BODY_NAME, DAYS } from "./naming.mjs";
+import { naming, reach, BODY_NAME, DAYS } from "./naming.mjs";
 
-const NEW = `/app/request/${PROJECT}`;
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const HUD = "U.S. Department of Housing and Urban Development, San Francisco Regional Office";
 const FOIA = "5 U.S.C. § 552";
 const LAWS = [{ level: "state", name: "California Public Records Act", citation: "Gov. Code § 7920.000" }, { level: "federal", name: "Freedom of Information Act", citation: FOIA }];
 const WITH_LAWS = ok({ ...PROFILES, view: { ...PROFILES.view, records_laws: LAWS } });
-const PLANE = naming({ ...DATA_PLANE, profiles: WITH_LAWS, actioncreate: ok({ id: ACTION_ID }) }, { fixed: "ENT-2026-9999999999999999" });
+/** A world with the team's one body: `{plane, body, path, x}` (naming.mjs). */
+const world = (base = {}, over = {}) => { const w = naming({ ...DATA_PLANE, profiles: WITH_LAWS, ...base }); return { ...w, plane: { ...w.plane, ...over } }; };
+/** The world, the request page opened, and the fold that names an office reached. */
+const start = async (base, over) => { const w = world(base, over); const p = await open(w.path, w.plane); await reach(p, w.body, until); return { ...w, p }; };
 
 test("R20, R4 (C64, DEC-402): with no office known a member names one: the fold, then `entitycreate` with the office, where requests go and the law, the office drawn marked and chosen, and 'Start the request' addressed to it", async () => {
-  const p = await open(NEW, PLANE);
-  await reach(p, until);
+  const { p, body } = await start();
   said(p, "screen.request.nooffice");
   said(p, "screen.request.nooffice.admin");
   for (const k of ["screen.request.nameoffice.head", "screen.request.nameoffice.note", "screen.request.nameoffice.name", "screen.request.nameoffice.name.help", "screen.request.nameoffice.where",
@@ -29,53 +30,49 @@ test("R20, R4 (C64, DEC-402): with no office known a member names one: the fold,
   const bare = await press(p, "entitycreate", {});
   assert.equal(p.byOp("entitycreate").length, 0, "no name: refused in place, nothing sent");
   assert.ok(text(p, p.root().querySelector(`[data-slot="${bare.getAttribute("data-ai")}"]`)).includes(W("findin.fieldneeded", { field: W("screen.request.nameoffice.name") })));
-  await press(p, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": HUD.split(", ")[0], "req-noff-role": HUD.split(", ")[1], "req-noff-where": "https://foiaonline.example/hud", "req-noff-law": "1", "req-noff-note": "It answers records requests for HUD in California." } });
+  await press(p, "entitycreate", { values: { ...DAYS, "req-noff-body": body, "req-noff-name": HUD.split(", ")[0], "req-noff-role": HUD.split(", ")[1], "req-noff-where": "https://foiaonline.example/hud", "req-noff-law": "1", "req-noff-note": "It answers records requests for HUD in California." } });
   assert.deepEqual(last(p, "entitycreate").body, { kind: "office", label: HUD, contact: { kind: "portal", value: "https://foiaonline.example/hud" }, law: FOIA,
     note: "It answers records requests for HUD in California." });
   assert.ok(main(p).querySelector('[data-named="1"]').textContent.includes(W("screen.request.nameoffice.mark")), "the office is drawn marked as named by a member");
-  assert.ok(text(p).includes(HUD.split(", ")[1]), "the office is chosen for this request");
+  assert.ok(text(p).includes(HUD.split(", ")[1]), "the office is chosen for this request, as the owner answers it");
   assert.deepEqual(ops(p), ["actioncreate"], "chosen: what is wanted is asked");
   await press(p, "actioncreate", { values: { "req-what": "Records of the regional office's housing inspections", "req-office": "0" }, reason: "x" });
   const doc = last(p, "actioncreate").body.document;
-  for (const line of [`role: ${JSON.stringify(HUD)}`, `body: ${JSON.stringify(BODY_NAME)}`, 'entity_id: "ENT-2026-9999999999999999"', 'action_kind: "records_request"'])
+  for (const line of [`role: ${JSON.stringify(HUD)}`, `body: ${JSON.stringify(BODY_NAME)}`, 'action_kind: "records_request"'])
     assert.ok(doc.includes(line), line);
-  assert.equal(p.location.pathname, `/app/request/${ACTION_ID}`);
+  assert.match(/entity_id: "(ENT-[^"]+)"/.exec(doc)[1], /^ENT-/, "the office is the entity the team now holds");
+  await until(p, () => /^\/app\/request\/ACTN-/.test(p.location.pathname), "the started request's page");
 });
 
 test("R20 (C64): where requests go is sent as an email, a portal or an address by its form, and not at all when left empty; a refused office chooses none; control: a profile with no records law draws no law choice and sends none", async () => {
-  const emailed = await open(NEW, PLANE);
-  await reach(emailed, until);
-  await press(emailed, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": "Records Office", "req-noff-where": "foia@agency.example", "req-noff-note": "x" } });
+  const { p: emailed, body: body_emailed } = await start();
+  await press(emailed, "entitycreate", { values: { ...DAYS, "req-noff-body": body_emailed, "req-noff-name": "Records Office", "req-noff-where": "foia@agency.example", "req-noff-note": "x" } });
   assert.deepEqual(last(emailed, "entitycreate").body.contact, { kind: "email", value: "foia@agency.example" });
-  const mailed = await open(NEW, PLANE);
-  await reach(mailed, until);
-  await press(mailed, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": "Records Office", "req-noff-where": "1 Main St, Washington DC", "req-noff-note": "x" } });
+  const { p: mailed, body: body_mailed } = await start();
+  await press(mailed, "entitycreate", { values: { ...DAYS, "req-noff-body": body_mailed, "req-noff-name": "Records Office", "req-noff-where": "1 Main St, Washington DC", "req-noff-note": "x" } });
   assert.deepEqual(last(mailed, "entitycreate").body.contact, { kind: "address", value: "1 Main St, Washington DC" });
-  const plain = await open(NEW, PLANE);
-  await reach(plain, until);
-  await press(plain, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": "Records Office", "req-noff-note": "x" } });
+  const { p: plain, body: body_plain } = await start();
+  await press(plain, "entitycreate", { values: { ...DAYS, "req-noff-body": body_plain, "req-noff-name": "Records Office", "req-noff-note": "x" } });
   assert.equal(Object.hasOwn(last(plain, "entitycreate").body, "contact"), false, "no place stated: none sent");
   // a refusal is drawn by its words and the office is not chosen
-  const no = await open(NEW, { ...PLANE, entitycreate: refused("UNKNOWN_LAW") });
-  await reach(no, until);
-  await press(no, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": "Records Office", "req-noff-note": "x" } });
+  const { p: no, body: body_no } = await start({}, { entitycreate: refused("UNKNOWN_LAW") });
+  await press(no, "entitycreate", { values: { ...DAYS, "req-noff-body": body_no, "req-noff-name": "Records Office", "req-noff-note": "x" } });
   assert.equal(no.doc.getElementById("req-what"), null);
   assert.equal(main(no).querySelector('[data-named="1"]'), null);
   // control: no records law in the profile
-  const bare = await open(NEW, { ...PLANE, profiles: ok({ ...PROFILES, view: { ...PROFILES.view, records_laws: [] } }) });
-  await reach(bare, until);
+  const { p: bare, body: body_bare } = await start({ profiles: ok({ ...PROFILES, view: { ...PROFILES.view, records_laws: [] } }) });
   assert.equal(bare.doc.getElementById("req-noff-law"), null);
-  await press(bare, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": "Records Office", "req-noff-note": "x" } });
+  await press(bare, "entitycreate", { values: { ...DAYS, "req-noff-body": body_bare, "req-noff-name": "Records Office", "req-noff-note": "x" } });
   assert.equal(Object.hasOwn(last(bare, "entitycreate").body, "law"), false);
 });
 
 test("R20 (C64): the administrator's wording is unchanged and she keeps Places; control: with offices known the fold is not drawn", async () => {
-  const admin = await open(NEW, { ...PLANE, whoami: ok(ADMIN) });
-  await reach(admin, until);
+  const { p: admin } = await start({ whoami: ok(ADMIN) });
   said(admin, "screen.request.nooffice.admin");
   assert.ok(main(admin).querySelector('a[href="/app/places"]'));
   assert.ok(main(admin).querySelector("details.mk-details"), "the fold");
-  const known = await open(NEW, { ...PLANE, peopledirectory: ok({ rows: [{ entity: "ENT-2026-2222222222222222", kind: "office", name: "Pothole repair program" }], truncated: false }) });
+  const w = world();
+  const known = await open(w.path, { ...w.plane, peopledirectory: ok({ rows: [{ entity: "ENT-2026-2222222222222222", kind: "office", name: "Pothole repair program" }], truncated: false }) });
   assert.ok(!text(known).includes(W("screen.request.nameoffice.head")));
   assert.equal(known.doc.getElementById("req-noff-name"), null);
 });

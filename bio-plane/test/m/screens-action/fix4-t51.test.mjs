@@ -8,7 +8,7 @@ import { WORLD_FOUNDER_HANDLE } from "../interface-shell/world.mjs";
 import { actionWorld, filingIn, correspond, openIn } from "./world-C.mjs";
 import { actionDoc } from "./world.mjs";
 import { until } from "./real.mjs";
-import { naming, reach, BODY, BODY_NAME, DAYS } from "./naming.mjs";
+import { naming, reach, BODY_NAME, DAYS } from "./naming.mjs";
 import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, PROFILES_WITH_HELP, RECORDS_HELP, ACTION, ACTION_ID, FILING, FILINGS, draft, TEMPLATES, button, READER } from "./page.mjs";
 
 const withPlan = (o) => ({ ...DATA_PLANE, plan: ok({ ...PLAN, ...o }) });
@@ -47,56 +47,61 @@ test("R44 (c) (C53-min): the picked options chosen together with a day and no da
 
 const NEW = `/app/request/${PROJECT}`;
 const OGIS = "Office of Government Information Services";
-/* `entitycreate` as `entities` R65 answers a member's naming (naming.mjs): a held office with the same folded name is answered with `existed: true`,
-   otherwise one is registered; the plane keeps what it was given, so naming twice meets the first entry */
-const namingPlane = () => naming({ ...DATA_PLANE, profiles: ok(PROFILES), actioncreate: ok({ id: ACTION_ID }) });
+/* the real `entities` (naming.mjs) answers a member's naming as R65 states: a held office with the same folded name is answered with `existed: true`, otherwise
+   one is registered, so naming twice meets the first entry; `page()` opens the request in the world and reaches the fold that names an office */
+const namingWorld = () => {
+  // no law is offered: these tests are of the names, and the real `entities` refuses a law the active profile does not hold
+  const w = naming({ ...DATA_PLANE, profiles: ok({ ...PROFILES, view: { ...PROFILES.view, records_laws: [] } }) });
+  return { ...w, page: async () => { const p = await open(w.path, w.plane); await reach(p, w.body, until); return p; } };
+};
 const officeOptions = (p) => p.doc.getElementById("req-office").querySelectorAll("option").map((o) => o.textContent.trim());
 
 test("R20 (C64-more): an office named by its agency alone (no comma, no office within it) is drawn once; the two fields are the agency and the office within it, the entity labelled by both", async () => {
-  const p = await open(NEW, namingPlane());
-  await reach(p, until);
+  const w = namingWorld(), { body } = w;
+  const p = await w.page();
   for (const k of ["screen.request.nameoffice.name", "screen.request.nameoffice.role", "screen.request.nameoffice.role.help", "screen.request.nameoffice.why", "screen.request.nameoffice.why.help"])
     assert.ok(text(p).includes(W(k)), k);
   assert.ok(!text(p).includes(W("shell.reason")), "the note is the design's own (DEC-412), not the kit's reason field");
-  await press(p, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": OGIS, "req-noff-note": "It answers federal records requests." } });
+  await press(p, "entitycreate", { values: { ...DAYS, "req-noff-body": body, "req-noff-name": OGIS, "req-noff-note": "It answers federal records requests." } });
+  await until(p, () => p.doc.getElementById("req-office"), "the office she named to be chosen");
   assert.equal(last(p, "entitycreate").body.label, OGIS, "the label is the name as typed, not split at a comma");
   assert.deepEqual(officeOptions(p), [`${OGIS}, ${BODY_NAME}`], "drawn once, never 'Office, Office': the office in its body");
   assert.ok(!text(p).includes(`${OGIS}, ${OGIS}`));
   // an agency and the office within it: both are kept, the office first as every office line draws it
-  const q = await open(NEW, namingPlane());
-  await reach(q, until);
-  await press(q, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": "City of Oakland", "req-noff-role": "Office of the City Clerk", "req-noff-note": "It holds the council's records." } });
+  const q = await w.page();
+  await press(q, "entitycreate", { values: { ...DAYS, "req-noff-body": body, "req-noff-name": "City of Oakland", "req-noff-role": "Office of the City Clerk", "req-noff-note": "It holds the council's records." } });
+  await until(q, () => q.doc.getElementById("req-office"), "the office she named to be chosen");
   assert.equal(last(q, "entitycreate").body.label, "City of Oakland, Office of the City Clerk");
   assert.deepEqual(officeOptions(q), [`City of Oakland, Office of the City Clerk, ${BODY_NAME}`], "as the owner answers it: the office by its label, in its body");
   await press(q, "actioncreate", { values: { "req-what": "Council minutes", "req-office": "0" }, reason: "x" });
   const doc = last(q, "actioncreate").body.document;
   assert.ok(doc.includes('role: "City of Oakland, Office of the City Clerk"') && doc.includes(`body: "${BODY_NAME}"`));
   // control: a comma in the agency's own name is kept whole (it is no longer a separator)
-  const c = await open(NEW, namingPlane());
-  await reach(c, until);
-  await press(c, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": "Housing, Planning and Building Department", "req-noff-note": "x" } });
+  const c = await w.page();
+  await press(c, "entitycreate", { values: { ...DAYS, "req-noff-body": body, "req-noff-name": "Housing, Planning and Building Department", "req-noff-note": "x" } });
+  await until(c, () => c.doc.getElementById("req-office"), "the office she named to be chosen");
   assert.equal(last(c, "entitycreate").body.label, "Housing, Planning and Building Department");
   assert.deepEqual(officeOptions(c), [`Housing, Planning and Building Department, ${BODY_NAME}`]);
 });
 
 test("R20 (C64-more): naming the same office again returns the first entry, which is the one chosen; a different office within the same agency is another entry", async () => {
-  const plane = namingPlane();
-  const first = await open(NEW, plane);
-  await reach(first, until);
-  await press(first, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": OGIS, "req-noff-note": "x" } });
+  const w = namingWorld(), { body } = w;
+  const first = await w.page();
+  await press(first, "entitycreate", { values: { ...DAYS, "req-noff-body": body, "req-noff-name": OGIS, "req-noff-note": "x" } });
+  await until(first, () => first.doc.getElementById("req-office"), "the office she named to be chosen");
   await press(first, "actioncreate", { values: { "req-what": "A", "req-office": "0" }, reason: "x" });
   const firstId = /entity_id: "([^"]+)"/.exec(last(first, "actioncreate").body.document)[1];
-  const again = await open(NEW, plane);
-  await reach(again, until);
-  await press(again, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": ` ${OGIS.toUpperCase()} `, "req-noff-note": "x again" } });
+  const again = await w.page();
+  await press(again, "entitycreate", { values: { ...DAYS, "req-noff-body": body, "req-noff-name": ` ${OGIS.toUpperCase()} `, "req-noff-note": "x again" } });
+  await until(again, () => again.doc.getElementById("req-office"), "the office she named to be chosen");
   assert.equal(again.byOp("entitycreate").length, 1);
   assert.deepEqual(ops(again), ["actioncreate"], "chosen at once: what is wanted is asked");
   await press(again, "actioncreate", { values: { "req-what": "B", "req-office": "0" }, reason: "x" });
   assert.equal(/entity_id: "([^"]+)"/.exec(last(again, "actioncreate").body.document)[1], firstId, "the first entry, not another");
   // control: another office within the same agency is not the first one
-  const other = await open(NEW, plane);
-  await reach(other, until);
-  await press(other, "entitycreate", { values: { ...DAYS, "req-noff-body": BODY, "req-noff-name": OGIS, "req-noff-role": "FOIA Public Liaison", "req-noff-note": "x" } });
+  const other = await w.page();
+  await press(other, "entitycreate", { values: { ...DAYS, "req-noff-body": body, "req-noff-name": OGIS, "req-noff-role": "FOIA Public Liaison", "req-noff-note": "x" } });
+  await until(other, () => other.doc.getElementById("req-office"), "the office she named to be chosen");
   await press(other, "actioncreate", { values: { "req-what": "C", "req-office": "0" }, reason: "x" });
   assert.notEqual(/entity_id: "([^"]+)"/.exec(last(other, "actioncreate").body.document)[1], firstId);
 });
