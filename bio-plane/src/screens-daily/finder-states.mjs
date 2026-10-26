@@ -216,12 +216,14 @@ export function finderStates() {
       // R12: no result: the words searched, what search covers, and "Capture it".
       // R78: when the wider reading finds documents (`widen.total` above 0) the partial match is told apart from "nothing matches".
       // F-B10 (a): the wider reading is the plane's of either route that answered one: the fields route's first, else the passages route's.
+      // The fields route counts documents, which the count line says; the passages route counts passages, so its reading draws the partial
+      // sentence and no document count (a count of another unit under "Documents holding ..." would be false).
       const reading = function (r) { const x = r && r.state === "ok" && r.value && r.value.widen; return x && typeof x.total === "number" && x.total > 0 ? x : null; };
-      const widen = reading(f) || reading(p);
-      const wider = !!widen;
+      const widen = reading(f);
+      const wider = !!(widen || reading(p));
       return scopes + '<div class="mk-note" data-state="empty"><p><b>' + (wider ? cs.w("screen.finder.noresult.partial", { q: q }) : cs.w("screen.finder.noresult", { q: q })) + "</b> " + cs.w("screen.finder.covers") + "</p>"
         + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
-        + (wider ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + '</h3><p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "");
+        + (wider ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + "</h3>" + (widen ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "") : "");
     }
     const total = f && f.state === "ok" ? "" : "";
     return scopes + fieldsSec + passagesSec + subjectsSec + total + (drawn.length > 1 || plain ? '<p class="mk-small muted">' + cs.w("screen.finder.route.apart") + "</p>" : "") + cross;

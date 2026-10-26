@@ -187,7 +187,7 @@ const PASSAGES = (rows, extra = {}) => ok({ ok: true, rows, count: rows.length, 
 
 /* ---------- F-B10 (a) (R78): the widening is read from the passages route too ---------- */
 
-test("R78 (F-B10 (a)): when no route holds a match, the wider reading of the passages route (`widen.total` above 0) draws the partial sentence and its count; fields' wins when it has one; controls: 0 or none on both says nothing matches", async () => {
+test("R78 (F-B10 (a)): when no route holds a match, the wider reading of the passages route (`widen.total` above 0) draws the partial sentence (no document count); fields' wins when it has one; controls: 0 or none on both says nothing matches", async () => {
   const q = "alpha zzzqqq";
   const w = (total) => ({ interpretation: "OR", total, q, detail: "d" });
   const drawn = async (fields, passages) => {
@@ -197,7 +197,8 @@ test("R78 (F-B10 (a)): when no route holds a match, the wider reading of the pas
   };
   const onlyPassages = await drawn(null, w(3));
   assert.ok(onlyPassages.includes(word("screen.finder.noresult.partial", { q })), "the partial sentence: " + onlyPassages.slice(0, 300));
-  assert.ok(onlyPassages.includes(word("screen.finder.widen", { n: "3" })), "its count");
+  assert.ok(onlyPassages.includes(word("screen.finder.partial.head")), "its heading");
+  assert.ok(!onlyPassages.includes(word("screen.finder.widen", { n: "3" })), "no passage count under \"Documents holding ...\"");
   assert.ok(!onlyPassages.includes(word("screen.finder.noresult", { q })), "not the no-match sentence");
   const both = await drawn(w(2), w(9));
   assert.ok(both.includes(word("screen.finder.widen", { n: "2" })), "the fields route's wider reading, as before, when it has one");
@@ -227,4 +228,21 @@ test("R28: a project changed in the same second as her last look, before it, is 
   assert.ok(since.includes("After the look"), "changed after the look: drawn");
   assert.ok(!since.includes("Same second"), "changed in the second of the look, before it: not drawn");
   assert.ok(!since.includes("Before the look"), "control: changed before: not drawn");
+});
+
+test("R78 (F-B10 (a), K5267): the walker's case over the real plane: words found only in passages, one of them absent (`household zzzqqq`): the passages route's own `widen` is read and the partial sentence is drawn, not \"nothing matches\"; control: no word found draws nothing matches", async () => {
+  const L = await lab();
+  const typed = "household zzzqqq";
+  const rows = await L.mem.read("meaningrows", { query: { q: "passage:household passage:zzzqqq", rows: "passage" } });
+  const fields = await L.mem.read("search", { query: { q: typed } });
+  assert.equal(rows.total, 0);
+  assert.ok(rows.widen && rows.widen.total > 0, "the plane offers the wider reading at passage grain: " + JSON.stringify(rows.widen));
+  assert.ok(!fields.widen, "and the fields route has none (the words are not in a title or note)");
+  const p = await asPlane("/app/finder/" + typed);
+  await settle();
+  assert.ok(text(p).includes(word("screen.finder.noresult.partial", { q: typed })), "partial: " + text(p).slice(0, 300));
+  assert.ok(!text(p).includes(word("screen.finder.noresult", { q: typed })));
+  const none = await asPlane("/app/finder/qqqxxx zzzqqq");
+  await settle();
+  assert.ok(text(none).includes(word("screen.finder.noresult", { q: "qqqxxx zzzqqq" })), "control");
 });
