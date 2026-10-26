@@ -18,8 +18,8 @@ const KEYS = ["sha", "kind", "state", "why", "written", "skipped", "owed", "fail
 async function ended() {
   const x = await store({ env: { CAPTURES: bucketStandIn() } });
   /* the reader's answers are extraction's published fixture (`readHeldAnswer`, made by its real `readHeld`): a read to its end, and a read in pieces the reader
-     refuses to go on with (`final`, CURSOR_MISMATCH). Both final rows, the one a member opened and the one none did, take the published final answer. */
-  const answers = { finished: await readHeldAnswer.read(), final: await readHeldAnswer.final() };
+     refuses to go on with (`final`, its reason is the published `why`). Both final rows, the one a member opened and the one none did, take the published final answer. */
+  const answers = { finished: await readHeldAnswer.read(), final: await readHeldAnswer.final() }, answerFinal = answers.final;
   // fixtures-own: harness a router of the reader's asks by digest, answering extraction's published answers (`readHeldAnswer`): which digest is read to its end and which is refused the cursor is the test's own registration, the answers are the owner's
   extractionOf(x.ctx).readHeld = async (a) => (a.sha === sha("finished") ? answers.finished : answers.final);
   const jobs = pendingOf(x.ctx);
@@ -28,12 +28,12 @@ async function ended() {
   jobs.registerJob({ kind: "reading", sha: sha("final"), member: "member:m2" });
   jobs.registerJob({ kind: "reading", sha: sha("unopened") });
   for (let i = 0, at = Date.now() + 1000; i < 4; i++, at += 1000) await x.s.onAlarm(at);
-  return { x, jobs };
+  return { x, jobs, answerFinal };
 }
 
 // fixtures-run: notice-producers reading-ended
 test("R1 (notice-producers R29, the reading-ended seam): the real job table answers the ended rows in the contract's shapes: refused, finished, final, final with no opener", async () => {
-  const { jobs } = await ended();
+  const { jobs, answerFinal } = await ended();
   const all = jobs.readingsEnded({});
   assert.equal(all.ok, true);
   assert.equal(all.next, null, "a page that is not full has no cursor");
@@ -47,8 +47,8 @@ test("R1 (notice-producers R29, the reading-ended seam): the real job table answ
   const by = (name) => all.rows.find((r) => r.sha === sha(name));
   assert.deepEqual([by("refused").state, by("refused").why, by("refused").member], ["refused", "pdf.bytes", "member:m1"], "a refusal's why is its bound key");
   assert.deepEqual([by("finished").state, by("finished").why, by("finished").member], ["finished", null, "member:m1"]);
-  assert.deepEqual([by("final").state, by("final").why, by("final").member], ["final", "CURSOR_MISMATCH", "member:m2"], "a final row's why is the reader's reason");
-  assert.deepEqual([by("unopened").state, by("unopened").why, by("unopened").member], ["final", "CURSOR_MISMATCH", null], "a row no member opened names no one");
+  assert.deepEqual([by("final").state, by("final").why, by("final").member], ["final", answerFinal.why, "member:m2"], "a final row's why is the reader's reason");
+  assert.deepEqual([by("unopened").state, by("unopened").why, by("unopened").member], ["final", answerFinal.why, null], "a row no member opened names no one");
   assert.deepEqual(all.rows.map((r) => r.ended_at), [...all.rows.map((r) => r.ended_at)].sort((a, b) => a - b), "in the table's order: by when it ended");
 });
 

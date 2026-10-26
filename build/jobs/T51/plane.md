@@ -1243,3 +1243,20 @@ B104 applied (job/T51/plane). New bio-plane/test/m/plane/r-transcribe-answer.tes
 NOT GREEN YET: same blocker as J69, DECLARED_OP_DISAGREES: readtranslate description (op-grades #30). I run it green after OP-GRADES merges.
 
 Your users' markers still read content transcribe-answer (extraction t48:29, reading-pipeline text-units:531 and :537, transcribe.test:323); the pairing lands with your rename.
+
+## Record (PLANE #64, B105; OP-GRADES #30 merged)
+
+**Entries applied:** merged `origin/tranche/T51` (never a rebase). OP-GRADES #30 is in, so the stores import again.
+- `r10-reading-ended.test.mjs` (B103): the expected reason of the final rows is now the published final answer's own `why` (`readHeldAnswer.final()`: the reader's sentence, not the code `CURSOR_MISMATCH`), taken from the answer, not written in the test. First run after the merge failed on that assertion alone; fixed and green.
+- `r-transcribe-answer.test.mjs` (B104): green against the real AI path, 2 tests.
+
+**Tests and checks**
+- The two new files: 4 tests, 4 pass.
+- The whole `bio-plane/test/m/plane/*.test.mjs` directory: run in the background; result below.
+- `checks/fixtures.mjs /home/user/bio plane`: 2 failures, both `orphan-run` for `r-transcribe-answer.test.mjs:54` and `:55` (`reading-pipeline transcribe-answer`, `extraction transcribe-answer`). They are the B104 pairing: the users' markers still read `content transcribe-answer` until BOB's rename.
+- format 0 failures; architecture 0; coverage 37 of 37; ownership (tranche/T51 → HEAD) 0.
+- Not run: `checks/run.mjs` and `build/plan/impact.mjs` (waiting on the directory run).
+
+**Deferred:** none.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 6, module lines 371
