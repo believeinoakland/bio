@@ -90,9 +90,6 @@ export const PLACE_SCREENS = Object.freeze({
    after Security, drawn only while `whoami`'s `administer` is true, `ADMIN_SCREENS`; R106: `bias` last, the drawing's "For every member"). */
 export const SETTINGS_SCREENS = Object.freeze(["members", "account", "connect", "notes", "ties", "group-identity", "security",
   "updates", "translations", "wizards", "group", "places", "recovery", "bias"]);
-/* K5046 (c): `ADMIN_SCREENS` and `ADMIN_ACTS` are wizard-scripts' (R40), the module that withholds the group-setup scripts by them; the shell
-   imports them, and re-exports them for the plane's wizards file until it imports them from wizard-scripts itself. */
-export { ADMIN_ACTS, ADMIN_SCREENS };
 
 /* R16: the screen an item of each kind opens (R27: a knock opens `inbox` at that knock; R47: a person or organisation
    the record follows opens `person`, a proceeding `proceeding`, a standard `standard`; R66: a project's plan, timeline,

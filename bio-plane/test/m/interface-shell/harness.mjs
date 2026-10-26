@@ -19,6 +19,7 @@ export const ADMIN = Object.freeze({ ...MEMBER, member: "rosa", handle: "rosa", 
 /* answers: a value (`ok`), a refusal at the top level (`refused`) or in `result` (`refusedIn`), an HTTP error with no
    JSON (`httpError`), no answer (`silent`: the fetch throws) and never (`pending`) */
 export const ok = (result, status = 200) => ({ status, json: { ok: true, result } });
+// fixtures-own: input the refusal envelope this harness builds for the code a test feeds it: the code is the test's input, not a module's answer
 export const refused = (code, translation, status = 400, extra = {}) => ({ status, json: { ok: false, reason: code, code, ...(translation ? { translation } : {}), ...extra } });
 export const refusedIn = (code, translation) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...(translation ? { translation } : {}) } } });
 export const httpError = (status = 500) => ({ status, text: "boom" });
@@ -85,16 +86,11 @@ export const undeclaredOps = () => new Map(undeclared);
 export const queueOf = (items) => (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: items.length }) : ok({ items }));
 export const FRAME = Object.freeze({
   whoami: ok(MEMBER),
-  interfacewords: ok({ ok: true, language: null, words: [] }),
-  groupidentity: ok({ ok: true, group: "river-town", display_name: "River Town" }),
-  /* queue R93: the frame asks for the count alone (`count=true`) and a screen for the list */
-  queue: (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: 3 }) : ok({ items: [{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }] })),
   infolevel: ok({ level: "prompt", set_at: null, asked_at: null }),
   assistantstate: ok({ on: false }),
   accountreference: ok({ held: false }),
   subscriptionsignin: ok({ connected: false }),
   groupkeystate: ok({ on: false }),
-  signout: ok({ ok: true }),
   version: { status: 200, text: "build-1\n" },
 });
 /* The session record interface-shell R32 keeps in localStorage under `SESSION_STORE_KEY`: `{t, e, d, w}`. */

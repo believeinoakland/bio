@@ -3,6 +3,7 @@
    pages, `cs.checks` over record data, more doors, explanations by the design's keys, a refusal in its own words, the look
    rows, the first load, a Reasoned act's reason, the public frame's cards, the phone layout. Every sentence is read through
    `setup-words`' `word` (R70); a test holds no English. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, interfaceScript, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
@@ -11,6 +12,7 @@ import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { feedWithItem } from "../queue/fixtures.mjs";
 import { fitSend, boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
 import { inWorld, bootAs, doorAs } from "./world.mjs";
 import { ALL, HOME, HELD, DOORBELL, PUBLISHED } from "./screens.fixture.mjs";
@@ -161,8 +163,9 @@ test("R74 the Sounds setting is off for a new member and kept on the device, nev
 
 const ACCOUNT = { id: "account", reads: () => ({}), acts: [], render: (cs) => cs.title() };
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R75 the member's initial opens Your menu by the design's keys: who is signed in, a link to account, sign out (explained by shell.menu.signout_does, sending signout), the appearance control; the question after the first month is one note at the top of Home, asked once; the password dialog reads session.reauth.*", async () => {
-  const p = await boot({ screens: [...ALL, ACCOUNT] });
+  const p = await boot({ screens: [...ALL, ACCOUNT], plane: FRAME_ANSWERS });
   await p.click('[data-shell="menu"]');
   const menu = p.root().querySelector("#cs-menu");
   assert.ok(!menu.hidden);
@@ -248,7 +251,7 @@ test("R76 the masthead's explanations button names itself and its setting (shell
     }
   }
   /* control: at 1280 px the labels are drawn */
-  const w = await boot({ screens: ALL });
+  const w = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   assert.equal(w.root().querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"));
   assert.equal(w.root().querySelector('.mk-mastsearch').textContent, word("shell.search"));
 });
@@ -426,12 +429,14 @@ test("R81 R88 more doors: request, matter, action and dash-project open their sc
 /* ---------- R82 ---------- */
 
 test("R82 explanations read the design's keys: the To-do count by shell.queue.waiting then shell.queue.open, only when every fill is answered; the team's name by shell.group.open; a row's icon by shell.icon.<kind>; the path's earlier steps by shell.crumb.back; control: the queue read failing draws no count and no sentence", async () => {
-  const p = await boot({ screens: ALL });
+  const p = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   const todo = p.root().querySelector('.cs-mast [data-kind="todo"]');
-  assert.equal(todo.getAttribute("data-tip"), h(word("shell.queue.waiting", { n: 3, todo: 2, noticed: 1, status: 0 })) + '<span class="more">' + h(word("shell.queue.open")) + "</span>");
+  const FEED = feedWithItem().items;
+  const kind = (c) => FEED.filter((x) => x.class === c).length;
+  assert.equal(todo.getAttribute("data-tip"), h(word("shell.queue.waiting", { n: FEED.length, todo: kind("OBLIGATION"), noticed: kind("FINDING"), status: kind("CONDITION") })) + '<span class="more">' + h(word("shell.queue.open")) + "</span>");
   assert.ok(p.root().querySelector(".cs-mast .mk-grp").getAttribute("data-tip").includes(h(word("shell.group.open"))));
   const ICONS = stand("held", [], (cs) => ["capture", "group", "clock", "tension", "hold", "plan"].map((k) => cs.icon(k)).join(""));
-  const q = await boot({ screens: [ICONS], path: "/app/held" });
+  const q = await boot({ screens: [ICONS], path: "/app/held", plane: FRAME_ANSWERS });
   for (const [i, k] of ["capture", "group", "clock", "tension", "hold", "plan"].entries()) assert.equal(q.root().querySelectorAll("#cs-main .cs-card")[i].getAttribute("data-tip"), h(word("shell.icon." + k)), k);
   const doc = { ...ALL.find((s) => s.id === "document") };
   const d = await boot({ screens: [doc], path: "/app/document/c1", plane: { image: ok({ title: "A lease", pages: 1, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [] }) } });
@@ -470,7 +475,7 @@ test("R83 a refusal is drawn in its own words and shell.unread is for no refusal
 /* ---------- R84 ---------- */
 
 test("R84 look: the tab's title is page.title ({screen}, {team}) and on a public page page.title.public; an explanation opens below what it explains (above when the room below is short), never over the next control, and closes on Escape; at 390 px a table has no header row and every control is at least 44 px; public pages carry no weight mark; control: at 1280 px a table keeps its header row", async () => {
-  const p = await boot({ screens: ALL });
+  const p = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   assert.equal(p.doc.title, word("page.title", { screen: word("screen.home.name"), team: "River Town" }));
   const d = await boot({ screens: [DOORBELL], path: "/app/doorbell", session: null });
   assert.equal(d.doc.title, word("page.title.public", { page: word("screen.doorbell.name"), team: word("shell.group.unnamed") }));
@@ -592,7 +597,7 @@ test("R87 a Reasoned act asks its reason and is never sent without one: the shel
 /* ---------- R89 ---------- */
 
 test("R89 the phone layout as drawn: the rules for a row (auto minmax(0, 1fr), cells under their words), a label list in one column, a choice's words one block beside its box, tabs wrapping whole live in the shell's own layout and apply at the phone width only; control: a 1280 px row keeps its cells side by side", async () => {
-  const p = await boot({ screens: ALL });
+  const p = await boot({ screens: ALL, plane: FRAME_ANSWERS });
   const style = /<style>([^]*?)<\/style>/.exec(p.html)[1];
   const at = style.indexOf("@media (max-width:760px)");
   assert.ok(at >= 0, "a phone-width block");

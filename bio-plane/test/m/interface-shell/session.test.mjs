@@ -1,5 +1,6 @@
 /* interface-shell R3, R4, R24, R32: the session record this module keeps in localStorage, its token only in the
    Authorization header, sign-in handed over, sign out, every tab told, and nothing kept of who opened what. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refused, silent, MEMBER, settle, tabs, STORE_KEY } from "./harness.mjs";
@@ -204,8 +205,9 @@ test("R4 the member's initial opens a menu with Sign out: it sends op=signout, t
   assert.ok(q.root().querySelector("#cs-main").textContent.includes(word("session.signedout")));
 });
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R24 nothing the shell does records who opened what: no storage holds a read or a screen visited, and no request but the screens' own reads and acts and the frame's", async () => {
-  const p = await boot({ screens: SCREENS, path: "/app/held", plane: { heldcaptures: HELD, image: IMAGE } });
+  const p = await boot({ screens: SCREENS, path: "/app/held", plane: { ...FRAME_ANSWERS, heldcaptures: HELD, image: IMAGE } });
   for (const a of p.root().querySelectorAll("a[data-nav]")) await p.click(a);
   await p.click(p.root().querySelector('a[href="/app/held"]') || p.root().querySelector("a[data-nav]"));
   for (const k of p.local.keys()) assert.match(k, /^(cs-(level|theme|railw|level-asked|group|first:[\w-]*)|bio-session(:active)?)$/, k);
