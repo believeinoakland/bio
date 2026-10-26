@@ -10,7 +10,7 @@
      admin and probe, so admission refuses an `ai` credential, K4098) and is also stamped `by`, set from the session only (its R86 fence,
      `MEMBER_SESSION_REQUIRED`);
    - `sessionread` (a member's session only, `machineClasses: []`; classes admin, member, probe; `NEEDS` `null`, `viewer`
-     stamped): `holdsdue` (action-holds R19), `templatebyhandle` (filing-templates R34), `rulefields` (local-facts R18)
+     stamped): `holdsdue` (action-holds R19), `holdsplaced` (action-holds R22), `templatebyhandle` (filing-templates R34), `rulefields` (local-facts R18)
      and `clocksrunning` (action-clocks R24);
    - `ownread` (a read for a session only, an administrator's, NOT_AN_ADMIN otherwise): `adminremovalsopen`
      (member-roster R75, served through membership's map, its R154), `by` stamped;
@@ -40,7 +40,7 @@ const T51_SHARES = Object.freeze({
   "action-plans": Object.freeze({ cite: "action-plans R17; R77", ops: Object.freeze({ checkpointsdue: "read" }) }),
   /* action-holds R19, local-facts R18, action-clocks R24 (R78, R79; N858, N1046, N1088, K3935, K4059): reads a member's
      session draws from. */
-  "action-holds": Object.freeze({ cite: "action-holds R19; R78", ops: Object.freeze({ holdsdue: "sessionread" }) }),
+  "action-holds": Object.freeze({ cite: "action-holds R19, R22; R78", ops: Object.freeze({ holdsdue: "sessionread", holdsplaced: "sessionread" }) }),
   "local-facts": Object.freeze({ cite: "local-facts R18; R78", ops: Object.freeze({ rulefields: "sessionread" }) }),
   "action-clocks": Object.freeze({ cite: "action-clocks R24; R79", ops: Object.freeze({ clocksrunning: "sessionread" }) }),
   /* member-roster R75 (CR-4; K3976): the administrator removals under way, an administrator's read from a session, `by`

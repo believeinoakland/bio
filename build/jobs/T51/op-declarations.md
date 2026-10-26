@@ -617,3 +617,42 @@ COMPLETE for B40, B41 and B42 (K5178; plan item 80 (2) and item 85 (2)). Commit 
 **Found in other modules (REPORT, with file:line).** (1) control-plane `test/m/control-plane/envelope.test.mjs:567`, the aggregate `answer` refusal check names op-declarations among earlier modules (see above). (2) Aggregate words failures: 16, in store-assembly (ask.mjs:389, 469, 502, 521, 522, 526, 531, 535, 540; wiring.mjs:49, 78, 103; wizards.mjs:51) and plane (declared.mjs:16 vs plane/declared.mjs:13, `plane.declared.readtranslate`'s en differs). Not measured by this job.
 
 Size (session_01RkSbN8aUrWKGhGQpRQEqD6): test runs 2, module lines 3470
+
+## J41 · COMPLETE
+
+COMPLETE for B43 (K5235; fix round 10, plan item 116; action-holds R5, R6, R22). Merged `origin/tranche/T51` into the job branch first (16 tranche commits in; a merge, no local work lost).
+
+**What changed.**
+- `bio-plane/src/op-declarations/t51.mjs:13` (the doc line) and `:43`: `holdsplaced` (action-holds R22) joins the `action-holds` share as `sessionread`, beside `holdsdue`. It is a member's session read (classes admin, member, probe; `machineClasses: []`; `NEEDS` null; `viewer` stamped; both session sets), its spec and row from the kind.
+- `bio-plane/test/m/op-declarations/t49.test.mjs:153-163`: the pinned family-row and NEEDS counts go up by one (533 to 534 family rows; 15 to 16 T51 adds). The composition test counts every family row, so the new op moves them; no assertion is weakened.
+- `bio-plane/test/m/op-declarations/t51.test.mjs` (end of file): a new test "R22, R5, R6 (T51; K5232 ...)". It checks `holdsplaced`'s family, kind, spec, NEEDS row, session sets, stamp, admitted bearers (none), AI grant and unattended status, that action-holds' ops map serves it (through `keysOf`); that `declaredFields("holdsplaced")` is `{accepts: [after, limit], requires: []}`; that `actionholdpreview` and `actionholdrelease` accept `from` (with `target`, `ord`); and a negative control (`holdsdue`, which declares no fields, answers `undefined`).
+- `from` on `actionholdpreview` and `actionholdrelease` needs no change here: action-holds' own `DECLARED_OPS` (`index.mjs:1122-1125`) already accepts it and `registerDeclaredOps` (R80) takes it from there. The new test pins it.
+
+**Failing-first.** (1) The new t51 test, run with `t51.mjs` reverted to HEAD: red on `holdsplaced` (`OPS.holdsplaced` absent), 15 pass, 1 fail; with the change: 16 of 16. (2) The count pin: after the `t51.mjs` change alone, t49's R3 failed (534 != 533); the count update takes it green. Expected, not a regression.
+
+**Suite counts.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/op-declarations/*.test.mjs`: tests 249, pass 247, fail 2. The 2 are the expected reds, by name, until AFFORDANCES #51 merges:
+- `R34 (affordances R48)`: "holdsplaced: neither explained nor named".
+- `R47, R34 (N862 ...)`: "holdsplaced: neither explained nor named" (`t42.test.mjs:140`).
+Neither is fixed by adding `holdsplaced` to the read ground: that would break the "no op is both" rule once affordances' `ACT_HELP` text lands, so I left the partition alone as B43 says. Everything else is green.
+
+**Checks** (absolute product root `/home/user/bio`):
+- format: 178 modules, 178 requirements files, 0 failures.
+- architecture (op-declarations): 40 product files, 275 relative imports, 0 failures.
+- coverage (op-declarations): 82 of 82 live ids named by a test, 0 failures.
+- fixtures (op-declarations --list): 3539 test files read, 0 failures; no marker added.
+- words: 178 modules, 19247 words, 0 failures.
+- ownership (op-declarations, merge base with tranche/T51 to HEAD): 0 failures.
+- impact: `origin/tranche/T51` to HEAD, run after this commit (count in the next line of this record).
+- aggregate `checks/run.mjs`: exit 1 with 288 fixture failures, all in other modules' test files (acquisition, screens-action, stub files for plane/store-assembly and others). None names an op-declarations file. This matches the aggregate state J40 recorded (other modules' fixture reds).
+
+**Met ids.** R22, R5, R6 of action-holds are met on the op-declarations side (the `holdsplaced` declaration and the `from` acceptance). R34 and R47 are NOT met until AFFORDANCES #51 merges.
+
+**Deferred.** Nothing in my module. The `holdsplaced` read ground is not mine to set: it waits for affordances.
+
+**For other modules (REPORT).** Each named in action-holds' record "After ANSWER B9":
+1. `affordances` (AFFORDANCES #51, in parallel): an `ACT_HELP` text for `holdsplaced`. Until it merges, my R34 and R47 stay red by name.
+2. `op-grades`: a read row and text for `holdsplaced` (as `holdsdue` at `op-grades/t51.mjs:13`). Not checked by my suite.
+3. `op-capabilities`: action-holds' record asks for a null row for `holdsplaced`, as for `actionholdpreview`. The row is already supplied by the `sessionread` kind (the R3 composition test passes with `holdsplaced` in it), so no hand row is needed; the record's ask is satisfied by the kind. Flagging it so BOB can confirm.
+4. `screens-action` (hold.mjs): sends `from` to the preview and release, and reads `holdsplaced`. Not mine.
+
+**Size (session_012VgFd3nsMnWwNKMK8gzKu2): test runs 7, module lines 3470 src and 6938 test**
