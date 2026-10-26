@@ -1544,3 +1544,9 @@ Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5
 ## Fix round 10, CHANGE B55 (K5221) · citeimported
 
 Merged `tranche/T51`. `fr30b.test.mjs:235` takes case-import's real `citeimportedAnswer()` (the success). A real refusal it gives (`IMPORTED_REF_MALFORMED`, no word held) is added: the plane's own translation is drawn. `IMPORTED_NOT_ACCEPTED` (the screen's special wording, `imported.mjs:246`) is a state `citeimportedAnswer` does not publish: it stays hand-built at `fr30b.test.mjs:256` (REPORT). Suite 297 tests; fixtures `--list` 4 lines (fr30b NOT_ACCEPTED, :425, :427, t51:76). No product code.
+
+## J50 · COMPLETE
+
+COMPLETE (B55, K5221). Merged tranche/T51. fr30b:235 now takes case-import's real citeimportedAnswer(); its real refusal IMPORTED_REF_MALFORMED (no word held, the plane's translation drawn) is added to the same test. Correction to the record: suite is 296 tests, 294 pass, 0 fail, 2 todo (not 297). Ownership 0.
+Left, 4 lines (fixtures --list 35 -> 4): fr30b:257 IMPORTED_NOT_ACCEPTED (citeimportedAnswer publishes no not-accepted state; the screen's special wording imported.mjs:246 needs it: CASE-IMPORT, please publish it); fr30b:435 and :437 (case-inputs: related / relationships-none standings); t51:76 (action-holds: docket-entry arrival). modules.json uses still lacks entities, capture, citation, sources, credentials, wizard-scripts (J48).
+Markers added: none. Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 17, module lines 3754 src + 5313 tests
