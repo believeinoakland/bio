@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { matterWorld, question as concluded, standard as declareStandard } from "./world-A.mjs";
-import { actionWorld, openIn, filingIn, entityOf, answerOf } from "./world-C.mjs";
+import { actionWorld, openIn, filingIn, officeFor, entityOf, answerOf } from "./world-C.mjs";
 import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, PLAN, PLAN_ID, ACTION, ACTION_ID, ROUTES, beside } from "./page.mjs";
 import { entitieskind as entitiesListing } from "../entities/fixtures.mjs";
 import { dateBeforePhase } from "../action-plans/fixtures.mjs";
@@ -196,9 +196,10 @@ test("R56 (walk E H2): after a filing is recorded sent, its proposed next state 
 
 test("R56 (walk E H1): a request offers the team's named offices again, picked by label and asked about, and an empty press is refused in words, never silent", async () => {
   const { world, me, project } = await actionWorld();
-  const office = await entityOf(me, "office", "Records Office, Port Ellery");
+  // the office is a post in a body (the line `actions` R111 reads the body from), as a team records one
+  const office = await officeFor(me, await entityOf(me, "place", "The old quay"), "Records Office", "City of Port Ellery");
   const p = await openIn(world, me, `/app/request/${project}`);
-  assert.ok(optionTexts(p, "req-subject").includes("Records Office, Port Ellery"), "the named office is offered");
+  assert.ok(optionTexts(p, "req-subject").includes("Records Office"), "the named office is offered");
   // an empty press is refused in the words of a field left empty, and sends nothing
   const b = await press(p, "addresseesuggest", { values: { "req-subject": "" } });
   assert.equal(p.byOp("addresseesuggest").length, 0);
@@ -208,7 +209,7 @@ test("R56 (walk E H1): a request offers the team's named offices again, picked b
   assert.equal(last(p, "addresseesuggest").query.subject, office);
   const real = await answerOf(world, me, "addresseesuggest", { query: { subject: office } });
   assert.equal(real.result.offices.length, 1, "the owner answers the office itself");
-  assert.deepEqual({ role: real.result.offices[0].addressee.role, entity_id: real.result.offices[0].addressee.entity_id }, { role: "Records Office, Port Ellery", entity_id: office });
+  assert.deepEqual({ role: real.result.offices[0].addressee.role, entity_id: real.result.offices[0].addressee.entity_id }, { role: "Records Office", entity_id: office });
   await until(p, () => p.doc.getElementById("req-office"), "the office to be chosen");
   assert.ok(optionTexts(p, "req-office").length === 1);
   // control: a team that names none is told no office is known
