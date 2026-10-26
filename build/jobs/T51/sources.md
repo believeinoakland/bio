@@ -168,3 +168,12 @@ Found outside sources, not changed:
 - Impact users (case-disclosures, consequences, actions, escalation, affordances, screens-action): 53 failing tests, all DECLARED_OP_DISAGREES: readtranslate description (the OP-GRADES #30 blocker). None imports sources/fixtures.mjs.
 
 Size (session_01DsN69dHjn1CmTE4K99844C): test runs 7, module lines 2942
+
+## Fix round 11 · CHANGE B7 (K5209): OP-GRADES #30 merged
+
+- Merged `origin/tranche/T51` (commit 5781eba4b8). The `DECLARED_OP_DISAGREES: readtranslate description` blocker is gone.
+- Re-run after the merge: `node --test bio-plane/test/m/sources/*.test.mjs` 47 of 47 pass; `checks/fixtures.mjs … sources --list` 0 failures; coverage 22 of 22; architecture 0; format 0; ownership 0 failures (3 files).
+- The impacted modules (case-disclosures, consequences, actions, escalation, affordances, screens-action): 1031 of 1031 pass, where 53 failed before the merge.
+- `checks/run.mjs` still lists the two hand-built `knockerconsent` answers in `bio-plane/test/m/screens-publish/fr30.test.mjs` (lines 68 and 80 now). Not mine; screens-publish to take the export.
+
+Size (session_01DsN69dHjn1CmTE4K99844C): test runs 11, module lines 2942
