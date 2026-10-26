@@ -108,3 +108,29 @@ test("R47 the ops of provenance, case-inputs, case-import, citation, monitoring,
   const { failed } = await servedThroughDoor(x, twin, owners);
   assert.deepEqual(failed, []);
 });
+
+test("R84 each of the assembly's own declared rows (ask, readtranslate, owedwork) agrees with the hand rows, in a process of its own: registered with op-grades' and op-declarations' registerDeclaredOps none is refused, and where op-grades holds a hand row (ask, readtranslate) the op is `agreed`, owedwork having none to disagree with; control: a differing sentence (op-grades) or a flipped `mutating` (op-declarations) is refused naming the op", () => {
+  const url = (rel) => JSON.stringify(pathToFileURL(resolve(import.meta.dirname, rel)).href);
+  const GRADES = url("../../../src/op-grades/index.mjs"), DECL = url("../../../src/op-declarations/index.mjs"), FILE = url("../../../src/store-assembly/declared.mjs");
+  const run = (body) => child(`const { registerDeclaredOps: grades } = await import(${GRADES});
+    const { registerDeclaredOps: decls } = await import(${DECL});
+    const { DECLARED_OPS } = await import(${FILE});
+    ${body}`);
+  const ok = run(`const g = grades({ "store-assembly": DECLARED_OPS }); decls({ "store-assembly": DECLARED_OPS });
+    process.stdout.write(JSON.stringify(g));`);
+  assert.equal(ok.status, 0, ok.stderr);
+  const done = JSON.parse(ok.stdout);
+  assert.deepEqual([...done.agreed, ...done.registered].sort(), ["ask", "owedwork", "readtranslate"], "every row is taken, none twice");
+  assert.deepEqual([...done.agreed].sort(), ["ask", "readtranslate"], "ask and readtranslate agree with op-grades' hand rows, in weight and sentence");
+  for (const op of ["ask", "readtranslate"]) {
+    const bad = run(`const r = DECLARED_OPS[${JSON.stringify(op)}]; grades({ "store-assembly": { ${op}: { ...r, description: r.description + " (changed)" } } });`);
+    assert.notEqual(bad.status, 0, `${op}: a disagreeing sentence stops the registration`);
+    assert.match(bad.stderr, new RegExp(`DECLARED_OP_DISAGREES: ${op} description`));
+  }
+  for (const op of ["ask", "readtranslate"]) {   /* owedwork has no hand row in op-declarations either: nothing to differ from */
+    const bad = run(`const r = DECLARED_OP_ROW(); decls({ "store-assembly": { ${op}: { ...r, mutating: !r.mutating } } });
+      function DECLARED_OP_ROW() { return DECLARED_OPS[${JSON.stringify(op)}]; }`);
+    assert.notEqual(bad.status, 0, `${op}: a flipped mutating stops the registration`);
+    assert.match(bad.stderr, new RegExp(`${op}: .*differs from the hand row on mutating`));
+  }
+});
