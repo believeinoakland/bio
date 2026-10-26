@@ -264,3 +264,15 @@ R156 is met (K5197, B10 START; K5202 on the Members clock, B12 CHANGE). Commits 
 **Markers:** none added.
 
 Size (session_0134U5UywFbnrvXpAVSSZyrL): test runs 14, module lines 1668 (`bio-plane/src/membership/*.mjs`)
+
+## J14 · REPORT
+
+Follow-up to J13 COMPLETE: the dependent-file rerun on the merged tree (228f3ecd9d and later) has finished. 58 files were run, one at a time, each bounded to 400 s.
+
+- 52 files exit 0.
+- 3 `screens-settings` files (connect, group, identity) fail 4 assertions in total. The same failures appear on a clean `origin/tranche/T51`, so they predate this change. (`updates.test.mjs` also fails 1 assertion in the earlier run, on the same baseline.)
+- 3 store-assembly files (fix5-r77 6 of 6, fix6-pending 10 of 10, r9-jobs 34 of 35) report every test that ran as passing, then hit the 400 s bound without exiting. r9-jobs has one test cancelled by that kill, so it is not verified. These are hangs after completion, not failures; I have not yet confirmed the cancelled test on a clean run.
+
+Nothing in the membership suite or checks changed since J13. Pushed head: eb0a451fdd.
+
+Size (session_0134U5UywFbnrvXpAVSSZyrL): test runs 14, module lines 1668 (`bio-plane/src/membership/*.mjs`)
