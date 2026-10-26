@@ -602,3 +602,7 @@ ANSWER (K5207, BOB's). (1) `uses` gains case-import (modules.json on the tranche
 ## B51 · CHANGE
 
 CHANGE (K5209): OP-GRADES #30 is merged (tranche `414d1282e6`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
+
+## B52 · CHANGE
+
+CHANGE (K5210): providers publishing for your lines (re-point as each merges; you need not wait to read them): case-authoring's `preflightNoFinding()` (`fr30:150`) and `preflightTensionRefused()` (`fr30b:77`); `fr30:156` expects `NO_TARGET`, an action-request code, where case-authoring R3/R80's pre-flight for no finding answers `PUBLISH_NO_FINDING`: the test asks a state the pre-flight never answers, so it takes `preflightNoFinding()` and asserts what the screen draws for it (CASE-AUTHORING #46 J31). public-read's, case-inputs', credentials' (`signerregisterown()`, `fix3:276`) and case-import's `importRegradeAnswer` (`fixtures.mjs:176`) are published on their branches and merge after they re-complete; I CHANGE you then.
