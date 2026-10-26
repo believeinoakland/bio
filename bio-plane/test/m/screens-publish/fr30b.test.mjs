@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
-import { open, main, drew, drewIn, ops, press, last, fill, tick, until, keptKey, answerSign, choose, day, publishedPlane, FINDING, F1, E1, DETAILS, DETAILS_PUBLIC, ok, refusedIn, word, hasWord, COPY, PREFLIGHT, P, C, DR, importedCase, rerunImport } from "./fixtures.mjs";
+import { open, main, drew, drewIn, ops, press, last, fill, tick, until, keptKey, answerSign, choose, day, publishedPlane, FINDING, F1, E1, DETAILS, DETAILS_PUBLIC, ok, refusedIn, word, hasWord, COPY, PREFLIGHT, P, C, DR, importedCase, rerunImport, provided, refusalWords, text } from "./fixtures.mjs";
 
 const EDITOR = `/app/case-editor/${P}/${DR}`;
 const CER = `/app/ceremony/${P}/${DR}`;
@@ -74,10 +74,12 @@ test("R46 each candidate the Disclosures step lists has a tick and a field for t
 });
 
 test("R46 a refusal is drawn by its key and the ticks are kept (control)", async () => {
-  const p = await open(CER, { plane: { publishpreflight: ok(PREFLIGHT({ first: { ok: false, code: "TENSION_NOT_DISCLOSED", reason: "TENSION_NOT_DISCLOSED" }, blockers: [] })) } });
+  const refused = await provided.preflight("tension"); // case-authoring's real pre-flight for an undisclosed contradiction
+  const first = refused.json.result.first;
+  const p = await open(CER, { plane: { publishpreflight: refused } });
   tick(p, "ce-disc", "CAND-1");
   await press(p, "publishpreflight");
-  assert.ok(drew(p, "refusal.TENSION_NOT_DISCLOSED"));
+  assert.ok(drew(p, "refusal." + first.code, first));
   assert.deepEqual(checked(p, "ce-disc"), ["CAND-1"]);
 });
 
@@ -113,7 +115,7 @@ test("R50 the ceremony's three requests name the draft and the project and carry
 const DOCS = { publishpreflight: ok(WITH(STEP3({ not_co_attested: [B64] }))), captureaccounts: ok({ captureSha: B64, actors: [{ actor: "dev", at: "2026-10-01T09:00:00Z" }], accounts: [] }) };
 
 test("R51 a document without a second confirmation offers the confirmation again, self-attestation with a required reason, and the capturing member's signed account; each sends its request", async () => {
-  const p = await open(CER, { boot: { idb: await keptKey() }, plane: { ...DOCS, reattest: ok({ ok: true }), captureaccount: ok({ ok: true, captureSha: B64, seq: 1 }) } });
+  const p = await open(CER, { boot: { idb: await keptKey() }, plane: { ...DOCS, reattest: await provided.reattest(), captureaccount: await provided.captureaccount() } });
   assert.ok(drew(p, "screen.ceremony.conf.heading") && ops(p).includes("reattest") && ops(p).includes("captureaccount"));
   await press(p, "reattest");
   assert.deepEqual(last(p, "reattest").body, { captureSha: B64 });
@@ -162,8 +164,9 @@ const md = (refs) => ["---", `id: ${P}`, "object_type: project", "title: \"The C
 
 test("R53 'Remove' and 'Reinstate' send the project, the handle and the reason the shell asks; a reinstated citation is listed again", async () => {
   let refs = [["INFO-2026-0004", "confirmed"], ["INFO-2026-0005", "severed", "Severed 2026-10-07T09:00:00Z: the wrong year"]];
-  const p = await open(EDITOR, { plane: { image: () => ok({ "bundle.md": md(refs) }), sever: () => { refs = [["INFO-2026-0004", "severed", "gone"], refs[1]]; return ok({ ok: true, severed: "INFO-2026-0004" }); },
-    reinstate: () => { refs = [refs[0], ["INFO-2026-0005", "confirmed"]]; return ok({ ok: true, reinstated: "INFO-2026-0005" }); } } });
+  const SEVERED = await provided.sever(), REINSTATED = await provided.reinstate(); // citation's real answers
+  const p = await open(EDITOR, { plane: { image: () => ok({ "bundle.md": md(refs) }), sever: () => { refs = [["INFO-2026-0004", "severed", "gone"], refs[1]]; return SEVERED; },
+    reinstate: () => { refs = [refs[0], ["INFO-2026-0005", "confirmed"]]; return REINSTATED; } } });
   assert.ok(drew(p, "screen.case-editor.the_passages_this_case_cites"));
   assert.equal(p.doc.querySelectorAll('button[data-act="sever"]').length, 1);
   assert.equal(p.doc.querySelectorAll('button[data-act="reinstate"]').length, 1);
@@ -303,7 +306,12 @@ test("R54 a file chosen on the published page is fingerprinted in the page and c
   assert.equal(empty.requests.slice(m).filter((r) => r.op === "verify").length, 0, "control: no file and no hash, nothing is sent");
 });
 
-const DETAIL_EDITOR = (details) => ({ casedetails: ok({ ok: true, case: C, published: false, truncated: false, history: [], details }) });
+/* case-inputs' real `casedetails` for a published case with two of the four details recorded (area, contact), and its public read: the screens' expectations are read from them */
+const RECORDED = await provided.casedetails();
+const DETAIL_ROWS = RECORDED.json.result.details;
+const STATED = Object.keys(DETAIL_ROWS).filter((f) => DETAIL_ROWS[f].stated);
+const AREA_WORDS = DETAIL_ROWS.area.value[0].words;
+const DETAIL_EDITOR = (answer = RECORDED) => ({ casedetails: answer });
 /** Presses the act button `sel` names, giving the reason the shell asks for a reasoned act (its mark, not a declared field). */
 const click = async (p, sel) => {
   const b = p.doc.querySelector(sel);
@@ -320,14 +328,14 @@ test("R57 the details of this work are drawn once the case has an id and before 
     reviewcopy: ok(COPY({ case: { case_id: null, edition: null, identity: "x", newCase: true } })) } });
   assert.ok(drew(first, "screen.case-editor.details.first") && !first.doc.querySelector("[data-detail]"), "before the first save: the note alone");
   assert.ok(!ops(first).includes("casedetailsset"));
-  const p = await open(EDITOR, { plane: DETAIL_EDITOR(DETAILS()) });
+  const p = await open(EDITOR, { plane: DETAIL_EDITOR() });
   assert.equal(p.doc.querySelectorAll("[data-detail]").length, 4, "four rows, no classification row");
   assert.ok(drew(p, "screen.case-editor.details.intro1") && drew(p, "screen.case-editor.details.outward2"));
-  assert.equal(p.doc.querySelectorAll("[data-notstated]").length, 4, "each Not stated until set");
+  assert.equal(p.doc.querySelectorAll("[data-notstated]").length, 4 - STATED.length, "each Not stated until set");
   const set = (field, mode) => `button[data-act="casedetailsset"][data-field="${field}"][data-mode="${mode}"]`;
   fill(p, { "cd-words": "Housing and rent policy" });
   await click(p, set("area", "add"));
-  assert.deepEqual(sent(p, "casedetailsset"), { case: C, field: "area", value: [{ words: "Housing and rent policy" }] });
+  assert.deepEqual(sent(p, "casedetailsset"), { case: C, field: "area", value: [...DETAIL_ROWS.area.value, { words: "Housing and rent policy" }] }, "an area added joins those stated");
   pick(p, "cd-contact", "doorbell");
   await click(p, set("contact", "save"));
   assert.deepEqual(sent(p, "casedetailsset"), { case: C, field: "contact", value: { kind: "doorbell" } });
@@ -337,12 +345,13 @@ test("R57 the details of this work are drawn once the case has an id and before 
   pick(p, "cd-rels", "none");
   await click(p, set("relationships", "save"));
   assert.deepEqual(sent(p, "casedetailsset"), { case: C, field: "relationships", value: { none: true } });
-  const read = await open(EDITOR, { plane: DETAIL_EDITOR(DETAILS({ area: { stated: true, value: [{ words: "Oakland Rent Board" }], set_by: "dev", set_at: "2026-10-01T09:00:00Z" }, relationships: { stated: true, value: { none: true }, set_by: "dev", set_at: "2026-10-01T09:00:00Z" } })) });
-  assert.ok(main(read).textContent.includes("Oakland Rent Board") && read.doc.querySelectorAll("[data-notstated]").length === 2, "what is stated reads back; the rest is Not stated");
+  assert.ok(main(p).textContent.includes(AREA_WORDS), "what is stated reads back; the rest is Not stated");
 });
 
 test("R57 the owner's refusal is drawn by its words and the details are kept (control); a row with nothing typed sends nothing", async () => {
-  const p = await open(EDITOR, { plane: { ...DETAIL_EDITOR(DETAILS()), casedetailsset: ok({ ok: false, code: "NOT_THE_PROJECT_OWNER", reason: "NOT_THE_PROJECT_OWNER" }) } });
+  const refused = (await provided.casedetailsset()).json.result.notOwner; // case-inputs' real refusal of a joined member's write
+  assert.equal(refused.reason, "NOT_THE_PROJECT_OWNER");
+  const p = await open(EDITOR, { plane: { ...DETAIL_EDITOR(), casedetailsset: ok(refused) } });
   await click(p, 'button[data-act="casedetailsset"][data-field="area"][data-mode="add"]');
   assert.equal(p.byOp("casedetailsset").length, 0, "nothing typed: nothing sent");
   fill(p, { "cd-words": "Housing" });
@@ -351,17 +360,16 @@ test("R57 the owner's refusal is drawn by its words and the details are kept (co
 });
 
 test("R57 the ceremony lists the four details stated or not stated and no Publish is disabled by them; published draws what casedetailspublic answers and nothing for a field not stated (control)", async () => {
-  const cer = await open(CER, { plane: DETAIL_EDITOR(DETAILS({ area: { stated: true, value: [{ words: "x" }], set_by: "dev", set_at: "2026-10-01T09:00:00Z" } })) });
+  const cer = await open(CER, { plane: DETAIL_EDITOR() });
   assert.equal(cer.doc.querySelectorAll("[data-detail]").length, 4);
-  assert.equal(cer.doc.querySelectorAll("[data-stated]").length, 1);
-  assert.equal(cer.doc.querySelectorAll("[data-notstated]").length, 3);
+  assert.equal(cer.doc.querySelectorAll("[data-stated]").length, STATED.length);
+  assert.equal(cer.doc.querySelectorAll("[data-notstated]").length, 4 - STATED.length);
   assert.ok(drew(cer, "screen.ceremony.details.ceremony.notstated2"));
   assert.ok(!cer.doc.querySelector('button[data-act="publish"][disabled]'), "none of them stops the publishing");
-  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: ok({ ok: true, case: C, group: "river-town", sentence: "x", details: DETAILS_PUBLIC({
-    area: { stated: true, value: [{ words: "Oakland Rent Board" }], set_at: "2026-10-01T09:00:00Z" }, relationships: { stated: true, value: { none: true }, set_at: "2026-10-01T09:00:00Z" } }) }) } });
-  assert.ok(main(pub).textContent.includes("Oakland Rent Board") && drew(pub, "screen.case-editor.details.ties.none"));
+  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: await provided.casedetailspublic() } });
+  assert.ok(main(pub).textContent.includes(AREA_WORDS));
   assert.ok(drew(pub, "screen.published.details.pub.current1"));
-  assert.equal(pub.doc.querySelectorAll("[data-detail]").length, 2, "a field not stated draws nothing");
+  assert.equal(pub.doc.querySelectorAll("[data-detail]").length, STATED.length, "a field not stated draws nothing");
 });
 
 test("R68 a project whose title the viewer cannot read is named by the unjoined crumb and no PROJ- text is drawn; NO_REVIEW_COPY is drawn by its key; a readable project draws its title (control)", async () => {
@@ -374,37 +382,51 @@ test("R68 a project whose title the viewer cannot read is named by the unjoined 
   assert.ok(q.root().textContent.includes("The Coliseum lease"), "control: a readable project draws its title");
 });
 
-test("R59 the assistant helps with the citing note only while it is reachable: it sends the note for citeimported and fills the field with its draft (B420 3); not reachable draws no help (control)", async () => {
+test("R59 the assistant helps with the citing note only while it is reachable: it sends the note for citeimported and draws wizard-scripts' real refusal in its words, the field left as typed (B420 3); not reachable draws no help (control)", async () => {
   const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
-  const p = await open(IMP, { plane: { ...IMPORT(true), ...reach, writinghelp: ok({ ok: true, text: "It states the 2025 schedule.", untested: true }) } });
-  const help = p.root().querySelector('button[data-act="writinghelp"]');
-  assert.ok(help, "help is drawn beside the note");
-  assert.equal(help.getAttribute("data-field"), "note");
-  assert.equal(help.getAttribute("data-forop"), "citeimported");
-  assert.equal(help.getAttribute("data-id"), "im-ci-note-0");
-  const accepted = ACCEPTED.answer.json.result.edition.findings.filter((x) => x.origin?.acceptance).length;
-  assert.equal(p.root().querySelectorAll('button[data-act="writinghelp"]').length, accepted, "one citing note per accepted finding, and nothing else");
-  await press(p, "writinghelp", { values: { "im-ci-note-0": "schedule 2025" } });
-  assert.deepEqual(last(p, "writinghelp").body, { op: "citeimported", field: "note", told: "schedule 2025" });
-  assert.equal(p.doc.getElementById("im-ci-note-0").value, "It states the 2025 schedule.");
+  /* the real `writinghelp` never returns a draft (K5212): the draft already held in the field, or the assistant unreachable */
+  for (const which of ["held", "unreachable"]) {
+    const answer = await provided.writinghelp(which);
+    const p = await open(IMP, { plane: { ...IMPORT(true), ...reach, writinghelp: answer } });
+    const help = p.root().querySelector('button[data-act="writinghelp"]');
+    assert.ok(help, "help is drawn beside the note");
+    assert.equal(help.getAttribute("data-field"), "note");
+    assert.equal(help.getAttribute("data-forop"), "citeimported");
+    assert.equal(help.getAttribute("data-id"), "im-ci-note-0");
+    const accepted = ACCEPTED.answer.json.result.edition.findings.filter((x) => x.origin?.acceptance).length;
+    assert.equal(p.root().querySelectorAll('button[data-act="writinghelp"]').length, accepted, "one citing note per accepted finding, and nothing else");
+    await press(p, "writinghelp", { values: { "im-ci-note-0": "schedule 2025" } });
+    assert.deepEqual(last(p, "writinghelp").body, { op: "citeimported", field: "note", told: "schedule 2025" });
+    assert.equal(p.doc.getElementById("im-ci-note-0").value, "schedule 2025", `${which}: the field is left as typed`);
+    assert.ok(text(p).includes(refusalWords(answer)), `${which}: the refusal in its words`);
+  }
   const off = await open(IMP, { plane: IMPORT(true) });
   assert.equal(off.root().querySelectorAll('button[data-act="writinghelp"]').length, 0);
 });
 
-test("R57 the details are named by key, Not stated by key, a relation by its word and 'Take out' by key; the ceremony marks a stated detail 'Stated' (B428)", async () => {
-  const stated = (value) => ({ stated: true, value, set_by: "dev", set_at: "2026-10-01T09:00:00Z" });
-  const d = DETAILS({ area: stated([{ words: "Oakland Rent Board" }]), related: stated([{ relation: "builds_on", url: "https://example.org/a" }, { relation: "disagrees_with", url: "https://example.org/b" }]) });
-  const p = await open(EDITOR, { plane: DETAIL_EDITOR(d) });
+test("R57 the details are named by key, Not stated by key and 'Take out' by key; the ceremony marks a stated detail 'Stated' (B428)", async () => {
+  const p = await open(EDITOR, { plane: DETAIL_EDITOR() });
   for (const f of ["area", "contact", "related", "relationships"]) assert.ok(drewIn(p.doc.querySelector(`[data-detail="${f}"]`), `screen.case-editor.details.name.${f}`), f);
-  assert.equal(p.doc.querySelectorAll("[data-notstated]").length, 2);
+  assert.equal(p.doc.querySelectorAll("[data-notstated]").length, 4 - STATED.length);
   assert.ok(drew(p, "case-inputs.details.not_stated"));
-  for (const k of ["builds_on", "disagrees_with"]) assert.ok(drew(p, `screen.case-editor.details.rel.${k}`), k);
   assert.ok(p.root().querySelectorAll('button[data-act="casedetailsset"]').some((b) => b.textContent.includes(word("screen.case-editor.details.takeout"))), "Take out");
-  const cer = await open(CER, { plane: DETAIL_EDITOR(d) });
-  assert.equal(cer.doc.querySelectorAll("[data-stated]").length, 2);
+  const cer = await open(CER, { plane: DETAIL_EDITOR() });
+  assert.equal(cer.doc.querySelectorAll("[data-stated]").length, STATED.length);
   assert.ok(drew(cer, "screen.case-editor.details.stated") && drew(cer, "screen.case-editor.details.name.contact"));
-  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: ok({ ok: true, case: C, group: "river-town", sentence: "x", details: DETAILS_PUBLIC({ area: { stated: true, value: [{ words: "Oakland Rent Board" }], set_at: "2026-10-01T09:00:00Z" } }) }) } });
+  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: await provided.casedetailspublic() } });
   assert.ok(drew(pub, "screen.case-editor.details.name.area"));
+});
+
+/* The related works and the "no relationships" standing are not in case-inputs' published `casedetails` (its `recorded` states area and contact):
+   REPORTed to BOB (fix round 10, K5213), the hand-built answers below stay until case-inputs publishes them. */
+test("R57 a related work is drawn by its relation's word; a published 'no relationships' is drawn by its key", async () => {
+  const stated = (value) => ({ stated: true, value, set_by: "dev", set_at: "2026-10-01T09:00:00Z" });
+  const d = DETAILS({ related: stated([{ relation: "builds_on", url: "https://example.org/a" }, { relation: "disagrees_with", url: "https://example.org/b" }]) });
+  const p = await open(EDITOR, { plane: { casedetails: ok({ ok: true, case: C, published: false, truncated: false, history: [], details: d }) } });
+  for (const k of ["builds_on", "disagrees_with"]) assert.ok(drew(p, `screen.case-editor.details.rel.${k}`), k);
+  const pub = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { ...publishedPlane([FINDING(F1)]), casedetailspublic: ok({ ok: true, case: C, group: "river-town", sentence: "x", details: DETAILS_PUBLIC({
+    relationships: { stated: true, value: { none: true }, set_at: "2026-10-01T09:00:00Z" } }) }) } });
+  assert.ok(drew(pub, "screen.case-editor.details.ties.none"));
 });
 
 test("R44 a finding's role choice is labelled by 'Finding {n}: its role in the case' and its two choices by key (B428)", async () => {

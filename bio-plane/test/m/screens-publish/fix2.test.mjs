@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
-import { open, main, text, drew, drewIn, ops, press, last, fill, tick, norm, until, keptKey, answerSign, button, ok, refusedIn, word, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, E1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
+import { open, main, text, drew, drewIn, ops, press, last, fill, tick, norm, until, keptKey, answerSign, button, ok, refusedIn, provided, word, COPY, DOCUMENT, PREFLIGHT, FINDING, F1, B1, E1, P, C, DR, SHA, publishedPlane, findingPath, signDialog } from "./fixtures.mjs";
 import { MEMBER } from "../interface-shell/harness.mjs";
 import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
@@ -229,8 +229,9 @@ const TWO_DRAFTS = { casedrafts: ok({ kind: "review-drafts", project: P, drafts:
   reviewcopy: (req) => ok(COPY({ draft: req.query.draft, comments: [{ comment_id: "RVC-" + req.query.draft, author_kind: "recipient", author: "Prof. N. Iyer", recipient: "Prof. N. Iyer", text: "On " + req.query.draft + ": which schedule?", at: "2026-10-07T09:00:00Z" }] })) };
 
 test("R2 R62 C52 the owner's reply is sent for the draft its comment belongs to, each of two drafts, with the text in the body; a stranger's refusal NO_REVIEW_COPY is drawn by its words (control)", async () => {
+  const COMMENTED = await provided.reviewcomment(); // review's real answer to reviewcomment
   for (const [path, draft] of [[`/app/review-copy/${P}/${OLD}`, OLD], [`/app/review-copy/${P}/${DR}`, DR], [`/app/review-copy/${P}`, DR]]) {
-    const p = await open(path, { plane: { ...TWO_DRAFTS, reviewcomment: ok({ ok: true, comment: "RVC-9" }) } });
+    const p = await open(path, { plane: { ...TWO_DRAFTS, reviewcomment: COMMENTED } });
     assert.ok(main(p).textContent.includes("On " + draft + ": which schedule?"), path);
     await press(p, "reviewcomment", { values: { "rc-reply-0": "The council approved the March schedule." } });
     const r = last(p, "reviewcomment");

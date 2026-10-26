@@ -1503,3 +1503,29 @@ REPORT (SCREENS-PUBLISH #24, fix round 10, re B54): 31 of the 35 op-table lines 
 4. CITATION `citeimported` (fr30b.test.mjs:235, :247): waits for CASE-IMPORT #22's merge, as B54 says; re-pointed when you CHANGE me.
 
 Found while re-pointing, no fix needed in my paths: the real `writinghelp` refusals (WRITING_HELP_DRAFT_HELD, AGENT_WORKER_UNBOUND) are drawn in their own words on the case editor, the docket and the imported page; the tests for them (case-editor.test.mjs:86, fr30.test.mjs:249, fr30b.test.mjs:379) now assert that, and the drafted-text cases are removed (K5212).
+
+## Fix round 10 (B54 · plan item 102, K5207, K5213) · SCREENS-PUBLISH #24 (session_01S5w36nrjrT4X3cdJbAUkgi)
+
+Merged `tranche/T51` first (twice: at start and before COMPLETE); `mail start` done; B54 read.
+
+**Re-pointed (31 of the 35 lines), tests and fixtures only, no product code.**
+- `fixtures.mjs`: the default plane's `docketpublic`, `casedetails`, `casedetailspublic`, `entitieskind` come from public-read's, case-inputs' and entities' published fixtures (`openDefaults`, called by `open`; `DEFAULT`); `provided` (casedraft, reviewcopy, reviewrevoke, reviewcomment, reattest, captureaccount, sever, reinstate, knockerconsent, signerregisterown, casedetails, casedetailsset, casedetailspublic, writinghelp, preflight, publishedCaseSeveral) hands a test the provider's real answer in the plane's shape, lazily imported; `refusalWords(answer)` is the words the page draws for a refusal answer.
+- review: `fr30:12` (casedraft; the opened editor's draft id is read from the answer), `fr30:237` (the real copy with refused gates; the missing line is read from it), `drafts:85`, `style:57` (reviewrevoke), `fix2:233` (reviewcomment).
+- capture: `fix3:37`, `fix3:325`, `fix4:17`, `fr30b:116` (reattest, captureaccount). credentials: `fix3:276`. citation: `fr30b:165`, `:166` (sever, reinstate). sources: `fr30:68` (knockerconsent); `fr30:80` takes the door's real SECRET_NOT_RECOGNISED through `openWorld` (the fixture publishes no refused consent). entities, case-inputs (area/contact), public-read: the defaults above, `t50:283` reads the docket entries it expects from the answer, `finding:75` the cases of FINDING_IN_SEVERAL_CASES from the answer, `fr30b` R57 reads its stated fields from `casedetails`' answer (the "area" add now appends to those stated; the refusal is the real NOT_THE_PROJECT_OWNER).
+- case-authoring (B52): `fr30:160/166` take `preflightNoFinding()` and the NO_TARGET control is removed (a state the pre-flight never answers); `fr30b:77` takes `preflightTensionRefused()`. `seam4:158` takes public-read's real `publishedcase` over the same world (NOT_PUBLISHED).
+- wizard-scripts (B53, K5212): the drafted-text `writinghelp` cases are removed (`case-editor:86`, `fr30:262/277`, `fr30b:379`); each test now sends the help and asserts what the screen draws for the real answers (`writingHelpDraftHeld`, `writingHelpUnreachable`): the refusal in its own words, the field left as typed, no draft. The case editor, the docket and the imported page all draw them already.
+- R57's test of the details is split in two: the names, Not stated, Take out and Stated tests read the real answer; the related-works and "no relationships" assertions stay on one test with hand-built answers (below).
+
+**Failing-first.** None: no product code changed; the one test that went red on a real answer (`t50:283`, whose expected entries were hand-written) and the R57 "area" add (the real area is already stated) were corrected to read the answer, then green.
+
+**Lines left (4, each with its provider):**
+- citation `citeimported`: `fr30b.test.mjs:235`, `:247`, waits for CASE-IMPORT #22 (B54).
+- case-inputs: `casedetails` `fr30b.test.mjs:425`, `casedetailspublic` `:427`: no published standing with `related` works or `relationships: {none: true}` stated (REPORT J48).
+- action-holds: `holdsdue` `t51.test.mjs:76`: no published answer listing a docket entry's mark (`arrived: {docket_entry, case}`) and none after the hold is placed (REPORT J48).
+- modules.json `uses` lacks entities, capture, citation, sources, credentials, wizard-scripts: `checks/architecture.mjs` 8 failures, all that (BOB's file; REPORT J48).
+
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/*.test.mjs`: 296 tests, 294 pass, 0 fail, 2 todo (R35's two press tests, K3717); the files run alone sum to 296 (K5124). **Impact:** `impact.mjs origin/tranche/T51 HEAD` names all 178 modules (the shared fixtures table); every module's users of screens-publish's fixtures are the two control-plane seam files, not changed in their reading of it (`openWorld` and the plane are unchanged); not re-run.
+**Checks:** format 0; coverage 80 of 80, 0; ownership 0; architecture 8 (the `uses` above); `checks/run.mjs`: the only findings in my files are those 8 and the 5 fixtures lines above (the other fixtures lines are not mine); words count not risen (no new sentence); fixtures `--list`: 5 (the 4 above and one counted line, `fr30b:235/247` being two).
+**Markers added:** none (`fixtures-own`/`fixtures-generic`: 0). **Met ids:** none new (every requirement mark unchanged).
+
+Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5303 tests
