@@ -22,7 +22,7 @@
 import { bounds, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
-import { factPath } from "../local-facts/paths.mjs";
+import { factPath, TEAM_ZONE_PATH } from "../local-facts/paths.mjs";
 import { rowOf } from "./checks.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -50,6 +50,14 @@ const clock = (p) => { const w = p.now(); return typeof w === "string" && w ? w 
  *  active profiles' own `time_zone` (`jurisdictions` R41, through `jurisdictions.combine` over record-core's
  *  `jurisdiction_profiles` setting); else null, never UTC. Two profiles governing different zones govern none. */
 export function groupZone(p) {
+  /* local-facts R21 (D-B1; K5257, K5258): the team's own zone, stated with or without a place profile, governs; its
+     governing value already folds in the profiles' agreed zone when nothing is stated. */
+  try {
+    const lf = p.localFacts();
+    const r = lf && typeof lf.factStatus === "function" ? lf.factStatus({ path: TEAM_ZONE_PATH }) : null;
+    const z = r && r.ok !== false && r.governs ? str(r.governs.value) : "";
+    if (z) return z;
+  } catch { /* the profiles answer */ }
   let list = null;
   try { list = typeof p.record.getSetting === "function" ? p.record.getSetting("jurisdiction_profiles") : null; }
   catch { list = null; }
