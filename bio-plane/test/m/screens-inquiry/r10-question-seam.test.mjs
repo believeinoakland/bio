@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
-import { boot } from "../interface-shell/harness.mjs";
+import { boot, counted } from "../interface-shell/harness.mjs";
 import { SCREENS, main, press, fill } from "./fixtures.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
@@ -41,7 +41,9 @@ const screenCall = (auth) => ({ now: () => Date.now(), digest: async (s) => crea
 /* the harness's `settle` waits only for the calls of a world's counted door; these are real requests to Miniflare, which it does not see, so a page's late reads (themes, frozen
    editions, reminders, the queue, plans) can land after the test has ticked its radios and pressed, and the redraw takes the press with it. `quiet` waits for them (R-SEAM, K4966). */
 let busy = 0, started = 0;
-const forwarded = (auth, slow = {}) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => { busy++; started++; try { return await call(auth, slow, op, req); } finally { busy--; } }]));
+const rawForwarded = (auth, slow = {}) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => { busy++; started++; try { return await call(auth, slow, op, req); } finally { busy--; } }]));
+/** every forwarding function is counted, so `settle()` waits on a late forwarded read (interface-shell K5242) */
+const forwarded = (auth, slow) => Object.fromEntries(Object.entries(rawForwarded(auth, slow)).map(([op, f]) => [op, counted(f)]));
 const call = async (auth, slow, op, req) => {
   if (slow[op]) await new Promise((r) => setTimeout(r, slow[op]));
   const r = await door(`/api/?${new URLSearchParams({ ...req.query, op })}`, { method: req.body === undefined ? "GET" : "POST", headers: { ...auth, "content-type": "application/json" },

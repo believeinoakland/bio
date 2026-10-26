@@ -16,7 +16,7 @@ import { OPS } from "../../../src/op-declarations/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { ARCHIVE_SCREEN } from "../../../src/screens-intake/archive.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { boot } from "../interface-shell/harness.mjs";
+import { boot, counted } from "../interface-shell/harness.mjs";
 import { generate } from "../../corpus.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { SCREENS, main, actsIn, word } from "./fixtures.mjs";
@@ -54,11 +54,13 @@ async function founder() {
 const screenCall = (auth) => ({ now: () => Date.now(), digest: async (s) => createHash("sha256").update(s).digest("hex"),
   call: async (op, { query = {}, body } = {}) => (await door(`/api/?${new URLSearchParams({ op, ...query })}`, { method: body === undefined ? "GET" : "POST",
     headers: { ...auth, "content-type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) })).json() });
-const forwarded = (auth) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
+const rawForwarded = (auth) => Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
   const r = await door(`/api/?${new URLSearchParams({ ...req.query, op })}`, { method: req.body === undefined ? "GET" : "POST", headers: { ...auth, "content-type": "application/json" },
     ...(req.body === undefined ? {} : { body: JSON.stringify(req.body) }) });
   return { status: r.status, json: await r.json().catch(() => null) };
 }]));
+/** every forwarding function is counted, so `settle()` waits on a late forwarded read (interface-shell K5242) */
+const forwarded = (auth) => Object.fromEntries(Object.entries(rawForwarded(auth)).map(([op, f]) => [op, counted(f)]));
 const upload = async (auth, bytes, name, type) => (await (await door(`/api/?op=captureupload&statement=r10stated&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`, { method: "POST", headers: auth, body: bytes })).json()).result;
 const until = async (p, done, ms = 90000) => {
   const end = Date.now() + ms;
