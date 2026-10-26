@@ -960,3 +960,7 @@ Findings for BOB:
 Ran: extraction suite 396 of 396; the 12 other test files importing `extraction/fixtures.mjs` 110 of 110; `impact.mjs origin/tranche/T51 HEAD`: 10 of 178 modules, 58 files (the users of the fixtures file); `checks/run.mjs /home/user/bio`: words 0 findings (178 modules, `testcopy 0`), channels 0, fixtures failures are the other modules' (stubs of test-support's `job-registrar-stub`, etc.); ownership 0.
 
 Size (session_015RF4m8g84eTxBUcZNfsLxW): test runs 8, module lines 4552
+
+## J49 · COMPLETE
+
+COMPLETE fix round 10 (B65). Fixtures published: readHeldAnswer.noWholeObject() and reextraction() ({press, pass}); t48 transcribe value is store-assembly's real shape. Findings (REPORT in my record, section 'EXTRACTION #49'): the real pdfstructure press answers performed:false (R103), performed:true is the ocr pass; store-assembly t42:266 keeps an old-shape copy 'theirs' and is red until it adds asked/sent/owed (17/17 with it, tried in a throwaway worktree); plane t42:301/402/410 orphan runs of transcribe-not-sent. Suite 396/396, users 110/110, ownership 0, words 0.
