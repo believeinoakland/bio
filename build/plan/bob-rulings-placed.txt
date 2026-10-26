@@ -7,3 +7,4 @@ K5038 · done: civicsmith.org and the installer deployed
 K5175 · superseded for the alpha by K5257 and K5258 (in rulings-active)
 K5183 · done: the work moved to Bob's primary account
 K5298 · the alpha cut's checklist (`walk-T51-alpha/alpha-cut.md`) and the handoff: stewards@civicsmith.org
+K4976 · the process tool: a quiet or dropped job is `proc status` QUIET and the platform's child-session event (civicos-process mechanics §5.4); RUNNING retired with the mailbox

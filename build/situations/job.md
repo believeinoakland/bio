@@ -1,0 +1,12 @@
+# Situation: every module job's standing rules
+
+**Status** · The product's own procedure, read whole by every module job before it changes code (its START names this file) (the process's `roles/BOB.md` names this folder; the manifest lists each file). Bob's rulings it carries keep their source ids.
+
+- Before any test run (BOB too), in every container (Bob, K4113): `npm ci --ignore-scripts --no-audit --no-fund` in every directory with a tracked `package-lock.json` and no `node_modules` (a restart empties them).
+- Run `newgroup-bundle-fresh` and `fleetbundles` with `node --test --test-force-exit` (K3972); never edit `modules.json` or `order.mjs` while a bundle build runs; never stop agent-worker's test run midway (restore from HEAD; K1994); a long command runs as a session-tracked background task, never a bare `nohup` (K4207).
+- A test names a requirement id at the module's interface; an id not yet met is named in a `test.todo`, never a red test or a pin of today's behaviour (K208). The report's `**Met**` line names the ids met; `proc merge` strikes their marks (K787).
+- Every scripted edit is read back (K702); plane LIKE/GLOB patterns stay within workerd's 50 bytes, `sql.exec` cursors spread (K313); a table key, thrown `feature` or compared string code is an identifier, never a `localize` sentence (K3971).
+- Words: tests never copy a sentence people read; a test asserts the key or reads the expected text from the word table, and a wording change is a word-table edit, never a module job (K3810). Words are kept (Bob, K3930): a sentence is written once at its use as `localize(id, en, vars)` (K3943) and extracted into the word table by a build step; the table wins, code wording is never synced back. The `unkeyed` list is not counted by the check (K3944); a refusal `detail` is a sentence a member can read wherever it travels (K3985).
+- Module tests at the providers' real shapes (Bob, K4990, K4993): a test never hand-builds another module's answer or a stub of its interface; it uses the provider's published fixture, produced by the provider's real code when the test runs, never stored; a `fixtures` check refuses hand-built answers (its text to Bob before it binds); the through-the-door seam test of each cause is written before its module jobs start.
+- A test asserts its own module's behaviour and never hand-lists another module's ops, rows or words (K3268).
+- Tests: `build/rulings-product/tests.md`; members' words and refusals: `build/rulings-product/words-ux.md`.
