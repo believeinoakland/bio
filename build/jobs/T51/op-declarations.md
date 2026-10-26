@@ -713,3 +713,7 @@ Size (session_01ET6tsyxXwxvXvyYHFZXgiU): test runs 6, module lines 3466
 ## J45 · QUESTION
 
 Best reading, carrying on: signerknown (credentials R83) has no act help until AFFORDANCES #52's CHANGE, so t36 R34 and t42 R47/R34 stay red naming it alone until affordances merges (checked against origin/job/T51/affordances: no other red). I name it under no ground, since it would be named and explained at that merge. Tell me to name it under the read ground now if you prefer.
+
+## J46 · COMPLETE
+
+COMPLETE for B45 (item 149). Changed: ACT_HELP_ABSENT's unexplained ground drops the five Standard ops (index.mjs); t35.test.mjs imports register-owners.mjs so signerknown comes from credentials' registered DECLARED_OPS, no hand list (red then green, 9/9). Suite 249: reds t36.test.mjs:306 and t42.test.mjs:129 name signerknown alone, until AFFORDANCES #52's CHANGE (see QUESTION); against affordances' branch those are the only two. Checks: ownership 0, architecture 0, words 0; format's one failure is build/rulings.md:5301 (not mine). No fixtures marker added. Record: section 'Fix round 10, item 149'. Size (session_01ET6tsyxXwxvXvyYHFZXgiU): test runs 6, module lines 3466
