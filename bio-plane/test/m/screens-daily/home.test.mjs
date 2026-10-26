@@ -250,12 +250,11 @@ test("R1, R8: each project the member sees is a reference opening project, with 
     r.projects.find((x) => x.id === coliseum).stage = "investigating";
     r.projects.find((x) => x.id === pothole).stage = "paused";
   }) });
-  const ladders = main(odd).querySelectorAll(".cs-ladder");
-  assert.equal(ladders.length, 2);
-  assert.deepEqual(on(ladders[0]), [true, true, false, false]);
-  assert.deepEqual(on(ladders[1]), [false, false, false, false], "an unknown stage draws no step on");
-  assert.equal(ladders[0].querySelector("[aria-current]").textContent, word("screen.home.stage.investigating"));
-  assert.deepEqual(ladders[0].children.map((s) => s.textContent), ["forming", "investigating", "matured", "closed"].map((s) => word(`screen.home.stage.${s}`)));
+  assert.equal(main(odd).querySelectorAll(".cs-ladder").length, 2);
+  assert.deepEqual(on(ladderOf(odd, "The Coliseum lease")), [true, true, false, false]);
+  assert.deepEqual(on(ladderOf(odd, "Pothole repairs")), [false, false, false, false], "an unknown stage draws no step on");
+  assert.equal(ladderOf(odd, "The Coliseum lease").querySelector("[aria-current]").textContent, word("screen.home.stage.investigating"));
+  assert.deepEqual(ladderOf(odd, "The Coliseum lease").children.map((s) => s.textContent), ["forming", "investigating", "matured", "closed"].map((s) => word(`screen.home.stage.${s}`)));
 });
 
 test("R8, R21, R25 (fix round 3, C14): each project's question count is its roster row's own, drawn with the project, picking the singular or plural key; a count at zero is not drawn; none is read project by project", timeout, async () => {
@@ -684,10 +683,10 @@ test("R17, C74: a row's Open opens its subject's screen; a subject that opens no
 // `reviewcopy` of a member's session is stamped with her viewer by the
 // Worker's door while the world's door stamps none (store-request/door.mjs `publicAnswer`), so the store is asked as the Worker's door asks it for her.
 const EDITION_CASES = (cases) => ok({ bundles: [], cases });
-const copyOf = (w, as) => async (req) => {
+const copyOf = (w, as) => counted(async (req) => {
   const got = await w.send({ url: `http://do/reviewcopy?draft=${encodeURIComponent(req.query.draft)}&viewer=${encodeURIComponent("member:" + as.handle)}`, headers: {}, method: "GET" });
   return ok((await got.json()).result);
-};
+});
 const editions = (w, as, over = {}) => ({ reviewcopy: copyOf(w, as), ...over });
 
 /** Two cases of `project` published by the real ceremony, the first in two editions (a reopened and re-concluded finding, its second edition saying what changed), the

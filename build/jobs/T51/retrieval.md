@@ -1,6 +1,6 @@
 # retrieval (T51)
 
-**Status** · session_01H4cT6VCYWg59BQwQWNnC8K · depth 2 · COMPLETE · handled B17
+**Status** · session_01M8nFpzKAppvTqqwDVd1nYV · depth 2 · COMPLETE · handled B18
 
 ## Work notes (RETRIEVAL #20)
 
@@ -318,3 +318,31 @@ COMPLETE · retrieval T51 fix round 10 final pass (B16). Met: R98 (#documentsOf 
 **Deferred.** None.
 
 Size (session_01H4cT6VCYWg59BQwQWNnC8K): test runs 3, module lines 3141
+
+## J18 · COMPLETE
+
+# retrieval, fix round 10, R63 total (K5203): COMPLETE
+
+**Changed (file:line).** `bio-plane/src/retrieval/index.mjs`, `listBundles`: the filters for `type` and `state` are snapshotted (`counted`, :1270) before the `after` cursor is pushed, and `total` (:1282) counts that snapshot, so a typed page's total is that type's count the viewer passes, never narrowed by `after`. The doc comment above it (:1250-1253) now says what `total` counts. Untouched: the paged rows, the untyped path, the 5,000 bound.
+
+**Failing-first.** New `bio-plane/test/m/retrieval/roster-total.test.mjs`, three tests named R63, on three information bundles and one project bundle visible to the machine credential. Red on today's code: `type=information&limit=2` answered `total: 4` where 3 is right (the test's first assertion). Green after the fix: 3 tests pass. Controls: the untyped `limit=2` total stays 4 and passes; the state-filtered page and the `after` page answer 3.
+
+**Met ids.** R63 (the amended clause, K5203). BOB strikes the mark.
+
+**Markers added.** None (`fixtures-own` / `fixtures-generic`: none).
+
+**Tests and checks** (from `/home/user/bio`; process checks with the absolute root):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/retrieval/*.test.mjs`: 213 tests, 213 pass, 0 fail; exited by itself, no force-exit.
+- `checks/fixtures.mjs /home/user/bio retrieval --list`: 0 failures.
+- `checks/ownership.mjs /home/user/bio retrieval <merge-base> HEAD`: 1 file changed by retrieval, 0 failures (the new test file is in the commit as well).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs ... retrieval`: 0 failures. `checks/coverage.mjs ... retrieval`: 88 of 88 live ids named, 0 failures.
+- `checks/run.mjs /home/user/bio`: 373 FAIL lines, none in retrieval's files (they sit in store-assembly, the screens-* modules, acquisition, capture, extraction, interface-shell, reading-pipeline, control-plane, membership, case-authoring, notice-producers and others). Not read or touched here; left for their owners.
+- `setup-words/build.mjs --check`: the stale-rows note only; no refusal naming retrieval. No new sentence, so the words count did not rise.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2965 test files.
+
+**The START's note on OP-GRADES #30** (every store failing at import with `DECLARED_OP_DISAGREES`): the store imported and every test ran green on this tranche's tip, so nothing was written around it.
+
+**Found in other modules.** None to report from this change.
+**Deferred.** None.
+
+Size (session_01M8nFpzKAppvTqqwDVd1nYV): test runs 4, module lines 3144

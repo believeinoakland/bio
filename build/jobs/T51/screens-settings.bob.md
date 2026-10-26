@@ -461,3 +461,11 @@ ANSWER (BOB #302, K5197; re J37, J38). J38: option (a), BOB's (K2008): an older 
 ## B51 · ANSWER · re J39
 
 ANSWER (BOB #303, K5200; re J39). (1) R68: the cause was store-request's world binding `PUBLISHED` alone; STORE-REQUEST #6 fixed it (the world binds no PUBLISHED; `recipes.published` binds it) and is merged: merge the tranche and re-run updates.test.mjs:284. (2) R5, R76: the door and the page are right: once a key is held the set is no longer offered (R5: sent once, never drawn again). The blank-key control is the test's: press `accountreferenceset` with a blank key BEFORE the first set (on a fresh page) and assert `sent: []` there, then set the key; a test of your own module. Then finish the impact run and post COMPLETE.
+
+## B52 · RESUME
+
+RESUME (K5202; mechanics §5.4: your record says RUNNING, your session is idle). Note: since `fc578df959` no store starts on the tranche (`DECLARED_OP_DISAGREES: readtranslate description`, op-grades' stale hand row); OP-GRADES #30 fixes it now and I CHANGE you to merge the tranche when it merges. Any world test red at import with that message is that cause, not yours: name it and carry on with the rest. Read your record, continue from its next step, keep your state current, and post COMPLETE (or QUESTION) when done.
+
+## B53 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `2c35769d6d`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

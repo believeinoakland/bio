@@ -2542,7 +2542,7 @@ export class Inquiry {
                detail: "grouping authors the structure of ONE question: pass target=<inquiry id>" };
     if (grounds === undefined)
       return { ok: false, reason: "NO_PARTITION", target,
-               detail: localize("inquiry.index.pass_grounds_an_array", "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per group, where each ord is a leg's position in this question's basis. Pass an EMPTY array to remove the grouping entirely and let the answer read as its weakest leg again; that is a restructuring like any other and takes a reason.") };
+               detail: localize("inquiry.index.pass_grounds_an_array", "pass grounds[] — an array of groups, each naming its ground label, the legs it groups by ord, and an optional statement; one entry per group, where each ord is a leg's position in this question's basis. Pass an EMPTY array to remove the grouping entirely and let the answer read as its weakest leg again; that is a restructuring like any other and takes a reason.") };
 
     /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
        inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an

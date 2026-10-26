@@ -2,7 +2,7 @@
  * by its real code over the real record, membership, content and entities each time a test calls one, never stored.
  * A module that uses a standards read takes its answer from here and never builds one by hand. Each export returns the
  * real answers together with the ids the real code minted, so a user's test names no id of its own. */
-import { seeded, V } from "./fixture.mjs";
+import { seeded, V, REASON } from "./fixture.mjs";
 
 const must = (r, what) => {
   if (!r || r.ok !== true) throw new Error(`fixture ${what} refused: ${JSON.stringify(r).slice(0, 300)}`);
@@ -78,4 +78,21 @@ export function standardsEmptyReads() {
 /** `standardsIn` (R8) over a record that holds no standard. */
 export function standardsIn() {
   return seeded().s.standardsIn({ viewer: MEMBER });
+}
+
+/** `standardinforce` (R7) and `inForceAt` (R20) for a version known in force through a date by a member's record (R50): the
+ *  real answers on the day the record decides (`known`, carrying `known_through {through, source: {captureSha, extent}, by}`
+ *  beside `why`), the day after (`after`, resting on no record, carrying none), with the member and source the real act
+ *  recorded. K5178. */
+export function inForceKnown() {
+  const w = seeded();
+  const src = w.passage("portal", { address: "https://ex.org/portal", retrieved: "2026-09-01T18:00:00Z" });
+  const extent = { kind: "pdf-page", page: 0 };
+  const standard = must(w.declare({ period: { from: "2020-01-01", to: null } }), "inForceKnown standard").id;
+  const member = V("bob");
+  must(w.s.inForceThroughRecord({ standard, through: "2026-09-01", source: { captureSha: src.capSha, extent }, reason: REASON,
+                                  author: member, viewer: member }), "inForceKnown record");
+  return { standard, member, captureSha: src.capSha, extent, through: "2026-09-01", after: "2026-09-02",
+           known: w.s.inForce(standard, "2026-09-01"), knownAt: w.s.inForceAt({ standard, date: "2026-09-01", viewer: MEMBER }),
+           afterDay: w.s.inForce(standard, "2026-09-02") };
 }

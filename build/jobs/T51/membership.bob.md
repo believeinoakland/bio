@@ -1,6 +1,6 @@
 # BOB to membership (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -133,3 +133,15 @@ Bob's direction for this round (K5175): every bug, failure and broken feature fo
 Your job: membership R156 (written by BOB at K5197; read it whole). MEMBER-ROSTER #6 J9 found membership still reads the wall clock for its own instants (`bio-plane/src/membership/index.mjs:338`, `:390`, `:902`, `:1020`, `:1047`, `:1066`, `:1101`, `:1135`). Read the store's clock as `bio-plane/src/credentials/index.mjs:131-150` (`#nowMs`) and member-roster's R82 do (K5132): a handed `now`, else `env.BIO_NOW_MS`, else the wall clock; take the environment the way your composition already hands it (if none does, REPORT what you need before inventing a path). Failing-first test naming R156, with its controls. The evidence is `build/plan/verify-marks.md` (its row and its fixture table for your module): read those rows whole.
 
 **Done:** module tests green; the users `node build/plan/impact.mjs tranche/T51 HEAD` names (when it names hundreds because of a shared table, run the modules that call what you changed); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` with no finding in your files and the words count not risen; `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio membership --list` at zero; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio membership $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the met ids (BOB strikes the marks), every `fixtures-own`/`fixtures-generic` marker you added (file:line and why), and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B11 · RESUME
+
+RESUME (BOB #303, K5201): your RUNNING window (22:44Z) has passed with no push for 30 minutes. Record where your dependent-module run stands, push, and continue to COMPLETE (split a long run into pieces of at most 30 minutes, each pushed).
+
+## B12 · CHANGE · re J12
+
+CHANGE (K5202, BOB's, P17), on your J12 REPORT, confirmed (`membersOps` sets `env` on the object it is handed, the `Membership` instance in production, so its `Members` delegate keeps `env = null`). The fix is the composer's, yours: the `Members` that `Membership`'s constructor builds (`membership/index.mjs:235`) is handed your clock, `new Members({ sql, now: () => this.#nowMs() })`, so member-roster's instants (R82: memberAdd, enroll, hostingAccessSet, memberStatusSince) read the same handed clock, else `env.BIO_NOW_MS`, else the wall clock. A `members` handed in is left as handed. Failing-first: through `membershipOps` with `env.BIO_NOW_MS` pinned, an act that records a member-roster instant (e.g. enroll or memberadd) records the pinned instant, red before, green after, naming R156. Then COMPLETE with R156.
+
+## B13 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `1c30f18a8d`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.

@@ -1,7 +1,9 @@
 /* inquiry's published fixtures (fixtures.mjs): each is called here and its real answer checked (K4990). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { basisForUnread, basisRefusals, datedWaitOf, disposeAct, migratedSurfacing, questionWaitsSetAside, readRefusals } from "./fixtures.mjs";
+import { basisForUnread, basisRefusals, datedWaitOf, disposeAct, divideAnswers, groundAnswers, migratedSurfacing,
+         questionWaitsNone, questionWaitsSetAside, readRefusals } from "./fixtures.mjs";
+import { INQUIRY_GRAMMAR_CHECKS } from "../../../src/inquiry-grammar/index.mjs";
 import { selectionResolve } from "../retrieval/fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -89,4 +91,60 @@ test("R55 R58: questionWaitsSetAside answers the asker the set-aside wait with b
     "the history is documentWaits'");
   const g = questionWaitsSetAside({ asker: "member:carol", setter: "member:dave", reason: "Duplicate." });
   assert.deepEqual(g.answer.document_waits.map((x) => [x.by, x.reason]), [["member:dave", "Duplicate."]]);
+});
+
+test("R23 R25: divideAnswers answers the real division (divided, its children and apportionment) and each refusal a screen builds by hand, as inquiry gives it", () => {
+  const f = divideAnswers();
+  assert.deepEqual([f.divided.ok, f.divided.to, f.divided.into], [true, "divided", [f.children[0], f.children[1]]]);
+  assert.deepEqual(f.divided.apportionment.map((a) => [a.ord, a.to]), [[0, [f.children[0]]], [1, [f.children[1]]]]);
+  assert.deepEqual([f.childExists.reason, f.childExists.child], ["CHILD_EXISTS", f.existing]);
+  assert.deepEqual([f.noHome.reason, f.noHome.orphans.map((o) => o.ord)], ["NO_APPORTIONMENT", [1]], "two passages have no home");
+  assert.equal(f.noReason.reason, "NO_REASON", "a division with no reason says why it is refused, and nothing else");
+  assert.deepEqual([f.notAnInquiry.reason, f.notAnInquiry.target], ["NOT_AN_INQUIRY", f.document]);
+  assert.deepEqual([f.absent.reason, f.absent.target], ["NO_SUCH_BUNDLE", "INQ-2026-9099-x"]);
+  assert.deepEqual([f.machine.reason, f.machine.check], ["MACHINE_CANNOT_DIVIDE", "C-32.7"]);
+  assert.ok(f.machine.translation && f.machine.detail);
+  assert.notEqual(f.world.record.head(f.children[0]), null, "the division that landed wrote its children; the refusals before it wrote none");
+});
+
+test("R23 R25 (catalogue): each divide refusal that carries a row carries the row inquiry-grammar holds for its code", () => {
+  const f = divideAnswers();
+  const row = INQUIRY_GRAMMAR_CHECKS.MACHINE_CANNOT_DIVIDE;
+  assert.deepEqual([f.machine.check, f.machine.translation], [row.check, row.translation]);
+});
+
+test("R27 R85: groundAnswers answers the real partition (authored, restructured) and each refusal a screen builds by hand, and writes nothing on a refusal", () => {
+  const f = groundAnswers();
+  assert.deepEqual([f.authored.ok, f.authored.act, f.authored.target, f.authored.grouped], [true, "authored", f.question, true]);
+  assert.deepEqual(f.authored.grounds.map((g) => g.ground), ["g1"]);
+  assert.deepEqual([f.restructured.ok, f.restructured.act, f.restructured.reason], [true, "restructured", "no grouping after all"]);
+  assert.deepEqual([f.noPartition.reason, f.noPartition.target], ["NO_PARTITION", f.question]);
+  assert.deepEqual([f.notAnInquiry.reason, f.notAnInquiry.target], ["NOT_AN_INQUIRY", f.document]);
+  assert.deepEqual([f.absent.reason, f.absent.target], ["NO_SUCH_BUNDLE", "INQ-2026-9099-x"]);
+  assert.deepEqual([f.cutsAgainst.reason, f.cutsAgainst.ord, f.cutsAgainst.findings[0].check], ["BASIS_REFUSED", 1, "C-2.8"]);
+  assert.equal(f.noReason.reason, "NO_REASON", "a restructure without its reason");
+  assert.equal(f.noReason.restructure, true);
+  assert.equal(f.heldAfterRefusals, f.heldAfterAuthored, "the refusals wrote nothing: the bytes the authored act left are the bytes still held");
+});
+
+test("R55 R58: questionWaitsNone answers a visible question with no wait as the real read gives it, nothing to add", () => {
+  const f = questionWaitsNone();
+  assert.deepEqual([f.answer.ok, f.answer.question, f.answer.waits], [true, f.question, []]);
+  assert.deepEqual(f.answer.document_waits, []);
+  assert.deepEqual(f.answer.history, []);
+});
+
+test("fixtures.mjs (new fixtures): two calls give two answers, each over a world of its own, never a stored one", () => {
+  const d1 = divideAnswers(), d2 = divideAnswers();
+  assert.notEqual(d1.world, d2.world);
+  assert.equal(d1.divided.into.length, 2);
+  assert.deepEqual(d2.divided.into, d1.divided.into, "the same question divided again names the same children, in its own world");
+  const g1 = groundAnswers(), g2 = groundAnswers();
+  assert.notEqual(g1.world, g2.world);
+  assert.deepEqual([g1.authored.ok, g2.authored.ok], [true, true]);
+  assert.equal(g2.noReason.reason, "NO_REASON", "the second call's own answer, not the first's");
+  const q1 = questionWaitsNone(), q2 = questionWaitsNone();
+  assert.notEqual(q1.inquiry, q2.inquiry);
+  assert.notEqual(q1.answer, q2.answer, "two reads are two answers");
+  assert.deepEqual(q1.answer, q2.answer, "the same empty question, read in a world of its own, answers alike");
 });
