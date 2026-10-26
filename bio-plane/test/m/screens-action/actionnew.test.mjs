@@ -118,7 +118,8 @@ test("R24: refusals in place send nothing: an undetermined addressee with no bas
   const rfc = await press(q, "actioncreate", { values: { "an-who": "The auditor", "an-ask": "Comment on the standard" }, reason: "x" });
   // R56 (walk E K-new): no local pre-check; the plane is asked and its refusal is drawn
   assert.equal(q.byOp("actioncreate").length, 1, "a request for comment with no advances leg is sent: the plane refuses it, not the screen");
-  assert.ok(text(q, q.root().querySelector(`[data-slot="${rfc.getAttribute("data-ai")}"]`)).includes(W("refusal.ACTION_BASIS_REFUSED")));
+  const shown = text(q, q.root().querySelector(`[data-slot="${rfc.getAttribute("data-ai")}"]`));
+  assert.ok(shown.length > 0 && !shown.includes(W("refusal.ACTION_BASIS_REFUSED")), "the owner's reasons are drawn, not the code's sentence that ends 'leave it out' (re-walk 10 N7)");
   assert.equal((await actionsOf(me)).filter((x) => x.kind === "request_for_comment").length, 0, "and the store holds none");
 });
 

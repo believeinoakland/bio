@@ -195,7 +195,7 @@ export const plan = Object.freeze({
       if (c.check === "subjects_not_live" && opt) return cs.w("action-plans.says.matter_serves_longer", { id: { html: opt } });
       if (c.check === "outward_on_hypothesis" && opt) return cs.w("action-plans.says.addresses_someone_outside", { id: { html: opt } });
       if (c.check === "enforces_superseded" && opt) return cs.w("action-plans.says.requirement_seeks_enforced", { id: { html: opt } });
-      if (c.check === "no_hostile_branch" && ph) return cs.w("action-plans.index.phase_id_addresses_someone_outside", { id: { html: ph } });
+      if (c.check === "no_hostile_branch" && ph) return cs.w("action-plans.says.phase_addresses_someone", { id: { html: ph } });
       return "";
     },
     // R53: an option with no summary is named by its place in the list, a phase with no name by its place in its scenario;

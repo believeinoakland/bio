@@ -219,7 +219,7 @@ test("L20: optionstart refused ACTION_BASIS_REFUSED draws the code's words and t
   const p = await open(STEP1, { ...DATA_PLANE, optionstart: refusedWith("ACTION_BASIS_REFUSED", { findings: [{ detail: "the leg names <b>no</b> finding" }, { detail: "the question is not this project's" }] }) });
   const b = await press(p, "optionstart", { reason: "go" });
   const t = beside(p, b);
-  assert.ok(t.includes(W("refusal.ACTION_BASIS_REFUSED")));
+  assert.ok(!t.includes(W("refusal.ACTION_BASIS_REFUSED")), "re-walk 10 N7: the owner's reasons are the answer");
   assert.ok(t.includes("the leg names <b>no</b> finding") && t.includes("the question is not this project's"), "each detail, escaped");
   assert.equal(slot(p, b).querySelector("b"), null, "never as markup");
   const q = await open(STEP1, { ...DATA_PLANE, optionstart: refusedWith("ACTION_BASIS_REFUSED") });

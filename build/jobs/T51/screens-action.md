@@ -668,3 +668,23 @@ Size (session_01HPNNooAJjye3pCPTVdDWud): test runs 25, module lines 11845
 ## J47 · COMPLETE
 
 COMPLETE (re B54; K5284; R57). Pushed on job/T51/screens-action; the record's Round 16 section holds what changed (request.mjs:83, :137, :239, :258), the tests red then green (fix10-r57.test.mjs, 3 tests), suites (310 of 310), checks (format, architecture, coverage 57/57, words, ownership 0; no fixtures finding in screens-action) and the Size line. Four findings for you, none hidden: (1) the owner places a post_in only when both bounds are stated (lines R10), so the fold also asks the optional Since/Until the person screen asks, and an undated office is registered but not chosen, with the design's sentence; R57 should say so; (2) the fold is reached by picking the body and Choose the office, no preselection; a team with no body cannot name an office (a member cannot register a body): a design word is wanted; (3) the label reuses screen.matter.f.body, a row 'The body that holds it' is wanted from UX-DESIGN; (4) bodies come from the peopledirectory read already made (first 200 names), because a second entitieskind read fails the reads-once test C14.
+
+## Round 17 · fix round 10, re-walk causes (SCREENS-ACTION #27, session_01ReWzbcE2jDSepbus9xYfCv, B55 START)
+
+Merged `tranche/T51` (9c236df30b). Items of section 7 and 3's words (area E), each test red on the old source at the walker's case, then green:
+
+- **N8** `matter.mjs:534`: "Open an escalation" / "Decline to escalate" are drawn only when the determination found a standard noncompliant (`P.ctx(view).nc`); otherwise the page draws the existing `unavailable` rows (`screen.matter.needs_a_recorded_determination_that_the_act`). Control: a noncompliant determination draws both and not the row.
+- **N5** `matter.mjs:188`: the body choice reads `entitieskind` for office, institution, body and movement (conformance `ACTOR_KINDS`); a person is not offered.
+- **N3** `request.mjs:83-93, 138`: the fold's body choice, with the team holding no body (the directory read whole, not truncated), draws `state.empty` (`[data-nobody]`) and, for an administrator, the places door already drawn below it. The 200-row cap: a truncated directory says nothing (it may hold a body beyond).
+- **Plan** `plan.mjs:198`: the `no_hostile_branch` check is drawn with the design's key `action-plans.says.phase_addresses_someone` (added to `words-fix-r56.mjs`); the plane's key is dropped from `words-fix-plan.mjs`.
+- **N7** `actionnew.mjs:174-177`, `start-send.mjs:213-218`: with the owner's findings, they are drawn alone (their `detail`), not under the code's sentence that ends "leave it out"; a refusal with none keeps the code's sentence.
+
+Tests: new `fix10-rewalk.test.mjs` (6: R6/R45, R56, R57/R20, R56/R53, R56 ×2). Changed: `fix2-t51` (design key), `actionnew-fix`, `actionnew`, `fix10-t51`, `send-t51` (the code's sentence no longer heads the owner's reasons).
+
+**Words, not as the brief said.** "New words by `localize`" cannot be done here: `checks/words.mjs` fails a `localize` call in a drawn-screen module (`marker`, 2 failures when I tried it in `request.mjs` and `actionnew.mjs`), and R19 says this module holds no English. I drew by existing keys only (`state.empty`, none for the N7 head). The sentences the walker asked for are owed to the design (REPORT): N3 "no body is held; where one is added" (K5285), N7 a head over the owner's reasons that does not say "leave it out" (and `refusal.ACTION_BASIS_REFUSED` itself should lose that ending).
+
+**Found in another module (REPORT):** `action-grammar` `bio-plane/src/action-grammar/grammar.mjs:182-185` the finding's English ("a request_for_comment names ZERO inquiries ... action_basis legs of kind advances ... (DEC-13)") is plane jargon and not a `localize` sentence; I draw it unchanged. The N7 red test `!/ZERO|action_basis|legs of kind/` can pass only when action-grammar words it.
+
+Checks: screens-action suite 316 of 316 (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`); `checks/run.mjs`: format 0, architecture 0, coverage 7084 of 7084, words 0 failures (marker 0); fixtures 89 failures, none in screens-action; `setup-words/build.mjs --check`: stale-rows note only; ownership 0.
+
+Size (session_01ReWzbcE2jDSepbus9xYfCv): test runs 6, module lines 5261
