@@ -40,7 +40,7 @@ import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
-         KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS } from "./checks.mjs";
+         KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS, SIGN_IN_WINDOW, SIGN_IN_STATED } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS }
   from "./checks.mjs";
@@ -71,12 +71,9 @@ export const KEYED_SERVICES = Object.freeze(["courtlistener"]);
 export const SECURITY_SERVICE_PREFIX = "security:";
 const SECURITY_SERVICE_RE = /^security:[A-Za-z0-9._-]{1,120}$/;
 
-/* R38 (F3; K1881, K1934 (2)): the sign-in window's bounds, BOB's under K1881. Refused attempts are estimated per source
-   and per role over any 10 minutes by a two-bucket sliding window (capture R31's form); at `perSource` for the source,
-   or `perRole` for the role, the next attempt is paused. `SIGN_IN_STATED` is the bound as the pause states it, composed
-   from the same constants. */
-export const SIGN_IN_WINDOW = Object.freeze({ perSource: 10, perRole: 10, windowMs: 10 * 60 * 1000 });
-export const SIGN_IN_STATED = word("credentials.refused_attempts_place", { per_source: String(SIGN_IN_WINDOW.perSource), per_role: String(SIGN_IN_WINDOW.perRole), window_ms: String(SIGN_IN_WINDOW.windowMs / 60000) });
+/* R38's bounds (SIGN_IN_WINDOW, SIGN_IN_STATED) are defined in checks.mjs, where the pause's words read them; they are
+   re-exported here as before. */
+export { SIGN_IN_WINDOW, SIGN_IN_STATED };
 /* R63 (T47; N955, K2976, K3033): the write ops the runner makes on a run, in every deployed mode: `check`'s (agent-worker
    R37) and `plan`'s (agent-worker R53, `optionpropose` with `airuntick` and `airunclose`). A run segment's credential
    holds a non-empty list of these and nothing else; `ai-runs` passes the run's mode's own. A mode deployed later adds
