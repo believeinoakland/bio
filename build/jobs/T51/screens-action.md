@@ -731,3 +731,29 @@ COMPLETE (SCREENS-ACTION #28, T51, R58, re B56). Pushed on `job/T51/screens-acti
 **Found in other modules:** none new.
 
 Size (session_01W8SeuUT4Pp8JrNDZyDteuM): test runs 4, module lines 5265
+
+## J50 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #28, T51, R59, re B57). tranche/T51 merged (K5303, DEC-439 to DEC-441). Pushed on `job/T51/screens-action` at 0cc0cd60ed.
+
+**R59, each key at its case (red, then green; the red run against the pre-change module failed all 10 R59-named groups):**
+- E H1b, `screen.action.law.none`, `.level`, `.citation` (`action.mjs` lawChoose, l.~476-484; `actionlawspropose` send, l.~612): with no law the places list for the kind, the sentence and a level and citation are drawn, and the propose act sends the named law (trimmed; nothing sent with an empty citation). Test: `r59-t51.test.mjs` (R59 E H1b), control with laws drawn: no sentence.
+- K12, `screen.action.resolution.said.<token>` (`action.mjs` head, l.~193-197): a resolved action draws its outcome's sentence. Test: `r59-t51.test.mjs` (R59 K12), control: none for an unresolved action.
+- N7, `screen.action.basis.refused.head` (`actionnew.mjs` ACTION_BASIS_REFUSED, l.~176): the owner's reasons sit under the head. Test: `actionnew-fix.test.mjs` (R24, L20), assertion added and named R59.
+- R57 / N3, `screen.request.office.body`, `.nobody`, `.undated` (`request.mjs` l.~142, ~145, ~150; the refusal's field name l.250): tests in `fix10-r57.test.mjs` and `fix10-rewalk.test.mjs` (titles now name R59), assertions moved to the new keys.
+- K4 / C-M17, `screen.plan.press.empty.<role|organisation|both>` (`plan.mjs` ADDRESSEE_INCOMPLETE, l.~541-547, by the owner's `empty` array): `fix10-t51.test.mjs` (R56, R59), assertion now the key per case.
+- H2, `screen.start-send.sent.next` (`send-steps.mjs` sent step, l.~305): `fix4-t51.test.mjs` (R43, R48, R59), assertion added.
+- J43, `screen.start-send.risk.door` (`send-steps.mjs` FILING_TIER_UNDETERMINED door, l.~453): `send-t51.test.mjs` (R41, R59), assertions moved to the key.
+
+**Changed behaviour an existing control asserted (please confirm):** `action-fix.test.mjs` (R54, R59) controlled "no laws draws neither act". R59 says the member names the law herself when the places list none, so with no laws I now draw the propose act with the level and citation fields, and no list and no change act. I read R59 as superseding that R54 control for this case. If BOB meant R54's control to stand, the naming fields have nowhere to send and R59 cannot be met as written: BOB to rule.
+
+**Checks (absolute root /home/user/bio):** module suite `bio-plane/test/m/screens-action/*.test.mjs` 322 of 322 pass, 0 fail (run without force-exit); format 0; architecture 0; coverage 59 of 59 ids named by a test; words 0; fixtures 0 failures (accepted 2, unchanged); ownership 0 failures (16 files: this module's paths and the merged tranche's history); `checks/run.mjs`: no finding names screens-action's files.
+
+**Deferred, with why:**
+1. `build/requirements/screens-action.md` R59 still ends "*(not yet met: T51)*"; the file is not in my paths. BOB removes the mark.
+2. The request's body choice: the design's words are keyed; the Request screen's own refusal field name now uses `screen.request.office.body` (was the Matter's `screen.matter.f.body`, which is in no Request path any more).
+3. R59 names "the places" that `risk.title` previously stood for; the risk tier heading itself still reads `risk.title` (only the door changed).
+
+**Found in other modules:** none new.
+
+Size (session_01W8SeuUT4Pp8JrNDZyDteuM): test runs 6, module lines 5289
