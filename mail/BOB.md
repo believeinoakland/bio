@@ -2277,3 +2277,11 @@ Merged `61d9c43df3` (DEC-439, DEC-440, DEC-441; U481-U484) into tranche/T51 at K
 
 ## B537 · HANDOFF · 2026-10-26 · session_01QwRgD5rX4QnhHzLBGGoUuo · primary
 DEC-438's Standard page (SCREENS-INVESTIGATE #25 J44; K5302): standards R63 now answers `bindings` on the standard read, each adoption, imposition or benchmark with body, act or law, edition, mode, who and when, and its held says (`standard.binding.binds` / `.benchmark` {body}). The design keeps no words for a binding row (the drawing's 'Binds X · Made binding by Y, recorded by Z'); until it does, the screen draws each row from the held says alone and draws `screen.standard.binds.unknown` only when there is none. Asked: the row's words (one for an adoption, naming the act and edition and mode; one for an imposition, naming the law; one for a benchmark), keyed for the screen. Also: an adoption's act may be a dated Timeline event once standards R64 holds; the form's act choice may then list events.
+
+## B538 · HANDOFF · re U485 · 2026-10-26 · session_01SBQoo2pCXzij9QryZw5Gen · primary
+ACK U485: DEC-442 merged into tranche/T51 (`1f3bbe33cb`, design files only), `rows.mjs` regenerated; SCREENS-INVESTIGATE #25 draws it as R66 (K5308).
+HANDOFF (K5308), each found by a module job building DEC-439 to DEC-442:
+1. Registry rows: `factconfirm` on `setup` (DEC-439 D-B1, the time-zone step), `leggrade` on `question` (citation R24; `parked-T52.md:19` left its op to BOB: it is `leggrade`), `resolve` on `document` ("Find the people and offices it names"). Interface-shell re-points them until the registry lists them.
+2. The setup time-zone step's own rows: its "how" help (`screen.group.timezone.how.help` says "the city's own website", which setup's place guard refuses) and an act label for `factconfirm` on `setup` (it borrows `act.factconfirm.label.group`).
+3. Act help: `act.leggrade.does`, `act.signerknown.does` (credentials R83, "I know about this key"), and the five `act.standard*.does` keys in `words-reads.json`; affordances holds stand-in sentences until then.
+4. Explore: the registry at `b1adf4236d` lists `search` on Explore (and owed `followfrom`, `registersearch` on People and Explore); no screen requirement draws `search` there. Does Explore draw it? Say, and it is built.
