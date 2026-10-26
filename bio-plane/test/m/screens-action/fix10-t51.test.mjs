@@ -40,7 +40,6 @@ test("R56 (walk E C2a (1, 2)): a noncompliant determination against a standard w
   const real = await answerOf(w.world, w.me, "determine", { body: { ...sent, reason: "recorded" } });
   assert.equal(real.result.code, "STANDARD_BINDING_UNDETERMINED", "the owner's own code");
   const slot = text(p, slotOf(p, b));
-  assert.ok(slot.includes(real.result.translation.replace(/\s+/g, " ").trim()), "the owner's words");
   assert.ok(slot.includes(String(real.result.detail).replace(/\s+/g, " ").trim()), "and its why");
   assert.ok(!slot.includes(W("refusal.STANDARD_NOT_BINDING")), "never the sentence for a standard that does not bind");
 });

@@ -570,11 +570,11 @@ export const matter = Object.freeze({
       // R45: record a determination, or (with the one it replaces) revise it; exactly the fields `determine` declares
       op: "determine",
       // R56 (walk E C2a (1)): a standard whose binding on the body is undetermined is the owner's own refusal, drawn in its words with the owner's why
-      // (its `detail` names why and that a member settles it in `standards`), the owner's translation and then its why; a standard that does not bind keeps the shell's words
+      // (its `detail` names why and that a member settles it in `standards`), the owner's own `detail` (the why); a standard that does not bind keeps the shell's words
       refusals: {
         STANDARD_BINDING_UNDETERMINED: function (r, cs) {
-          const said = cs.esc(r.translation || "");
-          return said + (typeof r.detail === "string" && r.detail ? ' <span class="meta">' + cs.esc(r.detail) + "</span>" : "");
+          // the refusal's own `detail` is the member's sentence (conformance localizes it, naming why and that a member settles it in `standards`)
+          return cs.esc(typeof r.detail === "string" && r.detail ? r.detail : r.translation || "");
         },
       },
       // R56 (walk E C2b): recording one goes to its page
