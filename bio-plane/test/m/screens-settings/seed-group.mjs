@@ -90,12 +90,6 @@ export function stakeBy(w, by) {
   const last = w.sql.exec("SELECT stake FROM declared_stake_history ORDER BY seq DESC LIMIT 1").toArray()[0];
   w.sql.exec("INSERT INTO declared_stake_history (stake, set_by, set_at) VALUES (?, ?, ?)", last ? last.stake : null, by, iso(w));
 }
-/** SEED, no act makes it (store-request's door strips `source` from `factconfirm`'s body as it does a stamp, so a correction is always
- *  refused FACT_VALUE_REFUSED): the correction a member made of the zone, as local-facts records it. */
-export function corrected(w, zone, by = "admin", path = ZONE_PATH) {
-  w.sql.exec("INSERT INTO local_fact_acts (path, profile, act, how, value_json, source, by_member, at) VALUES (?, ?, 'correct', 'read on the city''s site', ?, 'oaklandca.gov', ?, ?)",
-    path, path.split("/")[0], JSON.stringify(zone), by, iso(w));
-}
 /** SEED, no act makes it: a copy of the record in the list with the counts given (a record's tables are the schema's and are never one). */
 export function copyOf(w, { bundles, files, tables, rows = 1, note = null }, at = iso(w)) {
   w.sql.exec("INSERT INTO export_log (at, scope, bundles, files, note, tables, rows) VALUES (?, 'working-corpus', ?, ?, ?, ?, ?)", at, bundles, files, note, tables, rows);
@@ -107,11 +101,6 @@ export function sized(w, bytes) {
   Object.defineProperty(w.sql, "databaseSize", { get: () => bytes, enumerable: true, configurable: true });
   return w;
 }
-
-/** `stats` answers a founder always carry `dbBytes` (a number, or null): these two answers are what the owner never gives and the screen still
- *  has to read as it does (an answer without the key; a size that is not a number). */
-export const STATS_WITHOUT_SIZE = { stats: { ok: true, result: { documents: 12 } } };
-export const STATS_NOT_A_NUMBER = { stats: { ok: true, result: { documents: 12, dbBytes: "big" } } };
 
 /** The team's own key, held and switched on, by the real acts (the password asked again first, as an administrator's page does): the
  *  assistant is then reachable. The world holds `ACCOUNT_SEAL_SECRET` (`team({ env: { ACCOUNT_SEAL_SECRET: SEAL } })`). */
@@ -135,16 +124,6 @@ export const without = (as, op, ...keys) => async () => {
   for (const k of keys) delete r[k];
   return { ok: true, result: r };
 };
-
-/** WORLD GAP: the world has the one profile (`oakland-alameda`) and its time_zone fact only; a second place with another zone, and a
- *  counterparty's own zone, are not in it. Two places that disagree, and an office's own zone: the facts `factstatus` lists for them. */
-export const zoneFact = (profile, zone, office = null) => ({ path: `${profile}/time_zone`, fact: { fact: "time_zone", profile, ...(office ? { office } : {}) }, status: "unconfirmed",
-  profile: { value: zone, status: "verified", basis: "x" }, governs: { value: zone, origin: "profile" } });
-export const PLACES = (a, b) => ({
-  profiles: { ok: true, result: { ok: true, profiles: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }, { id: "us-ca-sf", name: "San Francisco, California", covers: ["San Francisco"] }], conflicts: [], choices: [], view: "main" } },
-  factstatus: { ok: true, result: { ok: true, facts: [zoneFact("us-ca-oakland", a), zoneFact("us-ca-sf", b)] } },
-});
-export const OFFICE_ZONE = (zone) => ({ factstatus: { ok: true, result: { ok: true, facts: [zoneFact(PROFILE, zone, "clerk")] } } });
 
 /** WORLD GAP: the interface's word list is the 26,000 words of setup-words, and the answer of `translations` lists every one; the page draws a row for
  *  each, which the test's document stand-in cannot draw in a test's time. The same real answer with only the words the test is about. */

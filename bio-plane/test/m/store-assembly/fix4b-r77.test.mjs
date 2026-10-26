@@ -16,7 +16,7 @@ import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 const { readHeldAnswer: { noHome, read: readDone } } = await import("../extraction/fixtures.mjs");
 const { owedRunAnswer } = await import("../acquisition/fixtures.mjs");
 import { pendingOf, PENDING_RETRY_MAX_MS, KEEPS_PENDING_DDL } from "../../../src/store-assembly/pending.mjs";
-import { ASSEMBLY_DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
+import { DECLARED_OPS as ASSEMBLY_DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
 
 const MiB = 1024 * 1024;
 const sha = (b) => createHash("sha256").update(b).digest("hex");

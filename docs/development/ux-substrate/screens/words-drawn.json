@@ -43422,7 +43422,7 @@
   "screen.setup.offices": "The officials you deal with",
   "screen.setup.offices.what": "Civicsmith can fill in the public offices of {place}, and who holds each one today, from the place's own records. Check the list, then confirm it. You can add others at any time.",
   "screen.setup.offices.none": "Civicsmith doesn't know the offices of {place} yet, so this list starts empty. Add the offices your team deals with, now or whenever they come up. When an update brings their rules, you'll be told, and the offices you added stay.",
-  "screen.setup.office.note": "Anything your team should know about it (optional)",
+  "screen.setup.office.note": "What your team deals with this office about",
   "screen.setup.assistant": "The AI assistant",
   "screen.setup.assistant.what": "Civicsmith can include an AI assistant, built on Anthropic's Claude. Members ask it, in everyday words, to find, read and check things in your team's material. It works only from what your team holds, gives legal information but never legal advice, and never decides, signs or sends anything. Everything in Civicsmith also works without it.",
   "screen.setup.keepaway": "No, keep our material away from AI",

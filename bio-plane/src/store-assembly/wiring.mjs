@@ -14,6 +14,7 @@ import { registerBudgetTypes } from "../../../budget-doctypes/index.mjs";
 import { factReader } from "../action-clocks/index.mjs";
 import { MACHINE_VIEWER } from "../lines/index.mjs";
 import { combine, get as profileOf } from "../../../jurisdictions/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R22 (T33-12; docprofile R36; K617, K1513): the content types registered into docprofile's registry, in this order
  *  and once each: doctypes' seven, Legistar's, the roster and org-chart readers, the court registers, the budget
@@ -46,7 +47,7 @@ export function registerReaders(register = registerDoctype) {
 export const ROSTER_CONTENT_TYPES = Object.freeze(ROSTER_TYPES.map((t) => t.key));
 export function rosterReads({ sql, sight = viewerPredicate }) {
   return ({ organisation = null, viewer = null } = {}) => {
-    if (typeof organisation !== "string" || organisation === "") return { ok: false, why: "no organisation was named by its entity id" };
+    if (typeof organisation !== "string" || organisation === "") return { ok: false, why: localize("store-assembly.wiring.no-organisation", "no organisation was named by its entity id") };
     try {
       const g = viewer === null || viewer === undefined ? { sql: "1=1", args: [] } : sight(viewer);
       const db = sql();
@@ -75,7 +76,7 @@ export function rosterReads({ sql, sight = viewerPredicate }) {
       }
       return { items };
     } catch (e) {
-      return { ok: false, why: `the store's read of held rosters failed (${String((e && e.message) || e).slice(0, 160)})` };
+      return { ok: false, why: localize("store-assembly.wiring.roster-read-failed", "the store's read of held rosters failed ({reason})", { reason: String((e && e.message) || e).slice(0, 160) }) };
     }
   };
 }
@@ -100,7 +101,7 @@ export function dutiesFactOf(localFacts) {
   return (h) => {
     if (h && typeof h === "object" && h.list !== undefined && h.list !== null) return { status: "profile_list" };
     const read = factReader(localFacts(), null);
-    return read ? read(h) : { status: "absent", why: "local facts are not reachable on this host" };
+    return read ? read(h) : { status: "absent", why: localize("store-assembly.wiring.local-facts-unreachable", "local facts are not reachable on this host") };
   };
 }
 

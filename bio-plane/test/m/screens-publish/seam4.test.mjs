@@ -80,6 +80,7 @@ test("R80 C47 control: a finding that states its role and both grades keeps the 
 /* ---------- C46 (R75, R61): a concluded question, concluded by the real `conclude` and by a project's adoption, through the real review ---------- */
 import { world, V, readingLines, currentLines } from "../case-authoring/fixture.mjs";
 import { reviewOf } from "../../../src/review/index.mjs";
+import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { sha as shaOf } from "../review/fixture.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-what-does-the-federal-freedom", OWN = "INQ-2026-0002-o";
@@ -155,7 +156,8 @@ function prep() {
     /* the door's answer: the document, and beside it the statement to sign (publication door, THE STATEMENT TO SIGN) */
     casedocument: (req) => { const d = w.publication.caseDocument(req.query.case, Number(req.query.edition), V("alice"));
       return ok(d && d.ok ? { ...d, sign: { namespace: "bio-ratify", statement: `bio-ratify-case ${d.case_id} ${d.edition} ${d.doc_sha}\n` } } : d); },
-    publishedcase: () => ({ status: 200, json: { ok: true, result: { ok: false, reason: "NOT_PUBLISHED", code: "NOT_PUBLISHED" } } }),
+    /* public-read's own `publishedcase` over this world: the draft's case is not published, so its answer is NOT_PUBLISHED */
+    publishedcase: async (req) => ok(await publicReadOps(publicReadOf(w.host, { publication: w.publication }), new URL(`http://do/publishedcase?${new URLSearchParams(req.query)}`)).publishedcase()),
   };
   return { w, P, plane };
 }

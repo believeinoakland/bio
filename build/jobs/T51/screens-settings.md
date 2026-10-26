@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_017Won73ZFYbqQngJZmEciqa · depth 2 · COMPLETE · handled B54
+**Status** · session_01FQ6wmxANKXEVpL3HC6BqZR · depth 2 · COMPLETE · handled B55
 
 ## J1 · QUESTION
 
@@ -562,3 +562,17 @@ COMPLETE (re B53/B54). Branch `job/T51/screens-settings` is pushed (head 108d9a7
 - Still failing on the merged tree, not in my paths, not isolated: `control-plane/t48-door` (TypeError: cannot set `env` of null, 1 of 16); `journey-check/pseudo` (8 of 8, `playwright-core` not installed in `bio-plane/src/journey-check`, an environment install); the screens-settings R58/R69 above (the only ones in my module).
 
 Size (session_017Won73ZFYbqQngJZmEciqa): test runs ~290 (21 logged runs, the 247-file sweep, the 12-file re-run and the full-suite runs), module lines 5477 (src), 7821 (tests).
+
+## Fix round 10, op-table lines (re B55; K5220)
+
+Fixtures lines 14 to 2 (+3 accepted markers unchanged). Each decided from the provider's code:
+- (a) `common.test` 28, 29: `table` removed from the two key presses; the real door answers (green, 9/9). `group.test` factconfirm: real door (store-request/index.mjs:423-426); the `corrected` seed removed, the zone tests use the act.
+- (b) removed, never answered by the provider: `writinghelp` untested draft (wizard-scripts/index.mjs:1539 refuses always); `groupdescriptiondraft` untested draft (instance-setup setup.mjs:2489, no `groupDraftTurn` supplied by any product code); `securitytoolcatalogue` invented entries (file-scanner/src/providers/catalogue.mjs gives no entry whose words and flag disagree); `stats` without/with non-number `dbBytes` (record-core/index.mjs:1199 number or null); `factstatus` two profiles / office zone (`profilesset` refuses `test-port-ellery` PROFILE_IS_TEST; oakland-alameda.mjs:48 has no office zone); `updatestart` non-https address (setup.mjs:465, :2871 the address is a constant https URL). Member control of R45 now runs over the real one-profile world.
+- `updates.test` R68 failed bootstrap: the owner made silent by `DROP TABLE bootstrap` (as updates.test drops release_notices), replacing the scripted refusal.
+- (c) REPORT, lines left: `seed-common.mjs:119`, `translations.test.mjs:87` (`translationdraft` success). Provider translations: the answer is `translationDraftRecord` (translations/index.mjs:484) after the door's agent-worker step (store-door/dispatch.mjs:510-517); the world's door asks no draft and translations publishes no fixture.
+Suite: 272 tests, 269 pass, 3 red by name (R58, R69 control, R69 group: store-request recipe, plan item 101 (4)(e)). Checks: format 0, architecture 0, coverage 7069/7069, ownership 0 (8 files); fixtures 2; words 15 failures all in store-assembly (not mine). No fixtures-own/generic marker added.
+Size (session_01FQ6wmxANKXEVpL3HC6BqZR): test runs 8, module lines 5470
+
+## J41 · COMPLETE
+
+COMPLETE (re B55, K5220). Pushed. Fixtures lines 14 to 2. (a) common.test 28/29 and group factconfirm go through the real door. (b) removed, provider never answers: writinghelp/groupdescriptiondraft untested drafts, invented security catalogue entries, stats without dbBytes, factstatus two profiles/office zone, updatestart non-https (constant https, setup.mjs:465,2871). R68 failed bootstrap made by DROP TABLE bootstrap. (c) LINES LEFT, provider translations: seed-common.mjs:119 and translations.test.mjs:87 translationdraft success (translations/index.mjs:484 translationDraftRecord after the door's agent-worker step store-door/dispatch.mjs:510-517; no fixture published). Suite 272, 269 pass, 3 red by name R58, R69 control, R69 group (store-request recipe). format 0, architecture 0, coverage 7069/7069, ownership 0, words findings only in store-assembly. No fixtures-own/generic marker added. Size (session_01FQ6wmxANKXEVpL3HC6BqZR): test runs 8, module lines 5470

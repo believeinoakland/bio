@@ -35,3 +35,22 @@ export async function interfaceWordsAnswer({ language = "es" } = {}) {
   assert.equal(w.m.translationAdopt({ language, key: ordinary.key, text: "Algo", by: "ruth" }).state, "shown");
   return { default: def, other: await answer("sam") };
 }
+
+/** The real `translationdraft` answer (R16, R18), for a reachable assistant (the door's `assistant`: the group's account, `on`):
+ *  `to_language` asks for the words still missing in `es` by a member who holds the grant, and `to_english` asks an administrator
+ *  to read the one kept protected word back into English. The platform's model turn is not built: after the first refusals and
+ *  the gates the module answers `ASSISTANT_DRAFT_UNAVAILABLE` with the words the door would send, and writes nothing. Made over a
+ *  fresh world each call, never stored. */
+export async function translationDraftAnswer({ direction = "to_language" } = {}) {
+  const c = aiAccountsWorld();
+  await c.group("ruth", "sam");
+  const w = boot({ more: { membership: c.m, aiAccounts: c.a } });
+  w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
+  const assistant = { on: true, account: { kind: "apikey", level: "group" } };
+  if (direction === "to_english") {
+    const protectedWord = interfaceWords().find((x) => x.protected && !/\{/.test(x.en));
+    w.m.translationAdopt({ language: "es", key: protectedWord.key, text: "Escrito", by: "ruth" });
+    return w.m.translationDraft({ language: "es", direction, key: protectedWord.key, by: "admin", assistant });
+  }
+  return w.m.translationDraft({ language: "es", direction, by: "ruth", assistant });
+}
