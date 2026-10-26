@@ -17,7 +17,7 @@ Incident: my first diagnostic script printed the input values of the sign-in for
 | f2 Discard with reason | 1280 | member | OK: state "Discarded", "Discarded: "alpha B walk: testing discard"", `inboxresolve;dur=168`. shots/B/16-knock-discarded-member-1280.png |
 | f2 Put back with no reason, then with a reason, then pull | 1280 | member | OK: "Put back in the inbox as new. The discard and its reason stay on the record." Then pulled: "Moved into the record..." (the design's KNOCK_DISCARDED rule met: it had to be put back first). See F-B4 |
 | f3 What is known of the source grows (`/app/about-knocker/<fingerprint>`) | 1280 | member | OK with notes: an attribute entry (occupation, "The source said it themselves", "One member", stored for listed members) recorded, `sourcedisclose;dur=181`; the page lists "Occupation / Told by the source themselves · One member". The "Record only that the team knows it, without storing it" choice and the hostile-claim fields are present. See F-B5, F-B6 |
-| f3 | 390 | member | not yet walked (see end) |
+| f3 | 390 | member | OK (read only): source page drawn, no horizontal scroll, levels strip wraps to two rows. shots/B/80-source-MEMBER-390.png. I did not record a second disclosure at 390 |
 
 Findings so far:
 
@@ -28,3 +28,79 @@ Findings so far:
 - F-B5 MINOR (inbox, "A source" panel): the "Record what is known of the source" control beside a source is a link to another source: its choice list names a source only as "less than 1 KB handed in on October 26, 2026", so two sources look alike and I linked two different knockers by accident (the entry now reads "A link to another source / Told by someone else · known to the team"). The label of the evidence box does not say it is a link.
 - F-B6 MINOR (source page): a recorded entry shows only its kind and who told, not what was recorded; the page does not say how a member reads the stored value ("each time one reads it, the read is logged").
 - F-B7 MINOR (doorbell heading): the team name is drawn twice escaped in the heading ("Hand material to &lt;b&gt;x&lt;/b&gt;") while the line above shows it once ("<b>x</b>"): another walker set the team name to markup. No script ran.
+
+## Find (member, 1280 and 390)
+
+Corpus at the time: 107 to 109 documents searched, passages read from 77 of them (older walks' large spreadsheets and PDFs among them), 180 items in the list.
+
+| step | width | role | result |
+| --- | --- | --- | --- |
+| Open Find | 1280 / 390 | member | OK: "Search everything your team holds, then hold a set together to act on it." Drawn about 0.3 s to first content, 1.4 to 2.1 s network idle (proxy included). No horizontal scroll at 390 |
+| Show: Documents / Questions / People and organizations; Only: New since you last looked / Watched by you / Flagged for a second look; Show as: One table | both | member | OK: each answers by itself in 2.5 s wall (my fixed wait; `browse;dur` 128 to 170 ms): 96 items documents, 6 questions, "People and organizations: Nothing here", "Watched by you: Nothing here". No horizontal scroll |
+| A search with rare words (`alpha-B-1-p1-l1`, `alpha-B-1-p4-l15`, `alpha-B-6-u3-kbody`, `alpha-B-6-u3 ordinance`) | 1280 | member | OK: "1 passage in 1 document matches", the passage with its source; 1.4 to 1.6 s wall; `search;dur` 138 to 315. Marks of the pdf, xlsx, docx and csv uploads were all found; the picture and the scanned pdf were found after their reading finished (about 10 minutes, "Read 24 of 24 words", "Read 43 of 43 words") |
+| A search with a common word (`budget`, `council`, `ordinance`, `ledger`, `café`, `alpha`) | 1280 | member | FAIL: see F-B8 (BLOCKER) |
+| `ordinance OR zzzqqq`, `"alpha-B-1-p1-l1 council"` | 1280 | member | FAIL: see F-B9 (MAJOR) |
+| An AND that finds nothing (`alpha-B-6-u3-kbody zzzqqq`) | 1280 | member | see F-B10 (MAJOR): "Nothing your team holds matches ..." with "See where nobody looked", no wider reading offered |
+| The words of a query joined with NOT (`council NOT zzzqqq alpha-B-1-p1-l1`) | 1280 | member | "No document holds all of the words ... together." then "When some documents hold only some of the words / Documents holding at least one of the words: 109." See F-B10 |
+| What this search covered | 1280 | member | words: see F-B11. Count lines are plain: "Passages were read from 77 of the 107 documents searched. The other 30 have not been read passage by passage yet, so their words were not searched." |
+
+## Add and the Document page
+
+| step | width | role | result |
+| --- | --- | --- | --- |
+| Add > A file or photo: a PDF (6.8 kB, the knock's file again) | 1280 | member | OK: "Your team's record already held exactly this file. Nothing new was written; your account of it is kept as a second sighting." `captureupload;dur=949`, 2.2 s wall |
+| a picture (PNG 7.7 kB) | 1280 | member | OK: "Captured: png-....png. It waits in Held captures until you or another member vouches for it." then "Kept. The reading follows: its words can be found and cited once it has been read." `captureupload;dur=886`, `promote;dur=279`, 2.1 s wall |
+| a spreadsheet (XLSX, 10.8 kB, 200 rows x 5) | 1280 | member | OK (captureupload;dur=1333, 2.1 s); the document page says "Read 1005 of 1005 words" |
+| an office file (DOCX 10 units) | 1280 | member | OK: "Its text: Read 20 of 20 words" at once; `captureupload;dur=1139`, `promote;dur=182` |
+| a scanned PDF (2 pages, 10.8 kB) | 1280 | member | OK: "Until a copy is read, its words can't be found or cited. Check again soon; if it stays unread, ask a team administrator." later "Read 43 of 43 words" |
+| a CSV (22 kB) | 390 | member | OK (`captureupload;dur=1189`) |
+| a PowerPoint (PPTX) | 390 | member | OK: "Its text: Read 10 of 10 words"; `captureupload;dur=1177`, `promote;dur=805`, 3.1 s wall |
+| Add with the "How you got it" radio, "Where and when" required | both | member | OK: fields, the safe-view warning and "It waits in Held captures until you or another member vouches for it" are on the screen |
+| Add > From an address: https://example.com/ | 1280 | member | "The record already holds this document, under another record. A document has one home in the record — the first record that registered it — and registering it again here would move it away from there. Nothing was written. Cite the record that holds it, ..." (found by another walker). See F-B12 |
+| From an address: a text page (rfc-editor.org, rfc2606.txt), a PDF (irs.gov f8822.pdf, 390), a page as a visitor saw it (iana.org, "The page as a visitor saw it") | 1280 / 390 | member | OK: "Captured: A page from www.rfc-editor.org, captured October 26, 2026." 2.6 s wall (`acquire;dur=1185`); "Captured: Form 8822 (Rev. February 2021)." 2.6 s; visitor render "Captured: Example Domains." 6.2 s wall (`acquire;dur=4822`, inside the 15 s bar). Buttons "Watch this address" and "Check it now" appear. The page for a PDF address at w3.org answered "The site refused to give the page to your team's Civicsmith. Try again later, or save the page yourself and add it as a file." (`acquire` 502; the site's refusal, a clear message with a next step) |
+| Add > What I saw or heard, empty | both | member | OK: "Before it is recorded, say: In your own words, Where, When." |
+| the same with a time later than now | both | member | OK: "Give the day and time you saw or heard it, no later than now." |
+| the same with a good account | both | member | OK: "Recorded as your testimony: I saw the pothole on Telegraph near 40th St. still unfilled on the morning of O.... It waits in Held captures like any capture." `testify;dur=239-266`, 1.6 s wall |
+| Held captures | 1280 / 390 | member | OK: lists my uploads with "Awaiting review · Received, not fetched: it earns no capture grade of its own." Address captures show grade "B". See F-B13 |
+| Document page (docx, png, pdf scan, xlsx) | 1280 / 390 | member | OK: file name, "Held until you vouch for it", reading count, fingerprint, the words with "Cite this" per passage, questions to cite in, record of the copy. First content 2.3 to 2.6 s wall at 1280 (proxy included; the bar is 2 s), no horizontal scroll at 390 |
+| Vouch for this copy: empty, then with "What you checked" and "What the team does about what remains" | 1280 | member | OK: "Say what you checked, and what the team does about what remains." then "Vouched for by walker, October 26, 2026. Your team can use this copy." `release;dur=300`, 4.0 s wall with the redraw |
+| Opening a file (the safe view), docx | 1280 | member | FAIL: F-B14 (MAJOR) |
+| the safe view of a spreadsheet and a csv | 1280 | member | OK: `safeview;dur=491` returns the sheet's cells as data; 2.6 s wall (not looked at as pixels: the page draws a table I did not open at 390) |
+| the safe view of a picture | 1280 | member | F-B15 (MAJOR) |
+| the safe view of a scanned PDF | 1280 | member | UNVERIFIED: the call answered `application/pdf` in 0.6 s and the page says "The safe view is open below: each page as a picture, so nothing in it can run." but in headless Chromium no picture, canvas, embed or frame appeared in the page in 30 s (a headless browser may lack a PDF viewer; I record it as unverified, not as a defect) |
+| Opening a file at 390 | 390 | member | page read, no horizontal scroll |
+| Admin role | 1280 | administrator | pages read: inbox, a knock, the source page, held, add (three forms), find, document, opening a file, doorbell: all drawn, no horizontal scroll. The administrator did not act on any capture (the member's acts above are the same for an administrator) |
+
+More findings:
+
+- F-B8 BLOCKER (Find, "What the documents say"): a search by a word that many passages hold (`budget`, `council`, `ordinance`, `ledger`, `café`, `alpha`) returns nothing but "This could not be read. Try again in a moment." The call `op=meaningrows&q=passage:<word>&rows=passage&limit=200` answers 502 `STORE_DID_NOT_ANSWER` (check C-69.2), `meaningrows;dur` 250 to 1185 ms, every time, three tries each on `ordinance`; a rare word (one to 20 passages) answers 200. A member cannot find a document by a common word. Seen the same way at the first and the later tries over 40 minutes; may be size-driven (77 documents read, the older walks' large spreadsheets among them). shots/B/54-find-ordinance-error.png.
+- F-B9 MAJOR (Find): `ordinance OR zzzqqq` and `"alpha-B-1-p1-l1 council"` (a quoted phrase that is in a held PDF passage) show "Nothing your team holds matches “...”. Search finds only what has been captured." The screen sends no passage question for a query with `OR` or a quoted phrase, so what documents say is not searched, and the answer is a false "nothing" (the design, query-language R1: `OR` and `"a b"` are part of the language; the single word of the same query does find the passage). shots/B/53-find-q3.png.
+- F-B10 MAJOR (Find, wider reading): an AND that finds nothing (`alpha-B-6-u3-kbody zzzqqq`, `ordinance zzzqqq`) says only "Nothing your team holds matches ... Try fewer or other words", with no wider reading. Only when the query held `NOT` did a wider reading appear, as a count "Documents holding at least one of the words: 109." with no list or button to open those documents (and 109 is about all documents searched, so it does not narrow anything). Design UC-001: "widening when an AND finds nothing". shots/B/55-find-widen-offer-1280.png.
+- F-B11 MAJOR (Find, "What this search covered"): a member would not understand: "Undetermined, because whether any finding RESTS ON these rows is the meaning level. `content:cited` and `content:uncited` answer it over this same set, and the `cited` column on each row says it per row" (code in backticks, "the meaning level", "rows").
+- F-B12 MINOR (Add from an address, already held): "A document has one home in the record — the first record that registered it — and registering it again here would move it away from there. Nothing was written. Cite the record that holds it" names no link to that record, and "registered", "home", "corroboration" are the system's words. The result for the member: nothing to open.
+- F-B13 MINOR (Held captures): a pulled knock appears as "Material handed in at the doorbell on 26 October 2026" (its file name is lost, the inbox had it) with a word "Refused" beside it that is the bulk-vouch refusal ("Open it to vouch for it by itself"), which reads as if the knock was refused. Address captures read "A page from www.rfc-editor.org, captured October 26, 2026" for a text page.
+- F-B14 MAJOR (Opening a file, safe view of a Word file): after "Show the safe view on this page" the screen says "The safe view of this file could not be made. The reason is stated beside it. The original is unchanged." and no reason is beside it. The call answered `SAFE_VIEW_FAILED`, renderer `NOT_RENDERABLE`, "The renderer refused the file." (the file is the generator's docx, read as 20 of 20 words and vouched). shots/B/63-safeview-docx.png. The member cannot read the file in the app and the page says nothing to do next but "ask for a deeper check".
+- F-B15 MAJOR (Opening a file, a picture): the page says "Read it in the safe view below" and the heading "each page as a picture", then, after the button, "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view." A member cannot look at their own photo in the app (only on the device after warnings). shots/B/63-safeview-png.png.
+- F-B16 MINOR (time): the Document page's first content takes 2.3 to 2.6 s wall (proxy included, about 28 calls, each `dur` 130 to 470 ms), over the 2 s bar; Home 1.0 to 1.4 s first content, 2.4 to 3.3 s to network idle.
+- F-B17 MINOR (Add files): the file form has no project field, so every capture is "No project yet" and neither the capture screen nor the Document page says how to put it into a project (except citing it in a question).
+- F-B18 MINOR (Add from an address, result line): the title of a web capture is "A page from www.rfc-editor.org, captured October 26, 2026" until read.
+- Not walked: (e) delegating looking to the assistant (not mine); a spreadsheet of more than a few hundred rows (done at length by the re-walk 9); the knock secret-phrase answer form ("If the team asked to publish something about you") beyond reading it; held-capture bulk vouching.
+
+Leftovers I made: project "Walk alpha B" (PROJ-2026-1626-walk-alpha-b, findable), two knocks (one discarded then put back, both pulled into the record), a link between two knocker sources and one disclosure on the source of the pdf knock (F-B5), uploads (png, xlsx, docx, scanned pdf, csv, pptx; the pdf was already held) and three address captures, two testimony records, one vouched copy (docx).
+
+## Findings, sorted
+
+BLOCKER
+- F-B8 Find: a common word gives "This could not be read. Try again in a moment." (502 STORE_DID_NOT_ANSWER on the passage search every time).
+
+MAJOR
+- F-B9 Find: `OR` and a quoted phrase answer a false "Nothing your team holds matches".
+- F-B10 Find: an AND finding nothing offers no wider reading; the one that appears (with NOT) is a count with nothing to open.
+- F-B11 Find: "What this search covered" shows code ("`content:cited` ... the meaning level").
+- F-B14 Opening a file: the safe view of a Word file fails with "The reason is stated beside it" and no reason.
+- F-B15 Opening a file: a picture has no safe view although the page says "Read it in the safe view below".
+
+MINOR
+- F-B1 to F-B7, F-B12, F-B13, F-B16, F-B17, F-B18 above.
+
+Journeys completed of journeys walked: 1 of 1 (f, from a knock to the record: acts at 1280, pages read at 390; its step 3 has no member surface beyond the source page), with Find, Add (address, PDF, picture, spreadsheet, office file, observation), held captures, Inbox, the Document page and its safe view walked as screens; F-B8 stops finding a document by a common word.
