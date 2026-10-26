@@ -3,6 +3,7 @@
    here instead of building the answer by hand. Every answer is the op's own answer, as the door sends it (reviewOps). */
 import { standard, P, V, SECRET } from "./fixture.mjs";
 import { reviewOps } from "../../../src/review/index.mjs";
+import { preflightAnswer } from "../case-authoring/fixtures.mjs";
 
 const INQ = "INQ-2026-0001-c";
 const QUESTION = "The Act requires a reply in 20 days.";
@@ -38,11 +39,13 @@ export function casedraft() {
 }
 
 /* The reviewcopy answer: that draft's copy, read as a member with standing, with the publish gates refused:
-   case-authoring's dry run answers a refusal, so the copy carries `gates: "refused"` and what refused it. */
+   case-authoring's dry run answers the refusal its published preflight gives (a project below strength), so the copy carries
+   `gates: "refused"` and what refused it. */
 export function reviewcopy() {
   const w = concludedWorld();
   const d = draftOf(w);
-  w.ca.gate = () => ({ ok: false, reason: "NOT_CONCLUDED", target: INQ });
+  const { first: refused } = preflightAnswer().blocked;
+  w.ca.gate = () => refused;
   return ops(w, { ...asMember, draft: d.draftId }).reviewcopy();
 }
 

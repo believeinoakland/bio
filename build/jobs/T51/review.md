@@ -446,3 +446,27 @@ COMPLETE for fix round 10 (B22, K5207; K5175: every bug found is fixed this roun
 Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 7, module lines 4932
 
 **Ring (J18):** the COMPLETE entry is posted (J18) and the state is COMPLETE. The ring to BOB's session (`session_01AnYAfLkcBeNLm6b2t6AWgR`) was refused three times by the scheduler with `run_once_at must be in the future`, for 22:58, 23:00 and 23:10 UTC (the container clock read 22:5x UTC). The posted entry is the message; BOB's backstop reads it (mechanics §13).
+
+## Completion record (CHANGE B23, K5209: merge of tranche T51 at OP-GRADES #30)
+
+COMPLETE for B23 · review. Branch job/T51/review. `origin/tranche/T51` merged in (`f680e3b511`), never rebased; the DECLARED_OP_DISAGREES block is gone.
+
+**Entries applied**
+- `fixtures.mjs` `reviewcopy()` (line 47): the gate's refusal is now the `first` refusal of case-authoring's published `preflightAnswer().blocked` (`bio-plane/test/m/case-authoring/fixtures.mjs`), not a literal of this module's own. The earlier literal was flagged by `checks/fixtures.mjs` as a hand-built answer of another module (answer, class refusal, provider case-authoring); the published one is the provider's real answer.
+- The other three exports and the four tests are unchanged.
+
+**Failing-first:** an earlier attempt that used `preflightAnswer().blocked` whole gave `gates: "passed"` (its `ok` is true, `ready` false), so the reviewcopy test went red; the refusal is taken from `first`. Break-once check repeated on the final gate: gate set to `{ ok: true }`, the answers test went red (1 fail); restored; 4 of 4 green.
+
+**Tests and checks** (from /home/user/bio, merged tree)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/review/*.test.mjs`: tests 106, pass 106, fail 0.
+- `checks/fixtures.mjs /home/user/bio review --list`: 0 failures (3517 test files, 178 modules; answer 0, stub 0, code 0, contract 0).
+- `checks/ownership.mjs /home/user/bio review origin/tranche/T51 HEAD`: 0 failures (3 files changed by review: the two fixtures files and this record).
+- `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 45 of 45 live ids named, 0 failures. `checks/format.mjs`: 0 failures.
+
+**Markers:** none added.
+
+**Found outside my paths:** none new. The earlier op-table findings in screens-inquiry and screens-publish (see the fix-round-10 record) stand for their owners.
+
+**Deferred:** nothing.
+
+Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 12, module lines 4935
