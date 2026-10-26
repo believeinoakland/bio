@@ -88,8 +88,8 @@ test("R30: Needs you lists the member's queue items of Action's kinds, each with
   const held = (await me.read("remindersfor", { query: { action } })).reminders;
   assert.deepEqual(held.map((r) => [r.entry, r.on, r.state]), [[0, "2026-10-01", "answered"], [0, "2026-11-01", "waiting"]], "the store holds the answer and the further day");
   // `taskresolve` (queue's): no item of Action's kinds offers it in the real queue (action-producers' doors for them name none), so the "Start the next step"
-  // act is drawn here over a task item the plane scripts, unchanged
-  const task = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: ok(ONE), queue: ok({ items: [QITEMS.items[0], QITEMS.items[2]] }), taskresolve: ok({ ok: true }) });
+  // act is drawn here over a task item the plane scripts, unchanged; its answer is not scripted (tasks publishes none), so the test reads the request alone
+  const task = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: ok(ONE), queue: ok({ items: [QITEMS.items[0], QITEMS.items[2]] }) });
   assert.ok(section(task, "home.needsyou.title").textContent.includes("The City Clerk's reply to the records request was due"));
   assert.ok(!section(task, "home.needsyou.title").textContent.includes("Not Action's"));
   await press(task, "taskresolve", { reason: "x" });

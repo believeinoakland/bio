@@ -1367,3 +1367,6 @@ session_01FqdzvhmfeKdDQQEZxW6vKL,job,op-grades,8381809,111253,1127,31415,,11,368
 session_0141YvoVpS4Rz4SNMfkcYzHh,job,interface-shell,58400284,289318,6066,128456,,45,11828
 session_01WxduRcHCPEywTgh4uSiVDq,job,screens-investigate,11980051,132685,1170,30710,,9,3585
 session_013hM79EaBNz2N4rzna8XuQt,job,provenance,2527952,64521,48,10704,,8,3318
+session_01RutxGFBqkM2oEVQc7Depo3,job,store-request,109876889,1167107,4560,256160,,,
+session_01DimduLub16HP55LgN9zZ6R,job,screens-publish,6662385,99986,102,29777,,4,3760
+session_019xK27ZcDWwZa116GviHjg1,job,screens-action,4872495,86170,80,27359,,5,5121
