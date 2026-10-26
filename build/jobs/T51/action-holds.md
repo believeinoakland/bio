@@ -178,3 +178,14 @@ Suites and checks: action-holds suite 54 pass, 0 fail (exited by itself). fixtur
 Not mine, for BOB: screens-publish `t51.test.mjs:76` hand-builds the holdsdue answer (op-table finding); it is the consumer to take `holdsDueDocketAnswer()` in its own job. store-assembly `wiring.mjs:78` and `wizards.mjs:51` words findings, present since B5.
 
 Size (session_01T1F4v1RYnwRpGQBM5cYrRi): test runs 3, module lines 0.
+
+## J9 · QUESTION
+
+QUESTION (B8 job; my best reading, I build on it meanwhile).
+
+Finding, read against the code and the screen: the hold screen (screens-action hold.mjs:34-40, :137-143) places a hold with body {project, from:{docket_entry|pressure}} and sends that SAME body to actionholdrelease. Today (1) the release/preview arms read neither `from` nor `docket_entry`/`pressure` and DECLARED_OPS lists neither (index.mjs:1078-1079), so the guard refuses a body that carries `from`; releasing by bare {project} works in code but the screen never has it once the mark leaves holdsdue (R3 drops a placed mark, even released); (2) no read lists a place once held: holdsOf needs the place in hand, pressurefor lists marks/records but no docket marks.
+
+Proposed wording (new, all marked not yet met T51):
+- R5/R6 amend: "It takes the place as R2 does, and also the placing act's `from` (R2's four kinds), read against the place as R2 reads it (a `from` naming none the author can see at that place is `HOLD_FROM_REFUSED`, asked after the place's refusals); `from` only locates, a release ends the hold at the place whatever prompted it. `holdsOf` (R2) also takes `{pressure}` (a pressure record's name, its project the place), as R19 gave it `{docket_entry}`." DECLARED_OPS: actionholdrelease and actionholdpreview (new row) accept `from`.
+- R22 new: `holdsPlaced({after?, limit?, viewer})` (`op=holdsplaced`, a read): every place at which any hold has ever been stated that the viewer may see (an action she sees; a project she may name, R2), in (place id, position) order, each {place: {target, ord|null} | {project}, hold (latest statement: in_place|released), by, at, reason, from (the refs of the statements there: {mark}|{pressure}|{docket_entry}|{counsel_matter}), projects (covered now, those she may name)}, at most 500 per page with `cursor`/`truncated` as R3's; an invisible place is absent (R13). Test: place from a docket mark, it is in holdsplaced in_place and not in holdsdue; preview shows its restarts; release; it reads `released`; control: an invisible action's place is in no page.
+Tests failing first through the real acts; published fixtures of each answer (holdsplaced, preview, release) for screens-action. Cross-module: op-declarations needs a spec for holdsplaced (and holdsdue still has none for its row beyond sessionread).
