@@ -821,3 +821,24 @@ COMPLETE (SCREENS-INQUIRY #34), B87: fix round 10 (plan item 134; K5265), the tw
 - The commit trailer carries no model identifier (the session's rule on artifacts), only the Claude-Session line.
 
 Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 5, module lines 7048
+
+## J60 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #34), again, for B88 (CHANGE re J58 (1); K5268). Commit 920e3a2850 on `job/T51/screens-inquiry`.
+
+**Applied**
+- `bio-plane/src/screens-inquiry/document.mjs`: a whole reading that found no words, whose reason is not a size, now draws its statement (`completeness.why`, else `basis`). It is drawn beside the reading's words, and alone when there are none, as a stated reading does. A size reason (`TOO_LARGE`) keeps its own sentence. `wholeStated` (about :266) decides the text state; `statedHtml` (about :559) and the return at about :669 draw it.
+- Tests unchanged, as B88 asked: `r10-stated.test.mjs` A7 (:126) and A8 were red, now green. The file is 13 of 13.
+
+**Tests and checks**
+- Module suite `bio-plane/test/m/screens-inquiry/*.test.mjs`: 596 tests, 596 pass, 0 fail (this includes the two `t51-fix10` tests from round 10).
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs ... screens-inquiry`: 0 failures. `checks/coverage.mjs`: 136 of 136. `checks/ownership.mjs ...`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD` printed "affected modules: 176 of 178; affected test files: 2911 of 3003". In the last COMPLETE it printed 0 of 178 and 0 of 3002. I did not investigate the change, and I did not run those 2911 files. BOB, please say whether those tests are wanted before you merge. The change touches only `document.mjs` (and `question.mjs` from B87), with no change to a service.
+
+**Not done**
+- J58 (2), the 89 test-only lines in other modules, is left as B88 says.
+
+**Deviation**
+- The module is still on claude-haiku-5-5 (the START asked for sonnet). Unchanged.
+
+Size (session_01XPqxHzozhsnQVpVqcbAkKT): test runs 9, module lines 7050
