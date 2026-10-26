@@ -987,3 +987,32 @@ REPORT (SCREENS-INQUIRY #36, R139; B93/B94). Two of R139's acts cannot be drawn 
 2. The label key for the leg-grade act is `screen.question.leggrade.act` (DEC-439), not `act.leggrade.label.question`; I use it as the label. `act.resolve.label.document` is held as given.
 
 Everything else in R139 (the question's set-aside sentence, the other-side choice beside Reinstate, "A published case carries this question.", "Checked by {name}, {date}", the flag recorded/already sentences, the flags list, the member-lead sentence, the doctype labels by reader id) proceeds now; the other-side choice sends `role` through `reinstate` (citation R23).
+
+## J69 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #36), B93 and B94: R139 (fix round 10, plan item 147; K5303). Red first, then green. Branch `job/T51/screens-inquiry`, merged with `origin/tranche/T51` (a merge commit, no rebase) before and at the end; code and tests at 31797baa51, merged at 592e47c144.
+
+**Applied (each at the walker's case, through the world's real acts and reads; `t51-fix14-r139.test.mjs`)**
+- Document (`document.mjs`): the `contradictionflag` answer is `screen.document.flag.recorded` (`wrote`) or `.already` (`already`), in place of the owner's `says` (done at about :1925); the flags raised on the document are listed from `contradictioncandidates` by `bundle` (head `screen.document.flags.head`, each row `screen.document.flags.pair` linking to its contradiction, `screen.contradiction.flagged.by` beneath, drawn only when a flag exists, a failed read drawn failed; before "Connections you assert"); a typed page a second member confirmed draws `screen.document.attest.checked` ({name}, {date}) for each counted attestation (about :751). The list is read again after the act.
+- Contradiction (`contradiction.mjs`): `screen.contradiction.lead.member` for a lead a member flagged (never the assistant's guess); each side's kind is `screen.contradiction.doctype.<id>` by the reader id (the 17 ids in `DOCTYPES`), an id with no row drawing nothing and a fact with no side drawn no row. Replaces B92's `doctypes.<id>.label` rule.
+- Question (`question.mjs`): `screen.question.yes.setaside` ({n}) beneath the passage whose "Yes, because of" named a passage answered "No", and again with the read-back, drawn from what the last save set aside (page memory: it is gone on a reload, since the record does not keep that the member said Yes); "Put it on the other side" (`screen.question.reinstate.otherside` and `.help`) beside Reinstate on a severed leg, sending `role` through `reinstate` (citation R23); `screen.question.carried` beneath the head when `publishedfrozen` names a case (or `backlinks` a published one): the world's `backlinks` never lists a published case, `publishedfrozen` does, so the page now reads it first and R72 shares that read.
+- The leg-grade fold (`screen.question.leggrade.head`, `.help` {ceiling}, `.act`; `question.mjs` `gradeFold` and `legGradeActs`) and "Find the people and offices it names" (`act.resolve.label.document`, `screen.document.people.none`; `document.mjs` `resolveActs`) are built against the real `leggrade` and `resolve`, and carried only where interface-shell admits the act (`admit.mjs`: the registry row or a `RE_POINTS` entry; BOB's B95, option (b), INTERFACE-SHELL #26). The fold offers the letters up to the ceiling `earnedbasis` answers for the document and sends `{project: the question, target, grade, reason, content_id and extent_* of the leg}`; `resolve` is sent over the copy's `captureSha`, and its none-found sentence is the outcome when the answer's `resolved` is empty.
+
+**Deferred, with why**
+- The two through-the-page tests for `leggrade` and `resolve` (BOB's B95: add them when INTERFACE-SHELL #26 merges and a CHANGE says so). I wrote and ran them over the real world with the two re-points added to `RE_POINTS` in my working tree only, never committed: both green, and red without the admission (the fold absent, the act absent). They are held out of the tree until the CHANGE, so the suite is green.
+
+**Changed tests**
+- `t51-fix13-b92.test.mjs`: the R138 test's two sentence expectations are now the R139 sentences (the owner's `says` is no longer drawn), and the C-M13 MINOR test now expects the held kind (`screen.contradiction.doctype.generic`) and never the id; both encoded the contract R139 replaces. BOB, please confirm.
+
+**REPORT**
+1. Registry rows for `leggrade` on `question` and `resolve` on `document` are asked of UX-DESIGN (B95); this module carries each as soon as the registry or `RE_POINTS` admits it, so no change is needed here when the registry rows arrive.
+2. `resolve` is declared `weight: reasoned` with fields `captureSha`, `ref`, `items` (no `reason`), so the shell's reason dialog adds a `reason` field the owner does not accept; it was accepted by the world, but the declaration and the act disagree (entities / op-grades, not this module).
+3. `act.resolve.label.document` and `screen.question.leggrade.act` are held; `act.leggrade.does` and `act.resolve.does` are AFFORDANCES R71's.
+
+**Tests and checks** (after the merge)
+- Module suite `bio-plane/test/m/screens-inquiry/*.test.mjs`: 612 tests, 612 pass, 0 fail (604 before, plus 8 new in `t51-fix14-r139.test.mjs`).
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs ... screens-inquiry`: 0 failures. `checks/coverage.mjs`: 138 of 138 live ids named by a test. `checks/words.mjs`: 0 failures. `checks/fixtures.mjs ... --list`: 0 failures in the module (4 accepted, as before).
+- `checks/run.mjs /home/user/bio`: 89 failures, none in screens-inquiry (the same 89 as before, other modules').
+- Ownership: 7 files changed by screens-inquiry, 0 failures.
+
+Size (session_01FwE5HXVu6NMPbKbXcKSGLp): test runs 31, module lines 7236
