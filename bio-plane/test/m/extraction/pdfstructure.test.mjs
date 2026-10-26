@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, pageUnits } from "./fixture.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { needsTier3 } from "../../../src/reading-pipeline/index.mjs";
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";

@@ -68,7 +68,7 @@ The investigation's working screens: a project's home, one question with what su
 #### T49 (T49-25)
 
 **The question page (N1089, DEC-235)**
-- **R23** *(not yet met: T51)* (T49; N1089; DEC-235 (1), (3); DEC-32 clauses 2, 4, 5; `inquiry` R27, R28; amends R2) On `question`, each passage cited in Supports carries, beneath it, what the member answered for it. It reads `question.falls` ("If this turned out to be wrong: your answer falls"), or `question.holds`, with `{others}` filled by the passages named as holding it up. These answers are read from the inquiry's partition (its grounds). While the question cites at least one passage and its document carries no partition, the page draws **state b**:
+- **R23** (T49; N1089; DEC-235 (1), (3); DEC-32 clauses 2, 4, 5; `inquiry` R27, R28; amends R2) On `question`, each passage cited in Supports carries, beneath it, what the member answered for it. It reads `question.falls` ("If this turned out to be wrong: your answer falls"), or `question.holds`, with `{others}` filled by the passages named as holding it up. These answers are read from the inquiry's partition (its grounds). While the question cites at least one passage and its document carries no partition, the page draws **state b**:
   - `question.ask.first.title` and `question.ask.first.says`. No strength mark and no strength sentence are drawn in state b (clause 5).
   - "What each passage carries" (`question.ask.title`, explained by `question.ask.help`), with one `question.ask` choice per cited passage (`question.ask.no` / `question.ask.yes`, a radio group, none preselected).
   - For "yes", `question.ask.which`: the member ticks among the other cited passages.

@@ -277,7 +277,7 @@ async function restartOver(w) {
 }
 
 test("R82 R37 (G172): the ledger's first `reading` pass over a scan whose page the OCR member refuses from its header ends final and owes nothing; a member answering transiently still owes", async () => {
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const registerJob = async () => ({ ok: true }), armJobs = async () => {};
   const refuses = await held({ env: { OCR_WORKER: member(() => ({ ok: false, reason: "IMAGE_TOO_LARGE" })) } });
   const a = await withEntry(pdf(SCAN(1)), () => refuses.w.x.readHeld({ sha: refuses.d, env: refuses.w.env, kind: "reading", registerJob, armJobs }));

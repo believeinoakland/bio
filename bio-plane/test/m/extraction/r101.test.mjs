@@ -197,6 +197,6 @@ test("R101 (progress only forward): an OCR pass whose answered pages merge to no
   const empty = member((b) => ({ ...ocrAnswer(b.pages, { text: () => "   " }) }));
   const before = w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading;
   const a = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: empty } });
-  assert.deepEqual([a.read, a.owed, a.why], [false, undefined, "NO_PROGRESS"], JSON.stringify(a));
+  assert.deepEqual([a.read, a.owed, a.why, a.final], [false, undefined, "NO_PROGRESS", true], JSON.stringify(a));
   assert.equal(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading, before, "nothing written");
 });
