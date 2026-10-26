@@ -152,10 +152,12 @@ export function actionBasisFindings(fm, findings) {
         localize('action-grammar.grammar.basis_leg_i_is_not_a', 'basis leg {i} is not a complete entry: it must name a record, and say whether the action rests on it or advances a question', { i: String(i) }), REPAIRS));
       return;
     }
+    /* R30: the label the two checkers word their findings around is a plain name of the entry, never its field path. */
+    const label = localize('action-grammar.grammar.basis_leg_label', 'basis leg {i}', { i: String(i) });
     /* MK-4 / C-54.1: an action resting on a LEAD rests on nothing found. */
-    if (leadLegFindings(`basis leg ${i}`, l, findings)) return;
+    if (leadLegFindings(label, l, findings)) return;
     /* D-162 / C-81.1: an action resting on a THEME rests on a member's lens, not on anything found. */
-    if (themeLegFindings(`basis leg ${i}`, l, findings)) return;
+    if (themeLegFindings(label, l, findings)) return;
     const target = typeof l.target === 'string' ? l.target : '';
     /* T45 (K2845, K2849 (5); `actions` R93): a `rests_on` leg may name a success record, `consequences`' own row, by its id;
        accepted here until record-grammar's id table registers the prefix (N911). Whether it is live and visible is

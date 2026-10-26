@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_011RyaZpwVopVEEDcMoEdk5n · depth 2 · COMPLETE · handled B19
+**Status** · session_01R4WZud7bMnBLMMBMgTAd8D · depth 2 · COMPLETE · handled B21
 
 ## J1 · REPORT
 
@@ -427,3 +427,23 @@ COMPLETE · B19 START (fix round 10; plan item 134; K5265): A-06 and A-03 fixed.
 **REPORT to BOB (another module): the detail of `signer-self-registered` still tells the reader to "mark it done".** The word list's row `queue.signer-self-registered.detail` (setup-words `rows.mjs:6304`, design source `words.json`) reads "…If you did not expect it, open Members and withdraw the key; if you did, mark it done." No such act exists on this item (the only options are the revoke, and the queue draws a link to Members). I kept the key: R43's test requires the item to answer a list key, and the screen draws by key, so a sentence written here would never be read. The design stream should replace the row with: "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and revoke the key. Otherwise leave it: this item goes when the key is revoked." Until then the item says "mark it done" and still cannot be cleared except by revoking (A-03's open question in causes-A.md: an "I know about this key" answer, which is Bob's to decide). Also for `queue`/`screens-daily`: the item's `signerset` option is not drawn on the queue (causes-A.md A-03 (2)), which is `screens-daily/queue.mjs:199`, not mine.
 
 Size (session_011RyaZpwVopVEEDcMoEdk5n): test runs 9, module lines 3706
+
+## J-B20 · R55 (START B20, QUEUE-PRODUCERS #31)
+
+**Applied now:** `bio-plane/src/queue-producers/index.mjs` `#obligationsSignerSelfRegistered`: a key whose row carries `known_by` (credentials R83) mints no `signer-self-registered` item (docstring updated). **Not yet testable:** credentials R83 (`signerKnown`, `known_by`) has not merged (CREDENTIALS #33 running), so `action.test.mjs` holds `test.todo("R55: …")` at the end, naming R55; the red-then-green test against the real code waits for BOB's CHANGE. Module tests: 163 run, 162 pass, 0 fail, 1 todo. `checks/run.mjs`: no finding in my files; ownership 0.
+
+Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 3, module lines 0
+
+## J24 · REPORT
+
+R55 applied in the producer (a row with known_by mints no signer-self-registered item; index.mjs #obligationsSignerSelfRegistered). Its test is test.todo naming R55 in action.test.mjs: credentials R83 (signerKnown, known_by) is not on the tranche yet, so no red-then-green is possible. Module tests 162 pass, 0 fail, 1 todo; run.mjs and ownership clean. Waiting on your CHANGE when CREDENTIALS #33 merges; then I write the test against its real code and post COMPLETE.
+
+## J-B21 · R55 against credentials R83's real code
+
+`action.test.mjs` R55 test (replaces the `test.todo`): two self-registered keys minted for ada, cy and `class:admin`; `w.credentials.signerKnown` (real) by ada on one; the next reads hold only the other, for all three. Red with the `known_by` filter removed (the item stayed), green with it. Module tests 163 run, 163 pass, 0 fail. `checks/run.mjs`: no finding in my files; ownership 0. No markers added. Key ids are `AAAA…`-shaped, as credentials' `signerKnown` requires.
+
+Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 6, module lines 0
+
+## J25 · COMPLETE
+
+R55 met. index.mjs #obligationsSignerSelfRegistered (~l.2078): a key whose row carries known_by mints no item. action.test.mjs R55 test, through credentials' real signerKnown: red with the filter removed, green with it; a second key still mints one for ada, cy and the admin credential. Module tests 163/163, 0 fail; run.mjs no finding in my files; ownership 0; no markers added. Size (session_01R4WZud7bMnBLMMBMgTAd8D): test runs 6, module lines 0

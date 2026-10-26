@@ -20,6 +20,9 @@ import { BASIS_VERSION_GRAMMAR_CHECKS, VERSION_KIND_CHECKS, VERSION_STATES, VERS
          VERSION_RELATIONSHIPS, VERSION_NAME_RE, SUGGEST_KINDS, SUFFICIENCY_UNCLAIMED, isSufficiencyUnclaimed } from "./checks.mjs";
 import { word, localize } from '../setup-words/index.mjs';
 
+/* R13: the one way this module names a version leg in a sentence: its place, read by key (`leg_of_version`). */
+const legPlace = (n, name) => localize('basis-version-grammar.grammar.leg_of_version', "Leg {n} of version '{name}'", { n: String(n), name: String(name) });
+
 export { BASIS_VERSION_GRAMMAR_CHECKS, VERSION_KIND_CHECKS, VERSION_STATES, VERSION_MACHINE, VERSION_REASON_REQUIRED,
          versionNeedsReason, VERSION_RELATIONSHIPS, VERSION_NAME_RE, SUGGEST_KINDS, SUFFICIENCY_UNCLAIMED,
          SUFFICIENCY_CLAIM_STATES, sufficiencyClaimState, isSufficiencyUnclaimed } from "./checks.mjs";
@@ -136,7 +139,7 @@ export function basisVersionFindings(fm, findings) {
        version's legs with no version, which is the checkGrounds precedent for
        checking the attached arrays even when the anchor is absent. */
     for (let i = 0; i < legRows.length; i++)
-      push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_legs_i_names', 'basis_version_legs[{i}] names version \'{String}\' and there is no basis_versions[] block', { i: String(i), String: String(String(legRows[i]?.version).slice(0, 48)) }));
+      push('VERSION_ORPHAN_ROW', localize('basis-version-grammar.grammar.leg_no_basis_versions', "{place} has no basis_versions[] block to belong to", { place: legPlace(i + 1, String(legRows[i]?.version).slice(0, 48)) }));
     for (let i = 0; i < groundRows.length; i++)
       push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_grounds_i_names', 'basis_version_grounds[{i}] names version \'{String}\' and there is no basis_versions[] block', { i: String(i), String: String(String(groundRows[i]?.version).slice(0, 48)) }));
     return;
@@ -232,7 +235,7 @@ export function basisVersionFindings(fm, findings) {
     const l = legRows[i];
     const vn = l && typeof l.version === 'string' ? l.version.trim() : '';
     if (!byName.has(vn)) {
-      push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_legs_i_names_2', 'basis_version_legs[{i}] names version \'{String}\', which is not in basis_versions[]', { i: String(i), String: String(String(l?.version).slice(0, 60)) }));
+      push('VERSION_ORPHAN_ROW', localize('basis-version-grammar.grammar.leg_version_not_in_block', "{place} belongs to a version that is not in basis_versions[]", { place: legPlace(i + 1, String(l?.version).slice(0, 60)) }));
       continue;
     }
     if (!legsOf.has(vn)) legsOf.set(vn, []);
@@ -337,15 +340,16 @@ export function basisVersionFindings(fm, findings) {
     const labels = new Set();
 
     for (const [li, leg] of legs) {
+      const place = legPlace(li + 1, name);
       /* MK-4 / C-54.1: the same named refusal at the version's grain. */
-      if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
+      if (leadLegFindings(place, leg, findings)) continue;
       /* D-162 / C-81.1: the theme refusal at the version's grain. */
-      if (themeLegFindings(localize('basis-version-grammar.grammar.leg_of_version', "Leg {n} of version '{name}'", { n: String(li + 1), name: String(name) }), leg, findings)) continue;
+      if (themeLegFindings(place, leg, findings)) continue;
       const t = leg.target;
       /* R3 (N522; DEC-112 (6)): a leg on another group's finding (`inquiry-grammar` R11's reference) has its form
          judged there (C-21.3) in place of the id, grade and extent arms: it names a finding and one edition, carries
          no grade and no extent. Whether an acceptance is in force is the promotion check's (`./index.mjs`, R6). */
-      const lbl = `basis_version_legs[${li}] (version '${name}')`;
+      const lbl = place;
       const imported = importedLegFindings(lbl, leg, findings);
       /* R3 (K3873; N1215): a leg on a calculation, a duty occurrence or a derived connection is judged by the same arms
          as the question's own (`inquiry-grammar` R14, R15, R17), in place of the id, grade and extent arms: its grades are
@@ -356,28 +360,28 @@ export function basisVersionFindings(fm, findings) {
       if (imported || derived) {
         /* judged by R11's arm, its findings C-21.3; or by the derived arm just run */
       } else if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
-        push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version', 'basis_version_legs[{li}] (version \'{name}\').target \'{String}\' is not a canonical record id', { li: String(li), name: String(name), String: String(String(t).slice(0, 40)) }));
+        push('VERSION_LEG_NOT_CITABLE', localize('basis-version-grammar.grammar.leg_target_not_canonical', "{place} has a target '{String}' that is not a canonical record id", { place, String: String(String(t).slice(0, 40)) }));
       } else if (typeof fm?.id === 'string' && t === fm.id) {
-        push('VERSION_LEG_SELF', localize('basis-versions.grammar.basis_version_legs_li_version_2', 'basis_version_legs[{li}] (version \'{name}\') rests on {t}, which is this inquiry: a question is not evidence for its own answer, in any account of it', { li: String(li), name: String(name), t: String(t) }));
+        push('VERSION_LEG_SELF', localize('basis-version-grammar.grammar.leg_rests_on_this_inquiry', "{place} rests on {t}, which is this inquiry: a question is not evidence for its own answer, in any account of it", { place, t: String(t) }));
       } else {
         const tt = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
         /* R10 (K3873; N1251): a held standard is judged by `inquiry-grammar` R13's arm, never refused for its kind; the grade
            and extent arms then stay silent on a leg it refused (a second complaint about one broken field helps nobody) */
         if (tt === 'standard') standard = standardLegFindings(lbl, leg, findings);
         else if (tt !== 'information' && tt !== 'inquiry')
-          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_3', 'basis_version_legs[{li}] (version \'{name}\').target \'{t}\' is a {tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)', { li: String(li), name: String(name), t: String(t), tt: String(tt) }));
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-version-grammar.grammar.leg_target_kind', "{place} has a target '{t}' that is a {tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)", { place, t: String(t), tt: String(tt) }));
       }
       if (!BASIS_ROLES.includes(leg.role))
-        push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_4', 'basis_version_legs[{li}] (version \'{name}\').role \'{String}\' is not one of: {BASIS_ROLES}', { li: String(li), name: String(name), String: String(String(leg.role).slice(0, 40)), BASIS_ROLES: String(BASIS_ROLES.join(', ')) }));
+        push('VERSION_LEG_NOT_CITABLE', localize('basis-version-grammar.grammar.leg_role', "{place} has a role '{String}' that is not one of: {BASIS_ROLES}", { place, String: String(String(leg.role).slice(0, 40)), BASIS_ROLES: String(BASIS_ROLES.join(', ')) }));
       /* the grade and extent arms do not ask a leg on another group's finding (R11's arm refuses either outright) or a
          derived one (its arm did) */
       if (!imported && !derived && !standard) {
         if (leg.grade !== undefined && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
-          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_5', 'basis_version_legs[{li}] (version \'{name}\').grade \'{String}\' is not one of: {BASIS_GRADES} (absent or null means undetermined, and is STATED as such)', { li: String(li), name: String(name), String: String(String(leg.grade).slice(0, 40)), BASIS_GRADES: String(BASIS_GRADES.join(', ')) }));
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-version-grammar.grammar.leg_grade', "{place} has a grade '{String}' that is not one of: {BASIS_GRADES} (absent or null means undetermined, and is STATED as such)", { place, String: String(String(leg.grade).slice(0, 40)), BASIS_GRADES: String(BASIS_GRADES.join(', ')) }));
         if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
-          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_6', 'basis_version_legs[{li}] (version \'{name}\').grade_axis \'{String}\' is not one of: {GRADE_AXES}', { li: String(li), name: String(name), String: String(String(leg.grade_axis).slice(0, 40)), GRADE_AXES: String(GRADE_AXES.join(', ')) }));
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-version-grammar.grammar.leg_grade_axis', "{place} has a grade_axis '{String}' that is not one of: {GRADE_AXES}", { place, String: String(String(leg.grade_axis).slice(0, 40)), GRADE_AXES: String(GRADE_AXES.join(', ')) }));
         if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
-          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_7', 'basis_version_legs[{li}] (version \'{name}\').grade_source \'{String}\' is not one of: {GRADE_SOURCES}', { li: String(li), name: String(name), String: String(String(leg.grade_source).slice(0, 40)), GRADE_SOURCES: String(GRADE_SOURCES.join(', ')) }));
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-version-grammar.grammar.leg_grade_source', "{place} has a grade_source '{String}' that is not one of: {GRADE_SOURCES}", { place, String: String(String(leg.grade_source).slice(0, 40)), GRADE_SOURCES: String(GRADE_SOURCES.join(', ')) }));
         /* REC-84 / IC-84 (1): THE EXTENT AT THE VERSION'S OWN GRAIN, C-25.10,
            through the SAME function `basis[]` runs — and it is what retires bound
            (1) in this function's header, which said D-164 was unlanded so a
@@ -388,7 +392,7 @@ export function basisVersionFindings(fm, findings) {
            function's own stated discipline ("`basisVersionFindings` reads the
            C-number OUT of this map at every site"): a second literal is a second
            place for the number to drift. Typed here, that arm once went red. */
-        checkLegExtentGrammar(leg, `basis_version_legs[${li}] (version '${name}')`,
+        checkLegExtentGrammar(leg, place,
           BASIS_VERSION_GRAMMAR_CHECKS.VERSION_LEG_NOT_CITABLE.check, findings);
       }
 
@@ -397,12 +401,12 @@ export function basisVersionFindings(fm, findings) {
          names a ground is judged as any ground a leg names. */
       if (!g) continue;
       if (!GROUND_LABEL_RE.test(g)) {
-        push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_legs_li_version_8', 'basis_version_legs[{li}] (version \'{name}\').ground \'{g}\' is not a ground label', { li: String(li), name: String(name), g: String(g.slice(0, 60)) }));
+        push('VERSION_GROUND_UNASSERTED', localize('basis-version-grammar.grammar.leg_ground_not_label', "{place} has a ground '{g}' that is not a ground label", { place, g: String(g.slice(0, 60)) }));
         continue;
       }
       labels.add(g);
       if (!declared.has(g))
-        push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_legs_li_version_9', 'basis_version_legs[{li}] (version \'{name}\') names ground \'{g}\', which no basis_version_grounds[] row declares: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for', { li: String(li), name: String(name), g: String(g) }),
+        push('VERSION_GROUND_UNASSERTED', localize('basis-version-grammar.grammar.leg_ground_undeclared', "{place} names ground '{g}', which no basis_version_grounds[] row declares: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for", { place, g: String(g) }),
           [localize('basis-versions.grammar.add_a_basis_version_grounds', 'add a basis_version_grounds[] row for version \'{name}\', ground \'{g}\', with asserted_by and at', { name: String(name), g: String(g) })]);
     }
     for (const [label, gi] of declared) {

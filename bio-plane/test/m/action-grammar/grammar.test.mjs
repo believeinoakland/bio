@@ -9,7 +9,7 @@ import * as AG from "../../../src/action-grammar/index.mjs";
 import { proposalLabel, idPattern } from "../../../src/record-grammar/index.mjs";
 import * as J from "../../../../jurisdictions/index.mjs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
-import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, RECORDED, ZONE } from "./fixture.mjs";
+import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, RECORDED, ZONE, PROVIDER_LEG_DOCS, providerLegFindings } from "./fixture.mjs";
 import { ROWS_NOW } from "./t45-rows.mjs";
 
 const S = suite(AG);
@@ -137,7 +137,7 @@ test("R5 by hand: each refusal (C-94.1–C-94.9); DUE_CITE_NOT_GOVERNING is not 
 
 test("R6: actionBasisFindings and correspondenceFindings answer, for every document, what they answered before the move", () => {
   for (const id of Object.keys(DOCS)) {
-    assert.deepEqual(S.docs[id].actionBasis, GOLDEN.docs[id].actionBasis, id);
+    assert.deepEqual(S.docs[id].actionBasis, PROVIDER_LEG_DOCS.includes(id) ? providerLegFindings(id) : GOLDEN.docs[id].actionBasis, id);
     assert.deepEqual(S.docs[id].correspondence, GOLDEN.docs[id].correspondence, id);
   }
 });
@@ -209,12 +209,17 @@ test("R30 (T51 fix round 10; K5297): over the corpus, no finding, repair or tran
   for (const id of Object.keys(DOCS).filter((d) => /^leg-(lead|theme)/.test(d))) {
     const messages = pushed((f) => AG.actionBasisFindings(DOCS[id], f)).findings.map((x) => x.message);
     assert.ok(messages.length > 0, id);
-    for (const m of messages) { assert.match(m, /^basis leg 0\b/, m); assert.doesNotMatch(m, /action_basis/, m); }
+    assert.deepEqual(messages, providerLegFindings(id).map((x) => x.message), `${id}: the provider's words for the label this module hands it`);
+    const label = localize("action-grammar.grammar.basis_leg_label", "basis leg {i}", { i: "0" });
+    for (const m of messages) { assert.ok(m.includes(label), m); assert.doesNotMatch(m, FIELD_OR_CODE, m); }
   }
 });
 
 test("R7: checkActionExtension reports, for every document under every instance kind set, the findings it reported before the move", () => {
-  for (const id of Object.keys(DOCS)) assert.deepEqual(S.docs[id].audit, GOLDEN.docs[id].audit, id);
+  for (const id of Object.keys(DOCS)) {
+    const want = PROVIDER_LEG_DOCS.includes(id) ? Object.fromEntries(Object.keys(GOLDEN.docs[id].audit).map((k) => [k, providerLegFindings(id)])) : GOLDEN.docs[id].audit;
+    assert.deepEqual(S.docs[id].audit, want, id);
+  }
 });
 
 test("R7 by hand: a missing counterparty and a pending clock entry past its date are reported (C-2.10, C-11.1); any other document gets nothing; it answers nothing; nowMs defaults to the clock", (t) => {

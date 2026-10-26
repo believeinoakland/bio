@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_01KTd17XTyLAtTuNkmbbXcVw · depth 2 · COMPLETE · handled B23
+**Status** · session_01T4hjho3HGUnZTokJ1wkCcL · depth 2 · COMPLETE · handled B26
 
 ## J1 · QUESTION
 
@@ -410,3 +410,29 @@ Outside my paths (REPORTed in my record): `checks/run.mjs` names 349 fixtures fa
 Markers added: none.
 
 Size (session_01KTd17XTyLAtTuNkmbbXcVw): test runs 5, module lines 92
+
+## Fix round 10 (B24: R96)
+
+- Applied: `bio-plane/src/queue/index.mjs` `#dispositionOf`: a `signer-self-registered` item's disposition is `available: true`, `op: signerknown`, `scope: key`, `key` the subject's key, `acts: [signerknown]`, `requires: [keyB64]`, `instead: signerset` (door unchanged); the kind's door detail names both acts. The bridge (R28) is unchanged and still names `signerset`.
+- Tests (`bio-plane/test/m/queue/signer.test.mjs`): R12's test now reads `available: true`; new R96 disposition test (red, then green); new R96 walker's-case test through the real credentials acts and the real producers (register a key, `signerKnown`, the feed holds none, a second key still mints one): RED until `credentials` R83 merges (`w.credentials.signerKnown is not a function`).
+- Suite: queue module tests 238, 237 pass, 1 red (the one above, waiting on credentials). Checks: format, architecture, coverage (57 of 57), ownership 0 failures.
+
+## J21 · REPORT
+
+R96 disposition built and green (signer-self-registered: available true, acts [signerknown], instead signerset; bridge unchanged). The walker's end-to-end test is red only because credentials.signerKnown (R83) is not merged yet; queue module 237/238. Waiting for your CHANGE when credentials merges; then I re-run and post COMPLETE.
+
+## J22 · REPORT
+
+Merged tranche/T51 (credentials R83 real). My R96 disposition test is green and the walker's case passes up to signerKnown ok. The last assertion, the item gone from every administrator's feed after the act, fails: bio-plane/src/queue-producers/index.mjs (#obligationsSignerSelfRegistered, ~line 2065-2085) does not yet skip a key whose row carries known_by (queue-producers R55, not merged; signerList already answers known_by). Nothing in my paths can fix it. Queue module 237/238. I keep the test as written and wait: tell me when QUEUE-PRODUCERS merges R55 (CHANGE), then I re-run and post COMPLETE.
+
+### Fix round 10: completion (B25, B26)
+
+- Entries applied: R96 (`bio-plane/src/queue/index.mjs` `#dispositionOf`, the `signer-self-registered` branch; door detail sentence in `OBLIGATION_DOOR_DETAIL`).
+- Test red then green: `bio-plane/test/m/queue/signer.test.mjs`, "R96: a self-registered key's disposition..." (red before the change, green after) and "R96: the walker's case through the real acts" (red: `signerKnown` absent, then red: item still minted, `queue-producers` R55 unmerged; green after both merged). The R12 signer test now expects `available: true`. Fixtures: both R96 tests use the world's real credentials and real queue-producers; the older tests' stubbed `feedItems` is `fixtures-own` as before, unchanged.
+- Suite: queue module tests 238, pass 238, fail 0. Checks: format, architecture, coverage (57 of 57), ownership 0 failures; `checks/run.mjs` no finding in my files.
+- Deferred: none. Found in other modules: none beyond the R55 dependency, now merged.
+- Size (session_01T4hjho3HGUnZTokJ1wkCcL): test runs 6, module lines 2706
+
+## J23 · COMPLETE
+
+R96 complete. src/queue/index.mjs #dispositionOf: a signer-self-registered item is available:true, acts [signerknown], scope key, requires [keyB64], instead signerset; bridge unchanged. Tests (test/m/queue/signer.test.mjs): R96 disposition and the walker's case through real credentials R83 and queue-producers R55, each red then green; queue module 238/238. Checks: format, architecture, coverage 57/57, ownership 0 failures; run.mjs no finding in my files. Size (session_01T4hjho3HGUnZTokJ1wkCcL): test runs 6, module lines 2706
