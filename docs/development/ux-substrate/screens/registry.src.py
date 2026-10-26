@@ -69,7 +69,7 @@ screen('projects', 'Projects', 'working', 'Every project the member may see, wit
 screen('theme', 'Themes', 'working', 'The team\'s themes, newest first, searchable by name or test, and declaring one (state a); one theme with what was placed in it, its hunches apart, and what was taken out with the reasons (state b). A theme is never evidence (DEC-242; connections R39 to R46).',
   [('themeread','Read the themes'),('themedeclare','Declare a theme'),('themeplace','Place it in the theme'),('themewithdraw','Take out or reject, with a reason')], [6])
 screen('dash-action', 'The Action dashboard', 'working', 'An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.',
-  [('filingapprove','Approve the text'),('reminderanswer','Answer a reminder'),('taskresolve','Start the next step'),('actioncreate','Start an action')], [22])
+  [('filingapprove','Approve the text'),('reminderanswer','Answer a reminder'),('actioncreate','Start an action')], [22])   # DEC-437 (B527, K5229): taskresolve removed, no item here offers it
 screen('dash-project', 'A project\'s dashboard', 'working', 'A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.',
   [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited')], [15])
 screen('unavailable', 'Can\'t open this', 'working', 'An address that leads nowhere, something the member may not see, and the team\'s Civicsmith out of reach (DEC-201).', [], [3])
