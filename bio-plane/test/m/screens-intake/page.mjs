@@ -5,6 +5,7 @@ import { boot, ok, refused, refusedIn, bytes, MEMBER, ADMIN, collectOwnerRows } 
 import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { OWED_SESSION_TTL_MS } from "../../../src/acquisition/index.mjs";
 
 export { ok, refused, refusedIn, bytes, MEMBER, ADMIN, word, hasWord };
 
@@ -79,11 +80,27 @@ export async function open(path, { plane = {}, me = MEMBER, reachable = false, s
    real modules from what real acts made. `plane` keeps only faults (a refusal, a silence, a delay) a real act cannot make. A test
    makes its state by `as.act(op, {query, body})` or a recipe, and reads values from those answers, never from a literal. */
 export async function openWorld(path, { world, as, plane = {}, screens = SCREENS, ...rest } = {}) {
-  const { door, session } = world.boot(as);
+  const { door: worlds, session } = world.boot(as);
+  /* the sign-in is the member's `as` (a member who signed in again, `lapse`, goes on as hers): the page's own header is dropped and the door adds hers */
+  const dropAuth = (h) => (h && !(h instanceof Headers) ? Object.fromEntries(Object.entries(h).filter(([k]) => k.toLowerCase() !== "authorization")) : h);
+  const door = (req) => (req && typeof req === "object" && !(req instanceof Request)
+    ? worlds({ ...req, ...(req.headers ? { headers: dropAuth(req.headers) } : {}), ...(req.init ? { init: { ...req.init, ...(req.init.headers ? { headers: dropAuth(req.init.headers) } : {}) } } : {}) })
+    : worlds(req));
   const p = await boot({ screens, path, door, session, plane: Object.fromEntries(Object.entries(plane).map(([op, a]) => [op, counted(a)])), ...rest });
   await p.settle();
   await idle(p);
   return p;
+}
+
+/* A session the store's own clock has moved past: the world's clock moves on by `by` (a month and a minute, longer than the store keeps an owed fetch's session,
+   `OWED_SESSION_TTL_MS`; the scheduler's firing run at the new instant), and the member, locked by so long an idle, signs in again as a person would. The page `p` she has
+   open goes on as hers (`openWorld` lets the door add her current sign-in), and her tab's storage holds the new record (interface-shell R32). */
+export async function lapse(t, p, as = t.mai, by = OWED_SESSION_TTL_MS + 60_000) {
+  await t.world.tick(by);
+  const fresh = await t.world.signIn(as.handle);
+  as.token = fresh.token;
+  Object.assign(as.session, fresh.session);
+  if (p) p.local.set("bio-session", JSON.stringify(fresh.session));
 }
 
 export const main = (p) => p.doc.getElementById("cs-main");

@@ -70,28 +70,24 @@ const drawn = async (t, plane = {}) => {
 const MB = (n) => (n / 1048576).toFixed(1);
 const cutWords = ["screen.open-file.safe.cut", "screen.open-file.safe.cut.more", "screen.open-file.safe.sheetscut", "screen.open-file.safe.sheet.unreadable"];
 
-test("R5 R36 a cut sheet draws the rows shown of the total by key; a sheet of unknown total says the same without it", async () => {
+test("R5 R36 a cut sheet draws the rows shown of the total by key", async () => {
   const t = await held(xlsxOf([{ name: "FY22", xml: sheetXml(2500) }]));
   const p = await drawn(t);
   const v = (await t.mai.read("safeview", { query: { capture: t.sha } })).sheets[0];
   assert.equal(v.truncated, true, "the owner cuts a long sheet");
   assert.ok(says(p, "screen.open-file.safe.cut", { from: v.rows.from, to: v.rows.to, total: v.total_rows }));
   assert.match(html(p), /<td>A3<\/td><td>3<\/td>/);
-  /* the owner always states the total of a sheet it cuts, so the answer that does not is the one scripted answer of this test */
-  const cells = Array.from({ length: 3 }, (_, i) => ({ ref: `A${i + 1}`, value: `v${i + 1}`, type: "s" }));
-  const q = await drawn(t, { safeview: ok({ ok: true, kind: "data", derived: true, sheets: [{ name: "FY22", cells, rows: { from: 1, to: 3 }, total_rows: null, truncated: true, next_row: 4 }], sheets_total: 1, sheets_truncated: false }) });
-  assert.ok(says(q, "screen.open-file.safe.cut.more", { from: 1, to: 3 }));
-  assert.deepEqual(rawKeys(q), []);
+  assert.deepEqual(rawKeys(p), []);
+  /* a sheet cut with no total stated is no answer the owner gives (it always states the total of a sheet it cuts): the case that scripted one is removed (fix round 10, K5245) */
 });
 
-test("R5 R36 a whole sheet and an answer from an older record draw no cut, no sheet statement", async () => {
+test("R5 R36 a whole sheet draws no cut, no sheet statement", async () => {
   const t = await held(xlsxOf([{ name: "FY22", xml: sheetXml(2) }]));
   const whole = await drawn(t);
   const w = (await t.mai.read("safeview", { query: { capture: t.sha } })).sheets[0];
   assert.deepEqual([w.truncated, w.total_rows], [false, 2], "the owner states it whole");
-  /* an answer from an older record carries no rows, no total, no cut: no file the owner holds now is answered so, so this one answer is scripted */
-  const old = await drawn(t, { safeview: ok({ ok: true, kind: "data", derived: true, sheets: [{ name: "FY22", cells: [{ ref: "A1", value: "1", type: "s" }, { ref: "A2", value: "2", type: "s" }] }] }) });
-  for (const [p, last] of [[whole, "2"], [old, "2"]]) {
+  /* an answer from an older record (no rows, no total, no cut) is none the owner gives of a file it holds now: the case that scripted one is removed (fix round 10, K5245) */
+  for (const [p, last] of [[whole, "2"]]) {
     assert.match(html(p), new RegExp(`<td>A2<\\/td><td>${last}<\\/td>`));
     /* no sentence of the four is in the page: their keys are not even asked for when nothing is cut */
     assert.equal(main(p).querySelectorAll(".mk-note").length, p.notesBefore, "the safe view adds no note of its own");

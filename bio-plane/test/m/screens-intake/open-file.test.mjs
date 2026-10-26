@@ -360,12 +360,7 @@ test("R39 altered bytes hand nothing over: refusal.DIGEST_MISMATCH beside the ac
   assert.ok(!btn(p, "openoriginal").hasAttribute("disabled"), "the act stays usable");
   assert.deepEqual(p.byOp("heldat").map((r) => r.query), [{ op: "heldat", sha256: f.sha }], "the one read made to tell which sentence: by digest, no check, nothing of the member's");
   assert.equal((await t.mai.read("heldat", { query: { sha256: f.sha } })).held, true, "the team holds the file under that fingerprint");
-  /* where the team holds no file under that fingerprint, its own sentence: the owner holds this one, so the answer that it does not is scripted */
-  const held = await t.mai.read("heldat", { query: { sha256: f.sha } });
-  const u = await at(t, f, t.mai, { openoriginal: bytes("altered bytes"), heldat: ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: held.changed }) });
-  await press(u, "openoriginal");
-  assert.equal(u.files.length, 0);
-  assert.ok(says(u, "refusal.DIGEST_MISMATCH.unheld"));
+  /* where the team holds no file under that fingerprint, its own sentence (`refusal.DIGEST_MISMATCH.unheld`): the owner answers heldat as not held only for a fingerprint its record has no file under, and the page offers the act only for a file it holds (measured: a file set aside is still held), so no act makes the state and the case is removed (fix round 10, K5245) */
   /* a warned opening of altered bytes is refused the same way */
   const g = await warnedFile(t);
   const w = await at(t, g, t.mai, { openwithwarning: bytes("altered bytes", "application/msword") });

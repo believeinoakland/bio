@@ -220,14 +220,7 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   assert.ok(says(bare, "refusal.uncatalogued"));
   assert.ok(text(bare).includes("NO_WORD_NO_TRANSLATION"), "the code, as the act gave it");
   assert.doesNotMatch(text(bare), /builder detail/);
-  /* control: a refusal with no words of its own is the shell's own failure word, never a silent tab */
-  const nt = await team();
-  serve(nt.world);
-  const r = await at(nt, "/app/capture", { promote: ok({ ok: false }) });   /* a nameless failure (a fault): no real promote answers one */
-  await capture(r);
-  await r.settle();
-  assert.ok(failed(r), "a failure with no words is still drawn as failed");
-  assert.ok(!says(r, "screen.capture.address.done", { title }));
+  /* a nameless failure (`promote` answering `{ok: false}` with no reason) is no real promote's answer, so its control is removed (fix round 10, K5245); the refusal with no word of its own is the one above */
 });
 
 /* the file tab's pieces (R2): a photo, its three answers, and the bytes the member sends */
@@ -682,14 +675,7 @@ test("R3 (K3171) the recorded testimony is named by the bundle_id provenance's t
   const id = /INFO-[\w-]+/.exec(link.getAttribute("href"))[0];
   assert.match((await t.mai.read("image", { query: { id } }))["bundle.md"], new RegExp(`^id: ${id}$`, "m"), "the link names a document the owner holds");
   assert.doesNotMatch(text(p), /[0-9a-f]{16}/, "never the capture's digest");
-  /* control: an answer naming no bundle draws no testimony id. The owner's testify always names the bundle it made, so an answer without one is no real act's: the one
-     scripted answer (a fault), reported */
-  const u = await team();
-  const q = await at(u, "/app/capture/saw", { testify: ok({ ok: true, id: "INFO-2026-0010-x" }) });
-  fill(q, { "ci-words": "x", "ci-where": "y", "ci-when": "2026-10-04T09:10:00Z" });
-  await press(q, "testify");
-  await idle(q);
-  assert.doesNotMatch(text(q), /INFO-2026-0010-x/);
+  /* an answer naming no bundle is no real testify's (the owner's always names the bundle it made): the control that scripted one is removed (fix round 10, K5245) */
 });
 
 test("R3 testify sends the member's words with where, and when as observedAt; never a time after now", async () => {
@@ -719,51 +705,39 @@ async function reachable(t) {
 }
 const assisted = () => team({ mai: CAN }, { ai: true });
 
-/* The draft itself is the one answer the world's door cannot make: the Worker door's half of `writinghelp` (control-plane R57, draft.mjs: the owner's
-   ASSISTANT_DRAFT_UNAVAILABLE, then the object's `draft` through the agent worker) is not wired in the store-request world's door, so the real `writinghelp` always
-   answers the owner's "cannot draft yet". Each draft below is the one scripted `writinghelp` answer (reported); the testify that keeps it is the owner's own. */
-test("R3 R10 writinghelp under the words only while reachable; its draft filled into the words field itself, labelled, kept only by testify", async () => {
+/* The real `writinghelp` never returns a draft (K5212): the Worker door's half (control-plane R57, draft.mjs) is not part of the store the world assembles, so the
+   owner's answer is its own "cannot draft yet". The screen is tested on that answer, and on wizard-scripts' two published answers (R24, R27). A drafted text, its label
+   and its test-instance label are drawn from an answer no act makes, so no test here scripts one. */
+test("R3 R10 writinghelp under the words only while reachable; asked with what the member typed, a refused help changes nothing: the words stay as typed, no label, nothing kept", async () => {
   const off = await team();
   const o = await at(off, "/app/capture/saw");
   assert.equal(btn(o, "writinghelp"), null);
   const t = await assisted();
   await reachable(t);
-  const p = await at(t, "/app/capture/saw", { writinghelp: ok({ ok: true, text: "The pothole is still open, about 60 cm across.", label: { kind: "machine", asked_by: "mai" } }) });
+  const p = await at(t, "/app/capture/saw");
   const h = html(p);
   assert.ok(h.indexOf('data-act="writinghelp"') > h.indexOf('id="ci-words"'), "under the words field");
   assert.ok(h.indexOf('data-act="writinghelp"') < h.indexOf('id="ci-where"'));
   const label = word("screen.capture.saw.draft", { handle: "mai" });
   assert.ok(!text(p).includes(label.split(" · ")[0] + " ·"), "no label before a draft");
   fill(p, { "ci-words": "pothole still open 60cm" });
-  await press(p, "writinghelp");
+  const asked = await press(p, "writinghelp");
   assert.deepEqual(p.byOp("writinghelp")[0].body, { op: "testify", field: "words", told: "pothole still open 60cm" });
-  /* R10: the same field, filled (cs.fill); no field of a new id */
-  assert.equal(p.doc.getElementById("ci-words").value, "The pothole is still open, about 60 cm across.");
+  assert.ok(saysIn(asked.slot(), "refusal.ASSISTANT_DRAFT_UNAVAILABLE"), "the owner's refusal, in the refusal's words, beside the act");
+  /* R10: the same field; the owner's refusal is no draft, so the member's words stand in it */
+  assert.equal(p.doc.getElementById("ci-words").value, "pothole still open 60cm");
   assert.equal(main(p).querySelectorAll("textarea.rec").length, 1);
-  assert.ok(text(p).includes(label));
-  assert.equal(p.byOp("testify").length, 0, "nothing is kept by the draft itself");
-  /* the member's own act keeps the draft as edited */
-  fill(p, { "ci-words": "The pothole is still open.", "ci-where": "Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
+  assert.ok(!text(p).includes(label), "no draft, no label");
+  assert.equal(main(p).querySelector('[data-label="untested"]'), null);
+  assert.equal(p.byOp("testify").length, 0, "nothing is kept by the help itself");
+  /* the member's own act keeps her words */
+  fill(p, { "ci-where": "Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
   await press(p, "testify");
-  assert.match(p.byOp("testify")[0].body.words, /^The pothole is still open\./);
-  assert.ok(!text(p).includes(label), "the label leaves once the member's own act kept it");
+  assert.equal(p.byOp("testify")[0].body.words, `pothole still open 60cm\n\n${word("screen.capture.saw.wherein", { where: "Seminary Ave" })}`);
   /* control: nothing typed, nothing asked */
   const q = await at(t, "/app/capture/saw");
   await press(q, "writinghelp");
   assert.equal(q.byOp("writinghelp").length, 0);
-});
-
-test("R3 R10 (K2816 (2); wizard-scripts R34) a writing-help draft carries the test-instance label exactly when its answer carries untested", async () => {
-  const t = await assisted();
-  await reachable(t);
-  for (const [answer, labelled] of [[{ ok: true, text: "X.", untested: true }, true], [{ ok: true, text: "X.", untested: "untested", label: { kind: "machine", asked_by: "mai" } }, true], [{ ok: true, text: "X." }, false]]) {
-    const p = await at(t, "/app/capture/saw", { writinghelp: ok(answer) });
-    fill(p, { "ci-words": "x" });
-    await press(p, "writinghelp");
-    await idle(p);
-    assert.equal(!!main(p).querySelector('[data-label="untested"]'), labelled, JSON.stringify(answer));
-    if (labelled) assert.ok(says(p, "ai.label.untested"));
-  }
 });
 
 test("R26 what the capture screen draws for a sample of its keys equals word(key, vars)", async () => {
@@ -1026,13 +1000,7 @@ test("R35 the capture's result carries the cite link by its fingerprint, which i
   await p.settle();
   assert.ok(main(p).querySelector(`a[href="/app/find-in/${SHA}/${t.question}"]`));
   assert.ok(!text(p).includes(SHA) && !text(p).includes(SHA.slice(0, 12)), "the fingerprint stays in the link's address");
-  /* control: an answer naming no capture fingerprint draws no cite link. The owner's acquire always names the capture it kept, so an answer without it is no real act's:
-     the one scripted answer (reported) */
-  const u = await subjects();
-  const q = await at(u, `/app/capture/address/${u.question}`, { acquire: ok({ ok: true, document: { file: "snapshots/a.pdf", title: null } }) });
-  await capture(q);
-  await q.settle();
-  assert.equal(main(q).querySelector('a[href^="/app/find-in/"]'), null);
+  /* an answer naming no capture fingerprint is no real acquire's (the owner's always names the capture it kept): the control that scripted one is removed (fix round 10, K5245) */
 });
 
 test("R36 Add opened from a question says what it files under first; a project or no subject says no such sentence; the how-choices have their own block", async () => {

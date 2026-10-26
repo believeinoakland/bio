@@ -12,6 +12,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { openWorld, members, main, text, fill, press, btn, ok, refused, says, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { readHeldAnswer } from "../extraction/fixtures.mjs";
 
 const ADDRESS = "https://www.irs.gov/pub/irs-pdf/f1040es.htm";
 const PAGE_WITH_TEXT = "<html><head><title>2026 Form 1040-ES</title></head><body>\n<h1>2026 Form 1040-ES</h1>\n<p>2026 Form 1040-ES Estimated Tax for Individuals</p>\n</body></html>";
@@ -115,10 +116,10 @@ test("R38 (E7) a readheld refused, a stored copy that cannot be read and a recor
   assert.ok(says(p, "transcribe.why.evidenceabsent"), "the stored copy can't be read just now");
   assert.ok(says(p, "screen.capture.a64.already_in_the_record_as"), "the held copy is still drawn");
   /* NO_HOME is the owner's answer to a copy whose home the viewer cannot see at the moment of reading, while the pre-flight just saw it: a race a world holds no
-     second viewer to make, so the one scripted answer */
+     second viewer to make, so extraction's published answer of `readHeld` (R80) is handed where the door would */
   const c = await team();
   await requested(c);
-  const q = await open(c, { readheld: ok({ ok: true, read: false, why: "NO_HOME" }) });
+  const q = await open(c, { readheld: ok(await readHeldAnswer.noHome()) });
   await pressCapture(q);
   assert.ok(says(q, "refusal.CAPTURE_NOT_HELD"));
 });
@@ -168,91 +169,19 @@ test("R38 (E7) control: a copy with text sends no readheld; an unreadable readin
   assert.equal(notHeld.byOp("reading").length, 0);
 });
 
-/* ---- E8: the press of "Finish it" says what the continuation answered ---- */
+/* ---- E8: the press of "Finish it" says what the continuation answered ----
+   Fix round 10 (K5245): the cases of a "Finish it" answered (the render still being made, the visitor copy filed, only its supporting files, a refusal of the render) are removed:
+   an unfinished capture with a render pending holds a browser session (`rs_...`) the world has no browser for, and the capture of the page as the site sent it keeps no
+   supporting files outstanding (measured over 60, 200 and 700 images), so no act makes the state they begin from (K4297). The press and its control stay below. */
 
-const SESSION = "rs_af6c46c7d9ab1c80_mvjalfx2";
-const PRIMARY = "a".repeat(64);
-const PAGE = "https://www.nps.gov/acad/index.htm";
-const OPEN = ok({ ok: true, truncated: false, captures: [{ session: SESSION, locator: PAGE, primary_sha: PRIMARY, started: "2026-10-22T08:41:56Z", updated: "2026-10-22T08:41:56Z", outstanding: 1 }] });
-const NOTHING_OPEN = ok({ ok: true, truncated: false, captures: [] });
-const HELD = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0131-acadia", title: "Acadia National Park", capture: { sha256: PRIMARY, grade: null } }] });
-const CONTINUED = { session: SESSION, primary: { sha256: PRIMARY, file: "snapshots/index.htm", locator: PAGE }, note: "the plane's note on the continuation" };
-const RENDERED = { capture: { method: "retrieved", sha256: "c".repeat(64), bytes: 41000, encoding: "utf-8" }, file: "snapshots/index.htm", title: null,
-  pair: { primary: "rendered", rendered: { file: "snapshots/index.htm", sha256: "c".repeat(64) }, shell: { file: "snapshots/index.htm.shell", sha256: PRIMARY } } };
-const FIRST = { ok: true, existed: false, reading: { title: "Acadia National Park" }, document: { capture: { sha256: PRIMARY, bytes: 9000, encoding: "utf-8" }, file: "snapshots/index.htm", title: null,
-  render_pending: { session: SESSION, since: "2026-10-22T08:41:56Z", note: "the plane's note on the render" } }, render: { state: "pending", session: SESSION } };
-/* E8 stays scripted where the world cannot make the state: a capture that asks for a rendered copy holds a browser session (`rs_...`) the world has no browser for, so
-   `acquire` answers (the first capture, the continuation, its refusal) and `opencaptures` are written here, and with them the `promote` of their documents (their
-   bytes are in no store) and `heldcaptures` (the Held list the scripted capture would have joined). The projects, the id minted and the pre-flight are the owners' own. */
-const base = { promote: (r) => ok({ ok: true, bundleId: r.body.bundleId }), heldcaptures: HELD };
-const openF = async (plane) => {
-  const t = await members({ mai: CAN });
-  return openWorld("/app/capture/address", { world: t.world, as: t.mai, plane: { ...base, ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
-};
-const finishButton = (p) => Array.from(main(p).querySelectorAll('button[data-act="acquire"]')).find((b) => b.getAttribute("data-session") === SESSION || /session/.test(b.outerHTML));
 const mark = (p, k) => main(p).querySelectorAll(`[data-finish="${k}"]`).length;
 
-test("R31 (E8) 'Finish it' answered with the render still being made says so, and the first capture's result is no longer drawn as if nothing happened", async () => {
-  const answers = [ok(FIRST), ok({ ok: true, existed: true, continued: CONTINUED, render: { state: "pending", session: SESSION } })];
-  const p = await openF({ opencaptures: OPEN, acquire: () => answers.shift() });
-  fill(p, { "ci-address": PAGE });
-  await press(p, "acquire");
-  assert.ok(says(p, "screen.capture.address.done", { title: "Acadia National Park" }), "before: the first capture's result is drawn");
-  assert.ok(main(p).textContent.includes("the plane's note on the render"), "before: with the plane's note that the visitor copy is still being made");
-  const finish = finishButton(p);
-  assert.ok(finish, "Finish it is drawn");
-  await p.click(finish);
-  for (let i = 0; i < 8; i++) await p.settle(20);
-  assert.deepEqual(p.byOp("acquire").slice(1).map((r) => r.body), [{ continue: SESSION }]);
-  assert.equal(mark(p, "pending"), 1, "the line states the answer: still being made");
-  assert.ok(says(p, "acquisition.index.render_pending_note"), "in the nearest held row's words (the plane's own note)");
-  assert.equal(says(p, "screen.capture.address.done", { title: "Acadia National Park" }), false, "the first capture's text is not drawn again");
-  assert.equal(p.byOp("promote").length, 1, "nothing new was filed by this press (the one promote is the first capture's)");
-});
-
-test("R31 (E8) 'Finish it' answered with the visitor copy filed says it, files that document once, and links it", async () => {
-  const answers = [ok(FIRST), ok({ ok: true, existed: false, document: RENDERED, render: { state: "done" } })];
-  const p = await openF({ opencaptures: OPEN, acquire: () => answers.shift() });
-  fill(p, { "ci-address": PAGE });
-  await press(p, "acquire");
-  await p.click(finishButton(p));
-  /* R-NOLOAD (K4787): wait for the work asserted (the second promotion), not for a fixed number of turns */
-  for (let i = 0; i < 80 && p.byOp("promote").length < 2; i++) { await p.settle(20); await new Promise((r) => setTimeout(r, 5)); }
-  for (let i = 0; i < 4; i++) await p.settle(20);
-  assert.equal(p.byOp("promote").length, 2, "the first capture, then the visitor copy");
-  const second = p.byOp("promote")[1].body;
-  assert.ok(second.files.some((x) => x.sha256 === "c".repeat(64) || x.blobSha === "c".repeat(64)), "the document filed is the rendered one");
-  assert.equal(mark(p, "done"), 1, "the line states the answer: finished");
-  assert.ok(main(p).querySelector(`a[href*="${second.bundleId}"]`), "and links the document it filed");
-  assert.equal(main(p).querySelectorAll('[data-finish="pending"]').length, 0);
-});
-
-test("R31 (E8) 'Finish it' answered with only its supporting files says they were fetched and that no new document was filed", async () => {
-  const p = await openF({ opencaptures: OPEN, acquire: ok({ ok: true, existed: true, continued: CONTINUED, snapshot: { fetched: 3, failed: 0, outstanding: 0 } }) });
-  await p.click(finishButton(p));
-  for (let i = 0; i < 8; i++) await p.settle(20);
-  assert.equal(mark(p, "files"), 1);
-  assert.ok(says(p, "acquisition.note.continuation_files_new"));
-  assert.equal(p.byOp("promote").length, 0);
-});
-
-test("R31 (E8) 'Finish it' refused says why in the refusal's words and draws no capture result; the unfinished line is still there to try again", async () => {
-  const answers = [ok(FIRST), refused("RENDER_FAILED", null, 502)];
-  const p = await openF({ opencaptures: OPEN, acquire: () => answers.shift() });
-  fill(p, { "ci-address": PAGE });
-  await press(p, "acquire");
-  await p.click(finishButton(p));
-  for (let i = 0; i < 8; i++) await p.settle(20);
-  assert.equal(says(p, "screen.capture.address.done", { title: "Acadia National Park" }), false, "the first result is gone");
-  assert.equal(mark(p, "pending") + mark(p, "done") + mark(p, "files"), 0, "no result is claimed");
-  assert.ok(says(p, "refusal.RENDER_FAILED") || main(p).querySelector('.cs-state[data-state="failed"], [role="alert"]'), "the refusal is drawn in words");
-  assert.ok(finishButton(p), "the member can try again");
-});
-
-test("R31 (E8) control: a press of Capture from an address still draws its own result, with no finish mark", async () => {
-  const p = await openF({ opencaptures: NOTHING_OPEN, acquire: ok(FIRST) });
-  fill(p, { "ci-address": PAGE });
-  await press(p, "acquire");
-  assert.ok(says(p, "screen.capture.address.done", { title: "Acadia National Park" }));
+test("R31 (E8) control: a press of Capture from an address draws its own result, with no finish mark and no Finish it", async () => {
+  const t = await team();
+  t.world.script(ADDRESS, async () => new Response(PAGE_WITH_TEXT, { status: 200, headers: { "content-type": "text/html" } }));
+  const p = await open(t);
+  await pressCapture(p);
+  assert.ok(says(p, "screen.capture.address.done", { title: "2026 Form 1040-ES" }));
   assert.equal(mark(p, "pending") + mark(p, "done") + mark(p, "files"), 0);
+  assert.equal(Array.from(main(p).querySelectorAll('button[data-act="acquire"]')).filter((b) => b.getAttribute("data-session")).length, 0, "nothing is unfinished");
 });

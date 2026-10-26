@@ -75,29 +75,17 @@ test("R61 (G43) a document with no reading is never marked dropped (control: a s
   assert.equal(provOf(cs).text, JSON.stringify({ documents: [bare] }, null, 1));
 });
 
-/* the three callers, over the real page and the real store: a big reading on the door's document is not embedded, whichever act filed it. The door itself reads a file in
-   bounded units (a 1.7 MB CSV answers a 0.5 MB document), so a reading over the promotion bound is a state no real act makes: those two answers stay scripted (`acquire`,
-   `captureupload`), the rest (the held check, the id, the promotion, the list) is the owners'. */
-const BIG = (n) => ({ units: "y".repeat(n) });
+/* the callers, over the real page and the real store: a big reading on the door's document is not embedded, whichever act filed it. The door itself reads a file in
+   bounded units (a 1.7 MB CSV answers a 0.5 MB document), so a reading over the promotion bound is a state no real act makes (fix round 10, K5245): the cases that scripted
+   `acquire` or `captureupload` to answer one are removed, and the bound is held where it is made, at `promoteDocument` above (the address path and the upload path both file
+   through it). What is left over the page is the control, which the owners answer. */
 const open = async (path, plane = {}) => {
   const t = await members({ mai: ["contribute"] });
   return { t, p: await openWorld(path, { world: t.world, as: t.mai, plane, screens: [...SCREENS, DOCUMENT_STUB] }) };
 };
 const provOfPage = (p) => p.byOp("promote")[0].body.files.find((f) => f.path === "data/provenance.json");
 
-test("R61 (G43, the address path) an acquired 1 MB CSV whose reading is over the bound is filed without it", async () => {
-  const doc = { capture: { sha256: SHA, bytes: 1048576, encoding: "binary", content_type: "text/csv" }, file: "snapshots/a.csv", title: null,
-                reading: BIG(BOUND), text_units: [{ n: 1, text: "y".repeat(BOUND) }] };
-  const { p } = await open("/app/capture/address", { acquire: ok({ ok: true, document: doc }) });
-  fill(p, { "ci-address": "https://city.example/data/big.csv" });
-  await press(p, "acquire");
-  await p.settle();
-  const f = provOfPage(p), got = JSON.parse(f.text).documents[0];
-  assert.ok(f.bytes < BOUND && !("reading" in got) && !("text_units" in got), "no reading embedded");
-  assert.equal(got.capture.sha256, SHA);
-});
-
-test("R61 (G43, a docx with a large table) a Word document whose reading carries a table over the bound is filed without it; the upload path likewise", async () => {
+test("R61 (G43, a docx with a large table) a Word document whose reading carries a table over the bound is filed without it", async () => {
   const doc = { capture: { sha256: SHA, bytes: 90000, encoding: "binary", content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
                 file: "snapshots/t.docx", locator: "upload:" + SHA, title: null,
                 reading: { title: "T", tables: [{ rows: Array.from({ length: 20000 }, (_, i) => ["row " + i, "a cell of some length", "another cell of some length"]) }] },
@@ -107,13 +95,6 @@ test("R61 (G43, a docx with a large table) a Word document whose reading carries
   const made = await promoteDocument(cs, { doc, title: "t.docx", locator: doc.locator, project: "" });
   assert.equal(made.readingDropped, true);
   assert.ok(!("reading" in JSON.parse(provOf(cs).text).documents[0]));
-  /* the upload path: a member's .docx upload whose door-read document carries the table */
-  const FILE = new File(["PK docx bytes"], "t.docx", { type: doc.capture.content_type });
-  const { p: up } = await open("/app/capture/file", { captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 90000 }, document: doc }) });
-  fill(up, { "ci-file": FILE, "ci-how-made": true, "ci-where": "the clerk's office, 4 October", "ci-what": "The budget table." });
-  await press(up, "captureupload");
-  const f = provOfPage(up), got = JSON.parse(f.text).documents[0];
-  assert.ok(f.bytes < BOUND && !("reading" in got) && !("text_units" in got), "the upload's promotion embeds no reading");
 });
 
 test("R61 (G43) control: a document whose reading fits is filed with it by the address path", async () => {
