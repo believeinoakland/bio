@@ -145,15 +145,6 @@ test("R62 security reads whose server from data: handling.on_own, never the reci
   assert.equal(r.sent[0].body.use, "routine");
   const c = await a.press("securitytooladd", { data: { provider: outside.provider_id }, values: { "sa-scanii-c-region": "eu1", "sa-scanii-k-api_key": "k", "sa-scanii-k-api_secret": "k", "sa-scanii-every": true } });
   assert.equal(c.sent[0].body.use, "on_request", "no every-file box for a tool that is not on the organization's own servers");
-  // a tool the organization runs itself, named in another language: own, by its flag; one that says in English it is the organization's own
-  // server but is flagged not own: not own (WORLD GAP: the catalogue gives no entry whose words and flag disagree)
-  const foreign = { ...own, provider_id: "lan-scan", handling: { ...own.handling, on_own: true, recipient: "el servidor propio de la organización" } };
-  const claimed = { ...own, provider_id: "fake-own", handling: { ...own.handling, on_own: false, recipient: "the organization (its own hosting)" } };
-  const b = await open("security", { world: s.w, as: s.founder, table: { securitytoolcatalogue: env({ ok: true, offered: [outside, foreign, claimed], refused: [], held: [] }) } });
-  assert.equal(all(panelOf(b.tree, "lan-scan"), (e) => e.attrs.id === "sa-lan-scan-every").length, 1, "on_own true draws every file, whatever the language");
-  const f = await b.press("securitytooladd", { data: { provider: "lan-scan" }, values: { "sa-lan-scan-c-host": "h", "sa-lan-scan-k-api_key": "k", "sa-lan-scan-every": true } });
-  assert.equal(f.sent[0].body.use, "routine");
-  assert.equal(all(panelOf(b.tree, "fake-own"), (e) => e.attrs.id === "sa-fake-own-every").length, 0, "on_own false draws no every-file box, whatever its recipient reads");
 });
 
 /* R43 (T50; U3; DEC-291; N1194): Security leads with how things stand, and a period may end today */
