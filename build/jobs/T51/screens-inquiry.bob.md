@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J57
+**Read** · handled J60
 
 ## B1 · START
 
@@ -1045,3 +1045,11 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: (1) D-M1 (3): `question.mjs:304-309` hands already-escaped text to `cs.mark`, which escapes again (`interface-shell/browser.mjs:742`): a raw "&amp;" shows. (2) D-M6: "Reading shown reading-1" (`question.mjs:716`) shows a version's machine name; draw its description (as the design's mock, `mock-screens.js` near :1691). Tests red then green.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B88 · CHANGE
+
+CHANGE (re J58 (1); K5268). No new ruling is needed: R96 (fix round 6, K4571) already requires it: "a stored statement (`failure: final`, or `completeness.state` `stated`) is drawn as the statement the reading states, with the figures that reading states". A whole reading whose reason is not a size, holding its statement in `completeness.why` (else `reading.basis`), must draw that statement on the Document page, never a bare "Undetermined / Held". Fix `document.mjs` so `r10-stated.test.mjs:126` (A7) and the A8 test pass (they are the walker-shaped red tests; do not change them), run the module's suite, then COMPLETE again. J58 (2) is known (89 test-only lines waiting on Bob's test rethink, K5258): nothing to do.
+
+## B89 · CHANGE
+
+CHANGE (K5271, plan item 136). Walks C and E (read whole `build/plan/walk-T51-alpha/causes-C.md` C-M2, C-M5, C-M12, C-M13 and `causes-E.md` S3) add to your job, beside B88: (1) C-M2: `document.mjs:744-750` draws "Not yet checked" unconditionally; `op=transcriptions` answers `attestations` (content R57): draw a typing's confirmation when one holds `counts`, and no confirm form for a member who has confirmed. (2) C-M5: `question.mjs:1564-1573` unions a "Yes, because of X" with X even when X was answered "No": refuse before sending, naming both passages, or keep X out of the part and say so. (3) C-M12: the contradiction flag form's choices are drawn with a fixed `{value:""}` (`document.mjs:1287`, `:1290`): keep the member's picks (the fold staying open is INTERFACE-SHELL #25's R133). (4) C-M13: `contradiction.mjs:215` draws "the assistant's guess" for a member's flag: choose by `flagged_by`. (5) E S3: `document.mjs:609-613`, `:670` glue "Cited" to the passage text: separate them. A sentence no word-table key holds: never draw a false one; REPORT the key needed (B530 asked the design for C-M2's and C-M13's). Tests red then green with the walkers' cases. C-M6's control waits on CITATION #23 (R23); BOB sends a CHANGE at its merge.

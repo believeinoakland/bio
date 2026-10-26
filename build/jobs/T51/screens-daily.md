@@ -1,6 +1,29 @@
 # screens-daily (T51)
 
-**Status** · session_01G5xzAiTosZejpAGJJrukB7 · depth 2 · COMPLETE · handled B46
+**Status** · session_01Tu7DPfm2DwNJsuukT5fZvH · depth 2 · COMPLETE · handled B48
+
+## Completion (SCREENS-DAILY #25, B48: CHANGE, K5267; plan item 135 (1))
+
+Merged `tranche/T51` (RETRIEVAL #32 on it). **F-B10 (a):** the real passage route's `widen` is now read (`finder-states.mjs` no-result branch: the partial sentence and its heading are drawn when either route offers a wider reading above 0). Test, the walker's case over the real plane (`round10.test.mjs`, K5267): `household zzzqqq`, words held only in passages: `meaningrows` answers total 0 and `widen.total` above 0, `search` answers none; the screen draws `screen.finder.noresult.partial`, not the no-match sentence (red on the earlier code, green); control: `qqqxxx zzzqqq` draws no match. The earlier scripted test now asserts the same.
+**REPORT / question for BOB (wording, outside my paths):** the passage route's `widen.total` counts passages (`retrieval/index.mjs:988`, meaningrows' count), but `screen.finder.widen` says "Documents holding at least one of the words: {n}" (`setup-words/rows.mjs:1887`). I therefore draw the passage reading's partial sentence and heading and withhold the count line (the fields route's count, documents, is still drawn as before). A sentence for a passage count (`{n} passages ...`) is a design row; with one, the count line can be drawn for this route too.
+Suite: module 319 tests, 315 pass, 4 fail (A-06 as above, unchanged: R75 x2, R85 x2). Users of the impact run (120 files): 714 pass, 0 fail; the run hit the 30-minute limit during `plane/g83-location.test.mjs`, which passes alone (15 of 15). `checks/run.mjs`: format 0, architecture 0, words 0, fixtures none in my files, coverage of my module 104 of 104 (8 failures listed are other modules' ids from the merge); ownership 0.
+Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 30, module lines 4360
+
+## Completion (SCREENS-DAILY #25, B47: fix round 10, plan item 134; K5265)
+
+Merged `tranche/T51` first (twice: at start, and again before the impact run). Entries applied: A-02, A-17, F-B9, F-B10 (a); one flaw of my own found and fixed (Since you last looked). New tests in `round10.test.mjs`; no generated artifact edited. Each test seen red against the tranche's code (the changed source files swapped back for the run), then green.
+
+**(1) A-02 (R3, R58).** `forward.mjs:8-26`: the choice's value is the roster row's `member_id`, its text the handle (`memberlist` rows: `member_id`, `handle`, `status`); a handle typed is looked up in the same roster and sent as that id, one the roster does not hold is sent as typed, and oneself is refused by handle or id. Test (real store, real page): to-do for the administrator, forward to the founder (id `admin`, handle `founder`): the choice holds `admin` with the text `founder`; the sent body is `to: "admin"`; the task's assignee is `admin` afterwards (red: option value `founder`; green). A unit test of `to` over a roster where id and handle differ. Amended `queue.test.mjs` R3/C75 (its option list was the handle list; now ids with handle text; not weakened).
+**(2) A-17 (R3, R50; DEC-299).** `queue.mjs`: the three acts whose button carries a second intent (`proposedispose` Defer/Dismiss, `queuemute` Turn back on/Mute, `projectrequestanswer` Grant/Decline) store the pressed button's label key in `view.ui.doneFor` when they send (:`send`), and the note reads it (`doneNote`). Tests (real store, real page): Defer then Dismiss, Turn back on, Grant and Decline each say their own word and not the op's label (red: each said the op's label).
+**(3) F-B9 (R56).** `finder-states.mjs:109-122`: the query is tokenised as the language does (term, `name:value`, quoted phrase, operator, parenthesis). No field term and no `passage:` term: fields and passages are both asked, the passages query being each term as `passage:term` with the operators and parentheses as written (`ordinance OR zzzqqq` becomes `passage:ordinance OR passage:zzzqqq`; `"a b"` becomes `passage:"a b"`); passage terms alone with operators (`passage:a OR passage:b`) go to the passages alone (before, the `OR` made it a fields query); a field term keeps it fields-only, so an OR never joins the routes (retrieval R88). The subjects route stays for plain words only: `subjectsnamed` folds every word of `q` to a term and requires all (`entities/index.mjs:910-920`), so the operators would be read as words. Tests: calls recorded over the real plane (five query shapes; field-term controls; plain and `passage:` controls), and the real plane's answer drawn (documents held and read by the real acts): fields hold nothing, passages hold some, the screen draws the passages section and never "nothing matches" (red: no `meaningrows` call).
+**(4) F-B10 (a) (R78).** `finder-states.mjs` no-result branch: the wider reading is the fields route's `widen` when its total is above 0, else the passages route's (`p.value.widen`, the same shape `{interpretation, total, q, detail}`). RETRIEVAL #32 does not yet add it to the real `meaningrows`, so the test scripts the answer (`NOHITS`, `PASSAGES`: fields only, then passages only, both, and 0/none controls); BOB CHANGEs me at its merge if the shape or unit differs (the sentence says documents; the fields route counts documents; the passage route's count is whatever #32 gives).
+**(5) Found in my own module, fixed.** `home.mjs:398` compared `p.lastChange > since` as text: a change stamped `…:47Z` sorts after a look stamped `…:47.304Z`, so a project changed before the look was drawn under Since you last looked. Now `Date.parse` on both. Test `round10.test.mjs` R28 (red, green). Also `home.test.mjs` `busy()` waited 1.1 s of wall clock for "the look stamped by the wall clock"; the look is stamped by the world's clock (frozen at the world's creation, so seconds behind the wall's on this machine) while a project's `lastChange` follows the wall's: it now moves the world's clock past the wall's before the look (R17/R28/R31 failed at the tranche's tip before my change for this reason; green now).
+
+**REPORT (outside my paths): A-06, `queue-producers/index.mjs:146`.** Four tests of mine still fail, as they do at the tranche's tip without my change: `routed.test.mjs` R75 (home), R75 (queue), `fix2.test.mjs` R85 (C94, home), R85 (C94, queue): "who has agreed" is empty. Cause as causes-A.md A-06: `#memberRoster` is `membersOf(host)`, a second `Members` that was never told the copy is claimed (`credentials/index.mjs:170` registers the claim on `membership`'s own instance, `membership/index.mjs:238`), so the founder is not an administrator in its list (`member-roster/index.mjs:342-346`, `:729-732`, `endorsementsOwed` `:1870-1887`). Not mine; the tests are right.
+**Also for BOB:** (a) the fixtures check named three scripted op-table answers in my new tests; I moved the F-B9 tests onto the real plane and hoisted the one scripted widen answer to a named builder, so it reports no line in my files (89 failures at the tranche's tip, none mine). (b) journey-check's tests need `npm ci` in `bio-plane/src/journey-check` (done here; K4113).
+
+**Tests and checks.** Module: 318 tests, 314 pass, 4 fail (the four above, A-06); run exits by itself. `round10.test.mjs`: 10 of 10. Users that `node build/plan/impact.mjs origin/tranche/T51 HEAD` names, run whole (screens-daily 32 files, control-plane 86, plane 33, journey-check 2): 707 pass, 0 fail after `npm ci` in journey-check (8 of 8 there). `checks/run.mjs`: format 0, architecture 0, coverage 7070 of 7070, fixtures 89 failures all outside my files (92 before the hoist), channels 0, words 0. Ownership 0 (8 files).
+Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 22, module lines 4356
 
 ## Completion (SCREENS-DAILY #18, B27: fix round 4, wave 2)
 
@@ -631,3 +654,31 @@ Size (session_01G5xzAiTosZejpAGJJrukB7): test runs 75, module lines 4336
 ## J33 · COMPLETE
 
 COMPLETE (B46). Count fixed: finder's done read results[result_key]; now results.output (the value, e.g. 2; the id only if nothing readable). Failing-first: finder.test.mjs 'R4: Count' red on the merged tranche, green after. Also made fix6/home overrides counted (settle did not wait; intermittent under load) and home's ladder test pick by name. screens-daily 31 files 308/308; format, architecture, coverage 104/104, ownership, words 0; fixtures --list 0 failures. Record: build/jobs/T51/screens-daily.md
+
+## J34 · COMPLETE
+
+COMPLETE · SCREENS-DAILY #25 · B47 (fix round 10, item 134). Record: build/jobs/T51/screens-daily.md, section "Completion (SCREENS-DAILY #25, B47)", pushed (1a64e7159a).
+
+Changed, each test red then green (round10.test.mjs, 10 of 10):
+1. A-02 forward.mjs:8-26: the choice sends the roster's member_id (text = handle); a typed handle is resolved through the roster; oneself refused by id or handle. Real store: forwarding to the founder (id admin, handle founder) leaves the task assigned to admin.
+2. A-17 queue.mjs (proposedispose, queuemute, projectrequestanswer send; doneNote): the "Done: ..." note names the pressed button (Defer, Turn back on, Grant/Decline).
+3. F-B9 finder-states.mjs:109-122: queries with OR/NOT/parentheses/quoted phrases and no field term also send the passage search (each term as passage:term, operators as written); passage terms with an OR go to passages alone; a field term keeps fields only. Subjects route stays plain-words only (subjectsnamed ANDs every word, entities/index.mjs:910-920). Tested over the real plane.
+4. F-B10 (a) finder-states.mjs no-result branch: reads the passage route's widen when the fields route has none. Scripted (RETRIEVAL #32 unmerged): CHANGE me at its merge if the shape or unit differs.
+5. Own flaw fixed: home.mjs:398 compared instants as text (Since you last looked drew a project changed before the look); now Date.parse. Test red/green. home.test.mjs busy() fixed (world clock vs wall clock).
+
+Suites: module 318 tests, 314 pass, 4 fail. Users named by impact.mjs (control-plane 86, plane 33, journey-check 2 files, plus screens-daily): 707 pass, 0 fail. checks/run.mjs: format 0, architecture 0, coverage 7070/7070, words 0, fixtures none in my files; ownership 0.
+
+REPORT (outside my paths): the 4 failing module tests (routed R75 home/queue, fix2 R85 home/queue) fail at the tranche tip without my change: A-06, queue-producers/index.mjs:146 (membersOf(host) is a second Members that was never told the copy is claimed; credentials/index.mjs:170 and membership/index.mjs:238 are the one that is). The tests are right.
+
+Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 22, module lines 4356
+
+## J35 · COMPLETE
+
+COMPLETE · SCREENS-DAILY #25 · B48 (CHANGE K5267, item 135 (1)). Record: build/jobs/T51/screens-daily.md "Completion (SCREENS-DAILY #25, B48)", pushed.
+
+Merged tranche/T51. F-B10 (a): the real passage route's widen is read (finder-states.mjs no-result branch); the walker's case over the real plane (household zzzqqq: passages total 0, widen above 0, fields none) draws the partial sentence, not "nothing matches": red on the earlier code, green; control draws no match.
+
+For BOB (wording): meaningrows' widen.total counts passages (retrieval/index.mjs:988) but screen.finder.widen says "Documents holding ...: {n}" (setup-words/rows.mjs:1887). I draw the partial sentence and heading for the passage reading and withhold its count rather than say a false unit; a design sentence for a passage count would let me draw it.
+
+Suites: module 319 tests, 315 pass, 4 fail (A-06 unchanged, queue-producers/index.mjs:146). Users (120 files) 714 pass, 0 fail (one file hit the 30-minute limit, passes alone 15/15). checks: format/architecture/words 0, no fixtures finding in my files, my coverage 104/104; ownership 0.
+Size (session_01Tu7DPfm2DwNJsuukT5fZvH): test runs 30, module lines 4360

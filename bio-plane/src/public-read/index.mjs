@@ -1290,7 +1290,9 @@ export class PublicRead {
                 signed document with `case-grammar`'s one reading, never live; null when it names none or is not `/5`. */
              project_reference: signed ? workingOnOf(signed.fm) : null,
              bar: state.bar ?? null,
-             bar_detail: state.bar
+             /* D-M6 (K5265): the standard is named only when the case DECLARES one; a bar object that declares none
+                (`declared: false`) answers the no-bar words, as a null bar does. */
+             bar_detail: state.bar && (state.bar.declared === true || state.bar.declared === "true")
                ? localize("public-read.index.the_standard_of_evidence_this", "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it.")
                : word("public-read.bar_recorded_case"),
              bias_acknowledgement: whole ? null : (state.bias_acknowledgement ?? null),

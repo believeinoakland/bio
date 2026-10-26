@@ -19,7 +19,7 @@ import { BasisVersions } from "../../../src/basis-versions/index.mjs";
 import { ObservationLog } from "../../../src/observation-log/index.mjs";
 
 /* The figures op=stats answers on the wire, the set `legacy-store` answered (pinned); their order is free (K861 (5)). */
-const WIRE = ["bundles", "files", "history", "refs", "textIndexOk", "projectParticipants", "projectOwnerVotes",
+const WIRE = ["bundles", "files", "history", "refs", "projectParticipants", "projectOwnerVotes",
               "proposedReadings", "inquiryMigrationReplays", "observationsNonLead", "basisVersions", "basisVersionLegs",
               "suggestRefusals"];
 
@@ -53,7 +53,7 @@ test("R100: op=stats answers every figure of the wire's set, through the caller'
   assert.equal(whole.projectParticipants, one(x, `SELECT count(*) c FROM project_participants`).c);
   assert.ok(whole.projectParticipants >= 1, "the owner participates");
   assert.equal(whole.projectOwnerVotes, 0);
-  assert.equal(whole.textIndexOk, extractionOf(x.ctx).textIndexOk());
+  assert.equal(Object.hasOwn(whole, "textIndexOk"), false, "the default answer carries no index check (A-01)");
   const prod = runProductionsOf(x.ctx).counts(null);
   assert.equal(whole.proposedReadings, prod.proposedReadings);
   assert.equal(whole.suggestRefusals, prod.suggestRefusals);
@@ -69,6 +69,42 @@ test("R100: op=stats answers every figure of the wire's set, through the caller'
     for (const k of ["bundles", "files", "history", "projectParticipants"]) assert.equal(out[k], 0, `${v || "(empty)"} ${k}`);
     assert.equal(out.refs, one(x, `SELECT count(*) c FROM refs WHERE COALESCE(bundle_id, '') <> ? AND COALESCE(target_id, '') <> ?`, x.P, x.P).c, `${v || "(empty)"} refs`);
   }
+});
+
+/* A-01 (walk T51 alpha): the FTS5 integrity check re-reads the whole text index; `op=stats` ran it on every call (5.7 s live,
+   and the single-threaded object made every other op wait). It runs only when the caller names `deep=1` and the control
+   plane's `capacity` stamp is `1` (the administrator class). */
+const checks = (x) => {
+  const seen = [];
+  const sql = x.ctx.storage.sql, exec = sql.exec.bind(sql);
+  sql.exec = (q, ...a) => { if (/integrity-check/.test(String(q))) seen.push(q); return exec(q, ...a); };
+  return seen;
+};
+
+test("R100 (A-01): the default `op=stats` answer runs no text-index integrity check and carries no `textIndexOk`; `deep=1` from the administrator class runs it once and carries it", async () => {
+  const x = await world();
+  const seen = checks(x);
+  for (const path of ["/stats", "/stats?capacity=1", "/stats?viewer=member:alice", "/stats?viewer=member:alice&capacity=1"]) {
+    const out = await x.call(path, null);
+    assert.equal(Object.hasOwn(out, "textIndexOk"), false, `${path} carries no textIndexOk`);
+  }
+  assert.equal(seen.length, 0, "no default read issued an integrity check");
+  const deep = await x.call("/stats?capacity=1&deep=1", null);
+  assert.equal(deep.textIndexOk, true);
+  assert.equal(seen.length, 1, "the named flag ran the check once");
+  const later = await x.call("/stats?capacity=1", null);
+  assert.equal(Object.hasOwn(later, "textIndexOk"), false, "the flag does not stay on");
+  assert.equal(seen.length, 1);
+  const member = await x.call("/stats?deep=1&viewer=member:alice", null);
+  assert.equal(Object.hasOwn(member, "textIndexOk"), false, "a caller without the capacity stamp cannot ask for the walk");
+  assert.equal(seen.length, 1);
+});
+
+test("R100 (A-01): purge's private proof keeps the index check (a deliberate read)", async () => {
+  const x = await world();
+  const seen = checks(x);
+  assert.equal(recordOf(x.ctx).proofCounts().textIndexOk, true);
+  assert.equal(seen.length, 1);
 });
 
 test("R100: the log counts: the wire's `observationsNonLead` leaves out lead rows, purge's proof counts the whole log and the leads, and neither carries the other's key", async () => {

@@ -202,3 +202,36 @@ test("R48 (B7): the expertise item carries the declarer's handle as fills.who; a
   assert.deepEqual(bare.fills, {}, "no handle, no who");
   assert.equal(bare.id, "OBLIGATION::expertise-confirmation-owed::dan::tax law", "the id stays");
 });
+
+/* T51 fix round 10, A-06 (K5257, walk-T51-alpha causes-A): the roster is read through the one membership instance credentials told the
+   copy is claimed, so the founder (`admin`, no members row) is among the administrators, for her own item and for the tally. */
+function claimedGroup() {
+  const w = world();
+  w.member("bob", { role: "admin", handle: "bob" });
+  w.run(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin','s','h',1,?)`, iso(NOW));
+  const propose = (by) => {
+    w.run(`INSERT INTO members (member_id, cover, handle, role, status, invited_by, created, updated, pairing_published)
+           VALUES ('newbie','newbie','newbie','member','proposed',?,?,?,0)`, by, iso(NOW - 3600000), iso(NOW - 3600000));
+    w.run(`INSERT INTO admin_votes (kind, target, voter, reason, created) VALUES ('add','newbie',?,NULL,?)`, by, iso(NOW - 3600000));
+  };
+  return { w, propose };
+}
+
+test("R46 (A-06): the founder proposes: the second administrator's item counts the founder's endorsement among those who have agreed", () => {
+  const { w, propose } = claimedGroup();
+  propose("admin");
+  const bob = owed(w.read("bob", V("bob")));
+  assert.deepEqual(bob.map((i) => i.id), ["OBLIGATION::endorsement-owed::admin::newbie::bob"]);
+  assert.deepEqual(bob[0].basis.have, ["admin"], "the founder has agreed");
+  assert.deepEqual(bob[0].basis.awaiting, ["bob"]);
+  assert.deepEqual(owed(w.read("admin", V("admin"))), [], "control: the founder proposed it, so she is owed nothing");
+});
+
+test("R46 (A-06): the second administrator proposes: the founder has the item, naming who has agreed and who is awaited", () => {
+  const { w, propose } = claimedGroup();
+  propose("bob");
+  const f = owed(w.read("admin", V("admin")));
+  assert.deepEqual(f.map((i) => i.id), ["OBLIGATION::endorsement-owed::admin::newbie::admin"], "the founder is an administrator");
+  assert.deepEqual(f[0].basis.have, ["bob"]); assert.deepEqual(f[0].basis.awaiting, ["admin"]);
+  assert.deepEqual(owed(w.read("bob", V("bob"))), [], "control: the proposer has none");
+});

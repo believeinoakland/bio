@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J33
+**Read** · handled J35
 
 ## B1 · START
 
@@ -479,3 +479,7 @@ Bob (K5257, K5258): the live walk before the alpha found this; it is fixed now, 
 
 Your job: (1) A-02: "Forward to a member" sends the member's handle (`forward.mjs:8-26`) where `tasks` `taskForward` reads a member id (`tasks/index.mjs:645-657`): send `member_id` from the roster (a test where id and handle differ, as the founder `admin`/`sparky`). (2) The "Done: ..." message names the op, not the button's act (`queue.mjs:359`: Defer reads "Dismiss with a reason"): it names the act pressed (DEC-299). (3) F-B9: `OR` and quoted phrases send no passage search (`finder-states.mjs:8`, `:109`, `:111-112`): send it for every query the plane's passage route answers. (4) F-B10 (a): read the passage route's `widen` (RETRIEVAL #32 adds it; BOB CHANGEs you at its merge) where today only the fields route's is read (`finder-states.mjs:209`). A test of each, red then green.
 **Done:** each test red then green; your module's tests green; the users `node build/plan/impact.mjs origin/tranche/T51 HEAD` names that exercise what you changed, green; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` no new finding in your files; ownership 0 (`node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-daily $(git merge-base origin/tranche/T51 HEAD) HEAD`). COMPLETE: what changed (file:line), each test red then green, suite counts, anything REPORTed, and the `Size (<session id>): test runs <n>, module lines <n>` line.
+
+## B48 · CHANGE
+
+CHANGE (K5267, plan item 135 (1)). RETRIEVAL #32 is merged into tranche/T51: `meaningrows` now answers `widen` on the passage route (F-B10 (a)); query-language's widened reading keeps a NOT atom a restriction (R13). Merge tranche/T51 into your branch (`mail jobbranch` is BOB's; you `git merge origin/tranche/T51`), then do your F-B10 (a) part: draw the passage route's `widen` as you draw the other routes', with the walker's exact case red then green. Your other entries stand.

@@ -244,6 +244,22 @@ test("R13 widenable only for an implicit conjunction of more than one atom; impl
   assert.deepEqual(sorted(w.ids({ q: "main shortfall", viewer: V, implicitOp: "or" })), ["A", "B"]);
 });
 
+test("R13 the OR reading keeps a NOT atom a restriction (F-B10 c)", () => {
+  const w = corpus();
+  const or = (q) => sorted(w.ids({ q, viewer: V, implicitOp: "or" }));
+  /* water is in A and B; main in A; budget in B; sewer in C; D holds none of them. */
+  assert.deepEqual(or("water NOT main"), ["B"], "a negated word excludes in the wider reading");
+  assert.deepEqual(or("main budget NOT water"), [], "the positives are ORed, then the exclusion applies");
+  assert.deepEqual(or("main sewer -budget"), ["A", "C"], "a leading - is the same restriction");
+  assert.deepEqual(or("main NOT sewer NOT budget zzzqqq"), ["A"], "every NOT restricts; a word that matches nothing adds nothing");
+  assert.deepEqual(or("NOT water"), ["C", "D"], "a lone NOT is still a restriction");
+  assert.deepEqual(or("NOT water NOT sewer"), ["D"], "several NOT atoms without a positive");
+  /* The widened query is the case F-B10 (c) met: nothing in the strict reading, and the wider one must not be the whole record. */
+  assert.deepEqual(sorted(w.ids({ q: "main sewer NOT budget water", viewer: V })), []);
+  assert.deepEqual(or("main sewer NOT budget water"), ["A", "C"], "the OR reading counts what no NOT excludes");
+  assert.equal(compile({ q: "main sewer NOT budget water", viewer: V }).widenable, true);
+});
+
 test("R24 NEAR: proximity in free text, text: and passage:, capitals only, with its fallbacks and clamp", () => {
   const w = world();
   w.bundle("A", { body: "alpha one two three beta" });                 // three tokens between

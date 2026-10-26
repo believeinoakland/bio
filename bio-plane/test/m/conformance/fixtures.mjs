@@ -38,6 +38,26 @@ export function noDeterminations() {
   return { conformance: w.c, viewer: V("pat"), world: w };
 }
 
+/** R43 (walk E C2a): `determine` noncompliant against a standard whose binding on the body is undetermined, in the shape the
+ *  live walk met: an ordinance declared with a start and no end (`period {from, to: null}`), the body given as text. `asked` is
+ *  that call; `askedByIssuerEntity` the same act against a standard whose issuer is an entity, the body typed as its name
+ *  (`typed`, undetermined) and picked as the entity (`picked`, binds); `benchmarkAsked` a noncompliant outcome against a policy
+ *  another body issued (`STANDARD_NOT_BINDING`) and `bindsAsked` one against a standard that binds (accepted). */
+export function standardBindingUndetermined() {
+  const { w, std, ev, input } = scene();
+  const open = w.standard("Parks Code 12.08.099", { period: { from: "2020-01-01", to: null } });
+  const dept = w.entity("body", "Parks Department", "government");
+  const byEntity = w.standard("Parks Code 12.08.101", { issuer: dept, period: { from: "2020-01-01", to: "2030-12-31" } });
+  const bench = w.standard("State Parks Board Guideline 4", { kind: "policy", issuer: "State Parks Board",
+                                                              period: { from: "2020-01-01", to: "2030-12-31" } });
+  const against = (standard, act = undefined) => input({ ...(act ? { act } : {}), standards: [{ standard, outcome: "noncompliant" }],
+    rows: [{ ...input().rows[0], standard, content: [ev.content] }] });
+  const act = (body) => ({ ...input().act, actor: { role: "Director of Parks", body } });
+  return { conformance: w.c, standard: open, body: "Parks Department", asked: against(open),
+           askedByIssuerEntity: { standard: byEntity, typed: against(byEntity, act("Parks Department")), picked: against(byEntity, act(dept)) },
+           benchmarkAsked: against(bench), bindsAsked: against(std), viewer: V("olive"), world: w };
+}
+
 const IMPORT_SHA = "a".repeat(64);
 const HELD = "INQ-2026-0201-held";
 const made = (d) => { if (!d.ok) throw new Error(`fixture determination refused: ${JSON.stringify(d).slice(0, 300)}`); return d.id; };

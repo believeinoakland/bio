@@ -1385,7 +1385,16 @@ function parseTokens(tokens, implicitOp, ctx) {
     }
     if (!kids.length) return null;
     if (kids.length === 1) return kids[0];
-    return explicit ? { op: "and", kids, explicit } : { op: implicitOp, kids };
+    if (explicit) return { op: "and", kids, explicit };
+    if (implicitOp !== "or") return { op: implicitOp, kids };
+    /* R13: the OR reading joins the positive atoms by OR, but a `NOT` atom stays a restriction: ORed in,
+       `NOT x` would match every document and the wider reading would count the whole record. */
+    const nots = kids.filter((k) => k.op === "not");
+    const pos = kids.filter((k) => k.op !== "not");
+    if (!nots.length) return { op: "or", kids };
+    const head = pos.length > 1 ? { op: "or", kids: pos } : pos[0];
+    const all = head ? [head, ...nots] : nots;
+    return all.length === 1 ? all[0] : { op: "and", kids: all };
   };
   const orExpr = () => {
     const kids = [];
