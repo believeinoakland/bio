@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { DECLARED_OPS as CITATION_OPS } from "../../../src/citation/index.mjs";
+import { DECLARED_OPS as CREDENTIAL_OPS } from "../../../src/credentials/index.mjs";
 import { T51_STANDARD_OPS, T51_STANDIN_OPS, T51_STANDIN_HELP } from "../../../src/affordances/act-help.mjs";
 
 const gate = { needs: () => null, mode: () => "session" };
@@ -26,7 +27,7 @@ test("R71: the answer with no target explains each of the five Standard acts (DE
 });
 
 test("R71: `leggrade` (citation R24, merged) is explained under `act.leggrade.does`: the word list's sentence once it holds one, until then a "
-   + "plain default that names the grade, its ceiling and its reason; `signerknown`, which no module declares yet, is held none", () => {
+   + "plain default that names the grade, its ceiling and its reason", () => {
   const help = answered();
   assert.equal(A.ACT_HELP_KEYS.leggrade, "act.leggrade.does");
   assert.ok(typeof help.leggrade === "string" && help.leggrade.trim().length > 0);
@@ -38,7 +39,19 @@ test("R71: `leggrade` (citation R24, merged) is explained under `act.leggrade.do
   }
   /* the real op: declared, a member's act, and its help is the one answer a screen reads (R49) */
   assert.ok(Object.hasOwn(CITATION_OPS, "leggrade") && CITATION_OPS.leggrade.classes.includes("member"), "citation declares op=leggrade, a member's act");
-  assert.equal(Object.hasOwn(help, "signerknown"), false, "signerknown is declared by no module yet: held none");
+});
+
+test("R71: `signerknown` (credentials R83, merged) is explained under `act.signerknown.does`: the word list's sentence once it holds one, until then "
+   + "a plain default naming the administrator, the self-registered key and that nothing else changes", () => {
+  const help = answered();
+  assert.ok(Object.hasOwn(CREDENTIAL_OPS, "signerknown"), "credentials declares op=signerknown");
+  assert.equal(A.ACT_HELP_KEYS.signerknown, "act.signerknown.does");
+  if (hasWord("act.signerknown.does")) assert.equal(help.signerknown, word("act.signerknown.does"));
+  else {
+    assert.ok(T51_STANDIN_OPS.includes("signerknown"));
+    assert.equal(help.signerknown, T51_STANDIN_HELP.signerknown);
+    for (const part of [/administrator/i, /key/i, /self|own|registered/i, /nothing else/i]) assert.match(help.signerknown, part);
+  }
 });
 
 test("R71 control: an op absent from the list answers none, and the table is one entry per op (no alias, no owed_ key)", () => {
