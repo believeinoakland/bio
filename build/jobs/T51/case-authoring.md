@@ -669,3 +669,17 @@ REPORT for CHANGE B40 (screens-publish J43). Done and pushed (job/T51/case-autho
 ## J32 · REPORT
 
 REPORT for CHANGE B41 (OP-GRADES #30 merged). Merged origin/tranche/T51 into job/T51/case-authoring (merge commit, pushed). Module suite: 262 tests, 261 pass, 1 fail: the R31 chain (control-plane r10 and store-assembly R83 are not in this module). format, architecture, coverage (59 of 59), ownership all 0 failures. I am not posting COMPLETE: the R31 chain is red until RATIFICATION #39 merges and the R31 CHANGE arrives; I'll post one COMPLETE covering R31, R87 and B40 then. Waiting for that CHANGE.
+
+## Completion record for B42 (CHANGE, K5214): R31, R87, B40
+
+**Entries applied.** Merged `origin/tranche/T51` (ratification #39 in: R60's chain, R61's member basis). R31's chain test now passes green on its own: the severed chain is clean and its control is unchanged. R87 (B39) is built and green. B40's fixtures are kept (`fixtures.mjs`, with `fixtures.test.mjs` checking each answer against a fresh real call).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-authoring/`: 262 tests, 262 pass, 0 fail.
+- format 0 failures; architecture 0; coverage 59 of 59 live ids named; ownership 0.
+
+**Deferred.** None.
+
+**Found, not changed.** The R31 fix needed the case-catalogue, ratification and publication merges (B38), which I did not touch.
+
+**Size (session_01PkeaPY8AiQwGQmpx2xoXoy): test runs 4, module lines 3121** (`bio-plane/src/case-authoring/*.mjs`; no source change this job).
