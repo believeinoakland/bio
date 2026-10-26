@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_012TPANXXg4GGQVhTc5yKHd8 · depth 2 · WORKING · handled B43
+**Status** · session_012TPANXXg4GGQVhTc5yKHd8 · depth 2 · WAITING ON BOB (J36) · handled B43
 
 ## J1 · REPORT
 
