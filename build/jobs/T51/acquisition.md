@@ -921,3 +921,35 @@ Size (session_01P1BKBM3MEP7CiKCPBTV2fp): test runs 7, module lines 14486 (`bio-p
 **Still open for BOB** (unchanged from J52): (1) the requirement line for K5132's clock rule (the test names R46 meanwhile); (2) whether to move about ten record instants to the instance clock; (3) the 50 `contract-no-run` lines.
 
 Size (session_01P1BKBM3MEP7CiKCPBTV2fp): test runs 8, module lines 14486
+
+## J54 · COMPLETE
+
+R124 applied (entry 'K5215'; head dbedf4f0cf on job/T51/acquisition, tranche/T51 merged).
+
+Changed
+- bio-plane/src/acquisition/index.mjs: every recorded instant and instant read now goes through `instantOf(cap)` (the handed instant, else `BIO_NOW_MS`, else the wall clock). Sites: :922 attest not-asked `at`; :1168 `retrieved`; :1229 reputation handed the instant as a fourth argument, and addressReputation (:2027) stamps `checked_at` from it (:2029, :2052); :1371 parked fetch `since`; :1787 pending render `since` (in-memory; its staleness read at :2392); :1834 attest `asking`; :2297 governor cooling-off read; :2422 `render_done.since`; :2444 continuation `retrieved`; :2598 `failed_at`; :2602 `since`; :2622 `failed_at`; :806 archive TimeGate default; :2661 openCaptures default `now` (reads the store's clock). Session-id suffixes (`Date.now().toString(36)`) are ids, not instants, and are unchanged.
+- bio-plane/test/m/acquisition/k5205-clock.test.mjs: new case naming R124 (a pinned BIO_NOW_MS is read by a capture's `retrieved` and a reputation's `checked_at`; control with none pinned reads the wall clock).
+- bio-plane/test/m/acquisition/t50.test.mjs: one assertion at :171 changed. It asserted that openCaptures with no `now` lists nothing, because the real wall clock is past the session's expiry. With the instance clock pinned in the same test (pinClock), R124 says the default instant is that pinned clock, so the session is live there. The assertion now says so. Nothing else in that test changed.
+
+Failing first
+- k5205-clock.test.mjs R124 case: red before (`retrieved` 2026-10-26T00:15:19Z, expected 2001-01-01T00:00:00Z), green after.
+
+Suites
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/acquisition/*.test.mjs` (no force-exit): tests 362, pass 362, fail 0. Before the t50 change: 361 pass, 1 fail (that assertion).
+- k5205-clock.test.mjs alone: 3 tests, pass 3.
+
+Checks (absolute root /home/user/bio)
+- format.mjs: 178 modules, 178 requirements files; 0 failures.
+- architecture.mjs acquisition: 66 product files, 261 relative imports; 0 failures.
+- coverage.mjs acquisition: 78 of 78 live requirement ids named by a test (R124 among them); 0 failures.
+- ownership.mjs acquisition: 0 failures (4 files changed by acquisition: the three above and this record).
+- fixtures.mjs acquisition --list: 50 failures, every one a `contract-no-run` line in acquisition's tests (fix6-t51, fix3-t51, fix4b-owed and others). K5215 says these 50 stay for BOB's mechanical pass, so they are not new and not fixed here.
+- run.mjs: 50 acquisition findings, the same `contract-no-run` lines; no new words finding, no new sentence added. Other findings are in store-assembly and other modules.
+- impact.mjs origin/tranche/T51 HEAD: 0 of 178 modules affected, 0 of 2970 test files (the changed functions are module-internal).
+
+Markers
+- None added (`fixtures-own` / `fixtures-generic`): 0.
+
+Deferred: none.
+
+Size (session_01JhzuHffwXuC8DT86HxHdZC): test runs 4, module lines 3067
