@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import { isDelimitedText } from "../../../src/csv-reader/index.mjs";
 import { enc } from "./fixtures.mjs";
 
-const CSV = enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n");
-const TSV = enc("id\tname\tamount\n1\tAnn\t10\n2\tBo\t20\n3\tCy\t30\n");
+const CSV = enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n4,Di,40\n5,Ed,50\n");
+const TSV = enc("id\tname\tamount\n1\tAnn\t10\n2\tBo\t20\n3\tCy\t30\n4\tDi\t40\n5\tEd\t50\n");
 const u16le = (s) => { const out = [0xff, 0xfe]; for (const c of s) { const n = c.charCodeAt(0); out.push(n & 255, n >> 8); } return new Uint8Array(out); };
 const TYPES = ["text/csv", "application/csv", "text/comma-separated-values", "text/tab-separated-values", "text/plain", "application/vnd.ms-excel", "application/octet-stream"];
 
@@ -99,14 +99,40 @@ test("R26 prose with commas on most lines, declared plain text, is not a table (
 });
 
 test("R26 controls: a repeating count is a table in a .txt, and a declared CSV or TSV keeps presence", () => {
-  const three = enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n");
+  const three = enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n4,Di,40\n5,Ed,50\n");
   assert.equal(isDelimitedText("a.txt", "text/plain", three), true, "a real three-column CSV named .txt");
   assert.equal(isDelimitedText("a.csv", "text/plain", three), true, "the same bytes named .csv");
   assert.equal(isDelimitedText("a.csv", "text/csv", three), true);
-  assert.equal(isDelimitedText("a.txt", "text/plain", enc("id\tname\tamount\n1\tAnn\t10\n2\tBo\t20\n")), true, "a TSV named .txt");
+  assert.equal(isDelimitedText("a.txt", "text/plain", enc("id\tname\tamount\n1\tAnn\t10\n2\tBo\t20\n3\tCy\t30\n4\tDi\t40\n5\tEd\t50\n")), true, "a TSV named .txt");
   assert.equal(isDelimitedText("a.csv", "text/plain", TITLED), true, "cause 20: a ragged CSV with a title block named .csv");
   assert.equal(isDelimitedText("a.csv", "text/csv", TITLED), true);
   assert.equal(isDelimitedText("a.csv", "text/plain", MINUTES), true, "a .csv name keeps presence on the majority (R7)");
   assert.equal(isDelimitedText("minutes.txt", "text/csv", MINUTES), true, "a declared CSV type keeps presence on the majority (R7)");
   assert.equal(isDelimitedText("minutes.txt", "text/tab-separated-values", enc("a\tb\n1\t2\n3\n4\t5\t6\n")), true, "a declared TSV type keeps presence");
+});
+
+/* csv-reader R27 (T51 fix round 10; walk C C-M14): beyond R26, declared plain text is delimited only with at least 5 records and
+   a mean field length under 40 characters. Every case goes through the exported function. */
+const WALK_C_MINUTES = enc([
+  "City of Walkton, Council minutes, March 2, 2026.",
+  "Item 7: the Council approved the roof contract with Oak Roofing LLC, for a sum, not to exceed $48,500.",
+  "Miguel Alvarez, Director of Public Works, reported that the work, as bid, is on schedule.",
+  "",
+].join("\n"));
+const SIX_ROWS = enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n4,Di,40\n5,Ed,50\n");
+const LONG_FIELDS = (n) => enc(Array.from({ length: n }, (_, i) => `${"x".repeat(45)}${i},${"y".repeat(45)},${"z".repeat(45)}`).join("\n") + "\n");
+
+test("R27 the walker's three lines of minutes with equal comma counts, declared plain text, are not delimited", () => {
+  assert.equal(isDelimitedText("alpha-c-minutes.txt", "text/plain", WALK_C_MINUTES), false, "three records, three commas on each");
+  assert.equal(isDelimitedText("alpha-c-minutes.txt", "text/plain; charset=utf-8", WALK_C_MINUTES), false);
+  assert.equal(isDelimitedText("alpha-c-minutes.txt", "application/octet-stream", WALK_C_MINUTES), false, "named .txt");
+  assert.equal(isDelimitedText("alpha-c-minutes.csv", "text/csv", WALK_C_MINUTES), true, "a declared CSV keeps R7: the new floor is for plain text only");
+});
+
+test("R27 control: a six-row comma table in a .txt is delimited; four records, or fields of 40 characters on average, are not", () => {
+  assert.equal(isDelimitedText("table.txt", "text/plain", SIX_ROWS), true, "six records, short fields");
+  assert.equal(isDelimitedText("table.txt", "text/plain", enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n")), false, "four records: below the floor of five");
+  assert.equal(isDelimitedText("table.txt", "text/plain", enc("id,name,amount\n1,Ann,10\n2,Bo,20\n3,Cy,30\n4,Di,40\n")), true, "exactly five records");
+  assert.equal(isDelimitedText("table.txt", "text/plain", LONG_FIELDS(8)), false, "eight records of three 46-character fields: prose-like");
+  assert.equal(isDelimitedText("table.csv", "text/plain", LONG_FIELDS(8)), true, "the same bytes named .csv keep R7");
 });
