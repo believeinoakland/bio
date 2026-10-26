@@ -538,6 +538,8 @@ export const plan = Object.freeze({
         TIER_REFUSED: function (r, cs) { return cs.w("screen.plan.a.tier.belongs.only.on.a") + " " + cs.w("screen.plan.change.the.kind.or.clear.the"); },
         LOBBYING_NO_REQUIREMENT: function (r, cs) { return cs.w("screen.plan.an.option.marked.as.lobbying.must") + " " + cs.w("screen.plan.choose.it.or.clear.the.mark"); },
         DATE_REFUSED: function (r, cs) { return cs.w("screen.plan.a.date.needs.the.law.order") + " " + cs.w("screen.plan.fix.the.date.and.add.again"); },
+        // R56 (walk E K4; walk C C-M17): the owner's refusal names the empty part; its `detail` is the member's sentence
+        ADDRESSEE_INCOMPLETE: function (r, cs) { return cs.esc(typeof r.detail === "string" && r.detail ? r.detail : r.translation || ""); },
         ADDRESSEE_REFUSED: function (r, cs) { return cs.w("screen.plan.an.option.can.be.directed.to") + " " + cs.w("screen.plan.change.who.it.is.for"); },
       },
       send: function (view, el, cs) {
@@ -548,11 +550,6 @@ export const plan = Object.freeze({
         if (detail) body.detail = detail;
         const text = function (id) { return String(cs.value(id) || "").trim(); };
         const kind = String(cs.value("plan-opt-adk") || "none");
-        // R56 (walk E K4; walk C C-M17): an addressee is refused for the part left empty, and the sentence names that part
-        if (kind === "office" || kind === "press" || kind === "organisation") {
-          if (!text("plan-opt-arole")) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.plan.option.role") } } };
-          if (!text("plan-opt-abody")) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.plan.the.body.or.organization") } } };
-        }
         if (kind === "office") body.addressee = { state: "named", kind: "office", role: text("plan-opt-arole"), body: text("plan-opt-abody") };
         else if (kind === "press" || kind === "organisation") body.addressee = { state: "named", kind: kind, role: text("plan-opt-arole"), organisation: text("plan-opt-abody") };
         else if (kind === "audience") body.addressee = { state: "audience", description: text("plan-opt-adesc") };

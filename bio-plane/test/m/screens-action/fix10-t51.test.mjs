@@ -7,6 +7,8 @@ import { matterWorld, question as concluded, standard as declareStandard } from 
 import { actionWorld, openIn, filingIn, entityOf, answerOf } from "./world-C.mjs";
 import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, PLAN, PLAN_ID, ACTION, ACTION_ID, ROUTES, beside } from "./page.mjs";
 import { entitieskind as entitiesListing } from "../entities/fixtures.mjs";
+import { dateBeforePhase } from "../action-plans/fixtures.mjs";
+import { seeded, opened, V } from "../action-plans/fixture.mjs";
 
 const slotOf = (p, b) => p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`);
 const optionTexts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent.trim());
@@ -101,24 +103,33 @@ test("R56 (walk E K-words): a date check that cannot be told for want of a day n
   assert.ok(strip.includes(W("action-plans.says.whether_regulated_date_falls", { oid: name, id: "Phase 1", date: D("2026-11-30"), day_undetermined: why })));
   assert.ok(strip.includes(`${name}'s regulated date ${D("2026-11-30")} falls before phase Phase 1 can start (${D("2026-12-01")})`));
   for (const raw of ["opt-1", "p1", "2026-11-30", "2026-12-01"]) assert.ok(!strip.includes(raw), `${raw} is not drawn`);
-  // control: the check the plan words by its key with the day it carries is drawn by that key
-  const q = await open(ROUTES.plan, withPlan({ checks: [{ check: "date_before_phase", scenario: 1, phase: "p1", option: "opt-1", date: "2026-11-30", start: "2026-12-01", says: "x" }] }));
-  assert.ok(text(q, main(q).querySelector(".mk-checks2")).includes(W("action-plans.says.regulated_date_falls", { oid: name, id: "Phase 1", date: D("2026-11-30"), start: D("2026-12-01") })));
+  // a determined check from action-plans' own fixture carries the day the phase starts: worded by its key, names and dates, no ids
+  const f = dateBeforePhase();
+  const q = await open(ROUTES.plan, { ...DATA_PLANE, plan: ok(f.read) });
+  const starts = f.read.checks.filter((c) => c.check === "date_before_phase");
+  assert.ok(starts.length > 0 && starts.every((c) => typeof c.start === "string"));
+  const drawn = text(q, main(q).querySelector(".mk-checks2"));
+  for (const c of starts) assert.ok(drawn.includes(W("action-plans.says.regulated_date_falls", { oid: f.read.options.find((o) => o.id === c.option).summary, id: "A", date: D(c.date), start: D(c.start) })));
+  for (const c of starts) assert.ok(!drawn.includes(c.date) && !drawn.includes(c.start), "no ISO day");
 });
 
-test("R56 (walk E K4; walk C C-M17): an option to an office, the press or an organization with its role or its body empty is refused in place naming the empty part, and sends nothing", async () => {
-  const p = await open(ROUTES.plan, DATA_PLANE);
-  const missing = async (values, key) => {
-    const b = await press(p, "optionadd", { values: { "plan-opt-summary": "Tell the story", "plan-opt-category": "awareness", ...values }, reason: "x" });
-    assert.equal(p.byOp("optionadd").length, 0, "nothing was sent");
-    assert.ok(beside(p, b).includes(W("findin.fieldneeded", { field: W(key) })), key);
-  };
-  await missing({ "plan-opt-adk": "press", "plan-opt-arole": "", "plan-opt-abody": "" }, "screen.plan.option.role");
-  await missing({ "plan-opt-adk": "press", "plan-opt-arole": "Reporter", "plan-opt-abody": "" }, "screen.plan.the.body.or.organization");
-  await missing({ "plan-opt-adk": "office", "plan-opt-arole": "", "plan-opt-abody": "Office of the City Clerk" }, "screen.plan.option.role");
-  // control: both parts given sends the addressee
-  await press(p, "optionadd", { values: { "plan-opt-summary": "Tell the story", "plan-opt-category": "awareness", "plan-opt-adk": "press", "plan-opt-arole": "Reporter", "plan-opt-abody": "The Daily Ledger" }, reason: "x" });
-  assert.deepEqual(last(p, "optionadd").body.addressee, { state: "named", kind: "press", role: "Reporter", organisation: "The Daily Ledger" });
+test("R56 (walk E K4; walk C C-M17): an option to an office, the press or an organization with its role or its body empty draws the owner's refusal naming the empty part", async () => {
+  const w = seeded();
+  opened(w, [w.SI, w.S1]);
+  const refusal = (addressee) => w.ap.optionAdd({ plan: w.PL, summary: "Tell the story", category: "awareness", subjects: [w.S1], addressee, author: V("bob"), viewer: V("bob") });
+  const cases = [{ state: "named", kind: "press", role: "", organisation: "" }, { state: "named", kind: "press", role: "Reporter", organisation: "" },
+    { state: "named", kind: "office", role: "", body: "Office of the City Clerk" }];
+  for (const [i, addressee] of cases.entries()) {
+    const real = refusal(addressee);
+    assert.equal(real.reason, "ADDRESSEE_INCOMPLETE");
+    const p = await open(ROUTES.plan, { ...DATA_PLANE, optionadd: ok(real) });
+    const kind = addressee.kind;
+    const b = await press(p, "optionadd", { values: { "plan-opt-summary": "Tell the story", "plan-opt-category": "awareness", "plan-opt-adk": kind, "plan-opt-arole": addressee.role,
+      "plan-opt-abody": addressee.organisation ?? addressee.body }, reason: "x" });
+    assert.equal(p.byOp("optionadd").length, 1, `case ${i}: the plane is asked`);
+    assert.ok(beside(p, b).includes(real.detail.replace(/\s+/g, " ").trim()), `case ${i}: the owner's sentence, naming the part`);
+    assert.ok(!beside(p, b).includes(W("refusal.ADDRESSEE_REFUSED")), "not the sentence about a private individual");
+  }
 });
 
 /* ---------- Start an action (walk E K-new) ---------- */
