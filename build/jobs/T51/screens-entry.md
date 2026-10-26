@@ -288,3 +288,8 @@ What changed: setup.mjs: read `zone` (factstatus @team/time_zone); a time-zone s
 Checks: format 0, architecture 0, coverage 31/31, words 0, fixtures none in screens-entry, ownership 0. Users (impact, 119 files, shell re-point patched): 713/714; the one red is journey-check, REPORT item 2.
 Markers added: none. R34's mark is yours to strike once the re-point merges.
 Size (session_01JdJGDMdqKM21B8AxsWMQLp): test runs 9, module lines 1197
+
+## J24 · COMPLETE
+
+COMPLETE (B22). tranche/T51 merged (interface-shell R134 on it); no local patch; the shell is the real one. screens-entry tests with journey-check's pseudo.test.mjs: 109 run, 108 pass. The one red is journey-check's 'R29 (b), (c): setup drawn with the real catalogue' (its modelled plane has no factstatus; JOURNEY-CHECK #16 not yet on the tranche; passes once it is). The screens-entry suite itself: 101/101. format 0, architecture 0, coverage 31/31, words 0, ownership 0, no finding in my files from checks/run.mjs. R34 met; BOB strikes its mark. Markers added: none.
+Size (session_01JdJGDMdqKM21B8AxsWMQLp): test runs 11, module lines 1197
