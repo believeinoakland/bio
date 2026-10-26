@@ -416,3 +416,7 @@ Size (session_01KTd17XTyLAtTuNkmbbXcVw): test runs 5, module lines 92
 - Applied: `bio-plane/src/queue/index.mjs` `#dispositionOf`: a `signer-self-registered` item's disposition is `available: true`, `op: signerknown`, `scope: key`, `key` the subject's key, `acts: [signerknown]`, `requires: [keyB64]`, `instead: signerset` (door unchanged); the kind's door detail names both acts. The bridge (R28) is unchanged and still names `signerset`.
 - Tests (`bio-plane/test/m/queue/signer.test.mjs`): R12's test now reads `available: true`; new R96 disposition test (red, then green); new R96 walker's-case test through the real credentials acts and the real producers (register a key, `signerKnown`, the feed holds none, a second key still mints one): RED until `credentials` R83 merges (`w.credentials.signerKnown is not a function`).
 - Suite: queue module tests 238, 237 pass, 1 red (the one above, waiting on credentials). Checks: format, architecture, coverage (57 of 57), ownership 0 failures.
+
+## J21 · REPORT
+
+R96 disposition built and green (signer-self-registered: available true, acts [signerknown], instead signerset; bridge unchanged). The walker's end-to-end test is red only because credentials.signerKnown (R83) is not merged yet; queue module 237/238. Waiting for your CHANGE when credentials merges; then I re-run and post COMPLETE.
