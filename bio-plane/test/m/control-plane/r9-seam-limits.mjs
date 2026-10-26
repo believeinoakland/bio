@@ -267,19 +267,20 @@ export function sections(kit, counting) {
   test("R9 seam §14b (G124b; R72, R111): the door hands `uploadCapture` its own byte ledger and the request's declared length: a 24 MiB text peaks at the file and at most two parts beyond it, and nothing is held once it is answered", { timeout: 900000 }, async () => {
     const { ownerOps: controlPlaneOwnerOps } = await import("../../../src/store-assembly/owner-ops.mjs");
     const { fresh, bucket } = await import("../capture/fixture.mjs");
-    // fixtures-contract: plane job-registrar
-    const { jobRegistrarStub } = await import("../../job-registrar-stub.mjs");
+    const { store } = await import("../store-assembly/fixture.mjs");
+    const { pendingOf } = await import("../../../src/store-assembly/pending.mjs");
     const PART = 8 * MiB;
     const b = bucket();
     b.createMultipartUpload = async (key) => { const ps = []; return { uploadPart: async (n, bytes) => { ps[n - 1] = new Uint8Array(bytes); return { partNumber: n }; },
       complete: async () => { b.held.set(key, new Uint8Array(Buffer.concat(ps))); }, abort: async () => {} }; };
     const w = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
     w.c.evidenceKey = (d) => `bio/captures/${d}`;
-    const j = jobRegistrarStub();
-    // fixtures-contract: plane job-registrar
-    w.c.registerJob = j.registerJob; w.c.armJobs = j.armJobs;
+    /* the job registrar is store-assembly's: the assembled store's real one, on the store's own storage */
+    const x = await store({});
+    const j = pendingOf(x.ctx);
+    w.c.registerJob = (e) => j.registerJob(e); w.c.armJobs = () => j.armJobs();
     const real = w.core.transact.bind(w.core);
-    w.core.transact = (fn) => { try { return real(() => j.transact(() => { const out = fn(); if (out && typeof out === "object" && out.ok === false) throw Object.assign(new Error("refused"), { refused: out }); return out; })); } catch (e) { if (e && e.refused) return e.refused; throw e; } };
+    w.core.transact = (fn) => { try { return real(() => x.ctx.storage.transactionSync(() => { const out = fn(); if (out && typeof out === "object" && out.ok === false) throw Object.assign(new Error("refused"), { refused: out }); return out; })); } catch (e) { if (e && e.refused) return e.refused; throw e; } };
     /* the ledger the door builds is the one capture is handed: seen through a spy on the method the owner-ops map calls */
     let seen = null, declared = null;
     const of = { capture: () => ({ uploadCapture: (a) => { seen = a.ledger; declared = a.declared; return w.c.uploadCapture(a); } }) };

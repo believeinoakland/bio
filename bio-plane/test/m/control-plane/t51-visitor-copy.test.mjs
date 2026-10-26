@@ -16,6 +16,7 @@ const { captureOf } = await import("../../../src/capture/index.mjs");
 const { recordOf } = await import("../../../src/record-core/index.mjs");
 const { promotionOf } = await import("../../../src/promotion/index.mjs");
 const { record } = await import("./record.mjs");
+const { pendingOf } = await import("../../../src/store-assembly/pending.mjs");
 
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 const SHELL = HTML("<div id=app></div>");
@@ -28,9 +29,8 @@ const screen = (ctx) => ({ now: () => Date.now(), digest: async (t) => hex(t), w
   call: async (op, { query = {}, body } = {}) => (op === "allocid" ? { ok: true, ...recordOf(ctx).allocId(query.prefix, query.year) } : promotionOf(ctx).promote({ ...body, ...who })) });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/* the plane's ledger, as a log of entries */
-// fixtures-contract: plane owed-ledger
-const ledger = () => { const entries = new Map(); return { entries, owedLater: async (e) => { entries.set(e.session, e); return { ok: true }; } }; };
+/* store-assembly's ledger: the assembled store's real one (`pendingOf(ctx).owedLater`, on the record's own storage), the entries it was handed kept beside it for the alarm's run */
+const ledger = (ctx) => { const entries = new Map(), real = pendingOf(ctx); return { entries, owedLater: async (e) => { entries.set(e.session, e); return real.owedLater(e); } }; };
 
 async function captured() {
   const r = await record();
@@ -39,9 +39,8 @@ async function captured() {
   let open; const gate = new Promise((x) => (open = x));
   r.env.RENDERER = { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(R_ANSWER(JSON.parse(init.body).url))); } };
   const cap = captureOf(r.ctx);
-  const L = ledger();
-  // fixtures-contract: plane owed-ledger
-  cap.owedLater = L.owedLater;
+  const L = ledger(r.ctx);
+  cap.owedLater = (e) => L.owedLater(e);
   const net = network({ [PG]: () => page(SHELL) });
   let first;
   try { first = await cap.acquire({ locator: PG, render: true }, { cls: "member", member: true, sessMember: "member:ann", storeName: "bio", renderWaitMs: 20 }); }
