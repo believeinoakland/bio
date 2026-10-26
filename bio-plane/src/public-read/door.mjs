@@ -4,7 +4,7 @@
  * to the Worker's `publishedRoutes` (`../publication/worker.mjs`, this module's by `paths`, K697, K702).
  * `bindPublishedPlane`'s hook hand-over stays the door's.
  *
- * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of its eight ops, or null for any other, so the door
+ * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of its ops, or null for any other, so the door
  * asks it and goes on. `helpers` are the door's own (`control-plane`'s, later in the order, handed in as
  * `capturePublicOp` is): `json`, `requiredArgument`, `storeSilent`, `storeRefusal`, `doAnswer`; and, optionally,
  * `publicReads`, the names of the registered reads the door routes as ops of their own (R18).
