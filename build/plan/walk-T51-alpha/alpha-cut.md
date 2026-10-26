@@ -29,13 +29,13 @@ a) Approve (typed in BOB's session) each refused `git push origin dist/cut-0.87.
 b) GitHub click: approve the release-sign run in environment `release` (step 9).
 c) *(Retired by K5293: the signature controls and the newgroup/civicsmith-site deploys are BOB's acts, no approval of Bob's.)*
 d) Rehearsal prerequisites on his side: CS_TEST_CF_* variables in "Default" environment, network allowance, Workers Paid upgrade, consent pages (K4942, K4950, K4967).
-e) The stewards' contact address (below). f) His own install walk (K5258).
+e) *(Done: the stewards' address is named, K5298.)* f) His own install walk (K5258).
 
 ## Rehearsal variables here
 `env | grep -c CS_TEST_CF` in this environment: 0 (variables absent; expected, they live only in the "Default" environment, K4956/K4964). The BIO environment's proxy injects project credentials on api.cloudflare.com so the throwaway account cannot be reached from BIO sessions at all (K4956). Whether Bob has since done the network allowance (K4967) and the Paid upgrade: no ruling after K4967 says so (ACCOUNT-MEASURE #5 not found in the rulings read); unverified.
 
 ## Stewards' contact address
-NOT named. K2799 (Bob: "I'll get you the email address ... before a public release goes out"; a public release is not cut without it, installer R48); K3385 H2 waits on Bob's choice; K3470 says stewards@civicsmith.org forwards to a verified neologic.com address but delivery was failing (N1159, "debugged from Saturday"); site/wrangler.jsonc:9-11 and K5039: STEWARDS_ADDRESS unset, site noindex; current.md:63 lists N923/N1159/stewards R7 as blocked on Bob. K5258 asks the alpha be available on civicsmith.org without mentioning the address. Decision for Bob: name it (or rule that an alpha for his own throwaway install does not need it); the site Worker's STEWARDS_ADDRESS var and Email Routing (needs a token with zone DNS/Email Routing permission, K3390) are the acts.
+NAMED (Bob, 2026-10-26, K5298): **stewards@civicsmith.org**, forwarding confirmed working through Cloudflare Email Routing to his own mailbox (the earlier silence was Gmail dropping mail whose sender and forwarded destination were both neologic.com, Bob's diagnosis). K2799's precondition is met, so the alpha is cut with it: `STEWARDS_ADDRESS` and `NOTIFY`'s `destination_address` are both this address (stewards R1, R14; installer R48). K3385 H2 and K3470's wait are over.
 
 ## 0.86.0 duration
 Cut worktree base 2026-10-20 01:30Z (b8ba7e7b43), version commit 01:35Z, images recorded 02:20Z, signed 03:21Z, installer rebuilt 03:27Z (git log) = about 2 h from cut to embedded installer; deployment to biosmoke8 and the smoke followed the same day (K4176, K4178, K4181); no ruling gives a single wall-clock total. Delays: push refusal needed Bob's approval (K4163, K4172), Docker 429 (K4176).
