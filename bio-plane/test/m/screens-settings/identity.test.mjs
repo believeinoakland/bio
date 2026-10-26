@@ -81,7 +81,7 @@ test("R58 with a recorded group group-identity says once, above its title, that 
 });
 
 test("R58 for an older installation answering group null it says the short name is not recorded yet, in its own state, and draws no field", async () => {
-  const t = await team({ group: null });   // an installation that recorded no producing team
+  const t = await team({ instanceName: null });   // an installation that recorded no producing team
   await t.founder.act("groupnameset", { body: { name: "East Oakland Watch" } });
   const id = await t.rosa.read("groupidentity");
   assert.equal(id.group, null);
