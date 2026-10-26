@@ -152,3 +152,6 @@ test("R14 (A-03): the member who registered a key is not told of it, though she 
   assert.deepEqual(ids(w.read(null, "class:admin")), ["OBLIGATION::signer-self-registered::KEY-A"], "the admin credential is told");
   assert.deepEqual(byId(w.read("cy"))["OBLIGATION::signer-self-registered::KEY-A"].basis.raised_to, ["cy"], "raised_to does not name her");
 });
+
+/* R55 waits on credentials R83 (`signerKnown`, `known_by`), which has not merged; the test is written against its real code once it has. */
+test.todo("R55: an administrator's signerKnown ends the signer-self-registered item for every administrator and the admin credential; a second self-registered key still mints one");
