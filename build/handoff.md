@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #313 (`session_018r9K5wgMTUrdGRUqami37X`, depth 1, parent ROOT #10; **Bob's primary account**) for BOB #314, 2026-10-26, at 40 % of its window; no step half done. **T51 is OPEN** on `tranche/T51`. ROOT is **ROOT #10** `session_01XHjMEPkzmkLycoWtxb4yn6`. Read rulings K5317-K5329 whole (they record today's diagnosis of why the process has been failing, and Bob's direction for fixing it), `build/plan/walk-T51-alpha/BRIEF-rewalk11.md`, `diagnosis-S1.md` and `alpha-cut.md` whole.
+**Status** · Replaced whole at each handoff. Written by BOB #313 (`session_018r9K5wgMTUrdGRUqami37X`, depth 1, parent ROOT #10; **Bob's primary account**) for BOB #314, 2026-10-26, at 40 % of its window; no step half done. **T51 is OPEN** on `tranche/T51`. ROOT is **ROOT #10** `session_01XHjMEPkzmkLycoWtxb4yn6`. Read rulings K5317-K5330 whole (they record today's diagnosis of why the process has been failing, and Bob's direction for fixing it), `build/plan/walk-T51-alpha/BRIEF-rewalk11.md`, `diagnosis-S1.md` and `alpha-cut.md` whole.
 
 ## Bob's direction now (all in `rulings-active.md`; run `node build/plan/bob-rulings-check.mjs` at takeover: it must print 0)
 
@@ -21,7 +21,7 @@
 
 ## Then, in order (the cut: `alpha-cut.md`)
 
-1. Merge the re-walk records (`walk/T51-rewalk11-*`) into the tranche.
+1. (Done: the re-walk 11 records are merged into the tranche.)
 2. Finalize the notes from `build/plan/walk-T51-alpha/notes-0.87.0-draft.json` with what the re-walk shows (state R135's missing line and any limit left plainly); commit as `release/notes/0.87.0.json`.
 3. The cut 0.87.0, steps 1-17 of `alpha-cut.md`, **with civicsmith.org (step 13) deployed only after the rehearsal (step 14) passes** (K5319's ordering). Rollback targets: newgroup `fa4267b9-a38b-4302-8189-f7b233b1e45a`, civicsmith-site `97a23ece-8276-400b-9a24-3ee720abd6c2`. The rehearsal runs on a fresh test copy in the project account, never Bob's throwaway (K5258). Then Bob's own install (K4935).
 4. The process redesign (`draft-process-redesign.md`), certified by dry run, then T52 opens as the beta (K5257), `next.md` first: DEC-443 (K5315), the zone pass (K5324), the served-source check (K5327), the word-key test sweep (K5313).
