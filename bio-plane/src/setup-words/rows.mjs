@@ -25334,7 +25334,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue-producers.index.the_export_log_row_carries","the export log row carries an instant this producer cannot read",null,null,false,"code"],
   ["queue-producers.index.the_flag_carries_no_instant","the flag carries no instant this producer can read",null,null,false,"code"],
   ["queue-producers.index.the_item_carries_no_instant","the item carries no instant this producer can read for when it fell due",null,null,false,"code"],
-  ["queue-producers.index.the_key_is_credentials_own","the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",null,null,false,"code"],
+  ["queue-producers.index.the_key_is_credentials_own","the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator but the one who registered the key, and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",null,null,false,"code"],
   ["queue-producers.index.the_keys_row_carries_an","the key's row carries an added stamp this producer cannot read as an instant",null,null,false,"code"],
   ["queue-producers.index.the_lens_in_force_when","the lens in force when it opened",null,null,false,"code"],
   ["queue-producers.index.the_lens_it_was_handed","the lens it was handed",null,null,false,"code"],

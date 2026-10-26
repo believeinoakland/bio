@@ -1387,3 +1387,7 @@ session_01VXhjMQEyP8S9vteVbYUTti,job,retrieval,6693894,105528,94,22530,,14,3159
 session_01SFAL7sJC5Fupe7Dt1e2o6Y,job,query-language,4863372,77078,588,12087,,7,3015
 session_01TcHc26898m1HrcsW2GWfXH,job,public-read,3828105,78142,64,17769,,4,14062
 session_01MHfM4Jg8WvCFNaPQUvxaFk,job,store-assembly,5768170,93084,1098,15165,,7,3800
+session_011RyaZpwVopVEEDcMoEdk5n,job,queue-producers,9713089,119435,132,29586,,9,3706
+session_01XJUFJNZiz3mKqghrzkmAZs,job,screens-publish,14360059,253138,118,36273,,12,3800
+session_01K6YtavmZMNJKgbSR9wXhWz,job,screens-intake,8181431,142186,102,31762,,14,3170
+session_012m6NnUGLKSBYVyTshxCY6U,job,file-scanner,10329102,150643,130,42574,,14,229
