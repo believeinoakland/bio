@@ -649,14 +649,28 @@
       "en": "Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing.",
       "module": "affordances",
       "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 152
+      "line": 160
+    },
+    {
+      "id": "act.leggrade.does",
+      "en": "Records how well your team's copy of a cited document shows the passage cited for this question, as a grade from A to D with your reason. The grade can be no higher than the record's own ceiling for that copy, and nothing else changes.",
+      "module": "affordances",
+      "file": "bio-plane/src/affordances/act-help.mjs",
+      "line": 161
     },
     {
       "id": "act.ruleservicesstate.does",
       "en": "Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing.",
       "module": "affordances",
       "file": "bio-plane/src/affordances/act-help.mjs",
-      "line": 153
+      "line": 163
+    },
+    {
+      "id": "act.signerknown.does",
+      "en": "An administrator says they know about a signing key a member registered for themselves. It records who said so and when, and nothing else changes.",
+      "module": "affordances",
+      "file": "bio-plane/src/affordances/act-help.mjs",
+      "line": 162
     },
     {
       "id": "action-clocks.count.amount_unit_after_anchor",
@@ -7068,91 +7082,168 @@
       "en": "basis_versions is not an array",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 145
+      "line": 148
     },
     {
       "id": "basis-version-grammar.grammar.describe_what_this_reading_of",
       "en": "describe what this reading of the evidence is and why it differs from the others",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 171
+      "line": 174
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_grade",
+      "en": "{place} has a grade '{String}' that is not one of: {BASIS_GRADES} (absent or null means undetermined, and is STATED as such)",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 380
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_grade_axis",
+      "en": "{place} has a grade_axis '{String}' that is not one of: {GRADE_AXES}",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 382
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_grade_source",
+      "en": "{place} has a grade_source '{String}' that is not one of: {GRADE_SOURCES}",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 384
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_ground_not_label",
+      "en": "{place} has a ground '{g}' that is not a ground label",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 404
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_ground_undeclared",
+      "en": "{place} names ground '{g}', which no basis_version_grounds[] row declares: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 409
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_no_basis_versions",
+      "en": "{place} has no basis_versions[] block to belong to",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 142
     },
     {
       "id": "basis-version-grammar.grammar.leg_of_version",
       "en": "Leg {n} of version '{name}'",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 343
+      "line": 24
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_rests_on_this_inquiry",
+      "en": "{place} rests on {t}, which is this inquiry: a question is not evidence for its own answer, in any account of it",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 365
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_role",
+      "en": "{place} has a role '{String}' that is not one of: {BASIS_ROLES}",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 375
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_target_kind",
+      "en": "{place} has a target '{t}' that is a {tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 372
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_target_not_canonical",
+      "en": "{place} has a target '{String}' that is not a canonical record id",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 363
+    },
+    {
+      "id": "basis-version-grammar.grammar.leg_version_not_in_block",
+      "en": "{place} belongs to a version that is not in basis_versions[]",
+      "module": "basis-version-grammar",
+      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
+      "line": 238
     },
     {
       "id": "basis-version-grammar.grammar.name_one_of_the_five",
       "en": "name one of the five kinds",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 185
+      "line": 188
     },
     {
       "id": "basis-version-grammar.grammar.name_the_member_asserting_that",
       "en": "name the member asserting that this ground is independently sufficient",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 319
+      "line": 322
     },
     {
       "id": "basis-version-grammar.grammar.or_leave_kind_out_entirely",
       "en": "or leave kind out entirely — a version a member composed is not a suggestion of any kind",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 185
+      "line": 188
     },
     {
       "id": "basis-version-grammar.grammar.or_leave_the_partition_as",
       "en": "or leave the partition as it was inherited — an edit that only changes the evidence is not a regroup",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 451
+      "line": 455
     },
     {
       "id": "basis-version-grammar.grammar.or_leave_the_version_suggested",
       "en": "or leave the version suggested — a state nobody has moved it into needs no reason",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 199
+      "line": 202
     },
     {
       "id": "basis-version-grammar.grammar.or_merge_the_grounds_into",
       "en": "or merge the grounds into one — legs in one ground are all necessary",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 430
+      "line": 434
     },
     {
       "id": "basis-version-grammar.grammar.or_split_the_legs_into",
       "en": "or split the legs into the grounds you meant to be alternatives",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 429
+      "line": 433
     },
     {
       "id": "basis-version-grammar.grammar.relationship_and_every_ground_is",
       "en": "relationship: and — every ground is necessary and the finding is no stronger than its weakest leg",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 422
+      "line": 426
     },
     {
       "id": "basis-version-grammar.grammar.relationship_or_the_grounds_are",
       "en": "relationship: or — the grounds are alternatives, each claimed sufficient on its own by a named member",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 423
+      "line": 427
     },
     {
       "id": "basis-version-grammar.grammar.state_relationship_implied",
       "en": "state relationship: {implied}",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 428
+      "line": 432
     },
     {
       "id": "basis-versions.checks.accepting_this_reading_claims_that",
@@ -7593,252 +7684,175 @@
       "en": "add a basis_version_grounds[] row for version '{name}', ground '{g}', with asserted_by and at",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 406
+      "line": 410
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_gi_declares",
       "en": "basis_version_grounds[{gi}] declares '{label}' for version '{name}', which no leg of that version belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 410
+      "line": 414
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_i_asserted",
       "en": "basis_version_grounds[{i}].asserted_by '{String}' is not a named member: \"these legs are enough on their own\" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's, and a machine-composed version PROPOSES the structure rather than asserting it",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 324
+      "line": 327
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_i_declares",
       "en": "basis_version_grounds[{i}] declares '{label}' a second time for version '{vn}': one ground, one assertion, one member answering for it",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 275
+      "line": 278
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_i_declares_2",
       "en": "basis_version_grounds[{i}] declares '{label}' one of {size} separately sufficient parts of version '{vn}' and records that nobody asserted it: a reading whose strength is the STRONGEST of its parts takes that maximum over a part somebody signed for, so the explicit no-claim value is open only to a version carrying exactly ONE part, where there is no maximum to take (DEC-65)",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 318
+      "line": 321
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_i_ground",
       "en": "basis_version_grounds[{i}].ground '{String}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 270
+      "line": 273
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_i_names",
       "en": "basis_version_grounds[{i}] names version '{String}' and there is no basis_versions[] block",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 141
+      "line": 144
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_i_names_2",
       "en": "basis_version_grounds[{i}] names version '{String}', which is not in basis_versions[]",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 265
+      "line": 268
     },
     {
       "id": "basis-versions.grammar.basis_version_grounds_i_requires",
       "en": "basis_version_grounds[{i}] requires 'at' as an ISO timestamp (got '{String}'): a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 329
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_i_names",
-      "en": "basis_version_legs[{i}] names version '{String}' and there is no basis_versions[] block",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 139
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_i_names_2",
-      "en": "basis_version_legs[{i}] names version '{String}', which is not in basis_versions[]",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 235
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version",
-      "en": "basis_version_legs[{li}] (version '{name}').target '{String}' is not a canonical record id",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 359
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_2",
-      "en": "basis_version_legs[{li}] (version '{name}') rests on {t}, which is this inquiry: a question is not evidence for its own answer, in any account of it",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 361
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_3",
-      "en": "basis_version_legs[{li}] (version '{name}').target '{t}' is a {tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 368
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_4",
-      "en": "basis_version_legs[{li}] (version '{name}').role '{String}' is not one of: {BASIS_ROLES}",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 371
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_5",
-      "en": "basis_version_legs[{li}] (version '{name}').grade '{String}' is not one of: {BASIS_GRADES} (absent or null means undetermined, and is STATED as such)",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 376
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_6",
-      "en": "basis_version_legs[{li}] (version '{name}').grade_axis '{String}' is not one of: {GRADE_AXES}",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 378
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_7",
-      "en": "basis_version_legs[{li}] (version '{name}').grade_source '{String}' is not one of: {GRADE_SOURCES}",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 380
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_8",
-      "en": "basis_version_legs[{li}] (version '{name}').ground '{g}' is not a ground label",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 400
-    },
-    {
-      "id": "basis-versions.grammar.basis_version_legs_li_version_9",
-      "en": "basis_version_legs[{li}] (version '{name}') names ground '{g}', which no basis_version_grounds[] row declares: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for",
-      "module": "basis-version-grammar",
-      "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 405
+      "line": 332
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_is_not",
       "en": "basis_versions[{i}] is not an object",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 153
+      "line": 156
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_carries",
       "en": "basis_versions[{i}] ('{name}') carries no description: every version carries a textual description of the composition, held to a commit message's standard — what changed and why — because it is what survives a conversation that was deliberately not kept",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 170
+      "line": 173
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_hidden",
       "en": "basis_versions[{i}] ('{name}').hidden is '{String}': hiding a version is a boolean, because hiding it is ALL it does — the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 188
+      "line": 191
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_is",
       "en": "basis_versions[{i}] ('{name}') is in state '{String}': a version is one of {VERSION_STATES}",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 174
+      "line": 177
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_is_2",
       "en": "basis_versions[{i}] ('{name}') is in state '{state}' and carries state_by '{String}' with state_reason '{why}': {VERSION_REASON_REQUIRED} are the two states a member enters WITH a recorded reason (§6 rule 4), and the reason carries the name of the member who authored it — never a machine's, because a machine may propose an account of the evidence and may never settle one",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 197
+      "line": 200
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_is_3",
       "en": "basis_versions[{i}] ('{name}') is in state '{state}' and requires 'state_at' as an ISO timestamp (got '{String}'): a decision made before a strength was seen is a different act from one made after it, and only a date lets a reader tell",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 201
+      "line": 204
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_is_4",
       "en": "basis_versions[{i}] ('{name}') is derived_from '{String}', which is not a version of this inquiry: the derivation edge is how alternatives read as a tree rather than a pile",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 210
+      "line": 213
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_kind",
       "en": "basis_versions[{i}] ('{name}').kind is '{String}': a suggestion is one of {keys} (section 9), and the set is closed so that a run reporting an empty search is distinguishable from a run that reported nothing",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 184
+      "line": 187
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_regroups",
       "en": "basis_versions[{i}] ('{name}') regroups the partition it inherited from '{parent}' and carries no attributed regroup act: DEC-50 licenses no unattributed structural edit, so the version records regroup_by (a named member, never a machine), regroup_at (an ISO timestamp) and regroup_note (the reason)",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 449
+      "line": 453
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_relationship",
       "en": "basis_versions[{i}] ('{name}').relationship is '{String}': every version states how its legs compose — {VERSION_RELATIONSHIPS} — because a version with no relationship field re-ships the flat implicit-AND basis REC-42 corrected, and the two readings give different strengths",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 421
+      "line": 425
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_sits",
       "en": "basis_versions[{i}] ('{name}') sits in a derived_from cycle through '{p}': versions form a TREE, and a tree has a root — a cycle leaves no answer to which of these came first",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 220
+      "line": 223
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_states",
       "en": "basis_versions[{i}] ('{name}') states relationship '{rel}' and is grouped into {size} ground{v1}, which composes as '{implied}': the stated relationship is what a member affirms at the accept ceremony, so it must be the one the structure actually has — otherwise an accepter signs for a reading that is not written down",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 427
+      "line": 431
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_name_string",
       "en": "basis_versions[{i}].name '{String}' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 159
+      "line": 162
     },
     {
       "id": "basis-versions.grammar.basis_versions_i_names_name",
       "en": "basis_versions[{i}] names '{name}', which basis_versions[{get}] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 163
+      "line": 166
     },
     {
       "id": "basis-versions.grammar.or_on_a_version_carrying",
       "en": "or, on a version carrying exactly ONE part, record '{SUFFICIENCY_UNCLAIMED}' — the record saying outright that nobody claimed it, which is not the same as a machine's name standing where a member's has to be",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 326
+      "line": 329
     },
     {
       "id": "basis-versions.grammar.or_put_every_leg_of",
       "en": "or put every leg of version '{vn}' in ONE part — a reading nobody has asserted the structure of is read as its weakest leg",
       "module": "basis-version-grammar",
       "file": "bio-plane/src/basis-version-grammar/grammar.mjs",
-      "line": 320
+      "line": 323
     },
     {
       "id": "basis-versions.index.a_different_place_not_a",
