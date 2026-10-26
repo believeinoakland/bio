@@ -513,3 +513,7 @@ CHANGE (K5303; plan item 147). Merge `origin/tranche/T51` into your branch (neve
 ## B53 · CHANGE
 
 CHANGE (K5304; plan item 148). Also in this job: MONEY #12 saw `bio-plane/test/m/screens-investigate/fix4.test.mjs` ("each screen of the module reads only what it draws, once") fail once in five runs. Reproduce it under named load (K4787, K4966: two suites at once is the realistic load), instrument it to its cause, fix it so it asserts work, never time, and prove it green under that load. Name it in your COMPLETE.
+
+## B54 · CHANGE
+
+CHANGE (K5305): WIZARD-SCRIPTS #29 (R53) is merged: the registry now carries Standard's five acts. Merge `origin/tranche/T51` into your branch (never a rebase) and re-run; your J45 block is cleared.
