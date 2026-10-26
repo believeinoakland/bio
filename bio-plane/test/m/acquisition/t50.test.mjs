@@ -16,6 +16,8 @@ import * as jurisdictions from "../../../../jurisdictions/index.mjs";
 const URL1 = "https://a.example/doc";
 const Q = "QUESTION-2026-0007";
 const stamp = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
+/* the instance clock (K5132, K5205): a pinned instant is the store's `env.BIO_NOW_MS`, which the act reads for the sessions it saves and lists */
+const pinClock = (store, ms) => { store.state.clockMs = ms; store.env.BIO_NOW_MS = String(ms); };
 
 /* ======================================================================= *
  * R47: `for`
@@ -144,7 +146,7 @@ const DAEMON = { cls: "daemon", member: false, sessMember: null };
 
 test("R46 R19: a member session's walk that parks a session lists it for that member with `outstanding` equal to the files left, and for no other member; a complete walk lists nothing; after expiry it is not listed", async () => {
   const w = world();
-  w.store.state.clockMs = Date.parse("2026-05-06T07:08:09Z");
+  pinClock(w.store, Date.parse("2026-05-06T07:08:09Z"));
   const r = await park(w);
   const session = r.body.snapshot.continuation.session;
   assert.ok(session && r.body.snapshot.outstanding > 0);
@@ -172,7 +174,7 @@ test("R46 R19: a member session's walk that parks a session lists it for that me
   assert.deepEqual(openCaptures(w.store, { by: "m1", now: Date.parse("2026-05-06T08:30:00Z") }).captures, [], "an instant in milliseconds reads as one");
   /* a complete walk lists nothing */
   const done = world();
-  done.store.state.clockMs = Date.parse("2026-05-06T07:08:09Z");
+  pinClock(done.store, Date.parse("2026-05-06T07:08:09Z"));
   const c = await run(done, siteOf("w.example", imgPage(2)), { locator: "https://w.example/p.html", subresources: true });
   assert.equal(c.body.snapshot.complete, true);
   assert.deepEqual(openCaptures(done.store, { by: "m1", now }).captures, []);
@@ -180,7 +182,7 @@ test("R46 R19: a member session's walk that parks a session lists it for that me
 
 test("R46: a continuation keeps the member who began the session, whoever continues it, and a finished one is no longer listed; Finish it (acquire with continue) still resumes a listed session", async () => {
   const w = world();
-  w.store.state.clockMs = Date.parse("2026-05-06T07:08:09Z");
+  pinClock(w.store, Date.parse("2026-05-06T07:08:09Z"));
   const loc = "https://w.example/p.html";
   const first = await park(w);
   const session = first.body.snapshot.continuation.session;
@@ -206,7 +208,7 @@ test("R46: a continuation keeps the member who began the session, whoever contin
 test("R46 R19 (controls): a session parked by the daemon, by another caller or before R19 records no member and is listed for no one; a session whose state cannot be read is not listed; a `by` that is absent, not a string, blank or a machine identity lists nothing", async () => {
   const now = "2026-05-06T07:10:00Z";
   const w = world();
-  w.store.state.clockMs = Date.parse("2026-05-06T07:08:09Z");
+  pinClock(w.store, Date.parse("2026-05-06T07:08:09Z"));
   /* parked by a capture-request arm run (a daemon), and by an admin session that is not a member session */
   const d = await park(w, { ...DAEMON, captureRequest: { locator: "https://w.example/p.html" } });
   assert.ok(d.body.snapshot.continuation, "parked");
@@ -238,7 +240,7 @@ test("R46: newest started first, at most OPEN_CAPTURES_MAX with `truncated`", as
   const w = world();
   const base = Date.parse("2026-05-06T00:00:00Z");
   for (let i = 0; i < 52; i++) {
-    w.store.state.clockMs = base + i * 60000;
+    pinClock(w.store, base + i * 60000);
     w.store.saveCaptureSession({ session: `cs_${String(i).padStart(2, "0")}`, locator: `https://w.example/${i}`, primarySha: sha(`p${i}`), primaryFile: `snapshots/p${i}`, base: `https://w.example/${i}`,
                                  state: { queue: Array.from({ length: i + 1 }, () => ({})), opened_by: i % 13 === 0 ? "m2" : "m1" }, ttlMs: 24 * 3600000 });
   }
@@ -252,7 +254,7 @@ test("R46: newest started first, at most OPEN_CAPTURES_MAX with `truncated`", as
   assert.equal(got.captures[0].outstanding, 52);
   /* over the bound */
   for (let i = 52; i < 60; i++) {
-    w.store.state.clockMs = base + i * 60000;
+    pinClock(w.store, base + i * 60000);
     w.store.saveCaptureSession({ session: `cs_${i}`, locator: `https://w.example/${i}`, primarySha: sha(`p${i}`), primaryFile: `snapshots/p${i}`, base: `https://w.example/${i}`,
                                  state: { queue: [{}], opened_by: "m1" }, ttlMs: 24 * 3600000 });
   }

@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J44
+**Read** · handled J46
 
 ## B1 · START
 
@@ -606,3 +606,7 @@ CHANGE (K5209): OP-GRADES #30 is merged (tranche `414d1282e6`): stores start aga
 ## B52 · CHANGE
 
 CHANGE (K5210): providers publishing for your lines (re-point as each merges; you need not wait to read them): case-authoring's `preflightNoFinding()` (`fr30:150`) and `preflightTensionRefused()` (`fr30b:77`); `fr30:156` expects `NO_TARGET`, an action-request code, where case-authoring R3/R80's pre-flight for no finding answers `PUBLISH_NO_FINDING`: the test asks a state the pre-flight never answers, so it takes `preflightNoFinding()` and asserts what the screen draws for it (CASE-AUTHORING #46 J31). public-read's, case-inputs', credentials' (`signerregisterown()`, `fix3:276`) and case-import's `importRegradeAnswer` (`fixtures.mjs:176`) are published on their branches and merge after they re-complete; I CHANGE you then.
+
+## B53 · CHANGE
+
+CHANGE (K5212, BOB's, P17; WIZARD-SCRIPTS #28 J32): `writinghelp` never returns a draft: past its refusals it answers `ASSISTANT_DRAFT_UNAVAILABLE` (`wizard-scripts/index.mjs:1539`); the draft is the model turn's, not built, and T51 adds no assistant work (K3717). So a hand-built drafted-text answer (`ok({ok: true, text: ...})`) tests a state no member reaches: remove those cases (test only, K4297 (2)), and test what your screen draws for wizard-scripts' real answers, taken from its published fixtures (`bio-plane/test/m/wizard-scripts/fixtures.mjs`, once WIZARD-SCRIPTS #28 merges; I CHANGE you then). Your lines: `case-editor.test.mjs:86`, `fr30.test.mjs:249`, `:252`, `:267`, `fr30b.test.mjs:379` (and any other `writinghelp` line your list names).
