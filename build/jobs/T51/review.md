@@ -1,6 +1,6 @@
 # review (T51)
 
-**Status** · session_019StUUiEtYSN1JC2beNrBi8 · depth 2 · WORKING · handled B24
+**Status** · session_019StUUiEtYSN1JC2beNrBi8 · depth 2 · RUNNING until 2026-10-26T10:29:26Z (module suites of notice-producers, queue, op-declarations, store-door, control-plane, plane) · handled B24
 
 ## Completion record (fix round 4, B13 START, K4429; REVIEW #22)
 
