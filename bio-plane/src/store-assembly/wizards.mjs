@@ -4,6 +4,7 @@
 import { CIVICSMITH_LIBRARY, SCREEN_REGISTRY, ADMIN_ACTS, ADMIN_SCREENS } from "../wizard-scripts/index.mjs";
 import { MACHINE_REFUSALS, RUNGS } from "../op-grades/index.mjs";
 import { OPS } from "../op-declarations/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R19 (N528; K1396): the labelled machine drafts the canon allows on a member's act, `case-authoring` R39's
    `whatchangedpropose` and `escalationreasondraft` (DEC-101's "what changed"), and (T34; DEC-152, DEC-153; K1818)
@@ -48,7 +49,7 @@ export function screenFailures(screens = SCREEN_REGISTRY, ops = OPS) {
     if (said(id) && seen.has(id)) out.push({ screen: id, problem: "id repeated" });
     seen.add(id);
     const acts = s && s.acts;
-    if (!Array.isArray(acts)) { out.push({ screen: id ?? null, problem: "acts is not a list" }); continue; }
+    if (!Array.isArray(acts)) { out.push({ screen: id ?? null, problem: localize("store-assembly.wizards.acts-not-list", "acts is not a list") }); continue; }
     if (new Set(acts).size !== acts.length) out.push({ screen: id, problem: "an act repeated" });
     for (const a of acts) if (!said(a) || !Object.hasOwn(ops, a)) out.push({ screen: id, problem: "no op spec", act: a });
   }

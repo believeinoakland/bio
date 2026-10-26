@@ -13,7 +13,7 @@ import { extractionOf } from "../../../src/extraction/index.mjs";
 const { readHeldAnswer: { read: readDone } } = await import("../extraction/fixtures.mjs");
 const { owedRunAnswer } = await import("../acquisition/fixtures.mjs");
 import { pendingOf, PENDING_BATCH } from "../../../src/store-assembly/pending.mjs";
-import { ASSEMBLY_DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
+import { DECLARED_OPS as ASSEMBLY_DECLARED_OPS } from "../../../src/store-assembly/declared.mjs";
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 /* R74: the rows still held as work (owed, or ended for a stated reason); a finished row stays in the job table for its readers */

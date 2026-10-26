@@ -8,7 +8,7 @@
      `env`                 `STORE` answering `idFromName`, `CAPTURES` an in-memory bucket with R2's surface, `BIO_NOW_MS` the
                            pinned clock, and any other binding the test hands in (`AGENT_WORKER` unbound unless handed, R49);
      the network           `globalThis.fetch` refusing every outbound address as an unreachable network does (a TypeError),
-                           until a test scripts an answer for it (`world.script`).
+                           until a test scripts an answer for it (`world.script`), the script reaching its own world alone (R94).
    BUILT ONCE FOR A FILE, COPIED FOR A TEST (R91; K5046 (g), K5052 (7)): the first world of each kind (claimed, unclaimed) a file
    asks for builds that kind's base; every world, the first included, is a fresh `assembleStore` over its own copy of its base's
    database (`serialize`, then `deserialize` into a new database) and its own copy of the base's bucket, so no database, `ctx`,
@@ -16,6 +16,7 @@
    The door between a page and the store, the sign-ins and the recipes are `store-request`'s, over this world (its R16 to R19). */
 import { registerHooks } from "node:module";
 import { DatabaseSync } from "node:sqlite";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 registerHooks({
   resolve(spec, ctx, next) {
@@ -172,15 +173,19 @@ const copyObjects = (objects) => new Map([...objects].map(([k, h]) => [k, { ...h
 
 /* ---- the platform: the network ---- */
 
-/* R94: every outbound address refused as an unreachable network refuses it, until a live world scripts an answer for it. The
-   scripts of every world the file made are asked, the latest world's first; a world's scripts reach no other world's acts
-   (its own store makes its calls), and the file is one process (node's runner gives each test file its own). */
-const SCRIPTS = [];
+/* R94: every outbound address refused as an unreachable network refuses it, until a live world scripts an answer for it. A script is its
+   world's own (K5200; SCREENS-ENTRY #13 J15): a call made in a world's context (`world.send`, `claim`, `tick`, `within`: the store's own work,
+   and what it starts, carries the context) is answered by that world's scripts, the latest first; a call made outside any (a test calling a
+   module on a world's instance, or `fetch` itself) by the latest world made's, so no script of one world, or of an earlier test, answers
+   another's. The file is one process (node's runner gives each test file its own). */
+const IN_WORLD = new AsyncLocalStorage();
+let LATEST = null;
 const realFetch = globalThis.fetch;
 globalThis.fetch = async function worldFetch(input, init) {
   const req = input instanceof Request ? input : new Request(input, init);
-  for (let i = SCRIPTS.length - 1; i >= 0; i--) {
-    const { match, answer } = SCRIPTS[i];
+  const scripts = (IN_WORLD.getStore() ?? LATEST)?.scripts ?? [];
+  for (let i = scripts.length - 1; i >= 0; i--) {
+    const { match, answer } = scripts[i];
     const hit = typeof match === "function" ? match(req) : match instanceof RegExp ? match.test(req.url) : req.url.startsWith(String(match));
     if (hit) return answer(req);
   }
@@ -196,9 +201,9 @@ async function settle(blocked) {
 }
 
 /* R1, R90: a fresh assembled store over `db` with `env`; the blocked work (migration, starts) awaited */
-async function assembled(db, env) {
+async function assembled(db, env, opts = {}) {
   const { ctx, blocked } = contextOver(db);
-  const store = assembleStore(ctx, env);
+  const store = assembleStore(ctx, env, opts);
   await settle(blocked);
   return { ctx, store, blocked };
 }
@@ -228,17 +233,18 @@ async function claimOver(store, { password, handle = null } = {}) {
   return result;
 }
 
-const BASES = new Map();
+const BASES = new Map();   /* one base for each kind: claimed or not, and the installer's name for the instance (null: none bound) */
 let printed = false;
 const ms = (t0) => Math.round(performance.now() - t0);
 
 /* R91: the base of a kind, built once for the file: the migrated store (and its claim), serialised */
-function baseOf(claimed) {
-  if (!BASES.has(claimed)) BASES.set(claimed, (async () => {
+function baseOf(claimed, instanceName) {
+  const kind = `${claimed ? "claimed" : "unclaimed"}|${instanceName}`;
+  if (!BASES.has(kind)) BASES.set(kind, (async () => {
     const t0 = performance.now();
     const db = new DatabaseSync(":memory:");
     const objects = new Map();
-    const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(objects), INSTANCE_NAME: WORLD_INSTANCE_NAME, BIO_NOW_MS: WORLD_NOW };
+    const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(objects), ...(instanceName === null ? {} : { INSTANCE_NAME: instanceName }), BIO_NOW_MS: WORLD_NOW };
     const { store } = await assembled(db, env);
     let founder = null;
     if (claimed) founder = await claimOver(store, { password: WORLD_PASSWORD, handle: WORLD_FOUNDER_HANDLE });
@@ -246,23 +252,28 @@ function baseOf(claimed) {
     db.close();
     return { bytes, objects, founder, ms: ms(t0) };
   })());
-  return BASES.get(claimed);
+  return BASES.get(kind);
 }
 
-/** R90–R94: `storeWorld({claimed?, now?, env?})` answers a world over its own copy of its kind's base:
- *  `{store, ctx, sql, env, db, claimed, password, founder, now(), claim({password, handle?}), send(request), tick(ms), script(match, answer)}`.
+/** R90–R94: `storeWorld({claimed?, now?, env?, instanceName?, deliver?, releaseKeys?})` answers a world over its own copy of its kind's base:
+ *  `{store, ctx, sql, env, db, claimed, password, founder, now(), claim({password, handle?}), send(request), tick(ms), script(match, answer), within(fn)}`.
  *  `claimed: false` gives an unclaimed instance (for the screens that claim it); otherwise the founder (`admin`) is claimed with
- *  `WORLD_PASSWORD` and handle `WORLD_FOUNDER_HANDLE`. `now` pins `env.BIO_NOW_MS` (default `WORLD_NOW`); `env` adds bindings. */
-export async function storeWorld({ claimed = true, now = WORLD_NOW, env: extra = {} } = {}) {
-  const base = await baseOf(claimed !== false);
+ *  `WORLD_PASSWORD` and handle `WORLD_FOUNDER_HANDLE`. `now` pins `env.BIO_NOW_MS` (default `WORLD_NOW`); `env` adds bindings.
+ *  `instanceName` is the slug the installer binds as `INSTANCE_NAME` for the first boot (default `WORLD_INSTANCE_NAME`); `null` binds none, as
+ *  an older installation's first boot had, so instance-setup records no producing team. `deliver` is `control-plane`'s owed-render delivery,
+ *  handed to `assembleStore` as the Durable Object class hands it (R1); none, a row that needs it stays owed (R67). `releaseKeys` is the list of
+ *  release keys instance-setup verifies a release notice against, a test's own keys instead of the product's (a test signs with the private half). */
+export async function storeWorld({ claimed = true, now = WORLD_NOW, env: extra = {}, instanceName = WORLD_INSTANCE_NAME, deliver = null, releaseKeys = null } = {}) {
+  const base = await baseOf(claimed !== false, instanceName);
   const t0 = performance.now();
   const db = new DatabaseSync(":memory:");
   db.deserialize(base.bytes);
-  const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(copyObjects(base.objects)), INSTANCE_NAME: WORLD_INSTANCE_NAME, ...extra, BIO_NOW_MS: now };
-  const { ctx, store } = await assembled(db, env);
+  const env = { STORE: { idFromName: (n) => n }, CAPTURES: memoryBucket(copyObjects(base.objects)), ...(instanceName === null ? {} : { INSTANCE_NAME: instanceName }), ...extra, BIO_NOW_MS: now };
+  const { ctx, store } = await assembled(db, env, { deliver, ...(releaseKeys ? { releaseKeys } : {}) });
   const copyMs = ms(t0);
   if (!printed) { printed = true; console.log(`storeWorld: base ${base.ms} ms, copy ${copyMs} ms`); }
-  const scripts = [];
+  const scope = { scripts: [] };   /* R94: this world's network scripts */
+  const within = (fn) => IN_WORLD.run(scope, fn);
   let password = claimed !== false ? WORLD_PASSWORD : null, founder = base.founder;
   const world = {
     store, ctx, env, db, sql: ctx.storage.sql, timing: { base: base.ms, copy: copyMs },
@@ -273,21 +284,24 @@ export async function storeWorld({ claimed = true, now = WORLD_NOW, env: extra =
     now: () => env.BIO_NOW_MS,
     /** R92: the founder made through the store's own `claim` route; the world then holds the password */
     async claim({ password: p, handle = null } = {}) {
-      const r = await claimOver(store, { password: p, handle });
+      const r = await within(() => claimOver(store, { password: p, handle }));
       password = p; founder = r;
       return r;
     },
     /** R92: a store request `{url, body, headers, method?}` (as `store-request`'s `innerRequest` makes it) passed to the
      *  assembled store's `dispatch`, answering the store's own Response */
-    send(request) { return store.dispatch(storeRequest(request)); },
+    send(request) { return within(() => store.dispatch(storeRequest(request))); },
     /** R93: the pinned clock moved on by `ms` and the scheduler's firing run at the new instant, its answer answered */
     async tick(by = 0) {
       if (!Number.isFinite(by) || by < 0) throw new Error("storeWorld: tick takes milliseconds, zero or more");
       env.BIO_NOW_MS = env.BIO_NOW_MS + by;
-      return schedulerOf(ctx, env).onAlarm(env.BIO_NOW_MS);
+      return within(() => schedulerOf(ctx, env).onAlarm(env.BIO_NOW_MS));
     },
-    /** R94: the network's answer for requests `match` names (a URL prefix, a RegExp or a predicate of the Request) */
-    script(match, answer) { const s = { match, answer }; scripts.push(s); SCRIPTS.push(s); return world; },
+    /** R94: the network's answer for requests `match` names (a URL prefix, a RegExp or a predicate of the Request), this world's alone */
+    script(match, answer) { scope.scripts.push({ match, answer }); return world; },
+    /** R94: `fn` run in this world's context, so a call it makes to the network (or a module's on this world's instance) is answered by this world's scripts */
+    within,
   };
+  LATEST = scope;   /* a call outside any world's context reaches the latest world's network */
   return world;
 }

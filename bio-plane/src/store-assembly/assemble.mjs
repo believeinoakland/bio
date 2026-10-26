@@ -38,7 +38,7 @@ import { aiAccountsOf, aiAccountsOps } from "../ai-accounts/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "../observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "../run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "../capture-requests/index.mjs";
-import { recordOf, recordCoreOps } from "../record-core/index.mjs";
+import { recordOf, recordCoreOps, stampInstant } from "../record-core/index.mjs";
 import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
@@ -180,12 +180,24 @@ export function clockOf(env) {
   };
 }
 
+/* R1, R5: the clock handed to `capture`, one function for each storage and reading the latest environment given: `captureOf` refuses a
+   caller's different `now` for a storage whose capture holds another (its R58), and a second assembly over one storage must build nothing twice. */
+const CAPTURE_CLOCKS = new WeakMap();
+const captureClockOf = (ctx, env) => {
+  let held = CAPTURE_CLOCKS.get(ctx.storage);
+  if (!held) { held = { env, now: () => clockOf(held.env)(null) }; CAPTURE_CLOCKS.set(ctx.storage, held); }
+  held.env = env;
+  return held.now;
+};
+
 /** R1: every module of the record store built on `ctx`'s storage, migrated and started; answers the assembled store
  *  `{routes, dispatch, namespace, nowMs, read}`. `deliver`, optional, is `control-plane`'s owed-render delivery
- *  (`deliverOwedRender`), handed to the owed-work ledger: absent, a ledger row that needs it stays owed (R67). The
+ *  (`deliverOwedRender`), handed to the owed-work ledger: absent, a ledger row that needs it stays owed (R67). `releaseKeys`,
+ *  optional and a test's own, is the list of keys instance-setup verifies a release notice against in place of the
+ *  product's (`RELEASE_KEYS`): the Durable Object class hands none. The
  *  migration and the starts are work handed to `ctx.blockConcurrencyWhile`, so they run before any request; a module that
  *  fails to build throws here, and the class that called it answers nothing. */
-export function assembleStore(ctx, env, { deliver = null } = {}) {
+export function assembleStore(ctx, env, { deliver = null, releaseKeys = null } = {}) {
   env = env || {};
   const sql = ctx.storage.sql;
   const namespace = () => namespaceOf(ctx, env) || "bio";
@@ -285,7 +297,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      its factory (ai-runs, answers' `useCheck`, question-explorer). Built with no zone handed in, so it reads the
      group's zone from retrieval (its R69) and counts by the group's local day; its first construction migrates and
      declares its tables (its R7). */
-  aiUseOf(ctx);
+  aiUseOf(ctx, { env, now: () => nowMs(null) });   /* R5 (K5200): its first construction takes the store's clock and environment, before any route hands them */
   /* ai-runs registers with retrieval, in the modules' order. R40 (T46): its `partAdmitted` is the one gate of the ask,
      the drafts and the transcriber; a module test's own set (`assistantGateOf`, handed before construction, K61) is
      handed to it here, at its first construction, else it reads Civicsmith's. */
@@ -316,7 +328,8 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      R18 (T37; K2226): handed the evidence bucket (`CAPTURES`) and the store's namespace, read as record-core's evidence
      prefix reads it (R2), which its factory forwards to the case-carriage it creates, so a photo's obscured copy is held
      (case-carriage R11; without them the mark is recorded with no copy, fail closed). */
-  publicationOf(ctx, { acceptedWork, bucket: env.CAPTURES ?? null, store: () => namespace() });
+  publicationOf(ctx, { acceptedWork, bucket: env.CAPTURES ?? null, store: () => namespace(),
+    now: () => new Date(nowMs(null)).toISOString() });   /* R5 (K5200): the store's clock, as an instant: publication forwards it to corpus-export and case-carriage */
   /* R23 (K1505 (3), K1643; publication R61): case-tensions, which publication's factory builds and registers its
      provider with (the seven doors), is the one instance per host the route map reaches. */
   caseTensionsOf(ctx);
@@ -424,7 +437,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
   const consequences = consequencesModule(ctx, { conformance });
   /* action-clocks (K704): after actions, which it reads and which joins the host first (its R9). R39 (T45): at creation
      it registers its due holder with steps (its R16, steps R29), once. */
-  actionClocksOf(ctx);
+  actionClocksOf(ctx, { env, now: () => nowMs(null) });   /* R5 (K5200; diagnosis A3): the store's clock, so `remindersfor` is judged on the world's day */
   /* R39 (T45; K2781 (1)): action-replies, directly after action-clocks, the one instance per host; handed this
      environment, it registers its open-requests source with case-authoring (built above; its R3, case-authoring R70),
      once, and makes and declares its tables (its R4). */
@@ -435,18 +448,19 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
   /* R39 (K2858): filings handed the plane's one action-holds instance, the project roster (migrated in R3's pass,
      so its second-approval read sees the roster), case-check and accepted-work. */
   /* K4051 (filings R64): handed `env`, so its registration of the minutes comparisons with case-inputs runs in production. */
-  filingsOf(ctx, { env, actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation,
+  filingsOf(ctx, { env, now: () => stampInstant("second", nowMs(null)), actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation,
                    actionHolds, projectRoster: projectRosterOf(ctx), caseCheck, acceptedWork });
   escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
   /* action-plans (K711): built before any route can run, so ai-runs holds its plan-mode open check (its R30) when the
      first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
-  actionPlansOf(ctx);
+  actionPlansOf(ctx, { now: () => stampInstant("second", nowMs(null)) });   /* R5 (K5200; diagnosis A3): its instants, to the second, are the store's */
   /* R39 (T45; K2781 (1)): plan-work, directly after action-plans, the one instance per host, handed the plane's
      action-holds and ai-runs; at creation it makes and declares its tables and registers its closing summary with
      action-plans (its R7, action-plans R44) and its re-examination with actions (`registerResponseListener`, its R10,
      actions R95), once each. following's watch reader is registered with it when following is built (below). */
   planWorkOf(ctx, { actionHolds, aiRuns: aiRunsOf(ctx, env) });
-  const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
+  /* the acquisition act signs its receipt through `cap.attestation`; R5 (K5200): handed the store's clock, so a session and a receipt read it */
+  const capture = captureOf(ctx, { env, attestation, now: captureClockOf(ctx, env) });
   /* R75 (T51 fix round 4; C5c; K4429; acquisition R96, control-plane R120): what a request left pending, finished by this object's
      own alarm. `keeps_pending` and `acquire_stages` are the plane's two operational tables, declared to purge as a whole-store
      clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
@@ -480,7 +494,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      record-core's, R2) and the object's own namespace, since its factory reads its deps on the first call only. Its
      first construction is its start: its `provenance.onReceipt` listener (its R1) is registered before the first
      request. Its tables are made and declared to purge in R3's pass. */
-  const fileSafety = fileSafetyOf(ctx, { env, store: namespace() });
+  const fileSafety = fileSafetyOf(ctx, { env, store: namespace(), now: () => nowMs(null) });   /* R5 (K5200): the store's clock */
   /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
      and it registers its wait source with ai-runs (ai-runs R41). Built before link-sweep and handed to it, so
      link-sweep's sweep scope check (its R12) is registered at construction and a sweep-named request drained before
@@ -593,7 +607,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
      and instance-setup is built first). Its nine routes are spread beside instance-setup's (R5), and migrated in R3's
      pass. */
   translationsOf(ctx);
-  const instanceSetup = instanceSetupOf(ctx, env, { queueProducers, now: () => nowMs(null) });   /* K5171: the instance clock, handed, not read from the env */
+  const instanceSetup = instanceSetupOf(ctx, env, { queueProducers, now: () => nowMs(null), ...(releaseKeys ? { releaseKeys } : {}) });   /* K5171: the instance clock, handed, not read from the env */
   /* R44 (T47; N981; K3030; credentials R64, instance-setup R54): instance-setup's disclosure read registered with
      credentials once, on this object's own instances, on instance-setup's behalf (credentials is earlier in the order
      and cannot reach it), so `disclosureDue` is asked in the assembled plane: `accountreferenceset` and a sign-in's
@@ -838,7 +852,7 @@ export function assembleStore(ctx, env, { deliver = null } = {}) {
       ...governorRoutes(governorOf(ctx), url, body),
       /* R31 (K2488): ai-use's `ailimitset`, `ailimits`, `aiusage`, `exploreapprove` (op-declarations R41), before
          ai-runs' map, over the one instance `aiUseOf(ctx)` makes. */
-      ...aiUseOps(aiUseOf(ctx), url, body),
+      ...aiUseOps(aiUseOf(ctx), url, body, env),
       ...aiRunsOps(aiRunsOf(ctx, env), url, body),
       ...answersOps(answersOf(ctx), url, body),   /* R21 (K1609) */
       ...retrievalRoutes(retrievalOf(ctx), url, body),
