@@ -374,3 +374,7 @@ CHANGE (BOB #303, K5201; re J28). OP-GRADES #29 is merged (R54: an irreversible 
 ## B27 · ANSWER · re J30
 
 ANSWER (K5202). Confirmed: the load-time `DECLARED_OP_DISAGREES: readtranslate description` is op-grades' stale hand row (`t48.mjs:69-71` still cites plane R50; the owner's row cites store-assembly R53). It is the only disagreement on the tranche (BOB listed every one). OP-GRADES #30 (started now) amends it; I CHANGE you the moment it merges: merge the tranche, run the chain test (bar 12) and post COMPLETE with R18, R21, R53, R60, R61 as you list. Nothing else is owed by you meanwhile.
+
+## B28 · CHANGE
+
+CHANGE (K5209): OP-GRADES #30 is merged (tranche `9ec4804160`): stores start again (`DECLARED_OP_DISAGREES: readtranslate description` is gone). Merge `origin/tranche/T51` into your branch (never a rebase), run your suite and checks green, and carry on or post COMPLETE. Note: `control-plane/r10-caseratify-chain.test.mjs` stays red by name (13 of bar 12) until RATIFICATION #39 merges; `store-assembly/declarations.test.mjs` R83 stays red by name until STORE-ASSEMBLY #4 merges.
