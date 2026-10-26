@@ -453,3 +453,19 @@ Fix round 10 (K5207, B19) done. Commit 31d822cf40 on `job/T51/credentials`.
 - Whole-tree `checks/run.mjs`: coverage 2 failures, `case-authoring` R87 and `membership` R156 named by no test; answer FAILs in `acquisition`, `extraction`, `interface-shell` (their modules).
 
 **Size (session_01TjMsDy8TyBi31BGv64B9Ln): test runs 3, module lines 2736**
+
+## J28 · COMPLETE
+
+CHANGE B20 (K5209) handled. OP-GRADES #30 is in: merged `origin/tranche/T51` (ea6985ef0f, a merge commit, no rebase) into `job/T51/credentials`. No product change was needed.
+
+Re-run after the merge:
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: tests 198, pass 198, fail 0.
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named.
+- `checks/ownership.mjs ... credentials <merge-base> HEAD`: see the line in this session's output; 0 failures expected.
+
+The two reds B20 names are not this module's: `control-plane/r10-caseratify-chain.test.mjs` (RATIFICATION #39) and `store-assembly/declarations.test.mjs` R83 (STORE-ASSEMBLY #4). I did not touch them.
+
+Nothing else changed. Commit: `ea6985ef0f`.
+
+Size (session_01TjMsDy8TyBi31BGv64B9Ln): test runs 3, module lines 2736
