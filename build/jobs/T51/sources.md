@@ -1,6 +1,6 @@
 # sources (T51)
 
-**Status** · session_01KVdCT4xo4Q6wdYgc64U2V2 · depth 2 · COMPLETE · handled B5
+**Status** · session_01DsN69dHjn1CmTE4K99844C · depth 2 · COMPLETE · handled B7
 
 ## Entries applied
 
@@ -119,3 +119,78 @@ Each has a test at the module's interface (fixtures.test.mjs, R9; R1, R8).
 **Tests and checks:** sources tests 46/46 pass (the new file's first run had one wrong expectation, a knock with a secret is same_knocker, fixed in the test); format 178 modules 0 failures; architecture 0; coverage 22 of 22 live ids named; words 0; fixtures 0; ownership 0 failures (3 files); impact: sources 1 of 11 and retrieval-browse 2 of 12 test files, the latter 20/20 pass.
 
 Size (session_01KVdCT4xo4Q6wdYgc64U2V2): test runs 3, module lines 67
+
+## Fix round 11 (B6 · START, K5207; K5175, K4990, K4993)
+
+**Entries applied**
+- `knockerconsent` fixture, in `bio-plane/test/m/sources/fixtures.mjs` (commit 837147f43b on job/T51/sources). Made by the real `sources` each time it is called, over `fixture.mjs`'s world, never stored: a source a pulled knock holds with its knocker secret, and one disclosure of its name waiting for consent (a pending entry). The answer carries `before` (the real `publishableAt` for the group: empty, R8), `answer` (the real `consentBySecret` for that entry, audience `group`: `ok`, naming the entry; R11) and `after` (the real `publishableAt` once it stands: the entry shown with basis `consent`).
+- Test in `bio-plane/test/m/sources/fixtures.test.mjs`, named R11 and R22. It calls the export and asserts each part at the module's interface.
+
+**Failing-first test**
+- Deliberate break: the asserted basis changed to `public_elsewhere`. Result: 2 pass, 1 fail (the knockerconsent test). Restored to `consent`: green.
+
+**Causes:** none placed to sources. **Deferred:** none. **Markers added:** none (no `fixtures-own` or `fixtures-generic`).
+
+**Found in another module (not changed)**
+- `checks/run.mjs` lists two `op-table knockerconsent` answers in `bio-plane/test/m/screens-publish/fr30.test.mjs:65` and `:77`, each hand-building the plane's `knockerconsent` answer. That is screens-publish's fixture to re-point to this export; not mine to change.
+- The impact run names `case-disclosures`, `consequences`, `actions`, `escalation`, `affordances` and `screens-action` as users of what the tranche changed. Their 53 failing tests in those directories all fail with `DECLARED_OP_DISAGREES: readtranslate description`, the OP-GRADES #30 blocker the START names. None imports `sources/fixtures.mjs` (checked by grep), so this job's commit does not reach them. A tranche-tip worktree was checked as well, but it lacked `bio-plane/node_modules` and so was not a like-for-like run; the comparison is by cause, not by count.
+
+**Tests and checks run**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/sources/fixtures.test.mjs`: 3 of 3 pass (after the deliberate break restored).
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/sources/*.test.mjs`: 47 tests, 47 pass, 0 fail.
+- `node checks/fixtures.mjs /home/user/bio sources --list`: 3508 test files read, 178 modules; answer 0, stub 0, code 0, contract 0, accepted 0; 0 failures.
+- `node checks/coverage.mjs /home/user/bio sources`: 22 of 22 live requirement ids named by a test, 0 failures.
+- `node checks/architecture.mjs /home/user/bio sources`: 0 failures.
+- `node checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files, 0 failures.
+- `node checks/run.mjs /home/user/bio`: no finding in sources' files; the findings listed are the screens-publish and other-module ones above, and words reads 15 failures, none in sources.
+- `node checks/ownership.mjs /home/user/bio sources origin/tranche/T51 HEAD`: 3 files changed by sources, 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: sources 1 of 11 test files (run, 47 pass); the other six modules as above.
+
+Size (session_01DsN69dHjn1CmTE4K99844C): test runs 7, module lines 2942
+
+## J7 · COMPLETE
+
+COMPLETE for the fix round 11 START (sources, T51; K5207, K5175).
+
+Changed (commit 837147f43b, record a794500bca on job/T51/sources):
+- bio-plane/test/m/sources/fixtures.mjs: `knockerconsent`, made by the real sources over fixture.mjs's world at call time. A knock with a secret is pulled, one name disclosure waits as a pending entry. `before` = real publishableAt for the group (empty, R8); `answer` = real consentBySecret for that entry (ok, R11); `after` = real publishableAt once it stands (entry shown, basis consent).
+- bio-plane/test/m/sources/fixtures.test.mjs: test named R11 and R22 calls the export and asserts each part.
+
+Failing-first: asserted basis changed to public_elsewhere, red (1 fail), restored, green.
+
+Tests: sources 47/47 pass. Checks: fixtures 0 failures (answer 0, stub 0, code 0); coverage 22 of 22 ids; architecture 0; format 0; ownership 0 failures (3 files).
+
+Markers: none (no fixtures-own or fixtures-generic).
+Deferred: none.
+
+Found outside sources, not changed:
+- screens-publish/fr30.test.mjs:65 and :77 hand-build the plane's knockerconsent answer; screens-publish should take `knockerconsent` from this module.
+- Impact users (case-disclosures, consequences, actions, escalation, affordances, screens-action): 53 failing tests, all DECLARED_OP_DISAGREES: readtranslate description (the OP-GRADES #30 blocker). None imports sources/fixtures.mjs.
+
+Size (session_01DsN69dHjn1CmTE4K99844C): test runs 7, module lines 2942
+
+## Fix round 11 · CHANGE B7 (K5209): OP-GRADES #30 merged
+
+- Merged `origin/tranche/T51` (commit 5781eba4b8). The `DECLARED_OP_DISAGREES: readtranslate description` blocker is gone.
+- Re-run after the merge: `node --test bio-plane/test/m/sources/*.test.mjs` 47 of 47 pass; `checks/fixtures.mjs … sources --list` 0 failures; coverage 22 of 22; architecture 0; format 0; ownership 0 failures (3 files).
+- The impacted modules (case-disclosures, consequences, actions, escalation, affordances, screens-action): 1031 of 1031 pass, where 53 failed before the merge.
+- `checks/run.mjs` still lists the two hand-built `knockerconsent` answers in `bio-plane/test/m/screens-publish/fr30.test.mjs` (lines 68 and 80 now). Not mine; screens-publish to take the export.
+
+Size (session_01DsN69dHjn1CmTE4K99844C): test runs 11, module lines 2942
+
+## J8 · COMPLETE
+
+COMPLETE for the fix round 11 START, with CHANGE B7 (K5209) handled. Supersedes my earlier COMPLETE (J7), which was posted before I read B7.
+
+Commits on job/T51/sources: fixtures 837147f43b; record a794500bca; merge of tranche/T51 5781eba4b8; record for B7 on the tip.
+
+Changed: bio-plane/test/m/sources/fixtures.mjs (`knockerconsent`, the real answer for a source with a pending consent entry: before = empty publishableAt for the group, answer = consentBySecret ok naming the entry, after = the entry shown with basis consent) and bio-plane/test/m/sources/fixtures.test.mjs (test naming R11 and R22).
+
+Failing-first: asserted basis changed to public_elsewhere, red; restored, green.
+
+After the merge: sources 47 of 47 pass; fixtures 0 failures; coverage 22 of 22; architecture, format 0; ownership 0 failures (3 files). Impacted modules (case-disclosures, consequences, actions, escalation, affordances, screens-action): 1031 of 1031 pass.
+
+Markers: none. Deferred: none.
+Outside sources, not changed: screens-publish/fr30.test.mjs (lines 68, 80) hand-builds the knockerconsent answer; screens-publish should take the export from this module.
+
+Size (session_01DsN69dHjn1CmTE4K99844C): test runs 11, module lines 2942

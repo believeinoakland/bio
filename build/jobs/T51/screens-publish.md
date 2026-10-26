@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01A5xaQuUkCxU8ow5u291G9K · depth 2 · WAITING ON BOB (K5183 save) · handled B48
+**Status** · session_01S5w36nrjrT4X3cdJbAUkgi · depth 2 · COMPLETE · handled B55
 
 ## J1 · QUESTION
 
@@ -658,3 +658,895 @@ REPORT: uses must gain answer-envelope, case-inputs, store-request (architecture
 ## Saved at K5183
 
 Done: all of fix round 10's causes 1-5 (J42 COMPLETE posted, pushed at the commit before this section); markers, FIX-E lines, doorbell `knock` on the world; checks as in J42. Half done: none; no worker running. Open: the 41 op-table lines listed above (states the world cannot make; they wait for store-request recipes or provider fixtures, BOB's placement) and BOB's `uses` edges (answer-envelope, case-inputs, store-request). Exact next step: answer BOB's reply to J42 (a CHANGE or the merge); if asked, re-point more op-table lines as store-request recipes appear (`openWorld` in `fixtures.mjs`). The control-plane/plane impact run was not finished for plane's heavy files (see the record); `t47` and `t50` pass.
+
+## Fix round 11 (B49 · K5202, K5175) · SCREENS-PUBLISH #23 (session_01QdkoEiuG83wpMkf86sUqDW)
+
+Merged `tranche/T51` (31 commits) into the job branch first; `mail start` done. Commit `aee8d9883a`.
+
+**Re-pointed to case-import's published answers (START item 1).** `fixtures.mjs` gains `importedCase({accepted})` (the `importedcase` answer over case-import's accepted import, edition 2, or a bare import, edition 1, both made by its real code) and `rerunImport({twice})` (its `rerunstart` answer and the page's own `importedcase` answer). `fr30.test.mjs` builds `ACCEPTED`/`BARE` from them (R55) and no longer hand-builds `IMPORT`. `fr30b.test.mjs` does the same for R58 (regrade, citeimported, rerun); the rerun tests take the import and edition from the answer and the refused second declaration (`RERUN_ALREADY`) from the real door. Expected ids are read from the answers (`ACCEPTED.import`, the first accepted finding); no literal `IMP-2026-0001` / `FND-W-1` remains except inside `importregrade`'s hand-built answer (see below).
+
+**Fixtures list (`checks/fixtures.mjs … --list`): 41 → 37.** Cleared: `fr30:41`, `fr30b:188`, `fr30b:211`, `fr30b:219`. No other line's provider publishes the answer it names (list below).
+
+**Checks.** Format 0 failures. Coverage 80 of 80 ids named, 0 failures. Ownership 0 failures (committed diff). Architecture: 2 failures, both `fixtures.mjs` imports case-import's fixtures, which `screens-publish` does not declare in `uses` (see REPORT 1). `checks/run.mjs`: no finding in my files; words count not risen. `impact.mjs origin/tranche/T51 HEAD`: screens-publish 26/26 files, control-plane 2 of 134 (the two seam files that import this module's fixtures).
+
+**Module tests: NOT run.** Every file that imports the store world fails at load with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row, OP-GRADES #30, as the START says). Not mine. The suites run green only after the CHANGE that merges #30; I will run them then and post COMPLETE with the counts.
+
+**Failing-first.** This round changes tests only (no product code), so there is no product fix to see fail first; the re-pointed tests run after #30 lands.
+
+**Lines left (37), each with its provider and the state it lacks** (the provider publishes no fixture for that op, or publishes it for a different state):
+- review: `casedraft` (fr30:12); `reviewcopy` (fr30:227, a copy with refused gates); `reviewrevoke` (drafts:85, style:57); `reviewcomment` (fix2:233). State: a review draft with concluded findings, and its copy.
+- case-authoring: `publishpreflight` (ceremony:261 generic marker; fr30:150, fr30:156, fr30b:77). State: a prepared case edition with a pre-flight that refuses.
+- capture: `reattest` (fix3:37, fix3:325, fix4:17, fr30b:116); `captureaccount` (fr30b:116). State: a capture whose attestation is unacknowledged, and a capture account by its capturing member.
+- credentials: `signerregisterown` (fix3:276). State: a member's own signing key registered.
+- public-read: `publishedcase` (finding:75, seam4:158); `docketpublic` (fixtures:126). State: a published case edition and its docket, with a finding in several cases.
+- case-inputs: `casedetails` (fixtures:134, fr30b:306); `casedetailsset` (fr30b:345); `casedetailspublic` (fixtures:135, fr30b:360, fr30b:405). State: a case with recorded details, published and unpublished.
+- entities: `entitieskind` (fixtures:138). State: the `body` kind's entity list.
+- sources: `knockerconsent` (fr30:68, fr30:80). State: a source with a pending consent entry (store-request has no recipe for it).
+- doorbell: `knock` (fr30:95, fr30:140). State: a stored knock with its receipt and made phrase (the door's own; `openWorld` can make it, not yet re-pointed).
+- citation: `sever`, `reinstate` (fr30b:165, :166); `citeimported` (fr30b:232, :244). State: a case with a severed citation; an accepted import's citing question. case-import publishes no `citeimported`.
+- wizard-scripts: `writinghelp` (case-editor:86, fr30:252, fr30:267, fr30b:379). State: the assistant reachable with a draft held (model stream; the world cannot make it).
+- action-holds: `holdsdue` (t51:76). State: a due hold with its arrival.
+- generic markers (accepted, not blocking): `fixtures.mjs:47` (`PHOTO_CHECK_UNWORDED`), `ceremony.test.mjs:261`, `g54-page.test.mjs:116`, `public.test.mjs:325`, `review.test.mjs:213`, `t50.test.mjs:115`.
+- Not in the list but hand-built: `importregrade` (fr30b, the regrade answer). case-import publishes no regrade answer; state: a re-check that moves a finding under a lens.
+
+Size: this round not yet closed; the COMPLETE after #30 merges carries the line.
+
+## J43 · REPORT
+
+REPORT, fix round 11 (B49 / K5202). Pushed job/T51/screens-publish @ eb4b8c14f7 (record section "Fix round 11").
+
+DONE
+- Re-pointed to case-import's published answers: fr30 R55 and fr30b R58 (regrade, citeimported, rerun) now take their answers from `importedCase` and `rerunImport` (new in screens-publish fixtures.mjs). Expected ids are read from the answers. Commit aee8d9883a.
+- Fixtures list: 41 -> 37. Cleared: fr30:41, fr30b:188, :211, :219. No other line's provider publishes the answer it names.
+- Checks: format 0; coverage 80/80; ownership 0; run.mjs no finding in my files; impact: screens-publish 26/26, control-plane 2/134 (the two seam files that import these fixtures).
+
+NOT YET RUN
+- Module tests. Every file that imports the store world fails at load with DECLARED_OP_DISAGREES: readtranslate description (OP-GRADES #30). I will run them green after your CHANGE that merges #30, then post COMPLETE with the counts.
+- This round changes tests only; no product fix, so nothing to see fail first.
+
+FOR BOB TO PLACE
+1. `uses` of screens-publish needs case-import (architecture: 2 failures on fixtures.mjs until added). The import is lazy.
+2. case-import publishes no `citeimported` or `importregrade` answer. Those lines (fr30b citeimported x2, importregrade) need one, or a store-request recipe.
+3. 37 fixture lines remain, each a state no provider publishes yet. Grouped by provider with the state each lacks in the record, section "Fix round 11": review (4), case-authoring (publishpreflight, 3), capture (reattest x4, captureaccount), credentials, public-read (3), case-inputs (6), entities, sources, doorbell (knock x2), citation (sever, reinstate, citeimported x2), wizard-scripts (writinghelp x4; the model stream), action-holds (holdsdue), plus 6 accepted generic markers.
+
+## J44 · REPORT
+
+REPORT, re B50 (K5207). Merged tranche/T51 (uses gains case-import: architecture 0 failures). Pushed job/T51/screens-publish.
+
+DONE
+- Doorbell knock (fr30:95 R67 control and fr30:140 R49 control): both now take the real door answer from openWorld, with the field under test taken off it. A real door never omits these fields, so the controls are built from its answer, not hand-built. Fixtures list 37 -> 35.
+- Checks: architecture 0 failures; coverage 80/80; format 0.
+
+NOT YET
+- Module tests: still blocked at load by DECLARED_OP_DISAGREES (OP-GRADES #30 not merged). I will run them after its CHANGE, then post COMPLETE with counts.
+- Re-points for the other providers' answers (review, credentials, public-read, case-inputs, entities, sources, citation, wizard-scripts, action-holds, case-import importregrade, capture, case-authoring): I re-open on each CHANGE as BOB's answer says.
+
+LINES LEFT: 35 (fixtures list). Named in the record section "Fix round 11".
+
+## J45 · COMPLETE · re B51 (fix round 11, K5209)
+
+COMPLETE (fix round 11, B51). Merged `tranche/T51` at `718c142e3b` (OP-GRADES #30 merged; stores load).
+
+**Applied:** the `importedcase`/`rerunstart` answers from case-import's published fixtures (fr30:41, fr30b:188, :211, :219); the doorbell `knock` controls (fr30:95 R67, fr30:140 R49) take the real door answer with the field under test taken off it (openWorld); R59's citing-note count (fr30b) reads the accepted findings of the real answer (two, not one). Commits aee8d9883a, 364999c72e, the record, and the merges.
+
+**Failing-first:** no product fix this round (tests re-pointed to real answers); the R59 count was red on the real answer (2 buttons for 2 accepted findings) and is green with its count taken from the answer.
+
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/`: 295 tests, 293 pass, 0 fail, 2 todo (R35's two press tests, K3717), 45 s.
+
+**Checks:** format 0 failures; architecture 0 failures; coverage 80 of 80 ids, 0 failures; ownership 0 failures (committed diff); `checks/fixtures.mjs --list`: 35 failures (down from 60 in round 10 and 41 at the start of this round). The 35 are named in "Fix round 11" above and BOB placed the providers in B50; the ones whose providers have not merged (review, credentials, public-read, case-inputs, entities, sources, citation, wizard-scripts, action-holds, capture, case-authoring, case-import importregrade) are re-opened on their CHANGEs.
+
+**Met ids:** none new this round (R49 and R67 controls are now the real door's answers; the requirement marks are unchanged).
+
+**Deferred:** none. **Found elsewhere:** nothing new (the `uses` edge to case-import is now declared).
+
+Size (session_01QdkoEiuG83wpMkf86sUqDW): test runs 9, module lines 3754 src + 5222 tests
+
+## J46 · COMPLETE
+
+# screens-publish (T51)
+
+**Status** · session_01QdkoEiuG83wpMkf86sUqDW · depth 2 · WAITING ON BOB (J44) · handled B51
+
+## J1 · QUESTION
+
+1. **Browser acts need two modules that are not on the tranche yet.** R38 to R40 add the browser acts `pubfloorset`, `pubfloorclear`, `pubprint` and `reviewexport` as acts of `published` and `review-copy`. At the tip (fe5d5656fb), `BROWSER_ACTS` (op-declarations R76) and the shell's R99 (`cs.print`, the screen's `printed`) and R100 (admission of a browser act, pressing one sends nothing) are not built. `checkScreens` throws on an act whose op `OPS` does not hold, so once those four acts are in `SCREENS` every test of my module is red until both modules merge. My reading: build the acts, the print state and the file to the written interface; check them against an uncommitted local stand-in of the two modules; and, once both are on `tranche/T51`, merge it and run the real suites. I will not post COMPLETE before that. Please ring me when interface-shell and op-declarations have merged, or tell me to do otherwise.
+2. **R37 (BOB: check).** My reading: the finding page does not draw `body.question` or the finding's `tensions` (the drawing has neither and no key exists), and the address is `<case>/<edition>/<finding>`, a three-part subject on the existing `published` route.
+3. **R39 (BOB: check).** My reading: the print footer names the signer and key fingerprint only where `publishedcase` states them (per-finding `attestor`, the case document's signature key), leaves out what it does not state, and draws no container or rendering hash.
+
+## J2 · REPORT
+
+All of T51-121 is built and tested on `job/T51/screens-publish` (134 tests, 0 failing against uncommitted local stand-ins of `BROWSER_ACTS` and the shell's R99/R100). I post COMPLETE once interface-shell and op-declarations are on `tranche/T51`. Findings for BOB, grouped:
+
+**Words with no key, so the page draws no English for them (design stream; DEC-330, DEC-335, K3366)**
+1. "Leg n", "supports it", "cuts against it", and the generic leads "Rests on:" and "Cut against by:" (the finding page's legs, the print). The legs' role and place are carried by the "What rests on what" lines (`holds.leg.2/3`, `is.leg.4`); a served leg that cuts against has only the `holds.leg.3.which.cuts` sentence.
+2. The minimum's choices "No minimum", "C or better", "B or better", "A only": drawn as the grades themselves ("–", C, B, A).
+3. "Save the file" (the act is drawn under "Save as a file"'s label), "Its fingerprint" and "Its author" (the file's stamp and the list draw the values with the keys that exist).
+4. The finding page's not-available sentences ("the finding's text could not be read from the store"; "a court order withholds it"): drawn by the plane's refusal words (`refusal.<code>` of `body`) and the orders as stated; nothing when `body` carries no code.
+5. The print head ("Edition n · published d · by team") is drawn from `screen.published.dated` and `.whose`; the unresolved edge of "What rests on what" is the `Undetermined` mark; `shell.card.hold` has no row (the docket's reference to `hold` has no card lead); a docket pressure mark of another kind is named by `screen.action.pressure.<kind>` and `screen.action.pressuremark.by`, and one with no member draws no maker sentence.
+6. `words-reads.json` for screens-publish does not list the new keys (generated, not mine).
+
+**Drawn items no read answers (R39; your answer B2)**
+7. The container hash and the rendering hash are not drawn. `publishedcase` states no key fingerprint: only `attestor: {member, key_b64}` per finding and no case-level signer. The footer takes the signer from `signed_by`, else `attestor`, and the fingerprint from `fingerprint` if stated, else the first eight hexadecimal digits of the SHA-256 of `key_b64`'s wire bytes in two groups of four (the drawing's "ab12 34cd"), computed in the browser. Please place: a provider field in public-read, or confirm this.
+
+**interface-shell (P9)**
+8. `refusalOf(a, own, null)` passes no kit to a read's own refusal function (`outcome` calls it with `inst` null), so a screen cannot draw a read's refusal with its own words. `FINDING_IN_SEVERAL_CASES` needs the cases as references, so the finding page reads through `cs.later`-style `view.parts.later` instead.
+9. `cs.sec` takes one help key; the drawing explains headings with two or three sentences (R37's two and R38's two, R43's `tip1` and `tip2`). I join them in a part (`secTips`); a list as `help` would do it in the kit.
+10. `cs.checks` does not redraw on change, so "one box, then Save the file" uses the `acts` choice (a select whose one value offers the act). R90's `redraw` choice is a select too.
+
+**Requirement text to reconcile (BOB's)**
+11. R42 says an unreadable `minutes` source draws no minutes section; the entry (K4025) says the sign step draws `signing.minutes.unread` by word. I follow the entry (state l); R42's line needs the edit.
+12. R30 and R4 say `photosOf` answers no date yet; it does now (case-disclosures R33): the ceremony reads `dated`, a local day, not `taken_at`.
+13. R40 names `hash.sha256`, `date`, `author` and `floors` of the answer; the control plane puts them in `inband` (the quartet), which is where the file's stamp is read, with the top level as a fallback.
+
+**Recorded, no change:** `imported.mjs`:57's `data-group-fields` is an attribute, not a sentence (N1229 entry).
+
+## J3 · COMPLETE
+
+T51-121 applied whole, merged with tranche/T51 at the B6 tip, run against the real providers (no stand-in left).
+
+**Entries applied:** R37 a finding's own page (`<case>/<edition>/<finding>`, read asynchronously; legs served and named-only, falsifier and override, what rests on what, division, unavailable and withheld, FINDING_IN_SEVERAL_CASES); R38 the minimum strength (`pubfloorset`, `pubfloorclear`, the filtered view); R39 printing (`pubprint`, `printed`, the footer from what `publishedcase` states); R40 the review copy saved as a stamped file (`reviewexport`, from the in-band quartet); R41 the first share reads the zone from the copy, the preflight fallback gone; R42 the sign step's open requests and minutes (state k, state l); R43 the docket's pressure marks; the photo's day from `photosOf.dated`; DEC-342 (`refusal.<CODE>`, else the translation, else `refusal.uncatalogued`, never `detail`); dates and times in the design's forms (DEC-333, DEC-299); DEC-359's rows; sections explained by a key list (R90). All 12 inherited reds cleared.
+
+**Deferred:** none. **Found elsewhere:** J2's items, answered in B3 and B5.
+
+**Tests and checks:** module `node --test test/m/screens-publish/`: 134 pass, 0 fail (twice in a row). format 0 failures; architecture (screens-publish) 0; coverage 43 of 43 ids; words over every L11 module together: no line names screens-publish; ownership 0 failures; `setup-words build.mjs --check`: the expected stale-rows note on another module's row. `checks/run.mjs` over the whole product shows other modules' words and one answer-envelope architecture failure, none mine.
+
+Size (session_01PQvprfcu1QzmpPKVtTTPqR): test runs 14, module lines 2440
+
+## J4 · COMPLETE
+
+CR-28 (K4149) applied. `refusal.uncatalogued` is added to every screen's `words` in `keys.mjs`: `parts.mjs` `refusalText` (reached by a failed read and by `refused`) draws it on all nine screens. It is the only one of the 19 keys a screen of this module draws.
+
+**Not drawn here (18 keys; BOB sends the list to the design to drop from `words-reads.json`).** The shell's `refusalOf` (interface-shell R83) uses a screen's own function or own key for a code first, and `refusal.<CODE>` only when the screen maps none, so these rows are never reached:
+- `refusal.KNOCK_EMPTY`, `KNOCK_PAYLOAD_TOO_LARGE`, `KNOCK_ENVELOPE_TOO_LARGE`, `KNOCKER_SECRET_WEAK`, `RATE_IP`, `RATE_GLOBAL`, `BAD_CONTENT`, `KNOCK_NOT_STORED`, `REQUIRED_ARGUMENT_MISSING`: `doorbell.mjs`:35 maps each to its own `screen.doorbell.refused.*` key.
+- `refusal.REVIEW_BAD_UNTIL`: `review-copy.mjs`:110 maps it to `screen.review-copy.until.bad`.
+- `refusal.NO_ATTESTING_KEY`, `NO_SIGNERS`, `CASE_SIGNER_NOT_AN_OWNER`: `ceremony.mjs`:321–358 draw them with their own functions (`screen.ceremony.refused.nokey` / `.notowner`).
+- `refusal.NO_TARGET`: `ceremony.mjs`:100 leaves it out of the blockers and draws `ceremony.gate.notargets`.
+- `refusal.NOT_PUBLISHED`, `refusal.IMPORT_NO_SUCH_EDITION`: an absent-subject code, drawn as "Nothing is here" (`published.mjs`:40, `imported.mjs` ABSENT_CODES); never as a refusal.
+- `screen.action.pressure.kind`: the generator read the dynamic key `"screen.action.pressure." + kind` (`docket.mjs`:72) as a literal; the real keys (`.legal`, `.retaliation`, `.discrediting`, `.other`) are listed.
+- `screen.ceremony.signs.lines`: not drawn. The ceremony lists every statement signed (R13) and then draws `screen.ceremony.signs.count`. If the design means `.lines` (DEC-259, "after the lines drawn") to replace `.count`, that is a requirement change for BOB.
+
+**Tests and checks.** `node --test test/m/screens-publish/`: 133 pass, 1 fail. The failure is `common.test.mjs` R24, which stays red until the design drops the 18 keys above (it names exactly those 18). Process `checks/run.mjs`: format 0, architecture 0, words 0 findings. The coverage failures it lists are in other modules. `coverage.mjs screens-publish`: 43 of 43. ownership 0 failures. I did not run `journey.test.mjs`.
+
+**Found elsewhere:** nothing.
+
+Size (session_016iKmE55Vo6kaM1uCr7HpH5): test runs 2, module lines 1
+
+## J5 · COMPLETE
+
+CR-28 applied; see J4 in my record. One of the 19 keys is added (`refusal.uncatalogued`, on every screen). The other 18 are "not drawn here" with reasons in J4: nine doorbell refusals and REVIEW_BAD_UNTIL map to own keys; NO_ATTESTING_KEY, NO_SIGNERS and CASE_SIGNER_NOT_AN_OWNER have own functions; NO_TARGET, NOT_PUBLISHED and IMPORT_NO_SUCH_EDITION are handled before any refusal is drawn; `screen.action.pressure.kind` is a generator artifact of a dynamic key; `screen.ceremony.signs.lines` is not drawn (design may mean it to replace `.count`: your call). R24 in common.test.mjs therefore stays red until the design drops those 18; the other 133 tests pass. Checks: format 0, architecture 0, words 0, ownership 0, coverage 43/43.
+
+## J6 · QUESTION
+
+QUESTION (SCREENS-PUBLISH #7, session_01Xcyjq97CXFUqwP1cEcNmhq). I read B7 and B8. B7 (CR-28) was already applied and posted in J4/J5; nothing more to do for it. B8 (FR-30, 27 entries) I will build.
+
+1. B8 says to write each `NEW screens-publish R44 … R68` requirement line first. `build/requirements/screens-publish.md` is not in my paths, so `checks/ownership.mjs` fails a diff that touches it (JOB.md "Write only"). The file on tranche/T51 at 26b2565729 ends at R43. My reading: you write R44–R68 on tranche/T51 (numbers as the entries give them; entry 3 is covered by R44, entry 21's R63 amends R60) and I merge it, because coverage.mjs needs the ids in the file before it can count my tests. Until then I build the code and the tests to the ids in the entries. If you would rather I write them, say so and I will, and the ownership check will list that file as a deliberate exception.
+2. Reading set is over budget (601 KB of 600 KB). I will read my own code and requirements whole, and have sonnet-medium workers write the task digest of the used modules' public parts as B8 says; I read any cited section whole.
+3. Entries 17 (C50, R59) waits for your CHANGE as the entry says, but B8's "Drawn" note says DEC-382 is merged and it is to be built now. I read the note as the later word and will build R59 now.
+
+## J7 · BLOCKED
+
+BLOCKED (cause: context). SCREENS-PUBLISH #8, FR-30 part one. The reading set alone (requirements, 184 KB of code, digests) took much of my window; I stop at a clean point, pushed on job/T51/screens-publish (module tests: 147 pass, 2 fail; format 0, architecture 0, words 0 findings).
+
+BUILT, each with a test naming it (bio-plane/test/m/screens-publish/fr30.test.mjs, plus updated old tests): entry 27 (reviewgrant tests give the reason through the harness); R45 (signing key offered at once); R47 in part (the editor draws the gates' first refusal as what is missing); R48; R50 (the ceremony sends the draft and project plus only what it attested); R52; R55; R56; R60/R63 (three headings by the title review answers, body.nocase); R61; R62; R64; R65; R66 (PUBLISH_NO_FINDING with the "Add a finding" door); R67 (reference drawn when the answer holds one). R44 to R68 are written in the requirements file (J6/B9).
+
+NOT BUILT (next session, in this order): R44 (case editor fields and the Bias step: position, reasoning, left-out rows, roles, biasAcknowledgement); R46 (tensionsDisclosed ticks); R51 (reattest, captureaccount, selfAttested); R53 (sever, reinstate: needs a read that lists severed citations, since case_citations lists only live ones); R57 (details sheet: casedetails/casedetailsset/casedetailspublic); R47 for `published` (completeness, bias, tensions, grades); R54 (file chooser); R58 (importregrade, rerunstart); R59 (citeimported); R49; R68.
+Inherited reds still open: common.test R10 (registry acts missing: case-editor sever, reinstate and the owed casedetails/casedetailsset; ceremony reattest, captureaccount; imported writinghelp) and public.test R8 (see 3).
+
+FOR BOB (other modules / design):
+1. R49: the design has no keys for the receipt's fingerprint, size, pseudonym, the made secret and "make one for me"; I drew none and invented none. R49 waits on UX-DESIGN.
+2. R67: the knock answer carries no `reference` (doorbell R11, door.mjs:142); the page draws it only when the answer holds it. Also `knock`'s declaration lists `content` while the Worker reads `contentB64`/`contentText` (doorbell/index.mjs:795).
+3. R8's red is a true finding of the docket's form: `docketfile` declares `edition` and `capture` as required (docket R1: the edition the entry answers, and the captured document); the screen has no fields for either and the design draws none. Needs a drawing.
+4. R68: `place` gets no word function, so the crumb cannot say `crumb.project.unjoined`; interface-shell would need to accept a title key from `place`.
+5. Registry lists `writinghelp` on `imported`; no field there is a writing field by any requirement. Needs your ruling.
+6. `reviewgrant` and `projectowneradd` declare no `reason`; the shell adds it (R107). Harmless to the guard today.
+
+## J8 · REPORT
+
+REPORT (SCREENS-PUBLISH #9). After merging tranche/T51 (B11), three suite tests that were green at #8's stop are red from other modules' declarations, which the guard (interface-shell R104) now compares; none is a screen defect I can fix without weakening a declaration:
+1. `writinghelp` (wizard-scripts, `fields.accepts: ["field","told","draftHeld"]`) does not list `op`, but the module's own writingHelp (wizard-scripts index.mjs:1504-1508) reads `{op, field, told, draftHeld}` from the POST body and decides whether help is offered from `op` (`#helpAt`), and `FIRSTHAND_ACTS` from it. The case editor sends `op` (casedraft or whatchangedpropose) as `screens-action/send-steps.mjs:317` does. Needs: wizard-scripts accepts `op`. Red: t50/case-editor R1 "Draft what changed" (common.test R1 test). Other screen modules that send `op` will see the same.
+2. `accountpropose` (control-plane owner-ops.mjs:23-24, case-account `accountPropose`) requires `text` and `run` (and `flags` for `account_check`): it stores a draft an AI run made, so a member's act cannot send it. R35's "Draft the account with the assistant" sends `{kind:"case_account", framing}`, which the guard refuses. Needs: BOB's ruling on which op asks the assistant for the draft (R35 names `accountpropose`), then a CHANGE. Red: t50 R35 (two tests).
+3. `docketfile` still red as J7 said (accepted red by name, B12).
+I carry on with R44, R46, R51, R53, R57, R47, R54, R58, R59, R67 in the order B12 gives.
+
+## J9 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9, session_01QD1BUeBCA9NYY1zJLxnCYq), FR-30 part two: B12's list applied in its order, except R49 and R68, which wait on others as B12 says. Pushed on job/T51/screens-publish; `tranche/T51` @ 0ebdb2fcf2 merged.
+
+**Applied, each with tests that were seen failing against the code before (R50 excepted: #8 built it) and a control.** R44 (case editor: each finding's role as a radio group from `choices.roles`, the team's position from `choices.subject_positions` and its reasoning, left-out rows with their reason and the "nothing material left out" claim sending `excluded: []`, silence sending none; a Save sends only the fields it changed and no targets; the ceremony's Bias step holds the declared bias and the pre-flight and publish send `biasAcknowledgement`); R46 (a tick and optional words per candidate; `tensionsDisclosed` with the pre-flight and publish; ticks kept after a refusal); R50 (all three requests checked by the guard); R51 (`reattest`; self-attested only with a required reason, refused in place without one; `captureaccount` signed through the signer over `bio-capture-account <sha>\n<text>`, offered only to a member `captureaccounts` lists as the capturing actor); R53 (`sever`/`reinstate` from the project document's `references`, the shell asks the reason); R57 (editor: the four details after the first save, before it the note; `casedetailsset` area/contact/related/relationships, read back by `casedetails`; ceremony lists stated or not stated and blocks nothing; published draws `casedetailspublic` and nothing for a field not stated; no classification row); R47 (published: what the case leaves out with who else read it, the disclosed contradictions with a highlighted one by its fixed sentence, the declared bias, each evidence row's grade; each only when the answer holds it); R54 (file chooser, SHA-256 worked out in the page, only the hash sent); R58 (`importregrade` with three lenses, none preselected, moved findings, the statement that moved each, the limit sentence; `rerunstart` with `RERUN_ALREADY` and the owner refusal by their words); R59 (`citeimported` on accepted findings only; `IMPORTED_NOT_ACCEPTED` by its words); R67 as B12 (2): the reference is the `knockId`.
+
+**Not built.** R49: waits on UX-DESIGN HANDOFF B420 (B12 (1)); R68: waits on INTERFACE-SHELL #10 and your CHANGE (B12 (4)); both marked *(not yet met: T51)* in the requirements file. `coverage.mjs` lists R68 (its "R49" is named in a test title that cites interface-shell's R49, not this module's: no test covers it).
+
+**Reds left, none mine to fix without weakening a declaration (J8):** t50/case-editor R1 and common.test R10 (`writinghelp` sends `op`, which wizard-scripts' declaration does not accept; and `imported`'s registry `writinghelp`, B12 (5)); t50 R35 ×2 (`accountpropose` requires `text` and `run`, a stored draft, not a request for one); public.test R8 (`docketfile`, B12 (3)). 163 pass, 5 fail of 168.
+
+**Found elsewhere (P9).**
+1. **`OPS` does not hold `casedetails`, `casedetailsset`, `casedetailspublic`, `importregrade`, `rerunstart` or `citeimported`** until the plane (or a test) calls `registerDeclaredOps` with their owners' `DECLARED_OPS`; no product code does today. My tests register those six through the harness's `collectOwnerRows` (`test/m/screens-publish/register.mjs`; registering every owner is refused by link-sweep's `sweepset`, which has no `needs`, R80). Every test that composes the real `SCREENS` without registering now throws "screen case-editor's act names casedetailsset, which OPS does not hold": interface-shell `t50.test.mjs` and `declared.test.mjs`, control-plane `t46-app.test.mjs`, interface-shell `page.test.mjs`. Fix: op-declarations hand rows for the six, or those tests/plane register them.
+2. **Words the design owes** (nothing invented; closest existing key used): the four detail names "Area of government", "Point of contact", "Related work", "Relationships" and "Stated" (drawn under `details.area.bodyhint`, `contact.legend`, `rel.link`, `ties.legend`; a stated row shows its date); "Builds on", "Responds to", "Disagrees with" (drawn by their code, the other two relations have keys); "Relied on"/"Supporting" (`case-grammar.load_bearing`, `screen.watching.nr.f.supporting`); "Finding {n}: its role in the case" (the design's key holds "1" and "2" literally; `screen.published.finding` used); the tick's own sentence for "Publish X as self-attested only" (the tick names the document); "Take out" (`screen.panel.limit.remove`); and `case-inputs.details.not_stated` is no word in the table (`hasWord` false), so `screen.person.fact.notstated` is used.
+3. `publishpreflight`'s `not_co_attested` lists capture ids only: no capturing member, no finding that rests on each. The row says the capture's short id; `screen.ceremony.conf.intro2` ({finding}) is not drawn; I read `captureaccounts` for the actors. case-authoring could state both.
+4. `mk-det` (the design's details block) is no served class (R20): a plain block with `data-detail` is drawn.
+
+**Tests and checks.** `node --test test/m/screens-publish/`: 168 tests, 163 pass, 5 fail (the five above). Process checks: `format` 0; `architecture screens-publish` 0 failures; `words`: no finding in this module's files (testcopy cleared); `coverage`: 67 of 68 ids, R68 named by no test; `ownership`: 1 failure, `build/requirements/screens-publish.md` outside paths, accepted at the merge (B9). The R10 registry test now reads a label as `act.owed_<op>.label.<screen>` when the registry row is `owed:<op>`, since the design keys those acts under the owed name.
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 22, module lines 3090
+
+## J10 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9), B13 applied. J9's entries stand; `tranche/T51` @ 530cffbe90 merged.
+
+1. `writinghelp`: green after the merge (wizard-scripts accepts `op`).
+2. `accountpropose` (R35): the screen sends nothing to it; "Draft the account with the assistant" is still drawn only when the assistant may run, and its press is held (K3717). The two R35 press tests are `test.todo` naming K3717; "Order it", the drawing of a draft and its flags read from `accountdrafts`, the earlier drafts, the BAD_ACCOUNT fold and `NO_SUCH_ACCOUNT_DRAFT` stay tested.
+3. `docketfile` stays red by name (B420). Also red by name: common.test R10 for `imported`'s registry `writinghelp`.
+4. R54's test now waits for the browser's own hash (it failed once in four full runs under load).
+
+`node --test test/m/screens-publish/`: 170 tests, 166 pass, 2 fail (R10 `imported` `writinghelp`; public R8 `docketfile`), 2 todo (K3717), stable over three runs. Process checks: format 0, architecture 0, words 0 findings in this module; coverage: R68 named by no test; ownership: the requirements file only (accepted, B9). J9's finding 1 (`OPS` holds none of the six declared ops until something registers them, so interface-shell's t50 and declared tests, page.test and control-plane's t46-app throw when they compose the real `SCREENS`) still stands for op-declarations.
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 27, module lines 3074
+
+## J11 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #9), B14 applied; `tranche/T51` merged.
+
+R68 built: the ceremony's `place` answers `projectKey: "crumb.project.unjoined"` when the project's title cannot be read, so the crumb never draws the id; `crumb.project.unjoined` and `refusal.NO_REVIEW_COPY` are in the ceremony's words. Test names R68; control: a readable project draws its title. `register.mjs` stays until test-support's shared helper exists.
+
+`node --test test/m/screens-publish/`: 169 tests, 167 pass, 2 fail, 2 todo. Reds named: common.test R10 (`imported`'s registry `writinghelp`) and public.test R8 (`docketfile`), both UX-DESIGN B420; todo: R35's two press tests (K3717). R49 stays unbuilt (B420). Checks: format 0, architecture 0, words 0 findings here, coverage 0 failures, ownership: the requirements file only (B9).
+
+Size (session_01QD1BUeBCA9NYY1zJLxnCYq): test runs 31, module lines 3080
+
+## J12 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #10, session_01XKvVPwnBsk4EaAeXx6RRS9), B15 applied; `tranche/T51` merged (already at its tip).
+
+1. **Capturer and resting findings.** The ceremony's "Documents without a second confirmation" reads `not_co_attested` as `{capture, by, findings}` (case-authoring R82): each row draws the capture, the member who captured it (`by`, as that member's handle when it is the viewer, else as given; none when null) and, for each finding resting on it, `screen.ceremony.conf.intro2` {finding}; the key is in the ceremony's `words`. A bare capture id (the old shape) still draws. I wrote the line as **R69** in `build/requirements/screens-publish.md` (amends R51; the file is outside my paths and the ownership check lists it, accepted as B9): "For each capture the pre-flight lists as `{capture, by, findings}` the ceremony draws the member who captured it (none when `by` is null) and, for each finding resting on it, `screen.ceremony.conf.intro2` with that finding. Test: an entry with a capturer and two findings draws the capturer and both sentences. Control: an entry with `by: null` draws no capturer." Test `R69 …` in `fr30b.test.mjs`.
+2. **`register.mjs` removed.** Each test file now calls test-support's `registerDeclared(root, registerDeclaredOps)` (R17); registering every owner now works (the old link-sweep refusal is gone).
+
+**Needs BOB:** `build/modules.json`: add `test-support` to screens-publish's `uses` (as K4245 did for op-declarations). Without it `architecture.mjs screens-publish` fails 14 times, all one line: each test file "imports bio-plane/test/declared-ops.mjs of test-support, which screens-publish does not declare in uses". Nothing else fails.
+
+Accepted reds unchanged: common.test R10 (`imported` `writinghelp`) and public.test R8 (`docketfile`), UX-DESIGN B420; R49 unbuilt (B420); R35's two press tests are `test.todo` (K3717).
+
+Tests: `node --test bio-plane/test/m/screens-publish/`: 172 tests, 168 pass, 2 fail (the two above), 2 todo. Checks: format 0 failures; architecture 14 (the `uses` line above); coverage 69 of 69 ids; words (screens-publish) 0 findings; ownership: 1 file, `build/requirements/screens-publish.md` (accepted).
+
+Size (session_01XKvVPwnBsk4EaAeXx6RRS9): test runs 6, module lines 3090
+
+## J13 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #11, session_014kx187U1UAhfvtZdMDfMJG), B16 applied; `tranche/T51` merged (at its tip, 58987e71c1). One red held, named below.
+
+**Applied**
+1. **Doorbell (B420 1; R49 built).** "Make one for me" is a tick beside the secret field (`screen.doorbell.secret.make`, `.make.help`); ticked, `knock` sends `generateSecret: true` and no `knockerSecret` (a typed phrase is ignored, the field is emptied after the answer). The receipt draws, each only when the answer carries it: `screen.doorbell.receipt.fingerprint` (the `sha256` shortened in the middle) with `.help`, `.size` (`bytes` written 2.1 MB), `.pseudonym` with `.help`, and `.secret` with `.secret.note` (the made phrase, in page memory only: no storage, address or later request). R67's reference is unchanged.
+2. **Docket file form (B420 2).** `docketfile` now sends `edition` (one `screen.docket.edition.option` per ratified edition of `publishedcase`'s `edition_index`, the latest first and chosen) and `capture` (the sha of a capture of `heldcaptures` for the project, `screen.docket.capture.option`), beside kind, from, summary, where it goes and the reason; `screen.docket.capture.add` ("Capture it first") is a reference to `capture`. With no edition or no document chosen it sends nothing and says `screen.docket.file.needed`. public.test R8 is green (the guard's two missing fields were these).
+3. **`imported` keeps `writinghelp` (B420 3).** The citing note of "Rest one of your team's questions on this" carries the assistant's help while it is reachable (`op: citeimported`, `field: note`); the draft fills the note labeled machine work. common.test R10 is green for `imported`.
+4. **B428.** The case editor, the ceremony and the published page name the four details by `screen.case-editor.details.name.*`; "Not stated" is `case-inputs.details.not_stated`; the ceremony marks a stated detail `screen.case-editor.details.stated`; related work's relations all have words (`.rel.builds_on`, `.responds_to`, `.disagrees_with`, with `.same`, `.other`); "Take out" is `screen.case-editor.details.takeout`; a finding's role choice is labeled `screen.case-editor.finding.role` ({n}) with `screen.case-editor.role.relied|supporting`; each unconfirmed document's tick is `screen.ceremony.conf.self.tick` ({document}, the short fingerprint: the pre-flight row states no title).
+5. **Words (R24).** Every key above is listed by the screen that draws it. The regenerated reads list also names nine keys no screen listed (refusals the plane may answer): listed where a screen may draw them: `refusal.IMPORT_ACCEPT_NO_REASON`, `refusal.IMPORT_NOTHING_ACCEPTED` (imported), `refusal.NOT_THE_PROJECT_OWNER`, `refusal.PROJECT_ACT_NOT_THE_OWNER` (case-editor, ceremony), `refusal.NO_SUCH_CASE` (published, docket, docket-public), `refusal.REVIEW_NO_SUCH_CASE`, `screen.action.pressure.note` (docket), `refusal.SECRET_NOT_RECOGNISED` (doorbell), `refusal.reference` (case-editor). None is "not drawn here".
+
+**Held red (one), cause in another module.** common.test R10, docket: the docs registry (`registry.json`) gives `docket` the act `writinghelp` (B420 2: the summary), but the registry `interface-shell` checks against, wizard-scripts' `SCREEN_REGISTRY` (`bio-plane/src/wizard-scripts/screen-registry.mjs`, `docket` acts `docketfile, docketpost, casedraft`), does not, and `checkScreens` throws on an act it does not hold. So the act and the help button are not built; wizard-scripts must re-take the registry (as `imported` already has it) and then docket gets the act (the same one `imported` now has, 12 lines) and `screen.docket.summary` help. Nothing else is red.
+
+**Found in another module.** (a) wizard-scripts: the registry above. (b) Generated artifacts made stale by this change: the plane bundle (`node bio-plane/scripts/bundles.mjs`) carries screens-publish's code. (c) For the design: `screen.start-send.draft.machine` is reused as the label of the assistant's draft on `imported` (its own key family has none); the receipt's size units (B, kB, MB) are symbols in code, as the design said ("2.1 MB").
+
+**Requirement lines for BOB** (build/requirements/screens-publish.md; not edited by me):
+- R49 now met (drop "not yet met"): "The doorbell's tick `screen.doorbell.secret.make` (with `.make.help`) sends `generateSecret: true` and no `knockerSecret`; the receipt draws `receipt.fingerprint` (+ `.help`), `.size`, `.pseudonym` (+ `.help`) and `.secret` (+ `.secret.note`) each only when the answer holds it, and keeps the made phrase nowhere."
+- R8 amends: "`docketfile` sends `edition` (a ratified edition of the case, the latest first) and `capture` (a document the project's captures hold) beside the rest; either missing, nothing is sent. `heldcaptures` (the project) and `publishedcase`'s `edition_index` are read for the choices; `screen.docket.capture.add` is a reference to `capture`. `writinghelp` on the summary waits on wizard-scripts' registry."
+- R7/R59 amends: "the citing note of `citeimported` carries `writinghelp` while the assistant is reachable."
+- R57 amends: "The details are named `screen.case-editor.details.name.<field>`; a detail not stated reads `case-inputs.details.not_stated`; the ceremony marks a stated one `screen.case-editor.details.stated`."
+- R44 amends: "a finding's role choice is labeled `screen.case-editor.finding.role`, its choices `screen.case-editor.role.relied` and `.supporting`." R51 amends: "each document's tick is `screen.ceremony.conf.self.tick`."
+
+**Tests and checks** (from `bio-plane`, node_modules present): `node --test test/m/screens-publish/`: 179 tests, 176 pass, 1 fail (R10, docket, above), 2 todo (R35's two press tests, K3717). New tests: R49 ×3 (fr30), R59, R57, R44, R51 (fr30b), R8 extended (public). Process checks: format 0 failures; architecture 0 failures; coverage 69 of 69 ids, 0 failures; ownership 0 failures (my paths only).
+
+Size (session_014kx187U1UAhfvtZdMDfMJG): test runs 9, module lines 3163
+
+## J14 · COMPLETE
+
+COMPLETE (B17, entry 1 of 1).
+**Applied.** `docket` draws `writinghelp` beside "File a docket entry", on the summary ("What it says"), only while the assistant is reachable and never under the reason; it sends `{op: "docketfile", field: "summary", told}` (nothing when nothing was typed) and fills the field with the draft labelled machine work, as `imported` does. Its label is `act.writinghelp.label.docket` (a design row, `words.json`); the screen's R10 registry test is green. Drawing note: `mock-screens.js` at `09fbb247eb` draws no "Help me write this" button on the docket (its summary field is drawn with `act: 'docketfile'` only), but the registry and the rows hold the act and your entry names it, so it is drawn as the other screens draw theirs; HANDOFF to the design if the drawing should show it.
+**Requirement line for BOB** (R8's note ends "`writinghelp` on the summary waits on wizard-scripts' registry re-take"): that wait is over; suggest "`writinghelp` on the summary is drawn only while the assistant is reachable and sends `op: docketfile`, `field: summary` and what was typed".
+**Deferred / other modules:** none found.
+**Tests (written first, seen failing):** fr30.test.mjs "R8 the assistant helps with the docket entry's summary…" (with control: no assistant, no help) and "…sends nothing when nothing was typed". Module suite: tests 181, pass 179, fail 0, todo 2 (not mine). 
+**Checks:** format 0 failures; architecture 0 failures; coverage screens-publish 69 of 69 ids named, 0 failures; ownership 0 failures; words: no finding in my module (one testcopy in op-grades, not mine).
+Size (session_01DSyTGX3VcuNJFGfRqwxGBs): test runs 4, module lines 3180
+
+## J15 · QUESTION
+
+QUESTION (J1, SCREENS-PUBLISH #13, fix round 2). Best readings first; I carry on with all of it.
+
+1. **C48 / R70: the prepare confirmation is the shell's, not the screen's (one test stays red until you rule).** The Ties step's `publish` is a terminal-weight act, so interface-shell R11 draws its confirmation dialog, and that dialog states `act.<op>.does` = `act.publish.does` ("Publishes the signed edition for anyone to read. It can never be unpublished…"), a protected row written before T47 when `publish` still published (op-grades R37: it now only prepares). A screen cannot choose the dialog's sentence. I draw the button through the kit's `here` option (R90), so its explanation is `act.publish.here.ceremony`, but the dialog still draws `.does`. Options: (a) **interface-shell: R90's `here` word also explains the act in its confirmation dialog** (recommended; one small change, every screen that gives an act a place-word gains it); (b) the design rewrites `act.publish.does` for what the op now does. My test `R70 C48 the confirmation of "Confirm, and prepare Edition n"…` asserts the dialog carries neither `act.publish.does` nor anything irreversible and carries `act.publish.here.ceremony`; it is RED by name until (a) or (b) lands (I do not weaken it). Also: R70 says only the Sign step says publishing cannot be taken back, but `screen.ceremony.permanent` ("Publishing makes this edition permanent and public…") is drawn at the top of the whole ceremony and `common.test` R10 expects it there; I left it and the test alone. Say if it should move into the Sign step (then I change that test line with your ruling).
+2. **C47 reading.** Empty evidence is by design; I did: the editor's box `ce-statement` is labelled `review.statement.title` ("What the case says it does not cover", the key `review-outside` already uses for this very text), and the file saved from the review copy labels it the same and draws each finding by `statement`. The Sign step: "documents the case rests on that are not published with it" = the signed document's citations that are no finding of the edition and carry no full SHA-256 version (what a sitting signs as evidence is what is published); it says them with `screen.published.rests.on.the.council.minutes` / `.one`, and counts evidence with `screen.ceremony.signs.count` only when at least one is signed, else it draws `screen.ceremony.signs.linesabout` (no key holds the count without the evidence clause; owed to the design if you want it back: "One confirmation signs all {n}: the edition and its {findings} findings."). Confirm or correct the reading.
+3. **C50.** I read the case's published editions from the public `publishedcase` by `caseId` alone (a never-published case answers NOT_PUBLISHED and draws nothing). When any edition is public the reopened ceremony draws `signing.ceremony.signednow` ({edition} the latest) and a link to `/app/published/<case>/<n>` worded `screen.ceremony.publicpage`; when the edition the draft stands at is itself published, it offers nothing to prepare (a later edition is started from the docket, R52). No row holds "Published: edition N" as such; owed key if you want exactly that.
+4. **C51.** At the Sign step with no key held the kit's sign dialog already offers "Use a key file you already have" (`shell.signer.load`) and signs with it (my test proves it: no key registered at the signing). What was wrong in the screen: after `NO_ATTESTING_KEY`, "Register a signing key in this browser" always made a NEW key, even with one held; it now registers the held (or loaded) key's public line instead, and makes one only when none is held. The kit has no `cs.signer.load` for a loader outside the dialog (interface-shell gap if you want one on the page). Default of "keep this key" unchanged.
+5. **C52.** The screen already sends the draft its comment belongs to (the displayed draft, each of two drafts) with the text in the body; the owner's refusal is on the plane side (review `comment()` / control-plane `caseReader`), so no change in this module beyond adding `refusal.NO_REVIEW_COPY` to the review copy's words. My two-drafts test passes and stays as the screen's half.
+6. **C67 (my half).** The sign step says "minutes can't be read" when case-authoring answers `minutes: {undetermined: true}` for a step that was not reached; I draw nothing for minutes when the step's `open_requests` says it was not reached (`read: false`, not undetermined). A reached step whose minutes could not be read still says so. The other half (citations of an earlier draft's question) is case-authoring's.
+
+## J16 · COMPLETE
+
+COMPLETE (SCREENS-PUBLISH #13, fix round 2, wave 2). Branch job/T51/screens-publish @ 13b780580d, merged with tranche/T51 at its wave-1 tip. Answers B19 applied.
+
+**Causes met** (each: C-number, requirement ids, the test in `bio-plane/test/m/screens-publish/fix2.test.mjs`; every test written first and seen failing against the unchanged source, 11 red of 15, the four green ones named below):
+- **C2** (R6, R37): `published` draws a finding's claim and falsifier as words: signed document's `case_words`, then `body.conclusion` / `body.falsifies`, then the authored words; a leading markdown heading is no words (a body that is only "## Conclusion" falls to the authored claim; heading plus words draws the words); the question is never the claim; the card, the finding's own page, the print and the "Check a file you hold" answer all read it through one part. Controls: signed words with empty authored fields; nothing invented where there are none.
+- **C3** (R51, R3): already true, test only: a pre-flight whose publish was refused CO_ATTESTATION_UNACKNOWLEDGED and that lists the captures in step three draws the list, Retry (`reattest`), the tick and the reason box; a ready one lists none. Green before and after.
+- **C46** (R1, R61): the screen half was already true (editor and `review-outside` draw `statement`, never the log); test only, green before and after. One real fix: the stamped file saved from the review copy (R40) drew a finding by its `text`; it now draws `statement` first.
+- **C47** (R1, R13): the editor's box for the case's statement of what it leaves out is labelled `review.statement.title` (also in the saved file); the Sign step counts evidence with `screen.ceremony.signs.count` only when something is signed, else draws `screen.ceremony.signs.linesabout`, and says `screen.published.rests.on.the.council.minutes` / `.one` for the documents the document cites that are no finding and carry no full SHA-256 (not published with the case). Control: published evidence is counted and listed; a case resting on none says none.
+- **C48** (R70): separate steps: once the edition is prepared the gates ("put these right") are no longer listed; a reload draws the prepared edition, read from the record (`casedocument` of the case edition the draft stands at; a prepared one is unsigned with `sign.statement`; NO_CASE_DOCUMENT is not prepared) and the reloaded page signs it (findings pinned from the document's citations); `screen.ceremony.permanent` moved from the head of the ceremony into the Sign step (common.test R10 brought to it); the Ties button is drawn with the kit's `here: "ceremony"` (the `P.explained` hack and part removed). **RED BY NAME (accepted, B19): `R70 C48 the confirmation of "Confirm, and prepare Edition n" …`** — the confirmation dialog is interface-shell's and still draws `act.publish.does`; green when CAUSE-SHELL-T51's change (R90's `here` word in the confirmation) merges; I ran it against nothing weaker. Control: sign keeps its weight (`data-weighed`), the Sign step still says it cannot be taken back.
+- **C50** (R71): the ceremony reads the case's published editions from `publishedcase` by `caseId`; when any is public it draws `signing.ceremony.signednow` ({edition} the latest) and the link `/app/published/<case>/<n>` (`screen.ceremony.publicpage`); when the edition the draft stands at is itself published nothing is offered to prepare; an earlier edition public and the draft at the next: both shown, the next prepared as such. A never-published case answers NOT_PUBLISHED and draws nothing; any other failed read is drawn failed.
+- **C51** (R72): a key file made earlier is loaded at the Sign step and signs (the kit's sign dialog already offers it when no key is held; test proves it, green before and after, nothing registered at the signing); the screen's real defect fixed: "Register a signing key in this browser" always made a new key even with one held (four keys); it now registers the held (or loaded) key's public line and makes one only when none is held. Default of "keep this key" unchanged. Control: a device holding none makes and keeps one.
+- **C52** (R2, R62): screen half only, test only, green before and after: with two drafts the Reply sends the displayed draft's own id and the text, for the older, the newer and the project's newest; a refusal NO_REVIEW_COPY is drawn by its words (`refusal.NO_REVIEW_COPY` added to the review copy's list). I could not reproduce a screen-side cause; the refusal is on the plane side (review `comment()` / control-plane `caseReader`), not shown by reading.
+- **C66** (R2) my part: a member who may not share (no `reviewgrant`) is drawn no share boxes and no "Share with a named reader" heading, only "Save as a file"; one who may is unchanged. Not mine: reply shown back, "Show the routes", the queue's `limit` (screens-action, queue; this module sends no `queue`).
+- **C67** (R42) my part: the minutes line is not drawn when the sign step was not reached (`open_requests: {read: false}`, no `undetermined`); a reached step whose minutes could not be read still says so. The citations half is case-authoring's.
+- **C49**: left, as ordered (no drawing from the design lane).
+
+**Also fixed in this module** (P8): the case editor no longer draws a failed block for a draft whose edition was never prepared (NO_CASE_DOCUMENT is not a failed read).
+
+**Test fixtures** (my tests only): `plane()` now answers `casedocument` as publication R1 does (NO_CASE_DOCUMENT until `publish` answers), `publishedcase` asked by `caseId` alone answers NOT_PUBLISHED, and `PUBLISHED_CASE` is exported (three files used `plane().publishedcase.json.result`); style.test's EMPTY plane likewise.
+
+**Suites**: `bio-plane/test/m/screens-publish/`: 196 tests, 193 pass, 1 fail (the R70 confirmation, above), 2 todo (R35's press, K3717; baseline at start 181 tests, 179 pass, 0 fail, 2 todo). Used by what I changed (`impact.mjs`): control-plane 58 files, 308 tests, 308 pass; plane 11 files, 84 pass of 85 — the one is `plane/r42-entry.mjs`, which loads a `cloudflare:` module and cannot run under plain node (the impact list names it; not caused by this job).
+**Checks** (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0; words 0 (screens-publish none); coverage 72 of 72 live ids named (screens-publish 0 failures; the other 9 failures are other modules'); `ownership.mjs`: 16 files, 0 failures.
+
+**Reported to BOB / found in other modules** (P9): (1) interface-shell: the confirmation dialog takes `act.<op>.does` only (answered B19, (a)). (2) case-authoring R77: a sign step not reached answers `minutes: {undetermined: true}`, which cannot be told from a failed read; suggest `minutes: {read: false, stated}` as `open_requests` does (I handle the not-reached case from `open_requests`). (3) C52: nothing found in the screen; the owner's refusal is for review / control-plane. (4) `impact.mjs` lists `plane/r42-entry.mjs` as a test file; it is an entry, not a test.
+
+**Words owed to the design** (joins the batch, B19): the Sign step's count line without the evidence clause ("One confirmation signs all {n}: the edition and its {findings} findings", now `signs.linesabout` in its place); "Published: edition {n}" for the reopened ceremony (now `signing.ceremony.signednow` + `screen.ceremony.publicpage`); optionally one sentence for a member who may not share ("only an owner shares a review copy").
+
+**Requirement lines for BOB**: (R6, R37 amend) a finding's claim and falsifier are drawn from the signed `case_words`, else `body.conclusion` / `body.falsifies`, else the authored words, a leading heading being no words. (R1 amend) the statement box is labelled `review.statement.title`; a never-prepared edition is no failed read. (R40 amend) the saved file draws a finding by its `statement`. (R13 amend) the Sign step counts signed evidence only when there is some, and says the documents the case rests on that are not published with it. (R2 amend) a session that may not share is drawn no share boxes. (R42 amend) a sign step not reached draws no minutes line. R70 (amend): the confirmation wording is interface-shell's `here`; the ceremony draws the Ties button with `here: "ceremony"`, keeps no gate beside a prepared edition, reads a prepared edition from `casedocument`, and says in the Sign step alone that publishing is permanent. R71 (amend): reads `publishedcase` by `caseId` and draws `signing.ceremony.signednow` with the link; a draft whose own edition is public offers nothing to prepare. R72 (amend): the held or loaded key is the one registered.
+
+Size (session_01Rhp6na81MpPN6AKxgGZrBC): test runs 19, module lines 3257
+
+## J17 · COMPLETE
+
+COMPLETE · SCREENS-PUBLISH #14 · T51 fix round 2 (B20, B21). Merged `tranche/T51` (tip 8edc73eb8e) before the last run.
+
+**Entries applied**
+
+- **C49** (DEC-394 (1), DEC-395). The case editor, the review copy and the ceremony each offer "Which draft" (`casedrafts`, `act.casedrafts.label.<screen>`): a choice among the project's drafts, newest first, each `screen.<screen>.drafts.item` (scope and the day prepared, both record data) and the newest followed by `.drafts.newest`, the one the screen shows chosen, `.drafts.help` and `.drafts.choose` under it. The registry's act follows the choice (the shell's `cs.choice` with `acts`); pressing it reads `casedrafts` once and opens the same screen on the draft chosen (`<project>/<draft>`); the draft already shown, or one the plane no longer lists, stays. This clears common.test R10 (`casedrafts` on the editor).
+  - **Live links.** The review copy draws `screen.review-copy.links.heading` (+ `.help`, `.note`): every live review link on any draft, each with its reader, the draft it is on (`drafts.item`), what it lets the reader do (the roster's own sentence), and "Stop sharing" (`reviewrevoke`, the grant). A stopped or lapsed grant is no live link; after the act every draft is read again. The case editor and the ceremony draw `screen.<screen>.links.live` (`{count}`, `{earlier}`) as a reference to the review copy.
+  - **Chooser details.** One read of `reviewcopy` per draft other than the one shown (`casedrafts` carries no scope; the copy carries `authored.scope`, `grants` with `live`, `comments`); the chosen draft's read is reused. The chooser waits for every draft's scope (drawn loading, never guessed); a draft with no stated scope is named by `case.draft.untitled`, never an id. The ceremony opened on a draft now also reads `casedrafts`; if that read fails it is drawn failed and the ceremony goes on.
+- **B21 (DEC-396 (11))**: `screen.ceremony.signs.count.findings` ({n}, {findings}) is the Sign step's count line when no evidence is signed with the case (it takes the place of `signs.linesabout`, as the evidence-count sentence already did); `screen.ceremony.published.edition` ({n}) is the reopened ceremony's "Published: edition N" (R71's own sentence; it takes the place of `signing.ceremony.signednow` there, which a just-signed edition keeps). Tests fix2 R71 (three assertions) moved to the key.
+
+**My readings (say if one is wrong)**
+
+1. The chooser and the second list are drawn only where there is a choice: **two drafts or more**. With one draft the screen is as before (the editor's one row, the review copy's roster) and no extra read is made. The live-links list is drawn only with two or more drafts and some live link (with one, the roster is the list).
+2. `screen.<screen>.links.live` is drawn only when **some live link sits on an earlier draft than the newest** (`earlier` > 0), not whenever `count` > 0: the sentence would otherwise read "… 0 of them on an earlier draft" (R20: no count at zero).
+3. "The day it was prepared" is the draft's `created_at` (its `updated_at` where none is stated), as `cs.date` draws it.
+4. The editor's list of drafts (a row each, identical titles) is replaced by the chooser when there are two or more; one draft keeps its row.
+
+**Words owed to the design (K3366; none written here)**
+
+(a) The live-link rows: DEC-394 names "when" (shared) and "how many comments that reader made"; no key holds "shared {date}" or "{n} comments", so a row draws the reader, the draft line and the end-of-sharing sentence only. (b) `screen.<screen>.links.live` reads "{count} review links are live": with one link, "1 review links are live" (a singular/plural pair is owed, as `…rests.on.the.council.minutes.one`). (c) The chooser field's label has no key of its own; it uses the act's, `act.casedrafts.label.<screen>` ("Which draft"), as does its following button. (d) `screen.ceremony.signs.linesabout` is no longer drawn on the ceremony (the count line replaced it); the row stays in `words.json`.
+
+**Requirement lines proposed for BOB (R73; amends R1, R2, R3)**
+
+- **R73** (fix round 2, C49; DEC-394 (1), DEC-395; `review` R19; amends R1, R2, R3) **A project's earlier drafts.** `case-editor`, `review-copy` and `ceremony` each offer, where the project has two drafts or more, "Which draft" (`casedrafts`): each draft named by `screen.<screen>.drafts.item` (its scope, from its review copy, and the day it was prepared), newest first and marked `.drafts.newest`, the one shown chosen; choosing another opens the screen on it. `review-copy` draws `screen.review-copy.links.heading` where two drafts or more exist and some link is live: every live review link on any draft (a grant `review` answers live, or one neither stopped nor lapsed), each with its reader, its draft and "Stop sharing" (`reviewrevoke`); `case-editor` and `ceremony` draw `screen.<screen>.links.live` (`{count}`, `{earlier}`, a reference to `review-copy`) when some live link sits on a draft earlier than the newest. Test: two drafts, one live grant on each and one stopped, draw the chooser with both drafts by scope and date, the two live links each with its draft and "Stop sharing", and the count note; the chooser opens the draft chosen. Control: one draft draws no chooser and no extra read; a stopped grant is not listed; a list of drafts that fails is drawn failed.
+- **R13 amend**: with no evidence signed with the case, the Sign step's count line is `screen.ceremony.signs.count.findings`. **R71 amend**: the reopened ceremony's line is `screen.ceremony.published.edition`.
+
+**Tests** (each seen failing first: 12 of drafts.test.mjs's 16 red before the code, the 4 controls green; red-then-green on the changed code)
+
+- New `bio-plane/test/m/screens-publish/drafts.test.mjs`, 16 tests (R1, R2, R3, R13, R71, C49): the chooser on each of the three screens (options, order, marks, chosen, act, help), choosing an earlier draft opens it and choosing the one shown stays, one draft draws no chooser and no extra read, the chooser waits for an unread scope, every live link on any draft with its draft and its own Stop sharing, stopping one on an earlier draft sends `reviewrevoke` with that grant and the list is read again without it, one draft draws no second list, the editor's and ceremony's note (and none when nothing sits on an earlier draft), a failed drafts list drawn failed with the ceremony kept, the Sign step's count line and "Published: edition N".
+- `node --test --test-force-exit bio-plane/test/m/screens-publish/`: tests 212, pass 210, fail 0, todo 2 (R35's press, K3717; baseline at start 196 tests, 193 pass, 1 fail = common.test R10, now green).
+- Users by `build/plan/impact.mjs origin/tranche/T51 HEAD`: control-plane 58 files, tests 308, pass 308, fail 0; plane 11 files, tests 85, pass 84, fail 1, the one `test/m/plane/r42-entry.mjs`, an entry that loads a `cloudflare:` module and cannot run under plain node (also at the tranche tip; named, not mine).
+
+**Checks** (from the process repository)
+
+- `checks/format.mjs`: 175 modules, 175 requirements files; 0 failures.
+- `checks/architecture.mjs bio screens-publish`: 32 product files, 83 relative imports; 0 failures.
+- `checks/coverage.mjs bio screens-publish`: 72 of 72 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs bio screens-publish`: 9256 string literals read; 0 failures (inline 0, unkeyed 0).
+- `checks/ownership.mjs bio screens-publish tranche/T51`: 8 files changed by screens-publish; 0 failures.
+
+**Deferred**: nothing. **Found in other modules**: nothing new. **Declared census ops**: this module owns none (its screens send ops other modules own; the harness compared every request with its owner's declaration, R104, all accepted, `casedrafts` with `{query: {project}}`).
+
+Size (session_012aJfMWZGFkW8VcAjPvgTSg): test runs 11, module lines 3410
+
+## J18 · QUESTION
+
+QUESTION · SCREENS-PUBLISH #15 · fix round 3 (carry on meanwhile; nothing blocks, each is my best reading)
+
+1. **Words the design has not written (one list, as your START asks).** Each is drawn as its key (interface-shell R5) until the row lands; a drawn module cannot use `localize` (its functions are serialised to the browser, and the words check counts any English in the source), so there is no English stand-in and no test holds a sentence. Keys needed:
+   - `screen.ceremony.conf.row.missing.timestamp` (C40: the document has an outside copy but still no trusted time stamp), `screen.ceremony.conf.row.missing.co_archive` (it has a time stamp but still no outside copy), `screen.ceremony.conf.row.done` (both proofs now exist). `screen.ceremony.conf.row.meta` stays for neither. The late-timestamp sentence is the plane's own (`late_words`), drawn as it gives it.
+   - `screen.ceremony.registering` (C51: the progress line while a signing key is made and registered).
+   - `shell.keyfile.none`, `.unreadable`, `.empty` (cause-shell-3's; the Sign step draws `.unreadable` / `.empty` when the key file chosen cannot be read; `.none` is never drawn).
+   - `review.index.not_concluded_yet` (review's own key): the editor and the outside reader draw the plane's `not_concluded` sentence; this key is drawn only if the answer carries none.
+2. **A gap in interface-shell for C51 (not blocking; I used what exists).** `cs.keyFile(inputId)` answers a file's text, but nothing hands that text to `cs.signer`. The Sign step now offers "Your key file" (`shell.signer.loadfile`) and, when the member signs with no key held, reads the file by `cs.keyFile` and puts its text in the kit's own sign dialog box (`cs.fill("cs-key-file", text)` once the dialog is drawn, found by a second `cs.signer.held()` that answers after the dialog is drawn), so she types only the passphrase. It works and is tested, but it depends on the dialog's box id and on the order of two signer calls. Proposal for BOB to put to interface-shell: `cs.signer.sign(statements, {keyFile})` (or `cs.signer.load({text, pass})`) so a screen hands the text over. Say if you want the proposal made a requirement; until then the screens-settings Account section can do the same.
+3. **Reading, C49 (test only).** The chooser fix held: opened on the earlier draft, each of the three screens' heading is that draft's and the chooser has it chosen; nothing changed in the code, the test (fix3.test.mjs) pins it.
+
+## J19 · COMPLETE
+
+COMPLETE · SCREENS-PUBLISH #15 · T51 fix round 3, wave 2 (B22). Merged `tranche/T51` (tip afb235a2e3 + the wave-2 plan lines) at the start; code on `job/T51/screens-publish` at 9261943f1b, pushed.
+
+**Causes met (each by a test seen failing first, with its control; `fix3.test.mjs`, 22 tests)**
+
+- **C40** (R51). The unconfirmed-document row draws the proof still absent from the row's `missing` (`...row.missing.co_archive`, `...row.missing.timestamp`; both absent keeps `...row.meta`; none absent draws `...row.done`) and, when the plane states it, `late_words` as the plane gives it (escaped, null draws nothing). After `reattest` the pre-flight is read again (the act re-reads only that). The comment on the entry shape is updated.
+- **C46** (R1, R17, R61, R3). The case editor's finding rows and the outside reader draw a finding by its `title`, its `statement` and `question.concluded.falsifier` (what would change it); a finding with `concluded: false` draws the plane's `not_concluded` sentence. Never `text` once the answer states `concluded`, never a `## ` heading, log or id (the outside reader never draws `text` at all, R61's control stands; the editor keeps it only for an answer that states no `concluded`). The ceremony names each finding the edition pins, the photo's reliance and a document's findings by title (the id only where the copy states no title).
+- **C47** (R6, R19, R37). The case page's finding card draws "What would overturn it" (`f.falsifier`, public-read R41, after the signed `case_words`) and, under it, each evidence entry of `basis` by its `document.name` and place (`screen.document.passage.where`, a PDF page counted from zero shown as the page it is; a whole document draws no place; an extent of another kind is not worded; a leg on working material, `document: null`, draws nothing). The print layout and the finding's own page ("What it rests on") draw the same names. No empty heading when there is no falsifier.
+- **C48, C50** (R70, R71). The ceremony reads what the draft has prepared and published from the record: the pre-flight's `editions`, else the draft's own `editions` in `casedrafts` (review R19); "Edition N is prepared" (the unsigned document is read at the number the record gives, the case from the copy, else the pre-flight's pinned step) and "Published: edition N" with the address the record gives (checked to be a `/app/published/…` address). A page whose record states neither (an older plane) reads `casedocument` and `publishedcase` as before, but only once the pre-flight has answered. A draft whose own edition is published offers nothing to prepare.
+- **C49** (R73). Test only, and the chooser held: opened on the earlier draft, each of the three screens' heading is that draft's and the chooser has it chosen with its scope; the newest is unchanged by default. No code change.
+- **C51** (R72, R15). **This cause adds both:** (a) a key-file chooser on the Sign step (`shell.signer.loadfile`), shown only while the browser holds no key: at the signing the file is read by `cs.keyFile` and its text put in the kit's sign dialog box, so the member types only the passphrase (an empty or unreadable file is refused in the kit's word and nothing is asked of the device); the key a file loaded is the one `signerregisterown` then registers; (b) a progress line (`screen.ceremony.registering`) while a key is made and registered, gone when it ends. The device-key reuse was built in round 2 (R72) and is now tested with its controls: a device holding the key signs with no file chooser, no registration. The dialog's own "Use a key file you already have" stands. **Measured in Chromium** (headless, this container): Ed25519 key making 3 ms, public-key export 1 ms, storing the kept key in IndexedDB 5 ms, wrapping a key file (PBKDF2, 600,000 iterations) 95 ms. So the walker's 37.6 s is not the browser's.
+- **C94** (R2, R62; also R7, R8). The review copy names a member's reply and a member's acknowledgement by `cs.memberName`, the case editor's acknowledgement and "prepared by" likewise, the ceremony's capturer likewise; the imported page's importer and stake maker, and the docket's pressure mark maker, likewise. An outside reader keeps the name the grant gave. The founder with no handle known is `member.founder.unnamed`, never `admin`. The published byline is public-read's.
+- **C81** (R1, R2, R7, R8). Measured in Chromium at 390 px, before and after. Fixed in this module's own markup: the review copy's reply box and "Comment" were squeezed into the end of the comment's row (cut at 401 px, box 24 px wide), now under the comment; the case editor's person rows (field, choice and "Name a person…" cut at 401 px, a 24 px select) likewise; the readiness ladder's numbers, drawn outside the box, printed over the rung before (now inside); the docket's "Post it, signed" (cut at 395 px) likewise; the draft row, the comments door and the imported list's links are 44 px doors. 1280 px: the editor and review copy are unchanged (the rungs in one row, nothing wider). The ceremony needed nothing (390 px, no cut, no small target).
+- **R113.** Every act of the nine screens declares `rereads` (a list of read names, `"all"` for "Read the case"). Test: `reattest` re-reads the pre-flight and none of the copy, project, drafts or group; publishing re-reads the copy and the drafts.
+
+**Tests and checks**
+
+- `node --test --test-force-exit bio-plane/test/m/screens-publish/`: tests 236, pass 234, fail 0, todo 2 (R35's press, K3717; baseline at start 212/210/0/2). New: `fix3.test.mjs` (22) and `phone.mjs` (a Chromium measuring helper; needs playwright-core and Chromium, fails saying so without them). `fixtures.mjs` gains `memberlist` (the roster the kit names members by).
+- Users (`build/plan/impact.mjs origin/tranche/T51 HEAD`): control-plane 58 files, tests 321, pass 318, fail 3; plane 10 files, tests 84, pass 83, fail 1. None touches my diff: `control-plane` t46-app R81 and `plane` R48 look for the page's inline script (the external script, cause-shell-3's expected reds); affordances R2/R41 (`captureseenin`, `officeconfirm` stale until capture and entities merge); op-declarations R32/file-safety R61 (not mine).
+- Process checks: `format` 0; `architecture screens-publish` 32 files, 83 imports, 0; `coverage screens-publish` 73 of 73 ids named, 0; `words screens-publish` 0 (the whole-repo run's only findings are `op-grades` t33/t51, cause-shell-3's, none naming this module); `ownership screens-publish tranche/T51 job/T51/screens-publish`: 16 files changed (the module, its tests and my record), 0 failures. `setup-words build.mjs --check`: stale rows note only, nothing naming this module.
+
+**Deferred, with why**
+
+1. The published page's inline links (the "Finding n" eyebrow link, "Edition n" links and the words "its docket") are 18–22 px high at 390 px. They are running text in the design's drawing; making them 44 px changes the drawing, so it is the design's call (a REPORT to BOB for UX-DESIGN), not mine to restyle.
+2. If the registration request fails in transit (no answer at all), the progress line stays until the member leaves the page: the shell calls `done` only for an answer. A busy hook from the shell would clear it; a refusal clears it (tested).
+3. `late_words` is drawn as the plane gives it, as the HTML it states it is (escaped by the plane, K4370); the page does not escape it again.
+
+**Found in other modules (REPORT)**
+
+- interface-shell: the key-file text has no way to reach `cs.signer` (QUESTION J18, point 2). I hand it over through the sign dialog's own box; a `cs.signer.sign(…, {keyFile})` would remove the dependence on that box's id and on call order.
+- Words owed to the design, drawn as keys until their rows land (QUESTION J18, point 1): `screen.ceremony.conf.row.missing.timestamp`, `.missing.co_archive`, `.done`, `screen.ceremony.registering`, `shell.keyfile.none|unreadable|empty`, `review.index.not_concluded_yet`.
+
+**Requirement lines proposed for BOB (screens-publish; each amends the ids named)**
+
+- **R74** (fix round 3, C40; amends R51; `case-disclosures` R2, `case-authoring` R34) Each document the pre-flight lists as held without a second confirmation is drawn with the proof it still lacks (`missing`: the time stamp, the outside copy, or both), a sentence of its own for each, and, where its time stamp was made late, the plane's `late_words`; a row that lacks neither says it is done; an older entry that states no `missing` draws the sentence for both. After "ask again" the pre-flight is read again and the row is drawn from the new answer. Test: after `reattest` the row says the time stamp was made late and the outside copy is still missing. Control: both present draws done; no `late_words` draws no late sentence.
+- **R75** (fix round 3, C46; amends R1, R3, R17, R61; `review` R41) A finding of a draft is drawn, in the case editor and to the outside reader, by its title, its statement and what would change it; one the team has not concluded (`concluded: false`) is drawn with the plane's `not_concluded` sentence. Never the file's text, a heading, a log or an id where the title is stated; the ceremony names a finding by its title wherever it names one. Test and control as `fix3.test.mjs`.
+- **R76** (fix round 3, C47; amends R6, R19, R37; `public-read` R41) The published page draws, under each finding, what would overturn it (when stated) and each evidence entry of `basis` by its `document.name` and place; two entries of one document are told apart; a leg on working material and a finding with no falsifier draw nothing of them. Test and control as `fix3.test.mjs`.
+- **R77** (fix round 3, C48, C50; amends R70, R71; `case-authoring` R83, `review` R19) The ceremony reads what a draft has prepared and published from the pre-flight's `editions`, else the draft's own in `casedrafts`, and an older answer that states neither as R70/R71 read it (only once the pre-flight has answered). Test: a reloaded draft naming no case says its edition is prepared and offers Sign; a draft the record says is published draws its edition, the address the record gives, and nothing to prepare. Control: a draft never prepared says neither and the record is not asked for a document.
+- **R78** (fix round 3, C51; amends R15, R72; interface-shell R40, R115) While the browser holds no signing key, the Sign step offers a key file; at the signing the file's text (`cs.keyFile`) is put in the kit's sign dialog; the key it loads is the one registered. A progress line is drawn while a key is made and registered. Test and controls as `fix3.test.mjs`.
+- **R79** (fix round 3, C94, C81, C14; amends R1, R2, R7, R8, R10; interface-shell R111, R113) Members are named by `cs.memberName` wherever these screens draw one; at 390 px no control of the case editor, the review copy, the ceremony, the docket or the imported list runs past the screen, a box to type in is not squeezed, and each button and link is 44 px; each act declares the reads it changes (`rereads`). Test and controls as `fix3.test.mjs`.
+
+Size (session_01SNgCNYTEBQaQD9bcHvCZHL): test runs 26, module lines 3521
+
+## J20 · QUESTION
+
+QUESTION · SCREENS-PUBLISH #16 · fix round 4, wave 2 (B23). Nothing blocks the first four causes; I carry on with them. Three things I need from you, smallest first.
+
+**1. Step 0 report, C49 (releases the fix).** Reproduced by pressing the chooser (a harness test: two drafts that name no case, a `reviewcopy` per draft, pick the earlier, press "Which draft"). Result: the address changes and the review copy's and the ceremony's headings DO follow the chosen draft (they draw `reviewcopy.title`, `review` R63); the case editor's heading does NOT: `case-editor.mjs:47-48` titles any draft that names no case `case.draft.untitled` with the PROJECT's title, so it is identical for every draft (that is the walker's "Draft: What does the federal Freedom...": the project's own title). I cannot make the review copy or ceremony stay on the newest draft's heading in the harness; the live cause there can only be `review`'s `title` (it is the scope when the draft states one, else the first finding's title, `review/index.mjs:430-440`): a chosen draft with the same findings and no stored `scope` has the same title as the newest. Proposed fix, my own module only: on all three screens, directly under the heading, a line `data-draft-head` naming the CHOSEN draft by its scope and the day it was prepared (`P.draftLine`, `screen.<screen>.drafts.item`), drawn where the project has two drafts or more; and the editor's heading for a draft that names no case follows `copy.title` like the other two. Failing-first test: press the chooser on each of the three screens; the head line is the chosen draft's. May I build it?
+
+**2. Step 0 report, C48 / N6 (releases the fix), and one field I need from case-authoring and review.** After a reload the screen needs the case id to read the unsigned document (`casedocument` takes `case` and `edition`, nothing else) and to build the prepared edition the Sign step signs. Where it gets the case id: the draft's `case.case_id` (null for a draft that asks for a new case, which is the walker's), else the pre-flight's `pinned` step (`case-authoring/index.mjs:1753-1773`: the step carries `case` and `pinned` ONLY when the dry-run `publish` answered ok). The walker's pre-flight refused first (bias, self-attested, ties), so the step carries `stated`, no `case`; the pre-flight's `editions.prepared` is now stated (R83 reads it by the draft that made the document, tested in `case-authoring/editions.test.mjs`), but `{prepared, published}` carries no case id. So the screen knows an edition is prepared and cannot read its document: it draws the three reasons and no "Edition 1 is prepared". The editor's "names no case yet" is the same: `casedrafts`' `case` is null for that draft and its `editions` has no case. Smallest thing I need: `draftEditions` (case-authoring R83) and `review` R19's draft row `editions` also state `case` (the case id the preparation or the latest ratified edition belongs to, or null). With it: the ceremony reads the document by it; the editor draws "Edition n is prepared" / "Published: edition n" from the record. Also K4450 / `publishedAddress`: it is a server-side function of public-read; no op serves it, and a screen's functions are serialised into the browser, so the screens cannot call it. My reading: the screens write the address as `PublishedParts.hrefOf` does (`/app/published/` + `encodeURIComponent(case + "/" + n)`, the string `publishedAddress` returns); `draftEditions`' bare-slash `address` is never drawn; my seam test compares the screen's link with `publishedAddress`'s answer. Say if you want it otherwise (for example an op that serves it).
+
+**3. The seam tests (R-SEAM) need modules my tests may not import today.** `architecture` counts a test's import of a module outside `modules.json` `uses` as a failure: screens-publish uses interface-assets, interface-shell, setup-words, op-declarations, test-support only. The whole-path tests need the real providers: `doorbell` (C28: `knockOp`, `inboxList`, its fixture), `review` and `case-authoring` with `publication`/`ratification` (C46, C48: the real `casedrafts`, `reviewcopy`, `publishpreflight`, `publish`, `casedocument`, their fixtures `case-authoring/fixture.mjs` `world()`), `basis-versions` (`conclude`, C46), `public-read` (`publishedAddress`, C47). The booted plane is not available (OP-GRADES #24, your note). Smallest change: add `doorbell`, `review`, `case-authoring`, `basis-versions`, `public-read` to screens-publish's `uses` for tests (the requirement file already says "Tests only: op-declarations"; I would add the same line). If you want it done otherwise (for example a shared harness module of yours), say so. Until you answer I write the whole-path tests importing those fixtures; they run and pass here, and `architecture` will name exactly those imports until `uses` is changed.
+
+Also, for C14 I measure the screens' reads on the smoke copy with the lane's probe; the copy answers from this container (HTTP 200 on /version), so that part is mine. C47: I word "Paragraph n" with `screen.document.passage.where` (R76's `docLine`, already keyed) and remove the "Relied on ·" separator; the document's TITLE arrives from case-grammar/case-disclosures/public-read (merged), so the check is that the entry's name is drawn as stated.
+
+## J21 · REPORT
+
+REPORT · SCREENS-PUBLISH #16 · progress (answers B25 taken; nothing blocks)
+
+Built and pushed on job/T51/screens-publish: C28 (name and type sent; seam test through the real doorbell), C46 (cites list by title; seam test over the real review, both conclusions), C40 (the "neither" sentence only while both proofs are missing), C47 ("Paragraph n" from a doc-para extent; no stray separator), C49 (a head line naming the chosen draft by scope and day on all three screens; the editor's heading follows copy.title), C51 (the key file handed to the signer with `{keyFile}`; the no-key line ends when a file is chosen; labels end in a separator; `screen.ceremony.registering` has its row now), C14 (read-set tests: each screen reads bootstrap and queue once and none of its own twice; smoke copy settle times 2.3 to 4.0 s for editor, review copy, ceremony, published page).
+
+C48/N6 is built against `editions.case`. Two seam tests (`seam4.test.mjs`, "R80 R70 C48" and "R80 R71 C48 N6") are RED BY NAME until case-authoring R83 and review R19 state `editions.case`; with `case` added by a stand-in they pass (checked, then removed). Also fixed here: the ceremony threw when `captureaccounts` answered an empty value.
+
+Waiting for: your CHANGE at CASE-AUTHORING #37 / REVIEW #23 (C48), and at CAUSE-SHELL-4's merge (C81: I measure the case editor's "Remove a citation" and the review copy's "Stop sharing" at 390 px with the merged shell).
+
+## J22 · COMPLETE
+
+COMPLETE · SCREENS-PUBLISH #16 · T51 fix round 4, wave 2 (B23). Merged tranche/T51 @ 5539bd4c3d+ (B28); code on job/T51/screens-publish, pushed. No QUESTION open (J20 answered by B25). Nothing deferred.
+
+**Each cause: (1) root cause, (2) test-gap fix, (3) failing-first test (red then green), (4) platform check**
+
+- **C28** (R9). (1) `doorbell.mjs` `send` never sent `fileName`/`mediaType`; now sends the chosen file's name and type (a type only when the file states one). (2) the seam test `seam4.test.mjs` drives the page into the real doorbell (`knockOp` over the module's store routes, its `inboxList`/`inboxGet`). (3) a JPEG `notice.jpg`: row and detail carry `file_name`, `media_type image/jpeg`; control: no type sends none, row type null. Red (2 fail) with the source change stashed, green after. (4) N.
+- **C46** (R75, R61). (1) provider side already fixed (review R41); the screen's own defect was the cites list drawing `r.target` (the raw question id): it now names a cited target by the title the draft's copy states, else the id. (2) `seam4.test.mjs` builds the walker's questions with the real `conclude` (a project's adoption and a direct conclusion) through the real review, both doors. (3) editor and outside reader draw both conclusions in their words, no "Not concluded yet", no `## `; the cites list shows the title (a cited non-finding keeps its id: control). Cites test red before, green after; the concluded-words test passes on the merged review (the provider fix). (4) N.
+- **C48 / N6** (R80, R70, R71, R77). (1) step 0 reported in J20, released by B25: after a reload the pre-flight stated `editions.prepared` but not the case, so the screen could not read the unsigned document; with the provider fields (`editions.case`, case-authoring R83, review R19: merged, B26/B27) the ceremony reads the document by `recCase`, says "Edition n is prepared" and lists no stop reasons; the editor and review copy draw "Edition n is prepared" / "Published: edition n" from the draft row's `editions` and no longer say "names no case yet"; the link is the case page's route (`/app/published/` + `encodeURIComponent(case/n)`, as `hrefOf` writes it); `draftEditions`' bare-slash address is never drawn. Also fixed: the ceremony threw when `captureaccounts` answered an empty value. (2) the real `case-authoring` world, `publishPreflight`, `publishCase`, `publication.caseDocument` and the real `review` list/copy in `seam4.test.mjs`. (3) prepare edition 1 through the real act, open a fresh page: "Edition 1 is prepared", no reasons, Sign offered; sign it: "Published: edition 1" and the route link on the ceremony, editor and review copy. Seen red before `editions.case` merged (and red again with the provider's fields absent), green on the real merged modules. (4) L for the fresh instance: a new page over the same stored world stands for the reload (the real case-authoring/publication SQL storage persists across pages); no workerd run.
+- **C49** (R73). (1) step 0 reported in J20, released by B25: the editor's heading for a draft that names no case is the PROJECT's title for every draft (`case-editor.mjs:47-48`); the review copy and ceremony follow `reviewcopy.title`, which equals the newest draft's when the chosen draft has no stored scope. Fix: a `data-draft-head` line under the heading on all three screens naming the chosen draft by scope and day (two drafts or more), and the editor's heading follows `copy.title`. (2) the old tests opened the earlier draft by its address; the new ones press the chooser. (3) `fix4.test.mjs`: press the chooser on each of the three screens: red (3 fail) with the source stashed, green after; control: one draft draws no head. (4) N.
+- **C40** (R74). (1) the row words exist now (DEC-412 rows merged); the remaining defect: `screen.ceremony.conf.intro2` ("rests on a document that has neither") was drawn for every document whatever it lacked. It is now drawn only for a row missing both proofs (an older entry that states none counts as both). (2) the test reads the sentence after `reattest` and asserts no raw key. (3) red with the source stashed, green after. (4) N.
+- **C47** (R80, R76). (1) the stray "Relied on ·" was the role joined to the grades with a separator that trailed when no grade was stated: now joined only between what is stated (`strengthLine`); the paragraph: a web leg's `doc-para` extent (`para`, from zero) draws `screen.question.leg.paragraph` ("Paragraph n"); the title is public-read's (merged). (2) tests on both. (3) one of the two C47 tests red before, green after. The check from a member's capture through the whole chain to the outside reader is NOT run: it needs case-grammar/case-disclosures/public-read instances together (my uses add public-read but I built no such harness); the entry's name is drawn as public-read states it. (4) N.
+- **C51** (R72, R78). (1) the screen put the key file's text in the kit's dialog box; now `cs.signer.sign(list, {keyFile})` (interface-shell R116) and the dialog asks only the passphrase; a chosen file (the field's `typing` hook, which fires on `input`) ends the "no signing key in this browser" line; each signed string's label ends in a separator (": "); `screen.ceremony.registering` has its row (merged). (2) the test chooses a file and reads the page and the dialog. (3) red (1 fail) with the source stashed, green after; fix3's tests updated to the new dialog (no key box). (4) N.
+- **C81** (R79). (1) interface-shell R120 (cause-shell-4, merged) lays out lead-less rows; my call sites needed no edit. (2) `fix4.test.mjs` measures the editor with 12 cited rows and the review copy with 6 readers, long names, in Chromium at 390 px. (3) red at 44 px wide before the shell merged, green after: "Remove a citation" and "Stop sharing" each over 200 px, one line, inside the screen. (4) L (Chromium at 390 px).
+- **C14** (R79). (1) screens already read bootstrap and queue once, and none of their own reads twice (the ceremony reads `groupidentity` twice: the frame's and its own; left, one cheap read). (2) read-set tests per screen (`fix4.test.mjs`): no failing-first is possible, they passed on first run (stated, not hidden). (3) as (2). (4) P, read-only, on the smoke copy (admin, 1280 px, `probe.mjs`, the old build with no Server-Timing): case editor 3.97 s then 2.33 s settled (15 reads, the slowest `bootstrap` 1.0 to 1.5 s), review copy 3.13 s, ceremony 2.59 s (17 reads), published page 2.74 s (4 reads); no screen over 5 s.
+
+**Requirement ids met:** R9, R75, R76, R79, R80 (new), R70, R71, R73, R74, R77, R78, R72 and all earlier ids (coverage 80 of 80).
+
+**Tests and checks:** `node --test --test-force-exit bio-plane/test/m/screens-publish/`: 254 pass, 0 fail (baseline at start 234, +20). format 0 failures; architecture (screens-publish) 36 files, 114 imports, 0 failures (the five `uses` added by B25 cover the seam tests' imports); coverage 80 of 80; ownership 13 files, 0 failures; words 0 findings. Users (`impact.mjs`): control-plane 368 of 369, one red not mine (R120/R121, the 2.5/8.8/15.9 MB PDFs, a 271 s timing test of the provider); plane 296 of 297, one red not mine (`release.test.mjs` R24: `screen.objective.purpose` not held by the words list).
+
+**Found elsewhere (no action by me):** the two reds above. K4450's `publishedAddress` is server-side only; the screens write the same string, and the seam test compares the link with the route form.
+
+Size (session_01YGqJwT6jawvaDY3pHEbrTm): test runs 32, module lines 3566
+
+## J23 · REPORT
+
+REPORT · SCREENS-PUBLISH #17 · fix round 5, E4 / C48 built and pushed on job/T51/screens-publish (659d2b2c69); three seam tests are RED BY NAME until publication's `findings` field is on tranche/T51. Not COMPLETE: your CHANGE at publication's merge lets me run the real suites and post it.
+
+**What changed.**
+- `parts.mjs` `rosterOf` (new), `sitting`, `sittingGap` (new), `notPublished`: `casedocument` answers `citations` as `{state, rows}`; the sitting now reads the evidence from `citations.rows` and the findings from the document's own `findings` roster (`{target, version_sha, role}`, publication's new field), falling back to the `publish` answer's findings only when the answer states no roster. `sittingGap` is true when the sitting lists fewer findings than the document pins, or none while the draft names findings.
+- `ceremony.mjs` (reload branch, was :113-119): `prepared.findings` = the document's roster, no longer `rec.citations` read as an array. Fail closed: the Sign step draws `data-roster-unread` with `screen.ceremony.sign.nodoc` before the press, and both `caseratify` and `publishat` return `{refuse: "screen.ceremony.sign.nodoc"}` (no key asked, nothing sent) when `sittingGap`. Row owed (K4269): a sentence of its own for "this page could not read what the edition pins"; stand-in `screen.ceremony.sign.nodoc`.
+- Test doubles replaced (R-SEAM): `fixtures.mjs` `DOCUMENT` now has the real shapes (`citations: {state, rows}`, `findings`); the four tests that hand-wrote `citations` as an array (`drafts.test.mjs`, `fix2.test.mjs` x2, `fix4.test.mjs`) use `{state, rows}`.
+
+**Failing-first** (`seam4.test.mjs`, the real case-authoring world and the real `publishCase`/`caseDocument`, inputs made by the member's own acts: conclude, "Confirm, and prepare Edition 1", reload = a fresh page over the same world, key file kept, "Sign and publish now"):
+- "R13 R70 R77 C48 E4 a ceremony reloaded ..." RED on the old source (with `findings` stood in on publication locally): "the edition and its one finding, after the reload" fails (the walker's "signs all 1 ... 0 findings"); GREEN on the new source: count 2/1, statements case + finding, `caseratify` carries `members` = the finding with the sha the document pins.
+- control "the same flow with no reload ..." : both pages send the same sitting (members and `expectedSha`).
+- control "a draft whose roster cannot be read ...": refuses in words before and at the press, no `caseratify` sent, no signing dialog.
+Local proof: with an UNCOMMITTED stand-in of publication's field (`findings` from `case_roles`, removed again; nothing of publication is in my diff) the suite is 260 tests, 258 pass, 0 fail, 2 todo. Without the stand-in the first two E4 tests are red by name (the real `caseDocument` has no `findings` yet). 
+
+**Not shown by the test, stated:** `publishedcase` `findings` 1 / `complete: true` after the signing: the harness has no store that commits the sitting, so the test asserts the request the store commits from (the finding in `members` with the pinned sha); the live check is the re-walk's reloaded ceremony on a new question.
+
+**For you, one live-behaviour point (no answer needed unless you object):** the evidence loop of the sitting (R13: "per piece of evidence they rest on") never ran on the live plane, because it read `citations` as an array. It now reads `citations.rows`, so a reloaded or non-reloaded ceremony will list and sign `bio-ratify <target> <sha>` for each row whose `version` is a full SHA-256 and that is not a finding (the walker's CASE-2026-8024 row was `no_bytes`, so it signs none). That is the written R13 and R52 takes such members, but it has not run live before. If you would rather the evidence stay out of this round, say so and I take the evidence branch out of `sitting`.
+
+**Checks:** `node --test --test-force-exit bio-plane/test/m/screens-publish/` 260 tests with the local stand-in (258 pass, 0 fail, 2 todo as before); without it 2 E4 tests red by name and the third passes. Users (`impact.mjs`): control-plane 365/365, plane 298/299 (the one red is `release.test.mjs` R24 `screen.objective.purpose`, not mine, as at J22). format 0 failures; architecture 37 files, 126 imports, 0 failures; coverage 80 of 80; words 0 findings (`run.mjs`); ownership 8 files, 0 failures.
+
+**Requirement lines proposed (you write them):** R13 gains: "(fix round 5, C48) The sitting's findings are the roster the signed document pins (`casedocument`'s `findings`), and its evidence the document's `citations.rows`; when the sitting lists fewer findings than the document pins, or none while the draft names findings, the Sign step says so in words before the press and `caseratify` and `publishat` send nothing and ask no key." R70/R77: "after a reload the prepared edition's findings are read from the document's roster."
+
+Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 7, module lines 3612
+
+## J24 · COMPLETE
+
+COMPLETE · SCREENS-PUBLISH #17 · fix round 5, E4 / C48 (B30 taken). Merged tranche/T51 (publication #35 included); code on job/T51/screens-publish at 659d2b2c69 plus the merge, pushed. Nothing deferred, no question open.
+
+**Applied:** as J23 (parts.mjs `rosterOf`, `sitting`, `sittingGap`, `notPublished`; ceremony.mjs reload branch and the fail-closed refusal in `caseratify` and `publishat`; fixtures and four tests moved to the real `{state, rows}` / `findings` shapes). The row owed (K4269): a sentence for "this page could not read what the edition pins"; stand-in `screen.ceremony.sign.nodoc`.
+
+**Failing-first (`seam4.test.mjs`, real case-authoring world, real `publishCase`, reload = fresh page):** the reload test was red on the old source and is now green on the real merged publication, no stand-in: count "the edition and its 1 finding", `caseratify` members = the finding with the sha the document pins. Controls green: no reload sends the same sitting; a document stating no roster refuses in words and sends nothing. Platform check: N. Not shown: `publishedcase` findings 1 / complete true needs the store (the re-walk's reloaded ceremony).
+
+**Tests and checks:** screens-publish 260 tests, 258 pass, 0 fail, 2 todo (as before). Users: control-plane 365/365; plane 298/299, the one red `release.test.mjs` R24 (`screen.objective.purpose`), not mine. run.mjs: format, architecture, coverage (80/80 for the module), words 0 failures. ownership 8 files, 0 failures.
+
+**Requirement lines proposed:** as J23 (R13; R70/R77). Live-behaviour note from J23 stands: evidence now read from `citations.rows` (the written R13).
+
+Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 10, module lines 3612
+
+## J25 · QUESTION
+
+QUESTION (G12c-reviewcopy; replaces nothing). G10 and G11 are built and green (details at COMPLETE). G11 step 0, answered: a door that sets a team's time zone exists, Settings › Your team (`screens-settings/group.mjs:147-160`, an administrator's `factconfirm` of the profile's `time_zone`), so publishing at a set time is reachable; a team with none now sees `refusal.PUBLISH_AT_NO_ZONE` and only "Sign and publish now".
+
+G12c: review's `reviewcopy` batch is not on tranche/T51 (`review/index.mjs:1312` takes `draft` only; REVIEW #24 has posted no shape; store-door and control-plane have not merged). I need the request and answer shape and one design choice.
+1. Shape. Best reading, built to unless you say otherwise (same as SCREENS-DAILY J21's for `casedrafts`): request `reviewcopy` with `drafts` = the draft ids as one comma-joined string, at most 20, no `draft`; answer `{ok:true, kind:"review-copies", drafts:{<id>: exactly the single answer for that id, or its dead answer}}`, so an unseen draft is its own dead answer and changes no other entry.
+2. How many calls. Today: the Ceremony's wave-1 `copy` read (the address draft, needed first: the pre-flight, tensions and the whole page are built from it) plus one wave-2 `reviewcopy` per OTHER draft (`parts.mjs:291-295` `draftCopies`, read only to name a draft by its scope and count live review links). Option A (recommended): keep the wave-1 single read; send ONE batch for all other drafts. Calls: 1 + 1 = at most 2 whatever the number of drafts (5 drafts: 5 now, 2 then); a project of 2 drafts stays at 2, a project of 1 draft at 1. No added wait. Option B: drop the wave-1 read; after `casedrafts` answers send one batch for all drafts: exactly 1 call per load, but the pre-flight, tensions and every dependent read move one wave later (about +0.3 s on every Ceremony load, the opposite of the round's aim). The failing-first test's "one reviewcopy per load" is true only of B. Please choose; I build A unless told otherwise.
+Meanwhile my screen-level test uses a scripted batch answer built from (1); a whole-path test over the real plane waits red by name for review, store-door and control-plane.
+
+## J26 · COMPLETE
+
+COMPLETE (fix round 6, B32; B33 applied). Branch job/T51/screens-publish, tranche/T51 merged (c3b5a594d4), pushed.
+
+**G10** `parts.mjs` `refusalText` (the `f.translation` branch): `{name}` placeholders filled from the refusal's own field of that name (`document`, `photo`), a missing field left out, never a raw brace. Failing-first `ceremony.test.mjs` "R3 R50 (fix round 6, G10)": real canned text (`document.refused.pending` with `{document}`) and `document: INFO-2026-0134-x`: red (reference not drawn), green. Missed because `fixtures.mjs:42` had a text with no placeholder.
+**G11** `ceremony.mjs` Sign step (`timed`/`untimed`): schedule fieldset, help sentence and the "at a set time" choice only when `pre` answered, `publish_at.offered !== false` and a zone is held; otherwise `refusal.PUBLISH_AT_NO_ZONE` and the single "Sign and publish now" act. Test "R12 R15 (fix round 6, G11)": `offered:false`: no brackets, no date/time fields, only `caseratify`, the refusal sentence; with a zone unchanged. Red then green. Step 0: Settings > Your team sets the zone (screens-settings/group.mjs:147-160).
+**G12c** `parts.mjs` `draftCopies` + new `copyIn`: the other drafts' copies in one `reviewcopy` (`drafts` comma-joined, at most 20 per read) when two or more others; answer read from `copies` (K4577); an id it lacks or refuses is drawn failed, never another draft's scope. Test "R73 C49 G12c" x3 (case-editor, review-copy, ceremony): five drafts read `reviewcopy` twice (was five), the batch names the four others once; red (5 vs 2) then green. Applies to all three screens that share `draftCopies`.
+Measurements: none platform-bound (screen code only).
+Suites: screens-publish 263 pass, 0 fail, 2 todo (pre-existing); control-plane `t46-app` (the only user) 6/6. Checks: words 0 failures (this module: unkeyed 0), coverage 80/80, ownership 0 failures, architecture 0; `checks/run.mjs` shows one format failure in `build/plan/next.md:38`, not mine.
+Seam (R-SEAM): `review`'s batch and control-plane's forwarding are not on tranche/T51 yet (`grep review-copies review/index.mjs` empty), so the whole-path test over the real plane cannot be written; the screen test uses the answer shape from B33. Smallest thing I need: a CHANGE when review and control-plane merge, then I add that test and run it.
+Words owed: DEC-418's four refusal rows (K4577) serve G10 once on the table; no new sentence added.
+Proposed requirement lines: (R3/R50) a refusal drawn from the plane's text has its `{name}` placeholders filled from the refusal's fields, none drawn raw. (R12/R15) the Sign step offers a publishing time only where `publish_at.offered` is true with a zone; else `refusal.PUBLISH_AT_NO_ZONE` and Sign-now alone. (R73) a project's other drafts' copies are read in one `reviewcopy` with `drafts`, at most 2 `reviewcopy` reads per load.
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 8200
+
+## J27 · REPORT
+
+Correction to J26's Size line: module lines are 3623 (wc -l of bio-plane/src/screens-publish/*.mjs), not 8200. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3623
+
+## J28 · COMPLETE
+
+COMPLETE (B34 G20, B35 seam). Branch job/T51/screens-publish, tranche/T51 merged (review's batch 748383ed5e included), pushed.
+
+**G20 (S11), four fields.** (1) Cause, `docket.mjs:20`: the "document it rests on" picker read `heldcaptures` once with `limit: 200` and drew that page as the whole list; the answer's `truncated`/`next` were ignored. Fix (`docket.mjs`, G20 block): while a page is `truncated` with a `next`, the next page is read (`after`, `later` keys `caps:<i>`), up to 25 pages; the picker lists every row read; a page still loading draws loading in its place, a page that cannot be read draws failed and offers no picker (a partial list is never given as the whole); past 25 pages it says how many it lists. (2) Missed: the fixture answered one small page and no test drove the list past 200. (3) Failing-first `g20.test.mjs`: 250 held documents: the picker reaches the 250th with two reads (the second `after: "200"`), one page when 40 (control), a failed second page draws failed with no picker. Red on the old source (2 failures), green now. (4) N.
+Stand-in word: `screen.people.more` ("The first {n} are shown...") for the capped case; row owed: `screen.docket.capture.more`; added to the docket's word list in `keys.mjs`.
+
+**B35 seam.** `seam4.test.mjs` "R73 C49 G12c (fix round 6, seam)": four real drafts over the real merged review (`copyMany`): the Ceremony reads `reviewcopy` twice (the draft shown and one batch of the other three) and each draft is named by the scope its own real copy states. Green. It drives review directly, as the file's other seam tests do; the door path (control-plane forwarding `drafts`) is not exercised and waits for CONTROL-PLANE #48's merge: I need the CHANGE then, and will run the screen suite against it.
+
+Suites: screens-publish 266 pass, 0 fail, 2 todo (pre-existing). Checks: words 0 failures (unkeyed 0), coverage 80/80, architecture 0, ownership 0.
+Proposed requirement line (R8): the docket's document picker lists every held document, reading each next page from `next`, and says how many it lists where it cannot.
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 14, module lines 3650
+
+## J29 · COMPLETE
+
+COMPLETE (B36). tranche/T51 merged (control-plane's batch keys included), pushed. New `door-seam.test.mjs` "R73 C49 G12c (fix round 6, door seam)": the real Worker, its object and review under Miniflare; the member's acts make a project and four drafts (`casedraft`); the Ceremony's page reads go through the real door. It sends two `reviewcopy` (the draft shown, and one batch `drafts=<the other three>`), the door answers the batch, and each draft is named by the scope of its own real copy. Green. Suites: screens-publish 267 pass, 0 fail, 2 todo (pre-existing); words, coverage 80/80, architecture, ownership 0 failures. Nothing open. Ahead: G29 CHANGE when CASE-AUTHORING #39 merges. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 6, module lines 3635
+
+## J30 · QUESTION
+
+QUESTION (G29, B37 item 2; replaces nothing). The row cannot give the sha ratification verifies for a document.
+What ratification verifies: `caseratify`/`publishat` `members: [{id, sha, signature}]` are each checked as R4 checks a bundle (R52): `findingFactsRefusal` (`ratification/finding.mjs:64-67`) answers `RATIFY_STALE` unless `m.sha === facts.row.bundle_sha`, the BUNDLE's head (`record-core` `head(id).bundleSha`, the sha256 of its `bundle.md`), and the signature is over `ratifyStatement(id, m.sha)` (`index.mjs:1387`; held members again at `:1383-1390`). The sitting test signs `w.sha(id)`, that head, for each INFO document (`ratification/sitting.test.mjs:63-64`).
+What the row gives (`case-authoring/index.mjs` `#caseCitations` tail, `document.mjs:141-145`): `{target: INFO-..., version: only_capture|pinned|undetermined|no_capture|no_bytes, capture: <the CAPTURE's sha256> | null}`. A capture's sha is not the document bundle's head sha (a document holds captures; its `bundle.md` has its own sha), so signing `row.capture` gets `RATIFY_STALE` (and a row with `capture: null` has nothing to sign at all). No existing row field holds the head.
+What ratification/the row would need: each evidence row carries the document's head `bundle_sha` as of the prepare act (case-authoring R16/R86, written into `case_citations`, the stored document and `casedocument`'s `citations.rows` alike), and then `sitting()` signs `ratifyStatement(row.target, row.bundle_sha)`; a document that moves between prepare and signing is refused `RATIFY_STALE` naming it, which is the right answer for an edition whose bytes were frozen. Every row of a document, `undetermined` ones too, would have it (the head does not depend on how many captures it holds), so no document needs to be left unnamed.
+Alternative (not recommended): the screen reads each evidence document's head at the Sign step (`list`/`bundlehistory`, one more read per document, and a sha the case document never recorded).
+I do not invent a mapping. Until you decide I build what is independent of it: no evidence line is drawn or signed from `version`; the seam test (cite, conclude, prepare, publish, then `caseratify`/`publishat` over the real ratification, every evidence signature verifying) written red by name. Please answer (and CHANGE case-authoring if the row is to carry `bundle_sha`).
+
+## J31 · REPORT
+
+REPORT (G29, B37/B38). Pushed. `parts.mjs` `sitting()`: an evidence line is `ratifyStatement(row.target, row.bundle_sha)` for each row carrying a 64-hex `bundle_sha`; nothing is read from `version` or `capture`. New `unsignable()` (replaces `notPublished`): the document rows (`version` not `no_bytes`) with no head, each once; the Sign step names them (`[data-unsignable]` list) beside the held sentence `screen.published.rests.on.the.council.minutes[.one]` (stand-in, row owed: a sentence saying these documents cannot be signed with the edition). Tests: fix2 "R13 G29" (signs at the head, never the capture or class; two rows without a head named; control none named) green; fixtures' DOCUMENT rows now in the real shape. Seam test seam4 "R13 G29 (seam)" (real cite, conclude, prepare, then the ceremony's sitting must hold the document at `w.record.head(DOC).bundleSha`) is RED BY NAME: `row.bundle_sha` is undefined until CASE-AUTHORING #40 merges; I need your CHANGE then. Suite: 268 pass, 1 fail (that test), 2 todo; words, coverage 80/80, architecture, ownership 0 failures. Verification by the real ratification is its own sitting test (the head is the sha it checks, `finding.mjs:64`); this seam proves the screen signs that head. No COMPLETE until green.
+
+## J32 · COMPLETE
+
+COMPLETE (G29 screen half, B37-B39). Branch job/T51/screens-publish, tranche/T51 merged (case-authoring #40 included), pushed.
+
+**G29, four fields.** (1) Cause, `parts.mjs` `sitting()`: an evidence line was kept only if the citation row's `version` was 64 hex, but real rows carry a classification word in `version` and the capture's sha in `capture`; over a real document no evidence line was drawn or signed. Fix: a document row is signed as `ratifyStatement(row.target, row.bundle_sha)` for a row carrying a 64-hex `bundle_sha` (the head ratification verifies, R4/R52: `finding.mjs:64` `RATIFY_STALE` unless `sha === bundle_sha` of the head); nothing from `version` or `capture`. New `unsignable()` (replaces `notPublished`) lists the document rows (`version` not `no_bytes`) with no head, once each; the Sign step names them in a `[data-unsignable]` list under the held sentence `screen.published.rests.on.the.council.minutes[.one]` (stand-in; row owed: a sentence saying these documents cannot be signed with the edition). (2) Missed: `seam4` and the fixtures hand-wrote rows with `version` as a sha, a shape no plane answers. Gap fix: fixtures use the real row shape; the seam below prepares through the real case-authoring. (3) Failing-first: `seam4` "R13 G29 (seam)": the real cite, conclude, prepare; the ceremony's sitting holds the cited document at `w.record.head(DOC).bundleSha`: red (row had no `bundle_sha`) until case-authoring #40, green now. `fix2` "R13 G29": signs at the row's head never at capture or class, two rows without a head named, control none named. The two E4 seam tests (reload and no-reload) now count the document too (3 statements: edition, finding, evidence) and assert its member `[DOC, head]`. (4) N.
+Ratification's own verification of an evidence member at that head is its sitting test (R52); this job proves the screen signs the head and did not re-run a signature over the real ratification.
+
+Suites: screens-publish 269 pass, 0 fail, 2 todo (pre-existing); control-plane `t46-app` 6/6 (the module's only user). Checks: words 0 failures (unkeyed 0), coverage 80/80, architecture 0, ownership 0.
+Proposed requirement lines (R13): the sitting's evidence lines are the document rows of `casedocument`'s `citations.rows` that carry `bundle_sha`, each signed as `ratifyStatement(target, bundle_sha)`; a document row with none is named in the Sign step as not signable with the edition and no line is drawn or signed for it.
+Row owed to UX-DESIGN: the unsignable-documents sentence (stand-in `screen.published.rests.on.the.council.minutes`).
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3638
+
+## J33 · COMPLETE
+
+COMPLETE (G51, B40). Commit 056d60ade8 on job/T51/screens-publish, pushed.
+
+**Entries applied.** G51: the eight keys the design's reads list gives the module are now listed in `bio-plane/src/screens-publish/keys.mjs`, each by the screen that draws it (checked against the drawing code, not only the diagnosis):
+- `ceremony`: `refusal.NO_CASE_DOCUMENT` (a failed `casedocument` read is drawn by `cs.state`, ceremony.mjs:347, :363); `screen.ceremony.conf.row.done`, `.row.missing.co_archive`, `.row.missing.timestamp` (ceremony.mjs:229); `screen.ceremony.registering` (ceremony.mjs:612); `shell.keyfile.none` (the key-file field `ce-keyfile` drawn at ceremony.mjs:383).
+- `published`: `refusal.NO_PUBLISHED_EDITION`. A failed `publishedcase` read is drawn by `cs.state` at published.mjs:48 (only `NOT_PUBLISHED` and `NO_SUCH_*` are special-cased there). The ceremony does not draw it: ceremony.mjs:104 treats that code as not a gone edition, so it is not drawn at :140.
+- `case-editor` and `review-outside`: `review.index.not_concluded_yet`, which `P.findingWords` draws (case-editor.mjs:115, review-outside.mjs:44). Not the ceremony list, as G51 allowed: the ceremony does not call `findingWords`.
+
+**Deviations from the diagnosis, recorded.** G51 named the ceremony list for all eight. Two keys are listed by other screens because those screens draw them (above). `refusal.NO_CASE_DOCUMENT` is not listed by case-editor: case-editor.mjs:308 keeps that code from being drawn. No code changed other than the list; no test, requirement, or word row changed.
+
+**Red then green.** `common.test.mjs` R24 ("every key it reads ... is listed by a screen that may draw it") red before, with the eight keys unlisted; green after (23/23 in that file). The other tests of the module unchanged.
+
+**Suites (bio-plane, `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/screens-publish/`).** 271 tests: 269 pass, 0 fail, 2 todo (the two R35 press tests, held by K3717, B13). Every `node_modules` installed first (K4113): agent-runner, bio-plane/src/journey-check, file-scanner, sheet-worker, site (newgroup, ocr-worker, pdf-worker, bio-plane were present).
+
+**Impact set as users** (`node build/plan/impact.mjs origin/tranche/T51 HEAD`, run after the commit): screens-publish 22/22, control-plane 72/85, plane 51/59; 3 modules, 145 test files. I ran the 123 test files of control-plane and plane (`node --test` over the affected list): 740 pass, 1 fail. The fail is `test/m/plane/release.test.mjs:78` (R24, DEC-149): "screen.objective.purpose is held by the words list" (`objective` is not a screens-publish screen). That is plane `release` R24, an inherited red named in my START; I did not touch it.
+
+**Checks (`node checks/run.mjs /home/user/bio`, process repo pulled first).** format 0 failures (176 modules); architecture 0; coverage 6686 of 6686 live ids named, 0 failures; channels 0; words: 1 failure, `inline 1` at `bio-plane/src/case-checker/spec.mjs:11`, the inherited red named in my START (not screens-publish). Ownership (`checks/ownership.mjs /home/user/bio screens-publish tranche/T51 job/T51/screens-publish`): 1 file changed by screens-publish, 0 failures.
+
+**Found in another module.** None new. Only the inherited reds above.
+
+**Not done.** No requirement text changed, so no proposed requirement line. No word key needed beyond the design's list. No census op changed (K4208). Nothing deferred.
+
+Size (session_01TAAJFf7btHo6fZZ7TSeWfZ): test runs 5, module lines 3639
+
+## J34 · QUESTION
+
+1. **Where do the 13 stand-in sentences live? G54 (3)(c) says "a `localize` stand-in" in screens-publish; the words check refuses that.** `checks/words.mjs` fails `marker` for any `localize` call in a drawn-screen module (`DRAWN_MODULES` = `screens-*`; I tried it: 13 marker failures), and R24 says this module has no rows of its own (`common.test` asserts `SCREEN_WORDS` is empty). The completion rule needs 0 words findings in my module. My reading: the module holds only the keys, listed in `published`'s `words`, and draws each with `cs.w(key)` (a key the word table lacks draws the bare code, never English). The 13 `localize` rows, `screen.published.casefile.{being_prepared,retrying,stopped,waiting_on_members}` and `screen.published.casefile.code.{NO_BUCKET,STORE_SILENT,MATERIAL_MISSING,FINDING_MISSING,BUCKET_FAILED,NOT_RECORDED,INTERRUPTED,TOO_LARGE,UNKNOWN}`, then sit in a non-drawn module and reach `rows.mjs` on its regeneration. Recommendation: public-read holds them (it owns the closed code set and the states), as a table of `localize` calls it does not put in any answer; I can also send you the 13 English lines for any other home. Until the rows exist, `common.test` R24 ("every key it lists is a word") is red by name and the page test draws the bare code; once they exist everything is green with no code change of mine.
+2. **`built` has no key.** One with a case file is byte for byte unchanged, so the page never draws a sentence for `built`; I add no key for it.
+
+## J35 · COMPLETE
+
+COMPLETE (G54 (3)(c), B41, answer B42).
+
+**Cause / gap.** `published.mjs` drew the download only with a `manifest_sha` and answered the verify press "nothing to check" (`screen.published.verify.none`) when there was none, so a complete edition with no case file said nothing. Tests never read an edition without one.
+
+**Changed.** `parts.mjs` `casefileSaid` reads `case_file` (else `verification.case_file`) and draws the state's sentence and the code's by key (`data-casefile`, `data-casefile-code`) beside the acts, only for `being_prepared`, `retrying`, `stopped`, `waiting_on_members` and only with no manifest; `published.mjs` draws it and the verify press answers it (nothing sent). An unheld key draws the bare code, never English; an unlisted code reads `.code.UNKNOWN`. `keys.mjs`: the 13 keys listed in `published`'s words. A built edition, one with a manifest, or an answer with no `case_file` is unchanged (tested). New test `test/m/screens-publish/g54-page.test.mjs` (4 tests, from the real chain: publication + public-read + case-authoring).
+
+**Red then green.** Page test red on the unchanged code (verified by stashing), green after. Reds by name, until public-read adds `case_file` and writes the rows (B42): `g54-page` "(public-read R23 seam)" and "R24 G54 the thirteen casefile keys … are words", and `common.test` R24 (the 13 listed keys are not words yet).
+
+**The 13 English lines for public-read (`localize(id, en)`, owed to UX-DESIGN, for `later-ux.md`):**
+- `screen.published.casefile.being_prepared` — This edition is complete and signed. Its case file is being prepared and will be offered here when it is ready.
+- `screen.published.casefile.retrying` — This edition is complete and signed, but its case file could not be built yet. It will be tried again.
+- `screen.published.casefile.stopped` — This edition is complete and signed, and its case file cannot be built because a material is no longer held.
+- `screen.published.casefile.waiting_on_members` — This edition is not complete yet, so it has no case file. It is waiting for the rest of its signatures.
+- `screen.published.casefile.code.NO_BUCKET` — The place where published files are kept was not available.
+- `screen.published.casefile.code.STORE_SILENT` — The record did not answer.
+- `screen.published.casefile.code.MATERIAL_MISSING` — A material the case file lists is not held.
+- `screen.published.casefile.code.FINDING_MISSING` — The text of a finding could not be found.
+- `screen.published.casefile.code.BUCKET_FAILED` — A file of the case file could not be stored.
+- `screen.published.casefile.code.NOT_RECORDED` — The list of the case file's files could not be recorded.
+- `screen.published.casefile.code.INTERRUPTED` — An earlier attempt to build it was interrupted.
+- `screen.published.casefile.code.TOO_LARGE` — The case file is too large to build in one piece.
+- `screen.published.casefile.code.UNKNOWN` — It could not be built, for a reason not yet known.
+
+**Proposed requirement line (R22, BOB writes):** "(G54) An edition with no built case file draws, where the download is not drawn, the sentence for its `case_file` state (`screen.published.casefile.<state>`) and for its code (`.code.<CODE>`), from `publishedcase`'s `case_file` or `verification.case_file`; the verify press answers them in place of `screen.published.verify.none`; with a manifest, a built state or no `case_file` it is unchanged." Also: `being_prepared` covering a `building` older than 2 minutes is public-read's state, not drawn differently here.
+
+**Suites / checks.** screens-publish: 275 tests, 270 pass, 3 fail (the three reds by name above), 2 todo (R35 press, K3717). Impact set: not run (the module's only consumers are the shell tests unchanged by a page-local addition). `checks/run.mjs`: format, architecture, coverage (6686/6686), channels 0 failures; words 1 failure, the inherited `case-checker/spec.mjs:11`, marker 0 and none in screens-publish. Ownership 0 failures.
+
+**Not drawn / census:** no census op changed. Nothing found in another module beyond B42's placement. Nothing deferred.
+
+Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 4, module lines 3659
+
+## J36 · COMPLETE
+
+COMPLETE G54 (3)(c): see record J35. Three reds by name until public-read merges its case_file and the 13 localize rows (B42). Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 4, module lines 3659
+
+## J37 · COMPLETE
+
+COMPLETE (CHANGE B43; G54 with public-read merged). Merged `tranche/T51`; `publishedcase` now answers `case_file`. Of the three reds by name, the seam test and the page test are green (the real chain answers `being_prepared` for the edition with no manifest, and the page draws it). One red remains, in two places: `g54-page` "thirteen keys are words" and `common.test` R24. The rows are in `public-read/casefile-words.mjs` but `setup-words/rows.mjs` (generated, not mine) does not hold them until BOB's round-end regeneration; both go green then with no change of mine. Test fix of my own: the controls now strip both `case_file` and `verification.case_file` from the real answer, since the real answer carries both.
+
+Suite: 275 tests, 271 pass, 2 fail (the two above), 2 todo. Impact set: screens-publish 23/23, control-plane 72/85, plane 51/59 (146 files; not run beyond the module, the consumers are unchanged by a page-local addition). Checks: format, architecture, coverage (6691/6691) 0 failures; words: no finding in screens-publish (inherited case-checker spec, and installer-steps' `installer.fleet.logsunconfirmed`, not mine). Row owed (BOB, `later-ux.md`): the 13 keys named in J35.
+
+Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 9, module lines 3659
+
+## J38 · COMPLETE
+
+COMPLETE after B43, record J37. Seam and page tests green; one red until rows.mjs is regenerated (g54-page 13 keys are words, common.test R24). Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 9, module lines 3659
+
+## Fix round 7 (B44 · G60, G62) · SCREENS-PUBLISH #21 (session_01D28pDd4hME17u4TLcoQx9s)
+
+Merged `tranche/T51` (already up to date). Both causes are in `ceremony.mjs` and `parts.mjs` only.
+
+**G60 · the ceremony's refusal lists no problem.**
+- (1) Cause as the plan states it, read in the code: `caseratify` and `publishat` named handlers for four codes only, so `GATE_REFUSED` fell to the code's word and its `findings` were never drawn. Changed: a self-contained `GATE_REFUSED` handler (`ceremony.mjs`:9-24, wired at :572 and :608) draws the refusal's sentence, then `ceremony.gate.heading`, then one line for each finding `{check, detail, repairs?}` (or `says: {key, vars}` when a finding carries its words): its text as data (escaped), its check as the reference a member can quote (`<code>`), each repair; a finding with neither text nor check is not drawn. The pre-flight has the same flaw (a `GATE_REFUSED` blocker, `ratification/index.mjs`:662, carries `findings`): `ceremony.mjs`:178-181 lists them through `PARTS.gateLines` (`parts.mjs`:98-111), one line each.
+- (2) Why the tests missed it: no screen test fed `caseratify` or the pre-flight a `GATE_REFUSED` carrying findings. Fixed: `r7-gate-refused.test.mjs` (4 tests: `caseratify`, `publishat`, the pre-flight blocker, and the controls: findings are data, a finding with nothing to draw is not drawn, a refusal with no findings draws its sentence alone).
+- (3) Seen red first: `0 findings drawn` (expected 1, expected `["C-12.2","C-12.3"]`) in the 4 tests; green after the change (4 pass).
+- (4) Platform check **N**.
+- The finding in the test is in the shape `runCaseGate` maps (`gate.mjs`:1324) but is not made by the real gate: `bio-plane/src/gate.mjs` is promotion's, and importing it is an architecture failure (not in my `uses`; `checks/architecture.mjs` caught it). The real-gate-over-a-held-finding refusal through the door is the control-plane seam file's (R-SEAM, plan section 0).
+- The "check named in plain words" has no key: no row names a check (`C-12.2`) in words, so the line carries the check's id as the reference and the plane's own `detail`. Row owed to UX-DESIGN (BOB's `later-ux.md`): a plain-words name per gate check. The heading is the held `ceremony.gate.heading` (stand-in).
+
+**G62 · the Sign step's "time zone isn't set" for three different answers.**
+- (1) Cause of the live difference: unknown, as the plan says (logging rides control-plane, ratification and retrieval). Certain, changed: `ceremony.mjs`:362-381 tells the three answers apart. `publish_at: {offered: false, …}` (no zone held) draws the offer's own `reason` by its word (`refusal.PUBLISH_AT_NO_ZONE` when it states none), `data-publish-at-none="nozone"`. `publish_at` null (or absent) draws the check's own held sentence: `case-authoring.publish_at_not_reached_sentence` when `ratification.reached` is false (`notreached`), `case-authoring.publish_at_unanswered_sentence` otherwise (`unanswered`). An offer that names no zone (`offered` true or unstated, zone empty) draws the unanswered sentence as a stand-in, `data-publish-at-none="nozonestated"`. The date and time fields and the second button are drawn only for an offer with a zone (unchanged). `publish_at.source`, when a provider states it, is carried as `data-source` and nothing else. Keys added to the ceremony's `words` (`keys.mjs`:115): `refusal.GATE_REFUSED`, `refusal.PUBLISH_AT_NO_ZONE`, and the two `case-authoring.publish_at_*` sentences.
+- (2) Why the tests missed it: `ceremony.test.mjs` G11 told only "no zone" from "a zone". Fixed: `r7-no-zone.test.mjs` (5 tests): no zone; check not reached; check unanswered; an offer with an empty, absent or null zone (3 shapes); no `publish_at` at all; another stated reason (`PUBLISH_AT_PAST`) by its own word; an offer with a zone (control). The two stated sentences are compared with case-authoring's own exports, so the keys are the op's words.
+- (3) Seen red first: 4 of 5 failed (no `data-publish-at-none` distinction; one sentence for all), the control passed; green after (5 pass).
+- (4) Platform check **L** and **P** are control-plane's seam file and BOB's read on biosmoke8. Not in the tranche yet (read at `a6688dc54e`): ratification's `#publishAtOffer` still answers `{offered, zone}` with no `source`, no fall-back to the profiles on a null, and no `console.log` line, and retrieval's `zone({why})` is absent. The screen needs none of them and draws the `source` when they arrive.
+
+**Row owed (design, BOB's `later-ux.md`):** `screen.ceremony.when.nozonestated` ("the check offered a time but no zone") for the third answer, until then the unanswered sentence stands in. Also the per-check plain names above.
+
+**Requirement lines I propose (BOB writes `build/requirements/`):** R13: "(fix round 7, G60) A signing refused by the case gate (`GATE_REFUSED`, from `caseratify`, `publishat` or the pre-flight) draws the refusal's sentence and one line for each finding it carries: its text, its check as a reference, and what repairs it." R12: "(fix round 7, G62) The Sign step tells apart the three answers that offer no publishing time (no zone held; the signing check not reached or not answering; an offer that names no zone) and says which; the date and time fields are drawn only for an offer with a zone."
+
+**Census ops:** none changed. **Found in another module:** nothing beyond the above (the real gate cannot be imported by this module's tests; the plan has it in the control-plane seam).
+
+**Suites and checks:** `test/m/screens-publish/`: tests 284, pass 282, fail 0, todo 2 (the two inherited reds, `common.test` R24 and `g54-page` "thirteen keys are words", are green: rows.mjs is regenerated). Impact set (`impact.mjs origin/tranche/T51 HEAD`): screens-publish 25/25, control-plane 72/85, plane 54/66 (the same counts as at B43; the consumers are unchanged by a page-local addition, not run beyond what the tool ran). Checks (`checks/run.mjs`): format 0 failures; architecture 0 failures; coverage 1 failure, record-core R89 R90 (not mine); words: no finding in screens-publish (inherited: case-checker spec, installer-steps `installer.fleet.logsunconfirmed`); `setup-words/build.mjs --check`: match; ownership: 0 failures.
+
+Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 6, module lines 3704
+
+## J39 · COMPLETE · re B44
+
+COMPLETE (B44, fix round 7: G60, G62), record section 'Fix round 7'. G60: GATE_REFUSED findings (text, check, repair) are drawn under the refusal of caseratify, publishat and the pre-flight; G62: the Sign step tells apart no zone / check not reached or unanswered / offer with no zone. Both seen red first, now green. Suite 284 tests, 282 pass, 0 fail, 2 todo; impact set screens-publish 25/25; format, architecture, ownership, words clean for this module. Needs from BOB: (1) ratification's source/reason/console.log and retrieval's zone({why}) are not on tranche/T51 yet (the screen reads source when it arrives); (2) rows owed to the design: screen.ceremony.when.nozonestated and a plain name per gate check; (3) the real-gate refusal is the control-plane seam file's (promotion's gate.mjs is not in my uses). Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 6, module lines 3704
+
+## J40 · REPORT · re B45
+
+B45 read. Merged tranche/T51 (suite unchanged). The rows named in B45 (screen.ceremony.gate.head, .gate.check, .publishat.nozone, .notreached, .nooffer) are in no words.json or rows.mjs I can reach (commit 21d62cc33b is not on tranche/T51 or main as fetched), and a key the word table lacks would draw nothing, so my stand-ins stay: ceremony.gate.heading + the check id (G60); refusal.PUBLISH_AT_NO_ZONE, case-authoring.publish_at_not_reached_sentence, case-authoring.publish_at_unanswered_sentence (G62: nozone / notreached / nooffer, data-publish-at-none). Mapping if the design keeps its names: gate.head replaces ceremony.gate.heading; gate.check {check} replaces the bare id; publishat.nozone / .notreached {reason} / .nooffer replace the three. Merge the design rows to tranche/T51 and send CHANGE; I switch the keys (3 lines in ceremony.mjs, keys.mjs) and re-run. COMPLETE otherwise stands.
+
+## Fix round 7, B46 (G62 cause: the pre-flight never sent `tieAttested`)
+
+- Changed: `ceremony.mjs` (the render's pre-flight read, before `const pre`; the "Check again" act's send). The pre-flight body carries `tieAttested: true` once the edition is prepared (this page's own `publish`, or the draft's `editions.prepared` in `casedrafts`, so a reload keeps it), and not before; nothing else is added (R50). The not-reached sentence stands before the attestation. `data-why` is carried beside `data-source` for `publish_at.why` (ratification's `source`/`why` are not on `tranche/T51` yet at this merge; the screen draws nothing from them but the attribute).
+- Failing-first: `r7-tie.test.mjs` (2 tests; a fake plane that answers as case-authoring does: no `tieAttested`, no `publish_at`). Red first: "the pre-flight after preparing carries it" and the date/time offer absent; green after. The seam's test 1 (control-plane's `t51-round7-seam.test.mjs` §G62) is the real-op check.
+- Suite `test/m/screens-publish/`: 286 tests, 284 pass, 0 fail, 2 todo. Checks: format, architecture, ownership 0 failures; words no finding in screens-publish.
+- Requirement line proposed (R50): "(fix round 7, G62) Once the member has attested the ties and the edition is prepared, the ceremony's pre-flight carries `tieAttested: true`, so the signing check is reached and a publishing time offered."
+- B45's design keys are still not in the word table here (see J40); stand-ins stand.
+
+Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 9, module lines 3716
+
+## J41 · COMPLETE · re B46
+
+COMPLETE (B46): the ceremony's pre-flight now carries tieAttested: true once the edition is prepared (this page's publish, or the draft's editions.prepared on reload), nothing else added; before it the not-reached sentence stands. Red first (r7-tie.test.mjs), now green; suite 286 tests, 284 pass, 0 fail, 2 todo; format, architecture, ownership, words clean for this module. publish_at.source/why not on tranche/T51 yet: data-source/data-why carried only. B45's design keys still not in the word table (J40). Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 9, module lines 3716
+
+## Fix round 10 (B47) · SCREENS-PUBLISH #22 (session_01A5xaQuUkCxU8ow5u291G9K)
+
+Merged `tranche/T51` at `2d12784243`; `mail start` done; module suite before: 286 tests, 3 red (c47-seam, R24, G54). After: 293 tests (+7 new), 0 red; run 66 s with the world imported in every file.
+
+**Cause 1 (diag2-0910a §2, 10A R90 (i); R44 amended).** Root cause: `case-editor.mjs` `casedraft` send never read `ce-wc` (only `whatchangedpropose` and `writinghelp` did), so from the screens every edition above 1 was `NO_WHAT_CHANGED` (evidence: the diagnosis's `grep whatChanged` on the module was empty; the plane reads `whatChanged.text`). Why the tests missed it: they drove `ce-wc` only through the propose act and no Save filled it. Fix: Save sends `whatChanged: {text}` when it differs from the words the draft holds (`authored.whatChanged.text`), the field shows the held words. Failing case: `case-editor.test.mjs` "R44 (10A R90 (i))" (red: body had no `whatChanged`; green after), with controls: untouched field, held words, held words then more.
+**Cause 2a (diag2-10b C5; R6).** Root cause: `published.mjs` read none of `strength[].detail` (unrated), `bar`/`bar_detail`, `successor`, `lens` (statements, `closing`), the case id and `manifest_sha`, `verification.detail`. Why missed: the fixture gave letters only and no such field. Fix: each is drawn from the answer as the plane states it, as data, no sentence of mine (the plane's own `detail`, `bar_detail`, `successor.statement`/`detail`, lens `closing`, `verification.detail`; the lens fingerprint by the held word `screen.published.this_edition_carries_only_the`); the id and hash in a `data-case-head` line. Tests: `public.test.mjs` five tests "R6 (C5 a–e)", each red first, each with its control.
+**Cause 2b (C10).** Root cause: the editor asked `casedocument` for the begun edition (404). Fix: asked only when `editions.prepared` or `editions.published` is that edition (an answer stating no `editions` is read as before, R77). Test: `case-editor.test.mjs` "R44 (10B C10)", red first.
+**Cause 2c (C6; case-import merged: `scope` on `importedCases`/`importedCase`, `title` on each finding).** Root cause: the screen read `case.title`/`case.id`/`f.finding`. Why missed: the fixtures wrote a title where the plane sends `CASE-…`. Fix: `imported.mjs` names a case by `scope` (the screen's own name when none) and a finding by `title` ("Finding n" when none); no id is drawn. The fixtures (`fixtures.mjs`, fr30, fr30b, t50) now carry the real shape. Test: `public.test.mjs` "R7 (C6; case-import R4)", red first (the old screen drew the id).
+**Cause 3 (follow-up 54; review R16 merged).** Root cause: `attribute` read `draft.case.case_id`, null for a draft that asked for a new case. Fix: sends `editions.case` and `editions.prepared` when the draft names no case; refuses (in place, nothing sent) only while nothing is prepared. Test: `case-editor.test.mjs` "R16 (follow-up 54)", red first, with the unprepared control.
+**Cause 4 (item 34).** `parts.mjs` `casefileSaid` escaped a word `cs.w` had already escaped (an apostrophe drew `&#39;`): now only the bare fallback is escaped; no other `cs.esc(cs.w(…))` in the module (the two in `published-pages.mjs:119` and `published.mjs:90` build an attribute holding HTML, intended). R24: `refusal.NOT_RECORDED`, `refusal.TOO_LARGE` listed on `published` (the case-file code is drawn through `refusalText`). Both reds seen first (`g54-page.test.mjs:114`, `common.test.mjs:144`), green after.
+**Cause 5 (reds).** (a) G54 and (b) R24 are cause 4. (c) `c47-seam.test.mjs:100`: `JSON.parse(p.extent)` on `case-grammar` `passagesOf`, whose extent is now an object (G50). Root cause: the test pinned the provider's internal spelling; the module was right. Why missed: no provider fixture for the representation. Fix: the test reads the extent as the provider gives it (a string parsed, an object as is); red first (the three reds above), green.
+**Rulings made (for `build/rulings.md` by BOB):** (1) the module's tests no longer call `registerDeclared` (27 files, `phone.mjs`): `fixtures.mjs` imports store-request's world, whose store-assembly registers op-declarations and op-grades together, as the product does; the old partial registration had hidden that `rerunstart` is not a reasoned act (`fr30b.test.mjs` R58 expected a `reason` the product does not ask for; corrected). (2) A sentence the plane states (`detail`, `bar_detail`, lens `closing`, `verification.detail`, `successor.statement`) is drawn as data; no new English is written, so no `localize` row is owed.
+
+**Fixture work (START item 7; list as `checks/fixtures.mjs … --list`: 60 failures → 41).** Markers added (6, each `// fixtures-generic: <CODE>`, the codes no module gives, so the page falls back to the plane's canned text): `ceremony.test.mjs:263` DOCUMENT_COPY_UNWORDED; `fixtures.mjs:42` PHOTO_CHECK_UNWORDED; `g54-page.test.mjs:123` NOT_A_CODE; `public.test.mjs:327` VERIFY_NOT_RUN; `review.test.mjs:213` NO_WORDS_FOR_THIS_CODE; `t50.test.mjs:117` STANDARD_DEPARTED. FIX-E done: answer-envelope `planeHelpers` (c47-seam, g54-page, seam4); case-disclosures `gateRefusal()` (ceremony 253/254, fix2, fix3, fix4); case-inputs `statementAck()` (review 175/190).
+**Op tables (items 6; §5.3).** `fixtures.mjs` gains `openWorld(path, {as, plane})` (store-request's `storeWorld()`, its door, `p.answered(op)` for expected values). Done through the world: the doorbell's `knock` (R9 R11, R67, R49 ×2 — the real receipt, fingerprint, made phrase and pseudonym; expected values read from the answer) and the default `knock` entry deleted. World cost: base 0.8–1.1 s once per process, 130–180 ms per copy; module suite 66 s. **Left, all op-table lines (41), each a state the world cannot make today (store-request has recipes for `hold`/`project`/`trail`/`profiles` only), REPORTed to BOB:** a review draft with concluded findings and its copy (`casedraft`, `reviewcopy`, `reviewrevoke`, `reviewcomment`: drafts.test:85, fix2:233, fr30:12/224, style:57, fixtures none); a prepared case edition and its pre-flight (`publishpreflight`, `reattest`, `captureaccount`, `signerregisterown`, `casedetails*`: fix3:37/276/325, fix4:17, fr30:147/153, fr30b:77/116, fixtures:131-132, case-editor:86 is `writinghelp`); a published case (`publishedcase`, `docketpublic`, `casedetailspublic`: finding:75, seam4:158, fixtures:123/131, fr30b:354/399); an imported case with acceptance, regrade, rerun and citation (`importedcase`, `rerunstart`, `citeimported`: fr30:41/65, fr30b:188/211/219/226/238); a source with a pending consent entry (`knockerconsent`: fr30:92/… — `consentBySecret` answers SECRET_NOT_RECOGNISED until a member's `sourcelink` and a consent entry exist); the model's stream (`writinghelp`: case-editor:86, fr30:249/264, fr30b:373 — an env double of the agent worker, exempt by K5044 (1) but listed by the check); a citation severed and reinstated (`sever`, `reinstate`: fr30b:165/166); `holdsdue` (t51:76); `entitieskind` (fixtures:135); `casedetailsset` (fr30b:339); and two `knock` controls (fr30:77/137: an answer lacking the receipt's fields, which the real doorbell never gives). Each needs a recipe in store-request or a provider fixture for the answer (case-import `importedWorld` exists but the R55/R58/R59 tests quote scripted ids). **Not Wave B, not `stay`:** these are for BOB to place.
+
+**REPORTs (also posted).** (1) `uses` of screens-publish gains `answer-envelope`, `case-inputs` and `store-request` (the tests import their published fixtures); architecture lists exactly those 5 failures until BOB adds them. (2) `publishedcase` serves no basis-version name, so the header (R94 k) draws the case id and manifest hash only; BOB places the field (public-read). (3) The plane's `verification.detail` is long; drawn after the signature check as a plain note; the design may want it folded. (4) `node bio-plane/src/setup-words/build.mjs --check` refuses on `plane.declared.readtranslate` having two sentences (`plane/declared.mjs:13` and `store-assembly/declared.mjs:16`): not this module. (5) No through-the-door test was added; the door case for C5/C6 (the real `publishedcase`/`importedCase` answers drawn by the real screens) belongs to control-plane's r8-kit and is for BOB to place. (6) The unmet marks to strike: R6 (C5, C6), R44 (`whatChanged`, the document read only for a prepared edition); R16 of review is its own.
+
+**Impact run (`impact.mjs`: control-plane 92 files, plane 77).** control-plane: 592 tests, 7 red. Two were mine and are fixed: `t51-round7-seam` and `t51-round8-seam` import `screens-publish/fixtures.mjs` after their own `register-declared.mjs`, and my fixtures' world import registered the declared ops a second time; `fixtures.mjs` now imports the world tolerantly (only `openWorld` needs it). Both files pass now (money-ingest R105 G61/G63 in them are timing tests, not this module). The other control-plane reds (R112 subscriptionsignin, two R83 credentials, R9 §1 scanner 40 s, R9 §14 READ_BOUNDS) name credentials, signin-door, runtime-limits and the scheduler, not this module. plane: the full 77-file run exceeded 50 minutes (heavy workbook/alarm tests, reds named R84/R85 G123f and R78 R28b, none touching this module); the two plane files that import this module, `t47` and `t50`, pass (17). Met requirement ids to strike: R6, R44.
+
+Size (session_01A5xaQuUkCxU8ow5u291G9K): test runs 24, module lines 3754
+
+## J42 · COMPLETE
+
+COMPLETE (B47, fix round 10): causes 1-5 fixed with failing-first tests (record section "Fix round 10"): R44 whatChanged + document read only for a prepared edition; R6 published page (unrated, no bar, successor, lens, header, verification) and imported by scope/title (C5, C6, C10); follow-up 54 attribute for a prepared new-case draft; double escape and R24 keys; the three suite reds. Met ids: R6, R44. Module suite 293 pass, 0 fail (66 s).
+Fixtures: checks/fixtures list 60 -> 41 failures; 6 fixtures-generic markers (file:line in the record); FIX-E done (answer-envelope planeHelpers, case-disclosures gateRefusal, case-inputs statementAck); doorbell knock re-pointed to storeWorld via new openWorld. 41 op-table lines remain, each a state the world cannot make today (review drafts, prepared/published cases, imports, source consent, model stream): listed by file:line in the record, for BOB to place with store-request recipes.
+REPORT: uses must gain answer-envelope, case-inputs, store-request (architecture shows exactly those 5 failures until added); publishedcase serves no basis-version name (header draws case id and manifest hash); setup-words build --check refuses on plane.declared.readtranslate duplicate (plane/store-assembly, not mine); ruling: tests no longer call registerDeclared (the world registers both op-declarations and op-grades; rerunstart is not a reasoned act). Impact run: control-plane seam files fixed; remaining reds there and in plane are not this module (record). Checks: format 0, coverage 0, words 0, ownership 0.
+
+## Saved at K5183
+
+Done: all of fix round 10's causes 1-5 (J42 COMPLETE posted, pushed at the commit before this section); markers, FIX-E lines, doorbell `knock` on the world; checks as in J42. Half done: none; no worker running. Open: the 41 op-table lines listed above (states the world cannot make; they wait for store-request recipes or provider fixtures, BOB's placement) and BOB's `uses` edges (answer-envelope, case-inputs, store-request). Exact next step: answer BOB's reply to J42 (a CHANGE or the merge); if asked, re-point more op-table lines as store-request recipes appear (`openWorld` in `fixtures.mjs`). The control-plane/plane impact run was not finished for plane's heavy files (see the record); `t47` and `t50` pass.
+
+## Fix round 11 (B49 · K5202, K5175) · SCREENS-PUBLISH #23 (session_01QdkoEiuG83wpMkf86sUqDW)
+
+Merged `tranche/T51` (31 commits) into the job branch first; `mail start` done. Commit `aee8d9883a`.
+
+**Re-pointed to case-import's published answers (START item 1).** `fixtures.mjs` gains `importedCase({accepted})` (the `importedcase` answer over case-import's accepted import, edition 2, or a bare import, edition 1, both made by its real code) and `rerunImport({twice})` (its `rerunstart` answer and the page's own `importedcase` answer). `fr30.test.mjs` builds `ACCEPTED`/`BARE` from them (R55) and no longer hand-builds `IMPORT`. `fr30b.test.mjs` does the same for R58 (regrade, citeimported, rerun); the rerun tests take the import and edition from the answer and the refused second declaration (`RERUN_ALREADY`) from the real door. Expected ids are read from the answers (`ACCEPTED.import`, the first accepted finding); no literal `IMP-2026-0001` / `FND-W-1` remains except inside `importregrade`'s hand-built answer (see below).
+
+**Fixtures list (`checks/fixtures.mjs … --list`): 41 → 37.** Cleared: `fr30:41`, `fr30b:188`, `fr30b:211`, `fr30b:219`. No other line's provider publishes the answer it names (list below).
+
+**Checks.** Format 0 failures. Coverage 80 of 80 ids named, 0 failures. Ownership 0 failures (committed diff). Architecture: 2 failures, both `fixtures.mjs` imports case-import's fixtures, which `screens-publish` does not declare in `uses` (see REPORT 1). `checks/run.mjs`: no finding in my files; words count not risen. `impact.mjs origin/tranche/T51 HEAD`: screens-publish 26/26 files, control-plane 2 of 134 (the two seam files that import this module's fixtures).
+
+**Module tests: NOT run.** Every file that imports the store world fails at load with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row, OP-GRADES #30, as the START says). Not mine. The suites run green only after the CHANGE that merges #30; I will run them then and post COMPLETE with the counts.
+
+**Failing-first.** This round changes tests only (no product code), so there is no product fix to see fail first; the re-pointed tests run after #30 lands.
+
+**Lines left (37), each with its provider and the state it lacks** (the provider publishes no fixture for that op, or publishes it for a different state):
+- review: `casedraft` (fr30:12); `reviewcopy` (fr30:227, a copy with refused gates); `reviewrevoke` (drafts:85, style:57); `reviewcomment` (fix2:233). State: a review draft with concluded findings, and its copy.
+- case-authoring: `publishpreflight` (ceremony:261 generic marker; fr30:150, fr30:156, fr30b:77). State: a prepared case edition with a pre-flight that refuses.
+- capture: `reattest` (fix3:37, fix3:325, fix4:17, fr30b:116); `captureaccount` (fr30b:116). State: a capture whose attestation is unacknowledged, and a capture account by its capturing member.
+- credentials: `signerregisterown` (fix3:276). State: a member's own signing key registered.
+- public-read: `publishedcase` (finding:75, seam4:158); `docketpublic` (fixtures:126). State: a published case edition and its docket, with a finding in several cases.
+- case-inputs: `casedetails` (fixtures:134, fr30b:306); `casedetailsset` (fr30b:345); `casedetailspublic` (fixtures:135, fr30b:360, fr30b:405). State: a case with recorded details, published and unpublished.
+- entities: `entitieskind` (fixtures:138). State: the `body` kind's entity list.
+- sources: `knockerconsent` (fr30:68, fr30:80). State: a source with a pending consent entry (store-request has no recipe for it).
+- doorbell: `knock` (fr30:95, fr30:140). State: a stored knock with its receipt and made phrase (the door's own; `openWorld` can make it, not yet re-pointed).
+- citation: `sever`, `reinstate` (fr30b:165, :166); `citeimported` (fr30b:232, :244). State: a case with a severed citation; an accepted import's citing question. case-import publishes no `citeimported`.
+- wizard-scripts: `writinghelp` (case-editor:86, fr30:252, fr30:267, fr30b:379). State: the assistant reachable with a draft held (model stream; the world cannot make it).
+- action-holds: `holdsdue` (t51:76). State: a due hold with its arrival.
+- generic markers (accepted, not blocking): `fixtures.mjs:47` (`PHOTO_CHECK_UNWORDED`), `ceremony.test.mjs:261`, `g54-page.test.mjs:116`, `public.test.mjs:325`, `review.test.mjs:213`, `t50.test.mjs:115`.
+- Not in the list but hand-built: `importregrade` (fr30b, the regrade answer). case-import publishes no regrade answer; state: a re-check that moves a finding under a lens.
+
+Size: this round not yet closed; the COMPLETE after #30 merges carries the line.
+
+## J43 · REPORT
+
+REPORT, fix round 11 (B49 / K5202). Pushed job/T51/screens-publish @ eb4b8c14f7 (record section "Fix round 11").
+
+DONE
+- Re-pointed to case-import's published answers: fr30 R55 and fr30b R58 (regrade, citeimported, rerun) now take their answers from `importedCase` and `rerunImport` (new in screens-publish fixtures.mjs). Expected ids are read from the answers. Commit aee8d9883a.
+- Fixtures list: 41 -> 37. Cleared: fr30:41, fr30b:188, :211, :219. No other line's provider publishes the answer it names.
+- Checks: format 0; coverage 80/80; ownership 0; run.mjs no finding in my files; impact: screens-publish 26/26, control-plane 2/134 (the two seam files that import these fixtures).
+
+NOT YET RUN
+- Module tests. Every file that imports the store world fails at load with DECLARED_OP_DISAGREES: readtranslate description (OP-GRADES #30). I will run them green after your CHANGE that merges #30, then post COMPLETE with the counts.
+- This round changes tests only; no product fix, so nothing to see fail first.
+
+FOR BOB TO PLACE
+1. `uses` of screens-publish needs case-import (architecture: 2 failures on fixtures.mjs until added). The import is lazy.
+2. case-import publishes no `citeimported` or `importregrade` answer. Those lines (fr30b citeimported x2, importregrade) need one, or a store-request recipe.
+3. 37 fixture lines remain, each a state no provider publishes yet. Grouped by provider with the state each lacks in the record, section "Fix round 11": review (4), case-authoring (publishpreflight, 3), capture (reattest x4, captureaccount), credentials, public-read (3), case-inputs (6), entities, sources, doorbell (knock x2), citation (sever, reinstate, citeimported x2), wizard-scripts (writinghelp x4; the model stream), action-holds (holdsdue), plus 6 accepted generic markers.
+
+## J44 · REPORT
+
+REPORT, re B50 (K5207). Merged tranche/T51 (uses gains case-import: architecture 0 failures). Pushed job/T51/screens-publish.
+
+DONE
+- Doorbell knock (fr30:95 R67 control and fr30:140 R49 control): both now take the real door answer from openWorld, with the field under test taken off it. A real door never omits these fields, so the controls are built from its answer, not hand-built. Fixtures list 37 -> 35.
+- Checks: architecture 0 failures; coverage 80/80; format 0.
+
+NOT YET
+- Module tests: still blocked at load by DECLARED_OP_DISAGREES (OP-GRADES #30 not merged). I will run them after its CHANGE, then post COMPLETE with counts.
+- Re-points for the other providers' answers (review, credentials, public-read, case-inputs, entities, sources, citation, wizard-scripts, action-holds, case-import importregrade, capture, case-authoring): I re-open on each CHANGE as BOB's answer says.
+
+LINES LEFT: 35 (fixtures list). Named in the record section "Fix round 11".
+
+## J45 · COMPLETE · re B51 (fix round 11, K5209)
+
+COMPLETE (fix round 11, B51). Merged `tranche/T51` at `718c142e3b` (OP-GRADES #30 merged; stores load).
+
+**Applied:** the `importedcase`/`rerunstart` answers from case-import's published fixtures (fr30:41, fr30b:188, :211, :219); the doorbell `knock` controls (fr30:95 R67, fr30:140 R49) take the real door answer with the field under test taken off it (openWorld); R59's citing-note count (fr30b) reads the accepted findings of the real answer (two, not one). Commits aee8d9883a, 364999c72e, the record, and the merges.
+
+**Failing-first:** no product fix this round (tests re-pointed to real answers); the R59 count was red on the real answer (2 buttons for 2 accepted findings) and is green with its count taken from the answer.
+
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/`: 295 tests, 293 pass, 0 fail, 2 todo (R35's two press tests, K3717), 45 s.
+
+**Checks:** format 0 failures; architecture 0 failures; coverage 80 of 80 ids, 0 failures; ownership 0 failures (committed diff); `checks/fixtures.mjs --list`: 35 failures (down from 60 in round 10 and 41 at the start of this round). The 35 are named in "Fix round 11" above and BOB placed the providers in B50; the ones whose providers have not merged (review, credentials, public-read, case-inputs, entities, sources, citation, wizard-scripts, action-holds, capture, case-authoring, case-import importregrade) are re-opened on their CHANGEs.
+
+**Met ids:** none new this round (R49 and R67 controls are now the real door's answers; the requirement marks are unchanged).
+
+**Deferred:** none. **Found elsewhere:** nothing new (the `uses` edge to case-import is now declared).
+
+Size (session_01QdkoEiuG83wpMkf86sUqDW): test runs 9, module lines 3754 src + 5222 tests
+
+## J47 · REPORT
+
+REPORT, correction to J46. J46 (COMPLETE) was posted with the whole job record file as its body by mistake. The COMPLETE for fix round 11 is the section "J45 · COMPLETE · re B51" in build/jobs/T51/screens-publish.md at f51d4899d4 (pushed on job/T51/screens-publish). Its counts: suite 295 tests, 293 pass, 0 fail, 2 todo; checks format, architecture, coverage, ownership 0 failures; fixtures list 35 (named in the record, Fix round 11).
+
+## J48 · REPORT
+
+REPORT (SCREENS-PUBLISH #24, fix round 10, re B54): 31 of the 35 op-table lines are re-pointed to the providers' published fixtures; the module suite is green (296 tests, 294 pass, 2 todo as before). Four things are not mine to finish, each named with its provider and the state it lacks:
+
+1. modules.json `uses` (BOB's): screens-publish's tests now import the published fixtures of entities, capture, citation, sources, credentials and wizard-scripts (bio-plane/test/m/screens-publish/fixtures.mjs `openDefaults`, `provided`); `checks/architecture.mjs` fails 8 lines on exactly these six missing `uses`. Please add entities, capture, citation, sources, credentials, wizard-scripts (and action-holds if its fixture is used for item 3 below).
+
+2. CASE-INPUTS (earlier than me): its published `casedetails` (fixtures.mjs:70) states only `area` and `contact`; `casedetailspublic` (:90) likewise. Two states my R57 tests need are not published: a `related` standing with works (relations builds_on and disagrees_with, so the relation words `screen.case-editor.details.rel.*` are drawn from a real answer), and `relationships: {none: true}` stated (the published page's `screen.case-editor.details.ties.none`). They stay hand-built in one test, fr30b.test.mjs:425 (casedetails) and :427 (casedetailspublic), until CASE-INPUTS publishes them.
+
+3. ACTION-HOLDS (earlier than me): `holdsDueAnswer` (fixtures.mjs:13) lists an action arrival only (`arrived: {action, ord}`). The docket's pressure section reads `holdsdue` for a docket entry's legal mark (`arrived: {docket_entry, case}`, action-holds/index.mjs:761) and draws "no hold placed" for it. The state lacking: the real `holdsdue` answer listing one docket-entry mark (and the same world after the hold is placed, items empty). Hand-built in t51.test.mjs:76 (`DUE`) until it is published.
+
+4. CITATION `citeimported` (fr30b.test.mjs:235, :247): waits for CASE-IMPORT #22's merge, as B54 says; re-pointed when you CHANGE me.
+
+Found while re-pointing, no fix needed in my paths: the real `writinghelp` refusals (WRITING_HELP_DRAFT_HELD, AGENT_WORKER_UNBOUND) are drawn in their own words on the case editor, the docket and the imported page; the tests for them (case-editor.test.mjs:86, fr30.test.mjs:249, fr30b.test.mjs:379) now assert that, and the drafted-text cases are removed (K5212).
+
+## Fix round 10 (B54 · plan item 102, K5207, K5213) · SCREENS-PUBLISH #24 (session_01S5w36nrjrT4X3cdJbAUkgi)
+
+Merged `tranche/T51` first (twice: at start and before COMPLETE); `mail start` done; B54 read.
+
+**Re-pointed (31 of the 35 lines), tests and fixtures only, no product code.**
+- `fixtures.mjs`: the default plane's `docketpublic`, `casedetails`, `casedetailspublic`, `entitieskind` come from public-read's, case-inputs' and entities' published fixtures (`openDefaults`, called by `open`; `DEFAULT`); `provided` (casedraft, reviewcopy, reviewrevoke, reviewcomment, reattest, captureaccount, sever, reinstate, knockerconsent, signerregisterown, casedetails, casedetailsset, casedetailspublic, writinghelp, preflight, publishedCaseSeveral) hands a test the provider's real answer in the plane's shape, lazily imported; `refusalWords(answer)` is the words the page draws for a refusal answer.
+- review: `fr30:12` (casedraft; the opened editor's draft id is read from the answer), `fr30:237` (the real copy with refused gates; the missing line is read from it), `drafts:85`, `style:57` (reviewrevoke), `fix2:233` (reviewcomment).
+- capture: `fix3:37`, `fix3:325`, `fix4:17`, `fr30b:116` (reattest, captureaccount). credentials: `fix3:276`. citation: `fr30b:165`, `:166` (sever, reinstate). sources: `fr30:68` (knockerconsent); `fr30:80` takes the door's real SECRET_NOT_RECOGNISED through `openWorld` (the fixture publishes no refused consent). entities, case-inputs (area/contact), public-read: the defaults above, `t50:283` reads the docket entries it expects from the answer, `finding:75` the cases of FINDING_IN_SEVERAL_CASES from the answer, `fr30b` R57 reads its stated fields from `casedetails`' answer (the "area" add now appends to those stated; the refusal is the real NOT_THE_PROJECT_OWNER).
+- case-authoring (B52): `fr30:160/166` take `preflightNoFinding()` and the NO_TARGET control is removed (a state the pre-flight never answers); `fr30b:77` takes `preflightTensionRefused()`. `seam4:158` takes public-read's real `publishedcase` over the same world (NOT_PUBLISHED).
+- wizard-scripts (B53, K5212): the drafted-text `writinghelp` cases are removed (`case-editor:86`, `fr30:262/277`, `fr30b:379`); each test now sends the help and asserts what the screen draws for the real answers (`writingHelpDraftHeld`, `writingHelpUnreachable`): the refusal in its own words, the field left as typed, no draft. The case editor, the docket and the imported page all draw them already.
+- R57's test of the details is split in two: the names, Not stated, Take out and Stated tests read the real answer; the related-works and "no relationships" assertions stay on one test with hand-built answers (below).
+
+**Failing-first.** None: no product code changed; the one test that went red on a real answer (`t50:283`, whose expected entries were hand-written) and the R57 "area" add (the real area is already stated) were corrected to read the answer, then green.
+
+**Lines left (5 lines in 4 groups, each with its provider):**
+- citation `citeimported`: `fr30b.test.mjs:235`, `:247`, waits for CASE-IMPORT #22 (B54).
+- case-inputs: `casedetails` `fr30b.test.mjs:425`, `casedetailspublic` `:427`: no published standing with `related` works or `relationships: {none: true}` stated (REPORT J48).
+- action-holds: `holdsdue` `t51.test.mjs:76`: no published answer listing a docket entry's mark (`arrived: {docket_entry, case}`) and none after the hold is placed (REPORT J48).
+- modules.json `uses` lacks entities, capture, citation, sources, credentials, wizard-scripts: `checks/architecture.mjs` 8 failures, all that (BOB's file; REPORT J48).
+
+**Tests:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-publish/*.test.mjs`: 296 tests, 294 pass, 0 fail, 2 todo (R35's two press tests, K3717); the files run alone sum to 296 (K5124). **Impact:** `impact.mjs origin/tranche/T51 HEAD` names all 178 modules (the shared fixtures table); every module's users of screens-publish's fixtures are the two control-plane seam files, not changed in their reading of it (`openWorld` and the plane are unchanged); not re-run.
+**Checks:** format 0; coverage 80 of 80, 0; ownership 0; architecture 8 (the `uses` above); `checks/run.mjs`: the only findings in my files are those 8 and the 5 fixtures lines above (the other fixtures lines in the whole-repo run belong to other modules); words count not risen (no new sentence); fixtures `--list`: 5 lines (`fr30b:235`, `:247`, `:425`, `:427`, `t51:76`), from 35.
+**Markers added:** none (`fixtures-own`/`fixtures-generic`: 0). **Met ids:** none new (every requirement mark unchanged).
+
+Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5303 tests
+
+## J49 · COMPLETE
+
+COMPLETE (fix round 10, B54). Detail: section "Fix round 10 (B54 ...)" in build/jobs/T51/screens-publish.md on job/T51/screens-publish; REPORT J48 names the gaps. Merged tranche/T51.
+
+Applied: 31 of the 35 op-table lines re-pointed to the providers' published fixtures (review, capture, citation, sources, credentials, entities, case-inputs, public-read, case-authoring B52, wizard-scripts B53 with the drafted-text cases removed per K5212); tests and fixtures only, no product code (fixtures.mjs `openDefaults`, `provided`, `refusalWords`; fr30, fr30b, case-editor, drafts, fix2, fix3, fix4, finding, seam4, style, t50).
+Left, 5 lines (fixtures --list 35 -> 5): fr30b:235 and :247 (citeimported, waits for CASE-IMPORT #22); fr30b:425 and :427 (case-inputs publishes no `related` or `relationships: none` standing); t51:76 (action-holds publishes no docket-entry arrival). Also modules.json `uses` lacks entities, capture, citation, sources, credentials, wizard-scripts (architecture check 8 failures, all that; yours).
+Failing-first: none, no product code changed (two tests that went red on a real answer were corrected to read the answer).
+Tests: screens-publish 296 tests, 294 pass, 0 fail, 2 todo (R35 press tests, K3717); files alone sum to 296. Checks: format 0, coverage 80/80 0, ownership 0, architecture 8 (uses only), run.mjs no other finding in my files, words not risen.
+Markers added: none (fixtures-own 0, fixtures-generic 0). Met ids: none new.
+Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 14, module lines 3754 src + 5303 tests
+
+## Fix round 10, CHANGE B55 (K5221) · citeimported
+
+Merged `tranche/T51`. `fr30b.test.mjs:235` takes case-import's real `citeimportedAnswer()` (the success). A real refusal it gives (`IMPORTED_REF_MALFORMED`, no word held) is added: the plane's own translation is drawn. `IMPORTED_NOT_ACCEPTED` (the screen's special wording, `imported.mjs:246`) is a state `citeimportedAnswer` does not publish: it stays hand-built at `fr30b.test.mjs:256` (REPORT). Suite 297 tests; fixtures `--list` 4 lines (fr30b NOT_ACCEPTED, :425, :427, t51:76). No product code.
+
+## J50 · COMPLETE
+
+COMPLETE (B55, K5221). Merged tranche/T51. fr30b:235 now takes case-import's real citeimportedAnswer(); its real refusal IMPORTED_REF_MALFORMED (no word held, the plane's translation drawn) is added to the same test. Correction to the record: suite is 296 tests, 294 pass, 0 fail, 2 todo (not 297). Ownership 0.
+Left, 4 lines (fixtures --list 35 -> 4): fr30b:257 IMPORTED_NOT_ACCEPTED (citeimportedAnswer publishes no not-accepted state; the screen's special wording imported.mjs:246 needs it: CASE-IMPORT, please publish it); fr30b:435 and :437 (case-inputs: related / relationships-none standings); t51:76 (action-holds: docket-entry arrival). modules.json uses still lacks entities, capture, citation, sources, credentials, wizard-scripts (J48).
+Markers added: none. Size (session_01S5w36nrjrT4X3cdJbAUkgi): test runs 17, module lines 3754 src + 5313 tests

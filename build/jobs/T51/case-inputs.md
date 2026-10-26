@@ -1,6 +1,6 @@
 # case-inputs (T51)
 
-**Status** · session_0129yAVbwi5t6RJnJxwU2Px9 · depth 2 · COMPLETE · handled B13
+**Status** · session_01319VhF3CxdhogoEXvR8aRC · depth 2 · COMPLETE · handled B15
 
 ## J1 · QUESTION
 
@@ -278,3 +278,59 @@ COMPLETE, re B13 (fix round 10: delete the idle `fixtures-contract: review no-re
 2. store-assembly: 15 inline and plain sentences at `ask.mjs:389, 469, 502, 521-540`, `wiring.mjs:49, 78, 103`, `wizards.mjs:51`, plus one marker finding at `declared.mjs:16` (`plane.declared.readtranslate` has a different en than at `bio-plane/src/plane/declared.mjs:13`). Words of store-assembly's own.
 
 **Size (session_0129yAVbwi5t6RJnJxwU2Px9): test runs 1, module lines 1602**
+
+## J15 · COMPLETE
+
+COMPLETE for B14 (fix round 10, K5207; the details fixtures, K5175).
+
+**Changed (commit 618c86369d on job/T51/case-inputs, pushed):**
+- `bio-plane/test/m/case-inputs/fixtures.mjs`: three new exports, each built by the module's real code over a fresh `world()` each call and never stored. `detailsWorld()` (alice owns Team, bo joins; one prepared and one ratified case) and `setDetail()` (throws if the owner's set is refused) are local helpers.
+  - `casedetails()` (line 70) returns `{recorded}`: `caseDetails` for bo on a published case with area and contact set.
+  - `casedetailsset()` returns `{set, notOwner}`: the owner's `caseDetailsSet` on a published case, and bo's refused set (NOT_THE_PROJECT_OWNER).
+  - `casedetailspublic()` returns `{published, unpublished}`: `caseDetailsPublic` on a published case with two fields set, and on an unsigned preparation (NOT_PUBLISHED).
+- `bio-plane/test/m/case-inputs/fixtures.test.mjs`: four new tests, one per export plus a fresh-world test. Titles name R20, R22, R23, R24. Imports extended.
+
+**Failing-first and red-then-green:** the fixtures were written and their tests passed on the first run (8/8 in fixtures.test.mjs). To show the tests check the real answer, I changed one expectation (`f.published.group` to `"wrong-group"`): red, 1 fail, 7 pass. Restored: green, 8 pass, 0 fail.
+
+**Met ids (for BOB to strike):** R20, R22, R23, R24 (the answers these fixtures publish and their checks).
+
+**Suite counts:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-inputs/*.test.mjs` (run without force-exit, it exits by itself): 81 tests, 81 pass, 0 fail, 0 skipped. fixtures.test.mjs alone: 8 of 8.
+
+**Checks (absolute root /home/user/bio):**
+- `checks/fixtures.mjs /home/user/bio case-inputs --list`: 0 failures (answer 0, contract 0, stub 0).
+- `checks/ownership.mjs /home/user/bio case-inputs <merge-base with origin/tranche/T51> HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: 15 failures, none in case-inputs' files; I added no `localize` sentence, so the word count is unchanged (19247). Six of the 15 are screens-publish lines that name case-inputs as the provider (see the REPORT below). The rest are store-assembly's (`ask.mjs`, `wiring.mjs`, `wizards.mjs`), not this module's.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2966 test files (the change is test-only).
+
+**Markers added:** none (no `fixtures-own`, no `fixtures-generic`, no `fixtures-contract`). The values are inputs I feed (the area and contact shapes), which the test checks against the module's real answers.
+
+**Gaps and notes:**
+- The START said to run the fixtures green after OP-GRADES #30 lands (CHANGE). The tests are green now, on the tranche merged at this round's start.
+- Commit message: I left out the model-name `Co-Authored-By` line because the session's rules forbid model identifiers in pushed artifacts; the Claude-Session line is in.
+
+**REPORT (not this module's; the day found):** screens-publish hand-builds answers for these three ops, now provided by the fixtures above, so they can take them:
+- `bio-plane/test/m/screens-publish/fixtures.mjs:134` (casedetails) and `:135` (casedetailspublic)
+- `bio-plane/test/m/screens-publish/fr30b.test.mjs:300` (casedetails), `:339` (casedetailsset), `:354` and `:399` (casedetailspublic)
+The answers they should take: `casedetails().recorded`, `casedetailsset().set` and `.notOwner`, `casedetailspublic().published` and `.unpublished`.
+
+**Size (session_01319VhF3CxdhogoEXvR8aRC): test runs 6, module lines 1602** (module lines = `bio-plane/src/case-inputs/*.mjs`, the module's source; the new test lines are 104 in the two test files).
+
+## J16 · COMPLETE
+
+COMPLETE for B15 (CHANGE K5209: OP-GRADES #30 merged; merged origin/tranche/T51 at 32996b4b0d into job/T51/case-inputs as a merge commit, no rebase; pushed).
+
+**Suite after the merge:** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/case-inputs/*.test.mjs`: 81 tests, 81 pass, 0 fail. The stores start again; no `DECLARED_OP_DISAGREES` now.
+
+**Checks (absolute root /home/user/bio):**
+- `checks/fixtures.mjs /home/user/bio case-inputs --list`: 0 failures (answer 0, contract 0, stub 0).
+- `checks/ownership.mjs`: 0 failures.
+- `checks/architecture.mjs /home/user/bio case-inputs`: 0 failures.
+- `checks/coverage.mjs /home/user/bio case-inputs`: 0 failures, 29 of 29 live requirement ids named by a test.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/run.mjs /home/user/bio`: the case-inputs findings are the same six screens-publish lines reported in J15 (`fixtures.mjs:134–135`, `fr30b.test.mjs:300, 339, 354, 399`); they are not this module's files, and I added no sentence, so the words count is unchanged.
+
+**Met ids:** unchanged from J15 (R20, R22, R23, R24).
+
+**Markers:** none added.
+
+**Size (session_01319VhF3CxdhogoEXvR8aRC): test runs 4 (this round), module lines 1602** (`bio-plane/src/case-inputs/*.mjs`, unchanged).

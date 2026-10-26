@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
-import { open, main, text, drew, press, tick, ok, refusedIn, plane, COPY, PREFLIGHT, SCREENS, P, DR, C } from "./fixtures.mjs";
+import { open, main, text, drew, press, tick, ok, refusedIn, plane, COPY, PREFLIGHT, SCREENS, P, DR, C, provided } from "./fixtures.mjs";
 
 const tokens = (css) => new Set([...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1]));
 const page = interfacePage(SCREENS);
@@ -54,7 +54,7 @@ test("R20 the states a screen moves through draw only defined classes: the cerem
   const v = await open(PATHS.published, { boot: { session: null }, plane: { verify: ok({ published: false, matches: [] }) } });
   await press(v, "verify");
   assert.deepEqual(undefinedIn(v), [], "a mismatch said");
-  const r = await open(PATHS["review-copy"], { plane: { reviewrevoke: ok({ ok: true }) } });
+  const r = await open(PATHS["review-copy"], { plane: { reviewrevoke: await provided.reviewrevoke() } });
   assert.deepEqual(undefinedIn(r), []);
 });
 

@@ -3,6 +3,7 @@
  * documented shapes (review, case-inputs, case-authoring, case-check, case-tensions, case-carriage, ratification,
  * publish-schedule, public-read, case-import, docket, doorbell); a test overrides any op. */
 import { webcrypto } from "node:crypto";
+import assert from "node:assert/strict";
 import { SCREENS } from "../../../src/screens-publish/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 /* store-request's world registers the declared ops (store-assembly) when it is first imported. A test that registered them itself first (control-plane's
@@ -82,6 +83,43 @@ export const PUBLISHED_CASE = { caseId: C, edition: 2, scope: "The Coliseum leas
   people: [{ shown: "The City Administrator", reason: "signed the March 2024 adjustment" }],
   captures: [{ title: "Council minutes, 12 January 2024", sha256: E1 }], corrections: { count: 0, last: null } };
 
+/* K5207, K5213 (fix round 10): the reads the screens' default plane takes from their providers' published fixtures, each answer made by
+ * the provider's real code. Loaded lazily (a provider's fixtures register nothing until a test asks), by `open` and `openDefaults`
+ * before the page boots; `plane()` spreads whatever is loaded. */
+export const DEFAULT = {};
+export async function openDefaults() {
+  if (DEFAULT.entitieskind) return DEFAULT;
+  const [pr, ci, en] = await Promise.all([import("../public-read/fixtures.mjs"), import("../case-inputs/fixtures.mjs"), import("../entities/fixtures.mjs")]);
+  const details = ci.casedetails().recorded, detailsPublic = ci.casedetailspublic().published;
+  Object.assign(DEFAULT, { docketpublic: ok(await pr.docketPublicOfCase()), casedetails: ok(details), casedetailspublic: ok(detailsPublic), entitieskind: ok(en.entitieskind()) });
+  return DEFAULT;
+}
+
+/* K5207, K5213: the answers a test takes from a provider's published fixtures, each in the plane's shape (`ok`), made by the
+ * provider's real code when called (lazily imported: a provider's fixtures register nothing until a test asks). */
+const say = (load, pick) => async (o) => ok(pick(await load(o)));
+export const provided = {
+  casedraft: say(async () => (await import("../review/fixtures.mjs")).casedraft(), (r) => r),
+  reviewcopy: say(async () => (await import("../review/fixtures.mjs")).reviewcopy(), (r) => r),
+  reviewrevoke: say(async () => (await import("../review/fixtures.mjs")).reviewrevoke(), (r) => r),
+  reviewcomment: say(async () => (await import("../review/fixtures.mjs")).reviewcomment(), (r) => r),
+  reattest: say(async (o) => (await import("../capture/fixtures.mjs")).reattest(o), (r) => r),
+  captureaccount: say(async (o) => (await import("../capture/fixtures.mjs")).captureAccount(o), ({ capture, ...r }) => r),
+  sever: say(async (o) => (await import("../citation/fixtures.mjs")).sever(o), (r) => r.answer),
+  reinstate: say(async (o) => (await import("../citation/fixtures.mjs")).reinstate(o), (r) => r.answer),
+  casedetails: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetails(), (r) => r.recorded),
+  casedetailsset: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetailsset(), (r) => r),
+  casedetailspublic: say(async () => (await import("../case-inputs/fixtures.mjs")).casedetailspublic(), (r) => r.published),
+  knockerconsent: say(async () => (await import("../sources/fixtures.mjs")).knockerconsent(), (r) => r.answer),
+  signerregisterown: say(async (o) => (await import("../credentials/fixtures.mjs")).signerregisterown(o), (r) => r.answer),
+  /** wizard-scripts' real `writinghelp` answers (K5212): the draft already held in the field, or the assistant unreachable. It never returns a draft. */
+  writinghelp: say(async (which) => { const w = await import("../wizard-scripts/fixtures.mjs"); return which === "unreachable" ? w.writingHelpUnreachable() : w.writingHelpDraftHeld(); }, (r) => r),
+  /** case-authoring's real `publishPreflight` answers the ceremony draws: `tension` (TENSION_NOT_DISCLOSED) and `noFinding` (PUBLISH_NO_FINDING). */
+  preflight: say(async (which) => { const f = await import("../case-authoring/fixtures.mjs"); return which === "tension" ? f.preflightTensionRefused().answer : f.preflightNoFinding().answer; }, (r) => r),
+  /** public-read's `publishedcase` refusal for a finding several cases pin. */
+  publishedCaseSeveral: say(async () => (await import("../public-read/fixtures.mjs")).publishedCaseSeveralCases(), (r) => r.byFinding),
+};
+
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
   /* publication R1: a case edition never authored answers NO_CASE_DOCUMENT; `publish` prepares it, and from then on the record holds its document */
@@ -123,19 +161,12 @@ export function plane(o = {}) {
     docket: ok({ case: C, project: P, entries: [
       { shelf: "public", entry: 1, kind: "edition", summary: "Edition 2 published, superseding Edition 1", published_at: "2026-11-19T14:00:00Z" },
       { shelf: "record", entry: 2, kind: "court-order", summary: "Order of 20 November: seal exhibit 4", proposed: "public", state: "filed", filed_at: "2026-11-20T09:00:00Z" }], wrote: false }),
-    docketpublic: ok({ ok: true, case: C, group: "river-town", captures: {}, last_entry: "2026-11-20", entries: [
-      { seq: 1, entry: 1, digest: DIGEST, signature: "-----BEGIN SSH SIGNATURE-----", published_at: "2026-11-19T14:00:00Z", taken_back: null,
-        fields: { kind: "edition", date: "2026-11-19", summary: "Edition 2 published, superseding Edition 1" } },
-      { seq: 2, entry: 2, digest: DIGEST, signature: "-----BEGIN SSH SIGNATURE-----", published_at: "2026-11-21T09:00:00Z", taken_back: null,
-        fields: { kind: "court-order", date: "2026-11-20", summary: "Order of 20 November: seal exhibit 4" } }] }),
     accountdrafts: ok({ case: C, drafts: [], truncated: false }),
     docketprepare: ok({ entry: "{}", digest: DIGEST, statement: `bio-docket ${C} 3 ${DIGEST}\n`, warning: "Posting is public and permanent.", expires: "2999-01-01T00:00:00Z" }),
     docketpost: ok({ case: C, seq: 3, entry: 2, published_at: "2026-11-21T09:00:00Z" }),
-    casedetails: ok({ ok: true, case: C, published: false, truncated: false, history: [], details: DETAILS() }),
-    casedetailspublic: ok({ ok: true, case: C, group: "river-town", details: DETAILS_PUBLIC() }),
     projectlist: ok({ projects: [{ id: P, title: "The Coliseum lease" }, { id: "PROJ-2026-0013", title: "Potholes" }] }),
     list: ok({ bundles: [{ bundle_id: "INQ-2026-0001", title: "Is the city repairing reported potholes?" }] }),
-    entitieskind: ok({ ok: true, kind: "body", entities: [{ entity_id: "ENT-1", kind: "body", label: "Oakland Rent Board" }], count: 1, truncated: false, next: null }),
+    ...DEFAULT,
     ...o,
   };
 }
@@ -175,8 +206,33 @@ export async function openWorld(path, o = {}) {
   return Object.assign(p, { world, as, answered: (op) => { const a = got.filter((x) => x.op === op).at(-1); return a && a.answer.json ? (a.answer.json.result !== undefined ? a.answer.json.result : a.answer.json) : undefined; } });
 }
 
+/* K5202 (case-import's published answers, K5175): the `importedcase` answer as case-import's real code makes it, over a world it builds
+ * when called (imported lazily: its fixtures register nothing until a test asks). `accepted`: the import whose latest edition (2) has its
+ * findings accepted and one flagged; else a bare import whose only edition (1) has nothing accepted. Answers `{import, edition, answer}`,
+ * the answer in the plane's shape (`ok`). */
+export async function importedCase({ accepted = true } = {}) {
+  const ci = await import("../case-import/fixtures.mjs");
+  if (accepted) {
+    const r = await ci.importedCaseAnswer();
+    return { import: r.import, edition: 2, answer: ok(r.answer) };
+  }
+  const u = await ci.importedWorld({ imports: [{ editions: [{ edition: 1 }] }] });
+  const id = u.imports[0].import;
+  return { import: id, edition: 1, answer: ok(u.ci.importedCase({ import: id, edition: 1, viewer: "member:alice" })) };
+}
+
+/* K5202: case-import's real `rerunstart` answer over its rerun world (`twice`: the second, refused declaration), with the import and
+ * edition the page is opened at (`edition` 1) and the page's own `importedcase` answer for them. Answers `{import, edition, answer, page}`. */
+export async function rerunImport({ twice = false } = {}) {
+  const ci = await import("../case-import/fixtures.mjs");
+  const r = await ci.rerunStartAnswer({ twice });
+  const page = ok(r.w.ci.importedCase({ import: r.import, edition: 1, viewer: "member:alice" }));
+  return { import: r.import, edition: 1, answer: ok(r.answer), page };
+}
+
 /** The served page at `path` with this module's screens, over the plane. */
 export async function open(path, o = {}) {
+  await openDefaults();
   const p = await boot({ screens: SCREENS, plane: plane(o.plane || {}), path, ...(o.boot || {}) });
   await p.settle();
   return p;
@@ -224,6 +280,8 @@ export async function press(p, op, { nth = 0, values = {}, reason, confirm = tru
   return { b, slot: () => p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`) };
 }
 export const last = (p, op) => p.byOp(op).at(-1);
+/** The words the page draws for a refusal the plane answered (`refusal.<CODE>` filled from the refusal's own fields, DEC-342); the answer is the plane's `ok(refusal)`. */
+export const refusalWords = (answer) => { const r = answer.json.result; assert(hasWord("refusal." + r.code), `no word for ${r.code}`); return norm(word("refusal." + r.code, r)); };
 /** Every text node drawn that reads as a word key: a key the page holds no word for is drawn as itself (interface-shell R5). */
 export const rawKeys = (root) => textNodes(root).map((t) => String(t.data).trim()).filter((t) => /^[a-z][\w-]*(\.[\w-]+){2,}$/.test(t));
 /** A file chosen in a file field (the stand-in's `files`). */

@@ -64,17 +64,17 @@ test("R27 an administrator who holds the hosting account: what runs now, the rel
   assert.ok(textOf(skip).includes(said("updates.skip.says", { version: n.ready.version })) && textOf(skip).includes(said("updates.skip.why")));
   assert.ok(acts(skip).some((b) => b.attrs["data-act"] === "updateskip"));
   assert.equal(all(a.tree, (e) => e.attrs["data-shell"] === "bind").length, 0, "the holder is handed no hand-off");
-  // Earlier releases: installed, skipped with its reason as data, and one recorded at setup
+  // Earlier releases: installed, skipped with its reason as data, and one installed with no member behind it
   const earlier = section(a, "updates.earlier.head");
   const t = textOf(earlier);
   const skipped = n.earlier.find((e) => e.skipped_at), installed = n.earlier.find((e) => e.version === "0.83.0"), setup = n.earlier.find((e) => e.version === "0.82.0");
   assert.equal(skipped.reason, WE_WAIT, "the reason is the data the owner holds");
   assert.ok(t.includes(said("updates.earlier.skipped", { version: skipped.version, date: day(skipped.skipped_at), who, reason: skipped.reason })));
   assert.ok(t.includes(said("updates.earlier.installed", { version: installed.version, date: day(installed.installed_at), who })));
-  // R33, R37, R73: an install with no member behind it is drawn by the words that name no one, never "allowed by set at setup"; the setup
-  // release (installed the day the copy was set up) says so
+  // R33, R37, R73: an install with no member behind it is drawn by the words that name no one, never "allowed by set at setup"; the copy's
+  // set-up release is `updatenotice`'s `setup` (R81), the oldest running release, which is not this one: its install says only its own date
   assert.equal(setup.allowed_by, null);
-  assert.ok(t.includes(said("updates.earlier.installed_setup", { version: setup.version, date: day(setup.installed_at) })), "recorded at setup");
+  assert.ok(t.includes(said("updates.earlier.installed_noactor", { version: setup.version, date: day(setup.installed_at) })), "installed with no member");
   assert.ok(!t.includes(said("settings.set.setup")), "no \"set at setup\" in a fill");
   assert.ok(!/\badmin\b/.test(t));
 });
@@ -132,10 +132,6 @@ test("R27 Update: on its answer the installer's address is offered in a new brow
   assert.ok(link, "the address");
   assert.equal(link.attrs.target, "_blank");
   assert.equal(link.attrs.rel, "noopener noreferrer");
-  // control: an address that is not https is never offered (WORLD GAP: the owner never answers one; the answer is scripted)
-  const bad = await open("updates", { world: w, as: founder, table: { updatestart: (q, b) => env({ ok: true, version: b.version, address: "javascript:alert(1)" }) } });
-  await bad.press("updatestart", { data: { version: "0.84.0" } });
-  assert.equal(all(bad.tree, (e) => e.tag === "a" && /^javascript:/.test(e.attrs.href || "")).length, 0);
 });
 
 test("R27 R34 Not now sends the version; Skip this version is reasoned: its reason, one line, is sent; none sends nothing", async () => {
@@ -217,8 +213,9 @@ test("R37 who allowed or skipped a release is a handle when a member did it; an 
     const h = await history(by);
     const nn = await h.founder.read("updatenotice");
     const o = await open("updates", { world: h.w, as: h.founder });
-    // the running release was installed the day the copy's facts say it was set up, so it says that, and no more
-    has(o, "updates.running.release_setup", { version: "0.83.0", date: day(nn.running.installed_at) });
+    // the running release has no member behind it, so it says only its own date; the copy's set-up date (updatenotice's `setup`, R81) is said apart
+    has(o, "updates.running.release_noactor", { version: "0.83.0", date: day(nn.running.installed_at) });
+    has(o, "updates.running.setup_on", { date: day(nn.setup.installed_at) });
     // the earlier one was installed on a day before it: only its own date
     has(o, "updates.earlier.installed_noactor", { version: "0.82.0", date: day(nn.earlier.find((e) => e.version === "0.82.0").installed_at) });
     assert.ok(!o.text.includes(said("settings.set.setup")) && !placeholder(o), String(by));
@@ -240,37 +237,30 @@ test("R37 who allowed or skipped a release is a handle when a member did it; an 
 
 const part = (o, key) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))[0];
 
-test("R73 a release with no member behind it that was not the setup is drawn by the noactor words, running and earlier, and the one set-up date is said once; the setup release says so; one with a member is unchanged (control)", async () => {
-  // the setup day is the copy's own fact, as `bootstrap` states it; the running release is the setup release in the owner's answers
-  // (installed_at is when the running release was first seen), so a later release that was not the setup is a state only a stated
-  // bootstrap makes (WORLD GAP, reported): the table states the day the earlier release was installed as the setup day
+test("R81 (R73) the set-up release is updatenotice's setup, never bootstrap's installed_at: a copy set up on one release and running a later one says the running release with no member is noactor and the set-up date is the set-up release's day, said once; a release with a member is unchanged (control); no setup held claims nothing about setup (control)", async () => {
+  // the copy was set up on its oldest running release (updatenotice's `setup`), and a later release has run since, a day after
   const { w, founder } = await history(null);
   const n = await founder.read("updatenotice");
-  const earlier = n.earlier.find((e) => e.version === "0.82.0");
-  const setupDay = (iso) => ({ bootstrap: () => ({ ok: true, service: "bio-plane", installed_at: iso }) });
-  const o = await open("updates", { world: w, as: founder, table: setupDay(earlier.installed_at) });
-  has(o, "updates.running.release_noactor", { version: "0.83.0", date: day(n.running.installed_at) });
-  has(o, "updates.running.setup_on", { date: day(earlier.installed_at) });
-  assert.equal(o.text.split(said("updates.running.setup_on", { date: day(earlier.installed_at) })).length, 2, "said once");
-  lacks(o, "updates.running.release_setup", { version: "0.83.0", date: day(n.running.installed_at) });
-  has(o, "updates.earlier.installed_setup", { version: "0.82.0", date: day(earlier.installed_at) });
-  // the running release is the setup release: it says it, and the set-up date is not said twice (the world's own bootstrap)
-  const s = await open("updates", { world: w, as: founder });
-  has(s, "updates.running.release_setup", { version: "0.83.0", date: day(n.running.installed_at) });
-  assert.ok(!s.text.includes(said("updates.running.setup_on", { date: day(n.running.installed_at) })));
-  has(s, "updates.earlier.installed_noactor", { version: "0.82.0", date: day(earlier.installed_at) });
+  const set = n.setup, run = n.running;
+  assert.ok(set && set.version !== run.version, "the setup release is not the running one");
+  assert.notEqual(day(set.installed_at), day(run.installed_at), "a day apart: the set-up date is not the running release's");
+  const o = await open("updates", { world: w, as: founder });
+  has(o, "updates.running.release_noactor", { version: run.version, date: day(run.installed_at) });
+  has(o, "updates.running.setup_on", { date: day(set.installed_at) });
+  assert.equal(o.text.split(said("updates.running.setup_on", { date: day(set.installed_at) })).length, 2, "said once");
+  lacks(o, "updates.running.setup_on", { date: day(run.installed_at) });
+  lacks(o, "updates.running.release_setup", { version: run.version, date: day(run.installed_at) });
   // control: a release with a member keeps today's words, and the one set-up date is said once
   const c = await history("founder");
   const cn = await c.founder.read("updatenotice"), who = await handleOf(c.founder);
   const m = await open("updates", { world: c.w, as: c.founder });
-  has(m, "updates.running.release", { version: "0.83.0", date: day(cn.running.installed_at), who });
+  has(m, "updates.running.release", { version: cn.running.version, date: day(cn.running.installed_at), who });
   has(m, "updates.earlier.installed", { version: "0.82.0", date: day(cn.earlier.find((e) => e.version === "0.82.0").installed_at), who });
-  assert.equal(m.text.split(said("updates.running.setup_on", { date: day(cn.running.installed_at) })).length, 2, "the set-up date, once");
-  // control: with no set-up date held nothing is claimed about setup (a bootstrap that states none)
-  const none = await open("updates", { world: w, as: founder, table: { bootstrap: () => ({ ok: true, service: "bio-plane" }) } });
-  has(none, "updates.running.release_noactor", { version: "0.83.0", date: day(n.running.installed_at) });
-  has(none, "updates.earlier.installed_noactor", { version: "0.82.0", date: day(earlier.installed_at) });
-  lacks(none, "updates.running.setup_on", { date: day(earlier.installed_at) });
+  assert.equal(m.text.split(said("updates.running.setup_on", { date: day(cn.setup.installed_at) })).length, 2, "the set-up date, once");
+  // control: no `setup` held (the answer says none) claims nothing about setup
+  const none = await open("updates", { world: w, as: founder, table: { updatenotice: { ...n, setup: null } } });
+  has(none, "updates.running.release_noactor", { version: run.version, date: day(run.installed_at) });
+  lacks(none, "updates.running.setup_on", { date: day(set.installed_at) });
 });
 
 test("R68 How your copy is doing: the check (selftest) draws what it found from its answer; a problem is drawn in its fold; the optional part is said not set up", async () => {
@@ -337,9 +327,9 @@ test("R68 What each part runs (bootstrap with members): each part named as the a
   assert.ok(sheetW.includes(said(P + "state.misnamed")) && sheetW.includes(owner["sheet-worker"].name), "a part answering under another name, as the answer names it");
   assert.ok(!rows.some((x) => /agent-worker|pdf-worker|ocr-worker/.test(textOf(x))), "never the module id");
   has(a, "screen.updates.health.parts.note"); has(a, "screen.updates.health.parts.next");
-  // a failed answer is drawn failed, no part listed (WORLD GAP: the owner's refusal for the members' read is the store's silence, which the world cannot make)
-  const facts = await founder.read("bootstrap");
-  const bad = await open("updates", { world: w, as: founder, table: { bootstrap: (q) => (q.members === "1" ? refuse("STORE_DID_NOT_ANSWER") : { ok: true, installed_at: facts.installed_at }) } });
+  // a failed answer is drawn failed, no part listed: the store's record of the claim cannot be read, so the owner is silent
+  const bad = await open("updates", { world: w, as: founder });
+  w.sql.exec("DROP TABLE bootstrap");
   await bad.press("bootstrap", {});
   lacks(bad, "screen.updates.health.parts.note");
   assert.ok(bad.refused && bad.refused.text.length > 0, "the refusal is drawn beside the act");

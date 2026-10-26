@@ -1,8 +1,10 @@
 /* public-read's published fixtures (fix-round 10, Wave A; K4990, K4993, K5044, K5074): the answers this module gives to
  * its users, made by its real code each time a test calls one, never stored. A user module takes its value from here
  * and never builds one by hand. Each export returns the real answers the module gave, so a user names no code of its own. */
-import { world, stubOf, bucket } from "./fixture.mjs";
+import { world, stubOf, bucket, publicationT34 } from "./fixture.mjs";
+import { seeded, post, CASE as DOCKET_CASE } from "../docket/fixture.mjs";
 import { bindPublishedPlane, assembleCaseContainer } from "../../../src/publication/worker.mjs";
+import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 
 const enc = (s) => new TextEncoder().encode(s);
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -67,4 +69,35 @@ export async function assembleCaseContainerRefusal() {
   const absent = scene({ noFinding: true });
   const notAssembled = await assembleCaseContainer(call(absent.w, absent.env));
   return { materialMissing, bucketFailed, notAssembled };
+}
+
+/* docket's own world (its real modules, `seeded`): CASE of project P holds F1 and F2. This module reads it as its wiring
+ * reads it (`publicReadOf(host)`, the docket on the host). A second case of P also cites F1, so one finding is cited in
+ * several cases (R39). Made fresh on each call. */
+const SECOND_CASE = "CASE-2026-0102";
+function docketWorld() {
+  const w = seeded();
+  publicationT34({ st: w.st, p: w.publication });
+  return { w, pr: publicReadOf(w.host) };
+}
+const readOp = (pr, name, query) => {
+  const url = new URL(`http://do/${name}`);
+  for (const [k, v] of Object.entries(query)) url.searchParams.set(k, String(v));
+  return publicReadOps(pr, url)[name]();
+};
+
+/** `publishedcase` for a published case edition whose finding is cited in several cases (R39, C-44.2): asked by the finding's
+ *  id alone it is refused FINDING_IN_SEVERAL_CASES, naming both cases; asked with `caseId` it is that case's edition. */
+export async function publishedCaseSeveralCases() {
+  const { w, pr } = docketWorld();
+  w.publish(w.P, SECOND_CASE, 1, [{ id: w.F1, role: "supporting" }]);
+  return { byFinding: await readOp(pr, "publishedcase", { id: w.F1 }),
+           byCase: await readOp(pr, "publishedcase", { caseId: DOCKET_CASE }) };
+}
+
+/** `docketpublic` for CASE's public docket (R21): the docket's own answer once a public withdrawal of edition 1 is posted. */
+export async function docketPublicOfCase() {
+  const { w, pr } = docketWorld();
+  await post(w, { kind: "withdrawal", edition: 1, reason: "We no longer stand behind edition 1." });
+  return readOp(pr, "docketpublic", { case: DOCKET_CASE });
 }

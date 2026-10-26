@@ -1,6 +1,6 @@
 # screens-wizards (T51)
 
-**Status** · session_01QiJTxoqM2vV4sPHpBViTjn · depth 2 · WAITING ON BOB (K5183 save) · handled B8
+**Status** · session_01TFDt6wMDgqu975n41svvYp · depth 2 · COMPLETE · handled B10
 
 ## Completion (T51-115)
 
@@ -143,3 +143,28 @@ Size (session_01QiJTxoqM2vV4sPHpBViTjn): test runs 40, module lines 941
 ## Saved at K5183
 
 Done: everything. Batch 7 is COMPLETE (J7), all committed and pushed; nothing half done, no worker running. Only open item: BOB adds the `store-request` `uses` edge to `screens-wizards` (J6 item 1), after which `architecture.mjs screens-wizards` is green. Next step for a continuing session: read BOB's answer to J6/J7 (`mail inbox --as job`), then act on it.
+
+## Fix round 10, batch 8 (SCREENS-WIZARDS #8; B9 START, K5202)
+
+Written, not yet run: the store cannot import until OP-GRADES #30 merges (`DECLARED_OP_DISAGREES: readtranslate description`; confirmed by running `t48.test.mjs`: 1 fail at import).
+- `bio-plane/test/m/screens-wizards/world.mjs:15`: the dead `{ group: null }` dropped (`storeWorld()`).
+- `bio-plane/test/m/screens-wizards/t51.test.mjs` (end): "R7 R11 a script the row says is required is drawn Recommended on its screen…": on `ceremony` and `members`, every `wizardsat` row carries a boolean `required`; the opened chip lists each row, and `wizard.mark.recommended` is drawn exactly for the rows with `required: true`; a control script of the member's is not marked; the ceremony offers a required script.
+- Module code unchanged: `guide.mjs:476` already reads `s.required === true` and `:491` draws the mark (T48-70); it never infers. The red-before is therefore shown by mutation after the CHANGE (the guide made to ignore the row), not by a missing field.
+Next: after OP-GRADES' CHANGE, merge `tranche/T51`, run the module, do the mutation red, run the done checks, COMPLETE.
+
+## J8 · REPORT
+
+REPORT · SCREENS-WIZARDS #8 · R7/R11 required-mark test and the dead group:null are written and pushed (8f906b432b). Module code needs no change: guide.mjs:476 reads the row's required, :491 draws wizard.mark.recommended. Not yet run: every store import fails DECLARED_OP_DISAGREES until OP-GRADES #30 merges (t48.test.mjs fails at import, 1 of 1). I wait for your CHANGE, then run green, show the red by mutation (the guide made to ignore the row), run the done checks and post COMPLETE.
+
+### Batch 8 COMPLETE (after CHANGE B10, K5209)
+- Changed: `bio-plane/test/m/screens-wizards/world.mjs:15` dead `{ group: null }` dropped; `t51.test.mjs` (last test, + `said` import) "R7 R11 a script the row says is required is drawn Recommended on its screen…". No module code changed: `guide.mjs:476` reads `required` from the row, `:491` draws `wizard.mark.recommended`.
+- Red/green: with `guide.mjs:476` mutated to `required: false`, `t51.test.mjs` 8 pass / 1 fail (the new test); restored, green. (Not red by a missing field: R52 was already merged.)
+- Suites: module 76 pass, 0 fail (75 + 1), run once without `--test-force-exit`. impact: screens-wizards 9/10 only (1 of 178 modules).
+- Checks: format 0; architecture 0; coverage: no failure for this module (4 failures: capture R115, case-authoring R87, filings R70, membership R156); words: 15 failures, none in screens-wizards files; fixtures `--list` 0 failures, 1 accepted (unchanged `guide.test.mjs:204` fixtures-own: platform); ownership 0 (3 files).
+- Markers added: none.
+- Met ids: R7, R11 (with R52 of wizard-scripts); BOB strikes the marks.
+Size (session_01TFDt6wMDgqu975n41svvYp): test runs 6, module lines 941
+
+## J9 · COMPLETE
+
+COMPLETE · SCREENS-WIZARDS #8 · batch 8. Tests only: world.mjs:15 dead group:null dropped; t51.test.mjs last test names R7 and R11 (every wizardsat row carries boolean required; Recommended is drawn exactly for required rows, on ceremony and members). Module code unchanged (guide.mjs:476/:491 already follow the row). Red by mutation (guide.mjs:476 forced to required:false: t51 8 pass/1 fail), green restored. Module 76 pass/0 fail; impact 1 of 178 modules; format/architecture 0; coverage and words show no finding in my files (coverage 4 failures: capture R115, case-authoring R87, filings R70, membership R156; words 15, none mine); fixtures 0 failures, 1 accepted (unchanged guide.test.mjs:204); ownership 0. No fixtures markers added. Met: R7, R11. Size (session_01TFDt6wMDgqu975n41svvYp): test runs 6, module lines 941.

@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_016UGXAT7b4bSBYAh8LnmNAf · depth 2 · COMPLETE · handled B20
+**Status** · session_01KixRhLYyLMAPyuUebw2EAv · depth 2 · COMPLETE · handled B29
 
 ## J1 · REPORT
 
@@ -406,3 +406,216 @@ Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0 (the new te
 - `checks/format.mjs`: 0 failures (178 modules). `checks/coverage.mjs ratification`: 59 of 59 live ids named, 0 failures. `checks/words.mjs ratification`: 0 failures.
 
 Size (session_016UGXAT7b4bSBYAh8LnmNAf): test runs 5, module lines 0
+
+## J23 · BLOCKED
+
+Cause: tests; needs Bob (the R21, R29, R32 naming ruling). R18 waits on case-catalogue R6.
+
+**R61 is done and green. The job is blocked on tests, and one of the three remaining red groups needs Bob's ruling.** Commit `3f47220787` on `job/T51/ratification`.
+
+**What changed**
+- `bio-plane/src/ratification/index.mjs:1096` (`#memberBasisAtPins`): each member is now handed `{basis, references}` at its pinned bytes (references default to `[]`), as case-catalogue R6 asks. Its callers (`:660`, `:1004`) are unchanged.
+- New `bio-plane/test/m/ratification/r61-member-basis.test.mjs` (4 tests, names R61). Failing-first: the three R61 tests were red on the old code (the gate was handed a bare array), and the absent-pin control was already green. All four are green now.
+
+**Suite (ratification, 339 tests, 34 files)**
+- Before the change: 333 pass, 6 fail (R21, R29, R32 and three R61).
+- After the change: 335 pass, 4 fail.
+- The 4 failures:
+  1. **R18 (`preflight.test.mjs:199`)** is expected to stay red until case-catalogue's R6 lands. The test checks that the pinned member's testimony leg reaches C-2.8. case-catalogue at this tranche still reads only a bare array (`checks.mjs:920`), so the object is dropped. case-catalogue's job (`job/T51/case-catalogue`, just started, nothing pushed yet) owns the fix. I did not pass bare arrays to meet it.
+  2. **R21, R29, R32 (`release.test.mjs`, `retire.test.mjs`)** were already red on the tranche before my change, so they are not caused by R61. The cause is a name mismatch. Retrieval answers `SELECTION_NOT_YOURS` (`bio-plane/src/retrieval/index.mjs:1419`, `:1439`, `:1536`; its R99). Ratification R21, R29 and R32 and their tests expect `NOT_YOURS`. Which name is right is a requirement question, so **this needs Bob's ruling**. My recommendation: keep `SELECTION_NOT_YOURS`, since it is retrieval's R99 contract, and amend ratification R21/R29/R32 and their tests to it.
+
+**Other suites I ran**
+- Caller tests (60 files in control-plane, plane, case-*, publication, promotion that exercise the case ceremony or gate): 388 of 391 pass.
+  - `control-plane/r10-caseratify-chain.test.mjs`: the chain is 13 calls against a bar of 11. I ran it on the pre-change `index.mjs` and it fails the same way (13), so this predates R61.
+  - Two money-ingest timing tests (R105 G61, G63) fail. They do not touch the case gate; I did not check them against the baseline.
+
+**Checks** (absolute root `/home/user/bio`)
+- `checks/format.mjs`: 0 failures (178 modules, 178 requirements files).
+- `checks/architecture.mjs ratification`: 0 failures (46 product files, 248 relative imports).
+- `checks/coverage.mjs ratification`: 60 of 60 live ids named by a test, 0 failures.
+- `checks/ownership.mjs ratification tranche/T51`: 3 files changed by ratification (index.mjs, the new test, this record), 0 failures.
+- `checks/fixtures.mjs ratification --list`: 0 failures. No `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added.
+- `checks/run.mjs`: 16 words failures, all in other modules (store-assembly, screens-*, and so on); none in ratification's paths. My change adds no member-facing prose.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 49 of 178 modules. The change is private and changes only the basis the case gate is handed, so I ran the caller tests above instead of all 1,094.
+
+**Waiting on**
+1. Bob: the `NOT_YOURS` / `SELECTION_NOT_YOURS` ruling (R21, R29, R32).
+2. The case-catalogue job's R6 change to land, then the R18 test should pass and the chain test (case-authoring R31) can re-run.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 9, module lines 4056
+
+## J24 · BLOCKED
+
+Cause: tests. R60 red at 12 against the bar of 11; the last call is public-read's (R44), not this module's. R18 waits on case-catalogue R6 (CHANGE).
+
+**Done since J23** (commit `84beddacc8`, pushed; tranche `origin/tranche/T51` merged in, never rebased).
+- **R21, R29, R32**: the tests now expect `SELECTION_NOT_YOURS`, per B22 (K5195). `release.test.mjs` and `retire.test.mjs`: 29 of 29 pass.
+- **R60 (chain)**: a sitting's members are gated in one `ratifygate` call, `{members: [...]}`, answered per member in the sitting's order (`ops.mjs` `readSitting`; the store arm `index.mjs` `ratifygate`). The chain went from 13 to 12.
+- **Test change, for your eye**: `sitting.test.mjs` "R60, R52 (G120b): a sitting of seven" asserted one `ratifygate` call per member. It now counts member gates inside the one call (each member's gate is still asked exactly once), and asserts that the sitting makes one gate call. The answer is byte for byte the same: the 13 sitting tests pass.
+
+**Why R60 is not met.** Chain measured by `r10-caseratify-chain.test.mjs` (scratch copy printing the call events; the test file itself is unchanged):
+1. `reauthdue` (admission, 1)
+2. `list` (the sitting's known ids; it runs in parallel with `gatefacts` and `image`, which form one hop)
+3. `ratifygate` (the sitting, 1 call)
+4. `caseratify`
+5. `reusedparts`
+6. copy read (`CAPTURES.get`), copy write (`PUBLISHED.put`)
+7. assembly: `recordcasefile`, `PUBLISHED.get`, `PUBLISHED.put`, `PUBLISHED.put`, `recordcasemanifest`
+
+That is 12. This module's share is now 6, the bar's "ratification 6". The assembly's share is 5, against the bar's 4, and that is public-read's `assembleCaseContainer` (R6, R44). I did not change it.
+
+Two things I did not do, for your ruling:
+- The `reusedparts` hop (5) appears only because the rig serves the reuse read before the copy read. The reuse check and the copy are issued together, so there is no causal dependency. Swapping the order of issue would drop that hop and make the count 11, but it would only move a queue position, not remove a hop. I did not do it.
+- `list` is a hop in this measure, but it runs in the same group as `gatefacts` and `image`, so removing it alone does not shorten the chain.
+
+**Still red**
+- `preflight.test.mjs` R18: waits on case-catalogue R6. Not on the tranche yet; I will re-run after your CHANGE.
+- `control-plane/r10-caseratify-chain.test.mjs`: 12 against 11, public-read's assembly.
+
+**Checks** (absolute root `/home/user/bio`): format 0 failures; architecture 47 product files, 249 imports, 0 failures; coverage 60 of 60 live ids named, 0 failures; ownership 3 files changed by ratification, 0 failures; ratification suite 339 tests, 338 pass, 1 fail (R18).
+
+**What I need from you**
+1. public-read's assembly to drop one hop (R44; 5 measured against 4), or a ruling that the bar counts it differently.
+2. The case-catalogue CHANGE, to clear R18.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 8, module lines 4066
+
+## J25 · REPORT
+
+Correction to J24's Size line: the module's source is 4097 lines (cat of bio-plane/src/ratification/*.mjs | wc -l), not 4066, which I estimated. Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 8, module lines 4097.
+
+## J26 · BLOCKED
+
+Cause: tests. One test is red: `control-plane/r10-caseratify-chain.test.mjs`, 12 calls against the bar of 11. R60 is not met yet, so I am not posting COMPLETE. Everything else is green.
+
+**Done since J25** (commit `30296b270a`, pushed; the tranche `origin/tranche/T51` merged in, never rebased).
+- **R18**: passes after the merge, with no change of mine (`preflight.test.mjs`, 18 of 18 with R61's four).
+- **R61**: passes (`r61-member-basis.test.mjs`, 4 of 4).
+- **R21**: passes (`SELECTION_NOT_YOURS`; from J25).
+- **R53**: `publishat` is declared in `DECLARED_OPS` (`index.mjs`): classes admin, member, probe; mutating; weight `irreversible` (op-grades); description `act.publishat.does`; fields the caseratify payload plus `at`, `at` required. `declared-ops.test.mjs` holds it against `publishAtOp` in a new case, 4 of 4 pass. The case registers the litigation-hold reader (R45) first: without it the requires-only call is `SCHEDULE_UNCHECKABLE`, a precondition, not a field.
+- Ratification suite: 340 of 340 pass.
+- Checks: format 0 failures; architecture 47 product files, 249 imports, 0 failures; coverage 60 of 60 live ids named, 0 failures.
+
+**R60 is not met, and the reason is the measured chain** (`r10-caseratify-chain.test.mjs`, measured on the merged tree with a scratch copy that prints each call; the test file is unchanged):
+1. `reauthdue` (admission): 1
+2. the group `list`, `gatefacts`, `image`, `casedocfacts`, read together: 1
+3. `ratifygate`, the sitting in one call (from J25): 1
+4. `caseratify`: 1
+5. `reusedparts`: 1
+6. copy read and copy write: 2
+7. assembly: `recordcasefile`, `PUBLISHED.get`, `PUBLISHED.put` ×2, `recordcasemanifest`: 5
+
+Admission 1 + ratification 6 = 7, which is this module's bar. The assembly is 5 against public-read's bar of 4 (R44). The test is red for that one call. B23 says "R60's two hops" are done. The first hop (the second `ratifygate`) is done. The `list` read is not a separate hop: it sits in the group with `gatefacts`, `image` and `casedocfacts`, which is one hop whichever of them ends last, so removing it alone changes nothing. The second thing I had listed, the assembly's extra hop, is in public-read, and I have not touched it.
+
+**What I need from you**
+1. Either public-read drops one hop in the assembly, or you rule that R60 is met for ratification's share and the chain test's bar is the assembly's to meet. Until then, the test stays red and R60 stays unmet.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 6, module lines 4097
+
+## J27 · REPORT
+
+Correction to J26 (the BLOCKED entry; the tool numbered it J26, not J27): its state is WAITING ON BOB (J26). Its Size line should read module lines 4102 (cat bio-plane/src/ratification/*.mjs | wc -l, measured after the publishat row), not 4097: Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 6, module lines 4102.
+
+## J28 · BLOCKED
+
+Cause: tests, and a dependency on OP-GRADES #29.
+
+**Done since J27**: the tranche is merged (never rebased). Commit `publishat` row now carries `machineClasses: []` to match op-declarations' hand row (R81). Ratification suite: 340 of 340 pass. `declared-ops.test.mjs`: 4 of 4 pass, including `publishat`.
+
+**Why R60 is not yet green.** `control-plane/r10-caseratify-chain.test.mjs` now fails at load, before any count: `DECLARED_OP_BAD_WEIGHT: publishat weight=irreversible` (`bio-plane/src/op-grades/declared.mjs:19`, reached from `kindOf` at `:39`). op-grades refuses the weight my row declares. That is the op-grades R54 you flagged in B24, which is not merged on the tranche. The row is right per R53, so I kept it and did not remove it to get a pass.
+
+Before this load failure the chain measured 12 (B25's bar) with the sitting in one gate call, so I expect the count to be green once OP-GRADES #29 merges. I have not measured it since, because the file does not load.
+
+**What I need from you**: tell me when OP-GRADES #29 has merged. Then I merge the tranche, run the chain test, and post COMPLETE with R18, R21, R53, R60, R61 met, if the chain is at or under 12.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 7, module lines 4103
+
+## J29 · REPORT
+
+Correction to J28's Size line: module lines 4102 (measured), not 4103. Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 7, module lines 4102.
+
+## J30 · BLOCKED
+
+Cause: tests, and a failure owned by store-assembly, already on the tranche.
+
+**Done since J29** (merged the tranche, never rebased; pushed).
+- OP-GRADES #29 merged, so the `publishat` weight registers. Its hand row's sentence (op-grades `index.mjs:1556`, "case-directed: keyed by a case edition…") differed from my row's words key, so op-grades refused with `DECLARED_OP_DISAGREES: publishat description`. My row now carries that sentence exactly. The R54 agreement check passes for `publishat`.
+- Ratification suite: 340 of 340 pass. `declared-ops.test.mjs`: 4 of 4, including `publishat`.
+
+**Why R60 is still not green.** `control-plane/r10-caseratify-chain.test.mjs` fails at load, before any count:
+`DECLARED_OP_DISAGREES: readtranslate description` (raised by op-grades `declared.mjs`, at the owner row's description check).
+- Owner: store-assembly. Its `bio-plane/src/store-assembly/declared.mjs:16` declares `readtranslate` with a description that differs from op-grades' hand row.
+- I checked it is on the tranche without my change: I restored the tranche's `ratification/index.mjs` for one run and got the same error. Then I put my version back. So it is not from my change.
+
+I have not measured the chain on this tranche, so the count (12, bar 12) still stands only from before.
+
+**What I need from you**: store-assembly to agree `readtranslate`'s description with its hand row (or you rule who moves). After that I re-run the chain test and post COMPLETE with R18, R21, R53, R60, R61 met, if it is at or under 12.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 11, module lines 4102
+
+## J31 · COMPLETE
+
+COMPLETE. Met ids: **R18, R21, R53, R60, R61**.
+
+**Merged** the tranche (`origin/tranche/T51`, never rebased); branch pushed.
+
+**What changed in this job (file:line)**
+- `bio-plane/src/ratification/index.mjs:1096` `#memberBasisAtPins`: each member's `{basis, references}` at its pinned bytes (R61; case-catalogue R6).
+- `bio-plane/src/ratification/index.mjs` `ratifygate` arm (store half): a body `{members: [...]}` gates a whole sitting in one call (R52, R60).
+- `bio-plane/src/ratification/ops.mjs` `readSitting` (new) and `readFinding` `batched` option: the sitting's gate is asked once, answered per member in the sitting's order (R60).
+- `bio-plane/src/ratification/index.mjs:1758` `DECLARED_OPS.publishat`: classes, `machineClasses: []`, mutating, weight `irreversible`, description = op-grades' hand sentence exactly (R53, R54 agreement).
+- Tests: `release.test.mjs`, `retire.test.mjs`: `SELECTION_NOT_YOURS` (R21, R29, R32). `sitting.test.mjs`: counts member gates carried in the one call; each member's gate still asked once (R60). `declared-ops.test.mjs`: `publishat` case, with a registered hold reader (R45). New `r61-member-basis.test.mjs`: 4 tests (R61).
+
+**Failing-first.** R61: red before the change (gate handed a bare array), green after. R60's chain: red at 13 before this round's batch, 12 after; the test now passes on the tranche.
+
+**Suite and tests**
+- Ratification: 340 of 340 pass.
+- `control-plane/r10-caseratify-chain.test.mjs`: 2 of 2 pass.
+- `declared-ops.test.mjs`: 4 of 4 pass.
+
+**Checks** (absolute root `/home/user/bio`)
+- format: 0 failures (178 modules, 178 requirements files).
+- architecture: 0 failures (47 product files, 249 relative imports).
+- coverage: 60 of 60 live ids named by a test, 0 failures.
+- ownership vs `origin/tranche/T51`: 8 files changed by ratification, 0 failures.
+- No `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added.
+
+**Notes.** Behaviour I did not change: public-read's assembly stays at its own count (BOB's bar), and the `reusedparts` ordering stays as BOB ruled.
+
+Size (session_01BjXA2f1GgToabWomrTvi6L): test runs 12, module lines 4102
+
+## J32 · REPORT
+
+Finding outside my paths, found while running the words and process checks after the change (not changed by this job; described against the words rule K3930, K3949):
+
+1. `bio-plane/test/m/op-grades/owners.test.mjs:250` (testcopy, [code]): the test holds a plain copy of the publishat sentence (`assert.equal(NON_ACTS.publishat, "case-directed: keyed by a case edition ...")`). Now that the sentence is written as `localize("ratification.declared.publishat", ...)`, `checks/words.mjs` flags this copy. The sentence is unchanged and the test still passes (`owners.test.mjs`: 14 of 14). Owner: op-grades. Proposed: op-grades compares against the localized sentence instead of a code copy, or BOB rules otherwise.
+2. `checks/run.mjs /home/user/bio` reports 369 FAIL lines across other modules (store-assembly and others). None is in ratification. I did not work them.
+
+## J33 · COMPLETE
+
+COMPLETE. Round 10 (K5214): the words failure in ratification is fixed. Met ids: none new; no requirement mark changed.
+
+**What changed (file:line)**
+- `bio-plane/src/ratification/index.mjs:1758` `DECLARED_OPS.publishat`: `description` is now `localize("ratification.declared.publishat", "<the same sentence exactly>")`, as every owner's declared row is written (K3930, K3943). Commit `a5f69fe7ac`, pushed.
+
+**Failing-first.** The words check was red before the change (`index.mjs:1758`, plain, 1 failure) and is green after (0 failures, 19247 words, unchanged count). No new test was written: the sentence is unchanged, so the existing declared-ops test was already the test of it. Its result is green before and after.
+
+**Suite and tests**
+- Ratification module: 340 of 340 pass (38 test files).
+- `bio-plane/test/m/ratification/declared-ops.test.mjs`: 4 of 4 pass.
+- `bio-plane/test/m/control-plane/r10-caseratify-chain.test.mjs` (the file lives under `m/control-plane/`, not `control-plane/`): 2 of 2 pass.
+- `bio-plane/test/m/op-grades/owners.test.mjs` (the copy flagged below): 14 of 14 pass.
+
+**Checks** (absolute root `/home/user/bio`)
+- `checks/words.mjs /home/user/bio ratification`: 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding in ratification's files; the words count did not rise. It reports 369 FAIL lines in other modules, and 1 testcopy in op-grades, both in my REPORT.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected. (`tranche/T51` as a bare name does not resolve in this checkout; I used `origin/tranche/T51`.)
+- `checks/fixtures.mjs /home/user/bio ratification --list`: 0 failures; answer 0, stub 0, code 0, contract 0, accepted 12 (existing).
+- `checks/ownership.mjs ... $(git merge-base origin/tranche/T51 HEAD) HEAD`: 1 file changed by ratification, 0 failures.
+- No `fixtures-own`, `fixtures-generic` or `fixtures-contract` marker added.
+
+**Findings outside my paths:** reported in the REPORT above (op-grades `owners.test.mjs:250`).
+
+**Notes.** I made a stray file at the filesystem root, `/tmp-scratch-run.txt`, by mistake (an output path I mis-typed). It is outside the repository. A safety check refused the removal, so it is still there; it can be deleted by hand.
+
+Size (session_01KixRhLYyLMAPyuUebw2EAv): test runs 5, module lines 4102

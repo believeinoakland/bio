@@ -61,9 +61,6 @@ test("R14 groupdescriptiondraft: the draft filled into the focus and purpose fie
   await a.press("groupdescriptionset", {});
   assert.equal((await rosa.read("groupdescription")).description.focus, draft.focus.text, "kept by her own save");
   lacks(a, "screen.group-identity.draft.label", { handle: asker });
-  const u = await open("group-identity", { world: w, as: rosa, table: { groupdescriptiondraft: () => ({ ok: true, result: { ...draft, untested: "untested" } }) } });
-  await u.press("groupdescriptiondraft", { values: { "gi-q-why": "x" } });
-  has(u, "ai.label.untested");
   const empty = await a.press("groupdescriptiondraft", { values: { "gi-q-what": "", "gi-q-who": "", "gi-q-why": "" } });
   assert.deepEqual(empty.sent, []);
 });

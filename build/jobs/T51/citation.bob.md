@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J22
+**Read** · handled J26
 
 ## B1 · START
 

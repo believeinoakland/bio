@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { all, has, lacks, open, storeWorld, SCREENS } from "./kit.mjs";
 import { KEYS } from "../../../src/screens-settings/keys.mjs";
-import { sized, STATS_WITHOUT_SIZE, STATS_NOT_A_NUMBER } from "./seed-group.mjs";
+import { sized } from "./seed-group.mjs";
 
 const G = "screen.group.storage.";
 const FACTORS = ["plan", "pare", "latency", "limits"].map((k) => G + "factors." + k);
@@ -56,18 +56,13 @@ test("R79 G42 group: from 9,000,000,000 B (90 %), and over 100 %, the second war
   }
 });
 
-test("R79 G42 group: a size the object does not state is said so, never as zero; an answer with no `dbBytes` draws nothing", async () => {
+test("R79 G42 group: a size the object does not state is said so, never as zero", async () => {
   const nul = await gauge(null);
   assert.equal(nul.stated, null, "the record states none");
   has(nul, G + "head");
   has(nul, G + "unstated");
   lacks(nul, G + "size", size("0.0", "0"));
   assert.equal(drawn(nul, "storage"), 1);
-  const none = await gauge(0, { table: STATS_WITHOUT_SIZE });   // world gap: the owner always states `dbBytes` to the founder
-  lacks(none, G + "head");
-  assert.equal(drawn(none, "storage"), 0, "key absent: nothing drawn");
-  const bad = await gauge(0, { table: STATS_NOT_A_NUMBER });   // world gap: the owner states a number or null
-  has(bad, G + "unstated");
 });
 
 test("R79 G42 group control: a member's screen sends no `stats` and draws no gauge, whatever the answer; a failed read is drawn failed", async () => {

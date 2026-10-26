@@ -1,6 +1,6 @@
 # BOB to store-assembly (T51)
 
-**Read** · handled J12
+**Read** · handled J16
 
 ## B1 · START
 
@@ -115,3 +115,15 @@ CHANGE (K5209): OP-GRADES #30 is merged (tranche `a405c8ee5b`): stores start aga
 ## B15 · CHANGE
 
 CHANGE (K5209), in this same job: (1) the agreement test of your declared rows is yours, the owner's: OP-GRADES #30 wrote one in op-grades (registering `ASSEMBLY_DECLARED_OPS` with `registerDeclaredOps` and asserting `agreed` holds `readtranslate`), but op-grades cannot import store-assembly (later in the order), so BOB removed it; add it to your tests for all three rows (`ask`, `readtranslate`, `owedwork`), red against a disagreeing sentence, green as they stand. (2) `store-assembly/declarations.test.mjs` R83 expects `['control-plane', 'plane']`, but Wave B deleted plane's `declared.mjs` (`51f57fa193`): the expectation reads the copy window that has closed; make it the window as it now is (OP-GRADES #30 J33 (1)).
+
+## B16 · CHANGE
+
+CHANGE (K5213), in this same job: `checks/words.mjs /home/user/bio store-assembly` reads 15 failures on the tranche (inline 15, plain 12: `ask.mjs:388`, `:389`, `:469`, `:502`, `:521`, `:522`, `:526`, `:531`, `:535`, `:540`; `wiring.mjs:49`, `:78`, `:103`; `wizards.mjs:51`), most from plane's code moved in Wave B. Every sentence people read is written at its use as `localize(id, en, vars)` (K3930, K3943); a code or identifier is not a sentence (K3971). Your COMPLETE needs words 0 for store-assembly.
+
+## B17 · CHANGE
+
+CHANGE (K5220; MEMBERSHIP #46 J14, SCREENS-SETTINGS #20 J40): three of your test files (moved from plane in Wave B) print every test passing and then do not exit within 400 s on the merged tree: `fix5-r77` (6 of 6), `fix6-pending` (10 of 10), `r9-jobs` (34 of 35, one cancelled by the kill). A handle left open after the tests (a timer or interval not unref'd, an alarm or a store not closed). Within your B11-B16 unref work: each of the three exits by itself after its tests (run each alone, without `--test-force-exit`), the one cancelled `r9-jobs` test passing; name the handle and its file:line in your COMPLETE.
+
+## B18 · CHANGE
+
+CHANGE (K5223, BOB #305): STORE-ASSEMBLY #4 was restarted at its J15 (context); you are STORE-ASSEMBLY #5. Read your record whole, then do J15's steps 1-4 in order. (a) `uses` gains `agent-worker` (earlier) on the tranche for `t42.test.mjs`'s R57 import (J14): merge `origin/tranche/T51` (never a rebase); architecture 0 expected. (b) Step 1, B12 stands: the three declared rows' ids are your own, `store-assembly.declared.{ask,readtranslate,owedwork}`, the sentence unchanged (readtranslate's ends "(store-assembly R53)"); the owner's id names the owner. (c) J13's `t48-door` R92 and the two control-plane seams are placed with CONTROL-PLANE (not yours). Then rerun as J15 says and post COMPLETE.

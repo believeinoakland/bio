@@ -1,6 +1,6 @@
 # action-holds (T51)
 
-**Status** · session_01E2eTwBJGNb3qbSi7xQa82K · depth 2 · COMPLETE · handled B3
+**Status** · session_01T1F4v1RYnwRpGQBM5cYrRi · depth 2 · COMPLETE · handled B7
 
 ## Completion
 
@@ -90,3 +90,91 @@ Size (session_01E2eTwBJGNb3qbSi7xQa82K): test runs 3, module lines 1267
 ## J4 · COMPLETE
 
 Fix round 10 batch 6 done. The 2 docket/docketEntryRead lines (due.test.mjs:29, places.test.mjs:92) now take docket's published fixture (docketEntryRead().absent). No fixtures-own or fixtures-generic marker added. fixtures check 0 failures; module tests 50 pass 0 fail; format, words, architecture, ownership 0 failures; impact: 0 affected. Record: build/jobs/T51/action-holds.md.
+
+## Fix round 10 (K5207; START B5, ACTION-HOLDS #8)
+
+**Done (B5, K5175).** Published `holdsdue`, the answer of `op=holdsdue` over the real `holdsDue`, in `bio-plane/test/m/action-holds/fixtures.mjs` (`holdsDueAnswer()`), made fresh on each call over a world this module builds: one project the viewer sees, one action in it with a legal mark (ord 0) and no hold, the door's answer through `actionHoldsOps(...).holdsdue()`, and the same module's `holdsDue` for comparison. No product change: the state (a due legal mark with its arrival) is made by the module's own acts.
+
+**Test added.** `bio-plane/test/m/action-holds/fixtures.test.mjs` (R19 holdsdue fixture; control):
+- the published answer is the door's answer over the real `holdsDue`; the item carries `arrived {action, ord 0}` and `marked_by` the viewer; a second call builds its own world (project ids differ per world, so the second world is compared on action, ord and arrived);
+- control: a viewer who sees no project of the mark reads no item.
+- Failing-first: `ord` expectation set to 1 → red (1 fail); restored to 0 → green (2 pass).
+
+**Suites and checks.**
+- `bio-plane/test/m/action-holds/*.test.mjs`: 52 tests, 52 pass, 0 fail (no `--test-force-exit`, exited by itself).
+- `checks/fixtures.mjs /home/user/bio action-holds --list`: answer 0, 0 failures.
+- `checks/words.mjs /home/user/bio action-holds`: 0 failures for this module.
+- `checks/ownership.mjs /home/user/bio action-holds <merge-base> HEAD`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected by the new files.
+- `checks/run.mjs /home/user/bio`: no finding in action-holds files. Findings are elsewhere, not mine: `screens-publish` `t51.test.mjs:76` (`[op-table holdsdue]`, the consumer that takes this answer in its own job, recorded as "action-holds (earlier)"), and `store-assembly` `wiring.mjs:78`, `wizards.mjs:51` (words). The words total is 15 failures, none in action-holds.
+
+**Markers added.** None: no `fixtures-own` or `fixtures-generic` marker; every value is the module's real answer.
+
+**Merge.** `origin/tranche/T51` (a4ce8a8de1) was merged into `job/T51/action-holds` (a merge, not a rebase) before the work.
+
+**Size (session_01JjBfGMNmBpVHmFVF6fEVJK): test runs 5, module lines 0.** (Test runs: the new file's runs, four; the module suite, one. Module lines: no `src` line changed; the two new test-side files are the whole change.)
+
+## J5 · COMPLETE
+
+Fix round 10 (START B5, K5175): holdsdue fixture published. bio-plane/test/m/action-holds/fixtures.mjs holdsDueAnswer() makes the door's op=holdsdue answer over the real holdsDue, fresh per call (no product change). Test bio-plane/test/m/action-holds/fixtures.test.mjs: 2 tests green; failing-first: ord 1 red, restored green. Module suite 52/52 green. Checks: fixtures 0, words 0 for action-holds, ownership 0 failures, impact 0 of 178 modules. Markers added: none. Not mine, for BOB: screens-publish t51.test.mjs:76 is the consumer to point at this answer; store-assembly wiring.mjs:78 and wizards.mjs:51 words findings. Record: build/jobs/T51/action-holds.md (Fix round 10 section). Commit b640284a1a pushed to job/T51/action-holds.
+
+## Fix round 10, after CHANGE (B6, K5209)
+
+Merged `origin/tranche/T51` (OP-GRADES #30 merged) into the job branch (merge `d9ad534024`, not a rebase). The stores start again. Re-run on the merged head:
+- `bio-plane/test/m/action-holds/*.test.mjs`: 52 pass, 0 fail (exited by itself).
+- `checks/fixtures.mjs /home/user/bio action-holds --list`: 0 failures.
+- `checks/words.mjs /home/user/bio action-holds`: 0 failures.
+- `checks/format.mjs /home/user/bio action-holds`: 0 failures.
+- `checks/ownership.mjs /home/user/bio action-holds <merge-base> HEAD`: 3 files changed by action-holds (`fixtures.mjs`, `fixtures.test.mjs`, this record), 0 failures.
+
+No new markers. The two stays named in the CHANGE (`control-plane/r10-caseratify-chain.test.mjs`, `store-assembly/declarations.test.mjs` R83) are not mine and were not run here.
+
+Size (session_01JjBfGMNmBpVHmFVF6fEVJK): test runs 6, module lines 0 (the rerun on the merged head adds one suite run and the checks; no `src` line changed).
+
+## J6 · COMPLETE
+
+CHANGE B6 (K5209) handled: merged origin/tranche/T51 into job/T51/action-holds (merge d9ad534024; no rebase). Re-run on the merged head: action-holds suite 52/52 green; fixtures --list 0 failures; words 0 failures; format 0 failures; ownership 0 failures (3 files: fixtures.mjs, fixtures.test.mjs, record). No new markers. The two named reds (control-plane r10-caseratify-chain, store-assembly declarations R83) are not mine and were not run. Record: build/jobs/T51/action-holds.md, section 'Fix round 10, after CHANGE'. Pushed to origin/job/T51/action-holds.
+
+## Fix round 10, START B7 (K5222; plan item 105)
+
+**Done (B7, K5175).** Published `holdsDueDocketAnswer()` in `bio-plane/test/m/action-holds/fixtures.mjs` (line 29, beside `holdsDueAnswer` at line 14). It takes docket's published world `docketEntryRead()` (its real legal mark, made by docket's real act on an entry of project P, which alice manages) and builds this module on that world's host. It answers: `answer`, the door's `op=holdsdue` answer before any hold, with the mark listed as `{arrived: {docket_entry, case}}`; `direct`, the module's own `holdsDue` read at the same moment (the control the test compares against); `placed`, the same world after `actionHold({project: P, from: {docket_entry}, hold: "in_place"})`, its items empty. No product change: the state is made by the real acts of docket and action-holds.
+
+**Test added.** `bio-plane/test/m/action-holds/fixtures.test.mjs` (lines 27 and 39): the published answer is the module's read and lists the mark with its arrival; after the hold the items are empty; each call builds its own world. Control: a viewer who sees no project of the mark (dave) reads no item.
+- Failing-first: the expected case id set to a wrong value → red (1 fail); restored → green.
+- One fault of my own on the way: the first draft compared the pre-hold answer with a read taken after the hold. Fixed by returning `direct` from the fixture, read before the hold.
+
+**Suites and checks** (absolute product root `/home/user/bio`):
+- `bio-plane/test/m/action-holds/*.test.mjs`: 54 pass, 0 fail (no `--test-force-exit`; it exited by itself).
+- `checks/fixtures.mjs … action-holds --list`: 0 failures (3532 test files read, 178 modules).
+- `checks/format.mjs`: 0 failures. `checks/words.mjs … action-holds`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected, 0 of 2985 test files.
+- `checks/run.mjs /home/user/bio`: no finding in this module's files. The words total is 15 failures, the same count as at B5 (none new). The findings that name this module's answer are not mine (see Found in other modules).
+- `checks/ownership.mjs … action-holds`: run again after the commit (see the Size line's session).
+
+**Markers added.** None. Every value is the module's real answer.
+
+**Found in other modules (not changed here).**
+- `screens-publish` `bio-plane/test/m/screens-publish/t51.test.mjs:76`: `DUE` hand-builds the `holdsdue` answer (`[op-table holdsdue]`, run.mjs). It is the consumer that should take `holdsDueDocketAnswer()`'s `answer` (the mark) and `placed` (after the hold) instead of its own stub. That is screens-publish's to change, in its own job.
+- `store-assembly` `bio-plane/src/store-assembly/wiring.mjs:78` and `wizards.mjs:51`: words findings, already present at B5. Not this module's.
+
+**Size (session_01T1F4v1RYnwRpGQBM5cYrRi): test runs 3, module lines 0.** (Test runs: the fixtures file alone once with the first draft of the test, once with the deliberate break, and the module suite once. Module lines: no `src` line changed; the two test-side files are the whole change.)
+
+## J7 · COMPLETE
+
+START B7 (K5222): `holdsDueDocketAnswer()` published in `bio-plane/test/m/action-holds/fixtures.mjs` (line 29). It takes docket's published `docketEntryRead()` world, so the mark is docket's real act. It answers the door's `op=holdsdue` answer for the legal mark (`arrived: {docket_entry, case}`), the module's direct read, and the same world after the hold is placed (items empty). Test: `fixtures.test.mjs` lines 27 and 39; failing-first with a deliberate wrong case id (red), restored (green). Suite 54/54 pass; fixtures 0 failures; format and words 0 for this module; impact 0 modules. Markers added: none. Not mine, for BOB: `screens-publish` `t51.test.mjs:76` is the consumer to point at this answer; `store-assembly` words findings `wiring.mjs:78` and `wizards.mjs:51`. Record: build/jobs/T51/action-holds.md, section "Fix round 10, START B7".
+
+## J8 · COMPLETE
+
+COMPLETE for START B7 (K5222; plan item 105).
+
+Changed: `bio-plane/test/m/action-holds/fixtures.mjs` (new `holdsDueDocketAnswer()`, line 29; beside `holdsDueAnswer`, line 14) and `bio-plane/test/m/action-holds/fixtures.test.mjs` (two tests, lines 27 and 39), plus the record `build/jobs/T51/action-holds.md` (section "Fix round 10, START B7"). Pushed as 8797b3fdad on job/T51/action-holds.
+
+What it publishes: over docket's published world `docketEntryRead()` (its real legal mark on an entry of project P, which alice manages), `answer` is the door's `op=holdsdue` answer before a hold, listing the mark as `{arrived: {docket_entry, case}}`; `direct` is the module's `holdsDue` read at the same moment; `placed` is the same world after `actionHold({project: P, from: {docket_entry}, hold: "in_place"})`, items empty. No product change.
+
+Failing-first: expected case id set wrong, red (1 fail); restored, green.
+
+Suites and checks: action-holds suite 54 pass, 0 fail (exited by itself). fixtures --list 0 failures. format 0. words (action-holds) 0. impact: 0 of 178 modules. run.mjs: no finding in this module's files; words total 15, unchanged from B5. Ownership: 0 failures. Markers added: none.
+
+Not mine, for BOB: screens-publish `t51.test.mjs:76` hand-builds the holdsdue answer (op-table finding); it is the consumer to take `holdsDueDocketAnswer()` in its own job. store-assembly `wiring.mjs:78` and `wizards.mjs:51` words findings, present since B5.
+
+Size (session_01T1F4v1RYnwRpGQBM5cYrRi): test runs 3, module lines 0.
