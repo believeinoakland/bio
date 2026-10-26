@@ -61,7 +61,7 @@
 - Every reader of the profiles' zone re-pointed to `jurisdictions.governingZone` (R98) with `team_time_zone`; action-plans' red test at the walker's case. A plan's date checks and events' dates read "no time zone" until then (0.87.0's notes say so).
 
 ## A served screen never references module scope (K5327; P19 (1): after the release, by Bob's order K5311)
-- interface-shell's `readAll`/`readsOf` catch shows a failed `reads` (never a silent "Still loading"); a check or shell test evaluates every module's served `SCREENS` source for free module-scope names; screens-publish's case editor passes `typing: edited` to its three `cs.checks` (re-walk 11 D, R81 after R135).
+- interface-shell's `readAll`/`readsOf` catch shows a failed `reads` (never a silent "Still loading"); a check or shell test evaluates every module's served `SCREENS` source for free module-scope names; re-walk 11 E's minors (K5328: N1's `screen.request.office.undated` not drawn; Matter's raw `ENT-` beside an office; the undetermined refusal's doubled reason); screens-publish's case editor passes `typing: edited` to its three `cs.checks` (re-walk 11 D, R81 after R135).
 
 ## Tests assert the word key, never the English: first after the alpha's deployment (Bob, K5313; P19 (1): after the release, by Bob's order)
 - The sweep (K5313): every finding and refusal carries its code, word key and values; every test and saved expected output asserts those, never a sentence or a fragment; the words check refuses sentence fragments in tests; one mechanical pass (§5.10), a module needing judgment its own job.
