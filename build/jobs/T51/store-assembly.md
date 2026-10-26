@@ -274,3 +274,7 @@ Size (session_01TZ1hRYK6oq2r9ft3RFiNHd): test runs 8, module lines 3750
 **Tests.** Module suite without `--test-force-exit`, exit by itself in 226 s: tests 428, pass 426, fail 1 (the transcribe-answer run, by the cause above), todo 1 (R98, `owner-ops.mjs`).
 **Checks.** `checks/run.mjs`: format, architecture, coverage and ownership clean for this module (ownership 0); words 0 for store-assembly; fixtures `--list`: 13 `orphan-run` (12 as before: the users' markers still read `plane`, test-support's `job-registrar`; plus the new `extraction transcribe-answer`), none of another kind.
 **Markers added:** none (`fixtures-run` line `t42.test.mjs:266`).
+
+## J17 · REPORT
+
+REPORT (B19 (2)). The real answer of store-assembly's transcribe (transcribe.mjs:155 and its NO_PAGE_RENDERED branch), for a posted answer agent-worker gave ok: {...agent-worker's answer, asked: [pages wanted], sent: [pages rendered and sent], owed: [pages beyond the cap owed, [] if none], unread: [{page, reason}] only when a page was refused}. Extraction's t48.test.mjs:29 value {ok, engine, version, pages} lacks asked, sent, owed (and unread). Its marker there still reads 'plane transcribe-answer'; it must read 'store-assembly transcribe-answer'. The run stands at t42.test.mjs:266 and is red for this cause only: BOB starts extraction's re-point.
