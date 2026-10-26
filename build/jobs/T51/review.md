@@ -1,6 +1,6 @@
 # review (T51)
 
-**Status** · session_01NYhxjj1BEgs71XesoJ5bcq · depth 2 · COMPLETE · handled B23
+**Status** · session_019StUUiEtYSN1JC2beNrBi8 · depth 2 · COMPLETE · handled B24
 
 ## Completion record (fix round 4, B13 START, K4429; REVIEW #22)
 
@@ -486,3 +486,32 @@ COMPLETE for CHANGE B23 (K5209) · review. Branch job/T51/review @ 2ed2770a21, p
 **Deferred:** nothing.
 
 Size (session_01NYhxjj1BEgs71XesoJ5bcq): test runs 12, module lines 4932
+
+## J20 · COMPLETE
+
+COMPLETE for the fix round 10 START (B24, K5282; REVIEW #30). Branch job/T51/review, `tranche/T51` merged at the start (up to date at 3fdb3eb7c4), commit 25a886d1ec pushed.
+
+**Entries applied: D-B1 (the team's own zone)**
+- `bio-plane/src/review/index.mjs` `#zone()` (around :369-400): the team's zone is now read first, by its path, `factStatus({path: TEAM_ZONE_PATH})`'s `governs.value` (local-facts R21), with or without a profile installed. The early return that answered null whenever no profile was active is gone. The profile fallback (the profile's governing zone, the agreed zone, and the combined view) is unchanged, so two profiles of different zones still govern none. Never throws: each source is in its own try. Imports `TEAM_ZONE_PATH` from `../local-facts/index.mjs` (line 77). R35's "never UTC in its place" holds: a null answer is still null.
+- Test, red then green: `bio-plane/test/m/review/zone-team.test.mjs` (new), through local-facts' real code over its own fixture (`../local-facts/fixture.mjs`), with the team zone stated by its real `factConfirm` correct.
+  - RED before the fix: "a team with no place profile that stated its zone answers that zone at the top level and in each grant part": `actual [true, null, []]`, `expected [true, 'America/Los_Angeles', []]`. Likewise "...governs it over the copy's zone at the recipient's door too, with an until": `actual [END, null]`, `expected [END, 'America/Chicago']`.
+  - GREEN after the fix: all three tests in that file (the two above, and the control "nothing stated and no profile installed answers a null zone, never UTC, at the top level and in each grant part").
+- `bio-plane/test/m/review/fixture.mjs`: when the world builds its own local-facts (no `localFacts` passed), it migrates local-facts up front (`localFactsOf(host, {record, membership}).migrate()`), as the plane does before any read. Without this, the first zone read created `local_fact_acts` during a read, which broke three existing "read writes nothing" checks (`batch.test.mjs` R10/R11, R13, R20). With the migration they pass unchanged. No existing assertion was weakened.
+
+**Requirement ids met:** R35 (the copy's zone, now reading the team's zone through local-facts R21). Proposed R35 amendment for BOB to write into `build/requirements/review.md`: "...the time zone that governs on this instance: local-facts' team zone (its R21, `@team/time_zone`, governing with or without a profile installed), else local-facts' governing value for the active profiles' `time_zone` (its R2), else the profiles' own (`jurisdictions` R41), else null..." Test: a team with no profile that stated `America/Los_Angeles` answers that zone at the top level, in the grant part and at the recipient's door; control: nothing stated and no profile answers null.
+
+**Deferred:** none.
+
+**Found in other modules / generated artifacts made stale (reported, not regenerated):**
+- `bio-plane/dist/bio-plane.bundled.mjs` and `release/bio-plane.bundled.mjs` embed `review/index.mjs`, so they are stale. Per the manifest, BOB regenerates them at layer close; I did not rebuild them.
+- Nothing else found in other modules.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/review/zone-team.test.mjs bio-plane/test/m/review/zone-concluded.test.mjs`: tests 10, pass 10, fail 0.
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/review/` (whole module, run to its own exit, no force-exit): tests 109, pass 109, fail 0 (before the fixture migration: 109 tests, 3 fail, the snapshot cause above).
+- `node /home/user/civicos-process/checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage 7083 of 7083 live ids named, 0 failures; channels 0 failures; words 0 failures. fixtures: 89 failures, all in other modules (acquisition, capture, control-plane, store-assembly, screens-intake, test-support, and others); none in `review`. No failure names `review`.
+- `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review $(git merge-base origin/tranche/T51 HEAD) HEAD`: 1 file changed by review in that range (the diff since 3fdb3eb7c4 is the commit with the three files), 0 failures.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178.
+- Consumers of review (`notice-producers`, `queue`, `op-declarations`, `store-door`, `control-plane`, `plane`), run file by file (the combined run's file-level noise was run-level, not per file): every file passes except `control-plane/t51-round9-seam.test.mjs`, one test: "R9 seam §5 (K4833, G127c; R120 R123): the same file pressed by a second member is refused for the WHOLE only". Its own title says "red until provenance 21 merges"; the assertion is about another module's fetch_pending state (`LARGE_DECLARED`), not review. Not caused by this change.
+
+Size (session_019StUUiEtYSN1JC2beNrBi8): test runs 11, module lines 1727
