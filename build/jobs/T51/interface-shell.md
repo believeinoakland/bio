@@ -667,3 +667,15 @@ QUESTION: interface-shell's tests import, and frame-answers.mjs imports, four mo
 (2) Another route you name.
 
 I will not commit or push further until you answer. Screens modules are being run against the new frame answers now; their reliance on removed defaults will follow in a REPORT.
+
+## J38 · REPORT
+
+K5230 (B55) and the CHANGE B54 are both in (merge fb0f6cd668 on my branch; pushed at 087708eaa4).
+
+Interface-shell suite: 377 tests, 377 pass. Checks: format, architecture, coverage (127/127), fixtures (0 failures), ownership 0.
+
+K5230: the seam's late forwarded read is now waited for by `settle()` ONLY when the forwarding answer is counted. I tried counting every plane-function answer in harness.mjs `fetch` (`counted(a)`): settle then hangs on any plane function that never resolves (the "never" answers in several tests), so I reverted it. The harness keeps `counted` exported. The new test `k5230.test.mjs` (K5230) wraps its forwarded answer in `counted`: red without the wrap (verified), green with it.
+
+Needed outside my paths: `screens-inquiry`'s seam helper `forwarded` (r10-question-seam.test.mjs:40, and the other four seam files) must wrap each forwarding function in `counted` from interface-shell's harness, to get the wait BOB's CHANGE describes. That is screens-inquiry's job; I have not edited it. The counting only works when the wrap is there.
+
+Screens REPORT (which screens modules relied on the removed frame defaults) follows when the per-module run finishes; I have the tranche-tip baseline running alongside it.
