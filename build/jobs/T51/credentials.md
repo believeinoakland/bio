@@ -545,3 +545,27 @@ Re-run after the merge:
 - `checks/run.mjs /home/user/bio`: words over the product 0 failures, consistent with B23's line.
 
 Size (session_01BSwm7HQZoqvNtYqxRTJFff): test runs 4, module lines 2741
+
+## J32 · COMPLETE
+
+START B24 (R83, K5303; DEC-439 to DEC-441; A-03) applied: `signerKnown({keyB64, viewer})`, `op=signerknown`. Red first (`w.c.signerKnown is not a function`, `signerknown is not a function` on the ops map), then green.
+
+What changed:
+- `bio-plane/src/credentials/schema.mjs`: `signers` gains `known_by` and `known_at` (nullable, in the DDL and in `CREDENTIALS_ADDITIVE_COLUMNS`, never back-filled).
+- `bio-plane/src/credentials/index.mjs`: `signerKnown` (after `signerRegisterOwn`); `signerList` answers `known_by` and `known_at` (null until an administrator has said it); `signerknown` in the ops map (key from the body only, the administrator from the door's `viewer` stamp, else `by`); `signerknown` in `DECLARED_OPS` (classes admin, member; machineClasses []; mutating; weight `reversible`; stamps `by`, `viewer`; needs `null`; accepts and requires `keyB64`). `op-declarations` refuses a mutating declared op with no `needs` (`NEEDS_MISSING`), so `needs: null` is stated.
+- K231, one code one site: R9's `MACHINE_CANNOT_REGISTER_KEY` region moved into one private `#machineCannotRegister(by, act)`, used by `signerRegisterOwn` (its detail unchanged) and by `signerKnown` (its own detail). Its row's `where` now names `#machineCannotRegister`.
+- `bio-plane/src/credentials/checks.mjs`: row `SIGNER_NOT_SELF_ACTIVE`, C-96.55 (the next free C-96 number), awaiting promotion's stamp; its translation is a `localize` row of this module (`credentials.checks.only_a_key_a_member_registered`).
+
+Refusal order, each writing nothing: no member behind the caller (machine credential, operator token, no stamp) `MACHINE_CANNOT_REGISTER_KEY`; not an administrator (`membership`'s `notAnAdmin`, the founder included); key of no shape `BAD_KEY` (R6's one site); key not held `NO_SUCH_KEY` (the absent-key answer R8's neighbour `signerSet` gives); key not self-registered or not active `SIGNER_NOT_SELF_ACTIVE`. A key already known answers `{ok: true, already: true, known_by, known_at}` of the first knower, writing nothing. My reading of "a key not held `BAD_KEY` or as R8 answers an absent key": BAD_KEY for a key of no shape, `NO_SUCH_KEY` for a well-shaped key no one holds. No QUESTION posted; say if you meant otherwise.
+
+Tests (all in `bio-plane/test/m/credentials/`): new `r83-signer-known.test.mjs` (7 tests: the administrator's call records and R8 reads it; the founder and `member:` viewer forms; the second call and its writes-nothing snapshot; machine and non-administrator refusals; BAD_KEY, NO_SUCH_KEY and SIGNER_NOT_SELF_ACTIVE controls for an administrator-registered key, a revoked key and a rebound key; the key still attests and is still revocable; the ops-map arm, a stamp never read from the body); `declared-ops.test.mjs` gains `signerknown` (R82); three existing assertions updated for the new fields and op: `keys.test.mjs` (the row's key set), `rows-ops.test.mjs` (`#machineCannotRegister` and the new row), `t48.test.mjs` (own ops 29, total 53).
+
+Runs: `bio-plane/test/m/credentials/*.test.mjs` tests 207, pass 207, fail 0 (run without `--test-force-exit`; it exits by itself). Checks over the product (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; words 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); coverage for credentials 59 of 59 ids named, 0 failures; `checks/fixtures.mjs credentials --list` 0 failures; no finding names this module. Ownership: see the line below.
+
+Users of what changed (`impact.mjs` names 113 of 178 modules through the shared tables), run: `op-grades` 162/162, `queue-producers` 162/162, `network-notices` 78/78, `screens-settings` 273/273. Red, all consequences of the new declared op in modules I do not own, REPORTed:
+1. `op-declarations` `t35.test.mjs:210-211` ("R30, R6 … negative control") lists credentials' map ops that have no spec, minus a hand list (`aicredentiallook`, `session`, `securitycount`); `signerknown` is now in the map and in the declared rows, not in that test's hand tables, so it reads `['signerknown','signoutall']` for `['signoutall']`. The hand list at that line takes `signerknown`, or the test reads the registered declaration.
+2. `op-declarations` `t36.test.mjs:318` (R34, affordances R48): "member ops with no text and no ground: signerknown". `affordances` R71 (its job, K5303) carries the op's `act.signerknown.does` text.
+3. Inherited, not mine: `store-assembly` `declarations.test.mjs` R83 (red by name until STORE-ASSEMBLY #4, B20).
+Also for BOB: `op-grades`' registry and `affordances`' act help do not yet know `signerknown` (its description is in `DECLARED_OPS`); the queue (`queue` R96) and `queue-producers` (R55) read `signerList`'s `known_by`.
+
+Deferred: nothing.

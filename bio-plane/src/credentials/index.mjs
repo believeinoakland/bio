@@ -2251,7 +2251,7 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["keyB64","comment"], requires: ["keyB64"] } },
   signerrevokeown: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("credentials.declared.signerrevokeown", "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle"),
     fields: { accepts: ["keyB64"], requires: ["keyB64"] } },
-  signerknown: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("credentials.declared.signerknown", "signer governance: an administrator says they know about a member's self-registered signing key, stamped `by` from their session; it records who and when and changes nothing else; the subject is a key, not a bundle"),
+  signerknown: { classes: ["admin","member"], machineClasses: [], mutating: true, stamps: ["by","viewer"], needs: null, weight: "reversible", description: localize("credentials.declared.signerknown", "signer governance: an administrator says they know about a member's self-registered signing key, stamped `by` from their session; it records who and when and changes nothing else; the subject is a key, not a bundle"),
     fields: { accepts: ["keyB64"], requires: ["keyB64"] } },
   signerset: { classes: ["admin","member","probe"], machineClasses: ["admin","probe"], mutating: true, weight: "credential", description: localize("credentials.declared.signerset", "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)"),
     fields: { accepts: ["keyB64","status"], requires: ["keyB64","status"] } },
