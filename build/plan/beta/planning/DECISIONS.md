@@ -47,3 +47,10 @@
 - K5517 · 2026-10-27 · on QUESTIONS.html L3, option A: "as recommended" (a disputed fiscal year still groups, shown disputed) · `build/rulings.md`
 - K5518 · 2026-10-27 · on QUESTIONS.html L4, option B: "as recommended" (a source's existence is confidential too) · `build/rulings.md`
 - K5519 · 2026-10-27 · on QUESTIONS.html L5, option A: "as recommended" (the sender's file name shown to all, marked as their words) · `build/rulings.md`
+- K5520 · 2026-10-27 · on QUESTIONS.html L6, option A: "as recommended" (JPEG and PNG safe pictures first) · `build/rulings.md`
+- K5521 · 2026-10-27 · on QUESTIONS.html L7, option A: "as recommended" (camera serial and owner name kept, shown beside the picture) · `build/rulings.md`
+- K5522 · 2026-10-27 · on QUESTIONS.html L8, option A: "as recommended" (GPS as text, no map link) · `build/rulings.md`
+- K5523 · 2026-10-27 · on QUESTIONS.html L9: "B" (a photo's time and place citable as "the file says") · `build/rulings.md`
+- K5524 · 2026-10-27 · on QUESTIONS.html L10, option A: "as recommended" (a checked typing may equal a checked machine reading; said in the explanation) · `build/rulings.md`
+- K5525 · 2026-10-27 · on QUESTIONS.html L11, option A: "as recommended" (the member's credit choice wins) · `build/rulings.md`
+- K5526 · 2026-10-27 · on QUESTIONS.html L12, option A: "as recommended" (the beta is a release before 1.0) · `build/rulings.md`
