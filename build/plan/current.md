@@ -1,7 +1,999 @@
-**Round** · none
+**Round** · R1 · layer 1 OPEN · layer 2 OPEN · layer 3 OPEN · layer 4 OPEN · layer 5 OPEN · layer 6 OPEN · layer 7 OPEN · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #326 · session_018BhcecwedTZuFi4aJevK1N · depth 1
 **Jobs** · none
 **Owed** · none
 
 T53 is the beta's build. By Bob's direction (K5417) nothing is built until the beta is designed whole and integrated into one comprehensive build plan: the design lanes (`build/plan/beta/LANES.md`) design, the PLANNING lane turns their designs into drafted requirement lines and this plan, BOB reviews and writes them, and only then does round R1 open. The entries T52 left are in `build/plan/carried-T52-R1.md`; the test sweep (option A, K5258) is the TESTS-SWEEP lane's, merged before R1.
+
+# Plan T53 · round R1, the beta's build
+
+**Status** · written by BOB #326 from PLANNING L57's READY draft (K5569, K5570) and its detail files, with K5571-K5576. One round (K5567: no R3); each module's detail in `build/plan/T53-R1/<module>.md`: its rows of every input, verbatim. Entries here are cause ids and a short clause; their pointers (requirement ids, lane files) are in the rows file. Modules and layers follow `modules.json`.
+
+**Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
+
+**Reading an entry.** As T52-R1 (`archive/T52-R1.md`): `first: settle X`, `[waits: X]` (an act or measurement), `[owed: X]` (BOB's at writing, or a point settled at START), `after X` (a same-layer dependency arrives as a CHANGE, K5434 (2)); `T53-n` new, `C T52-n` carried (text in the rows file, from `carried-T52-R1.md`; T52-103 done, K5406). A job reads its module's rows file whole at START, and any lane draft an entry names whole, except one over 30 KB naming three or more modules: its head plus the module's sections. Layer 11's screen jobs also draw carried DEC-445, DEC-446, DEC-452 and DEC-453 rows (in their rows files). A DEC row is carried by id. K5565 English entries: the rule is in each rows file.
+
+**Before R1 (BOB's acts).** (1) TESTS-SWEEP merged (K5572: fixtures 89 to 3; the 3 left are entries below; words baseline recorded, K5565 (2)). (2), (7), (9) architecture DONE (K5573: `bob/T53-req-arch` merged; modules.json, layers.md, MODULE_ORDER: register-readers, registers, mail-door, screens-ai, screens-document, ai-catalogue, ai-gate, ai-issuer, load-check and the rest). (3) Requirement lines from the READY drafts, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures to layer 11's START. (5) Design rows each entry names folded from `main` (K945). (6) CAPABILITIES' acts: M1 the `email()` probe on `20b5…7f72` only; M-R9 a member's own free CourtListener token by `request_credential`, never printed; record-core's two read-only checks on biosmoke8; N1265 rehearsal shapes on `CS_TEST_CF_ACCOUNT_ID` alone (K4942). (8) DEC-473 to DEC-478 merged; done. (10) U512-U518 (DEC-479 to DEC-485) merge with layer 3's first job, file-safety before doorbell. After K5576: BOB moves agent-runner after ai-gate when agent-worker's first entry merges.
+
+## Layer 1
+
+**setup-words**
+- T53-1 · N1265, DEC-416, DEC-430 · CAPABILITIES rows
+- T53-2 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/setup-words.md`
+**record-grammar**
+- T53-3 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/record-grammar.md`
+**jurisdictions**
+- T53-4 · N1257 (DEC-404) · four defects first
+- T53-5 · N1257 (K5452, K5458) · layer model, forest check, `governs`
+- T53-6 · N1257 · shipped layers, footprint check, test forest
+- T53-7 · N1257 (K5451) · team layers, one placeless team-rules layer
+- T53-8 · N1256 (DEC-401 B) · federal offices snapshot `[waits: F4, makers' key]`
+- T53-9 · K5497 · US places only; others named by the team
+- T53-10 · A2 (DEC-458) · `fiscal_year` in the team layer
+- T53-11 · K5527 (4), (5) · N858's text record in the profile
+- T53-12 · N1257, K5458, K5462 · CAPABILITIES rows
+- T53-13 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-14 · K5565 · English in tests: its entry
+- T53-502 · K5577 (2) · the federal layer's `street_types` (USPS suffixes) as data for register-readers
+- rows: `build/plan/T53-R1/jurisdictions.md`
+**civil-time**
+- T53-15 · A2 · `fiscalPeriod` over a stated entry
+- T53-16 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/civil-time.md`
+**calc-grammar**
+- T53-17 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/calc-grammar.md`
+**connection-grammar**
+- T53-18 · N1260 (DEC-409) · `chainStrength`, `foldParallel`, `CHAIN_LIMITS`
+- T53-19 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/connection-grammar.md`
+**test-support**
+- T53-20 · N824 · CAPABILITIES rows
+- T53-21 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/test-support.md`
+**runtime-limits**
+- T53-22 · N1267 (K4628, K5427) · per-kind bounds as one table; PL20, PL21, PL45
+- T53-23 · K4354, K5438 · `TIME_BUDGETS`, `budgetOf`
+- T53-24 · N1273 (K5440) · `STORE_JURISDICTIONS`, room and R2 jurisdiction
+- T53-25 · K4746, K5569 · three levels as rows of the bounds table
+- T53-26 · N824, K5527, N1259 · CAPABILITIES rows
+- T53-27 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/runtime-limits.md`
+**signatures**
+- T53-28 · K5457, K5471 · three more namespaces; run-key check
+- T53-29 · K5565 · English in tests: its entry
+- T53-504 · K5577 (5) · `CATALOGUE_KEYS` with test keys; the ceremony's public lines arrive as a CHANGE
+- rows: `build/plan/T53-R1/signatures.md`
+**bundler**
+- T53-30 · K5457 · agent Worker `HEALTH` object; `deleted_classes` `RemoteSession`
+- T53-31 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/bundler.md`
+**court-citations**
+- T53-32 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/court-citations.md`
+**id-spaces**
+- T53-33 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/id-spaces.md`
+**subresources**
+- T53-34 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/subresources.md`
+**structured-text-reader**
+- T53-35 · N1266 (K5435) · JSON, XML, ICS and more in windows to 100 MB
+- rows: `build/plan/T53-R1/structured-text-reader.md`
+**mail-reader**
+- T53-36 · N1266 (K5435, K5437) · EML, MSG, MBOX; attachments as members
+- T53-37 · CAPABILITIES · CAPABILITIES rows
+- rows: `build/plan/T53-R1/mail-reader.md`
+**csv-reader**
+- T53-505 · K5530 F4, K5571 · the record walk promoted to a service (R28) for register-readers
+- rows: `build/plan/T53-R1/csv-reader.md`
+**office-readers**
+- T53-39 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/office-readers.md`
+**odf-reader**
+- T53-40 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/odf-reader.md`
+**pdf-reader**
+- T53-41 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/pdf-reader.md`
+**format-registry**
+- T53-42 · N1266 (K5435-K5437) · roster, detection, refused set
+- T53-43 · DEC-467 · KIND-TABLE: plain names and limits (the audio and video figure decided, K5571 (3))
+- T53-44 · DEC-473 · {kind} and {reason} read by key; A4-R3 dropped kinds
+- rows: `build/plan/T53-R1/format-registry.md`
+**text-chain**
+- T53-45 · A8 (DEC-464) · a typed passage's two grades
+- T53-46 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/text-chain.md`
+**docprofile**
+- T53-47 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/docprofile.md`
+**doctypes**
+- T53-48 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/doctypes.md`
+**legistar-reader**
+- T53-49 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/legistar-reader.md`
+**roster-reader**
+- T53-50 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/roster-reader.md`
+**court-doctypes**
+- T53-51 · N1259, K4403 · CAPABILITIES rows
+- T53-52 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/court-doctypes.md`
+**register-readers**
+- T53-53 · N1259, K4403, K1484 · CAPABILITIES rows
+- T53-503 · K5577 (2) · `contactShape(text, streetTypes)`: street types passed from the active layers
+- rows: `build/plan/T53-R1/register-readers.md`
+**budget-doctypes**
+- T53-54 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/budget-doctypes.md`
+**image-codecs**
+- T53-55 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/image-codecs.md`
+**pdf-pixels**
+- T53-56 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/pdf-pixels.md`
+**image-cover**
+- T53-57 · A4 (DEC-460) · `redrawPicture`, `photoFactsOf`
+- T53-58 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/image-cover.md`
+**doc-clean**
+- T53-59 · N824, K2334, K1485 · CAPABILITIES rows
+- T53-60 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/doc-clean.md`
+**pdf-worker**
+- T53-61 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/pdf-worker.md`
+**ocr-worker**
+- T53-62 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/ocr-worker.md`
+**sheet-worker**
+- T53-63 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/sheet-worker.md`
+**file-scanner**
+- C T52-100
+- T53-64 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/file-scanner.md`
+**reader-container**
+- T53-65 · N1266, N1267 · conversion readers, archives as streams
+- rows: `build/plan/T53-R1/reader-container.md`
+## Layer 2
+
+**member-roster**
+- T53-66 · K5562, K5563 · founder's removal and endorsement, vote removals shown
+- T53-67 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/member-roster.md`
+**record-core**
+- T53-68 · N1271 (K5570) · Institution stage, upgrade from Team (PL24) `[waits: study S1-S4, Bob's decision]`
+- T53-69 · N1257, K5458, K5462 · CAPABILITIES rows
+- T53-70 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/record-core.md`
+**membership**
+- T53-71 · K5501 · `onProjectLeft` in `projectRemove`
+- T53-72 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/membership.md`
+**project-roster**
+- T53-73 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/project-roster.md`
+**ai-catalogue**
+- T53-74 · N1220 (K5457) · the signed closed list of AIs
+- T53-75 · K5457 · seed payload `[waits: key ceremony, Bob's pass marks]`
+- T53-76 · K5482 · untested-entry payload, combined record
+- rows: `build/plan/T53-R1/ai-catalogue.md`
+**ai-accounts**
+- T53-77 · N1220 · account model, plan scope, checks P1-P7
+- T53-78 · K5457 · twelve ops retired, nineteen new, users re-pointed
+- T53-79 · DEC-465, K5471 · `aikeyseal`, list order, payer flag
+- T53-80 · K5457 · migration of apikey and signin accounts
+- T53-81 · K5478, DEC-471 · `aicreditsclear`, `ai-credits-stop`
+- T53-82 · DEC-476 · terms change a notice, `ai.notice.termschange`
+- T53-83 · K5501 · removed member loses shared placements
+- T53-84 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/ai-accounts.md`
+**credentials**
+- T53-85 · K5457 · R27, R32, R48, R63, R66, R73 amended; R72 retired
+- T53-86 · N1259, K4403, K1449 · CAPABILITIES rows
+- T53-87 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/credentials.md`
+**promotion**
+- T53-88 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-89 · K5006 · reds: first settle, then fix
+- T53-90 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/promotion.md`
+## Layer 3
+
+**provenance**
+- T53-91 · N824, K2425 · CAPABILITIES rows
+- T53-92 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-93 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/provenance.md`
+**attestation**
+- T53-94 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/attestation.md`
+**provenance-routes**
+- T53-95 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/provenance-routes.md`
+**capture-sources**
+- T53-96 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/capture-sources.md`
+**acquisition**
+- T53-97 · K5513 (C22) · daemon fetch only for a followed case
+- T53-98 · N1266, N1267 · held-and-named filed, refused not filed
+- T53-99 · K5574 · same recognition if it fetches directly
+- T53-100 · N1259, K4403, K1485 · CAPABILITIES rows
+- T53-101 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/acquisition.md`
+**capture**
+- T53-102 · K5513 (C22) · daemon fetch only for a followed case
+- T53-103 · N1266, N1267 · held-and-named filed, refused not filed
+- T53-104 · DEC-455 · `previewmore` (name BOB's)
+- T53-105 · K5574, K5575 · challenge or CAPTCHA recognised, refused, counted per host; her file matches the waiting request
+- T53-106 · N824, K5506, K5527 · CAPABILITIES rows
+- T53-107 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-108 · P9 (P-22) · Add door under three uploaders: acceptance within the Add budget `first: settle where the wait is`
+- T53-109 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/capture.md`
+**file-safety**
+- T53-110 · A4 · safe picture of a photograph, `file_says`
+- T53-111 · DEC-454 · partial-scan reason in words
+- T53-112 · N1266 · held-and-named file safe-graded
+- T53-113 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-114 · DEC-479 · file-safety before doorbell in layer 3
+- T53-115 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/file-safety.md`
+**doorbell**
+- T53-116 · A3 · pulled knock carries file name
+- T53-117 · DEC-479 · `inboxview` `[owed: requirement line, BOB writes]`
+- T53-118 · N824, DEC-108 · CAPABILITIES rows
+- T53-119 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/doorbell.md`
+**mail-door**
+- T53-120 · N824, K5504, K5506 · CAPABILITIES rows
+- rows: `build/plan/T53-R1/mail-door.md`
+**sources**
+- T53-121 · A3 (DEC-459) · `sourceLinksFor` `[owed: BOB writes from sources]`
+- T53-122 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/sources.md`
+## Layer 4
+
+**calibration**
+- T53-123 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/calibration.md`
+**reading-pipeline**
+- T53-124 · N1266, N1267 · 100 MB text bound, held-unread re-run `[owed: BOB writes the 100 MB line, RF10's]`
+- T53-125 · N1272 · CAPABILITIES rows
+- T53-126 · DEC-479 (51) · count of words below the reader's own clarity
+- T53-127 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/reading-pipeline.md`
+**extraction**
+- T53-128 · N1272 (K5445) · interpretation, own proposals (no AI)
+- T53-129 · N1266, N1267 · 100 MB text bound, held-unread re-run `[owed: BOB writes the 100 MB line, RF10's]`
+- T53-130 · N1272, K4636, K5445 · CAPABILITIES rows
+- T53-131 · DEC-479 (61) · `readheld` weighs Reversible, no reason
+- T53-132 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/extraction.md`
+**content**
+- T53-133 · A8 · typing graded as typist's word
+- T53-134 · DEC-454 · `content.extent` part key in words
+- T53-135 · N1259, K4403 · CAPABILITIES rows
+- T53-136 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/content.md`
+## Layer 5
+
+**entities**
+- T53-137 · N1257, N1256 · `federalOfficesFind`
+- T53-138 · N1257, K5458 · CAPABILITIES rows
+- T53-139 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-140 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/entities.md`
+**events**
+- T53-141 · N1259 · CAPABILITIES rows
+- T53-142 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-143 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/events.md`
+**local-facts**
+- T53-144 · N1257 (K5451) · a team writes its own layers
+- T53-145 · A2 (K5468) · member states a government's year
+- T53-146 · N1257, K5458 · CAPABILITIES rows
+- rows: `build/plan/T53-R1/local-facts.md`
+**connections**
+- T53-147 · N1260 (K1469) · `named_in` hop end and hub `[waits: M-F1]`
+- T53-148 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/connections.md`
+**observation-log**
+- T53-149 · N1219 · run log carries reads and disagreements
+- T53-150 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/observation-log.md`
+**law-relations**
+- T53-151 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/law-relations.md`
+**standards**
+- T53-152 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/standards.md`
+**progressions**
+- T53-153 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/progressions.md`
+**money**
+- T53-154 · N1260 (DEC-409) · five money kinds, `moneyByParty`
+- T53-155 · A2 · fiscal keys by the government's year
+- T53-156 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-157 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/money.md`
+**money-checks**
+- T53-158 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/money-checks.md`
+**duties**
+- T53-159 · N1257, K5458 · CAPABILITIES rows
+- T53-160 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/duties.md`
+**people**
+- T53-161 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/people.md`
+**explore**
+- T53-162 · N1260 (DEC-409) · every chain, shorter paths, time stop
+- T53-163 · N1260 (DEC-447) · `followfrom`
+- T53-164 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-165 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/explore.md`
+**bias**
+- T53-166 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/bias.md`
+**query-language**
+- T53-167 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/query-language.md`
+**retrieval-browse**
+- T53-168 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/retrieval-browse.md`
+**retrieval**
+- T53-169 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/retrieval.md`
+**calculations**
+- T53-170 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-171 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/calculations.md`
+**workbooks**
+- T53-172 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/workbooks.md`
+**registers**
+- T53-173 · N1259, K4403, K4405 · CAPABILITIES rows
+- rows: `build/plan/T53-R1/registers.md`
+## Layer 6
+
+**inquiry-grammar**
+- T53-174 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/inquiry-grammar.md`
+**leg-earning**
+- T53-175 · A8 · typed passage's ceiling at its grain
+- T53-176 · A1 · "no subject named" as a `why`
+- T53-177 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/leg-earning.md`
+**inquiry**
+- T53-178 · A1 (DEC-457) · `setSubject`, `subjectHistory` `[UX need]`
+- T53-179 · DEC-481 · each subject change answered with its record
+- T53-180 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/inquiry.md`
+**hypotheses**
+- T53-181 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/hypotheses.md`
+**steps**
+- T53-182 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/steps.md`
+**citation**
+- T53-183 · A8 · typed passage citable; A4-R11 "the file says" (K5514)
+- T53-184 · N1259, K4403 · CAPABILITIES rows
+- T53-185 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/citation.md`
+**basis-version-grammar**
+- T53-186 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/basis-version-grammar.md`
+**basis-versions**
+- T53-187 · A5, A8 · ungraded and typed passages listed, labelled
+- T53-188 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/basis-versions.md`
+**strength**
+- T53-189 · A8 · leg on a typed passage at its grade
+- T53-190 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/strength.md`
+**contradiction**
+- T53-191 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/contradiction.md`
+**run-rules**
+- T53-192 · K5457 · bar per AI and part, `GATE_PART_OF`
+- T53-193 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/run-rules.md`
+**agent-harness**
+- T53-194 · K5457 · `ROLE_NEEDS`, `needOf`, `partOf`
+- rows: `build/plan/T53-R1/agent-harness.md`
+**agent-model**
+- T53-195 · K5457 · interface and Anthropic adapter `first: the interface`
+- T53-196 · K5457 · OpenAI-compatible adapter, host profiles `[waits: live checks L2, L3]`
+- T53-197 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/agent-model.md`
+**ai-use**
+- T53-198 · K5457 · neutral usage record, thresholds
+- T53-199 · K5459 · members' use shown to a payer
+- T53-200 · K5480 · `airetestset`
+- T53-201 · K5480-K5487 · re-test cap, opt-in health counts
+- T53-202 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/ai-use.md`
+**ai-runs**
+- T53-203 · K5457 · `principal_ai`, Gate 1 per part, segments, hops, ops
+- T53-204 · N1219, DEC-466 · reads passed through, `airunparts`
+- T53-205 · BOB · idem lines for `airunspawn`, `airunclose`, the ai-runs tick `[owed: BOB writes]`
+- T53-206 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/ai-runs.md`
+**run-productions**
+- T53-207 · K5571 · agent-steps R54's idem obligations get lines (6)
+- T53-208 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/run-productions.md`
+**capture-requests**
+- T53-209 · K5574, K5575 · challenge or CAPTCHA recognised, refused, counted per host; her file matches the waiting request
+- T53-210 · K5571 · agent-steps R54's idem obligations get lines (6)
+- T53-211 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/capture-requests.md`
+**reading-guides**
+- T53-212 · N1257 · guides side by side per layer
+- T53-213 · N1257, N858, K5508 · CAPABILITIES rows
+- T53-214 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/reading-guides.md`
+**skills**
+- T53-215 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/skills.md`
+**question-explorer**
+- T53-216 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/question-explorer.md`
+**answers**
+- T53-217 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/answers.md`
+**agent-steps**
+- T53-218 · K5457 · entry by need, Gate 1 per part, `idem`
+- T53-219 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/agent-steps.md`
+**agent-runner**
+- T53-220 · K5457 · Claude Code route retired `first: N1205's split`
+- T53-221 · K5457 · Gate 1 test container `[waits: offline keys]`
+- T53-222 · K5576 · R44-R60 `after ai-gate; after BOB moves agent-runner after ai-gate`
+- T53-223 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/agent-runner.md`
+**agent-worker**
+- T53-224 · K5576 · `first: remove t47.test.mjs's import of agent-runner, drop the uses edge`; merges first in the AI group
+- T53-225 · K5485 · beta offers every built part
+- T53-226 · N1205 · the split off `/signin` and REMOTE `first: agent-model's interface`
+- T53-227 · K5457 · entry by need, sealed key by `aicredential`
+- T53-228 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/agent-worker.md`
+**ai-gate**
+- T53-229 · K5457 · Gate 1 suite and verdicts `[waits: Bob's pass marks]`
+- T53-230 · K5457 · cost shown, consent, canaries
+- T53-231 · K5457 · results bundle, `partsRefused` `[waits: ai-issuer]`
+- T53-232 · K5482 · `combineResults`
+- rows: `build/plan/T53-R1/ai-gate.md`
+## Layer 7
+
+**intent**
+- T53-233 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/intent.md`
+**investigation**
+- T53-234 · N1272, K5445, K5496 · CAPABILITIES rows
+- T53-235 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/investigation.md`
+**reevaluation**
+- T53-236 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/reevaluation.md`
+## Layer 8
+
+**case-grammar**
+- T53-237 · A5, A8 · case-document `/10`, edition statements, credits
+- T53-238 · N1259, K4403 · CAPABILITIES rows
+- T53-239 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-grammar.md`
+**corpus-export**
+- T53-240 · K5441, K5443 · whole-record export by parts
+- T53-241 · N1259, K1493 · CAPABILITIES rows
+- T53-242 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/corpus-export.md`
+**case-carriage**
+- T53-243 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-carriage.md`
+**case-tensions**
+- T53-244 · K5571 · the typist's and checker's credit applied (content R64, citation R27)
+- T53-245 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-tensions.md`
+**publication**
+- T53-246 · A5, A8 · case-document `/10`, edition statements, credits
+- T53-247 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-248 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/publication.md`
+**publish-schedule**
+- T53-249 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/publish-schedule.md`
+**docket**
+- T53-250 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-251 · K5571 · publication R83 moves here
+- T53-252 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/docket.md`
+**public-read**
+- T53-253 · A5, A8 · case-document `/10`, edition statements, credits
+- C T52-23
+- T53-254 · N1259 · CAPABILITIES rows
+- T53-255 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-256 · DEC-481 · `screen.published.subjectchanged.*`
+- T53-257 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/public-read.md`
+**network-notices**
+- T53-258 · K5507, K5527 (6) · R23 prepares a submission, not the list
+- T53-259 · N1110, K5507 · CAPABILITIES rows
+- T53-260 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/network-notices.md`
+**case-catalogue**
+- T53-261 · A5, A8 · case-document `/10`, edition statements, credits
+- T53-262 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-catalogue.md`
+**ratification**
+- T53-263 · A5 · refused only when statement missing
+- C T52-24
+- T53-264 · K5006 · reds: first settle, then fix
+- T53-265 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/ratification.md`
+**case-checker**
+- T53-266 · N1259 · CAPABILITIES rows
+- T53-267 · DEC-482 · regenerate the case-checker bundle with the words (BOB)
+- T53-268 · K5006 · reds: first settle, then fix
+- T53-269 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-checker.md`
+**case-import**
+- T53-270 · A5, A8 · case-document `/10`, edition statements, credits
+- T53-271 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-272 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-import.md`
+**case-disclosures**
+- T53-273 · A5, A8 · ungraded and typed passages listed, labelled
+- C T52-25
+- T53-274 · N1259, K1483, K1493 · CAPABILITIES rows
+- T53-275 · DEC-480 · per-name mark on forwarded email names (`mailnameshow`, `mailnamewithhold`)
+- T53-276 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-disclosures.md`
+**case-account**
+- T53-277 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-account.md`
+**case-inputs**
+- C T52-26
+- T53-278 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-inputs.md`
+**case-authoring**
+- T53-279 · A5 · sign step lists ungraded passages
+- C T52-27
+- T53-280 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-281 · K4354, P15, P24 · the count of drafts Home reads
+- T53-282 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-authoring.md`
+**review**
+- T53-283 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-284 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/review.md`
+**case-check**
+- C T52-28
+- T53-285 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/case-check.md`
+## Layer 9
+
+**conformance**
+- C T52-29
+- T53-286 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/conformance.md`
+**consequences**
+- T53-287 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/consequences.md`
+**action-grammar**
+- T53-288 · CAPABILITIES · CAPABILITIES rows
+- T53-289 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/action-grammar.md`
+**action-records**
+- T53-290 · CAPABILITIES · CAPABILITIES rows
+- T53-291 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/action-records.md`
+**actions**
+- T53-292 · N1257 · R112 two laws, two clocks
+- C T52-30
+- T53-293 · N1257, K5458 · CAPABILITIES rows
+- T53-294 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-295 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/actions.md`
+**action-holds**
+- T53-296 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/action-holds.md`
+**action-clocks**
+- T53-297 · N1257 · R27 layer a list comes from
+- T53-298 · CAPABILITIES · CAPABILITIES rows
+- T53-299 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/action-clocks.md`
+**action-replies**
+- rows: `build/plan/T53-R1/action-replies.md`
+**filing-templates**
+- T53-300 · N1257 · R36 places may name layers
+- T53-301 · K5528 · `attributionLacks`, `second_approval` `[owed: BOB writes]`
+- T53-302 · K5528 · CAPABILITIES rows
+- T53-303 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/filing-templates.md`
+**filings**
+- T53-304 · K5527 (4) · R29 template `sha` equals counted review
+- C T52-31
+- T53-305 · CAPABILITIES · CAPABILITIES rows
+- T53-306 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/filings.md`
+**escalation**
+- T53-307 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/escalation.md`
+**action-plans**
+- C T52-32
+- C T52-33
+- T53-308 · K5571 · agent-steps R54's idem obligations get lines (6)
+- T53-309 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/action-plans.md`
+**plan-work**
+- T53-310 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/plan-work.md`
+## Layer 10
+
+**monitoring**
+- T53-311 · K4403 · CAPABILITIES rows
+- T53-312 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/monitoring.md`
+**following**
+- T53-313 · N1259 · watch a number, a followed docket daily
+- C T52-34
+- T53-314 · N1259, K1484, K4403 · CAPABILITIES rows
+- T53-315 · K5006 · reds: first settle, then fix
+- T53-316 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/following.md`
+**link-sweep**
+- T53-317 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/link-sweep.md`
+**scheduler**
+- T53-318 · K4403, N824 · CAPABILITIES rows
+- T53-319 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/scheduler.md`
+## Layer 11
+
+**wizard-scripts**
+- C T52-35
+- C T52-36
+- T53-320 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-321 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/wizard-scripts.md`
+**op-grades**
+- T53-322 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
+- T53-323 · N1220 · every machine result labelled with its AI
+- T53-324 · BOB · R57 AI op grades confirmed `[owed: BOB writes]`
+- C T52-37
+- C T52-38
+- T53-325 · K4168, N824, N858 · CAPABILITIES rows
+- T53-326 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-327 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/op-grades.md`
+**affordances**
+- T53-328 · N1260 (DEC-447) · "Follow from here" in this module
+- C T52-39
+- T53-329 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-330 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-331 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/affordances.md`
+**tasks**
+- C T52-40
+- T53-332 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/tasks.md`
+**machinery-producers**
+- T53-333 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/machinery-producers.md`
+**action-producers**
+- T53-334 · CAPABILITIES · CAPABILITIES rows
+- T53-335 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/action-producers.md`
+**queue-producers**
+- T53-336 · A6 (DEC-462) · one item per member for new keys
+- T53-337 · N1257 · `place-profile-arrived` for any layer
+- T53-338 · K5574, K5575 · hand-off: Queue item with the link; her file matched by address
+- T53-339 · CAPABILITIES · CAPABILITIES rows
+- T53-340 · K5571 · the same notices as reads it calls; owed lines
+- T53-341 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/queue-producers.md`
+**notice-producers**
+- T53-342 · K4403 · CAPABILITIES rows
+- T53-343 · K5571 · ai-accounts' and ai-use's notices to owners are reads it calls; owed lines (R45, R72, R75-R77, termsNoticesDue)
+- T53-344 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/notice-producers.md`
+**queue**
+- T53-345 · K5480, K5478 · `retesting-off`, `ai-credits-stop`
+- T53-346 · A6 · per-key choice of act passed through
+- T53-347 · N1259 · CAPABILITIES rows
+- T53-348 · K4354, P15, P24 · Home and Queue read kept counts, not whole lists
+- T53-349 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/queue.md`
+**translations**
+- T53-350 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/translations.md`
+**instance-setup**
+- T53-351 · DEC-466 U5, K5471 (2) · AI gateway's two permissions `[first: settle "AI Gateway - Edit" or "Read", Secrets Store scope]`
+- C T52-41
+- T53-352 · N824, K5504, N1257 · CAPABILITIES rows
+- T53-353 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/instance-setup.md`
+**op-capabilities**
+- T53-354 · K4168, N824, N858 · CAPABILITIES rows
+- rows: `build/plan/T53-R1/op-capabilities.md`
+**op-declarations**
+- T53-355 · K4599 · `screenread`, budget class per op
+- T53-356 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
+- T53-357 · N1220 · every machine result labelled with its AI
+- T53-358 · BOB · R90 AI op grades confirmed `[owed: BOB writes]`
+- C T52-42
+- T53-359 · K4168, N824, N858 · CAPABILITIES rows
+- T53-360 · K4354, P24 · `heldcaptures` out of each screen's first wave
+- T53-361 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-362 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/op-declarations.md`
+**admission**
+- T53-363 · N1264 · `admit` in the room, parity
+- C T52-43
+- T53-364 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- rows: `build/plan/T53-R1/admission.md`
+**answer-envelope**
+- T53-365 · K4168, N824, N858 · CAPABILITIES rows
+- T53-366 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/answer-envelope.md`
+**store-door**
+- T53-367 · N1264 · one RPC admits, stamps, runs
+- C T52-44
+- C T52-45
+- T53-368 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-369 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/store-door.md`
+**signin-door**
+- T53-370 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-371 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/signin-door.md`
+**store-assembly**
+- C T52-46
+- C T52-47
+- T53-372 · N1259, N824 · CAPABILITIES rows
+- T53-373 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-374 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/store-assembly.md`
+**store-request**
+- C T52-48
+- T53-375 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-376 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/store-request.md`
+**interface-shell**
+- T53-377 · N1220 · AI ops declared with grade and class `[owed: "AI act" class, P1]`
+- T53-378 · N1220 · every machine result labelled with its AI
+- T53-379 · K4599 · one `screenread` per screen
+- T53-380 · A7 · one document-picker, two scopes
+- T53-381 · N1260 (DEC-447) · "Follow from here" in this module
+- C T52-49
+- C T52-50
+- C T52-51
+- C T52-52
+- C T52-53
+- T53-382 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-383 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-384 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/interface-shell.md`
+**screens-entry**
+- C T52-54
+- C T52-55
+- C T52-56
+- T53-385 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-386 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-387 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-entry.md`
+**screens-wizards**
+- C T52-57
+- T53-388 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-389 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-wizards.md`
+**screens-settings**
+- T53-390 · N1257 (K5450) · places as a tree; install asks where work focuses
+- T53-391 · K5444 (K5454) · level at install, gauge, outgrowing
+- T53-392 · N1273 · region picker, move by export `[screen need to UX-DESIGN]`
+- T53-393 · K5443 · whole-record import, the one way to move
+- T53-394 · DEC-470 · `registerfileimport` key read by `keys.mjs`
+- T53-395 · P9 (BOB #324) · `CONSENSUS_REQUIRED` clears a shown invite link · DEC-483
+- T53-396 · K5562, K5563 · Members: founder's remove, endorsement, cancel · DEC-484, DEC-485
+- T53-397 · N1220 · `connect`, `teamai`, `projectai` retired
+- C T52-58
+- T53-398 · N1257 · CAPABILITIES rows
+- T53-399 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-400 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-401 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-settings.md`
+**screens-ai**
+- T53-402 · N1220 (DEC-420) · seven AI screens `[waits: UX-DESIGN's rows, B555]`
+- T53-403 · DEC-465 · origin check, owner opt-in, `aiorderset`, `aikeyseal`
+- T53-404 · DEC-466 · labels name the AI; Setup states
+- T53-405 · K5459 · `aiusebymember`
+- T53-406 · DEC-475, DEC-476 · results, health share, re-test, wait-then-switch
+- T53-407 · BOB · a drawer for `aiuseovertime`'s bars `[owed: BOB writes]`
+- rows: `build/plan/T53-R1/screens-ai.md`
+**screens-intake**
+- T53-408 · N1269 (K5446) · largest file stated; over-limit refused, a way in
+- T53-409 · K5425 (b) · fixtures-run line 27 orphan: marker or delete
+- T53-410 · A3, DEC-454-456 · R72, R73, display rows `[waits: design's row, r9-states R65]`
+- T53-411 · K5574, K5575 · hand-off: Queue item with the link; her file matched by address
+- C T52-59
+- C T52-60
+- C T52-61
+- T53-412 · N1272, K5445, K5496 · CAPABILITIES rows
+- T53-413 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-414 · K4354, P24 · `heldcaptures` out of Add's first wave
+- T53-415 · K5006 · reds: first settle, then fix
+- T53-416 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-intake.md`
+**screens-daily**
+- T53-417 · A6 · a line and two acts per key
+- T53-418 · N1260 (DEC-447) · "Follow from here" in this module
+- C T52-62
+- C T52-63
+- C T52-64
+- C T52-65
+- C T52-104
+- T53-419 · N1260, N1272, K5495 · CAPABILITIES rows
+- T53-420 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-421 · K4354, P24 · `heldcaptures` out of Home and Queue's first wave; Home reads kept counts
+- T53-422 · K5006 · reds: first settle, then fix
+- T53-423 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-424 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-daily.md`
+**screens-inquiry**
+- T53-425 · A1 · subject at opening and its change
+- T53-426 · A7 · the pickers
+- T53-427 · N1260 · "Follow from here" outside Document
+- T53-428 · BOB · retire its `projectai` mention, follow screens-settings R9 (a CHANGE) `[owed: BOB writes]`
+- C T52-66
+- C T52-67
+- C T52-68
+- C T52-69
+- C T52-72
+- C T52-73
+- T53-429 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-430 · DEC-481 · "Who it is about" and the team's notes of each change
+- T53-431 · K5006 · reds: first settle, then fix
+- T53-432 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-433 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-inquiry.md`
+**screens-document**
+- T53-434 · A3 · source line
+- T53-435 · A8 · Cite on typed words
+- T53-436 · N1260 · "Follow from here"
+- T53-437 · DEC-454, DEC-467 · display rows; held, refused, converted
+- T53-438 · DEC-474 · chips drawn on `ceiling`
+- T53-439 · BOB · R1-R57 marked not yet met (T53), tests moved by its job `[owed: BOB writes]`
+- C T52-66
+- C T52-67
+- C T52-70
+- C T52-71
+- C T52-72
+- T53-440 · N1272, K5495, K5496 · CAPABILITIES rows
+- T53-441 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-442 · DEC-479 (51) · `screen.document.text.unsure`, dotted marks and card
+- T53-443 · K4354, P24 · `heldcaptures` out of Document's first wave
+- T53-444 · K5006 · reds: first settle, then fix
+- rows: `build/plan/T53-R1/screens-document.md`
+**screens-investigate**
+- T53-445 · N1260 (DEC-447) · "Follow from here" in this module
+- T53-446 · A7 · document pickers
+- C T52-74
+- C T52-75
+- C T52-76
+- C T52-77
+- T53-447 · N1257, N1259 · CAPABILITIES rows
+- T53-448 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-449 · K5571 · R-40's `person` half (6)
+- T53-450 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-investigate.md`
+**screens-publish**
+- T53-451 · A7 · document pickers
+- T53-452 · A5 · signing step, published statement
+- C T52-78
+- C T52-79
+- C T52-80
+- T53-453 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-454 · DEC-479, DEC-480 · Inbox "Show it safely", receipt reorder; the ceremony's "Emails in this case"
+- T53-455 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-publish.md`
+**screens-action**
+- T53-456 · N1260 (DEC-447) · "Follow from here" in this module
+- T53-457 · N1257 · `request` offers laws by `governs`
+- C T52-81
+- C T52-82
+- C T52-83
+- C T52-84
+- T53-458 · N1257, N858 · CAPABILITIES rows
+- T53-459 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-460 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/screens-action.md`
+**control-plane**
+- T53-461 · N1264, K4599 · routes `screenread`, folded admission
+- T53-462 · K5425 (b) · fixtures-run lines 23, 29 orphans: delete or name stand-in
+- C T52-85
+- C T52-86
+- C T52-87
+- C T52-88
+- T53-463 · N1259, N824 · CAPABILITIES rows
+- T53-464 · K5006 · reds: first settle, then fix
+- T53-465 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-466 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/control-plane.md`
+**plane**
+- T53-467 · N1264, K4599 · routes `screenread`, folded admission
+- C T52-89
+- C T52-90
+- C T52-91
+- T53-468 · N1259, N824 · CAPABILITIES rows
+- T53-469 · K5438 · per-week counts kept per copy: record bytes, members at once, share of screens over class (PL26)
+- T53-470 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/plane.md`
+**installer-steps**
+- T53-471 · N1257 (K5450) · places as a tree; install asks where work focuses
+- T53-472 · K5444 (K5454) · level at install, gauge, outgrowing
+- T53-473 · N1273 · region picker, move by export `[screen need to UX-DESIGN]`
+- T53-474 · K5443 · whole-record import, the one way to move
+- T53-475 · DEC-466 U5, K5471 (2) · AI gateway's two permissions `[first: settle "AI Gateway - Edit" or "Read", Secrets Store scope]`
+- C T52-92
+- T53-476 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-477 · K5571 · the refusal for runtime-limits R45 (R47)
+- T53-478 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/installer-steps.md`
+**installer**
+- T53-479 · N1257 (K5450) · places as a tree; install asks where work focuses
+- T53-480 · K5444 (K5454) · level at install, gauge, outgrowing
+- T53-481 · N1273 · region picker, move by export `[screen need to UX-DESIGN]`
+- T53-482 · K5443 · whole-record import, the one way to move
+- T53-483 · DEC-466 U5, K5471 (2) · AI gateway's two permissions `[first: settle "AI Gateway - Edit" or "Read", Secrets Store scope]`
+- T53-484 · K5471 (5) · read-only Logs scope `[first: Bob's act registering it]`
+- T53-485 · N1265 · check and gate; R2 scopes `[owed: BOB settles the count]`
+- C T52-93
+- C T52-94
+- C T52-95
+- T53-486 · N1265, K5449, DEC-416 · CAPABILITIES rows
+- T53-487 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/installer.md`
+**site**
+- C T52-96
+- T53-488 · N1110 · CAPABILITIES rows
+- T53-489 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-490 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/site.md`
+**stewards**
+- T53-491 · N1110, DEC-255, DEC-270 · CAPABILITIES rows
+- T53-492 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/stewards.md`
+**ai-issuer**
+- T53-493 · K5457 · serves catalogue, advisories, seal key `[waits: BOB's deploy to 20b5…7f72, tools; R18 retention]`
+- T53-494 · K5482, K5487 · `airesultown`, `POST /ai/health`
+- rows: `build/plan/T53-R1/ai-issuer.md`
+**journey-check**
+- T53-495 · N1260 (K4354) · act counter, 2 s assertion, Sewer Service Fund `[first: BOB's K lines for target files]`
+- T53-496 · K4354 · budget walk 1280 and 390 px
+- T53-497 · N1268 · acceptance corpus walk
+- C T52-97
+- C T52-98
+- T53-498 · N1259, K4354, DEC-407 · CAPABILITIES rows
+- T53-499 · K5457 · off the retired AI ops (FOLD-AI §2.8)
+- T53-500 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/journey-check.md`
+**load-check**
+- T53-501 · N1274 · `runProfile`, `seedCopy`, `report`
+- rows: `build/plan/T53-R1/load-check.md`
+
+## Measurements
+
+K5567: at once unless it measures R1's code; scratch copies are BOB's under K5120, never biosmoke8. **At once, alongside R1:** registers M-R3 (index storage at 73,043 / 1M / 5M rows, decides S1-S4 before registers' START), M-R7 (streaming, sets `REGISTER_STREAM_MAX`, `SLICE_*` before register-readers' START), M-R4, M-R8, M-R10, M-R11, M-R12, the federal zips BOB's download; PLATFORM: Levels 2-3 study S1-S4 (N1271 waits, K5570), S1 baseline and soak on plat-s1, per-table bytes, P-M17 and FILES' L1-L6 on the alpha's reader, budget walks of today's screens, S2 prototypes B and C, Enterprise quote, load test's short "before" run, Level 1's figures; preparation: N1257's F4, N1268's corpus files, M-N1272's files and Bob's blind gold set (K5537), N824 P1-P2 with M1 and P3 once Bob's Email Routing domain exists (N1159). **After the code it measures** (on a scratch copy, when its module merges): M-N1272 after extraction (L4); interpretation timings and the per-level ceiling (R119, K5535) after extraction and investigation; N824's door CPU at 25 MiB after mail-reader and mail-door; N1268's walk after journey-check and the readers; the registers journey after registers and its screen; PLATFORM's fold, combined-read and work-fix figures after PL12-PL14, per-type load after the readers (L1), the N1273 picker and `eu` rehearsal after the installer, the whole-record move at 1, 5, 25 GB after corpus-export and the import, Institution after N1271; the load test per level (N1274) and budget walk L2, L3 after load-check and layer 11's deploy. **No R3:** a defect found goes to its module's job, open until its layer closes (P10); a closed layer's goes to the completion round.
+
+## Left out of T53 (P19)
+
+CAPABILITIES' (`plan-T53-capabilities.md` §E, each with its hard reason): webhooks (paid), OpenFEC (bulk needs no key), OpenCorporates (Bob: never), assisted register acts (Bob, after the alpha), company officers' bulk import until its line, Form 700 and unmeasured registers, the listing desk, payment probe (Bob, K5449 B1), Tier 2 texts, court-petition templates (Bob: never), interpreting everything (K5445), K5458's unlisted names (outside its list). K5424 `noindex` stays until the 1.0 release is deployed (Bob, K5526). K5447 (B) over-limit partial read waits until proposals work well (K5445). N1270 audio, video, forum formats after 1.0 (Bob, K4628; held and named, K5436). K5454 Enterprise support: built with the first team that wants it, listed "not yet available" (PL29). FILES Tier 3 readers (PST/OST, Access): each by Bob's ruling when a real file is shown (K5437). N1267a XLSX by window: Bob has not decided; the beta keeps 250,000 cells (K4831 (10)).
