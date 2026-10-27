@@ -183,6 +183,8 @@
   "bio-plane/test/m/citation/cite-refusals.test.mjs": 1,
   "bio-plane/test/m/citation/found.test.mjs": 1,
   "bio-plane/test/m/citation/sever.test.mjs": 1,
+  "bio-plane/test/m/civil-time/recurrence.test.mjs": 1,
+  "bio-plane/test/m/civil-time/rules.test.mjs": 4,
   "bio-plane/test/m/conformance/act-event.test.mjs": 3,
   "bio-plane/test/m/conformance/determine.test.mjs": 2,
   "bio-plane/test/m/conformance/r44-standards-page.test.mjs": 2,
