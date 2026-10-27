@@ -6,112 +6,25 @@
 
     <span class="eyebrow">The assistant · from the AI-DESIGN lane</span>
     <p class="lede">In the beta, a team, a project or a member chooses which AI the assistant runs on, from a list Civicsmith keeps. Each AI on the list carries Civicsmith's evidence: the privacy checks the team set, and a test of whether it can do each part of the assistant's work (asking, drafting, reading documents, reading unclear pages, checks and plans, drafting a case's account).</p>
-    <article class="q" id="AI1">
-      <div class="meta"><span class="k">AI1</span><span>AI-DESIGN</span><span>asked 27 Oct · rewritten 27 Oct at your request</span></div>
-      <h3>What must an AI prove before members can use it in the beta?</h3>
-      <p><span class="k">Why this matters.</span> The assistant's work is split into parts: answering questions, drafting, reading documents, reading unclear pages, running checks and plans, and drafting a case's account. Before any part is switched on for members with a given AI (say Claude, GPT or Gemini), Civicsmith has to know that AI does that part well enough. Otherwise a member could get a wrong answer that looks right.</p>
-      <p><span class="k">Today's rule (from 2026-10, N829, K2479).</span> A part reaches members only after the AI passes a <em>test set of real public matters</em>: real Oakland documents and questions, with the correct answers written by people, not machines. That set was meant to be written later. It has never been written: it ships with no matters in it, and who writes it is yours to decide. So under today's rule, no AI can pass, and no member could use the assistant in the beta at all.</p>
-      <p><span class="k">What Civicsmith can do without that set.</span> It has its own automatic test for each part (Gate 1). It uses invented cases whose right answers are known, so a program can score the AI without a person reading each answer. It is cheaper and quicker, but the cases are made up, so they may miss how real documents trip an AI up. The pass marks for this test are yours to set (AD13), once a first measuring run on your sample accounts shows what the AIs actually score.</p>
-      <p class="note">Example: before "read an unclear scanned page" is switched on with a given AI, Gate 1 feeds it 200 invented scanned pages with known text and scores how much it gets right. Under option B, if that AI clears the mark you set, members can use that part with that AI. Later, once the real Oakland test set exists, the AI is also scored on it, the score is shown to teams, and the part is switched off for that AI if it falls below the mark.</p>
+    <article class="q" id="AI15">
+      <div class="meta"><span class="k">AI15</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
+      <h3>Should a provider's terms that bind the team's work be shown when an AI is connected?</h3>
+      <p><span class="k">Why this matters.</span> Some providers' rules touch civic work directly. OpenAI's usage policies limit political campaigning and lobbying uses. xAI's ask users not to provide sensitive information such as political opinions. Terms also change on announced dates. A team should know what it agrees to before its work depends on it.</p>
+      <p class="note">Example: an administrator connects an OpenAI account. Before switching it on she sees two of OpenAI's rules that apply to an advocacy team, quoted with the page and the date, and a note that new terms take effect on a date in November.</p>
       <ul class="opts">
-        <li><span class="k">A · Keep today's rule</span><span>Nothing reaches members until the real test set is written (by you, or by people you name) and each part passes it. The safest, but the beta has no assistant until that work is done, and that could take weeks.</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">B · Gate 1 now; the real test set later, as a standing check</span><span>A part reaches members once the chosen AI passes Civicsmith's automatic test, at the marks you set after the first measuring run. When the real test set exists, it becomes an ongoing accuracy check shown to teams, and a part that falls below its mark there is switched off. The beta gets a working assistant, and every AI is still held to a measured bar. What it needs from you: setting the pass marks after the first run, and later, naming who writes the real set.</span></li>
-        <li><span class="k">C · Let members use untested parts, labeled "untested"</span><span>As test copies do today. The quickest, but members could rely on an AI that has never been checked for that kind of work.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Show them, quoted with the page and the date, and restrict nothing</span><span>The terms that bear on civic work are quoted with page and date, shown at connection and again before a change takes effect. Civicsmith restricts nothing on their account (a point not confirmed restricts nothing). Gains: the team decides knowing the rules. Costs: Civicsmith has to keep the quotes current.</span></li>
+        <li><span class="k">B · Show them, and also block uses a provider's terms forbid</span><span>Gains: protects teams from breaking terms. Costs: Civicsmith would be interpreting providers' terms for teams, and would often be wrong.</span></li>
+        <li><span class="k">C · Link to the terms only</span><span>Gains: nothing to maintain. Costs: few will read them, so a team may never learn of a rule that affects its work.</span></li>
       </ul>
     </article>
-    <article class="q" id="AI2">
-      <div class="meta"><span class="k">AI2</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>Which parts of the assistant does the beta offer?</h3>
-      <p>You asked for "full support for the assistant". Already built: asking, drafting, reading unclear pages, checks and plans. Built but switched off behind accuracy bars you set: investigating, extracting and exploring (at most 20% false alarms).</p>
+    <article class="q" id="AI16">
+      <div class="meta"><span class="k">AI16</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
+      <h3>Should Civicsmith run one small service of its own, for the AI list and teams' sealed test results?</h3>
+      <p><span class="k">Why this matters.</span> You decided that the list of AIs updates at any time, not only with releases, and that teams can send sealed test results to you. Both need somewhere outside any team's copy that every copy can reach: a place that publishes the signed list and receives the sealed results. Today nothing like that exists. Each team's copy is its own.</p>
+      <p class="note">Example: on a Tuesday you approve "Llama 4 at Groq" for the list. Every team's copy picks it up the next day without a new release. A team in Fresno tests a local model and presses "Send the results", and the sealed file lands with you.</p>
       <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Every built part, plus three more: the intake interview, the case's account, and "what does this charge or rule mean" answers</span><span>Investigating, extracting and exploring stay behind their bars and switch on for an AI as soon as it passes them.</span></li>
-        <li><span class="k">B · As A, and switch investigating, extracting and exploring on now</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI3">
-      <div class="meta"><span class="k">AI3</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>When work moves to an account someone else pays for, is the member asked?</h3>
-      <p>You allowed work to continue down an ordered list of accounts when one hits its limit.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Ask only when the payer changes</span><span>A move to another account of the same owner goes ahead, is shown, and can be stopped.</span></li>
-        <li><span class="k">B · Ask on every move</span></li>
-        <li><span class="k">C · Never ask; only show it</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI4">
-      <div class="meta"><span class="k">AI4</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>If Cloudflare's own credits get charged instead of the team's key, what happens?</h3>
-      <p>A team's provider key can be held by Cloudflare's AI Gateway, so Civicsmith never holds it. Cloudflare says that if the key is missing, some requests are charged to Cloudflare's own credits instead. Each call is checked afterwards against the gateway's log.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Keep that one answer, tell the team's administrators, and stop the account's further calls until an administrator clears it</span><span>Withholding the answer would not undo the charge.</span></li>
-        <li><span class="k">B · As A, and withhold the answer</span></li>
-        <li><span class="k">C · Only tell the administrators</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI5">
-      <div class="meta"><span class="k">AI5</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>Does the team's list of allowed AIs also bind a member's personal subscription?</h3>
-      <p>You decided a personal subscription is the member's alone, and that the team's required privacy checks still bind it.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Yes: a personal subscription must also be on the team's allowed list</span><span>The same reasoning as for the checks: the team decides what its work may run on.</span></li>
-        <li><span class="k">B · No: only the privacy checks bind it</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI6">
-      <div class="meta"><span class="k">AI6</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>How much may Civicsmith spend re-testing AIs on your accounts?</h3>
-      <p>Keeping the list honest means re-testing listed AIs regularly, to catch one that quietly gets worse. That spends your money continuously.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Re-test only the AIs teams actually use, each with a monthly cap you set</span></li>
-        <li><span class="k">B · No regular re-tests until you ask</span></li>
-        <li><span class="k">C · No cap</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI7">
-      <div class="meta"><span class="k">AI7</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>Can Civicsmith take an AI off the list before you look?</h3>
-      <p>For example, when a provider retires a model or a re-test shows it got worse.</p>
-      <ul class="opts">
-        <li><span class="k">A · Every change waits for you</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">B · A standing rule lets Civicsmith mark an AI "watch", "lapsed" or "retired" when a stated trigger fires, telling you each time</span><span>Triggers: the provider's shutdown date, a failed re-test, a different model answering. Adding an AI or bringing one back stays yours.</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI8">
-      <div class="meta"><span class="k">AI8</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>Test results that teams send in: what is shown, and how long is it kept?</h3>
-      <p>A team can test an unlisted AI inside Civicsmith's locked container and send you the sealed result.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · The team sees its own result at once, marked "reported by your team, not yet confirmed"; the shared results page shows listed AIs only; sealed test records are kept while the AI is listed, plus one year</span><span>Nothing is published until Civicsmith repeats the test. The records are never shown and are kept only to re-score.</span></li>
-        <li><span class="k">B · The team sees nothing until the AI is listed; the results page also shows "tested, not listed"; records kept indefinitely</span><span>Or tell me which part to change.</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI9">
-      <div class="meta"><span class="k">AI9</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>What if a team's copy loses touch with Civicsmith for a long time?</h3>
-      <p>Each copy fetches the list of AIs daily.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Keep offering the last list it had, and say plainly after two weeks that the list is old</span></li>
-        <li><span class="k">B · Stop offering AIs after a set time</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI10">
-      <div class="meta"><span class="k">AI10</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>Do you adopt the five requirements the lane wrote that you haven't ruled one by one?</h3>
-      <p>You asked for proposals on these, and the drafts build them in:</p>
-      <p>(1) how an AI that changes or is retired is caught and taken off the list; (2) costs shown before and after, and "not measurable in money" for subscriptions; (3) what happens when a provider is down: wait, switch, or continue without AI, and nothing changes silently; (4) each provider's terms that bind the team shown at connection, including political and legal-advice limits and dates when terms change; (5) Civicsmith runs one small service of its own that publishes the list and receives teams' sealed results.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Adopt them as the beta's requirements</span><span>You can revise any of them whenever you wish.</span></li>
-        <li><span class="k">B · Bring each one separately</span></li>
-      </ul>
-    </article>
-
-    <article class="q" id="AI11">
-      <div class="meta"><span class="k">AI11</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>When a team lets members use one of its AI accounts on "their own projects", which projects count as theirs?</h3>
-      <p><span class="k">Why this matters.</span> You ruled (K5430) that a team's AI account stays off every project's and member's list unless the account's owner switches on "Projects and members may add this account to their own lists". Once it is on, a member may add it to the AI list of their own projects. That decides whose AI account, and so whose money and whose privacy checks, a project's work runs on.</p>
-      <p class="note">Example: Maria leads the "Rate case 2026" project. Dev has only joined it. The team's Gemini account has sharing switched on. Can Dev add the team's Gemini to "Rate case 2026", or only Maria?</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Only projects the member leads</span><span>The person answerable for a project chooses what it runs on. Dev can ask Maria. This is how the drafts are written now.</span></li>
-        <li><span class="k">B · Any project the member has joined</span><span>Easier for Dev, but anyone who joins could change which AI, and whose checks, a project uses.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · One small Civicsmith service on Civicsmith's own Cloudflare account</span><span>It publishes the list and its notices, all signed with a key kept offline (the service itself cannot sign anything), and receives sealed results it cannot open. Opening and scoring happen apart from it. You decide what enters the list (AI7's rule aside). Gains: the list updates any time, and teams' results reach you. Costs: one more thing Civicsmith runs and pays for, small Cloudflare fees, and every copy depends on it for list updates (each copy keeps its last good list if the service is unreachable, as you ruled in AI9).</span></li>
+        <li><span class="k">B · Publish the list as a file in the public code repository, and receive results by email</span><span>Gains: nothing new to run. Costs: list updates are tied to the repository, results arrive by hand, and teams have no "Send" button.</span></li>
+        <li><span class="k">C · No central service; the list ships only with releases</span><span>Gains: simplest. Costs: goes against your decision that the list updates at any time, and teams' results have no way to reach you.</span></li>
       </ul>
     </article>

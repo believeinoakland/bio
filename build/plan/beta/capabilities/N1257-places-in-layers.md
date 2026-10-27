@@ -1,6 +1,6 @@
 # N1257 places in layers, with N1256 federal offices: analysis, points and needs (draft)
 
-**Status** · READY for PLANNING (reviewed by CAPABILITIES #1, C2), with section J added; written by a worker, checked against the reading in section H. Revised 2026-10-27 for Bob's ruling K5452 (a team's work, not the team's location, decides its layers; its footprint is any set of places at any level): every changed line is listed in section L.
+**Status** · DRAFT, not READY (it becomes READY once Bob's L18 and the work-outside-US remainder are answered); reviewed by CAPABILITIES #1, C2, with section J added; written by a worker, checked against the reading in section H. Revised 2026-10-27 for Bob's ruling K5452 (a team's work, not the team's location, decides its layers; its footprint is any set of places at any level): every changed line is listed in section L.
 For the beta's build plan, tranche T53. Carries DEC-404 (Bob, 2026-10-21: "Let's go with A after the alpha"), K4362, and DEC-401's option B (N1256). Design and requirements only; no code was changed.
 The requirement lines (section B) are in two companions: `N1257-requirements-jurisdictions.md` (draft R99 to R133, see section M) and `N1257-requirements-modules.md` (local-facts, instance-setup, installer, screens-settings, screens-action, actions, action-clocks, queue-producers, entities, filing-templates, reading-guides). Sections A and C to I are here.
 
@@ -92,7 +92,7 @@ Recommended A; it is what the draft's lines build (R108, `instance-setup` R108, 
 **D3. A team whose work is focused outside the United States.** (Bob, K5452: a team merely LOCATED abroad, with its work focused on a United States jurisdiction, is settled: it chooses the United States places of its work as any team does. A team whose WORK is focused in another country remains open.) The four levels (federal, state, county, city) and the federal layer are the United States'; Civicsmith holds United States places only. A team whose work is in another country has no layer to choose; today it gets nothing filled in (DEC-150), and the draft preselects the federal layer for every team, removable. A team working in both (some United States places and some abroad) gets the layers of the United States places it names and names the rest as free-text places.
 - A (recommended). Say so on the choice: Civicsmith holds United States places; a team whose work is elsewhere removes the federal layer, names its places in the free-text place and writes none of the four levels, and adds its offices itself as today. The level names stay as DEC-404 has them.
 - B. Rename the levels generally (nation, region, county, city) and let a team add a national layer. A bigger change to the vocabulary (R31) and to the decision.
-The draft assumes A (`installer` R86: the federal layer may be removed, and the page says what that means).
+The draft assumes A (`installer` R94: the federal layer may be removed, and the page says what that means).
 
 ## E. What the places screen needs from UX-DESIGN (needs only, to go through BOB)
 
@@ -103,7 +103,7 @@ The draft assumes A (`installer` R86: the federal layer may be removed, and the 
 5. "Report a rule" beside each shipped rule: what is shown to the member before anything is carried; the "carried" state.
 6. A read-only layer's rule drawn with its source beside it and no edit mark; a conflict drawn as "two layers disagree about X; nothing is assumed" with both values.
 7. Choosing a federal office on `request`: a search by agency or abbreviation before "Name the office yourself" (DEC-402), with the list's date.
-8. The install page: the same choice of the work's places before a team exists (`installer` R86).
+8. The install page: the same choice of the work's places before a team exists (`installer` R94).
 9. The words keyed in `setup-words`; no place named in a word that is not data (`build/layers.md` rule 1).
 
 ## F. What must be measured, and on what copy
@@ -178,12 +178,12 @@ Bob's ruling (K5452; `DECISIONS.md` C7): a team's layers follow where its WORK i
 **`N1257-requirements-modules.md`.**
 - `local-facts` R23 (several team layers; superseded by section M), R24 (the team's rules layer).
 - `instance-setup` R107 (a set of the work's places, any level and number; nothing preselected below the federal layer; parents added and shown), R108 (branches in `profiles()`), R109 (a set of place names).
-- `installer` R86 (the install asks where the work focuses, a set of places).
+- `installer` R94 (the install asks where the work focuses, a set of places).
 - `screens-settings` R82 (a tree; the choice is a set).
 - Unchanged: `local-facts` R25 to R27, `instance-setup` R110, R111, `screens-settings` R83, `screens-action` R60, `actions` R112, `action-clocks` R27, `queue-producers` R58, `entities` R68, `filing-templates` R36, `reading-guides` R17.
 
 ## M. Changed for PLANNING rows 15,17,18 (2026-10-27)
 
 **Row 15 (one team layer).** `local-facts` R24's single placeless team-rules layer (no level or place, within the federal layer) is THE one team layer, holding the team's rules and its per-government facts; K5452's footprint is entries about many governments in it (each carrying `government: {level, place}`), not several team layers. Altered: `jurisdictions` R99 (`level` and `place` absent on the team layer), R100 (the team layer is not judged by level; its entries by `government.level`), R101 (`LAYER_TEAM_TWICE`; within federal; listed last), R115 (rewritten), R116 (`fiscal_year` added), R118 (test forest); `local-facts` R23 (entries into the one layer, `government`; the fiscal-year exception), R24; layer-names R28, R29 (the team path continues with the government), R84. `LAYER_ENTRY_IN_SHIPPED` keeps R23's meaning. R102 now reads "the fiscal year of one government" (DEC-458 A2 via K5456): new R123 (a layer states one government's year, never a default) and R124 (a member states it with `how`, as the time zone is; R115's basis and `local-facts` R23's confirmation do not apply to it); section J above is now carried by these lines.
-**Row 17 (who holds the team layer).** `local-facts` owns `team_layers` (new R30, moved from `instance-setup` R110, which is a tombstone) and hands the layer to `combine`; `instance-setup` records only the choice of Civicsmith layers. Altered: `instance-setup` R107 (the setting holds Civicsmith ids only; `LAYER_NOT_SHIPPED` for `team`), R108 (`profiles()` reads the team layer from `local-facts`), R109, R110, R111; layer-names R112 (seeding from the layers `combine` hands over), R113 (an arrival is a Civicsmith layer); `installer` R86 and `screens-settings` R82 (wording).
-**Row 18 (one `jurisdictions` job).** `N1257-requirements-jurisdictions.md` now also carries N858's attribution lines (its R99, R100 as R125, R126; its R101 stays withdrawn) and N1259-a's jurisdictions lines (R99-R105 as R127-R133), each marked with its source draft; N858 and N1259-a hold pointers. N858's `reading-guides` line moved from R17 to R18 (N1257's R17 is guides per layer; they compose, per layer); its `op-declarations` R84 is theirs alone and stays. Conflicts for BOB: see the end of the jurisdictions file.
+**Row 17 (who holds the team layer).** `local-facts` owns `team_layers` (new R30, moved from `instance-setup` R110, which is a tombstone) and hands the layer to `combine`; `instance-setup` records only the choice of Civicsmith layers. Altered: `instance-setup` R107 (the setting holds Civicsmith ids only; `LAYER_NOT_SHIPPED` for `team`), R108 (`profiles()` reads the team layer from `local-facts`), R109, R110, R111; layer-names R112 (seeding from the layers `combine` hands over), R113 (an arrival is a Civicsmith layer); `installer` R94 and `screens-settings` R82 (wording).
+**Row 18 (one `jurisdictions` job).** `N1257-requirements-jurisdictions.md` now also carries N858's attribution lines (its R99, R100 as R125, R126; its R101 stays withdrawn) and N1259-a's jurisdictions lines (R99-R105 as R127-R133), each marked with its source draft; N858 and N1259-a hold pointers. N858's `reading-guides` line moved from R17 to R19 (layer-names takes R18) (N1257's R17 is guides per layer; they compose, per layer); its `op-declarations` R84 is theirs alone and stays. Conflicts for BOB: see the end of the jurisdictions file.

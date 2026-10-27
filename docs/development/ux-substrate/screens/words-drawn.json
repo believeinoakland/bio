@@ -5180,7 +5180,7 @@
   },
   {
    "key": "screen.teamai.use.why",
-   "en": "Summed over members; nobody is named.",
+   "en": "What the team's key was used for, month by month.",
    "protected": false,
    "note": "DEC-284"
   },
@@ -44894,7 +44894,7 @@
   },
   {
    "key": "screen.aiproviders.optin.note",
-   "en": "Off until an administrator turns it on. Work never moves to it from another list otherwise.",
+   "en": "Off until an administrator turns it on. Until then, only your team's own list uses this account.",
    "protected": false,
    "note": "DEC-465: aiproviders: the opt-in note"
   },
@@ -44942,7 +44942,7 @@
   },
   {
    "key": "screen.aimoments.continued.crossowner",
-   "en": "It went on with your team's second account, which your administrators let projects use.",
+   "en": "Your administrators let projects use this team account.",
    "protected": false,
    "note": "DEC-465: aimoments a: the continued account belongs to another owner"
   },
@@ -45022,7 +45022,7 @@
    "key": "screen.ai.ready",
    "en": "The assistant is ready: {n} accounts on.",
    "protected": false,
-   "note": "DEC-466: setup and AI providers: the ready state (U3)"
+   "note": "DEC-466: setup: the ready state, several accounts (U3); AI providers says it with screen.aiproviders.stands.on (DEC-469)"
   },
   {
    "key": "screen.ai.ready.one",
@@ -45218,7 +45218,7 @@
   },
   {
    "key": "screen.aimine.seenby",
-   "en": "Your use on accounts your team or a project pays for is shown to their administrators. Your own subscription's use is yours alone.",
+   "en": "Your use on accounts your team or a project pays for is shown to your team's administrators or that project's owners. Your own subscription's use is yours alone.",
    "protected": false,
    "note": "DEC-468: aimine, Your use and cost (K5459)"
   },
@@ -45269,6 +45269,12 @@
    "en": "{n} rules your team uses changed in this update: {list}. You're told once.",
    "protected": false,
    "note": "DEC-468: queue: an administrator item after an update (K5450); {n} {list}"
+  },
+  {
+   "key": "screen.aimoments.mock.j",
+   "en": "you stopped instead of switching",
+   "protected": false,
+   "note": "DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)"
   }
  ],
  "rewrite": {
@@ -45490,6 +45496,7 @@
   "project-stage.why.edition_case_ratified": "this case has not been signed",
   "refusal.BAD_PERIOD": "A follow needs a first day, and a last day that isn't before it, or no last day. Nothing was written.",
   "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE": "Your team's Civicsmith already holds this document, filed in another place, so it wasn't filed again here: a document has one home. Nothing was written. If you found it at a new address, that address is already noted with the copy your team holds.",
-  "attestation.register_row_names": "no register row names this capture under a record that exists, so the record states no attestation for it"
+  "attestation.register_row_names": "no register row names this capture under a record that exists, so the record states no attestation for it",
+  "screen.panel.usage.group": "Summed over members, and nothing asked is shown. Whoever pays for the account, administrators or owners, also sees each member's use. A member sees their own use on Settings › The assistant."
  }
 }
