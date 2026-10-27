@@ -2100,6 +2100,19 @@
      ]
     },
     {
+     "op": "owed:previewmore DEC-455",
+     "label": "Show more rows",
+     "status": "owed"
+    },
+    {
+     "op": "captureuploadabort",
+     "label": "Cancel sending",
+     "status": "declared",
+     "modules": [
+      "capture"
+     ]
+    },
+    {
      "op": "owed:capturecredentiallist DEC-381",
      "label": "Show the stored logins",
      "status": "owed"

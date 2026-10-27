@@ -7886,7 +7886,6 @@ def w431(key, en, note):
 w431('begin.account', "That Cloudflare account couldn't be used. Start again from the first page; nothing was created.", 'J27 R84 (6): an account choice the sign-in did not list')
 w431('begin.subdomain', "That name can't be used. Use lowercase letters, digits and hyphens, not starting or ending with a hyphen.", 'J27 R84 (4): an address name refused before registering')
 w431('limit.crons.other', '{n} scheduled jobs', 'J27 R84 (3): the cron-trigger count in the limit stop; {n} a number')
-W.append(dict(key='act.captureuploadabort.does', en='Stops sending a large document in parts. Nothing of it is kept.', protected=False, note='DEC-431: affordances act-help.mjs:153 (T51 K4900, capture R113), word for word its default, so the reads list regenerates'))
 W.append(dict(key='act.captureuploadbegin.does', en="Starts sending a large document in parts. Nothing is kept until the last part has arrived.", protected=False, note='DEC-431: affordances act-help.mjs (T51), its default without "to the group\'s store" (DEC-281: team, never group), so the reads list regenerates'))
 W.append(dict(key='act.captureuploadpart.does', en="Sends one part of a large document that is being sent in parts. The part is checked as it arrives.", protected=False, note='DEC-431: affordances act-help.mjs (T51), word for word its default, so the reads list regenerates'))
 W.append(dict(key='act.captureuploadcomplete.does', en="Finishes sending a large document once every part has arrived, and files it as one document.", protected=False, note='DEC-431: affordances act-help.mjs (T51), word for word its default, so the reads list regenerates'))
@@ -8404,6 +8403,11 @@ w454('queue.kind.reading-ended', 'Documents you added, now read, partly read, or
 w454('screen.document.supporting.notwalked.pending', "This page is still being drawn in the background, so its supporting files haven't been looked for yet.", 'Document: supporting files not walked, RENDER_PENDING')
 w454('screen.document.supporting.notwalked.toolarge', 'This page is too large to look through for supporting files, so none were looked for.', 'Document: supporting files not walked, TOO_LARGE_TO_PARSE or PRIMARY_TOO_LARGE')
 w454('screen.document.supporting.notwalked.unavailable', "Your team's Civicsmith couldn't look through this page for supporting files, so none were looked for.", 'Document: supporting files not walked, any other reason')
+def w455(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-455: ' + note))
+# fix round 9 (G137b, parted upload): the spreadsheet preview's cut line, and a parted upload canceled
+w455('screen.capture.preview.cut', 'Showing rows 1 to {shown} of {total}.', "Add, a spreadsheet or CSV preview cut at a row (screens-intake R5, next_row); {shown} {total}")
+w455('screen.capture.file.parts.cancelled', 'Sending was canceled. Nothing was kept.', 'Add, a file being sent in parts, canceled (captureuploadabort)')
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

@@ -172,6 +172,8 @@ const ACT_HELP = {
   capturerequestretry: 'Puts a request the source itself turned away back in the queue to be tried again, with what your team holds for that source. Any other request is left as it is.',
   owed_capturecredentiallist: 'Lists the sources your team has stored a login for, and who gave each, with the date. It never shows a username or a secret.',
   owed_capturecredentialwithdraw: 'Destroys the stored login for this source. Requests to it are turned away for a login again until someone gives a new one.',
+  captureuploadabort: 'Stops sending a large document in parts. Nothing of it is kept.',
+  owed_previewmore: 'Shows the next rows of this file, from where the preview was cut. The file itself is not changed.',
   owed_declareorigin: 'Records, with your name and the date, the system this document came from. A second declaration is added beside the first and never replaces it. The document itself does not change.',
   contradictionflag: 'Sets a passage here beside a passage in another document as a contradiction your project settles, with your reason. It changes neither document.',
   owed_citeimported: 'Rests one of your team\'s questions on a finding your team accepted from another team\'s case, at the edition shown. It carries the fact that they published it, and the grade the edition published, never higher.',

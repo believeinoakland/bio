@@ -6962,3 +6962,15 @@ the design: 68 rows minted, none reworded. Display rows the screens draw in plac
 verified: on tranche/T52 with these words and registry files: words 0, format 0; the run of capture, doorbell, file-safety, workbooks, screens-daily, screens-intake, queue- and notice-producers and two screens-inquiry files, with and without, is recorded on the next line when it ends.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-454 block); `screens/later-ux-T52-triage.md`.
 owed: BOB: merge this commit (MERGE). Code, for the owning jobs: screens-intake capture.mjs and screens-inquiry document.mjs draw the display rows named above in place of their stand-ins (and `screen.document.unsupported.<kind>` by the reading's kind); sizes reach members in MB; file-safety's partial-scan reason and `content.extent`'s part key get plain names.
+
+### DEC-455 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (`screens/later-ux-T52-triage.md`'s B items 125, 149, 152: fix round 9's G137a, G137b; SCREENS-INTAKE #23's J46, J47, K4922, K4930)
+for: design (T52)
+question: Three drawings owed by the design: the safe view of a long document shows only its first pages; a spreadsheet preview cut at a row, and how to see more; Cancel for a file being sent in parts.
+why it is Bob's: it is not (P17): screen detail beneath his rulings.
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: Opening a file: both safe-view panels open with `file-safety.index.safe_view_first_pages` (DEC-454), filled "the first 500 of the document's 812 pages". Add: a CSV's preview ends at its cut with `screen.capture.preview.cut` "Showing rows 1 to {shown} of {total}." and a "Show more rows" button that loads the next rows from the cut (`owed:previewmore DEC-455`, its line "Shows the next rows of this file, from where the preview was cut. The file itself is not changed."); a file sent in parts shows "Sending part {n} of {m}." with "Cancel sending" (`captureuploadabort`, declared), and after it `screen.capture.file.parts.cancelled` "Sending was canceled. Nothing was kept." `act.captureuploadabort.does` (DEC-431) is now written from `mock-acts.js`, its English unchanged.
+verified: the page's checks (walk, drawn words, library against tranche/T52) pass; the rows are new, so no test reads them.
+reasoning recorded in: this entry; `screens/mock-screens.js`; `screens/mock-acts.js`; `screens/registry.src.py`; `screens/words-drawn.src.py` (DEC-455 block).
+owed: BOB: merge this commit (MERGE). Code, for screens-intake (J46, J47): an op that reads a preview's next rows from `next_row`, then `act.owed_previewmore.*` takes its name; the parted-upload page draws Cancel and the canceled line.

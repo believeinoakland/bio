@@ -42403,12 +42403,6 @@
    "note": "DEC-431: B514 J27 R84 (3): the cron-trigger count in the limit stop; {n} a number"
   },
   {
-   "key": "act.captureuploadabort.does",
-   "en": "Stops sending a large document in parts. Nothing of it is kept.",
-   "protected": false,
-   "note": "DEC-431: affordances act-help.mjs:153 (T51 K4900, capture R113), word for word its default, so the reads list regenerates"
-  },
-  {
    "key": "act.captureuploadbegin.does",
    "en": "Starts sending a large document in parts. Nothing is kept until the last part has arrived.",
    "protected": false,
@@ -44957,6 +44951,18 @@
    "en": "Your team's Civicsmith couldn't look through this page for supporting files, so none were looked for.",
    "protected": false,
    "note": "DEC-454: Document: supporting files not walked, any other reason"
+  },
+  {
+   "key": "screen.capture.preview.cut",
+   "en": "Showing rows 1 to {shown} of {total}.",
+   "protected": false,
+   "note": "DEC-455: Add, a spreadsheet or CSV preview cut at a row (screens-intake R5, next_row); {shown} {total}"
+  },
+  {
+   "key": "screen.capture.file.parts.cancelled",
+   "en": "Sending was canceled. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)"
   }
  ],
  "rewrite": {

@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7906,
+  "screen": 7908,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1298,
+  "act": 1301,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -237,8 +237,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19535,
-  "protected": 1162
+  "total": 19540,
+  "protected": 1164
  },
  "words": [
   {
@@ -81054,13 +81054,6 @@
    "note": "DEC-431: B514 J27 R84 (3): the cron-trigger count in the limit stop; {n} a number"
   },
   {
-   "key": "act.captureuploadabort.does",
-   "en": "Stops sending a large document in parts. Nothing of it is kept.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-431: affordances act-help.mjs:153 (T51 K4900, capture R113), word for word its default, so the reads list regenerates"
-  },
-  {
    "key": "act.captureuploadbegin.does",
    "en": "Starts sending a large document in parts. Nothing is kept until the last part has arrived.",
    "protected": false,
@@ -84034,6 +84027,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-454: Document: supporting files not walked, any other reason"
+  },
+  {
+   "key": "screen.capture.preview.cut",
+   "en": "Showing rows 1 to {shown} of {total}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-455: Add, a spreadsheet or CSV preview cut at a row (screens-intake R5, next_row); {shown} {total}"
+  },
+  {
+   "key": "screen.capture.file.parts.cancelled",
+   "en": "Sending was canceled. Nothing was kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -124446,6 +124453,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_previewmore.label.capture",
+   "en": "Show more rows",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.captureuploadabort.label.capture",
+   "en": "Cancel sending",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_capturecredentiallist.label.capture",
    "en": "Show the stored logins",
    "protected": true,
@@ -128166,6 +128185,18 @@
   {
    "key": "act.owed_capturecredentialwithdraw.does",
    "en": "Destroys the stored login for this source. Requests to it are turned away for a login again until someone gives a new one.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.captureuploadabort.does",
+   "en": "Stops sending a large document in parts. Nothing of it is kept.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_previewmore.does",
+   "en": "Shows the next rows of this file, from where the preview was cut. The file itself is not changed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
