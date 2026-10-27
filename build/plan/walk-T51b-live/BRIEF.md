@@ -1,0 +1,20 @@
+# The alpha's live walk of 0.87.0 (K5348): brief for five walkers at once
+
+**What and why.** Bob (K5348): "The live walk can be scheduled for after the release, the installer update, and the site updates. Any issues found during the live walk can be folded into the next tranche that will work toward the beta release." Signed release 0.87.0 (K5350) runs on https://biosmoke8.believeinoakland.workers.dev (`/version` reads `0.87.0`; a development copy, nothing it holds is secret, K3556). One complete pass: every journey of the design walked end to end as a member would, every screen as **administrator and as member** at **1280 px and 390 px**, re-walk 11's open rows at the walker's exact case, and a dead-end census. **Nothing is fixed in this walk**: every defect becomes a T52 entry by cause (`build/situations/fix-round.md`).
+
+**Read first, whole:** this brief; `build/plan/walk-T51-alpha/BRIEF.md` (how to walk, the A-E stages and their journeys, the record's form: follow it except where this brief differs); `build/plan/redeploy-walk-T51.md` §4 (the spine table, the findings rules); the paragraphs "How to reach the copy (R-PROXY, K4733)", "Files (generated locally, never real documents)" and "Severity" of `build/plan/walk-T51-rewalk9/BRIEF.md` (seeds `live087-<area>-<n>`); your stage's journeys in `docs/development/ux-substrate/ux-experience.json` (`journeyExperience`, `useCases`); your area's re-walk 11 record `build/plan/walk-T51-alpha/rewalk11-<area>.md`. Never print a credential, session token or invitation link, and never commit a screenshot that shows one. An act a safety check refuses: record "refused: <what>", never retry it another way.
+
+**Each walker:** its own browser context; its own project "Walk 087 <A-E>" (a second only where a journey needs it), with the test member where a journey needs two people; never change other projects, the copy's settings or secrets; judge only records you made. Time every screen and act (K4354: drawn or answered within 2 s, a web capture within 15 s; read `Server-Timing`; note when another walker was acting). Do not stop at a defect: record it and go on.
+
+**Re-walk 11's open rows, by area** (each at its exact case; `FIXED`, `NOT FIXED` or `known gap`, quoted):
+- A: S-1, the founder's setup page after the claim ("Still loading", K5327: every part draws); the setup zone row (part 3 "Where your team works").
+- B: every re-walk 11 B row not FIXED.
+- C: the money rows and C-M8 (document by title, after a money trail is started); every other re-walk 11 C row not FIXED.
+- D: every re-walk 11 D row not FIXED.
+- E: the adoption row (a standard's adoption by day or event); E-AP2/N2 and the plan's date checks (the team's zone, K5343); E-C2a against the issuer.
+
+**Dead-end census (K4164):** on every screen you reach, note any place a member is left with no way on or back, a control that does nothing, an act whose result is nowhere to be seen, or a word a member would not understand (quote it). Each is a finding with its severity.
+
+**(e) Delegating to the assistant** is not walked: record only whether its screen says plainly it is not ready (K3717).
+
+**Your record:** `build/plan/walk-T51b-live/<A-E>.md`, written as you go (a walk cut short keeps what it found): per journey step, at each width and role, `OK` or the finding (screen, what you did, what you saw quoted, what the design says, the time, severity, a screenshot under `build/plan/walk-T51b-live/shots/<area>/`); then the re-walk 11 rows; then the dead ends. End with the findings sorted BLOCKER, MAJOR, MINOR and one line: journeys completed of journeys walked. Work in your own worktree (`git -C /home/user/bio worktree add -b walk/T51b-live-<area> <scratch>/live-<area> origin/tranche/T51b`, `bio-plane/node_modules` and `bio-plane/src/journey-check/node_modules` symlinked from `/home/user/bio`), never in `/home/user/bio` itself; commit and push only your own files on `walk/T51b-live-<area>`, pushing as you go; BOB merges them. Memory: the container is shared by five walkers (about 15 GB): one browser, close pages you are done with, never run a test suite.
