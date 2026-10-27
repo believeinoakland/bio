@@ -39,7 +39,7 @@ A breaks every line that keys a deploy flag to a fine part (run-rules R14, R16, 
 ## 4. Points touching Bob's open questions (AI1-AI10; for BOB's page, no new question)
 
 - **Retention**: ai-issuer R18 keeps sealed bundles 180 days (a K5457 number); AI8 (c) recommends "while the AI is listed, plus one year". The number follows Bob's AI8 answer.
-- **N1258 and AI1**: N1258 says "tested before the beta against real questions"; AI1's option B admits a part by Gate 1 and keeps the real set as the standing measure. If Bob answers B, N1258's text is amended to say so.
+- **N1258 and AI1** (Bob answered B, K5475: N1258's text is amended accordingly when BOB writes it): N1258 says "tested before the beta against real questions"; AI1's option B admits a part by Gate 1 and keeps the real set as the standing measure. If Bob answers B, N1258's text is amended to say so.
 - **AI2 and Gate 1**: AI2 admits investigate, extract and explore per AI; Gate 1 verdicts are per part. Under B, AI2's answer is read through `GATE_PART_OF`.
 - Lines waiting: AI1 (run-rules R19, R37; agent-worker R121; ai-runs R40, R78; ai-gate), AI3 (ai-runs R94), AI4 (agent-model R47), AI6-AI7 (ai-gate R41-R53), AI8 (ai-gate R54-R64, ai-issuer R18), AI10 (agent-model R5, R13, R34, R50-R53; agent-worker R124; ai-runs R95).
 - **`next.md`**: N1105 closed, N1198 generalised (ai-catalogue, ai-accounts), N1199 and N1276 retired, N842, N1200, N1219 into their modules, N1258 the standing measure (R2), N829 (the real-matters set) outside the product with its hard reason (the set is Civicsmith's data, gathered, not built).

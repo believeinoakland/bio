@@ -58,3 +58,7 @@ Plan entries: FILES's KIND-TABLE (format-registry, READY) and PHOTO-DATA (with A
 ## L11 · 2026-10-27 · K5473; A4 the one photo source; JOURNEYS folded
 
 K5473: row 20 decided as recommended; A4 aligned by a Sonnet worker (serials, owner, artist and copyright read, not shown by default; "near {place}" from the shipped and team layers only, else rounded; `left_out` the closed key list for DEC-467's {what}); the installer asks for a read-only Logs scope (Bob's act: register it on the OAuth client). JOURNEYS W7's drafts READY: a Sonnet worker set the 130 defects out by owning module in the new detail file `plan-T53-journeys.md` (§A entries with MERGE marks against T52, §B the 19 points Bob's, §C defects with no line, §D four placements for BOB); the plan points to it.
+
+## L12 · 2026-10-27 · K5474, K5475, C21's ids
+
+K5475 (Bob, AI1 B): Gate 1 at Bob's marks admits a part; the real public-matters set later a standing check; the plan's AI1 waits cleared, N1258 and N829 restated. K5474: JOURNEYS' 19 points sorted (J1-J7 Bob's, B558 to UX-DESIGN, four decided), noted in `plan-T53-journeys.md` §B. BOB's C21 rule recorded in CONSISTENCY §1: the A lines keep their ids; colliding CAPABILITIES lines take the next free (content R65, citation R28, queue R98, screens-settings R83, screens-daily R110).

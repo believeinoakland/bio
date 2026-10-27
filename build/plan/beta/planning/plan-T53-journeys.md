@@ -258,6 +258,8 @@
 
 ## B. The 19 "Not decided" points (Bob's)
 
+**Sorted by K5474 (BOB #322):** seven are Bob's, J1-J7 on QUESTIONS.html (draft 1 #3, #4; draft 2 #2, #4; draft 3 #1, #2, #5); eight are UX detail sent to UX-DESIGN (B558: draft 1 #1, #2, #6, #7, #8; draft 2 #1, #3; draft 3 #6); four decided by BOB as the lane recommends: R-39 (a duplicate office's add answers the existing office; lists draw one entry), R-73 (a question opened from a chain belongs to the explore page's project, else the member chooses), R-119 (an action's replies list by arrival day, then recorded order), R-130 with R-62, R-105 (a journey fails on a failed response the app itself asks for; the step-up 403 accepted). Their lines are unbracketed at writing.
+
 Part 1 (`DRAFT-requirements-1.md`), 8 points:
 
 | id | the point | module · lines that wait on it |
@@ -314,5 +316,5 @@ Counts check: rows listed in A cover R-1..R-130 (R-5, R-39, R-67, R-68, R-69, R-
 - R-127: DRAFT-3 puts the line under screens-action, but it changes interface-shell R119: **interface-shell owns it**, screens-action draws it.
 - R-13: owning module not traced (screens-settings or screens-investigate): JOURNEYS to trace before the plan is written.
 - R-84: no carried entry holds the `events` plane fix (the 502): a new entry under events (layer 5) and plane's route, with PLATFORM.
-- R-73: a DRAFT-2 Q5 item whose register owner is explore: placed under explore, waiting on Q5(D2).
+- R-73: placed under explore; decided by K5474.
 - Four open items not among the 19: the owner of R-83's event edit and withdraw act; which side holds the identity in R-65 (a BLOCK); interface-shell R?6's 422 px; the Tab-stop count. The first two are BOB's; the last two are numbers set at the job's START.
