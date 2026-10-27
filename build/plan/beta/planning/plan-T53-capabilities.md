@@ -1,6 +1,6 @@
 # T53's CAPABILITIES entries by owning module (PLANNING L23)
 
-**Status** · DRAFT for BOB · PLANNING #3, 2026-10-27. CAPABILITIES' READY scope (C29: N1259 a-f/b2, N824, N1110, N1265, N858, N1269-N1272, N1257 layer-names and record-core) read whole by five Sonnet reading workers and set out one entry per module by layer. Pointers `capabilities/<file>` are on `lane/capabilities` (merged into tranche/T53 by BOB). Ids are draft ids; renumbering per §D is applied in the entries. N1260 and N1257's earlier files are in `plan-T53-draft.md` itself.
+**Status** · DRAFT for BOB; §F all decided as recommended and §G sorted by K5530 (BOB #323: F7 the probe upload only where no read can answer, K5449 (1) for the card line; F10 supersedes K5528 T3; mail-door BOB's packaging; N1110 B2 T1, B3 closed; N824 B4, the R119 ceiling, the gold-set reviewer and DEC-340's facts on Bob's page as C31-C34; N858's per-text people Bob's acts when each text is made; N1259-d R36 (case-disclosures R41) asked of BOB in plain words) · PLANNING #3, 2026-10-27. CAPABILITIES' READY scope (C29: N1259 a-f/b2, N824, N1110, N1265, N858, N1269-N1272, N1257 layer-names and record-core) read whole by five Sonnet reading workers and set out one entry per module by layer. Pointers `capabilities/<file>` are on `lane/capabilities` (merged into tranche/T53 by BOB). Ids are draft ids; renumbering per §D is applied in the entries. N1260 and N1257's earlier files are in `plan-T53-draft.md` itself.
 
 ## Keys
 
@@ -46,7 +46,7 @@
 - T53 · N1259 (K4403 (2), (5); K1484, K1485, DEC-408) · streams delimited files to rows under a definition, zip by directory and member (ZIP64), drops contact columns before any other code sees a row (street lines only, K5499), withholds phone and address shapes in free text, the closed filter (`validateFilter`, `matches`, `autoWatchable`), the reducer with the original's fingerprint, estimates; pure, no AI · N1259-a register-readers R1-R11
 
 **doc-clean**
-- T53 · N824 (K2334 (2), K1485) · a captured message's published copy is body and attachments only; no header but the date and an official's name; reads format-registry's detection, not judging bytes again · N824 R13 `[waits: Bob's N824 B4]`
+- T53 · N824 (K2334 (2), K1485) · a captured message's published copy is body and attachments only; no header but the date and an official's name; reads format-registry's detection, not judging bytes again · N824 R13 `[waits: Bob's N824 B4, C31]`
 
 ### Layer 2
 
@@ -75,9 +75,9 @@
 **doorbell**
 - T53 · N824 (DEC-108 (5)) · discarded knocks cleared 7 days after receipt, never under a hold · N824-container-member-job R29
 
-**mail-door** (new, §B) `[waits: Bob: mail-door as a new capability module (layers.md ruling 5)]`
+**mail-door** (new, §B) (K5530: BOB's packaging; layer 3 after doorbell, `member-roster` in its uses)
 - T53 · N824 (K5504-K5506, K5527) · a private address per member (digest only; no member email stored), mail waits 14 days privately, filed only with her statement, rate bounds, count-only tally, never AI, off by default; relays `mail-reader` ML10's nesting refusal (no `MAIL_TOO_NESTED`); runs `mail-reader` before accepting (R3, R10) · N824 R1-R14 `[waits: M1, R12 only]`
-- T53 · N824 · R7, what of a message is published `[waits: Bob's N824 B4]`
+- T53 · N824 · R7, what of a message is published `[waits: Bob's N824 B4, C31]`
 - T53 · N824 (R6) · the removal of a member's unconfirmed mail: `mail-clear` returns counts (cannot call layer 11) and a notice-producers line reads them `[owed: that line]`
 - T53 · N824 · declares `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete` in its own `DECLARED_OPS`, see op-declarations.
 
@@ -154,7 +154,7 @@
 
 - **actions** · T53 · N1257 (K5458) · R113 (law stores `layer`), R114 (`law_layer`), R115 (office `layer`) · N1257 layer-names
 - **action-records** R21 · **action-grammar** R31 · **action-clocks** R28, R29 (proposal and entry keep `layer`; a date never recomputed by a later layer) · **filing-templates** R37 · **filings** R71 · all N1257 layer-names. filings R29 is amended, no new id.
-- **filing-templates** · T53 · K5528 T3/T4 · R15's private `#lacks` replaced by `jurisdictions`' `attributionLacks` (passing its own machine and hash functions), one word `second_approval` · `lines-K5527` §3 `[owed: no filing-templates line exists; BOB writes it]`
+- **filing-templates** · T53 · K5528 T3/T4 · R15's private `#lacks` replaced by `jurisdictions`' `attributionLacks` (both import `record-grammar`'s functions directly, K5530 F10), one word `second_approval` · `lines-K5527` §3 `[owed: no filing-templates line exists; BOB writes it]`
 
 ### Layer 10
 
@@ -233,7 +233,7 @@
 - (Stale: `N1257-places-in-layers.md:45` names installer R86 for N1257.)
 
 **stewards**
-- T53 · N1110 (DEC-255, DEC-270) · a listing withdrawal carries `rule_part` 1-4 and the rule text's date; reinstatement records why; the steward's page gives the sentence to send by hand; the service tells no group · N1110 R24-R26 `[waits: Bob's N1110 B2, B3]` (opens when Bob names the address and keys; R24-R26 build and test while closed)
+- T53 · N1110 (DEC-255, DEC-270) · a listing withdrawal carries `rule_part` 1-4 and the rule text's date; reinstatement records why; the steward's page gives the sentence to send by hand; the service tells no group · N1110 R24-R26 (K5530: B2 the stewards' own mail, never public, K5507's D1; B3 `RULE_PARTS` 1-4 closed, the rule text's date stored) (opens when Bob names the address and keys; R24-R26 build and test while closed)
 
 **site**
 - T53 · N1110 · listed groups omit a standing withdrawal and say nothing of it; item is the group's `address`; a malformed register should fail the deploy check, not 500 every request (draft follows the module's rule until BOB rules) · N1110 R17 `after: stewards R24`
