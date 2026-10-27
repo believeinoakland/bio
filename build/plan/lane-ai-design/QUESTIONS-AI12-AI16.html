@@ -1,0 +1,55 @@
+<!-- AI12-AI16 for QUESTIONS-open-ai.html (Bob's K5484: AI10 "B", bring each of the five separately). Written by AI-DESIGN #3, 2026-10-27. -->
+    <article class="q" id="AI12">
+      <div class="meta"><span class="k">AI12</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
+      <h3>How does Civicsmith notice that an AI has changed or is being retired?</h3>
+      <p><span class="k">Why this matters.</span> Providers change their models quietly and retire old ones on a date they announce. An AI that passed Civicsmith's test in October may answer differently in December. A team would keep trusting a label that no longer describes what it gets.</p>
+      <p class="note">Example: a team uses "Mistral Large" for drafting letters. In January the provider swaps in a new version under the same name and starts refusing to quote meeting minutes. Without a watch, the team just sees more refusals and nobody knows why.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Several signals, and the AI's status moves through steps</span><span>Each AI on the list names an exact version. Civicsmith watches four things: its re-tests (AI6), the provider's announced retirement dates, a different model answering than the one listed, and teams' results drifting away from Civicsmith's. Teams can also opt in to send counts of errors and refusals, never their content. An AI then moves from "listed" to "watch" to "lapsed" to "retired", under your standing rule (AI7). A lapsed AI takes no new work, but nothing it already produced changes. Gains: problems are caught early and shown to teams. Costs: more to build, and re-test spending under your cap.</span></li>
+        <li><span class="k">B · Only the provider's announced retirement dates</span><span>Gains: simple, costs nothing. Costs: a quiet change in behaviour is never caught.</span></li>
+        <li><span class="k">C · As A, without the teams' opt-in counts</span><span>Gains: no data from teams at all. Costs: slower to notice problems that show up only in real use.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="AI13">
+      <div class="meta"><span class="k">AI13</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
+      <h3>What does a team see about cost, before and after the assistant works?</h3>
+      <p><span class="k">Why this matters.</span> Every ask and run is paid by someone's AI account, and prices for the same model differ up to tenfold between providers. Teams on small budgets need to know before they start, and after, so a limit is never a surprise. Some plans, like a monthly subscription, report no money per request at all.</p>
+      <p class="note">Example: before a long check of a contract, Dev sees "about $0.40 to $1.10 on the team's OpenRouter account". Afterwards he sees "$0.62". On his own ChatGPT subscription the same work shows "not measurable in money: 41 requests".</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · An estimate before, the actual cost after, and "not measurable in money" where a plan reports none</span><span>Also shown: spend against each limit, alerts at levels the owner sets, and, if a run would move to another account, what that move adds. A subscription is never shown as $0. Who sees each member's cost follows your earlier answer (K5459). Gains: no surprises, and limits are managed early. Costs: estimates need measured figures for each AI, so a new AI shows "no estimate yet" until it has been measured.</span></li>
+        <li><span class="k">B · The actual cost after, only</span><span>Gains: simpler, and never shows a wrong estimate. Costs: nobody knows before starting what a long run will cost.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="AI14">
+      <div class="meta"><span class="k">AI14</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
+      <h3>What happens when an AI provider is down or very slow?</h3>
+      <p><span class="k">Why this matters.</span> Every provider has outages. The assistant should never silently switch where a member's material goes, never lose work, and never leave a member staring at a spinner.</p>
+      <p class="note">Example: Maria asks a question while the team's provider is down. Overnight, the team's standing questions are due on the same provider.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · A quick, honest stop for a member who is waiting; a pause and resume for overnight work</span><span>A member asking is told at once and offered the choices: wait, switch to another account she may use (a move to someone else's account asks her first, as you ruled in AI3), or continue without AI. Work nobody is waiting on, like standing questions, pauses and resumes by itself when the provider recovers. Brief errors are retried a few times. Nothing already done is lost, and a retry never writes anything twice. Gains: honest and safe. Costs: overnight answers can come late.</span></li>
+        <li><span class="k">B · Always move to the next account in the list</span><span>Gains: fewer interruptions. Costs: material goes to another provider without the member choosing it, unless that provider was already shown to her.</span></li>
+        <li><span class="k">C · Only show an error</span><span>Gains: simplest. Costs: overnight work is lost and has to be started again by hand.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="AI15">
+      <div class="meta"><span class="k">AI15</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
+      <h3>Should a provider's terms that bind the team's work be shown when an AI is connected?</h3>
+      <p><span class="k">Why this matters.</span> Some providers' rules touch civic work directly. OpenAI's usage policies limit political campaigning and lobbying uses. xAI's ask users not to provide sensitive information such as political opinions. Terms also change on announced dates. A team should know what it agrees to before its work depends on it.</p>
+      <p class="note">Example: an administrator connects an OpenAI account. Before switching it on she sees two of OpenAI's rules that apply to an advocacy team, quoted with the page and the date, and a note that new terms take effect on a date in November.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Show them, quoted with the page and the date, and restrict nothing</span><span>The terms that bear on civic work are quoted with page and date, shown at connection and again before a change takes effect. Civicsmith restricts nothing on their account (a point not confirmed restricts nothing). Gains: the team decides knowing the rules. Costs: Civicsmith has to keep the quotes current.</span></li>
+        <li><span class="k">B · Show them, and also block uses a provider's terms forbid</span><span>Gains: protects teams from breaking terms. Costs: Civicsmith would be interpreting providers' terms for teams, and would often be wrong.</span></li>
+        <li><span class="k">C · Link to the terms only</span><span>Gains: nothing to maintain. Costs: few will read them, so a team may never learn of a rule that affects its work.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="AI16">
+      <div class="meta"><span class="k">AI16</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
+      <h3>Should Civicsmith run one small service of its own, for the AI list and teams' sealed test results?</h3>
+      <p><span class="k">Why this matters.</span> You decided that the list of AIs updates at any time, not only with releases, and that teams can send sealed test results to you. Both need somewhere outside any team's copy that every copy can reach: a place that publishes the signed list and receives the sealed results. Today nothing like that exists. Each team's copy is its own.</p>
+      <p class="note">Example: on a Tuesday you approve "Llama 4 at Groq" for the list. Every team's copy picks it up the next day without a new release. A team in Fresno tests a local model and presses "Send the results", and the sealed file lands with you.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · One small Civicsmith service on Civicsmith's own Cloudflare account</span><span>It publishes the list and its notices, all signed with a key kept offline (the service itself cannot sign anything), and receives sealed results it cannot open. Opening and scoring happen apart from it. You decide what enters the list (AI7's rule aside). Gains: the list updates any time, and teams' results reach you. Costs: one more thing Civicsmith runs and pays for, small Cloudflare fees, and every copy depends on it for list updates (each copy keeps its last good list if the service is unreachable, as you ruled in AI9).</span></li>
+        <li><span class="k">B · Publish the list as a file in the public code repository, and receive results by email</span><span>Gains: nothing new to run. Costs: list updates are tied to the repository, results arrive by hand, and teams have no "Send" button.</span></li>
+        <li><span class="k">C · No central service; the list ships only with releases</span><span>Gains: simplest. Costs: goes against your decision that the list updates at any time, and teams' results have no way to reach you.</span></li>
+      </ul>
+    </article>
