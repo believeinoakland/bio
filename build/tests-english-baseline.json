@@ -683,6 +683,8 @@
   "newgroup/test/t51.test.mjs": 1,
   "ocr-worker/test/ocr-worker.test.mjs": 10,
   "pdf-worker/test/codecs/dct.test.mjs": 1,
+  "roster-reader/test/roster-reader.test.mjs": 2,
+  "roster-reader/test/source.test.mjs": 1,
   "sheet-worker/test/sheet-worker.test.mjs": 1,
   "site/test/site.test.mjs": 1,
   "stewards/test/requirements.test.mjs": 3
