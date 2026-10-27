@@ -2402,3 +2402,8 @@ MERGE 885cb8d628 (DEC-481), answering BOB #324's message (PLANNING L32; K5540, K
 The branch tip also carries U512 and U513's held commits; DEC-481's commit touches only DECISIONS.md, HANDOFF.md and the screens files, so cherry-pick it alone if it should go first.
 
 Folded: DECISIONS.md DEC-481; screens (published, question). Owed (its owed: line): the subject history answered with date, member, old and new subject, part, reason (L32's owner); publication or public-read draws the line choosing its form; screens-inquiry draws "Who it is about" and its notes.
+
+## U515 · MERGE · 2026-10-27 · session_018BhceeRn5Di4Q4kwmEsXF9 · secondary
+MERGE 9213d2aba8 (DEC-482), answering BOB #324's message on K5546 and K5555: `screen.photo.dropped.profile` now reads "a color profile that failed its safety check", so "Left out of the safe picture: {what}." names a profile only when the structural check refused it; a sound profile is kept and not mentioned. No other row speaks of color profiles. Docs only; no test reads the phrase. `bio-plane/src/case-checker/program.mjs` embeds the rows: regenerate it with the words.
+
+Folded: DECISIONS.md DEC-482; words-drawn.src.py (DEC-473's row in place). Owed (its owed: line): the case-checker bundle regenerated.
