@@ -4,7 +4,7 @@
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
-**Before R1 (BOB's acts):** (1) TESTS-SWEEP merged by its §5.10 pass; words and fixtures checks at 0; the fixtures findings needing a module's judgment become entries below (K5425 (b)) `[owed: TESTS-SWEEP's list]`. (2) The new modules added to `modules.json` and `layers.md` (STRUCTURE §5; the ones carrying capability to Bob), member-roster R27's `MODULE_ORDER` (R61: modules.json's order) re-pinned. (3) Requirement lines written from the READY drafts named below, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures given to layer 11's START. (5) The design rows each entry names folded from `main` (K945).
+**Before R1 (BOB's acts):** (1) TESTS-SWEEP merged by its §5.10 pass; words and fixtures checks at 0; the fixtures findings needing a module's judgment become entries below (K5425 (b)) `[owed: TESTS-SWEEP's list]`. (2) Layer 6 re-ordered (FOLD-AI §2.9) and the new modules added to `modules.json` and `layers.md` (STRUCTURE §5; the ones carrying capability to Bob), member-roster R27's `MODULE_ORDER` (R61: modules.json's order) re-pinned. (3) Requirement lines written from the READY drafts named below, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures given to layer 11's START. (5) The design rows each entry names folded from `main` (K945).
 
 **Reading an entry.** As T52-R1 (`archive/T52-R1.md`, "Reading an entry"): `first: settle X`, `[waits: X]`, `after X` (a same-layer dependency arrives as a CHANGE, K5434 (2)). A detail file named by an entry is read whole at START; its lines are the module's requirements once BOB writes them.
 
@@ -14,7 +14,7 @@
 - T53 · N1257 (DEC-404, N1256) · the four defects first: weekend compared by days, closure lists by qualified name in the branch, records_help per law, a `federal` office level · `capabilities/N1257-requirements-jurisdictions.md` R103-R105, R107
 - T53 · N1257 (K5452, K5458, K5462) · the layer model: layer and `within`, names addressed `layer:name`, the forest checked branch by branch, a conflict naming its layers, records laws saying whom they govern, coverage dates · same, R99-R102, R106, R108
 - T53 · N1257 · the shipped layers (federal, California, Alameda County, Oakland), the every-footprint build check, the package alias and its equality test; the test forest · same, R109-R114, R118
-- T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · same, R115-R117 `[waits: CONSISTENCY §2.15 (the stated fiscal year's layer)]`
+- T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · same, R115-R117 plus the one placeless team-rules layer (CONSISTENCY §2.15, decided) `[owed: CAPABILITIES' amendment of R24, R100, R102, R115]`
 - T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · same, R119, R120 `[owed: F4's measure; the makers' key]`
 - `[owed: K5458's lines: every module that stores a rule, list or office name stores its layer (K5462: old records resolve on their own date)]`
 - T53 · A2 (DEC-458) · a government's fiscal year as a one-value layer fact; a team's statement a team-layer entry · `planning/lines-A2-fiscal-year.md` re-cut per CONSISTENCY §2.1 `[owed: L2-3]`
@@ -23,7 +23,7 @@
 - T53 · A2 · `fiscalPeriod` over a stated entry, `from`, reasons never holding `*` · `planning/lines-A2-fiscal-year.md` (civil-time)
 
 **connection-grammar**
-- T53 · N1260 (DEC-409 to DEC-411, K1471, K4354) · `chainStrength`, `strongerChain`, paths ordered by strength, `foldParallel`, `CHAIN_LIMITS` · `capabilities/N1260-following-the-trail-a.md` §1, §2 (R22-R25) `[CONSISTENCY §2.16: its time figures]`
+- T53 · N1260 (DEC-409 to DEC-411, K1471, K4354) · `chainStrength`, `strongerChain`, paths ordered by strength, `foldParallel`, `CHAIN_LIMITS` · `capabilities/N1260-following-the-trail-a.md` §1, §2 (R22-R25) (counts only; the times are budget classes of `followfrom` and explore's ops, CONSISTENCY §2.16)
 
 **text-chain**
 - T53 · A8 (DEC-464) · a typed passage's two grades (unchecked, checked one step stronger, never `EARNED_CAPTURE_CEILING`) · `planning/lines-A8-typed-page.md` §2 `[owed: L2-10]`
@@ -111,7 +111,7 @@
 
 **local-facts**
 - T53 · N1257 (K5451) · a team writes its own layers entry by entry; a wrong shipped rule is reported, not edited; an old fact path still reads · `capabilities/N1257-requirements-modules.md` (local-facts R23-R27) `[waits: C3, BOB's]`
-- T53 · A2 · the stated fiscal year as a team entry (R28, R29) · `planning/lines-A2-fiscal-year.md` `[waits: CONSISTENCY §2.15]`
+- T53 · A2 · the stated fiscal year as a team entry (R28, R29) · `planning/lines-A2-fiscal-year.md` (re-cut L7 onto the team-rules layer)
 
 **connections**
 - T53 · N1260 (K1469, K1470, K1486, K1489) · `named_in`: a document as a hop's end, its hub, its sight check · `capabilities/N1260-following-the-trail-a.md` §3 (R74-R76) `[waits: measure M-F1]`
@@ -148,7 +148,7 @@
 - T53 · A8 · a typed passage citable at once; the citation names typist and checker · `planning/lines-A8-typed-page.md` §6 `[owed: L2-11]`
 
 **run-rules**
-- T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37) · `lane-ai-design/draft-run-rules.md` `[waits: AI1 for R19's standing measure and R37; reading A or B, FOLD-AI §1]`
+- T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37) · `lane-ai-design/draft-run-rules.md` (the map, `draft:reading` → `draft`; FOLD-AI §1 decided) `[waits: AI1 for R19's standing measure and R37]`
 
 **ai-runs**
 - T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended) `[waits: AI1, AI3, AI10]`
@@ -156,7 +156,7 @@
 **agent-harness**
 - T53 · K5457 · `ROLE_NEEDS`, `needOf`, `partOf` over the six parts, `disclosureGate`, `resumeAt`; R17 moves with N1205 · `lane-ai-design/draft-agent-run-path.md` (agent-harness R20-R24)
 
-**agent-model** (before ai-use, FOLD-AI §2)
+**agent-model** (position 90, FOLD-AI §2.9)
 - T53 · K5457 · first: the interface (`turn`, `converse`, `capabilities`, `estimate`, `health`) with the Anthropic adapter behind it, today's tests passing through `turn` (N1205's landing place) · `lane-ai-design/draft-agent-model.md` R1-R36, R43, R44, R54, R55
 - T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI4 (R47), AI10; live checks L2, L3]`
 
