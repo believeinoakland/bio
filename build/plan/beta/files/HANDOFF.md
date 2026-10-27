@@ -41,3 +41,6 @@ PROBE-SPEC-L1-L2.md written (READING-PIPELINE's first Stage 1 job, then plat-s1)
 
 ### F9 · 2026-10-27
 MOVE-COPY.md written (ranged streaming default; CopyObject if the eu rehearsal allows; Super Slurper alternative; parts until the GAP-1.5 migration). Sent to BOB.
+
+### F10 · 2026-10-27
+CC4 points to PLANNING's A4-R1..R6.
