@@ -12,7 +12,7 @@
 | money | PLANNING A2 R36-R38 (fiscal keys, the view) | CAPABILITIES N1260-a | cite draft ids (A2-R4..R7); BOB numbers at writing (K5448) |
 | screens-inquiry | PLANNING A1 R140 (opening form) | CAPABILITIES N1260-b | as above (A1-R4) |
 | content | PLANNING A8 R63-R64 (typed grade, labels) | CAPABILITIES N1259-a | as above (A8's content lines) |
-| (L6 census) | jurisdictions R99-R105 (N1257, N1259-a, N858); screens-inquiry R140-R142 (A1, A7, N1260, N1272); screens-daily R108-R109 (A6, N1260, N1272); interface-shell R136 (N1260, A7); journey-check R32-R34 (N1260, N1265); instance-setup R107 (N1257, N824); installer R86 (N1257, N1265); filing-templates R36, reading-guides R17 (N1257, N858); money R36-R38 (N1260, A2) | — | Numbered by BOB at writing (K5448). For money, N1260 keeps R36-R38 (its lines cite them) and A2 takes R39-R41. |
+| (L6 census) | jurisdictions R99-R105 (N1257, N1259-a, N858); screens-inquiry R140-R142 (A1, A7, N1260, N1272); screens-daily R108-R109 (A6, N1260, N1272); interface-shell R136 (N1260, A7); journey-check R32-R34 (N1260, N1265); instance-setup R107 (N1257, N824); installer R86 (N1257, N1265); filing-templates R36, reading-guides R17 (N1257, N858); money R36-R38 (N1260, A2) | — | Numbered by BOB at writing (K5448). For money, N1260 keeps R36-R38 (its lines cite them) and A2 takes R39-R41. A2's jurisdictions and local-facts lines are CAPABILITIES' R134, R135 and R31, R32 (K5468). |
 | (general) | every lane drafts from the file's highest id | — | BOB numbers at writing, in the order the plan's entries list them; drafts cite each other by draft id (A2-R99, N1257-R99) until then |
 
 ## 2. Overlaps of subject (one owner each)

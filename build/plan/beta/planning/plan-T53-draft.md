@@ -17,7 +17,7 @@
 - T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · same, R115-R117 plus the one placeless team-rules layer (CONSISTENCY §2.15, decided) `[owed: CAPABILITIES' amendment of R24, R100, R102, R115]`
 - T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · same, R119, R120 `[owed: F4's measure; the makers' key]`
 - `[owed: K5458's lines: every module that stores a rule, list or office name stores its layer (K5462: old records resolve on their own date)]`
-- T53 · A2 (DEC-458) · a government's fiscal year as a one-value layer fact; a team's statement a team-layer entry · `planning/lines-A2-fiscal-year.md` re-cut per CONSISTENCY §2.1 `[owed: L2-3]`
+- T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18, L3 (Bob)]`
 
 **civil-time**
 - T53 · A2 · `fiscalPeriod` over a stated entry, `from`, reasons never holding `*` · `planning/lines-A2-fiscal-year.md` (civil-time)
@@ -111,7 +111,7 @@
 
 **local-facts**
 - T53 · N1257 (K5451) · a team writes its own layers entry by entry; a wrong shipped rule is reported, not edited; an old fact path still reads · `capabilities/N1257-requirements-modules.md` (local-facts R23-R27) `[waits: C3, BOB's]`
-- T53 · A2 · the stated fiscal year as a team entry (R28, R29) · `planning/lines-A2-fiscal-year.md` (re-cut L7 onto the team-rules layer)
+- T53 · A2 (K5468) · a member states a government's year with how checked, refused in order (`FACT_VALUE_REFUSED`, `LAYER_ENTRY_IN_SHIPPED`, `FISCAL_YEAR_IN_RECORDS`) (R31); its standing at `team/<level>:<place>/fiscal_year` (R32) · `capabilities/N1257-requirements-a2.md` `[owed: READY]`
 
 **connections**
 - T53 · N1260 (K1469, K1470, K1486, K1489) · `named_in`: a document as a hop's end, its hub, its sight check · `capabilities/N1260-following-the-trail-a.md` §3 (R74-R76) `[waits: measure M-F1]`
