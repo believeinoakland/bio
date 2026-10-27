@@ -37,3 +37,13 @@ test("the op answers nothing without PROTO_B=1 and refuses a non-admin with it",
   assert.equal(await protobProbeOp(new URL("https://x/?op=protobprobe"), {}, null, { cls: "admin", json }), null);
   assert.equal((await protobProbeOp(new URL("https://x/?op=protobprobe"), { PROTO_B: "1", CAPTURES: {} }, null, { cls: "member", json })).s, 403);
 });
+
+test("protobProbeOp: a member is refused unless the session administers (PROTO_B=1)", async () => {
+  const { protobProbeOp } = await import("../../../src/proto-b/probe.mjs");
+  const json = (b, s) => new Response(JSON.stringify(b), { status: s });
+  const env = { PROTO_B: "1" };
+  const u = new URL("http://x/?op=protobprobe");
+  assert.equal((await protobProbeOp(u, env, null, { cls: "member", json })).status, 403);
+  assert.equal((await protobProbeOp(u, env, null, { cls: "member", json, administer: true })).status, 503, "past the gate (no CAPTURES here)");
+  assert.equal(await protobProbeOp(u, {}, null, { cls: "member", json }), null, "flag unset: nothing");
+});

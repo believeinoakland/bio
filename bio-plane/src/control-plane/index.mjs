@@ -48,6 +48,7 @@ import { appRouteOf, appPage, appAsset, appScript, logoAsked, addressPageOf } fr
 /* R116 (fix round 2; C15): the interface words kept for the release and compressed */
 import { interfaceWordsCache } from "./words-cache.mjs";
 import { probe as probeOfCache } from "./shared-cache.mjs";
+const PROTO_ADMIN_READS = ["tablebytes", "protocprobe", "protobprobe"];   /* PROTOTYPE: see the gate after admission */
 /* R121 (fix round 4, C5a, P9): the door's clock, in its own isolate */
 import { makeClock, clockedEnv, withClock, withServerTiming } from "./phase-clock.mjs";
 import { interfacePage, interfaceScript, interfaceScriptHash, pageWork } from "../interface-shell/index.mjs";
@@ -1204,6 +1205,10 @@ export function makeFetch(hooks = {}) {
     /* REC-132: the session's two halves, apart: `sessViewer` wherever a VISIBILITY gate is stamped, `sessIdentity`
        wherever the question is WHO; `sessMember` the folded id every author, by and actor stamp carries. */
     const { member: sessMember, viewer: sessViewer, identity: sessIdentity, rights: sessRights, caps: sessCaps } = caller;
+    /* PROTOTYPE (proto/levels-2-3-all): the three measuring reads admit the admin bearer AND a signed-in member session whose rights
+       administer (the check `op=stats` uses: `viaSession && sessRights.administer`); any other member, or none, is refused. */
+    if (PROTO_ADMIN_READS.includes(op) && !(cls === "admin" || (viaSession && sessRights && sessRights.administer)))
+      return json({ ok: false, reason: "CLASS_FORBIDDEN", error: "forbidden for token class", op, cls }, 403);
     /* R106 (T50; N1186, K3557; admission R30, credentials R79): THE VIEWER OF AN `ai` CALLER is the one admission answers,
        the principal's viewer carrying the project its credential was minted for (the plain principal's viewer when it was
        minted with none), so what the caller reads is what membership R149 admits within that project. Every viewer stamp

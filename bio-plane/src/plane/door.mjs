@@ -97,7 +97,7 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
     storeName, cls, viewer, member: viaSession ? sessMember : "", ...hook });
   if (op === "registeraudit") return registerAuditOp(env, store(), { json, doAnswer, storeSilent, storeRefusal, captureKey,
     storeName, cls, ...hook });
-  if (op === "protobprobe") { const pb = await protobProbeOp(url, env, store(), { cls, json }); if (pb) return pb; }   /* PROTO-B: null unless PROTO_B=1 */
+  if (op === "protobprobe") { const pb = await protobProbeOp(url, env, store(), { cls, json, administer: viaSession && !!(sessRights && sessRights.administer) }); if (pb) return pb; }   /* PROTO-B: null unless PROTO_B=1 */
   if (INSTANCE_SETUP_OPS.includes(op)) return instanceSetupOp(op, url, env, storeName, { cls, scratch: SCRATCH, json, doAnswer,
     storeSilent, storeRefusal, viewer, ...hook });
   if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, store, { json, doAnswer, storeRefusal, storeSilent,

@@ -135,9 +135,9 @@ export async function protobProbe({ sql, bucket, store, args = {} }) {
 
 /** The door's arm of `op=protobprobe` (admin only, behind PROTO_B=1): asks the room's `/protobprobe` route and states the room's
  *  I/O time as `in-protobprobe` in `Server-Timing`, as the control plane states `in-<route>` for the routes it forwards. Null when the flag is unset. */
-export async function protobProbeOp(url, env, stub, { cls, json }) {
+export async function protobProbeOp(url, env, stub, { cls, json, administer = false }) {
   if (!env || env.PROTO_B !== "1") return null;
-  if (cls !== "admin") return json({ ok: false, reason: "PROTO_B_ADMIN_ONLY" }, 403);
+  if (cls !== "admin" && !administer) return json({ ok: false, reason: "PROTO_B_ADMIN_ONLY" }, 403);
   if (!env.CAPTURES) return json({ ok: false, reason: "PROTO_B_NO_CAPTURES_BINDING" }, 503);
   const q = new URLSearchParams();
   for (const k of ["n", "k", "term", "hits", "phase", "copy", "maxunits"]) if (url.searchParams.has(k)) q.set(k, url.searchParams.get(k));

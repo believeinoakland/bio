@@ -918,7 +918,7 @@ const OPS_HAND = aliasRows({
   actionkinds:      { classes: ["admin", "member", "probe"],     mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
-  protocprobe: { classes: ["admin"],                             mutating: false },   /* PROTO C (throwaway): the Worker cache's counts */
+  protocprobe: { classes: ["admin", "member"],                            mutating: false },   /* PROTO C (throwaway): the Worker cache's counts */
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
   /* REC-176: the census of manifest rows a repeated snap key overwrote; counts and lists, never rewrites;
      registeraudit's fence. */
@@ -967,7 +967,7 @@ const OPS_HAND = aliasRows({
   /* Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a
      member's session. */
   /* PROTO-B (throwaway; answers only with env PROTO_B=1): timings of text units and a term search, room against R2. */
-  protobprobe: { classes: ["admin"],                             mutating: false },
+  protobprobe: { classes: ["admin", "member"],                            mutating: false },
   cpuprobe:   { classes: ["admin", "probe"],                     mutating: true  },
   /* M2', the fetch layer; REC-33: `daemon` is admitted so the class can reach the archive arm, and the direct arm
      refuses it in the handler. */
@@ -1510,7 +1510,7 @@ const OPS_HAND = aliasRows({
   /* T33 (K1640; R17): a page of an export, with `export`'s credential (corpus-export R6, R8); it writes nothing. */
   exportpage:      { classes: ["admin"],                         mutating: false },
   /* PROTOTYPE (proto/levels-2-3): the administrator's per-table size read (record-core `tableBytes`), exportpage's posture: admin class only, no session, nothing stamped, writes nothing. */
-  tablebytes:      { classes: ["admin"],                         mutating: false },
+  tablebytes:      { classes: ["admin", "member"],                        mutating: false },
   /* T33 (K1566; money-checks R6): the detectors' bounded run is the scheduler's, which calls it in-process; the op is
      the operator's, `reproject`'s posture, and no session reaches it (recorded below). */
   moneydetectorsrun: { classes: ["admin", "probe"],              mutating: true  },
