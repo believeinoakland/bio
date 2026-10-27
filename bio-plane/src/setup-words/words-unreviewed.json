@@ -46656,13 +46656,6 @@
       "line": 93
     },
     {
-      "id": "refusal.MONEY_BAD_PERIOD",
-      "en": "That period is not one this team's money records can read.",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 83
-    },
-    {
       "id": "refusal.WORKBOOK_FILE_TOO_LARGE",
       "en": "This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",
       "module": "workbooks",
