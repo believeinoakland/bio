@@ -22,7 +22,7 @@ import { EVENTS_SCHEMA, EVENTS_ADDED_COLUMNS } from "./schema.mjs";
 import { EVENT_CHECKS } from "./checks.mjs";
 import { readDate, whenOf, sequenceOf, spanOfBound, placeAgainst, orderByWhen } from "./time.mjs";
 import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } from "./follow.mjs";
-import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
+import { neighboursOf, OWNER_KINDS, SLICE } from "./owner.mjs";
 import { USE_KINDS, OUTCOMES, recordDiscretion, recordAssessment, withdrawUse, facetOf, usesOf } from "./uses.mjs";
 import { recordedBy } from "./recorded.mjs";
 import { reason } from "./reasons.mjs";
@@ -653,8 +653,8 @@ export class Events {
      for many events in a few queries (R35's pages, T36-14), each answer the same as one event's alone. */
   #governingMany(eventIds) {
     const ids = [...new Set(eventIds)], out = new Map();
-    for (let i = 0; i < ids.length; i += 400) {
-      const part = ids.slice(i, i + 400), marks = part.map(() => "?").join(",");
+    for (let i = 0; i < ids.length; i += SLICE) {
+      const part = ids.slice(i, i + SLICE), marks = part.map(() => "?").join(",");
       for (const a of this.#rows(`SELECT c.event_id AS chosen_for, a.* FROM event_choices c JOIN event_attestations a ON a.attestation_id = c.attestation_id
                                   WHERE c.event_id IN (${marks}) AND a.event_id = c.event_id AND a.serves='event' AND a.value IS NOT NULL
                                   ORDER BY c.choice_id DESC`, ...part)) {
@@ -671,8 +671,8 @@ export class Events {
   /* R24: which of these attestations' dated facts are upper bounds. */
   #upperBounds(atts) {
     const ids = [...new Set(atts.filter((a) => a && a.dated_fact_id).map((a) => a.dated_fact_id))], out = new Set();
-    for (let i = 0; i < ids.length; i += 400) {
-      const part = ids.slice(i, i + 400);
+    for (let i = 0; i < ids.length; i += SLICE) {
+      const part = ids.slice(i, i + SLICE);
       for (const f of this.#rows(`SELECT dated_fact_id FROM dated_facts WHERE upper_bound=1 AND dated_fact_id IN (${part.map(() => "?").join(",")})`, ...part))
         out.add(f.dated_fact_id);
     }
@@ -731,8 +731,8 @@ export class Events {
      at once (R35's pages), each answer the same as one event's alone. */
   #whensRead(eventIds) {
     const ids = [...new Set(eventIds)], held = new Map(), out = new Map();
-    for (let i = 0; i < ids.length; i += 400) {
-      const part = ids.slice(i, i + 400);
+    for (let i = 0; i < ids.length; i += SLICE) {
+      const part = ids.slice(i, i + SLICE);
       for (const r of this.#rows(`SELECT * FROM event_when_cache WHERE event_id IN (${part.map(() => "?").join(",")})`, ...part)) held.set(r.event_id, r);
     }
     const rebuilt = this.#whenRows(ids);
@@ -1238,8 +1238,8 @@ export class Events {
      viewer who may see the fact's capture (R40); a capture not held and one hidden contribute nothing, answered alike. */
   #datedLane(shas, from, to, limit, viewer) {
     const sees = this.#seer(viewer), items = [];
-    for (let i = 0; i < shas.length; i += 400) {
-      const part = shas.slice(i, i + 400);
+    for (let i = 0; i < shas.length; i += SLICE) {
+      const part = shas.slice(i, i + SLICE);
       for (const r of this.#rows(`SELECT * FROM dated_facts WHERE capture_sha IN (${part.map(() => "?").join(",")}) ORDER BY extent, source_row, kind, value`, ...part)) {
         if (!sees(r.bundle_id)) continue;
         let w = null;
@@ -1256,17 +1256,21 @@ export class Events {
      governing attestation, or null with why for an item placed nowhere. Only what the viewer may see is answered or
      counted (R40). Answers, for each event id, a function of its item (whose `when` says whether it is placed). */
   #drawn(eventIds, viewer) {
-    const gov = this.#governingMany(eventIds), memo = new Map(), out = new Map();
+    const gov = this.#governingMany(eventIds), memo = new Map(), out = new Map(), sees = this.#seer(viewer);
     for (const id of eventIds) {
       const atts = this.#visibleAttestations(id, viewer);
       const attById = new Map(atts.map((a) => [Number(a.attestation_id), a]));
       const live = this.#rows(`SELECT * FROM event_participants WHERE event_id=? AND superseded_by IS NULL ORDER BY participant_id`, id)
         .filter((p) => attById.has(Number(p.attestation_id)));
       const participants = live.slice(0, ITEM_PARTICIPANTS_MAX).map((p) => this.#participantView(p, viewer, attById, memo));
+      /* R57: every recorded relation between this event and another, in the order recorded, withdrawn ones marked; a relation whose citation the viewer may not see is not answered (R40) */
+      const relations = this.#rows(`SELECT r.kind, r.from_event, r.to_event, r.withdrawn_at, a.bundle_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
+                                    WHERE r.from_event=? OR r.to_event=? ORDER BY r.relation_id`, id, id)
+        .filter((r) => sees(r.bundle_id)).map((r) => ({ kind: r.kind, other: r.from_event === id ? r.to_event : r.from_event, withdrawn: r.withdrawn_at != null }));
       const g = gov.get(id);
       out.set(id, (item) => {
         const placed = !!item.when && g && attById.has(Number(g.attestation_id));
-        return { participants, participants_total: live.length, participants_truncated: live.length > ITEM_PARTICIPANTS_MAX,
+        return { participants, relations, participants_total: live.length, participants_truncated: live.length > ITEM_PARTICIPANTS_MAX,
                  grade: placed ? g.grade ?? null : null,
                  ...(placed ? {} : { grade_why: item.why && item.why.key === "events.why.cache_stale"
                    ? reason("events.why.grade_time_unread")
@@ -1282,8 +1286,8 @@ export class Events {
   #eventsCiting(shas, viewer) {
     if (!shas.length) return [];
     const sees = this.#seer(viewer), byEvent = new Map();
-    for (let i = 0; i < shas.length; i += 400) {
-      const part = shas.slice(i, i + 400);
+    for (let i = 0; i < shas.length; i += SLICE) {
+      const part = shas.slice(i, i + SLICE);
       for (const a of this.#rows(`SELECT event_id, bundle_id FROM event_attestations WHERE serves='event' AND capture_sha IN (${part.map(() => "?").join(",")})`, ...part))
         if (sees(a.bundle_id) && !byEvent.has(a.event_id)) byEvent.set(a.event_id, { parts: [], concerns: false });
     }

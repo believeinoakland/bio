@@ -79,6 +79,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 **explore**
 - T52-18 · W9 · C-K22 label · MINOR · an event node is named in the Timeline's words (`screen.timeline.kind`), not "award · undated". W30 draws the grade word and the source link. PL1 W9.
 
+**retrieval**
+- T52-101 · query-language R35 (K5389) · test-only · retrieval's tests that assert a snippet's match in brackets (`passage-arm.test.mjs`'s R11/R15/R54 and R79 tests, `t51-round9.test.mjs` R95, `t51-fix2.test.mjs`) read `MARK_OPEN` and `MARK_CLOSE` (imported from query-language, never copied); after query-language merges (K5393).
+
 **query-language**
 - T52-19 · W10 · B-K5 marker · MAJOR · the match marker in a snippet is one the stored text cannot contain (or offsets), so a literal "[placed nowhere]" or "[object Object]" is not eaten; W28 adapts the drawer. PL1 W10.
 
@@ -92,6 +95,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 **contradiction**
 - T52-22 · `candidatesFor` publishes a member-flagged candidate (`flagged_by`) in its answer, so screens-inquiry's `t51-fix11-b89.test.mjs` `answer(c)` takes it and R138's flags list can be drawn (SCREENS-INQUIRY #34 J64; K5282).
+
+**agent-worker**
+- T52-102 · `requirements.test.mjs` red in a batch run of query-language's users (`proc tests --users`), green alone (QUERY-LANGUAGE #1, K5393): first: settle the cause (shared state, ordering or memory; R14's memory watch), then fix it; "flake" is not a cause.
 
 ## Layer 8
 
@@ -135,13 +141,15 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 ## Layer 11
 
+Every screen job of this layer also draws DEC-445's rows and DEC-446's layout that touch its screens (merged `fb5f9dc2a9`, K5394): the singulars (`screen.finder.named.one`, `screen.findin.searched.one`, `document.unread.page`), `screen.finder.shown`, `screen.timeline.dated.meta.nograde`, `screen.find-in.notread.which`, `refusal.SUBJECT_IN_ACTIVE_PLAN.named`, the Document page's display rows (`screen.document.basis.*`, `screen.document.reading.*`), and DEC-446's DS2, DS4, DS5, DS10, DS13, DS18, DS20, DS32, DS35 as the mockup shows.
+
 **wizard-scripts**
 - T52-35 · W19 · A-K16 · MINOR · the shipped wizards' approver is a member-facing name in the data, not "BOB"; the draw stays. [waits: the approver's word, the design's]. PL2 W19.
 - T52-36 · DEC-443 (U486, `2892f29ccb`; K5315) · re-take the registry: the four acts (`factconfirm` on setup, `leggrade` on question, `resolve` on document, `signerknown` on queue); regenerate its data. interface-shell R134's re-points retire in their own entry.
 
 **op-grades**
 - T52-37 · R46 *(not yet met: T52)* · `expertisewithdraw` (DEC-386) has the entry Reasoned, source the kit; the totality names it.
-- T52-38 · `resolve` weight: with entities' entry (K5314), whichever side the job settles.
+- T52-38 · `resolve` weight: settled by ENTITIES #1 (K5392): `reasoned` stands with no `reason` field, so op-grades changes nothing here; its job confirms its table agrees and closes the entry.
 
 **affordances**
 - T52-39 · DEC-443 · reads `act.leggrade.does`, `act.signerknown.does`, `act.factconfirm.does` and the five `act.standard*.does` by key (ACT_HELP words move; three tests re-pinned); DEC-444's two ACT_HELP sentences (`counselpacketread`, `counselpacketexport`).
@@ -252,6 +260,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 - T52-98 · a knock, pull and vouch step and a testimony vouched (W5's gap: `journeys.mjs` has none; provenance R81 files both, K5381), and the walk of N1265's three installer steps.
 
 ## Completion round (P10: modules whose layer has closed)
+
+**file-safety** (layer 3)
+- T52-103 · DEC-449 (UX-DESIGN U493, `cf94163859`, B544) · test-only · `STAND_INS` drops `SIGNATURES_RUN_UNDER_WAY` now that `refusal.SIGNATURES_RUN_UNDER_WAY` has its row; R24 (`rows.test.mjs`) green. Done instead by BOB as a §5.10 mechanical pass at layer 5's close (no job running), with DEC-449 and DEC-450 (U494, `2ac5195725`) merged in the same step, so R24 is never red on the tranche (K5397).
 
 **file-scanner** (layer 1)
 - T52-100 · U5 (T52-13 settled by FILE-SAFETY #1, K5384) · MAJOR · the pinned LibreOffice 7.4.7.2 cannot load a streamed docx (data-descriptor flag 0x8, 28-byte extras; corpus docgen `alpha-B-6`); `renderer.mjs`'s `plainPackage` already converts it, but a render failed before stays failed because `renderer_version` holds only package versions (`handler.mjs:27`): file-scanner R36 (parked in `req-ahead-T52.md` until this round's START). Test with the streamed docx: refused by the old version, rendered once the version moves. After T52's redeploy (BOB's act 7) the live image is checked to carry `plainPackage` and capture `9dce360a…` renders.

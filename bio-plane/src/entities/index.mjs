@@ -138,6 +138,11 @@ export const TABLE_DECLARATIONS = Object.freeze([
 ]);
 
 /* R11 (C-75): the set form's identity groups, as `affordances`' `resolve` set act states them. */
+/* R67: the reference a testimony of a whole document is held under, and the bounds of the prose read. */
+export const WHOLE_DOCUMENT_REF = "document:whole";
+const PROSE_UNITS_MAX = 5000;
+const PROSE_ALIASES_MAX = 50000;
+const proseFold = (t) => String(t ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 const RESOLVE_ITEM_KEYS = [["captureSha"], ["captureSha", "ref"]];
 const RESOLVE_SHARED_KEYS = ["ref"];
 
@@ -1590,10 +1595,33 @@ export class Entities {
         if (!matches.length) { unresolved.push({ ref: rr.ref, kind: rr.ref_kind, key: rr.ref_key, label: rr.label }); continue; }
         resolved.push(...matches);
       }
+      /* R67: a reading that recorded no reference naming an entity is read as prose for followed names, offered as candidates only. */
+      if (ref == null && !resolved.length && !this.#one(`SELECT 1 AS x FROM resolutions WHERE capture_sha=? AND ref<>? LIMIT 1`, captureSha, WHOLE_DOCUMENT_REF))
+        unresolved.push(...this.#namesInProse(captureSha));
       return { ok: true };
     });
     return { ok: true, capture_sha: captureSha, references: refs.length,
              resolved_count: resolved.length, unresolved_count: unresolved.length, resolved, unresolved };
+  }
+
+  /* R67: the registered entities whose label or a standing alias is a whole-word run of the capture's text (letter case and
+     accents ignored), one candidate per entity not already resolved on this capture, in entity id order. Nothing is written. */
+  #namesInProse(captureSha) {
+    const units = this.#rows(`SELECT text FROM capture_text WHERE capture_sha=? ORDER BY seq LIMIT ?`, captureSha, PROSE_UNITS_MAX)
+      .map((r) => proseFold(r.text)).filter(Boolean);
+    if (!units.length) return [];
+    const hay = ` ${units.join(" | ")} `;
+    const held = new Set(this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE capture_sha=?`, captureSha).map((r) => r.entity_id));
+    const out = [], seen = new Set();
+    for (const a of this.#rows(`SELECT a.entity_id, a.alias, e.label FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
+                                 WHERE a.withdrawn_at IS NULL ORDER BY a.entity_id, a.canonical DESC, a.alias_norm LIMIT ?`, PROSE_ALIASES_MAX)) {
+      if (seen.has(a.entity_id) || held.has(a.entity_id)) continue;
+      const f = proseFold(a.alias);
+      if (!f || !hay.includes(` ${f} `)) continue;
+      seen.add(a.entity_id);
+      out.push({ kind: "name", key: a.alias, label: a.label ?? null, entityId: a.entity_id, grade: "C", needs_confirmation: true });
+    }
+    return out;
   }
 
   /** R12: a member's grade-D TESTIMONY that a document concerns an entity — the ONLY path a D enters. Both ends
@@ -1601,14 +1629,19 @@ export class Entities {
   testify({ captureSha, ref, entityId, basis, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return noSha("testimony is about a captured document, named by its capture sha256");
-    if (typeof ref !== "string" || !ref)
+    if (ref != null && (typeof ref !== "string" || !ref))
       return { ok: false, reason: "NO_REF", detail: localize("entities.index.testimony_names_the_raw", "testimony names the raw reference (kind:key) the document carries") };
     if (typeof entityId !== "string" || !entityId)
       return noEntity("testimony names the entity the reference concerns, by id");
     const b = typeof basis === "string" ? basis.trim() : "";
     if (!b) return actShapeRefusal("NO_BASIS", localize("entities.index.grade_d_is_recorded", "grade D is recorded testimony: it carries the member's stated basis, with an author and a date"));
-    const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`, captureSha, ref);
-    if (!rr) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
+    /* R67: without `ref` the testimony is of the document as a whole, held under the whole-document reference. */
+    const whole = ref == null;
+    const rr = whole
+      ? (this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, captureSha) ?? this.#one(`SELECT bundle_id FROM capture_text WHERE capture_sha=? LIMIT 1`, captureSha))
+      : this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`, captureSha, ref);
+    if (whole) ref = WHOLE_DOCUMENT_REF;
+    if (!rr) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref: whole ? null : ref,
       detail: localize("entities.index.this_captured_document_s_reading_2", "this captured document's reading carries no such reference to testify about") };
     if (!this.has(entityId)) return noSuchEntity(entityId);
     /* D-219: what grade D lacks is a captured DOCUMENT, not a basis. */
@@ -2229,7 +2262,7 @@ export const DECLARED_OPS = Object.freeze({
   resolve: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolve", "recogniser write, keyed by capture sha"),
     fields: { accepts: ["captureSha","ref","items"], requires: [["captureSha","items"]] } },
   resolvetestify: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolvetestify", "recogniser testimony, keyed by capture sha"),
-    fields: { accepts: ["captureSha","ref","entityId","basis"], requires: ["captureSha","ref","entityId","basis"] } },
+    fields: { accepts: ["captureSha","ref","entityId","basis"], requires: ["captureSha","entityId","basis"] } },
   resolutiondefect: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution"),
     fields: { accepts: ["captureSha","ref","entityId","reason","source"], requires: ["captureSha","ref","entityId","reason"] } },
   /* R62 (T51 fix round 3; C64; DEC-401, DEC-402): the administrator's confirm of an office a member named (R64). A member reaches the

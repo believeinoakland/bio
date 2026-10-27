@@ -5924,7 +5924,7 @@
   },
   {
    "key": "ceremony.gate.other",
-   "en": "Something in the draft stops the signing: {what}. Put it right in the case, then check again.",
+   "en": "This stops the signing: {what}. Put it right above, then check again.",
    "protected": false,
    "note": "DEC-299: any other gate, {what} its own plain sentence"
   },
@@ -13538,7 +13538,7 @@
   },
   {
    "key": "screen.published.is.leg.4.which.supports",
-   "en": "is Leg {leg}, which supports Finding {n}; it rests on documents this edition does not hold",
+   "en": "supports Finding {n} as passage {leg}; the documents it rests on are not held in this edition",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -34190,19 +34190,19 @@
   },
   {
    "key": "screen.members.cap.administer.confirm.head",
-   "en": "Make {who} an administrator?",
+   "en": "Propose {who} as an administrator?",
    "protected": false,
    "note": "DEC-384: B411 T-05: the confirmation before a grant that includes administering"
   },
   {
    "key": "screen.members.cap.administer.confirm",
-   "en": "Choosing “look after the team's Civicsmith” makes {who} an administrator. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.",
+   "en": "Choosing “look after the team's Civicsmith” proposes {who} as an administrator. {who} becomes one once every current administrator agrees; your choice counts as the first agreement. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.",
    "protected": false,
    "note": "DEC-384: B411 T-05: the confirmation"
   },
   {
    "key": "screen.members.cap.administer.confirm.yes",
-   "en": "Make {who} an administrator",
+   "en": "Propose {who} as an administrator",
    "protected": false,
    "note": "DEC-384: B411 T-05: the confirming button"
   },
@@ -37340,7 +37340,7 @@
   },
   {
    "key": "screen.matter.routes.none",
-   "en": "No route is known for this matter yet.",
+   "en": "No way to take this matter forward is recorded yet: no office or procedure that handles it is named.",
    "protected": false,
    "note": "DEC-396: B444 6: the routes (procedure guides) list when it is empty"
   },
@@ -38204,7 +38204,7 @@
   },
   {
    "key": "screen.follow.who.money",
-   "en": "Money given or received",
+   "en": "Payments made or received",
    "protected": false,
    "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
   },
@@ -38660,7 +38660,7 @@
   },
   {
    "key": "screen.explore.all.cut",
-   "en": "The explorer stopped after 2 seconds and shows what it found. More may exist.",
+   "en": "The explorer stopped early so as to answer quickly, and shows what it found. More may exist.",
    "protected": false,
    "note": "DEC-411: when the search was stopped at 2 seconds; never implies completeness"
   },
@@ -43490,7 +43490,7 @@
   },
   {
    "key": "screen.standard.through.none.summary",
-   "en": "When no day is recorded",
+   "en": "If no end date is stated",
    "protected": false,
    "note": "DEC-438: the mockup fold over the unknown state"
   },
@@ -44018,7 +44018,7 @@
   },
   {
    "key": "screen.case-editor.published.note",
-   "en": "Edition {n} is published and is never changed. Its scope, what it leaves out, its findings and the declared bias it was signed under are fixed in it as published. A correction, or anything new, goes in the next edition.",
+   "en": "Edition {n} is published and cannot be changed. Its scope, what it leaves out, its findings and the bias your team declared are fixed as published. To correct it or add anything, start the next edition.",
    "protected": false,
    "note": "DEC-444: D-K9: replaces the stale bias line and draft fields once published"
   },
@@ -44036,31 +44036,31 @@
   },
   {
    "key": "screen.case-editor.next.lead",
-   "en": "A next edition starts from Docket, where your team keeps everything the case has filed and received. It starts as a draft and is published like any case.",
+   "en": "A next edition starts as a draft from Docket, where your team keeps everything filed and received for this case, and is published like any case.",
    "protected": false,
    "note": "DEC-444: D-K9: above the link to Docket's \"Start the next edition\" (casedraft with the case, R52, DEC-374)"
   },
   {
    "key": "screen.counsel.made.head",
-   "en": "Packets made for this action",
+   "en": "Packets assembled for this action",
    "protected": false,
    "note": "DEC-444: E-K7 (filings R11, R13): the versions made, newest first"
   },
   {
    "key": "screen.counsel.made.lead",
-   "en": "Each time a member assembles the packet, a new version is made from the record as it stands then. Earlier versions stay readable, exactly as they were made. Only a member who may see this action and every project the packet draws on can read or save one.",
+   "en": "Each time a member assembles the packet, a new version is saved from the record as it stands then. Earlier versions stay readable, exactly as they were assembled. Only a member who may see this action and every project the packet draws on can read or save one.",
    "protected": false,
    "note": "DEC-444: E-K7: filings R11 (who may read), R13 (the versions listed)"
   },
   {
    "key": "screen.counsel.made.by",
-   "en": "Made by {who}, {date}, for {counsel}, {organization}",
+   "en": "Assembled by {who}, {date}, for {counsel}, {organization}",
    "protected": false,
    "note": "DEC-444: E-K7: a version's made line beside its id and version; {counsel} the counsel named and {organization} theirs (screen.counsel.made.by.noorg without one); then the reason quoted"
   },
   {
    "key": "screen.counsel.made.by.noorg",
-   "en": "Made by {who}, {date}, for {counsel}",
+   "en": "Assembled by {who}, {date}, for {counsel}",
    "protected": false,
    "note": "DEC-444: E-K7: the made line when no organization is named"
   },
@@ -44072,7 +44072,7 @@
   },
   {
    "key": "screen.counsel.made.exported",
-   "en": "Saved as a file once: by {who}, {date}, for {counsel}.",
+   "en": "Saved as a file by {who}, {date}, for {counsel}.",
    "protected": false,
    "note": "DEC-444: E-K7: the export record (counselPacketExport); one row per export"
   },
@@ -44102,9 +44102,243 @@
   },
   {
    "key": "screen.counsel.export.note",
-   "en": "Saving a version as a file records who saved it, when, and for which lawyer. The file keeps the marking on every page.",
+   "en": "Saving a version as a file records who saved it, when, and for which counsel. The file keeps the marking on every page.",
    "protected": false,
    "note": "DEC-444: E-K7: counselPacketExport records who, which version, when, which counsel"
+  },
+  {
+   "key": "refusal.SUBJECT_IN_ACTIVE_PLAN.named",
+   "en": "That matter is already in another open plan of this project: {plan}. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.",
+   "protected": false,
+   "note": "DEC-445: shown in place of refusal.SUBJECT_IN_ACTIVE_PLAN, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.basis.added",
+   "en": "Added by a member rather than fetched from its source, so who issued it is not yet known. Recorded {at}; a member can settle it from the queue.",
+   "protected": false,
+   "note": "DEC-445: shown in place of capture.authority_basis, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.reading.nonames",
+   "en": "No names of people or organizations were found in this document's text. The document itself is unchanged.",
+   "protected": false,
+   "note": "DEC-445: shown in place of reading-pipeline.why.reader_found_entities, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.reading.reread",
+   "en": "Civicsmith read {replaced} of the pages again more carefully and recovered more of their text; the rest kept their first reading.",
+   "protected": false,
+   "note": "DEC-445: shown in place of textchain.say.push.page_re_read, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.reading.transcribed",
+   "en": "{filled} scanned pages were turned into text and added to this document's own text{kept}",
+   "protected": false,
+   "note": "DEC-445: shown in place of reading-pipeline.scanned_page_transcribed, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.basis.fetched",
+   "en": "Who issued this is not yet known: nothing said so when it was fetched. Recorded {retrieved}; a member can settle it from the queue.",
+   "protected": false,
+   "note": "DEC-445: shown in place of acquisition.authority_basis.assertion_supplied_mechanical, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.finder.named.one",
+   "en": "named in 1 document, {document}",
+   "protected": false,
+   "note": "DEC-445: DS11: the singular of screen.finder.named"
+  },
+  {
+   "key": "screen.findin.searched.one",
+   "en": "Searched {read} of 1 document.",
+   "protected": false,
+   "note": "DEC-445: DS11: the singular of screen.findin.searched"
+  },
+  {
+   "key": "screen.finder.shown",
+   "en": "Showing {shown} of {total} matching documents.",
+   "protected": false,
+   "note": "DEC-445: DS11: Find's own row, in place of screen.held.archivemore (\"files\", a Held row)"
+  },
+  {
+   "key": "screen.timeline.dated.meta.nograde",
+   "en": "{precision} · a dated fact, from {document}",
+   "protected": false,
+   "note": "DEC-445: DS14: the row when the fact has no grade (no bare \"· grade\")"
+  },
+  {
+   "key": "document.unread.page",
+   "en": "Page {pages} is a picture of text that Civicsmith's own reading couldn't make out, so its words can't be found or cited yet. The page image is kept as it is.",
+   "protected": false,
+   "note": "DEC-445: DS15: the singular of document.unread.pages"
+  },
+  {
+   "key": "screen.find-in.notread.which",
+   "en": "Not searched: {documents}",
+   "protected": false,
+   "note": "DEC-445: DS34: beneath screen.find-in.notread, the documents named, each linked"
+  },
+  {
+   "key": "screen.capture.filing-later.a",
+   "en": "A document added here can be filed into a project later.",
+   "protected": false,
+   "note": "DEC-446: DS10: note on Add"
+  },
+  {
+   "key": "screen.capture.filing-later.b",
+   "en": "Add opened from a project files it there directly.",
+   "protected": false,
+   "note": "DEC-446: DS10: note on Add"
+  },
+  {
+   "key": "screen.ceremony.plain.head",
+   "en": "What you are signing, in plain words",
+   "protected": false,
+   "note": "DEC-446: DS20: fold beside the raw signed lines"
+  },
+  {
+   "key": "screen.ceremony.plain.1",
+   "en": "You put your team's name to Edition {edition} of {case}: its {findings} findings and the {documents} documents they rest on.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 1"
+  },
+  {
+   "key": "screen.ceremony.plain.2",
+   "en": "Your signature is tied to their exact text, so a reader can check that nothing was changed afterward.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 2"
+  },
+  {
+   "key": "screen.ceremony.plain.3",
+   "en": "Once it is public, a mistake can be corrected by a new edition, never removed.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 3"
+  },
+  {
+   "key": "screen.ceremony.plain.4",
+   "en": "Nothing is signed until you confirm on your device.",
+   "protected": false,
+   "note": "DEC-446: DS20: plain reading, line 4"
+  },
+  {
+   "key": "screen.plan.tier.row",
+   "en": "How careful to be: 2 · file with caution",
+   "protected": false,
+   "note": "DEC-446: DS13: the legal option's tier shown in its row"
+  },
+  {
+   "key": "screen.plan.nosuggestions",
+   "en": "No options are suggested yet: none of this project's matters has a route to suggest from.",
+   "protected": false,
+   "note": "DEC-446: DS13: why no suggestions are offered"
+  },
+  {
+   "key": "screen.queue.item.weight",
+   "en": "Needs a reason from you",
+   "protected": false,
+   "note": "DEC-446: DS4: the item's weight, after its rung, in its meta line"
+  },
+  {
+   "key": "screen.wizards.getarecord.what",
+   "en": "Walks you through asking an office for a record, from the request to the reply.",
+   "protected": false,
+   "note": "DEC-446: DS5: what the Get a record wizard does"
+  },
+  {
+   "key": "screen.wizards.checklist.what",
+   "en": "Walks you through what the team checks before and after a council meeting.",
+   "protected": false,
+   "note": "DEC-446: DS5: what the council-meeting checklist wizard does"
+  },
+  {
+   "key": "screen.action.ended.complied",
+   "en": "The office complied",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice (actions R7, R14), in place of the bare word screen.action.resolution.complied"
+  },
+  {
+   "key": "screen.action.ended.denied",
+   "en": "The office denied it",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.escalated",
+   "en": "It was escalated",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.withdrawn",
+   "en": "Your team withdrew it",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.completed",
+   "en": "Your team carried it out",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.help",
+   "en": "Choose the one closest to what happened. It is shown with the action.",
+   "protected": false,
+   "note": "DEC-446: DS35: help of the choice"
+  },
+  {
+   "key": "screen.action.ended.own",
+   "en": "In your own words",
+   "protected": false,
+   "note": "DEC-446: DS35: the move's reason, labeled for a resolution"
+  },
+  {
+   "key": "screen.action.ended.own.help",
+   "en": "Required. Say what happened; it is kept as the reason for closing the action, beside the choice above.",
+   "protected": false,
+   "note": "DEC-446: DS35: actionMove's reason, which every move carries (R14): the box for the action's own outcome"
+  },
+  {
+   "key": "screen.follow.who.donations",
+   "en": "Donations given or received",
+   "protected": false,
+   "note": "DEC-447: B543 (2): apart from money paid or received, as Bob named them (DEC-409); campaign and register donations"
+  },
+  {
+   "key": "screen.follow.who.laws",
+   "en": "Laws and standards that bind them",
+   "protected": false,
+   "note": "DEC-447: B543 (1): law as a place to follow into (DEC-409, every dimension); opens the binding rows of Standard (DEC-442) for an organization or office; drawn only when the record holds one"
+  },
+  {
+   "key": "screen.follow.document.laws",
+   "en": "Laws and standards it cites",
+   "protected": false,
+   "note": "DEC-447: B543 (1): from a document, the laws and standards its passages cite; drawn only when it cites one"
+  },
+  {
+   "key": "screen.follow.docs.matched",
+   "en": "Matched to them",
+   "protected": false,
+   "note": "DEC-447: B543 (3): first heading under \"Documents that name them\": documents the record resolved to this person or organization"
+  },
+  {
+   "key": "screen.follow.docs.words",
+   "en": "Their name appears, not matched to them",
+   "protected": false,
+   "note": "DEC-447: B543 (3): second heading: documents whose words contain the name, which the record has not matched"
+  },
+  {
+   "key": "screen.follow.docs.words.note",
+   "en": "These documents contain the same name, but nothing yet shows it is the same person or organization. Open one to say whether it is.",
+   "protected": false,
+   "note": "DEC-447: B543 (3): beneath the second heading"
+  },
+  {
+   "key": "screen.follow.open.whole",
+   "en": "Open all of it in {screen}",
+   "protected": false,
+   "note": "DEC-447: B543: the fold shows that dimension's rows for the item in place; this link opens the whole screen narrowed to it"
   }
  ],
  "rewrite": {
@@ -44145,7 +44379,7 @@
   "screen.join.language.help": "Chosen from your device's setting. You can change it any time.",
   "screen.join.handle.help": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
   "screen.join.codes.after": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your team's home opens, with a short guided start you can take or leave.",
-  "screen.money.didnotmove": "did not move: a {phase} figure",
+  "screen.money.didnotmove": "no money moved: this is a {phase} figure",
   "screen.money.gap.to": "Undetermined: not stated in {source}, the only source holding this figure.",
   "screen.people.notmembers": "The people and organizations your team's record follows: officials, staff, companies and public bodies. Your own team's members are not listed here; they are under Settings › Members.",
   "screen.people.today.seeded": "added at setup, from the public offices of your team's place",
@@ -44294,6 +44528,25 @@
   "screen.money.f.nocontract": "Choose the contract.",
   "screen.held.more": "{count} shown here. More are on the next page.",
   "refusal.STANDARD_NOT_BINDING": "This standard is held as a benchmark for this body, not a rule that binds it, so the act cannot be found out of conformance with it. To measure the act against it, ask the question on this project and cite the standard there. Nothing was written.",
-  "action-plans.time_zone_held_place": "no time zone is held for your team, so the plan's dates cannot be checked against the day. It is set under Settings, Your team"
+  "action-plans.time_zone_held_place": "no time zone is held for your team, so the plan's dates cannot be checked against the day. It is set under Settings, Your team",
+  "act.projectvisibilityset.label.project": "Change who can find this project",
+  "act.taskforward.label.home": "Pass it to another member",
+  "act.taskforward.label.queue": "Pass it to another member",
+  "screen.more.sub": "The places the tabs do not hold.",
+  "refusal.CO_ATTESTATION_UNACKNOWLEDGED": "A document this case rests on has no independent proof of when it was captured. Try getting that proof again, or say, with a reason, that you publish it on your team's word alone. Nothing was written.",
+  "observation-log.partial.looked_got_part": "we looked and found only part of it",
+  "screen.standard.inforce.none": "The record does not say when it took effect.",
+  "label.standardcopy.undetermined": "Not known whether this is the official text",
+  "following.why.placed_nowhere_attestation": "not placed on the timeline: no record you can see gives its date",
+  "shell.unavailable.nothing": "Nothing you can open is here. If a member invited you to a project, the invitation waits on Home: join it there.",
+  "screen.projectai.purpose": "Who pays for the assistant's work in this project, what it pays for, its limits, and keeping the project's material away from AI. These are settings only: whether the assistant can answer yet is said where members ask it. Every owner sees every change.",
+  "public-read.bar_recorded_case": "No standard of proof is recorded for this edition. That is not a standard of zero: the case came before cases carried their own standard, or its team never set one, so it claims to meet none.",
+  "act.successrecord.label.matter": "Record what this matter achieved",
+  "refusal.TEMPLATE_NOT_NAMED": "There is no file template for this kind of filing in your place's rules. Write the words yourself on this screen, or ask an administrator to add a template for this kind. Nothing was written.",
+  "screen.action.pressuremark.reply": "came in reply number {ord}",
+  "capture.fieldneeded": "This can be captured only once “{field}” is filled in.",
+  "refusal.SUBJECT_IN_ACTIVE_PLAN": "That matter is already in another open plan of this project. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.",
+  "screen.find-in.notread": "{n} documents could not be searched, because they are not read yet or are pictures of text. They may hold what you looked for.",
+  "screen.find-in.notread.one": "One document could not be searched, because it is not read yet or is a picture of text. It may hold what you looked for."
  }
 }
