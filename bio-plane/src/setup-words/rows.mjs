@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19580 design words, 1166 protected; SHA-256
-   3e15aefcf64b80d4b67b6e99b203b996719bbb4cf59b8163fd0d20f75ae62d59) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19595 design words, 1166 protected; SHA-256
+   201641d9b9a1daedc3e9a91191b5d57c2d0a3c9f31e30ebc4ae5a28c57ce1d34) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "3e15aefcf6";
+export const WORDS_COMMIT = "201641d9b9";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -3572,7 +3572,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.panel.usage.heading","This month's use","adopted from screens-settings's own rows",null,false,"design"],
   ["screen.panel.usage.none","Nothing used this month.","adopted from screens-settings's own rows",null,false,"design"],
   ["screen.panel.usage.all","All uses","adopted from screens-settings's own rows",null,false,"design"],
-  ["screen.panel.usage.group","Summed over members; nobody is named, and nothing asked is shown. A member sees their own use on Settings › The assistant.","adopted from screens-settings's own rows",null,false,"design"],
+  ["screen.panel.usage.group","Summed over members, and nothing asked is shown. Whoever pays for the account, administrators or owners, also sees each member's use. A member sees their own use on Settings › The assistant.","adopted from screens-settings's own rows; DEC-259: reworded",null,false,"design"],
   ["screen.panel.usage.own","Only you see this.","adopted from screens-settings's own rows",null,false,"design"],
   ["screen.panel.col.month","This month","adopted from screens-settings's own rows",null,false,"design"],
   ["screen.panel.col.calls","Calls","adopted from screens-settings's own rows",null,false,"design"],
@@ -5450,7 +5450,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.teamai.uses.why","Everyday help is {everyday}; exploring is {explore}.","DEC-284: {everyday}: on, off or partly on; {explore}: on, off or asked each day",null,false,"design"],
   ["screen.teamai.limits.why","{overall} overall; {each} for each member.","DEC-284: when no limit is set: screen.teamai.limits.none",null,false,"design"],
   ["screen.teamai.limits.none","None set.","DEC-284",null,false,"design"],
-  ["screen.teamai.use.why","Summed over members; nobody is named.","DEC-284",null,false,"design"],
+  ["screen.teamai.use.why","What the team's key was used for, month by month.","DEC-284",null,false,"design"],
   ["screen.teamai.key","The key itself","DEC-284",null,false,"design"],
   ["screen.teamai.key.why","Replace it, switch it off or remove it.","DEC-284",null,false,"design"],
   ["screen.teamai.changes.why","Every change, with who made it and when.","DEC-284",null,false,"design"],
@@ -11262,7 +11262,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aiproviders.bud.th.proj","Cost this month, by project","DEC-420: B488 aiproviders: bud th proj",null,false,"design"],
   ["screen.aiproviders.bud.th.cost","Cost","DEC-420: B488 aiproviders: bud th cost",null,false,"design"],
   ["screen.aiproviders.bud.norecord","Work in the record, outside any project","DEC-420: B488 aiproviders: bud norecord",null,false,"design"],
-  ["screen.aiproviders.bud.note","Each cost sums everyone's use and names no member. A member sees their own cost on Your AI.","DEC-420: B488 aiproviders: bud note",null,false,"design"],
+  ["screen.aiproviders.bud.note","Each cost sums everyone's use. A member sees their own cost on Your AI.","DEC-420: B488 aiproviders: bud note",null,false,"design"],
   ["screen.aiproviders.chk.head","Privacy and origin checks","DEC-420: B488 aiproviders: chk head",null,false,"design"],
   ["screen.aiproviders.chk.why","Seven checks, all required to start with.","DEC-420: B488 aiproviders: chk why",null,false,"design"],
   ["screen.aiproviders.chk.mock","In this mockup, show the checks","DEC-420: B488 aiproviders: chk mock",null,false,"design"],
@@ -11417,7 +11417,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aimine.use.calls","Requests","DEC-420: B488 aimine: use calls",null,false,"design"],
   ["screen.aimine.use.cost","Cost","DEC-420: B488 aimine: use cost",null,false,"design"],
   ["screen.aimine.use.nomoney","not measurable in money","DEC-420: B488 aimine: use nomoney",null,false,"design"],
-  ["screen.aimine.use.note","Only you see this: your own use across every account that served you.","DEC-420: B488 aimine: use note",null,false,"design"],
+  ["screen.aimine.use.note","Your own use across every account that served you.","DEC-420: B488 aimine: use note",null,false,"design"],
   ["screen.aimine.first.head","The first time material goes to a provider","DEC-420: B488 aimine: first head",null,false,"design"],
   ["screen.aimine.first.note","The assistant names the provider and waits for you before material first goes to it, and after any switch to another provider.","DEC-420: B488 aimine: first note",null,false,"design"],
   ["screen.aimine.first.see","You can see this notice, and the others like it, on When the AI can't go on.","DEC-420: B488 aimine: first see",null,false,"design"],
@@ -12069,7 +12069,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.capture.file.parts.cancelled","Sending was canceled. Nothing was kept.","DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)",null,false,"design"],
   ["screen.aiproviders.origin.notoffered","Not offered while your team requires the origin check.","DEC-465: aiproviders: the catalogue entry for an AI that fails the origin check (DeepSeek)",null,false,"design"],
   ["screen.aiproviders.optin","Projects and members may add this account to their own lists","DEC-465: aiproviders: the owner opt-in on a team account row, off by default",null,false,"design"],
-  ["screen.aiproviders.optin.note","Off until an administrator turns it on. Work never moves to it from another list otherwise.","DEC-465: aiproviders: the opt-in note",null,false,"design"],
+  ["screen.aiproviders.optin.note","Off until an administrator turns it on. Until then, only your team's own list uses this account.","DEC-465: aiproviders: the opt-in note",null,false,"design"],
   ["screen.aimine.optin","My projects may add this account to their lists","DEC-465: aimine: the opt-in on a member's own API-key account, off by default",null,false,"design"],
   ["screen.aimine.subscription.ownlist","A personal subscription is only ever on your own list, never on your team's or a project's.","DEC-465: aimine: the line on a member's personal subscription row",null,false,"design"],
   ["screen.aiconnect.key.sealed","Keep it sealed in your team's Civicsmith","DEC-465: aiconnect step 3: the fifth way a key is held",null,false,"design"],
@@ -12077,7 +12077,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aimoments.checksapply","Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.","DEC-465: aimoments: whose checks apply; {project}",null,false,"design"],
   ["screen.aiconnect.s3.sealgo","Keep it sealed","DEC-465: aiconnect step 3: the sealed way, its button",null,false,"design"],
   ["screen.aimoments.mock.i","whose checks apply","DEC-465: aimoments: the mock choice for the new moment",null,false,"design"],
-  ["screen.aimoments.continued.crossowner","It went on with your team's second account, which your administrators let projects use.","DEC-465: aimoments a: the continued account belongs to another owner",null,false,"design"],
+  ["screen.aimoments.continued.crossowner","Your administrators let projects use this team account.","DEC-465: aimoments a: the continued account belongs to another owner",null,false,"design"],
   ["screen.machine.draft.ai","Draft · the assistant's ({ai})","DEC-466: machine label: a draft by the assistant, with the AI named (U1)",null,false,"design"],
   ["screen.machine.draft.asked.ai","Draft · the assistant's ({ai}), asked by {handle}","DEC-466: machine label: a draft, the AI named, who asked (U1)",null,false,"design"],
   ["screen.machine.proposed.ai","Proposed by the assistant ({ai})","DEC-466: machine label: a proposal, the AI named (U1)",null,false,"design"],
@@ -12090,7 +12090,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.run.part","Part {n} · {ai} on {account} · {from} to {to}","DEC-466: a finished run: one part (U2)",null,false,"design"],
   ["screen.run.switch","Went on to {ai} on {account}, because {reason}","DEC-466: a finished run: the change of AI between parts (U2)",null,false,"design"],
   ["screen.run.declined","{member} declined to go on with another AI; the run stopped.","DEC-466: a run that stopped because the member declined the change (U2)",null,false,"design"],
-  ["screen.ai.ready","The assistant is ready: {n} accounts on.","DEC-466: setup and AI providers: the ready state (U3)",null,false,"design"],
+  ["screen.ai.ready","The assistant is ready: {n} accounts on.","DEC-466: setup: the ready state, several accounts (U3); AI providers says it with screen.aiproviders.stands.on (DEC-469)",null,false,"design"],
   ["screen.ai.ready.one","The assistant is ready: one account on.","DEC-466: setup: the ready state, one account (U3)",null,false,"design"],
   ["screen.ai.notready","The assistant isn't ready: no account is on yet. Add one in AI providers.","DEC-466: AI providers: not ready (U3)",null,false,"design"],
   ["screen.ai.projectonly","Your team has no account of its own. The assistant works in {project} only, on that project's account.","DEC-466: AI providers: a project-only account (U3, interface-shell R20)",null,false,"design"],
@@ -12118,6 +12118,21 @@ export const WORD_ROWS = Object.freeze([
   ["screen.document.cite.page","Page {n} of {m}, {file}","DEC-467: Document, the citation line of a multi-page file",null,false,"design"],
   ["screen.document.converted","Read from a converted copy of {file}; the original is kept.","DEC-467: Document, a file read from a converted copy",null,false,"design"],
   ["screen.document.encrypted","Needs a password. Civicsmith never asks for it or keeps it.","DEC-467: Document, an encrypted file (K4831 (6))",null,false,"design"],
+  ["screen.aiproviders.bymember.head","Use by member, this month","DEC-468: aiproviders, Limits and alerts: the heading of a team-paid account's by-member table (K5459)",null,false,"design"],
+  ["screen.aiproviders.bymember.note","Your team pays for this account, so its administrators see each member's use. A member's own subscription isn't shown here.","DEC-468: aiproviders: the line under the by-member table (K5459)",null,false,"design"],
+  ["screen.aiproviders.bymember.th.member","Member","DEC-468: aiproviders and aiproject: the by-member table, the member column (K5459)",null,false,"design"],
+  ["screen.aiproviders.bymember.th.runs","Runs","DEC-468: aiproviders and aiproject: the by-member table, the runs column (K5459)",null,false,"design"],
+  ["screen.aiproject.bymember.note","This project pays for this account, so its owners see each member's use on it.","DEC-468: aiproject: the line under the by-member table (K5459)",null,false,"design"],
+  ["screen.aimine.seenby","Your use on accounts your team or a project pays for is shown to your team's administrators or that project's owners. Your own subscription's use is yours alone.","DEC-468: aimine, Your use and cost (K5459)",null,false,"design"],
+  ["screen.layers.head","The rules each place brings","DEC-468: places: the heading of the layers, each with its information mark (K5450, DEC-404)",null,false,"design"],
+  ["screen.layers.info.label","How current this is","DEC-468: places: the information mark's name for assistive technology (K5450)",null,false,"design"],
+  ["screen.layers.info.entry","Read from {source} on {date}. Its calendars reach {reach}.","DEC-468: places: the information mark beside a layer; {source} {date} {reach} (K5450)",null,false,"design"],
+  ["screen.layers.info.past","After {reach}, not known.","DEC-468: places: the information mark beside a layer, a count past the calendars is never guessed; {reach} (K5450)",null,false,"design"],
+  ["screen.layers.info.promise","Civicsmith promises the date it read this, not that the law hasn't changed since. Not legal advice.","DEC-468: places: the information mark beside a layer (K5450)",null,false,"design"],
+  ["screen.layers.info.page","This page's rules come with each Civicsmith update. The newest was read on {date}.","DEC-468: places: the information mark by the page title; {date} (K5450)",null,false,"design"],
+  ["queue.kind.rules-changed","Rules that changed in this update","DEC-468: queue: the kind, for an administrator (K5450; the style of queue.kind.*)",null,false,"design"],
+  ["screen.queue.ruleschanged","{n} rules your team uses changed in this update: {list}. You're told once.","DEC-468: queue: an administrator item after an update (K5450); {n} {list}",null,false,"design"],
+  ["screen.aimoments.mock.j","you stopped instead of switching","DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],

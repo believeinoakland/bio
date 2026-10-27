@@ -20,24 +20,24 @@
 
 | lane | prefix | branch · folder | model | scope | starts from |
 |---|---|---|---|---|---|
-| **AI-DESIGN #3** | A | `lane/ai-design` (merge `tranche/T53` in first) · `build/plan/lane-ai-design/` | Opus | AI provider selection (a team's, a project's, a member's AI) and the assistant fully designed: what it does on every screen and journey, its modules (keep, adapt, retire), the provider boundary, its tests and limits, its costs to a team | `HANDOVER.md` there (A41): Bob's decisions AIR1-AIR45 for BOB to record as K rulings, the rulings they supersede, N1220 to refresh, the technical points left to BOB |
+| **AI-DESIGN #4** | A | `lane/ai-design` (merge `tranche/T53` in first) · `build/plan/lane-ai-design/` | Opus | AI provider selection (a team's, a project's, a member's AI) and the assistant fully designed: what it does on every screen and journey, its modules (keep, adapt, retire), the provider boundary, its tests and limits, its costs to a team | `HANDOVER.md` there (A41): Bob's decisions AIR1-AIR45 for BOB to record as K rulings, the rulings they supersede, N1220 to refresh, the technical points left to BOB |
 | **PLATFORM** | P | `lane/platform` · `build/plan/beta/platform/` | Sonnet | The three service levels (Bob, K4746: Team, Organization, Coalition/institution on Enterprise; the record split N1271), performance and responsiveness designed in (a time budget for every screen and op, the combined read K4599, the admission fold N1264), where a team's record lives (K4746 (2), N1273's region picker), the per-level load test (N1274) | `build/plan/lane-performance/` (CHARTER, HANDOFF, archive P1-P26), K4746, K4747, K4599, K4635 |
 | **CAPABILITIES** | C | `lane/capabilities` · `build/plan/beta/capabilities/` | Sonnet | Every feature put off until after the alpha (`build/plan/next.md`; `carried-T52-R1.md`'s "Left out"): public registers and alerts (N1259), following the trail (N1260), places in layers (N1257), email capture (N824) and the rest, each with Bob's open points brought as options | `draft-T52-DEC406.md`, `draft-T52-DEC409.md`, `draft-T52-plan.md`, `draft-T52-N1260-requirements.md`, DEC-447 |
 | **FILES** | F | `lane/files` · `build/plan/beta/files/` | Sonnet | Every file type and size the beta reads (N1266, studied closely for Bob first, K4632; N1267 sizes, K4628 option B; N1267a), how each is read, held and shown, and the acceptance corpus (N1268) | `build/plan/lane-reading-architecture/` (`GAP.md`, `stage0/RESULTS.md`), K4831 |
 | **JOURNEYS #4** | W | `lane/journeys` · `build/plan/lane-journeys/` | Sonnet | The alpha's defects found whole: walk every feature and journey that needs no assistant on the deployed 0.87.0, each defect a cause with its owning module and how it was missed; confirm which carried T52 entries still stand | its `CHARTER.md` and `HANDOFF.md`; `build/plan/walk-T51b-live/`; `carried-T52-R1.md` |
 | **TESTS-SWEEP** | S | `lane/tests-sweep` · `build/plan/beta/tests-sweep/` and test files | Sonnet | The tests rethink's option A (Bob, K5418): every test that asserts English asserts the word key and values instead; the words check refuses English in tests; each K5339 and K5343 red run once and sorted; the 89 fixtures findings cleared. A mechanical pass (P7): one full run of every module it touched before its merge, recorded by module | `build/plan/tests-rethink-T52.html`, K5258, K5313, `proc tests` |
 | **PLANNING** | L | `lane/planning` · `build/plan/beta/planning/` | Opus | Turns the lanes' READY drafts into one consistent set of requirement lines and architecture changes (new modules, layers, order), then into T53's comprehensive build plan by layer (the carried entries, every new capability, the sweep's merge first), each job's reading set within its budget, each exclusion with its hard reason (P19). Proposes; BOB reviews, brings Bob what is his and writes every line | this file, `MAP.md`, `carried-T52-R1.md`, `build/layers.md`, `build/modules.json`, `build/requirements/README.md` |
-| **UX-DESIGN #43** | U | its own stream (`claude/gallant-brown-zg0wc1`) | Opus | Every screen and word the other lanes need, as their needs arrive through BOB | its own charter |
+| **UX-DESIGN #44** | U | its own stream (`claude/gallant-brown-zg0wc1`) | Opus | Every screen and word the other lanes need, as their needs arrive through BOB | its own charter |
 
 ## 3. Sessions (BOB keeps this table)
 
 | lane | session | started |
 |---|---|---|
-| AI-DESIGN #3 | `session_018BhcedQQCRAKFMw8Mi8Xka` | 2026-10-27, BOB #320 |
-| PLATFORM #1 | `session_018BhceduzvspNp7pagSnBaL` | 2026-10-27, BOB #320 |
-| CAPABILITIES #1 | `session_018BhcefgnFUeeyqm8N5bN75` | 2026-10-27, BOB #320 |
+| AI-DESIGN #4 | `session_018BhcedHXD9yareupMq6poX` | 2026-10-27, BOB #322 (#3 `session_018BhcedQQCRAKFMw8Mi8Xka` archived by #4) |
+| PLATFORM #2 | `session_018BhcegTAycjUS9ubrhLQ2p` | 2026-10-27, BOB #322 (#1 `session_018BhceduzvspNp7pagSnBaL` archived by #2) |
+| CAPABILITIES #2 | `session_018BhceefmwyUmQFrnSkiEv7` | 2026-10-27, BOB #322 (#1 `session_018BhcefgnFUeeyqm8N5bN75` archived by #2) |
 | FILES #1 | `session_018Bhcecv29TYVd71UxV9qGX` | 2026-10-27, BOB #320 |
 | JOURNEYS #4 | `session_018Bhcef2FG9FpTXzkPVijim` | 2026-10-27, BOB #320 |
 | TESTS-SWEEP #1 | `session_018BhcechYohm1LHA7fup1fn` | 2026-10-27, BOB #320 |
 | PLANNING #2 | `session_018Bhceg7ptZUBDjGtWWSVz4` | 2026-10-27, BOB #321 (#1 `session_018Bhcefb6SwLLagYbDTHR1M` archived by #2) |
-| UX-DESIGN #43 | `session_018BhcefCkHUHGG8UK3QabvX` | 2026-10-27, BOB #320 |
+| UX-DESIGN #44 | `session_018Bhcefdgy83sFMSkwg7xRc` | 2026-10-27, BOB #322 (#43 `session_018BhcefCkHUHGG8UK3QabvX` archived by #44) |

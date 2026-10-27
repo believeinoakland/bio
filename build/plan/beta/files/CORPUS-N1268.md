@@ -2,6 +2,8 @@
 
 **Status** · READY (F3; the type list is settled; S2 sampling continues and may change source rows). First drafted by FILES #1 (F2), 2026-10-27. Not READY: waits on the final type list. Bob (K4632): for the beta. Kept in the build state and re-run every tranche on the live test copy (K4628 (4)).
 
+**Placement (K5448 (5)):** the corpus is walked by `journey-check`.
+
 ## 1. What it is
 
 Per type: a **small**, a **typical** and a **largest-allowed** file (SIZES-N1267 §2), plus a **just-over** file for each bound (refusal with its size). Each goes in by **upload** and, where a web address can hold it, by **web capture**, on the live test copy. Pass means, for each:
@@ -18,7 +20,7 @@ Per type: a **small**, a **typical** and a **largest-allowed** file (SIZES-N1267
 
 | source | gives | use |
 |---|---|---|
-| **Legistar** attachments (public API, all 1,243 sampled were PDF) | real council PDFs, small to very large | PDF small and typical; the largest packets measured for the top of the range |
+| **Legistar** attachments (public API, all 1,243 sampled were PDF) | real council PDFs, small to very large | PDF small (14 KB) and typical (about 220 KB median); the largest seen is 19.4 MB, so the top of the range (100 MB) is generated |
 | **Open data portal** uploaded files (102; PDF, ZIP, old Excel, one .doc, one text, images) | real request releases: .xls, ZIP, .doc | legacy Excel, ZIP, DOC, text, PNG/JPEG (and one video for held-and-named) |
 | **Open data portal** tables | CSV, JSON, XML, and GeoJSON/KML/shapefile exports of map tables | CSV, TSV (a tab export), JSON, XML, GeoJSON, KML |
 | **Generated** by the seeded generator of GAP-1.1, with a truth token per page, row and member | any size, any shape | the largest-allowed and just-over of every type; and types with no public sample: HEIC, WebP, GIF, multi-page TIFF, RTF, EML, MSG, MBOX, TAR, 7z, XLSM, ICS, SVG, SRT |
