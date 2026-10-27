@@ -14,6 +14,8 @@
  *     NOT in `bindings`; `keep_bindings` names their classes and Cloudflare keeps them. No `migrations` field is sent.
  *   - the cron schedules are read before, and if a raw script PUT changed them they are PUT back and read back.
  *
+
+ * --set-var NAME=VALUE (repeatable) adds or overrides a plain_text var; NAME must match /^PROTO_[A-Z0-9_]+$/, anything else is refused.
  * usage, from bio-plane/ (an asset is a built plane bundle: `node scripts/bundles.mjs` makes dist/bio-plane.bundled.mjs):
  *   node scripts/deploy-plane-only.mjs plat-s1 dist/bio-plane.bundled.mjs --dry-run        (read-only; mandatory first)
  *   CONFIRM_PLAT_S1_PLANE_ONLY=yes node scripts/deploy-plane-only.mjs plat-s1 dist/bio-plane.bundled.mjs
@@ -24,11 +26,21 @@ import { createHash } from "node:crypto";
 
 const ACCOUNT = "20b533579290b9b93168345edd3b7f72", WORKER = "plat-s1";
 const ARGS = process.argv.slice(2), DRY = ARGS.includes("--dry-run");
-const [name, assetPath] = ARGS.filter((a) => !a.startsWith("--"));
+/* --set-var NAME=VALUE (repeatable): add or override a plain_text var; only PROTO_* names are allowed */
+const SET_VARS = new Map(), POSITIONAL = [];
+for (let i = 0; i < ARGS.length; i++) {
+  if (ARGS[i] === "--set-var") {
+    const kv = ARGS[++i] ?? "", eq = kv.indexOf("=");
+    const k = eq > 0 ? kv.slice(0, eq) : kv, v = eq > 0 ? kv.slice(eq + 1) : "";
+    if (eq < 1 || !/^PROTO_[A-Z0-9_]+$/.test(k)) { console.error(`REFUSED [BAD_SET_VAR]: --set-var takes NAME=VALUE with NAME matching /^PROTO_[A-Z0-9_]+$/; got \`${k}\`.\nNothing was uploaded.`); process.exit(1); }
+    SET_VARS.set(k, v);
+  } else if (!ARGS[i].startsWith("--")) POSITIONAL.push(ARGS[i]);
+}
+const [name, assetPath] = POSITIONAL;
 const TOKEN = process.env.CF_TOKEN || process.env.CLOUDFLARE_API_TOKEN, ACCT = process.env.CF_ACCT || process.env.CLOUDFLARE_ACCOUNT_ID;
 const refuse = (code, why) => { console.error(`REFUSED [${code}]: ${why}\nNothing was uploaded.`); process.exit(1); };
 
-if (!name || !assetPath) { console.error("usage: node scripts/deploy-plane-only.mjs plat-s1 <bundle> [--dry-run]"); process.exit(2); }
+if (!name || !assetPath) { console.error("usage: node scripts/deploy-plane-only.mjs plat-s1 <bundle> [--set-var PROTO_X=V ...] [--dry-run]"); process.exit(2); }
 if (name !== WORKER) refuse("WRONG_WORKER", `this script deploys \`${WORKER}\` only; got \`${name}\`.`);
 if (ACCT !== ACCOUNT) refuse("WRONG_ACCOUNT", `account ${ACCOUNT} only; the environment names ${ACCT ? ACCT : "none"}.`);
 if (!TOKEN) refuse("NO_TOKEN", "CF_TOKEN or CLOUDFLARE_API_TOKEN is not set.");
@@ -62,7 +74,15 @@ if (!liveBindings.length) refuse("NO_LIVE_BINDINGS", "the live Worker reports no
 
 /* classes Cloudflare keeps for us and that cannot (or must not) be re-sent */
 const KEPT_CLASSES = ["secret_text", "secret_key", "durable_object_namespace"];
-const sent = liveBindings.filter((b) => b && !KEPT_CLASSES.includes(b.type));
+const sent = liveBindings.filter((b) => b && !KEPT_CLASSES.includes(b.type)).map((b) => (b.type === "plain_text" && SET_VARS.has(b.name)) ? { ...b, text: SET_VARS.get(b.name) } : b);
+const setNotes = [];
+for (const [k, v] of SET_VARS) {
+  const clash = liveBindings.find((b) => b && b.name === k && b.type !== "plain_text");
+  if (clash) refuse("SET_VAR_CLASH", `${k} is a live ${clash.type} binding, not a plain_text var; it will not be overridden.`);
+  const was = liveBindings.find((b) => b && b.name === k && b.type === "plain_text");
+  if (!was) sent.push({ type: "plain_text", name: k, text: v });
+  setNotes.push(`${was ? "OVERRIDE" : "ADD"}      ${k} = ${JSON.stringify(v)}${was ? "  (live: " + JSON.stringify(was.text) + ")" : ""}`);
+}
 const keptBindings = liveBindings.filter((b) => b && KEPT_CLASSES.includes(b.type));
 const keep_bindings = [...new Set(keptBindings.map((b) => b.type))];
 for (const b of keptBindings) if (b.type === "durable_object_namespace" && !b.class_name) refuse("DO_UNREADABLE", `binding ${b.name} has no class_name in the live settings.`);
@@ -108,16 +128,21 @@ console.log(`code     : live ${beforeHash ? beforeHash.slice(0, 16) + "…" : "(
 console.log(`settings : compatibility_date=${meta.compatibility_date} flags=${JSON.stringify(meta.compatibility_flags ?? [])} limits=${JSON.stringify(meta.limits ?? null)} observability=${JSON.stringify(meta.observability ?? null)} placement=${JSON.stringify(meta.placement ?? null)}`);
 console.log(`keep_bindings: ${JSON.stringify(keep_bindings)}   migrations: none sent`);
 console.log(`\nbindings the upload would SEND (${sent.length}):`);
-for (const b of sent) console.log("  " + show(b));
+for (const b of sent) console.log("  " + show(b) + (SET_VARS.has(b.name) && b.type === "plain_text" ? "   <- --set-var" : ""));
+if (setNotes.length) { console.log(`\n--set-var changes (${setNotes.length}):`); for (const n of setNotes) console.log("  " + n); }
 console.log(`\nbindings KEPT by Cloudflare, not sent (${keptBindings.length}):`);
 for (const b of keptBindings) console.log("  " + show(b));
 /* diff: every live binding is either sent verbatim or kept; compare the sent set to the live set by exact content */
 const key = (b) => JSON.stringify(Object.fromEntries(Object.entries(b).sort()));
 const liveKeys = new Set(liveBindings.map(key)), sentKeys = new Set([...sent, ...keptBindings].map(key));
 const added = [...sentKeys].filter((k) => !liveKeys.has(k)), removed = [...liveKeys].filter((k) => !sentKeys.has(k));
-console.log(`\ndiff vs live bindings: ${added.length} added, ${removed.length} removed, ${liveBindings.length - added.length} identical (sent + kept = ${sent.length + keptBindings.length} of live ${liveBindings.length})`);
+console.log(`\ndiff vs live bindings: ${added.length} added, ${removed.length} removed, ${liveBindings.length - removed.length} identical (sent + kept = ${sent.length + keptBindings.length} of live ${liveBindings.length})`);
+for (const k of added) console.log("  + " + show(JSON.parse(k)));
+for (const k of removed) console.log("  - " + show(JSON.parse(k)));
 console.log(`schedules: live ${crons.length ? crons.join(" | ") : "none"}; after the upload they are read again and, if changed, PUT back to exactly these`);
-if (added.length || removed.length) refuse("DIFF_NOT_EMPTY", "the bindings to send differ from the live ones; that is a bug of this script.");
+const expectedChanges = SET_VARS.size; /* each --set-var is one added line, plus one removed line if it overrides a live var */
+const overrides = [...SET_VARS.keys()].filter((k) => liveBindings.some((b) => b && b.name === k && b.type === "plain_text")).length;
+if (added.length !== expectedChanges || removed.length !== overrides) refuse("DIFF_NOT_EMPTY", "the bindings to send differ from the live ones; that is a bug of this script.");
 
 if (DRY) { console.log("\n--dry-run: nothing was uploaded."); process.exit(0); }
 
