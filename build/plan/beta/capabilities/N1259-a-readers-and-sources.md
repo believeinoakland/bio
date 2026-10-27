@@ -1,6 +1,6 @@
 # N1259 (a): register definitions, the file reader, reduction on arrival, acquisition, cited rows (requirement drafts)
 
-**Status** · DRAFT for the PLANNING lane (CAPABILITIES lane worker, 2026-10-27; checked against the checkout by C7, see "Review (C7 worker)" at the end of part (b)): requirement lines for `jurisdictions`, the NEW module `register-readers`, `credentials`, `acquisition`, `content` and `extraction`, turning N1259 (DEC-406/407/408/411, K4403, K4405) into the house format. Part (a) of five.
+**Status** · READY (C29, every point of Bob's settled) for the PLANNING lane (CAPABILITIES lane worker, 2026-10-27; checked against the checkout by C7, see "Review (C7 worker)" at the end of part (b)): requirement lines for `jurisdictions`, the NEW module `register-readers`, `credentials`, `acquisition`, `content` and `extraction`, turning N1259 (DEC-406/407/408/411, K4403, K4405) into the house format. Part (a) of five.
 **Read / not read** · Author: the canon named in the first draft. C7: every cited requirement file and the cited code; what it could not verify says `(UNVERIFIED: why)`.
 **DRAFT, not READY** · The lane lead marks READY. Draft ids: next free after each file's highest bold `**Rn**` (retired counted; C7 confirmed R98, R83, R124, R62, R112). This part's `jurisdictions` lines (drafted R99-R105) are R127-R133 in `N1257-requirements-jurisdictions.md` (K5448); cites use R127-R133.
 

@@ -1,6 +1,6 @@
 # What each capability adds to a team's record and load, per service level
 
-**Status** · DRAFT by CAPABILITIES #1 (C4), for PLATFORM through BOB (MAP.md §2; K5442, K4746). Levels: **Team** (L1), **Institution** (L2), **Enterprise** (L3). Figures marked *arith* are arithmetic from the drafts' measures, not measurements; *measure* means a measurement is named in the draft and not yet taken. Sources: `N1259-e-needs-and-points.md` §3–4, the other drafts' needs sections. Files mentioned go through FILES' readers.
+**Status** · READY (C29, every point of Bob's settled) by CAPABILITIES #1 (C4), for PLATFORM through BOB (MAP.md §2; K5442, K4746). Levels: **Team** (L1), **Institution** (L2), **Enterprise** (L3). Figures marked *arith* are arithmetic from the drafts' measures, not measurements; *measure* means a measurement is named in the draft and not yet taken. Sources: `N1259-e-needs-and-points.md` §3–4, the other drafts' needs sections. Files mentioned go through FILES' readers.
 
 | capability | stored per team | ops per member action | background work | L1 Team | L2 Institution | L3 Enterprise |
 |---|---|---|---|---|---|---|

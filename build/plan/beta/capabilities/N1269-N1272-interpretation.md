@@ -1,6 +1,6 @@
 # N1269 and N1272: what is read, what is interpreted, and what members are told (questions for Bob)
 
-**Status** · DRAFT by CAPABILITIES #1 (C2), for BOB to place on QUESTIONS.html. Written to stand alone: it needs none of the lane's files. Nothing is decided here; each question carries options and a recommendation. Requirement lines follow once Bob answers (they belong to `extraction`, `reading-pipeline`, `screens-inquiry` and the investigation modules, with the FILES lane's size rules).
+**Status** · READY (C29, every point of Bob's settled) by CAPABILITIES #1 (C2), for BOB to place on QUESTIONS.html. Written to stand alone: it needs none of the lane's files. Nothing is decided here; each question carries options and a recommendation. Requirement lines follow once Bob answers (they belong to `extraction`, `reading-pipeline`, `screens-inquiry` and the investigation modules, with the FILES lane's size rules).
 
 ## What is already settled (Bob, K4628, K4632, K4636)
 

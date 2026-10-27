@@ -1,6 +1,6 @@
 # N1110 a steward may decline or remove a listing: requirement drafts, what blocks, options (CAPABILITIES worker, 2026-10-27)
 
-**Status** · DRAFT, not READY; written by a worker for CAPABILITIES #1 (lane/capabilities); nothing outside this file was edited, nothing committed. Ids are draft ids ("next free after the highest `**Rn**` in the module's file, PLANNING renumbers").
+**Status** · READY (C29, 2026-10-27; every point of Bob's settled); written by a worker for CAPABILITIES #1 (lane/capabilities); nothing outside this file was edited, nothing committed. Ids are draft ids ("next free after the highest `**Rn**` in the module's file, PLANNING renumbers").
 **Read whole:** `stewards.md` R1-R23 lines I cite (R1, R3, R5, R12-R15, R22, R23, Purpose, Suggestions, Mail note); `site.md` R4, R13, R15, R16 and its Deployment and Listed groups notes; `network-notices.md` Purpose, R22, R23, R30; DEC-255, DEC-270, DEC-132 (3) and DEC-111; Publication §5E and §5B (the directory paragraphs); K3359, K3384, K3296; N1110, N923, N1159 in `next.md`.
 **Not read whole:** `site.md` (13 KB: lines 1-63 skimmed by search), `network-notices.md` private part, `stewards.md` Private part, `BIO_Publication_v0_1.md` (read §5E and the directory lines only).
 

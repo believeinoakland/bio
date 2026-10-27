@@ -1,6 +1,6 @@
 # N1269 and N1272: what is interpreted, how it is chosen and shown, and the limits members see (requirement lines)
 
-**Status.** DRAFT by a worker for CAPABILITIES #1; not READY.
+**Status.** READY (C29, 2026-10-27; every point of Bob's settled), by a worker for CAPABILITIES #1.
 Written from Bob's answers C1 (K5445), Q2 (K5495), C21 (K5496), C3 (K5446), C4 (K5447) in `DECISIONS.md` and `N1269-N1272-interpretation.md`; none is pending and every line is final.
 Revised for K5453 (Bob's decisions on the draft's points; BOB numbers every line, K5448): one limit per kind, no second "standard" figure (point 2); interpretation proposals reuse DEC-77's acceptance shape (point 3); the meaning of "interpretation" for files that are not sheets is Bob's ruling C21 (K5496, option A; point 1). Section 10 lists every altered line.
 Draft ids: next free after the highest bold `**Rn**` per module file, skipping ids other drafts here take (section 9 item 4); BOB numbers every line. Nothing in the repository was edited but this file.

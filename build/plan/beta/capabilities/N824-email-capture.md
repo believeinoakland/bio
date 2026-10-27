@@ -1,6 +1,6 @@
 # N824 email capture: requirement drafts and Bob's points (CAPABILITIES worker, 2026-10-27)
 
-**Status** · DRAFT, not READY; written by a worker for CAPABILITIES #1 (lane/capabilities); nothing outside this file and its companion `N824-container-member-job.md` was edited, nothing committed. Revised for BOB's C9 and C12 and for K5504-K5506 (section 7 lists every altered id). Ids are draft ids, "next free after the highest `**Rn**` in the module's file, PLANNING renumbers".
+**Status** · READY (C29, 2026-10-27; every point of Bob's settled; M1, the `email()` probe, is a measurement entry for PLANNING to place as a job, not run by this lane, K5529); written by a worker for CAPABILITIES #1 (lane/capabilities); nothing outside this file and its companion `N824-container-member-job.md` was edited, nothing committed. Revised for BOB's C9 and C12 and for K5504-K5506 (section 7 lists every altered id). Ids are draft ids, "next free after the highest `**Rn**` in the module's file, PLANNING renumbers".
 **Read / not read:** moved unchanged to `N824-email-capture-changes.md`, which also keeps the C9/C12 change lists.
 
 ## 0. What exists, and what this feature is

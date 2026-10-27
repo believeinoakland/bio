@@ -1,6 +1,6 @@
 # N1259 (b2): review items moved out of `N1259-b-registers-module.md` (size), and C13 notes
 
-**DRAFT, not READY** · The lane lead marks READY. Review items moved out of part (b).
+**READY (C29, 2026-10-27)** · Review items moved out of part (b).
 
 Part (b)'s file is within bytes of its 45,000 limit; prose goes here.
 
