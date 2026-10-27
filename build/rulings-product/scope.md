@@ -50,3 +50,4 @@
 - What kind of proceeding can a team register before it has chosen its places? (Bob, K5556, on J3: "as recommended"): C · The screen says to choose the team's places first and links there, with A beside it so the team isn't stuck
 - What can a person's page record? (Bob, K5557, on J4: "as recommended"): A · Add membership and credential to what can be recorded The page already shows them; only adding them is missing.
 - Who files a correction, a withdrawal or a court order on a case's docket? (Bob, K5558, on J5: "as recommended"): A · The project's owner, from the docket page
+- When a new edition of a case is published, is that recorded on its docket? (Bob, K5559, on J6: "as recommended"): A · Automatically, with the edition's "what changed" text Readers look for changes in both places.
