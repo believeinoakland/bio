@@ -6914,3 +6914,15 @@ the design: `screen.money.proposed` "proposed by the assistant" (house word); `m
 verified: on tranche/T52 with these words files: words 0, format 0; `calculations/r7-delimiter` passes; `screens-inquiry/r10-stated` fails with and without (the tranche's own).
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-450 block, five rows in place); `screens/parked-T52.md`.
 owed: BOB: merge this commit (MERGE); the owning jobs choose the `.one` rows when the count is 1.
+
+### DEC-451 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (B545: MONEY #1, money R34; and a check of DEC-450 before its merge)
+for: design (T52)
+question: (1) The two sentences money now says when a fiscal year is sent with no body (R34: the stand-in `*` is a lookup key, never printed), keyed `money.index.no_body_named_for_fiscal` and `money.index.no_body_named_no_period` with no words rows. (2) DEC-450 dropped "Background reading: {ingest}" from `money.ingest.partial`, but money R31's test (`g55-view.test.mjs:108`) asserts the sentence names the ingest's key: merged as is, U495 turns money red (121/122).
+why it is Bob's: it is not (P17): member words and keeping the tranche green.
+provisional: as below. alternative: drop the key now and owe money a test change (refused: layer 5 is closed, and an out-of-layer job needs Bob, K1548). recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: `money.index.no_body_named_for_fiscal` "{fiscal} names no body, and your team's profiles hold no fiscal year shared by every body, so it can't be turned into dates. Name the body whose fiscal year it is."; `money.index.no_body_named_no_period` "Your team's profiles have no fiscal year {fiscal} shared by every body. Name the body whose fiscal year it is." (beside their named-body neighbors; A2's answer on fiscal years may reword them). `money.ingest.partial` keeps "Background reading: {ingest}" as on the tranche; the drop is parked in `screens/parked-T52.md` for money's next job (R31's test reads the key from `.ingest`, not from the sentence).
+verified: on tranche/T52 with these words files: words 0, format 0; money 122/122 (121/122 with DEC-450's row as it was); `calculations/r7-delimiter` passes; `screens-inquiry/r10-stated` cannot load here (miniflare), the same with and without.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-451 block; `money.ingest.partial` in place); `screens/parked-T52.md`.
+owed: BOB: merge this commit (MERGE), which carries DEC-449 and DEC-450 and replaces U495's commit.
