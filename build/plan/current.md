@@ -2,7 +2,7 @@
 # Plan T52 · the beta (K5257)
 **Status** · OPEN · BOB #319 · session_018Bhced5gpDxaidQNabEbp6 · depth 1
 **Jobs** · member-roster: MEMBER-ROSTER #1 session_018BhcefqKiHdmRnqkPsWrrx; membership: MEMBERSHIP #1 session_018BhcefkQnJJfBgtYuqcBsn; promotion: PROMOTION #1 session_018BhcegixzKL2KvktYcXKVM
-**Owed** · none
+**Owed** · message member-roster; message membership; start project-roster; message promotion
 
 T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are written from `next.md` and the 0.87.0 walk's placement (K5354); R14 (civicos-process PR #13) is adopted before its first test run (K5351).
 
@@ -42,6 +42,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 **membership**
 - T52-7 · W4 · A-K8 (b)(c) · MINOR · `projectInvite` answers a distinct code for invited-not-joined, and checks `founderHandle()` first ("that is you / already an owner"); `memberByHandle` stays (R48): membership R157 (K5369). The owner-add arm `project-roster/index.mjs:295` has the same shape: it joins only if the red test reaches it. Words owed. PL1 W4.
+
+**project-roster**
+- T52-99 · MEMBERSHIP #1's finding (W4's owner-add arm, PL1 W4 (c)) · MINOR · `projectOwnerAdd`, `projectOwnerRemove` and `projectOwnerRescue` resolve the founder's handle to the founder: project-roster R45 (K5373).
 
 **promotion**
 - T52-8 · K5339 red · `row-census.test.mjs`: first: settle the cause, then fix it.
