@@ -24764,28 +24764,28 @@
       "en": "event-directed: keyed by (event, entity, role); writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1515
+      "line": 1523
     },
     {
       "id": "events.declared.createevent",
       "en": "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1513
+      "line": 1521
     },
     {
       "id": "events.declared.recorddatedfact",
       "en": "dated-fact-directed: keyed by (capture, extent); holds a document's own stated date and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1511
+      "line": 1519
     },
     {
       "id": "events.declared.relate",
       "en": "event-directed: keyed by the two events; writes a cited relation and moves no bundle",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1517
+      "line": 1525
     },
     {
       "id": "events.follow.a_register_import_reads_one",
@@ -24869,77 +24869,77 @@
       "en": "a capture attestation names the extent that attests the event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 458
+      "line": 466
     },
     {
       "id": "events.index.a_cause_is_held_only",
       "en": "a cause is held only as a named source's claim; a member's own hypothesis is not held here (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 935
+      "line": 943
     },
     {
       "id": "events.index.a_correction_names_the_subject",
       "en": "a correction names the subject the participant is, by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 784
+      "line": 792
     },
     {
       "id": "events.index.a_correction_says_why_the",
       "en": "a correction says why the participant was wrong; it is kept beside the row",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 779
+      "line": 787
     },
     {
       "id": "events.index.a_dated_fact_is_a",
       "en": "a dated fact is a captured document's own statement, named by its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 292
+      "line": 300
     },
     {
       "id": "events.index.a_dated_fact_is_one",
       "en": "a dated fact is one of {DATED_KINDS}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 298
+      "line": 306
     },
     {
       "id": "events.index.a_dated_fact_names_the",
       "en": "a dated fact names the extent of the capture that states it",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 295
+      "line": 303
     },
     {
       "id": "events.index.a_dated_fact_says_how",
       "en": "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 301
+      "line": 309
     },
     {
       "id": "events.index.a_hypothesis_is_never_a",
       "en": "a hypothesis is never a participant (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 507
+      "line": 515
     },
     {
       "id": "events.index.a_hypothesis_is_never_an",
       "en": "a hypothesis is never an end of an event's relation (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 925
+      "line": 933
     },
     {
       "id": "events.index.a_hypothesis_is_never_what",
       "en": "a hypothesis is never what an event concerns (K1467)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 498
+      "line": 506
     },
     {
       "id": "events.index.a_hypothesis_v1_is_never",
@@ -24953,28 +24953,28 @@
       "en": "a merge says why the two records are one happening",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 810
+      "line": 818
     },
     {
       "id": "events.index.a_participant_is_a_registered",
       "en": "a participant is a registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 506
+      "line": 514
     },
     {
       "id": "events.index.a_participant_is_what_a",
       "en": "a participant is what a document states or a member testifies, never filled from who held an office",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 514
+      "line": 522
     },
     {
       "id": "events.index.a_participant_names_the_attestation",
       "en": "a participant names the attestation that states it, by its index in attestations",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 564
+      "line": 572
     },
     {
       "id": "events.index.a_payer_or_payee_lives",
@@ -24988,189 +24988,189 @@
       "en": "a proceeding's status is read by its entity id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1362
+      "line": 1370
     },
     {
       "id": "events.index.a_relation_is_between_two",
       "en": "a relation is between two distinct events",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 927
+      "line": 935
     },
     {
       "id": "events.index.a_relation_is_one_of",
       "en": "a relation is one of {RELATION_KINDS}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 923
+      "line": 931
     },
     {
       "id": "events.index.a_relation_names_two_events",
       "en": "a relation names two events by id: from and to",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 924
+      "line": 932
     },
     {
       "id": "events.index.a_role_is_one_of",
       "en": "a role is one of {ROLES}; a payer or payee lives on the money fact, never on an event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 511
+      "line": 519
     },
     {
       "id": "events.index.a_split_leaves_at_least",
       "en": "a split leaves at least one attestation on the event it splits",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 855
+      "line": 863
     },
     {
       "id": "events.index.a_split_names_the_attestations",
       "en": "a split names the attestations that move to the new event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 850
+      "line": 858
     },
     {
       "id": "events.index.a_split_says_why_one",
       "en": "a split says why one record held two happenings",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 846
+      "line": 854
     },
     {
       "id": "events.index.a_stated_cause_is_held",
       "en": "a stated cause is held only from a named source by a member; the machine never writes one",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 933
+      "line": 941
     },
     {
       "id": "events.index.a_status_is_one_of",
       "en": "a status is one of {STATUSES}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 552
+      "line": 560
     },
     {
       "id": "events.index.a_status_is_read_as",
       "en": "a status is read as of a date",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1377
+      "line": 1385
     },
     {
       "id": "events.index.a_timeline_is_of_an",
       "en": "a timeline is of an explicit set of entity or event ids, or of captures; a project's or inquiry's scope is resolved by its caller",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1168
+      "line": 1176
     },
     {
       "id": "events.index.a_timeline_reads_the_dated",
       "en": "a timeline reads the dated facts of at most {CAPTURES_MAX} captures",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1173
+      "line": 1181
     },
     {
       "id": "events.index.a_timeline_s_audience_is",
       "en": "a timeline's audience is \"public\", or none for the team's own reading",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1171
+      "line": 1179
     },
     {
       "id": "events.index.a_vote_is_held_with",
       "en": "a vote is held with the value the record states",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 531
+      "line": 539
     },
     {
       "id": "events.index.a_vote_value_is_one",
       "en": "a vote value is one of the profile's: {values}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 537
+      "line": 545
     },
     {
       "id": "events.index.a_withdrawal_says_why_the",
       "en": "a withdrawal says why the relation was wrong; it is kept beside it",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 963
+      "line": 971
     },
     {
       "id": "events.index.an_act_is_named_by",
       "en": "an act is named by its ACT- id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 990
+      "line": 998
     },
     {
       "id": "events.index.an_attestation_from_a_captured",
       "en": "an attestation from a captured document names its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 455
+      "line": 463
     },
     {
       "id": "events.index.an_attestation_is_a_held",
       "en": "an attestation is a held dated fact, a passage of a captured document, or a member's testimony",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 446
+      "line": 454
     },
     {
       "id": "events.index.an_attestation_with_no_date",
       "en": "an attestation with no date of its own cannot govern when the event happened",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 635
+      "line": 643
     },
     {
       "id": "events.index.an_event_concerns_a_registered",
       "en": "an event concerns a registered subject or another event, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 497
+      "line": 505
     },
     {
       "id": "events.index.an_event_is_held_only",
       "en": "an event is held only with at least one attestation",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 554
+      "line": 562
     },
     {
       "id": "events.index.an_event_is_not_merged",
       "en": "an event is not merged into itself",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 814
+      "line": 822
     },
     {
       "id": "events.index.an_event_is_one_of",
       "en": "an event is one of {EVENT_KINDS}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 551
+      "line": 559
     },
     {
       "id": "events.index.an_event_is_read_by",
       "en": "an event is read by its id (op=event&id=EVT-…)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1092
+      "line": 1100
     },
     {
       "id": "events.index.an_event_of_kind_kind",
       "en": "an event of kind {kind} is held only with its provision, reason and outcome: it is recorded with op={v1}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 545
+      "line": 553
     },
     {
       "id": "events.index.an_event_row_holds_no",
@@ -25184,56 +25184,56 @@
       "en": "author",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 408
+      "line": 416
     },
     {
       "id": "events.index.choosing_which_readings_dates_are",
       "en": "choosing which readings' dates are held",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 357
+      "line": 365
     },
     {
       "id": "events.index.dated_facts_are_read_for",
       "en": "dated facts are read for a captured document, by its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 419
+      "line": 427
     },
     {
       "id": "events.index.edit_acts_are_read_from",
       "en": "edit acts are read from a captured office document, named by its capture sha256",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 395
+      "line": 403
     },
     {
       "id": "events.index.events_are_read_for_one",
       "en": "events are read for one registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1151
+      "line": 1159
     },
     {
       "id": "events.index.every_relation_is_cited",
       "en": "every relation is cited",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 930
+      "line": 938
     },
     {
       "id": "events.index.its_two_ends_were_merged",
       "en": "its two ends were merged into one event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 829
+      "line": 837
     },
     {
       "id": "events.index.kept_as_governing_when_another",
       "en": "kept as governing when another event was merged into this one",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 819
+      "line": 827
     },
     {
       "id": "events.index.no_dated_fact_with_that",
@@ -25254,161 +25254,161 @@
       "en": "no participant with that id is held",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 781
+      "line": 789
     },
     {
       "id": "events.index.no_question_with_that_id",
       "en": "no question with that id is held where you can see it; a question is an inquiry the record holds",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 303
+      "line": 311
     },
     {
       "id": "events.index.no_relation_with_that_id",
       "en": "no relation with that id is held",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 965
+      "line": 973
     },
     {
       "id": "events.index.office_metadata_the_files_field",
       "en": "office metadata: the file's {field} value{v1}; what the file states about itself, never a finding",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 408
+      "line": 416
     },
     {
       "id": "events.index.only_a_member_merges_or",
       "en": "only a member merges or splits events; the machine's rows are corrected by a member's act",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 804
+      "line": 812
     },
     {
       "id": "events.index.only_a_member_records_which",
       "en": "only a member records which of two events came first; the machine infers no order (R41)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 937
+      "line": 945
     },
     {
       "id": "events.index.statements_are_read_for_one",
       "en": "statements are read for one registered subject, named by its id",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1352
+      "line": 1360
     },
     {
       "id": "events.index.status_as_of_a_date",
       "en": "status as of a date is read of an entity of kind proceeding",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1368
+      "line": 1376
     },
     {
       "id": "events.index.testimony_carries_the_member_s",
       "en": "testimony carries the member's own account of the event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 466
+      "line": 474
     },
     {
       "id": "events.index.testimony_is_a_member_s",
       "en": "testimony is a member's own account, never the machine's",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 467
+      "line": 475
     },
     {
       "id": "events.index.that_act_already_names_another",
       "en": "that act already names another event",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 995
+      "line": 1003
     },
     {
       "id": "events.index.that_event_holds_no_such",
       "en": "that event holds no such attestation",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 634
+      "line": 642
     },
     {
       "id": "events.index.that_row_was_already_corrected",
       "en": "that row was already corrected; correct the row that replaced it",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 782
+      "line": 790
     },
     {
       "id": "events.index.that_within_would_make_an",
       "en": "that within would make an event lie within itself",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 942
+      "line": 950
     },
     {
       "id": "events.index.the_capture_s_reading_holds",
       "en": "the capture's reading holds no office metadata",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 400
+      "line": 408
     },
     {
       "id": "events.index.the_extent_names_no_part",
       "en": "the extent names no part of that capture",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 315
+      "line": 323
     },
     {
       "id": "events.index.the_machine_writes_no_relation",
       "en": "the machine writes no relation but within (R41)",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 939
+      "line": 947
     },
     {
       "id": "events.index.the_opt_in_set_is",
       "en": "the opt-in set is a list of capture classes (content-type keys), empty for none",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 359
+      "line": 367
     },
     {
       "id": "events.index.the_record_holds_no_such",
       "en": "the record holds no such capture you can see",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 294
+      "line": 302
     },
     {
       "id": "events.index.the_two_events_dates_already",
       "en": "the two events' dates already answer which came first: {f} {answer} {t}; a cited order is held only for a pair no date settles",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 947
+      "line": 955
     },
     {
       "id": "events.index.the_write_was_undone_because",
       "en": "the write was undone because {module}'s listener failed: {message}",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 600
+      "line": 608
     },
     {
       "id": "events.index.who_was_sent_something_is",
       "en": "who was sent something is read of a communication, an issuance or a meeting",
       "module": "events",
       "file": "bio-plane/src/events/index.mjs",
-      "line": 1342
+      "line": 1350
     },
     {
       "id": "events.owner.this_node_has_v1_connections",
       "en": "this node has {v1} connections of the kind {v2}, more than that kind's bound of {hubBoundOf}; it is named, never expanded",
       "module": "events",
       "file": "bio-plane/src/events/owner.mjs",
-      "line": 124
+      "line": 126
     },
     {
       "id": "events.recorded.a_read_names_the_member",

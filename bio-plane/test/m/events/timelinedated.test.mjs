@@ -67,7 +67,7 @@ test("R53 NO_SET refuses only when both set and captures are empty; AUDIENCE_UNK
 test("R53 R29 dated: undetermined orders shown with their bands, from and to bound only the placed items, a fact whose date cannot be placed listed apart, limit for this list", () => {
   const view = testView();
   delete view.time_zone;
-  const w = world({ view });
+  const w = world({ view, profiles: false });
   const a = w.capture("r53-order");
   const day = fact(w, a, "2026-04-10", "meeting", MEMBER, { kind: "document" });
   assert.equal(day.zone, null, "the profile gives no zone, so a day has no span");

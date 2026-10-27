@@ -80,8 +80,10 @@ export function neighboursOf(k, args) {
   const node = typeof a.node === "string" ? a.node : "";
   const kinds = Array.isArray(a.kinds) ? a.kinds.filter((x) => ALL.includes(x)) : ALL;
   const start = Number.isInteger(a.page) && a.page > 0 ? a.page : 0;
-  const ctx = { kinds, at: a.at, viewer: a.viewer, view: k.view(), zone: k.zone() };
   const kept = typeof k.kept === "function" ? k.kept() : null;
+  /* K5292: the governing zone is read from the store, so a walk reads it once while the store is unchanged */
+  const zone = kept ? (kept.zone !== undefined ? kept.zone : (kept.zone = k.zone())) : k.zone();
+  const ctx = { kinds, at: a.at, viewer: a.viewer, view: k.view(), zone };
   if (!kept) return answersFor(k, [node], ctx, start, null).get(node);
   const asked = JSON.stringify([kinds, a.at ?? null, a.viewer, ctx.zone]);
   const key = (n, p) => `${asked}\u0000${n}\u0000${p}`;
