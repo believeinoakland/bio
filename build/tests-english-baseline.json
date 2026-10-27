@@ -661,8 +661,6 @@
   "bio-plane/test/m/workbooks/add.test.mjs": 1,
   "bio-plane/test/members.test.mjs": 3,
   "bio-plane/test/tier2-wire.test.mjs": 8,
-  "court-doctypes/test/assess.test.mjs": 7,
-  "court-doctypes/test/readers.test.mjs": 18,
   "docprofile/test/docprofile.test.mjs": 10,
   "docprofile/test/reading-position.test.mjs": 2,
   "docprofile/test/round9.test.mjs": 1,

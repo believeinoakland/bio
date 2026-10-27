@@ -255,6 +255,28 @@ const ROW_FIELDS = [["date", "date"], ["text", "text"], ["filer", "filer"], ["ki
 const JSON_FACTS = new Set(["links", "documents"]);
 const PROCEEDING_FIELDS = ["number_as_written", "forum_as_written", "kind_as_written", "filed"];
 
+/* R19: the two readings of one CourtListener docket, the page's and the API's, are one register in two forms. */
+const ONE_DOCKET = new Set(["courtlistener_docket", "courtlistener_api"]);
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+
+/** A date as the page writes it ("Nov. 17, 2017", "Sept 8, 2021") or the answer ("2017-11-17"), as the
+ *  answer writes it; a date neither form reads is kept as written. */
+export function isoDate(written) {
+  const t = String(written == null ? "" : written).trim();
+  const m = /^([A-Za-z]+)\.?\s+([0-9]{1,2}),\s+([0-9]{4})$/.exec(t);
+  const month = m && MONTHS[m[1].slice(0, 3).toLowerCase()];
+  return month ? `${m[3]}-${String(month).padStart(2, "0")}-${m[2].padStart(2, "0")}` : t || null;
+}
+
+/* A row as both forms state it: its key (an unnumbered entry's, from the date as the answer writes it), its
+   date, filer and sealing. Twins keep their order mark. */
+function sharedRow(r) {
+  const twin = /#[0-9]+$/.exec(r.key);
+  const key = r.entry_id != null ? r.key
+    : `minute:${isoDate(r.date) ?? ""}|${r.text ?? (r.documents || []).map((x) => x.description || x.document || "").join("; ")}${twin ? twin[0] : ""}`;
+  return { ...r, key, date: isoDate(r.date) };
+}
+
 const failedRead = (why) => ({ meaningful: null, significance: null, events: [], confirmed: null,
   why: localize("court-doctypes.common.why_so_nothing_is_claimed", "{why}, so nothing is claimed about the register either way (a failed read is never a register emptied)", { why: String(why) }) });
 
@@ -290,40 +312,53 @@ export function assessRegister(before, after) {
   const a = before || {}, b = after || {};
   if (a.failed || b.failed)
     return failedRead(localize("court-doctypes.common.a_reading_failed_v1", "a reading failed ({v1})", { v1: String(a.failed ? "before: " + a.failed : "after: " + b.failed) }));
-  if (a.type && b.type && a.type !== b.type)
+  const oneDocket = !!a.type && !!b.type && a.type !== b.type && ONE_DOCKET.has(a.type) && ONE_DOCKET.has(b.type);
+  if (a.type && b.type && a.type !== b.type && !oneDocket)
     return failedRead(localize("court-doctypes.common.the_two_readings_are_of_kinds", "the two readings are of different kinds of register"));
   const na = a.proceeding && a.proceeding.number_as_written, nb = b.proceeding && b.proceeding.number_as_written;
   if (na && nb && na !== nb)
     return failedRead(localize("court-doctypes.common.the_two_readings_are_of", "the two readings are of different proceedings ({na} and {nb})", { na: String(na), nb: String(nb) }));
-  const rowsA = Array.isArray(a.rows) ? a.rows : [], rowsB = Array.isArray(b.rows) ? b.rows : [];
+  let rowsA = Array.isArray(a.rows) ? a.rows : [], rowsB = Array.isArray(b.rows) ? b.rows : [];
   const registers = a.register !== false || b.register !== false;
   if (registers && (!rowsA.length || !rowsB.length))
     return failedRead(!rowsA.length && !rowsB.length ? localize("court-doctypes.common.no_register_row_was_read_either", "no register row was read in either reading") : localize("court-doctypes.common.no_register_row_was_read", "no register row was read in the {v1} reading", { v1: String(!rowsA.length ? "earlier" : "later") }));
 
   const events = [];
-  /* The proceeding: its status, its caption and its parties, as written. */
+  /* The proceeding: its status, its caption and its parties, as written (within one form: the two forms state
+     different parts of it, R19). */
   const pa = a.proceeding || {}, pb = b.proceeding || {};
-  if ((pa.status_as_written ?? null) !== (pb.status_as_written ?? null))
-    events.push(event("status_changed", { field: "status_as_written", was: pa.status_as_written ?? null, now: pb.status_as_written ?? null,
-      why: localize("court-doctypes.common.the_proceedings_status_as_written", "the proceeding's status as written changed from {show} to {show_2}", { show: String(show(pa.status_as_written)), show_2: String(show(pb.status_as_written)) }) }));
-  if ((pa.caption ?? null) !== (pb.caption ?? null))
-    events.push(event("item_changed", { field: "caption", was: pa.caption ?? null, now: pb.caption ?? null,
-      why: localize("court-doctypes.common.the_proceedings_caption_as_written", "the proceeding's caption as written changed") }));
-  for (const f of PROCEEDING_FIELDS)
-    if ((pa[f] ?? null) !== (pb[f] ?? null))
-      events.push(event("item_changed", { field: f, was: pa[f] ?? null, now: pb[f] ?? null,
-        why: localize("court-doctypes.common.the_proceedings_replace_as_written", "the proceeding's {replace} as written changed from {show} to {show_2}", { replace: String(f.replace(/_as_written$/, "").replace(/_/g, " ")), show: String(show(pa[f])), show_2: String(show(pb[f])) }) }));
-  const parties = (r) => new Map((Array.isArray(r.parties) ? r.parties : []).map((p) => [partyKey(p), p]));
-  const ptA = parties(a), ptB = parties(b);
-  for (const [k, p] of ptA) if (!ptB.has(k))
-    events.push(event("item_changed", { field: "parties", party: p.name, role_as_written: p.role_as_written, was: p.name, now: null,
-      why: localize("court-doctypes.common.v1_show_is_no_longer", "{v1}{show} is no longer named on the page", { v1: String(p.role_as_written ? p.role_as_written + " " : ""), show: String(show(p.name)) }) }));
-  for (const [k, p] of ptB) if (!ptA.has(k))
-    events.push(event("item_changed", { field: "parties", party: p.name, role_as_written: p.role_as_written, was: null, now: p.name,
-      why: localize("court-doctypes.common.v1_show_is_newly_named", "{v1}{show} is newly named on the page", { v1: String(p.role_as_written ? p.role_as_written + " " : ""), show: String(show(p.name)) }) }));
+  if (!oneDocket) {
+    if ((pa.status_as_written ?? null) !== (pb.status_as_written ?? null))
+      events.push(event("status_changed", { field: "status_as_written", was: pa.status_as_written ?? null, now: pb.status_as_written ?? null,
+        why: localize("court-doctypes.common.the_proceedings_status_as_written", "the proceeding's status as written changed from {show} to {show_2}", { show: String(show(pa.status_as_written)), show_2: String(show(pb.status_as_written)) }) }));
+    if ((pa.caption ?? null) !== (pb.caption ?? null))
+      events.push(event("item_changed", { field: "caption", was: pa.caption ?? null, now: pb.caption ?? null,
+        why: localize("court-doctypes.common.the_proceedings_caption_as_written", "the proceeding's caption as written changed") }));
+    for (const f of PROCEEDING_FIELDS)
+      if ((pa[f] ?? null) !== (pb[f] ?? null))
+        events.push(event("item_changed", { field: f, was: pa[f] ?? null, now: pb[f] ?? null,
+          why: localize("court-doctypes.common.the_proceedings_replace_as_written", "the proceeding's {replace} as written changed from {show} to {show_2}", { replace: String(f.replace(/_as_written$/, "").replace(/_/g, " ")), show: String(show(pa[f])), show_2: String(show(pb[f])) }) }));
+    const parties = (r) => new Map((Array.isArray(r.parties) ? r.parties : []).map((p) => [partyKey(p), p]));
+    const ptA = parties(a), ptB = parties(b);
+    for (const [k, p] of ptA) if (!ptB.has(k))
+      events.push(event("item_changed", { field: "parties", party: p.name, role_as_written: p.role_as_written, was: p.name, now: null,
+        why: localize("court-doctypes.common.v1_show_is_no_longer", "{v1}{show} is no longer named on the page", { v1: String(p.role_as_written ? p.role_as_written + " " : ""), show: String(show(p.name)) }) }));
+    for (const [k, p] of ptB) if (!ptA.has(k))
+      events.push(event("item_changed", { field: "parties", party: p.name, role_as_written: p.role_as_written, was: null, now: p.name,
+        why: localize("court-doctypes.common.v1_show_is_newly_named", "{v1}{show} is newly named on the page", { v1: String(p.role_as_written ? p.role_as_written + " " : ""), show: String(show(p.name)) }) }));
+  }
 
   /* The rows, by their key (R6): page order, white space and markup were already read away. */
-  const d = diffEntities(a.entities || [], b.entities || []);
+  /* Across the two forms only the fields both state are compared: the key, the date, the filer and the sealing. */
+  let entsA = a.entities || [], entsB = b.entities || [];
+  if (oneDocket) {
+    const shared = (rows) => rows.map(sharedRow);
+    rowsA = shared(rowsA); rowsB = shared(rowsB);
+    const ents = (rows) => rows.map((r) => entity(r.key, "register_row", [r.date, r.text].filter(Boolean).join(" · ").slice(0, 160),
+      { date: r.date, filer: r.filer, sealing: r.sealing }, r.source));
+    entsA = ents(rowsA); entsB = ents(rowsB);
+  }
+  const d = diffEntities(entsA, entsB);
   const byKeyA = new Map(rowsA.map((r) => [r.key, r])), byKeyB = new Map(rowsB.map((r) => [r.key, r]));
   const composite = /composite/.test(String(b.key_basis || a.key_basis || ""));
   const pairs = composite ? counterparts(d.gone.map((e) => byKeyA.get(e.key)), d.appeared.map((e) => byKeyB.get(e.key))) : new Map();
@@ -368,16 +403,17 @@ export function assessRegister(before, after) {
   bySeverity(events);
   const intact = rowsB.length - d.appeared.length - d.altered.length;
   const parts = [];
-  if (d.appeared.length) parts.push(`${d.appeared.length} row(s) added`);
+  if (d.appeared.length) parts.push(localize("court-doctypes.common.length_row_s_added", "{length} row(s) added", { length: String(d.appeared.length) }));
   if (d.gone.length) parts.push(localize("court-doctypes.common.length_row_s_no_longer", "{length} row(s) no longer listed", { length: String(d.gone.length) }));
-  if (d.altered.length) parts.push(`${d.altered.length} row(s) changed`);
+  if (d.altered.length) parts.push(localize("court-doctypes.common.length_row_s_changed", "{length} row(s) changed", { length: String(d.altered.length) }));
   const other = events.filter((e) => e.field && !e.key).length;
   if (other) parts.push(localize("court-doctypes.common.other_change_s_to_the", "{other} change(s) to the proceeding", { other: String(other) }));
   return {
     meaningful: isMeaningful(events), significance: worstSignificance(events), events,
     confirmed: intact > 0 ? { rows: rowsB.length, intact } : null,
-    why: parts.length ? `${intact} of ${rowsB.length} rows unchanged; ${parts.join(", ")}`
-      : registers ? localize("court-doctypes.common.all_length_rows_of_this", "all {length} rows of this register are unchanged", { length: String(rowsB.length) }) : "the proceeding is unchanged",
+    why: parts.length ? localize("court-doctypes.common.intact_of_rows_unchanged", "{intact} of {rows} rows unchanged; {parts}", { intact: String(intact), rows: String(rowsB.length), parts: parts.join(", ") })
+      : registers ? localize("court-doctypes.common.all_length_rows_of_this", "all {length} rows of this register are unchanged", { length: String(rowsB.length) })
+      : localize("court-doctypes.common.the_proceeding_is_unchanged", "the proceeding is unchanged"),
   };
 }
 

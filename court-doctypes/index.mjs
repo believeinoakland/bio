@@ -1,4 +1,4 @@
-/* court-doctypes: three content types that read a proceeding's register, and the register row diff
+/* court-doctypes: three content types (and a fourth, R18) that read a proceeding's register, and the register row diff
  * (`build/requirements/court-doctypes.md`; plan T33-16; K1443, K1480, K1492, K1506).
  *
  * Each type is docprofile's content-type shape, `{key, label, version, contract, detect, parse, assess}`,
@@ -10,20 +10,31 @@
 import courtlistenerDocket from "./courtlistener.mjs";
 import cpucProceeding from "./cpuc.mjs";
 import ecourtRoa from "./ecourt.mjs";
+import courtlistenerApi from "./courtlistener-api.mjs";
 
-export { courtlistenerDocket, cpucProceeding, ecourtRoa };
+export { courtlistenerDocket, cpucProceeding, ecourtRoa, courtlistenerApi };
 export { sealingOf } from "./common.mjs";
 
 /** The three types, in the order they are registered. */
 export const COURT_TYPES = Object.freeze([courtlistenerDocket, cpucProceeding, ecourtRoa]);
 export const KEYS = Object.freeze(COURT_TYPES.map((t) => t.key));
 
-/** Register the three types through docprofile's seam (`register(type)`), in order. Returns what each
- *  call returned, so the caller can see a refusal; never throws on a seam that refuses. */
-export function registerCourtTypes(register) {
-  if (typeof register !== "function") return COURT_TYPES.map((t) => ({ key: t.key, registered: false, why: "no register function was given" }));
-  return COURT_TYPES.map((t) => {
+/** The fourth type, which reads CourtListener's docket-entries answer (R18), registered by its own function
+ *  so the three above stay the three. */
+export const COURT_API_TYPES = Object.freeze([courtlistenerApi]);
+
+function registerAll(types, register) {
+  if (typeof register !== "function") return types.map((t) => ({ key: t.key, registered: false, why: "no register function was given" }));
+  return types.map((t) => {
     try { return { key: t.key, registered: true, result: register(t) }; }
     catch (e) { return { key: t.key, registered: false, why: String((e && e.message) || e) }; }
   });
 }
+
+/** Register the three types through docprofile's seam (`register(type)`), in order. Returns what each
+ *  call returned, so the caller can see a refusal; never throws on a seam that refuses. */
+export const registerCourtTypes = (register) => registerAll(COURT_TYPES, register);
+
+/** Register the docket-entries type the same way (R18): the caller calls it after `registerCourtTypes`
+ *  and before `generic`. */
+export const registerCourtApiTypes = (register) => registerAll(COURT_API_TYPES, register);

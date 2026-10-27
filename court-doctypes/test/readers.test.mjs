@@ -4,7 +4,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { recognise } from "../../bio-plane/src/idspaces.mjs";
 import { courtlistenerDocket as CL, cpucProceeding as CPUC, ecourtRoa as EC, COURT_TYPES, KEYS, registerCourtTypes } from "../index.mjs";
-import { fixture, viewFor, LOCATORS, ctxFor, FIRST, TEST } from "./helpers.mjs";
+import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { fixture, viewFor, LOCATORS, ctxFor, FIRST, TEST, wordRe } from "./helpers.mjs";
 
 const P2 = fixture("courtlistener-4214664-p2.html");
 const P4 = fixture("courtlistener-4214664-p4.html");
@@ -42,19 +43,19 @@ test("R1 R15 R17: the same page at an address no active profile names under the 
     const d = type.detect(ctxFor(text, { view: VIEWS[TEST], locator, origin }));
     assert.equal(d.match, true);
     assert.equal(d.confidence, "likely", type.key);
-    assert.match(d.why, /no active profile names its address/);
+    assert.match(d.why, wordRe("court-doctypes.common.no_active_profile_names_its"));
     /* and with no systems entry under the key at all, nowhere is the address */
     const bare = type.detect(ctxFor(text, { view: viewFor(FIRST, { systems: false }), locator, origin }));
     assert.equal(bare.confidence, "likely");
     /* a capture with no address */
     const none = type.detect(ctxFor(text, { view: VIEWS[FIRST], locator: undefined, origin }));
     assert.equal(none.confidence, "likely");
-    assert.match(none.why, /names no address/);
+    assert.match(none.why, wordRe("court-doctypes.common.the_capture_names_no_address"));
   }
   /* an address of one type's system is not another type's */
   const crossed = CL.detect(ctxFor(P2, { view: VIEWS[FIRST], locator: LOCATORS[FIRST].documents }));
   assert.equal(crossed.confidence, "likely");
-  assert.match(crossed.why, /its address is one of .+, not an address the active profiles name for a CourtListener docket/);
+  assert.match(crossed.why, wordRe("court-doctypes.common.its_address_is_one_of", { label: localize("court-doctypes.courtlistener.label", "a CourtListener docket") }));
 });
 
 test("R1 R17: a page of the right address without the register's structure is not matched, with which kind of page it is", () => {
@@ -85,7 +86,7 @@ test("R1 R17: a page of the right address without the register's structure is no
   for (const type of COURT_TYPES) {
     const d = type.detect(ctxFor("", { view: VIEWS[FIRST], origin: "member" }));
     assert.equal(d.match, false);
-    assert.match(d.why, /lacks/);
+    assert.match(d.why, wordRe("court-doctypes.common.this_page_lacks_what_s"));
   }
 });
 
@@ -94,11 +95,11 @@ test("R2 R17: ecourt_roa matches only a member's own capture; any other origin i
   for (const origin of [undefined, null, "fetch", "daemon", "acquisition", { kind: "fetch" }, "Member"]) {
     const d = EC.detect(ctxFor(ROA, { view: VIEWS[FIRST], locator: L.ecourt, origin }));
     assert.equal(d.match, false, JSON.stringify(origin));
-    assert.match(d.why, /an account-gated register is read only from a member's own capture/);
+    assert.match(d.why, wordRe("court-doctypes.ecourt.member_only"));
     const r = EC.parse(ctxFor(ROA, { view: VIEWS[FIRST], locator: L.ecourt, origin }));
     assert.deepEqual(r.rows, []);
     assert.deepEqual(r.parties, []);
-    assert.match(r.failed, /an account-gated register is read only from a member's own capture/);
+    assert.match(r.failed, wordRe("court-doctypes.ecourt.member_only"));
   }
   for (const origin of ["member", { kind: "member" }])
     assert.equal(EC.detect(ctxFor(ROA, { view: VIEWS[FIRST], locator: L.ecourt, origin })).confidence, "certain");
@@ -109,13 +110,13 @@ test("R3 R16 R17: the proceeding as each page states it, its number recognised t
   const cl = CL.parse(ctxFor(P2, { view, locator: L.courtlistener(2) }));
   assert.equal(cl.proceeding.number_as_written, "1:16-cv-00745");
   assert.equal(cl.proceeding.caption, "NATIONAL VETERANS LEGAL SERVICES PROGRAM v. United States");
-  assert.equal(cl.proceeding.forum_as_written, "District Court, District of Columbia");
+  assert.equal(cl.proceeding.forum_as_written, /<h2>\s*([^<]*?)\s*<\/h2>/.exec(P2)[1], "the court, as the page's own heading writes it");
   assert.equal(cl.proceeding.kind_as_written, "Other Statutory Actions");
   assert.equal(cl.proceeding.filed, "April 21, 2016");
   assert.equal(cl.proceeding.status_as_written, null);
-  assert.match(cl.proceeding.why.status_as_written, /states no status/);
+  assert.equal(cl.proceeding.why.status_as_written, localize("court-doctypes.courtlistener.the_docket_page_states_no", "the docket page states no status; a terminated case shows a Date Terminated field, and this page has none"));
   assert.equal(cl.proceeding.docket_number_core, null);
-  assert.match(cl.proceeding.why.docket_number_core, /does not state/);
+  assert.equal(cl.proceeding.why.docket_number_core, localize("court-doctypes.courtlistener.docket_number_core", "the docket page does not state CourtListener's docket_number_core (its API does), so it is not given"));
   const card = CPUC.parse(ctxFor(CARD, { view, locator: L.card }));
   assert.equal(card.proceeding.number_as_written, "A2106021");
   assert.match(card.proceeding.caption, /^Application of Pacific Gas and Electric Company for Authority, Among Other Things, to Increase Rates/);
@@ -123,11 +124,11 @@ test("R3 R16 R17: the proceeding as each page states it, its number recognised t
   assert.equal(card.proceeding.kind_as_written, "Ratesetting");
   assert.equal(card.proceeding.filed, "June 30, 2021");
   assert.equal(card.proceeding.forum_as_written, null);
-  assert.match(card.proceeding.why.forum_as_written, /names no forum/);
+  assert.equal(card.proceeding.why.forum_as_written, localize("court-doctypes.cpuc.the_page_names_no_forum", "the page names no forum in its text (only its banner image does), so none is given"));
   const docs = CPUC.parse(ctxFor(DOCS, { view, locator: L.documents }));
   assert.equal(docs.proceeding.number_as_written, "A2106021");
   assert.equal(docs.proceeding.caption, null);
-  assert.match(docs.proceeding.why.caption, /card's/);
+  assert.equal(docs.proceeding.why.caption, localize("court-doctypes.cpuc.the_documents_report_states_only", "the documents report states only the proceeding's number; its caption, status, category and filing date are the card's"));
   const ec = EC.parse(ctxFor(ROA, { view, locator: L.ecourt, origin: "member" }));
   assert.equal(ec.proceeding.number_as_written, "24CV000123");
   assert.equal(ec.proceeding.status_as_written, "Active");
@@ -144,7 +145,7 @@ test("R3 R16 R17: the proceeding as each page states it, its number recognised t
   for (const [type, text, origin] of [[CL, P2], [CPUC, CARD], [EC, ROA, "member"]]) {
     const r = type.parse(ctxFor(text, { view: VIEWS[TEST], locator: LOCATORS[TEST].card, origin }));
     assert.equal(r.proceeding.number, null);
-    assert.match(r.proceeding.why.number, /has the shape of no form of the active profiles' proceeding space/);
+    assert.match(r.proceeding.why.number, wordRe("court-doctypes.common.aswritten_has_the_shape_of", { asWritten: r.proceeding.number_as_written }));
   }
   /* and a number in the test profile's own form is recognised there */
   const mc = EC.parse(ctxFor(ROA.replace("24CV000123", "MC-24-0123"), { view: VIEWS[TEST], locator: LOCATORS[TEST].ecourt, origin: "member" }));
@@ -242,8 +243,7 @@ test("R5 R7 R16: the fictional eCourt register (marked so) is read row by row, i
 
 test("R6 R17: keys per register, key_basis saying how; entry_id only where CourtListener assigns an entry number", () => {
   const cl = CL.parse(ctxFor(P2, { view: VIEWS[FIRST] }));
-  assert.match(cl.key_basis, /entry number/);
-  assert.match(cl.key_basis, /date and its text/);
+  assert.equal(cl.key_basis, localize("court-doctypes.courtlistener.key_basis", "courtlistener_docket: a numbered entry is keyed by the entry number CourtListener gives it (entry_id); an unnumbered (minute) entry by its date and its text as written (or, with no text, its documents' descriptions), and twins on one reading by their order among themselves"));
   const numbered = cl.rows.filter((x) => x.entry_id), minute = cl.rows.filter((x) => !x.entry_id);
   assert.equal(numbered.length, 51);
   assert.equal(minute.length, 49);
@@ -259,13 +259,13 @@ test("R6 R17: keys per register, key_basis saying how; entry_id only where Court
   for (const r of [cl, CPUC.parse(ctxFor(DOCS, { view: VIEWS[FIRST] })), EC.parse(ctxFor(ROA, { view: VIEWS[FIRST], origin: "member" }))])
     assert.equal(new Set(r.rows.map((x) => x.key)).size, r.rows.length, r.type);
   const docs = CPUC.parse(ctxFor(DOCS, { view: VIEWS[FIRST] }));
-  assert.match(docs.key_basis, /composite of its filing date, document type, filer and description/);
+  assert.equal(docs.key_basis, localize("court-doctypes.cpuc.key_basis", "cpuc_proceeding: the commission assigns its documents report no row id, so a row is keyed by the composite of its filing date, document type, filer and description as written, plus its document link where it has one; identical twins on one reading are told apart by their order; an edit to any of these reads as one row gone and one added, reported together"));
   for (const x of docs.rows) {
     assert.equal(x.entry_id, null);
     assert.equal(x.key, [x.date, x.kind_as_written, x.filer, x.text, x.links[0].href].join("|"));
   }
   const ec = EC.parse(ctxFor(ROA, { view: VIEWS[FIRST], origin: "member" }));
-  assert.match(ec.key_basis, /date as written and its order among the rows of that date/);
+  assert.equal(ec.key_basis, localize("court-doctypes.ecourt.key_basis", "ecourt_roa (PROVISIONAL): a row is keyed by its date as written and its order among the rows of that date; the row shape and this key are assumed from the portal's own description of a case page and are not yet verified on a member's capture"));
   /* twins: two rows written identically on one reading are both kept, told apart by order */
   const twin = DOCS.replace(/(<tr >[\s\S]*?<\/tr>)/, "$1$1");
   const t = CPUC.parse(ctxFor(twin, { view: VIEWS[FIRST] }));
@@ -276,9 +276,7 @@ test("R6 R17: keys per register, key_basis saying how; entry_id only where Court
 test("R7: every ecourt_roa reading is provisional and says why; the other two are not", () => {
   const ec = EC.parse(ctxFor(ROA, { view: VIEWS[FIRST], origin: "member" }));
   assert.equal(ec.provisional, true);
-  assert.match(ec.key_basis, /PROVISIONAL/);
-  assert.match(ec.key_basis, /assumed from the portal's own description/);
-  assert.match(ec.key_basis, /not yet verified on a member's capture/);
+  assert.equal(ec.key_basis, localize("court-doctypes.ecourt.key_basis", "ecourt_roa (PROVISIONAL): a row is keyed by its date as written and its order among the rows of that date; the row shape and this key are assumed from the portal's own description of a case page and are not yet verified on a member's capture"));
   const refused = EC.parse(ctxFor(ROA, { view: VIEWS[FIRST] }));
   assert.equal(refused.provisional, true);
   for (const r of [CL.parse(ctxFor(P2, { view: VIEWS[FIRST] })), CL.parse(ctxFor(P4, { view: VIEWS[FIRST] })),
@@ -290,7 +288,7 @@ test("R8 R17: page as the register's pagination states it; complete only when th
   const p2 = CL.parse(ctxFor(P2, { view: VIEWS[FIRST] }));
   assert.deepEqual(p2.page, { n: 2, of: 4, may_continue: true });
   assert.equal(p2.complete, false);
-  assert.match(p2.complete_why, /page 2 of the register's 4/);
+  assert.equal(p2.complete_why, localize("court-doctypes.common.this_is_page_n_of", "this is page {n} of the register's {of}, so it holds only some of its rows", { n: 2, of: 4 }));
   const p4 = CL.parse(ctxFor(P4, { view: VIEWS[FIRST] }));
   assert.deepEqual(p4.page, { n: 4, of: 4, may_continue: false });
   assert.equal(p4.complete, false, "the last page of four is not the register");
@@ -309,10 +307,10 @@ test("R8 R17: page as the register's pagination states it; complete only when th
   assert.equal(ec.complete, true);
   const unstated = EC.parse(ctxFor(ROA.replace(/<div class="pager">[^<]*<\/div>/, ""), { view: VIEWS[FIRST], origin: "member" }));
   assert.equal(unstated.complete, false);
-  assert.match(unstated.complete_why, /states no pagination/);
+  assert.equal(unstated.complete_why, localize("court-doctypes.common.the_page_states_no_pagination", "the page states no pagination, so whether it holds every row of the register is not established"));
   const card = CPUC.parse(ctxFor(CARD, { view: VIEWS[FIRST] }));
   assert.equal(card.complete, false);
-  assert.match(card.complete_why, /no documents report/);
+  assert.equal(card.complete_why, localize("court-doctypes.cpuc.the_page_holds_no_documents", "the page holds no documents report, so it lists no register rows"));
 });
 
 test("R9 R14: sealing is what a row's text states (sealed, unsealed or null), never a finding", () => {
