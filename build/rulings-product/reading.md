@@ -9,3 +9,4 @@
 - A file Civicsmith cannot yet read (Bob, K5436, on F2: "as recommened"): kept whole, its type named plainly, findable by name and details, read when a reader is added; RAR and programs, installers and disk images stay refused by name.
 - Costly file types (Bob, K5437, on F3: "as recommened"): MBOX read in the beta; PST, Access and FILES' other Tier 3 types held and named until a real file shows they turn up, each then added by its own ruling.
 - What is interpreted (Bob, K5445, on C1: "as recommended, with the understanding that C is the objective - even if we aren't able to support that until after the beta."): opened or cited parts, a member's deliberate marking, and Civicsmith's own proposals (the objective; accepted by a member before any interpretation); never everything up to a size.
+- Limits shown first (Bob, K5446, on C3: "as recommended"): the add screen states each kind's limit before a file is added; over it, refused with size and limit, never half-read.
