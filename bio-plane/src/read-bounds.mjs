@@ -33,11 +33,11 @@ const light = (kind, alphaBytes, beta = MB50) => ({
 
 const TABLE = {
   /* request_bytes: the most of a stored text, office or HTML document (any kind but a PDF) a member's request reads inline; above it the reading is deferred to the ledger, never refused (K4916) */
-  text: { ...light("text", 24 * MiB, MB100), calendar_events: same(100000, k("text", "calendar_events")), request_bytes: same(3 * MiB, k("text", "request_bytes")) },
+  text: { ...light("text", 24 * MiB, MB100), nesting: same(1000, k("text", "nesting")), calendar_events: same(100000, k("text", "calendar_events")), request_bytes: same(3 * MiB, k("text", "request_bytes")) },
   csv: light("csv", 17 * MiB),
   tsv: light("tsv", 24 * MiB),
-  json: { ...light("json", 24 * MiB, MB100), nesting: same(1000, k("json", "nesting")) },
-  xml: { ...light("xml", 24 * MiB, MB100), tag: same(64 * KiB, k("xml", "tag")), nesting: same(1000, k("xml", "nesting")) },
+  json: light("json", 24 * MiB, MB100),
+  xml: { ...light("xml", 24 * MiB, MB100), tag: same(64 * KiB, k("xml", "tag")) },
   archive: {
     uploaded_bytes: row(524288000, 256 * MiB, 524288000, k("archive", "uploaded_bytes")),
     unpacked_bytes: row(2 * GiB, 256 * MiB, 2 * GiB, k("archive", "unpacked_bytes")),
@@ -57,7 +57,7 @@ const TABLE = {
     rows: same(1048576, k("spreadsheet", "rows")),
     xls_sheet_rows: same(65536, k("spreadsheet", "xls_sheet_rows")),
   },
-  message: { bytes: same(MB100, k("message", "bytes")) },
+  message: { upload_bytes: same(MB100, k("message", "upload_bytes")) },
   pdf: {
     bytes: bytes(24 * MiB, k("pdf", "bytes"), MB100),
     worker_bytes: bytes(64 * MiB, k("pdf", "worker_bytes"), MB100),
@@ -202,7 +202,7 @@ const TABLE = {
  * a row not listed keeps the alpha as its active figure (no bound moves, K1881): a reader's own rows (a worker's bytes, a part's text, a package's
  * declared text) take the standard when that reader's job moves them. The light kinds (below) take the standard already. */
 export const BETA_STANDARD_ROWS = Object.freeze([
-  ["pdf", "bytes"], ["document", "bytes"], ["spreadsheet", "bytes"], ["image", "bytes"], ["archive", "uploaded_bytes"], ["message", "bytes"],
+  ["pdf", "bytes"], ["document", "bytes"], ["spreadsheet", "bytes"], ["image", "bytes"], ["archive", "uploaded_bytes"], ["message", "upload_bytes"],
 ].map((r) => Object.freeze(r)));
 
 /* The three service levels (R38-R40; PL20, PL21, PL45 of `service-levels-draft.md`). `design_stage` and `cf_plan` are identifiers, never
@@ -268,7 +268,8 @@ export const statement = (kind, name, size) => ({ size, bound: boundOf(kind, nam
 export const wholeReadRow = (kind) => {
   if (kind === "csv" || kind === "text") return [kind, "bytes"];
   /* the beta's kinds (R37): the kind's own whole-read row */
-  if (kind === "document" || kind === "spreadsheet" || kind === "image" || kind === "message") return [kind, "bytes"];
+  if (kind === "document" || kind === "spreadsheet" || kind === "image") return [kind, "bytes"];
+  if (kind === "message") return ["message", "upload_bytes"];
   if (kind === "archive") return ["archive", "uploaded_bytes"];
   return ["pdf", "bytes"];
 };

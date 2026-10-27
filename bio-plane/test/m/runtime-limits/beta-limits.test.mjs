@@ -34,10 +34,9 @@ test("R37: the second limit of each kind (pages, rows, unpacked bytes, members, 
   assert.equal(boundOf("archive", "ratio"), 1100);
   assert.equal(boundOf("archive", "depth"), 3);
   assert.equal(boundOf("archive", "mailbox_messages"), 100000);
-  assert.equal(boundOf("json", "nesting"), 1000);
-  assert.equal(boundOf("xml", "nesting"), 1000);
+  assert.equal(boundOf("text", "nesting"), 1000);
   assert.equal(boundOf("text", "calendar_events"), 100000);
-  for (const [kind, name] of [["document", "pages"], ["spreadsheet", "rows"], ["archive", "mailbox_messages"], ["json", "nesting"], ["xml", "nesting"], ["text", "calendar_events"]]) {
+  for (const [kind, name] of [["document", "pages"], ["spreadsheet", "rows"], ["archive", "mailbox_messages"], ["text", "nesting"], ["text", "calendar_events"]]) {
     assert.equal(READ_BOUNDS[kind][name].protective, boundOf(kind, name), `${kind}/${name}`);
     assert.deepEqual(statement(kind, name, boundOf(kind, name) + 1).bound, boundOf(kind, name));
   }
