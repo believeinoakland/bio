@@ -72,3 +72,9 @@
 - K5549 · 2026-10-27 · on QUESTIONS.html L24, option A: "as recommended" (the record grades a cited typed page) · `build/rulings.md`
 - K5550 · 2026-10-27 · on QUESTIONS.html L25, option A: "as recommended" (one check raises a typed page D to C; later checks raise nothing) · `build/rulings.md`
 - K5552 · 2026-10-27 · on QUESTIONS.html L26, option A: "as recommended" (each typist or checker chooses her credit per edition; default "a member of the team") · `build/rulings.md`
+- K5553 · 2026-10-27 · on QUESTIONS.html J1: "as recommended" (Can an administrator set aside held material in their own name? A · Yes, when the administrator is also a person on the team) · `build/rulings.md`
+- K5554 · 2026-10-27 · on QUESTIONS.html J2: "as recommended" (When a member opens a record that isn't theirs to see, does Civicsmith admit it exists? C · "You can't open this", with who to ask) · `build/rulings.md`
+- K5556 · 2026-10-27 · on QUESTIONS.html J3: "as recommended" (What kind of proceeding can a team register before it has chosen its places? C · The screen says to choose the team's places first and links there, with A beside it) · `build/rulings.md`
+- K5557 · 2026-10-27 · on QUESTIONS.html J4: "as recommended" (What can a person's page record? A · Add membership and credential) · `build/rulings.md`
+- K5558 · 2026-10-27 · on QUESTIONS.html J5: "as recommended" (Who files a correction, a withdrawal or a court order on a case's docket? A · The project's owner, from the docket page) · `build/rulings.md`
+- K5559 · 2026-10-27 · on QUESTIONS.html J6: "as recommended" (When a new edition of a case is published, is that recorded on its docket? A · Automatically, with the edition's "what changed" text) · `build/rulings.md`

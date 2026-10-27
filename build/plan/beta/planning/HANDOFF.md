@@ -1,19 +1,18 @@
 # PLANNING: handoff
 
-**Writer** · PLANNING #3 (prefix L), session in `build/plan/beta/LANES.md` §3, Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #322 (BOB now #324 `session_018BhceeH2URWcU8Mf7u5KoM`; PLANNING #1 L1-L5 and #2 `session_018Bhceg7ptZUBDjGtWWSVz4` L6-L15, both archived). Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
+**Writer** · PLANNING #4 (prefix L), Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #324 (`session_018BhceeH2URWcU8Mf7u5KoM`); PLANNING #1 L1-L5, #2 L6-L15, #3 `session_018BhceeU1GqFDsqidzDGQQ8` L16-L35, all archived. Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
 
 ## 0. State now and next steps
 
-**State.** PLANNING #3 hands over at L35 (context 42 %). Folded into `plan-T53-draft.md` by layer (43 KB): the seven A drafts, every Bob answer applied (L1-L26; no bracket on a Bob question remains in `lines-A*.md`; L14, L15, L21 went against the recommendation: owner or administrator only, published and divided questions too with A1-R7's public line, the colour profile kept by A4-R8's check); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (C29, C31) with its detail in `plan-T53-capabilities.md` (45 KB, §A-§G, all its C questions answered, K5530-K5538); JOURNEYS in `plan-T53-journeys.md` (only J1-J7 wait on Bob); PLANNING's own lines, all decided: `lines-K5501-role-change.md`, `lines-K5513-daily-follow.md`, `lines-K5527-texts-and-listing.md`, `lines-K5532-officers-guardrail-listing.md`. `CONSISTENCY.md` rows 1-20 decided. BOB is #324 (`session_018BhceeH2URWcU8Mf7u5KoM`).
+**State.** PLANNING #4 took over at L36. Folded into `plan-T53-draft.md` by layer (43 KB): the seven A drafts with every Bob answer (no bracket on a Bob question remains in `lines-A*.md`); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (detail in `plan-T53-capabilities.md`); JOURNEYS in `plan-T53-journeys.md` (J1-J6 answered and applied, only J7 waits on Bob); PLANNING's own lines, all decided (`lines-K5501-*`, `lines-K5513-*`, `lines-K5527-*`, `lines-K5532-*`). K5555 (A4-R8's bounding) applied. `CONSISTENCY.md` rows 1-20 decided.
 
 **Next steps, in order.**
-1. (PLANNING #4) Takeover; merge tranche/T53 in; read MAP.md and every lane's section 0.
-2. BOB's answer on L34's points: A4-R8's bounding of a kept profile (recommended); FILES told PHOTO-DATA's sRGB conversion is withdrawn; UX-DESIGN told `screen.photo.dropped.profile` now means a profile that failed the check.
-3. Fold as BOB relays: DEC-474 to DEC-477 once merged (screens-inquiry R141-R147 and screens-daily R111 wait on DEC-476: unbracket in `plan-T53-capabilities.md`); PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535); TESTS-SWEEP's fixtures findings needing a module's judgment (K5425 (b)), as entries.
-4. On Bob's J1-J7: unbracket `plan-T53-journeys.md` §A lines reading "waits Jn".
-5. When every lane is folded: each job's reading set measured against 600 KB (`build/plan/reading-sets.py` counts code and tests too; measure requirements plus the drafts the job reads; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions with six drafts, registers); the plan under 51,200 bytes, detail files beside it; mark READY for BOB.
+1. On Bob's J7 (an outside reader's acknowledgement public by name; recommended B, only if she ticks): unbracket `plan-T53-journeys.md` §A's two R-107 lines and the plan's JOURNEYS wait.
+2. Fold as BOB relays: DEC-474 to DEC-477 once merged (screens-inquiry R141-R147 and screens-daily R111 wait on DEC-476: unbracket in `plan-T53-capabilities.md` and the plan's Before R1 (8)); PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535, PL44-PL45); TESTS-SWEEP's fixtures findings needing a module's judgment (K5425 (b)), as entries.
+3. Meanwhile: each job's reading set measured against 600 KB (`build/plan/reading-sets.py` counts code and tests too; measure requirements plus the drafts the job reads; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions with six drafts, registers); a job over budget gets a relief proposal for BOB.
+4. When every lane is folded: the plan under 51,200 bytes, detail files beside it; mark READY for BOB.
 
-**Waiting on.** BOB: L34's points; the DEC-474..477 merge. Bob: J1-J7. Lanes: PLATFORM, TESTS-SWEEP.
+**Waiting on.** Bob: J7. BOB: the DEC-474..477 merge (after his suite run). Lanes: PLATFORM (service levels, whole-record move still DRAFT), TESTS-SWEEP (fixtures list).
 
 Entries L1-L15 are in `build/plan/archive/planning/HANDOFF-L1-L15.md` (moved at L35).
 
@@ -96,3 +95,7 @@ Bob answered L18-L26 (K5543-K5550, K5552), all as recommended but L21 (K5546, B:
 ## L35 · 2026-10-27 · hand-over to PLANNING #4
 
 Context at 42 % after L34: section 0 and `NEXT-SESSION-PROMPT.md` rewritten; BOB #324 asked to start PLANNING #4.
+
+## L36 · 2026-10-27 · takeover; K5555; J1-J6 applied
+
+PLANNING #4 took over (reading set as the prompt names; tranche/T53 merged in), archived #3. K5555 (BOB's: A4-R8's bounding as drafted) marked on A4-R8, Q-A3A4-4, CONSISTENCY row 20 and the plan. Found: L34's colour-profile line took the id A4-R8 already held by image-cover's `redrawPicture` line; as K5555 and every reference name the profile line A4-R8, image-cover's two uncited lines are renumbered A4-R12 (`redrawPicture`) and A4-R13 (`photoFactsOf`), each noting its old id. J1-J6 (K5553, K5554, K5556-K5559, all as recommended) unbracket eight lines of `plan-T53-journeys.md` §A (R-23, R-29, R-66, R-72, R-94 twice, R-96 twice); only R-107's two lines wait on J7. DECISIONS gains K5553, K5554, K5556-K5559.
