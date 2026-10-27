@@ -22,7 +22,7 @@ function sized(n) {
 }
 
 test("R12 an uploaded 100 MB EML reads; 100 MB + 1 is refused with its size", { timeout: 120000 }, async () => {
-  const bound = boundOf("mail", "upload_bytes");
+  const bound = boundOf("message", "upload_bytes");
   assert.equal(bound, 100 * MiB);
   const ok = await readMessage(sized(bound));
   assert.equal(ok.ok, true);
@@ -33,7 +33,7 @@ test("R12 an uploaded 100 MB EML reads; 100 MB + 1 is refused with its size", { 
   assert.equal(over.reason, "MAIL_TOO_LARGE");
   assert.equal(over.size, bound + 1);
   assert.equal(over.bound, bound);
-  assert.equal(over.key, "limit.mail.upload_bytes");
+  assert.equal(over.key, "limit.message.upload_bytes");
 });
 
 test("R12 a message received by address is bounded at 25 MiB, judged before any byte is read", async () => {
@@ -112,5 +112,5 @@ test("R14 no numeric literal in the module's source is a ceiling it keeps; each 
     for (const re of CEILINGS) assert.equal(re.test(src), false, `${f} holds ${re}`);
   }
   const index = readFileSync(join(dir, "index.mjs"), "utf8");
-  for (const name of ["message_bytes", "upload_bytes", "mailbox_messages", "nest_max", "nest_read_max"]) assert.ok(index.includes(`"${name}"`), name);
+  for (const row of ['"mail", "message_bytes"', '"message", "upload_bytes"', '"archive", "mailbox_messages"', '"nest_max"', '"nest_read_max"']) assert.ok(index.includes(row), row);
 });

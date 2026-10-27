@@ -19,7 +19,12 @@ import { sourceOf, countMessages, readPiece } from "./mbox.mjs";
 
 /* The ceilings, each read when it is needed (R14; `runtime-limits` R37, R46). */
 const mailBound = (name) => boundOf("mail", name);
-const boundName = (route) => (route === "address" ? "message_bytes" : "upload_bytes");
+/* a message by its route: received by address `mail.message_bytes`, uploaded `message.upload_bytes` (K5578 (2)) */
+const routeRow = (route) => (route === "address" ? ["mail", "message_bytes"] : ["message", "upload_bytes"]);
+const routeBound = (route) => boundOf(...routeRow(route));
+const uploadBound = () => boundOf("message", "upload_bytes");
+/* MBOX is an archive kind (runtime-limits R37): its message count is the archive's row */
+const mailboxCap = () => boundOf("archive", "mailbox_messages");
 
 export const MAIL_FORMATS = Object.freeze(["eml", "msg", "mbox"]);
 
@@ -209,14 +214,14 @@ export async function nestingOf(bytes, { within = 0 } = {}) {
 /* ---- one message ------------------------------------------------------------------------------------------------- */
 
 async function bytesOf(input, route) {
-  const name = boundName(route);
+  const [kind, name] = routeRow(route);
   if (input instanceof Uint8Array) {
-    if (input.length > mailBound(name)) return refused("MAIL_TOO_LARGE", statement("mail", name, input.length));
+    if (input.length > routeBound(route)) return refused("MAIL_TOO_LARGE", statement(kind, name, input.length));
     return { ok: true, bytes: input };
   }
   const src = sourceOf(input);
   if (!src) return refused("MAIL_SOURCE_UNREADABLE");
-  if (src.size > mailBound(name)) return refused("MAIL_TOO_LARGE", statement("mail", name, src.size));
+  if (src.size > routeBound(route)) return refused("MAIL_TOO_LARGE", statement(kind, name, src.size));
   try { return { ok: true, bytes: await src.read(0, src.size) }; } catch { return refused("MAIL_SOURCE_UNREADABLE"); }
 }
 
@@ -283,7 +288,7 @@ export async function planMailbox(input) {
     const src = sourceOf(input);
     if (!src) return refused("MAIL_SOURCE_UNREADABLE");
     if (src.size > boundOf("archive", "uploaded_bytes")) return refused("MAIL_MAILBOX_TOO_LARGE", statement("archive", "uploaded_bytes", src.size));
-    const cap = mailBound("mailbox_messages");
+    const cap = mailboxCap();
     const c = await countMessages(src, cap);
     if (c.stopped) return refused("MAIL_MAILBOX_TOO_MANY", { bound: cap, counted: c.count });
     return { ok: true, kind: "mbox", messages: c.count, verdict: { ok: true, size: src.size, limit: boundOf("archive", "uploaded_bytes"), bound_key: statement("archive", "uploaded_bytes", src.size).key }, mode: "messages" };
@@ -301,17 +306,17 @@ export async function readMailbox(input, cursor = null, budget = {}) {
     const src = sourceOf(input);
     if (!src) return refused("MAIL_SOURCE_UNREADABLE");
     if (!cursor) { const p = await planMailbox(input); if (!p.ok) return p; }
-    const cap = mailBound("mailbox_messages");
+    const cap = mailboxCap();
     if ((cursor?.index ?? 0) >= cap) return refused("MAIL_MAILBOX_TOO_MANY", { bound: cap });
     const piece = await readPiece(src, cursor, budget, {
-      maxBytes: mailBound("upload_bytes"),
+      maxBytes: uploadBound(),
       readOne: async (bytes) => {
         const p = parseEml(bytes);
         if (!p.ok) return refused(p.reason);
         const { headers, unreadable } = headersOf(p.fields);
         return { ok: true, format: "eml", headers, unreadable, body: p.body, attachments: p.attachments.map(listing) };
       },
-      tooLarge: (size) => refused("MAIL_TOO_LARGE", statement("mail", "upload_bytes", size)),
+      tooLarge: (size) => refused("MAIL_TOO_LARGE", statement("message", "upload_bytes", size)),
     });
     if (!piece.ok) return refused(piece.reason);
     const over = piece.units.find((u) => u.index >= cap);
@@ -366,8 +371,8 @@ function messageEntry(format, contentTypes) {
     plan: async (source) => {
       const src = sourceOf(source);
       if (!src) return refused("MAIL_SOURCE_UNREADABLE");
-      const ok = src.size <= mailBound("upload_bytes");
-      return { ok: true, kind: format, verdict: { ok, size: src.size, limit: mailBound("upload_bytes"), bound_key: statement("mail", "upload_bytes", src.size).key }, mode: "whole" };
+      const ok = src.size <= uploadBound();
+      return { ok: true, kind: format, verdict: { ok, size: src.size, limit: uploadBound(), bound_key: statement("message", "upload_bytes", src.size).key }, mode: "whole" };
     },
     read: async (source) => {
       const t = textOf(await readMessage(source));

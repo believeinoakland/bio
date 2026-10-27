@@ -60,7 +60,7 @@ test("R3 a generated 500 MB mailbox reads every message once, by range, the toke
 });
 
 test("R3 R11 a 100,001-message mailbox is refused whole naming 100,000; the 100,001st message is a stated failure", async () => {
-  const cap = boundOf("mail", "mailbox_messages");
+  const cap = boundOf("archive", "mailbox_messages");
   const src = F.mailboxSource(cap + 1, 220);
   const plan = await planMailbox(src);
   assert.equal(plan.ok, false);
