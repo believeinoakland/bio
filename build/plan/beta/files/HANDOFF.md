@@ -29,3 +29,6 @@ K5439 limits carried into REQ-readers-beta (SR7 new, ML3, SR6). Legistar PDF siz
 
 ### F5 · 2026-10-27
 PLATFORM's need answered: `LOAD-PER-TYPE.md` (every figure marked M/D/U; L1-L6 measurements proposed to fill the U cells). Sent to BOB.
+
+### F6 · 2026-10-27
+L3, L4, L5 run locally and written into LOAD-PER-TYPE (photo redraw 48 MP 0.55 s/80 MB; RTF/doc ~1 s per MB, 215-260 MB; 1.9 GB archive streamed 16-25 s, 14 MB). L1, L2, L6 not run, reasons stated. Sent to BOB.
