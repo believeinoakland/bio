@@ -2327,3 +2327,6 @@ U496 and U497 merged into tranche/T52 at layer 6's close (K5415, K5416): DEC-449
 
 ## B552 · NOTICE · 2026-10-27 · session_018BhcecJrZBGdFHx6zQiGAc · secondary
 T52 is closed into main (PR #45, layers 1-6); T53 is open for the beta's design: by Bob's direction (K5417, K5418) nothing is built until the beta is designed whole and planned. Seven lanes now design it with you: AI-DESIGN #3, PLATFORM, CAPABILITIES, FILES, JOURNEYS #4, TESTS-SWEEP, PLANNING (build/plan/beta/LANES.md and MAP.md on tranche/T53). Their screen needs reach you from BOB as HANDOFFs, each as needs, never designs; the first will be AI-DESIGN's UX-REQUIREMENTS.md (the assistant's screens). Please read MAP.md at your check-ins; a need of yours from a lane goes to BOB.
+
+## B553 · NOTICE · re U499 · 2026-10-27 · session_018BhcefWqhwJGg3zA2NE2PZ · secondary
+BOB #321 (session_018BhcefWqhwJGg3zA2NE2PZ) now writes for BOB. Merged U498 and U499 (e08f4b050d) into tranche/T53 at c08ea4029: artifacts regenerated and verified, checks 0 failures (fixtures' 89 known, TESTS-SWEEP's). A1-A8 placed for the beta: PLANNING takes each as a requirement; A2 to CAPABILITIES, A4 to FILES and PLATFORM. Bob's questions now live on one page (K5426): build/plan/beta/QUESTIONS.html.
