@@ -288,6 +288,7 @@ fieldset.mk-checks label > span { flex: 1 1 0; min-width: 0; }  /* DEC-316: a ch
 .mk-ev b { font-weight: 600; }
 .mk-date { font: 600 var(--t-xs) var(--f-sans); color: var(--c-muted); }
 .mk-lanes.small .mk-ev { font-size: var(--t-xs); }
+.cs-grade[data-scale="ceiling"] { color: var(--c-capture); background: var(--c-capture-tint); }
 .mk-passage { margin: 0; padding: 10px 14px; border-left: 3px solid var(--c-capture); background: var(--c-surface); font-size: var(--t-lg); line-height: 1.5; }
 /* DEC-233: a sub-heading inside a section */
 /* DEC-236 (B204 (1)): what the shell needs and the mockup did not draw, as design classes: an account menu under the avatar, an act with
@@ -817,7 +818,8 @@ const REG = {{REG}};
 /* DEC-159 (DEC-129 rule 4; DEC-82's disclosure): every mark explains itself on hover, focus or tap; names open a card. */
 (function () {
   var G = {
-    scale: { capture: ['Capture', 'how easily someone else could check that this copy is what its source published, unaltered'],
+    scale: { capture: ['Copy', 'your team\'s grade for the copy: how well the copy your team holds shows the passage it cites, never above how well it could be captured'],
+             ceiling: ['How well it could be captured', 'how easily someone else could check this copy against what its source published, set by how it was obtained; your team\'s grade for a passage never goes above it'],
              connection: ['Connection', 'how easily someone else could check this link: that this payment, vote, office or person is the one meant'],
              testimony: ['Testimony', 'how easily someone else could check what a witness says'],
              subject: ['Subject match', 'how easily someone else could check that this record is about this person or thing'] },

@@ -952,7 +952,7 @@ w276('screen.published.tip.group', 'the team that made this case', False, "the t
 w276('screen.published.tip.group_why', 'The authors; the case is signed by one of them and can be checked without them.', False, "the team, its card")
 w276('screen.published.tip.bar', 'here {grade} for both grades', False, "the project's bar, its card")
 w276('screen.published.tip.bar_why', "This finding meets it; the bar is the team's own, set before publishing.", False, "the project's bar, its card")
-w276('screen.published.tip.capture', 'how well a document is held, A to D', False, "a capture grade, its card")
+w276('screen.published.tip.capture', 'how well a document could be captured, A to D', False, "a capture grade, its card")
 w276('screen.published.tip.capture_why', 'A grade says how checkable the documents are, never whether the finding is true.', False, "a capture grade, its card")
 w276('screen.published.tip.connection', 'how firmly the documents are linked to the claim, A to D', False, "a connection grade, its card")
 w276('screen.published.tip.connection_why', 'The link from these documents to the finding is firm, though not the firmest.', False, "a connection grade, its card")
@@ -6287,8 +6287,8 @@ REWRITE.update({
 def n(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-384: B411 ' + note))
 # question: strength sentences in plain words (I-22, I-23, A8), code ids strength.arithmetic.*
-n('strength.arithmetic.unrated_no_leg_on_any_set', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.', 'I-23/A8: strength sentence in plain words; the code draws each document by its title, once')
-n('strength.arithmetic.unrated_no_leg_on_this_axis', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.', 'I-23/A8: strength sentence in plain words')
+n('strength.arithmetic.unrated_no_leg_on_any_set', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}. Grade at least one of them to count it.', 'I-23/A8: strength sentence in plain words; the code draws each document by its title, once')
+n('strength.arithmetic.unrated_no_leg_on_this_axis', 'Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}. Grade at least one of them to count it.', 'I-23/A8: strength sentence in plain words')
 n('strength.arithmetic.unrated_this_inquiry_rests_on_nothing', 'Not graded yet on {axis}: this question rests on nothing here.', 'I-23/A8: strength sentence in plain words')
 n('strength.arithmetic.present_and_not_yet_load_bearing', 'Listed, but not counted yet: {legs}.', 'I-23/A8: plain words')
 n('strength.arithmetic.no_computed_strength_a_leg', 'There is no strength for {axis} yet: a document that every set of reasons needs is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.', 'I-23/A8: plain words')
@@ -8089,7 +8089,7 @@ w439('queue.signer-self-registered.known', 'I know about this key', 'A-03: the a
 w439('screen.setup.zone', "Your team's time zone", 'D-B1: the setup step (factconfirm, path @team/time_zone)')
 w439('screen.setup.zone.help', 'Dates and deadlines are counted in it. You can skip this and set it later under Settings, Your team.', 'D-B1: its help')
 w439('screen.question.leggrade.head', 'What this passage earns', 'D-M1, C-M4: the fold on a cited passage; its act waits on BOB naming the op')
-w439('screen.question.leggrade.help', 'Grade how well the copy your team holds shows this passage, up to the most the record allows ({ceiling}), and say why.', 'D-M1, C-M4: {ceiling} the record\'s ceiling, a letter')
+w439('screen.question.leggrade.help', 'Grade how well the copy your team holds shows this passage, up to how well it could be captured ({ceiling}), and say why.', 'D-M1, C-M4: {ceiling} the record\'s ceiling, a letter')
 w439('screen.case-editor.save', 'Save these details', 'D-M2: casedraft on the drafted state')
 w439('screen.case-editor.unsaved', 'Changes here are not saved yet.', 'D-M2: drawn once a field of the drafted state is edited')
 w439('act.resolve.label.document', 'Find the people and offices it names', 'D-M3, C-M7: resolve on Document')
@@ -8580,6 +8580,34 @@ w473('screen.photo.dropped.credentials', 'a content credential (who made or edit
 w473('screen.photo.dropped.other_metadata', 'other details the file carried', 'A4-R3 left_out kind other_metadata, {what}')
 w473('screen.photo.dropped.unreadable', "parts that couldn't be read", 'A4-R3 left_out kind unreadable, {what}')
 
+REWRITE.update({
+  'mark.scale.capture.name': 'Copy',
+  'mark.scale.capture.means': "your team's grade for the copy: how well the copy your team holds shows the passage it cites, never above how well it could be captured",
+  'screen.group.bar.capture': 'Copy',
+})
+REWRITE.update({
+  'screen.group.bar.now': 'Copy at least {capture}, connection at least {connection}, set on {date}:',   # DEC-474
+  'screen.published.meets': "meets this project's bar (copy {capture}, connection {connection})",   # DEC-474: the team's grade
+  'filings.floors_capture_connection': 'Floors: copy {capture}, connection {connection}. {detail}',   # DEC-474: the team's grade
+  'standard.source.capture': 'could be captured: {capture}, {extent}',   # DEC-474: the record's ceiling
+  'standard.source.capture.whole': 'could be captured: {capture}',   # DEC-474: the record's ceiling
+  'calculations.capture_capped_derivation': 'could be captured: {capture}, capped by its derivation at {cap}',   # DEC-474: the record's ceiling
+})
+def w474(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-474: ' + note))
+# Bob's A5 (DEC-461): the two measures named apart; ungraded passages at signing and in the edition (with JOURNEYS R-110, DEC-472 (8))
+w474('screen.question.leggrade.choice', "Your team's grade for the copy", "A5: the label of the grade chooser in the fold 'What this passage earns'")
+w474('screen.question.leggrade.pointer', 'To grade a passage, open it and use “What this passage earns”.', "A5: under the question's strength box, pointing to the grading fold")
+w474('screen.ceremony.ungraded.head', 'Passages not graded yet', "A5: the signing section; never blocks")
+w474('screen.ceremony.ungraded.lead', '{n} passages this edition rests on have no grade from your team yet. You can grade them here, or sign without grading them.', "A5: {n} how many")
+w474('screen.ceremony.ungraded.row', '{passage}, in finding {n}', "A5: one ungraded passage, at signing and in the published edition; {passage} its document and place, {n} the finding")
+w474('screen.ceremony.ungraded.grade', 'Grade it', "A5: the button on that row (leggrade)")
+w474('screen.ceremony.ungraded.note', 'If you sign without grading them, the published edition says so.', "A5: under the list at signing")
+w474('screen.published.ungraded', 'Published with {n} passages not yet graded by the team.', "A5: near the top of a published edition; {n} how many; what 'not graded' means is screen.published.strength.unrated's")
+w474('screen.published.ungraded.one', 'Published with one passage not yet graded by the team.', "A5: the same line when exactly one")
+w474('screen.published.ungraded.which', 'Which passages', "A5: the fold listing them")
+
+w474('screen.strength.pair', 'copy {capture}, connection {connection}', 'a question or finding strength pair in running text (the team grade, DEC-461)')
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

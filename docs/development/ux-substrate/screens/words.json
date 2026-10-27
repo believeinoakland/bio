@@ -4,7 +4,7 @@
  "for_builders": "A sentence on a screen that carries its data (a name, a count, a date) is keyed when the screen is built: screen.<id>.<part>, with {placeholders}; it is protected when it is a warning or dialog before an outward, signed or irreversible act, the court notice (\"What a court can reach\"), or says who can see something.",
  "counts": {
   "weight": 11,
-  "mark": 55,
+  "mark": 57,
   "state": 69,
   "draft": 5,
   "photo": 13,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7988,
+  "screen": 7999,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 67,
-  "act": 1307,
+  "act": 1308,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -237,8 +237,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19682,
-  "protected": 1167
+  "total": 19696,
+  "protected": 1170
  },
  "words": [
   {
@@ -309,13 +309,27 @@
   },
   {
    "key": "mark.scale.capture.name",
-   "en": "Capture",
+   "en": "Copy",
+   "protected": true,
+   "source": "page.src.html marks",
+   "note": "DEC-259: reworded"
+  },
+  {
+   "key": "mark.scale.capture.means",
+   "en": "your team's grade for the copy: how well the copy your team holds shows the passage it cites, never above how well it could be captured",
+   "protected": true,
+   "source": "page.src.html marks",
+   "note": "DEC-259: reworded"
+  },
+  {
+   "key": "mark.scale.ceiling.name",
+   "en": "How well it could be captured",
    "protected": true,
    "source": "page.src.html marks"
   },
   {
-   "key": "mark.scale.capture.means",
-   "en": "how easily someone else could check that this copy is what its source published, unaltered",
+   "key": "mark.scale.ceiling.means",
+   "en": "how easily someone else could check this copy against what its source published, set by how it was obtained; your team's grade for a passage never goes above it",
    "protected": true,
    "source": "page.src.html marks"
   },
@@ -23329,7 +23343,7 @@
   },
   {
    "key": "screen.published.meets",
-   "en": "meets this project's bar (capture {capture}, connection {connection})",
+   "en": "meets this project's bar (copy {capture}, connection {connection})",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-publish's own rows; DEC-259: reworded"
@@ -25821,10 +25835,10 @@
   },
   {
    "key": "screen.group.bar.now",
-   "en": "Capture at least {capture}, connection at least {connection}, set on {date}:",
+   "en": "Copy at least {capture}, connection at least {connection}, set on {date}:",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.group.bar.none",
@@ -25842,10 +25856,10 @@
   },
   {
    "key": "screen.group.bar.capture",
-   "en": "Capture",
+   "en": "Copy",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.group.bar.connection",
@@ -29100,17 +29114,17 @@
   },
   {
    "key": "standard.source.capture",
-   "en": "capture {capture}, {extent}",
+   "en": "could be captured: {capture}, {extent}",
    "protected": false,
    "source": "DEC-253",
-   "note": "{capture} is the first twelve characters of its fingerprint"
+   "note": "{capture} is the first twelve characters of its fingerprint; DEC-259: reworded"
   },
   {
    "key": "standard.source.capture.whole",
-   "en": "capture {capture}",
+   "en": "could be captured: {capture}",
    "protected": false,
    "source": "DEC-253",
-   "note": "when no extent is named"
+   "note": "when no extent is named; DEC-259: reworded"
   },
   {
    "key": "question.conclude.own.choice",
@@ -36794,7 +36808,7 @@
   },
   {
    "key": "screen.published.tip.capture",
-   "en": "how well a document is held, A to D",
+   "en": "how well a document could be captured, A to D",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-276: a capture grade, its card"
@@ -71066,14 +71080,14 @@
   },
   {
    "key": "strength.arithmetic.unrated_no_leg_on_any_set",
-   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}. Grade at least one of them to count it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-384: B411 I-23/A8: strength sentence in plain words; the code draws each document by its title, once"
   },
   {
    "key": "strength.arithmetic.unrated_no_leg_on_this_axis",
-   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}.",
+   "en": "Not graded yet on {axis}: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: {legs}. Grade at least one of them to count it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-384: B411 I-23/A8: strength sentence in plain words"
@@ -82378,7 +82392,7 @@
   },
   {
    "key": "screen.question.leggrade.help",
-   "en": "Grade how well the copy your team holds shows this passage, up to the most the record allows ({ceiling}), and say why.",
+   "en": "Grade how well the copy your team holds shows this passage, up to how well it could be captured ({ceiling}), and say why.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-439: D-M1, C-M4: {ceiling} the record's ceiling, a letter"
@@ -85000,6 +85014,83 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-473: A4-R3 left_out kind unreadable, {what}"
+  },
+  {
+   "key": "screen.question.leggrade.choice",
+   "en": "Your team's grade for the copy",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: the label of the grade chooser in the fold 'What this passage earns'"
+  },
+  {
+   "key": "screen.question.leggrade.pointer",
+   "en": "To grade a passage, open it and use “What this passage earns”.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: under the question's strength box, pointing to the grading fold"
+  },
+  {
+   "key": "screen.ceremony.ungraded.head",
+   "en": "Passages not graded yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: the signing section; never blocks"
+  },
+  {
+   "key": "screen.ceremony.ungraded.lead",
+   "en": "{n} passages this edition rests on have no grade from your team yet. You can grade them here, or sign without grading them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: {n} how many"
+  },
+  {
+   "key": "screen.ceremony.ungraded.row",
+   "en": "{passage}, in finding {n}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: one ungraded passage, at signing and in the published edition; {passage} its document and place, {n} the finding"
+  },
+  {
+   "key": "screen.ceremony.ungraded.grade",
+   "en": "Grade it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: the button on that row (leggrade)"
+  },
+  {
+   "key": "screen.ceremony.ungraded.note",
+   "en": "If you sign without grading them, the published edition says so.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: under the list at signing"
+  },
+  {
+   "key": "screen.published.ungraded",
+   "en": "Published with {n} passages not yet graded by the team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: near the top of a published edition; {n} how many; what 'not graded' means is screen.published.strength.unrated's"
+  },
+  {
+   "key": "screen.published.ungraded.one",
+   "en": "Published with one passage not yet graded by the team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: the same line when exactly one"
+  },
+  {
+   "key": "screen.published.ungraded.which",
+   "en": "Which passages",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: A5: the fold listing them"
+  },
+  {
+   "key": "screen.strength.pair",
+   "en": "copy {capture}, connection {connection}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-474: a question or finding strength pair in running text (the team grade, DEC-461)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -97493,9 +97584,10 @@
   },
   {
    "key": "filings.floors_capture_connection",
-   "en": "Floors: capture {capture}, connection {connection}. {detail}",
+   "en": "Floors: copy {capture}, connection {connection}. {detail}",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "filings.group_declared_stake",
@@ -116904,9 +116996,10 @@
   },
   {
    "key": "calculations.capture_capped_derivation",
-   "en": "capture {capture}, capped by its derivation at {cap}",
+   "en": "could be captured: {capture}, capped by its derivation at {cap}",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "calculations.derivation_capped",
@@ -127498,6 +127591,12 @@
   {
    "key": "act.owed_casedetails.label.ceremony",
    "en": "See the details of this work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.leggrade.label.ceremony",
+   "en": "Record this grade",
    "protected": true,
    "source": "registry.json"
   },

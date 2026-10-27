@@ -262,6 +262,10 @@ for _s in S:
     for _sid, _op, _l in [('setup','factconfirm','Save the time zone'),('question','leggrade','Record this grade'),('document','resolve','Find the people and offices it names'),('queue','signerknown','I know about this key')]:
         if _s['id'] == _sid and _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
 
+# DEC-474 (Bob's A5, DEC-461): the ceremony lists the passages not yet graded, each with the grading act (never blocking)
+for _s in S:
+    if _s['id'] == 'ceremony' and 'leggrade' not in {a['op'] for a in _s['acts']}: _s['acts'].append(dict(op='leggrade', label='Record this grade'))
+
 # DEC-245 (K3320): the first investigation on the question: find a source, ask the assistant, stop it, accept its reading.
 for _s in S:
     if _s['id'] == 'question':
