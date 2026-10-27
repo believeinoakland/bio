@@ -12,3 +12,14 @@
 
 - **K5504-K5506:** B1 (K5504), B2 (K5505) and B3 (K5506) marked ANSWERED, their "decision wanted" lines replaced by the rulings; mail-door R1 and R2 (no member's own email address kept; `envelope_from` kept nowhere), R3 (owner alone sees it; the address says who forwarded it; not in the record until the statement), R12 (upload of a saved email stays available whatever the door), `instance-setup` R114 (the team's own domain, about $10-15 a year, free email routing); section 6's shared-inbox suggestion marked not taken. Unchanged: R4-R11, R13, R14 (R5 and R6 already say that mail waits for the statement and for how long; the rate figures remain proposals). The doorbell's discard clearing (`doorbell` R29, in the companion) concerns knocks, not forwarded mail: see its section C.1 and E.
 - **K5527 (1), (2):** B2's ruling adds that Civicsmith never asks for, stores as a field or uses a member's email address and that a forwarded message is kept whole, headers included, as its source (R1 and R2 tests, R5); B5 is ANSWERED for the wait: 14 days is final (R6, runtime-limits R37, the companion's section G), after which the mail is removed and the member is told (R6, with a test; the companion's `scheduler` R35 test). The rate and size figures stay proposals.
+
+## Suggestions (moved from section 6) (bind nothing)
+
+- Name the module's table `mail_waiting`; key its private bytes `bio/mail/<sha256>`.
+- A member's private address digest: SHA-256 of the full address under the instance key, as `doorbell` R12 keys sources.
+- Show "sent to your private address" on each waiting message so a member knows which of her addresses it came to.
+- A team-wide shared inbox (S1) was not taken (K5505).
+
+## Changed for K5527 (2) and K5530
+
+- **R6:** the 14-day notice is final, its notice kind `mail_cleared` a proposed name (UNVERIFIED removed). **B4:** bracketed on Bob's C31. **B6, section 4.1, the companion's layer arrangement:** `member-roster` added to `mail-door`'s uses (K5530 G: a new layer-3 module after `doorbell`, packaging K5504-K5506's capability, K2008).
