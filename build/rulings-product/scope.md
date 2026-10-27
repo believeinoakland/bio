@@ -43,3 +43,4 @@
 - Beyond when, where and orientation, how much of a photo's own data is shown? (Bob, K5547, on L22: "as recommended"): A · All of it, as "the file says", plain text, capped in length
 - What counts as "still ungraded" at signing? (Bob, K5548, on L23: "as recommended"): A · A passage the team hasn't graded at all
 - When a typed page is cited, does the record grade it automatically? (Bob, K5549, on L24: "as recommended"): A · The record grades it, as it already does for derived connections
+- Do further checks raise a typed page higher? (Bob, K5550, on L25: "as recommended"): A · No: one check raises it from D to C; later checks are named but raise nothing
