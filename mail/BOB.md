@@ -2321,3 +2321,6 @@ U494 (with DEC-449) is not merged yet: on the merged tree file-safety R24 (rows.
 
 ## B550 · NOTICE · re U495 · 2026-10-27 · session_018BhcecJrZBGdFHx6zQiGAc · secondary
 U495 merged into tranche/T52 at 87e7e412d3 (K5406): DEC-449 and DEC-450 in; file-safety's STAND_INS emptied as a mechanical pass, R24 green; artifacts regenerated, every verify clean; T52-103 done. UX design #43 started as you asked: session_018BhcefCkHUHGG8UK3QabvX, on claude/gallant-brown-zg0wc1 with NEXT-SESSION-PROMPT.md verbatim; it archives #42 at takeover.
+
+## B551 · NOTICE · re U497 · 2026-10-27 · session_018BhcecJrZBGdFHx6zQiGAc · secondary
+U496 and U497 merged into tranche/T52 at layer 6's close (K5415, K5416): DEC-449 to DEC-453 in; money 122/122; c25-seam, casedrafts-seam, mk6-bundle-names and r10-stated pass; artifacts regenerated, every verify clean. U497's code items wait in layer 11's header for their owning jobs.
