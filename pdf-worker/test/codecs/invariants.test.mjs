@@ -15,6 +15,9 @@ import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
 import { MqDecoder, mqContexts } from "../../src/mq.mjs";
 import { decodePng, PNG_REFUSES, PngRefusal } from "../../src/pngdecode.mjs";
 
+/* A trap the test sets on a clock, the random source, the network and crypto: the decoder that reaches for one throws it. */
+class Reached extends Error {}
+
 const load = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
 const DCT = load("../fixtures/dct-variants.json"), JB = load("../fixtures/jbig2-variants.json");
 const JPX = load("../fixtures/jpx-variants.json"), CC = load("fixtures/ccitt-variants.json");
@@ -133,7 +136,7 @@ test("R8 pure: the same bytes and options always answer the same way, in any ord
 test("R8 no clock, no randomness, no I/O: every decode answers the same with them all taken away", () => {
   const want = CALLS.map(([, , fn]) => summary(answer(fn)));
   const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
-  const trap = (what) => () => { throw new Error(`the decoder reached for ${what}`); };
+  const trap = (what) => () => { throw new Reached(`the decoder reached for ${what}`); };
   try {
     Date.now = trap("the clock");
     Math.random = trap("randomness");
@@ -141,7 +144,7 @@ test("R8 no clock, no randomness, no I/O: every decode answers the same with the
     globalThis.fetch = trap("the network");
     Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
     const got = CALLS.map(([, , fn]) => answer(fn));
-    for (const a of got) if (a instanceof Error) assert.doesNotMatch(a.message, /the decoder reached for/);
+    for (const a of got) if (a instanceof Error) assert.ok(!(a instanceof Reached), a.message);
     assert.deepEqual(got.map(summary), want);
   } finally {
     Date.now = saved.now; Math.random = saved.random; globalThis.fetch = saved.fetch;
@@ -181,7 +184,7 @@ test("R8 R11 pure, the strip-wise JPEG decoder too: the same answers in any orde
   const first = rowsAnswers().map(summary);
   assert.deepEqual([...DCT.variants].reverse().map((v) => summary(rowsAnswer(v))).reverse(), first, "in reverse order, the same answers");
   const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
-  const trap = (what) => () => { throw new Error(`the decoder reached for ${what}`); };
+  const trap = (what) => () => { throw new Reached(`the decoder reached for ${what}`); };
   let got;
   try {
     Date.now = trap("the clock");
@@ -218,7 +221,7 @@ test("R8 pure, the PNG decoder too: the same bytes always answer the same way, i
 test("R8 the PNG decoder reaches for no clock, no randomness and no I/O, and changes no input", async () => {
   const want = (await pngAnswers()).map(pngSummary);
   const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
-  const trap = (what) => () => { throw new Error(`the decoder reached for ${what}`); };
+  const trap = (what) => () => { throw new Reached(`the decoder reached for ${what}`); };
   let got;
   try {
     Date.now = trap("the clock");
@@ -232,7 +235,7 @@ test("R8 the PNG decoder reaches for no clock, no randomness and no I/O, and cha
     Object.defineProperty(globalThis, "performance", { value: saved.perf, configurable: true, writable: true });
     Object.defineProperty(globalThis, "crypto", { value: saved.crypto, configurable: true, writable: true });
   }
-  for (const a of got) if (a instanceof Error) assert.doesNotMatch(a.message, /the decoder reached for/);
+  for (const a of got) if (a instanceof Error) assert.ok(!(a instanceof Reached), a.message);
   assert.deepEqual(got.map(pngSummary), want);
   for (const [name, bytes] of PNG_INPUTS) {
     const d = bytes(), before = sha(d);
