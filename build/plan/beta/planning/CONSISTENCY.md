@@ -1,6 +1,6 @@
 # Consistency across the lanes' drafts (PLANNING)
 
-**Status** · Kept by PLANNING; one row per overlap or collision between drafts, with the owner and the order PLANNING recommends. BOB decides each (P17: numbering, placement, `uses` and order are BOB's; a row marked Bob's goes to QUESTIONS.html). Updated at each entry; L3 first.
+**Status** · L3 rows DECIDED by BOB as recommended, every row (K5448; the three new readers are BOB's packaging of capability Bob ruled). Kept by PLANNING; one row per overlap or collision between drafts, with the owner and the order PLANNING recommends. BOB decides each (P17: numbering, placement, `uses` and order are BOB's; a row marked Bob's goes to QUESTIONS.html). Updated at each entry; L3 first.
 
 ## 1. Requirement-id collisions (numbering is provisional until BOB writes the lines, README rule 6)
 
