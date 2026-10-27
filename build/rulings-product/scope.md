@@ -51,3 +51,4 @@
 - What can a person's page record? (Bob, K5557, on J4: "as recommended"): A · Add membership and credential to what can be recorded The page already shows them; only adding them is missing.
 - Who files a correction, a withdrawal or a court order on a case's docket? (Bob, K5558, on J5: "as recommended"): A · The project's owner, from the docket page
 - When a new edition of a case is published, is that recorded on its docket? (Bob, K5559, on J6: "as recommended"): A · Automatically, with the edition's "what changed" text Readers look for changes in both places.
+- Is an outside reader's acknowledgement shown publicly by name? (Bob, K5560, on J7: "as recommended"): B · Shown by name only if they tick that it may be Naming a person publicly should be their choice.
