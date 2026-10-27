@@ -1194,7 +1194,7 @@ SCR.capture = c => { const st = CAPTURE_TAB[c.act || (c.wizard && c.wizard.act)]
     <p class="mk-small">Read: <span class="mk-data">documents (PDF, Word, PowerPoint, OpenDocument, RTF), up to 100 MB or 5,000 pages</span></p>
     <p class="mk-small">Read: <span class="mk-data">text (plain text, Markdown, logs, JSON, XML, HTML, calendars, contacts, captions, SVG, map layers), up to 100 MB</span></p>
     <p class="mk-small">Read: <span class="mk-data">spreadsheets (Excel, OpenDocument, CSV), up to 50 MB or about 1,000,000 rows</span></p>
-    <p class="mk-small">Read: <span class="mk-data">pictures and photos (JPEG, PNG, TIFF, HEIC, GIF, WebP, BMP, AVIF, JPEG 2000), up to 50 MB each</span></p>
+    <p class="mk-small">Read: <span class="mk-data">pictures (JPEG, PNG, TIFF, HEIC, GIF, WebP, BMP, AVIF, JPEG 2000), up to 50 MB each</span></p>
     <p class="mk-small">Read: <span class="mk-data">email and archives (email files, ZIP, TAR, 7z, single compressed files, mailboxes), up to 500 MB, or 2 GB unpacked; a mailbox up to 100,000 messages</span></p>
     <p class="mk-small">Kept, not read yet: <span class="mk-data">Outlook mailboxes, Access and SQLite databases, Visio, Publisher and OneNote files, CAD drawings, audio, video, icons, and any other kind not listed</span></p>
     <p class="mk-small">Not kept: <span class="mk-data">RAR archives, programs, installers and disk images</span></p>
@@ -1205,10 +1205,10 @@ SCR.capture = c => { const st = CAPTURE_TAB[c.act || (c.wizard && c.wizard.act)]
    ${sheet(row(I('document'), '<b class="mk-data">Public Works work orders, FY2025.csv</b><span class="meta">CSV · 48 MB · preview</span>', '') + `<div class="mk-data" style="padding:8px 14px;overflow-x:auto"><table class="mk-table"><tbody><tr><td>1</td><td>WO-10001</td><td>Pothole, Seminary Ave</td><td>Closed</td></tr><tr><td>2</td><td>WO-10002</td><td>Pothole, 60th St</td><td>Open</td></tr><tr><td>200</td><td>WO-10200</td><td>Pothole, Foothill Blvd</td><td>Closed</td></tr></tbody></table></div>` + row(I('clock'), 'Showing rows 1 to 200 of 4,812.', btn('owed:previewmore DEC-455', 'Show more rows')))}
    ${sheet(row(I('clock'), '<b class="mk-data">Council packet, 2026.pdf</b><span class="meta">PDF · 212 MB</span><br>Sending part 3 of 8.', btn('captureuploadabort', 'Cancel sending')))}
    ${sheet(row(I('refused'), '<b class="mk-data">Council packet, 2026.pdf</b><br>Sending was canceled. Nothing was kept.', ''))}
-   ${sheet(row(I('accepted'), '<b class="mk-data">Culvert plan.vsdx</b><br>A Visio drawing: kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', ''))}
-   ${sheet(row(I('refused'), '<b class="mk-data">Old minutes.rar</b><br>RAR files aren\'t kept: they can\'t be unpacked safely here. Nothing was kept.', ''))}
-   ${sheet(row(I('refused'), '<b class="mk-data">Update.exe</b><br>Program files aren\'t kept: they can run on a device. Nothing was kept.', ''))}
-   ${sheet(row(I('refused'), '<b class="mk-data">Scans, 2019.tif</b><br>This image is 74 MB, over the 50 MB allowed for image files, so it wasn\'t added. Nothing was kept.', ''))}
+   ${sheet(row(I('accepted'), '<b class="mk-data">Culvert plan.vsdx</b><br>This Visio drawing is kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', ''))}
+   ${sheet(row(I('refused'), '<b class="mk-data">Old minutes.rar</b><br>This RAR archive can\'t be added: files like it can\'t be unpacked safely here. Nothing was kept.', ''))}
+   ${sheet(row(I('refused'), '<b class="mk-data">Update.exe</b><br>This program or installer can\'t be added: files like it can run on a device. Nothing was kept.', ''))}
+   ${sheet(row(I('refused'), '<b class="mk-data">Scans, 2019.tif</b><br>This multi-page picture (TIFF) is 74 MB, over the 50 MB allowed for this kind of file, so it wasn\'t added. Nothing was kept.', ''))}
    ${sheet(row(I('refused'), '<b class="mk-data">City clerk mail.mbox</b><br>This mailbox holds 140,000 messages, over the 100,000 allowed, so it wasn\'t added. Nothing was kept.', ''))}
    ${checks('How you got it', [['I made it myself: a photo, a recording, my notes', true], ['I was handed it: a printed agenda, a letter', false], ['Someone sent it to me', false], ['I downloaded it from a website', false]], { radio: true })}
    <p class="mk-small muted" style="margin:-8px 0 0">Downloaded from a website? Capture it from its address instead: a copy your team's Civicsmith fetches itself holds up better.</p>
@@ -1281,8 +1281,8 @@ SCR.archive = c => { const st = c.v === 'refused' ? 'b' : 'a'; return { rail: 'a
    ${sec('Messages in it', sheet(
      zrow('Re: Sewer fund transfer, draft', 'Read · filed · held for review · capture B', '', true) +
      zrow('Agenda packet attached', 'Read · filed · held for review · capture B', '', true) +
-     zrow('Culvert plan.vsdx', 'A Visio drawing: kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', '', false) +
-     zrow('Update.exe', gapm('refused', 'Program files aren\'t kept: they can run on a device. Nothing was kept.'), '', false))) }
+     zrow('Culvert plan.vsdx', 'This Visio drawing is kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', '', false) +
+     zrow('Update.exe', gapm('refused', 'This program or installer can\'t be added: files like it can run on a device. Nothing was kept.'), '', false))) }
   </div></div>` }; };
 
 /* K1888, K1890, K1892, K1928, K1929 (Bob), drawn by DEC-168: before a file opens. Low risk opens the original (scanned
@@ -1331,7 +1331,7 @@ SCR['open-file'] = c => { const st = OPEN_ST[c.v] || 'b'; const sel = v => v ===
   <div class="st st-e"><div style="display:grid;gap:18px">
    ${h1('<span class="rec">Seminary Ave at 60th.jpg</span>', 'Added by you, October 9 · Pothole repairs')}
    <div class="mk-drop">${I('camera')} Safe picture</div>
-   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><b class="mk-small">Taken October 4, 2026, near 6012 Seminary Ave.</b><span class="mk-small">Taken October 4, 2026. The photo holds no place.</span><span class="mk-small">This photo holds no date or place.</span><span class="mk-small">Shown beside the safe picture, read from the original; not carried in the picture.</span><span class="mk-small">Left out of the safe picture: the camera's make and serial number, and the photo's thumbnail.</span></div>
+   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><b class="mk-small">Taken October 4, 2026, near 6012 Seminary Ave.</b><span class="mk-small">Taken October 4, 2026. The photo holds no place.</span><span class="mk-small">This photo holds no date or place.</span><span class="mk-small">Shown beside the safe picture, read from the original; not carried in the picture.</span><span class="mk-small">Left out of the safe picture: a small preview picture and the camera maker's notes.</span></div>
   </div></div>` }; };
 
 /* DEC-432 (B517 R13a): the Document page's document picker, for the connect and contradict folds. The same documents are offered
@@ -1368,7 +1368,7 @@ SCR.document = c => { const st = c.v === 'compare' ? 'b' : 'a'; const held = c.v
      <p>4. Where a repair would close a traffic lane, the work is scheduled with the Department of Transportation.</p>
      <p class="mk-data">5. Repairs are recorded as closed when the crew reports the work complete and a supervisor confirms it.</p>
     </div>
-    <details class="mk-details"><summary>A held file</summary>${sheet(row(I('accepted'), 'A Visio drawing: kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', ''))}</details>
+    <details class="mk-details"><summary>A held file</summary>${sheet(row(I('accepted'), 'This Visio drawing is kept whole and findable by its name and details. It isn\'t read yet; it will be read once Civicsmith reads files of this kind.', ''))}</details>
     <details class="mk-details"><summary>Macros and passwords</summary><div style="display:grid;gap:6px">${note('This file contains macros. Its text is read; the macros were never run.')}${note('Needs a password. Civicsmith never asks for it or keeps it.')}${note('Read from a converted copy of Old budget.xls; the original is kept.')}</div></details>
     <details class="mk-details"><summary>Pages and parents</summary><div style="display:grid;gap:6px">${note('Page 2 of 14, Fax cover.tif')}${note('From <span class="mk-data">City clerk mail, 2026</span>')}</div></details>
     <details class="mk-details"><summary>When the document is a single picture</summary>${note('This is a picture, and Civicsmith\'s own reading couldn\'t make out text in it. Read it yourself, or transcribe it.')}</details>${note('This table was read as plain text, so its rows and columns may be out of order. Check each figure against the original before you rely on it.')}${note('Pages 7 to 9 are pictures of text that Civicsmith\'s own reading couldn\'t make out, so their words can\'t be found or cited yet. The page images are kept as they are.')}

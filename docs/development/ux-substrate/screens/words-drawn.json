@@ -45056,13 +45056,13 @@
   },
   {
    "key": "screen.document.held.kind",
-   "en": "{kind}: kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind.",
+   "en": "This {kind} is kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind.",
    "protected": false,
    "note": "DEC-467: Document and Add, a file of a kind not read yet (K5436); {kind} a plain name, such as \"A Visio drawing\""
   },
   {
    "key": "screen.capture.refused.type",
-   "en": "{kind} files aren't kept: {reason}. Nothing was kept.",
+   "en": "This {kind} can't be added: {reason}. Nothing was kept.",
    "protected": false,
    "note": "DEC-467: Add, a file of a refused type (K5436); {kind} {reason}"
   },
@@ -45116,7 +45116,7 @@
   },
   {
    "key": "screen.capture.refused.limit",
-   "en": "This {kind} is {size}, over the {limit} allowed for {kind} files, so it wasn't added. Nothing was kept.",
+   "en": "This {kind} is {size}, over the {limit} allowed for this kind of file, so it wasn't added. Nothing was kept.",
    "protected": false,
    "note": "DEC-467: Add, a file over its kind's size limit (K5439); {kind} {size} {limit}"
   },
@@ -45425,6 +45425,366 @@
    "en": "in no project",
    "protected": false,
    "note": "DEC-472: the document picker: a widened row in no project (DEC-463)"
+  },
+  {
+   "key": "file.kind.pdf",
+   "en": "PDF",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.docx",
+   "en": "Word document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pptx",
+   "en": "PowerPoint presentation",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xlsx",
+   "en": "Excel workbook",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xls",
+   "en": "older Excel workbook (97-2003)",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.odt",
+   "en": "OpenDocument text",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.odp",
+   "en": "OpenDocument presentation",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.ods",
+   "en": "OpenDocument spreadsheet",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.rtf",
+   "en": "Rich Text document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.csv",
+   "en": "CSV table",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.tsv",
+   "en": "TSV table",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.text",
+   "en": "text file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.html",
+   "en": "web page",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.json",
+   "en": "JSON data file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xml",
+   "en": "XML file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.svg",
+   "en": "SVG drawing",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.map",
+   "en": "map data file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.ics",
+   "en": "calendar file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.vcf",
+   "en": "contact file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.captions",
+   "en": "caption file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.picture",
+   "en": "picture",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.tiff",
+   "en": "multi-page picture (TIFF)",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.email",
+   "en": "email message",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.mbox",
+   "en": "mailbox",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.archive",
+   "en": "archive",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pst",
+   "en": "Outlook mailbox",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.access",
+   "en": "Access database",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.sqlite",
+   "en": "SQLite database",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.parquet",
+   "en": "Parquet data file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.xlsb",
+   "en": "Excel binary workbook",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.maplayer",
+   "en": "map layer",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.wpd",
+   "en": "WordPerfect document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pages",
+   "en": "Pages document",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.numbers",
+   "en": "Numbers spreadsheet",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.key",
+   "en": "Keynote presentation",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.visio",
+   "en": "Visio drawing",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.pub",
+   "en": "Publisher file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.one",
+   "en": "OneNote file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.mpp",
+   "en": "Project file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.cad",
+   "en": "CAD drawing",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.epub",
+   "en": "e-book",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.audio",
+   "en": "audio recording",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.video",
+   "en": "video",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.other",
+   "en": "file",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.rar",
+   "en": "RAR archive",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.program",
+   "en": "program or installer",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.script",
+   "en": "script",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.kind.diskimage",
+   "en": "disk image",
+   "protected": false,
+   "note": "DEC-473: the plain name of a file kind, {kind}"
+  },
+  {
+   "key": "file.refused.reason.runs",
+   "en": "files like it can run on a device",
+   "protected": false,
+   "note": "DEC-473: why a kind is not kept, {reason}"
+  },
+  {
+   "key": "file.refused.reason.rar",
+   "en": "files like it can't be unpacked safely here",
+   "protected": false,
+   "note": "DEC-473: why a kind is not kept, {reason}"
+  },
+  {
+   "key": "file.refused.reason.diskimage",
+   "en": "a disk image can hold programs, and it isn't unpacked here",
+   "protected": false,
+   "note": "DEC-473: why a kind is not kept, {reason}"
+  },
+  {
+   "key": "screen.photo.dropped.thumbnail",
+   "en": "a small preview picture",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind thumbnail, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.maker_note",
+   "en": "the camera maker's notes",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind maker_note, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.profile",
+   "en": "the color profile",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind profile, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.extra_picture",
+   "en": "another picture inside the file",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind extra_picture, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.after_end",
+   "en": "data after the end of the picture",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind after_end, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.xmp",
+   "en": "editing notes (XMP)",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind xmp, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.credentials",
+   "en": "a content credential (who made or edited it)",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind credentials, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.other_metadata",
+   "en": "other details the file carried",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind other_metadata, {what}"
+  },
+  {
+   "key": "screen.photo.dropped.unreadable",
+   "en": "parts that couldn't be read",
+   "protected": false,
+   "note": "DEC-473: A4-R3 left_out kind unreadable, {what}"
   }
  ],
  "rewrite": {
