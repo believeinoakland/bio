@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19436 design words, 1162 protected; SHA-256
-   0f2e41144fdc2ee29ea7ee587a699bd5c28f76ee0309b3f12a34ca773be5278b) followed by 7515 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   0f2e41144fdc2ee29ea7ee587a699bd5c28f76ee0309b3f12a34ca773be5278b) followed by 7516 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23804,6 +23804,7 @@ export const WORD_ROWS = Object.freeze([
   ["image-cover.strip.the_fmt_data_ends_before","the {fmt} data ends before the image does: {why}",null,null,false,"code"],
   ["image-cover.strip.the_fmt_s_structure_cannot","the {fmt}'s structure cannot be walked: {why}",null,null,false,"code"],
   ["image-cover.strip.the_trailer_before_any_image","the trailer before any image",null,null,false,"code"],
+  ["inquiry-grammar.checks.a_passage_that_cuts_against_the_conclusion","A passage that cuts against the conclusion is not a reason for it, so it cannot sit in a ground, which groups the passages that support it. Take the passage out of its ground first, then put it on the other side. Nothing was written.",null,null,false,"code"],
   ["inquiry-grammar.checks.dividing_a_question_says_the","Dividing a question says the team asked one thing when it was really asking two, and that is a judgement about the team's own work. The credential that asked here is an automated one: it may raise questions and gather what they rest on, and may not restructure them. Sign in to divide it.",null,null,false,"code"],
   ["inquiry-grammar.grammar.a_capture_grade_is_a_p","a capture grade is a property of an information object and measures how the bytes arrived",null,null,false,"code"],
   ["inquiry-grammar.grammar.a_derived_connection_target","a derived connection ({target})",null,null,false,"code"],
@@ -24027,7 +24028,6 @@ export const WORD_ROWS = Object.freeze([
   ["inquiry-grammar.grammar.remove_the_extent_fields_from","remove the extent fields from {label}",null,null,false,"code"],
   ["inquiry-grammar.grammar.remove_the_extent_fields_from_2","remove the extent fields from {label}",null,null,false,"code"],
   ["inquiry-grammar.grammar.remove_the_falsifier_override_by_p","remove the record of who accepted the missing falsifier and when, if the falsifier stands",null,null,false,"code"],
-  ["inquiry-grammar.grammar.remove_the_ground_from_the_leg_p","remove the ground from basis leg {i}: a ground groups the legs that support the conclusion",null,null,false,"code"],
   ["inquiry-grammar.grammar.remove_v1","remove {v1}",null,null,false,"code"],
   ["inquiry-grammar.grammar.remove_v1_from_item_p","remove that entry from {item}",null,null,false,"code"],
   ["inquiry-grammar.grammar.renumber_shown_on_label_the_p","renumber the applications on {label} from 1, with none left out",null,null,false,"code"],
@@ -24063,6 +24063,7 @@ export const WORD_ROWS = Object.freeze([
   ["inquiry-grammar.grammar.state_what_the_statement_did","state what the statement did: {effects}",null,null,false,"code"],
   ["inquiry-grammar.grammar.subject_entity_string_is_not_p","the subject entity '{String}' is not an entry in the subject registry",null,null,false,"code"],
   ["inquiry-grammar.grammar.surfaced_by_surfaced_by_is_p","who surfaced this inquiry is '{surfaced_by}', which is not one of: agent, human",null,null,false,"code"],
+  ["inquiry-grammar.grammar.take_the_passage_out_of_its_ground_first","take basis leg {i} out of its ground first: a ground groups only the passages that support the conclusion. Then put the passage on the side that cuts against it",null,null,false,"code"],
   ["inquiry-grammar.grammar.testimony_is_a_member_s","Testimony is a member's account of a connection",null,null,false,"code"],
   ["inquiry-grammar.grammar.the_calculation_target","the calculation {target}",null,null,false,"code"],
   ["inquiry-grammar.grammar.the_case_states_these_facts_p","the case states these facts once, in its own signed document",null,null,false,"code"],

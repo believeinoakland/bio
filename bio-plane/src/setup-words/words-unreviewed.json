@@ -30521,6 +30521,13 @@
       "line": 226
     },
     {
+      "id": "inquiry-grammar.checks.a_passage_that_cuts_against_the_conclusion",
+      "en": "A passage that cuts against the conclusion is not a reason for it, so it cannot sit in a ground, which groups the passages that support it. Take the passage out of its ground first, then put it on the other side. Nothing was written.",
+      "module": "inquiry-grammar",
+      "file": "bio-plane/src/inquiry-grammar/checks.mjs",
+      "line": 109
+    },
+    {
       "id": "inquiry-grammar.checks.dividing_a_question_says_the",
       "en": "Dividing a question says the team asked one thing when it was really asking two, and that is a judgement about the team's own work. The credential that asked here is an automated one: it may raise questions and gather what they rest on, and may not restructure them. Sign in to divide it.",
       "module": "inquiry-grammar",
@@ -30532,14 +30539,14 @@
       "en": "a capture grade is a property of an information object and measures how the bytes arrived",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1134
+      "line": 1135
     },
     {
       "id": "inquiry-grammar.grammar.a_derived_connection_target",
       "en": "a derived connection ({target})",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1652
+      "line": 1653
     },
     {
       "id": "inquiry-grammar.grammar.a_finding_s_bytes_name_p",
@@ -30553,14 +30560,14 @@
       "en": "a {grade_axis} axis",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1485
+      "line": 1486
     },
     {
       "id": "inquiry-grammar.grammar.a_hunch",
       "en": "a hunch",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1486
+      "line": 1487
     },
     {
       "id": "inquiry-grammar.grammar.a_hunch_is_a_member",
@@ -30574,7 +30581,7 @@
       "en": "a resolution IS the framework's connection grade and grades nothing else",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1134
+      "line": 1135
     },
     {
       "id": "inquiry-grammar.grammar.add_a_basis_leg_naming_p",
@@ -30588,7 +30595,7 @@
       "en": "add a grounds row for '{label}' with who asserted it and when",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 959
+      "line": 960
     },
     {
       "id": "inquiry-grammar.grammar.add_a_references_entry_for_p",
@@ -30609,35 +30616,35 @@
       "en": "add a subject entity: the registry entry this inquiry is about",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1151
+      "line": 1152
     },
     {
       "id": "inquiry-grammar.grammar.add_target_edition_to_basis_p",
       "en": "add the target edition to basis leg {i}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1305
+      "line": 1306
     },
     {
       "id": "inquiry-grammar.grammar.an_occurrence_of_a_duty",
       "en": "an occurrence of a duty ({v1})",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1586
+      "line": 1587
     },
     {
       "id": "inquiry-grammar.grammar.and_more",
       "en": " and more",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1782
+      "line": 1783
     },
     {
       "id": "inquiry-grammar.grammar.application_n_of_at",
       "en": "application {n} of {at}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1786
+      "line": 1787
     },
     {
       "id": "inquiry-grammar.grammar.apportion_the_remaining_leg_s",
@@ -30651,14 +30658,14 @@
       "en": "{at} must be a list: it lists each bias statement applied here, one statement and effect each",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1792
+      "line": 1793
     },
     {
       "id": "inquiry-grammar.grammar.author_a_grounds_row_per_p",
       "en": "write one grounds row per ground label, naming the member who asserts that ground is independently sufficient and the date",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 897
+      "line": 898
     },
     {
       "id": "inquiry-grammar.grammar.author_a_trigger_dual_audience",
@@ -30707,7 +30714,7 @@
       "en": "basis leg {i} carries a grade of its own on a PUBLISHED case ({target}): a leg resting on a published case inherits that case's frozen strength and says so with grade source 'inherited'. A case built on a case cannot be stronger than the case beneath it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1298
+      "line": 1299
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_carries_a_grade_p",
@@ -30721,21 +30728,21 @@
       "en": "basis leg {i} claims an EARNED resolution grade, but this inquiry names no subject entity: an earned connection grade is the strongest resolution of the target's captures to the inquiry's subject, and with no subject named there is nothing to have resolved to",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1150
+      "line": 1151
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_claims_an_earned_p",
       "en": "basis leg {i} claims an EARNED resolution grade on an inquiry leg: a resolution matches a captured document's reading to a registry entity, and an inquiry is not a captured document — there is nothing here for the recogniser to have graded",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1144
+      "line": 1145
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_claims_inherited_with_p",
       "en": "basis leg {i} claims 'inherited' with no grade: a leg resting on a published case may state no grade at all — undetermined, stated — but it may not claim to have inherited one",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1293
+      "line": 1294
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_cuts_against_ground_p",
@@ -30770,35 +30777,35 @@
       "en": "basis leg {i} names the ground '{label}', which is not declared in the grounds: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 958
+      "line": 959
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_ground_string_is_p",
       "en": "the ground on basis leg {i}, '{String}', is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 889
+      "line": 890
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_inherits_axis_grade_2_p",
       "en": "basis leg {i} inherits {axis} grade {grade} from {target} edition {ed}, whose frozen {axis_2} strength is {grade_2}: a case built on a case cannot be stronger than the case beneath it, and the comparison is per axis — this leg's {axis_3} grade against that edition's {axis_4} grade, never against a composed letter",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1325
+      "line": 1326
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_inherits_axis_grade_p",
       "en": "basis leg {i} inherits {axis} grade {grade} from {target} edition {ed}, whose {axis_2} axis is {v1}: {v2}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1320
+      "line": 1321
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_inherits_from_target_p",
       "en": "basis leg {i} inherits from {target} without naming an edition: every edition is a separate document with its own frozen strength, so an unnamed edition leaves the inheritance rule nothing fixed to compare against",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1304
+      "line": 1305
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_is_a_hunch_2_p",
@@ -30826,7 +30833,7 @@
       "en": "basis leg {i} names edition {ed} of {target}, which is not in the published record (published editions: {v1})",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1310
+      "line": 1311
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_note_is_not_2_p",
@@ -30868,14 +30875,14 @@
       "en": "basis leg {i} states a capture grade of {grade} for {target}, which is a member's authored observation: the capture axis measures the act of reading a document in, and nobody read these words in from anywhere — they are the member's own. Its grade is testimony, {grade_2}, on the testimony axis, and its capture axis is not applicable",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1067
+      "line": 1068
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_a_capture_4_p",
       "en": "basis leg {i} states a capture grade of {grade} for {target}, which is stronger than the {grade_2} the record can earn for it. {why} {v1}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1235
+      "line": 1236
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_a_capture_p",
@@ -30889,35 +30896,35 @@
       "en": "basis leg {i} states a testimony grade of {grade}: a member's firsthand observation is graded {TESTIMONY_GRADE} on the testimony axis and at no other value. It stands on the observing member's trust, and nothing raises it — a second member agreeing with it is a co-signature, not a second observation (a second member who saw the same thing records their own, and the case then rests on two testimonies, each {TESTIMONY_GRADE_2})",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1075
+      "line": 1076
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_a_testimony_3_p",
       "en": "basis leg {i} states a testimony-axis grade with grade source '{grade_source}': a testimony grade comes from a member's own authored observation and from nothing else — a resolution, a capture or a hunch is an account of something other than whose word this is",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1085
+      "line": 1086
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_a_testimony_4_p",
       "en": "basis leg {i} states a testimony grade for {target}, but whether that document IS a member's authored observation is held by the register, which cannot be read here: a document is an observation because the act that records one wrote it, never because a leg says so",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1091
+      "line": 1092
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_a_testimony_5_p",
       "en": "basis leg {i} states a testimony grade for {target}, which is not a member's authored observation: the testimony axis grades whose word a document is, and this one's bytes were captured, not authored here. Grading it as testimony would let a captured source pass for a member's own word",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1097
+      "line": 1098
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_a_testimony_6_p",
       "en": "basis leg {i} states a testimony grade of {grade} for {target}, but the record holds {grade_2} for it. {v1}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1109
+      "line": 1110
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_a_testimony_p",
@@ -30931,49 +30938,49 @@
       "en": "basis leg {i} states an EARNED resolution grade of {grade} for {target}, but the record holds no A/B/C resolution of that document to {subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member's testimony earns nothing either — that leg is testimony and says so",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1198
+      "line": 1199
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_an_earned_3_p",
       "en": "basis leg {i} states an EARNED capture grade of {grade} for {target}, but the record holds no registered capture for that document: there are no bytes here whose arrival this grade could be measuring",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1199
+      "line": 1200
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_an_earned_4_p",
       "en": "basis leg {i} states an EARNED {wantAxis} grade of {grade} for {target}, but the record earns {grade_2}: an earned grade is computed by the record and a caller does not hand it to us in either direction. {why}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1241
+      "line": 1242
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_an_earned_p",
       "en": "basis leg {i} states an EARNED capture grade of {grade} for {target}, but what that document's capture can support is UNDETERMINED, not {grade_2}. {v1}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1190
+      "line": 1191
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_grade_source_2_p",
       "en": "basis leg {i} states a grade source '{src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1122
+      "line": 1123
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_grade_source_3_p",
       "en": "basis leg {i} states a grade source '{src}' on the {grade_axis} axis: {v1}, so it can only be a source for a {wantAxis} grade",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1134
+      "line": 1135
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_grade_source_4_p",
       "en": "basis leg {i} states grade source 'inherited' but its target {v1}: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1283
+      "line": 1284
     },
     {
       "id": "inquiry-grammar.grammar.basis_i_states_grade_source_p",
@@ -31022,7 +31029,7 @@
       "en": "basis leg{v1} {map} name{v2} a ground, but there is no grounds section: grounds compose as alternatives, so a finding takes its strongest ground rather than its weakest leg, and that is only ever reached by an affirmative, attributed act. Nothing may become stronger because a field was written and nobody signed for it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 896
+      "line": 897
     },
     {
       "id": "inquiry-grammar.grammar.basis_leg_v1_orphans_v2_p",
@@ -31036,21 +31043,21 @@
       "en": "the bias applications on {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1790
+      "line": 1791
     },
     {
       "id": "inquiry-grammar.grammar.cannot_be_checked_against_the",
       "en": "cannot be checked against the published record here",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1283
+      "line": 1284
     },
     {
       "id": "inquiry-grammar.grammar.cite_a_published_case_and",
       "en": "cite a published case and name its edition",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1284
+      "line": 1285
     },
     {
       "id": "inquiry-grammar.grammar.concluded_state_carries_both_an",
@@ -31246,56 +31253,56 @@
       "en": "{field} cannot be written in the record: a statement id is at most {BIAS_STATEMENT_MAX} characters, with no quote, backslash, newline or #",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1825
+      "line": 1826
     },
     {
       "id": "inquiry-grammar.grammar.field_is_missing_or_empty",
       "en": "{field} is missing or empty: an application names the bias statement applied, by its id as the project's declared bias holds it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1822
+      "line": 1823
     },
     {
       "id": "inquiry-grammar.grammar.field_is_set_on_a_p",
       "en": "{field} is set on a {effect} application: only a grade lowered names the letters a grade moved between",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1847
+      "line": 1848
     },
     {
       "id": "inquiry-grammar.grammar.field_on_application_of",
       "en": "{field} on application {n} of {at}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1787
+      "line": 1788
     },
     {
       "id": "inquiry-grammar.grammar.field_on_item",
       "en": "{field} on {item}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1810
+      "line": 1811
     },
     {
       "id": "inquiry-grammar.grammar.field_string_is_not_one",
       "en": "{field} '{String}' is not one of: {effects}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1830
+      "line": 1831
     },
     {
       "id": "inquiry-grammar.grammar.field_string_is_not_one_2_p",
       "en": "{field} is '{String}', which is not one of: {BASIS_GRADES}: a lowered grade names the letter it was lowered from",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1836
+      "line": 1837
     },
     {
       "id": "inquiry-grammar.grammar.field_string_is_not_one_3_p",
       "en": "{field} is '{String}', which is not one of: {BASIS_GRADES}: a lowered grade names the letter it was lowered to",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1838
+      "line": 1839
     },
     {
       "id": "inquiry-grammar.grammar.field_word_effect",
@@ -31330,35 +31337,35 @@
       "en": "follow the lead and cite the document the look captured instead",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1348
+      "line": 1349
     },
     {
       "id": "inquiry-grammar.grammar.give_at_least_one_basis_p",
       "en": "give at least one basis leg the ground '{label}'",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 966
+      "line": 967
     },
     {
       "id": "inquiry-grammar.grammar.grade_basis_i_on_the_2_p",
       "en": "grade basis leg {i} on the testimony axis: grade axis testimony, grade {grade}, grade source testimony",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1068
+      "line": 1069
     },
     {
       "id": "inquiry-grammar.grammar.grade_basis_i_on_the_p",
       "en": "grade basis leg {i} on the capture axis, which is what a captured document's grade measures",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1098
+      "line": 1099
     },
     {
       "id": "inquiry-grammar.grammar.grade_label_on_the_capture_p",
       "en": "grade {label} on the capture axis with grade source: capture — the earned-basis check answers what the standard's text earns",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1489
+      "line": 1490
     },
     {
       "id": "inquiry-grammar.grammar.grade_this_leg_on_the",
@@ -31372,56 +31379,56 @@
       "en": "grounds row {i} names '{asserted_by}' as the one asserting it, which is not a named member: \"these legs are enough on their own\" is an authored judgment that makes the finding stronger, so it carries the name of the member making it — never a machine's",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 945
+      "line": 946
     },
     {
       "id": "inquiry-grammar.grammar.grounds_i_declares_label_a_p",
       "en": "grounds row {i} declares '{label}' a second time: one ground, one assertion, one member answering for it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 918
+      "line": 919
     },
     {
       "id": "inquiry-grammar.grammar.grounds_i_declares_label_which_p",
       "en": "grounds row {i} declares '{label}', which no basis leg belongs to: a ground groups the legs of the inquiry, and an empty one asserts that nothing is sufficient on its own",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 965
+      "line": 966
     },
     {
       "id": "inquiry-grammar.grammar.grounds_i_ground_string_is_p",
       "en": "grounds row {i} has the ground '{String}', which is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 914
+      "line": 915
     },
     {
       "id": "inquiry-grammar.grammar.grounds_i_is_not_an_p",
       "en": "grounds row {i} is not an object",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 909
+      "line": 910
     },
     {
       "id": "inquiry-grammar.grammar.grounds_i_requires_at_as_p",
       "en": "grounds row {i} requires a date as a full timestamp (got '{at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it, and only a date lets a reader tell",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 949
+      "line": 950
     },
     {
       "id": "inquiry-grammar.grammar.grounds_i_statement_is_not_p",
       "en": "the statement on grounds row {i} is not a string",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 952
+      "line": 953
     },
     {
       "id": "inquiry-grammar.grammar.grounds_is_not_an_array",
       "en": "grounds is not an array",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 903
+      "line": 904
     },
     {
       "id": "inquiry-grammar.grammar.including_length_that_cutv1_against",
@@ -31435,56 +31442,56 @@
       "en": "is not a published case",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1283
+      "line": 1284
     },
     {
       "id": "inquiry-grammar.grammar.item_applies_the_statement_st",
       "en": "{item} applies the statement {st} as {effect} a second time ({get} already does): one statement's one effect here is recorded once",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1854
+      "line": 1855
     },
     {
       "id": "inquiry-grammar.grammar.item_is_not_an_object_p",
       "en": "{item} is not an object: an application names the statement applied and its effect",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1800
+      "line": 1801
     },
     {
       "id": "inquiry-grammar.grammar.item_k_is_not_part_p",
       "en": "{item} holds an entry that is not part of a bias application, which carries {BIAS_APPLICATION_KEYS} only",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1806
+      "line": 1807
     },
     {
       "id": "inquiry-grammar.grammar.item_lowers_the_grade_from_p",
       "en": "{item} lowers the grade from {from} to {to}, which is not lower: a statement applied as grade lowered names a weaker letter than the one it started from",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1841
+      "line": 1842
     },
     {
       "id": "inquiry-grammar.grammar.its_grade_is_its_chain",
       "en": "its grade is its chain's, the weakest hop of the derivation, and never authored",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1653
+      "line": 1654
     },
     {
       "id": "inquiry-grammar.grammar.its_grades_are_derived_from",
       "en": "its grades are derived from the inputs it reads, the weakest input's capture capped by its derivation",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1538
+      "line": 1539
     },
     {
       "id": "inquiry-grammar.grammar.keep_the_bias_max_applications",
       "en": "keep the {BIAS_MAX} applications that bear on it, or divide the question",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1816
+      "line": 1817
     },
     {
       "id": "inquiry-grammar.grammar.keep_the_content_id_it_p",
@@ -31498,28 +31505,28 @@
       "en": "the bias applications on {label} are not written the way the record holds them: each one is recorded beside the leg as its own numbered entry, with its statement, its effect and, for a lowered grade, the grades from and to",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1762
+      "line": 1763
     },
     {
       "id": "inquiry-grammar.grammar.label_carries_count_bias_applications",
       "en": "{label} carries {count} bias applications: at most {BIAS_MAX} are recorded in one place",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1815
+      "line": 1816
     },
     {
       "id": "inquiry-grammar.grammar.label_content_id_is_set_2_p",
       "en": "the content id on {label} is set, on a leg on {what}: the leg names it whole, and the parts it reads are its own",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1515
+      "line": 1516
     },
     {
       "id": "inquiry-grammar.grammar.label_content_id_is_set_p",
       "en": "the content id on {label} is set, on a leg on another team's finding ({ref}): the leg names the finding, and the parts it rests on are checked in that team's own case file",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1418
+      "line": 1419
     },
     {
       "id": "inquiry-grammar.grammar.label_content_id_string_is_p",
@@ -31533,56 +31540,56 @@
       "en": "the extent capture on {label} is set, on a leg on {what}: no capture holds it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1523
+      "line": 1524
     },
     {
       "id": "inquiry-grammar.grammar.label_extent_capture_is_set_p",
       "en": "the extent capture on {label} is set, on a leg on another team's finding ({ref}): no capture of this record holds that finding",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1426
+      "line": 1427
     },
     {
       "id": "inquiry-grammar.grammar.label_field_is_set_on_2_p",
       "en": "the {field} on {label} is set, on a leg on {what}: {why}, so the leg states none of its own",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1510
+      "line": 1511
     },
     {
       "id": "inquiry-grammar.grammar.label_field_is_set_on_p",
       "en": "the {field} on {label} is set, on a leg on another team's finding ({ref}): that finding's grades are the ones its edition published, and the leg states none of its own",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1413
+      "line": 1414
     },
     {
       "id": "inquiry-grammar.grammar.label_field_v_is_a_p",
       "en": "the {field} on {label} ('{v}') is a LEAD, and a lead is never evidence: it says where to look, not what was found, so no leg can rest on it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1347
+      "line": 1348
     },
     {
       "id": "inquiry-grammar.grammar.label_k_is_missing_or_p",
       "en": "the {k} on {label} is missing or empty, on a leg on a derived connection ({target}): the leg carries the five fields the connection was derived from ({DERIVATION_FIELDS}), each a non-empty string, so a reader can derive it again",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1640
+      "line": 1641
     },
     {
       "id": "inquiry-grammar.grammar.label_names_an_extent_on",
       "en": "{label} names an extent on a leg on another team's finding ({ref}): the leg names the finding, and the parts it rests on are checked in that team's own case file",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1422
+      "line": 1423
     },
     {
       "id": "inquiry-grammar.grammar.label_names_an_extent_on_2",
       "en": "{label} names an extent on a leg on {what}: the leg names it whole, and the parts it reads are its own",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1519
+      "line": 1520
     },
     {
       "id": "inquiry-grammar.grammar.label_names_an_extent_this",
@@ -31603,56 +31610,56 @@
       "en": "{label} rests on the standard {target} and states {wrong}: a standard is law the team holds in captured text, so the only grade a leg on it carries is the capture grade that text earns. Whether the standard bears on this question is the inquiry's own argument, not a grade",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1488
+      "line": 1489
     },
     {
       "id": "inquiry-grammar.grammar.label_s_bias_applications_are",
       "en": "{label}'s bias applications are numbered up to {top} with {gaps}{v1} missing: they are numbered from 1 with none left out, so a reader can tell none was dropped",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1782
+      "line": 1783
     },
     {
       "id": "inquiry-grammar.grammar.label_shown_is_not_a_2_p",
       "en": "an entry on {label} is not part of a bias application, which records {BIAS_APPLICATION_KEYS} only",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1774
+      "line": 1775
     },
     {
       "id": "inquiry-grammar.grammar.label_shown_is_not_a_p",
       "en": "a numbered entry on {label} is not part of a bias application: its number is written as 1, 2, 3 and so on",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1771
+      "line": 1772
     },
     {
       "id": "inquiry-grammar.grammar.label_target_edition_string_does_p",
       "en": "the target edition on {label} ('{String}') does not name an edition of {ref}: a leg on another team's finding names the one edition it rests on, a positive whole number, because each edition is a separate document with its own published grades",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1408
+      "line": 1409
     },
     {
       "id": "inquiry-grammar.grammar.label_target_portion_string_is_p",
       "en": "the target portion on {label} ('{String}') is not a portion path: it names a section within the standard's instrument, as text of at most {PORTION_PATH_MAX} characters",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1481
+      "line": 1482
     },
     {
       "id": "inquiry-grammar.grammar.label_target_target_is_not_p",
       "en": "the target on {label}, {target}, is not the id of the derivation the leg carries ({id}): a derived connection is named by the SHA-256 of its five fields, so a leg whose target and fields disagree names two different connections",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1647
+      "line": 1648
     },
     {
       "id": "inquiry-grammar.grammar.make_at_a_list_of_p",
       "en": "make {at} a list of statement and effect items, or drop it — where no statement was applied there are none",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1793
+      "line": 1794
     },
     {
       "id": "inquiry-grammar.grammar.move_the_capture_grade_onto",
@@ -31687,28 +31694,28 @@
       "en": "name the member asserting that this ground is independently sufficient",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 946
+      "line": 947
     },
     {
       "id": "inquiry-grammar.grammar.name_the_portions_path_on",
       "en": "name the portion's path on {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1482
+      "line": 1483
     },
     {
       "id": "inquiry-grammar.grammar.name_the_statement_by_an_p",
       "en": "name the statement by an id of at most {BIAS_STATEMENT_MAX} characters without those marks, as the declared bias holds it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1826
+      "line": 1827
     },
     {
       "id": "inquiry-grammar.grammar.nothing_on_that_axis_was",
       "en": "nothing on that axis was ever established there, so a grade taken from it would be invented outright",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1320
+      "line": 1321
     },
     {
       "id": "inquiry-grammar.grammar.or_clear_the_falsifier_if",
@@ -31722,7 +31729,7 @@
       "en": "or correct the derivation fields on {label} to the connection its target names",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1649
+      "line": 1650
     },
     {
       "id": "inquiry-grammar.grammar.or_describe_the_part_instead_p",
@@ -31743,7 +31750,7 @@
       "en": "or drop the target portion — the leg then rests on the whole standard",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1482
+      "line": 1483
     },
     {
       "id": "inquiry-grammar.grammar.or_drop_the_extent_fields",
@@ -31757,7 +31764,7 @@
       "en": "or drop the ground labels — an unstructured basis is no stronger than its weakest leg, which is the conservative reading",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 898
+      "line": 899
     },
     {
       "id": "inquiry-grammar.grammar.or_grade_this_leg_on",
@@ -31771,7 +31778,7 @@
       "en": "or have the transcription measured (the MEASUREMENTS ledger, per engine, per version) and state the letter the record then earns",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1192
+      "line": 1193
     },
     {
       "id": "inquiry-grammar.grammar.or_if_none_can_honestly_p",
@@ -31785,21 +31792,21 @@
       "en": "or, if the target is a published case, inherit its frozen connection grade (grade source: inherited)",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1146
+      "line": 1147
     },
     {
       "id": "inquiry-grammar.grammar.or_if_this_is_your_p",
       "en": "or, if this is your own firsthand knowledge, record it as an observation (the testify act) and cite that",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1099
+      "line": 1100
     },
     {
       "id": "inquiry-grammar.grammar.or_if_you_saw_the",
       "en": "or, if you saw the thing yourself, author it as your own observation and cite that",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1349
+      "line": 1350
     },
     {
       "id": "inquiry-grammar.grammar.or_keep_the_extent_fields_p",
@@ -31820,14 +31827,14 @@
       "en": "or name another effect — a statement that changed no letter did not lower one",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1843
+      "line": 1844
     },
     {
       "id": "inquiry-grammar.grammar.or_remove_the_row",
       "en": "or remove the row",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 966
+      "line": 967
     },
     {
       "id": "inquiry-grammar.grammar.or_sever_the_supersedes_edge",
@@ -31848,56 +31855,56 @@
       "en": "or state no grade at all — an inquiry with no subject entity has no A/B/C available to it, and that is honest",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1152
+      "line": 1153
     },
     {
       "id": "inquiry-grammar.grammar.or_state_no_grade_on_2",
       "en": "or state no grade on {label} — the leg stays in the basis, present and not yet load-bearing",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1490
+      "line": 1491
     },
     {
       "id": "inquiry-grammar.grammar.or_state_no_grade_on_p",
       "en": "or state no grade on basis leg {i} — the leg stays in the basis, present and not yet load-bearing",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1069
+      "line": 1070
     },
     {
       "id": "inquiry-grammar.grammar.or_state_the_grade_as",
       "en": "or state the grade as testimony (grade D, with an author and a date) if it is a member's account",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1124
+      "line": 1125
     },
     {
       "id": "inquiry-grammar.grammar.or_state_this_leg_as",
       "en": "or state this leg as testimony (grade D, with an author and a date) if it is a member's own account",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1193
+      "line": 1194
     },
     {
       "id": "inquiry-grammar.grammar.or_state_this_leg_as_2",
       "en": "or state this leg as testimony (grade D, with an author and a date)",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1202
+      "line": 1203
     },
     {
       "id": "inquiry-grammar.grammar.or_state_where_this_grade",
       "en": "or state where this {grade_axis}-axis grade actually came from",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1136
+      "line": 1137
     },
     {
       "id": "inquiry-grammar.grammar.or_state_where_this_grade_2",
       "en": "or state where this grade actually came from",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1284
+      "line": 1285
     },
     {
       "id": "inquiry-grammar.grammar.or_use_relates_to_which_p",
@@ -31967,63 +31974,63 @@
       "en": "reference {i} names an occurrence of a duty ({target}): a leg on it is not a reference, so the references do not list it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1606
+      "line": 1607
     },
     {
       "id": "inquiry-grammar.grammar.references_i_target_names_another_p",
       "en": "reference {i} names another team's finding ({target}): a leg on it is not a reference, so the references do not list it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1449
+      "line": 1450
     },
     {
       "id": "inquiry-grammar.grammar.remove_content_id_from_label_2_p",
       "en": "remove the content id from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1516
+      "line": 1517
     },
     {
       "id": "inquiry-grammar.grammar.remove_content_id_from_label_p",
       "en": "remove the content id from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1419
+      "line": 1420
     },
     {
       "id": "inquiry-grammar.grammar.remove_extent_capture_from_label_2_p",
       "en": "remove the extent capture from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1524
+      "line": 1525
     },
     {
       "id": "inquiry-grammar.grammar.remove_extent_capture_from_label_p",
       "en": "remove the extent capture from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1427
+      "line": 1428
     },
     {
       "id": "inquiry-grammar.grammar.remove_field_from_label",
       "en": "remove {field} from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1414
+      "line": 1415
     },
     {
       "id": "inquiry-grammar.grammar.remove_field_from_label_2",
       "en": "remove {field} from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1511
+      "line": 1512
     },
     {
       "id": "inquiry-grammar.grammar.remove_item",
       "en": "remove {item}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1855
+      "line": 1856
     },
     {
       "id": "inquiry-grammar.grammar.remove_k_from_this_documents_p",
@@ -32037,21 +32044,21 @@
       "en": "remove reference {i}; the basis leg alone names that occurrence",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1607
+      "line": 1608
     },
     {
       "id": "inquiry-grammar.grammar.remove_references_i_the_basis_p",
       "en": "remove reference {i}; the basis leg alone names that finding",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1450
+      "line": 1451
     },
     {
       "id": "inquiry-grammar.grammar.remove_shown_from_label_p",
       "en": "remove that entry from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1775
+      "line": 1776
     },
     {
       "id": "inquiry-grammar.grammar.remove_the_basis_leg",
@@ -32065,14 +32072,14 @@
       "en": "remove the extent fields from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1423
+      "line": 1424
     },
     {
       "id": "inquiry-grammar.grammar.remove_the_extent_fields_from_2",
       "en": "remove the extent fields from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1520
+      "line": 1521
     },
     {
       "id": "inquiry-grammar.grammar.remove_the_falsifier_override_by_p",
@@ -32082,46 +32089,39 @@
       "line": 291
     },
     {
-      "id": "inquiry-grammar.grammar.remove_the_ground_from_the_leg_p",
-      "en": "remove the ground from basis leg {i}: a ground groups the legs that support the conclusion",
-      "module": "inquiry-grammar",
-      "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 883
-    },
-    {
       "id": "inquiry-grammar.grammar.remove_v1",
       "en": "remove {v1}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1848
+      "line": 1849
     },
     {
       "id": "inquiry-grammar.grammar.remove_v1_from_item_p",
       "en": "remove that entry from {item}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1807
+      "line": 1808
     },
     {
       "id": "inquiry-grammar.grammar.renumber_shown_on_label_the_p",
       "en": "renumber the applications on {label} from 1, with none left out",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1772
+      "line": 1773
     },
     {
       "id": "inquiry-grammar.grammar.renumber_the_bias_n_keys_p",
       "en": "renumber the applications on {label} 1, 2, 3 and so on",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1783
+      "line": 1784
     },
     {
       "id": "inquiry-grammar.grammar.resolve_the_document_to_the_p",
       "en": "resolve the document to the subject with the resolve act, then state the grade it earned",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1201
+      "line": 1202
     },
     {
       "id": "inquiry-grammar.grammar.rest_this_leg_on_the",
@@ -32135,7 +32135,7 @@
       "en": "rest this leg on the INFO- document that carries the reference",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1145
+      "line": 1146
     },
     {
       "id": "inquiry-grammar.grammar.restore_the_division_block_from_p",
@@ -32149,21 +32149,21 @@
       "en": "run this through the ratification gate or the promote act, which read the record",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1123
+      "line": 1124
     },
     {
       "id": "inquiry-grammar.grammar.run_this_through_the_ratification_p",
       "en": "run this through the ratification gate or the promote act, which read the record",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1092
+      "line": 1093
     },
     {
       "id": "inquiry-grammar.grammar.set_basis_i_grade_to_p",
       "en": "set the grade on basis leg {i} to {grade}, the frozen {axis} strength of that edition",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1326
+      "line": 1327
     },
     {
       "id": "inquiry-grammar.grammar.set_division_parent_to_the_p",
@@ -32177,119 +32177,119 @@
       "en": "set the grade axis to {wantAxis} on basis leg {i}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1135
+      "line": 1136
     },
     {
       "id": "inquiry-grammar.grammar.set_grade_source_inherited_and_p",
       "en": "set the grade source to inherited and the target edition on basis leg {i}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1299
+      "line": 1300
     },
     {
       "id": "inquiry-grammar.grammar.set_grade_source_testimony_on_p",
       "en": "set the grade source to testimony on basis leg {i}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1086
+      "line": 1087
     },
     {
       "id": "inquiry-grammar.grammar.set_label_target_edition_to_p",
       "en": "set the target edition on {label} to the edition this team accepted",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1409
+      "line": 1410
     },
     {
       "id": "inquiry-grammar.grammar.set_label_target_to_id_p",
       "en": "set the target on {label} to {id}, the id its derivation fields give",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1648
+      "line": 1649
     },
     {
       "id": "inquiry-grammar.grammar.state_field_the_grade_after",
       "en": "state {field}, the grade after the statement was applied",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1839
+      "line": 1840
     },
     {
       "id": "inquiry-grammar.grammar.state_field_the_grade_before",
       "en": "state {field}, the grade before the statement was applied",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1837
+      "line": 1838
     },
     {
       "id": "inquiry-grammar.grammar.state_field_the_id_of",
       "en": "state {field}, the id of the statement in the project's declared bias",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1823
+      "line": 1824
     },
     {
       "id": "inquiry-grammar.grammar.state_grade_grade_on_basis_2_p",
       "en": "state grade {grade} on basis leg {i} — the earned-basis check answers what each target earns before you write it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1242
+      "line": 1243
     },
     {
       "id": "inquiry-grammar.grammar.state_grade_grade_on_basis_p",
       "en": "state grade {grade} on basis leg {i}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1110
+      "line": 1111
     },
     {
       "id": "inquiry-grammar.grammar.state_grade_grade_or_weaker_p",
       "en": "state grade {grade} or weaker on basis leg {i} — the earned-basis check answers what each target earns before you write it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1236
+      "line": 1237
     },
     {
       "id": "inquiry-grammar.grammar.state_grade_testimony_grade_on_p",
       "en": "state grade {TESTIMONY_GRADE} on basis leg {i}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1076
+      "line": 1077
     },
     {
       "id": "inquiry-grammar.grammar.state_item_as_statement_effect_p",
       "en": "state {item} as a statement and an effect, with from and to when the effect is grade lowered",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1801
+      "line": 1802
     },
     {
       "id": "inquiry-grammar.grammar.state_k_on_label_as_p",
       "en": "state the {k} on {label}, as the connection's derivation gives it",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1641
+      "line": 1642
     },
     {
       "id": "inquiry-grammar.grammar.state_no_capture_grade_an_p",
       "en": "state no capture grade — an uncaptured document is undetermined on the capture axis, and undetermined is stated",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1203
+      "line": 1204
     },
     {
       "id": "inquiry-grammar.grammar.state_no_capture_grade_on_p",
       "en": "state NO capture grade on basis leg {i} — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1191
+      "line": 1192
     },
     {
       "id": "inquiry-grammar.grammar.state_no_grade_on_basis_p",
       "en": "state no grade on basis leg {i} — undetermined, stated, is the honest answer",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1321
+      "line": 1322
     },
     {
       "id": "inquiry-grammar.grammar.state_the_grade_this_source",
@@ -32303,7 +32303,7 @@
       "en": "state the letters the grade moved between, {field} weaker than {field_2}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1842
+      "line": 1843
     },
     {
       "id": "inquiry-grammar.grammar.state_what_evidence_would_falsify",
@@ -32317,7 +32317,7 @@
       "en": "state what the statement did: {effects}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1831
+      "line": 1832
     },
     {
       "id": "inquiry-grammar.grammar.subject_entity_string_is_not_p",
@@ -32334,6 +32334,13 @@
       "line": 212
     },
     {
+      "id": "inquiry-grammar.grammar.take_the_passage_out_of_its_ground_first",
+      "en": "take basis leg {i} out of its ground first: a ground groups only the passages that support the conclusion. Then put the passage on the side that cuts against it",
+      "module": "inquiry-grammar",
+      "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
+      "line": 883
+    },
+    {
       "id": "inquiry-grammar.grammar.testimony_is_a_member_s",
       "en": "Testimony is a member's account of a connection",
       "module": "inquiry-grammar",
@@ -32345,7 +32352,7 @@
       "en": "the calculation {target}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1537
+      "line": 1538
     },
     {
       "id": "inquiry-grammar.grammar.the_case_states_these_facts_p",
@@ -32373,21 +32380,21 @@
       "en": "what it rests on is derived from the duty's source in force, its trigger date, its due date and the level searched",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1587
+      "line": 1588
     },
     {
       "id": "inquiry-grammar.grammar.what_lies_beneath_is_unknown",
       "en": "what lies beneath is unknown rather than absent, so a grade taken from it would be a claim about material nobody has seen",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1320
+      "line": 1321
     },
     {
       "id": "inquiry-grammar.grammar.write_each_application_as_form_p",
       "en": "record each application as its own numbered entry on {label}, and remove the bias applied list from {label}",
       "module": "inquiry-grammar",
       "file": "bio-plane/src/inquiry-grammar/grammar.mjs",
-      "line": 1763
+      "line": 1764
     },
     {
       "id": "inquiry.contradiction.a_corrected_resolution_names_the",
