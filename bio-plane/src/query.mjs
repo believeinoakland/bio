@@ -1115,6 +1115,19 @@ export const MEANING_AXIS_CAP = 500;
 const TEXT_PATHS = /\.(md|txt)$/i;
 const TEXT_CAP = 128 * 1024;   // per column, so one large bundle cannot make a write unbounded
 
+/* T52-19 (B-K5 marker): a snippet marks each match with MARK_OPEN and MARK_CLOSE, two control characters that no word a
+   member reads can be: `textOf` removes them from the text it indexes, and the statement below checks the stored text
+   it cuts from (a unit, or a record indexed before this rule), so a literal "[placed nowhere]" or "[object Object]" in a
+   record is plain text and never read as a match. A text that does hold either character is cut with no marker at all
+   (and the characters removed), never with one a reader could mistake. */
+export const MARK_OPEN = "\u0001";
+export const MARK_CLOSE = "\u0002";
+const markedSnippet = (table, col, textSql) =>
+  `CASE WHEN instr(${textSql}, char(1)) + instr(${textSql}, char(2)) > 0`
+  + ` THEN replace(replace(snippet(${table}, ${col}, '', '', '\u2026', ?), char(1), ''), char(2), '')`
+  + ` ELSE snippet(${table}, ${col}, char(1), char(2), '\u2026', ?) END`;
+const CONTROL_MARKS = /[\u0001\u0002]/g;
+
 export function textOf(bundleId, files) {
   const list = (files || []).map((f) => ({ path: f.path, text: typeof f.text === "string" ? f.text : (typeof f.content === "string" ? f.content : null) }));
   const md = list.find((f) => f.path === "bundle.md");
@@ -1136,7 +1149,7 @@ export function textOf(bundleId, files) {
   const others = list
     .filter((f) => f.path !== "bundle.md" && f.text !== null && TEXT_PATHS.test(f.path))
     .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  const cap = (s) => String(s ?? "").slice(0, TEXT_CAP);
+  const cap = (s) => String(s ?? "").replace(CONTROL_MARKS, "").slice(0, TEXT_CAP);
   const nested = (block, key) => {
     const b = fm && typeof fm === "object" ? fm[block] : null;
     return b && typeof b === "object" && !Array.isArray(b) && b[key] != null ? String(b[key]) : "";
@@ -2498,12 +2511,12 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     const ts = rank
       ? `(SELECT CASE`
         + ` WHEN highlight(bundles_fts, ${BODY}, ${mark}, ${mark}) <> bundles_fts.body`
-        + ` THEN snippet(bundles_fts, ${BODY}, '[', ']', '\u2026', ?)`
+        + ` THEN ${markedSnippet("bundles_fts", BODY, "bundles_fts.body")}`
         + ` WHEN highlight(bundles_fts, ${TITLE}, ${mark}, ${mark}) <> bundles_fts.title`
-        + ` THEN snippet(bundles_fts, ${TITLE}, '[', ']', '\u2026', ?) END`
+        + ` THEN ${markedSnippet("bundles_fts", TITLE, "bundles_fts.title")} END`
         + ` FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid = p._fid)`
       : `NULL`;
-    const tsArgs = rank ? [snip, snip, rank] : [];
+    const tsArgs = rank ? [snip, snip, snip, snip, rank] : [];
     /* One selection of the first matching unit serves both columns (R33's snippet, R34's unit): the same rows in the same
        order, so the unit named is the unit cut. R34 (fix round 9; K4922): the caller reads its kind and extent by key. */
     const firstUnit = (select) => passageMatch
@@ -2512,8 +2525,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
         + ` WHERE ct.${pm.key} = p.bundle_id AND ${pm.ftsTable} MATCH ?`
         + ` ORDER BY ct.capture_sha ASC, ct.seq ASC, ct.extent_kind ASC, ct.extent ASC LIMIT 1)`
       : `NULL`;
-    const ps = firstUnit(`snippet(${pm.ftsTable}, ${pm.ftsColumn}, '[', ']', '\u2026', ?)`);
-    const psArgs = passageMatch ? [snip, passageMatch] : [];
+    const ps = firstUnit(markedSnippet(pm.ftsTable, pm.ftsColumn, "ct.text"));
+    const psArgs = passageMatch ? [snip, snip, passageMatch] : [];
     const pu = firstUnit(`ct.rowid`);
     const puArgs = passageMatch ? [passageMatch] : [];
     return { sql: `${c.sql}\nSELECT ${qcols}, COALESCE(q.ts, q.ps) AS snippet,`
@@ -2841,10 +2854,10 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        so a member reading a passage hit and a bundle hit reads one convention. */
     const snipCol = m.ftsTable
       ? (fts
-          ? `, snippet(${fts.name}, ${fts.col}, '[', ']', '…', ?) AS snippet`
+          ? `, ${markedSnippet(fts.name, fts.col, "m.text")} AS snippet`
           : `, NULL AS snippet`)
       : "";
-    const snipArgs = m.ftsTable && fts ? [snip] : [];
+    const snipArgs = m.ftsTable && fts ? [snip, snip] : [];
     const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, `
               + m.row.map((c2) => m.rowLabel?.[c2] ? `(${m.rowLabel[c2]}) AS ${c2}` : `m.${c2} AS ${c2}`).join(", ")
               + reached + present + computed + snipCol;

@@ -42488,35 +42488,35 @@
       "en": "{arm}: {stringify} compares a full-text field; {arm_2}: matches text and does not order it",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1676
+      "line": 1689
     },
     {
       "id": "query-language.query.arm_stringify_compares_subname_against",
       "en": "{arm}: {stringify} compares {subName} against nothing",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1612
+      "line": 1625
     },
     {
       "id": "query-language.query.arm_stringify_has_no_word",
       "en": "{arm}: {stringify} has no word in it to match",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1715
+      "line": 1728
     },
     {
       "id": "query-language.query.arm_stringify_is_both_claims",
       "en": "{arm}: {stringify} is both {claims}; say {map}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1644
+      "line": 1657
     },
     {
       "id": "query-language.query.arm_unknown_sub_field_stringify",
       "en": "{arm}: unknown sub-field {stringify}; known: {keys}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1629
+      "line": 1642
     },
     {
       "id": "query-language.query.capture_letter_bounded",
@@ -42530,21 +42530,21 @@
       "en": "({col} IS NULL) ASC, {col_2} {sortDir}, b.bundle_id ASC",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2471
+      "line": 2484
     },
     {
       "id": "query-language.query.compiling_it_drops_v1_so",
       "en": "compiling it drops {v1}, so what would be saved is not what would run",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 3007
+      "line": 3020
     },
     {
       "id": "query-language.query.facets_stringify_can_hold_many",
       "en": "facets: {stringify} can hold many values per record; not a facet",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2554
+      "line": 2567
     },
     {
       "id": "query-language.query.field_this_is_the_value",
@@ -42558,35 +42558,35 @@
       "en": "fields: {stringify} is not a field; ignored",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2030
+      "line": 2043
     },
     {
       "id": "query-language.query.fields_stringify_is_not_a_2",
       "en": "fields: {stringify} is not a table, a key and a column; read as before",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2034
+      "line": 2047
     },
     {
       "id": "query-language.query.fm_path_stringify_is_not",
       "en": "fm: path {stringify} is not a frontmatter path",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1506
+      "line": 1519
     },
     {
       "id": "query-language.query.from_scope_s_rowjoin_join",
       "en": "FROM scope s {rowJoin}\n JOIN {table} m ON m.{key} = b.bundle_id{ftsJoin}{joined}\nWHERE {sql}{refSql}{ftsWhere}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2811
+      "line": 2824
     },
     {
       "id": "query-language.query.has_unknown_field_stringify",
       "en": "has: unknown field {stringify}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1489
+      "line": 1502
     },
     {
       "id": "query-language.query.how_the_unit_was_read",
@@ -42600,91 +42600,91 @@
       "en": "{name}: {stringify} ends before it starts; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1831
+      "line": 1844
     },
     {
       "id": "query-language.query.name_stringify_is_not_a",
       "en": "{name}: {stringify} is not a calendar date; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1805
+      "line": 1818
     },
     {
       "id": "query-language.query.name_stringify_is_not_one",
       "en": "{name}: {stringify} is not one of money's {words} ({words_2}); dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1769
+      "line": 1782
     },
     {
       "id": "query-language.query.name_stringify_names_a_local",
       "en": "{name}: {stringify} names a local day and no time zone is given; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1812
+      "line": 1825
     },
     {
       "id": "query-language.query.name_stringify_why_dropped",
       "en": "{name}: {stringify}: {why}; dropped",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1818
+      "line": 1831
     },
     {
       "id": "query-language.query.select_name_as_field_fieldref",
       "en": "SELECT '{name}' AS field, {fieldRef} AS value, count(*) AS n\n  FROM scope s {rowJoin}\n  WHERE {sql} AND {fieldRef_2} IS NOT NULL GROUP BY {fieldRef_3}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2574
+      "line": 2587
     },
     {
       "id": "query-language.query.sort_stringify_can_hold_many",
       "en": "sort: {stringify} can hold many values per record; not a sort",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1854
+      "line": 1867
     },
     {
       "id": "query-language.query.sort_stringify_is_not_a",
       "en": "sort: {stringify} is not a sort key",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 3001
+      "line": 3014
     },
     {
       "id": "query-language.query.sort_unknown_field_stringify",
       "en": "sort: unknown field {stringify}",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1855
+      "line": 1868
     },
     {
       "id": "query-language.query.sql_select_r_capture_sha",
       "en": "{sql}\nSELECT r.capture_sha AS capture_sha, r.registered AS registered,\n       ex.state AS extract_state, ex.condition AS extract_condition,\n       ex.detail AS extract_detail,\n       ix.state AS index_state, ix.bound AS index_bound,\n       ix.detail AS index_detail,\n       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha) AS has_reading\nFROM scope s {rowJoin}\n JOIN register r ON r.bundle_id = b.bundle_id\n LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'extract' AND subject = r.capture_sha)\n LEFT JOIN observation_log ix ON ix.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'derive' AND subject = r.capture_sha)\nWHERE {sql_2}\nORDER BY r.capture_sha ASC LIMIT ?",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 2761
+      "line": 2774
     },
     {
       "id": "query-language.query.stringify_is_not_available_here",
       "en": "{stringify} is not available here; read as nothing",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1758
+      "line": 1771
     },
     {
       "id": "query-language.query.tf_i_fid_tf_as",
       "en": "tf{i}(fid, tf) AS (SELECT fid, {map} FROM (SELECT rowid AS fid, {hs} FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1967
+      "line": 1980
     },
     {
       "id": "query-language.query.unknown_field_stringify_read_as",
       "en": "unknown field {stringify}; read as free text",
       "module": "query-language",
       "file": "bio-plane/src/query.mjs",
-      "line": 1523
+      "line": 1536
     },
     {
       "id": "queue-producers.index.a_bounded_number_of_shared",
