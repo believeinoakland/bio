@@ -6901,6 +6901,7 @@ the design: "Your team's Civicsmith is already fetching the newest list of known
 verified: on tranche/T52 at its tip with these words files: words 0, format 0; file-safety one failure more than without, R24 in `test/m/file-safety/rows.test.mjs`, which lists the stand-ins still owed and now finds this row landed: FILE-SAFETY drops `refusal.SIGNATURES_RUN_UNDER_WAY` from that list and its stand-in.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`; `screens/words-reads.json`.
 owed: BOB: merge this commit (MERGE) with FILE-SAFETY's R24 list brought up to date.
+amended: 2026-10-27 (B549): file-safety's reads come from the fixed batch `screens/words-reads-mod-2.json` (DEC-260), not the scan; the key is added there and `words-reads.json` regenerated from T52's tip, where R24 passes.
 
 ### DEC-450 · decided
 raised: 2026-10-27 · the UX design session with Bob (session_018BhcedaAqFXn43yDDqk4vj, UX design #42) (T52's opening; `screens/parked-T52.md`; K4269, K4270)
