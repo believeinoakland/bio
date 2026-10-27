@@ -236,7 +236,6 @@
   "bio-plane/test/m/credentials/t37.test.mjs": 4,
   "bio-plane/test/m/credentials/t38.test.mjs": 3,
   "bio-plane/test/m/credentials/t47-signin.test.mjs": 1,
-  "bio-plane/test/m/doc-clean/fixture-answers.test.mjs": 1,
   "bio-plane/test/m/docket/reads.test.mjs": 2,
   "bio-plane/test/m/doorbell/doorbell.test.mjs": 2,
   "bio-plane/test/m/doorbell/knocker.test.mjs": 1,
