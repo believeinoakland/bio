@@ -1,0 +1,6 @@
+Round R1, layer 2, module member-roster, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module member-roster`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-6 · W3 · A-K6 tally · MINOR · `memberList` returns a proposed administrator's row with the endorsers and the administrators still awaited (`endorsedBy`, `endorsementsOwed` exist): member-roster R83 (K5369). PL1 W3.

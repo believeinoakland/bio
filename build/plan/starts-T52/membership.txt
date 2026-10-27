@@ -1,0 +1,6 @@
+Round R1, layer 2, module membership, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module membership`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-7 · W4 · A-K8 (b)(c) · MINOR · `projectInvite` answers a distinct code for invited-not-joined, and checks `founderHandle()` first ("that is you / already an owner"); `memberByHandle` stays (R48): membership R157 (K5369). The owner-add arm `project-roster/index.mjs:295` has the same shape: it joins only if the red test reaches it. Words owed. PL1 W4.
