@@ -12,7 +12,7 @@
 3. On Bob's answers (L13-L26 (L1-L12 applied, L18, L19; L13 rewritten on the page, open), L18, J1-J7, N1257 D3, L18, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
-**Waiting on.** PLANNING's worker: K5527 (4)-(6) lines (R137's hash in case-disclosures R40, N1257 R125/R126, R138's field names, network-notices R23). Bob: L13-L26, J1-J7, N1257 D3, L18. Lanes: as step 2.
+**Waiting on.** BOB: `lines-K5527-texts-and-listing.md` T1-T8. Bob: L13-L26, J1-J7, N1257 D3, L18. Lanes: as step 2.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -89,3 +89,7 @@ BOB #323 relayed K5515-K5519 (Bob, L1-L5, all as recommended): their seven brack
 ## L19 · 2026-10-27 · L6-L12 applied; K5527's R36 points
 
 BOB #323 relayed K5520-K5526 (Bob, L6-L12) and K5527. A drafts: L6, L8, L10, L11 unbracketed; L7 (K5521) changes A4: the camera and lens serials and the owner name are shown beside the picture to members who may see it (governing K5473 (1) for them), image id, artist and copyright still not shown by default (A4-R2, R5, R10 and the table); L9 = B (K5523, not the recommendation): a photo's stated time and place are citable as "the file says", never as a checked fact, new A4-R11 (citation; an edition's place only where the author turned it on, K5514); L12 (K5526): the beta is before 1.0, K5424's exclusion stands. K5527 (6): R36's daemon arm bound to `courtlistener`, `lines-K5513-daily-follow.md` decided. K5527 (4)-(6) given to a Sonnet worker. DECISIONS gains K5520-K5526; QUESTIONS-L2 all answered.
+
+## L20 · 2026-10-27 · K5527 (4)-(6) drafted
+
+A Sonnet worker drafted `lines-K5527-texts-and-listing.md` from N858, N1110, N1257 R125/R126 and the code; PLANNING checked its pointer claims on disk. Found: `case-disclosures` has no R40 (last R23) and an edition holds no profile text, so the hash is `jurisdictions` R40 (as N858 meant) plus a `filings` R29 sentence; R138's `writer` is `authored_by` in the code; `reviews[].organisation` and `credential` are optional in the code and must count as required; guides lack every attribution field; "not a member of a listed group" cannot be checked by the product (T6, possibly Bob's under K5511); `site.md` cites network-notices R23 where K5507 means R32. Lines: jurisdictions R40, R125, R126, R138 (deltas), filings R29, reading-guides R20, network-notices R23 (full). Eight technical points T1-T8 for BOB. Plan entries added (jurisdictions, filings, network-notices).

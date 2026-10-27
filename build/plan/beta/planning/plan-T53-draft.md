@@ -20,6 +20,8 @@
 - T53 · K5497 (C7 remainder) · Civicsmith ships United States places only; a team choosing its places is told so; a team whose work is about a place outside the US names its places and adds their offices and rules itself (DEC-150); level names unchanged · `[owed: CAPABILITIES' lines]`
 - T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18 (Bob)]` (L3 decided, K5517: a disputed year still groups, shown disputed)
 
+- T53 · K5527 (4), (5) · N858's text record in the profile: a review's `reviewed_text_sha` (R40), a guide's attribution fields (R125), what counts as the professional review and `countedReview` (R126), R138 on `authored_by` and `machine_draft` · `planning/lines-K5527-texts-and-listing.md` §1, §3, §4 `[owed: BOB on T1-T8; CAPABILITIES' N858 READY]`
+
 **civil-time**
 - T53 · A2 · `fiscalPeriod` over a stated entry, `from`, reasons never holding `*` · `planning/lines-A2-fiscal-year.md` (civil-time)
 
@@ -217,6 +219,8 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 - T53 · A5 · refused only when the statement is missing; the commit records it · `planning/lines-A5-A6-signing.md` (ratification R62-R63)
 - C T52-24
 
+**filings** (layer 9 job, listed here with its K5527 line) · T53 · K5527 (4) · R29: a profile template's recorded `sha` equals its counted review's hash; an earlier text flagged · `planning/lines-K5527-texts-and-listing.md` §2
+
 **corpus-export**
 - T53 · K5441, K5443 · the whole team record exported by resumable parts, the one way to change region (PL50-PL53) · `platform/whole-record-move-draft.md` `[owed: READY]`
 
@@ -231,6 +235,8 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 **following** · C T52-34; `[owed: N1259 watches and alerts]` · **monitoring** · `[owed: N1259's pause line]`
 
 ## Layer 11
+
+**network-notices** (layer 8; listed with layer 11's) · T53 · K5507, K5527 (6) · R23 prepares a submission to the network pages, not the directory of groups (civicsmith.org's list, R32); Purpose, R30 and `site`'s note reworded · `planning/lines-K5527-texts-and-listing.md` §5
 
 **op-declarations**
 - C T52-42 · T53 · K4599 · screens declare reads by wave; `screenread` (PL10, PL11); every op and screen a budget class (PL3, PL4) · `platform/combined-read-and-fold-draft.md` §3, `time-budgets-draft.md` §4
