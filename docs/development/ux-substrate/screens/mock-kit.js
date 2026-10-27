@@ -109,7 +109,7 @@ const acts = (...b) => `<div class="mk-acts">${b.join('')}</div>`;
    scoped to the item, in place. Ops reuse the target screen's own act where it exists (search, explore, registersearch). */
 const FOLLOW_OP = 'owed:followfrom DEC-409', FOLLOW_ROWS = 'owed:registersearch DEC-406';
 const FOLLOW = {
-  who: [['Money paid or received', FOLLOW_OP], ['Donations given or received', FOLLOW_OP], ['Organizations and offices held', FOLLOW_OP], ['Laws and standards that bind them', FOLLOW_OP], ['Events taken part in', FOLLOW_OP], ['Documents that name them', 'search'], ['Register rows that name them', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  who: [['Payments made or received', FOLLOW_OP], ['Donations given or received', FOLLOW_OP], ['Organizations and offices held', FOLLOW_OP], ['Laws and standards that bind them', FOLLOW_OP], ['Events taken part in', FOLLOW_OP], ['Documents that name them', 'search'], ['Register rows that name them', FOLLOW_ROWS], ['Connections to…', 'explore']],
   money: [['Who paid and who received it', FOLLOW_OP], ['Other payments from the same source', FOLLOW_OP], ['Events it is tied to', FOLLOW_OP], ['Documents that state it', 'search'], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']],
   event: [['Who took part', FOLLOW_OP], ['Money that moved around it', FOLLOW_OP], ['Documents that date it', 'search'], ['Register rows from that time', FOLLOW_ROWS], ['Connections to…', 'explore']],
   document: [['People and organizations it names', FOLLOW_OP], ['Money it states', FOLLOW_OP], ['Events it dates', FOLLOW_OP], ['Laws and standards it cites', FOLLOW_OP], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']]
