@@ -41,6 +41,7 @@
 
 **format-registry**
 - T53 · N1266 (K5435-K5437) · the beta's roster, detection by content, macro variant, encrypted, unlisted named (K5436), refused set, `formatNameFor` · `files/REQ-format-registry-beta.md` RF1-RF9
+- T53 · DEC-467 · one table the screens read: each kind's plain name (by key) and its limits (runtime-limits' per-kind rows), for Add's "What can be added", held, refused and over-limit sentences · DEC-467 `[owed: FILES's lines (formatNameFor and the limits read as one op)]`
 
 **reader-container** (new; K4831 (2))
 - T53 · N1266, N1267 · legacy Office and RTF by conversion, macros never run, every image kind to OCR-ready frames, archives as streams within bounds, refusal before any read · `files/REQ-readers-beta.md` CC1-CC6 (CC4 replaced by A4, CONSISTENCY §2.2)
@@ -234,7 +235,7 @@
 - T53 · A7 · one document-picker element with two scopes (A7-R1), cited by screens-inquiry R137, screens-investigate R34 and R52, screens-publish R8 · `planning/lines-A1-A7-subject-pickers.md` `[owed: L2]`
 
 **screens-inquiry**
-- C T52-66 to T52-73 · T53 · N1260 ("Follow from here" on Document), A1, A7, A3 (the Document page's source line), A8 (Cite on typed words, the labels), DEC-454 (`document.mjs` display rows) · the named `planning/lines-*` files and DEC-454
+- C T52-66 to T52-73 · T53 · N1260 ("Follow from here" on Document), A1, A7, A3 (the Document page's source line), A8 (Cite on typed words, the labels), DEC-454 (`document.mjs` display rows; its twelve `unsupported.<kind>` rows withdrawn by DEC-467, `ico` kept), DEC-467 (held, refused, macros, pages, converted, password; the photo's "Taken … near …" and "Left out of the safe picture: {what}" from A4's table, A4-R2, A4-R3) · the named `planning/lines-*` files and DEC-454
 
 **screens-intake**
 - T53 · N1269 (K5446, K5447) · before a file is added, each kind's largest file read whole is stated; a file over its limit refused with its size and limit and offered a way in (a register by a filter, N1259; else the part the member needs) · `files/SIZES-N1267.md`, K5446, K5447
@@ -266,6 +267,8 @@
 
 **screens-settings** (the AI screens)
 - T53 · N1220 (DEC-420, K5457) · `aiproviders`, `aiconnect`, `aimine`, `aiproject`, `aimoments`, `aitest`, `airesults`; `connect`, `teamai`, `projectai` and their acts retired · `lane-ai-design/draft-assistant-screens.md` §2, §4, §5; `UX-REQUIREMENTS.md` `[waits: UX-DESIGN's rows, B555]`
+- T53 · DEC-465 · origin an ordinary check ("Not offered" row removed); a team account's owner opt-in "Projects and members may add this account"; a member's list ordered (`aiorderset`); a key kept sealed in the team's Civicsmith (`aikeyseal`); aimoments names whose checks apply · DEC-465 `[owed: AI-DESIGN's lines for the two ops and the opt-in (ai-accounts)]`
+- T53 · DEC-466 · each label names the AI (`screen.machine.*.ai`); a finished run lists its parts and switches (N1219: ai-runs' segments); Setup's ready and not-ready states (interface-shell R20's read); the installer's gateway line matched to K4464's grant · DEC-466 `[owed: AI-DESIGN's lines (ai-runs, interface-shell R20, installer)]`
 - T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7
 
 **op-declarations**, **op-grades**, **interface-shell** (the assistant)
