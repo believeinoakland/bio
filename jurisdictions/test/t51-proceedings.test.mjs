@@ -68,5 +68,5 @@ test("R93 the first profile's block agrees with its records_response deadline an
   assert.equal(h.days, rule.amount); assert.equal(h.extra_days, rule.extension.days);
   assert.ok(f.records_laws.some((l) => l.name === h.law));
   const c = combine([FIRST, FIRST]);
-  assert.deepEqual(c.view.records_help.days, 10);
+  assert.deepEqual(c.view.records_help.find((b) => b.law === h.law).days, 10);
 });

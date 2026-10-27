@@ -65,22 +65,25 @@ test("R93 the test profile holds a block differing from every value a real block
   assert.ok(t.records_help && t.records_help.basis === "TEST");
   assert.equal(t.records_help.faster.request, "quick look");
   const r = combine([TEST]);
-  assert.deepEqual(r.view.records_help.days, 7);
-  assert.equal(r.view.records_help.profile, TEST);
+  /* R105: the view holds a list of blocks, one per law */
+  assert.ok(Array.isArray(r.view.records_help) && r.view.records_help.length === 1);
+  assert.deepEqual(r.view.records_help[0].days, 7);
+  assert.equal(r.view.records_help[0].profile, TEST);
   /* equal blocks in two profiles: kept once, both bases carried */
   const same = combine([TEST, other()]);
-  assert.ok(same.ok); assert.equal(same.view.records_help.days, 7);
-  assert.deepEqual(same.view.records_help.bases.map((b) => b.profile), [TEST, "test-other"]);
-  assert.equal(same.conflicts.filter((c) => c.at === "records_help").length, 0);
+  assert.ok(same.ok); assert.equal(same.view.records_help[0].days, 7);
+  assert.deepEqual(same.view.records_help[0].bases.map((b) => b.profile), [TEST, "test-other"]);
+  assert.equal(same.conflicts.filter((c) => c.at.startsWith("records_help")).length, 0);
   /* differing: withheld and reported */
   const diff = combine([TEST, other((p) => { p.records_help.days = 9; })]);
   assert.ok(diff.ok);
-  assert.equal(diff.view.records_help, undefined);
-  const c = diff.conflicts.find((x) => x.at === "records_help");
+  /* R105: the field that differs is withheld and reported at its own path; the block's other fields stand */
+  assert.equal(diff.view.records_help[0].days, undefined);
+  const c = diff.conflicts.find((x) => x.at === `records_help[${t.records_help.law}].days`);
   assert.ok(c); assert.equal(c.values.length, 2);
   /* a profile with no block beside one with: the block stands */
   const solo = combine([bare({}), TEST]);
-  assert.equal(solo.view.records_help.days, 7);
+  assert.equal(solo.view.records_help[0].days, 7);
 });
 
 test("R93 the first profile gives no default: it holds a block only as researched, and a held block validates with every citation naming a section", () => {

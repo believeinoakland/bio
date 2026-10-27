@@ -1687,6 +1687,8 @@ const officesKey = (offices) => (Array.isArray(offices) ? [...new Set(offices.ma
 const deepFreeze = (o) => { if (o && typeof o === "object") { Object.values(o).forEach(deepFreeze); Object.freeze(o); } return o; };
 const clone = (o) => (o === undefined ? undefined : JSON.parse(JSON.stringify(o)));
 const HELD = new Map([FIRST, TEST].map((p) => [p.id, deepFreeze(clone(p))]));
+/* R114: a package is a held profile of one field, the ids of its layers. */
+const PACKAGES = new Map([...HELD.values()].filter((p) => Array.isArray(p.package)).map((p) => [p.id, p.package.slice()]));
 
 /** Every profile held, sorted by id: `[{id, name, covers, test}]`. Never throws. */
 export function list() {
@@ -1769,9 +1771,20 @@ export function combine(listIn) {
  * The team's governing time zone (R98, K5292): `teamZone` when it is an R41 value; else the `time_zone` of the view
  * `combine(profileIds)` gives; else `null`. The one site every module that needs the zone asks. Never throws.
  */
-export function governingZone(profileIds, teamZone) {
+export function governingZone(profileIds, teamZone, ...more) {
   try {
+    const layer = more[0]; /* R102: optionally the layer whose branch is read */
     if (isTimeZone(teamZone)) return teamZone;
+    /* R102: a rule is read in the value of its own branch: the zone of `layer` and the layers above it */
+    if (typeof layer === "string" && Array.isArray(profileIds) && profileIds.length) {
+      const { errors, profiles } = readProfiles(profileIds);
+      if (!errors.length) {
+        const byId = new Map(profiles.map((x) => [x.id, x]));
+        const chain = [];
+        for (let x = byId.get(layer); x && !chain.includes(x); x = x.layer && x.layer.within ? byId.get(x.layer.within) : null) chain.unshift(x);
+        if (chain.length) { const v = merge(chain).view.time_zone; if (v && isTimeZone(v.value)) return v.value; }
+      }
+    }
     if (!Array.isArray(profileIds) || profileIds.length === 0) return null;
     const r = combine(profileIds);
     const v = r && r.ok && r.view && r.view.time_zone ? r.view.time_zone.value : null;
@@ -1781,11 +1794,28 @@ export function governingZone(profileIds, teamZone) {
 
 function combineInner(listIn) {
   if (!Array.isArray(listIn)) return { ok: false, errors: [{ at: null, code: "NOT_A_LIST", detail: "combine takes a list of profile ids or profiles" }] };
+  const { errors, profiles } = readProfiles(listIn);
+  if (errors.length) return { ok: false, errors };
+  if (!profiles.some((p) => isObj(p.layer))) return { ok: true, ...merge(profiles) };
+  return mergeLayers(profiles);
+}
+
+/* The profiles a list names, packages expanded (R114): `{errors, profiles}`. */
+function readProfiles(listIn) {
   const errors = [];
   const profiles = [];
   const seen = new Map();
   listIn.forEach((item, i) => {
     let p;
+    if (typeof item === "string" && PACKAGES.has(item)) {
+      /* R114: a package stands for its layers, in its order; each is combined as if it had been named */
+      for (const id of PACKAGES.get(item)) {
+        const l = HELD.has(id) ? get(id) : null;
+        if (!l) { errors.push({ at: i, code: "UNKNOWN_PROFILE", detail: localize("jurisdictions.index.no_profile_item_is_held", "no profile '{item}' is held", { item: String(id) }) }); continue; }
+        if (!seen.has(l.id)) { seen.set(l.id, l); profiles.push(l); }
+      }
+      return;
+    }
     if (typeof item === "string") {
       p = get(item);
       if (!p) { errors.push({ at: i, code: "UNKNOWN_PROFILE", detail: localize("jurisdictions.index.no_profile_item_is_held", "no profile '{item}' is held", { item: String(item) }) }); return; }
@@ -1798,14 +1828,184 @@ function combineInner(listIn) {
        apart in the view's `profile` tags, so that is refused rather than one of them chosen. */
     if (seen.has(p.id)) {
       if (stable(seen.get(p.id)) !== stable(p))
-        errors.push({ at: i, code: "INVALID_PROFILE", detail: localize("jurisdictions.index.a_different_profile_with_id", "a different profile with id '{id}' was given earlier", { id: String(p.id) }), errors: [] });
+        errors.push({ at: i, code: isObj(p.layer) && p.layer.origin === "team" ? "LAYER_TEAM_TWICE" : isObj(p.layer) ? "LAYER_ID_TWICE" : "INVALID_PROFILE", detail: localize("jurisdictions.index.a_different_profile_with_id", "a different profile with id '{id}' was given earlier", { id: String(p.id) }), errors: [] });
       return;
     }
     seen.set(p.id, p);
     profiles.push(p);
   });
+  return { errors, profiles };
+}
+
+/* ------------------------------------------------------------------------------------------------ */
+/* The forest of layers (R99–R102, R101, R104, R108, R121). A layer is a profile with a `layer`; layers sit within one
+   another (city, county, state, federal) and combine side by side, none overriding another. Each branch (a layer and the
+   layers above it) is merged by the rules above, so two layers of one branch that disagree conflict (R102) and two layers
+   on different branches never do; the views of the branches are then united. What is true of the whole team, not of a
+   place (time zone, locale, weekend, instrument key, practice), is judged over every layer at once. */
+
+const TEAM_FACTS = ["time_zone", "locale", "weekend", "instrument_key", "practice"];
+const TEAM_CONFLICTS = ["time_zone", "locale", "weekend", "instrument_key", "practice.minutes_due_days"];
+const layerRank = (p) => (p.layer.origin === "team" ? 9 : LAYER_RANK[p.layer.level]);
+const layerOrder = (a, b) => layerRank(a) - layerRank(b) || String(a.layer.place || "").localeCompare(String(b.layer.place || "")) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+/* The id of the layer a layer sits within: the team layer sits within the federal layer when that is active (R101). */
+function parentOf(l, layers) {
+  if (l.layer.within) return l.layer.within;
+  if (l.layer.origin === "team") { const f = layers.find((x) => x.layer.level === "federal"); return f ? f.id : null; }
+  return null;
+}
+/* The layers from the root down to `l` (`l` last); stops at a loop. */
+function chainOf(l, layers) {
+  const byId = new Map(layers.map((x) => [x.id, x]));
+  const chain = [];
+  for (let x = l; x && !chain.includes(x); x = byId.get(parentOf(x, layers))) chain.unshift(x);
+  return chain;
+}
+/* R101, R104: the faults of the forest, each naming its branch. */
+function forestErrors(layers) {
+  const errors = [];
+  const byId = new Map(layers.map((x) => [x.id, x]));
+  /* the layer ids from the failing layer up, ending at the parent that is not in the list when there is one */
+  const branch = (l) => {
+    const ids = [];
+    for (let x = l; x && !ids.includes(x.id); x = byId.get(parentOf(x, layers))) {
+      ids.push(x.id);
+      const pid = parentOf(x, layers);
+      if (pid !== null && !byId.has(pid)) ids.push(pid);
+    }
+    return ids;
+  };
+  const err = (l, code, detail) => errors.push({ at: null, code, detail, branch: branch(l) });
+  const federals = layers.filter((l) => l.layer.level === "federal");
+  if (federals.length > 1) err(federals[1], "LAYER_FEDERAL_TWICE", localize("jurisdictions.index.at_most_one_federal_layer", "at most one layer is federal"));
+  if (!federals.length) { const below = layers.find((l) => ["state", "county", "city"].includes(l.layer.level)); if (below) err(below, "LAYER_NO_FEDERAL", localize("jurisdictions.index.a_federal_layer_is_present", "a layer below the federal one needs the federal layer in the list")); }
+  for (const l of layers) {
+    const pid = parentOf(l, layers);
+    if (pid === null) continue;
+    const par = byId.get(pid);
+    if (!par) { err(l, "LAYER_PARENT_MISSING", localize("jurisdictions.index.the_layer_within_is_not", "{id} sits within {pid}, which is not in the list", { id: String(l.id), pid: String(pid) })); continue; }
+    if (l.layer.origin !== "team" && !(layerRank(par) < layerRank(l)))
+      err(l, "LAYER_PARENT_LEVEL", localize("jurisdictions.index.a_layer_sits_within_a_higher", "{id} sits within {pid}, which is not a layer of a higher level", { id: String(l.id), pid: String(pid) }));
+    const seen = new Set();
+    for (let x = l; x; x = byId.get(parentOf(x, layers))) { if (seen.has(x.id)) { err(l, "LAYER_CYCLE", localize("jurisdictions.index.within_loops_back", "following within from {id} loops back", { id: String(l.id) })); break; } seen.add(x.id); }
+  }
+  /* R104: a closure list a rule counts on is held by its own layer or one in its branch */
+  for (const l of layers) {
+    const held = new Set(chainOf(l, layers).flatMap((x) => (x.holidays || []).filter((h) => typeof h.list === "string").map((h) => h.list)));
+    const names = [];
+    (l.deadlines || []).forEach((d, i) => {
+      if (own(d, "closures")) names.push([`deadlines[${i}].closures`, d.closures]);
+      if (isObj(d.observed)) names.push([`deadlines[${i}].observed.closures`, d.observed.closures]);
+    });
+    if (l.practice && l.practice.minutes_due_days && own(l.practice.minutes_due_days, "closures")) names.push(["practice.minutes_due_days.closures", l.practice.minutes_due_days.closures]);
+    for (const [path, name] of names) if (!held.has(name))
+      err(l, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_layer_of_the_branch_holds", "{id}: {path} names '{name}', which no layer of the branch holds", { id: String(l.id), path: String(path), name: String(name) }));
+  }
+  return errors;
+}
+/* The united view of branch views: lists are united by what an entry says (R14), keeping every giver's basis. */
+function uniteViews(views) {
+  const unite = (a, b) => {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      const out = a.map(copy);
+      for (const e of b) {
+        const k = canon(e);
+        const at = out.find((x) => canon(x) === k);
+        if (!at) out.push(copy(e));
+        else if (isObj(at) && Array.isArray(e.bases)) for (const bb of e.bases) if (!(at.bases || []).some((x) => x.profile === bb.profile && x.basis === bb.basis)) (at.bases = at.bases || []).push(copy(bb));
+      }
+      return out;
+    }
+    if (isObj(a) && isObj(b)) { const out = copy(a); for (const k of Object.keys(b)) out[k] = own(a, k) ? unite(a[k], b[k]) : copy(b[k]); return out; }
+    if (typeof a === "string" && typeof b === "string" && a !== b) return a.split("; ").includes(b) ? a : `${a}; ${b}`;
+    return a;
+  };
+  const base = copy(views[0]);
+  for (const v of views.slice(1)) for (const k of Object.keys(v)) {
+    if (["id", "name", "covers", "test", "profiles"].includes(k)) continue;
+    base[k] = own(base, k) ? unite(base[k], v[k]) : copy(v[k]);
+  }
+  return base;
+}
+/* R108: the last year every closure list a layer holds has a year for; a layer states it, or it is read from the lists. */
+function holidaysThrough(l) {
+  if (isObj(l.coverage) && own(l.coverage, "holidays_through")) return l.coverage.holidays_through;
+  const last = new Map();
+  for (const h of l.holidays || []) { const k = `${listKey(h)}\u0003${officesKey(h.offices)}`; last.set(k, Math.max(last.get(k) || 0, h.year)); }
+  return last.size ? Math.min(...last.values()) : undefined;
+}
+
+function mergeLayers(all) {
+  const layers = all.filter((p) => isObj(p.layer)).sort(layerOrder);
+  const plain = all.filter((p) => !isObj(p.layer));
+  const errors = forestErrors(layers);
   if (errors.length) return { ok: false, errors };
-  return { ok: true, ...merge(profiles) };
+  const isParent = new Set(layers.map((l) => parentOf(l, layers)).filter((x) => x !== null));
+  const leaves = layers.filter((l) => !isParent.has(l.id));
+  const branches = leaves.map((l) => merge([...plain, ...chainOf(l, layers)]));
+  const whole = merge([...plain, ...layers]);
+  const view = uniteViews(branches.map((b) => b.view));
+  for (const k of ["id", "name", "covers", "test", "profiles"]) view[k] = whole.view[k];
+  /* what is true of the whole team is judged over every layer at once */
+  for (const k of TEAM_FACTS) { if (own(whole.view, k)) view[k] = whole.view[k]; else delete view[k]; }
+  const info = new Map(layers.map((l) => [l.id, { id: l.id, level: l.layer.level, origin: l.layer.origin }]));
+  const conflicts = [], seen = new Set();
+  const add = (c) => {
+    const k = stable({ at: c.at, values: c.values });
+    if (seen.has(k)) return;
+    seen.add(k);
+    conflicts.push({ ...c, values: c.values.map((v) => (info.has(v.profile) ? { ...v, layer: { ...info.get(v.profile) } } : v)) });
+  };
+  for (const b of branches) for (const c of b.conflicts) if (!TEAM_CONFLICTS.includes(c.at)) add(c);
+  for (const c of whole.conflicts) if (TEAM_CONFLICTS.includes(c.at)) add(c);
+  view.layers = layers.map((l) => {
+    const t = holidaysThrough(l);
+    return { id: l.id, ...(l.layer.level ? { level: l.layer.level, place: l.layer.place } : {}), origin: l.layer.origin,
+      ...(parentOf(l, layers) !== null ? { within: parentOf(l, layers) } : {}),
+      ...(isObj(l.coverage) ? { as_of: l.coverage.as_of } : {}), ...(t !== undefined ? { holidays_through: t } : {}) };
+  });
+  return { ok: true, view, conflicts };
+}
+
+const NAME_KEYS = { records_laws: (e) => e.name, deadlines: (e) => e.rule, counterparties: (e) => e.role,
+  closures: (e) => e.list, holidays: (e) => e.list };
+/**
+ * R121: the one resolver of a stored name, for every module. `{section, name, layer?, asking?, layers}`: `layers` the active
+ * layer set (profiles or held ids) the caller passes, `asking` the layer it reads from. Answers `{ok: true, layer, entry}`,
+ * `{ok: false, reason: "NAME_UNKNOWN"}` or `{ok: false, reason: "NAME_AMBIGUOUS", layers}`. A name may be written
+ * `<layer id>:<name>`. Without `layer`: the asking layer's own, else one in its branch (the layers above it, the nearest
+ * first, then those below), else the one active layer that gives it; two give it, NAME_AMBIGUOUS. For `closures` and
+ * `holidays` the entry is the list of that name's year entries. Pure; never throws.
+ */
+export function nameResolve(q) {
+  const unknown = { ok: false, reason: "NAME_UNKNOWN" };
+  try {
+    if (!isObj(q) || !own(NAME_KEYS, q.section) || typeof q.name !== "string" || !Array.isArray(q.layers)) return unknown;
+    const ls = q.layers.map((l) => (typeof l === "string" ? get(l) : l)).filter((l) => isObj(l) && isObj(l.layer));
+    const keyOf = NAME_KEYS[q.section];
+    const listy = q.section === "closures" || q.section === "holidays";
+    let name = q.name, layerId = typeof q.layer === "string" ? q.layer : null;
+    const colon = name.indexOf(":");
+    if (layerId === null && colon > 0 && ls.some((l) => l.id === name.slice(0, colon))) { layerId = name.slice(0, colon); name = name.slice(colon + 1); }
+    const gives = (l) => {
+      const arr = (listy ? l.holidays : l[q.section]) || [];
+      const hits = arr.filter((e) => isObj(e) && keyOf(e) === name);
+      return hits.length ? (listy ? hits : hits[0]) : null;
+    };
+    const found = (l) => ({ ok: true, layer: l.id, entry: copy(gives(l)) });
+    if (layerId !== null) { const l = ls.find((x) => x.id === layerId); return l && gives(l) ? found(l) : unknown; }
+    const asking = typeof q.asking === "string" ? ls.find((x) => x.id === q.asking) : null;
+    if (asking) {
+      if (gives(asking)) return found(asking);
+      const above = chainOf(asking, ls).slice(0, -1).reverse();
+      const below = ls.filter((x) => x !== asking && chainOf(x, ls).includes(asking));
+      for (const l of [...above, ...below]) if (gives(l)) return found(l);
+    }
+    const givers = ls.filter(gives);
+    if (givers.length === 1) return found(givers[0]);
+    if (givers.length > 1) return { ok: false, reason: "NAME_AMBIGUOUS", layers: givers.map((l) => ({ layer: l.id, level: l.layer.level, place: l.layer.place })) };
+    return unknown;
+  } catch { return unknown; }
 }
 
 function merge(profiles) {
@@ -1964,11 +2164,32 @@ function merge(profiles) {
     if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
   /* R90 (T48): pointers are unioned in the order given, as R14's lists are; a pointer's hours carry their own basis, so
      the hours kept are tagged with every giver's (R13), as an office's are. */
-  /* R93 (T50): the records-help block is one value (R15): kept only when every profile that gives it gives the same. */
+  /* R93 (T50), R105 (T53): records-request help is a list of blocks, one per law. The layer that holds the law gives its core
+     (days, extra days, reasons, citations); a layer below it adds `portal` and `faster`. A block's field is one value per law
+     (R15): profiles on one branch that give different values conflict at records_help[<law>].<field>. */
   if (has("records_help")) {
-    const given = profiles.filter((p) => p.records_help).map((p) => ({ profile: p.id, value: p.records_help, basis: p.records_help.basis }));
-    if (agree(given)) view.records_help = keep(given);
-    else conflict("records_help", given, localize("jurisdictions.index.records_help_conflict", "the active profiles give different records-request help, so none is given: the page has no figure to show"));
+    const byLaw = new Map();
+    for (const p of profiles) for (const h of Array.isArray(p.records_help) ? p.records_help : p.records_help ? [p.records_help] : []) {
+      if (!byLaw.has(h.law)) byLaw.set(h.law, []);
+      byLaw.get(h.law).push({ profile: p.id, h });
+    }
+    view.records_help = [];
+    for (const [law, given] of byLaw) {
+      const e = { law };
+      for (const f of ["days", "extra_days", "extension_reasons", "citations", "portal", "faster"]) {
+        const vals = given.filter((g) => own(g.h, f)).map((g) => ({ profile: g.profile, value: clone(g.h[f]), basis: g.h.basis }));
+        if (!vals.length) continue;
+        if (agree(vals)) e[f] = vals[0].value;
+        else conflict(`records_help[${law}].${f}`, vals,
+          localize("jurisdictions.index.records_help_conflict", "the active profiles give different records-request help, so none is given: the page has no figure to show"));
+      }
+      if (given.some((g) => g.h.status !== undefined)) e.status = given[0].h.status;
+      e.basis = given[0].h.basis; e.profile = given[0].profile;
+      e.bases = given.map((g) => ({ profile: g.profile, basis: g.h.basis }));
+      /* a block whose core is withheld by a conflict carries no figure to show */
+      if (own(e, "days") || own(e, "portal") || own(e, "faster")) view.records_help.push(e);
+    }
+    if (!view.records_help.length) delete view.records_help;
   }
   /* R94 (T50): forums are unioned (R14), a forum given twice once. */
   if (has("forums")) { const v = []; for (const p of profiles) union(v, p.forums, p.id); view.forums = strip(v); }
@@ -2243,7 +2464,13 @@ function merge(profiles) {
   for (const sec of ["weekend", "instrument_key"]) {
     if (!has(sec)) continue;
     const given = profiles.filter((p) => p[sec]).map((p) => ({ profile: p.id, value: p[sec], basis: p[sec].basis }));
-    if (agree(given)) view[sec] = keep(given);
+    /* R103: two weekends are the same when their days are; the citations are then joined (as a time zone's agree whatever the
+       basis), so a federal and a state layer citing their own statutes for one Saturday and Sunday do not conflict */
+    const same = sec === "weekend" ? new Set(given.map((g) => [...g.value.days].sort().join())).size <= 1 : agree(given);
+    if (same) {
+      view[sec] = keep(given);
+      if (sec === "weekend") view[sec].citation = [...new Set(given.map((g) => g.value.citation))].join("; ");
+    }
     else conflict(sec, given, sec === "weekend"
       ? localize("jurisdictions.index.weekend_conflict", "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined")
       : localize("jurisdictions.index.instrument_key_conflict", "the active profiles give different instrument-key segments, so no key is composed"));

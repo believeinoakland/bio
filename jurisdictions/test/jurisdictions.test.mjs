@@ -702,10 +702,11 @@ test("R22 the test profile: test true, every basis TEST, every section and vocab
   for (const h of hosts(t)) assert.ok(!fh.has(h), h);
   for (const c of t.covers) assert.ok(!f.covers.includes(c));
   /* combining the two gives no conflict: they share nothing */
-  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && !["locale", "time_zone", "weekend", "records_help", "fiscal_year[*]"].includes(c.at)
+  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && !["locale", "time_zone", "weekend", "fiscal_year[*]"].includes(c.at) && !c.at.startsWith("records_help[")
     && !c.at.startsWith("action_kinds[records_request]")), []);
-  /* R93: both profiles now hold a records_help block, differing in every value by design (R84), so that one fact is withheld */
-  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => c.at === "records_help").length, 1);
+  /* R93, R105: both profiles hold a records_help block, of two different laws (R84), so each stands as its own block and none conflicts */
+  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => c.at.startsWith("records_help")).length, 0);
+  assert.equal(combine([FIRST, TEST]).view.records_help.length, 2);
   /* R49: both profiles state a year for body *, differing by design (R22), so that one fact is withheld (R15) */
   assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => c.at === "fiscal_year[*]").length, 1);
 });
