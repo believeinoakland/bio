@@ -44,10 +44,10 @@ blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-f
     <span class="eyebrow">Kept by BOB · last updated 27 October 2026, BOB #321</span>
     <h1>Questions for Bob</h1>
     <p class="lede">Every question from every lane that needs your decision is on this page, explained, with options and a recommendation. When you answer one, it moves to <a href="#answered">Answered</a> at the bottom, with your words and where they were recorded.</p>
-    <p><span class="count">4 open</span> <span class="count done">13 answered</span></p>
+    <p><span class="count">9 open</span> <span class="count done">16 answered</span></p>
   </header>
 
-  <div class="how">To answer, reply in chat and name the question. For example: <em>"P1: A. P2 as recommended."</em> You can also comment "As recommended" on an option right on this page You can answer some now and leave the rest.</div>
+  <div class="how">To answer, reply in chat and name the question. For example: <em>"P2 as recommended. C1: A."</em> You can also comment "As recommended" on an option right on this page You can answer some now and leave the rest.</div>
 
   <section class="group" id="open">
     <h2>Open</h2>
@@ -55,37 +55,7 @@ blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-f
     <span class="eyebrow">Speed and where a team's data lives · from the PLATFORM lane</span>
     <p class="lede">You ruled that a team's copy of Civicsmith has three service levels (Team, Organization, Coalition), and that its data store is created near the team (K4746, K4747). Today only Level 1 exists: one data store per team. These questions set the beta's speed bar and what teams are told.</p>
 
-    <article class="q" id="P1">
-      <div class="meta"><span class="k">P1</span><span>PLATFORM · time budgets</span><span>asked 27 Oct</span></div>
-      <h3>How fast must the beta be?</h3>
-      <p>Today's bar (K4354): 2 seconds for a screen to appear, 2 seconds for an action to answer, 15 seconds for a web capture. All eight timed screens meet it now, at 0.9 to 2.0 seconds.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Keep the bar</span><span>Nothing new to build. The work goes into holding 2 seconds as the product grows.</span></li>
-        <li><span class="k">B · Keep 2 seconds to open a screen, but 1 second to move between screens and for simple lookups</span><span>Rides work already planned, with a stricter target for moving around inside the app.</span></li>
-        <li><span class="k">C · 1 second for everything</span><span>A redesign: each trip to the data store costs about 0.11 seconds, and many screens make several.</span></li>
-      </ul>
-    </article>
 
-    <article class="q" id="P2">
-      <div class="meta"><span class="k">P2</span><span>PLATFORM · record placement</span><span>asked 27 Oct</span></div>
-      <h3>What does the region picker promise?</h3>
-      <p>You said "a team with a legal requirement can pick a region". Cloudflare offers two different things. A <em>location hint</em> puts the data store near a place for speed, but guarantees nothing about where data is kept. A separate <em>jurisdiction</em> setting does guarantee it, for a few regions such as the EU. Only the second can meet a legal requirement. (The lane will re-check Cloudflare's current pages before this is built.)</p>
-      <ul class="opts">
-        <li><span class="k">A · Offer only "near me"</span><span>Speed only, no guarantee.</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">B · Offer both "near me" and "keep my data in this region", worded honestly about the difference</span><span>Matches your words. It costs more to build, since the guarantee needs a different Cloudflare setup.</span></li>
-        <li><span class="k">C · No picker; use the founder's region without asking</span><span>Simplest, but a team with a legal need can't meet it.</span></li>
-      </ul>
-    </article>
-
-    <article class="q" id="P3">
-      <div class="meta"><span class="k">P3</span><span>PLATFORM · record placement</span><span>asked 27 Oct</span></div>
-      <h3>Can a team change its region after it installs?</h3>
-      <p>A data store can't be moved once it is created.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Not at Level 1</span><span>A team that must move makes a new copy by export and import.</span></li>
-        <li><span class="k">B · Only when the team moves up to Level 2</span><span>Level 2 builds new data stores anyway, so the team can choose a region then.</span></li>
-      </ul>
-    </article>
 
     <article class="q" id="P4">
       <div class="meta"><span class="k">P4</span><span>PLATFORM · service levels</span><span>asked 27 Oct</span></div>
@@ -97,12 +67,115 @@ blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-f
       </ul>
     </article>
 
-    <p class="note">Coming soon from other lanes: the CAPABILITIES lane is preparing the open points on public registers (N1259), the reading "stretch goal" (N1269) and N1272. Each will appear here with its options when the lane has written it up.</p>
+
+    <span class="eyebrow">Reading versus interpreting big documents · from the CAPABILITIES lane</span>
+    <p class="lede">Settled already: every document a member adds is kept whole and read whole, so every line can be searched and cited (K4571). <em>Interpreting</em> is a separate, selective act: turning parts of a document into structured facts, such as a sheet's figures, names or dates. You said deciding what to interpret "is itself an investigation of a different kind" (K4632). Today, a sheet's cells are interpreted only for the range a member opens or cites.</p>
+    <article class="q" id="C1">
+      <div class="meta"><span class="k">C1</span><span>CAPABILITIES · N1272</span><span>asked 27 Oct</span></div>
+      <h3>Who chooses which parts of a document are interpreted?</h3>
+      <p>Picture a 400-page budget PDF or a 600,000-row register. It is kept and searchable, but only a few pages matter to this investigation.</p>
+      <ul class="opts">
+        <li><span class="k">A · Only what a member opens or cites</span><span>Today's rule, extended to every kind of file. Predictable, and nothing is interpreted unasked.</span></li>
+        <li><span class="k">B · A member marks parts to interpret for a named investigation</span><span>For example, "interpret pages 3–9 for the sewer fund". A deliberate act, with a record of why.</span></li>
+        <li><span class="k">C · Civicsmith proposes parts from the investigation's own words, without AI</span><span>Matched headings, search hits, names and amounts, listed for a member to accept or edit. Nothing is interpreted until a member accepts.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A now, B as the member's deliberate act, C once tested on real documents; the assistant's proposals only after the assistant is built. Never "interpret everything up to a size"</span><span>Interpreting everything would make work and storage grow with every document, which your rule was written to avoid.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C2">
+      <div class="meta"><span class="k">C2</span><span>CAPABILITIES · N1272</span><span>asked 27 Oct</span></div>
+      <h3>How is this shown, and how does a later investigation find what wasn't interpreted?</h3>
+      <p>Every line stays searchable whichever you choose.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · One plain line on the document page, plus an offer</span><span>For example: "Read in full and searchable. Interpreted for the sewer fund: pages 3 to 9. Not interpreted: the rest." A later investigation sees "Interpret parts of this for this investigation", with who interpreted what before, and when.</span></li>
+        <li><span class="k">B · A, plus a list on each investigation</span><span>The list shows held documents that matched its searches but haven't been interpreted for it. More helpful, but more on the screen. Could follow later if members ask.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C3">
+      <div class="meta"><span class="k">C3</span><span>CAPABILITIES · N1269</span><span>asked 27 Oct</span></div>
+      <h3>When do members learn the size limits?</h3>
+      <p>You said "we may need to communicate some limits to members - like a maximum file size for each type".</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Before adding a file, by kind</span><span>The add screen states the largest file read whole: documents 100 MB or 5,000 pages, spreadsheets 50 MB or about 1 million rows, images 50 MB, archives 500 MB. A larger file is refused in plain words, with its size and the limit, never half-read.</span></li>
+        <li><span class="k">B · Only when a file is refused</span><span>Less to read, but the member learns only after waiting.</span></li>
+        <li><span class="k">C · A "comfortable" size and a larger "possible but slower" size</span><span>More honest about waiting time, but harder to explain.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C4">
+      <div class="meta"><span class="k">C4</span><span>CAPABILITIES · N1269</span><span>asked 27 Oct</span></div>
+      <h3>What about a file over the limit that still matters?</h3>
+      <p>For example, a 5 GB register.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Refuse it, say why, and offer a way in</span><span>For a register, bring in only part of it by a filter (N1259). Otherwise, the member brings in the part they need.</span></li>
+        <li><span class="k">B · Keep it, read only the first part and the parts a member asks for, and say exactly what was read</span><span>Risks a member believing it was all searched. Only after C1's proposals work well.</span></li>
+        <li><span class="k">C · Not in the beta; study it once real members hit the limit</span><span>The fallback for anything beyond A.</span></li>
+      </ul>
+    </article>
+
+    <span class="eyebrow">Places in layers · from the CAPABILITIES lane</span>
+    <p class="lede">You decided (DEC-404) that Civicsmith ships four read-only layers of places and rules (federal, state, county, city). Teams report errors but don't edit a layer, and a team's own research sits beside a layer and serves only that team. Three points remain.</p>
+    <article class="q" id="C5">
+      <div class="meta"><span class="k">C5</span><span>CAPABILITIES · N1257</span><span>asked 27 Oct</span></div>
+      <h3>What does Civicsmith promise about how current the layers are?</h3>
+      <p>Laws change, offices are renamed, and holiday lists come out late. In October 2026, neither the City's nor the court's 2027 holiday list had been published. Teams' deadlines rest on these layers.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Show beside each rule where it came from and on what date</span><span>For example, "read from the Oakland city clerk on 3 October 2026", and how far its calendars reach. A count past that shows as "not known", never a guess. Civicsmith promises the date it read, not that the law hasn't changed since, and says "not legal advice". Updates come with releases, and an administrator is told once which rules changed.</span></li>
+        <li><span class="k">B · Promise a delay, such as "within 30 days of a change"</span><span>Needs people and a process Civicsmith may not have, and a broken promise about a deadline is the worst failure.</span></li>
+        <li><span class="k">C · Show no dates</span><span>Cheap, but a team can't judge a rule.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C6">
+      <div class="meta"><span class="k">C6</span><span>CAPABILITIES · N1257</span><span>asked 27 Oct</span></div>
+      <h3>What does "read-only" mean when a team knows a fact is wrong today?</h3>
+      <p>Today a member can correct a holiday date, an office's hours or the time zone for their own team, marked as theirs, with how they checked it (K921, K925). DEC-404 says a team does not edit a read-only layer.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · The layer never changes; a team's own marked correction to a calendar fact stands, and laws and deadlines can only be reported</span><span>A closed office is a fact the team can see, and deadline counts must follow it. A team may also add its own rule, under a different name, beside a shipped one, never over it.</span></li>
+        <li><span class="k">B · Reports only, for everything</span><span>The strictest reading of "does not edit". A team with a wrong holiday waits for the next release.</span></li>
+        <li><span class="k">C · A team may put its own value over a shipped one, marked</span><span>Contradicts DEC-404.</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C7">
+      <div class="meta"><span class="k">C7</span><span>CAPABILITIES · N1257</span><span>asked 27 Oct</span></div>
+      <h3>What about a team outside the United States?</h3>
+      <p>The four levels, and the federal layer, are the United States'. Today a team elsewhere gets nothing filled in (DEC-150).</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Say so when the team chooses</span><span>Civicsmith holds United States places. A team elsewhere names its place, uses none of the four levels, and adds its own offices, as today. The level names stay.</span></li>
+        <li><span class="k">B · Rename the levels in general terms (nation, region, county, city), and let a team add a national layer</span><span>A bigger change to the words and to your decision.</span></li>
+      </ul>
+    </article>
+
+
+    <span class="eyebrow">The assistant's costs · from the UX design stream</span>
+
+    <article class="q" id="U1">
+      <div class="meta"><span class="k">U1</span><span>UX-DESIGN · cost visibility</span><span>asked 27 Oct</span></div>
+      <h3>Should team leaders see how much each member's AI work costs?</h3>
+      <p>Today's drawing (DEC-420) shows administrators the cost per account and per project, without naming members. Each member sees their own use and cost. AI-DESIGN asks for cost per member as well. Who may see that about a member is your call.</p>
+      <p class="note">Example: Lakeshore Tenants pays for one team account. Mai runs many long readings for "Pothole repairs"; Teo runs few. Rosa, an administrator, sees the month's total and Pothole repairs' share. Should she also see "Mai: $41, Teo: $3"?</p>
+      <ul class="opts">
+        <li><span class="k">A · Leaders see every member's cost by name</span><span>The team can spot heavy use and talk about it. But members may hold back from work they feel is watched, and a member's pattern of work becomes visible to leaders.</span></li>
+        <li><span class="k">B · Per account and per project only; each member sees their own (today's drawing)</span><span>No member is singled out, and projects still show where the money goes. But an administrator can't tell who drives a project's spending without asking.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">C · As B, but when a team or project limit is reached, an administrator may open the per-member breakdown for that account and month</span><span>Opening it is recorded in the account's history, with who looked and why. Everyday use stays private, administrators get what they need when money runs short, and the look itself is on the record.</span></li>
+      </ul>
+    </article>
+
+    <p class="note">Coming soon from the CAPABILITIES lane: public registers (N1259), email capture (N824), the public directory of groups (N1110), the installer's checks (N1265), and guides (N858). Each will appear here, in plain words with options, once the lane has written it up.</p>
   </section>
 
   <section class="group" id="answered">
     <h2>Answered</h2>
     <div class="answered">
+      <details>
+        <summary><span class="k">P3 · Changing region after install: not at Level 1</span><span class="when">27 Oct · K5441</span></summary>
+        <div class="body"><blockquote>"a recommended"</blockquote><p>A Level 1 team's region is fixed once it installs. A team that must move makes a new copy by export and import, and the install screen says so before the team chooses.</p></div>
+      </details>
+      <details>
+        <summary><span class="k">P2 · The region picker: both choices, worded honestly</span><span class="when">27 Oct · K5440</span></summary>
+        <div class="body"><blockquote>"as recommended"</blockquote><p>Teams choose either "near me", for speed with no promise about where data is kept, or "keep my data in this region", which Cloudflare guarantees for the regions it offers. The lane re-checks Cloudflare's current terms before this is built.</p></div>
+      </details>
+      <details>
+        <summary><span class="k">P1 · How fast the beta must be: keep the bar, with levels for scale</span><span class="when">27 Oct · K5438</span></summary>
+        <div class="body"><blockquote>"keep the current bar, but also recognize that different sized teams will require different levels of capabilities (Team, Institution, Enterprise). A copy configured as a Team may get to the point where it needs to upgrade to an Institution if it expects their workflow to meet the scale and performance metrics."</blockquote><p>The 2-second bar holds at every level. Each level states the size of workload it handles at that speed, and a copy that outgrows its level is told it needs the next one up.</p></div>
+      </details>
       <details>
         <summary><span class="k">F3 · Outlook archives and Access databases: held until a real file turns up</span><span class="when">27 Oct · K5437</span></summary>
         <div class="body"><blockquote>"as recommened"</blockquote><p>MBOX mailboxes are read in the beta. Outlook archives, Access databases and the other costly types are kept whole and named until a sample of real files or a team shows they turn up; each is then added by its own small ruling.</p></div>
