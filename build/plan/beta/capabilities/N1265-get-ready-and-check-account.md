@@ -83,7 +83,7 @@ DEC-415 asks that the date effect be reported to Bob and that this be placed bef
 
 ## Review (C7 worker)
 
-Checked against the checkout at `810dfe0a` (branch lane/capabilities). Counts: **22 corrections** (listed), **9 items unverifiable** (listed). The edit also applied K5449 as the caller decided it.
+Checked against the checkout at `810dfe0a` (branch lane/capabilities). Counts: **22 corrections in this file** and **16 in `N858-templates-and-guides-texts.md`** (both listed here), **9 + 5 items unverifiable**. The edit of this file also applied K5449 as the caller decided it; N858's Bob-points stay open, as asked.
 
 ### Corrections (line id: was -> now; evidence)
 
@@ -110,6 +110,29 @@ Checked against the checkout at `810dfe0a` (branch lane/capabilities). Counts: *
 21. **R33 "the release check / `npm run release`" and "journey-check R33 ... installer-steps tables".** was: tables in installer-steps, a release script -> now: tables in the installer (journey-check uses installer, not installer-steps: `modules.json` journey-check row); no `npm run release` exists; the release check is the journey walk (`layers.md:95`). Evidence: grep of every `package.json`; `journey-check/package.json` scripts hold `journey` only.
 22. **Section 6 L2 and section 7.** was: "none seen" scheduled CI; "hard reason: not on main until T51's close"; `next.md` -> now: a weekly cron exists (`.github/workflows/prune-branches.yml:18`); the entry is already placed as T52-92/94/98 (`build/plan/T52-R1.md:229,233,241`); path is `build/plan/next.md`. Also R34 gains the token variable name `CS_TEST_CF_TOKEN` (K4942), and `world.mjs` (installer-steps' fake) became `fixture.mjs` (the installer's) in R86's test.
 
+### N858 corrections (`N858-templates-and-guides-texts.md`; line id: was -> now; evidence)
+
+1. **Header ids.** was: jurisdictions R99, reading-guides R17, filing-templates R36 -> now: jurisdictions R99-R100 (R101 withdrawn), reading-guides R17, op-declarations R84. Evidence: highest ids are jurisdictions R98, reading-guides R16, filing-templates R35, op-declarations R83 (grep of each file).
+2. **R17 (reading-guides) "reads `filing-templates` R15".** was: a layer-6 rule reading a layer-9 module -> now: reads `jurisdictions`' shared judge (R100). Evidence: `layers.md` (reading-guides layer 6, filing-templates layer 9); `modules.json` reading-guides `uses` (no filing-templates).
+3. **R100 `textsLack` "one function shared" with `filing-templates` R15 and `reading-guides` R17.** was: the judge placed in jurisdictions (layer 1) yet calling later modules' rules -> now: `attributionLacks` lives in jurisdictions and both later modules call it. Evidence: R15's judge is private, `filing-templates/index.mjs:327` (`static #lacks`) with `approver` mapped to `second_approval` at `:1316`.
+4. **R36 (filing-templates) enumerates doors "from `op-declarations`".** was: a layer-9 test reaching a layer-11 module, and reading answers from declarations -> now: the test is op-declarations R84; it enumerates the three owners' ops and requires each classified. Evidence: `modules.json` filing-templates `uses` (no op-declarations; op-declarations `uses` holds filing-templates, reading-guides, filings); `reading-guides.md` R16 (a `DECLARED_OPS` row is `{classes, machineClasses?, mutating, weight, description, fields}`, no answer shape). Doors list gains `offeredVersion` (R25, R26) and `unofferedFor` (R35).
+5. **R99, R17, R100 "sources" for a guide.** was: a guide-level `sources` field and a `sources` lack -> now: no new field; the sources are R80's required item `citations`. Evidence: `jurisdictions.md:155` (R80), `reading-guides.md:26` (R13).
+6. **R101.** was: a check that no shipped profile holds `TEST` or a `placeholder` field -> now: withdrawn. Evidence: `jurisdictions/index.mjs:218-222, 302, 889` (`BASIS_INVALID` already); no `placeholder` marker in `jurisdictions.md` or its code (grep).
+7. **R99 refusal codes.** was: approver equal to author "refused naming the field" under `GUIDE_UNATTRIBUTED` -> now: `VALUE_INVALID` as for a template; a non-ruling basis `BASIS_INVALID`. Evidence: `jurisdictions/index.mjs:866-868, 889`.
+8. **R99 test profile.** was: silent -> now: the test profile's existing guide must gain the fields. Evidence: `jurisdictions.md:159` (R84: the test profile supplies a procedure guide).
+9. **Section 3 step 4 "the release checks reject ...".** was: all codes by release checks -> now: each code with where it runs (load: `jurisdictions`; read time: `filing-templates` R15, R28; `reading-guides` R13, R4 for a team's guide). Evidence: `jurisdictions.md:48, 155, 162`; `filing-templates.md:53, 64`; `reading-guides.md:20, 26`.
+10. **B3 "the review is bound to the text's SHA ... `REVIEW_STALE`".** was: a property of every text -> now: of a team's own template only; a profile template is data under R15 (R4, R7-R11 do not apply) and its `reviews` carry no SHA. Evidence: `filing-templates.md:39, 53`; `jurisdictions.md:48`. Section 3 step 5 amended to say the process alone ties it.
+11. **B3 / `next.md` N858 "Bob the reviewer".** was: not noticed -> now: stated, with the reading that Bob's review is the approval unless he also states a professional credential. Evidence: `build/plan/next.md:16`.
+12. **Section 2 item 6 `APPROVER_IS_AUTHOR`.** was: the profile approver's refusal -> now: that is R10's, for a team's template; a profile template's approver equal to author is `VALUE_INVALID`. Evidence: `filing-templates.md:42`; `jurisdictions/index.mjs:868`.
+13. **Section 5 item 1.** was: the Sunshine Ordinance a law "researched, 2026-10-11 actions-law"; anti-SLAPP only a deadline -> now: the law's basis is `2026-10-05 time-law` (its `requesters` fact is the researched one); anti-SLAPP is also a `legal_facts` entry. Evidence: `oakland-alameda.mjs:414-423, 651-654, 716+`.
+14. **Section 6 link check.** was: sources' addresses checked by N1265's run -> now: two gaps stated (N1265 R33 refuses hosts outside its tables; sources have `citation` only, no address). Evidence: `jurisdictions.md:162` (R87 (b)); N1265 R33.
+15. **Section 0, B1.** was: three things for a guide -> now: states that the sources part is satisfied by R80 (see 5).
+16. **Section 7 test list.** was: R99-R101 and R36 -> now: R99, R100 and op-declarations R84.
+
+Verified and left as they were: `filing-templates` R15, R28, R34, R35 and their codes (`TEMPLATE_NOT_REVIEWED`, `TEMPLATE_BLANK_UNKNOWN`, `TEMPLATE_COURT_PETITION`, `MACHINE_CANNOT_DRAFT_TEMPLATE`, `MACHINE_CANNOT_REVIEW_TEMPLATE`, `REVIEW_STALE`), `filings` R41, R65, `screens-action` R31, `jurisdictions` R40, R80, R81, R87, `reading-guides` R13, R15, `guide.procedure.legalinfo`, `FILING_BLANKS`, DEC-340's owed sentence, v0.2 rule 11 and section 8, K921, K924, K2647, K2781 (6), K3935, the Oakland profile holding no `templates` or `procedure_guides` and its Tier 1/2 kinds (`records_request`, `grand_jury`, `controller_referral`, `public_comment`, `media`; `records_petition`, `brown_act_demand`, `party_participation`). New names `attributionLacks`, `textsLack`, `GUIDE_UNATTRIBUTED` exist nowhere else in the checkout.
+
+N858 unverifiable (marked in the file): "Actions D8" itself (not found as a file; quoted by `next.md` and K2781 (6)); whether `checkGuide` runs on a profile guide; where the "release checks" run (no such command found); whether Bob wants a source-address field; whether `reviews` should carry a text SHA (not drafted).
+
 ### Layer and test-pin checks (no violation found)
 
 - Edges: the lines now use only `installer` -> `installer-steps`, `setup-words`; `journey-check` -> `installer` (all earlier or declared). The draft's installer-steps lines would have needed installer-steps -> installer (not declared, and a later module in the same layer's order: installer-steps is before installer).
@@ -127,6 +150,15 @@ Checked against the checkout at `810dfe0a` (branch lane/capabilities). Counts: *
 8. `installer.md` R2's "not yet met: T51" mark and its "five scopes" text are stale, but I may not edit that file; BOB corrects it through R86's amendment.
 9. Cloudflare's live pages and answer shapes (nothing fetched live); every link in R92's tables is to be chosen and checked by the job.
 
-### The 10 most important
+### The 10 most important (of all 38)
 
-1 (installer-steps cannot hold the checks: they move to the installer), 2/3 (R85's four-step guide is the Get-ready; DEC-416's five steps are retired and Containers has no "turn on" step), 6 (the scope count is six, registered K3819; R2 is stale), 5 (the 52 keys are 27 and `getready.*` is gone), 9/10 (the check must take no lock and must never call `addressReady`), 17 (the gate breaks about 62 existing install tests unless the fixture sends `chk`), 20 (do not change the frozen `JOURNEY_29_ORDER`), 13 (the name-free check is inline in `fresh` and must be extracted), 16 (a lone 429 is retried; only `Lasting` becomes `unknown`), 19 (the link-scan must exempt the OAuth endpoints and move `ui.mjs:217`'s sign-up link).
+1. N1265: `installer-steps` cannot hold the checks (it may not use the installer); they move to the installer's `ready.mjs` and the draft's installer-steps R46-R49 are withdrawn.
+2. N1265: R85's four-step guide is the Get-ready; DEC-416's five steps are retired (DEC-430) and Containers has no "turn on" step; the "52 keys" are 27 and `getready.*` is gone.
+3. N1265: the scope count is six and the sixth is registered (K3819); `installer` R2's "exactly the five" and its "not yet met: T51" are stale (R86 amends).
+4. N1265: the check must take no lock and never call `addressReady`; its only write is the plan probe (`establishPlan`), which K5449's "reads only" does not remove (BOB confirms that is meant).
+5. N1265: the gate breaks about 62 existing install tests unless the fixture's `begin` sends `chk`.
+6. N1265: do not change the frozen `JOURNEY_29_ORDER`; the name-free check is inline in `fresh` and must be extracted; a lone 429 is retried, only `Lasting` becomes `unknown`.
+7. N858: R17 (reading-guides, layer 6) read `filing-templates` (layer 9); the shared judge moves into `jurisdictions` (`attributionLacks`).
+8. N858: the all-doors acceptance test cannot sit in `filing-templates` (no edge to `op-declarations`) and declarations carry no answer shape; it is op-declarations R84 with a classified enumeration.
+9. N858: a guide's sources are already R80's required item citations; R99/R17 add no `sources` field.
+10. N858: R101 is already built (`BASIS_INVALID` on `TEST` outside a test profile) and invented a `placeholder` marker; withdrawn. Also: a profile text's review is not SHA-bound (B3 corrected).
