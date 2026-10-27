@@ -11,8 +11,9 @@
 - `combined-read-and-fold-draft.md` **READY**: fold and combined read, PL10-PL17; throwaway tests first; two technical points BOB's.
 - `load-test-draft.md` **READY**: PL40-PL43, proposed module `load-check`; the scratch deployment is BOB's (K5120, K5434): say when and on what.
 - `record-placement-draft.md` **READY** for placement and the picker (P2 K5440, P3 K5441 folded; Cloudflare's pages re-read 2026-10-27 and quoted in §2, which changed the design: a jurisdiction covers only where the room runs and stores; Workers reach it from anywhere, so the words promise storage, and the R2 bucket needs its own jurisdiction at creation, PL34). The split (§4) waits on N1271's study.
+- `whole-record-move-draft.md` **DRAFT** (new, K5443 (4)): PL50-PL53 for `corpus-export` (whole-record export by resumable parts), PL54-PL57 for the installer's import; one point maybe Bob's (whether a move carries members' sign-in material; assumed not).
 - `service-levels-draft.md` **DRAFT**: PL20-PL28; names Team / Institution / Enterprise = Levels 1 / 2 / 3 (confirmed, K5442; 70 %/90 % thresholds stand); figures estimates until measured; waits on P4 and on load figures from FILES and CAPABILITIES.
-- `DECISIONS.md`: eleven decisions (K5438, K5440, K5441, K5442 added).
+- `DECISIONS.md`: twelve decisions (K5438, K5440-K5443).
 
 **Open with Bob:** P4 (which levels' figures teams see).
 
@@ -31,3 +32,5 @@
 **P-2 · 2026-10-27** · Bob's P1 answered (K5438): bar kept at every level, ranges per level, copies told when outgrowing. Folded into `service-levels-draft.md` (PL26-PL28; the name reading) and `time-budgets-draft.md` §5; `DECISIONS.md` +1. FILES and CAPABILITIES have stated no load figures yet; asked via BOB.
 
 **P-3 · 2026-10-27** · Bob's P2 and P3 answered (K5440, K5441). Cloudflare's data-location pages (Durable Objects, 2026-06-26; R2, 2026-08-19) read and quoted in `record-placement-draft.md` §2; design changed by what they say (storage-only promise; R2 bucket in the same jurisdiction; hint and jurisdiction not combined; jurisdictions are eu, us, fedramp). New lines PL34 (R2 bucket) and PL35 (whole-record export, deferred to its owner).
+
+**P-4 · 2026-10-27** · K5443 folded: `whole-record-move-draft.md` (PL50-PL57) written for `corpus-export` and the installer; the one-`eu`-rehearsal added to `load-test-draft.md` §2; placement §3 and §5 updated.

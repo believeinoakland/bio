@@ -34,7 +34,7 @@ Bob's rulings: offer "near me" and "keep my data in this region", worded honestl
 **installer / installer-steps / newgroup / plane** (with UX-DESIGN; needs, not designs)
 - **PL32** The install screen shows the region the copy will use and offers two choices: **near me** (a hint; `locationHintFor` chooses by default, a list to pick another) and **keep my data in this region** (EU, US, and FedRAMP only where the account has it). Before the choice it states: the choice cannot be changed later; moving later is an export and an import (K5441); what "near me" is (faster for people near the place; not a guarantee where the data is) and what "keep in this region" is (stored there; the stored files too; it does not make everything that runs on the copy run there). Choosing sets `STORE_LOCATION` or `STORE_JURISDICTION`, restated in every upload as G83 does. *Screen needs:* the two-way choice, the lists, the pre-choice statement. Test: an install carries its default hint; a picked region overrides it; a jurisdiction sets the jurisdiction and no hint; a missing `cf` installs as today (no hint).
 - **PL33** Settings states the copy's placement truthfully: the hint or the jurisdiction in force; for a hint, "not a guarantee"; for a jurisdiction, what is and is not covered (PL32's words). Test: each state's words key.
-- **PL35** An export and an import of a whole team record (K5441's move) exists as the one way to change region; *this is not designed here* (a new capability: whole-record export and a fresh install importing it; CAPABILITIES or the installer lane, through BOB). Test: deferred to that design.
+- **PL35** An export and an import of a whole team record (K5441's move) exists as the one way to change region; written in `whole-record-move-draft.md` as lines for `corpus-export` (PL50-PL53, extended to the whole record) and the installer's import into a new copy (PL54-PL57), as BOB ruled (K5443). Test: there.
 
 ## 4. The split, as needs for N1271's study (the study is Bob's: options with the study)
 
@@ -49,7 +49,7 @@ Bob's rulings: offer "near me" and "keep my data in this region", worded honestl
 
 ## 5. For Bob (through BOB)
 
-Only what Bob has not ruled: **P4** (which levels' figures teams see; in `service-levels-draft.md` §5) and, when N1271's study is in, the split's unit. No new question from this draft. One point for BOB's judgement, not Bob's: PL34 means the installer must create the R2 bucket in the jurisdiction, and the *scratch* and rehearsal installs (K4942) then need an account that allows it; EU and US jurisdictions are available on any account per the page, FedRAMP is not.
+Only what Bob has not ruled: **P4** (which levels' figures teams see; in `service-levels-draft.md` §5) and, when N1271's study is in, the split's unit. No new question from this draft. Decided (K5443): biosmoke8 and rehearsal installs stay unjurisdictioned, and one rehearsal on the throwaway account installs with `eu` to prove the path (`load-test-draft.md` §2).
 
 ## 6. What must be measured, and on what copy
 

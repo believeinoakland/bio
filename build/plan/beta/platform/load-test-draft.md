@@ -10,6 +10,8 @@ For each level (`service-levels-draft.md`): (1) at what number of members workin
 
 On a **scratch copy**, deployed for the test and discarded, in the permitted Cloudflare account `20b533579290b9b93168345edd3b7f72` only, never biosmoke8 and never another team's copy. The throwaway rehearsal account (`CS_TEST_CF_ACCOUNT_ID`) is for the new-team rehearsal alone (K4942) and is not used. A scratch deployment is not covered by K4296's approval for biosmoke8 (N1274); it is BOB's act, with Bob's authorization if BOB judges it needed (§6). The route is the proxy's (K4733); figures are net of it (P18).
 
+**One rehearsal with a jurisdiction (K5443).** biosmoke8 and the load-test copies stay unjurisdictioned. One new-team rehearsal on the throwaway account (`CS_TEST_CF_ACCOUNT_ID`, K4942, for that rehearsal alone) installs with `eu` to prove the path: the room in the `eu` jurisdiction, the R2 bucket created in `eu` and reached through its endpoint, the install refusing cleanly if either cannot be created (`record-placement-draft.md` PL30, PL34), and then a whole-record move into it (`whole-record-move-draft.md`) as the import's proof. It records the room's start-up and hop, an R2 read from the jurisdiction endpoint against the default, and the install's result; it is a rehearsal, not a load run (no ramp).
+
 ## 3. How it loads
 
 **A driver that speaks ops, not a browser**, for the many; **a browser for a few**, because "drawn" needs one (P23's method). The driver replays a profile of the screens' declared reads (`op-declarations`), as sessions of seeded members: sign in, then a mix of screens and acts at the profile's rate, with think time. P17's model was 2 screens a minute a member; the test measures against 1, 2 and 4.
