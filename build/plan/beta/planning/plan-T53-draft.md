@@ -11,11 +11,19 @@
 ## Layer 1
 
 **jurisdictions**
-- T53 · N1257 (DEC-404) · places in layers: the four defects first (weekend by citation, closure lists across layers, records_help per law, `federal` office level), then the layer model, the shipped layers (federal, California, Alameda County, Oakland), the package alias and its equality test, team layers; N1256's federal offices with the layer or after F4's measure · `capabilities/N1257-places-in-layers.md`, `N1257-requirements-jurisdictions.md` `[owed: READY; C1-C7 BOB's, D1-D3 Bob's]`
+- T53 · N1257 (DEC-404, N1256) · the four defects first: weekend compared by days, closure lists by qualified name in the branch, records_help per law, a `federal` office level · `capabilities/N1257-requirements-jurisdictions.md` R103-R105, R107
+- T53 · N1257 (K5452, K5458, K5462) · the layer model: layer and `within`, names addressed `layer:name`, the forest checked branch by branch, a conflict naming its layers, records laws saying whom they govern, coverage dates · same, R99-R102, R106, R108
+- T53 · N1257 · the shipped layers (federal, California, Alameda County, Oakland), the every-footprint build check, the package alias and its equality test; the test forest · same, R109-R114, R118
+- T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · same, R115-R117 `[waits: CONSISTENCY §2.15 (the stated fiscal year's layer)]`
+- T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · same, R119, R120 `[owed: F4's measure; the makers' key]`
+- `[owed: K5458's lines: every module that stores a rule, list or office name stores its layer (K5462: old records resolve on their own date)]`
 - T53 · A2 (DEC-458) · a government's fiscal year as a one-value layer fact; a team's statement a team-layer entry · `planning/lines-A2-fiscal-year.md` re-cut per CONSISTENCY §2.1 `[owed: L2-3]`
 
 **civil-time**
 - T53 · A2 · `fiscalPeriod` over a stated entry, `from`, reasons never holding `*` · `planning/lines-A2-fiscal-year.md` (civil-time)
+
+**connection-grammar**
+- T53 · N1260 (DEC-409 to DEC-411, K1471, K4354) · `chainStrength`, `strongerChain`, paths ordered by strength, `foldParallel`, `CHAIN_LIMITS` · `capabilities/N1260-following-the-trail-a.md` §1, §2 (R22-R25) `[CONSISTENCY §2.16: its time figures]`
 
 **text-chain**
 - T53 · A8 (DEC-464) · a typed passage's two grades (unchecked, checked one step stronger, never `EARNED_CAPTURE_CEILING`) · `planning/lines-A8-typed-page.md` §2 `[owed: L2-10]`
@@ -102,18 +110,29 @@
 ## Layer 5
 
 **local-facts**
-- T53 · N1257 · team-layer entries, reports of a shipped rule, old paths · `capabilities/N1257-requirements-modules.md` `[owed: READY]`
-- T53 · A2 · the stated fiscal year as a team-layer entry · CONSISTENCY §2.1
+- T53 · N1257 (K5451) · a team writes its own layers entry by entry; a wrong shipped rule is reported, not edited; an old fact path still reads · `capabilities/N1257-requirements-modules.md` (local-facts R23-R27) `[waits: C3, BOB's]`
+- T53 · A2 · the stated fiscal year as a team entry (R28, R29) · `planning/lines-A2-fiscal-year.md` `[waits: CONSISTENCY §2.15]`
+
+**connections**
+- T53 · N1260 (K1469, K1470, K1486, K1489) · `named_in`: a document as a hop's end, its hub, its sight check · `capabilities/N1260-following-the-trail-a.md` §3 (R74-R76) `[waits: measure M-F1]`
 
 **money**
-- T53 · A2 · fiscal keys by the government's own year; the view offered only where known; never `*` · `planning/lines-A2-fiscal-year.md` (money R36-R38)
+- T53 · N1260 (DEC-409, DEC-410, DEC-447 (2)) · five money kinds in place of `money_flow`; a party's hub by date and kind; `moneyByParty` · `capabilities/N1260-following-the-trail-a.md` §4 (R36-R38)
+- T53 · A2 · fiscal keys by the government's own year; the view only where known; never `*` · `planning/lines-A2-fiscal-year.md` (money, renumbered R39-R41, CONSISTENCY §1)
+
+**explore**
+- T53 · N1260 (DEC-409 to DEC-411, K4403 (8)(9)) · every chain between two ends, the most direct, shorter paths beside a member's own, a time stop that can be continued · `capabilities/N1260-following-the-trail-a.md` §5 (R30-R35)
+- T53 · N1260 (DEC-447) · each kind's dimension; "Follow from here" per item kind, a fund included; op `followfrom` · same, §6 (R36) `[owed: standards' `standardsBinding` line]`
 
 **entities**
-- T53 · N1257, N1256 · a federal office made an entity only when chosen · `capabilities/N1257-requirements-modules.md` `[owed: READY]`
+- T53 · N1257, N1256 · `federalOfficesFind` (op `federaloffices`); a federal office made an entity only when chosen, FOIA its law · `capabilities/N1257-requirements-modules.md` (entities R68)
 
-`[owed: CAPABILITIES N1259 (people, money groundwork, registers), N1260 (explore)]`
+`[owed: CAPABILITIES N1259 (people, money groundwork, registers)]`
 
 ## Layer 6
+
+**reading-guides**
+- T53 · N1257 · procedure guides side by side, one per layer, unranked (R17) · `capabilities/N1257-requirements-modules.md`
 
 **inquiry**
 - T53 · A1 (DEC-457) · `setSubject` with a reason, `subjectHistory`, the private-person warning on a subject · `planning/lines-A1-A7-subject-pickers.md` (inquiry R87-R90) `[owed: L2-1]`
@@ -185,7 +204,7 @@
 
 ## Layer 9
 
-**conformance** · C T52-29 · **actions** · C T52-30; N1257 `actions` R112 `[owed: READY]` · **filings** · C T52-31 · **action-plans** · C T52-32, T52-33 · **action-clocks** · N1257 R27 `[owed: READY]`
+**conformance** · C T52-29 · **actions** · C T52-30; N1257 R112 (two laws, two clocks; the zone named) · **filings** · C T52-31 · **action-plans** · C T52-32, T52-33 · **action-clocks** · N1257 R27 (the layer a list comes from) · **filing-templates** · N1257 R36 (a template's places may name layers) · all `capabilities/N1257-requirements-modules.md`
 
 ## Layer 10
 
@@ -204,7 +223,7 @@
 
 **queue-producers**
 - T53 · A6 (DEC-462) · one item per member listing each new key, by key words (R56, R57) · `planning/lines-A5-A6-signing.md` (A6)
-- T53 · N1257 · a layer change told once (renumbered R58) `[owed: READY]`
+- T53 · N1257 · `place-profile-arrived` for a layer of any level; a rule change told once to administrators (R58) · `capabilities/N1257-requirements-modules.md`
 
 **queue**, **screens-daily**
 - T53 · A6 · a per-key choice of act passed through (queue), a line and two acts per key, never handled by "choose several" (screens-daily) · `planning/lines-A6-queue-acts.md` (Q-A6-1, Q-A6-2 decided, K5456; their wording a UX need)
@@ -215,17 +234,22 @@
 - T53 · A7 · one document-picker element with two scopes (A7-R1), cited by screens-inquiry R137, screens-investigate R34 and R52, screens-publish R8 · `planning/lines-A1-A7-subject-pickers.md` `[owed: L2]`
 
 **screens-inquiry**
-- C T52-66 to T52-73 · T53 · A1 (R140, R141), A7 (R142), A3 (the Document page's source line), A8 (Cite on typed words, the labels), DEC-454 (`document.mjs` display rows) · the named `planning/lines-*` files and DEC-454
+- C T52-66 to T52-73 · T53 · N1260 ("Follow from here" on Document), A1, A7, A3 (the Document page's source line), A8 (Cite on typed words, the labels), DEC-454 (`document.mjs` display rows) · the named `planning/lines-*` files and DEC-454
 
 **screens-intake**
 - T53 · N1269 (K5446, K5447) · before a file is added, each kind's largest file read whole is stated; a file over its limit refused with its size and limit and offered a way in (a register by a filter, N1259; else the part the member needs) · `files/SIZES-N1267.md`, K5446, K5447
 - C T52-59 to T52-61 · T53 · A3 (R72, R73), DEC-454 and DEC-455 (`capture.mjs`: display rows, "Show more rows", Cancel sending), DEC-456 (r9-states R65 `[waits: the design's row]`), held-and-named and refused sentences (FILES UX-NEEDS) · as named
 
+**affordances**, **interface-shell**, **screens-daily**, **screens-investigate**, **screens-action** (N1260, N1257)
+- T53 · N1260 (DEC-447) · `cs.follow`, one "Follow from here" fold read only when opened (interface-shell); its menus (affordances R72-R74); Find results draw it (screens-daily); people, events, money, chain steps and Explore's three acts (screens-investigate R67-R69) · `capabilities/N1260-following-the-trail-b.md`
+- T53 · N1257 · `request` offers the laws whose `governs` holds the office's level (screens-action R60) · `capabilities/N1257-requirements-modules.md`
+
 **screens-investigate**, **screens-publish**
 - C T52-74 to T52-80 · T53 · A7 (their pickers) · `planning/lines-A1-A7-subject-pickers.md` A7 §5; A5 (screens-publish: the signing step, the published statement)
 
 **screens-settings**, **installer**, **installer-steps**
-- C T52-58, T52-92 to T52-95 · T53 · N1257 (the places screen, the install choice) `[owed: READY]`; the AI screens (below)
+- C T52-58, T52-92 to T52-95 · the AI screens (below)
+- T53 · N1257 (K5450, K5452) · the places page as a tree, the choice a set, "Report a rule" the one act on a shipped rule, an information mark on each entry and the page (screens-settings R82, R83); the install asks where the work focuses, as a set, nothing below federal preselected (installer R86); instance-setup holds the choice and the team's layers (R107-R111) · `capabilities/N1257-requirements-modules.md` `[waits: D3 (Bob); CONSISTENCY §2.17]`
 - T53 · K5444, K5442, K5454 · a copy chooses its level at install (Team, Institution; Enterprise listed as not yet available, PL29) and can move up later · `[owed: PLATFORM service levels; Levels 2-3 study]`
 - T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" storage in a jurisdiction, the room and its R2 bucket; what runs elsewhere said), the choice fixed and the move by export and import said before it (PL32); Settings states the placement truthfully (PL33) · `platform/record-placement-draft.md` §3 (installer, installer-steps, plane; screen needs to UX-DESIGN)
 - T53 · K5443 · the one way to change region: whole-record export (corpus-export, layer 8) and the installer's import (PL35, PL50-PL57) · `platform/whole-record-move-draft.md` `[owed: READY; one point maybe Bob's (a move carries members' sign-in material?)]`
@@ -234,6 +258,7 @@
 - C T52-85 to T52-91 · T53 · N1264, K4599: routes `screenread` and the folded admission · `platform/combined-read-and-fold-draft.md` §3
 
 **journey-check**
+- T53 · N1260 (K4354, DEC-447 (4)) · an act counter against a target set before the walk, the 2-second assertion, the Sewer Service Fund journey (writes nothing) · `capabilities/N1260-following-the-trail-b.md` `[first: BOB's K lines for the two target files]`
 - C T52-97, T52-98 · T53 · K4354 · the budget walk at 1280 and 390 px (PL5, PL6) · `platform/time-budgets-draft.md` §4 · T53 · N1268 · the acceptance corpus walk · `files/CORPUS-N1268.md` (CONSISTENCY §2.5)
 
 **ai-issuer** (new; Civicsmith's own Worker; K5457)
