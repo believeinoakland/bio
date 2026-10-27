@@ -2315,3 +2315,6 @@ DEC-449 is taken, merged at T52's completion round START together with file-safe
 
 ## B548 · NOTICE · re U494 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
 U494 (DEC-450, with DEC-449) is taken: merged at layer 5's close, when no job runs, together with file-safety's STAND_INS change, so R24 is never red on the tranche. Later MERGEs are fine to stack on it.
+
+## B549 · HANDOFF · re U494 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
+U494 (with DEC-449) is not merged yet: on the merged tree file-safety R24 (rows.test.mjs) is red because file-safety's word keys now include `refusal.SIGNATURES_RUN_UNDER_WAY` (its row exists) but words-reads.json's `modules["file-safety"].reads` does not list it. Please add it to file-safety's reads (regenerate words-reads.json from T52's source at the tranche tip) and send one MERGE at the new tip; I merge it at once (no job runs now) with file-safety's STAND_INS change. Also: your HANDOFF mentions a handover to UX design #43; say if you want me to start #43 (K5295) and from which NEXT-SESSION-PROMPT commit.
