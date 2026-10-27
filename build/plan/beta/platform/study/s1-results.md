@@ -19,3 +19,20 @@
 
 ## What is not yet measured (next)
 Seed A (1b) and the screens on a team with data; Project and Document screens (they need a project and a document); the other sizes; the ramp; per-table bytes (needs the proto redeploy).
+
+## 1b. Seed A-lite (the first, small seed), 1280 px
+
+**What was seeded.** One project (`PLAT S1 study project`) and 120 generated files, 104 MB, uploaded through the product's own file door (`op=captureupload` with the file as the body, filed under the project from its own Add door): 60 text files (50-500 KB), 30 CSV (1-5 MB, 8,000-40,000 rows), 15 DOCX, 15 PDF (20-100 pages, text). Two workers, about 11-13 s a file, no failures, about 12 minutes. This is a fifth of the 500-document / 0.4 GB "Seed A" the plan names: the full seed and the larger ones are for the next session. **The room's own figures after it** (`op=stats`, read a few minutes after the last upload, reading still in progress): 123 bundles, 489 files, **28,889 text units**, `dbBytes` **200,000,000** (a round figure: the stats read may report a coarse size, so read it as "about 200 MB"; per-table bytes need the measuring ops of step 1d). So 104 MB of files made about 200 MB of database at this point, about 1.9 times the file bytes (not FILES' 1.4-1.5 times the text: the text share of these files is not measured separately).
+
+| screen | admin raw ms | admin net ms | member raw ms | member net ms | requests (API) admin / member |
+|---|---|---|---|---|---|
+| Home | 2,811 (2,096-3,489) | 690 (620-881) | 1,797 (1,632-2,449) | 623 (556-714) | 35 (25) / 30 (20) |
+| Queue | 2,169 (1,347-3,126) | 713 (645-982) | 1,394 (1,237-2,575) | 607 (585-620) | 23 (13) / 23 (13) |
+| Project | 2,341 (1,863-4,230) | 822 (703-1,053) | 2,658 (2,071-4,285) | 639 (617-770) | 36 (27) / 35 (25) |
+| Document | 2,455 (2,358-3,179) | 913 (812-952) | 1,275 (1,169-1,840) | 676 (599-695) | 44 (33) / 22 (12) |
+| Held | 1,860 (1,183-2,451) | 800 (639-1,275) | 1,194 (1,078-1,905) | 567 (522-578) | 24 (13) / 21 (12) |
+| Inbox | 1,769 (1,096-3,042) | 589 (570-612) | 1,179 (996-2,178) | 576 (531-666) | 20 (10) / 19 (10) |
+| Add | 1,405 (1,249-1,837) | 782 (706-951) | 1,165 (1,058-1,210) | 579 (560-636) | 22 (12) / 21 (12) |
+| Projects | 1,191 (1,156-2,619) | 579 (522-695) | 1,309 (1,092-2,569) | 591 (579-594) | 23 (13) / 23 (13) |
+
+**Reading.** With data the net medians stay at 0.57-0.91 s (the bar is 2 s); raw medians reach 2.2-2.8 s for the administrator on Home, Queue, Project and Document, with ranges to 4.2 s: the proxy adds 1-2 s to concurrent requests (P18), so the raw figure overstates and the net figure understates; the truth for a member in the same place is between. **The administrator's screens are heavier than the member's** (Document 44 requests against 22, 913 against 676 ms net), as in P23. Compared with the empty team (1a), Held, Add and Document moved most (Held 577 to 800 ms, Add 592 to 782 ms): the room's own work begins to show, as P24 found on biosmoke8. At 104 MB the copy is far from the ceiling; the 2 GB and 6 GB seeds and the ramp (steps 1c, 1e) are what find it. **Caveats:** a fifth of the planned seed; reading still in progress while the screens were timed (the `textUnits` were still landing); nobody else on the copy; alpha code 0.87.0.
