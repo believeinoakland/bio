@@ -26,6 +26,12 @@ const TEXT = {
   "civil-time.missing.computation_absent": (v) => localize("civil-time.missing.computation_absent", "the computation '{computation}' the rule names is not held by the jurisdiction view", v),
   "civil-time.missing.fiscal_year_withheld": (v) => localize("civil-time.missing.fiscal_year_withheld", "a fiscal year for {body} is withheld: the active profiles disagree on it ({at})", v),
   "civil-time.missing.fiscal_year_absent": (v) => localize("civil-time.missing.fiscal_year_absent", "a fiscal year for {body} is not held by the jurisdiction view", v),
+  "civil-time.missing.fiscal_year_no_body": (v) => localize("civil-time.missing.fiscal_year_no_body", "no government was named, so no fiscal year can be read from the jurisdiction view", v),
+  /* trace notes (R25) are read by key as reasons are: the test reads them through `reasonText` */
+  "civil-time.rules.close_of_business_no_opening": (v) => localize("civil-time.rules.close_of_business_no_opening", "the close of business is undetermined: the office's hours list no opening on {weekday}", v),
+  "civil-time.rules.close_of_business_no_hours": (v) => localize("civil-time.rules.close_of_business_no_hours", "the close of business is undetermined: the jurisdiction view holds no hours for the governing office", v),
+  "civil-time.rules.calendar_entry_status": (v) => localize("civil-time.rules.calendar_entry_status", "calendar entry {year}{list}: {status}", v),
+  "civil-time.rules.calendar_entry_on_correction": (v) => localize("civil-time.rules.calendar_entry_on_correction", "calendar entry {year}{list}: counted on its correction, now {status}", v),
   "civil-time.missing.closure_list_withheld": (v) => localize("civil-time.missing.closure_list_withheld", "the closure list '{list}', which the rule names, is withheld: the active profiles disagree on it ({at})", v),
   "civil-time.missing.closure_list_absent": (v) => localize("civil-time.missing.closure_list_absent", "the closure list '{list}', which the rule names, is not held by the jurisdiction view", v),
   "civil-time.calendar.list_year_withheld": (v) => localize("civil-time.calendar.list_year_withheld", "the closure list '{list}' for {year} is withheld: the active profiles disagree on it", v),
