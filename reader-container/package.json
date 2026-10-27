@@ -1,0 +1,13 @@
+{
+  "name": "reader-container",
+  "private": true,
+  "type": "module",
+  "version": "0.87.0",
+  "description": "The container reader: legacy and macro Office and RTF by conversion, every image kind to upright frames, archives as streams within their bounds (reader-container R1-R8).",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "ecosystem": "Debian:12",
+  "base": {
+    "repository": "docker.io/library/node",
+    "digest": "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+  },
+  "image": "reader",
+  "class_name": "ReaderContainer",
+  "source": "https://snapshot.debian.org/archive/debian/20261006T000000Z bookworm main; https://snapshot.debian.org/archive/debian-security/20261006T000000Z bookworm-security main",
+  "packages": [
+    { "name": "bzip2", "version": null },
+    { "name": "fonts-dejavu-core", "version": "2.37-6" },
+    { "name": "fonts-liberation2", "version": "2.1.5-1" },
+    { "name": "imagemagick", "version": null },
+    { "name": "libheif1", "version": null },
+    { "name": "libimage-exiftool-perl", "version": null },
+    { "name": "libopenjp2-7", "version": null },
+    { "name": "libreoffice-calc", "version": "4:7.4.7-1+deb12u14" },
+    { "name": "libreoffice-core", "version": "4:7.4.7-1+deb12u14" },
+    { "name": "libreoffice-impress", "version": "4:7.4.7-1+deb12u14" },
+    { "name": "libreoffice-writer", "version": "4:7.4.7-1+deb12u14" },
+    { "name": "p7zip-full", "version": null },
+    { "name": "xz-utils", "version": null }
+  ],
+  "note": "The package statement of the container reader's image (bundler R27): each Debian package the Dockerfile installs. LibreOffice and the fonts are file-scanner's pinned versions; a null version is pinned by the release that first builds the image from the snapshot named. Its server is container/*.mjs and src/records.mjs; no npm package is installed."
+}
