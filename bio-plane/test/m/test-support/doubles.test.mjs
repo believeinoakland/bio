@@ -103,21 +103,29 @@ test("R27 a second registration re-arms, updates cursor, owed, detail and parts 
   assert.equal(s.rows()[0].priority, "raised", "a later registration without priority does not lower it");
 });
 
-test("R27 every kind of the contract registers; fetch and subresources are keyed by capture session; anything else answers ok:false and never throws", () => {
-  assert.deepEqual([...JOB_KINDS].sort(), ["fetch", "grade", "ingest", "keep", "ocr", "reading", "safe_view", "scan", "subresources", "unpack"]);
+test("R27 every kind of the contract registers; fetch, member and subresources are keyed by capture session; anything else answers ok:false and never throws", () => {
+  assert.deepEqual([...JOB_KINDS].sort(), ["fetch", "grade", "ingest", "keep", "member", "ocr", "reading", "safe_view", "scan", "subresources", "unpack"]);
   const s = jobRegistrarStub();
   for (const kind of JOB_KINDS) {
-    const e = kind === "fetch" || kind === "subresources" ? { kind, session: "cap-1" } : { kind, sha: SHA2 };
+    const e = kind === "fetch" || kind === "member" || kind === "subresources" ? { kind, session: "cap-1" } : { kind, sha: SHA2 };
     assert.equal(s.registerJob(e).ok, true, kind);
   }
-  assert.equal(s.rows().length, 10);
-  for (const bad of [null, undefined, 7, {}, { kind: "nope", sha: SHA }, { kind: "reading" }, { kind: "reading", sha: "ABC" }, { kind: "reading", sha: SHA.toUpperCase() }, { kind: "fetch" }, { kind: "fetch", sha: SHA }]) {
+  assert.equal(s.rows().length, 11);
+  for (const bad of [null, undefined, 7, {}, { kind: "nope", sha: SHA }, { kind: "reading" }, { kind: "reading", sha: "ABC" }, { kind: "reading", sha: SHA.toUpperCase() }, { kind: "fetch" }, { kind: "fetch", sha: SHA }, { kind: "member", sha: SHA }]) {
     let r;
     assert.doesNotThrow(() => { r = s.registerJob(bad); });
     assert.equal(r.ok, false, JSON.stringify(bad));
     assert.equal(typeof r.reason, "string");
   }
-  assert.equal(s.rows().length, 10, "a refused registration writes nothing");
+  assert.equal(s.rows().length, 11, "a refused registration writes nothing");
+});
+
+test("R29 a member entry is keyed by capture session, listed by rows(), and without a session answers JOB_SESSION_MISSING", () => {
+  const s = jobRegistrarStub();
+  assert.deepEqual(s.registerJob({ kind: "member", sha: SHA }), { ok: false, reason: "JOB_SESSION_MISSING" });
+  assert.deepEqual(s.registerJob({ kind: "member", session: "cap-1" }), { ok: true, existed: false, state: "queued" });
+  assert.deepEqual(s.registerJob({ kind: "member", session: "cap-1" }), { ok: true, existed: true, state: "queued" });
+  assert.deepEqual(s.rows().map((r) => [r.kind, r.session, r.sha]), [["member", "cap-1", null]]);
 });
 
 test("R27 a row written inside a transaction that rolled back is not listed; one that committed is", () => {

@@ -46,7 +46,7 @@ test("R20 MONTHLY with ordinal BYDAY, BYMONTHDAY (negative too) and BYSETPOS; YE
   /* 02:30 on the spring change does not occur: the instance is the time after the gap */
   const gap = ex("FREQ=WEEKLY;BYDAY=SU", "2026-03-01T02:30", LA, "2026-03-01", "2026-03-16");
   assert.deepEqual(values(gap), ["2026-03-01T02:30", "2026-03-08T03:30", "2026-03-15T02:30"]);
-  assert.match(gap.trace.notes.join(" "), /does not occur/);
+  assert.ok(gap.trace.notes.includes(word("civil-time.wall_time_occur", { n: "2026-03-08", zone: LA })), JSON.stringify(gap.trace.notes));
 });
 
 test("R20 the test profile's stated meeting schedules (its recurrences) expand in its zone", () => {
@@ -99,6 +99,7 @@ test("R20 any other part is refused RRULE_UNSUPPORTED, naming it; a malformed ru
 });
 
 test("R21 fiscalPeriod: the fiscal year holding a date under the body's fiscal_year fact, with start and end days; none held, or a band across two, undetermined", () => {
+  const core = ({ label, start, end }) => ({ label, start, end });
   const v = firstView(), t = testView();
   /* a profile holding no fiscal_year: undetermined, never a guessed year (the first profile keeps Oakland's since
      jurisdictions R49, so the fact is removed here) */
@@ -108,11 +109,11 @@ test("R21 fiscalPeriod: the fiscal year holding a date under the body's fiscal_y
   assert.deepEqual(none1.why, { key: "civil-time.missing.fiscal_year_absent", vars: { body: "Oakland City Council" } });
   /* the test profile: every body from April, named by its start; the Harbour District from October, named by its end */
   const SB = "Port Ellery Selectboard", HD = "Port Ellery Harbour District";
-  assert.deepEqual(fiscalPeriod({ date: day("2026-03-31", HFX), body: SB, view: t }), { label: "FY2025-26", start: "2025-04-01", end: "2026-03-31" });
-  assert.deepEqual(fiscalPeriod({ date: day("2026-04-01", HFX), body: SB, view: t }), { label: "FY2026-27", start: "2026-04-01", end: "2027-03-31" });
-  assert.deepEqual(fiscalPeriod({ date: "2026-04-01", body: "any body", view: t }), { label: "FY2026-27", start: "2026-04-01", end: "2027-03-31" });
-  assert.deepEqual(fiscalPeriod({ date: day("2026-10-05", HFX), body: HD, view: t }), { label: "HD2027", start: "2026-10-01", end: "2027-09-30" });
-  assert.deepEqual(fiscalPeriod({ date: day("2026-09-30", HFX), body: HD, view: t }), { label: "HD2026", start: "2025-10-01", end: "2026-09-30" });
+  assert.deepEqual(core(fiscalPeriod({ date: day("2026-03-31", HFX), body: SB, view: t })), { label: "FY2025-26", start: "2025-04-01", end: "2026-03-31" });
+  assert.deepEqual(core(fiscalPeriod({ date: day("2026-04-01", HFX), body: SB, view: t })), { label: "FY2026-27", start: "2026-04-01", end: "2027-03-31" });
+  assert.deepEqual(core(fiscalPeriod({ date: "2026-04-01", body: "any body", view: t })), { label: "FY2026-27", start: "2026-04-01", end: "2027-03-31" });
+  assert.deepEqual(core(fiscalPeriod({ date: day("2026-10-05", HFX), body: HD, view: t })), { label: "HD2027", start: "2026-10-01", end: "2027-09-30" });
+  assert.deepEqual(core(fiscalPeriod({ date: day("2026-09-30", HFX), body: HD, view: t })), { label: "HD2026", start: "2025-10-01", end: "2026-09-30" });
   /* the local day governs: 2026-04-01T02:00Z is still 03-31 in Halifax */
   assert.equal(fiscalPeriod({ date: { value: "2026-04-01T02:00:00", precision: "second", zone: HFX }, body: SB, view: t }).label, "FY2026-27");
   assert.equal(fiscalPeriod({ date: { value: "2026-04-01T02:00:00", precision: "second", zone: "UTC" }, body: SB, view: t }).label, "FY2026-27");
@@ -146,4 +147,38 @@ test("R30 R20 R21 the reasons of expandRecurrence and fiscalPeriod are {key, var
     assert.ok(reasonText(a.why).length > 5, a.why.key);
     if (hasWord(a.why.key)) assert.equal(word(a.why.key, a.why.vars), reasonText(a.why));
   }
+});
+
+test("R31 fiscalPeriod maps a date over a team-layer entry as over a Civicsmith's, says whose entry it was, and names the body asked, never `*`", () => {
+  const core = ({ label, start, end }) => ({ label, start, end });
+  const entry = { body: "B", start: "07-01", named_by: "end", label: "FY{start}-{end2}" };
+  const withEntry = (e) => ({ ...testView(), fiscal_year: [e] });
+  const team = fiscalPeriod({ date: day("2026-03-01", LA), body: "B", view: withEntry({ ...entry, profile: "team", origin: "team" }) });
+  const shipped = fiscalPeriod({ date: day("2026-03-01", LA), body: "B", view: withEntry({ ...entry, profile: "oakland-alameda", origin: "civicsmith" }) });
+  assert.deepEqual(core(team), core(shipped));
+  assert.deepEqual(core(team), { label: "FY2025-26", start: "2025-07-01", end: "2026-06-30" });
+  assert.deepEqual(team.from, { profile: "team", origin: "team" });
+  /* control: a Civicsmith entry's answer is its layer's, the mapping unchanged */
+  assert.deepEqual(shipped.from, { profile: "oakland-alameda", origin: "civicsmith" });
+  /* the origin rides on the candidates of a band across two years */
+  const two = fiscalPeriod({ date: { value: "2026", precision: "edtf", zone: LA }, body: "B", view: withEntry({ ...entry, profile: "team", origin: "team" }) });
+  assert.equal(two.undetermined, true);
+  assert.ok(two.candidates.every((c) => c.from.origin === "team"));
+  /* a body with no entry: the reason names the body and holds no `*` */
+  const none = fiscalPeriod({ date: day("2026-03-01", LA), body: "C", view: withEntry({ ...entry, profile: "team", origin: "team" }) });
+  assert.equal(none.undetermined, true);
+  assert.deepEqual(none.why, { key: "civil-time.missing.fiscal_year_absent", vars: { body: "C" } });
+  assert.ok(reasonText(none.why).includes("C"));
+  assert.ok(!reasonText(none.why).includes("*") && !JSON.stringify(none.why).includes("*"));
+  /* no government named (body `*` or empty): the reason says so, and holds no `*` */
+  const emptyView = { ...testView(), fiscal_year: [] };
+  for (const body of ["*", "", "  "]) {
+    const r = fiscalPeriod({ date: day("2026-03-01", LA), body, view: emptyView });
+    assert.equal(r.undetermined, true);
+    assert.deepEqual(r.why, { key: "civil-time.missing.fiscal_year_no_body", vars: {} });
+    assert.ok(!reasonText(r.why).includes("*"));
+  }
+  /* withheld as a conflict: still names the body asked */
+  const w = { ...emptyView, conflicts: [{ at: "fiscal_year", values: [], says: "disagree" }] };
+  assert.deepEqual(fiscalPeriod({ date: day("2026-03-01", LA), body: "C", view: w }).why, { key: "civil-time.missing.fiscal_year_withheld", vars: { body: "C", at: "fiscal_year" } });
 });

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7490 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7495 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22091,6 +22091,7 @@ export const WORD_ROWS = Object.freeze([
   ["civil-time.missing.computation_absent","the computation '{computation}' the rule names is not held by the jurisdiction view",null,null,false,"code"],
   ["civil-time.missing.computation_withheld","the computation '{computation}' the rule names is withheld: the active profiles disagree on it ({at})",null,null,false,"code"],
   ["civil-time.missing.fiscal_year_absent","a fiscal year for {body} is not held by the jurisdiction view",null,null,false,"code"],
+  ["civil-time.missing.fiscal_year_no_body","no government was named, so no fiscal year can be read from the jurisdiction view",null,null,false,"code"],
   ["civil-time.missing.fiscal_year_withheld","a fiscal year for {body} is withheld: the active profiles disagree on it ({at})",null,null,false,"code"],
   ["civil-time.missing.weekend_absent","the weekend is not held by the jurisdiction view",null,null,false,"code"],
   ["civil-time.missing.weekend_counting_absent","the weekend is not held by the jurisdiction view; a business count or a roll needs it (the weekend is never assumed)",null,null,false,"code"],
@@ -22101,6 +22102,10 @@ export const WORD_ROWS = Object.freeze([
   ["civil-time.rules.anchor_open_end","the anchor {value} has an open or unknown end",null,null,false,"code"],
   ["civil-time.rules.anchor_undetermined","the anchor is undetermined: {why}",null,null,false,"code"],
   ["civil-time.rules.anchor_undetermined_unsaid","the anchor is undetermined: no why given",null,null,false,"code"],
+  ["civil-time.rules.calendar_entry_on_correction","calendar entry {year}{list}: counted on its correction, now {status}",null,null,false,"code"],
+  ["civil-time.rules.calendar_entry_status","calendar entry {year}{list}: {status}",null,null,false,"code"],
+  ["civil-time.rules.close_of_business_no_hours","the close of business is undetermined: the jurisdiction view holds no hours for the governing office",null,null,false,"code"],
+  ["civil-time.rules.close_of_business_no_opening","the close of business is undetermined: the office's hours list no opening on {weekday}",null,null,false,"code"],
   ["civil-time.rules.daytext_has_no_such_day","{dayText} has no such day {v1}: both readings are kept (K1504 (4))",null,null,false,"code"],
   ["civil-time.rules.due_open_end","the due {value} has an open end",null,null,false,"code"],
   ["civil-time.rules.due_undetermined","the due date is undetermined: {why}",null,null,false,"code"],

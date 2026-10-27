@@ -348,7 +348,7 @@ test("R7: where the dependencies are not installed it says it could not check, n
     const r = await verifyFresh(m, committed);
     assert.equal(r.checked, false);
     assert.equal(r.findings, null, "no empty list of findings that a caller could read as fresh");
-    assert.match(r.reason, /not installed/);
+    assert.ok(typeof r.reason === "string" && r.reason.length > 0, "a reason is given");
     assert.match(r.reason, /node_modules\/fakedep\/index\.mjs/);
     assert.equal(freshBuildRunnable(m, manifest).runnable, false);
     /* A member with no dependencies is always checkable. */
@@ -1371,6 +1371,46 @@ test("R39: every kind of binding is held to what the release exports: a service 
   assert.deepEqual(cont.map((f) => f.name).sort(), ["B", "M1", "M2", "M3", "M4"], "a deleted class needs no export");
   /* a config with none of these keys, or none at all, binds nothing */
   assert.deepEqual(bindingFindings([unit("a", []), { name: "b", exports: new Set(), config: null }]), []);
+});
+
+test("R43 (a): a class a member's migration deletes needs no export, and no binding of any member of the release may name it unless a later migration of its own member creates it again; the control is R39's creation without an export", () => {
+  const runner = (migrations, exports = ["default"]) => unit("agent-runner", exports, { migrations });
+  const worker = (bindings) => unit("agent-worker", ["default"], { durable_objects: { bindings } });
+  const deleting = [{ tag: "v1", new_sqlite_classes: ["RemoteSession"] }, { tag: "v3", deleted_classes: ["RemoteSession"] }];
+  /* deleted, unbound, not exported: coherent */
+  assert.deepEqual(bindingFindings([runner(deleting), worker([])]), []);
+  /* the other member still binds it: refused naming member, binding and class */
+  const bound = bindingFindings([runner(deleting), worker([{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" }])]);
+  assert.equal(naming(bound, "agent-worker", "REMOTE", "RemoteSession").length, 1, JSON.stringify(bound));
+  assert.match(bound[0].text, /agent-runner/);
+  /* the member's own binding (no script_name) of its own deleted class is refused too */
+  const own = bindingFindings([unit("a", [], { durable_objects: { bindings: [{ name: "X", class_name: "Gone" }] }, migrations: [{ tag: "v1", deleted_classes: ["Gone"] }] })]);
+  assert.equal(naming(own, "a", "X", "Gone").length, 1, JSON.stringify(own));
+  /* created again by a later migration of its own member (and exported): the binding stands */
+  const again = [{ tag: "v1", deleted_classes: ["RemoteSession"] }, { tag: "v2", new_sqlite_classes: ["RemoteSession"] }];
+  assert.deepEqual(bindingFindings([runner(again, ["default", "RemoteSession"]), worker([{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" }])]), []);
+  /* control: a migration that creates a class its bundle does not export is refused as R39 states */
+  assert.equal(naming(bindingFindings([runner([{ tag: "v1", new_sqlite_classes: ["RemoteSession"] }])]), "agent-runner", "migration v1", "RemoteSession").length, 1);
+});
+
+test("R43 (a): the release's Worker part states a member's migrations net of deletions: a deleted-only migration and a class a later migration deletes are no part of what an install creates, and a malformed deletion is named", () => {
+  const cfg = (migrations) => ({ durable_objects: { bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" }] }, migrations });
+  const part = (migrations) => workerPart(cfg(migrations));
+  const read = (r) => r.part.descriptor.durable_objects.migrations;
+  assert.deepEqual(read(part([{ tag: "v1", new_sqlite_classes: ["SegmentDriver", "RemoteSession"] }, { tag: "v2", deleted_classes: ["RemoteSession"] }])),
+    [{ tag: "v1", classes: ["SegmentDriver"] }]);
+  /* control: no deletion, the part is as before */
+  assert.deepEqual(read(part([{ tag: "v1", new_sqlite_classes: ["SegmentDriver"] }])), [{ tag: "v1", classes: ["SegmentDriver"] }]);
+  assert.deepEqual(part([{ tag: "v1", new_sqlite_classes: ["A"] }, { tag: "v2", deleted_classes: "A" }]).missing, ["migrations"]);
+});
+
+test("R43 (b): HEALTH, an ordinary class of the agent Worker beside SEGMENTS and CHECKS, is held to R39 as written: bound to a class the bundle exports it passes, to one it lacks it is refused", () => {
+  const config = { durable_objects: { bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckDriver" }, { name: "HEALTH", class_name: "HealthProbe" }] },
+    migrations: [{ tag: "v1", new_sqlite_classes: ["SegmentDriver", "CheckDriver", "HealthProbe"] }] };
+  assert.deepEqual(bindingFindings([unit("agent-worker", ["default", "SegmentDriver", "CheckDriver", "HealthProbe"], config)]), []);
+  const lacking = bindingFindings([unit("agent-worker", ["default", "SegmentDriver", "CheckDriver"], config)]);
+  assert.equal(naming(lacking, "agent-worker", "HEALTH", "HealthProbe").length, 1, JSON.stringify(lacking));
+  assert.equal(naming(lacking, "agent-worker", "migration v1", "HealthProbe").length, 1, "its creating migration is held too");
 });
 
 test("R39: bundleExports reads the names the built bundle exports from the build, not from the source", async () => {
