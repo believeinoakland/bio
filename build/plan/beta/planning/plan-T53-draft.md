@@ -6,6 +6,8 @@
 
 **Before R1 (BOB's acts):** (1) TESTS-SWEEP merged by its §5.10 pass; words and fixtures checks at 0; the fixtures findings needing a module's judgment become entries below (K5425 (b)) `[owed: TESTS-SWEEP's list]`. (2) Layer 6 re-ordered (FOLD-AI §2.9) and the new modules added to `modules.json` and `layers.md` (STRUCTURE §5; the ones carrying capability to Bob), member-roster R27's `MODULE_ORDER` (R61: modules.json's order) re-pinned. (3) Requirement lines written from the READY drafts named below, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures given to layer 11's START. (5) The design rows each entry names folded from `main` (K945).
 
+**CAPABILITIES' detail** (L23): `planning/plan-T53-capabilities.md` holds every CAPABILITIES entry by layer and module (N1259, N824, N1110, N1265, N858, N1269-N1272, N1257's layer names and record-core), its new modules (register-readers L1, registers L5, mail-door L3), measurements, BOB's acts, left-outs and points; each module's job reads its rows there at START. The lines below name each module once.
+
 **Reading an entry.** As T52-R1 (`archive/T52-R1.md`, "Reading an entry"): `first: settle X`, `[waits: X]`, `after X` (a same-layer dependency arrives as a CHANGE, K5434 (2)). A detail file named by an entry is read whole at START; its lines are the module's requirements once BOB writes them.
 
 ## Layer 1
@@ -16,7 +18,7 @@
 - T53 · N1257 · the shipped layers (federal, California, Alameda County, Oakland), the every-footprint build check, the package alias and its equality test; the test forest · same, R109-R114, R118
 - T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · same, R115-R117 plus the one placeless team-rules layer (CONSISTENCY §2.15, decided) `[owed: CAPABILITIES' amendment of R24, R100, R102, R115]`
 - T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · same, R119, R120 `[owed: F4's measure; the makers' key]`
-- `[owed: K5458's lines: every module that stores a rule, list or office name stores its layer (K5462: old records resolve on their own date)]`
+- T53 · N1257 (K5458, K5462) · `nameResolve` (R121, pure: callers pass the active layer set), the one-government fiscal year (R123, R124), N1259's register sections (R127-R133), N858's court-kind refusal (R136) and R137's display half, the beta's profile texts; every module that stores a rule, list or office name stores its layer (local-facts, entities, duties, reading-guides, layer 9, instance-setup, producers, screens) · `planning/plan-T53-capabilities.md` §A
 - T53 · K5497 (C7 remainder) · Civicsmith ships United States places only; a team choosing its places is told so; a team whose work is about a place outside the US names its places and adds their offices and rules itself (DEC-150); level names unchanged · `[owed: CAPABILITIES' lines]`
 - T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18 (Bob)]` (L3 decided, K5517: a disputed year still groups, shown disputed)
 
@@ -106,8 +108,8 @@
 - T53 · K5513 (C22) · acquisition R36: a daemon fetches on the team's key only for the daily check of a court case a member follows, stopping at the last unfollow; else `NOT_PERMITTED` (credentials R29 unchanged: the words are R36's) · `planning/lines-K5513-daily-follow.md`
 - T53 · N1266, N1267 · held-and-named filed whole with an owed reading (RF10), refused not filed (RF11), the refusal before any read (CC6) · `files/REQ-format-registry-beta.md` RF10-RF11
 - T53 · DEC-455 · capture: an op reading a preview's next rows from `next_row` (`previewmore`, name BOB's) · DEC-455
-- `[owed: CAPABILITIES N824 email intake (C12-C14 answered: K5504 a forwarding address on the team's own domain, upload beside it; K5505 a private address per member; K5506 forwarded mail waits in her private list until she states where it came from)]` `[owed: N1110 (K5507: the directory the hand-kept list on civicsmith.org; declined listings and applications recorded now)]` `[owed: N858 (K5508-K5512: a guide needs a template's writer, sources, a professional's review and another approver, a team of one may opt out, recorded; texts for the records request and Oakland's lower-stakes actions, never court petitions; the reviewer named with organisation and credential, re-reviewed at each release touching its kind or a changed source; a machine may draft, declared, never review or approve)]`
-- `[owed: N1259 registers (C8-C11, C22 answered: K5503 a seventh reason for naming a person, "named in the public filing the case cites"; K5513 a followed case polled daily on the team's key; K5498 California's own sources, the state API by the team's key read only when a member asks, the bulk file brought in, never OpenCorporates, paid sources by a member's own account only; K5499 only a home address's street lines removed from donor lists; K5500 the donor-use guard federal only, 11 CFR 104.15)]`
+- T53 · N824 (K2425, K5504-K5506, K5527 (1), (2)) · provenance's `email` origin, `emailCapture` with her statement, `fileMember` for a message's attachments and a ZIP's entries, discarded knocks cleared; new module **mail-door** after doorbell `[waits: Bob: the module; N824 B4]` · `planning/plan-T53-capabilities.md` §A Layer 3
+- T53 · N1259 (K4403, K5498, K5503, K5513) · `streamRegister`, `probeRegister`, the docket read for a followed case (R36, `planning/lines-K5513-daily-follow.md`), segments as captures · `planning/plan-T53-capabilities.md` §A Layer 3 `[owed: CAPABILITIES' officers line, K5498]`
 
 ## Layer 4
 
@@ -116,7 +118,7 @@
 - T53 · DEC-454 · `content.extent`'s part key in plain words · DEC-454
 
 **extraction** (with screens-inquiry)
-- T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents; finding names, organisations and dates across a whole document is reading, not interpretation (K5496, C21 A); the page and search say what was interpreted, for which investigation, by whom and when, with "not interpreted for this investigation" in search, and the document view marks interpreted parts visibly (K5495, C2 A; the mark UX-DESIGN's) · `[owed: CAPABILITIES N1269-N1272 READY (Q2 still Bob's)]`
+- T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents; finding names, organisations and dates across a whole document is reading, not interpretation (K5496, C21 A); the page and search say what was interpreted, for which investigation, by whom and when, with "not interpreted for this investigation" in search, and the document view marks interpreted parts visibly (K5495, C2 A; the mark UX-DESIGN's) · · `planning/plan-T53-capabilities.md` §A Layer 4 (extraction R114-R119, reading-pipeline R64-R65, acquisition R135) and Layer 7 (investigation R26-R32) `[R119: Bob, a member-visible limit?]`
 
 **reading-pipeline**, **extraction**
 - T53 · N1266, N1267 (K5427) · the text bound 100 MB, HTML streamed to it; the held-unread verdict re-run when a reader arrives · `files/SIZES-N1267.md` §3, `REQ-format-registry-beta.md` RF10 `[owed: lines for reading-pipeline not drafted]`
@@ -141,7 +143,7 @@
 **entities**
 - T53 · N1257, N1256 · `federalOfficesFind` (op `federaloffices`); a federal office made an entity only when chosen, FOIA its law · `capabilities/N1257-requirements-modules.md` (entities R68)
 
-`[owed: CAPABILITIES N1259 (people, money groundwork, registers)]`
+**registers** (new, after workbooks; K4403 (1)) · T53 · N1259 · listing, imports by resumable slices, search, cite a row, compare, tombstones, interest and refresh, guardrails · `planning/plan-T53-capabilities.md` §A Layer 5; also events (one followed entry one event), local-facts, entities, duties (layer names) there
 
 ## Layer 6
 
@@ -232,7 +234,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 
 ## Layer 10
 
-**following** · C T52-34; `[owed: N1259 watches and alerts]` · **monitoring** · `[owed: N1259's pause line]`
+**following** · C T52-34; T53 · N1259 watch a number, never a name; a followed docket daily (K5513) · `planning/plan-T53-capabilities.md` §A Layer 10 · **monitoring** · pause stops slices and polls · same · **scheduler** · `register-import`, `discard-clear`, `mail-clear` · same
 
 ## Layer 11
 
