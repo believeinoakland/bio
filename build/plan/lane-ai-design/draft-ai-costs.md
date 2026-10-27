@@ -21,7 +21,8 @@ Example price spread, to show why the estimate matters (same model, `gpt-oss-120
 1. **Before connecting:** each plan's price basis and an estimate for typical work (from characterization's standard tasks) (`aiproviders` "Add an AI").
 2. **Before a run or a costly act:** an estimate range on the account that will serve it; if a hop is possible, the extra cost of moving (a cold cache) (`aimoments` (h)).
 3. **After:** the actual cost, by AI and effort, beside the estimate (`ai-use` R11, R15).
-4. **Over time:** spend against each limit; alerts at thresholds the owner sets; reconciliation with the provider's own figures where it offers them, else the gateway log's per-call cost.
+4. **Who is using what** (Bob, K5459): the paying team's administrators, or a paying project's owners, see each member's use and cost on the accounts they pay for, so they can talk with that member before it gets out of hand (`draft-ai-use.md` R27). A member's own account and personal subscription stay private to that member.
+5. **Over time:** spend against each limit; alerts at thresholds the owner sets; reconciliation with the provider's own figures where it offers them, else the gateway log's per-call cost.
 
 ## 3. What is measured, and on which copy
 

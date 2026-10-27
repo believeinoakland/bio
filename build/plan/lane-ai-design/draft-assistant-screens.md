@@ -82,6 +82,7 @@ Words: op names keep DEC-420's spellings; "limit", never "budget", in words peop
 - **U3 · UX-DESIGN:** "AI path ready" states in place of the alpha's last-check steps (setup, Settings), and the reachable rule (`interface-shell` R20) for a project-only account.
 - **U4 · UX-DESIGN:** the charge-or-rule answer (N1258) when its tranche opens.
 - **U5 · UX-DESIGN:** the installer's ask for a Cloudflare credential able to create a gateway and store keys (AIR45), with why, in plain words.
+- **U7 · UX-DESIGN (K5459):** `aiproviders`' "Limits and alerts" and `aiproject` show per-member use and cost on accounts the team or project pays for (`op=aiusebymember`, owner `ai-use`, rung none (read), class read act); DEC-420's "names no member" no longer holds there. `aimine` unchanged (a member's own use, private).
 - **U6 · UX-DESIGN (owed by DEC-420):** `aiconnect`'s dashboard labels checked against a live dashboard (this lane can do it once a credential with AI Gateway access exists; Bob's act otherwise); a catalogue row for the "through a gateway" type (`draft-ai-catalogue.md`).
 
 ## 6. For Bob (through BOB, written for him on `QUESTIONS.html`)

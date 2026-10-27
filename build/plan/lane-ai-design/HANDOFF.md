@@ -32,3 +32,6 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 ## A44 · 2026-10-27 · BOB's decisions taken in; the two owed deltas drafted
 K5457: every For BOB point decided as recommended. Drafted for PLANNING: `draft-run-rules.md` (READY; admit per entry and gate part, real-matters set as the standing measure pending AI1) and `credentials` R48 (in `draft-ai-accounts.md`). **Need:** Bob's AI1–AI10.
+
+## A45 · 2026-10-27 · Bob's K5459 folded: paying owners see per-member use
+AD43 added; `draft-ai-use.md` R27 `accountUseByMember` (team and project accounts, to their owners; a member's own account never); `draft-ai-costs.md` §2; `draft-assistant-screens.md` U7. **Need:** Bob's AI1–AI10.
