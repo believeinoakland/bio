@@ -21,7 +21,9 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
   - **AI9, K5483:** A. Keep offering the last list; say it is old after two weeks.
   - **AI10, K5484:** "B", bring each of the five separately. Written as AI12–AI16 (`QUESTIONS-AI12-AI16.html`) and sent to BOB for the page; their lines stay drafts until answered.
 
-**Open with Bob** · AI2 (which parts the beta offers; rewritten on the page), AI11 (owned or joined projects; "owns" drafted), AI12–AI16.
+**Also answered and folded by #3 after hand-over:** AI2 A (K5485; the screens draft's rows already follow it; AD50), AI11 B (K5486: a shared account may go on any project the member has joined; `draft-ai-accounts-dec465.md` R49 changed; AD51).
+
+**Open with Bob** · AI12–AI16 (on the page).
 
 **Next steps, in order**
 1. Fold AI8 (K5482):

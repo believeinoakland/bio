@@ -102,7 +102,7 @@ Words: op names keep DEC-420's spellings; "limit", never "budget", in words peop
 - C · let members use untested parts with an "untested" label, as test copies do today.
 Why B: it gives the beta a working assistant without waiting on a hand-written set, and it still holds every AI to a measured bar. A alone would hold the whole assistant back. C drops the bar.
 
-**Q2 · Which parts the beta offers.** "Full support for the assistant" (K5417). Today only asking, drafting, page reading, checks and plans are built; investigating, extracting and exploring are off behind their own bars (D11: at most 20% false alarms).
+**Q2 · Which parts the beta offers. ANSWERED: A (K5485).** "Full support for the assistant" (K5417). Today only asking, drafting, page reading, checks and plans are built; investigating, extracting and exploring are off behind their own bars (D11: at most 20% false alarms).
 - A · *(recommended)* the beta offers every part that is built, plus the intake interview and the case's account (N842) and the charge-or-rule answer (N1258). Investigating, extracting and exploring stay behind their own bars and turn on per AI when an AI passes them.
 - B · as A, and the beta also builds and turns on investigating, extracting and exploring now.
 Why A: those three have their own accuracy bars Bob set; they open per AI as soon as one passes, with no new decision.

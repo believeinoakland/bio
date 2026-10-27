@@ -58,6 +58,8 @@ One line per decision (LANES.md §1): id · date · his words, quoted, never rew
 - AD47 · 2026-10-27 · "as recommended" (AI5: a personal subscription must also be on the team's allowed list) · AQ5 · K5479
 - AD48 · 2026-10-27 · "A, with the ability for an admin to turn off retesting - with a queue entry reminding the admin that retesting is off." (AI6: re-test only AIs in use, each with a monthly cap Bob sets) · AQ6 · K5480
 - AD49 · 2026-10-27 · "as recommended" (AI7 B: a standing rule lets Civicsmith mark an AI watch, lapsed or retired on a stated trigger, telling Bob each time; adding or restoring stays his) · AQ7 · K5481
+- AD50 · 2026-10-27 · "as recommended" (AI2 A: every built part, plus the intake interview, the case's account and the charge-or-rule answer; investigating, extracting and exploring stay behind their bars and switch on per AI as it clears them) · AQ2 · K5485
+- AD51 · 2026-10-27 · "B" (AI11: a shared account may go on any project the member has joined, not only ones they lead) · AQ11 · K5486
 
 ## Costs
 - AD43 · 2026-10-27 · "If the team or project is paying for the AI usage, then they should see who's using what so that they can manage usage with that member before it gets out of control." (option A of UX-DESIGN's cost-visibility question; personal subscriptions stay private) · BOB #321's relay · K5459
