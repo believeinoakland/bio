@@ -43,7 +43,7 @@ Five tests per type: **value** to an investigation of a public body (what Oaklan
 
 ## 2a. A first count (F2, 2026-10-27, from the live sources)
 
-**Legistar** (the city's agendas and attachments; its public API): the attachments of the 400 most recent matters, **1,243 attachments, all PDF (100 %)**. Council business arrives as PDF; the size and page count of those packets are not yet measured (S2 continues).
+**Legistar** (the city's agendas and attachments; its public API): the attachments of the 400 most recent matters, **1,243 attachments, all PDF (100 %)**. Council business arrives as PDF. Size of a random 150 of them: median 218 KB, 90th percentile 1.6 MB, largest 19.4 MB. So the 100 MB / 5,000-page bound is far above the ordinary council attachment; it is there for the packets, scans and request releases that are not ordinary (pages not measured).
 
 **Oakland's open data portal** (data.oaklandca.gov; its catalog API): 739 assets. **313 are tables** (served as CSV, JSON and XML by the platform; map tables also as GeoJSON, KML/KMZ and shapefile). **102 are uploaded files**, by the portal's detected type:
 

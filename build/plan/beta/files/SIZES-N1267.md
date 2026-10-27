@@ -2,6 +2,8 @@
 
 **Status** · READY (F3; the type list is settled, K5435 to K5437). First drafted by FILES #1 (F2), 2026-10-27. Not READY: waits on Bob's answers F1-F3 (K5426) for which types are in. Figures: K4628 (3) option B, K4831 (3), (4), (8), (10), K5427 (text 100 MB). Requirement wording is BOB's (P17).
 
+**Placement (K5448 (8)):** these per-kind bounds become `runtime-limits`' Level 1 row; each reader quotes it (GAP-1.2).
+
 ## 1. The rule
 
 A file is read whole, searchable to the last line, citable at its page, row or cell (K4628, K4630), when it is within its kind's bound. A file over **either** limit of its kind is refused in plain words with its size and the limit, never half read (K4831 (4)). The alpha ships with its current, lower limits, each stated with size and limit and never shown as read (K4831 (3)); this table is the beta's.
