@@ -68,6 +68,9 @@
 ## The alpha's live walk, after the release, installer and site (Bob, K5348; P19 (1): after the release, by Bob's order)
 - One complete walk of 0.87.0 on biosmoke8 (`deploy-and-walk.md`): re-walk 11's open rows (S-1 setup "Still loading", A's setup zone row, E's adoption row, C's money rows and C-M8, E-AP2/N2, E-C2a, the plan's date checks), every screen as administrator and member (K3052, the dead-end census K4164); each defect an entry of T52.
 
+## At T52's open: R14 adopted (K5351; P19 (1): after the release, by Bob's order K5343)
+- Merge civicos-process PR #13 (`lane/r14-test-runs`) into `lane/process-redesign`, then that branch's PR to `main` (RD33; 250/250 at the lane's last read): every test run reports a missing result with its cause; a memory watch caps each test process (screens-inquiry's `document`, `fr28-document`, `t51-document` then read NO RESULT at 4.1 GB, a job of T52's); `proc tests` for a pass.
+
 ## After 0.87.0 (K5350; P19 (1): after the release, by Bob's order K5343)
 - R33 `newgroup/test/realsize.test.mjs`: four reds (the install and update memory cases at real size) red on the tranche tip with 0.86.0 too; traced to the test's fake Cloudflare refusing the upload ("this release's description of its program can't be read"), its child build not yet read; the installer itself reads 0.87.0's statements cleanly.
 - `deploy-test.yml` cannot start a fresh copy (members deploy before the plane; a script copy holds no store or secrets), and on the shared test account a copy's member run re-points the one `agent-worker` (K5350): a fresh copy goes through the installer, or the workflow refuses a copy without a store.

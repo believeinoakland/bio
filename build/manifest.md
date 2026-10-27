@@ -76,9 +76,9 @@ Every feature and journey that does not need the assistant is walked in its own 
 
 Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#3, `session_01Vp7GZTN9bpooZud5Wd2CuC`, sonnet, started by BOB #273 on the third account, K4851; #1 `session_015HB1ABUMedpZ4X94giQAiz` started by BOB #241; #2 on another account, unreachable), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
 
-## Parallel work: the process redesign (Bob, 2026-10-26; K5334)
+## Parallel work: the process redesign (Bob, 2026-10-26; K5334; ended K5351)
 
-The process redesign (K5319, K5326; `build/plan/draft-process-redesign.md`) is designed, built and certified by dry run in its own session, **PROCESS-REDESIGN** (#3, `session_016AUJRfwhxT75qBeN33AT57`, started by #2 on Bob's "refresh yourself"; #2 `session_01PpUDVnuZpceq4TvX8bQ7gq` idle, its archive refused by auto mode (K5344), left as is; #1 archived), on branch `lane/process-redesign` of `believeinoakland/civicos-process` (its `lane-process-redesign/CHARTER.md`). It never changes the process in use, bio, or that repository's `main`: its result reaches use only certified, at a tranche boundary or on Bob's ruling. BOB reads its `HANDOFF.md` (entries `R<n>`; `RELEASE` marks a fault seen in the alpha's cut) at takeover and at every backstop check.
+The PROCESS-REDESIGN lane designed, built and certified the redesigned process, now in use (civicos-process `main`); its record is `lane-process-redesign/HANDOFF.md` there (R1-R17). It ended once T51b R1 ran clean on the process (#3 `session_016AUJRfwhxT75qBeN33AT57` archived; #2 left idle, K5344). Its last work, R14 (test runs that name a missing result's cause, the memory watch, `proc tests`), is civicos-process PR #13, merged by BOB at T52's open (`next.md`). A new process fault goes to BOB, or to a lane BOB restarts.
 
 ## Parallel work: the reading architecture (Bob, 2026-10-23; K4812; ended K4834)
 
