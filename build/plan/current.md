@@ -202,6 +202,7 @@ Every screen job of this layer also draws DEC-445's rows and DEC-446's layout th
 
 **screens-daily**
 - T52-62 · W28 · A-K2 offer (after W20), A-K4, A-K5, A-K11 Queue half (after W23), B-K5 display half (after W10), B-K11, B-K12 · MAJOR · Forward offers only members who can see the item and never the viewer; "Choose several" Forward moves what one-by-one Forward moves, or each row says why, and names the ask as the Queue does; no "Done: act.taskdecide.label.queue" (a sweep over every act that sets `ui.done` finds its words row); the Queue line counts as the masthead does ("1 item waits on you" owed); a record's snippet shows words, no `##` or session log; the passage count says passages and documents truthfully ("{n} passages in 1 document" row owed, DS11); the widen button is not labelled "Search". PL2 W28.
+- T52-104 · `browse.test.mjs` R46 ("a passage's matched words", line 212) red on the tranche before and after query-language R35 (RETRIEVAL #1, K5402): first: settle the cause with W28's marks (R35), then fix it.
 - T52-63 · N1263 · reads `screen.queue.vouchband.apart` (bell and sidebar count queue items only, the band its own number).
 - T52-64 · U1 · LA-7 · first: settle m1's `op=memberlist` and Home's `data.members` state; guard "Yours: ." until the list is known (certain either way). Also LB-18: the `cs.call` start and settle order for "Still loading" at 1.5 s on `council NOT zzzqqq …`.
 - T52-65 · K4599 (a) · Home and Queue read one combined read.
