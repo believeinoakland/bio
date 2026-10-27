@@ -46016,15 +46016,9 @@
   },
   {
    "key": "screen.document.interp.for",
-   "en": "For {investigation}: {parts} ({member}, {date}). Not yet: {ranges}.",
+   "en": "For {investigation}:",
    "protected": false,
-   "note": "DEC-476: document: the fact value for the current investigation (K5495)"
-  },
-  {
-   "key": "screen.document.interp.other",
-   "en": "For {investigation}: {parts} ({member}, {date}).",
-   "protected": false,
-   "note": "DEC-476: document: beneath it, another investigation the viewer can see (K5495)"
+   "note": "DEC-476: document: the heading of one investigation's entry in the fact row, then a line per member and date (K5495; DEC-478)"
   },
   {
    "key": "screen.document.interp.none",
@@ -46067,6 +46061,66 @@
    "en": "not interpreted for {investigation}",
    "protected": false,
    "note": "DEC-476: finder: on a document or passage hit whose document is not interpreted for the current investigation (K5495)"
+  },
+  {
+   "key": "screen.document.interp.group",
+   "en": "{parts}, by {member}, {date}",
+   "protected": false,
+   "note": "DEC-478: document: one line per member and date under an investigation (B563 1)"
+  },
+  {
+   "key": "screen.document.interp.notyet",
+   "en": "Not yet: {ranges}.",
+   "protected": false,
+   "note": "DEC-478: document: what is not interpreted for this investigation, as ranges (B563)"
+  },
+  {
+   "key": "screen.document.interp.all",
+   "en": "Every part is interpreted.",
+   "protected": false,
+   "note": "DEC-478: document: in place of Not yet when nothing is left (B563 2)"
+  },
+  {
+   "key": "part.page",
+   "en": "page {n}",
+   "protected": false,
+   "note": "DEC-478: a part: one page (B563 4)"
+  },
+  {
+   "key": "part.pages",
+   "en": "pages {from} to {to}",
+   "protected": false,
+   "note": "DEC-478: a part: a page range (B563 4)"
+  },
+  {
+   "key": "part.rows",
+   "en": "rows {from} to {to} of the sheet “{sheet}”",
+   "protected": false,
+   "note": "DEC-478: a part: a sheet's row range (B563 4)"
+  },
+  {
+   "key": "part.paragraphs",
+   "en": "paragraphs {from} to {to}",
+   "protected": false,
+   "note": "DEC-478: a part: a text's paragraph range (B563 4)"
+  },
+  {
+   "key": "part.slides",
+   "en": "slides {from} to {to}",
+   "protected": false,
+   "note": "DEC-478: a part: a presentation's slide range (B563 4)"
+  },
+  {
+   "key": "part.section",
+   "en": "the section “{heading}”",
+   "protected": false,
+   "note": "DEC-478: a part: a headed section (B563 4)"
+  },
+  {
+   "key": "text.sourcechanged",
+   "en": "A source this text rests on changed on {date}. It is waiting to be reviewed again, and is still offered.",
+   "protected": false,
+   "note": "DEC-478: a reviewed text the link check flagged (B564, K5512, K5529)"
   }
  ],
  "rewrite": {

@@ -7262,3 +7262,15 @@ the design: (1) The bar's cards name the team's grade by its new name: `screen.c
 verified: the page's checks pass; on tranche/T53 with these words files, words 0 failures, format 0; no code reads the reworded or dropped rows.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `mock-refs.js`, `mock-acts.js`, `words-drawn.src.py` (the rows named, in place).
 owed: BOB: merge this commit (MERGE). Nothing new for jobs.
+
+### DEC-478 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018Bhcefdgy83sFMSkwg7xRc, UX design #44) (B563: CAPABILITIES C27 on DEC-476's Interpreted row; B564: C28, K5512, K5529)
+for: design (T53, the beta)
+question: The Interpreted row by member and date, when every part is interpreted, the two undrawn rows, the parts a chooser offers; and the line on a reviewed text whose source changed.
+why it is Bob's: it is not (P17, beneath K5495).
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: The Interpreted row lists each investigation the viewer can see under "For {investigation}:", then one line per member and date, "{parts}, by {member}, {date}", then "Not yet: {ranges}." or, when nothing is left, "Every part is interpreted."; before any part, "Nothing yet for {investigation}." (`screen.document.interp.other` is dropped: the same heading serves every investigation). The line recorded when a member opens or cites a part, "Interpreted for {investigation}: {part}.", is drawn under the text's legend. Parts are named by the units the reading holds: "page {n}", "pages {from} to {to}", "rows {from} to {to} of the sheet “{sheet}”", "paragraphs {from} to {to}", "slides {from} to {to}", "the section “{heading}”" (`part.*`); the chooser and the spreadsheet fold use them. B564: `text.sourcechanged` "A source this text rests on changed on {date}. It is waiting to be reviewed again, and is still offered." (not drawn: its screen is the reviewed text's, not yet drawn).
+verified: the page's checks pass; on tranche/T53 with these words files, words 0 failures, format 0; no code reads the new keys.
+reasoning recorded in: this entry; `screens/mock-screens.js` (document facts, chooser, text legend, spreadsheet fold), `words-drawn.src.py` (DEC-478 block; `screen.document.interp.for` in place, `.other` dropped).
+owed: BOB: merge this commit (MERGE); tell CAPABILITIES (C27, C28). CAPABILITIES and screens-inquiry: `interpretationOf`'s parts grouped by `by` and day into `screen.document.interp.group`, `.notyet` from `not_interpreted`, `.all` when it is empty, each part named by its `part.*` row.
