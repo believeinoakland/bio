@@ -8,3 +8,4 @@
 - The region picker (Bob, K5440, on P2: "as recommended"): "near me" (speed only) and "keep my data in this region" (Cloudflare's jurisdiction setting), worded honestly about the difference.
 - Region after install (Bob, K5441, on P3: "a recommended"): fixed at Level 1; a move is a new copy by export and import, said before the region is chosen.
 - Choosing a level (Bob, K5444, on P4: "Shouldn't, for example, a newsroom be able to start a CS copy at the institution level ...? ... let's start that study."): a copy picks Team, Institution or Enterprise at install; the Levels 2-3 study (N1271) runs now in PLATFORM; unmeasured figures are marked so.
+- Enterprise (Bob, K5454, on P5: "we'll need to work with a CS team interested in setting up an enterprise scale copy before we can provide that support"): not yet available; built with the first team that wants it; Team and Institution in the beta.
