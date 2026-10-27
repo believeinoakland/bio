@@ -1,6 +1,6 @@
 # pdf-pixels (T52)
 
-**Status** · session_018Bhcee86hcxpTAeDLQWjph · depth 2 · COMPLETE
+**Status** · session_018Bhcee86hcxpTAeDLQWjph · depth 2 · WAITING: COMPLETE reported to BOB; available for a CHANGE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
