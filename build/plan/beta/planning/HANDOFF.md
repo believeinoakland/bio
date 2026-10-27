@@ -4,15 +4,15 @@
 
 ## 0. State now and next steps
 
-**State.** PLANNING #4 took over at L36. Folded into `plan-T53-draft.md` by layer (43 KB): the seven A drafts with every Bob answer (no bracket on a Bob question remains in `lines-A*.md`); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (detail in `plan-T53-capabilities.md`); JOURNEYS in `plan-T53-journeys.md` (J1-J7 answered and applied; nothing waits on Bob); PLANNING's own lines, all decided (`lines-K5501-*`, `lines-K5513-*`, `lines-K5527-*`, `lines-K5532-*`). K5555 (A4-R8's bounding) applied. `CONSISTENCY.md` rows 1-20 decided.
+**State.** PLANNING #4 took over at L36. Folded into `plan-T53-draft.md` by layer (43 KB): the seven A drafts with every Bob answer (no bracket on a Bob question remains in `lines-A*.md`); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (detail in `plan-T53-capabilities.md`); JOURNEYS in `plan-T53-journeys.md` (J1-J7 answered and applied; nothing waits on Bob); PLANNING's own lines, all decided (`lines-K5501-*`, `lines-K5513-*`, `lines-K5527-*`, `lines-K5532-*`). K5555 (A4-R8's bounding) applied; DEC-473 to DEC-478 folded (L39). `CONSISTENCY.md` rows 1-20 decided.
 
 **Next steps, in order.**
 1. (done L38: J7.)
-2. Fold as BOB relays: DEC-474 to DEC-477 once merged (screens-inquiry R141-R147 and screens-daily R111 wait on DEC-476: unbracket in `plan-T53-capabilities.md` and the plan's Before R1 (8)); PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535, PL44-PL45); TESTS-SWEEP's fixtures findings needing a module's judgment (K5425 (b)), as entries.
+2. Fold as BOB relays: PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535, PL44-PL45); TESTS-SWEEP's fixtures findings needing a module's judgment (K5425 (b)), as entries.
 3. BOB's word on `reading-sets-T53.md` R1-R7 (L37: detail rows into each START; many-module drafts read by section; DEC rows by id; screens-inquiry split by screen and the AI screens as `screens-ai`, K617; the other modules past 4,000 lines; drafts named by file); then apply them to the plan and re-measure.
 4. When every lane is folded: the plan under 51,200 bytes, detail files beside it; mark READY for BOB.
 
-**Waiting on.** Bob: nothing. BOB: L37's R1-R7; the DEC-474..477 merge (after his suite run). Lanes: PLATFORM (service levels, whole-record move still DRAFT), TESTS-SWEEP (fixtures list).
+**Waiting on.** Bob: nothing. BOB: L37's R1-R7. Lanes: PLATFORM (service levels, whole-record move still DRAFT), TESTS-SWEEP (fixtures list).
 
 Entries L1-L15 are in `build/plan/archive/planning/HANDOFF-L1-L15.md` (moved at L35).
 
@@ -107,3 +107,7 @@ Each job's set measured by a scratch script over the plan and its two detail fil
 ## L38 · 2026-10-27 · J7 applied; K5561
 
 Bob answered J7 B as recommended (K5560): the two R-107 lines of `plan-T53-journeys.md` §A unbracketed; the plan's JOURNEYS entry no longer waits. BOB recorded JOURNEYS' four lane-recommended points as K5561 (already applied as K5474). Nothing waits on Bob in this lane's scope. DECISIONS gains K5560.
+
+## L39 · 2026-10-27 · DEC-474 to DEC-478 folded
+
+BOB merged U505-U511 (DEC-473 to DEC-478, ec02fce0bc); tranche/T53 merged in. `plan-T53-capabilities.md`: screens-daily R111 and screens-inquiry R141-R147 unbracketed, with DEC-476's and DEC-478's keys (the Interpreted row grouped by member and day, `interpretmark`'s chooser naming parts by `part.*`, the margin bars, Finder's mark; DEC-476 confirms the draft's old "R109" pointer is this R111). The plan: Before R1 (8) done; a new block of DEC-474 (the `ceiling` scale in interface-shell and the screens' chips, the signing list's words, `screen.published.ungraded`), DEC-475 (the AI screens' U8-U10, AI6, AI14 with wait lengths for BOB to confirm, K5483, K5486, K5488), DEC-476 (AI15: no terms acceptance, `ai.notice.termschange`), DEC-477 (words only) and DEC-478 entries.

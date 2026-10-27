@@ -202,10 +202,10 @@
 
 **screens-daily**
 - T53 · N1260 · A6 keeps R108-R109; N1260's R108 **numbered R110** · N1260
-- T53 · N1272 (K5495, K5496) · the Finder's "not interpreted for {investigation}" mark; draft R109 **numbered R111** (CONSISTENCY) · N1269-N1272 R111 `[waits: BOB's merge of DEC-474 to DEC-477 from the design stream]` (on branch claude/gallant-brown-zg0wc1, not yet on tranche/T53; DEC-476 governs)
+- T53 · N1272 (K5495, K5496) · the Finder's "not interpreted for {investigation}" mark; draft R109 **numbered R111** (CONSISTENCY) · N1269-N1272 R111; drawn by DEC-476 (merged, ec02fce0bc): a hit whose document is not interpreted for the current investigation adds "not interpreted for {investigation}", from `interpretedFor` (DEC-476 names the draft's old "R109" pointer wrong: it is this R111)
 
 **screens-inquiry**
-- T53 · N1272 (K5495, K5496) · the Document page's "Interpreted" row, the offer (op `interpretmark`), the chooser, the proposals list and its absent state, the in-place sentence, the margin bars · N1269-N1272 R141-R147 `[waits: BOB's merge of DEC-474 to DEC-477 from the design stream]` `[chooser for sheet rows, paragraphs, slides is UX-DESIGN's]`. R118's withdrawal has no screen: recommended a UX need in the chooser, else op only.
+- T53 · N1272 (K5495, K5496) · the Document page's "Interpreted" row, the offer (op `interpretmark`), the chooser, the proposals list and its absent state, the in-place sentence, the margin bars · N1269-N1272 R141-R147; drawn by DEC-476 and DEC-478 (merged, ec02fce0bc): R141 becomes the Interpreted row's keys (`screen.document.interp.for`, `.group` by member and day from `interpretationOf`'s `by`, `.notyet` from `not_interpreted`, `.all` when empty; `.other` dropped), R142's act `interpretmark` and its chooser (parts named by `part.*`: pages, sheet rows, paragraphs, slides, sections), the margin bars from `for_this`/`for_others`, the line on opening or citing a part under the text's legend; the spreadsheet fold keeps only `screen.document.sheet.read`. R118's withdrawal has no screen: recommended a UX need in the chooser, else op only.
 
 **screens-investigate** (and the registers screen)
 - T53 · N1257 · R71 (`due-date` rules with layer) · N1257 layer-names R71
