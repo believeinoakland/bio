@@ -67,7 +67,7 @@ export function readAddress(locator) {
   if (typeof locator !== "string" || !locator)
     return { why: "no address was given, so whether this is a Legistar Web API capture cannot be said" };
   const m = ADDRESS.exec(locator.trim());
-  if (!m) return { why: "the address is not a Legistar Web API address (webapi.legistar.com/v1/<client>/<endpoint>)" };
+  if (!m) return { why: localize("legistar-reader.index.the_address_is_not_a_legistar", "the address is not a Legistar Web API address (webapi.legistar.com/v1/<client>/<endpoint>)") };
   const segs = m[2].split("/").filter(Boolean);
   if (!segs.length) return { why: localize("legistar-reader.index.the_address_names_a_client", "the address names a Legistar client but no endpoint") };
   let record = null;
@@ -134,7 +134,7 @@ function capture(ctx) {
   if (Array.isArray(d.json)) objects = d.json;
   else if (addr.record !== null && d.json && typeof d.json === "object") objects = [d.json];
   else return { why: addr.record !== null
-    ? "the bytes are JSON but not an object or an array of objects"
+    ? localize("legistar-reader.index.the_bytes_are_json_but_not", "the bytes are JSON but not an object or an array of objects")
     : localize("legistar-reader.index.the_bytes_are_json_but", "the bytes are JSON but not an array, as a list of {endpoint} is", { endpoint: String(addr.endpoint) }) };
   for (let i = 0; i < objects.length; i++) {
     const o = objects[i];
