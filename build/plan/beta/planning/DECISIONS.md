@@ -79,3 +79,5 @@
 - K5558 · 2026-10-27 · on QUESTIONS.html J5: "as recommended" (Who files a correction, a withdrawal or a court order on a case's docket? A · The project's owner, from the docket page) · `build/rulings.md`
 - K5559 · 2026-10-27 · on QUESTIONS.html J6: "as recommended" (When a new edition of a case is published, is that recorded on its docket? A · Automatically, with the edition's "what changed" text) · `build/rulings.md`
 - K5560 · 2026-10-27 · on QUESTIONS.html J7: "as recommended" (Is an outside reader's acknowledgement shown publicly by name? B · Shown by name only if they tick that it may be) · `build/rulings.md`
+- K5562 · 2026-10-27 · on QUESTIONS.html B1: "as recommended" (The founder may remove an administrator alone, with a reason, recorded and shown to the team; other administrators still need a majority vote, and still can't remove the founder) · `build/rulings.md`
+- K5563 · 2026-10-27 · on QUESTIONS.html B2: "as recommened" (The founder's approval is enough to add an administrator; other administrators' proposals still need every administrator's approval; the founder or the proposer can cancel a waiting proposal) · `build/rulings.md`

@@ -1,6 +1,6 @@
 # T53's job reading sets, measured against 600 KB (PLANNING L37)
 
-**Status** · DECIDED: R1-R7 as recommended and DEC-475's wait lengths confirmed (BOB #324, P17, P20; its K line to follow); applied to the plan and re-measured at L40 (§5) · PLANNING #4, 2026-10-27. Section 0 step 3 of `HANDOFF.md`: each job's reading set measured against the 600 KB budget (K2700) before the plan is READY, with a relief proposal where a set is over. Every point here is BOB's (P17: reading sets, splits for size and STARTs are BOB's, K617, K2700, mechanics §17); nothing is Bob's. Measured on `lane/planning` at a78921bd (tranche/T53 merged in), by a scratch script over `plan-T53-draft.md`, `plan-T53-capabilities.md` and `plan-T53-journeys.md`.
+**Status** · DECIDED: R1-R7 as recommended and DEC-475's wait lengths confirmed (BOB #324, K5564); applied to the plan and re-measured at L40 (§5) · PLANNING #4, 2026-10-27. Section 0 step 3 of `HANDOFF.md`: each job's reading set measured against the 600 KB budget (K2700) before the plan is READY, with a relief proposal where a set is over. Every point here is BOB's (P17: reading sets, splits for size and STARTs are BOB's, K617, K2700, mechanics §17); nothing is Bob's. Measured on `lane/planning` at a78921bd (tranche/T53 merged in), by a scratch script over `plan-T53-draft.md`, `plan-T53-capabilities.md` and `plan-T53-journeys.md`.
 
 ## 1. What was counted
 
