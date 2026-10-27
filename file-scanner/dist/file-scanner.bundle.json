@@ -36,7 +36,7 @@
     {
       "path": "../bio-plane/src/setup-words/rows.mjs",
       "bytes": 18264,
-      "sha256": "d5ef1104bd13a16478bebdb21da9155e28d968c107b228db33c4846911d4cd6c"
+      "sha256": "d9d7e65d83c55791b4d96b9b03a03c100c14fe4232f363e8e39efe3ef5268fca"
     },
     {
       "path": "../bio-plane/src/tokens.mjs",
