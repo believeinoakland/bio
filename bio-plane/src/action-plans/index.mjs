@@ -64,6 +64,7 @@ import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { actionsOf, contactNotAMember, contactId, zoneOf } from "../actions/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
+import { governingZone } from "../../../jurisdictions/index.mjs";
 import { actionClocksOf, reminderRefused } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
@@ -1704,8 +1705,13 @@ export class ActionPlans {
     items.sort((a, b) => (a.look_again < b.look_again ? -1 : a.look_again > b.look_again ? 1 : a.plan < b.plan ? -1 : 1));
     return { ok: true, as_of: iso(now), day: today, items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
   }
-  /* R46 (b), R48: the zone the place states (actions R68), or null when none is held. */
-  #zone() { return zoneOf(this.actions.place()) || null; }
+  /* R46 (b), R48: the team's governing zone (jurisdictions R98, K5292: its stated `team_time_zone`, else the profiles'), else the
+     zone the place states (actions R68), or null when none is held. */
+  #zone() {
+    let g = null;
+    try { g = governingZone(this.record.getSetting("jurisdiction_profiles"), this.record.getSetting("team_time_zone")); } catch { g = null; }
+    return g || zoneOf(this.actions.place()) || null;
+  }
   /* R46 (b), R48: the local day of `ms` in `zone`, or null when no zone is held or the day cannot be read (K1444 (iii):
      never the UTC day in its place). */
   #localDay(ms, zone) {

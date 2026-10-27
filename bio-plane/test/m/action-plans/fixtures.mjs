@@ -50,6 +50,7 @@ export function dateBeforePhase() {
   const nowMs = ms("2026-10-15T02:30:00Z");
   const read = w.ap.planRead({ id: w.PL, viewer: V("bob"), nowMs });
   const place = w.actions.place;
+  w.record.setSetting("jurisdiction_profiles", [], "test");
   w.actions.place = () => null;
   const undetermined = w.ap.planRead({ id: w.PL, viewer: V("bob"), nowMs });
   w.actions.place = place;
