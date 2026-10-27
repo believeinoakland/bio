@@ -1,2 +1,13 @@
 <!-- Open questions for Bob from platform and from BOB (K5426), shown on QUESTIONS.html. -->
     <span class="eyebrow">Administrators · from BOB, after your plat-s1 findings</span>
+
+    <article class="q" id="B4">
+      <div class="meta"><span class="k">B4</span><span>BOB · capture · sites that ask for a person</span><span>asked 27 Oct</span></div>
+      <h3>When a site shows a "confirm you are a person" check, how does the member take over so the capture can finish?</h3>
+      <p><strong>Background.</strong> You ruled that a challenge page or CAPTCHA goes to the member so the capture can proceed. Today Civicsmith does not recognise these checks at all: it either fails or, worse, could file the check page itself as if it were the document. I am fixing that part now: Civicsmith will recognise the check, file nothing, and tell the member. What remains is how the member gets the document in. One thing is not possible: passing the member's "I am a person" result on to Civicsmith's own server. The site ties that pass to her browser, so it usually fails anywhere else, and doing it would be working around the protection, which your K3656 forbids. So the document has to come from her browser.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · She opens it, passes the check, and adds the file</span><span>An item in her Queue: "This site wants a person to confirm before it gives the document", with the link. She opens it in her own browser, passes the check, saves the file and adds it in Civicsmith. Civicsmith matches it to the waiting request by its address and records that she brought it from that address, that the site asked for a person, and when. Nothing to install, and it can be built in this tranche. The record rests on her word that the file came from that address, as any file a member hands in does, not on Civicsmith's own fetch.</span></li>
+        <li><span class="k">B · A Civicsmith browser extension</span><span>After she passes the check, she clicks "Capture this page" and the extension sends the file, its address and the site's reply straight from her browser. Smoother, and a stronger record, since Civicsmith sees the address and the file together. But it is a new program to build, publish in the Chrome and Firefox stores and keep up to date, and every member must install it: larger than the beta.</span></li>
+      </ul>
+      <p class="note">My recommendation: A now. Civicsmith counts how often each site asks for a person, and with those counts in hand you decide later whether B is worth building.</p>
+    </article>
