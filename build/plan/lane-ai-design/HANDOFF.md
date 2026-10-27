@@ -50,3 +50,14 @@ Per FOLD-AI §1–§3 as BOB decided (K5457):
 - **Form, every draft**: house prefix on every line, Tests on every line, numbers moved to Suggestions as "set at START".
 
 **Need:** Bob's AI1–AI10.
+
+## A47 · 2026-10-27 · DEC-465 and DEC-466's owed lines drafted
+T53 merged in (U500). New files, READY for PLANNING:
+- **`draft-ai-accounts-dec465.md`**: R49 amended to DEC-465's two share flags; R54's `checksInForce` names whose checks apply; R69 `aikeyseal`; R70 `aiorderset` for a member's own list; R71–R74.
+- **`draft-run-record.md`**: observation-log R40, R41 (N1219's `read` and `disagree`); ai-runs R99–R104, "How this run went" with `op=airunparts`, and labels naming the AI (U1, U2).
+- **`draft-instance-setup.md`**: R107, R108, the installer's gateway permission matched to K4464 (exact Cloudflare names OPEN until a live test); R109 `assistantreadiness` (U3).
+- The catalogue's R4 gains `display_name`.
+
+**For BOB:** R107 and R108 amend `installer` R2 and `installer-steps` R45, so PLANNING should place them there. Which projects "my projects" means (owned, as drafted, or joined) is in the new accounts file's For BOB.
+
+**Need:** Bob's AI1–AI10.
