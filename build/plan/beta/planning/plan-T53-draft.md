@@ -298,7 +298,7 @@
 
 **PLATFORM's plat-s1 findings** (P-22) · the Add door under three uploaders (capture), `heldcaptures` out of the first wave, kept counts for Home; P-22's 2.8-4.8 s the bar for these and the fold · `planning/plan-T53-platform-rows.md`
 
-**Today's reds** (`reds-T53.md`) · 23 in promotion, ratification, case-checker, following, screens-daily, screens-intake, screens-inquiry (three to screens-document), control-plane; each `first: settle` stale or real, then fixed; struck where TESTS-SWEEP's sweep fixes it · `planning/plan-T53-reds.md`
+**Today's reds** (`reds-T53.md`) · 22 in promotion, ratification, case-checker, following, screens-daily, screens-intake, screens-inquiry (three to screens-document), control-plane; each `first: settle` stale or real, then fixed; struck where TESTS-SWEEP's sweep fixes it · `planning/plan-T53-reds.md`
 
 **English in tests** (K5565) · every module with sites carries one conversion entry for its own, done in this tranche; 58 modules gain a job by it alone · `planning/plan-T53-tests-english.md`
 

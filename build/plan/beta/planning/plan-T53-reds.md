@@ -1,6 +1,6 @@
 # T53's entries for the reds in today's suites (PLANNING L53)
 
-**Status** · Entries for BOB · PLANNING #4, 2026-10-27, from BOB #324's sort, `build/plan/beta/reds-T53.md` (tranche/T53 @ 4410b89e): 23 reds in 8 modules, each identical at `e887103327` and at `6ed95cb038` and red before U505, so no merge since caused one. Beside `plan-T53-draft.md` (at its cap); each module's START carries its rows here verbatim (K5564).
+**Status** · Entries for BOB · PLANNING #4, 2026-10-27, from BOB #324's sort, `build/plan/beta/reds-T53.md` (tranche/T53 @ 4410b89e): 22 reds listed in 8 modules (the file's header and BOB's message say 23; its sections hold 1+3+1+1+2+3+10+1 = 22), each identical at `e887103327` and at `6ed95cb038` and red before U505, so no merge since caused one. Beside `plan-T53-draft.md` (at its cap); each module's START carries its rows here verbatim (K5564).
 
 **The entry, the same for every red below** · T53 · K5006, P7, P19 · `first: settle` whether the test is stale (a K5339/K5343 red, TESTS-SWEEP's run) or the module is wrong, then fix whichever it is; none is deferred and none is accepted · Test: the named test green in the module's full run; Control: the module's other tests unchanged. **Where TESTS-SWEEP shows a red stale and fixes it in its sweep, that row is struck when the sweep merges** (BOB #324).
 
