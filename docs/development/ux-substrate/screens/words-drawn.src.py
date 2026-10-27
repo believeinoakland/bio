@@ -7105,7 +7105,7 @@ W.append(dict(key='screen.registers.never.fec', en="The Federal Election Commiss
 # DEC-410: Follow from here; all connections; the most direct path (DEC-409)
 W.append(dict(key='screen.follow.label', en='Follow from here', protected=False, note='DEC-410: the one control on every person, organization, payment, donation, event and document; opens a menu'))
 W.append(dict(key='screen.follow.tip', en='Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.', protected=False, note="DEC-410: the control's explanation"))
-W.append(dict(key='screen.follow.who.money', en='Money given or received', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
+W.append(dict(key='screen.follow.who.money', en='Money paid or received', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
 W.append(dict(key='screen.follow.who.offices', en='Organizations and offices held', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
 W.append(dict(key='screen.follow.who.events', en='Events taken part in', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
 W.append(dict(key='screen.follow.who.docs', en='Documents that name them', protected=False, note='DEC-410: menu item on a person or organization (search)'))
@@ -7183,7 +7183,7 @@ W.append(dict(key='screen.registers.search.fec.noexport', en='Rows from this reg
 W.append(dict(key='screen.registers.watch.auto', en='A watch starts by itself only for what a project has said it is interested in, and it is shown with that project and its interest.', protected=False, note='DEC-411: note'))
 W.append(dict(key='screen.registers.watch.row.project', en='{register} · watched for the project {project}, which has an interest in {interest}', protected=False, note='DEC-411: a watch line started for a project'))
 W.append(dict(key='screen.registers.watch.changes', en='{count} changes since you last looked', protected=False, note='DEC-411: count on a watch'))
-W.append(dict(key='screen.explore.all.cut', en='The explorer stopped after 2 seconds and shows what it found. More may exist.', protected=False, note='DEC-411: when the search was stopped at 2 seconds; never implies completeness'))
+W.append(dict(key='screen.explore.all.cut', en='The explorer stopped early so as to answer quickly, and shows what it found. More may exist.', protected=False, note='DEC-411: when the search was stopped at 2 seconds; never implies completeness'))
 W.append(dict(key='screen.explore.all.continue', en='Keep looking', protected=False, note='DEC-411: button (owed:explorecontinue)'))
 W.append(dict(key='screen.explore.shorter.note', en='Paths with fewer steps join the same two ends.', protected=False, note="DEC-411: beside a member's chain; never says the chain is wrong"))
 W.append(dict(key='screen.explore.shorter.best', en='The best has {short} steps, against your {mine}.', protected=False, note="DEC-411: beside a member's chain"))
@@ -8249,6 +8249,17 @@ w446('screen.action.ended.completed', 'Your team carried it out', 'DS35: the res
 w446('screen.action.ended.help', 'Choose the one closest to what happened. It is shown with the action.', 'DS35: help of the choice')
 w446('screen.action.ended.own', 'In your own words', 'DS35: the move\'s reason, labeled for a resolution')
 w446('screen.action.ended.own.help', 'Required. Say what happened; it is kept as the reason for closing the action, beside the choice above.', 'DS35: actionMove\'s reason, which every move carries (R14): the box for the action\'s own outcome')
+
+# DEC-447: B543 (N1260's four design questions; DEC-409 to DEC-411)
+def w447(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-447: ' + note))
+w447('screen.follow.who.donations', 'Donations given or received', 'B543 (2): apart from money paid or received, as Bob named them (DEC-409); campaign and register donations')
+w447('screen.follow.who.laws', 'Laws and standards that bind them', 'B543 (1): law as a place to follow into (DEC-409, every dimension); opens the binding rows of Standard (DEC-442) for an organization or office; drawn only when the record holds one')
+w447('screen.follow.document.laws', 'Laws and standards it cites', 'B543 (1): from a document, the laws and standards its passages cite; drawn only when it cites one')
+w447('screen.follow.docs.matched', 'Matched to them', 'B543 (3): first heading under "Documents that name them": documents the record resolved to this person or organization')
+w447('screen.follow.docs.words', 'Their name appears, not matched to them', 'B543 (3): second heading: documents whose words contain the name, which the record has not matched')
+w447('screen.follow.docs.words.note', 'These documents contain the same name, but nothing yet shows it is the same person or organization. Open one to say whether it is.', 'B543 (3): beneath the second heading')
+w447('screen.follow.open.whole', 'Open all of it in {screen}', 'B543: the fold shows that dimension\'s rows for the item in place; this link opens the whole screen narrowed to it')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

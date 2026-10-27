@@ -109,11 +109,13 @@ const acts = (...b) => `<div class="mk-acts">${b.join('')}</div>`;
    scoped to the item, in place. Ops reuse the target screen's own act where it exists (search, explore, registersearch). */
 const FOLLOW_OP = 'owed:followfrom DEC-409', FOLLOW_ROWS = 'owed:registersearch DEC-406';
 const FOLLOW = {
-  who: [['Money given or received', FOLLOW_OP], ['Organizations and offices held', FOLLOW_OP], ['Events taken part in', FOLLOW_OP], ['Documents that name them', 'search'], ['Register rows that name them', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  who: [['Money paid or received', FOLLOW_OP], ['Donations given or received', FOLLOW_OP], ['Organizations and offices held', FOLLOW_OP], ['Laws and standards that bind them', FOLLOW_OP], ['Events taken part in', FOLLOW_OP], ['Documents that name them', 'search'], ['Register rows that name them', FOLLOW_ROWS], ['Connections to…', 'explore']],
   money: [['Who paid and who received it', FOLLOW_OP], ['Other payments from the same source', FOLLOW_OP], ['Events it is tied to', FOLLOW_OP], ['Documents that state it', 'search'], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']],
   event: [['Who took part', FOLLOW_OP], ['Money that moved around it', FOLLOW_OP], ['Documents that date it', 'search'], ['Register rows from that time', FOLLOW_ROWS], ['Connections to…', 'explore']],
-  document: [['People and organizations it names', FOLLOW_OP], ['Money it states', FOLLOW_OP], ['Events it dates', FOLLOW_OP], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']]
+  document: [['People and organizations it names', FOLLOW_OP], ['Money it states', FOLLOW_OP], ['Events it dates', FOLLOW_OP], ['Laws and standards it cites', FOLLOW_OP], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']]
 };
+/* DEC-447 (B543 (4)): a fund is followed from as an organization is, without offices held or laws that bind it */
+FOLLOW.fund = FOLLOW.who.filter(([l]) => l !== 'Organizations and offices held' && l !== 'Laws and standards that bind them' && l !== 'Donations given or received');
 const follow = kind => `<details class="mk-details mk-follow" data-follow="${kind}"><summary data-tip="${esc('Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.')}">Follow from here</summary><div class="mk-acts">${FOLLOW[kind].map(([l, op]) => btn(op, l, { tone: 'quiet' })).join('')}</div></details>`;
 const machine = (who, inner) => `<div class="cs-machinework">${inner}<span class="by">${I('machine')}Machine work · the assistant, at ${who === 'you' ? 'your request' : esc(who) + '\'s request'}</span></div>`;
 const wizmark = (n, names) => `<button type="button" class="cs-wizmark" title="${esc(names)}">${I('wizard')}Show me how${n > 1 ? ` (${n})` : ''}</button>`;

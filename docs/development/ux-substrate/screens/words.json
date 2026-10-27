@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7851,
+  "screen": 7858,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19419,
+  "total": 19426,
   "protected": 1162
  },
  "words": [
@@ -76154,7 +76154,7 @@
   },
   {
    "key": "screen.follow.who.money",
-   "en": "Money given or received",
+   "en": "Money paid or received",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
@@ -76686,7 +76686,7 @@
   },
   {
    "key": "screen.explore.all.cut",
-   "en": "The explorer stopped after 2 seconds and shows what it found. More may exist.",
+   "en": "The explorer stopped early so as to answer quickly, and shows what it found. More may exist.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-411: when the search was stopped at 2 seconds; never implies completeness"
@@ -83221,6 +83221,55 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-446: DS35: actionMove's reason, which every move carries (R14): the box for the action's own outcome"
+  },
+  {
+   "key": "screen.follow.who.donations",
+   "en": "Donations given or received",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-447: B543 (2): apart from money paid or received, as Bob named them (DEC-409); campaign and register donations"
+  },
+  {
+   "key": "screen.follow.who.laws",
+   "en": "Laws and standards that bind them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-447: B543 (1): law as a place to follow into (DEC-409, every dimension); opens the binding rows of Standard (DEC-442) for an organization or office; drawn only when the record holds one"
+  },
+  {
+   "key": "screen.follow.document.laws",
+   "en": "Laws and standards it cites",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-447: B543 (1): from a document, the laws and standards its passages cite; drawn only when it cites one"
+  },
+  {
+   "key": "screen.follow.docs.matched",
+   "en": "Matched to them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-447: B543 (3): first heading under \"Documents that name them\": documents the record resolved to this person or organization"
+  },
+  {
+   "key": "screen.follow.docs.words",
+   "en": "Their name appears, not matched to them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-447: B543 (3): second heading: documents whose words contain the name, which the record has not matched"
+  },
+  {
+   "key": "screen.follow.docs.words.note",
+   "en": "These documents contain the same name, but nothing yet shows it is the same person or organization. Open one to say whether it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-447: B543 (3): beneath the second heading"
+  },
+  {
+   "key": "screen.follow.open.whole",
+   "en": "Open all of it in {screen}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-447: B543: the fold shows that dimension's rows for the item in place; this link opens the whole screen narrowed to it"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
