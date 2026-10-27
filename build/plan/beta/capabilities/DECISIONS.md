@@ -16,6 +16,7 @@
 - C1 (QUESTIONS page) · 2026-10-27 · "as recommended, with the understanding that C is the objective - even if we aren't able to support that until after the beta." (who chooses what is interpreted, N1272: A for every kind now, B as the member's deliberate act, C = Civicsmith's proposals without AI, accepted before interpreting, is the objective: built in the beta if it tests well on real documents, else right after; the assistant's proposals with N1220; never D) · K5445
 - C3 (QUESTIONS page) · 2026-10-27 · "as recommended" (N1269 Q3: limits shown per kind before a file is added; a file over its limit refused with its size and the limit) · K5446
 - C4 (QUESTIONS page) · 2026-10-27 · "as recommended" (N1269 Q4: a file over the limit refused with the reason and a way in: a register by filter via N1259, else the member's own part; reading only the first part waits until proposals work well) · K5447
+- K5448 (PLANNING CONSISTENCY, BOB's) · 2026-10-27 · N1257 keeps jurisdictions R99-R120 and local-facts R23-R27; queue-producers A6 keeps R56-R57, N1257's layer-change line becomes R58; a member-stated fiscal year (A2) is a team-layer entry of N1257 (same job), A2's own lines only the fallback; N824's intake files through FILES' mail-reader and adds no parser; BOB numbers every line at writing
 
 ## Design's (not Bob's, P17), carried because they bind this lane's drafts
 
