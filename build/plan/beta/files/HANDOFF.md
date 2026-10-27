@@ -44,3 +44,6 @@ MOVE-COPY.md written (ranged streaming default; CopyObject if the eu rehearsal a
 
 ### F10 · 2026-10-27
 CC4 points to PLANNING's A4-R1..R6.
+
+### F11 · 2026-10-27
+C14 carried: ML7-ML12 added to mail-reader, ML4 and CC5 aligned to the one nesting count and the one ledger; READY again.
