@@ -1,6 +1,6 @@
 # Plan T53 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · READY for BOB (PLANNING L56, 2026-10-27, K5569): every lane's READY drafts folded, PLATFORM's service levels and whole-record move last; no mark waits on a lane draft or a question to Bob: each `[owed: …]` left is BOB's at writing or a technical point settled at START, each `[waits: …]` an act or a measurement named in it. Form by K5434 (4) and K5567: one round, measurements at once unless they measure R1's code, no R3; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · READY for BOB (PLANNING L57, 2026-10-27, K5569, K5570): every lane's READY drafts folded, PLATFORM's service levels and whole-record move last; no mark waits on a lane draft or a question to Bob: each `[owed: …]` left is BOB's at writing or a technical point settled at START, each `[waits: …]` an act or a measurement named in it. Form by K5434 (4) and K5567: one round, measurements at once unless they measure R1's code, no R3; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
@@ -70,7 +70,7 @@
 ## Layer 2
 
 **record-core**
-- no PLATFORM entry: placement is runtime-limits' (PL30-PL34); N1271's split left out (K5569, below)
+- T53 · N1271 (K5444, K5454, K5570) · Institution's design stage: the record split and the upgrade step from Team (PL24) · `planning/plan-T53-platform-rows.md` `[waits: the Levels 2-3 study S1-S4 and Bob's decision on its report; then its modules' still-open jobs, else the completion round]`
 
 **membership**
 - T53 · K5501 · `onProjectLeft(module, fn)` called inside `projectRemove` (R36), `why: "removed"`; `projectLeave` and `projectOwnerRemove` call nobody (R158) · `planning/lines-K5501-role-change.md`
@@ -249,7 +249,7 @@
 **screens-settings**, **installer**, **installer-steps**
 - C T52-58, T52-92 to T52-95 · the AI screens (below)
 - T53 · N1257 (K5450, K5452) · the places page as a tree, the choice a set, "Report a rule" the one act on a shipped rule, an information mark on each entry and the page (screens-settings R82, R83); the install asks where the work focuses, as a set, nothing below federal preselected (installer R86); instance-setup holds the choice and the team's layers (R107-R111) · `capabilities/N1257-requirements-modules.md` (D3 = C7, answered: K5452, K5497) (READY, C29) (CONSISTENCY §2.17 decided)
-- T53 · K5444, K5442, K5454 · a copy chooses its level at install (PL29; in T53 only Team selectable, Institution and Enterprise listed "not yet available", K5569); the gauge's level and outgrowing (PL22-PL28) · `platform/service-levels-draft.md` (READY) · rows: `planning/plan-T53-platform-rows.md`
+- T53 · K5444, K5442, K5454 · a copy chooses its level at install (PL29; Institution "not yet available" until N1271 is built, Enterprise listed so, K5570); the gauge's level and outgrowing (PL22-PL28) · `platform/service-levels-draft.md` (READY) · rows: `planning/plan-T53-platform-rows.md`
 - T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" storage in a jurisdiction, the room and its R2 bucket; what runs elsewhere said), the choice fixed and the move by export and import said before it (PL32); Settings states the placement truthfully (PL33) · `platform/record-placement-draft.md` §3 (installer, installer-steps, plane; screen needs to UX-DESIGN)
 - T53 · K5443 · the one way to change region: whole-record export (corpus-export, layer 8) and the installer's import (PL35, PL50-PL57) · `platform/whole-record-move-draft.md` (READY, K5569; sign-in material not carried, K1489, K1490) · rows: `planning/plan-T53-platform-rows.md`
 
@@ -311,7 +311,7 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 
 **At once, alongside R1** (each measures what exists now or prepares a copy; its result goes to the job that reads it, before that job's layer START where it can):
 - Registers, on the source files and a throwaway on a scratch copy (`planning/plan-T53-capabilities.md` §C): M-R3 index storage at 73,043 / 1M / 5M rows (decides S1-S4 before registers' layer-5 START), M-R7 streaming throughput, CPU, subrequests and decoder state (sets `REGISTER_STREAM_MAX`, `SLICE_*` before register-readers' layer-1 START), M-R4 identifier forms, M-R8 count queries, M-R10 contact-shape false hits (by script, the drafted rule), M-R11 volatile text, M-R12 extract sizes; the federal zips BOB's download.
-- PLATFORM (BOB #324): the S1 Level 1 baseline and soak on plat-s1; per-table bytes and the plane-only measuring ops; P-M17 and FILES' L1-L6 on the alpha's reader; the budget walks of today's screens and acts (`platform/time-budgets-draft.md` §6 L1); the S2 prototypes B and C and T-a (throwaway; T-a is Before R1 (4)); the Enterprise quote; the load test's short "before" run on the alpha's design with PLATFORM's study driver (`platform/load-test-draft.md` §6; load-check itself is built in R1).
+- PLATFORM (BOB #324): the Levels 2-3 study S1-S4 (N1271 waits on its report to Bob, K5570); the S1 Level 1 baseline and soak on plat-s1; per-table bytes and the plane-only measuring ops; P-M17 and FILES' L1-L6 on the alpha's reader; the budget walks of today's screens and acts (`platform/time-budgets-draft.md` §6 L1); the S2 prototypes B and C and T-a (throwaway; T-a is Before R1 (4)); the Enterprise quote; the load test's short "before" run on the alpha's design with PLATFORM's study driver (`platform/load-test-draft.md` §6; load-check itself is built in R1).
 - Preparation: N1257's F4, the federal offices list's size (`capabilities/LOAD-TABLE.md`); the acceptance corpus's files (N1268, `files/CORPUS-N1268.md`); M-N1272's files, pinned questions and bar in `MEASUREMENTS.md`, and Bob's blind marking of the gold set (K5537); N824 P1-P2 with M1 (Before R1 (6)) and P3's delivery checks once Bob's Email Routing domain exists (N1159).
 
 **After the code it measures** (each on a scratch copy deployed from the tranche, run the moment its module merges, never at a round's end; the one dependency named):
@@ -320,7 +320,7 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 - N824's door CPU at 25 MiB · after mail-reader and mail-door (layers 1, 3).
 - The acceptance corpus walk (N1268) · after journey-check's walk and the readers (layers 1, 11).
 - The registers journey · after registers and the registers screen (layers 5, 11).
-- PLATFORM: the after-figures of the fold, the combined read and the work fixes · after PL12-PL14 (admission, store-door, layer 11); per-type load of the photo redraw, Tier 2 and held types, and archive fan-out · after the new readers (layer 1); the N1273 region picker and the `eu` rehearsal · after the installer's new path (layer 11); Level 1's per-level figures are at once (`planning/plan-T53-platform-rows.md`); the whole-record move at 1, 5, 25 GB · after corpus-export and the installer's import (layers 8, 11).
+- PLATFORM: the after-figures of the fold, the combined read and the work fixes · after PL12-PL14 (admission, store-door, layer 11); per-type load of the photo redraw, Tier 2 and held types, and archive fan-out · after the new readers (layer 1); the N1273 region picker and the `eu` rehearsal · after the installer's new path (layer 11); Level 1's per-level figures are at once (`planning/plan-T53-platform-rows.md`); the whole-record move at 1, 5, 25 GB · after corpus-export and the installer's import (layers 8, 11); measured Institution and the upgrade step · after N1271 is built (K5570).
 - The load test per level (N1274) and the budget walk L2, L3 · after load-check and layer 11's deploy.
 
 **No R3.** A defect a measurement finds goes to its module's job, which stays open until its layer closes (P10); a defect in a layer already closed goes to the tranche's completion round (§5.2), the only later round.
@@ -334,5 +334,4 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 - N1270 · audio, video, forum formats · Bob's: after 1.0 (K4628); held and named meanwhile (K5436)
 - K5454 · Enterprise support (Level 3) · Bob's, a hard reason outside the product: built with the first Civicsmith team that wants an Enterprise-scale copy; listed at install as not yet available (PL29)
 - FILES Tier 3 readers (PST/OST, Access and the rest) · Bob's (K5437): each by its own ruling when a real file is shown
-- N1271 · Institution and Enterprise's design stages and the upgrade step (PL24) · Bob's decision not yet made: the Levels 2-3 study and its report to Bob (K5444, K5569)
 - N1267a · XLSX cells by window · Bob's decision not yet made, a row above his alpha's 250,000 (K4831 (10))
