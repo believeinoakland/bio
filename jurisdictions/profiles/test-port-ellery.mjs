@@ -472,6 +472,12 @@ export default {
     { kind: "bylaw_complaint", items: [
       { route: "Ask the Town Clerk to place the complaint before the Selectboard", expect: "an acknowledgement within five days", citation: "P.E.B.L. § 9(1)" },
       { route: "Ask the Examiner of Accounts to review the Selectboard's answer", citation: "Test Stat. § 6.10", after: ["denied", "none_stated"] }],
+      /* R125: the attribution a template carries; the professional review is of this exact list (R126) */
+      notes: "A made-up guide for tests.", authored_by: "Ada Example",
+      reviews: [{ reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)", credential: "solicitor (test)",
+        scope: "the whole guide", outcome: "no_concerns", at: "2026-08-25",
+        reviewed_text_sha: "ad15e18c2b07b2ae73cfef2df0569710a94bdb1e6cbf0234121a9813b0dac5a5" }],
+      approved_by: "Cy Example", approved_at: "2026-09-02",
       status: "researched", basis: "TEST" },
   ],
   /* R86: phrasings added to Civicsmith's own lists */

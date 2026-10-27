@@ -9,7 +9,7 @@
  * Services: list() · get(id) · validate(profile) · combine(list) · isLocale(value). */
 import FIRST from "./profiles/oakland-alameda.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
-import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
+import { BASIS_GRADES, isMachineIdentity, sha256HexSync, canonicalJson } from "../bio-plane/src/record-grammar/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
@@ -918,10 +918,31 @@ function validateInto(p, errors) {
   const templateIds = new Set();
   /* R40, R81, R87 (b): one template, attributed; in a kind's `templates` it also carries its purpose (judged by the
      caller), its name and the public sources it was written from. */
+  /* R40, R125: a text's reviews, each judged by its field; `reviewed_text_sha` is optional in the shape (R126 counts only a review that has it). */
+  const reviewsOf = (path, reviews) => {
+    reviews.forEach((r, j) => {
+      const ra = `${path}[${j}]`;
+      if (!isObj(r)) { err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}"); return; }
+      fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential", "reviewed_text_sha"]);
+      for (const f of REVIEW_REQUIRED)
+        if (!own(r, f) || r[f] === undefined || r[f] === null) err(`${ra}.${f}`, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.the_reviews_f_is_missing", "the review's {f} is missing", { f: String(f) }));
+      const rbad = (f, ok, why) => { if (own(r, f) && r[f] !== undefined && r[f] !== null && !ok) err(`${ra}.${f}`, "VALUE_INVALID", why); };
+      rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
+      rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
+      rbad("scope", isStr(r.scope), "the scope is non-empty text");
+      rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), localize("jurisdictions.index.outcome_is_one_of_review", "outcome is one of {REVIEW_OUTCOMES}", { REVIEW_OUTCOMES: String(REVIEW_OUTCOMES.join(", ")) }));
+      rbad("at", isDate(r.at), "at is a real YYYY-MM-DD");
+      rbad("organisation", isStr(r.organisation), "the organisation is a non-empty name");
+      rbad("credential", isStr(r.credential), "the credential is non-empty text");
+      /* R40 (T53): the SHA-256 of the text as reviewed; optional in the shape, required for a review to count (R126) */
+      if (own(r, "reviewed_text_sha") && !(typeof r.reviewed_text_sha === "string" && /^[0-9a-f]{64}$/.test(r.reviewed_text_sha)))
+        err(`${ra}.reviewed_text_sha`, "VALUE_INVALID", "reviewed_text_sha is the SHA-256 of the text as reviewed, 64 lowercase hexadecimal characters");
+    });
+  };
   const templateOf = (ta, t, k, inList) => {
     if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", { fields: TEMPLATE_FIELDS.join(", ") }));
     else {
-      fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", ...(inList ? ["purpose"] : [])]);
+      fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", "machine_draft", ...(inList ? ["purpose"] : [])]);
       for (const f of TEMPLATE_FIELDS)
         if (!own(t, f) || t[f] === undefined || t[f] === null) err(`${ta}.${f}`, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.the_templates_f_is_missing", "the template's {f} is missing", { f: String(f) }));
       const bad = (f, why) => { if (own(t, f) && t[f] !== undefined && t[f] !== null) err(`${ta}.${f}`, "VALUE_INVALID", why); };
@@ -939,27 +960,22 @@ function validateInto(p, errors) {
       if (!Array.isArray(t.contributors) || !t.contributors.every(isStr)) bad("contributors", "contributors is a list of names");
       if (!isDate(t.approved_at)) bad("approved_at", "approved_at is a real YYYY-MM-DD");
       if (!Array.isArray(t.reviews)) bad("reviews", "reviews is a list of {reviewer, kind, organisation?, credential?, scope, outcome, at}");
-      else t.reviews.forEach((r, j) => {
-        const ra = `${ta}.reviews[${j}]`;
-        if (!isObj(r)) { err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}"); return; }
-        fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential"]);
-        for (const f of REVIEW_REQUIRED)
-          if (!own(r, f) || r[f] === undefined || r[f] === null) err(`${ra}.${f}`, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.the_reviews_f_is_missing", "the review's {f} is missing", { f: String(f) }));
-        const rbad = (f, ok, why) => { if (own(r, f) && r[f] !== undefined && r[f] !== null && !ok) err(`${ra}.${f}`, "VALUE_INVALID", why); };
-        rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
-        rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
-        rbad("scope", isStr(r.scope), "the scope is non-empty text");
-        rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), localize("jurisdictions.index.outcome_is_one_of_review", "outcome is one of {REVIEW_OUTCOMES}", { REVIEW_OUTCOMES: String(REVIEW_OUTCOMES.join(", ")) }));
-        rbad("at", isDate(r.at), "at is a real YYYY-MM-DD");
-        rbad("organisation", isStr(r.organisation), "the organisation is a non-empty name");
-        rbad("credential", isStr(r.credential), "the credential is non-empty text");
-      });
+      else reviewsOf(`${ta}.reviews`, t.reviews);
       if (own(t, "basis") && t.basis !== undefined && t.basis !== null) {
         if (!(test && t.basis === "TEST") && !(typeof t.basis === "string" && t.basis !== "" && basisParts(t.basis).every((x) => K_REF.test(x))))
           err(`${ta}.basis`, "BASIS_INVALID", t.basis === "TEST" ? "TEST is a basis only in a test profile"
             : "a template rests on the ruling that approved it (K<n>)");
       }
       if (t.use === "file" && k.tier === 3) err(ta, "TEMPLATE_TIER3", "a Tier 3 kind has no use: file template; a brief may serve it");
+      /* R136 (T53): no template the team files in its own name for a kind filed in a court; a brief may serve it */
+      if (t.use === "file" && isObj(k.venue) && k.venue.how === "court") err(ta, "TEMPLATE_COURT_PETITION", "a kind filed in a court has no file template; a brief may serve it");
+      /* R138 (T53): a text's writer and approver are named people; a machine may only compose a declared first draft */
+      if (isStr(t.authored_by) && isMachineIdentity(t.authored_by)) err(`${ta}.authored_by`, "MACHINE_CANNOT_DRAFT_TEMPLATE", "a machine is not the writer of a text; declare a machine draft with a named person as writer");
+      if (isStr(t.approved_by) && isMachineIdentity(t.approved_by)) err(`${ta}.approved_by`, "MACHINE_CANNOT_APPROVE_TEMPLATE", "a machine does not approve a text");
+      if (own(t, "machine_draft")) {
+        if (typeof t.machine_draft !== "boolean") err(`${ta}.machine_draft`, "VALUE_INVALID", "machine_draft is true or false");
+        else if (t.machine_draft === true && !(typeof t.notes === "string" && t.notes.trim())) err(`${ta}.notes`, "VALUE_INVALID", "a machine draft declares itself in non-empty notes");
+      }
     }
     if (isObj(t) && (inList || own(t, "name"))) {
       if (!isStr(t.name) || t.name.length > TEMPLATE_NAME_MAX || /[\r\n]/.test(t.name))
@@ -1448,14 +1464,16 @@ function validateInto(p, errors) {
     });
   }
 
-  /* R80 (T45): one sourced procedure guide per kind, its items in the profile's order and never ranked; R87 (d): an item
-     may name the correspondence outcomes after which its route applies. */
+  /* R80 (T45), R125 (T53): one sourced procedure guide per kind, its items in the profile's order and never ranked; R87 (d): an
+     item may name the correspondence outcomes after which its route applies. A guide carries the attribution a template does
+     (notes, writer, reviews, approver, date); its basis is the ruling that approved it, or TEST in a test profile. */
   if (own(p, "procedure_guides")) {
     const guided = new Set();
     list("procedure_guides", p.procedure_guides).forEach((g, i) => {
       const at = `procedure_guides[${i}]`;
       if (!entry(at, g)) return;
-      fields(at, g, ["kind", "items", "status", "basis"]);
+      for (const f of ["review_opt_out", "not_reviewed"]) if (own(g, f)) err(`${at}.${f}`, "VALUE_INVALID", "a profile guide has no review opt-out: that is a team's own guide's");
+      fields(at, g, ["kind", "items", "notes", "machine_draft", "authored_by", "reviews", "approved_by", "approved_at", "status", "basis", "review_opt_out", "not_reviewed"]);
       if (!profileKinds.has(g.kind)) err(`${at}.kind`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of_4", "'{String}' is no kind of this profile", { String: String(String(g.kind)) }));
       else if (guided.has(g.kind)) err(`${at}.kind`, "VALUE_INVALID", localize("jurisdictions.index.kind_has_one_guide", "{kind} has one guide", { kind: String(g.kind) }));
       else guided.add(g.kind);
@@ -1471,7 +1489,26 @@ function validateInto(p, errors) {
             || !it.after.every((o) => typeof o === "string" && KIND_RE.test(o)) || new Set(it.after).size !== it.after.length))
           err(`${ia}.after`, "VALUE_INVALID", "after is a non-empty list of outcomes, each matching ^[a-z][a-z0-9_]*$, once");
       });
+      /* R125: the first missing field is GUIDE_UNATTRIBUTED; a wrong value is VALUE_INVALID */
+      const missing = ["notes", "authored_by", "reviews", "approved_by", "approved_at"].find((f) => !own(g, f) || g[f] === undefined || g[f] === null);
+      if (missing) err(`${at}.${missing}`, "GUIDE_UNATTRIBUTED", localize("jurisdictions.index.the_guides_f_is_missing", "the guide's {f} is missing", { f: String(missing) }));
+      else {
+        if (typeof g.notes !== "string") err(`${at}.notes`, "VALUE_INVALID", "notes are text, possibly empty");
+        if (!isStr(g.authored_by)) err(`${at}.authored_by`, "VALUE_INVALID", "authored_by is a non-empty name");
+        else if (isMachineIdentity(g.authored_by)) err(`${at}.authored_by`, "MACHINE_CANNOT_DRAFT_TEMPLATE", "a machine is not the writer of a text");
+        if (!isStr(g.approved_by)) err(`${at}.approved_by`, "VALUE_INVALID", "approved_by is a non-empty name");
+        else if (isMachineIdentity(g.approved_by)) err(`${at}.approved_by`, "MACHINE_CANNOT_APPROVE_TEMPLATE", "a machine does not approve a text");
+        else if (isStr(g.authored_by) && g.approved_by.trim() === g.authored_by.trim()) err(`${at}.approved_by`, "VALUE_INVALID", "the approver is not the guide's writer");
+        if (!isDate(g.approved_at)) err(`${at}.approved_at`, "VALUE_INVALID", "approved_at is a real YYYY-MM-DD");
+        reviewsOf(`${at}.reviews`, g.reviews);
+      }
+      if (own(g, "machine_draft")) {
+        if (typeof g.machine_draft !== "boolean") err(`${at}.machine_draft`, "VALUE_INVALID", "machine_draft is true or false");
+        else if (g.machine_draft === true && !(typeof g.notes === "string" && g.notes.trim())) err(`${at}.notes`, "VALUE_INVALID", "a machine draft declares itself in non-empty notes");
+      }
       statusBasis(at, g);
+      if (own(g, "basis") && typeof g.basis === "string" && !(test && g.basis === "TEST") && !basisParts(g.basis).every((x) => K_REF.test(x)))
+        err(`${at}.basis`, "BASIS_INVALID", "a guide rests on the ruling that approved it (K<n>)");
     });
   }
 
@@ -1835,6 +1872,68 @@ function readProfiles(listIn) {
     profiles.push(p);
   });
   return { errors, profiles };
+}
+
+/* ------------------------------------------------------------------------------------------------ */
+/* What a profile text lacks (R126, R138). A text is a template (`text`) or a guide (`items`); both carry the same
+   attribution (R40, R125). Pure; never throw; `filing-templates` and `reading-guides` call these, so there is one copy. */
+
+/** The SHA-256 of a text as reviewed: a template's `text` as UTF-8, a guide's `items` in canonical JSON (K5528 T2). */
+const textHash = (e) => (typeof e.text === "string" ? sha256HexSync(e.text) : sha256HexSync(canonicalJson(Array.isArray(e.items) ? e.items : [])));
+
+/**
+ * R126, R137: the latest counted review of a text, `{reviewer, organisation, credential, at}`, or null. Counted: a review of
+ * kind `professional`, outcome `no_concerns`, by a named person who is not a machine, with an organisation, a credential and a
+ * real date, of the text as it is now (`reviewed_text_sha` equals its hash), so a changed text loses its review.
+ */
+export function countedReview(entry) {
+  try {
+    if (!isObj(entry) || !Array.isArray(entry.reviews)) return null;
+    const now = textHash(entry);
+    let best = null;
+    for (const r of entry.reviews) {
+      if (!isObj(r) || r.kind !== "professional" || r.outcome !== "no_concerns" || !isStr(r.reviewer) || isMachineIdentity(r.reviewer)
+          || !isStr(r.organisation) || !isStr(r.credential) || !isDate(r.at) || r.reviewed_text_sha !== now) continue;
+      if (best === null || r.at >= best.at) best = { reviewer: r.reviewer, organisation: r.organisation, credential: r.credential, at: r.at };
+    }
+    return best;
+  } catch { return null; }
+}
+
+/** R126: what a template or guide lacks, a subset of `writer`, `sources`, `professional_review`, `second_approval`, in that order. */
+export function attributionLacks(entry) {
+  try {
+    const e = isObj(entry) ? entry : {};
+    const out = [];
+    const writer = isStr(e.authored_by) ? e.authored_by.trim() : "";
+    if (!writer || isMachineIdentity(writer)) out.push("writer");
+    const guide = typeof e.text !== "string" && Array.isArray(e.items);
+    if (!(guide ? e.items.length > 0 : Array.isArray(e.sources) && e.sources.some((x) => isObj(x) && isStr(x.citation)))) out.push("sources");
+    if (countedReview(e) === null) out.push("professional_review");
+    if (!isStr(e.approved_by) || (writer && e.approved_by.trim() === writer)) out.push("second_approval");
+    return out;
+  } catch { return ["writer", "sources", "professional_review", "second_approval"]; }
+}
+
+/**
+ * R126: for every template and guide of a profile (a layer is a profile) that lacks a part, `{kind, purpose}` (a template) or
+ * `{kind, guide: true}` (a guide), and `lacks`. A kind's single `template` reads as purpose `initial` (R81). `[]` when none lacks.
+ */
+export function textsLack(profile) {
+  const out = [];
+  try {
+    if (!isObj(profile)) return out;
+    for (const k of Array.isArray(profile.action_kinds) ? profile.action_kinds : []) {
+      if (!isObj(k)) continue;
+      const ts = Array.isArray(k.templates) ? k.templates : isObj(k.template) ? [{ ...k.template, purpose: "initial" }] : [];
+      for (const t of ts) { const lacks = attributionLacks(t); if (lacks.length) out.push({ kind: k.kind, purpose: t.purpose, lacks }); }
+    }
+    for (const g of Array.isArray(profile.procedure_guides) ? profile.procedure_guides : []) {
+      const lacks = attributionLacks(g);
+      if (lacks.length) out.push({ kind: g.kind, guide: true, lacks });
+    }
+  } catch { /* never throws */ }
+  return out;
 }
 
 /* ------------------------------------------------------------------------------------------------ */

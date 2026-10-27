@@ -343,8 +343,11 @@ test("R25 action_kinds: kind form, label, tier 1–3, laws, venue {name, how, ba
   for (const bad of ["", 3, null]) assert.ok(hasError(breakIt((p) => { p.action_kinds[2].advisory = bad; }), "VALUE_INVALID", "action_kinds[2].advisory"), String(bad));
   assert.equal(combine([sample()]).view.action_kinds.find((k) => k.kind === "records_petition").advisory, "Have it reviewed first.");
   assert.equal(combine([sample()]).view.action_kinds.find((k) => k.kind === "records_request").advisory, undefined);
-  for (const how of ["portal", "mail", "email", "in_person", "court"])
+  for (const how of ["portal", "mail", "email", "in_person"])
     assert.ok(breakIt((p) => { p.action_kinds[0].venue.how = how; }).ok, how);
+  /* R136: a kind filed in a court takes no file template; the kind's other facts stand */
+  assert.ok(hasError(breakIt((p) => { p.action_kinds[0].venue.how = "court"; }), "TEMPLATE_COURT_PETITION", "action_kinds[0].template"));
+  assert.ok(breakIt((p) => { p.action_kinds[0].venue.how = "court"; delete p.action_kinds[0].template; }).ok, "control: the same kind with no file template");
   assert.ok(hasError(breakIt((p) => { p.action_kinds[0].venue.how = "fax"; }), "VALUE_INVALID", "action_kinds[0].venue.how"));
   assert.ok(hasError(breakIt((p) => { delete p.action_kinds[0].venue.basis; }), "BASIS_MISSING", "action_kinds[0].venue.basis"));
   assert.ok(hasError(breakIt((p) => { delete p.action_kinds[0].label; }), "VALUE_INVALID", "action_kinds[0].label"));
