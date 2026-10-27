@@ -8,11 +8,11 @@
 
 **Next steps, in order.**
 1. (done L38: J7.)
-2. Fold as BOB relays: PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535, PL44-PL45); TESTS-SWEEP's fixtures findings needing a module's judgment (K5425 (b)), as entries.
+2. Fold as BOB relays: PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535, PL44-PL45); (TESTS-SWEEP's fixtures findings: done L44.)
 3. (done L40: R1-R7 applied, re-measured, every job under 600 KB.)
 4. When every lane is folded: the plan under 51,200 bytes, detail files beside it; mark READY for BOB.
 
-**Waiting on.** Bob: nothing. BOB: the K line for R1-R7 (decided). Lanes: PLATFORM (service levels, whole-record move still DRAFT), TESTS-SWEEP (fixtures list).
+**Waiting on.** Bob: nothing. BOB: nothing (R1-R7 recorded K5564). Lanes: PLATFORM only (service levels, whole-record move still DRAFT). Own work: K5562-K5563's lines (a worker drafting; check its pointers, then entries under member-roster and screens-settings).
 
 Entries L1-L15 are in `build/plan/archive/planning/HANDOFF-L1-L15.md` (moved at L35).
 
@@ -127,3 +127,7 @@ BOB #324: DEC-483 drew the stale-link sentence (`screen.members.invite.nolink`),
 ## L43 · 2026-10-27 · L42's points decided
 
 BOB #324 decided L42's three points (K line with R1-R7's): file-safety before doorbell in layer 3, `MODULE_ORDER` re-pinned in the same act; the unsure-word count in reading-pipeline (the measure in text-chain); the email names' mark in case-disclosures. `plan-T53-design-rows.md` marked.
+
+## L44 · 2026-10-27 · TESTS-SWEEP's three fixtures findings; K5562-K5563
+
+TESTS-SWEEP's `FIXTURES.md` (lane/tests-sweep ddf8bf4c): 86 of 89 cleared in the sweep; the three orphan fixtures-run lines of `store-assembly/r10-fixtures-run.test.mjs` are entries under control-plane (lines 23, 29) and screens-intake (line 27). Bob ruled K5562 (the founder removes an administrator alone, with a reason) and K5563 (the founder's endorsement alone issues an administrator invitation; a waiting proposal cancellable by the founder or the proposer); a Sonnet worker drafts `lines-K5562-K5563-founder.md`. BOB recorded L37, L39 and L42's decisions as K5564. DECISIONS gains K5562, K5563.
