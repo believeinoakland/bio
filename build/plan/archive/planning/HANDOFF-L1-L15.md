@@ -1,0 +1,64 @@
+# PLANNING handoff entries L1-L15 (archived by PLANNING #3 at L35)
+
+Moved whole from `build/plan/beta/planning/HANDOFF.md`; a successor never reads this at takeover.
+
+## L1 · 2026-10-27 · the plan's structure drafted
+
+Read the takeover set; wrote `STRUCTURE.md`, `DECISIONS.md` (Bob's words this lane carries: K5417, K5418, layers.md ruling 5, K2425, K4635, K4747) and `NEXT-SESSION-PROMPT.md`. Found: T52's layers 1-6 closed and merged (K5419), so every `after W1`…`after W11` in the carried file is met; `proc round open` takes one plan file and `current.md` is capped at 51,200 bytes, so the plan's form needs BOB's choice (Q4); several carried layer-11 entries depend on same-layer entries, so layer 11 needs waves (Q2).
+
+## L2 · 2026-10-27 · Bob's answers A1-A8 drafted as requirement lines; K5434 taken in
+
+BOB #321 relayed DEC-454 to DEC-464 (merged `c08ea4029`), K5424-K5427, then K5434 (Q1-Q4) and K5428-K5437. Five Sonnet workers read the named modules' requirement files whole (about 1 MB in all, never into this context) and drafted lines in the house format; PLANNING reviewed each for layer order and against the DEC's words and saved it here with a review note. Findings: A5 changes the signed case document's format (six layer-8 modules, carried as one capability file); A4 keeps every safely readable metadata field as data and drops only second images, opaque structures and parser risks (PLANNING's reading of Bob's "only drop metadata [that] is necessary"), and overlaps FILES's image types; A6 needs per-key acts in queue and screens-daily; A7 settles a disagreement between screens-investigate R34 and R52. Eleven questions for Bob in `QUESTIONS-L2.md`. STRUCTURE §1, §3, §7 rewritten to K5434; §5 gains FILES's tiers; §8 new; Q5 (is the beta 1.0?) for BOB. DECISIONS carries A1-A8 and F1-F3.
+
+## L3 · 2026-10-27 · the first READY drafts folded: the plan's first draft and the consistency table
+
+Read whole: FILES's READY drafts (REQ-readers-beta, REQ-format-registry-beta, SIZES-N1267, CORPUS-N1268, UX-NEEDS), PLATFORM's three READY drafts (combined read and fold, load test, time budgets), CAPABILITIES' `N1257-places-in-layers.md`. Wrote `plan-T53-draft.md` and `CONSISTENCY.md`; STRUCTURE §5 updated. Main findings: id collisions with my A2 and A6 drafts; A2's fiscal year and N1257's team layer are one mechanism; A4 and FILES CC4 both make the safe picture; `load-check` as drafted uses journey-check, which the layers forbid; PL3 is a process check; `reader-container` is not yet a module.
+
+## L4 · 2026-10-27 · BOB #321's review of the A drafts answered; the owed lines drafted
+
+BOB's review (A1-A7, A2, A5-A6, A8 fit with fixes; A3-A4 not fit as written; cross-cutting X1 id collisions, X2 house prefix, X3 how-statements to Suggestions). Four Sonnet workers fixed the five files against it, each told the review verbatim, Bob's decisions verbatim and the L questions; three more drafted the owed lines (A6: queue and screens-daily; A5 and A8: case-grammar, case-catalogue, publication, public-read, case-import, case-disclosures, basis-versions). PLANNING checked each result's form and placed the house prefix where missing. Main changes: limits not in Bob's words are now questions (A1 five, A3-A4 five, A2 two, A5 two, A6 two, A8 two, A58 two); A2 rides N1257's team layer; A3's `sourceLinksFor` is a sources line without administrators; A4's security review is a corpus test, its process moved to Suggestions; A7 is one interface-shell picker element cited by three screens modules; A8's record-graded typed leg is now a doctrine question (Q-A8-1). CONSISTENCY's L3 rows decided by BOB (K5448); K5438-K5447 into the plan's draft.
+
+## L5 · 2026-10-27 · hand-over to PLANNING #2
+
+The A drafts' new lines folded into `plan-T53-draft.md` (layer-8 `/10` format, case-disclosures and basis-versions, queue and screens-daily, the interface-shell picker, leg-earning A1-R6); BOB's X1 collisions added to CONSISTENCY §1. Section 0 and `NEXT-SESSION-PROMPT.md` rewritten for the successor. Asked BOB to start PLANNING #2.
+
+## L6 · 2026-10-27 · takeover; K5456 in the A drafts; AI-DESIGN, PLATFORM placement, N1257 and N1260 folded
+
+PLANNING #2 took over (reading set as the prompt names), archived #1. K5456's six unbracketed; the seven A drafts marked READY for BOB. DECISIONS gains K5450-K5452, K5454. Five Sonnet reading workers read AI-DESIGN's eleven drafts and CAPABILITIES' N1257 and N1260 whole; their entries are in the plan by layer. Main findings: run-rules' "six-part" delta reads two ways (recommend the map, FOLD-AI §1); three layer-6 order problems (ai-use before agent-model, ai-runs reading ai-gate, ai-gate's conformance scorer); `aicredential` unowned; twelve retired ops still named in sixteen layer-11 modules; A2's fiscal year no longer fits N1257's many team layers (CONSISTENCY 15); eight id ranges claimed by two or three drafts (BOB numbers). `MODULE_ORDER` is member-roster R27 (R61), not membership R83; corrected. K5454: Enterprise left out with its hard reason.
+
+## L7 · 2026-10-27 · K5464 applied; A2 re-cut
+
+BOB decided L6 (K5464): FOLD-AI §1 the map with `draft:reading` → `draft`; §2 as recommended, positions proposed in FOLD-AI §2.9 (run-rules, agent-harness, agent-model, ai-use, ai-runs … agent-steps, agent-worker, ai-gate, agent-runner); CONSISTENCY 11-15, 17-19 as recommended, 16 changed (CHAIN_LIMITS stay counts in connection-grammar; times become budget classes). A Sonnet worker re-cut `lines-A2-fiscal-year.md` onto the team-rules layer: money R39-R41, no basis or status on a stated year, `FISCAL_YEAR_IN_RECORDS` for an equal value, and an "Owed by N1257" list (a)-(g).
+
+## L8 · 2026-10-27 · K5468: A2 aligned with CAPABILITIES' lines
+
+BOB decided CAPABILITIES C18 (K5468). A Sonnet worker aligned `lines-A2-fiscal-year.md`: A2-R1..R3 now point to R134, R31, R32; the fallback A2-R8..R10 retired; place team layers and TEAM_SECTION_REFUSED gone; FACT_VALUE_REFUSED; money R39-R41 still free. The plan's two A2 entries point to CAPABILITIES' file. Found: that file's R134, R31, R32 still limit `government.level` to county and city and write `team/city:<place>`; K5468 (1) and (5) widen both (for CAPABILITIES, through BOB).
+
+## L9 · 2026-10-27 · DEC-465 to DEC-467 folded
+
+BOB #322 merged UX-DESIGN U500 (DEC-465 to DEC-467) and named what is owed. Folded as plan entries: DEC-465 (origin an ordinary check; an account's owner opt-in; `aiorderset`; `aikeyseal`) and DEC-466 (the AI named on each label; a run's parts, N1219; the ready state's read, interface-shell R20; the installer's gateway line, K4464) under the AI screens, lines owed by AI-DESIGN; DEC-467 under format-registry (one table of plain kind names and per-kind limits, lines owed by FILES) and screens-inquiry (DEC-454's twelve `unsupported.<kind>` rows withdrawn). DEC-460's kept and dropped photo data is already A4's table (`lines-A3-A4-source-picture.md` §2, A4-R2, A4-R3): the design's {what} reads `left_out`'s kinds.
+
+## L10 · 2026-10-27 · K5471 folded
+
+Plan entries: FILES's KIND-TABLE (format-registry, READY) and PHOTO-DATA (with A4); AI-DESIGN A47 (ai-accounts R68-R74 incl. `aikeyseal`, `aiorderset`; observation-log R40-R41 and ai-runs R99-R104, the run record; instance-setup R109 and the installer's two gateway permissions, R107 into installer R2 and R108 into installer-steps R45); `NS_AI_RUN`; the installer's refused Logpush read (K5471 (5)); JOURNEYS W6's 130 defects as a placeholder under layer 11 until its drafts arrive. CONSISTENCY row 20: four differences between A4's photo table and PHOTO-DATA, incl. where "near {place}" gets a place name without an outside service.
+
+## L11 · 2026-10-27 · K5473; A4 the one photo source; JOURNEYS folded
+
+K5473: row 20 decided as recommended; A4 aligned by a Sonnet worker (serials, owner, artist and copyright read, not shown by default; "near {place}" from the shipped and team layers only, else rounded; `left_out` the closed key list for DEC-467's {what}); the installer asks for a read-only Logs scope (Bob's act: register it on the OAuth client). JOURNEYS W7's drafts READY: a Sonnet worker set the 130 defects out by owning module in the new detail file `plan-T53-journeys.md` (§A entries with MERGE marks against T52, §B the 19 points Bob's, §C defects with no line, §D four placements for BOB); the plan points to it.
+
+## L12 · 2026-10-27 · K5474, K5475, C21's ids
+
+K5475 (Bob, AI1 B): Gate 1 at Bob's marks admits a part; the real public-matters set later a standing check; the plan's AI1 waits cleared, N1258 and N829 restated. K5474: JOURNEYS' 19 points sorted (J1-J7 Bob's, B558 to UX-DESIGN, four decided), noted in `plan-T53-journeys.md` §B. BOB's C21 rule recorded in CONSISTENCY §1: the A lines keep their ids; colliding CAPABILITIES lines take the next free (content R65, citation R28, queue R98, screens-settings R83, screens-daily R110).
+
+## L13 · 2026-10-27 · K5476
+
+`plan-T53-journeys.md` §D replaced by BOB's placements (K5476): R-127 interface-shell, R-13 screens-investigate, R-84 a new events entry with the plane's route, R-83 `withdrawEvent` in events, R-65 calculations with retrieval R18-R19 as control; the two numbers at START.
+
+## L14 · 2026-10-27 · the AI answers in the plan
+
+BOB #322 relayed K5475-K5494 (AI1-AI16 all answered by Bob), A48, A50, DEC-469, DEC-470: each folded into `plan-T53-draft.md` as it came (commits since L13). The plan's AI waits now read only "AI-DESIGN's drafts re-marked READY".
+
+## L15 · 2026-10-27 · AI-DESIGN final (A48-A58) folded
+
+AI-DESIGN READY and final against AI1-AI16 (AD1-AD58), merged into tranche/T53. New lines folded: catalogue R54, R55 (R43-R45 amended); ai-gate R67 `combineResults` (R53, R63 amended); ai-issuer R25, R26 (R13, R16-R18 amended); ai-use R28-R33 (re-testing cap and switch, opt-in health counts); instance-setup R110 (the health sender); ai-accounts R68 replaced by `aicreditsclear`, R75, R76; the ops `airesultown`, `aihealthshare`, `aihealthpreview`, `aicreditsclear`, `aiwaitswitch`, `airetestset`; queue kinds `retesting-off`, `ai-credits-stop`. The plan's AI entries wait on nothing of Bob's; agent-model still on live checks L2, L3. Left for BOB at writing: dec465 For BOB 3 (the `membership` role-change listener), recommended.
+

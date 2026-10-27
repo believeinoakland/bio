@@ -54,3 +54,32 @@
 - K5524 · 2026-10-27 · on QUESTIONS.html L10, option A: "as recommended" (a checked typing may equal a checked machine reading; said in the explanation) · `build/rulings.md`
 - K5525 · 2026-10-27 · on QUESTIONS.html L11, option A: "as recommended" (the member's credit choice wins) · `build/rulings.md`
 - K5526 · 2026-10-27 · on QUESTIONS.html L12, option A: "as recommended" (the beta is a release before 1.0) · `build/rulings.md`
+- K5534 · 2026-10-27 · on QUESTIONS.html C31 (N824): "All visible headers, though not all MIME headers. It does not include email addresses, but may include the names of recipients when that's material to the case." · `build/rulings.md`
+- K5535 · 2026-10-27 · on QUESTIONS.html C32, option A: "as recommended" (a ceiling on interpreted parts per service level, shown when reached) · `build/rulings.md`
+- K5536 · 2026-10-27 · on QUESTIONS.html L13, option A: "as recommended" (a subject change refused until the named connections are re-graded) · `build/rulings.md`
+- K5537 · 2026-10-27 · on QUESTIONS.html C33: "A" (Bob prepares the M-N1272 gold set himself, marking blind) · `build/rulings.md`
+- K5538 · 2026-10-27 · on QUESTIONS.html C34: "as recommended" (researched facts offered marked "researched, not reviewed") · `build/rulings.md`
+- K5539 · 2026-10-27 · on QUESTIONS.html L14: "B" (only a question's owner or an administrator may change its subject) · `build/rulings.md`
+- K5540 · 2026-10-27 · on QUESTIONS.html L15: "B" (a published question, or one divided into parts, may have its subject changed, with the change shown) · `build/rulings.md`
+- K5541 · 2026-10-27 · on QUESTIONS.html L16, option A: "as recommended" (a member may take the subject off, with a reason) · `build/rulings.md`
+- K5542 · 2026-10-27 · on QUESTIONS.html L17, option A: "as recommended" (a concluded question's subject may change, the conclusion kept, the strength before and after shown) · `build/rulings.md`
+- K5543 · 2026-10-27 · on QUESTIONS.html L18, option A: "as recommended" (the records' year governs; the team's statement listed as set aside) · `build/rulings.md`
+- K5544 · 2026-10-27 · on QUESTIONS.html L19, option A: "as recommended" ("listed" means named on any recorded detail of the source) · `build/rulings.md`
+- K5545 · 2026-10-27 · on QUESTIONS.html L20, option A: "as recommended" (the Inbox follows the same rule) · `build/rulings.md`
+- K5546 · 2026-10-27 · on QUESTIONS.html L21: "B": keep the colour profile · `build/rulings.md`
+- K5547 · 2026-10-27 · on QUESTIONS.html L22, option A: "as recommended" (all of a photo's data shown as "the file says", plain text, capped) · `build/rulings.md`
+- K5548 · 2026-10-27 · on QUESTIONS.html L23, option A: "as recommended" ("still ungraded" is a passage the team has not graded at all) · `build/rulings.md`
+- K5549 · 2026-10-27 · on QUESTIONS.html L24, option A: "as recommended" (the record grades a cited typed page) · `build/rulings.md`
+- K5550 · 2026-10-27 · on QUESTIONS.html L25, option A: "as recommended" (one check raises a typed page D to C; later checks raise nothing) · `build/rulings.md`
+- K5552 · 2026-10-27 · on QUESTIONS.html L26, option A: "as recommended" (each typist or checker chooses her credit per edition; default "a member of the team") · `build/rulings.md`
+- K5553 · 2026-10-27 · on QUESTIONS.html J1: "as recommended" (Can an administrator set aside held material in their own name? A · Yes, when the administrator is also a person on the team) · `build/rulings.md`
+- K5554 · 2026-10-27 · on QUESTIONS.html J2: "as recommended" (When a member opens a record that isn't theirs to see, does Civicsmith admit it exists? C · "You can't open this", with who to ask) · `build/rulings.md`
+- K5556 · 2026-10-27 · on QUESTIONS.html J3: "as recommended" (What kind of proceeding can a team register before it has chosen its places? C · The screen says to choose the team's places first and links there, with A beside it) · `build/rulings.md`
+- K5557 · 2026-10-27 · on QUESTIONS.html J4: "as recommended" (What can a person's page record? A · Add membership and credential) · `build/rulings.md`
+- K5558 · 2026-10-27 · on QUESTIONS.html J5: "as recommended" (Who files a correction, a withdrawal or a court order on a case's docket? A · The project's owner, from the docket page) · `build/rulings.md`
+- K5559 · 2026-10-27 · on QUESTIONS.html J6: "as recommended" (When a new edition of a case is published, is that recorded on its docket? A · Automatically, with the edition's "what changed" text) · `build/rulings.md`
+- K5560 · 2026-10-27 · on QUESTIONS.html J7: "as recommended" (Is an outside reader's acknowledgement shown publicly by name? B · Shown by name only if they tick that it may be) · `build/rulings.md`
+- K5562 · 2026-10-27 · on QUESTIONS.html B1: "as recommended" (The founder may remove an administrator alone, with a reason, recorded and shown to the team; other administrators still need a majority vote, and still can't remove the founder) · `build/rulings.md`
+- K5563 · 2026-10-27 · on QUESTIONS.html B2: "as recommened" (The founder's approval is enough to add an administrator; other administrators' proposals still need every administrator's approval; the founder or the proposer can cancel a waiting proposal) · `build/rulings.md`
+- K5567 · 2026-10-27 · Bob, in chat: "Don't run multiple tranches or rounds when things can instead be done at once." · `build/rulings.md`
+- K5568 · 2026-10-27 · on QUESTIONS.html B3: "A" (Every removal of an administrator shows the team who removed them and why, whether the founder acted alone or the administrators voted) · `build/rulings.md`
