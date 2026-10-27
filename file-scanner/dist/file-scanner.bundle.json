@@ -167,6 +167,6 @@
   },
   "lock": {
     "path": "package-lock.json",
-    "sha256": "5cc8a8b26bf4f18e001df55c9bd6b8f191715fd18dd1c4d4ec6729ccadc97dbb"
+    "sha256": "5ff1fd670290853373e67735635a726909bda80ede2c93209bc8535f8f831d76"
   }
 }
