@@ -8494,6 +8494,28 @@ w471('screen.aiproviders.mock.f', "an account stopped after a charge to Cloudfla
 w471('screen.aiproviders.stands.credits', "{account}'s answer at {time} was charged to Cloudflare's own credits instead of your team's key. The answer was kept, and {account} takes no more work until an administrator clears it.", 'aiproviders: the stopped account, also the administrators\' Queue item (K5478)')
 w471('screen.aiproviders.credits.clear', 'Clear it and turn the account back on', 'aiproviders: the administrator clears the stop (K5478; owed op aicreditsclear)')
 
+def w472(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-472: ' + note))
+# JOURNEYS W7 (B558, K5474): eight screen points decided by the design
+w472('screen.account.revoke.confirm.head', 'Revoke your signing key?', "account: the question before revoking one's own signing key (R-1)")
+w472('screen.account.revoke.confirm.body', "Cases you already signed keep their signatures, marked as withdrawn from today. You can't sign again until you make a new key.", 'account: what revoking does (R-1)')
+w472('screen.account.revoke.confirm.go', 'Revoke it', 'account: the button that revokes (act signerrevokeown) (R-1)')
+w472('screen.account.revoke.confirm.keep', 'Keep it', 'account and members: the button that keeps the key (R-1)')
+w472('screen.members.keywithdraw.confirm.head', "Withdraw {member}'s signing key?", 'members: the question before an administrator withdraws a signing key (R-2)')
+w472('screen.members.keywithdraw.confirm.body', "Cases {member} already signed keep their signatures, marked as withdrawn from today. {member} can't sign again until they make a new key.", 'members: what withdrawing does (R-2)')
+w472('screen.members.keywithdraw.confirm.go', 'Withdraw it', 'members: the button that withdraws (act signerset) (R-2)')
+w472('screen.notes.deleted', 'Your note was deleted: {title}', 'notes: the line after a note is deleted (R-3)')
+w472('screen.group.copy.done', "Your copy is ready to download. It's on the list below with the time and the counts.", 'group: the line after a copy of the record is taken (R-4)')
+w472('screen.security.usual.none', 'none', 'security: a usual of zero in the totals table (R-5)')
+w472('screen.security.usual.floor', 'When your team usually has none of something, up to {floor} in a day still counts as near your usual; more is marked above it.', 'security: how a usual of zero is read, under the totals table (R-5)')
+w472('screen.security.tip.hour_usual_none', 'Usual for an hour: none', 'security: an hour square whose usual is zero (R-5)')
+w472('screen.ai.notready.here', 'The assistant can help here once an administrator turns on an AI account.', 'question: where the assistant would be offered and no account is on (R-6)')
+w472('screen.front.signedin', "You're signed in as {name}.", "front: the team's page seen by a signed-in member (R-7)")
+w472('screen.front.home', 'Go to Home', 'front: the link to Home for a signed-in member (R-7)')
+w472('form.choose.widen.documents', 'Show documents from your other projects', "the document picker: widens the list beyond this document's project (DEC-463)")
+w472('form.choose.inproject', 'in {project}', 'the document picker: the project a widened row belongs to (DEC-463)')
+w472('form.choose.noproject', 'in no project', 'the document picker: a widened row in no project (DEC-463)')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
