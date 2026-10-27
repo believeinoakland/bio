@@ -216,7 +216,7 @@ Every screen job of this layer also draws DEC-445's rows and DEC-446's layout th
 - T52-68 · FR-28 block R84-R139 *(not yet met: T52)* · each act is sent as its owner declares it, and a test names each requirement; includes re-walk 11 C (3): the "after the strength was shown" line draws the grades, and (2) the ground-naming refusal (inquiry's entry).
 - T52-69 · DEC-443 · draws `act.leggrade.label.question` (`screen.question.leggrade.act` retired).
 - T52-70 · N1263 · reads `act.readheld.label.document`, `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`, `screen.document.cite.repair.says`.
-- T52-71 · R138's list clause: the flags raised on a document, from `contradictioncandidates` (the key `screen.document.flags.head` is held; after contradiction's entry).
+- T52-71 · R138's list clause: the flags raised on a document, from `contradictioncandidates` (the key `screen.document.flags.head` is held; after contradiction's entry); `t51-fix11-b89.test.mjs` takes contradiction's published fixture `flaggedRead()` (merged, K5408) instead of hand-building the flagged candidate.
 - T52-72 · the memory watch (R14, adopted): `document`, `fr28-document` (12.6 GB, killed by the container) and `t51-document` run within the cap, the old defect found and fixed; K5343 reds (5): first: settle each cause.
 - T52-73 · K4599 (a) · the Project screen first reads the combined read.
 
