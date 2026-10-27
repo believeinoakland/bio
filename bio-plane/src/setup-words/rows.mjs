@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19764 design words, 1176 protected; SHA-256
-   d5ec5a821c527113af70833a1da9580fd33aca9b84a75700665e0e7e3331fe9d) followed by 7481 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7490 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "d5ec5a821c";
+export const WORDS_COMMIT = "3498b203ac";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -17991,17 +17991,6 @@ export const WORD_ROWS = Object.freeze([
   ["extractrun.says.machine_credential_marked","no machine credential has marked a passage citable in this scope, so there is nothing to measure. This is an absence and not a clean result",null,null,false,"design"],
   ["extractrun.says.passage_machine_marked","{count} of {m} passage(s) a machine marked citable have been cited by a member. The other {uncited} are PROPOSALS: the record keeps them, labels them, and counts none of them as extraction coverage. If this fraction never rises across runs, the assistant is manufacturing citable-looking passages",null,null,false,"design"],
   ["tokens.group_civicsmith_binds","Your team's Civicsmith binds no Claude account to its own settings, and none can be set there. The assistant is reached through a member's own Claude account or API key, or through the team's API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.",null,null,false,"design"],
-  ["odf-reader.odf.content_xml_references_length_package","content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.normalised_by",", normalised by {name}","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.no_byte_rewritten",", no byte rewritten","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.the_sha256_of_the_flavour","the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.content_xml_is_not_valid","content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.the_bytes_are_not_an","the bytes are not an OpenDocument package detected with certainty, so no container digest was taken","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.no_odp_export_has_been","no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.content_xml_is_over_the","content.xml is over the declared-uncompressed text bound ({v1}), so it was not inflated and no digest was taken","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.content_xml_could_not_be","content.xml could not be read whole ({why})","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.no_intra_link_odf_manifest_2","no intra link: {ODF_MANIFEST_PART} lists no embedded member","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
-  ["odf-reader.odf.no_intra_link_odf_manifest","no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)","K5565 (T53, odf-reader's entry): the module's own localize sentence, keyed as written; not yet reviewed",null,false,"design"],
   ["rail.home.name","Home",null,null,false,"design"],
   ["rail.home.holds","Home: what needs you, what needs the team, and every area at a glance.",null,null,false,"design"],
   ["rail.queue.name","Queue",null,null,false,"design"],
@@ -25450,12 +25439,21 @@ export const WORD_ROWS = Object.freeze([
   ["ocr-worker.pngsamples.the_inflated_raster_is_shorter","the inflated raster is shorter than the header's dimensions require",null,null,false,"code"],
   ["ocr-worker.tessengine.the_language_model_is_v1","the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it",null,null,false,"code"],
   ["odf-reader.odf.content_xml_byte_identical_across","content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",null,null,false,"code"],
+  ["odf-reader.odf.content_xml_could_not_be","content.xml could not be read whole ({why})",null,null,false,"code"],
+  ["odf-reader.odf.content_xml_is_not_valid","content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken",null,null,false,"code"],
   ["odf-reader.odf.content_xml_is_not_valid_2","content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken",null,null,false,"code"],
+  ["odf-reader.odf.content_xml_is_over_the","content.xml is over the declared-uncompressed text bound ({v1}), so it was not inflated and no digest was taken",null,null,false,"code"],
   ["odf-reader.odf.content_xml_not_read_its","content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())",null,null,false,"code"],
   ["odf-reader.odf.content_xml_not_read_over","content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",null,null,false,"code"],
+  ["odf-reader.odf.content_xml_references_length_package","content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed",null,null,false,"code"],
   ["odf-reader.odf.no_flavour_export_has_been","no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",null,null,false,"code"],
+  ["odf-reader.odf.no_intra_link_odf_manifest","no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)",null,null,false,"code"],
+  ["odf-reader.odf.no_intra_link_odf_manifest_2","no intra link: {ODF_MANIFEST_PART} lists no embedded member",null,null,false,"code"],
+  ["odf-reader.odf.no_odp_export_has_been","no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",null,null,false,"code"],
   ["odf-reader.odf.part_odf_mimetype_part_is","part: {ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified",null,null,false,"code"],
+  ["odf-reader.odf.the_bytes_are_not_an","the bytes are not an OpenDocument package detected with certainty, so no container digest was taken",null,null,false,"code"],
   ["odf-reader.odf.the_packages_central_directory_could","the package's central directory could not be read ({why})",null,null,false,"code"],
+  ["odf-reader.odf.the_sha256_of_the_flavour","the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}",null,null,false,"code"],
   ["odf-reader.odf.this_package_carries_no_meta","this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author",null,null,false,"code"],
   ["office-readers.csv.a_tab_separated_file_is_read_by_this_entry","a tab-separated file is read by this entry; its delimiter is decided from the bytes",null,null,false,"code"],
   ["office-readers.csv.declared_by_the_producer_in_the_bytes","declared by the producer in the bytes",null,null,false,"code"],
