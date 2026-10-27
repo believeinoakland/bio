@@ -5912,7 +5912,7 @@
     },
     {
      "op": "monitorslate",
-     "label": "Read what is due",
+     "label": "Show what is due",
      "status": "declared",
      "modules": [
       "op-declarations"

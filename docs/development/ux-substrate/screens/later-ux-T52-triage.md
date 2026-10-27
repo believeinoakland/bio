@@ -14,3 +14,5 @@ A reading worker's triage of `build/plan/later-ux.md` on `tranche/T52` (about 16
 **B (about 10):** 25 the doorbell's small points (re-read the walk first); 38 an inactive member told "password does not match" (Bob's: help against an oracle); 45 a safe view of a knock's bytes (design draws first); 51 "Read N of M words"; 61 whether "Read it now" asks a reason; 74 and 81 old data (backfill or leave: BOB's); 125, 149, 152 drawings owed by the design (the safe view's first 500 pages; a spreadsheet's "show more"; Cancel for a parted upload).
 
 **C (about 41):** 1-5, 8, 9, 11, 21, 23, 27, 28, 30-32, 34, 36, 37, 39, 43, 49, 52, 54, 55, 67-70, 72, 73, 76-80, 87, 88, 90, 98, 102, 105, 111, 112: the jobs' (singular choices, raw ids, layout at 390 px, labels the code must choose by kind). **D (about 43):** the rest.
+
+**Done (UX design #43):** W group 1 (items 6-19) as DEC-452; groups 2 and 3 (the refusals line, Document's and the ceremony's lines) as DEC-453, with its parked items named there. Next: the Add and Document line (round 9's code keys, 82-159), then the B items' drawings.

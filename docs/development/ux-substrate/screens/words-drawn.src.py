@@ -88,7 +88,7 @@ w('screen.dash-action.next.record', 'Record what came back', False, "an action's
 w('screen.dash-action.next.escalate', 'Escalate, as the plan sets', False, "an action's next step")
 # dash-project
 w('screen.dash-project.next.heading', 'Next for you here')
-w('screen.dash-project.next.vouch', 'Vouch for the {count} photos you captured at {place}')
+w('screen.dash-project.next.vouch', 'Vouch for the {count} copies you captured at {place}')
 w('screen.dash-project.next.newer', 'Decide on the newer version of {document}')
 w('screen.dash-project.next.prepare', 'Then Edition {edition} can be prepared: the {count} findings meet the bar')
 w('screen.dash-project.glance.heading', 'This project at a glance')
@@ -1173,21 +1173,21 @@ ADM = "{admins}: the handles of the team's active administrators, joined with co
 w286('screen.home.join.heading', 'Getting into a project', False, "Home's section for a member who may not start projects")
 w286('screen.home.join.says', "Every project you can get into: the ones you were invited to, and the findable ones, whose owners let every member see their names. A project's owners decide who joins it.")
 w286('screen.home.join.lead', "Your team's work happens in projects, and you're not in one yet. Join one you were invited to, or ask to join one the team can find.")
-w286('screen.home.join.nocreate', "Starting a project of your own is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.", False, ADM)
-w286('screen.home.join.none', "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Yours: {admins}.", False, 'when no project is invited or findable; ' + ADM)
+w286('screen.home.join.nocreate', "Starting a project of your own is for members your team's administrators allow. Administrators: {admins}. Ask if you have a problem to bring.", False, ADM)
+w286('screen.home.join.none', "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Administrators: {admins}.", False, 'when no project is invited or findable; ' + ADM)
 w286('projects.findable.head', 'Findable')
 w286('projects.findable.says', 'Projects you are not in whose owners let every member see their names. Nothing else about them shows until you are in. Ask to join, with a word on why if you like; its owners grant or decline it, and you can withdraw your request while it waits.')
 w286('projects.findable.meta', 'Findable: only its name shows until its owners let you in.')
 w286('projects.request.asked', 'You asked to join on {date}. Its owners decide.', False, 'a findable project the member asked to join; the request is open')
-w286('screen.projects.nocreate', "Starting a project is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.", False, "in place of “Start a project” for a member who may not start one; " + ADM)
+w286('screen.projects.nocreate', "Starting a project is for members your team's administrators allow. Administrators: {admins}. Ask if you have a problem to bring.", False, "in place of “Start a project” for a member who may not start one; " + ADM)
 w286('queue.project-request.summary', '{who} asks to join {project}', False, "in the owners' queue; the member's word follows as their own words")
 w286('queue.project-request.detail', 'Grant it to invite them, or decline it. They see your answer and any word you add.')
 w286('screen.home.request.grant', 'Grant', True, 'grants a request to join (projectrequestanswer)')
 w286('screen.home.request.decline', 'Decline', True, 'declines a request to join (projectrequestanswer)')
 REWRITE.update({
   'project.visibility.start.later': 'Choose one: neither is chosen for you. You can change it later, with a reason.',
-  'screen.updates.admins': "Only your team's administrators install updates. Yours: {admins}. If something needs updating, ask one of them.",
-  'screen.security.admins': "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
+  'screen.updates.admins': "Only your team's administrators install updates. Administrators: {admins}. If something needs updating, ask one of them.",
+  'screen.security.admins': "Security is set by your team's administrators. Administrators: {admins}. Ask one of them about anything here.",
 })
 # --- end DEC-286
 # --- DEC-287 (the member walk's M-D4, B246): a member's Members page is the roster, its columns explained; what each may do in
@@ -1224,7 +1224,7 @@ REWRITE.update({
 #     in plain words, retire apart; a file a member added says why it is high risk and what to do next
 def w289(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-289' + (': ' + note if note else '')))
-w289('document.held.says', 'Held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.', False, 'a copy the viewer captured, not yet vouched for (release)')
+w289('document.held.says', 'Awaiting review: held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.', False, 'a copy the viewer captured, not yet vouched for (release)')
 w289('document.attest.when', 'Useful when someone may later claim the document was changed after it was captured.', False, 'beside the timestamp button; what it does is its own explanation')
 w289('document.attest.label', 'Get an independent timestamp', True, 'the act attest')
 w289('document.retire.fold', 'Stop using this copy', False, 'folds the act retire, apart from the copy\'s other acts')
@@ -1369,7 +1369,7 @@ w299('case.draft.untitled', '{project}: draft case', False, 'the title of a draf
 w299('case.prepared.by', 'Draft · prepared by {member}', False, "{member} the member's name or handle, never the account's sign-in name such as admin")
 w299('screen.case-editor.tip.distributed', 'Distributed: published, and each copy handed to the readers the case names, such as the office it is sent to.', False, 'the card the ladder lacked')
 w299('case.ladder.notyet', 'Not checked yet', False, 'a step of the readiness ladder that nothing has judged; never "not met" (B411 B2/C8)')
-w299('ceremony.gate.heading', 'Put these right before you sign', False, "the ceremony's list of what stops the signing")
+w299('ceremony.gate.heading', 'Fix these before you sign', False, "the ceremony's list of what stops the signing")
 w299('ceremony.gate.notargets', 'This draft has no finding to publish. Add a finding to the case, then check again.', False, 'the publication with no targets; replaces the developer text; B411 D1: a door "Add a finding" beside it')
 w299('ceremony.gate.other', 'This stops the signing: {what}. Put it right above, then check again.', False, 'any other gate, {what} its own plain sentence')
 # (4) acknowledgements
@@ -1984,7 +1984,7 @@ W.append(dict(key='screen.explore.hop.unnamed', en='an unnamed item', protected=
 # (4) strip reading and the Find field
 W.append(dict(key='find.query.help', en='Leave it empty to browse everything.', protected=False, note='DEC-329: B303 (4): the help under the Find words field (today find.query.placeholder is passed as help); finder.mjs:70'))
 # (5) Acquire timeout; action kinds; the action page's question field
-W.append(dict(key='refusal.ACQUIRE_TIMED_OUT', en="The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.", protected=False, note='DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED'))
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT', en="The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file.", protected=False, note='DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED'))
 for _k, _cap, _low in [
     ('cpra_request', 'Records request', 'records request'),
     ('grand_jury', 'Grand jury referral', 'grand jury referral'),
@@ -3782,7 +3782,7 @@ W.append(dict(key='refusal.GRADE_OFFERED', en="A proposal cannot grade itself. C
 W.append(dict(key='refusal.HELD_ACTS_UNREADABLE', en='The set-asides recorded for this question could not be read.', protected=False, note='DEC-342: reading set-asides for a question failed'))
 W.append(dict(key='refusal.HOLDER_NOT_A_PERSON', en='A post can only be held by a person. Choose a person as the holder. Nothing was written.', protected=False, note='DEC-342: holds line whose holder is not a person'))
 W.append(dict(key='refusal.HOLDS_UNREADABLE', en='The litigation holds could not be read, so whether these projects are held cannot be said. Try again.', protected=False, note='DEC-342: litigation holds failed to read'))
-W.append(dict(key='refusal.HOST_COOLING_OFF', en='Civicsmith is holding off asking that website for now so it is not overloaded. Nothing was fetched; try again in a little while.', protected=False, note='DEC-342: per-host request governor is pausing that site'))
+W.append(dict(key='refusal.HOST_COOLING_OFF', en="Your team's Civicsmith is waiting a while before it asks that website again. Nothing was fetched. Try again in a little while, or save the page yourself and add it as a file.", protected=False, note='DEC-342: per-host request governor is pausing that site'))
 W.append(dict(key='refusal.HYPOTHESIS_ID', en='A hypothesis cannot be named here, because it is not evidence or a record. Nothing was written.', protected=False, note='DEC-342: hypothesis id used in a fact, event or line'))
 W.append(dict(key='refusal.HYPOTHESIS_NOT_A_FACT', en="A hypothesis or hunch can't be an input or threshold of a calculation, or the basis of a check. Use held facts instead. Nothing was written.", protected=False, note='DEC-342: calculation or check rests on a hypothesis'))
 W.append(dict(key='refusal.IDENTIFIER_NOT_IN_SPACE', en="That identifier does not have the shape of any form your team's jurisdiction profiles allow for it. Check it and try again. Nothing was written.", protected=False, note='DEC-342: identifier shape matches no form of its scheme'))
@@ -4609,8 +4609,8 @@ W.append(dict(key='network-notices.status.lapsed', en='lapsed', protected=False,
 W.append(dict(key='screen.project.notice.lapsed.on', en='It lapsed on {date}.', protected=False, note='DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); after screen.project.notice.a.notice.that.stays.dormant'))
 W.append(dict(key='screen.project.notice.missed', en='A monthly check was missed. The last level attested is {level}, on {date}.', protected=False, note='DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a notice with missed monthlies'))
 W.append(dict(key='screen.dash-project.tile.events.undetermined', en='{n} undetermined in order', protected=False, note="DEC-360 (B371 1): screens-inquiry, dash-project R79; the Events tile's note"))
-W.append(dict(key='screen.dash-project.next.vouch.noplace', en='Vouch for the {count} photos you captured', protected=False, note='DEC-360 (B371 1): screens-inquiry, dash-project R79; a held capture with no address (an upload)'))
-W.append(dict(key='screen.home.todo.vouch.noplace', en='Vouch for the {count} photos you captured', protected=False, note='DEC-360 (B371 1): screens-inquiry, dash-project R79; the same on Home'))
+W.append(dict(key='screen.dash-project.next.vouch.noplace', en='Vouch for the {count} copies you captured', protected=False, note='DEC-360 (B371 1): screens-inquiry, dash-project R79; a held capture with no address (an upload)'))
+W.append(dict(key='screen.home.todo.vouch.noplace', en='Vouch for the {count} copies you captured', protected=False, note='DEC-360 (B371 1): screens-inquiry, dash-project R79; the same on Home'))
 W.append(dict(key='screen.dash-project.precision.day', en='to the day', protected=False, note='DEC-360 (B371 1): screens-inquiry, dash-project R79; the {precision} of story.undetermined'))
 W.append(dict(key='screen.dash-project.precision.minute', en='to the minute', protected=False, note='DEC-360 (B371 1): screens-inquiry, dash-project R79; the {precision} of story.undetermined'))
 W.append(dict(key='screen.dash-project.precision.second', en='to the second', protected=False, note='DEC-360 (B371 1): screens-inquiry, dash-project R79; the {precision} of story.undetermined'))
@@ -4669,8 +4669,8 @@ W.append(dict(key='screen.glossary.honest.signature.name', en='Signature', prote
 W.append(dict(key='screen.glossary.honest.timestamp.name', en='Timestamp', protected=False, note="DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.honest.timestamp"))
 W.append(dict(key='refusal.DIGEST_MISMATCH.download', en="The file that arrived doesn't match the fingerprint your team holds for it, so it was not saved or opened. Nothing was changed. Try the download again.", protected=False, note='DEC-360 (B371 2): interface-shell R98; the browser-side check before a download is saved'))
 
-W.append(dict(key='screen.dash-project.next.vouch.noplace.one', en='Vouch for the photo you captured', protected=False, note='DEC-360 (B371 1): the one-photo form'))
-W.append(dict(key='screen.home.todo.vouch.noplace.one', en='Vouch for the photo you captured', protected=False, note='DEC-360 (B371 1): the one-photo form on Home'))
+W.append(dict(key='screen.dash-project.next.vouch.noplace.one', en='Vouch for the copy you captured', protected=False, note='DEC-360 (B371 1): the one-photo form'))
+W.append(dict(key='screen.home.todo.vouch.noplace.one', en='Vouch for the copy you captured', protected=False, note='DEC-360 (B371 1): the one-photo form on Home'))
 # DEC-362: B375 (installer-steps)
 W.append(dict(key='installer.fleet.left.item', en='{member} ({why})', protected=False, note="DEC-362 (B375): installer-steps (T51-127, R36); one entry of installer.fleet.partial.*'s {list}, joined as a list; {why} an installer.fleet.why.* fragment, never a whole sentence"))
 W.append(dict(key='installer.fleet.why.integrity', en="its files didn't match the fingerprints this release states for them", protected=False, note='DEC-362 (B375): installer-steps (T51-127, R36); a bundle or part failed its hash'))
@@ -4694,7 +4694,7 @@ W.append(dict(key='installer.fleet.skip.manifest.reason', en="This release names
 # DEC-364: B379 (screens-inquiry key gaps)
 W.append(dict(key='screen.question.decision.change', en='Change your decision', protected=False, note="DEC-364 (B379 A): screens-inquiry, question; the fold's summary (say003 is the question inside it)"))
 W.append(dict(key='screen.question.compare.axis', en='{axis}: {change}', protected=False, note='DEC-364 (B379 A): screens-inquiry, question R72; an axis with no citation to name, {axis} the card word, {change} a screen.question.word.* word; with a citation draw screen.question.say054 ({change}, {source}), which carries the "since … was cited" tail'))
-W.append(dict(key='screen.dash-project.next.vouch.one', en='Vouch for the photo you captured at {place}', protected=False, note='DEC-364 (B379 A): screens-inquiry, dash-project; the one-photo form of screen.dash-project.next.vouch'))
+W.append(dict(key='screen.dash-project.next.vouch.one', en='Vouch for the copy you captured at {place}', protected=False, note='DEC-364 (B379 A): screens-inquiry, dash-project; the one-photo form of screen.dash-project.next.vouch'))
 W.append(dict(key='screen.project.scale.now', en='(now)', protected=False, note='DEC-364 (B379 A): screens-inquiry, project R75; marks the table row for the current number of owners'))
 W.append(dict(key='screen.project.scale.takes', en='{votes} of {owners}', protected=False, note='DEC-364 (B379 A): screens-inquiry, project R75; Votes it takes at three owners or more'))
 W.append(dict(key='screen.project.scale.who', en='{voters} of {owners} may vote', protected=False, note='DEC-364 (B379 A): screens-inquiry, project R75; the Why cell at three owners or more'))
@@ -5728,7 +5728,7 @@ W.append(dict(key='screen.project.the.record.decides.the.stage.by', en='The reco
 W.append(dict(key='screen.project.nothing.here.is.a.button.when', en='Nothing here is a button: when what a stage needs happens, the stage moves.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
 W.append(dict(key='screen.project.every.project.starts.here', en='Every project starts here.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
 W.append(dict(key='screen.project.a.question.this.project.holds.has', en='A question this project holds has a leg in its basis.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
-W.append(dict(key='screen.project.either.one.reaches.it.the.project', en='Either one reaches it: the project concludes one of the {held} questions it holds, or it owns a case edition that has been ratified.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
+W.append(dict(key='screen.project.either.one.reaches.it.the.project', en='Either one reaches it: the project concludes one of its {held} questions, or it has a signed case.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
 W.append(dict(key='screen.project.an.owner.closes.a.project.by', en='An owner closes a project by recording why: resolved, superseded or abandoned.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
 W.append(dict(key='screen.project.the.record.never.grows.into.this', en='The record never grows into this stage on its own.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
 W.append(dict(key='screen.project.an.owner.can.reopen.a.closed', en='An owner can reopen a closed project.', protected=False, note='DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, "team" never "group"'))
@@ -6599,7 +6599,7 @@ ROWS = [
 ('screen.queue.snoozed.head', 'Snoozed', 'B426: the section of What you answered that holds items hidden until a day you chose'),
 ('screen.queue.snoozed.holds', 'Items you snoozed until a day you chose. They return on that day, or now with Bring back.', 'B426: help under the Snoozed heading'),
 ('screen.queue.snoozed.until', 'comes back {date}', 'B426: a snoozed row'),
-('screen.home.waiting.counts', 'Waiting for a member to look: held captures {held}, Inbox items {inbox}.', 'B426: one status line on Home; both counts shown, a zero shown as 0, never worded as a plural'),
+('screen.home.waiting.counts', 'Waiting for a member to look: {held} in Held captures, {inbox} in Inbox.', 'B426: one status line on Home; both counts shown, a zero shown as 0, never worded as a plural'),
 ('screen.queue.routed.auth.cannot', 'I could not tell', 'B426: the second choice of Who issued this document?'),
 ('screen.queue.routed.auth.issuer.label', 'The issuing party', 'B426: label of the field naming who issued it'),
 ('screen.queue.routed.auth.tried.label', 'What you tried', 'B426: label of the field for where you looked when you could not tell'),
@@ -6859,7 +6859,7 @@ W.append(dict(key='screen.project.ask_owners', en='Ask {owners}.', protected=Fal
 # DEC-393: B437 (K4262)
 W.append(dict(key='screen.action.minutes.notfound', en='These words are not in the document you chose. Copy them exactly as the minutes write them. Nothing was written.', protected=False, note='DEC-393: B437 1: in-place refusal in the minutes fold (screens-action R55): the typed passage is not in the chosen document'))
 W.append(dict(key='screen.action.minutes.needed', en='The meeting, its date, the document and the passage are all needed. Nothing was written.', protected=False, note='DEC-393: B437 1: in-place refusal in the minutes fold: one of the four parts is missing'))
-W.append(dict(key='screen.home.todo.vouch.one', en='Vouch for the photo you captured on {place}', protected=False, note='DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch'))
+W.append(dict(key='screen.home.todo.vouch.one', en='Vouch for the copy you captured at {place}', protected=False, note='DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch'))
 W.append(dict(key='queue.letter-approval.summary', en='The letter {title} is waiting for your approval', protected=False, note='DEC-393: B437 2: queue kind letter-approval (minted by the design for screens-daily and its producer): a letter awaiting approval'))
 W.append(dict(key='queue.letter-approval.detail', en="A member prepared this letter, and it needs approval before it is sent. Read it, then approve it. Your team's Civicsmith sends nothing: once it is approved, you send it and record the sending.", protected=False, note='DEC-393: B437 2: queue kind letter-approval, its detail'))
 W.append(dict(key='screen.home.ailimit.set', en='Set the limit', protected=False, note='DEC-393: B437 2: Home, the button of ailimitset as drawn in place'))
@@ -6968,7 +6968,7 @@ REWRITE.update({
 })
 
 # DEC-397: B446 (K4326), B447 (K4327)
-W.append(dict(key='refusal.ACQUIRE_TIMED_OUT.held', en="The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.", protected=False, note='DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept'))
+W.append(dict(key='refusal.ACQUIRE_TIMED_OUT.held', en="The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file.", protected=False, note='DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept'))
 W.append(dict(key='refusal.ACQUIRE_TIMED_OUT.undetermined', en="The site took longer than 25 seconds to finish, so your team's Civicsmith stopped, and it cannot tell whether anything was kept. Look in Held captures before you try again, so the page is not captured twice.", protected=False, note='DEC-397: B446: a timed-out capture whose kept state cannot be told'))
 W.append(dict(key='form.choose.search', en='Search your documents', protected=False, note='DEC-397: B447 (screens-investigate C95): the document picker\'s search box label'))
 W.append(dict(key='form.choose.search.none', en='No document matches. Try other words, or add the document first.', protected=False, note='DEC-397: B447: the document picker\'s search found nothing'))
@@ -7305,7 +7305,7 @@ def w417(key, en, note):
 w417('refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited', "You have been invited to this project but have not joined it yet, so you can't do this here. Looking, capturing and citing stay open to you. Join the project to go on. Nothing was changed.", 'screens-action (K4557): an invited, not yet joined member at the start of a filing step on action, request or start-send; drawn beside Join (projectjoin)')
 w417('screen.projectact.invited.head', 'If you were invited and have not joined yet', 'the fold on action, request and start-send holding the refusal and Join')
 w417('document.readnow.pending', 'Being read now. Its words can be found and cited once the reading is done, and this page shows them then.', 'control-plane #47 J26: Read it now or the OCR press answered READING_PENDING')
-w417('plane.pending.interrupted', "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.", 'plane #50 J29: an owed reading the object stopped three times')
+w417('plane.pending.interrupted', "The reading kept stopping before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.", 'plane #50 J29: an owed reading the object stopped three times')
 
 # DEC-418: fix round 6's words (B481; K4562, K4571)
 def w418(key, en, note):
@@ -8281,6 +8281,57 @@ def w451(key, en, note):
 w451('money.index.no_body_named_for_fiscal', "{fiscal} names no body, and your team's profiles hold no fiscal year shared by every body, so it can't be turned into dates. Name the body whose fiscal year it is.", "money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal} the fiscal year as sent. Beside money.index.the_active_profiles_hold_no")
 w451('money.index.no_body_named_no_period', "Your team's profiles have no fiscal year {fiscal} shared by every body. Name the body whose fiscal year it is.", "money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal}. Beside money.index.the_profiles_fiscal_year_for")
 
+def w452(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-452: ' + note))
+# later-ux triage group 1 (items 6-19): vouching says "copy", Stage in plain words, "Administrators:", Home's waiting line
+REWRITE.update({
+ 'screen.home.todo.vouch': 'Vouch for the {count} copies you captured at {place}',
+ 'project-stage.held_questions_read': '{with_legs} of the {read} questions read have at least one source behind them',
+ 'project-stage.reached_later_stage': 'reached because a later stage is reached; none of the {read} questions read has a source behind it',
+ 'project-stage.project_holds_question': 'the project has no question yet; a question with a source behind it reaches this stage',
+ 'project-stage.project_holds_questions': 'the project has {read} questions and none has a source behind it; a source behind any one of them reaches this stage',
+ 'project-stage.project_concluded_held': 'the project has concluded {concluded} of the {read} questions read; signed cases: {editions}',
+ 'project-stage.project_concluded_none': 'the project has concluded none of the {read} questions read and has no signed case; concluding one of them, or signing a case it owns, reaches this stage',
+ 'project-stage.why.unsigned_case_document': 'no draft of this case is saved',
+ 'project-stage.why.edition_case_ratified': 'this case has not been signed',
+})
+w452('screen.question.citeimp.heading', 'Findings from other teams', "Question: the heading of the section where another team's finding is cited (screens-inquiry question.mjs's cs.sec, which today reuses act.owed_citeimported.label.question, the button's label)")
+w452('project-stage.forming_needs_nothing', 'Every project starts here; nothing is needed.', "Stage: Forming's need line, drawn whether or not it is reached (screens-inquiry project.mjs; today an unreached stage's needs is null, so Forming reads blank)")
+def w453(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-453: ' + note))
+# later-ux triage groups 2 and 3: refusals; Document's held line; the signing gate's names
+REWRITE.update({
+ 'refusal.BAD_PERIOD': "A follow needs a first day, and a last day that isn't before it, or no last day. Nothing was written.",
+ 'refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE': "Your team's Civicsmith already holds this document, filed in another place, so it wasn't filed again here: a document has one home. Nothing was written. If you found it at a new address, that address is already noted with the copy your team holds.",
+ 'attestation.register_row_names': 'no register row names this capture under a record that exists, so the record states no attestation for it',
+})
+w453('refusal.MONEY_BAD_PERIOD', "Your team's Civicsmith can't read that period. Check its dates or its fiscal year, and try again.", "money R29: the refusal; the money.index.* detail is drawn beside it (until now only the code's stand-in)")
+w453('dock.withheld.REMOTE_UNAVAILABLE', "The assistant isn't answering right now, so this run can't start. Nothing was sent. Try again in a few minutes; if it keeps happening, tell an administrator, with the reference below.", "the assistant panel, when the agent runner answers 503 REMOTE_UNAVAILABLE (beside dock.withheld.other)")
+w453('member.unnamed', 'A member', "the name drawn for a member with no handle, in place of the member's id (queue-producers #memberName; beside member.founder.unnamed)")
+w453('refusal.PROMOTE_NOT_A_PARTICIPANT.unseen', "You can't file into that project: only its members, and those invited to it, can. Nothing was filed. Ask whoever told you about it to have an owner invite you, or file it into a project you are in.", "promotion: PROMOTE_NOT_A_PARTICIPANT where the member cannot see the project (membership sight NONE), so no id or title is shown")
+w453('screen.document.a34.para_same', 'paragraph {n}: the same in both', "Document's comparison (A34): beside screen.document.a34.page_same; {n} the paragraph number, or numbers joined with commas")
+w453('screen.document.a34.para_differs', 'paragraph {n}: reads differently', "Document's comparison (A34): beside screen.document.a34.page_differs; {n} as para_same")
+w453('ceremony.gate.name.c41_1', 'The kind of case file', 'the signing gate: the plain name of check C-41.1, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_2', 'Which case this is', 'the signing gate: the plain name of check C-41.2, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_3', 'Which edition this is', 'the signing gate: the plain name of check C-41.3, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_4', 'Which project the case belongs to', 'the signing gate: the plain name of check C-41.4, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_5', 'What the case is about', 'the signing gate: the plain name of check C-41.5, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_6', 'Your statement of bias', 'the signing gate: the plain name of check C-41.6, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_7', 'The findings the case rests on', 'the signing gate: the plain name of check C-41.7, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_8', 'Which findings carry the case and which support it', 'the signing gate: the plain name of check C-41.8, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_9', 'The version of each finding the case uses', 'the signing gate: the plain name of check C-41.9, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_10', 'What the case says it leaves out', 'the signing gate: the plain name of check C-41.10, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_11', 'What the case excludes', 'the signing gate: the plain name of check C-41.11, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_12', 'The standard of evidence the case sets', 'the signing gate: the plain name of check C-41.12, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_13', 'Who wrote the statement of bias, and what it admits', 'the signing gate: the plain name of check C-41.13, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_14', 'Proposed changes the case relies on', 'the signing gate: the plain name of check C-41.14, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_15', 'The sources the case cites, and the version of each', 'the signing gate: the plain name of check C-41.15, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_16', 'What changed since the last edition', 'the signing gate: the plain name of check C-41.16, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c41_17', 'The notice the project is working on', 'the signing gate: the plain name of check C-41.17, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c3_1', 'The "What This Excludes" section', 'the signing gate: the plain name of check C-3.1, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c21_1', 'Limits and bias written fresh for this edition', 'the signing gate: the plain name of check C-21.1, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c2_8', "How each finding's grade rests on its sources", 'the signing gate: the plain name of check C-2.8, filling screen.ceremony.gate.check {check}')
+w453('ceremony.gate.name.c12_2', "The record's history is complete", 'the signing gate: the plain name of check C-12.2, filling screen.ceremony.gate.check {check}')
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2603,
+  "refusal": 2605,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,11 +53,11 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7866,
+  "screen": 7869,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
-  "member": 3,
+  "member": 4,
   "stake": 26,
   "translate": 8,
   "proceeding": 11,
@@ -76,7 +76,7 @@
   "setup": 77,
   "projects": 9,
   "progression": 38,
-  "dock": 8,
+  "dock": 9,
   "count": 6,
   "translations": 8,
   "due": 2,
@@ -99,7 +99,7 @@
   "act": 1298,
   "prompt": 3,
   "term": 3,
-  "ceremony": 3,
+  "ceremony": 24,
   "time": 4,
   "size": 4,
   "reference": 1,
@@ -157,6 +157,7 @@
   "inquiry": 21,
   "citation": 4,
   "control-plane": 1,
+  "project-stage": 17,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -231,13 +232,12 @@
   "render": 24,
   "question-explorer": 13,
   "attestation": 13,
-  "project-stage": 16,
   "extractrun": 9,
   "tokens": 1,
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19438,
+  "total": 19467,
   "protected": 1162
  },
  "words": [
@@ -6956,7 +6956,7 @@
   },
   {
    "key": "screen.updates.admins",
-   "en": "Only your team's administrators install updates. Yours: {admins}. If something needs updating, ask one of them.",
+   "en": "Only your team's administrators install updates. Administrators: {admins}. If something needs updating, ask one of them.",
    "protected": false,
    "source": "DEC-236",
    "note": "DEC-236: B203; screens-settings R27, what a member who is not an administrator sees; DEC-259: reworded"
@@ -26262,7 +26262,7 @@
   },
   {
    "key": "screen.security.admins",
-   "en": "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
+   "en": "Security is set by your team's administrators. Administrators: {admins}. Ask one of them about anything here.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-settings's own rows; DEC-259: reworded"
@@ -29682,9 +29682,10 @@
   },
   {
    "key": "screen.home.todo.vouch",
-   "en": "Vouch for {count} photos you captured on {place}",
+   "en": "Vouch for the {count} copies you captured at {place}",
    "protected": false,
-   "source": "DEC-257"
+   "source": "DEC-257",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "screen.home.todo.newer",
@@ -32076,7 +32077,7 @@
   },
   {
    "key": "screen.dash-project.next.vouch",
-   "en": "Vouch for the {count} photos you captured at {place}",
+   "en": "Vouch for the {count} copies you captured at {place}",
    "protected": false,
    "source": "DEC-259"
   },
@@ -37696,14 +37697,14 @@
   },
   {
    "key": "screen.home.join.nocreate",
-   "en": "Starting a project of your own is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "en": "Starting a project of your own is for members your team's administrators allow. Administrators: {admins}. Ask if you have a problem to bring.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-286: {admins}: the handles of the team's active administrators, joined with commas and “and”"
   },
   {
    "key": "screen.home.join.none",
-   "en": "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Yours: {admins}.",
+   "en": "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Administrators: {admins}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-286: when no project is invited or findable; {admins}: the handles of the team's active administrators, joined with commas and “and”"
@@ -37738,7 +37739,7 @@
   },
   {
    "key": "screen.projects.nocreate",
-   "en": "Starting a project is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "en": "Starting a project is for members your team's administrators allow. Administrators: {admins}. Ask if you have a problem to bring.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-286: in place of “Start a project” for a member who may not start one; {admins}: the handles of the team's active administrators, joined with commas and “and”"
@@ -37822,7 +37823,7 @@
   },
   {
    "key": "document.held.says",
-   "en": "Held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
+   "en": "Awaiting review: held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-289: a copy the viewer captured, not yet vouched for (release)"
@@ -38480,7 +38481,7 @@
   },
   {
    "key": "ceremony.gate.heading",
-   "en": "Put these right before you sign",
+   "en": "Fix these before you sign",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-299: the ceremony's list of what stops the signing"
@@ -42274,7 +42275,7 @@
   },
   {
    "key": "refusal.ACQUIRE_TIMED_OUT",
-   "en": "The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.",
+   "en": "The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED"
@@ -54076,7 +54077,7 @@
   },
   {
    "key": "refusal.HOST_COOLING_OFF",
-   "en": "Civicsmith is holding off asking that website for now so it is not overloaded. Nothing was fetched; try again in a little while.",
+   "en": "Your team's Civicsmith is waiting a while before it asks that website again. Nothing was fetched. Try again in a little while, or save the page yourself and add it as a file.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-342: per-host request governor is pausing that site"
@@ -59753,14 +59754,14 @@
   },
   {
    "key": "screen.dash-project.next.vouch.noplace",
-   "en": "Vouch for the {count} photos you captured",
+   "en": "Vouch for the {count} copies you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; a held capture with no address (an upload)"
   },
   {
    "key": "screen.home.todo.vouch.noplace",
-   "en": "Vouch for the {count} photos you captured",
+   "en": "Vouch for the {count} copies you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the same on Home"
@@ -60166,14 +60167,14 @@
   },
   {
    "key": "screen.dash-project.next.vouch.noplace.one",
-   "en": "Vouch for the photo you captured",
+   "en": "Vouch for the copy you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): the one-photo form"
   },
   {
    "key": "screen.home.todo.vouch.noplace.one",
-   "en": "Vouch for the photo you captured",
+   "en": "Vouch for the copy you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): the one-photo form on Home"
@@ -60320,7 +60321,7 @@
   },
   {
    "key": "screen.dash-project.next.vouch.one",
-   "en": "Vouch for the photo you captured at {place}",
+   "en": "Vouch for the copy you captured at {place}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-364 (B379 A): screens-inquiry, dash-project; the one-photo form of screen.dash-project.next.vouch"
@@ -67404,7 +67405,7 @@
   },
   {
    "key": "screen.project.either.one.reaches.it.the.project",
-   "en": "Either one reaches it: the project concludes one of the {held} questions it holds, or it owns a case edition that has been ratified.",
+   "en": "Either one reaches it: the project concludes one of its {held} questions, or it has a signed case.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
@@ -72990,7 +72991,7 @@
   },
   {
    "key": "screen.home.waiting.counts",
-   "en": "Waiting for a member to look: held captures {held}, Inbox items {inbox}.",
+   "en": "Waiting for a member to look: {held} in Held captures, {inbox} in Inbox.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-387: B426: one status line on Home; both counts shown, a zero shown as 0, never worded as a plural"
@@ -74649,7 +74650,7 @@
   },
   {
    "key": "screen.home.todo.vouch.one",
-   "en": "Vouch for the photo you captured on {place}",
+   "en": "Vouch for the copy you captured at {place}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch"
@@ -75300,7 +75301,7 @@
   },
   {
    "key": "refusal.ACQUIRE_TIMED_OUT.held",
-   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept"
@@ -77337,7 +77338,7 @@
   },
   {
    "key": "plane.pending.interrupted",
-   "en": "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.",
+   "en": "The reading kept stopping before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-417: B477 plane #50 J29: an owed reading the object stopped three times"
@@ -83354,6 +83355,209 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-451: money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal}. Beside money.index.the_profiles_fiscal_year_for"
+  },
+  {
+   "key": "screen.question.citeimp.heading",
+   "en": "Findings from other teams",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-452: Question: the heading of the section where another team's finding is cited (screens-inquiry question.mjs's cs.sec, which today reuses act.owed_citeimported.label.question, the button's label)"
+  },
+  {
+   "key": "project-stage.forming_needs_nothing",
+   "en": "Every project starts here; nothing is needed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-452: Stage: Forming's need line, drawn whether or not it is reached (screens-inquiry project.mjs; today an unreached stage's needs is null, so Forming reads blank)"
+  },
+  {
+   "key": "refusal.MONEY_BAD_PERIOD",
+   "en": "Your team's Civicsmith can't read that period. Check its dates or its fiscal year, and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: money R29: the refusal; the money.index.* detail is drawn beside it (until now only the code's stand-in)"
+  },
+  {
+   "key": "dock.withheld.REMOTE_UNAVAILABLE",
+   "en": "The assistant isn't answering right now, so this run can't start. Nothing was sent. Try again in a few minutes; if it keeps happening, tell an administrator, with the reference below.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the assistant panel, when the agent runner answers 503 REMOTE_UNAVAILABLE (beside dock.withheld.other)"
+  },
+  {
+   "key": "member.unnamed",
+   "en": "A member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the name drawn for a member with no handle, in place of the member's id (queue-producers #memberName; beside member.founder.unnamed)"
+  },
+  {
+   "key": "refusal.PROMOTE_NOT_A_PARTICIPANT.unseen",
+   "en": "You can't file into that project: only its members, and those invited to it, can. Nothing was filed. Ask whoever told you about it to have an owner invite you, or file it into a project you are in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: promotion: PROMOTE_NOT_A_PARTICIPANT where the member cannot see the project (membership sight NONE), so no id or title is shown"
+  },
+  {
+   "key": "screen.document.a34.para_same",
+   "en": "paragraph {n}: the same in both",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: Document's comparison (A34): beside screen.document.a34.page_same; {n} the paragraph number, or numbers joined with commas"
+  },
+  {
+   "key": "screen.document.a34.para_differs",
+   "en": "paragraph {n}: reads differently",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: Document's comparison (A34): beside screen.document.a34.page_differs; {n} as para_same"
+  },
+  {
+   "key": "ceremony.gate.name.c41_1",
+   "en": "The kind of case file",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.1, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_2",
+   "en": "Which case this is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.2, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_3",
+   "en": "Which edition this is",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.3, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_4",
+   "en": "Which project the case belongs to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.4, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_5",
+   "en": "What the case is about",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.5, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_6",
+   "en": "Your statement of bias",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.6, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_7",
+   "en": "The findings the case rests on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.7, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_8",
+   "en": "Which findings carry the case and which support it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.8, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_9",
+   "en": "The version of each finding the case uses",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.9, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_10",
+   "en": "What the case says it leaves out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.10, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_11",
+   "en": "What the case excludes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.11, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_12",
+   "en": "The standard of evidence the case sets",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.12, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_13",
+   "en": "Who wrote the statement of bias, and what it admits",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.13, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_14",
+   "en": "Proposed changes the case relies on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.14, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_15",
+   "en": "The sources the case cites, and the version of each",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.15, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_16",
+   "en": "What changed since the last edition",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.16, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_17",
+   "en": "The notice the project is working on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-41.17, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c3_1",
+   "en": "The \"What This Excludes\" section",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-3.1, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c21_1",
+   "en": "Limits and bias written fresh for this edition",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-21.1, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c2_8",
+   "en": "How each finding's grade rests on its sources",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-2.8, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c12_2",
+   "en": "The record's history is complete",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-453: the signing gate: the plain name of check C-12.2, filling screen.ceremony.gate.check {check}"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -107128,10 +107332,10 @@
   },
   {
    "key": "refusal.BAD_PERIOD",
-   "en": "A follow names the days it covers: a first day, and a last day not before it, or none. Nothing was written.",
+   "en": "A follow needs a first day, and a last day that isn't before it, or no last day. Nothing was written.",
    "protected": false,
    "source": "DEC-260",
-   "note": "following, refusal by its code"
+   "note": "following, refusal by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.BAD_FOLLOW_CADENCE",
@@ -112707,10 +112911,10 @@
   },
   {
    "key": "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE",
-   "en": "The record already holds this document, under another record. A document has one home in the record — the first record that registered it — and registering it again here would move it away from there. Nothing was written. Cite the record that holds it, or, if you found it at a new address, that sighting is already recorded as a corroboration of the one it holds.",
+   "en": "Your team's Civicsmith already holds this document, filed in another place, so it wasn't filed again here: a document has one home. Nothing was written. If you found it at a new address, that address is already noted with the copy your team holds.",
    "protected": false,
    "source": "DEC-260",
-   "note": "provenance's translation, keyed by its code"
+   "note": "provenance's translation, keyed by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.CAPTURE_HELD_IN_PARTS",
@@ -121115,9 +121319,10 @@
   },
   {
    "key": "attestation.register_row_names",
-   "en": "no register row names this capture under a record that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's",
+   "en": "no register row names this capture under a record that exists, so the record states no attestation for it",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "attestation.home_carries",
@@ -121145,39 +121350,45 @@
   },
   {
    "key": "project-stage.held_questions_read",
-   "en": "{with_legs} of the {read} held questions read have at least one leg in their basis",
+   "en": "{with_legs} of the {read} questions read have at least one source behind them",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.reached_later_stage",
-   "en": "reached because a later stage is reached; none of the {read} held questions read has a leg in its basis",
+   "en": "reached because a later stage is reached; none of the {read} questions read has a source behind it",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_holds_question",
-   "en": "the project holds no question yet; a held question with a leg in its basis reaches this stage",
+   "en": "the project has no question yet; a question with a source behind it reaches this stage",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_holds_questions",
-   "en": "the project holds {read} questions and none has a leg in its basis; a leg on any one of them reaches this stage",
+   "en": "the project has {read} questions and none has a source behind it; a source behind any one of them reaches this stage",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_concluded_held",
-   "en": "the project has concluded {concluded} of the {read} held questions read and owns {editions} ratified case editions",
+   "en": "the project has concluded {concluded} of the {read} questions read; signed cases: {editions}",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_concluded_none",
-   "en": "the project has concluded none of the {read} held questions read and owns no ratified case edition; concluding one of them, or a ratified case edition of a case it owns, reaches this stage",
+   "en": "the project has concluded none of the {read} questions read and has no signed case; concluding one of them, or signing a case it owns, reaches this stage",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_closed_further",
@@ -121223,15 +121434,17 @@
   },
   {
    "key": "project-stage.why.unsigned_case_document",
-   "en": "no unsigned case document of this case is stored",
+   "en": "no draft of this case is saved",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.why.edition_case_ratified",
-   "en": "no edition of this case is ratified",
+   "en": "this case has not been signed",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "extractrun.holds_number_date",
@@ -126070,7 +126283,7 @@
   },
   {
    "key": "act.monitorslate.label.watching",
-   "en": "Read what is due",
+   "en": "Show what is due",
    "protected": true,
    "source": "registry.json"
   },
