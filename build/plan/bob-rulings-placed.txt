@@ -12,3 +12,4 @@ K5340 · done: the process redesign adopted and `tranche/T51b` cut; T51b's aim i
 K5341 · done: civicos-process mechanics §4, §10 and `proc` (PR #11)
 K5342 · done: requirements and next.md (BOB's)
 K5343 · done: the pass committed; Bob's direction (alpha, installer, site first; tests after) in `rulings-product/scope.md`
+K5344 · done: the manifest's PROCESS-REDESIGN line

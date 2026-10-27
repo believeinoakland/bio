@@ -78,7 +78,7 @@ Why Civicsmith is slow for a member is measured and diagnosed in its own session
 
 ## Parallel work: the process redesign (Bob, 2026-10-26; K5334)
 
-The process redesign (K5319, K5326; `build/plan/draft-process-redesign.md`) is designed, built and certified by dry run in its own session, **PROCESS-REDESIGN** (#2, `session_01PpUDVnuZpceq4TvX8bQ7gq`, started by BOB #314; #1 `session_014M1HxBsrXKac2pDaf9LPqF` archived), on branch `lane/process-redesign` of `believeinoakland/civicos-process` (its `lane-process-redesign/CHARTER.md`). It never changes the process in use, bio, or that repository's `main`: its result reaches use only certified, at a tranche boundary or on Bob's ruling. BOB reads its `HANDOFF.md` (entries `R<n>`; `RELEASE` marks a fault seen in the alpha's cut) at takeover and at every backstop check.
+The process redesign (K5319, K5326; `build/plan/draft-process-redesign.md`) is designed, built and certified by dry run in its own session, **PROCESS-REDESIGN** (#3, `session_016AUJRfwhxT75qBeN33AT57`, started by #2 on Bob's "refresh yourself"; #2 `session_01PpUDVnuZpceq4TvX8bQ7gq` idle, its archive refused by auto mode (K5344), left as is; #1 archived), on branch `lane/process-redesign` of `believeinoakland/civicos-process` (its `lane-process-redesign/CHARTER.md`). It never changes the process in use, bio, or that repository's `main`: its result reaches use only certified, at a tranche boundary or on Bob's ruling. BOB reads its `HANDOFF.md` (entries `R<n>`; `RELEASE` marks a fault seen in the alpha's cut) at takeover and at every backstop check.
 
 ## Parallel work: the reading architecture (Bob, 2026-10-23; K4812; ended K4834)
 
