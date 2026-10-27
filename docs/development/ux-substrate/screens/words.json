@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7957,
+  "screen": 7958,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19594,
+  "total": 19595,
   "protected": 1166
  },
  "words": [
@@ -24813,10 +24813,10 @@
   },
   {
    "key": "screen.panel.usage.group",
-   "en": "Summed over members; nobody is named, and nothing asked is shown. A member sees their own use on Settings › The assistant.",
+   "en": "Summed over members, and nothing asked is shown. Whoever pays for the account, administrators or owners, also sees each member's use. A member sees their own use on Settings › The assistant.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.panel.usage.own",
@@ -37627,7 +37627,7 @@
   },
   {
    "key": "screen.teamai.use.why",
-   "en": "Summed over members; nobody is named.",
+   "en": "What the team's key was used for, month by month.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-284"
@@ -83960,7 +83960,7 @@
   },
   {
    "key": "screen.aiproviders.optin.note",
-   "en": "Off until an administrator turns it on. Work never moves to it from another list otherwise.",
+   "en": "Off until an administrator turns it on. Until then, only your team's own list uses this account.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-465: aiproviders: the opt-in note"
@@ -84016,7 +84016,7 @@
   },
   {
    "key": "screen.aimoments.continued.crossowner",
-   "en": "It went on with your team's second account, which your administrators let projects use.",
+   "en": "Your administrators let projects use this team account.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-465: aimoments a: the continued account belongs to another owner"
@@ -84110,7 +84110,7 @@
    "en": "The assistant is ready: {n} accounts on.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-466: setup and AI providers: the ready state (U3)"
+   "note": "DEC-466: setup: the ready state, several accounts (U3); AI providers says it with screen.aiproviders.stands.on (DEC-469)"
   },
   {
    "key": "screen.ai.ready.one",
@@ -84338,7 +84338,7 @@
   },
   {
    "key": "screen.aimine.seenby",
-   "en": "Your use on accounts your team or a project pays for is shown to their administrators. Your own subscription's use is yours alone.",
+   "en": "Your use on accounts your team or a project pays for is shown to your team's administrators or that project's owners. Your own subscription's use is yours alone.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-468: aimine, Your use and cost (K5459)"
@@ -84398,6 +84398,13 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-468: queue: an administrator item after an update (K5450); {n} {list}"
+  },
+  {
+   "key": "screen.aimoments.mock.j",
+   "en": "you stopped instead of switching",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
