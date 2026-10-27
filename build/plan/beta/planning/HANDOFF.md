@@ -13,7 +13,7 @@
 4. Owed to others through BOB: FILES's CC4 to A4-R1..R6 (K5448); screens-intake R36 and R5 amended for the safe picture (A4-R10); UX-DESIGN needs from A6 (Q-A6-1, Q-A6-2 wording, K5456) and A4.
 5. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy cases screens-inquiry 153 KB and interface-shell 123 KB before drafts), the plan under 51,200 bytes, READY.
 
-**Waiting on.** Bob: L1-L26, J1-J7, N1257 D3, the published-place default (every AI question answered, K5475-K5494). BOB: nothing open from this lane. Lanes: AI-DESIGN's drafts re-marked READY after the AI answers; CAPABILITIES N1259, N824, N1110, N858, N1265, N1269-N1272; PLATFORM service levels and whole-record move; TESTS-SWEEP's judgment list.
+**Waiting on.** Bob: L1-L26, J1-J7, N1257 D3, the published-place default (every AI question answered, K5475-K5494). BOB: nothing open from this lane. Lanes: CAPABILITIES N1259, N824, N1110, N858, N1265, N1269-N1272; PLATFORM service levels and whole-record move; TESTS-SWEEP's judgment list.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -70,3 +70,7 @@ K5475 (Bob, AI1 B): Gate 1 at Bob's marks admits a part; the real public-matters
 ## L14 · 2026-10-27 · the AI answers in the plan
 
 BOB #322 relayed K5475-K5494 (AI1-AI16 all answered by Bob), A48, A50, DEC-469, DEC-470: each folded into `plan-T53-draft.md` as it came (commits since L13). The plan's AI waits now read only "AI-DESIGN's drafts re-marked READY".
+
+## L15 · 2026-10-27 · AI-DESIGN final (A48-A58) folded
+
+AI-DESIGN READY and final against AI1-AI16 (AD1-AD58), merged into tranche/T53. New lines folded: catalogue R54, R55 (R43-R45 amended); ai-gate R67 `combineResults` (R53, R63 amended); ai-issuer R25, R26 (R13, R16-R18 amended); ai-use R28-R33 (re-testing cap and switch, opt-in health counts); instance-setup R110 (the health sender); ai-accounts R68 replaced by `aicreditsclear`, R75, R76; the ops `airesultown`, `aihealthshare`, `aihealthpreview`, `aicreditsclear`, `aiwaitswitch`, `airetestset`; queue kinds `retesting-off`, `ai-credits-stop`. The plan's AI entries wait on nothing of Bob's; agent-model still on live checks L2, L3. Left for BOB at writing: dec465 For BOB 3 (the `membership` role-change listener), recommended.
