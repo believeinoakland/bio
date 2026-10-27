@@ -1761,7 +1761,7 @@ const ACT_HELP = {
   owed_aicreditsclear: "Lets the account take work again after you have checked why a call was charged to Cloudflare's credits. The clearing is recorded with your name and the time.",
   owed_aikeyseal: "Keeps the key sealed in your team's Civicsmith, readable only by its own programs, until you remove it.",
   owed_aikeyreference: 'Saves where the key is kept, not the key. Civicsmith asks for it from there each time it is needed.',
-  owed_interpretmark: 'Reads the parts you chose for this investigation and records, with your name and the date, which parts were read.',
+  owed_interpretmark: 'Records, with your name and the date, which parts were interpreted for this investigation.',
   owed_aitermsaccept: 'Records, with your name and the date, that you accepted the warning this plan carries.',
   owed_aiconnecttest: 'Sends a harmless test message that holds none of your team\'s material, and reports whether the connection works. The account stays off until the test passes.',
   owed_aiaccountadd: 'Turns the connected account on and puts it in the place you chose in the order. It cannot be turned on before its test passes.',
@@ -3573,7 +3573,7 @@ SCR.document = c => { const st = c.v === 'compare' ? 'b' : 'a'; const held = c.v
   </div>
   <div class="mk-held"${held ? '' : ' hidden'}>${sheet(row(I('clock'), '<b>Awaiting review.</b> Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.', btn('release', 'Vouch for this copy', { tone: 'primary' })))}</div>${sheet(row(I('accepted'), 'Vouched for by Dev, October 2. Your team can use this copy.', ''))}
   ${acts(btn('findin', 'Find in this', { icon: 'search' }), btn('owed:interpretmark K5495', w4p('screen.document.interp.offer', 'Interpret parts of this for {investigation}', { investigation: 'Pothole repairs' })))}
-  <details class="mk-details"><summary>${w4p('screen.document.interp.offer')}</summary>${checks(w4p('screen.document.interp.chooser.will', 'This reads the parts you choose for {investigation}.', { investigation: 'Pothole repairs' }), [[w4('screen.document.interp.chooser.whole', 'The whole document'), false], [D('Pages 1 and 2'), false], [D('Pages 3 to 9'), false], [D('Pages 10 to 12'), false]], { act: 'owed:interpretmark K5495' })}</details>
+  <details class="mk-details"><summary>${w4p('screen.document.interp.offer')}</summary>${checks(w4p('screen.document.interp.chooser.will', 'This interprets the parts you choose for {investigation}.', { investigation: 'Pothole repairs' }), [[w4('screen.document.interp.chooser.whole', 'The whole document'), false], [D('Pages 1 and 2'), false], [D('Pages 3 to 9'), false], [D('Pages 10 to 12'), false]], { act: 'owed:interpretmark K5495' })}</details>
   ${sec('Read it', `<div class="mk-tabs2" role="tablist">${tab(st, 'a', 'By page')}${tab(st, 'b', 'Beside the version your question cites')}</div>
    <div class="st st-a">
     <div class="mk-pagebar"><span class="mk-pageno">Page 3 of 12</span>${link('Previous page')}${link('Next page', 'next')}<span>Select any words to cite them.</span>${ref('Open the original file', 'open-file', '<b>The original file</b> · the PDF exactly as captured, 1.2 MB · opens on your device after Civicsmith\'s file check')}</div>
@@ -5415,7 +5415,7 @@ const aiPlanEntry = (p, v) => { const name = [v.prov, p.plan, p.type].filter(Boo
    ${acts(p.custom ? aigo(aib('aitestopen', w4('screen.aiplan.testfirst', 'Test it first'), { tone: 'primary' }), 'aitest') : aigo(aib('aiplanconnect', w4('screen.aiplan.connect', 'Connect'), { tone: 'primary' }), 'aiconnect'))}</div></details>`; };
 
 SCR.aiproviders = c => { const st = ({ allok: 'b', none: 'c', before: 'd' })[c.v] || 'a', used = c.v === 'before' ? AIACC.filter(a => !a.name.startsWith('Mistral')).map((a, i) => ({ ...a, n: i + 1 })) : AIACC;
-  const stand = `<div class="st st-a st-b">${row(I('accepted'), w4('screen.aiproviders.stands.on', '{n} accounts are on, in order: {order}.', { n: '3', order: 'OpenAI, Mistral, OpenRouter' }), aiChipOn(true))}</div><div class="st st-d">${row(I('accepted'), w4('screen.aiproviders.stands.on', { n: '2', order: 'OpenAI, OpenRouter' }), aiChipOn(true))}</div><div class="st st-c">${row(I('undetermined'), w4('screen.aiproviders.stands.none', 'No account is on yet. The assistant is off for everyone until an administrator switches one on.'), aiChipOn(false))}${note(w4('screen.ai.notready', "The assistant isn't ready: no account is on yet. Add one in AI providers."))}</div><div class="st st-e">${row(I('undetermined'), w4('screen.ai.projectonly', "Your team has no account of its own. The assistant works in {project} only, on that project's account.", { project: 'Street repairs' }), aiChipOn(false))}</div>`;
+  const stand = `<div class="st st-a st-b">${row(I('accepted'), w4('screen.aiproviders.stands.on', '{n} accounts are on, in order: {order}.', { n: '3', order: 'OpenAI, Mistral, OpenRouter' }), aiChipOn(true))}</div><div class="st st-d">${row(I('accepted'), w4('screen.aiproviders.stands.on', { n: '2', order: 'OpenAI, OpenRouter' }), aiChipOn(true))}</div><div class="st st-c">${row(I('undetermined'), w4('screen.aiproviders.stands.none', 'No account is on yet. The assistant is off for everyone until an administrator switches one on.'), aiChipOn(false))}</div><div class="st st-e">${row(I('undetermined'), w4('screen.ai.projectonly', "Your team has no account of its own. The assistant works in {project} only, on that project's account.", { project: 'Street repairs' }), aiChipOn(false))}</div>`;
   return { rail: 'settings', title: 'AI providers', st, crumbs: ['Settings', 'AI providers'], main: `
   ${aimock('mk-apst', w4('screen.aiproviders.mock', 'In this mockup, show the card for'), [['a', w4('screen.aiproviders.mock.a', 'three accounts on, one of them slow')], ['b', w4('screen.aiproviders.mock.b', 'all accounts available')], ['c', w4('screen.aiproviders.mock.c', 'no account on yet')], ['d', w4p('screen.aiproviders.mock.d', 'before {provider} is added', { provider: 'Mistral' })], ['e', w4('screen.aiproviders.mock.e', 'no account of the team\'s own, one project\'s only')], ['f', w4('screen.aiproviders.mock.f', 'an account stopped after a charge to Cloudflare\'s credits')], ['g', w4('screen.aiproviders.mock.g', 'an account stopped: another gateway recorded the call')], ['h', w4('screen.aiproviders.mock.h', "an account stopped: the gateway log couldn't be read")], ['i', w4('screen.aiproviders.mock.i', 'the list of AIs is out of date')]], st)}
   ${h1(w4('screen.aiproviders.title', 'AI providers'), w4('screen.aiproviders.intro', 'Only administrators set this up. Members choose among what is allowed here.'))}
@@ -5452,7 +5452,7 @@ SCR.aiproviders = c => { const st = ({ allok: 'b', none: 'c', before: 'd' })[c.v
      <tr><td>${D('Pothole repairs')}</td><td class="num">$33.20</td></tr><tr><td>${D('Bus stop shelters')}</td><td class="num">$21.10</td></tr><tr><td>${w4('screen.aiproviders.bud.norecord', 'Work in the record, outside any project')}</td><td class="num">$10.20</td></tr></tbody></table></div>
     ${note(w4('screen.aiproviders.bud.note', "Each cost sums everyone's use. A member sees their own cost on Your AI."))}
     ${checks(w4('screen.aiproviders.retest.switch', 'Re-test the AIs your team uses, each month'), [[w4('screen.aiproviders.retest.switch'), true]], { act: 'owed:airetestset K5480' })}
-    ${note(w4('screen.aiproviders.retest.note', 'Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your Queue.'))}
+    ${note(w4('screen.aiproviders.retest.note', 'Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your queue.'))}
     ${checks(w4('screen.aiproviders.health.switch', 'Share daily counts of errors and refusals with Civicsmith'), [[w4('screen.aiproviders.health.switch'), false]], { act: 'owed:aihealthset K5487' })}
     ${note(w4('screen.aiproviders.health.note', 'Off until an administrator turns it on. For each AI and day it sends calls, refusals, no answer and errors by kind; never what was asked, who asked or which account.'))}
     ${acts(btn('owed:aihealthpreview K5487', w4('screen.aiproviders.health.preview', 'See exactly what would be sent')))}
@@ -5659,7 +5659,7 @@ SCR.aimoments = c => { const st = ({ continued: 'a', disclosure: 'b', limit: 'c'
      ${note(w4('screen.aimoments.h.note', "The estimate comes from the provider's published prices. The provider's own bill is what counts. A plan that reports no cost says “not measurable in money”."))}</div>
    <div class="st st-l">${card('money', w4('screen.aimoments.h.noestimate', "No estimate yet for {ai}: Civicsmith hasn't measured it.", { ai: 'Mistral Large 3' }))}
      ${acts(aib('airunstart', w4('screen.aimoments.h.start', 'Start the run'), { tone: 'primary' }), aib('aiaccountpick', w4('screen.aimoments.h.pick', 'Choose another account')))}</div>
-   <div class="st st-j">${card('hold', w4('screen.run.declined', '{member} declined to go on with another AI; the run stopped.', { member: 'Mai' }))}</div>
+   <div class="st st-j">${card('hold', w4('screen.run.declined', '{member} stopped the run instead of letting it go on with another account.', { member: 'Mai' }))}</div>
    <div class="st st-i">${card('hint', w4('screen.aimoments.checksapply', "Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.", { project: 'Pothole repairs' }))}</div>
   </div></aside>` }; };
 
@@ -6137,7 +6137,7 @@ const SCREEN_REFS = {
   ],
   "project": [
     ["its own policy","document","<b>Administrative Instruction 4.12</b> · Public Works' pothole repair policy · could be captured: B · sets seven calendar days","The project measures the city against its own rule, not against an outside standard."],
-    ["Bar: B/B",null,"<b>The project's bar</b> · B on capture and B on connection · a question meets it when both of its grades reach B","The main question is at B and C: one step short, on connection."],
+    ["Bar: B/B",null,"<b>The project's bar</b> · copy B, connection B · a question meets it when both of its grades reach B","The main question is at B and C: one step short, on connection."],
     ["Investigating",null,"<b>Investigating</b> · the project's stage · after Forming · Matured comes when its questions meet the bar","The project stays here until a question reaches B/B."],
     ["2026 report","document","<b>Report to council: street maintenance performance</b> · 2026 · could be captured: B · claims 90% of potholes filled","Its 90% means something different depending on which seven days it counted."],
     ["seven working days",null,"<b>Seven working days</b> · a looser count than the seven calendar days Administrative Instruction 4.12 sets · skips weekends and holidays","If the city counted working days, its 90% would not test the instruction's standard."]
@@ -6326,7 +6326,7 @@ const SCREEN_REFS = {
     ["Ties","ties","<b>Ties</b> · a step · each member confirms any tie to people or firms the case concerns · Teo's tie to the Bay Courier is declared","If a member's confirmation changes after you sign, a scheduled publish stops."],
     ["Finding 1",null,"<b>Finding 1</b> · <span class=mk-data>the 2024 rent adjustments were made without the council vote the lease requires</span> · copy B, connection B","The case's central claim; it meets the bar, so it can be relied on in public."],
     ["Finding 2",null,"<b>Finding 2</b> · <span class=mk-data>two rent adjustments had no council vote</span> · copy B, connection B · Prof. Iyer asked it to <span class=mk-data>name which schedule the council approved</span>","Check the reviewer's comment was answered before you sign."],
-    ["meets the bar",null,"<b>The project's bar</b> · B/B · the least capture and connection a finding needs to be relied on","Every finding meets it, so none is published as weaker than the team claims."],
+    ["meets the bar",null,"<b>The project's bar</b> · B/B · the least copy and connection grades a finding needs to be relied on","Every finding meets it, so none is published as weaker than the team claims."],
     ["An unresolved contradiction","timeline","<b>Two dates for the rent notice</b> · two documents disagree · in tension, not resolved · both dated only by month","Disclosed with the case, so readers see it; it does not stop publishing."],
     ["The timeline, frozen at signing","timeline","<b>Timeline of The Coliseum lease</b> · 9 events · fixed as it stands when you sign","Events recorded after you sign go into the next edition, not this one."],
     ["the key registered in this browser",null,"<b>Your signing key</b> · registered in this browser for Dev · anyone can check the signature on the public page","Signing from another device needs that device's key registered first."],
@@ -6336,7 +6336,7 @@ const SCREEN_REFS = {
     ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published September 18, 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
     ["Lakeshore Tenants",null,"<b>Lakeshore Tenants</b> · the team that made this case · <span class=mk-data>tenants near the Oakland Coliseum, meeting since 2025</span>","The authors; the case is signed by one of them and can be checked without them."],
     ["council vote the lease requires",null,"<b>Lease §7.2</b> · a clause of the Coliseum lease · a change to the rent needs a council vote","The rule this finding measures the rent adjustments against."],
-    ["this project's bar",null,"<b>The project's bar</b> · the least capture and connection a finding needs to be relied on · here B for both grades","This finding meets it; the bar is the team's own, set before publishing."],
+    ["this project's bar",null,"<b>The project's bar</b> · the least copy and connection grades a finding needs to be relied on · here B for both grades","This finding meets it; the bar is the team's own, set before publishing."],
     ["capture B",null,"<b>How well it could be captured: B</b> · how well a document could be captured, A to D · A is easiest to check; D rests on a person's word","A grade says how checkable the documents are, never whether the finding is true."],
     ["connection B",null,"<b>Connection grade B</b> · how firmly the documents are linked to the claim, A to D","The link from these documents to the finding is firm, though not the firmest."],
     ["What we did",null,"<b>The team's lane</b> · what the team itself did, kept apart from what the government did","The team's own acts are never mixed in with the city's."],
@@ -6529,7 +6529,7 @@ const COL_HELP = {
   'money|Stage': 'How far along the money was when the source counted it: <b>adopted</b> (budgeted), <b>committed</b> (promised by contract), or <b>actual</b> (spent; "paid" when the source shows the payment). Figures at different stages are compared, never added.',
   'money|Period': 'The accounting period the source counts the amount in, such as a fiscal year, which need not match the calendar year. It is not the date the money moved: that is in <b>When it moved</b>.',
   'money|Amount': 'The amount exactly as the source states it. A rounded amount ("about $2 million") keeps its rounding.',
-  'money|Source': 'The document the figure was read from, with its capture grade: how sure the team is that the copy is what the office published. Click the mark for the document.',
+  'money|Source': 'The document the figure was read from, with how well it could be captured: how easily someone else could check the copy against what the office published. Click the mark for the document.',
   'money|In this trail?': 'Whether this figure counts in the trail\'s comparison, and the member\'s reason for including it or leaving it out. A figure left out stays listed, with why.',
   'security|Kind': 'The kind of attempt that was turned away. Each counts attempts, not people.',
   'security|This period': 'How many of this kind in the period you are looking at.',

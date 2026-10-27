@@ -218,7 +218,7 @@ const ACT_HELP = {
   owed_aicreditsclear: "Lets the account take work again after you have checked why a call was charged to Cloudflare's credits. The clearing is recorded with your name and the time.",
   owed_aikeyseal: "Keeps the key sealed in your team's Civicsmith, readable only by its own programs, until you remove it.",
   owed_aikeyreference: 'Saves where the key is kept, not the key. Civicsmith asks for it from there each time it is needed.',
-  owed_interpretmark: 'Reads the parts you chose for this investigation and records, with your name and the date, which parts were read.',
+  owed_interpretmark: 'Records, with your name and the date, which parts were interpreted for this investigation.',
   owed_aitermsaccept: 'Records, with your name and the date, that you accepted the warning this plan carries.',
   owed_aiconnecttest: 'Sends a harmless test message that holds none of your team\'s material, and reports whether the connection works. The account stays off until the test passes.',
   owed_aiaccountadd: 'Turns the connected account on and puts it in the place you chose in the order. It cannot be turned on before its test passes.',

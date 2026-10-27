@@ -2132,7 +2132,7 @@
   },
   {
    "key": "screen.ceremony.tip.bar",
-   "en": "the least capture and connection a finding needs to be relied on",
+   "en": "the least copy and connection grades a finding needs to be relied on",
    "protected": false,
    "note": "DEC-275: the project's bar, its card"
   },
@@ -3914,7 +3914,7 @@
   },
   {
    "key": "screen.project.tip.bar",
-   "en": "{grade} on capture and {grade_2} on connection",
+   "en": "copy {grade}, connection {grade_2}",
    "protected": false,
    "note": "DEC-276: the project's bar, its card"
   },
@@ -45014,7 +45014,7 @@
   },
   {
    "key": "screen.run.declined",
-   "en": "{member} declined to go on with another AI; the run stopped.",
+   "en": "{member} stopped the run instead of letting it go on with another account.",
    "protected": false,
    "note": "DEC-466: a run that stopped because the member declined the change (U2)"
   },
@@ -45065,18 +45065,6 @@
    "en": "This {kind} can't be added: {reason}. Nothing was kept.",
    "protected": false,
    "note": "DEC-467: Add, a file of a refused type (K5436); {kind} {reason}"
-  },
-  {
-   "key": "screen.capture.refused.type.rar",
-   "en": "they can't be unpacked safely here",
-   "protected": false,
-   "note": "DEC-467: the {reason} for a RAR file"
-  },
-  {
-   "key": "screen.capture.refused.type.program",
-   "en": "they can run on a device",
-   "protected": false,
-   "note": "DEC-467: the {reason} for a program, installer or disk image"
   },
   {
    "key": "screen.document.macros",
@@ -45920,7 +45908,7 @@
   },
   {
    "key": "screen.aiproviders.retest.note",
-   "en": "Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your Queue.",
+   "en": "Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your queue.",
    "protected": false,
    "note": "DEC-475: aiproviders: the re-test note (K5480)"
   },
@@ -46058,7 +46046,7 @@
   },
   {
    "key": "screen.document.interp.chooser.will",
-   "en": "This reads the parts you choose for {investigation}.",
+   "en": "This interprets the parts you choose for {investigation}.",
    "protected": false,
    "note": "DEC-476: document: the legend of the chooser (K5495)"
   },

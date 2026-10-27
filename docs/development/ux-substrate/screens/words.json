@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 8035,
+  "screen": 8033,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19746,
+  "total": 19744,
   "protected": 1176
  },
  "words": [
@@ -34085,7 +34085,7 @@
   },
   {
    "key": "screen.ceremony.tip.bar",
-   "en": "the least capture and connection a finding needs to be relied on",
+   "en": "the least copy and connection grades a finding needs to be relied on",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-275: the project's bar, its card"
@@ -36164,7 +36164,7 @@
   },
   {
    "key": "screen.project.tip.bar",
-   "en": "{grade} on capture and {grade_2} on connection",
+   "en": "copy {grade}, connection {grade_2}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-276: the project's bar, its card"
@@ -84114,7 +84114,7 @@
   },
   {
    "key": "screen.run.declined",
-   "en": "{member} declined to go on with another AI; the run stopped.",
+   "en": "{member} stopped the run instead of letting it go on with another account.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-466: a run that stopped because the member declined the change (U2)"
@@ -84174,20 +84174,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-467: Add, a file of a refused type (K5436); {kind} {reason}"
-  },
-  {
-   "key": "screen.capture.refused.type.rar",
-   "en": "they can't be unpacked safely here",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-467: the {reason} for a RAR file"
-  },
-  {
-   "key": "screen.capture.refused.type.program",
-   "en": "they can run on a device",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-467: the {reason} for a program, installer or disk image"
   },
   {
    "key": "screen.document.macros",
@@ -85171,7 +85157,7 @@
   },
   {
    "key": "screen.aiproviders.retest.note",
-   "en": "Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your Queue.",
+   "en": "Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your queue.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-475: aiproviders: the re-test note (K5480)"
@@ -85332,7 +85318,7 @@
   },
   {
    "key": "screen.document.interp.chooser.will",
-   "en": "This reads the parts you choose for {investigation}.",
+   "en": "This interprets the parts you choose for {investigation}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-476: document: the legend of the chooser (K5495)"
@@ -129844,7 +129830,7 @@
   },
   {
    "key": "act.owed_interpretmark.does",
-   "en": "Reads the parts you chose for this investigation and records, with your name and the date, which parts were read.",
+   "en": "Records, with your name and the date, which parts were interpreted for this investigation.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -131950,7 +131936,7 @@
   },
   {
    "key": "column.money.source.shows",
-   "en": "The document the figure was read from, with its capture grade: how sure the team is that the copy is what the office published. Click the mark for the document.",
+   "en": "The document the figure was read from, with how well it could be captured: how easily someone else could check the copy against what the office published. Click the mark for the document.",
    "protected": false,
    "source": "mock-refs.js COL_HELP"
   },
