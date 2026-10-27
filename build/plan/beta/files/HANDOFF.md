@@ -35,3 +35,6 @@ L3, L4, L5 run locally and written into LOAD-PER-TYPE (photo redraw 48 MP 0.55 s
 
 ### F7 · 2026-10-27
 K5448 placement carried (CC4 now points to A4; module placement; Level 1 row; journey-check). PROBE-SPEC.md written for PLATFORM's S1 cycle. Answered BOB on R2 to R2 copy (CopyObject and UploadPartCopy documented; cross-jurisdiction untested).
+
+### F8 · 2026-10-27
+PROBE-SPEC-L1-L2.md written (READING-PIPELINE's first Stage 1 job, then plat-s1). C21 (interpretation for non-sheet files) noted: BOB's recommendation is names found at reading stay reading, for search; nothing for FILES unless Bob rules otherwise.
