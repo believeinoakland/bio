@@ -153,7 +153,7 @@
 - T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37), per AI and naming it (A48) · `lane-ai-design/draft-run-rules.md` (the map, `draft:reading` → `draft`; FOLD-AI §1 decided) (AI1 answered B, K5475)
 
 **ai-runs**
-- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97, R105 `aiwaitswitch` with `WAIT_THEN_SWITCH_CHOICES` set at START (K5489), and the amended; R75's `testBarRecord` gains `entry_id`, named in run-rules R19, A48) `[waits: AI15, AI16 (AI12-AI14 answered, K5487-K5489)]` (AI1, AI3 answered, K5475, K5477)
+- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97, R105 `aiwaitswitch` with `WAIT_THEN_SWITCH_CHOICES` set at START (K5489), and the amended; R75's `testBarRecord` gains `entry_id`, named in run-rules R19, A48) `[waits: AI-DESIGN's drafts re-marked READY (every AI question answered, K5475-K5494)]` (AI1, AI3 answered, K5475, K5477)
 - T53 · N1219, DEC-466 · `read` and `disagree` passed through (R99), `op=airunlog` (R100), segments as parts, hops and refusals recorded (R101, R102), `op=airunparts` "How this run went" (R103), the label names the AI, never the account (R104) · `lane-ai-design/draft-run-record.md`
 
 **observation-log** (layer 5)
@@ -164,7 +164,7 @@
 
 **agent-model** (position 90, FOLD-AI §2.9)
 - T53 · K5457 · first: the interface (`turn`, `converse`, `capabilities`, `estimate`, `health`) with the Anthropic adapter behind it, today's tests passing through `turn` (N1205's landing place) · `lane-ai-design/draft-agent-model.md` R1-R36, R43, R44, R54, R55
-- T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI15, AI16 (AI12-AI14 answered, K5487-K5489); live checks L2, L3]` (AI4 answered, K5478)
+- T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI-DESIGN's drafts re-marked READY (every AI question answered, K5475-K5494); live checks L2, L3]` (AI4 answered, K5478)
 
 **agent-runner**
 - T53 · K5457 · the Claude Code route retired in one change (R35, R42; RUNNER and REMOTE bindings off) · `lane-ai-design/draft-agent-runner.md` R13 `first: N1205's split`
@@ -176,7 +176,7 @@
 **agent-worker**
 - T53 · K5485 (AI2 A) · the beta offers every built part plus the intake interview, the case's account and charge-or-rule answers; investigate, extract and explore per AI behind their bars · K5485
 - T53 · N1205 (K5457) · first: the split: `/signin`, its relay and REMOTE dispatch (R66, R67, R81-R85, R109, R111) to agent-model's adapter; `ai_account`; no credential in the Worker · `lane-ai-design/draft-agent-run-path.md` (agent-worker) `first: agent-model's interface`
-- T53 · K5457 · each path takes its entry by need, refuses by name, labels every result, fails fast with three choices, turn-level progress, the sealed key by `aicredential` at the call · same, R120-R127 `[waits: AI15, AI16 (AI12-AI14 answered, K5487-K5489) (R124)]` (AI1 answered, K5475)
+- T53 · K5457 · each path takes its entry by need, refuses by name, labels every result, fails fast with three choices, turn-level progress, the sealed key by `aicredential` at the call · same, R120-R127 `[waits: AI-DESIGN's drafts re-marked READY (every AI question answered, K5475-K5494) (R124)]` (AI1 answered, K5475)
 
 **ai-use**
 - T53 · K5457 · the neutral usage record (provider-reported money apart from Civicsmith's estimate; never zero for the unmeasured); provider limits as limits reached; thresholds, alerts, reconciliation · `lane-ai-design/draft-ai-use.md` R1-R26
