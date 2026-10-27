@@ -18,6 +18,8 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **PLANNING's fold (FOLD-AI §1–§3, K5457) answered in A46:** every gap and form defect fixed; `draft-credentials.md` and `draft-signatures.md` (R49–R56) split out as their own files.
 
+**Merged and decided (BOB #322, K5471):** A46 and A47 merged into `tranche/T53`. `NS_AI_RUN` approved as a third signing namespace. A member may clear a payer flag on their own account (R68). R107 and R108 placed by PLANNING in `installer` R2 and `installer-steps` R45. "My projects" (owned or joined) is now on Bob's page; "owns" stays drafted until he answers.
+
 **Needs placed** · PLATFORM: an "AI act" budget class and the assistant's declared reads (`draft-assistant-screens.md` §5 P1, P2). UX-DESIGN: U1–U6, sent by BOB as B555.
 
 **Next steps, in order**
