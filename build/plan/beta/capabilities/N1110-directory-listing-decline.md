@@ -89,7 +89,7 @@ Each carries Test/Control lines I have not written: they depend on Bob's B1 and 
 
 ## Review (C7 worker)
 
-Reviewer: C7 worker, 2026-10-27, branch `lane/capabilities`, nothing committed. Covers this file and `N824-email-capture.md` (both edited in place; sizes after the edits: N824 about 43 KB, N1110 about 20 KB, both under 45,000 bytes). Counts: N824 28 corrections or marks, N1110 9; 37 in all.
+Reviewer: C7 worker, 2026-10-27, branch `lane/capabilities`, nothing committed. Covers this file and `N824-email-capture.md` (both edited in place; sizes after the edits: N824 43,148 bytes, N1110 about 33,500 bytes with this section, both under 45,000). Counts: N824 24 numbered corrections plus the Cloudflare marks, N1110 9; 33 numbered in all.
 
 ### N1110 (this file)
 
@@ -145,7 +145,7 @@ Corrections (line: was -> now, evidence):
 22. R37: figures "each exported once (`boundOf`) ... where PLATFORM sets one" -> new `mail` rows of `READ_BOUNDS` with `{standard, alpha, protective, key}` (runtime-limits R29-R31, R35's `same(n, key)`; `read-bounds.test.mjs:18` requires those four fields); `PLATFORM_FIGURES` has no per-level entry (`byte-ledger.mjs:11-17`), so per-level figures are UNVERIFIED and PLATFORM's.
 23. R107: "at `FULL` sight ... `op=groupidentity`'s pattern" -> an administrator, refused as `GROUP_IDENTITY_NOT_ADMIN` is (instance-setup R5), domain validated as R7 validates a group domain, history as R6 (`{value, set_at, set_by}`).
 24. R13 (doc-clean) and section 5: `email-reader` -> `mail-reader`.
-25-28. The four Cloudflare marks of B1 and the two of section 2 (counted above in 3 and 8) are recorded once each in the list above; the unclear item left open is that `doc-clean` (layer 1) and `mail-door` must follow `mail-reader` in the total order, which is BOB's placing; adding `mail-door` to `modules.json` also regenerates `member-roster/order.mjs` (`build/manifest.md`, generated artifacts).
+Open, not a correction: `doc-clean` (layer 1) and `mail-door` must follow `mail-reader` in the total order, which is BOB's placing; adding `mail-door` to `modules.json` also regenerates `member-roster/order.mjs` (`build/manifest.md`, generated artifacts).
 
 Unverifiable (all marked `UNVERIFIED` in the file): the registrar price of a domain; that the plane can export `email()` and the installer upload carries it; what Cloudflare's logs keep of a rejected message; whether authentication results reach a Worker; per-service-level figures; the byte cost of holding a 25 MiB message once on the Worker (PLATFORM); `D42`'s option texts (the draft's contradiction 1, still open); the exact set of headers `mail-reader` will answer (FILES').
 
