@@ -19,3 +19,4 @@
 - The five unruled AI requirements (Bob, K5484, on AI10: "B"): each is brought to Bob separately (AI12-AI16); its lines stay drafts until he answers.
 - The beta's assistant parts (Bob, K5485, on AI2: "as recommended"): every built part plus the intake interview, the case's account and charge-or-rule answers; investigating, extracting and exploring switch on per AI as each clears its bar.
 - A shared team account on projects (Bob, K5486, on AI11: "B"): any project the member has joined, once the owner allows sharing.
+- Catching a changed or retiring AI (Bob, K5487, on AI12: "as recommended"): exact versions; re-tests, retirement dates, a different model answering and drifting team results watched; teams' opt-in counts, never content; listed, watch, lapsed, retired.
