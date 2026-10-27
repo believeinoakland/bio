@@ -520,7 +520,7 @@
     },
     {
      "op": "taskforward",
-     "label": "Pass it to someone else",
+     "label": "Pass it to another member",
      "status": "declared",
      "modules": [
       "op-declarations",
@@ -2794,7 +2794,7 @@
     },
     {
      "op": "projectvisibilityset",
-     "label": "Change who can find it",
+     "label": "Change who can find this project",
      "status": "declared",
      "modules": [
       "op-declarations"

@@ -1371,7 +1371,7 @@ w299('screen.case-editor.tip.distributed', 'Distributed: published, and each cop
 w299('case.ladder.notyet', 'Not checked yet', False, 'a step of the readiness ladder that nothing has judged; never "not met" (B411 B2/C8)')
 w299('ceremony.gate.heading', 'Put these right before you sign', False, "the ceremony's list of what stops the signing")
 w299('ceremony.gate.notargets', 'This draft has no finding to publish. Add a finding to the case, then check again.', False, 'the publication with no targets; replaces the developer text; B411 D1: a door "Add a finding" beside it')
-w299('ceremony.gate.other', "Something in the draft stops the signing: {what}. Put it right in the case, then check again.", False, 'any other gate, {what} its own plain sentence')
+w299('ceremony.gate.other', 'This stops the signing: {what}. Put it right above, then check again.', False, 'any other gate, {what} its own plain sentence')
 # (4) acknowledgements
 w299('document.vouched', 'Vouched for by {member}, {date}. Your team can use this copy.', False, 'replaces the held-copy box at once after "Vouch for this copy"; stays on the page')
 w299('queue.done', 'Done: {what}. It has left your queue.', False, "after any queue item's own act; every item's button names its act, never \"Act on an item\"")
@@ -2816,7 +2816,7 @@ W.append(dict(key='screen.published.holds.leg.2.which.supports', en='holds Leg {
 W.append(dict(key='screen.published.the.city.administrator.s.letter', en="The City Administrator's letter", protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
 W.append(dict(key='screen.published.holds.leg.3.which.cuts', en='holds Leg {leg}, which cuts against Finding {n}', protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
 W.append(dict(key='screen.published.finding.4.of.another.team_', en="Finding {n} of another team's case", protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
-W.append(dict(key='screen.published.is.leg.4.which.supports', en='is Leg {leg}, which supports Finding {n}; it rests on documents this edition does not hold', protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
+W.append(dict(key='screen.published.is.leg.4.which.supports', en='supports Finding {n} as passage {leg}; the documents it rests on are not held in this edition', protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
 W.append(dict(key='screen.published.whether.the.question.was.divided', en='Whether the question was divided', protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
 W.append(dict(key='screen.published.finding.1.answers.one.part', en='Finding {n} answers one part of a question the team divided in two.', protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
 W.append(dict(key='screen.published.the.question.it.came.from', en='The question it came from, "{question}", was set aside and cannot be published.', protected=False, note='DEC-330: B306 A76/A77/A79: drawn sentence'))
@@ -6362,9 +6362,9 @@ w411('queue.answered.dismissed.noreason', 'Dismissed {item}', 'G4: an answered r
 w411('queue.answered.muted', 'Muted {kind}', 'G4: an answered row, queuemute; {kind} as queue.kind.* names it')
 w411('queue.answered.generic', 'Answered {item}', 'G4: an answered row for any other act, so the row never shows only a name and a day')
 # T-05: what "look after the team's Civicsmith" grants, said before it is granted
-w411('screen.members.cap.administer.confirm.head', 'Make {who} an administrator?', 'T-05: the confirmation before a grant that includes administering')
-w411('screen.members.cap.administer.confirm', "Choosing “look after the team's Civicsmith” makes {who} an administrator. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.", 'T-05: the confirmation')
-w411('screen.members.cap.administer.confirm.yes', 'Make {who} an administrator', 'T-05: the confirming button')
+w411('screen.members.cap.administer.confirm.head', 'Propose {who} as an administrator?', 'T-05: the confirmation before a grant that includes administering')
+w411('screen.members.cap.administer.confirm', "Choosing “look after the team's Civicsmith” proposes {who} as an administrator. {who} becomes one once every administrator has agreed, and your choice counts as the first agreement. An administrator can invite members, change what each may do, change the team's settings, install updates, see who holds the hosting account, and vote on removing other administrators. Taking it back later takes a vote of the administrators.", 'T-05: the confirmation')
+w411('screen.members.cap.administer.confirm.yes', 'Propose {who} as an administrator', 'T-05: the confirming button')
 w411('screen.members.cap.administer.confirm.no', 'Go back', 'T-05: the other button')
 # T-06: after "Stand down as owner"
 w411('project.owners.standdown.opened', 'You asked to stand down as an owner. The vote is open: you stay an owner until the other owners agree ({awaiting}).', 'T-06: on the owner\'s own row at once, and until the vote ends; {awaiting} the other owners by name')
@@ -6939,7 +6939,7 @@ W.append(dict(key='screen.project.opened.date', en='Opened {date}', protected=Fa
 W.append(dict(key='screen.question.leg.paragraph', en='Paragraph {n}', protected=False, note='DEC-396: B444 4: a web leg\'s place in its page, beside "Page N" for a paged document'))
 W.append(dict(key='screen.matter.pick.choose', en='Choose one', protected=False, note='DEC-396: B444 6: the first, empty row of the matter\'s pickers (event, cause, way)'))
 W.append(dict(key='screen.matter.pick.none', en='None of these', protected=False, note='DEC-396: B444 6: the row of a matter picker when nothing listed fits'))
-W.append(dict(key='screen.matter.routes.none', en='No route is known for this matter yet.', protected=False, note='DEC-396: B444 6: the routes (procedure guides) list when it is empty'))
+W.append(dict(key='screen.matter.routes.none', en='No way to take this matter forward is recorded yet: no office or procedure that handles it is named.', protected=False, note='DEC-396: B444 6: the routes (procedure guides) list when it is empty'))
 # DEC-396: B444 (K4323) items 7-12
 W.append(dict(key='screen.action.kind.records_petition', en='Court petition to enforce a records request', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list: an action that asks a court to enforce a records request'))
 W.append(dict(key='screen.action.kind.brown_act_demand', en='Brown Act demand', protected=False, note='DEC-396: B444 item 7: the action page subtitle and the queue kind list: a demand to correct an action taken against the Brown Act'))
@@ -7105,7 +7105,7 @@ W.append(dict(key='screen.registers.never.fec', en="The Federal Election Commiss
 # DEC-410: Follow from here; all connections; the most direct path (DEC-409)
 W.append(dict(key='screen.follow.label', en='Follow from here', protected=False, note='DEC-410: the one control on every person, organization, payment, donation, event and document; opens a menu'))
 W.append(dict(key='screen.follow.tip', en='Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.', protected=False, note="DEC-410: the control's explanation"))
-W.append(dict(key='screen.follow.who.money', en='Money given or received', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
+W.append(dict(key='screen.follow.who.money', en='Money paid or received', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
 W.append(dict(key='screen.follow.who.offices', en='Organizations and offices held', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
 W.append(dict(key='screen.follow.who.events', en='Events taken part in', protected=False, note='DEC-410: menu item on a person or organization (owed:followfrom)'))
 W.append(dict(key='screen.follow.who.docs', en='Documents that name them', protected=False, note='DEC-410: menu item on a person or organization (search)'))
@@ -7183,7 +7183,7 @@ W.append(dict(key='screen.registers.search.fec.noexport', en='Rows from this reg
 W.append(dict(key='screen.registers.watch.auto', en='A watch starts by itself only for what a project has said it is interested in, and it is shown with that project and its interest.', protected=False, note='DEC-411: note'))
 W.append(dict(key='screen.registers.watch.row.project', en='{register} · watched for the project {project}, which has an interest in {interest}', protected=False, note='DEC-411: a watch line started for a project'))
 W.append(dict(key='screen.registers.watch.changes', en='{count} changes since you last looked', protected=False, note='DEC-411: count on a watch'))
-W.append(dict(key='screen.explore.all.cut', en='The explorer stopped after 2 seconds and shows what it found. More may exist.', protected=False, note='DEC-411: when the search was stopped at 2 seconds; never implies completeness'))
+W.append(dict(key='screen.explore.all.cut', en='The explorer stopped early so as to answer quickly, and shows what it found. More may exist.', protected=False, note='DEC-411: when the search was stopped at 2 seconds; never implies completeness'))
 W.append(dict(key='screen.explore.all.continue', en='Keep looking', protected=False, note='DEC-411: button (owed:explorecontinue)'))
 W.append(dict(key='screen.explore.shorter.note', en='Paths with fewer steps join the same two ends.', protected=False, note="DEC-411: beside a member's chain; never says the chain is wrong"))
 W.append(dict(key='screen.explore.shorter.best', en='The best has {short} steps, against your {mine}.', protected=False, note="DEC-411: beside a member's chain"))
@@ -8076,7 +8076,7 @@ w438('screen.standard.f.law', 'The law that makes it binding', 'standardimpose: 
 w438('screen.standard.f.reason', 'Your reason', 'each of the four acts')
 w438('refusal.STANDARD_BINDING_UNDETERMINED', 'Civicsmith cannot yet tell whether this standard was in force and binding on this body on the day of the act, so the act is not found out of conformance with it. Settle it on the standard\'s page, under "Whom it binds, and until when", then record the determination again. Nothing was written.', 'B531 item 6; conformance C-113.45 (K5274)')
 w438('screen.matter.f.body.help', 'Choose the office or body whose act this is, from your team\'s offices and bodies. They come from the places your team chose, under Settings › Places and offices.', 'C2a (a): the body is chosen, never typed, so it matches the standard\'s issuer')
-w438('screen.standard.through.none.summary', 'When no day is recorded', 'the mockup fold over the unknown state')
+w438('screen.standard.through.none.summary', 'If no end date is recorded', 'the mockup fold over the unknown state')
 w438('screen.matter.event.none.summary', 'When the project has no dated event', 'the mockup fold')
 w438('screen.matter.determine.needscase.summary', 'When no finding is published yet', 'the mockup fold')
 w438('screen.matter.event.none', "This project has no dated event yet. Record the act on the project's Timeline, with its date, then choose it here.", 'C2a (1): the event picker when the project has none')
@@ -8188,6 +8188,79 @@ w444('screen.counsel.section.exhibits', 'Exhibits, with their fingerprints and g
 w444('screen.counsel.section.standards', 'Standards, candidate theories and remedies', 'E-K7: a section of the packet')
 w444('screen.counsel.sections.marking', 'Every section, and every file saved from it, carries the marking: prepared for review by {counsel}; not legal advice; not for filing.', 'E-K7: under the sections, the marking R11 keeps')
 w444('screen.counsel.export.note', 'Saving a version as a file records who saved it, when, and for which lawyer. The file keeps the marking on every page.', 'E-K7: counselPacketExport records who, which version, when, which counsel')
+
+# DEC-445: B541 (the 0.87.0 live walk, DS items): one plain-wording pass; each refusal names its cause and its next step; labels that state their outcome; singulars
+REWRITE.update({
+ 'act.projectvisibilityset.label.project': 'Change who can find this project',
+ 'act.taskforward.label.home': 'Pass it to another member',
+ 'act.taskforward.label.queue': 'Pass it to another member',
+ 'screen.more.sub': 'The places the tabs do not hold.',
+ 'refusal.CO_ATTESTATION_UNACKNOWLEDGED': 'A document this case rests on has no independent proof of when it was captured. Try getting that proof again, or say, with a reason, that you publish it on your team\'s word alone. Nothing was written.',
+ 'observation-log.partial.looked_got_part': 'we looked and found only part of it',
+ 'screen.standard.inforce.none': 'The record does not say when it took effect.',
+ 'label.standardcopy.undetermined': 'Not known whether this is the official text',
+ 'following.why.placed_nowhere_attestation': 'not placed on the timeline: no record you can see gives its date',
+ 'screen.money.didnotmove': 'no money moved: this is a {phase} figure',
+ 'shell.unavailable.nothing': 'Nothing you can open is here. If a member invited you to a project, the invitation waits on Home: join it there.',
+ 'screen.projectai.purpose': 'Who pays for the assistant\'s work in this project, what it pays for, its limits, and keeping the project\'s material away from AI. These are settings only: whether the assistant can answer yet is said where members ask it. Every owner sees every change.',
+ 'public-read.bar_recorded_case': 'No standard of proof is recorded for this edition. That is not a standard of zero: the case came before cases carried their own standard, or its team never set one, so it claims to meet none.',
+ 'act.successrecord.label.matter': 'Record what this matter achieved',
+ 'refusal.TEMPLATE_NOT_NAMED': 'There is no file template for this kind of filing in your place\'s rules. Write the words yourself on this screen, or ask an administrator to add a template for this kind. Nothing was written.',
+ 'screen.action.pressuremark.reply': 'came in reply number {ord}',
+ 'capture.fieldneeded': 'This can be captured only once “{field}” is filled in.',
+ 'refusal.SUBJECT_IN_ACTIVE_PLAN': 'That matter is already in another open plan of this project. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.',
+ 'screen.find-in.notread': '{n} documents could not be searched, because they are not read yet or are pictures of text. They may hold what you looked for.',
+ 'screen.find-in.notread.one': 'One document could not be searched, because it is not read yet or is a picture of text. It may hold what you looked for.',
+})
+def w445(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-445: ' + note))
+w445('refusal.SUBJECT_IN_ACTIVE_PLAN.named', 'That matter is already in another open plan of this project: {plan}. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.', 'shown in place of refusal.SUBJECT_IN_ACTIVE_PLAN, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.basis.added', 'Added by a member rather than fetched from its source, so who issued it is not yet known. Recorded {at}; a member can settle it from the queue.', 'shown in place of capture.authority_basis, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.reading.nonames', 'No names of people or organizations were found in this document\'s text. The document itself is unchanged.', 'shown in place of reading-pipeline.why.reader_found_entities, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.reading.reread', 'Civicsmith read {replaced} pages again more carefully and recovered more of their text; the other {kept} kept their first reading.', 'shown in place of textchain.say.push.page_re_read, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.reading.transcribed', '{filled} scanned pages were turned into text and added to this document\'s own text{kept}', 'shown in place of reading-pipeline.scanned_page_transcribed, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.basis.fetched', 'Who issued this is not yet known: nothing said so when it was fetched. Recorded {retrieved}; a member can settle it from the queue.', 'shown in place of acquisition.authority_basis.assertion_supplied_mechanical, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.finder.named.one', 'named in 1 document, {document}', 'DS11: the singular of screen.finder.named')
+w445('screen.findin.searched.one', 'Searched {read} of 1 document.', 'DS11: the singular of screen.findin.searched')
+w445('screen.finder.shown', '{shown} of {total} documents shown.', 'DS11: Find\'s own row, in place of screen.held.archivemore ("files", a Held row)')
+w445('screen.timeline.dated.meta.nograde', '{precision} · a dated fact, from {document}', 'DS14: the row when the fact has no grade (no bare "· grade")')
+w445('document.unread.page', 'Page {pages} is a picture of text that Civicsmith\'s own reading couldn\'t make out, so its words can\'t be found or cited yet. The page image is kept as it is.', 'DS15: the singular of document.unread.pages')
+w445('screen.find-in.notread.which', 'Not searched: {documents}', 'DS34: beneath screen.find-in.notread, the documents named, each linked')
+
+# DEC-446: B541 (the 0.87.0 live walk): layout and flow items
+def w446(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-446: ' + note))
+w446('screen.capture.filing-later.a', 'A document added here can be filed into a project later.', 'DS10: note on Add')
+w446('screen.capture.filing-later.b', 'Add opened from a project files it there directly.', 'DS10: note on Add')
+w446('screen.ceremony.plain.head', 'What you are signing, in plain words', 'DS20: fold beside the raw signed lines')
+w446('screen.ceremony.plain.1', 'You put your team\'s name to Edition {edition} of {case}: its {findings} findings and the {documents} documents they rest on.', 'DS20: plain reading, line 1')
+w446('screen.ceremony.plain.2', 'Your signature is tied to their exact text, so a reader can check that nothing was changed afterward.', 'DS20: plain reading, line 2')
+w446('screen.ceremony.plain.3', 'Once it is public, a mistake can be corrected by a new edition, never removed.', 'DS20: plain reading, line 3')
+w446('screen.ceremony.plain.4', 'Nothing is signed until you confirm on your device.', 'DS20: plain reading, line 4')
+w446('screen.plan.tier.row', 'tier 2, file with caution', "DS13: the legal option's tier shown in its row")
+w446('screen.plan.nosuggestions', "No options are suggested yet: none of this project's matters has a route to suggest from.", 'DS13: why no suggestions are offered')
+w446('screen.queue.item.weight', 'weight: Reasoned, asks for a reason', "DS4: the item's weight, after its rung, in its meta line")
+w446('screen.wizards.getarecord.what', 'Walks you through asking an office for a record, from the request to the reply.', 'DS5: what the Get a record wizard does')
+w446('screen.wizards.checklist.what', 'Walks you through what the team checks before and after a council meeting.', 'DS5: what the council-meeting checklist wizard does')
+w446('screen.action.ended.complied', 'The office complied', 'DS35: the resolution choice (actions R7, R14), in place of the bare word screen.action.resolution.complied')
+w446('screen.action.ended.denied', 'The office denied it', 'DS35: the resolution choice')
+w446('screen.action.ended.escalated', 'It was escalated', 'DS35: the resolution choice')
+w446('screen.action.ended.withdrawn', 'Your team withdrew it', 'DS35: the resolution choice')
+w446('screen.action.ended.completed', 'Your team carried it out', 'DS35: the resolution choice')
+w446('screen.action.ended.help', 'Choose the one closest to what happened. It is shown with the action.', 'DS35: help of the choice')
+w446('screen.action.ended.own', 'In your own words', 'DS35: the move\'s reason, labeled for a resolution')
+w446('screen.action.ended.own.help', 'Required. Say what happened; it is kept as the reason for closing the action, beside the choice above.', 'DS35: actionMove\'s reason, which every move carries (R14): the box for the action\'s own outcome')
+
+# DEC-447: B543 (N1260's four design questions; DEC-409 to DEC-411)
+def w447(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-447: ' + note))
+w447('screen.follow.who.donations', 'Donations given or received', 'B543 (2): apart from money paid or received, as Bob named them (DEC-409); campaign and register donations')
+w447('screen.follow.who.laws', 'Laws and standards that bind them', 'B543 (1): law as a place to follow into (DEC-409, every dimension); opens the binding rows of Standard (DEC-442) for an organization or office; drawn only when the record holds one')
+w447('screen.follow.document.laws', 'Laws and standards it cites', 'B543 (1): from a document, the laws and standards its passages cite; drawn only when it cites one')
+w447('screen.follow.docs.matched', 'Matched to them', 'B543 (3): first heading under "Documents that name them": documents the record resolved to this person or organization')
+w447('screen.follow.docs.words', 'Their name appears, not matched to them', 'B543 (3): second heading: documents whose words contain the name, which the record has not matched')
+w447('screen.follow.docs.words.note', 'These documents contain the same name, but nothing yet shows it is the same person or organization. Open one to say whether it is.', 'B543 (3): beneath the second heading')
+w447('screen.follow.open.whole', 'Open all of it in {screen}', 'B543: the fold shows that dimension\'s rows for the item in place; this link opens the whole screen narrowed to it')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
