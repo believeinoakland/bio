@@ -103,7 +103,7 @@ Nothing here repeats an answer in K4403, K4405 (its ten points) or DEC-447. Each
 
 **Items for a lawyer** (asked before the first beta; none blocks a draft): (1) publishing a federal donor (K4403 (3)); (2) K5500: whether California has a rule like 11 CFR 104.15 for the state's filings, and whether it reaches the City's open data (a public-domain licence does not by itself settle it).
 
-**P-4 · A donor named in a cited row and "every named person has a recorded basis" (doctrine, K1483 (a)).** *In plain words:* you ruled that a published case must record why each person it names is named. A case citing campaign rows names every donor in those rows; today's allowed reasons are six (their act or position, a tie, an interest, their consent, an earlier publication of them, or that they are a private party and the words say why), none of which says "named in the public filing this case cites". *Options:* (A) keep the six: each donor needs one (heavy: a case citing fifty rows needs fifty reasons, and `private_party` with words is the nearest); (B) add a seventh reason, "named in a public filing the case cites", which the cited row itself proves, still recorded and checked before publication; (C) a donor named only by the cited row needs no further reason. *Recommendation:* B: it keeps your rule (a recorded, checked reason for every named person) and makes the honest reason cheap to record. It adds a kind to `peopleJudged` (part (d) R35).
+**P-4 · A donor named in a cited row and "every named person has a recorded basis" (doctrine, K1483 (a)). ANSWERED, K5503 (C11), option B, "as recommended".** A published case that cites a public filing gains a seventh recorded reason for naming a person, "named in the public filing the case cites" (`named_in_cited_filing`), which the cited row itself proves: the cited row of the register names the person. It is recorded and checked before publication like the six others (their act or position, a tie, an interest, their consent, an earlier publication of them, a private party with the words saying why), and is accepted only while a cited row names that person. It keeps K1483 (a) (a recorded, checked reason for every named person) and makes the honest reason cheap for a case citing many rows. Applied in part (d) R35 (a kind added to `peopleJudged`, case-disclosures R25) with its test. Not decided here: the Provides of case-disclosures R25, whose list of reasons lives outside this folder.
 
 ### BOB's, decided and reported (P17: lower-level; recorded in K-lines at the opening)
 
@@ -161,3 +161,7 @@ Nothing here repeats an answer in K4403, K4405 (its ten points) or DEC-447. Each
 1. K5498 (C8-poll): every "CONDITIONAL on C8-poll" mark removed; part (a) R130 amends `acquisition` R36 to "no daemon uses a keyed service except a member-asked read of a team's own key"; R130, R131; part (c) alerts note, R41, R42, R81; part (d) R134; points P-1, 4, 10, 16 and gap 6 here.
 2. K5499 (C9): part (a) R3 keeps ZIP, coordinates and city (street lines only removed); P-2.
 3. K5500 (C10): part (d) R66 and header say the guard is federal only; P-3 and the lawyer list here.
+
+## Changed for K5503
+
+1. K5503 (C11): part (d) R35 adds the seventh recorded reason `named_in_cited_filing`, proven by the cited row, with its test; P-4 marked ANSWERED. No other line here lists the reasons.
