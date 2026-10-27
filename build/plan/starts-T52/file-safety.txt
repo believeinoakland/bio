@@ -1,0 +1,7 @@
+Round R1, layer 3, module file-safety, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module file-safety`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-12 · N1261 · K4459 · `checks.mjs:96` reads `SIGNATURES_RUN_RECENT` by `rowWord`, `STAND_INS` dropped (R24 green; the key is in `words-reads.json`). START drafted at `archive/starts-T51-F4/file-safety-2.txt`.
+- T52-13 · U5 · B-K4 / LB-4 · first: settle the bytes of capture `9dce360a…` (the alpha walk's `INFO-2026-0192`, still "cannot make a safe view") through the pinned converter (`soffice --headless --convert-to pdf`), against today's file's zip entries: a malformed old file means only the sentence `refusal.NOT_RENDERABLE` (B-K13) is wrong; an unsupported feature means `file-scanner`'s entry (BOB's act 4, else an entry of `next.md`). PLD U5.
