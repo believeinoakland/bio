@@ -50,6 +50,9 @@ Every registry screen (`docs/development/ux-substrate/`) and every op (`op-decla
 - **PL5** The budget check opens each screen as the role named, at 1280 and 390 px, 5 runs at least, and reports the net median and p90 against `budgetOf(class)`; a screen over is a finding naming the screen, the figure and the slowest request; it never changes a copy's data and never prints a credential. Test: a fixture copy with one screen delayed beyond its ceiling reports exactly that screen.
 - **PL6** The check reports the structure figures (hops in the critical path, requests, repeats) beside the time, from the door's `Server-Timing` (`do-<route>`, `in-<route>`; control-plane R121). Test: a request chain of known hops reports that count.
 
+**reading-pipeline, extraction and any module that lands rows or runs long work in the room** (FILES' LOAD-PER-TYPE M3: a landing write blocks the object for its duration, about 28-72 ms per 1 MB batch)
+- **PL7** Background work yields the room between batches: no single hold of the room's thread by work that is not a member's act exceeds 100 ms (a batch of at most about 1 MB), and a door window arriving during background work waits at most one batch, not the work's total. Test: a landing of 150 MB in 1 MB batches, with a call arriving in the middle, answers that call within one batch's time plus its own; no batch's measured hold exceeds the stated bound.
+
 **screens (all)**: a new screen's UX needs arrive with its budget class (no design from this lane).
 
 ## 5. The beta's bar: ANSWERED (K5438, Bob on P1, option A)
