@@ -44143,24 +44143,6 @@
    "note": "DEC-445: DS34: beneath screen.find-in.notread, the documents named, each linked"
   },
   {
-   "key": "screen.action.ended.pick",
-   "en": "Pick the closest word.",
-   "protected": false,
-   "note": "DEC-446: DS35: help of the outcome choice (How it ended)"
-  },
-  {
-   "key": "screen.action.ended.shown",
-   "en": "It is shown with the action.",
-   "protected": false,
-   "note": "DEC-446: DS35: help of the outcome choice"
-  },
-  {
-   "key": "screen.action.ended.own.help",
-   "en": "Say how it ended in your own words, if none of the five fits or to add what they leave out.",
-   "protected": false,
-   "note": "DEC-446: DS35: help of the optional field In your own words"
-  },
-  {
    "key": "screen.capture.filing-later.a",
    "en": "A document added here can be filed into a project later.",
    "protected": false,
@@ -44180,7 +44162,7 @@
   },
   {
    "key": "screen.ceremony.plain.1",
-   "en": "You are saying that this edition of The Coliseum lease, its 2 findings and the 5 pieces of evidence they rest on are what you read.",
+   "en": "You put your team's name to Edition {edition} of {case}: its {findings} findings and the {documents} documents they rest on.",
    "protected": false,
    "note": "DEC-446: DS20: plain reading, line 1"
   },
@@ -44231,6 +44213,54 @@
    "en": "Walks you through what the team checks before and after a council meeting.",
    "protected": false,
    "note": "DEC-446: DS5: what the council-meeting checklist wizard does"
+  },
+  {
+   "key": "screen.action.ended.complied",
+   "en": "The office complied",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice (actions R7, R14), in place of the bare word screen.action.resolution.complied"
+  },
+  {
+   "key": "screen.action.ended.denied",
+   "en": "The office denied it",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.escalated",
+   "en": "It was escalated",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.withdrawn",
+   "en": "Your team withdrew it",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.completed",
+   "en": "Your team carried it out",
+   "protected": false,
+   "note": "DEC-446: DS35: the resolution choice"
+  },
+  {
+   "key": "screen.action.ended.help",
+   "en": "Choose the one closest to what happened. It is shown with the action.",
+   "protected": false,
+   "note": "DEC-446: DS35: help of the choice"
+  },
+  {
+   "key": "screen.action.ended.own",
+   "en": "In your own words",
+   "protected": false,
+   "note": "DEC-446: DS35: the move's reason, labeled for a resolution"
+  },
+  {
+   "key": "screen.action.ended.own.help",
+   "en": "Required. Say what happened; it is kept as the reason for closing the action, beside the choice above.",
+   "protected": false,
+   "note": "DEC-446: DS35: actionMove's reason, which every move carries (R14): the box for the action's own outcome"
   }
  ],
  "rewrite": {

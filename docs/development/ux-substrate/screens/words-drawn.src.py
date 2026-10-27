@@ -8229,13 +8229,10 @@ w445('screen.find-in.notread.which', 'Not searched: {documents}', 'DS34: beneath
 # DEC-446: B541 (the 0.87.0 live walk): layout and flow items
 def w446(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-446: ' + note))
-w446('screen.action.ended.pick', 'Pick the closest word.', 'DS35: help of the outcome choice (How it ended)')
-w446('screen.action.ended.shown', 'It is shown with the action.', 'DS35: help of the outcome choice')
-w446('screen.action.ended.own.help', 'Say how it ended in your own words, if none of the five fits or to add what they leave out.', 'DS35: help of the optional field In your own words')
 w446('screen.capture.filing-later.a', 'A document added here can be filed into a project later.', 'DS10: note on Add')
 w446('screen.capture.filing-later.b', 'Add opened from a project files it there directly.', 'DS10: note on Add')
 w446('screen.ceremony.plain.head', 'What you are signing, in plain words', 'DS20: fold beside the raw signed lines')
-w446('screen.ceremony.plain.1', 'You are saying that this edition of The Coliseum lease, its 2 findings and the 5 pieces of evidence they rest on are what you read.', 'DS20: plain reading, line 1')
+w446('screen.ceremony.plain.1', 'You put your team\'s name to Edition {edition} of {case}: its {findings} findings and the {documents} documents they rest on.', 'DS20: plain reading, line 1')
 w446('screen.ceremony.plain.2', 'Your signature is tied to their exact text, so a reader can check that nothing was changed afterward.', 'DS20: plain reading, line 2')
 w446('screen.ceremony.plain.3', 'Once it is public, a mistake can be corrected by a new edition, never removed.', 'DS20: plain reading, line 3')
 w446('screen.ceremony.plain.4', 'Nothing is signed until you confirm on your device.', 'DS20: plain reading, line 4')
@@ -8244,6 +8241,14 @@ w446('screen.plan.nosuggestions', "No options are suggested yet: none of this pr
 w446('screen.queue.item.weight', 'weight: Reasoned, asks for a reason', "DS4: the item's weight, after its rung, in its meta line")
 w446('screen.wizards.getarecord.what', 'Walks you through asking an office for a record, from the request to the reply.', 'DS5: what the Get a record wizard does')
 w446('screen.wizards.checklist.what', 'Walks you through what the team checks before and after a council meeting.', 'DS5: what the council-meeting checklist wizard does')
+w446('screen.action.ended.complied', 'The office complied', 'DS35: the resolution choice (actions R7, R14), in place of the bare word screen.action.resolution.complied')
+w446('screen.action.ended.denied', 'The office denied it', 'DS35: the resolution choice')
+w446('screen.action.ended.escalated', 'It was escalated', 'DS35: the resolution choice')
+w446('screen.action.ended.withdrawn', 'Your team withdrew it', 'DS35: the resolution choice')
+w446('screen.action.ended.completed', 'Your team carried it out', 'DS35: the resolution choice')
+w446('screen.action.ended.help', 'Choose the one closest to what happened. It is shown with the action.', 'DS35: help of the choice')
+w446('screen.action.ended.own', 'In your own words', 'DS35: the move\'s reason, labeled for a resolution')
+w446('screen.action.ended.own.help', 'Required. Say what happened; it is kept as the reason for closing the action, beside the choice above.', 'DS35: actionMove\'s reason, which every move carries (R14): the box for the action\'s own outcome')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
