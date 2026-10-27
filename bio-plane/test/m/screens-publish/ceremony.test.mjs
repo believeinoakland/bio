@@ -4,7 +4,9 @@
  * states that stop it (no key here, a phone, a member who is not an owner). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, drewIn, day, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
+import { groupName, open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
+const GROUP = await groupName();
+import { gateRefusal } from "../case-disclosures/fixtures.mjs";
 
 const PATH = `/app/ceremony/${P}/${DR}`;
 const R = "because";
@@ -23,8 +25,8 @@ test("R3 the steps in order, the current one marked; the reads: checks, disclosu
   const steps = main(p).querySelectorAll("[data-step]");
   assert.deepEqual(steps.map((s) => s.textContent), ["what", "strength", "leavesout", "people", "photos", "disclosures", "bias", "preview", "ties", "sign"].map((k) => word(`screen.ceremony.step.${k}`)));
   assert.equal(main(p).querySelector('[aria-current="step"]').getAttribute("data-step"), "photos", "an unchecked photo holds the ceremony at Photos");
-  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P, targets: ["FND-2026-0031"], caseId: C });
-  assert.deepEqual(last(p, "publishtensions").body, { project: P, targets: ["FND-2026-0031"] });
+  assert.deepEqual(last(p, "publishpreflight").body, { draft: DR, project: P }, "R50: the draft and the project alone");
+  assert.deepEqual(last(p, "publishtensions").body, { project: P, draft: DR });
   assert.equal(last(p, "photomarks").query.capture, PHOTO);
   assert.equal(last(p, "publishschedule").query.case, C);
 });
@@ -32,7 +34,10 @@ test("R3 the steps in order, the current one marked; the reads: checks, disclosu
 test("R3 every refusal that holds before signing is drawn by its words; \"Check again\" reads the checks again", async () => {
   const p = await open(PATH);
   const b = main(p).querySelector("[data-blockers]");
-  assert.match(b.textContent, /Photo 1 is not yet checked\..*A contradiction is not yet disclosed\./);
+  const lines = b.querySelectorAll("li").map((l) => l.textContent);
+  assert.equal(lines.length, 2);
+  assert.ok(lines[0].includes(PREFLIGHT().first.translation), "a code the list holds no word for is drawn by the plane's translation");
+  assert.ok(lines[1].includes(word("refusal.TENSION_NOT_DISCLOSED").replace(/[.\s]+$/, "")), "a code the list holds is drawn by its word, not the translation");
   const n = p.byOp("publishpreflight").length;
   await press(p, "publishpreflight");
   assert.ok(p.byOp("publishpreflight").length > n);
@@ -115,7 +120,7 @@ test("R5 the Ties step's confirmation sends publish with tieAttested: true; no S
   const b = last(p, "publish").body;
   assert.equal(b.tieAttested, true);
   assert.equal(b.draft, DR);
-  assert.equal(b.caseId, C);
+  assert.deepEqual(Object.keys(b).sort(), ["draft", "project", "tieAttested"], "R50: only what was attested here; the findings, the case and the words are the draft's");
   assert.ok(ops(p).includes("caseratify"), "Sign offered once publish answered");
   const q = await open(PATH, { plane: { publish: pending } });
   tick(q, "ce-tie", "yes");
@@ -125,7 +130,7 @@ test("R5 the Ties step's confirmation sends publish with tieAttested: true; no S
 
 test("R12 the Sign step: when it becomes public (now, or a date and time in the group's zone), one button following the choice, and who signs", async () => {
   const p = await prepared();
-  assert.ok(drew(p, "signing.ceremony.who", { signer: "dev", project: "The Coliseum lease", group: "River Town" }));
+  assert.ok(drew(p, "signing.ceremony.who", { signer: "dev", project: "The Coliseum lease", group: GROUP }));
   assert.ok(drew(p, "screen.ceremony.when") && drew(p, "screen.ceremony.when.help", { zone: "America/Los_Angeles" }));
   assert.ok(p.doc.getElementById("ce-date") && p.doc.getElementById("ce-time"));
   assert.deepEqual(ops(p).filter((o) => o === "caseratify" || o === "publishat"), ["caseratify"], "one button: now");
@@ -181,7 +186,7 @@ test("R14 signed and waiting draws signedat with \"Move the time\" and \"Cancel 
   await until(p, () => main(p).querySelector('[data-signed="at"]'));
   assert.deepEqual(last(p, "publishat").body.at, { date: "2026-11-19", time: "06:00" });
   assert.equal(last(p, "publishat").body.members.length, 2);
-  assert.ok(drewIn(main(p).querySelector('[data-signed="at"]'), "signing.ceremony.signedat", { edition: "2", date: day("2026-11-19"), time: "06:00", zone: "America/Los_Angeles" }));
+  assert.ok(drewIn(main(p).querySelector('[data-signed="at"]'), "signing.ceremony.signedat", { edition: "2", date: day("2026-11-19"), time: clock("06:00"), zone: "America/Los_Angeles" }));
   await press(p, "publishatmove", { values: { "ce-move-date": "2026-11-20", "ce-move-time": "07:30" }, reason: R });
   carries(last(p, "publishatmove").body, { case: C, edition: 2, at: { date: "2026-11-20", time: "07:30" } });
   const w = await open(PATH, { plane: { publishschedule: ok({ editions: [{ case: C, edition: 2, state: "waiting", at: { date: "2026-11-19", time: "06:00", zone: "Z" } }] }) } });
@@ -226,13 +231,50 @@ test("R15 at the phone width the Sign step draws signing.ceremony.phone and send
   assert.ok(drew(p, "screen.ceremony.asked"));
 });
 
-test("R4 a photo's facts: taken by and relied on, with the day when the step carries `taken_at` and without it when it does not", async () => {
+test("R4 R30 a photo's facts: taken by and relied on, with the local day when `photosOf` answers `dated` and without it when it does not (R33 of case-disclosures)", async () => {
   const p = await open(PATH);
   const ph = main(p).querySelector(`[data-photo="${PHOTO}"]`);
   assert.ok(drewIn(ph, "screen.ceremony.photo.facts", { by: "dev", findings: "FND-2026-0031" }), "no day: the sentence without one");
   const pre = PREFLIGHT();
-  pre.steps[3].photos[0].taken_at = "2026-03-02T10:00:00Z";
+  pre.steps[3].photos[0].dated = "2026-03-02";
   const q = await open(PATH, { plane: { publishpreflight: ok(pre) } });
   assert.ok(drewIn(main(q).querySelector(`[data-photo="${PHOTO}"]`), "screen.ceremony.photo.facts.dated", { by: "dev", date: day("2026-03-02"), findings: "FND-2026-0031" }));
   assert.deepEqual(q.root().innerHTML.match(/\{[a-z]\w*\}/g) || [], []);
+  pre.steps[3].photos[0].dated = null;
+  const none = await open(PATH, { plane: { publishpreflight: ok(pre) } });
+  assert.ok(drewIn(main(none).querySelector(`[data-photo="${PHOTO}"]`), "screen.ceremony.photo.facts", { by: "dev", findings: "FND-2026-0031" }), "control: a null day is the undated sentence");
+});
+
+test("R3 R50 (fix round 6, G10) a refusal's placeholder is filled from the refusal's own field: the real canned text names the document, no raw {document}", async () => {
+  const canned = word("document.refused.pending", { document: "{document}" }); // what case-disclosures' check answers as `translation`
+  assert.ok(canned.includes("{document}"), "the answer's text carries the placeholder");
+  const gate = gateRefusal(); // case-disclosures' own refusals, raised by worlds that hold them
+  assert.ok(gate.DOCUMENT_COPY_PENDING.translation.includes("{document}"), "the real answer's text carries the placeholder");
+  const pre = PREFLIGHT({ first: gate.DOCUMENT_COPY_PENDING, blockers: [gate.PHOTO_UNCHECKED] });
+  const p = await open(PATH, { plane: { publishpreflight: ok(pre) } });
+  const lines = main(p).querySelector("[data-blockers]").querySelectorAll("li").map((l) => l.textContent);
+  assert.equal(lines.length, 2);
+  assert.ok(lines[0].includes(gate.held.document), "the document is named");
+  assert.ok(lines[1].includes(gate.held.photo), "the photo is named");
+  assert.ok(!lines.some((l) => /[{}]/.test(l)), "no raw placeholder is drawn");
+  // control: a refusal that names no field draws no brace either
+  // fixtures-generic: DOCUMENT_COPY_UNWORDED (a code no module gives, so the page falls back to the plane's canned text (R-fallback control))
+  const q = await open(PATH, { plane: { publishpreflight: ok(PREFLIGHT({ first: { ok: false, code: "DOCUMENT_COPY_UNWORDED", translation: canned }, blockers: [] })) } });
+  assert.ok(!/[{}]/.test(main(q).querySelector("[data-blockers]").textContent), "control: a missing field leaves no brace");
+});
+
+test("R12 R15 (fix round 6, G11) a team with no time zone is offered no publishing time: no empty brackets, no second button, the held refusal says why; with a zone the Sign step is as before", async () => {
+  const none = PREFLIGHT();
+  none.steps[7] = { signer: "dev", open_requests: [], publish_at: { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" } };
+  const p = await prepared({ plane: { publishpreflight: ok(none) } });
+  assert.ok(drew(p, "refusal.PUBLISH_AT_NO_ZONE"), "the held refusal is said");
+  assert.ok(!/\(\s*\)/.test(text(p)), "no empty brackets");
+  assert.equal(p.doc.getElementById("ce-date"), null);
+  assert.equal(p.doc.getElementById("ce-time"), null);
+  assert.deepEqual(ops(p).filter((o) => o === "caseratify" || o === "publishat"), ["caseratify"], "only Sign and publish now");
+  const zoned = PREFLIGHT();
+  zoned.steps[7] = { signer: "dev", open_requests: [], publish_at: { offered: true, zone: "America/Los_Angeles" } };
+  const q = await prepared({ plane: { publishpreflight: ok(zoned) } });
+  assert.ok(drew(q, "screen.ceremony.when.help", { zone: "America/Los_Angeles" }) && q.doc.getElementById("ce-date"));
+  assert.ok(!drew(q, "refusal.PUBLISH_AT_NO_ZONE"));
 });

@@ -33,7 +33,7 @@ import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { caseInputsOf } from "../case-inputs/index.mjs";
 import { bearingFindings, BEARINGS, counterpartyName } from "../action-grammar/index.mjs";
 import { isMachineIdentity, proposalLabel, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { ACTION_REPLY_CHECKS } from "./checks.mjs";
 import { ACTION_REPLIES_TABLES, migrateActionReplies } from "./schema.mjs";
 
@@ -52,6 +52,13 @@ const NOT_ADDRESSED = "not_addressed";
 const PAGE = 200;
 /* R10: the longest of a reply's own words that say it may not be quoted. */
 export const QUOTING_WORDS_MAX = 500;
+
+/* The refusals' `detail` sentences, read through `localize` (setup-words R13; the words are not yet rows of words.json). */
+const ONE_ACTION_DETAIL = localize("action-replies.index.one_action_at_a_time", "one action at a time: pass target=<action id>");
+const NO_AUTHOR_DETAIL = localize("action-replies.index.no_author",
+  "this call carries nobody. The plane stamps the proposer from the credential that asked, and a proposal nobody can be named for is one the record could say nothing about.");
+const ARISING_FORM_DETAIL = localize("action-replies.index.arising_form", "arising is {project} or {plan, matter}", { project: "{project}" });
+const ENTRY_NOT_REPLY_DETAIL = localize("action-replies.index.entry_not_reply", "the entry named is not a reply received on this request");
 
 /* The catalogue-backed refusals: each carries its code, check and translation. */
 export function withRow(r) {
@@ -155,8 +162,8 @@ export class ActionReplies {
     /* DEC-49 REGION is-bearing-rfc */
     if (a.kind !== "request_for_comment" || !e || e.direction !== "received")
       return refuse("BEARING_NOT_RFC", a.kind !== "request_for_comment"
-        ? "this action is not a request for comment; only a reply to one is laid out claim by claim"
-        : "the entry named is not a reply received on this request", { target, ord: ord ?? null, kind: a.kind ?? null });
+        ? localize("action-replies.index.not_rfc_laid_out", "this action is not a request for comment; only a reply to one is laid out claim by claim")
+        : ENTRY_NOT_REPLY_DETAIL, { target, ord: ord ?? null, kind: a.kind ?? null });
     /* END DEC-49 REGION is-bearing-rfc */
     return { ok: true, a, ord: e.ord };
   }
@@ -165,8 +172,8 @@ export class ActionReplies {
     /* DEC-49 REGION is-quoting-rfc */
     if (a.kind !== "request_for_comment" || !e || e.direction !== "received")
       return refuse("QUOTING_NOT_RFC", a.kind !== "request_for_comment"
-        ? "this action is not a request for comment; only a reply to one can ask not to be quoted"
-        : "the entry named is not a reply received on this request", { target, ord: ord ?? null, kind: a.kind ?? null });
+        ? localize("action-replies.index.not_rfc_quoting", "this action is not a request for comment; only a reply to one can ask not to be quoted")
+        : ENTRY_NOT_REPLY_DETAIL, { target, ord: ord ?? null, kind: a.kind ?? null });
     /* END DEC-49 REGION is-quoting-rfc */
     return { ok: true, a, ord: e.ord };
   }
@@ -178,7 +185,7 @@ export class ActionReplies {
     /* DEC-49 REGION is-quoting-shape */
     const wordsOk = w !== null && w.length >= 1 && w.length <= QUOTING_WORDS_MAX && !/["\\\r\n\u2028\u2029]/.test(w);
     if (typeof quotable !== "boolean" || (quotable === false && !wordsOk) || (given && !wordsOk))
-      return refuse("QUOTING_REFUSED", "quotable is true or false, and with false the reply's own words that say so", { target });
+      return refuse("QUOTING_REFUSED", localize("action-replies.index.quoting_shape", "quotable is true or false, and with false the reply's own words that say so"), { target });
     /* END DEC-49 REGION is-quoting-shape */
     return { ok: true, quotable, words: quotable ? null : w };
   }
@@ -212,9 +219,9 @@ export class ActionReplies {
     const who = typeof author === "string" ? author.trim() : "";
     /* DEC-49 REGION is-machine-bearing */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_RECORD_BEARING", "a reply is laid out by a member; a machine may propose a layout");
+      return refuse("MACHINE_CANNOT_RECORD_BEARING", localize("action-replies.index.machine_bearing", "a reply is laid out by a member; a machine may propose a layout"));
     /* END DEC-49 REGION is-machine-bearing */
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: ONE_ACTION_DETAIL };
     const t = this.#bearingTarget(target, ord, viewer);
     if (t.ok === false) return t;
     const s = this.#bearingShape(claims, t.a, target);
@@ -236,9 +243,8 @@ export class ActionReplies {
   actionBearingPropose({ target, ord = null, claims = null, proposer = null, viewer = null } = {}) {
     const who = typeof proposer === "string" ? proposer.trim() : "";
     if (!who)
-      return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody. The plane stamps the proposer from the "
-        + "credential that asked, and a proposal nobody can be named for is one the record could say nothing about." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+      return { ok: false, reason: "NO_AUTHOR", detail: NO_AUTHOR_DETAIL };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: ONE_ACTION_DETAIL };
     const t = this.#bearingTarget(target, ord, viewer);
     if (t.ok === false) return t;
     const s = this.#bearingShape(claims, t.a, target);
@@ -266,9 +272,9 @@ export class ActionReplies {
     const who = typeof author === "string" ? author.trim() : "";
     /* DEC-49 REGION is-machine-quoting */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_RECORD_QUOTING", "what a reply says about being quoted is recorded by a member");
+      return refuse("MACHINE_CANNOT_RECORD_QUOTING", localize("action-replies.index.machine_quoting", "what a reply says about being quoted is recorded by a member"));
     /* END DEC-49 REGION is-machine-quoting */
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: ONE_ACTION_DETAIL };
     const t = this.#bearingTarget(target, ord, viewer, true);
     if (t.ok === false) return t;
     const s = this.#quotingShape(quotable, words, target);
@@ -306,7 +312,7 @@ export class ActionReplies {
   /** R1: the layouts of the action's received entries (or of the one at `ord`): the latest per entry with the earlier
    *  ones, and the proposals apart. Writes nothing. */
   bearingsOf({ target, ord = null, viewer = null } = {}) {
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: ONE_ACTION_DETAIL };
     const a = this.#action(target, viewer);
     if (a.ok === false) return a;
     const want = ord === null || ord === undefined || ord === "" ? null : ordOf(ord);
@@ -349,26 +355,26 @@ export class ActionReplies {
     const who = typeof author === "string" ? author.trim() : "";
     /* DEC-49 REGION is-machine-link */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_LINK", "what arose from a response is linked by a member");
+      return refuse("MACHINE_CANNOT_LINK", localize("action-replies.index.machine_link", "what arose from a response is linked by a member"));
     /* END DEC-49 REGION is-machine-link */
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: ONE_ACTION_DETAIL };
     const a = this.#action(target, viewer);
     if (a.ok === false) return a;
     const e = ActionReplies.#entry(a, ord);
     /* DEC-49 REGION is-arose-response */
     if (!e || e.direction !== "received")
-      return refuse("AROSE_FROM_NOT_A_RESPONSE", "the entry named is not a reply received", { target, ord: ord ?? null });
+      return refuse("AROSE_FROM_NOT_A_RESPONSE", localize("action-replies.index.arose_not_reply", "the entry named is not a reply received"), { target, ord: ord ?? null });
     /* END DEC-49 REGION is-arose-response */
     const ar = ActionReplies.#arising(arising);
     /* DEC-49 REGION is-arising-shape */
-    if (!ar) return refuse("AROSE_FROM_REFUSED", "arising is {project} or {plan, matter}", { target });
+    if (!ar) return refuse("AROSE_FROM_REFUSED", ARISING_FORM_DETAIL, { target });
     /* END DEC-49 REGION is-arising-shape */
     if (ar.project && !this.#seesProject(ar.project, who)) return noSuchProject(ar.project, { target });
     const held = ar.project
       ? this.#one(`SELECT seq FROM action_arose_from WHERE bundle_id=? AND ord=? AND project=?`, target, e.ord, ar.project)
       : this.#one(`SELECT seq FROM action_arose_from WHERE bundle_id=? AND ord=? AND plan=? AND matter=?`, target, e.ord, ar.plan, ar.matter);
     /* DEC-49 REGION is-arose-linked */
-    if (held) return refuse("AROSE_FROM_LINKED", "this link is already recorded", { target, ord: e.ord, arising: ar });
+    if (held) return refuse("AROSE_FROM_LINKED", localize("action-replies.index.arose_linked", "this link is already recorded"), { target, ord: e.ord, arising: ar });
     /* END DEC-49 REGION is-arose-linked */
     const at = this.#at();
     const w = this.record.transact(() => {
@@ -383,7 +389,7 @@ export class ActionReplies {
   /** R2: what arose from the response at `ord` (every response of the action without one), each link the viewer may
    *  see whole; the rest withheld whole. Writes nothing. */
   aroseFrom({ target, ord = null, viewer = null } = {}) {
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: ONE_ACTION_DETAIL };
     const a = this.#action(target, viewer);
     if (a.ok === false) return a;
     const want = ord === null || ord === undefined || ord === "" ? null : ordOf(ord);
@@ -400,7 +406,7 @@ export class ActionReplies {
     const bare = arising && typeof arising === "object" && !Array.isArray(arising)
       ? Object.fromEntries(Object.entries(arising).filter(([k]) => k !== "viewer")) : arising;
     const ar = ActionReplies.#arising(bare);
-    if (!ar) return refuse("AROSE_FROM_REFUSED", "arising is {project} or {plan, matter}");
+    if (!ar) return refuse("AROSE_FROM_REFUSED", ARISING_FORM_DETAIL);
     if (ar.project && !this.#seesProject(ar.project, viewer)) return noSuchProject(ar.project);
     if (ar.plan && !this.#seesBundle(ar.plan, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: ar.plan };
     const rows = ar.project

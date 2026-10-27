@@ -20,9 +20,13 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { actionPlansOf } from "../../../src/action-plans/index.mjs";
+import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { runPrincipalGate } from "../../../src/run-rules/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { escalationRead as escalationFixture } from "../escalation/fixtures.mjs";
+import { actionRead as actionFixture } from "../actions/fixtures.mjs";
+import { actionRegistrar } from "../retrieval/fixtures.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -62,23 +66,29 @@ export const ms = (iso) => Date.parse(iso);
 export const OFFICE = { state: "named", kind: "office", role: "Town Clerk", body: "City of Port Ellery" };
 const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {}) {
-  const st = storage();
-  const host = { storage: st };
-  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  const clock = { now: NOW };
+/** `on`: a basis-versions test world (its `world()`, with `st`, `host`, `record`, `membership`, `promotion` and `clock`), so the plan's
+ *  host holds the real basis-versions instance and its project records (K5131: a stance is read through basis-versions' own answer). */
+export function world({ profiles = ["test-port-ellery"], omit = [], duties, on } = {}) {
+  const st = on ? on.st : storage();
+  const host = on ? on.host : { storage: st };
+  const clock = on ? on.clock : { now: NOW };
   const nowMs = () => ms(clock.now);
-  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
-  record.migrate();
-  const membership = membershipOf(host, { record });
-  membership.migrate();
-  const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
-  provenanceOf(host, { record, membership, promotion, now: () => clock.now }).migrate();
+  let record, membership, promotion;
+  if (on) ({ record, membership, promotion } = on);
+  else {
+    const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+    record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+    record.migrate();
+    membership = membershipOf(host, { record });
+    membership.migrate();
+    promotion = promotionOf(host, { record, membership, now: () => clock.now });
+    promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+    provenanceOf(host, { record, membership, promotion, now: () => clock.now }).migrate();
+  }
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
   /* connections' `refs` projection, as far as actions' read joins it (its R25). */
-  st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
+  st.db.exec(`CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
 
   /* R35: objects withheld from one viewer (`w.hide(viewer, id)`), as a sight rule narrower than membership's would: a
      membership proxy (conformance's reads.test.mjs builds one the same way) answers `inSight` false for them, and the
@@ -120,6 +130,12 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
     return s && viewer !== V("outsider") ? { ok: true, id, ...s } : { ok: false, reason: "NO_SUCH_STANDARD" };
   } };
   const escalations = new Map();      // determination -> [{id, state, stage, history}]
+  /* an id escalation holds none of: its own real answer (escalation's published fixture), the same for any id it names. */
+  let realEscalation = null;
+  const noSuchEscalation = (id) => {
+    realEscalation ??= escalationFixture();
+    return realEscalation.escalation.escalationRead({ id, viewer: realEscalation.viewer });
+  };
   const escalation = {
     escalationsFor: ({ determination, viewer }) => {
       const d = determinations.get(determination);
@@ -128,7 +144,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
     },
     escalationRead: ({ id }) => {
       for (const l of escalations.values()) for (const e of l) if (e.id === id) return { ok: true, id, stage: e.stage, history: e.history };
-      return { ok: false, reason: "NO_SUCH_ESCALATION" };
+      return noSuchEscalation(id);
     },
   };
   const filings = { availableActions: ({ determination }) => ({ ok: true, determination, kinds: [{ kind: "complaint", tier: 1 }] }) };
@@ -166,8 +182,8 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   };
   const stand = { strength, conformance, standards, escalation, filings, aiRuns };
   /* actions, real, over the stand-in conformance; what it registers with retrieval is the test's (nothing here reads it). */
-  const retrievalStub = { registerActionFacts: () => ({ ok: true }), registerProjectionDecoration: () => ({ ok: true }) };
-  const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
+  const { retrieval: realRetrieval } = actionRegistrar();
+  const actions = actionsOf(host, { record, membership, promotion, retrieval: realRetrieval, conformance,
                                     content: { captureFor: () => null }, now: nowMs });
   /* action-clocks' steps (its R16), in the shape of steps' Provides: no step stands for any entry here. Built on this
      host it would declare observation-log's tables, which the plane builds first (K2862, B6). */
@@ -176,14 +192,23 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   const clocks = actionClocksOf(host, { record, membership, actions, conformance, steps, now: nowMs });
   const given = Object.fromEntries(Object.entries(stand).filter(([k]) => !omit.includes(k)).map(([k, v]) => [k, v]));
   for (const k of omit) given[k] = null;
+  /* an action the viewer may not see: actions' own answer to a viewer it withholds the action from (its published fixture). */
+  let realActions = null;
+  const unseenAction = (id) => { realActions ??= actionFixture(); return realActions.actions.actionRead({ id, viewer: realActions.outsider }); };
   const seenActions = new Proxy(actions, { get: (t, k) => (k === "actionRead"
-    ? (a) => (hid(a && a.viewer, a && a.id) ? { ok: false, reason: "NO_SUCH_BUNDLE", target: a.id } : t.actionRead(a))
+    ? (a) => (hid(a && a.viewer, a && a.id) ? unseenAction(a.id) : t.actionRead(a))
     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
   /* leg-earning, real; of its own deps R7 reads only connections' `edgeSevered` (no citation here is severed: severing is
      leg-earning's and connections' to test), and content is not read, so neither module is built on this host. */
-  const legEarning = legEarningOf(host, { record, membership, promotion, content: {}, connections: { edgeSevered: () => false } });
-  legEarning.migrate();
-  const ap = actionPlansOf(host, { record, membership: sight, promotion, legEarning, ...given, actions: omit.includes("actions") ? null : seenActions,
+  const legEarning = on ? onHostLegEarning(st) : legEarningOf(host, { record, membership, promotion, content: {}, connections: { edgeSevered: () => false } });
+  if (!on) legEarning.migrate();
+  /* basis-versions, real, for the project's stance on a question (K5131: `conclusionOf`, its R22). On a world with no basis-versions world under
+     it nothing here makes a version, so the services its acts ask of inquiry, content and accepted-work are never called. */
+  const basisVersions = on ? on.bv : basisVersionsOf(host, { record, membership, promotion, content: {}, now: () => clock.now,
+    inquiry: { earned: () => ({ earned: { capture: {} } }), legCapped: () => null, cyclePath: () => null, basisFor: () => ({ ok: true, legs: [] }) },
+    acceptedWork: { acceptedLegRefusals: () => [] } });
+  if (!on) basisVersions.migrate();
+  const ap = actionPlansOf(host, { record, membership: sight, promotion, legEarning, basisVersions, ...given, actions: omit.includes("actions") ? null : seenActions,
                                    clocks: omit.includes("clocks") ? null : clocks,
                                    ...(omit.includes("duties") ? { duties: null } : duties !== undefined ? { duties } : {}), now: () => clock.now });
 
@@ -265,6 +290,13 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
     principalGate: runPrincipalGate,
   };
   return w;
+}
+
+/* On a basis-versions world's host (`on`), connections' tables already exist in a shape leg-earning's migration does not take, so
+   leg-earning cannot be built there. R7's read is the one `projectsDrawingOn` makes over the real `refs` rows that world's connections wrote. */
+function onHostLegEarning(st) {
+  return { projectsDrawingOn: (id) => [...st.sql.exec(`SELECT DISTINCT r.bundle_id AS p FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
+    WHERE r.target_id=? AND r.kind='cites' AND b.object_type='project' ORDER BY r.bundle_id`, id)].map((r) => r.p) };
 }
 
 export function projMd(title, extra = []) {

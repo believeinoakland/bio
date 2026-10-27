@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "../../../src/case-disclosures/index.mjs";
+import { basisForUnread } from "../inquiry/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const HUNCH = { grade: "B", grade_axis: "connection", grade_source: "hunch", author: "member:alice", date: "2026-09-27" };
@@ -31,7 +32,7 @@ test("R16 (C-120.7): hunchDebt answers UNCLEARED_HUNCH naming each member, leg a
 });
 
 test("R16, R18, R23: a basis that cannot be read is not a basis without a hunch — it fails closed as C-120.7 with the member stated undetermined, and hunchDebt never throws (J1's reading)", () => {
-  for (const basisFor of [() => { throw new Error("down"); }, () => ({ ok: false, reason: "NO_ID" }), () => null]) {
+  for (const basisFor of [() => { throw new Error("down"); }, () => basisForUnread().noId, () => null]) {
     const w = world({ deps: { inquiry: { basisFor } } });
     const r = w.cd.hunchDebt([{ id: Q, bundleSha: "s" }]);
     refused(r, "UNCLEARED_HUNCH");

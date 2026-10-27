@@ -125,21 +125,6 @@ test("R2 (was credentials R23) the reference, an API key, is sealed under its me
     await keep(w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "bob" } }));
     await keep(w.c.accountReferenceFor({ member: "bob", act: { kind: "standing", member: "ann" } }));
     for (const viewer of ["bob", "ann", "second"]) await keep(w.c.accountReferenceState({ member: "bob", viewer }));
-    for (const op of Object.values(w.ops("by=ann&member=ann&viewer=member:ann"))) {
-      try { await keep(op()); } catch (e) { answers.push(String(e && e.stack)); }
-    }
-    /* stored only encrypted: no column of any table carries the secret, nor its SHA-256 */
-    const { createHash } = await import("node:crypto");
-    const dump = w.snapshot();
-    const said = JSON.stringify(answers) + logs.join("\n");
-    for (const secret of [SENTINEL, SUB]) {
-      const digest = createHash("sha256").update(secret).digest("hex");
-      assert.ok(!dump.includes(secret), "the secret is in no table");
-      assert.ok(!dump.includes(digest), "nor its digest");
-      assert.ok(!dump.includes(Buffer.from(secret).toString("base64")), "nor its plain base64");
-      /* no answer, error or log carries it or its digest */
-      assert.ok(!said.includes(secret) && !said.includes(digest), secret);
-    }
     for (const id of ["ann", "bob"]) {
       const row = w.row(`SELECT * FROM account_references WHERE member_id=?`, id);
       assert.deepEqual(Object.keys(row).sort(), ["explore", "iv", "kind", "member_id", "sealed", "set_at", "standing", "suggestions",
@@ -171,6 +156,22 @@ test("R2 (was credentials R23) the reference, an API key, is sealed under its me
     const other = aiAccountsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: "another-secret" });
     assert.equal((await other.accountReferenceFor({ member: "bob", act: { kind: "ask", member: "bob" } })).reason,
       "ACCOUNT_SEAL_UNAVAILABLE");
+    /* last, so the door's own removal (R38, `by=ann`) takes Ann's reference only after every state read above */
+    for (const op of Object.values(w.ops("by=ann&member=ann&viewer=member:ann"))) {
+      try { await keep(op()); } catch (e) { answers.push(String(e && e.stack)); }
+    }
+    /* stored only encrypted: no column of any table carries the secret, nor its SHA-256 */
+    const { createHash } = await import("node:crypto");
+    const dump = w.snapshot();
+    const said = JSON.stringify(answers) + logs.join("\n");
+    for (const secret of [SENTINEL, SUB]) {
+      const digest = createHash("sha256").update(secret).digest("hex");
+      assert.ok(!dump.includes(secret), "the secret is in no table");
+      assert.ok(!dump.includes(digest), "nor its digest");
+      assert.ok(!dump.includes(Buffer.from(secret).toString("base64")), "nor its plain base64");
+      /* no answer, error or log carries it or its digest */
+      assert.ok(!said.includes(secret) && !said.includes(digest), secret);
+    }
   } finally { Object.assign(console, orig); }
 });
 

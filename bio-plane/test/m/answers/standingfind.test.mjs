@@ -152,7 +152,7 @@ test("R28 a selection is frozen at set time into the ids it then holds (K1982): 
   const c = w.arrive("The clerk shall file the report.");
   const sel = await w.retrieval.selectionCreate({ owner: ANN, viewer: ANN, ids: ["INFO-C1", "INFO-OUT"] });
   assert.equal(sel.ok, true, JSON.stringify(sel));
-  assert.equal(code(setFind(w, { find: { scope: { selection: sel.handle }, kinds: ["requirements"] }, author: VERA })), "NOT_YOURS",
+  assert.equal(code(setFind(w, { find: { scope: { selection: sel.handle }, kinds: ["requirements"] }, author: VERA })), "SELECTION_NOT_YOURS",
                "read under the selection's owner");
   const q = setFind(w, { find: { scope: { selection: sel.handle }, kinds: ["requirements"] } });
   assert.equal(q.ok, true, JSON.stringify(q));
@@ -246,7 +246,7 @@ test("R28 (N729; K1991) a selection is read at set time through retrieval's read
   w.clock.sel += 1000;
   /* each refusal writes nothing: no question, and no selection row touched */
   const quiet = tables(w), rows0 = selRows();
-  assert.equal(code(setFind(w, { ...scope(sel.handle), author: VERA })), "NOT_YOURS");
+  assert.equal(code(setFind(w, { ...scope(sel.handle), author: VERA })), "SELECTION_NOT_YOURS");
   const tooBig = setFind(w, scope(big.handle));
   assert.deepEqual([code(tooBig), tooBig.limit, tooBig.got], ["SCOPE_TOO_LARGE", 200, 201]);
   assert.equal(code(setFind(w, scope("sel-none"))), "NO_SUCH_SELECTION");

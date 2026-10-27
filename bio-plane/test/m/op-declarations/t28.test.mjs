@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { caseImportOps } from "../../../src/case-import/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, PLAN_RUN_SCOPE } = O;
 const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
@@ -126,19 +127,28 @@ test("R14: publish and publishpreflight keep their specs, NEEDS rows and lists �
 
 test("R14, R6: every op case-import's ops map serves has a spec the door answers by name, and the tables name each one — OPS, NEEDS, an act list and both session sets; case-checker's two public reads (its R15) are specced and in neither set (negative control: an op added to the map without a spec is seen)", () => {
   const served = Object.keys(caseImportOps({}, new URL("https://instance.invalid/"), {}));
-  /* The map also serves R16's two watch ops (N534), declared and tested in `t31.test.mjs`. */
-  assert.deepEqual([...served].sort(), [...SESSION_REACHED, "importwatch", "importunwatch"].sort());
+  /* The map also serves R16's two watch ops (N534), declared and tested in `t31.test.mjs`, and the ops case-import declares
+     (R33, T51 fix round), read from its registered declarations and never listed here (K3268, R80). */
+  const DECLARED = Object.keys(REGISTERED["case-import"]);
+  assert.deepEqual([...served].sort(), [...new Set([...SESSION_REACHED, "importwatch", "importunwatch", ...DECLARED])].sort());
+  /* An op its owner declares and no act list names is stamped by the declaration, as R80 registers it. */
+  const declaredOnly = (op) => DECLARED.includes(op) && listsHolding(op).length === 0;
   for (const op of [...served, ...PUBLIC_OPS]) {
     assert.match(op, /^[a-z]+$/, op);
     assert.ok(Object.hasOwn(OPS, op) && Object.hasOwn(NEEDS, op), `${op}: no spec or NEEDS row`);
-    assert.ok(listsHolding(op).length > 0, `${op} is in no act list`);
+    if (declaredOnly(op)) assert.deepEqual([...O.OP_STAMPS[op]].sort(), [...(REGISTERED["case-import"][op].stamps ?? ["viewer"])].sort(), op);
+    else assert.ok(listsHolding(op).length > 0, `${op} is in no act list`);
     assert.equal(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), OPS[op].classes !== null, op);
   }
-  /* case-import's lists name exactly its map: the mutating ops its acts, the rest its reads. */
-  assert.deepEqual([...O.CASE_IMPORT_ACTIONS].sort(), served.filter((op) => OPS[op].mutating).sort());
-  assert.deepEqual([...O.CASE_IMPORT_READS].sort(), served.filter((op) => !OPS[op].mutating).sort());
+  /* case-import's lists name exactly its map's ops that no declaration stamps: the mutating ops its acts, the rest its reads. */
+  assert.deepEqual([...O.CASE_IMPORT_ACTIONS].sort(), served.filter((op) => OPS[op].mutating && !declaredOnly(op)).sort());
+  assert.deepEqual([...O.CASE_IMPORT_READS].sort(), served.filter((op) => !OPS[op].mutating && !declaredOnly(op)).sort());
   /* Negative control: a map that serves an op with no spec is seen; names the modules do not serve are no op. */
   assert.deepEqual([...served, "importdelete"].filter((op) => !Object.hasOwn(OPS, op)), ["importdelete"]);
   /* (T45: case-check's `casecheck` is a declared op since R49, so it is no control here) */
   for (const op of ["importedit", "caseimportcheck", "caseimports"]) assert.ok(!Object.hasOwn(OPS, op), op);
+  /* Control (K3268): an op in no hand table and no owner's declaration is refused — no spec, no session set, the gate answers machine. */
+  assert.equal(Object.hasOwn(OPS, "importnosuchop"), false);
+  assert.equal(SESSION_OPS.member.has("importnosuchop"), false);
+  assert.equal(ACT_GATE.mode("importnosuchop"), "machine");
 });

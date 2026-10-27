@@ -1,0 +1,64 @@
+# file-scanner: the words check after the conversion (K3949)
+
+Layer 1.
+
+## Plain findings (K3957)
+
+49 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('file-scanner.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `file-scanner/container/renderer.mjs:105` "route must be pdf or office"
+- plain `file-scanner/src/providers/catalogue.mjs:46` "private mode: samplesharing 0 and private processing on every call (paid licence only)"
+- plain `file-scanner/src/providers/catalogue.mjs:57` "the region chosen; dynamic analysis traffic may be routed to another region; malicious ..."
+- plain `file-scanner/src/providers/catalogue.mjs:58` "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub ..."
+- plain `file-scanner/src/providers/catalogue.mjs:59` "metadata up to 6 months for research"
+- plain `file-scanner/src/providers/catalogue.mjs:60` "the organization's own Intelix account (free monthly allowance, then pay as you go)"
+- plain `file-scanner/src/providers/catalogue.mjs:76` "deleted on completion of analysis"
+- plain `file-scanner/src/providers/catalogue.mjs:76` "up to 400 days in the processing region"
+- plain `file-scanner/src/providers/catalogue.mjs:78` "the team's own key; terms allow use within its own products made available to its clients"
+- plain `file-scanner/src/providers/catalogue.mjs:86` "private mode: not stored or shared; permanently removed from storage"
+- plain `file-scanner/src/providers/catalogue.mjs:87` "scan results remain in the MetaDefender Cloud database, limited to the submitter"
+- plain `file-scanner/src/providers/catalogue.mjs:95` "the organization's own MetaDefender Core server"
+- plain `file-scanner/src/providers/catalogue.mjs:96` "as the organization configures its server"
+- plain `file-scanner/src/providers/catalogue.mjs:97` "as the organization configures its server"
+- plain `file-scanner/src/providers/catalogue.mjs:106` "the organization's own server and licence"
+- plain `file-scanner/src/providers/catalogue.mjs:114` "the storage account's region; content read within it"
+- plain `file-scanner/src/providers/catalogue.mjs:115` "the service does not retain the scanned content; this adapter deletes the blob after th..."
+- plain `file-scanner/src/providers/catalogue.mjs:116` "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud ..."
+- plain `file-scanner/src/providers/catalogue.mjs:118` "the organization's own Azure subscription, billed per GB scanned"
+- plain `file-scanner/src/providers/catalogue.mjs:130` "not stated (Cloud); the organization's own servers (Core)"
+- plain `file-scanner/src/providers/catalogue.mjs:139` "the Glasswall Halo deployment the organization runs or subscribes to"
+- plain `file-scanner/src/providers/catalogue.mjs:140` "removed according to the deployment's file retention policy"
+- plain `file-scanner/src/providers/catalogue.mjs:141` "the analysis report, as the deployment keeps it"
+- plain `file-scanner/src/providers/catalogue.mjs:142` "an entitlement to a number of files or a volume a day"
+- plain `file-scanner/src/providers/catalogue.mjs:149` "an edition of Light or above, whose analyses and results are private"
+- plain `file-scanner/src/providers/catalogue.mjs:152` "kept until the customer deletes it; then securely deleted in near real time"
+- plain `file-scanner/src/providers/catalogue.mjs:153` "kept until the customer deletes it"
+- plain `file-scanner/src/providers/catalogue.mjs:154` "the organization's own Light, Pro or Enterprise subscription"
+- plain `file-scanner/src/providers/catalogue.mjs:161` "not stated beyond the account"
+- plain `file-scanner/src/providers/catalogue.mjs:170` "community access off: every upload confidential"
+- plain `file-scanner/src/providers/catalogue.mjs:173` "stored in the Falcon platform; period not stated"
+- plain `file-scanner/src/providers/catalogue.mjs:173` "kept in the Falcon platform"
+- plain `file-scanner/src/providers/catalogue.mjs:175` "with the organization's Falcon subscription"
+- plain `file-scanner/src/providers/catalogue.mjs:186` "the regional cloud chosen; some metadata shared across regional clouds"
+- plain `file-scanner/src/providers/catalogue.mjs:187` "signatures and reports kept indefinitely"
+- plain `file-scanner/src/providers/catalogue.mjs:200` "the team's own Cloudflare account, a token with Intel Read"
+- plain `file-scanner/src/providers/catalogue.mjs:207` "no file is sent; the server sees only a hash prefix on a local match"
+- plain `file-scanner/src/providers/catalogue.mjs:209` "the organization's own Google Cloud project; results must not be redistributed"
+- plain `file-scanner/src/providers/catalogue.mjs:217` "as the organization keeps its logs"
+- plain `file-scanner/src/providers/catalogue.mjs:225` "as the workspace keeps its logs"
+- plain `file-scanner/src/providers/catalogue.mjs:226` "the organization's own Azure workspace"
+- plain `file-scanner/src/providers/catalogue.mjs:237` "as the instance keeps its logs"
+- plain `file-scanner/src/providers/catalogue.mjs:244` "the organization's own Elastic deployment"
+- plain `file-scanner/src/providers/catalogue.mjs:245` "as the organization keeps its logs"
+- plain `file-scanner/src/providers/routes.mjs:319` "the safe view reported nothing removed"
+- plain `file-scanner/src/providers/routes.mjs:330` "the test address answered listed"
+- plain `file-scanner/src/providers/routes.mjs:330` "the test address did not answer listed"
+- plain `file-scanner/src/providers/routes.mjs:333` "a test record of zero counts was accepted"
+- plain `file-scanner/src/render.mjs:42` "the renderer could not be reached"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `file-scanner/test/adapters.test.mjs:154` "\"PRIVATE_MODE_NOT_HONOURED\""
+- testcopy `file-scanner/test/contract.test.mjs:216` "\"civicsmith-security-counts\""

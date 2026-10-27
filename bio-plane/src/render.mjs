@@ -28,6 +28,7 @@
  */
 import { originOf, SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "./subresources.mjs";
 import { browserBindingRenderer } from "./browserrender.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 
 /* D-520: the navigation bound's figure, from M-151 (see RENDER_DEFAULTS below). */
 export const RENDER_NAVIGATION_TIMEOUT_MS = 10000;
@@ -87,7 +88,7 @@ export const RENDERED_METHOD = "rendered";
    so a shell match is never evidence the document is stable. One copy, read by op=monitor and
    by its suite. */
 export const RENDER_TICK_UNDETERMINED =
-  "content undetermined — not watched: this source renders its content in the browser";
+  word("render.content_undetermined_watched");
 
 /* D-499 — WHICH WAIT FIRED, AND WHAT THAT SAYS ABOUT COMPLETENESS.
  *
@@ -142,12 +143,12 @@ export function waitFiredClass(fired, askedWait) {
 /* The sentence a timed-out render reads, as one string in ONE place: the record
    states it in `render.undetermined[]` and the provenance assertion carries it,
    and a hand copy in either would agree for free and drift for free. */
-export const RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
+export const RENDER_INCOMPLETE_READING = word("render.render_incomplete_wait");
 
 /* D-570: what a render settled by the quiet window reads. Never "complete": the requests
    it did not wait for may still have been bringing data. `count` is how many were open. */
 function settledReading(count) {
-  return `settled; ${Number.isInteger(count) && count >= 0 ? count : "an unstated number of"} long-lived request(s) still open were not waited for`;
+  return word("render.settled_long_lived", { is_integer: String(Number.isInteger(count) && count >= 0 ? count : word("render.unstated_number")) });
 }
 
 /** The reading, derived from a built render block. `null` when the wait met the
@@ -158,7 +159,7 @@ export function completenessReading(render) {
     return settledReading(render.wait && render.wait.long_lived ? render.wait.long_lived.count : null);
   if (render.completeness !== "undetermined") return null;
   if (render.wait && render.wait.fired_class === "timeout") return RENDER_INCOMPLETE_READING;
-  return "render completeness is undetermined (which wait ended the render was not established)";
+  return word("render.render_completeness_undetermined");
 }
 
 /* The daily render allowance, in browser milliseconds, when the instance sets none.
@@ -252,6 +253,7 @@ export const NON_DATA_TYPES = Object.freeze({
  *   viewport       {width, height}, dpr number, locale string, timezone string
  *   wait           {condition, fired}: what was asked, and WHICH condition ended it
  *   elapsed_ms     number: browser time this render spent
+ *   phases_ms      {session, load, quiet, bodies}: whole ms each phase took, `quiet` null when the load event never fired (capture-sources R68)
  *   navigated_to   string: the page address the browser ended on
  *   status         number: the navigation's HTTP status
  *   requests       [{url, type, outcome: completed|failed|blocked, status?, blocked_by?, sha256?,
@@ -310,39 +312,101 @@ const HEX64 = /^[0-9a-f]{64}$/;
  *
  * `put(sha, bytes)` and `sha256(bytes)` are injected so this stays pure of R2; the
  * answer is an array ALIGNED with `answer.requests` (null where no digest is owed). */
+/* R70 (fix round 9, G138, S15): a body is decoded when its turn to be put comes and let go when the put ends, so the decoded bytes
+   resident at any instant are those of the bodies in flight (KEEP_LANES), never all of the render's. What the ceilings need before
+   that turn is a body's size and whether it can be decoded at all, and both are read off the string without decoding it. */
+const B64 = /^[A-Za-z0-9+/]*={0,2}$/;
+function b64size(s) {
+  if (typeof s !== "string" || s.length % 4 !== 0 || !B64.test(s)) return null;
+  return (s.length / 4) * 3 - (s.endsWith("==") ? 2 : s.endsWith("=") ? 1 : 0);
+}
 function b64bytes(s) {
-  if (typeof s !== "string" || !/^[A-Za-z0-9+/]*={0,2}$/.test(s) || s.length % 4 !== 0) return null;
+  if (b64size(s) === null) return null;
   try { const bin = atob(s); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
   catch { return null; }
 }
+/* The UTF-8 length of a string, as `TextEncoder` would encode it (a lone surrogate is three bytes, U+FFFD), without encoding it. */
+function utf8size(s) {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < s.length && (s.charCodeAt(i + 1) & 0xfc00) === 0xdc00) { n += 4; i++; }
+    else n += 3;
+  }
+  return n;
+}
+
+/* R8 (fix round 4, C13a, P7): the bodies are kept several at a time. Each trip to the evidence store costs about 0.27 s (measured on
+   the live copy), so a page of thirty-three sub-resources kept one after another cost 9.4 s of the render stage; KEEP_LANES of them
+   are in flight at once, and the answer is by request index, so the order asked is the order answered whichever body ends first. */
+export const KEEP_LANES = 8;
 
 export async function keepRenderBodies(answer, { put, sha256 }) {
   if (!answer || !Array.isArray(answer.requests)) return null;
-  let kept = 0, spent = 0;
-  const out = [];
-  for (const r of answer.requests) {
-    if (!r || typeof r !== "object" || !isStr(r.url) || r.outcome !== "completed") { out.push(null); continue; }
+  const out = new Array(answer.requests.length).fill(null);
+  /* what is to be kept, in the requests' order: a request that is not a completed load owes no digest (null), one whose bytes
+     cannot be kept is answered undetermined at once with its reason. Nothing is decoded here (R70): `src` is the body as delivered. */
+  const owed = [];
+  answer.requests.forEach((r, i) => {
+    if (!r || typeof r !== "object" || !isStr(r.url) || r.outcome !== "completed") return;
     const claim = HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {};
     const undet = (why) => ({ sha256: "undetermined", digest_reason: why, ...claim });
-    let bytes = null, as = null;
+    let src = null, as = null, size = null;
     if (typeof r.body_base64 === "string") {
-      bytes = b64bytes(r.body_base64); as = "bytes";
-      if (!bytes) { out.push(undet("the renderer's body for this request was not valid base64, so no bytes were kept")); continue; }
+      as = "bytes"; size = b64size(r.body_base64);
+      if (size === null) { out[i] = undet(word("render.renderer_body_request")); return; }
+      src = r.body_base64;
     } else if (typeof r.body_text === "string") {
-      bytes = new TextEncoder().encode(r.body_text); as = "decoded_text";
+      as = "decoded_text"; size = utf8size(r.body_text); src = r.body_text;
     } else {
-      out.push(undet(`the renderer did not deliver this response's bytes${isStr(r.body_unavailable) ? ` (${String(r.body_unavailable).slice(0, 200)})` : ""}, so none were kept`
-        + (claim.renderer_sha256 ? "; the digest it reported is recorded as renderer_sha256, its claim, which nothing here can recompute" : "")));
-      continue;
+      out[i] = undet(word("render.renderer_deliver_response", { is_str: String(isStr(r.body_unavailable) ? ` (${String(r.body_unavailable).slice(0, 200)})` : ""), bytes: String(claim.renderer_sha256 ? "; the digest it reported is recorded as renderer_sha256, its claim, which nothing here can recompute" : "") }));
+      return;
     }
-    if (bytes.length > SUBRESOURCE_MAX) { out.push(undet(`the body is ${bytes.length} bytes, over the ${SUBRESOURCE_MAX}-byte per-subresource ceiling, so it was not kept`)); continue; }
-    if (kept >= SUBRESOURCE_CAP) { out.push(undet(`past the ${SUBRESOURCE_CAP}-body per-capture ceiling, so it was not kept`)); continue; }
-    if (spent + bytes.length > SUBRESOURCE_BUDGET) { out.push(undet(`the capture's ${SUBRESOURCE_BUDGET}-byte subresource budget was spent, so it was not kept`)); continue; }
-    let digest = null;
-    try { digest = await sha256(bytes); await put(digest, bytes); }
-    catch (e) { out.push(undet(`your group's Civicsmith could not keep the bytes (${String((e && e.message) || e).slice(0, 200)})`)); continue; }
-    kept++; spent += bytes.length;
-    out.push({ sha256: digest, bytes: bytes.length, body_as: as, kept: true, ...claim });
+    if (size > SUBRESOURCE_MAX) { out[i] = undet(word("render.body_bytes_byte", { bytes: String(size), subresource_max: String(SUBRESOURCE_MAX) })); return; }
+    owed.push({ i, src, as, size, claim, undet });
+  });
+  /* Each distinct body goes to the store once, however many requests asked for it. */
+  const stored = new Map();
+  const keepOne = (digest, bytes) => {
+    if (!stored.has(digest)) stored.set(digest, Promise.resolve().then(() => put(digest, bytes)));
+    return stored.get(digest);
+  };
+  const lane = async (queue, work) => {
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(KEEP_LANES, queue.length) }, async () => {
+      while (next < queue.length) await work(queue[next++]);
+    }));
+  };
+  /* The ceilings are held in the requests' order: a body is taken while the count and the budget allow it. A body whose store
+     failed is not kept, so the ones refused only for want of its place are reconsidered once the rest have ended. */
+  let kept = 0, spent = 0, waiting = owed;
+  for (;;) {
+    const take = [], over = [];
+    let k = kept, s = spent;
+    for (const c of waiting) {
+      if (k >= SUBRESOURCE_CAP) { over.push({ c, why: word("render.past_body_per", { subresource_cap: String(SUBRESOURCE_CAP) }) }); continue; }
+      if (s + c.size > SUBRESOURCE_BUDGET) { over.push({ c, why: word("render.capture_byte_subresource", { subresource_budget: String(SUBRESOURCE_BUDGET) }) }); continue; }
+      k++; s += c.size; take.push(c);
+    }
+    let failed = 0;
+    await lane(take, async (c) => {
+      try {
+        /* the turn of this body: decoded now, and out of scope when this function ends (the lane's next body is decoded after) */
+        const bytes = c.as === "bytes" ? b64bytes(c.src) : new TextEncoder().encode(c.src);
+        if (!bytes) throw new Error(word("render.renderer_body_request"));
+        const digest = await sha256(bytes);
+        await keepOne(digest, bytes);
+        out[c.i] = { sha256: digest, bytes: bytes.length, body_as: c.as, kept: true, ...c.claim };
+        kept++; spent += bytes.length;
+      } catch (e) {
+        failed++;
+        out[c.i] = c.undet(word("render.group_civicsmith_keep", { entry: String(String((e && e.message) || e).slice(0, 200)) }));
+      }
+    });
+    if (!failed || !over.length) { for (const { c, why } of over) out[c.i] = c.undet(why); break; }
+    waiting = over.map((o) => o.c);
   }
   return out;
 }
@@ -352,17 +416,54 @@ export function originKey(u) {
   try { const x = new URL(u); return `${x.protocol}//${x.host}`; } catch { return null; }
 }
 
+/* R11, R69 — A PAGE THAT DID NOT RENDER IS NOT A DOCUMENT. The browser's answer is judged by what came back, not by there being
+   some html: a main-frame status of 400 or more (a 403, a 404, a captcha wall), a `chrome-error://` page (the browser's own error
+   page) and a document whose body holds no content (the shell of a client-rendered page that never hydrated) are each "the page did
+   not render", `permanent`. */
+const CONTENT_TAGS = /<(?:img|picture|video|audio|canvas|svg|iframe|object|embed|input|textarea|select|button|table|map|math)\b/i;
+export function isEmptyShell(html) {
+  if (typeof html !== "string") return true;
+  const body = /<body\b[^>]*>([\s\S]*?)(?:<\/body\s*>|$)/i.exec(html);
+  const inner = (body ? body[1] : html.replace(/<head\b[\s\S]*?<\/head\s*>/i, ""))
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|noscript|template)\b[\s\S]*?<\/\1\s*>/gi, "");
+  if (CONTENT_TAGS.test(inner)) return false;
+  return inner.replace(/<[^>]*>/g, "").replace(/&nbsp;|&#160;|&#xa0;/gi, " ").trim().length === 0;
+}
+
+/* R69, R71: what the copy of a rendered page IS, stated among the gaps of every render block (R49): the first load, never a
+   visitor's later view. One copy of the sentence, read by the record and by the caller's words. */
+export const RENDER_COPY_STATEMENT = localize("capture-sources.render.copy_first_load_not_scrolled",
+  "this is a copy of the page's first load: it was not scrolled, banners and dialogs were not dismissed, and frames and shadow content are not in it, so what a visitor sees beyond the first load is not claimed");
+
+const didNotRender = (problem) => ({ ok: false, problem, failure_class: "permanent" });
+
 /** Build the `render` block from a renderer's answer.
  *
- *  Returns `{ ok: true, render }` or `{ ok: false, problem }` when the answer is not
- *  a render at all (no document). Everything else short of that is RECORDED with
+ *  Returns `{ ok: true, render }` or `{ ok: false, problem, failure_class }` when the answer is not
+ *  a render at all (no document, or a page that did not render: R11). Everything else short of that is RECORDED with
  *  its gaps named, because a render that happened and was partly observed is a
- *  fact, and refusing it would push a caller back to the shell. */
-export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at, digests = null }) {
+ *  fact, and refusing it would push a caller back to the shell.
+ *  `domBound` ({size, bound}, R71) is the caller's judgement of the document's size against the render-DOM bound: a page over
+ *  it is not rendered, stated with both figures. */
+export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at, digests = null, domBound = null }) {
   if (!answer || typeof answer !== "object" || answer.ok !== true)
-    return { ok: false, problem: `the renderer did not answer ok (${answer && answer.error ? String(answer.error).slice(0, 200) : "no answer"})` };
+    return { ok: false, problem: word("render.renderer_answer", { answer: String(answer && answer.error ? String(answer.error).slice(0, 200) : "no answer") }),
+             failure_class: answer && answer.failure_class === "transient" ? "transient" : "permanent" };
   if (typeof answer.html !== "string" || answer.html.length === 0)
-    return { ok: false, problem: "the renderer answered with no rendered document" };
+    return didNotRender(word("render.renderer_answered_rendered"));
+  if (domBound && Number.isFinite(domBound.size) && Number.isFinite(domBound.bound) && domBound.size > domBound.bound)
+    return didNotRender(localize("capture-sources.render.the_page_did_not_render_over_bound",
+      "the page did not render: its document is {size} bytes, over the {bound}-byte bound for a rendered page", { size: String(domBound.size), bound: String(domBound.bound) }));
+  if (Number.isFinite(answer.status) && answer.status >= 400)
+    return didNotRender(localize("capture-sources.render.the_page_did_not_render_status",
+      "the page did not render: the page answered with status {status}, which is an error and not the document", { status: String(answer.status) }));
+  if (typeof answer.navigated_to === "string" && /^chrome-error:\/\//i.test(answer.navigated_to.trim()))
+    return didNotRender(localize("capture-sources.render.the_page_did_not_render_error_page",
+      "the page did not render: the browser ended on its own error page, which is not the document"));
+  if (isEmptyShell(answer.html))
+    return didNotRender(localize("capture-sources.render.the_page_did_not_render_empty_shell",
+      "the page did not render: what came back is an empty shell, a document whose body holds no content"));
 
   const undetermined = [];
   /* The page's host: where the browser ended, else the address asked; an unparseable
@@ -381,7 +482,7 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
       const i = at.get(r);
       const d = Array.isArray(digests) ? digests[i] : null;
       if (d && (HEX64.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
-      return { sha256: "undetermined", digest_reason: "your group's Civicsmith did not keep this render's subresource bytes",
+      return { sha256: "undetermined", digest_reason: word("render.group_civicsmith_keep_render"),
                ...(HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}) };
     };
     const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr(r.url));
@@ -408,7 +509,7 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
     });
     const undigested = subresources.filter((x) => x.sha256 === "undetermined").length;
     if (undigested)
-      undetermined.push(`subresources: ${undigested} of the ${subresources.length} subresources the render loaded carry no digest, because their bytes were not kept; each names its reason (BOB #33, 2026-09-24)`);
+      undetermined.push(localize("capture-sources.render.subresources_undigested_of_the_length", "subresources: {undigested} of the {length} subresources the render loaded carry no digest, because their bytes were not kept; each names its reason (BOB #33, 2026-09-24)", { undigested: String(undigested), length: String(subresources.length) }));
     data = rq.filter((r) => r.outcome === "completed" && !NON_DATA_TYPES[String(r.type || "").toLowerCase()])
       .map((r) => {
         const o = originOf(r.url, pageHost);
@@ -423,7 +524,7 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
                  reported_by: "renderer" };
       });
   } else {
-    undetermined.push("requests: the renderer did not record the page's requests, so render.requests and render.data are undetermined");
+    undetermined.push(localize("capture-sources.render.requests_the_renderer_did_not", "requests: the renderer did not record the page's requests, so render.requests and render.data are undetermined"));
   }
 
   /* SCRIPTS — BOB #31: every script executed is named by origin, or the set is
@@ -442,10 +543,10 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
        approximation is wrong on shared vendor platforms (item 3's last bullet). */
     thirdParty = [...origins.entries()].filter(([, o]) => o !== "same_host").map(([k]) => k).sort();
   } else {
-    undetermined.push("scripts: the renderer could not record which scripts executed, so the script set is undetermined (BOB #31)");
+    undetermined.push(localize("capture-sources.render.scripts_the_renderer_could_not", "scripts: the renderer could not record which scripts executed, so the script set is undetermined (BOB #31)"));
   }
 
-  const pick = (k, v) => { if (v === null || v === undefined) undetermined.push(`${k}: not reported by the renderer`); return v ?? null; };
+  const pick = (k, v) => { if (v === null || v === undefined) undetermined.push(word("render.reported_renderer", { key: String(k) })); return v ?? null; };
 
   /* D-499 — WHICH WAIT FIRED, and the completeness that follows from it. Computed
      here rather than in the literal below so the reading lands in `undetermined[]`
@@ -463,23 +564,18 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
     urls: Array.isArray(ll.urls) ? ll.urls.filter(isStr) : null,
   } : null;
   if (firedClass === "settled")
-    undetermined.push(`completeness: ${settledReading(longLived ? longLived.count : null)}`
-      + `${longLived && longLived.older_than_s !== null ? ` (requests open longer than ${longLived.older_than_s} s)` : ""}`
-      + ` — the renderer's wait ended on its quiet window, which does not wait for them, so what they would have `
-      + `brought is undetermined. The capture keeps its grade and its method; these bytes are not presented as the `
-      + `whole page (D-570, BOB #34, 2026-09-25).`);
+    undetermined.push(localize("capture-sources.render.completeness_quiet_window_wait", "completeness: {settled}{open_for} — the renderer's wait ended on its quiet window, which does not wait for them, so what they would have brought is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (D-570, BOB #34, 2026-09-25).", {
+      settled: String(settledReading(longLived ? longLived.count : null)),
+      open_for: longLived && longLived.older_than_s !== null ? localize("capture-sources.render.requests_open_longer_than", " (requests open longer than {older_than_s} s)", { older_than_s: String(longLived.older_than_s) }) : "",
+    }));
   else if (firedClass === "timeout")
-    undetermined.push(`completeness: ${RENDER_INCOMPLETE_READING} — the renderer's wait ended on its timeout`
-      + `${num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""}`
-      + `${isStr(asked.wait && asked.wait.until) ? ` rather than on the \`${asked.wait.until}\` condition` : ""}`
-      + `, so what the page would have shown had the condition been met is undetermined. The capture keeps its `
-      + `grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
+    undetermined.push(localize("capture-sources.render.completeness_render_incomplete_reading_the", "completeness: {RENDER_INCOMPLETE_READING} — the renderer's wait ended on its timeout{v1}{v2}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).", { RENDER_INCOMPLETE_READING: String(RENDER_INCOMPLETE_READING), v1: String(num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""), v2: String(isStr(asked.wait && asked.wait.until) ? localize("capture-sources.render.rather_than_on_the_condition", " rather than on the `{until}` condition", { until: String(asked.wait.until) }) : "") }));
   else if (firedClass === "undetermined")
-    undetermined.push(`completeness: ${isStr(waitFired)
-      ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the `
-        + `\`${(asked.wait && asked.wait.until) || "(none asked)"}\` condition your group's Civicsmith asked for nor a timeout`
-      : "the renderer did not report which wait ended the render"}, so whether the render ran to its `
-      + `condition is undetermined and this rendering may be incomplete.`);
+    undetermined.push(word("render.completeness_whether_render", { is_str: String(isStr(waitFired)
+      ? localize("capture-sources.render.the_renderer_reported_the_wait", "the renderer reported the wait fired on `{waitFired}`, which is neither the `{until}` condition your team's Civicsmith asked for nor a timeout", { waitFired: String(waitFired), until: String((asked.wait && asked.wait.until) || "(none asked)") })
+      : word("render.renderer_report_wait")) }));
+
+  undetermined.push(RENDER_COPY_STATEMENT);
 
   const render = {
     of: shellSha,
@@ -523,8 +619,8 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
  *  data or ran code: that is crediting a city with a vendor's copy. */
 export function renderedAuthority({ asserted, render, at }) {
   const reasons = [];
-  if (!asserted) reasons.push("the served shell's own authority is undetermined: no assertion was supplied");
-  if (!Array.isArray(render.data)) reasons.push("which origins supplied data is undetermined: the renderer did not record the page's requests");
+  if (!asserted) reasons.push(word("render.served_shell_authority"));
+  if (!Array.isArray(render.data)) reasons.push(word("render.origins_supplied_data"));
   else {
     const foreign = new Map();
     for (const d of render.data) if (d.origin !== "same_host") {
@@ -532,17 +628,17 @@ export function renderedAuthority({ asserted, render, at }) {
       foreign.set(k, d.origin);
     }
     for (const [k, o] of [...foreign.entries()].sort())
-      reasons.push(`${k} supplied data (${o === "same_site" ? "same_site, which approximates and is not the host" : o})`);
+      reasons.push(localize("capture-sources.render.k_supplied_data_v1", "{k} supplied data ({v1})", { k: String(k), v1: String(o === "same_site" ? "same_site, which approximates and is not the host" : o) }));
   }
   if (!Array.isArray(render.third_party_executed))
-    reasons.push("which scripts executed is undetermined: the renderer could not record the script set (BOB #31)");
+    reasons.push(localize("capture-sources.render.which_scripts_executed_is", "which scripts executed is undetermined: the renderer could not record the script set (BOB #31)"));
   else for (const k of render.third_party_executed) reasons.push(`${k} ran code`);
 
   if (reasons.length === 0)
     return { authority_state: "determined", authority: asserted,
-             authority_basis: `asserted by the capturing caller at intake for the served shell, and the render drew data only from the page's own host with no script from another origin executed; ${at}` };
+             authority_basis: word("render.asserted_capturing_caller", { at: String(at) }) };
   return { authority_state: "undetermined",
-           authority_basis: `rendered capture, ${at}: ${reasons.join("; ")}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).`,
+           authority_basis: localize("capture-sources.render.rendered_capture_at_reasons_a", "rendered capture, {at}: {reasons}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).", { at: String(at), reasons: String(reasons.join("; ")) }),
            authority_other_origins: Array.isArray(render.data) || Array.isArray(render.third_party_executed)
              ? [...new Set([
                  ...(Array.isArray(render.data) ? render.data.filter((d) => d.origin !== "same_host").map((d) => originKey(d.address)).filter(Boolean) : []),
@@ -591,9 +687,9 @@ export function rendererFor(env) {
         r = await env.RENDERER.fetch("http://renderer/render", {
           method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req) });
       } catch (e) {
-        return { ok: false, error: `the renderer service could not be reached: ${String((e && e.message) || e).slice(0, 200)}` };
+        return { ok: false, error: localize("capture-sources.render.the_renderer_service_could_not", "the renderer service could not be reached: {String}", { String: String(String((e && e.message) || e).slice(0, 200)) }) };
       }
-      return r.json().catch(() => ({ ok: false, error: `the renderer answered HTTP ${r.status} with no JSON` }));
+      return r.json().catch(() => ({ ok: false, error: localize("capture-sources.render.the_renderer_answered_http_status", "the renderer answered HTTP {status} with no JSON", { status: String(r.status) }) }));
     } };
   if (env && env.BROWSER && typeof env.BROWSER.fetch === "function")
     return browserBindingRenderer(env.BROWSER);

@@ -79,7 +79,7 @@ test("R54, R19, R31: muting the update to-do, by kind or by id, is refused KIND_
   for (const r of [w.q.queueMute({ member: "alice", viewer: "member:alice", case: "INQ-1", kinds: ["update-ready"] }),
                    w.q.queueMute({ member: "alice", viewer: "member:alice", item: UPDATE_ID })])
     assert.deepEqual([r.reason, r.kind_class, r.check], ["KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27"]);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice',?,'OBLIGATION',?)`, UPDATE_ID, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice',?,'OBLIGATION',?)`, UPDATE_ID, iso(NOW));
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen) VALUES ('alice','INQ-1','update-ready',NULL,?)`, iso(NOW));
   const f = w.feed("alice");
   assert.deepEqual(f.items.map((i) => i.id), [UPDATE_ID]);

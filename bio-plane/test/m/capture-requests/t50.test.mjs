@@ -8,7 +8,7 @@ import { CAPTURE_REQUESTS_MODULE } from "../../../src/capture-requests/index.mjs
 
 const readerOf = (w) => {
   const regs = w.capture.readers.filter((r) => r.slot === "captured-for");
-  assert.equal(regs.length, 1, "registered once, at start");
+  assert.equal(regs.length, 1, "exactly one registration in the captured-for slot");
   assert.equal(regs[0].module, CAPTURE_REQUESTS_MODULE);
   return regs[0].fn;
 };

@@ -15,6 +15,7 @@ import { mergeTier2Text, tier2Note, glyphCount } from "../../../src/textchain.mj
 import { tier2Escalate, decodeView, LAYER_FIDELITY_SOURCE, NAMED_ENGINE_SOURCE } from "../../../src/reading-pipeline/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -190,8 +191,8 @@ const tiers = () => ({
 const OCR_PART = (pages) => [
   { step: "pixels", cap: "C", measured_by: "M-1", calibration: null, ...(pages ? { extent: { kind: "pages", pages } } : {}) },
   { step: "ocr", engine: "tess", version: "5.3", cap: "C", measured_by: "M-1", calibration: null, ...(pages ? { extent: { kind: "pages", pages } } : {}) }];
-const SAID = "were transcribed by the OCR member and merged into this document's own text";
-const KEPT = "already had text kept it";
+const keptClause = (kept) => word("reading-pipeline.already_text_kept", { kept });
+const scanned = (n, kept = "") => word("reading-pipeline.scanned_page_transcribed", { filled: String(n), kept: kept ? keptClause(kept) : "" });
 
 test("R6 R3 R5 (tier3-layer-parts): a document reaching both merges gets the four-part chain: tier 1 over the page the tier-2 merge kept, tier 2 over the page it won, and the engine's pixels and ocr over the page filled; tier 3", async () => {
   const w = fresh();
@@ -202,7 +203,7 @@ test("R6 R3 R5 (tier3-layer-parts): a document reaching both merges gets the fou
   assert.equal(r.text_tier, 3);
   assert.deepEqual(r.text_source, [layer(1, [2]), layer(2, [0]), ...OCR_PART([1])]);
   assert.match(r.basis, /1 page\(s\) were re-read by the tier-2 decoder, .*; the other 2 page\(s\) kept tier 1's reading; this document's text layer is a merge of two decodes/);
-  assert.ok(r.basis.includes(`1 scanned page(s) ${SAID}; the pages that ${KEPT}`), "R9: two pages kept their text");
+  assert.ok(r.basis.includes(scanned(1, "pages")), "R9: two pages kept their text");
 });
 
 test("R6 R3 (tier3-layer-parts): a document reaching only the tier-3 merge gets one layer part at the wired tier and the engine's two; one reaching only the tier-2 merge keeps its two scoped layer parts and asks no OCR", async () => {
@@ -213,7 +214,7 @@ test("R6 R3 (tier3-layer-parts): a document reaching only the tier-3 merge gets 
   assert.deepEqual(e3.OCR_WORKER.calls.map((c) => c.body.pages), [[1]]);
   assert.equal(only3.text_tier, 3);
   assert.deepEqual(only3.text_source, [layer(1, [0]), ...OCR_PART([1])]);
-  assert.ok(only3.basis.includes(`1 scanned page(s) ${SAID}; the page that ${KEPT}`));
+  assert.ok(only3.basis.includes(scanned(1, "page")));
   const e2 = tiers();
   const only2 = await readPdf(w, TIER2ONLY, e2);
   assert.equal(e2.PDF_WORKER.calls.length, 1);
@@ -235,11 +236,11 @@ test("R6 R9 (tier3-layer-parts): a whitespace-only text page is in no part and r
   for (const r of [ws, mt, all]) {
     assert.equal(r.text_tier, 3);
     assert.deepEqual(r.text_source, OCR_PART(null));
-    assert.equal(r.basis.includes(KEPT), false, "no page held text");
+    assert.equal(r.basis.includes(keptClause("page")) || r.basis.includes(keptClause("pages")), false, "no page held text");
   }
-  assert.ok(ws.basis.includes(`1 scanned page(s) ${SAID}`));
-  assert.ok(mt.basis.includes(`1 scanned page(s) ${SAID}`));
-  assert.ok(all.basis.includes(`2 scanned page(s) ${SAID}`));
+  assert.ok(ws.basis.includes(scanned(1)));
+  assert.ok(mt.basis.includes(scanned(1)));
+  assert.ok(all.basis.includes(scanned(2)));
 });
 
 test("R3 (tier3-layer-parts): the escalation weighs glyphs, never raw characters: 8 markers against the good line's 8 characters and 7 glyphs is sent to tier 2; 7 markers is not", async () => {

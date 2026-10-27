@@ -119,6 +119,79 @@ test("R2: a read naming a project (PROJECT_NAMING_READS) asked with a stamped vi
   assert.equal(t.log.some((e) => e.kind === "existence"), false);
 });
 
+test("R2 (fix round 6, G12c; K4571): the batch reads — `casedrafts` (`projects`), `inquirystrength` (`ids`) and `reviewcopy` (`drafts`) — fence every listed id exactly as the single read fences its one: a list given as an array, a JSON array or a comma list, in the query or the body, is read id by id (one `visibilityOf` per distinct id, `existenceAct` only for a discoverable one), a project the caller sees only at EXISTENCE answers the single read's answer byte for byte, whatever its place in the list, before the route runs; a list of seen or hidden ids reaches the route unchanged; `reviewcopy`'s ids are draft ids and the read stays among those naming no project", async () => {
+  const P = "PROJ-seen", P2 = "PROJ-seen2", F = "PROJ-full", H = "PROJ-hidden";
+  const BATCH = { casedrafts: ["project", "projects"], inquirystrength: ["id", "ids"] };
+  assert.deepEqual(D.PROJECT_NAMING_LISTS, { casedrafts: ["projects"], inquirystrength: ["ids"] });
+  for (const [op, params] of Object.entries(BATCH)) {
+    assert.deepEqual(PROJECT_NAMING_READS[op], params, `${op}'s row`);
+    assert.equal(Object.hasOwn(PROJECT_NAMING_READS_NOT, op), false, `${op} in both tables`);
+    const list = params[1];
+    const forms = {
+      "array in the body": (ids) => ({ q: "", init: { method: "POST", body: JSON.stringify({ [list]: ids }) } }),
+      "JSON array in the query": (ids) => ({ q: `&${list}=${encodeURIComponent(JSON.stringify(ids))}` }),
+      "comma list in the query": (ids) => ({ q: `&${list}=${ids.join(",")}` }),
+      "comma list in the body": (ids) => ({ q: "", init: { method: "POST", body: JSON.stringify({ [list]: ids.join(",") }) } }),
+      "repeated in the query": (ids) => ({ q: ids.map((i) => `&${list}=${i}`).join("") }),
+    };
+    /* the single read's answer for the project she sees only at EXISTENCE: what each batch must answer */
+    const single = await go(fakeStore({ discoverable: [P, F], existence: [P] }), `${op}?viewer=member:ann&${params[0]}=${P}`);
+    assert.equal(single.json.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+    for (const [form, make] of Object.entries(forms)) {
+      for (const ids of [[P], [F, P], [P, F], [H, F, P, H], [F, H, P, P2]]) {
+        const s = fakeStore({ discoverable: [P, P2, F], existence: [P] });
+        const { q, init } = make(ids);
+        const r = await go(s, `${op}?viewer=member:ann${q}`, init);
+        assert.deepEqual(r.json, single.json, `${op} ${form} ${ids}: the single read's answer, byte for byte`);
+        assert.equal(s.log.some((e) => e.kind === "route"), false, `${op} ${form} ${ids}: the route ran`);
+        assert.equal(JSON.stringify(r.json).includes(F) || JSON.stringify(r.json).includes(H), false, `${op} ${form} ${ids}: nothing of another id`);
+      }
+      /* controls: a list of ids she sees whole or that are hidden reaches the route with the list as sent */
+      for (const ids of [[F], [F, H], [H], [F, P2]]) {
+        const s = fakeStore({ discoverable: [P2, F], existence: [P] });
+        const { q, init } = make(ids);
+        const r = await go(s, `${op}?viewer=member:ann${q}`, init);
+        assert.deepEqual(r.json.result, { answered: op }, `${op} ${form} ${ids}`);
+        const routed = s.log.filter((e) => e.kind === "route");
+        assert.equal(routed.length, 1, `${op} ${form} ${ids}: routed once`);
+        if (init) assert.deepEqual(routed[0].body, JSON.parse(init.body), "the body as sent");
+      }
+    }
+    /* order does not decide: two ids at EXISTENCE answer alike whichever comes first (the lowest id's answer) */
+    const two = (ids) => go(fakeStore({ discoverable: [P, P2], existence: [P, P2] }), `${op}?viewer=member:ann&${list}=${ids.join(",")}`);
+    assert.deepEqual((await two([P, P2])).json, (await two([P2, P])).json);
+    assert.equal((await two([P2, P])).json.result.project, P);
+    /* the cost: one visibility lookup per distinct id, an existence answer only for a discoverable one, none without a viewer */
+    const c = fakeStore({ discoverable: [F], existence: [] });
+    await go(c, `${op}?viewer=member:ann&${list}=${[F, H, F, H, "PROJ-x"].join(",")}`);
+    assert.deepEqual(c.log.filter((e) => e.kind === "visibility").map((e) => e.id), [F, H, "PROJ-x"]);
+    assert.deepEqual(c.log.filter((e) => e.kind === "existence").map((e) => e.id), [F]);
+    const n = fakeStore({ discoverable: [P], existence: [P] });
+    assert.deepEqual((await go(n, `${op}?${list}=${P},${F}`)).json.result, { answered: op });
+    assert.equal(n.log.some((e) => e.kind === "membership"), false);
+    /* the single parameters keep their meaning: a comma in `${params[0]}` is not a list */
+    const one = fakeStore({ discoverable: [P], existence: [P] });
+    assert.deepEqual((await go(one, `${op}?viewer=member:ann&${params[0]}=${F},${P}`)).json.result, { answered: op });
+  }
+  /* malformed lists never throw at the door: they reach the owner, who refuses them */
+  for (const [bad, want] of [[{ projects: 7 }, null], [{ projects: { a: 1 } }, null], [{ projects: [1, null, ""] }, null],
+                             [{ projects: "[not json" }, null], [{ projects: [[P]] }, "PROJECT_SEEN_NOT_A_PARTICIPANT"]]) {
+    const s = fakeStore({ discoverable: [P], existence: [P] });
+    const r = await go(s, "casedrafts?viewer=member:ann", { method: "POST", body: JSON.stringify(bad) });
+    assert.equal(r.status, 200, JSON.stringify(bad));
+    if (want) assert.equal(r.json.result.reason, want, JSON.stringify(bad));
+    else assert.deepEqual(r.json.result, { answered: "casedrafts" }, JSON.stringify(bad));
+  }
+  /* reviewcopy: its ids are DRAFT ids (a thing inside a project), so the batch key is named in the reason and no existence answer is run */
+  assert.equal(Object.hasOwn(PROJECT_NAMING_READS, "reviewcopy"), false);
+  assert.match(PROJECT_NAMING_READS_NOT.reviewcopy, /`draft`/);
+  assert.match(PROJECT_NAMING_READS_NOT.reviewcopy, /`drafts`/);
+  const rc = fakeStore({ discoverable: [P], existence: [P] });
+  const rr = await go(rc, `reviewcopy?viewer=member:ann&drafts=${P},DRAFT-1`, { method: "POST", body: JSON.stringify({ drafts: [P, "DRAFT-1"], draft: P }) });
+  assert.deepEqual(rr.json.result, { answered: "reviewcopy" });
+  assert.equal(rc.log.some((e) => e.kind === "membership"), false);
+});
+
 test("R2 (T36-48; K2063, K2152; file-safety R2, R6, R9, R11, R15, R31, R33, R38): file-safety's reads that take a parameter — `verdictnotes`, `threatof`, `originalstate`, `safeview`, `safecopy` (a capture's digest), `scanfindings` and `securitytoolevents` (a cursor), `findingkind` (a finding name) — are listed as naming no project, each with its reason, so a discoverable project's id in any of their own parameters, query or body, is never asked of membership and the route answers; none is among the reads naming a project (negative control: the same id at a read naming a project is answered existence first)", async () => {
   const { fileSafetyOps } = await import("../../../src/file-safety/index.mjs");
   const served = new Set(Object.keys(fileSafetyOps(null, new URL("http://do/"), null, null)));
@@ -250,6 +323,7 @@ test("R14 (T47; N970; amends R2; basis-versions R50; project-roster R26): `statu
   const own = M.existenceAct(RP, "member:vera");
   assert.equal(own && own.check, "C-70.1", "vera sees the project only at EXISTENCE");
   const routed = [];
+// fixtures-own: input a route map handed to the door under test; the routes only record that they ran
   const real = { membership: () => membershipOf(x.ctx),
     routes: (url, body) => ({ ...basisVersionsOps(basisVersionsOf(x.ctx), url, body),
       statusreportassist: () => { routed.push("statusreportassist"); return { ok: true }; },
@@ -274,6 +348,7 @@ test("R3 (DEC-113, DEC-36; actions R58): `projectholds` is among the reads namin
   const membership = () => ({ visibilityOf: (id) => { asked.push(id); return id === P ? "discoverable" : "hidden"; },
                                existenceAct: (id) => (id === P ? { ok: false, reason: "PROJECT_SEEN_NOT_A_PARTICIPANT", project: id } : null) });
   const store = { membership, routes: (url, body) => {
+// fixtures-own: input a route map handed to the door under test; the routes only record what reached them
     const seen = (op) => () => { ran.push([op, Object.fromEntries(url.searchParams), body]); return { ok: true, projects: [{ project: P, held: null }] }; };
     return { projectholds: seen("projectholds"), actionholdrelease: seen("actionholdrelease"), actionholdpreview: seen("actionholdpreview"),
              notices: () => ({ ok: true }) };
@@ -481,10 +556,11 @@ test("R11 (K2574; plane R33): the door adds no `use` to a read's entry — which
 });
 
 test("R11 (K2585; control-plane R72; capture R86): `captureupload`'s POST body is handed to the route map unread, as the request's own stream — never JSON-parsed or refused BAD_JSON — and its bytes reach the route unchanged (negative control: the same bytes on any other op are BAD_JSON)", async () => {
-  assert.deepEqual(D.STREAMED_BODY_OPS, ["captureupload"]);
+  assert.ok(D.STREAMED_BODY_OPS.includes("captureupload"));
   const BYTES = new Uint8Array([0x7b, 0x00, 0xff, 0x25, 0x50, 0x44, 0x46, 0x0a]);
   const got = [];
   const store = { membership: () => null,
+// fixtures-own: input a route map handed to the door under test; the route reads the body the door hands it
     routes: (url, body) => ({ captureupload: async () => {
       got.push({ stream: body instanceof ReadableStream, locked: body.locked, by: url.searchParams.get("by") });
       return { ok: true, bytes: [...new Uint8Array(await new Response(body).arrayBuffer())] };
@@ -492,6 +568,29 @@ test("R11 (K2585; control-plane R72; capture R86): `captureupload`'s POST body i
   const r = await go(store, "captureupload?by=member:ann&statement=s", { method: "POST", body: BYTES });
   assert.deepEqual([r.status, r.json], [200, { ok: true, result: { ok: true, bytes: [...BYTES] } }]);
   assert.deepEqual(got, [{ stream: true, locked: false, by: "member:ann" }]);
+  const n = await go(store, "other", { method: "POST", body: BYTES });
+  assert.deepEqual([n.status, n.json.reason], [400, "BAD_JSON"]);
+});
+
+test("R19 (fix round 9, G127f; K4928; capture R113, control-plane R72): every op of STREAMED_BODY_OPS — `captureupload` and `captureuploadpart` — is handed its POST body as the request's own stream, unread, so binary bytes that are not JSON reach the arm as its `bytes` and are never refused BAD_JSON (negative control: a JSON op's body is parsed as before, and the same bytes on any op outside the list are BAD_JSON)", async () => {
+  assert.deepEqual([...D.STREAMED_BODY_OPS].sort(), ["captureupload", "captureuploadpart"]);
+  const BYTES = new Uint8Array([0x7b, 0x00, 0xff, 0x25, 0x50, 0x44, 0x46, 0x0a]);
+  const got = [];
+  const arm = (name) => async (url, body) => {
+    got.push({ name, stream: body instanceof ReadableStream, locked: body.locked, part: url.searchParams.get("part") });
+    return { ok: true, bytes: [...new Uint8Array(await new Response(body).arrayBuffer())] };
+  };
+  const store = { membership: () => null,
+    routes: (url, body) => ({ captureupload: () => arm("captureupload")(url, body),
+      captureuploadpart: () => arm("captureuploadpart")(url, body),
+      json: () => ({ ok: true, echoed: body }), other: () => ({ ok: true }) }) };
+  for (const op of D.STREAMED_BODY_OPS) {
+    const r = await go(store, op + "?by=member:ann&part=2", { method: "POST", body: BYTES });
+    assert.deepEqual([r.status, r.json], [200, { ok: true, result: { ok: true, bytes: [...BYTES] } }], op);
+  }
+  assert.deepEqual(got.map((g) => [g.name, g.stream, g.locked]), [["captureupload", true, false], ["captureuploadpart", true, false]]);
+  const j = await go(store, "json", { method: "POST", body: JSON.stringify({ a: 1 }) });
+  assert.deepEqual([j.status, j.json], [200, { ok: true, result: { ok: true, echoed: { a: 1 } } }]);
   const n = await go(store, "other", { method: "POST", body: BYTES });
   assert.deepEqual([n.status, n.json.reason], [400, "BAD_JSON"]);
 });

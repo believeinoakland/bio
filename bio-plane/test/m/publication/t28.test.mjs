@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
 import { CASE_SOURCES_CHECKS } from "../../../src/publication/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { extractedTextOf } from "../../../src/case-grammar/index.mjs";
 
 const F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes", CASE = "CASE-2026-0001";
@@ -30,8 +31,7 @@ const expectRow = (r, code, table = CASE_SOURCES_CHECKS) =>
 
 test("R58 commitCaseEdition refuses a case document whose format is not /6 (nor /7, read as /6: N538) with CASE_FORMAT_SUPERSEDED (C-122.2), nothing committed; a /6 preparation signs; a retry of an edition signed before T28 still answers existed", () => {
   const { w, proj, roles } = base();
-  assert.equal(CASE_SOURCES_CHECKS.CASE_FORMAT_SUPERSEDED.translation, "This case was prepared before published cases "
-    + "carried everything they rest on. Prepare it again, and sign the new preparation. Nothing was published.");
+  assert.equal(CASE_SOURCES_CHECKS.CASE_FORMAT_SUPERSEDED.translation, word("refusal.CASE_FORMAT_SUPERSEDED"));
   for (const format of ["bio-case-document/5", "bio-case-document/4", "bio-case-document/3", "bio-case-document/2",
                         "bio-case-document/1"]) {
     w.prepare(CASE, 1, { project: proj, roles, format });

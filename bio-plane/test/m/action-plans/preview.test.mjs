@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, FIRST } from "./fixture.mjs";
 import { actionPlansOps, noSuchPlan } from "../../../src/action-plans/index.mjs";
 import { contactNotAMember } from "../../../src/actions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const DATES = [{ date: "2026-11-01", basis: "the records statute, ten days" }, { date: "2026-12-01", basis: "the order of 2026" }];
@@ -34,9 +35,9 @@ test("R37: a start that would land answers would_start with the action R18 compo
     kind: "other", addressee: OFFICE,
     clock: DATES.map((d) => ({ date: d.date, basis: d.basis, status: "pending" })),
     legs: [{ target: w.I, kind: "rests_on", subjects: [{ subject: w.SI, support: "hypothetical",
-                                                         why: "a suspected matter: an inquiry still open, not a determination" }] },
+                                                         why: word("action-plans.why.suspected_matter_inquiry") }] },
            { target: w.D, kind: "rests_on", subjects: [{ subject: w.S1, support: "established",
-                                                         why: "determined; the project declares no bar, so nothing is measured against one" }] }],
+                                                         why: word("action-plans.why.determined_project_declares") }] }],
     plan: w.PL, option: a, contact: "alice", breach: false, premise_override: null });
   assert.deepEqual(p.reminders, [{ entry: 0, date: "2026-11-01", on: "2026-10-25", set_by: V("alice") },
                                  { entry: 1, date: "2026-12-01", on: "2026-11-20", set_by: V("alice") }]);

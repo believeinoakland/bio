@@ -7,7 +7,11 @@
  *   - the drafts of a new edition's statement of what changed (`op=whatchangedpropose`, `op=whatchangeddrafts`, R6, R7);
  *   - the one source of a case's open requests for comment at signing, which `action-replies` fills (R8), and the sign
  *     step's sentences for them (R10, R17);
- *   - the outcomes a member carries into a case's next edition, the service `consequences` calls (R9).
+ *   - the one source of a case's minutes comparisons at signing, which `filings` fills, and the sign step's lines for
+ *     them (R19);
+ *   - the outcomes a member carries into a case's next edition, the service `consequences` calls (R9);
+ *   - a case's standard details, beside the case and never in its signed document (`op=casedetailsset`,
+ *     `op=casedetails`, the public read `casedetailspublic`, R20–R26, T51).
  *
  * Copied from `case-authoring` for size (N908; K617, K624; the map `build/extraction/case-authoring-split-2.md`), meaning
  * unchanged, each requirement naming its source id; `case-authoring` deletes its copies once this module is merged
@@ -23,6 +27,9 @@
  *                        `reauthorSection` (its R21; R2).
  *   publishSchedule      `waitingEditionOf` (publish-schedule R7; R4).
  *   account              `case-account`'s `accountShaped` (its R5; R9's cites).
+ *   entities, promotion  `has` (its R7; R21's `area.entity`), `fact("producingGroup")` (its R40; R24's `group`).
+ *   publicRead           `registerPublicReads` (its R18): `casedetailspublic`, registered by `registerCaseInputsPublicReads` (R24),
+ *                        which the plane calls at start; creating the instance registers nothing.
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R6's sight, its R37);
@@ -42,9 +49,17 @@ import { SECTIONS, fmSafe, OUTCOME_KINDS, outcomesOf } from "../case-grammar/ind
 import { STATEMENT_ACK_CHECKS, CARRIED_OUTCOME_CHECKS, fillWords } from "./checks.mjs";
 import { CASE_INPUTS_TABLES, migrateCaseInputs } from "./schema.mjs";
 import { statementSha, ackFrontmatterLines, ackBodyLines, withheldWriterStated } from "./document.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+/* R21, R24 (T51): the entities a team holds; the group's slug; the public reads and C-98.8's row. */
+import { entitiesOf } from "../entities/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { publicReadOf } from "../public-read/index.mjs";
+import { rowOf } from "../public-read/checks.mjs";
+import { CASE_DETAILS_FIELDS, CASE_DETAILS_HISTORY_MAX, CASE_DETAILS_WORDS, fillDetails, detailsShapeProblem } from "./details.mjs";
 
 export { STATEMENT_ACK_CHECKS, CARRIED_OUTCOME_CHECKS, CASE_INPUTS_WORDS, fillWords } from "./checks.mjs";
 export { CASE_INPUTS_SCHEMA, CASE_INPUTS_TABLES, migrateCaseInputs } from "./schema.mjs";
+export { CASE_DETAILS_FIELDS, CASE_DETAILS_HISTORY_MAX, CASE_DETAILS_WORDS, DETAILS_LIMITS, RELATIONS, fillDetails } from "./details.mjs";
 export { statementSha, ackFrontmatterLines, ackBodyLines, withheldWriterStated, ACK_PROSE_HEAD } from "./document.mjs";
 
 /** R2: the most acknowledgements one list names; a list that reaches it says so (`truncated`). */
@@ -149,18 +164,55 @@ export function openRequestLine(r) {
 /** R17 (DEC-198 (7), DEC-199): the step's one sentence when R8 reads `undetermined`, `signing.openrequest.unread`'s. */
 export const OPEN_REQUESTS_UNREAD_SENTENCE = fillWords(OPEN_REQUEST_KEYS.unread);
 
+/** R19 (T51; N880 (U4); DEC-340, U366; K3935): the doors the minutes comparisons' source gives. */
+const MINUTES_DOORS = Object.freeze(["minutesComparisonsOn"]);
+/** R19: the sign step's minutes sentences, read by key from `words.json` through `setup-words`' `word`: the one fact line
+ *  (`{meeting}`, `{date}`), the two passages' labels, and, by `same`, the verdict. */
+export const MINUTES_KEYS = Object.freeze({
+  line: "signing.minutes.line",
+  left: "signing.minutes.left",
+  right: "signing.minutes.right",
+  same: "signing.minutes.same",
+  differs: "signing.minutes.differs",
+});
+/* R19: whitespace folded, so two texts differing only in runs of space, tab or line break read as equal. */
+const foldSpace = (t) => t.replace(/\s+/g, " ").trim();
+/* R19: one row the source answers, as R19 shapes it, or null when it is not one. `same` must be true exactly when the two
+   texts are equal once whitespace is folded: a row saying otherwise would tell a member the two read alike (or not) when
+   they do not, and is malformed. */
+function minutesRow(r) {
+  if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+  const meeting = typeof r.meeting === "string" ? r.meeting.trim() : "";
+  const date = typeof r.date === "string" ? r.date.trim() : "";
+  if (!meeting || !date) return null;
+  if (typeof r.minutes !== "string" || typeof r.filed !== "string" || typeof r.same !== "boolean") return null;
+  if (r.same !== (foldSpace(r.minutes) === foldSpace(r.filed))) return null;
+  return { meeting, date, minutes: r.minutes, filed: r.filed, same: r.same };
+}
+/** R19: one row's lines for `case-authoring` R77's sign step, `{key, says, left, right, comparison}`: the fact line
+ *  (`signing.minutes.line` with the row's `{meeting}` and `{date}`) beside the two passages' labels (`left`, `right`, each
+ *  `{key, says}`) and, by `same`, `comparison`, `signing.minutes.same` or `signing.minutes.differs`. It asks no reason. */
+export function minutesLine(r) {
+  const keyed = (key, vars) => ({ key, says: word(key, vars) });
+  return { ...keyed(MINUTES_KEYS.line, { meeting: r.meeting, date: r.date }),
+           left: keyed(MINUTES_KEYS.left), right: keyed(MINUTES_KEYS.right),
+           comparison: keyed(r.same ? MINUTES_KEYS.same : MINUTES_KEYS.differs) };
+}
+
 export class CaseInputs {
   #deps;
   /* R8: the one source of a case's open requests for comment, registered once at start (`action-replies` R3). */
   #openRequests = null;
+  /* R19: the one source of a case's minutes comparisons, registered once at start (`filings` R64). */
+  #minutes = null;
 
   constructor({ storage, record, membership, host = null, publication = null, publishSchedule = null, account = null,
-                now = null } = {}) {
+                entities = null, promotion = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, publication, publishSchedule, account };
+    this.#deps = { host, publication, publishSchedule, account, entities, promotion };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -170,6 +222,10 @@ export class CaseInputs {
   get publishSchedule() { return this.#deps.publishSchedule ||= publishScheduleOf(this.#deps.host); }
   /* R9: `case-account`, the one instance on this host, for an outcome's cites (its R5). */
   get account() { return this.#deps.account ||= caseAccountOf(this.#deps.host); }
+  /* R21: `entities`, the one instance on this host, for the bodies a team holds. */
+  get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
+  /* R24: `promotion`, the one instance on this host, for the producing group's slug. */
+  get promotion() { return this.#deps.promotion ||= promotionOf(this.#deps.host); }
 
   migrate() { migrateCaseInputs(this.sql); }
 
@@ -194,10 +250,10 @@ export class CaseInputs {
     const module = typeof moduleOrSource === "string" ? str(moduleOrSource) : str(source && source.module) || "unnamed";
     if (!source || typeof source !== "object" || !OPEN_REQUESTS_DOORS.every((d) => typeof source[d] === "function"))
       return { ok: false, reason: "PROVIDER_MALFORMED",
-               detail: `the open requests' source gives the door ${OPEN_REQUESTS_DOORS.join(", ")}. Nothing was registered.` };
+               detail: localize("case-inputs.index.the_open_requests_source_gives", "the open requests' source gives the door {OPEN_REQUESTS_DOORS}. Nothing was registered.", { OPEN_REQUESTS_DOORS: String(OPEN_REQUESTS_DOORS.join(", ")) }) };
     if (this.#openRequests)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#openRequests.module,
-               detail: `the open requests' source is already registered by ${this.#openRequests.module}. Nothing was registered.` };
+               detail: localize("case-inputs.index.the_open_requests_source_is", "the open requests' source is already registered by {module}. Nothing was registered.", { module: String(this.#openRequests.module) }) };
     this.#openRequests = { module, openRequestsOn: source.openRequestsOn };
     return { ok: true, module };
   }
@@ -215,9 +271,49 @@ export class CaseInputs {
     let read;
     try { read = this.#openRequests.openRequestsOn({ case: caseId, members, viewer }); }
     catch (e) { return { ok: false, undetermined: true, why: String(e && e.message || e).slice(0, 200) }; }
-    if (!Array.isArray(read)) return { ok: false, undetermined: true, why: "the source answered no list" };
+    if (!Array.isArray(read)) return { ok: false, undetermined: true, why: word("case-inputs.why.source_answered_list") };
     const rows = read.map(openRequestRow);
-    if (rows.some((r) => r === null)) return { ok: false, undetermined: true, why: "the source answered a malformed row" };
+    if (rows.some((r) => r === null)) return { ok: false, undetermined: true, why: word("case-inputs.why.source_answered_malformed") };
+    return { ok: true, rows };
+  }
+
+  /* ==========================================================================================================
+   * R19 (T51; N880 (U4); DEC-340, U366; K3935; P4's seam, BOB's shape): THE MINUTES BESIDE THE GROUP'S PUBLIC COMMENT. A
+   * later module (`filings`, its R64) fills, once at start, the one source of a case's minutes comparisons;
+   * `case-authoring` R77's sign step lists what it answers, beside R8's open requests. R8's pattern: nothing here
+   * refuses, writes, or enters the document, and it asks no reason (a declaration, DEC-13).
+   * ========================================================================================================== */
+  /** R19: `registerMinutesComparisons({minutesComparisonsOn})`, or `registerMinutesComparisons(module, source)`. A second
+   *  registration is refused `PROVIDER_DECLARED`, one without the door `PROVIDER_MALFORMED`, each registering nothing. */
+  registerMinutesComparisons(moduleOrSource, maybeSource = undefined) {
+    const source = typeof moduleOrSource === "string" ? maybeSource : moduleOrSource;
+    const module = typeof moduleOrSource === "string" ? str(moduleOrSource) : str(source && source.module) || "unnamed";
+    if (!source || typeof source !== "object" || !MINUTES_DOORS.every((d) => typeof source[d] === "function"))
+      return { ok: false, reason: "PROVIDER_MALFORMED",
+               detail: localize("case-inputs.index.the_minutes_comparisons_source_gives", "the minutes comparisons' source gives the door {MINUTES_DOORS}. Nothing was registered.", { MINUTES_DOORS: String(MINUTES_DOORS.join(", ")) }) };
+    if (this.#minutes)
+      return { ok: false, reason: "PROVIDER_DECLARED", module: this.#minutes.module,
+               detail: localize("case-inputs.index.the_minutes_comparisons_source_is", "the minutes comparisons' source is already registered by {module}. Nothing was registered.", { module: String(this.#minutes.module) }) };
+    this.#minutes = { module, minutesComparisonsOn: source.minutesComparisonsOn };
+    return { ok: true, module };
+  }
+
+  /** R19: whether the minutes comparisons' source is registered, and by whom. */
+  minutesComparisonsSource() {
+    return this.#minutes ? { registered: true, module: this.#minutes.module } : { registered: false, module: null };
+  }
+
+  /** R19: the minutes comparisons for `case`, its `members` (`[{bundle_id, version_sha}]`) at the pinned bytes, as `viewer`
+   *  asks: `{ok: true, rows}` in the source's order, `[]` with none registered; `{ok: false, undetermined: true}` when the
+   *  source throws or answers anything but a list of R19's rows. Synchronous; never throws. */
+  minutesComparisonsOn({ case: caseId = null, members = [], viewer = null } = {}) {
+    if (!this.#minutes) return { ok: true, rows: [] };
+    let read;
+    try { read = this.#minutes.minutesComparisonsOn({ case: caseId, members, viewer }); }
+    catch (e) { return { ok: false, undetermined: true, why: String(e && e.message || e).slice(0, 200) }; }
+    if (!Array.isArray(read)) return { ok: false, undetermined: true, why: word("case-inputs.why.source_answered_list") };
+    const rows = read.map(minutesRow);
+    if (rows.some((r) => r === null)) return { ok: false, undetermined: true, why: word("case-inputs.why.source_answered_malformed") };
     return { ok: true, rows };
   }
 
@@ -239,28 +335,25 @@ export class CaseInputs {
     const who = str(by);
     /* DEC-49 REGION is-carry-machine */
     if (!who || isMachineIdentity(who))
-      return refusal(C, "MACHINE_CANNOT_CARRY_OUTCOME", { detail: "an outcome is carried into a case's next edition by a "
-        + "member's act, and no member, or an automated credential, asked. Nothing was written." });
+      return refusal(C, "MACHINE_CANNOT_CARRY_OUTCOME", { detail: localize("case-inputs.index.an_outcome_is_carried_into", "an outcome is carried into a case's next edition by a member's act, and no member, or an automated credential, asked. Nothing was written.") });
     /* END DEC-49 REGION is-carry-machine */
     const ratified = this.#ratifiedCase(caseId, who);
     if (!ratified) return this.#noSuchCase();
     /* DEC-49 REGION is-carry-participant */
     if (!this.membership.isJoinedParticipant(ratified.project, who))
-      return refusal(C, "CARRY_NOT_A_PARTICIPANT", { case: ratified.caseId, detail: `${who} has not joined `
-        + `${ratified.project}, the project that makes this case. Nothing was written.` });
+      return refusal(C, "CARRY_NOT_A_PARTICIPANT", { case: ratified.caseId, detail: localize("case-inputs.index.who_has_not_joined_project", "{who} has not joined {project}, the project that makes this case. Nothing was written.", { who: String(who), project: String(ratified.project) }) });
     /* END DEC-49 REGION is-carry-participant */
     /* R17 (DEC-199): C-136.5's sentence, true of a missing and a malformed field alike, with `{field}` the field named. */
-    const bad = (field, why) => refusal(C, "BAD_CARRIED_OUTCOME", { field, detail: `${field}: ${why} Nothing was written.`,
+    const bad = (field, why) => refusal(C, "BAD_CARRIED_OUTCOME", { field, detail: localize("case-inputs.index.field_why_nothing_was_written", "{field}: {why} Nothing was written.", { field: String(field), why: String(why) }),
       translation: fillWords("refusal.BAD_CARRIED_OUTCOME", { field }) });
     const shaped = this.account.accountShaped([{ text: "cites", cites }], null, 0);
     /* DEC-49 REGION is-carry-shaped */
-    if (!OUTCOME_KINDS.includes(kind)) return bad("kind", `an outcome is one of ${OUTCOME_KINDS.join(", ")}.`);
+    if (!OUTCOME_KINDS.includes(kind)) return bad("kind", localize("case-inputs.index.an_outcome_is_one_of", "an outcome is one of {OUTCOME_KINDS}.", { OUTCOME_KINDS: String(OUTCOME_KINDS.join(", ")) }));
     if (typeof text !== "string" || !text.trim() || [...text].length > CARRIED_TEXT_MAX || /["\\\r\n]/.test(text))
-      return bad("text", `the member's statement is words on one line, at most ${CARRIED_TEXT_MAX} characters, with no `
-        + "quote, backslash or line break.");
+      return bad("text", localize("case-inputs.index.the_members_statement_is_words", "the member's statement is words on one line, at most {CARRIED_TEXT_MAX} characters, with no quote, backslash or line break.", { CARRIED_TEXT_MAX: String(CARRIED_TEXT_MAX) }));
     if (cites === undefined || cites === null || shaped.ok === false)
-      return bad("cites", "what the outcome rests on is a list of cites in case-account R5's shape, {kind, ref, ord}.");
-    if (!isDate(on)) return bad("on", "the date the outcome occurred, YYYY-MM-DD.");
+      return bad("cites", localize("case-inputs.index.what_the_outcome_rests_on", "what the outcome rests on is a list of cites in case-account R5's shape, {kind, ref, ord}."));
+    if (!isDate(on)) return bad("on", localize("case-inputs.index.the_date_the_outcome_occurred", "the date the outcome occurred, YYYY-MM-DD."));
     /* END DEC-49 REGION is-carry-shaped */
     const at = this.#when("millisecond");
     const id = this.record.mintOpaqueId(CARRIED_OUTCOME_PREFIX, at.slice(0, 4), "", (x) =>
@@ -279,26 +372,23 @@ export class CaseInputs {
     const C = CARRIED_OUTCOME_CHECKS;
     const who = str(by);
     if (!who || isMachineIdentity(who))
-      return refusal(C, "MACHINE_CANNOT_CARRY_OUTCOME", { detail: "an outcome is withdrawn from a case's next edition by a "
-        + "member's act, and no member, or an automated credential, asked. Nothing was written." });
+      return refusal(C, "MACHINE_CANNOT_CARRY_OUTCOME", { detail: localize("case-inputs.index.an_outcome_is_withdrawn_from", "an outcome is withdrawn from a case's next edition by a member's act, and no member, or an automated credential, asked. Nothing was written.") });
     const row = str(outcome) ? this.#one(`SELECT outcome_id, case_id FROM carried_outcomes WHERE outcome_id=?`, str(outcome)) : null;
     /* DEC-49 REGION is-carried-outcome-found */
     if (!row || !this.#ratifiedCase(row.case_id, who))
       return refusal(C, "NO_SUCH_CARRIED_OUTCOME", { outcome: str(outcome) || null,
-        detail: "no outcome carried into a case you can see answers to that id. Nothing was written." });
+        detail: localize("case-inputs.index.no_outcome_carried_into_a", "no outcome carried into a case you can see answers to that id. Nothing was written.") });
     /* END DEC-49 REGION is-carried-outcome-found */
     const state = this.#outcomeStates(row.case_id).get(row.outcome_id);
     /* DEC-49 REGION is-carried-outcome-pending */
     if (state && state.state !== "pending")
       return refusal(C, "CARRIED_OUTCOME_SETTLED", { outcome: row.outcome_id, state: state.state,
         ...(state.edition ? { edition: state.edition } : {}),
-        detail: state.state === "carried" ? `edition ${state.edition} of ${row.case_id}, signed, carries this outcome. `
-          + "Nothing was written." : "this outcome was already withdrawn. Nothing was written." });
+        detail: state.state === "carried" ? localize("case-inputs.index.edition_edition_of_case_id", "edition {edition} of {case_id}, signed, carries this outcome. Nothing was written.", { edition: String(state.edition), case_id: String(row.case_id) }) : localize("case-inputs.index.this_outcome_was_already_withdrawn", "this outcome was already withdrawn. Nothing was written.") });
     /* END DEC-49 REGION is-carried-outcome-pending */
     /* DEC-49 REGION is-carry-reasoned */
     if (typeof reason !== "string" || !reason.trim() || [...reason].length > CARRY_REASON_MAX)
-      return refusal(C, "CARRY_NO_REASON", { detail: `withdrawing an outcome is recorded with your own words on why, at most `
-        + `${CARRY_REASON_MAX} characters. Nothing was written.` });
+      return refusal(C, "CARRY_NO_REASON", { detail: localize("case-inputs.index.withdrawing_an_outcome_is_recorded", "withdrawing an outcome is recorded with your own words on why, at most {CARRY_REASON_MAX} characters. Nothing was written.", { CARRY_REASON_MAX: String(CARRY_REASON_MAX) }) });
     /* END DEC-49 REGION is-carry-reasoned */
     const at = this.#when("millisecond");
     this.sql.exec(`INSERT INTO carried_outcome_withdrawals (outcome_id, reason, by, at) VALUES (?,?,?,?)`,
@@ -330,8 +420,7 @@ export class CaseInputs {
 
   /* R9: NO_SUCH_CASE, one answer for a case with no ratified edition and one whose project the member does not see. */
   #noSuchCase() {
-    return { ok: false, reason: "NO_SUCH_CASE", detail: "no published case you can see answers to that id. A case not yet "
-      + "published, and one you cannot see, are answered alike. Nothing was written." };
+    return { ok: false, reason: "NO_SUCH_CASE", detail: localize("case-inputs.index.no_published_case_you_can", "no published case you can see answers to that id. A case not yet published, and one you cannot see, are answered alike. Nothing was written.") };
   }
 
   /** R9: the case's pending outcomes in the order carried, each `{outcome, kind, text, cites, on, carried_by,
@@ -388,8 +477,7 @@ export class CaseInputs {
       && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, row.project_id, ...gate.args);
     if (seen) return { ok: true, caseId: id };
     return { ok: false, reason: "NO_SUCH_CASE",
-             detail: "no published case you can see answers to that id. A case not yet published, and one you cannot "
-                   + "see, are answered alike. Nothing was written." };
+             detail: localize("case-inputs.index.no_published_case_you_can_2", "no published case you can see answers to that id. A case not yet published, and one you cannot see, are answered alike. Nothing was written.") };
   }
 
   /** R6: store a draft of a new edition's statement of what changed in `case`, labelled by
@@ -402,9 +490,8 @@ export class CaseInputs {
     const length = typeof text === "string" ? [...text].length : null;
     if (length === null || !text.trim() || length > WHAT_CHANGED_MAX)
       return { ok: false, reason: "BAD_WHAT_CHANGED", case: seen.caseId, length, max: WHAT_CHANGED_MAX,
-               detail: `a draft of what changed in an edition is words, at most ${WHAT_CHANGED_MAX} characters: `
-                     + (length === null ? "none were given" : !text.trim() ? "the words given were blank"
-                       : `the words given are ${length} characters`) + `. Nothing was written.` };
+               detail: localize("case-inputs.index.a_draft_of_what_changed", "a draft of what changed in an edition is words, at most {WHAT_CHANGED_MAX} characters: {v1}. Nothing was written.", { WHAT_CHANGED_MAX: String(WHAT_CHANGED_MAX), v1: String(length === null ? localize("case-inputs.index.none_were_given", "none were given") : !text.trim() ? localize("case-inputs.index.the_words_given_were_blank", "the words given were blank")
+                       : localize("case-inputs.index.the_words_given_are_length", "the words given are {length} characters", { length: String(length) })) }) };
     const by = proposedBy == null || !String(proposedBy).trim() ? null : String(proposedBy).trim();
     const label = proposalLabel(by, "edition_statement");
     return this.record.transact(() => {
@@ -415,8 +502,7 @@ export class CaseInputs {
       this.sql.exec(`INSERT INTO what_changed_drafts (draft_id, case_id, text, proposed_by, label, at)
                      VALUES (?,?,?,?,?,?)`, id, seen.caseId, text, by, JSON.stringify(label), at);
       return { ok: true, draft: { id, case: seen.caseId, text, label, at },
-               next: `a member adopts it as written, or rewrites it, at op=publish (whatChanged: {text, draft: "${id}"}); `
-                   + `until then it is a draft and never the group's statement` };
+               next: localize("case-inputs.index.a_member_adopts_it_as", "a member adopts it as written, or rewrites it, at op=publish (whatChanged: {text, draft: \"{id}\"}); until then it is a draft and never the team's statement", { id: String(id) }) };
     });
   }
 
@@ -443,6 +529,113 @@ export class CaseInputs {
       const d = this.#one(`SELECT draft_id, text FROM what_changed_drafts WHERE draft_id=? AND case_id=?`, named, id);
       return d ? { draft_id: d.draft_id, text: d.text } : null;
     } catch { return null; }
+  }
+
+  /* ==========================================================================================================
+   * R20–R26 (T51; K4169, K4171, K4185; UC-101; Design Requirements 6, 10; DEC-111 item 9): A CASE'S STANDARD DETAILS.
+   *
+   * Four fields (area of government, point of contact, related work, relationship disclosure) sit BESIDE the case and
+   * never enter its signed document (K4164 goal 1; R25): they change after signing, as a contact moves, which a signed
+   * edition cannot do honestly. One row per set, append-only; a field's standing value is its latest. Not stated is
+   * shown "not stated", never refused at publication and never filled in (Declared Bias, DEC-20: disclosed, never blocking).
+   * ========================================================================================================== */
+  /* R20, R23, R24: the case `caseId` names and its project: published when its first edition was ratified (publication
+     R40's `cases`), else an unsigned preparation (the project its latest `case_documents` row prints), else null. */
+  #detailsCase(caseId) {
+    const id = str(caseId);
+    if (!id) return null;
+    const pub = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
+    if (pub) return { caseId: id, project: pub.project_id, published: true };
+    const doc = this.#one(`SELECT text FROM case_documents WHERE case_id=? ORDER BY edition DESC LIMIT 1`, id);
+    const project = doc ? str((parseFrontmatter(doc.text).data || {}).case_project) : "";
+    return project ? { caseId: id, project, published: false } : null;
+  }
+
+  /* R20, R23: whether `viewer` sees the project in full (membership R43's rule, through its one `sight`). */
+  #detailsFull(project, viewer) {
+    return typeof viewer === "string" && !!viewer && this.membership.sight(project, viewer) === "full";
+  }
+
+  /* R20, R23: one answer for a case that has neither a preparation nor an edition and one the viewer cannot see (R14). */
+  #detailsNoSuchCase() {
+    return { ok: false, reason: "NO_SUCH_CASE", detail: fillDetails("noSuchCase"), translation: fillDetails("noSuchCase") };
+  }
+
+  /* R22: each field's standing value, `{stated, value, set_by, set_at}` (null where not stated). */
+  #detailsStanding(caseId, handles = true) {
+    const out = {};
+    for (const field of CASE_DETAILS_FIELDS) {
+      const r = this.#one(`SELECT value, set_by, at FROM case_details WHERE case_id=? AND field=? ORDER BY seq DESC LIMIT 1`,
+                          caseId, field);
+      const value = r && r.value !== "null" ? JSON.parse(r.value) : null;
+      out[field] = value === null ? { stated: false, value: null, set_by: null, set_at: null }
+        : { stated: true, value, set_by: handles ? this.membership.memberFacts(r.set_by)?.handle ?? null : null, set_at: r.at };
+    }
+    return out;
+  }
+
+  /** R20: record one field of a case's details, or clear it (`value: null`). Refusals, in order, each writing nothing:
+   *  `MACHINE_CANNOT_SET_DETAILS`; the existence refusal (C-70.1) or `NO_SUCH_CASE`; `NOT_THE_PROJECT_OWNER`;
+   *  `DETAILS_FIELD_UNKNOWN`; `DETAILS_MALFORMED` naming the part. Answers `{ok: true, case, field, value, at}`. */
+  caseDetailsSet({ case: caseId = null, field = null, value = undefined, by = null, viewer = null } = {}) {
+    const who = str(by);
+    if (!who || isMachineIdentity(who))
+      return { ok: false, reason: "MACHINE_CANNOT_SET_DETAILS", detail: fillDetails("machine") };
+    const found = this.#detailsCase(caseId);
+    if (!found) return this.#detailsNoSuchCase();
+    const existence = this.membership.existenceAct(found.project, viewer);
+    if (existence) return existence;
+    if (!this.#detailsFull(found.project, viewer)) return this.#detailsNoSuchCase();
+    if (!this.membership.isProjectOwner(found.project, who))
+      return { ok: false, reason: "NOT_THE_PROJECT_OWNER", project: found.project, author: who, detail: fillDetails("notOwner") };
+    if (typeof field !== "string" || !CASE_DETAILS_FIELDS.includes(field))
+      return { ok: false, reason: "DETAILS_FIELD_UNKNOWN", field: typeof field === "string" ? field.slice(0, 80) : null,
+               fields: [...CASE_DETAILS_FIELDS],
+               detail: fillDetails("fieldUnknown", { field: typeof field === "string" ? field.slice(0, 80) : String(field), fields: CASE_DETAILS_FIELDS.join(", ") }) };
+    const bad = value === undefined ? "value" : value === null ? null : detailsShapeProblem(field, value, (e) => this.entities.has(e));
+    if (bad)
+      return { ok: false, reason: "DETAILS_MALFORMED", field, part: bad, detail: fillDetails("malformed", { field, part: bad }) };
+    const json = JSON.stringify(value);
+    return this.record.transact(() => {
+      const at = this.#when("millisecond");
+      this.sql.exec(`INSERT INTO case_details (case_id, field, value, set_by, at) VALUES (?,?,?,?,?)`,
+                    found.caseId, field, json, who, at);
+      return { ok: true, case: found.caseId, field, value: JSON.parse(json), at };
+    });
+  }
+
+  /** R22, R23: the four standing values and the history, to a member who sees the case's project in full; every other
+   *  caller receives the answer for a case that does not exist (R14). Writes nothing and never throws. */
+  caseDetails({ case: caseId = null, viewer = null } = {}) {
+    try {
+      const found = this.#detailsCase(caseId);
+      if (!found || !this.#detailsFull(found.project, viewer)) return this.#detailsNoSuchCase();
+      const rows = this.#rows(`SELECT field, value, set_by, at FROM case_details WHERE case_id=? ORDER BY seq DESC LIMIT ?`,
+                              found.caseId, CASE_DETAILS_HISTORY_MAX + 1);
+      return { ok: true, case: found.caseId, published: found.published, details: this.#detailsStanding(found.caseId),
+               truncated: rows.length > CASE_DETAILS_HISTORY_MAX,
+               history: rows.slice(0, CASE_DETAILS_HISTORY_MAX).reverse().map((r) => ({
+                 field: r.field, value: r.value === "null" ? null : JSON.parse(r.value),
+                 by: this.membership.memberFacts(r.set_by)?.handle ?? null, at: r.at })) };
+    } catch { return this.#detailsNoSuchCase(); }
+  }
+
+  /** R24: the credential-free public read of a published case's details: the four standing values (never who set them),
+   *  the team's slug and the sentence that they are its current statement, not part of the signed edition. A case with
+   *  no published edition, an unsigned preparation included, is `NOT_PUBLISHED` (C-98.8) and nothing of it. */
+  caseDetailsPublic({ case: caseId = null } = {}) {
+    const id = str(caseId);
+    if (!id || !this.#one(`SELECT 1 AS x FROM cases WHERE case_id=?`, id))
+      return { ok: false, reason: "NOT_PUBLISHED", ...rowOf("NOT_PUBLISHED"), detail: fillDetails("notPublished") };
+    let group = null;
+    try { const f = this.promotion.fact("producingGroup"); group = f && f.ok && str(f.value) ? str(f.value) : null; } catch { group = null; }
+    const standing = this.#detailsStanding(id, false);
+    const details = {};
+    for (const field of CASE_DETAILS_FIELDS) {
+      const { stated, value, set_at } = standing[field];
+      details[field] = { stated, value, set_at, ...(stated ? {} : { says: fillDetails("notStated") }) };
+    }
+    return { ok: true, case: id, group, details, sentence: fillDetails("publicCurrent") };
   }
 
   /* R4 (was case-authoring R59; N681, N823): whether `publish-schedule` holds this case edition waiting (its R1, read
@@ -516,8 +709,7 @@ export class CaseInputs {
         /* DEC-49 REGION is-statement-ack-subject */
         if (!cid || !Number.isInteger(ed) || ed < 1)
           return ack("STATEMENT_ACK_NO_SUBJECT",
-                     "name the statement to acknowledge: draft=<a draft case's id>, or case=<case id>&"
-                   + "edition=<n> for a case document authored and not yet signed.");
+                     localize("case-inputs.index.name_the_statement_to_acknowledge", "name the statement to acknowledge: draft=<a draft case's id>, or case=<case id>&edition=<n> for a case document authored and not yet signed."));
         /* END DEC-49 REGION is-statement-ack-subject */
         /* publication R40's read contract; the standing test is publication's (its R1). */
         const doc = this.#one(`SELECT case_id, edition, text, ratified_at FROM case_documents
@@ -528,11 +720,7 @@ export class CaseInputs {
         /* DEC-49 REGION is-statement-ack-signed */
         if (doc.ratified_at || this.#waits(cid, ed))
           return ack("STATEMENT_ACK_ALREADY_SIGNED",
-                     `case ${cid} edition ${ed} is signed${doc.ratified_at ? "" : " and waiting to be published at its "
-                   + "set time"}, and its completeness block — which lists who `
-                   + `acknowledged its statement — is what the signature covers. An acknowledgement now `
-                   + `could appear in no signed document of this edition; a published edition is `
-                   + `corrected forward, by the next one (DEC-12).`,
+                     localize("case-inputs.index.case_cid_edition_ed_is", "case {cid} edition {ed} is signed{v1}, and its completeness block — which lists who acknowledged its statement — is what the signature covers. An acknowledgement now could appear in no signed document of this edition; a published edition is corrected forward, by the next one (DEC-12).", { cid: String(cid), ed: String(ed), v1: String(doc.ratified_at ? "" : localize("case-inputs.index.and_waiting_to_be_published", " and waiting to be published at its set time")) }),
                      { caseId: cid, edition: ed });
         /* END DEC-49 REGION is-statement-ack-signed */
         const fm = parseFrontmatter(doc.text).data || {};
@@ -554,10 +742,7 @@ export class CaseInputs {
       /* DEC-49 REGION is-statement-ack-participant */
       if (!project || !this.membership.isJoinedParticipant(project, who))
         return ack("STATEMENT_ACK_NOT_A_PARTICIPANT",
-                   "an acknowledgement of a case's exclusion statement is given by a JOINED participant of "
-                 + "the project that produces the case, or by the recipient of a review copy through their "
-                 + "grant (BIO_Publication §3 rule 11). Sight of a project is not a place in it: an "
-                 + "invited member who has not joined, and an administrator, are neither.");
+                   localize("case-inputs.index.an_acknowledgement_of_a_cases", "an acknowledgement of a case's exclusion statement is given by a JOINED participant of the project that produces the case, or by the recipient of a review copy through their grant (BIO_Publication §3 rule 11). Sight of a project is not a place in it: an invited member who has not joined, and an administrator, are neither."));
       /* END DEC-49 REGION is-statement-ack-participant */
       kind = "participant"; by = who;
     }
@@ -565,29 +750,18 @@ export class CaseInputs {
     /* DEC-49 REGION is-statement-ack-statement */
     if (!text)
       return ack("STATEMENT_ACK_NO_STATEMENT",
-                 "this draft states nothing about what its case excludes, so there is no statement to "
-               + "acknowledge yet. The draft's editor authors it (statement=); acknowledge it then.");
+                 localize("case-inputs.index.this_draft_states_nothing_about", "this draft states nothing about what its case excludes, so there is no statement to acknowledge yet. The draft's editor authors it (statement=); acknowledge it then."));
     /* END DEC-49 REGION is-statement-ack-statement */
     /* REC-193 / §3 rule 13 — A WRITER NOT RECORDED IS STATED, NOT GUESSED: an acknowledgement recorded against an
        unknown author may BE the author's own. It costs the act and not the case. A recipient is unaffected. */
     /* DEC-49 REGION is-statement-ack-author-undetermined */
     if (kind === "participant" && (authorFromDraft || authorStatedUndetermined) && !statementAuthor)
       return ack("STATEMENT_ACK_AUTHOR_UNDETERMINED",
-                 (authorFromDraft
-                   ? `this draft records no author for its exclusion statement: it was written before your `
-                   + `group's Civicsmith stamped one, and who wrote the sentence that now stands is UNDETERMINED. `
-                   : `this case document states that who wrote its exclusion statement could not be `
-                   + `established, so the author of the sentence is UNDETERMINED — and it is not the member `
-                   + `named as the case's author, who prepared and published it (BIO_Publication §3 rule 13). `)
-                   + `An acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and your `
-                   + `group's Civicsmith cannot tell here whether you are the first — reading the draft's last editor `
-                   + `would attribute the statement to whoever last touched any part of it. `
-                   + (authorFromDraft
-                     ? `An editor of this project saves the statement again (op=casedraft with statement=), `
-                     + `which records who wrote its current bytes; acknowledge it then. `
-                     : `Publish this edition again from a draft whose statement carries an author `
-                     + `(op=publish), and this document will name the member who wrote the sentence. `)
-                   + `The case publishes either way.`,
+                 localize("case-inputs.index.v1_an_acknowledgement_is_a", "{v1}An acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and your team's Civicsmith cannot tell here whether you are the first — reading the draft's last editor would attribute the statement to whoever last touched any part of it. {v2}The case publishes either way.", { v1: String(authorFromDraft
+                   ? localize("case-inputs.index.this_draft_records_no_author", "this draft records no author for its exclusion statement: it was written before your team's Civicsmith stamped one, and who wrote the sentence that now stands is UNDETERMINED. ")
+                   : localize("case-inputs.index.this_case_document_states_that", "this case document states that who wrote its exclusion statement could not be established, so the author of the sentence is UNDETERMINED — and it is not the member named as the case's author, who prepared and published it (BIO_Publication §3 rule 13). ")), v2: String(authorFromDraft
+                     ? localize("case-inputs.index.an_editor_of_this_project", "An editor of this project saves the statement again (op=casedraft with statement=), which records who wrote its current bytes; acknowledge it then. ")
+                     : localize("case-inputs.index.publish_this_edition_again_from", "Publish this edition again from a draft whose statement carries an author (op=publish), and this document will name the member who wrote the sentence. ")) }),
                  { draft: draftId, author: null });
     /* END DEC-49 REGION is-statement-ack-author-undetermined */
     /* THE AUTHOR'S OWN ACKNOWLEDGEMENT IS REFUSED BY NAME: the rule's whole content is a SECOND person. The author is
@@ -596,16 +770,9 @@ export class CaseInputs {
     if (kind === "participant" && ((statementAuthor && by === statementAuthor)
                                    || (blockAuthor && by === blockAuthor)))
       return ack("STATEMENT_ACK_BY_ITS_AUTHOR",
-                 (statementAuthor && by === statementAuthor
-                   ? `you wrote this statement, and its acknowledgement is a SECOND person's reading of what `
-                   + `the case leaves out (BIO_Publication §3 rule 11). `
-                   : `you prepared and published this case and authored its completeness block at that act, so `
-                   + `you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the `
-                   + `case leaves out (BIO_Publication §3 rule 11). Who WROTE the statement is a separate `
-                   + `fact, stated separately in these bytes (§3 rule 13). `)
-                   + `Ask a participant of this project, or `
-                   + `hand the draft to a reader through a review grant. The case publishes without one and `
-                   + `says so.`,
+                 localize("case-inputs.index.v1_ask_a_participant_of", "{v1}Ask a participant of this project, or hand the draft to a reader through a review grant. The case publishes without one and says so.", { v1: String(statementAuthor && by === statementAuthor
+                   ? localize("case-inputs.index.you_wrote_this_statement_and", "you wrote this statement, and its acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11). ")
+                   : localize("case-inputs.index.you_prepared_and_published_this", "you prepared and published this case and authored its completeness block at that act, so you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11). Who WROTE the statement is a separate fact, stated separately in these bytes (§3 rule 13). ")) }),
                  { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor });
     /* END DEC-49 REGION is-statement-ack-by-its-author */
     /* R1 — DEC-88 (K1025, K1030): THE ACKNOWLEDGER'S OWN WORDS, kept with the acknowledgement and shown in R2's list.
@@ -614,11 +781,8 @@ export class CaseInputs {
     /* DEC-49 REGION is-statement-ack-reasoned */
     if (typeof reason !== "string" || !reason.trim() || [...reason].length > STATEMENT_ACK_REASON_MAX)
       return ack("STATEMENT_ACK_NO_REASON",
-                 `an acknowledgement of a case's exclusion statement is recorded with the acknowledger's own words on `
-               + `it (reason=), at most ${STATEMENT_ACK_REASON_MAX} characters: say what you read and what you make of `
-               + `what the case leaves out. ` + (typeof reason !== "string" ? "None were given." : !reason.trim()
-                 ? "The words given were blank." : `The words given are ${[...reason].length} characters.`)
-               + ` Nothing was written.`);
+                 localize("case-inputs.index.an_acknowledgement_of_a_cases_2", "an acknowledgement of a case's exclusion statement is recorded with the acknowledger's own words on it (reason=), at most {STATEMENT_ACK_REASON_MAX} characters: say what you read and what you make of what the case leaves out. {v1} Nothing was written.", { STATEMENT_ACK_REASON_MAX: String(STATEMENT_ACK_REASON_MAX), v1: String(typeof reason !== "string" ? localize("case-inputs.index.none_were_given_2", "None were given.") : !reason.trim()
+                 ? localize("case-inputs.index.the_words_given_were_blank_2", "The words given were blank.") : localize("case-inputs.index.the_words_given_are_length_2", "The words given are {length} characters.", { length: String([...reason].length) })) }));
     /* END DEC-49 REGION is-statement-ack-reasoned */
     const sha = statementSha(text);
     /* THE UNSIGNED DOCUMENTS OF THIS STATEMENT, AT THIS CASE IDENTITY, IN THIS PROJECT, read before anything is written
@@ -674,30 +838,12 @@ export class CaseInputs {
                                             named_at: linkedTo.authored_at ?? null,
                                             signed: linkedSigned } } : {}),
              listed: linkedTo
-               ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of `
-                   + `edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), `
-                   + `so it is a reading of that case (BIO_Publication §3 rule 13). `
-                   + (linkedSigned
-                     ? `That edition is already SIGNED, and its list is what the signature covers: this reading `
-                       + `can appear in no signed document of it, and is recorded as the act it was.`
-                     : `Its case document is authored and unsigned, so it now lists this reading (case_documents), `
-                       + `re-authored; its owner signs the new bytes.`)
+               ? localize("case-inputs.index.this_is_a_reading_of", "this is a reading of draft {draftId}, which {authored_by} named as the draft of edition {edition} of {case_id} when publishing it ({authored_at}), so it is a reading of that case (BIO_Publication §3 rule 13). {v1}", { draftId: String(draftId), authored_by: String(linkedTo.authored_by), edition: String(linkedTo.edition), case_id: String(linkedTo.case_id), authored_at: String(linkedTo.authored_at), v1: String(linkedSigned
+                     ? localize("case-inputs.index.that_edition_is_already_signed", "That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.")
+                     : localize("case-inputs.index.its_case_document_is_authored", "Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.")) })
                : ident.caseId != null
-               ? `the completeness block of ${review.caseIdentitySentence(ident.caseId, ident.edition)} `
-                   + `lists this acknowledgement when its case document is authored with this exact statement `
-                   + `(op=publish), or — if that document is already authored and unsigned — now, re-authored `
-                   + `(case_documents). A statement edited afterwards is a different sentence, and this `
-                   + `acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose `
-                   + `statement is byte-identical: reading this case's statement is not reading that one's.`
-               : `this is a reading of draft ${draftId}, which names no case — a case id is minted only by `
-                   + `publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy `
-                   + `lists it for this draft. NO case document lists it, and that is deliberate: a case `
-                   + `document that named you would be claiming you read ITS statement, which this record `
-                   + `cannot establish of any case (§3 rule 13) — UNTIL the case is published naming this draft `
-                   + `(op=publish&draft=${draftId}): at that act this reading binds to the case it produced, `
-                   + `and its document lists it with the link stated (REC-217, BOB #33). Published without `
-                   + `draft=, it is counted there as undetermined and never named. A statement edited `
-                   + `afterwards is a different sentence, and this acknowledgement is not listed under it.` };
+               ? localize("case-inputs.index.the_completeness_block_of_caseidentitysentence", "the completeness block of {caseIdentitySentence} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or — if that document is already authored and unsigned — now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.", { caseIdentitySentence: String(review.caseIdentitySentence(ident.caseId, ident.edition)) })
+               : localize("case-inputs.index.this_is_a_reading_of_2", "this is a reading of draft {draftId}, which names no case — a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (§3 rule 13) — UNTIL the case is published naming this draft (op=publish&draft={draftId_2}): at that act this reading binds to the case it produced, and its document lists it with the link stated (REC-217, BOB #33). Published without draft=, it is counted there as undetermined and never named. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.", { draftId: String(draftId), draftId_2: String(draftId) }) };
   }
 
   /* REC-217 / §3 rule 13 (BOB #33): the case edition a publisher named this draft for, read off the act's own record
@@ -719,8 +865,7 @@ export class CaseInputs {
     const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : {};
     if (!SECTIONS.acknowledgements(doc.text.split("\n")))
       return { case_id: doc.case_id, edition: doc.edition, reauthored: false,
-               why: "this case document was authored before acknowledgements were recorded, so it has no list "
-                  + "to add to; it is left exactly as it was signed-for-review" };
+               why: localize("case-inputs.index.this_case_document_was_authored", "this case document was authored before acknowledgements were recorded, so it has no list to add to; it is left exactly as it was signed-for-review") };
     const project = str(fm.case_project);
     /* REC-212: the writer exclusion travels with the splice, read from the document's own bytes; a document with no
        `statement_by` key predates rule 13 and is not asked. */
@@ -736,7 +881,12 @@ export class CaseInputs {
                                                      lines: { frontmatter: ackFrontmatterLines(acks),
                                                               body: ackBodyLines(acks, project) } });
     const nowSha = after ? after.doc_sha ?? null : null;
-    if (nowSha === doc.doc_sha) return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha };
+    /* G47: a splice publication refuses (its `why`, and `too_large` when the new text would pass the byte bound) is
+       answered as refused with both, never as `reauthored` alone. */
+    if (nowSha === doc.doc_sha)
+      return { case_id: doc.case_id, edition: doc.edition, reauthored: false, doc_sha: doc.doc_sha,
+               ...(after && after.too_large ? { too_large: after.too_large } : {}),
+               ...(after && after.why ? { why: after.why } : {}) };
     return { case_id: doc.case_id, edition: doc.edition, reauthored: nowSha !== null,
              doc_sha: nowSha, acknowledged: acks.rows.length,
              read: `op=casedocument&case=${doc.case_id}&edition=${doc.edition}` };
@@ -845,11 +995,9 @@ export class CaseInputs {
    *  absorbed by it. The document prints where the name came from beside the name. */
   statementWriter(project, caseId, edition, statement, publisher, namedDraft = null) {
     const want = fmSafe(statement);
-    const notFromAuthor = `It is NOT read off ${publisher}, who prepared and published this case: `
-      + `preparing a case is not writing its statement (BIO_Publication §3 rule 13).`;
+    const notFromAuthor = localize("case-inputs.index.it_is_not_read_off", "It is NOT read off {publisher}, who prepared and published this case: preparing a case is not writing its statement (BIO_Publication §3 rule 13).", { publisher: String(publisher) });
     if (!want) return { by: null, from: "no_statement",
-                        stated: "UNDETERMINED: this case document prints no exclusion statement, so there is "
-                              + "no sentence for anybody to have written." };
+                        stated: word("case-inputs.stated.undetermined_case_document") };
     if (namedDraft) {
       let p = null;
       try { p = JSON.parse(namedDraft.params); } catch { p = null; }
@@ -858,17 +1006,11 @@ export class CaseInputs {
           ? namedDraft.statement_by.trim() : null;
         if (!stamp)
           return { by: null, from: "named_draft_unrecorded",
-                   stated: `UNDETERMINED: ${publisher} named draft ${namedDraft.draft_id} as this case's draft, and `
-                         + `that draft records no author for this sentence — it was written before drafts recorded `
-                         + `their authors — so who wrote the bytes this case publishes cannot be established. ${notFromAuthor} `
-                         + `An editor who saves the statement again records who wrote the bytes that stand.` };
+                   stated: word("case-inputs.stated.undetermined_named_draft", { publisher: String(publisher), draft_id: String(namedDraft.draft_id), not_from_author: String(notFromAuthor) }) };
         return { by: stamp, from: "named_draft",
                  stated: stamp === publisher
-                   ? `${stamp} wrote this exclusion statement, in draft ${namedDraft.draft_id}, which ${publisher} `
-                     + `named as this case's draft, and also prepared and published the case — two acts, one member.`
-                   : `${stamp} wrote this exclusion statement, in draft ${namedDraft.draft_id}, which ${publisher} `
-                     + `named as this case's draft. ${publisher} prepared and published the case: two acts, two `
-                     + `names (BIO_Publication §3 rule 13).` };
+                   ? word("case-inputs.stated.wrote_exclusion_statement", { stamp: String(stamp), draft_id: String(namedDraft.draft_id), publisher: String(publisher) })
+                   : localize("case-inputs.index.stamp_wrote_this_exclusion_statement", "{stamp} wrote this exclusion statement, in draft {draft_id}, which {publisher} named as this case's draft. {publisher_2} prepared and published the case: two acts, two names (BIO_Publication §3 rule 13).", { stamp: String(stamp), draft_id: String(namedDraft.draft_id), publisher: String(publisher), publisher_2: String(publisher) }) };
       }
     }
     const cap = DRAFTS_READ_MAX;
@@ -877,9 +1019,7 @@ export class CaseInputs {
                              WHERE project_id=? ORDER BY created_at, draft_id LIMIT ?`, project, cap + 1);
     if (rows.length > cap)
       return { by: null, from: "drafts_unbounded",
-               stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists `
-                     + `(${cap}), so which draft this sentence was written in — and therefore who wrote it — `
-                     + `cannot be established here. ${notFromAuthor}` };
+               stated: word("case-inputs.stated.undetermined_holds_drafts", { project: String(project), cap: String(cap), not_from_author: String(notFromAuthor) }) };
     const here = (d) => (d.case_id ?? null) === (caseId ?? null)
                       || ((d.case_id ?? null) === null && Number(edition) === 1);
     const unreadable = [];
@@ -891,32 +1031,22 @@ export class CaseInputs {
     });
     if (unreadable.length)
       return { by: null, from: "draft_unreadable",
-               stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity `
-                     + `(${unreadable.join(", ")}) hold arguments that cannot be read, so whether this `
-                     + `sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}` };
+               stated: word("case-inputs.stated.undetermined_draft_case", { unreadable: String(unreadable.length), project: String(project), unreadable3: String(unreadable.join(", ")), not_from_author: String(notFromAuthor) }) };
     if (!matches.length)
       return { by: publisher, from: "this_act",
-               stated: `${publisher} wrote this exclusion statement in the act that published this case, and `
-                     + `prepared and published the case — two acts, one member: no draft of ${project} at `
-                     + `this case identity holds this sentence, so these bytes arrived with this publication.` };
+               stated: word("case-inputs.stated.wrote_exclusion_statement_act", { publisher: String(publisher), project: String(project) }) };
     if (matches.some((d) => !d.statement_by))
       return { by: null, from: "draft_unrecorded",
-               stated: `UNDETERMINED: the draft this sentence stands in (${matches.map((d) => d.draft_id)
-                     .join(", ")}) records no author — it was written before drafts recorded their authors — so who `
-                     + `wrote the bytes this case publishes cannot be established. ${notFromAuthor} An editor `
-                     + `who saves the statement again records who wrote the bytes that stand.` };
+               stated: word("case-inputs.stated.undetermined_draft_sentence", { draft_id: String(matches.map((d) => d.draft_id)
+                     .join(", ")), not_from_author: String(notFromAuthor) }) };
     const names = [...new Set(matches.map((d) => d.statement_by))];
     if (names.length > 1)
       return { by: null, from: "drafts_disagree",
-               stated: `UNDETERMINED: ${names.length} drafts of ${project} at this case identity hold this `
-                     + `sentence and name different authors (${names.join(", ")}), so which member wrote the `
-                     + `bytes this case publishes cannot be established. ${notFromAuthor}` };
+               stated: word("case-inputs.stated.undetermined_drafts_case", { names: String(names.length), project: String(project), names3: String(names.join(", ")), not_from_author: String(notFromAuthor) }) };
     return { by: names[0], from: "draft",
              stated: names[0] === publisher
-               ? `${names[0]} wrote this exclusion statement, in the draft it was prepared in, and also `
-                 + `prepared and published the case — two acts, one member.`
-               : `${names[0]} wrote this exclusion statement, in the draft it was prepared in. ${publisher} `
-                 + `prepared and published the case: two acts, two names (BIO_Publication §3 rule 13).` };
+               ? word("case-inputs.stated.wrote_exclusion_statement_draft_prepared", { names: String(names[0]) })
+               : localize("case-inputs.index.v1_wrote_this_exclusion_statement", "{v1} wrote this exclusion statement, in the draft it was prepared in. {publisher} prepared and published the case: two acts, two names (BIO_Publication §3 rule 13).", { v1: String(names[0]), publisher: String(publisher) }) };
   }}
 
 const instances = new WeakMap();
@@ -966,5 +1096,60 @@ export function caseInputsOps(c, url, body) {
       bySecret: q("bySecret") === "1",
       /* R1 (DEC-88): the acknowledger's words, from the query as the subject is; absent stays absent. */
       reason: q("reason") ?? undefined }),
+    /* R20 (T51): one field of a case's details. `case` from the query, else the body; `field` and `value` from the body,
+       else the query (a value in the query is a JSON text; one that is not JSON is passed as the text it is, and is
+       malformed); `by` and `viewer` the stamps. */
+    casedetailsset: () => c.caseDetailsSet({ case: q("case") || b.case || null, field: b.field !== undefined ? b.field : q("field"),
+      value: b.value !== undefined ? b.value : url.searchParams.has("value") ? jsonText(q("value")) : undefined,
+      by: q("by") ?? q("author"), viewer: q("viewer") }),
+    /* R23: the details and their history, to a member who sees the case's project. */
+    casedetails: () => c.caseDetails({ case: q("case") || b.case || null, viewer: q("viewer") }),
   };
 }
+
+/* R20: a value that came in the query, a JSON text; text that is not JSON is passed as it is, for R21 to refuse. */
+function jsonText(t) {
+  try { return JSON.parse(t); } catch { return t; }
+}
+
+const registered = new WeakMap();
+
+/** R24 (public-read R18, as `case-checker`'s `registerCaseCheckerPublicReads`): at start, register `casedetailspublic` once
+ *  per host with `public-read`; the registration's answer is kept and returned, so a refused one is seen. Creating the
+ *  instance (R16) does not register, so it reaches no other module's instance on the host; the plane calls this where it
+ *  registers the other modules' public reads. */
+export function registerCaseInputsPublicReads(host, deps = {}) {
+  if (registered.has(host)) return registered.get(host);
+  const publicRead = deps.publicRead || publicReadOf(host);
+  const answer = publicRead.registerPublicReads("case-inputs", caseDetailsPublicReads(caseInputsOf(host, deps)));
+  registered.set(host, answer);
+  return answer;
+}
+
+/** R24 (public-read R18): the one credential-free read this module registers at start, `casedetailspublic`, taking the
+ *  query parameter `case`. */
+export function caseDetailsPublicReads(c) {
+  return { casedetailspublic: { read: (a) => c.caseDetailsPublic({ case: a.case ?? null }), params: ["case"] } };
+}
+
+/* R27, R29 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops of this module that a screen sends or that this
+   tranche adds, declared by their owner beside the ops map. `casedetailsset`, `casedetails` and `casedetailspublic` are
+   new; `statementack` and `whatchangedpropose` take their classes, weight and description from their hand rows
+   (op-declarations, op-grades, op-capabilities), which these rows agree with. `casedetailspublic` is served by
+   public-read's door (R24), so no arm of `caseInputsOps` carries it. `fields.accepts` is every field the arm reads from
+   the address and the body, the stamps excepted; `requires` the ones it refuses without. `statementack` is the one
+   judgment: a recipient arrives with `secret`, which the control plane hashes and strips, handing the arm its digest as
+   the body's `secretSha` and the mark `bySecret=1` (R5), so those two are door-set stamps and the field a caller sends,
+   which the screens send, is `secret`. */
+export const DECLARED_OPS = Object.freeze({
+  casedetailsset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", stamps: ["by","viewer"], needs: "contribute", description: localize("case-inputs.declared.casedetailsset", "case-directed: keyed by a case, reached from the case editor; an owner sets or clears one of its standard details, kept beside the case and never in its signed document"),
+    fields: { accepts: ["case","field","value"], requires: ["case","field","value"] } },
+  casedetails: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("case-inputs.declared.casedetails", "read: a case's standard details and their history, to a member who sees its project; writes nothing"),
+    fields: { accepts: ["case"], requires: ["case"] } },
+  casedetailspublic: { classes: null, mutating: false, weight: "read", description: localize("case-inputs.declared.casedetailspublic", "read: a published case's standard details as its team currently states them, public, no credential; writes nothing"),
+    fields: { accepts: ["case"], requires: ["case"] } },
+  statementack: { classes: null, mutating: true, weight: "reasoned", description: localize("case-inputs.declared.statementack", "case-directed: keyed by a case edition; a member acknowledges what the case does not cover"),
+    fields: { accepts: ["draft","case","edition","secret","reason"], requires: [["draft","case","secret"],"reason"] } },
+  whatchangedpropose: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("case-inputs.declared.whatchangedpropose", "case-directed: keyed by a published case, reached from its next edition; a draft, never a statement until a member adopts it"),
+    fields: { accepts: ["case","text"], requires: ["case","text"] } },
+});

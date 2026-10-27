@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0, sha, agentWorker, SIGNIN_TOKEN } from "./world.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { stepsWorld } from "../steps/fixtures.mjs";
 import { AI_RUN_MODE_WRITES } from "../../../src/ai-runs/index.mjs";
 import { AI_RUN_WRITES } from "../../../src/credentials/index.mjs";
 import { AI_RUNS_CHECKS, CIVICSMITH_TEST_SET, untestedLabel } from "../../../src/run-rules/index.mjs";
@@ -105,10 +106,9 @@ test("R78, R10, R19, R28: a run the bar admitted carries no label — untested i
 });
 
 test("R78, R23's input: an exploring run's origin is judged with investigate's admission through partAdmitted — refused while check is unverified even on a test instance; once check is verified live, admitted on the exception; control: the same record on a non-test instance stays refused", async () => {
-  const { stepsStub } = await import("./world.mjs");
-  const own = { origin: "explore", place: { questions: [INQ] }, work: "find the fee schedule" };
+  const own = { origin: "explore", place: stepsWorld().place, work: "find the fee schedule" };
   for (const [env, opens] of [[PAIR, true], [{}, false]]) {
-    const w = world({ env, testSet: EMPTY, bars: [], steps: stepsStub() });
+    const w = world({ env, testSet: EMPTY, bars: [], steps: stepsWorld().steps });
     await w.group("ann"); w.bundle(INQ);
     assert.equal((await w.runs.open(OPEN({ run: "S", ...own }))).code, env === PAIR ? "AI_RUN_EXPLORE_NOT_DEPLOYABLE" : "AI_RUN_MODE_NOT_DEPLOYED");
     if (env !== PAIR) { assert.equal(w.runs.partAdmitted("investigate").admitted, false); continue; }
@@ -349,7 +349,8 @@ test("R18 (T46): the wake still withholds a member's own sign-in run as MEMBER_P
   assert.deepEqual([woke.wakes[0].resume, woke.dispatched], ["MEMBER_PRINCIPAL_RUN", 0]);
   assert.equal(aw.calls.length, 0);
   assert.equal(runCreds(w).length, 0, "the wake mints nothing");
-  for (const answer of [{ status: 403, body: { ok: false, reason: "NO" } }, "throw"]) {
+  // fixtures-contract: agent-worker dispatch-refusal
+  for (const answer of [{ status: 400, body: { ok: false, reason: "BAD_BODY", code: "BAD_BODY", worker: "agent-worker", detail: "d" } }, "throw"]) {
     const x = await memberWorld(agentWorker(answer));
     const r = await x.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
     assert.deepEqual([r.dispatched, r.dispatch.state], [false, answer === "throw" ? "SILENT" : "REFUSED"]);

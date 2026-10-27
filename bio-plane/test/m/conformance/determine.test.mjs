@@ -9,6 +9,7 @@ import { noSuchProject } from "../../../src/membership/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/checks.mjs";
 import { STANDARDS_CHECKS } from "../../../src/standards/checks.mjs";
 import { noSuchStandard } from "../../../src/standards/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -543,10 +544,9 @@ test("R23: a supersession with no reason is CONFORMANCE_NO_REASON (C-113.22), on
   const first = w.c.determine(input());
   /* the two rows, their numbers and translations as they stood before the codes became this module's own (N433, K766) */
   assert.deepEqual([CONFORMANCE_CHECKS.CONFORMANCE_NO_REASON.check, CONFORMANCE_CHECKS.CONFORMANCE_NO_REASON.translation],
-    ["C-113.22", "Superseding a determination says why it is superseded. Give the reason. Nothing was written."]);
+    ["C-113.22", word("refusal.CONFORMANCE_NO_REASON")]);
   assert.deepEqual([CONFORMANCE_CHECKS.CONFORMANCE_BAD_REASON.check, CONFORMANCE_CHECKS.CONFORMANCE_BAD_REASON.translation],
-    ["C-113.17", "The reason for superseding a determination is not text of at most 500 characters. Say why, more "
-      + "briefly. Nothing was written."]);
+    ["C-113.17", word("refusal.CONFORMANCE_BAD_REASON")]);
   /* no row of this module carries progressions' names, and no number is held by two rows (DEC-49) */
   for (const shared of ["NO_REASON", "BAD_REASON"]) assert.equal(shared in CONFORMANCE_CHECKS, false, shared);
   const rows = Object.values(CONFORMANCE_CHECKS).map((r) => r.check);

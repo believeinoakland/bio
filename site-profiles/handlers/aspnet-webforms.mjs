@@ -22,6 +22,8 @@
  */
 import { CONFIDENCE } from "../recogniser.mjs";
 import { REGION } from "../region.mjs";
+import { factsOf } from "../scan.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION"
                        + "|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY|__LASTFOCUS";
@@ -34,13 +36,14 @@ export default {
 
   detect(ctx) {
     const h = ctx.headers || {};
-    const text = ctx.text || "";
+    const f = factsOf(ctx);
     const signals = [];
     /* The hidden field is the definitive signal: nothing but WebForms emits it,
-       and it is present on every WebForms page by construction. */
-    if (/<input[^>]*\bname="__VIEWSTATE"/i.test(text)) signals.push("__VIEWSTATE field");
-    if (/<input[^>]*\bname="__EVENTVALIDATION"/i.test(text)) signals.push("__EVENTVALIDATION field");
-    if (/\bid="aspnetForm"/i.test(text)) signals.push("aspnetForm");
+       and it is present on every WebForms page by construction. Linear in the text
+       (R20): the tags and the markers are read once, by `scan.mjs`. */
+    if (f.viewstate) signals.push("__VIEWSTATE field");
+    if (f.eventvalidation) signals.push("__EVENTVALIDATION field");
+    if (f.marks.has("aspnet_form")) signals.push("aspnetForm");
     const powered = String(h["x-powered-by"] || "");
     if (/asp\.net/i.test(powered)) signals.push("x-powered-by: " + powered);
     if (h["x-aspnet-version"]) signals.push("x-aspnet-version: " + h["x-aspnet-version"]);
@@ -73,7 +76,7 @@ export default {
   rules() {
     return [
       { key: "webforms_page_state", region: REGION.MECHANICAL,
-        label: "page state this site rebuilds on every visit",
+        label: localize("site-profiles.aspnet-webforms.page_state_this_site_rebuilds", "page state this site rebuilds on every visit"),
         patterns: [
           new RegExp(`(<input[^>]*\\bname="(?:${VIEWSTATE_FIELDS})"[^>]*\\bvalue=")([^"]*)(")`, "gi"),
           /* Some skins emit the field with value= before name=. Measured absent on
@@ -92,7 +95,7 @@ export default {
       /* Ad and analytics slots. Legistar carries GPT and Google Analytics, and per
          the standing ruling a third party's script output is that third party's,
          never the publisher's, so it is machinery here and not decoration. */
-      { key: "ad_slots", region: REGION.MECHANICAL, label: "an advertising or analytics slot",
+      { key: "ad_slots", region: REGION.MECHANICAL, label: localize("site-profiles.aspnet-webforms.an_advertising_or_analytics", "an advertising or analytics slot"),
         patterns: [
           /(\bdata-google-query-id=")([^"]*)(")/gi,
           /(["'&](?:correlator|cachebuster|ord|gclid|_ga|_gid)=)([^"'&\s]+)()/gi,

@@ -5,24 +5,26 @@
    R34's re-read candidates. The migration's no-store reason (R66) is n26.test.mjs's. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass } from "./fixture.mjs";
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
 import { deriveMembership } from "../../../src/extraction/filemembership.mjs";
 import { WORD } from "./words.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { notAPdf } from "../pdf-reader/fixtures.mjs";
 
 const OLD = /\b(this|the) (instance|plane)\b|\binstance's\b|\bplane's\b/i;
 
 const pdf = (text, pages) => ({ format: "pdf", structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
-  : { ok: false, reason: "NOT_A_PDF" }) });
+  : await notAPdf()) });
 
 async function held(text) {
   const w = fresh();
   bundle(w.s, "B-1");
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   const reading = { content_type: "generic", reader_version: 1, read_from_text: false, found: false, entities: [], facts: {},
-                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 2 };
-  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading });
+                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 2, tier3_candidate: true };
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading, textUnits: text ? pageUnits(text) : null });
   return { w, d };
 }
 
@@ -67,7 +69,7 @@ test("R27 R21 (DEC-149): a reading's origin says your team's Civicsmith composed
   const asserted = w.x.readingFor("b".repeat(64)).origin;
   assert.equal(composed.state, "composed");
   assert.equal(composed.why, WORD("extraction.why.group_civicsmith_read"), "read by key (T50)");
-  assert.equal(composed.why, "your team's Civicsmith read the capture's bytes and composed this reading");
+  assert.equal(composed.why, word("extraction.why.group_civicsmith_read"));
   assert.equal(asserted.state, "asserted");
   assert.equal(asserted.why, WORD("extraction.why.group_civicsmith_did"), "read by key (T50)");
   assert.match(asserted.why, /^your team's Civicsmith did not compose this reading: a caller carried it in/);
@@ -77,9 +79,8 @@ test("R27 R21 (DEC-149): a reading's origin says your team's Civicsmith composed
 test("R34 (DEC-149): a written re-read names its candidates as what your group's Civicsmith can read", async () => {
   const text = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
   const { w, d } = await held(text);
-  const r = await withEntry(pdf(text, 2),
-    () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
-  assert.equal(r.body.reextraction.written, true);
-  assert.match(r.body.reextraction.candidates, /what your group's Civicsmith can read; this one is re-read now$/);
-  assert.doesNotMatch(r.body.reextraction.candidates, OLD);
+  const { x } = await pressThenPass(w, d, { OCR_WORKER: member(() => ocrAnswer([1])) });
+  assert.equal(x.written, true);
+  assert.match(x.candidates, /what your team's Civicsmith can read; this one is re-read now$/);
+  assert.doesNotMatch(x.candidates, OLD);
 });

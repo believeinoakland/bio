@@ -270,6 +270,13 @@ export const BUNDLE_CASES = {
   "INQ-2026-0130-versions-entry": { surfaced_by: "robot", subject_entity: "nope", ...VERSIONS,
                                     basis: [{ target: INFO, role: "maybe", ground: "a" }] },
   "INQ-2026-0131-versions-bad": { basis_versions: [{ name: "", relationship: "xor" }], basis_version_legs: [{ version: "zz", target: LEAD }] },
+  /* R19 (T51; N1216): a version name outside the form (65 characters) is VERSION_NAME_MALFORMED, not a duplicate; a name
+     another version of the question already carries is VERSION_NAME_NOT_UNIQUE, and a valid unique name (0129) neither. */
+  "INQ-2026-0133-version-name-long": { basis_versions: [{ name: "n".repeat(65), relationship: "and", state: "suggested" }],
+    basis_version_legs: [{ version: "n".repeat(65), target: INFO, role: "supports" }] },
+  "INQ-2026-0134-version-name-twice": { basis_versions: [{ name: "first", relationship: "and", state: "suggested" },
+    { name: "first", relationship: "and", state: "suggested" }],
+    basis_version_legs: [{ version: "first", target: INFO, role: "supports" }] },
   "INQ-2026-0132-unreferenced": { references: refsTo(INFO2), basis: [{ target: INFO, role: "supports" }, { target: INFO2, role: "supports" }] },
   "PROB-2026-0001-legacy-type": { object_type: "problem", schema: "problem@1", current_state: "surfaced", surfaced_by: "agent" },
   [INFO]: "info",

@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, attributed, WHY } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 /* quinn is a member outside the project (the fixture's); bo and cy are joined in it. */
@@ -145,7 +146,7 @@ test("R27 R3 R9 R21 a finding conformance withholds from the reader is withheld 
   const d = f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
   const why = Object.fromEntries(d.unfilled.map((u) => [u.name, u.why]));
-  assert.match(why.findings, /not one you may see/);
+  assert.equal(why.findings, word("filings.finding_standard_determination"));
   assert.ok(d.text.includes("Findings: [UNFILLED: findings]."), d.text);
   assert.equal(d.blanks.some((b) => b.name === "findings"), false);
   const p = f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("bo"), viewer: V("bo") });

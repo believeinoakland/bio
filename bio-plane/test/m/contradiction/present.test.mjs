@@ -156,6 +156,34 @@ test("R25: each candidate carries its key, why, both sides verbatim with source,
   assert.deepEqual([r.state, r.resolution.kind, r.resolution.member, r.resolution.wrong_side], ["resolved", "corrected", M1, "a"]);
 });
 
+test("R25 (T51, B5): a candidate taken up carries taken_up {member, at, words} from its take_up act, and so does it once resolved; an open one, and one resolved without a take-up, carry none", () => {
+  const w = seeded();
+  const duty = cand(w, "K2", "record");
+  const absent = (c) => assert.ok(!("taken_up" in c), JSON.stringify(c.taken_up));
+  absent(one(w, duty));
+  const up = w.c.takeUp({ candidate: duty, question: "Which fee holds?", frame: "b", viewer: M1, author: M1 });
+  assert.equal(up.ok, true);
+  const want = { member: M1, at: up.act.at, words: "Which fee holds?" };
+  assert.equal(one(w, duty).state, "taken_up");
+  assert.deepEqual(one(w, duty).taken_up, want);
+  /* the same under the same sight: another member who sees both sides reads the same take-up */
+  assert.deepEqual(one(w, duty, M2).taken_up, want);
+  assert.deepEqual(w.c.candidatesFor({ on: { inquiry: IQ.a }, viewer: M2 }).candidates[0].taken_up, want);
+  /* later: resolved through the inquiry's conclusion, it still says who took it up and how it was worded */
+  const done = w.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both fees are in the record",
+                            viewer: M2, author: M2 });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 400));
+  assert.equal(one(w, duty).state, "resolved");
+  assert.deepEqual(one(w, duty).taken_up, want);
+  /* control: a candidate resolved by an act alone was never taken up */
+  const other = cand(w, "K4", "record");
+  w.c.clarify({ candidate: other, choice: "one_wrong", wrongSide: "a", reason: "misread", viewer: M1, author: M1 });
+  assert.equal(one(w, other).state, "resolved");
+  absent(one(w, other));
+  /* control: a viewer who may not see both sides is not answered the candidate, so nothing of the take-up either */
+  assert.equal(one(w, duty, null), null);
+});
+
 test("R25, R45: empty answers name their level — none_judged, or none_shown counting precision and unrelated — never a bare list; filters, page, cursor", () => {
   const w = seeded();
   const none = w.c.candidatesFor({ on: { inquiry: IQ.a }, viewer: M1 });
@@ -241,7 +269,7 @@ test("R26: a state is derived at every read, by acts alone: open, explained_not_
   assert.equal(up.ok, true, JSON.stringify(up).slice(0, 600));
   assert.equal(one(t, d).state, "taken_up");
   assert.equal(one(t, d).inquiry, up.inquiry);
-  const res = t.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both stand",
+  const res = t.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both conclusions stand",
                             viewer: M1, author: M1 });
   assert.equal(res.ok, true, JSON.stringify(res).slice(0, 600));
   assert.deepEqual([one(t, d).state, one(t, d).resolution.kind], ["resolved", "irreconcilable"]);
@@ -290,7 +318,7 @@ test("R27: each mark over a claim, a leg and an extent — in_tension, lead, sof
   const h = seeded();
   const c2 = cand(h, "K2", "record");
   const up = h.c.takeUp({ candidate: c2, question: "Which holds?", frame: "b", viewer: M1, author: M1 });
-  h.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both stand", viewer: M1, author: M1 });
+  h.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both conclusions stand", viewer: M1, author: M1 });
   assert.deepEqual(marks(h, claimRef(IQ.a, "the fee rose")), [{ mark: "held_irreconcilable", candidate: c2, inquiry: up.inquiry }]);
 });
 
@@ -442,7 +470,7 @@ test("R29: a case pinning a finding at its bytes discloses each standing duty on
   const up = w.c.takeUp({ candidate: duty2, question: "Which?", frame: "a", viewer: M1, author: M1 });
   const taken = w.c.unresolvedRecordOn({ finding, sha: p.bundleSha }).candidates[0];
   assert.deepEqual([taken.state, taken.inquiry], ["taken_up", up.inquiry]);
-  w.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both", viewer: M1, author: M1 });
+  w.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both conclusions stand", viewer: M1, author: M1 });
   assert.deepEqual(w.c.unresolvedRecordOn({ finding, sha: p.bundleSha }).candidates.map((c) => [c.candidate, c.kind]), [[duty2, "irreconcilable"]]);
   void lead;
   /* bytes no text answers: undetermined */

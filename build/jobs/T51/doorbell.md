@@ -1,0 +1,182 @@
+# doorbell (T51)
+
+**Status** · session_011eQWGNdKbyTzSjrWKDMhqy · depth 2 · COMPLETE · handled B10
+
+## Completion (T51-182, the words pass; session_01C6MLP8YoCGd3BrWthJxfJ5)
+
+**Entries applied.** T51-182 (the words findings in `build/plan/words-pass/doorbell.md`):
+- The 13 `plain` findings, all judged member-readable (each a refusal's `detail`, a `basis`, an evidence sentence, a capture method label or a pseudonym's note), each now `localize("doorbell.<stem>.<slug>", en, vars)` in `src/doorbell/door.mjs` (1) and `src/doorbell/index.mjs` (12). No REPORT of a string no member reads: none was found.
+- The 10 conversion findings (1 handlist, 9 test copies): `rows.test.mjs` hand-list of capture's codes now comes from `CAPTURE.CAPTURE_CHECKS`; the C-118 and C-85 expectations now read each row's translation as `EXPECT` (new `test/m/doorbell/expect.mjs`: `word(key)` or `localize(id, en)` per row, the product's own ids), compared by equality, not by copied text; `doorbell.test.mjs`, `t35.test.mjs` and `knock-origin.test.mjs` compare the same way; `knock-origin`'s signal fixture is now a neutral token (`origin member`); `t35`'s `these bytes` assertion compares with `localize` filled from the inbox row.
+- The 5 `code` test copies: the same comparison, in the same files.
+
+**Deferred.** `test/m/doorbell/knocker.test.mjs:205` holds a regular-expression fragment of the `these bytes were received` sentence. The words check does not count it (zero findings), so I left it; BOB may want it converted with the rest of R13's test copies.
+**Not mine (seen in the repository-wide run).** `checks/run.mjs /home/user/bio` reports failures in other modules (wizard-scripts and others); none names doorbell. `setup-words/build.mjs --check` reports `rows.mjs` stale (the expected note); no refusal names doorbell.
+**For BOB.** `expect.mjs` holds one `localize` id the product does not use (`doorbell.checks.group_can_see`), to name the sentence every refusal shares (R9). Its text is the product's own, so the test compares with it; a row for it would change nothing.
+
+**Checks.** `node checks/words.mjs /home/user/bio doorbell`: 0 failures (was 27). `node checks/format.mjs /home/user/bio`: 0 failures. `node checks/architecture.mjs /home/user/bio doorbell`: 0 failures. `node checks/coverage.mjs /home/user/bio doorbell`: 25 of 25 live ids named by a test, 0 failures. `node checks/ownership.mjs /home/user/bio doorbell tranche/T51 job/T51/doorbell`: 0 failures. `node --test bio-plane/test/m/doorbell/`: 73 of 73 pass.
+
+**Size (session_01C6MLP8YoCGd3BrWthJxfJ5): test runs 3, module lines 1144**
+
+## J1 · COMPLETE
+
+T51-182 done: the 13 plain findings and the 10 conversion findings are fixed (commit e8ac15435f on job/T51/doorbell). words check 0 failures (was 27); format, architecture, coverage and ownership 0 failures; doorbell tests 73 of 73 pass. Open for BOB: knocker.test.mjs:205 holds a regex fragment of a product sentence (not counted by the check, left as is); expect.mjs uses one localize id not used by the product (doorbell.checks.group_can_see). Record: build/jobs/T51/doorbell.md, Completion section.
+
+## CHANGE (K3982) · re-completion
+
+Merged `tranche/T51`. Both open points closed:
+1. `knocker.test.mjs`: the regular-expression copy of the `these bytes` sentence is now an equality with the product's own `localize("doorbell.index.these_bytes_were_received_at", en, vars)`, the vars read from the inbox row and the pull's inputs.
+2. `expect.mjs`: the minted `doorbell.checks.group_can_see` constant is deleted. The tests that held it now read `EXPECT[code]` (the product's own key per row) by equality; the shared sentence is no longer asserted on its own.
+Also `rows.test.mjs` uses a plain token ("changed translation") in place of the deleted constant.
+
+**Checks:** `node checks/words.mjs /home/user/bio doorbell`: 0 failures. `node --test bio-plane/test/m/doorbell/`: 73 of 73 pass. format, architecture, coverage (25 of 25) and ownership (8 files, 0 failures) all 0 failures. `setup-words/build.mjs --check`: the stale-rows note only, no refusal naming doorbell.
+
+**Not mine (seen in the repository-wide run, reported to BOB under P9):** `provenance/register-checks.test.mjs:186,196` copies the doorbell's sentences; `control-plane/doorbell.test.mjs:296,514` and `screens-entry/front.test.mjs:55` hand-list ops and keys.
+
+**Size (session_01C6MLP8YoCGd3BrWthJxfJ5): test runs 4, module lines 1144**
+
+## J2 · COMPLETE
+
+CHANGE K3982 done (commit d09363a33a on job/T51/doorbell, tranche/T51 merged). (1) knocker.test.mjs:205 now compares asserts by equality with the product's localize call, vars from the inbox row. (2) expect.mjs's minted doorbell.checks.group_can_see is deleted; tests read EXPECT[code] by equality. words check doorbell: 0 failures; doorbell tests 73/73; format, architecture, coverage, ownership 0 failures; setup-words check: stale-rows note only. Reported under P9, not mine: provenance/register-checks.test.mjs:186,196 copy doorbell sentences; control-plane/doorbell.test.mjs:296,514 and screens-entry/front.test.mjs:55 hand-list keys/ops. Record: build/jobs/T51/doorbell.md, CHANGE section.
+
+## Completion (fix round 2, B3: C28's plane half, a knock's name and type; DOORBELL #5, session_01M3qW5twDUffgj9DdAeC1Tc)
+
+**Entries applied.**
+- A knock records the file name and media type its sender stated. `knock` takes `fileName` and `mediaType` (the Worker forwards them when strings); the inbox row holds `file_name` and `media_type` (two additive columns, null on every older row); `inboxList` rows and `inboxGet`'s item answer both. Bounded: the name to 255 characters with control characters dropped, the type to 127; white space trimmed; a value that is not a string or is empty once cleaned is absent (null). Never a type check: nothing reads the stated type to admit or refuse, the file-safety scan still decides. The sender's answer carries neither.
+- K4208: declared the census ops I own that had no declaration and are reachable: `inboxget`, `doorbelltally`, `pulledknocks` (`DECLARED_OPS`, rows copied from the existing hand rows and op-grades' descriptions).
+
+**Proposed requirement line (BOB writes it):** **R27** *(T51; K4328; amends R3 and R25)* A knock records the file name and media type its sender stated: `knock` takes `fileName` and `mediaType`, each kept as text of at most 255 and 127 characters, control characters dropped and white space trimmed, else absent (null); neither is ever read as a type check (the file-safety scan decides). The inbox row holds both (R25: two additive columns, null on a row written before), and `inboxList` and `inboxGet` answer `file_name` and `media_type`, null for a knock that stated none. The knock's own answer to its sender carries neither. Test: `knock-name.test.mjs`, with its controls (neither stated; non-string, blank; a type that lies about the bytes is recorded as stated and the knock accepted). R25's list of the inbox's additive columns gains the two.
+
+**What a safe view of the bytes before the pull would take (not in this entry).** A new member-only read (`inboxview`, signed-in member session, no machine credentials) that fetches the knock's bytes (the evidence-store object or the inline copy, hashed against the row's digest), runs them through the file-safety scan, and answers only what the scan allows: for a type it judges viewable, a bounded rendering (text excerpt, or a still image) or a refusal naming the scan's finding; never the raw bytes and never a stated type taken on trust. It needs: a doorbell requirement for the read and its bound; file-safety's scan reachable from this module (an addition to `uses`, and the layer contract permitting doorbell to call it); the op declared (op-declarations, op-grades), routed by control-plane/plane, and a screen door in screens-intake. It writes nothing (no receipt, no capture), so the pull stays R13's only filing act.
+
+**Deferred.** None.
+**Found in other modules (P9).** (1) `op-declarations` hand-declares the inbox list as `inbox`, but this module's route is `inboxlist`; the plane's R71 refuses a declared op with no route of that name, so I could not declare it from here. Whoever owns the route map (plane/control-plane) must alias `inbox` to the doorbell's `inboxlist` route, or the hand row be renamed, before the owner can declare it. (2) Reds seen and not mine (present without my change): `screens-intake` R8 (registry acts), control-plane R17 `groupdescriptiondraft`, `screens-*` R24 words.
+
+**Checks.** `node --test --test-force-exit bio-plane/test/m/doorbell/`: 85 of 85 pass (73 at the last completion; 4 are R27's, 3 the declared reads', the rest came with the tranche merge). Users: control-plane, sources, store-door (437 of 438; the red is `groupdescriptiondraft`, control-plane's, on the tranche tip too), plane declarations 5 of 5 after dropping the `inbox` row, op-declarations and op-grades 391 of 391. `format` 0 failures; `architecture doorbell` 0; `coverage doorbell` 26 of 26 live ids named, 0 failures; `words doorbell` 0 failures; `ownership doorbell` 0 failures; `setup-words build --check`: the stale-rows note only (a control-plane row), none naming doorbell. Each R27 test was seen failing before the code.
+
+Size (session_01M3qW5twDUffgj9DdAeC1Tc): test runs 9, module lines 1180
+
+## J3 · COMPLETE
+
+COMPLETE (fix round 2, B3: C28's plane half). A knock now records the file name and media type its sender stated (fileName, mediaType; bounded 255/127, control characters dropped, absent = null, never a type check) and inboxList/inboxGet answer file_name and media_type; the sender's answer carries neither. Proposed line R27 (and R25's additive columns) is in my record's Completion for you to write. Safe view before the pull: described in the record (a member-only inboxview read through file-safety's scan, answering only what it allows; needs a requirement, file-safety in uses, op declaration and routing, and an intake door). Also declared inboxget, doorbelltally, pulledknocks (K4208). For P9: the inbox list is hand-declared as 'inbox' but routed as 'inboxlist', so plane R71 refuses my declaring it; the route owner must alias or rename. Doorbell 85/85; coverage 26/26; format, architecture, words, ownership 0 failures; users (control-plane, sources, store-door, plane, op-declarations, op-grades) green but for reds not mine. Commit 5e8dc44721 plus a counts fix on job/T51/doorbell.
+
+## Completion (fix round 3, wave 1, B4: C28's knock answers, Small 1; DOORBELL #6, session_012xGAhuEiWYxdWHqLzyKcUo)
+
+**Entries applied.**
+1. **C28\* (the plane half).** Round 2 already recorded the sender's stated file name and media type on the inbox row and answered them from `inboxList` and `inboxGet`. The check the entry asked for found `knocksOf` (`op=knocksof`, R15) missing them: its row selected neither. It now selects `file_name` and `media_type`, so all three reads (`inboxlist`, `inboxget`, `knocksof`) answer both, null for a knock that stated none. The name is held in this module's `inbox` table (no part outside `doorbell`), so no QUESTION was needed. `pulledknocks` (R18) is a fixed-field read for `sources` and is unchanged.
+2. **Small 1.** `DECLARED_OPS` declares `inboxlist` where `doorbellOps` routes it (class, weight and description as the existing `inbox` hand row and op-grades read it; fields `status`, `sort`, `dir`, `limit`, `after`, none required). The member-facing description is `localize("doorbell.declared.inboxlist", …)`, written once.
+
+**Tests (each seen failing first).** `knock-name.test.mjs`: "R27 R15: knocksof answers the file name and media type …" and its control (a knock that stated neither answers both null through `knocksof` and `inboxget`). `declared-ops.test.mjs`: "R26 doorbell declares inboxlist where the route is" (every op in `DECLARED_OPS` is a key of `doorbellOps`, and `declaredOpHolds` for `inboxlist`) and its control (the declared list's classes and no-write, and the route answers the list). Words are read by key; no sentence is copied.
+
+**Proposed requirement lines (BOB writes).** (a) R27 amended: "`knocksOf` (R15) rows answer `file_name` and `media_type` as `inboxList` and `inboxGet` do, null for a knock that stated none." (b) R26 amended: `inboxlist` joins `knock`, `knocksof`, `inboxpull`, `inboxresolve` (and the three reads round 2 added) among the declared ops.
+
+**Not mine, for BOB (P9).** The alias half of Small 1 is `op-declarations`' and `control-plane`'s: `inbox` is still a hand row in `op-declarations` (`OPS_HAND`, also named in its act lists) and the control plane maps `inbox` to the `inboxlist` route (`DO_PATH`). To make `inbox` the alias of the declared `inboxlist`, `OP_ALIASES` there needs `inbox: "inboxlist"` and the hand row renamed `inboxlist`; until then both are declared (the owner's `inboxlist` is merged as a new op, `inbox` untouched, and the alias still answers). Their R81 agreement holds today because no hand row is named `inboxlist`.
+**Deferred.** None.
+
+**Suites and checks.** `node --test --test-force-exit bio-plane/test/m/doorbell/`: 88 of 88 pass (85 before). Users: sources 44/44, op-declarations 242/242, op-grades 145/145, test-support 65/65, control-plane `m/` 0 failures, plane 279 of 280 and store-door 52 of 53; the reds (`plane` R24 words of the screens, `store-door` R17 `groupdescriptiondraft`) are on the tranche tip too and not mine. `build/plan/impact.mjs origin/tranche/T51 HEAD` lists 85 affected modules; its summary shows short counts for other modules (pdf-worker, agent-steps, agent-worker, corpus-export, journey-check, public-read and others) that I did not trace; I ran the direct users above and the plane and control-plane suites, and did not compare the rest against the tip. `checks/format.mjs`: one failure, `build/rulings.md:4346` (K4349), not mine and on the tip. `architecture doorbell` 0, `coverage doorbell` 27 of 27 live ids named, `words doorbell` 0 failures, `ownership doorbell origin/tranche/T51 job/T51/doorbell` 0 failures.
+
+**Safe view before the pull (not in this entry).** As round 2 recorded: a member-only read (`inboxview`) that fetches the knock's bytes, hashes them against the row's digest, runs them through the file-safety scan and answers only what the scan allows; it needs a doorbell requirement, `file-safety` in `uses` (layer contract permitting), the op declared and routed, and a screen door in screens-intake. `later-ux.md` (K4332) holds it.
+
+Size (session_012xGAhuEiWYxdWHqLzyKcUo): test runs 8, module lines 1182
+
+## J4 · COMPLETE
+
+COMPLETE (fix round 3, wave 1, B4). C28: knocksof now answers file_name and media_type (inboxlist and inboxget already did); the name is held in doorbell's inbox row, nothing outside. Small 1: inboxlist declared in DECLARED_OPS where routed. Tests seen failing first, with controls: knock-name.test.mjs (R27 R15) and declared-ops.test.mjs (R26). Doorbell 88/88; sources, op-declarations, op-grades, test-support green; plane and store-door each one red (R24 words, groupdescriptiondraft) also on the tranche tip. format has one red (rulings.md:4346, K4349) on the tip; architecture, coverage 27/27, words, ownership 0. Proposed lines: R27 amended (knocksOf rows answer both), R26 gains inboxlist. For BOB (P9): the alias half of Small 1 is op-declarations' and control-plane's: OP_ALIASES needs inbox -> inboxlist and the hand row renamed; until then both are declared and the alias answers. Safe view needs a requirement, file-safety in uses, the op declared and routed, and an intake door (record). Record: build/jobs/T51/doorbell.md.
+
+## Round 5 (E5), DOORBELL #7 · session_01SJ3MSM2hnThczxNQgrgj8g
+
+Read whole: `fix-round-5-T51.md`, `build/requirements/doorbell.md`, `src/doorbell/index.mjs`; `fix-round-5-step0.md` does not exist yet (none of my entries waits on it).
+
+**Root cause** (`src/doorbell/index.mjs:652`): `profileOf({... ct: null ...})`; the pull ignores the knock's stored `media_type` and `file_name` (columns written at :463, read at :502), so `profile.profiled_from_text` is false for a `text/plain` knock and the reading states "not read as text".
+**Why the tests missed it:** `knock-origin` and the control-plane F6 case pull a probe type and a PDF; no test pulls plain text.
+**Failing-first** (`test/m/doorbell/knock-text.test.mjs`, R13): the walker's case (273 bytes of text, `knock-b.txt`, `text/plain`) and the `.TXT`/`.md` no-type case are red now (`false !== true`); the NUL, not-UTF-8, `application/pdf` and no-name-no-type controls pass today and must stay green.
+**Provider not merged:** the fix calls acquisition's `textTypeOf({bytes, type, name})` (plan section 3, merge 2). It is not on `tranche/T51` at 7115408d02 (`git grep textTypeOf` finds nothing). The test is written; the code waits for the merge (no copy of the rule is made here).
+
+## J5 · QUESTION
+
+E5 is ready except for its provider. My failing-first test (test/m/doorbell/knock-text.test.mjs, R13) is red on the walker's case: root cause src/doorbell/index.mjs:652 (ct: null; the knock's stored media_type and file_name are ignored). The fix is one call to acquisition's textTypeOf({bytes, type, name}), which the plan puts at merge 2 (before me), but tranche/T51 at 7115408d02 has no textTypeOf (git grep finds none; acquisition's round-5 job is not among the six started). Smallest thing I need: acquisition's textTypeOf on tranche/T51, with the signature the plan names; ring me when it is merged and I will merge tranche/T51 and finish. I will not copy the rule. If you would rather I wait on nothing, say so and I will add the call behind your chosen signature.
+
+**Done (E5).** Merged `tranche/T51` (acquisition's `textTypeOf` is on it). `src/doorbell/index.mjs:18` imports `textTypeOf`; `:652-655` `#pull` computes `ct = textTypeOf({bytes, type: row.media_type, name: row.file_name})` and hands it to `profileOf` (was `ct: null`). No copy of the rule.
+**Red then green:** `knock-text.test.mjs` R13 cases 1 and 2 red before (`false !== true`, recorded above), green after; controls (NUL, not UTF-8, `application/pdf` over text, no name and no type) green before and after. New data only: a knock pulled before this keeps its stored profile.
+**Suites:** `node --test --test-force-exit bio-plane/test/m/doorbell/`: 92 of 92 pass. `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (doorbell only), affected test files 1.
+**Checks:** `checks/run.mjs`: format, architecture, coverage (6610 of 6610), channels, words (inline 0, plain 0, testcopy 0, missingkey 0) 0 failures; ownership 0 failures.
+**Proposed requirement line (BOB writes):** R13 add: "A pulled knock is profiled with the text type acquisition's `textTypeOf` answers for its bytes, its stated media type and file name (the upload's rule, acquisition R102); a knock whose bytes are not text, or whose stated type is not a text type, is profiled as before. New data only."
+**Through the door** (`op=knock`, `inboxpull`, `op=reading`) is control-plane's seam test.
+Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1185
+
+## J6 · COMPLETE
+
+E5 done. src/doorbell/index.mjs:18 imports acquisition's textTypeOf; #pull (:652-655) passes the knock's media_type and file_name through it into profileOf (was ct: null). Failing-first knock-text.test.mjs (R13): walker's case and the .txt/.md no-type case red before, green after; controls (NUL, not UTF-8, application/pdf over text, no name/type) green throughout. Doorbell suite 92/92; impact: doorbell only; checks/run.mjs and ownership 0 failures, words count not up. New data only. Proposed R13 line is in my record (BOB writes). Through-the-door seam test is control-plane's. Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1155.
+
+## Completion (fix round 9, G126: the pull registers its row; session_01SNmBaYG8fmPmaVutFww2Xa)
+
+**Entries applied.** G126, the doorbell's piece, R28 (new), and BOB #276's added line (K4887).
+- **R-FOUR (1) root cause.** `#pull` (`src/doorbell/index.mjs`, the transaction after the receipt, the `pulled` update and the actor) wrote no job row: the reading a pulled knock owes had no owner at admission, only the control plane's promote hop. Now `register()` calls the registrar inside the pull's own `#tx`, after the actor and before `within`: one row `{kind: "reading", sha: <whole digest>, carrier: <document.file>}`. The registrar is read as `keepLater` is: `capture`'s instance's `registerJob` when a function, else the call's `registerJob` (`pullKnock`, `inboxResolve`'s `pulled` arm), else none; the answer then carries `jobs: {not_registered: [{kind: "reading", reason: "NO_REGISTRAR"}]}`. `{ok: false}`, a throw or a non-answer rolls the pull back and answers `JOB_NOT_REGISTERED` (502) with `knockId` and `job: {kind, reason}`. The alarm is armed after the commit (`armJobs`, capture's instance's else the call's; a failure is the backstop's). A pull that writes nothing (a knock already pulled, bytes the record already holds) registers nothing. No import from a later module.
+- **(2) Why the tests missed it, gap fixed.** No doorbell test had a registrar; the pull's tests ended at the provenance document. `r9-t51.test.mjs` is that gap.
+- **(3) Failing-first, seen RED then GREEN** (`test/m/doorbell/r9-t51.test.mjs`, five tests, each named R28, each with its control, on test-support's `jobRegistrarStub` made part of record-core's transaction as capture's `r9-t51` does). Red, with `src/doorbell/index.mjs` stashed to the tranche: `AssertionError ... actual: 0, expected: 1` (one `reading` row); `a knock already pulled registers no second row ... actual: 0, expected: 1`; `actual: true, expected: false` (refusing registrar left the knock pulled); `one row, nothing read inline ... actual: [], expected: [["reading", <sha>, 0, "queued"]]`; `actual: undefined, expected: { not_registered: [ [Object] ] }`. Green: `ℹ tests 5 ℹ pass 5 ℹ fail 0`.
+  - the five: a pull of new bytes leaves exactly one `reading` row for the digest, armed after (and through `inboxResolve`'s `pulled` arm alike); a pull already pulled or of held bytes registers nothing, a second pull leaves the one row, a row already held is re-armed and none added; a refusing, throwing or non-answering registrar rolls the pull back (knock unpulled, no actor or other row) and answers `JOB_NOT_REGISTERED` with `knockId`, the same knock then pulls with a working registrar; a kill between the held bytes and the transaction finds no pull and no row, the retry one row (`written 0`, `queued`, no inline read), and a refusing `within` takes the row with the pull; no registrar says so in the answer, the call's registrar serves, capture's instance's wins.
+  - The fixture's provenance keeps receipts in memory, outside the SQL transaction, so "no receipt" after a rollback is not observable in it; the actor table and every other table are compared before and after instead.
+- **(4) Platform check: N** (count and field; the stub is the contract). The real table is control-plane's seam (section 3b, 11), after plane-2.
+- **BOB #276 (K4887).** `knock-text.test.mjs` R13 (`61 FF FE 62 63`): the one decode (acquisition R120, G131g) reads those bytes as text, so the test now asserts `profiled_from_text: true` for them; the NUL case and a new all-control-bytes case stay not-text.
+- **Words.** One new sentence, keyed through `localize` in this module: `doorbell.index.job_not_registered`. Row owed to `later-ux.md` (plan section 5): "the reading this knock owes could not be registered, so the knock stays as it was and nothing was filed". The answer's `jobs.not_registered` carries codes, not a sentence.
+- **Files created outside `paths`:** none.
+
+**Deferred.** None. **Found in another module:** none. **Generated artifacts made stale:** none. **Proposed wording for R28 (BOB writes it):** the requirement says "else the pull goes on without a row and says so in its answer"; the answer's note is `jobs.not_registered` with reason `NO_REGISTRAR`, as capture's upload answers it; and the refusal is `JOB_NOT_REGISTERED` (502), as capture's.
+
+**Ran.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/doorbell/`: `tests 97, pass 97, fail 0`. `impact.mjs origin/tranche/T51 HEAD` names 85 modules (a shared-table trigger on `index.mjs`); the users of the pull: 30 test files naming `pullKnock`/`inboxpull`/`inboxResolve` outside this module (affordances, plane, op-declarations, screens-intake, capture, op-grades, store-door, provenance, control-plane) plus `test/m/sources/`: `tests 367, pass 367, fail 0`. Checks from civicos-process: `format: 176 modules, 176 requirements files; 0 failures`; `architecture: ... 0 failures`; `coverage: 1 modules, 28 of 28 live requirement ids named by a test; 0 failures`; `words: ... inline 0, plain 0, testcopy 0, missingkey 0 ... 0 failures`; `ownership: 4 files changed by doorbell between tranche/T51 and HEAD; 0 failures`.
+
+Size (session_01SNmBaYG8fmPmaVutFww2Xa): test runs 6, module lines 1203
+
+## J7 · COMPLETE
+
+COMPLETE · DOORBELL #8 · fix round 9, G126 (the pull registers its row), R28. The pull registers one reading row (whole digest) through the registrar inside its own transaction; a refusing registrar rolls the pull back (JOB_NOT_REGISTERED with knockId); no registrar says so in the answer; held/already-pulled pulls register nothing. Red then green: r9-t51.test.mjs (5 tests). Doorbell 97/97; 30 user test files + sources 367/367. Checks format, architecture, coverage, words, ownership: 0 failures. BOB #276's knock-text line done. New sentence doorbell.index.job_not_registered owed to later-ux. No file created outside paths; nothing deferred. Details in build/jobs/T51/doorbell.md.
+
+## Completion (fix round 10, B9: WALK-FINAL-04B R39, the envelope bound; DOORBELL #9, session_01YBReDY5hYh8xKFsNUdPD1p)
+
+**Requirement ids met:** R1 and R6 (amended K5129); R7 and R10 unchanged and re-run (content over 8 MiB stays `KNOCK_PAYLOAD_TOO_LARGE`, the order of refusals is as before). BOB strikes the "not yet met: T51" marks on R1 and R6.
+
+**K4426's four fields.**
+1. *Root cause.* `bio-plane/src/doorbell/door.mjs:101` refused any raw body over `KNOCK.maxBytes + 4096` (8 MiB + 4 KiB) before parsing; a file arrives as `contentB64` (`screens-publish/doorbell.mjs:72`), 4/3 larger than its bytes, so a file above about 6 MiB was refused `KNOCK_ENVELOPE_TOO_LARGE` though the published content bound is 8 MiB. Fix: `KNOCK.maxEnvelope = 4 * ceil(maxBytes / 3) + 4096` = 11,188,908 bytes, the one bound `knockOp` tests the body against; the cap on decoded content (`KNOCK.maxBytes`) is unchanged.
+2. *Why the tests missed it, and the gap fixed.* Every size test sent `contentText` (one byte per byte) or a raw string, so the base64 expansion never met the bound. The new test sends `contentB64`, and the existing envelope tests (`doorbell.test.mjs` R10 and R6, `inbox.test.mjs`, `rows.test.mjs`, `t35.test.mjs`) now state their edge through `KNOCK.maxEnvelope`.
+3. *Test of the walker's case, through the real entry (`knockOp`), seen red first and then green.* `doorbell.test.mjs` "R1 R6 R7 (K5129)": `contentB64` of 7 MiB and of exactly 8 MiB kept (200, bytes as sent); 8 MiB + 1 B `KNOCK_PAYLOAD_TOO_LARGE` 413 with `maxBytes` 8 MiB (not the envelope); a body of exactly 11,188,908 bytes read; 11,188,909 bytes `KNOCK_ENVELOPE_TOO_LARGE` 413. Red on the old bound: the 7 MiB knock answered 413, not 200. Green after the change.
+4. *Platform check.* **L/P at the redeploy, noted for BOB (K4428):** (a) the Worker's request-body limit must admit an 11,188,908-byte body (Cloudflare's published limit is 100 MB on Free and Pro, but BOB confirms it for this plan); (b) memory and CPU: a full 8 MiB knock holds the 11 MB body, its string, the `atob` string and the 8 MiB array (`Uint8Array.from(atob(..), ..)` is a per-character loop), then the Durable Object receives the base64 again inside a JSON string. I did not measure it in a workerd child (no runtime in this session); the first 8 MiB knock after the redeploy should be read from the logs. No change made for it: the bound is the published one and the decode is R1's.
+
+**Fixture lines (`checks/fixtures.mjs <root> doorbell --list`): 22 failures at the start, 13 now.**
+- *Done:* `instance.test.mjs:76, 79` (record-core's `declarePurge` refusals) now come from record-core's published `tableDeclarationRefusals`; `r9-t51.test.mjs` carries `fixtures-contract: plane job-registrar` on the stub import, the registrar's wiring and the registrar-refusal loop (plane's `r10-fixtures-run.test.mjs` already runs `doorbell job-registrar`), and `fixtures-generic: JOB_TABLE_FULL` on its made-up refusal. The `orphan-run` line for `job-registrar` is thus answered; `store-door`'s `store-replies` run and `answer-envelope`'s `door-helpers` run still have no doorbell marker (below).
+- *Remaining, named with why:*
+  - `storeSilent` hand-built as `{ok:false, reason:"STORE_DID_NOT_ANSWER", op}` at `inbox.test.mjs:14`, `knock-name.test.mjs:12`, `knocker.test.mjs:22`, `ops.test.mjs:13`, `rows.test.mjs:82`, `t35.test.mjs:19`; and the BAD_JSON and UNKNOWN_OP answers at `invariants.test.mjs:132, 133, 141, 157`. Provider: answer-envelope (later in the order, cannot be imported), whose `door-helpers` contract states the full answer (`code`, `check`, `translation`, `detail`, `correlation`). My values are not equal to it and cannot be made equal without copying the translation sentence, which the words check refuses as a test copy, so I did not mark a contract I do not meet. **For BOB:** either answer-envelope publishes the sentence-free part of those answers as data a later module's tests may read, or the doorbell tests take the one answer through the real `knockOp` hooks the plane passes (a change to `knockOp`'s injection, not in my entry).
+  - `homeOf` stood in for provenance at `held.test.mjs:14` (and the same lines at `r9-t51.test.mjs:15`, accepted only because the registrar marker sits within reach; it is the same open item). Provider: provenance (earlier), whose `homeOfHomed`/`registeredHomes` fixtures build a real provenance in its own store; the doorbell's fixture reads the register by SQL from the doorbell's own storage and these tests also check that no receipt, actor or register row is written, so the re-point needs provenance to publish a `homeOf` over a caller's storage. REPORT to BOB under P9: a provenance fixture owed (`homeOf` reading a given storage's `register` and `bundles`).
+
+**Checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/doorbell/`: tests 98, pass 98, fail 0. Users: `screens-publish/public.test.mjs` and `answer-envelope/families.test.mjs`: 41 of 41. `format`: 178 modules, 0 failures. `architecture doorbell`: 0 failures. `coverage doorbell`: 28 of 28 live ids named by a test, 0 failures. `words doorbell`: 0 failures. `ownership doorbell tranche/T51`: 0 failures. `fixtures doorbell --list`: 13 listed, named above.
+
+**Deferred.** None of the module's own.
+
+Size (session_01YBReDY5hYh8xKFsNUdPD1p): test runs 6, module lines 1206
+
+## J8 · COMPLETE
+
+COMPLETE (B9, fix round 10, WALK-FINAL-04B R39). R1 and R6 met: the envelope bound is KNOCK.maxEnvelope = base64 length of 8 MiB + 4 KiB = 11,188,908 bytes; contentB64 of 7 MiB and 8 MiB kept, 8 MiB + 1 B KNOCK_PAYLOAD_TOO_LARGE, 11,188,909 bytes KNOCK_ENVELOPE_TOO_LARGE 413; seen red first (7 MiB refused on the old bound). Doorbell 98/98; users screens-publish and answer-envelope families 41/41; format, architecture, coverage (28/28), words, ownership 0 failures. Fixtures list 22 -> 13: record-core refusals re-pointed to its published fixture; registrar contract markers added (plane runs doorbell job-registrar). Remaining 13, with why, in my record: 10 hand-built storeSilent/BAD_JSON/UNKNOWN_OP answers (provider answer-envelope is later; its door-helpers contract carries the translation sentence the words check forbids copying), and homeOf stand-ins (REPORT: provenance owes a homeOf fixture over a caller's storage). Platform check for BOB at the redeploy: request-body limit for an 11.19 MB body, memory/CPU of a full 8 MiB knock (not measured here). Record: build/jobs/T51/doorbell.md, Completion (B9).
+
+## Completion (fix round 10, follow-up 65, B10: doorbell's half; DOORBELL #10, session_011eQWGNdKbyTzSjrWKDMhqy)
+
+Plan §3 item 65 (K5153), doorbell's half. Before the work the branch was fast-forwarded to `origin/job/T51/doorbell` and merged with `tranche/T51` (`6697aa598a`, a fast-forward).
+
+- **`held.test.mjs`.** The hand-written `homeOf` stand-in at line 14 is replaced by provenance's published `homeOfOver({ host: f.ctx, record: f.core }).homeOf` (`bio-plane/test/m/provenance/fixtures.mjs`), over the same storage. The header now says provenance's real `homeOf` answers. Nothing else in the file changed.
+- **Ten hand-built answers marked (K5099: no translation sentence in any literal).**
+  - Six `storeSilent` 502 literals (`inbox`, `knock-name`, `knocker`, `ops`, `rows`, `t35`): `// fixtures-contract: answer-envelope door-helpers`. Its provider `answer-envelope` is later in `modules.json`; `answer-envelope/door-helpers.test.mjs:11` already carries `fixtures-run: doorbell door-helpers`.
+  - Four BAD_JSON / UNKNOWN_OP answers in `invariants.test.mjs` (lines 132, 133, 141, 157): `// fixtures-contract: store-door store-replies`. `store-door/fixtures.test.mjs:28` already carries `fixtures-run: doorbell store-replies`. The UNKNOWN_OP literal at line 133 lost its `translation: "t"`; the door relays the body unchanged and the test still passes.
+- **The two orphan runs** (`answer-envelope/door-helpers.test.mjs:11`, `store-door/fixtures.test.mjs:28`) now match doorbell's markers. Neither file needs a change; BOB needs no edit there.
+- **Left as it is.** `r9-t51.test.mjs:15` still stands in a `homeOf` for the registrar seam. The checker accepts it (`accepted(job-registrar)`) and follow-up 65 names only line 14, so I did not touch it. BOB may want the same re-point there.
+
+**Checks.**
+- `node checks/fixtures.mjs /home/user/bio doorbell --list`: 0 failures (13 before). The 16 accepted lines are unchanged.
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/doorbell/*.test.mjs`: tests 98, pass 98, fail 0. The run exited by itself (no `--test-force-exit`).
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs doorbell`: 0 failures. `checks/coverage.mjs doorbell`: 28 of 28 live ids named, 0 failures. `checks/ownership.mjs doorbell tranche/T51`: run after the commit.
+- `checks/words.mjs` (via `checks/run.mjs`): no failure names doorbell as its user. `checks/run.mjs` fails in other modules (control-plane, screens-*, plane and others, about 2,140 lines); none is a doorbell failure. Those are the tranche's, not this job's, and I did not change them.
+
+**Deferred.** None of the module's own. The `r9-t51.test.mjs:15` stand-in above is for BOB's decision.
+
+Size (session_011eQWGNdKbyTzSjrWKDMhqy): test runs 1, module lines 1206
+
+## J9 · COMPLETE
+
+COMPLETE (B10, fix round 10, follow-up 65, doorbell's half; commit bac7eb19f0). Re-pointed held.test.mjs:14 to provenance's homeOfOver; marked the ten hand-built answers (six storeSilent against answer-envelope door-helpers, four BAD_JSON/UNKNOWN_OP against store-door store-replies; UNKNOWN_OP's translation sentence left out, K5099). Both orphan runs now match doorbell's markers: no change needed in their files. fixtures doorbell --list: 0 failures (13 before). Doorbell suite 98/98. format, architecture, coverage (28/28), words, ownership: 0 failures for doorbell. Left for BOB: r9-t51.test.mjs:15 still stands in homeOf (accepted by the checker, not named in follow-up 65). Record: build/jobs/T51/doorbell.md, Completion (fix round 10, follow-up 65). Size (session_011eQWGNdKbyTzSjrWKDMhqy): test runs 1, module lines 1206.

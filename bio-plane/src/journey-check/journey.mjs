@@ -1,5 +1,5 @@
 /* journey-check R1: `npm run journey` (the local arm), or `npm run journey -- --live <address>` (the live arm, with its
-   credentials in the environment); `--out <directory>` writes elsewhere than `out/<arm>/`. Prints the report, whose
+   credentials in the environment); `--assistant` sets R20's switch (the assistant works: R9 and R10 are walked whole; by default their assistant steps are reported as not walked, K3717); `--out <directory>` writes elsewhere than `out/<arm>/`. Prints the report, whose
    every value is redacted, and exits 1 on any failure. The screenshots and the report are generated, never committed.
    R4: the walk runs only when this file is the process's entry; importing it starts nothing. */
 import { realpathSync } from "node:fs";
@@ -11,8 +11,8 @@ export async function main(args) {
   const opt = (name) => { const at = args.indexOf(name); return at >= 0 ? args[at + 1] : undefined; };
   const out = opt("--out");
   return args.includes("--live")
-    ? runLive({ base: opt("--live"), ...(out ? { out } : {}) })
-    : runLocal(out ? { out } : {});
+    ? runLive({ base: opt("--live"), ...(out ? { out } : {}), assistant: args.includes("--assistant") })
+    : runLocal({ ...(out ? { out } : {}), assistant: args.includes("--assistant") });
 }
 
 /* Whether `entry` (the process's `argv[1]`) is this file, through any link. */

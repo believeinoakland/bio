@@ -10,6 +10,7 @@ import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 import { ASSISTANT_DISCLOSURE, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS }
   from "../../../src/setup.mjs";
 import * as S from "../../../src/setup.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
@@ -54,7 +55,7 @@ test("R53 (K2093) any keep-away `on` other than false is read as kept away: a st
     const w = await boot({ prov: st(keepAway) });
     const r = w.m.assistantState();
     assert.deepEqual([r.ok, r.on, r.set_by, r.set_at, r.reason], [true, false, null, null, null], why);
-    assert.match(r.detail, /could not be read, so it is read as kept away/, why);
+    assert.equal(r.detail, word("instance-setup.assistant.detail.keep_away_unread"), why);
   }
   /* the real setting, unreadable: ai-accounts answers on: null, and this module reads it as kept away */
   const w = await over();
@@ -164,7 +165,7 @@ test("R55 (T37; N765, K231) assistantGate answers ai-accounts.aiKeptAway() (its 
   w.c.db.exec(`DROP TABLE ai_keep_away`);
   const unread = w.m.assistantGate();
   assert.deepEqual([unread.reason, unread.keep_away], ["AI_KEPT_AWAY", { reason: null, set_by: null, set_at: null }]);
-  assert.match(unread.detail, /could not be read/);
+  assert.equal(unread.detail, localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."));
 });
 
 test("R55 (T37) the one site: an ai-accounts whose aiKeptAway throws is the store's silence (STORE_DID_NOT_ANSWER), never an open gate; this module mints no AI_KEPT_AWAY of its own (no such row is its)", async () => {

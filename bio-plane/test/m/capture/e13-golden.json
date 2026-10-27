@@ -1,0 +1,687 @@
+{
+ "ok": true,
+ "held": [
+  {
+   "bundle_id": "INFO-000",
+   "title": "title INFO-000",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-01T00:00:00Z",
+   "age_days": 70,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "adbd9eb6e79e8ac084730e534b6d1930404ec3544c9ebd29e81951710e0b162f",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 224,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-001",
+   "title": "title INFO-001",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-02T00:00:00Z",
+   "age_days": 69,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "7b963b02dc95bc235eeb88347d925cde1f1bdd201e9b54b756a35ded7c5b94ce",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 225,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-002",
+   "title": "title INFO-002",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-03T00:00:00Z",
+   "age_days": 68,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "65932e89994a31f859fc7594518a58ff2031eac0e2b54796371196777cc553a1",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 226,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-170",
+   "title": "title INFO-170",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-03T00:00:00Z",
+   "age_days": 68,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "2d8521657d0509220e288c9871677f65cf287730696d84e1777030f935babb6e",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 20971520,
+   "format": "html",
+   "whole": false
+  },
+  {
+   "bundle_id": "INFO-003",
+   "title": "title INFO-003",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-04T00:00:00Z",
+   "age_days": 67,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "d3b23f9fe88ffe9379de150ad4c431499662d54ca27e9bc44af97bf6c24a7b16",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 227,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-004",
+   "title": "title INFO-004",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-05T00:00:00Z",
+   "age_days": 66,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "94fbc17e4dff1df773fe07dc7c59a6e7009111dd3c3f83c09ce5ba74822b8c4a",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 228,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-200",
+   "title": "title INFO-200",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-05T00:00:00Z",
+   "age_days": 66,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "c0df6492abd420948f7f66821c9b8929618195e94c8877f053f34e537326bc4f",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 33554433,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-005",
+   "title": "title INFO-005",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-06T00:00:00Z",
+   "age_days": 65,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "f9e3843e771f779db2ad88ed10aa739d9003dbd3b3fa1836afab747df42bd778",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 229,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-201",
+   "title": "title INFO-201",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-06T00:00:00Z",
+   "age_days": 65,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "a3ef6d38849bab51a452c4a2de4dd9b874957aaac7a75bf3f332b4fa8db570a7",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 33554434,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-006",
+   "title": "title INFO-006",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-07T00:00:00Z",
+   "age_days": 64,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "cdb6dfcf5d08fc13eec59f19626e41423b04bfa16ec2bbefdbe68c56e54d11c3",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 230,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-202",
+   "title": "title INFO-202",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-07T00:00:00Z",
+   "age_days": 64,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "52d080ef8f026ab38e2acae4fa6019fb3f3a1bb39278330a3d355fd55653cc23",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 33554435,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-007",
+   "title": "title INFO-007",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-08T00:00:00Z",
+   "age_days": 63,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "d76e6e73637f2c4d6d7e907e8c58d65ea53719341403d395b1bcff8e17dc9716",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 231,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-008",
+   "title": "title INFO-008",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-09T00:00:00Z",
+   "age_days": 62,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "9128ecbf798236a66274860d188f0739a2c3cdc042877b77dee56507c8cffb04",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 232,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-009",
+   "title": "title INFO-009",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-10T00:00:00Z",
+   "age_days": 61,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "e0acc57b7c0cb99a63ce15eac4d75307217a295461388dda1ad67797b47be1ad",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 233,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-010",
+   "title": "title INFO-010",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-11T00:00:00Z",
+   "age_days": 60,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "9337ab55b0ec6fbd9e1f7bffd5d258041fedfb5401fc00ec67a71825662941b7",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 235,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-150",
+   "title": "title INFO-150",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-11T00:00:00Z",
+   "age_days": 60,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "9edfada62e4c69495543ae7c97fc8d85eafde047232e9ac7b6748863369213d6",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": null,
+   "format": "html",
+   "whole": false
+  },
+  {
+   "bundle_id": "INFO-011",
+   "title": "title INFO-011",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-12T00:00:00Z",
+   "age_days": 59,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "1e184f5d6232aaf774b1a8f6602e52e95a4bbe9cced1917e79802fabcaa1635f",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 236,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-100",
+   "title": "title INFO-100",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-17T00:00:00Z",
+   "age_days": 54,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "8313ed7db30a54592faa39c0ba0f48970ee1215a06ea0ff9cd0bace9e0c29b99",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": null,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-101",
+   "title": "title INFO-101",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-18T00:00:00Z",
+   "age_days": 53,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "3f9872a2daf9bb65d077fba27c5ac049066aed3b3c569f38ec724d2df9f93739",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": null,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-102",
+   "title": "title INFO-102",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-19T00:00:00Z",
+   "age_days": 52,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "fb8053cdd9d584192f696b0b9c40d11c38fc1dfee46f5787b07b9082828349d1",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": null,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-103",
+   "title": "title INFO-103",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-20T00:00:00Z",
+   "age_days": 51,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "395ef7694f4abcb956435d2943fd1c73ee067f0b79cdd38f06a5fb978855f781",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": null,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-104",
+   "title": "title INFO-104",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-21T00:00:00Z",
+   "age_days": 50,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "459de80b816970c43e35b73ceaea6ec3ff0e2a21a56d0f7c7ad6cc576ebb97d2",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": null,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-160",
+   "title": "title INFO-160",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-21T00:00:00Z",
+   "age_days": 50,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "623d7bc29008b7cec0afa9c06479a9df3f7d8adb7a0b758f5a04beae055a83ec",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 8388609,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-105",
+   "title": "title INFO-105",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-22T00:00:00Z",
+   "age_days": 49,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "93911fb061ecd9c6c89383fadb8dfd1fef593bac03fe98abd0b49f916548ad85",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": null,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-161",
+   "title": "title INFO-161",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-22T00:00:00Z",
+   "age_days": 49,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "b25aa01fbf4c225927da9da7c2f0cdee88561f5a6337c586b2e4a5c92bdb759d",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 9437185,
+   "format": "html",
+   "whole": true
+  },
+  {
+   "bundle_id": "INFO-250",
+   "title": "title INFO-250",
+   "project": null,
+   "source": null,
+   "collected_since": "2026-01-27T00:00:00Z",
+   "age_days": 44,
+   "eligible": null,
+   "eligibility_basis": "no batch-release examination is registered, so eligibility is undetermined",
+   "captured_for": null,
+   "captured_for_basis": "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+   "capture": {
+    "sha256": "a00ea6b218a63d80c4da33c4539c600c155b0faf3f6f3b5d21af4cac88d9a5cc",
+    "grade": {
+     "grade": null,
+     "route": "unrecorded",
+     "determined": false,
+     "basis": "CAPTURE_ROUTE_UNRECORDED"
+    }
+   },
+   "actor": null,
+   "retrieved": null,
+   "bytes": 33554434,
+   "format": "html",
+   "whole": false
+  }
+ ],
+ "state": "held",
+ "sort": "age",
+ "dir": "desc",
+ "limit": 500,
+ "truncated": false,
+ "next": null
+}

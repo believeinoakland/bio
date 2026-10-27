@@ -1,7 +1,7 @@
 /* pdf-worker's HTTP surface: R1–R12, R35–R38 and R41 of build/requirements/pdf-worker.md.
  *
- * The subject is the COMMITTED BUNDLE (`dist/pdf-worker.bundled.mjs`), the file
- * that deploys. It is driven two ways: under miniflare (workerd, the runtime it
+ * The subject is a fresh build of the source by the committed bundle's own recipe (`subject.mjs`); that the committed
+ * `dist/pdf-worker.bundled.mjs`, the file that deploys, equals such a build is `fleetbundles.test.mjs`'s guard. It is driven two ways: under miniflare (workerd, the runtime it
  * serves in) for the behaviour of each route, and imported into node with a
  * recording `env` where the question is what the Worker touches (R1, R37). */
 import "../../bio-plane/test/sandbox.mjs";
@@ -9,8 +9,10 @@ import "../../bio-plane/test/sandbox.mjs";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
-import { makePdf, content, hex, runner } from "./make-pdf.mjs";
+import { extractPdfStructure, openPdfRange } from "../../bio-plane/src/pdfstructure.mjs";
+import { makePdf, content, image, hex, runner } from "./make-pdf.mjs";
+import { generate } from "../../bio-plane/test/pdfgen.mjs";
+import { BUNDLE } from "./subject.mjs";
 
 const { Miniflare } = await (async () => {
   try { return await import("miniflare"); } catch { /* fall through */ }
@@ -19,7 +21,6 @@ const { Miniflare } = await (async () => {
 })();
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
-const BUNDLE = here("../dist/pdf-worker.bundled.mjs");
 const bundle = await import(pathToFileURL(BUNDLE).href);
 const worker = bundle.default;
 const { t, finish } = runner("structure");
@@ -169,7 +170,13 @@ console.log("\n--- R5: the R2 key, by .get only; NOT_FOUND ---");
   t("R5 under workerd too", [st2, out2.reason], [404, "NOT_FOUND"]);
 }
 
-console.log("\n--- R6: extractPdfStructure's refusal, verbatim, at 422 ---");
+/* pdf-reader's own answer for the range asked (R6, R7): the fields the member passes through beside its `text` and `tier`. */
+const rangeFields = async (bytes, range = {}) => {
+  const { text: _t, ...rest } = await (await openPdfRange(bytes)).range(range);
+  return JSON.parse(JSON.stringify(rest));
+};
+
+console.log("\n--- R6: pdf-reader's refusal, verbatim, at 422 ---");
 {
   const [st, out] = await answer(await post(mf, { capture_sha: NOT_PDF_SHA, store: "bio" }));
   const want = await extractPdfStructure(NOT_PDF);
@@ -180,11 +187,10 @@ console.log("\n--- R6: extractPdfStructure's refusal, verbatim, at 422 ---");
 console.log("\n--- R7 and R9: tier 2 replaces .text, everything else passes through ---");
 {
   const [st, out] = await answer(await post(mf, { capture_sha: SHA, store: "bio" }));
-  const base = JSON.parse(JSON.stringify(await extractPdfStructure(DOC)));
   t("R7 200 and tier 2", [st, out.ok, out.tier], [200, true, 2]);
-  const { text: _a, tier: _b, ...rest } = out;
-  const { text: _c, ...baseRest } = base;
-  t("R7 every other field is extractPdfStructure's own, unchanged", rest, baseRest);
+  const { text: _a, tier: _b, notes, ...rest } = out;
+  t("R7 every other field is pdf-reader's own for the range, unchanged", rest, await rangeFields(DOC));
+  t("R7 the notes are the member's own, none here", notes, []);
   t("R9 one entry per page, pages kept separate", out.text.pages.map((p) => [p.page, p.text.trim()]),
     [[0, "First page words"], [1, ""], [2, "Third page words"]]);
   const marker = { page: 1, reason: "no_text_layer", font: null, codes: "", count: 0 };
@@ -202,13 +208,12 @@ console.log("\n--- R8: over the envelope ---");
   const b = await mfSmall.getR2Bucket("CAPTURES");
   await b.put(`bio/captures/${SHA}`, DOC);
   const [st, out] = await answer(await post(mfSmall, { capture_sha: SHA, store: "bio" }));
-  const base = JSON.parse(JSON.stringify(await extractPdfStructure(DOC)));
   t("R8 over the env limit: 200, tier 1", [st, out.tier], [200, 1]);
   t("R8 the text is the over_envelope shape", out.text, {
     document: "", pages: [],
     undetermined: [{ page: null, reason: "over_envelope", font: null, codes: "", count: 0, bytes: DOC.length, limit: DOC.length - 1 }],
     counts: { chars: 0, undetermined: 1 } });
-  t("R8 the note is appended", out.notes, [...base.notes, "tier2_declined_over_envelope"]);
+  t("R8 the note is appended", out.notes, ["tier2_declined_over_envelope"]);
   await mfSmall.dispose();
 
   const mfExact = newMf({ MAX_PDF_BYTES: String(DOC.length) });
@@ -217,24 +222,61 @@ console.log("\n--- R8: over the envelope ---");
   t("R8 exactly at the limit is not over it", (await (await post(mfExact, { capture_sha: SHA, store: "bio" })).json()).tier, 2);
   await mfExact.dispose();
 
-  /* The default, 16,777,216 bytes: the same document padded with a comment to one
-     byte over, and to exactly the limit. */
+  /* The default, 67,108,864 bytes (64 MiB, measured: test/envelope-memory.probe.mjs): the same document padded with a
+     comment to one byte over, and to exactly the limit. */
   const pad = (n) => { const u = new Uint8Array(n); u.set(DOC); u.fill(0x20, DOC.length); u[DOC.length] = 0x25; return u; };
-  for (const [label, n, tier] of [["one byte over the default", 16777217, 1], ["exactly the default", 16777216, 2]]) {
+  const DEFAULT = 64 * 1024 * 1024;
+  for (const [label, n, tier] of [["one byte over the default", DEFAULT + 1, 1], ["exactly the default", DEFAULT, 2],
+                                  ["the old 16 MiB default plus one", 16777217, 2]]) {
     const bytes = pad(n);
     const sha = hex(bytes);
     const { env } = spyEnv({ [`bio/captures/${sha}`]: bytes });
     const o = await (await nodeCall(env, { capture_sha: sha, store: "bio" })).json();
     t(`R8 ${label} (${n} B): tier ${tier}`, [o.tier, o.text.undetermined[0]?.limit ?? null],
-      [tier, tier === 1 ? 16777216 : null]);
+      [tier, tier === 1 ? DEFAULT : null]);
+    if (tier === 1)
+      t(`R8 ${label}: the decline names the size and the limit`, o.text.undetermined[0],
+        { page: null, reason: "over_envelope", font: null, codes: "", count: 0, bytes: n, limit: DEFAULT });
   }
+}
+
+console.log("\n--- R8: a 23 MB PDF in WinAnsi fonts with no /ToUnicode is read (G34) ---");
+{
+  /* The walker's two files (reportlab, 23.2 MB and 23 MB): twenty text pages in Helvetica, WinAnsiEncoding, no
+     /ToUnicode, and the bulk of the bytes one incompressible image. Tier 1 cannot decode such a font, so only tier 2 has
+     the words; they were over the old 16 MiB envelope, and ended "undetermined, no_tounicode". */
+  const pseudo = (n) => { const out = Buffer.alloc(n); let x = 2463534242; for (let i = 0; i < n; i++) { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; out[i] = x & 0xff; } return out; };
+  const pageIds = Array.from({ length: 20 }, (_, i) => 4 + i);
+  const contentId = (i) => 24 + i;
+  const lines = (p) => Array.from({ length: 30 }, (_, l) => `BT /F1 11 Tf 40 ${760 - l * 12} Td (Page ${p + 1} line ${l + 1} budget appropriation fund amount for the record) Tj ET`).join("\n");
+  const WALKER = makePdf([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    `<< /Type /Pages /Kids [${pageIds.map((i) => `${i} 0 R`).join(" ")}] /Count 20 >>`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    ...pageIds.map((_, i) => `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >>${i === 0 ? " /XObject << /Im0 44 0 R >>" : ""} >> /Contents ${contentId(i)} 0 R >>`),
+    ...pageIds.map((_, i) => content(lines(i))),
+    image(4800, 4800, "/ColorSpace /DeviceGray /BitsPerComponent 8", pseudo(4800 * 4800)),
+  ]);
+  const sha = hex(WALKER);
+  const tier1 = await extractPdfStructure(WALKER);
+  t("R8 the walker's shape: the file is over the old 16 MiB envelope and under 24 MiB",
+    [WALKER.length > 16 * 1024 * 1024, WALKER.length < 24 * 1024 * 1024], [true, true]);
+  t("R8 the walker's shape: tier 1 alone cannot read its words (no_tounicode, no characters)",
+    [tier1.text.counts.chars, tier1.text.undetermined.length > 0, tier1.text.undetermined[0].reason], [0, true, "no_tounicode"]);
+  const mfWalker = newMf();
+  await (await mfWalker.getR2Bucket("CAPTURES")).put(`bio/captures/${sha}`, WALKER);
+  const [st, out] = await answer(await post(mfWalker, { capture_sha: sha, store: "bio" }));
+  t("R8 the walker's shape under workerd: 200, tier 2, with its words and nothing undetermined",
+    [st, out.tier, out.text.document.includes("Page 20 line 30 budget appropriation fund amount for the record"), out.text.pages.length, out.text.counts.undetermined],
+    [200, 2, true, 20, 0]);
+  t("R8 the walker's shape: no decline note", out.notes.includes("tier2_declined_over_envelope"), false);
+  await mfWalker.dispose();
 }
 
 console.log("\n--- R10: the tier-2 pass throws ---");
 {
   await bucket.put(`bio/captures/${BROKEN_SHA}`, BROKEN);
   const [st, out] = await answer(await post(mf, { capture_sha: BROKEN_SHA, store: "bio" }));
-  const base = JSON.parse(JSON.stringify(await extractPdfStructure(BROKEN)));
   t("R10 200, tier 1", [st, out.ok, out.tier], [200, true, 1]);
   t("R10 the tier2_extraction_error text", out.text, {
     document: "", pages: [],
@@ -242,10 +284,37 @@ console.log("\n--- R10: the tier-2 pass throws ---");
     counts: { chars: 0, undetermined: 1 } });
   const note = out.notes[out.notes.length - 1] || "";
   t("R10 one tier2_error note appended, message at most 80 chars",
-    [out.notes.length, /^tier2_error:.{1,80}$/s.test(note)], [base.notes.length + 1, true]);
+    [out.notes.length, /^tier2_error:.{1,80}$/s.test(note)], [1, true]);
   const { text: _a, tier: _b, notes: _n, ...rest } = out;
-  const { text: _c, notes: _d, ...baseRest } = base;
-  t("R10 the structure fields are kept", rest, baseRest);
+  t("R10 the range's fields are kept", rest, await rangeFields(BROKEN));
+}
+
+console.log("\n--- R10: a file cut before its trailer is read on a repaired view (fix round 10, cause 8) ---");
+{
+  /* The walker's case (A5b): 30 pages of six lines, cut at 70 per cent of its bytes (16,746 B). pdf.js throws on the cut
+     file; tier 1 cannot decode its WinAnsi font; so before this the whole file answered tier2_extraction_error. */
+  const cut = generate({ kind: "pdf", seed: "rw9-A-5b", size: { pages: 30, lines: 6 }, truncate: 0.7 });
+  const bytes = await cut.bytes();
+  const sha = hex(bytes);
+  await bucket.put(`bio/captures/${sha}`, bytes);
+  t("R10 the walker's file is 16,746 bytes and loses pages 23 to 30", [bytes.length, [...Array(30)].map((_, i) => cut.truth.page(i + 1).unread).filter(Boolean).length], [16746, 8]);
+  const [st, out] = await answer(await post(mf, { capture_sha: sha, store: "bio" }));
+  const words = (x) => x.replace(/\s+/g, "");
+  t("R10 a cut file: 200, tier 2, stated partial", [st, out.ok, out.tier, out.partial, out.notes.includes("pdf_truncated")], [200, true, 2, true, true]);
+  t("R10 a cut file: pages 0 to 21 carry the truth's text, none unread",
+    out.text.pages.slice(0, 22).map((p) => [p.page, words(p.text), p.undetermined.length]),
+    Array.from({ length: 22 }, (_, i) => [i, words(cut.truth.page(i + 1).text), 0]));
+  t("R10 a cut file: the pages it could not read are named, pages 22 to 29",
+    out.text.undetermined.map((u) => [u.page, u.reason]), Array.from({ length: 8 }, (_, i) => [22 + i, "truncated"]));
+  t("R10 a cut file: no tier2_extraction_error", out.text.undetermined.some((u) => u.reason === "tier2_extraction_error"), false);
+  t("R10 a cut file: the counts", out.text.counts, { chars: out.text.document.length, undetermined: 8 });
+  /* the range asked is kept on a cut file (R42) */
+  const [, r] = await answer(await post(mf, { capture_sha: sha, store: "bio", from: 20, count: 4 }));
+  t("R10 a cut file, pages 20 to 23: two read, two named", r.text.pages.map((p) => [p.page, p.undetermined.map((u) => u.reason)]),
+    [[20, []], [21, []], [22, ["truncated"]], [23, ["truncated"]]]);
+  /* a whole file is not partial */
+  const [, whole] = await answer(await post(mf, { capture_sha: SHA, store: "bio" }));
+  t("R10 a whole file is not stated partial", [whole.partial, whole.notes], [undefined, []]);
 }
 
 console.log("\n--- R11: GET /version ---");
@@ -260,6 +329,7 @@ console.log("\n--- R11: GET /version ---");
 
 console.log("\n--- R12: anything else ---");
 {
+  // fixtures-own: input the module's own refusal for a route it does not serve, compared with its own dispatch
   const want = { ok: false, reason: "UNKNOWN", detail: "POST /structure or GET /version only" };
   for (const [label, path, method] of [
     ["POST /version", "version", "POST"], ["GET /structure", "structure", "GET"], ["PUT /structure", "structure", "PUT"],

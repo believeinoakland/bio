@@ -6,6 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, MACHINE } from "./fixture.mjs";
+import { heldActsUnreadable } from "../capture/fixtures.mjs";
 import { DOCUMENT_WAITS_MAX, WAIT_ENDING_STATES } from "../../../src/inquiry/index.mjs";
 
 const Q = "INQ-2026-0901-q", R = "INQ-2026-0902-r";
@@ -110,9 +111,11 @@ test("R58 a question at an ending state (concluded, divided, dismissed) answers 
   assert.equal(one(w).state, "waiting", "deferred is no ending state");
 });
 
+const unreadable = heldActsUnreadable();   /* capture's published fixture: its real answer over a store it cannot read */
+
 test("R58 when capture's read cannot be read (it throws, answers ok: false or no list), the question's wait is undetermined with that reason, never no wait", () => {
   for (const heldActsOf of [() => { throw new Error("boom"); },
-                            () => ({ ok: false, reason: "HELD_ACTS_UNREADABLE", acts: null }),
+                            () => unreadable,
                             () => ({ ok: true, acts: "none" }), () => null]) {
     const w = world({ capture: true }); w.member("alice"); w.inquiry(Q);
     w.held.heldActsOf = heldActsOf;
@@ -121,7 +124,7 @@ test("R58 when capture's read cannot be read (it throws, answers ok: false or no
     assert.match(a.why, /could not be read/);
   }
   const w = world({ capture: true }); w.member("alice"); w.inquiry(Q);
-  w.held.heldActsOf = () => ({ ok: false, reason: "HELD_ACTS_UNREADABLE", acts: null });
+  w.held.heldActsOf = () => unreadable;
   assert.match(one(w).why, /HELD_ACTS_UNREADABLE/);
 });
 
@@ -157,4 +160,48 @@ test("R58 K1618 DEC-94 the read writes nothing, raises nothing and never throws:
     .map((t) => [t.name, w.count(`"${t.name}"`)]);
   assert.deepEqual(after, before, "no row written anywhere");
   assert.deepEqual([told, w.raisedCalls], [[], []]);
+});
+
+const waitsOf = (w, q = Q, viewer = V("alice")) => w.k.questionWaits({ question: q, viewer, asOf: "2026-10-10T12:00:00Z" });
+
+test("R55 R58 (K5130) questionWaits, as the asker reads it, carries the documents set aside and the history exactly as documentWaits gives them: by and reason, a restore ends the wait and both stay", () => {
+  const w = setup();
+  assert.deepEqual([waitsOf(w).document_waits, waitsOf(w).history], [[], []], "nothing set aside yet");
+  aside(w, [D1], "Out of scope for now.", V("bob"));
+  const a = waitsOf(w);
+  const real = one(w);
+  assert.deepEqual(a.document_waits.map((x) => [x.document, x.by, x.reason]), [[D1, V("bob"), "Out of scope for now."]]);
+  assert.deepEqual(a.document_waits, real.waits, "the set-aside waits are R58's");
+  assert.deepEqual(a.history, real.history, "the history is R58's");
+  assert.equal(a.waits.length, 0, "the dated waits are untouched");
+  restore(w, [D1], "Needed after all.", V("alice"));
+  const b = waitsOf(w);
+  assert.deepEqual(b.document_waits, [], "a restore ends the wait");
+  assert.deepEqual(b.history.map((h) => [h.document, h.act, h.by, h.reason]),
+    [[D1, "set_aside", V("bob"), "Out of scope for now."], [D1, "restore", V("alice"), "Needed after all."]]);
+  assert.deepEqual(b.history, one(w).history);
+});
+
+test("R55 R58 (K5130) questionWaits: a viewer who may not see the document gets neither its wait nor its history; a question at an ending state answers its history and no wait; an unreadable capture read is not no wait", () => {
+  const w = setup();
+  aside(w, [D1, D2], "Not needed yet.");
+  const P = w.project("Bob's own", "bob");
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, P, D1);
+  const a = waitsOf(w);
+  assert.deepEqual(a.document_waits.map((x) => x.document), [D2]);
+  assert.ok(!JSON.stringify(a).includes(D1), "the hidden document is unannounced");
+  assert.deepEqual(waitsOf(w, Q, V("bob")).document_waits.map((x) => x.document).sort(), [D1, D2].sort());
+  w.st.sql.exec(`UPDATE bundles SET current_state='concluded' WHERE bundle_id=?`, Q);
+  const e = waitsOf(w);
+  assert.deepEqual([e.document_waits, e.history.map((h) => h.document)], [[], [D2]]);
+  const u = world({ capture: true }); u.member("alice"); u.inquiry(Q);
+  u.held.heldActsOf = () => unreadable;
+  const r = waitsOf(u);
+  assert.deepEqual([r.document_waits, r.history], [null, null], "undetermined, never no wait");
+  assert.match(r.document_waits_why, /HELD_ACTS_UNREADABLE/);
+  /* control: a question the viewer may not see is answered as an absent one, with no document waits */
+  const hidden = setup(); aside(hidden, [D1], "x");
+  const HP = hidden.project("Bob's own", "bob");
+  hidden.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, HP, Q);
+  assert.deepEqual({ ...waitsOf(hidden), question: null }, { ...waitsOf(hidden, "INQ-2026-0998-none"), question: null });
 });

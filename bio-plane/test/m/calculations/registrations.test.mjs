@@ -61,7 +61,7 @@ test("R20 at start it registers with people.registerRosterSource: for an organis
     const st = w.people.staffingAt({ organisation, at, viewer });
     assert.equal(st.ok, true, JSON.stringify(st).slice(0, 300));
     const mine = st.rosters.filter((x) => x.source === "calculations");
-    assert.equal(mine.length, 1, "registered once, at start");
+    assert.equal(mine.length, 1);
     assert.equal(mine[0].level, "held as a table, read by calculations");
     return mine[0].answer;
   };

@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as cg from "../../../src/connection-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const { createRegistry } = cg;
 const nb = () => ({ items: [] });
@@ -72,6 +73,13 @@ test("R4 owners lists every owner and its kinds in registration order; kindOf an
   o[0].kinds[0].word = "changed"; o.pop();
   assert.equal(r.kindOf("b1").word, "bee");
   assert.equal(r.owners().length, 2);
+});
+
+test("R7 a read with no viewer is refused VIEWER_MISSING, its reason read by connection-grammar.registry.viewer_missing", () => {
+  const a = createRegistry().neighbours({ owner: "nobody", node: "ENT-2026-0001", at: null, viewer: undefined, scope: null });
+  assert.equal(a.refused, "VIEWER_MISSING");
+  assert.equal(a.why, localize("connection-grammar.registry.viewer_missing",
+    "a read names the member reading; an absent viewer is neither an administrator nor the public"));
 });
 
 test("R5 each registry is its own; the default registry is one the plane wires, with the same services", () => {

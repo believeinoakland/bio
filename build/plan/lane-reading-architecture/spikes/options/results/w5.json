@@ -1,0 +1,25 @@
+{
+ "str2097152": {
+  "status": "complete"
+ },
+ "str3000000": {
+  "status": "errored",
+  "error": "Step big-1 output is too large. Maximum allowed size is 1MiB."
+ },
+ "str4194304": {
+  "status": "errored",
+  "error": "Step big-1 output is too large. Maximum allowed size is 1MiB."
+ },
+ "str6000000": {
+  "status": "errored",
+  "error": "Step big-1 output is too large. Maximum allowed size is 1MiB."
+ },
+ "str8388608": {
+  "status": "errored",
+  "error": "Step big-1 output is too large. Maximum allowed size is 1MiB."
+ },
+ "str10485760": {
+  "status": "errored",
+  "error": "Step big-1 output is too large. Maximum allowed size is 1MiB."
+ }
+}

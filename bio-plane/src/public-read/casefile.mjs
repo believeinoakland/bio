@@ -7,9 +7,11 @@
  * `../publication/worker.mjs`), from what the published projection holds (`PublicRead.caseFileFacts`) and the published
  * bucket; served part by part (`op=publishedbytes&sha256=<manifest>&format=zip&part=<n>`).
  *
- * THE FORMAT IS `case-grammar`'s (its R13, `CASE_FILE_FORMAT`; a stored `bio-case-file/1` is served as written): every path is `caseFilePath`'s, the manifest is
+ * THE FORMAT IS `case-grammar`'s (its R13, `CASE_FILE_FORMAT`; a stored `bio-case-file/1`, `/2` or `/3` is served as written): every path is `caseFilePath`'s, the manifest is
  * `CASE_FILE_MANIFEST_PATH` at each part's root, the files are listed in path order and each part's digest is
- * `casePartDigest`'s; this file writes the format and decides nothing it states. What is this module's (K1315, reported):
+ * `casePartDigest`'s; this file writes the format and decides nothing it states. A `ref` on two or more rows of the case document
+ * names each of its files by the row's capture (`materials/<ref>/<sha>/<leaf>`), and a case file with such a path states
+ * `bio-case-file/4` (G50; `caseFileFormatFor`); every other keeps `/3`. What is this module's (K1315, reported):
  * each file sits at its path directly under the part's root; an attestation is named `<n>-<by_kind>.json` under its
  * material's ref, `n` its place among that material's rows; a key is written on one line as `<type> <base64>`.
  *
@@ -19,11 +21,35 @@
  * `CONTAINER_TOO_LARGE` (C-98.7) at the zip while the file is still served by its own hash: a case file is never refused
  * for its size and nothing is left out. */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { canonicalJson } from "../record-grammar/index.mjs";
-import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
-         provOf } from "../case-grammar/index.mjs";
+import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, caseFileEntryOf, casePartDigest, completeEditionOf,
+         calculationFileText, provOf } from "../case-grammar/index.mjs";
+import * as grammar from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
+
+/** R44 (G121): the most R2 calls of one kind in flight at once: the case file's reads of materials, and the writes of its files. */
+export const CASEFILE_GROUP = 8;
+
+/** R44 (G121b): a window of `CASEFILE_GROUP` calls that slides, so the next call starts the moment one ends and no call waits for a
+ *  group's slowest. Runs `fn(item)` over `items`, at most `width` at a time, in order of start; answers the settled results in the
+ *  items' order (`{status, value | reason}`), never throws, and starts no further call once one has failed (those in flight finish). */
+export async function inWindow(items, fn, width = CASEFILE_GROUP) {
+  const out = new Array(items.length);
+  let next = 0, failed = false;
+  const lane = async () => {
+    while (!failed && next < items.length) {
+      const i = next++;
+      try { out[i] = { status: "fulfilled", value: await fn(items[i], i) }; } catch (reason) { failed = true; out[i] = { status: "rejected", reason }; }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(width, items.length) }, lane));
+  return out;
+}
+
+/** R44 (G121b): an object this small is written without asking after it first (its key is its hash, so the same bytes again change
+ *  nothing); a larger one is asked after, so a big file already held is not sent again. Proposed; BOB records. */
+export const CASEFILE_BLIND_PUT_MAX = 256 * 1024;
 
 const enc = new TextEncoder();
 const utf8 = (s) => enc.encode(String(s));
@@ -51,8 +77,7 @@ export const ARCHIVE_HOLDS_ORIGINAL = word("public-read.archive_holds_material")
 
 /* R6: the assembly's one statement that it built nothing, naming what it could not read. */
 const notAssembled = (cause, what) => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED", cause, ...what,
-  detail: "the case edition is published and its findings answer by hash; its case file was not built, because it would "
-        + "have left out something it must carry. Nothing was recorded for it." });
+  detail: localize("public-read.casefile.the_case_edition_is_published", "the case edition is published and its findings answer by hash; its case file was not built, because it would have left out something it must carry. Nothing was recorded for it.") });
 
 /** A signing key on one line, as an SSH public key is written: its type (the wire blob's first string) and its base64. */
 export function keyLine(keyB64) {
@@ -75,16 +100,47 @@ const entryCost = (name, bytes) => bytes + utf8(name).length * 2 + 76;
  *  or the signed document's bytes do not hash to its digest: a case file that would leave out what it must carry is
  *  never built. It is a statement inside an act that has committed, never a refusal (R6). `maxBytes` is the part bound
  *  (R5). */
-export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES }) {
+export async function buildCaseFile({ facts, group = null, read: readStore, maxBytes = CONTAINER_MAX_BYTES }) {
   const files = [];
+  /* G50 (B): one file at one path is listed once (a shared archive two captures reach, the same copy two rows name); a
+     second file at the same path with other bytes is kept, and the case file's own check then states the repeated path. */
   const add = async (path, kind, content) => {
-    files.push({ path, kind, sha256: await sha256Hex(content), bytes: content.length, content });
+    const sha256 = await sha256Hex(content);
+    if (typeof path === "string" && files.some((f) => f.path === path && f.sha256 === sha256)) return;
+    files.push({ path, kind, sha256, bytes: content.length, content });
   };
   const docBytes = utf8(facts.document.text);
   if ((await sha256Hex(docBytes)) !== facts.document.doc_sha)
-    return notAssembled("the signed case document's text does not hash to its digest", { sha256: facts.document.doc_sha });
+    return notAssembled(localize("public-read.casefile.signed_document_text_does_not", "the signed case document's text does not hash to its digest"), { sha256: facts.document.doc_sha });
   await add(caseFilePath("case_document"), "case_document", docBytes);
   await add(caseFilePath("case_signature"), "case_signature", utf8(facts.document.sig_armored ?? ""));
+
+  /* R44 (G121): every object the assembly will read is read first, in groups of 8, each answer (or throw) kept by its hash and
+     handed back at the place that asks for it, so the files, the `unheld` list and every statement are what the one-at-a-time
+     read gave, in the same order, and a read that threw throws where it was asked. */
+  const wanted = [];
+  const inline = (sha, text) => { if (text == null) wanted.push(sha); };
+  for (const f of facts.findings) if (f.published) inline(((f.published.parts || []).find((x) => x && x.sha256 === f.published.bundle_sha) ?? { sha256: f.published.bundle_sha }).sha256);
+  for (const m of facts.materials) {
+    if (m.original_of_copy || m.capture_invalid) continue;
+    inline(m.sha, m.bytes_text);
+    if (m.kind !== "observation") inline(m.text_sha, m.extracted_text);
+    if (m.kind !== "observation") for (const a of m.archives || []) if (a.registered !== false) inline(a.sha, a.text);
+  }
+  for (const o of facts.obscured || []) if (o.registered && !o.capture_invalid) wanted.push(o.copy);
+  for (const a of facts.attestations) for (const t of a.held || []) inline(t.sha, t.text);
+  for (const c of facts.calculations || []) for (const i of c.inputs || []) inline(i.sha, i.text);
+  const fetched = new Map();
+  const todo = [...new Set(wanted)].filter((sha) => /^[0-9a-f]{64}$/.test(String(sha ?? "")));
+  await inWindow(todo, async (sha) => {
+    try { fetched.set(sha, { bytes: await readStore(sha) }); } catch (error) { fetched.set(sha, { error }); }
+  });
+  const read = async (sha) => {
+    const got = fetched.get(sha);
+    if (!got) return readStore(sha);
+    if (got.error) throw got.error;
+    return got.bytes;
+  };
 
   for (const f of facts.findings) {
     const at = (kind) => caseFilePath(kind, f.bundle_id);
@@ -94,7 +150,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
         ?? { path: "bundle.md", sha256: f.published.bundle_sha };
       const bytes = await read(p.sha256);
       if (!bytes || (await sha256Hex(bytes)) !== p.sha256)
-        return notAssembled("a finding's published bytes are not in the published object store at their hash",
+        return notAssembled(localize("public-read.casefile.a_finding_s_published_bytes", "a finding's published bytes are not in the published object store at their hash"),
                             { finding: f.bundle_id, sha256: p.sha256 });
       await add(at("finding"), "finding", bytes);
       if (f.published.sig_armored) await add(at("finding_signature"), "finding_signature", utf8(f.published.sig_armored));
@@ -111,18 +167,22 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     const bytes = inline != null ? utf8(inline) : await read(sha);
     return bytes && (await sha256Hex(bytes)) === sha ? bytes : null;
   };
+  /* G50 (B): the key a material's files are spelled by: the `ref`, or `[ref, capture]` for a `ref` on several rows (`facts`
+     states the row's `capture`); a row whose capture is not a sha (`capture_invalid`) has none to spell, so none of its files
+     is carried at a plain path: each is named in `unheld`. */
+  const keyOf = (m) => (m.capture ? [m.ref, m.capture] : m.ref);
   for (const m of facts.materials) {
     const kind = m.kind === "observation" ? "observation" : "document";
     /* R23 (T37): bytes a material carried as its copy shares are its original's, which never travel. */
     if (m.original_of_copy) { unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes",
                                             why: ORIGINAL_NOT_CARRIED }); continue; }
-    const bytes = await held(m.sha, m.bytes_text);
-    if (!bytes) unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes" });
-    else await add(caseFilePath(kind, m.ref), kind, bytes);
+    const bytes = m.capture_invalid ? null : await held(m.sha, m.bytes_text);
+    if (!bytes) unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes", ...(m.capture_invalid ? { unspellable: true } : {}) });
+    else await add(caseFilePath(kind, keyOf(m)), kind, bytes);
     if (kind === "document") {
-      const tb = await held(m.text_sha, m.extracted_text);
-      if (!tb) unheld.push({ ref: m.ref, sha: m.text_sha ?? null, what: "extracted_text" });
-      else await add(caseFilePath("extracted_text", m.ref), "extracted_text", tb);
+      const tb = m.capture_invalid ? null : await held(m.text_sha, m.extracted_text);
+      if (!tb) unheld.push({ ref: m.ref, sha: m.text_sha ?? null, what: "extracted_text", ...(m.capture_invalid ? { unspellable: true } : {}) });
+      else await add(caseFilePath("extracted_text", keyOf(m)), "extracted_text", tb);
     }
     /* R32 (N717; K2004): a member document carried whole brings its `container` record and its archive, outward to the
        outermost, each under the material's ref (an archive named by its own SHA-256, a record by its member's, `case-grammar`
@@ -131,7 +191,10 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
        named there too. The archive's tokens travel as today, in the material's attestation rows. */
     if (kind === "document" && bytes) for (const a of m.archives || []) {
       const ab = a.registered === false ? null : await held(a.sha, a.text);
-      if (!ab) unheld.push({ ref: m.ref, sha: a.sha ?? null, what: a.kind, ...(a.holds_original ? { why: ARCHIVE_HOLDS_ORIGINAL } : {}) });
+      /* an archive the commit did not register (`case-carriage` R8 holds none that holds an image) is named but is not a material
+         that went missing: `unregistered`, which no retry heals */
+      if (!ab) unheld.push({ ref: m.ref, sha: a.sha ?? null, what: a.kind, ...(a.holds_original ? { why: ARCHIVE_HOLDS_ORIGINAL } : {}),
+                            ...(a.registered === false && !a.holds_original ? { unregistered: true } : {}) });
       else await add(caseFilePath(a.kind, [m.ref, a.kind === "container" ? a.member : a.sha]), a.kind, ab);
     }
   }
@@ -141,9 +204,9 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
      under that ref; never the original's bytes, its extracted text, or an archive or container record of it. A copy
      not registered, or whose bytes do not hash to that digest, is not carried and is named in `unheld`. */
   for (const o of facts.obscured || []) {
-    const bytes = o.registered ? await held(o.copy) : null;
-    if (!bytes) unheld.push({ ref: o.ref, sha: o.copy ?? null, what: "obscured" });
-    else await add(caseFilePath("obscured", o.ref), "obscured", bytes);
+    const bytes = o.registered && !o.capture_invalid ? await held(o.copy) : null;
+    if (!bytes) unheld.push({ ref: o.ref, sha: o.copy ?? null, what: "obscured", ...(o.capture_invalid ? { unspellable: true } : {}) });
+    else await add(caseFilePath("obscured", keyOf(o)), "obscured", bytes);
   }
   /* R33 (K2129): the edition's criteria rows exactly as R31 answers them, once, in canonical JSON; none for an edition
      whose criteria were not recorded (committed before T35). */
@@ -180,7 +243,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   if (calcs.length) await add(caseFilePath("calculation", "prov"), "calculation", utf8(provOf(calcs.map((c) => c.row))));
   const unspelled = files.filter((f) => typeof f.path !== "string");
   if (unspelled.length)
-    return notAssembled("a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path",
+    return notAssembled(localize("public-read.casefile.a_finding_id_a_material", "a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path"),
                         { kinds: unspelled.map((f) => f.kind) });
 
   /* The signing keys: the case document's signer's and each finding's, once each, in the order they are met. */
@@ -189,7 +252,9 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     if (typeof k !== "string" || !k || keys.some((x) => x.b64 === k)) continue;
     keys.push({ b64: k, key: keyLine(k), fingerprint: await keyFingerprint(k) });
   }
-  const head = { format: CASE_FILE_FORMAT, group, case: facts.case, edition: facts.edition,
+  /* G50 (B): `bio-case-file/4` is declared only by a case file with a path that states a capture; every other keeps `/3`. */
+  const discriminated = files.some((f) => typeof f.path === "string" && caseFileEntryOf(f.path)?.capture);
+  const head = { format: discriminated ? grammar.caseFileFormatFor(files.map((f) => f.path)) : CASE_FILE_FORMAT, group, case: facts.case, edition: facts.edition,
                  case_document_sha: facts.document.doc_sha,
                  keys: keys.map((k) => ({ key: k.key, fingerprint: k.fingerprint })) };
 
@@ -243,3 +308,32 @@ export function caseFilePartLayout(manifest, index) {
 
 /** R5: the parts a case file's manifest lists, by index. */
 export const caseFileParts = (manifest) => (Array.isArray(manifest.parts) ? manifest.parts.map((p) => Number(p.index)) : []);
+
+/* G54 (K4426, K4565, K4566, K4571): THE CASE FILE'S STATE AS THE PUBLIC READ STATES IT. The closed set of codes a failed attempt
+   is stated by, the one mapping from what `publication` stored to the state and code `publishedcase` answers, and nothing
+   else of the attempt: no sentence, no `step`, no `error`, no `detail` (the op is public; those stay in the row and the log).
+   The reader's sentences, by state and code, are `screens-publish`'s. */
+export const CASEFILE_CODES = Object.freeze(["NO_BUCKET", "STORE_SILENT", "MATERIAL_MISSING", "FINDING_MISSING", "BUCKET_FAILED",
+  "NOT_RECORDED", "INTERRUPTED", "TOO_LARGE", "UNKNOWN"]);
+export const CASEFILE_PUBLIC_STATES = Object.freeze(["built", "being_prepared", "retrying", "stopped", "waiting_on_members"]);
+/** A `building` older than this is an attempt that was interrupted (`publication`'s `CASEFILE_BUILDING_WAIT_MS`). */
+export const CASEFILE_BUILDING_STALE_MS = 120000;
+const codeOf = (why) => (why && CASEFILE_CODES.includes(why.code) ? why.code : "UNKNOWN");
+/** `{state, code, attempted_at, attempts}` for one case edition: `complete`, the `manifest_sha` it records, and the ledger as
+ *  `publication` stores it (`casefile_state`, `casefile_attempts`, `casefile_attempted_at`, `casefile_why` as JSON text or
+ *  null); `now` in milliseconds. An edition with a manifest and no ledger state (every edition before G54) is `built`. */
+export function caseFileStateOf({ complete, manifest_sha = null, state = null, attempts = null, attempted_at = null, why = null }, now = Date.now()) {
+  let parsed = null;
+  try { parsed = typeof why === "string" && why ? JSON.parse(why) : why && typeof why === "object" ? why : null; } catch { parsed = null; }
+  const n = Number(attempts) || 0;
+  const out = (st, code) => ({ state: st, code, attempted_at: attempted_at ?? null, attempts: n });
+  if (!complete) return out("waiting_on_members", null);
+  if (state === "stopped") return out("stopped", codeOf(parsed));
+  if (state === "failed") return out("retrying", codeOf(parsed));
+  if (state === "building") {
+    const t = Date.parse(attempted_at ?? "");
+    return out("being_prepared", Number.isFinite(t) && now - t > CASEFILE_BUILDING_STALE_MS ? "INTERRUPTED" : null);
+  }
+  if (state === "built" || (state == null && manifest_sha)) return out("built", null);
+  return out("being_prepared", null);
+}

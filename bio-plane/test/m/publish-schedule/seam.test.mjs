@@ -209,7 +209,8 @@ test("R1 R10 the factory: one instance per host; it creates scheduled_editions w
   w.ps.migrate();
   assert.deepEqual(w.rows(`SELECT * FROM scheduled_editions`), rows, "every boot keeps the rows");
   const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((c) => [c.name, c.type, c.notnull, c.dflt_value]);
-  assert.equal(cols("scheduled_editions").length, 19);
+  assert.equal(cols("scheduled_editions").length, 20, "publication's 19 columns and R2's case_file (G54), added once");
+  assert.deepEqual(cols("scheduled_editions").at(-1), ["case_file", "TEXT", 0, null]);
   const idx = w.rows(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='scheduled_editions' AND name NOT LIKE 'sqlite_%' ORDER BY name`);
   assert.deepEqual(idx.map((r) => r.name), ["scheduled_editions_case", "scheduled_editions_due"]);
 });

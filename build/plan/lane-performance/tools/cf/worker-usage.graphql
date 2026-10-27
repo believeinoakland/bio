@@ -1,0 +1,8 @@
+{ viewer { accounts(filter:{accountTag:"ACCOUNT"}) {
+  w: workersInvocationsAdaptive(limit:20, filter:{scriptName:"biosmoke8", status:"success", datetime_geq:"2026-10-23T11:01:00Z", datetime_leq:"2026-10-23T14:30:00Z"}) {
+    sum { requests } quantiles { cpuTimeP25 cpuTimeP50 cpuTimeP75 cpuTimeP90 cpuTimeP99 cpuTimeP999 wallTimeP90 wallTimeP99 wallTimeP999 } }
+  h: workersInvocationsAdaptive(limit:100, orderBy:[datetimeHour_ASC], filter:{scriptName:"biosmoke8", datetime_geq:"2026-10-22T00:00:00Z", datetime_leq:"2026-10-23T14:30:00Z"}) {
+    dimensions { datetimeHour } sum { requests } quantiles { cpuTimeP99 wallTimeP50 wallTimeP99 } }
+  s: durableObjectsStorageGroups(limit:20, filter:{datetime_geq:"2026-10-20T00:00:00Z"}) { dimensions { datetimeHour } max { storedBytes } }
+  r: r2StorageAdaptiveGroups(limit:20, filter:{datetime_geq:"2026-10-23T00:00:00Z"}, orderBy:[datetime_DESC]) { dimensions { bucketName datetime } max { payloadSize metadataSize objectCount } }
+} } }

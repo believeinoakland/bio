@@ -7,6 +7,7 @@ import { validateDescriptor } from '../src/providers/descriptor.mjs';
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS, engineFamily, differentEngine, providerById } from '../src/providers/catalogue.mjs';
 import { depsWith, post, putCapture, memoryBucket, EICAR } from './helpers.mjs';
 import { specs, vendorNet, HANDLING } from './vendors.mjs';
+import { ELASTIC_DEFAULT_INDEX } from '../src/providers/sinks.mjs';
 
 const ids = (l) => l.map((d) => d.provider_id);
 const good = () => JSON.parse(JSON.stringify(providerById('scanii')));
@@ -213,7 +214,7 @@ test('R21 the spec\'s config: each required field present, else CONFIG_MISSING n
   assert.deepEqual((await call.forward(elastic))[1].ok, true, 'an optional field left out');
   assert.ok(net.seen.length >= 2);
   for (const r of net.seen) assert.ok(!`${r.url}${JSON.stringify(r.headers)}${r.text}`.includes('UNNAMED-FIELD') && !r.text.includes('elsewhere.example'), 'an unnamed field never leaves');
-  assert.ok(net.seen.some((r) => r.text.includes('civicsmith-security-counts')), 'elastic used its default index');
+  assert.ok(net.seen.some((r) => r.text.includes(ELASTIC_DEFAULT_INDEX)), 'elastic used its default index');
 });
 
 test('R29 GET /providers answers each descriptor\'s and each generic template\'s config list', async () => {

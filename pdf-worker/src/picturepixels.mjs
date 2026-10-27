@@ -25,11 +25,17 @@
  * before anything is allocated, against `PICTURE_SOURCE_MAX`, the reduced one
  * against `PICTURE_FRAME_MAX`. A PNG is still decoded whole (image-codecs R10),
  * so its full frame is judged against `PICTURE_FRAME_MAX` (T43-5's measure).
+ *
+ * THE PREPARATION (R44; T51, FR-42, K4194). With `prepare: true` the grey picture
+ * is also made ready for the engine: the light levelled, the lines turned level,
+ * small print enlarged (`preparePicture`). The engine reads a photograph of a
+ * page at 43 % of its words without it. Without `prepare` the answer is R42's.
  */
 
 import { readJpegHeader, decodeBaselineJpegRows, DctRefusal } from "./dctdecode.mjs";
 import { decodePng, PngRefusal, PNG_REFUSES } from "./pngdecode.mjs";
-import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8 } from "./pagepixels.mjs";
+import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8, isSource } from "./pagepixels.mjs";
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
 
 /** The largest frame held whole here, as `width × height × components`
  *  (R42): a PNG's full frame, read from its header, and a JPEG's REDUCED frame,
@@ -38,7 +44,7 @@ import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8 } from "./pagepixe
  *  4000×3000, 4080×3072) pass whole. Measured at T43-5 (its job record): a
  *  whole decode's live working set is 2.0–2.33 bytes per sample, so this bound
  *  holds it under 88 MB of a 128 MB isolate. */
-export const PICTURE_FRAME_MAX = 4096 * 3072 * 3;
+export const PICTURE_FRAME_MAX = boundOf("image", "picture_frame");
 
 /** The largest JPEG frame decoded here, as `width × height × components` read
  *  from its header (R42, T44): 16384 × 12288 × 3, a 201-megapixel colour
@@ -48,7 +54,8 @@ export const PICTURE_FRAME_MAX = 4096 * 3072 * 3;
  *  process's own, at 48 and at 195 MP, beside the input bytes the caller
  *  holds), so the bound is CPU time: 40–60 ms per megapixel in node, about
  *  12 s for a 200 MP colour reduction, 8 s grey, under a 30 s CPU limit. */
-export const PICTURE_SOURCE_MAX = 16384 * 12288 * 3;
+export const PICTURE_SOURCE_MAX = boundOf("image", "picture_source");
+const EDGE_MAX = boundOf("image", "edge");
 
 const refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
@@ -57,8 +64,8 @@ const refuse = (reason, detail = {}) => {
 
 /* R42: a codec's refusal mapped as R22 and R25 map them, total over PNG_REFUSES
  * (every declared feature is UNSUPPORTED_FILTER unless named here). */
-const PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
-const PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA" };
+const PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, {});
+export const PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA", IMAGE_TOO_LARGE: "IMAGE_TOO_LARGE" };
 /** The `REFUSALS` reason each PNG_REFUSES feature answers, declared so a test
  *  can see the mapping is total. (The memory key is behind `PICTURE_FRAME_MAX`,
  *  which refuses first.) */
@@ -147,6 +154,21 @@ const AXES = [null,
   [true, false, false], [true, true, false], [true, true, true], [true, false, true],
   [false, false, false], [false, false, true], [false, true, true], [false, true, false]];
 
+/* R43, R48: the orientation that is `o` followed by a clockwise turn of `deg`.
+ * Each orientation is the signed permutation it applies to (x, y); a clockwise
+ * quarter turn on a picture with y downwards is (x, y) -> (-y, x). */
+const matrixOf = (o) => {
+  const [xToX, xRev, yRev] = AXES[o];
+  const sx = xRev ? -1 : 1, sy = yRev ? -1 : 1;
+  return xToX ? [sx, 0, 0, sy] : [0, sy, sx, 0];
+};
+function turnedOrientation(o, deg) {
+  let m = matrixOf(o);
+  for (let q = deg / 90; q > 0; q--) m = [-m[2], -m[3], m[0], m[1]];
+  for (let c = 1; c <= 8; c++) if (matrixOf(c).every((v, i) => v === m[i])) return c;
+  throw new Error(`no orientation for ${o} turned ${deg}`);
+}
+
 /** The orientation's picture size: 5–8 swap the sides. */
 const orientedSize = (w, h, o) => (AXES[o][0] ? [w, h] : [h, w]);
 
@@ -234,6 +256,207 @@ async function sha256Hex(u8) {
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+
+/* ── R44: the preparation for the engine ─────────────────────────────────────
+ * A photograph of a page is read badly for three reasons the picture itself
+ * shows: the light is uneven and the paper grey, the page is tilted, and the
+ * letters are small. `prepare` (an opt-in of `renderPictureToPixels`, so R42's
+ * Pillow-exact answer stays the default) answers them in this order, all in
+ * integer-exact or fixed-order float arithmetic, so a call is a pure function
+ * of its bytes (R40):
+ *   1. LEVEL the light: the paper's brightness is taken per cell (the mean of
+ *      the brighter half of the cell's pixels, so ink does not darken it),
+ *      smoothed, and each pixel is divided by it; the picture is then stretched
+ *      so the paper reads 255 and the ink's own level (the darkest twentieth of
+ *      the ink pixels, however few they are) 0.
+ *   2. DESKEW: the ink pixels' row profile is sharpest at the angle the lines
+ *      run; searched over ±PREPARE_TILT_MAX degrees (0.25 steps, then 0.05).
+ *   3. SCALE UP: the median text line's height is measured; a picture whose
+ *      lines are shorter than PREPARE_LINE_PX is enlarged (bicubic) to reach
+ *      it, by no more than PREPARE_SCALE_MAX, and never past `maxEdge`.
+ * The turn and the enlargement are one resampling, so the picture is smoothed
+ * once. Pictures are never reduced here. */
+
+/** The tilt searched, in degrees either way. */
+export const PREPARE_TILT_MAX = 10;
+/** The text line height, in pixels, a small-print picture is enlarged to. 20, not 40 (T51 fix round 2, C18): enlarging a
+ *  blurred page further only enlarges its blur. Measured through the engine on the hard photograph (231 words, 110 dpi,
+ *  blur): lines to 40 px read 48 percent, to 20 px 56; the clean and noisy photographs read 97-100 percent at either. */
+export const PREPARE_LINE_PX = 20;
+/** The largest enlargement. */
+export const PREPARE_SCALE_MAX = 4;
+/** A tilt under this many degrees is left as it is (no turn). */
+export const PREPARE_TILT_FLOOR = 0.1;
+
+/** A [1 2 1]×[1 2 1] blur, edges clamped: takes the grain out of a noisy photograph
+ *  before the paper and the ink are told apart. */
+function smooth(g, w, h) {
+  const t = new Uint16Array(w * h), out = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const l = g[y * w + Math.max(0, x - 1)], c = g[y * w + x], r = g[y * w + Math.min(w - 1, x + 1)];
+    t[y * w + x] = l + 2 * c + r;
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    out[y * w + x] = (t[Math.max(0, y - 1) * w + x] + 2 * t[y * w + x] + t[Math.min(h - 1, y + 1) * w + x] + 8) >> 4;
+  }
+  return out;
+}
+
+/** A pixel under this share (of 255) of the paper beneath it is ink; fewer than INK_MIN of them is no ink. */
+const INK_RATIO = 200, INK_MIN = 32;
+
+/** Levels the light and stretches the contrast in place; returns the grey. */
+function levelLight(g, w, h) {
+  const cell = Math.max(12, Math.min(64, Math.round(Math.max(w, h) / 60)));
+  const cw = Math.ceil(w / cell), ch = Math.ceil(h / cell);
+  let bg = new Float32Array(cw * ch);
+  const hist = new Uint32Array(256);
+  for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+    hist.fill(0);
+    const x1 = Math.min(w, (cx + 1) * cell), y1 = Math.min(h, (cy + 1) * cell);
+    let n = 0;
+    for (let y = cy * cell; y < y1; y++) for (let x = cx * cell; x < x1; x++) { hist[g[y * w + x]]++; n++; }
+    /* the mean of the brighter half */
+    let need = n >> 1, sum = 0, cnt = 0;
+    for (let v = 255; v >= 0 && cnt < (n - need); v--) {
+      const take = Math.min(hist[v], (n - need) - cnt);
+      sum += take * v; cnt += take;
+    }
+    bg[cy * cw + cx] = Math.max(1, sum / Math.max(1, cnt));
+  }
+  /* smooth: two 3×3 box passes */
+  for (let pass = 0; pass < 2; pass++) {
+    const nx = new Float32Array(bg.length);
+    for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+      let s = 0, c = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const y = cy + dy, x = cx + dx;
+        if (y >= 0 && y < ch && x >= 0 && x < cw) { s += bg[y * cw + x]; c++; }
+      }
+      nx[cy * cw + cx] = s / c;
+    }
+    bg = nx;
+  }
+  /* ratio per pixel, bilinear on the cell centres; the ink level from a histogram of ratios */
+  const half = cell / 2;
+  const at = (x, y) => {
+    const fx = Math.min(cw - 1, Math.max(0, (x - half) / cell)), fy = Math.min(ch - 1, Math.max(0, (y - half) / cell));
+    const x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(cw - 1, x0 + 1), y1 = Math.min(ch - 1, y0 + 1);
+    const tx = fx - x0, ty = fy - y0;
+    return (bg[y0 * cw + x0] * (1 - tx) + bg[y0 * cw + x1] * tx) * (1 - ty) + (bg[y1 * cw + x0] * (1 - tx) + bg[y1 * cw + x1] * tx) * ty;
+  };
+  const ratio = new Uint8Array(w * h), rh = new Uint32Array(256);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const r = Math.min(255, Math.round(255 * g[y * w + x] / at(x + 0.5, y + 0.5)));
+    ratio[y * w + x] = r; rh[r]++;
+  }
+  /* The ink level comes from the ink, not from a fixed share of all the pixels (R44 (a)): a page of three lines holds
+   * under half a percent ink, and a level taken there falls among the paper's own greys and turns the page dark. The
+   * ink is the pixels well under the paper (ratio under INK_RATIO); its level is the darkest twentieth of them. A
+   * picture with next to no such pixels has no ink to level by: its paper is stretched to 255 and nothing more. */
+  let inkN = 0;
+  for (let v = 0; v < INK_RATIO; v++) inkN += rh[v];
+  let lo = 0;
+  if (inkN >= INK_MIN) {
+    const target = Math.max(1, Math.round(inkN * 0.05));
+    let acc = 0;
+    while (lo < INK_RATIO - 1 && (acc += rh[lo]) < target) lo++;
+  }
+  const hi = 235;
+  const span = Math.max(32, hi - lo);
+  for (let i = 0; i < g.length; i++) g[i] = Math.max(0, Math.min(255, Math.round((ratio[i] - lo) * 255 / span)));
+  return g;
+}
+
+/** The tilt, in degrees (positive = the lines run clockwise down the page), of the
+ *  text lines in a levelled grey picture; 0 when there is no ink to tell by. */
+function skewOf(g, w, h) {
+  const xs = [], ys = [];
+  const step = Math.max(1, Math.ceil(Math.sqrt((w * h) / 400000)));
+  for (let y = 0; y < h; y += 1) for (let x = (y % step); x < w; x += step) if (g[y * w + x] < 96) { xs.push(x); ys.push(y); }
+  if (xs.length < 200) return 0;
+  const cx = w / 2, cy = h / 2, n = xs.length;
+  const bins = new Uint32Array(w + h + 8);
+  const score = (deg) => {
+    const t = deg * Math.PI / 180, s = Math.sin(t), c = Math.cos(t);
+    bins.fill(0);
+    const off = (w + h) >> 1;
+    for (let i = 0; i < n; i++) bins[Math.round((ys[i] - cy) * c - (xs[i] - cx) * s + off)]++;
+    let sq = 0; for (let i = 0; i < bins.length; i++) sq += bins[i] * bins[i];
+    return sq;
+  };
+  let best = 0, bs = -1;
+  for (let a = -PREPARE_TILT_MAX; a <= PREPARE_TILT_MAX + 1e-9; a += 0.25) { const v = score(a); if (v > bs) { bs = v; best = a; } }
+  const centre = best;
+  for (let a = centre - 0.25; a <= centre + 0.25 + 1e-9; a += 0.05) { const v = score(a); if (v > bs) { bs = v; best = a; } }
+  return Math.round(best * 100) / 100;
+}
+
+/** The text lines (runs of rows holding ink) of a deskewed levelled grey picture:
+ *  how many, and the median height of one in pixels. */
+function textLines(g, w, h) {
+  const rows = new Uint32Array(h);
+  for (let y = 0; y < h; y++) { let c = 0; for (let x = 0; x < w; x++) if (g[y * w + x] < 96) c++; rows[y] = c; }
+  const floor = Math.max(2, Math.round(w * 0.004));
+  const runs = [];
+  let start = -1, gap = 0;
+  for (let y = 0; y <= h; y++) {
+    const ink = y < h && rows[y] >= floor;
+    if (ink) { if (start < 0) start = y; gap = 0; }
+    else if (start >= 0) { gap++; if (gap > 1 || y === h) { runs.push(y - gap - start + 1); start = -1; gap = 0; } }
+  }
+  const real = runs.filter((r) => r >= 4).sort((a, b) => a - b);
+  return { lines: real.length, median: real.length ? real[real.length >> 1] : 0 };
+}
+
+/** One resampling: the grey `g` (w×h) turned by `deg` and scaled by `s`, bicubic
+ *  (Catmull-Rom), paper-white where the source has no pixel; the canvas grows to
+ *  hold the turned picture whole. */
+function resample(g, w, h, deg, s) {
+  const t = deg * Math.PI / 180, cs = Math.cos(t), sn = Math.sin(t);
+  const bw = Math.abs(w * cs) + Math.abs(h * sn), bh = Math.abs(w * sn) + Math.abs(h * cs);
+  const W = Math.max(1, Math.round(bw * s)), H = Math.max(1, Math.round(bh * s));
+  const out = new Uint8Array(W * H);
+  const cxs = w / 2, cys = h / 2, cxo = W / 2, cyo = H / 2;
+  const wt = (d) => { const a = Math.abs(d); return a < 1 ? 1.5 * a * a * a - 2.5 * a * a + 1 : a < 2 ? -0.5 * a * a * a + 2.5 * a * a - 4 * a + 2 : 0; };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const dx = (x + 0.5 - cxo) / s, dy = (y + 0.5 - cyo) / s;
+    const sx = dx * cs - dy * sn + cxs - 0.5, sy = dx * sn + dy * cs + cys - 0.5;
+    if (sx < -1 || sy < -1 || sx > w || sy > h) { out[y * W + x] = 255; continue; }
+    const x0 = Math.floor(sx), y0 = Math.floor(sy);
+    let acc = 0, wsum = 0;
+    for (let j = -1; j <= 2; j++) {
+      const yy = Math.min(h - 1, Math.max(0, y0 + j)), wy = wt(sy - (y0 + j));
+      for (let i = -1; i <= 2; i++) {
+        const xx = Math.min(w - 1, Math.max(0, x0 + i)), wx = wt(sx - (x0 + i));
+        acc += g[yy * w + xx] * wx * wy; wsum += wx * wy;
+      }
+    }
+    out[y * W + x] = Math.max(0, Math.min(255, Math.round(acc / wsum)));
+  }
+  return { samples: out, width: W, height: H };
+}
+
+/** R44: a grey picture made ready for the engine. `{samples, width, height, comps:1,
+ *  prepared:{text_found, tilt_deg, scale, line_px}}` (`line_px`: the median text line's height in the answered picture). A picture with no text lines
+ *  in it (no ink, or ink everywhere: noise, a blank wall) is handed on as it is,
+ *  `text_found:false`: stretching its noise would make marks for the engine to read. */
+export function preparePicture({ samples, width: w, height: h }, maxEdge) {
+  const g = levelLight(smooth(samples, w, h), w, h);
+  const deskew = skewOf(g, w, h);
+  const turn = Math.abs(deskew) < PREPARE_TILT_FLOOR ? 0 : deskew;
+  /* the line height is measured on the picture as it will lie: turn, then measure */
+  let cur = turn ? resample(g, w, h, turn, 1) : { samples: g, width: w, height: h };
+  const { lines, median } = textLines(cur.samples, cur.width, cur.height);
+  if (lines < 2 || median > cur.height / 4)
+    return { samples, width: w, height: h, comps: 1, prepared: { text_found: false, tilt_deg: 0, scale: 1, line_px: 0 } };
+  let scale = median < PREPARE_LINE_PX ? Math.min(PREPARE_SCALE_MAX, PREPARE_LINE_PX / median) : 1;
+  scale = Math.min(scale, maxEdge / Math.max(cur.width, cur.height));
+  scale = scale < 1.05 ? 1 : Math.round(scale * 100) / 100;
+  if (scale !== 1) cur = resample(g, w, h, turn, scale);
+  return { samples: cur.samples, width: cur.width, height: cur.height, comps: 1,
+           prepared: { text_found: true, tilt_deg: turn ? -turn : 0, scale, line_px: Math.round(median * scale) } };
+}
 /* ── the renderer ─────────────────────────────────────────────────────────── */
 
 /**
@@ -243,8 +466,11 @@ async function sha256Hex(u8) {
  * refusal from `REFUSALS`. `maxEdge` (a positive integer) bounds the long edge;
  * `grey` turns the picture grey.
  */
-export async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false } = {}) {
+export async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false, prepare = false, turn: turnAsked = 0 } = {}) {
   if (!Number.isInteger(maxEdge) || maxEdge < 1) throw new TypeError("renderPictureToPixels: maxEdge must be a positive integer");
+  if (prepare) grey = true;   /* R44: the preparation works on grey */
+  const turn = [90, 180, 270].includes(turnAsked) ? turnAsked : 0;   /* R48 */
+  if (isSource(bytes)) bytes = await bytes.readRange(0, bytes.size);   /* R47: a picture is read whole */
   const b = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
   const format = b && sniff(b);
   if (!format) return refuse("NOT_A_PICTURE");
@@ -255,38 +481,43 @@ export async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = 
     try { h = readJpegHeader(b); } catch (e) { return jpegRefusal(e); }
     const source = { format, width: h.frame.width, height: h.frame.height, comps: h.frame.comps.length };
     const orientation = exifOrientation(b);
-    const k = reductionFor(...orientedSize(source.width, source.height, orientation), maxEdge);
-    const tooBig = overBound(source, PICTURE_SOURCE_MAX, "PICTURE_SOURCE_MAX") ?? overReduced(source, k);
+    const applied = turnedOrientation(orientation, turn);
+    const k = reductionFor(...orientedSize(source.width, source.height, applied), maxEdge);
+    const tooBig = overEdge(source) ?? overBound(source, PICTURE_SOURCE_MAX, "PICTURE_SOURCE_MAX") ?? overReduced(source, k);
     if (tooBig) return tooBig;
     /* Decoded while reduced (T44): the decoder hands over a strip of finished
      * rows at a time and only the reduced picture is kept. */
-    const red = reducer(source.width, source.height, source.comps, { grey, orientation, k });
+    const red = reducer(source.width, source.height, source.comps, { grey, orientation: applied, k });
     try { decodeBaselineJpegRows(b, { onRows: (rows, y0, count) => red.rows(rows, y0, count) }); } catch (e) { return jpegRefusal(e); }
-    return answer(red.done(), { source, orientation, k });
+    return answer(red.done(), { source, orientation, k, turn }, prepare, maxEdge);
   }
 
   /* A PNG is decoded whole (image-codecs R10) and judged on its full frame
    * against PICTURE_FRAME_MAX; it is never turned (R43). */
   const hd = pngHeader(b);
   const source = { format, width: hd ? hd.width : null, height: hd ? hd.height : null, comps: hd ? hd.comps : null };
-  const tooBig = hd && overBound(source, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX");
+  const tooBig = hd && (overEdge(source) ?? overBound(source, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX"));
   if (tooBig) return tooBig;
   let pic;
   try { pic = await decodePng(b); } catch (e) { return pngRefusal(e); }
   if (!hd) Object.assign(source, { width: pic.width, height: pic.height, comps: pic.comps });
-  const k = reductionFor(pic.width, pic.height, maxEdge);
-  const red = reducer(pic.width, pic.height, pic.comps, { grey, orientation: 1, k });
+  const applied = turnedOrientation(1, turn);
+  const k = reductionFor(...orientedSize(pic.width, pic.height, applied), maxEdge);
+  const red = reducer(pic.width, pic.height, pic.comps, { grey, orientation: applied, k });
   red.rows(pic.samples, 0, pic.height);
   pic.samples = null;
-  return answer(red.done(), { source, orientation: 1, k });
+  return answer(red.done(), { source, orientation: 1, k, turn }, prepare, maxEdge);
 }
 
-async function answer(r, { source, orientation, k }) {
+async function answer(r, { source, orientation, k, turn }, prepare, maxEdge) {
+  const prepared = prepare ? preparePicture(r, maxEdge) : null;
+  if (prepared) r = prepared;
   return {
     ok: true, page: 0, route: "decoded-picture", mediaType: "image/png",
     bytes: await encodePng8(r.samples, r.width, r.height, r.comps),
     width: r.width, height: r.height, upright: true,
-    orientation, reduced_by: k, source,
+    orientation, turned_deg: turn, reduced_by: k, source,
+    ...(prepared ? { prepared: prepared.prepared } : {}),
     pixels_sha256: await sha256Hex(r.samples),
   };
 }
@@ -296,6 +527,13 @@ function overBound({ width, height, comps }, bound, name) {
   const samples = width * height * comps;
   return samples > bound
     ? refuse("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples, bound, bound_name: name })
+    : null;
+}
+
+/** Either side of the header's frame against the edge bound (R42, R46). */
+function overEdge({ width, height, comps }) {
+  return width > EDGE_MAX || height > EDGE_MAX
+    ? refuse("IMAGE_TOO_LARGE", { page: 0, width, height, comps, bound: EDGE_MAX, bound_name: "edge" })
     : null;
 }
 

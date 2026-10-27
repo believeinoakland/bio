@@ -1504,8 +1504,9 @@ var fleet_member_default = {
     "anything else": 'R6: 404 {ok: false, code: "UNKNOWN"}'
   },
   image: {
-    repository: "ghcr.io/believeinoakland/agent-runner",
-    digest: "sha256:03dcdf70efee6f011a425294b80710ef8acdcf0d030541908772fad183f46d1b",
+    repository: "docker.io/civicsmith/agent-runner",
+    digest: "sha256:78b09547d8a2e9962f7d1ee373e5f9d80c0e730a8fc97613b3599a92c81bbb63",
+    source_sha256: "23cf9ef6f8dac820f3e3148ea21963455adc74ad6ce70a97009ff61f2cf33a1c",
     platform: "linux/amd64",
     port: 8080,
     schedulingPolicy: "default"
@@ -1555,11 +1556,61 @@ var SIGNIN_HOLD_MS = CODE_WAIT_MS + OUTCOME_WAIT_MS + 3e4;
 var WAITING_HEADER = "x-signin-waiting";
 var TRACE_HEADER = "x-civicsmith-trace";
 
+// src/says-words.mjs
+var SAYS_WORDS = Object.freeze({
+  "agent-runner.signin.claude_answered_the_code_but": "Claude answered the code, but not with a token your team's Civicsmith can use. Start connecting Claude again.",
+  "agent-runner.signin.claude_did_not_accept_the": "Claude did not accept the code{v1}. Start connecting Claude again and paste the new code.",
+  "agent-runner.signin.claude_gave_no_answer_within": "Claude gave no answer within 60 seconds of the code. Start connecting Claude again and paste the new code.",
+  "agent-runner.signin.claudes_sign_in_gave_no": "Claude's sign-in gave no address within 30 seconds. Wait a minute, then try connecting Claude again.",
+  "agent-runner.signin.claudes_sign_in_stopped_before": "Claude's sign-in stopped before it gave an address. Wait a minute, then try connecting Claude again.",
+  "agent-runner.signin.this_claude_sign_in_was": "This Claude sign-in was ended before it gave an address. Start connecting Claude again.",
+  "agent-runner.signin.your_teams_civicsmith_cannot_start": "Your team's Civicsmith cannot start Claude's sign-in: Claude Code is missing from it. Tell your team's steward.",
+  "agent-runner.signin.your_teams_civicsmith_could_not_2": "Your team's Civicsmith could not tell which member this is for. Sign in to Civicsmith again, then connect Claude.",
+  "agent-runner.signin.your_teams_civicsmith_could_not_3": "Your team's Civicsmith could not run Claude's sign-in just now. Wait a minute, then try again.",
+  "agent-runner.worker.your_teams_civicsmith_could_not": "Your team's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.",
+  "refusal.NO_SIGNIN_WAITING": "No sign-in was waiting for that code: it timed out, or was started on another page. Open Anthropic's sign-in page again and paste the new code it gives you.",
+  "refusal.SIGNIN_ADDRESS_UNEXPECTED": "The sign-in answered with an address that isn't Anthropic's, so your team's Civicsmith didn't open it. Nothing was sent. Tell whoever installed your team's Civicsmith.",
+  "screen.connect.refused.ATTEMPT_SUPERSEDED": "A newer sign-in was started, so this code belongs to an older one. Paste the code from the page you opened last.",
+  "screen.connect.refused.BAD_CODE": "That doesn't look like the code from Anthropic's page. Copy the whole code and paste it again. Nothing was sent to Anthropic.",
+  "screen.connect.refused.BAD_REQUEST": "The sign-in couldn't read what was sent. Open Anthropic's sign-in page again and start over.",
+  "screen.connect.refused.NOT_THIS_MEMBER": "That sign-in was started by someone else's session, so it can't connect yours. Open Anthropic's sign-in page again yourself."
+});
+
+// src/says.mjs
+var SAYS_KEYS = Object.freeze({
+  BAD_REQUEST: "screen.connect.refused.BAD_REQUEST",
+  BAD_MEMBER: "agent-runner.signin.your_teams_civicsmith_could_not_2",
+  NOT_THIS_MEMBER: "screen.connect.refused.NOT_THIS_MEMBER",
+  NO_SIGNIN_WAITING: "refusal.NO_SIGNIN_WAITING",
+  BAD_CODE: "screen.connect.refused.BAD_CODE",
+  ATTEMPT_SUPERSEDED: "screen.connect.refused.ATTEMPT_SUPERSEDED",
+  NO_BINARY: "agent-runner.signin.your_teams_civicsmith_cannot_start",
+  NO_ADDRESS: "agent-runner.signin.claudes_sign_in_gave_no",
+  EXITED: "agent-runner.signin.claudes_sign_in_stopped_before",
+  ENDED: "agent-runner.signin.this_claude_sign_in_was",
+  NOT_RUN: "agent-runner.signin.your_teams_civicsmith_could_not_3",
+  SIGNIN_ADDRESS_UNEXPECTED: "refusal.SIGNIN_ADDRESS_UNEXPECTED",
+  NO_OUTCOME: "agent-runner.signin.claude_gave_no_answer_within",
+  TOKEN_SHAPE: "agent-runner.signin.claude_answered_the_code_but",
+  REFUSED: "agent-runner.signin.claude_did_not_accept_the",
+  RUNNER_NOT_STARTED: "agent-runner.worker.your_teams_civicsmith_could_not"
+});
+function says(code, vars = {}) {
+  const key = SAYS_KEYS[code];
+  const row = key === void 0 ? void 0 : SAYS_WORDS[key];
+  if (typeof row !== "string") throw new Error(`no carried row for ${code}`);
+  return row.replace(/\{([A-Za-z0-9_]+)\}/g, (_, name) => {
+    if (!Object.hasOwn(vars, name)) throw new Error(`${key} needs {${name}}`);
+    return String(vars[name]);
+  });
+}
+
 // src/worker.mjs
 var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
+var DISABLED = JSON.stringify({ ok: false, code: "LOCAL_RUNNER_DISABLED" });
 var HOLD_KEY = "signin_hold_until";
 var LIBRARY_DETAIL_MAX = 120;
-var STARTED_WORDS = "Your group's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.";
+var STARTED_WORDS = says("RUNNER_NOT_STARTED");
 var log = (line) => console.log(JSON.stringify(line));
 var instanceRef = (id) => String(id ?? "").replace(/[^0-9a-f]/gi, "").slice(0, 12).toLowerCase();
 var pathTemplate = (url) => {
@@ -1596,6 +1647,35 @@ function egressHandler(host) {
     }
   };
 }
+var REFUSED_WORDS = "Origin is disallowed";
+var hostOf = (url) => {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/\.$/, "");
+  } catch {
+    return null;
+  }
+};
+var RefusalLoggingProxy = class extends ContainerProxy {
+  async fetch(request) {
+    const res = await super.fetch(request);
+    try {
+      const host = hostOf(request.url);
+      if (res.status === 520 && host !== null && !fleet_member_default.egress.includes(host) && await res.clone().text() === REFUSED_WORDS) {
+        const props = this.ctx && this.ctx.props || {};
+        log({
+          event: "runner.egress.refused",
+          instance_ref: instanceRef(props.containerId),
+          host,
+          method: request.method,
+          path_template: pathTemplate(request.url),
+          status: 520
+        });
+      }
+    } catch {
+    }
+    return res;
+  }
+};
 var AgentRunner = class extends Container {
   defaultPort = fleet_member_default.image.port;
   // A conversation's instance sleeps soon after its connection ends (R9); a sign-in holds it awake to its outcome (R25).
@@ -1622,10 +1702,16 @@ var AgentRunner = class extends Container {
     }
     log({ event: "runner.lifecycle", instance_ref: this.instanceRef, what, ...extra, signin_hold: hold });
   }
-  // Every request goes to the image's one port; a caller cannot pick another. R26: an answer that is not the image's
-  // JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a sign-in's answers set and clear the
-  // hold, read from their path, status and the waiting header alone, never a body.
+  // R35: every request, whatever its method, path or upgrade, is answered 410 before the container, its port or the
+  // class's storage is touched; the line names the method and path template only, never a query, header or body.
   async fetch(request) {
+    log({ event: "runner.local.disabled", method: request.method, path_template: pathTemplate(request.url), status: 410 });
+    return new Response(DISABLED, { status: 410, headers: { "content-type": "application/json" } });
+  }
+  // Suspended while R35 holds (nothing calls it): every request to the image's one port; a caller cannot pick another.
+  // R26: an answer that is not the image's JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a
+  // sign-in's answers set and clear the hold, read from their path, status and the waiting header alone, never a body.
+  async passThrough(request) {
     let res;
     try {
       res = await this.containerFetch(request, this.defaultPort);
@@ -1695,6 +1781,6 @@ var worker_default = {
 };
 export {
   AgentRunner,
-  ContainerProxy,
+  RefusalLoggingProxy as ContainerProxy,
   worker_default as default
 };

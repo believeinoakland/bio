@@ -5,6 +5,7 @@
    nothing fetched; absent, the lookup asks for now as before. R3's eligibility rule is unchanged (K1521). Over a
    scripted Memento archive (fixture `wayback`) whose TimeGate, here, negotiates on the Accept-Datetime it is sent. */
 import { test } from "node:test";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { world, run, lookup, sha, wayback, WB, eligible, http1123 } from "./fixture.mjs";
 import { acceptDatetime } from "../../../src/capture-sources/memento.mjs";
@@ -47,8 +48,8 @@ test("R35 R32: with `at`, the TimeGate is asked at that instant, the memento it 
   assert.equal(d.capture.sha256, sha("of mid 2023"));
   const hop = d.provenance_chain[1];
   assert.deepEqual([hop.asked_at, hop.memento_datetime, hop.apart_seconds], [at, "2023-07-01T00:00:00Z", 41 * 86400 + 12 * 3600]);
-  assert.equal(hop.asked_note, `the memento is of 2023-07-01T00:00:00Z, ${41 * 86400 + 12 * 3600} seconds after the instant asked about (${at}); it is not the page at ${at}`);
-  assert.equal(hop.asserts, `these bytes were served for ${ADDR} at 2023-07-01T00:00:00Z, with HTTP status 200`, "the assertion is still the memento's own moment");
+  assert.equal(hop.asked_note, word("acquisition.asked_note.memento_seconds_instant", { archived_at: "2023-07-01T00:00:00Z", apart: 41 * 86400 + 12 * 3600, after: "after", at }));
+  assert.equal(hop.asserts, localize("capture-sources.memento.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: ADDR, archived_at: "2023-07-01T00:00:00Z", statuscode: "200" }), "the assertion is still the memento's own moment");
   assert.equal(hop.document_address, ADDR);
   /* archiveLookup asks the same and its answer states both instants */
   const look = await lookup(await fresh(), negotiating(), { address: ADDR, at });

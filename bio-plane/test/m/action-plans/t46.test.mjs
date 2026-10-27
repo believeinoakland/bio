@@ -123,13 +123,13 @@ test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's
   /* T50-47 (K3736): C-124.2 PLAN_NO_TITLE reads refusal.PLAN_NO_TITLE by key too (DEC-260), answered above. */
   assert.equal(PLAN_WORDS["refusal.PLAN_NO_TITLE"], WORDS["refusal.PLAN_NO_TITLE"], "PLAN_NO_TITLE held by key, verbatim");
   assert.equal(ACTION_PLAN_CHECKS.PLAN_NO_TITLE.translation, WORDS["refusal.PLAN_NO_TITLE"]);
-  /* control: this module's other rows, which words.json does not hold, keep theirs (R47). (T47: R49 amends R47's clause
-     on C-124.63, which now reads DEC-199's sentence by key; its test is t47's.) */
-  for (const [c, r] of Object.entries(ACTION_PLAN_CHECKS))
-    if (!(`refusal.${c}` in WORDS)) assert.equal(`refusal.${c}` in PLAN_WORDS, false, c);
-  /* T50-47: words.json now holds refusal.PLAN_NO_TITLE (DEC-260), so the unheld control row is SUBJECT_MALFORMED */
-  assert.equal(WORDS["refusal.SUBJECT_MALFORMED"], undefined);
-  assert.match(ACTION_PLAN_CHECKS.SUBJECT_MALFORMED.translation, /\S/);
+  /* control (R47): every code this module mints has a words.json row, so none keeps its own text, but ADDRESSEE_INCOMPLETE
+     (R54, T51): a code the design has no row for yet, which keeps its own `localize`d sentence and is reported to BOB;
+     SUBJECT_MALFORMED reads its row by key (T51, action-plans words check, K3949) and PLAN_WORDS, which holds only R47's
+     rows, does not carry it */
+  const NO_ROW_YET = ["ADDRESSEE_INCOMPLETE"];
+  for (const c of Object.keys(ACTION_PLAN_CHECKS)) assert.ok(`refusal.${c}` in WORDS || NO_ROW_YET.includes(c), c);
+  assert.equal(ACTION_PLAN_CHECKS.SUBJECT_MALFORMED.translation, WORDS["refusal.SUBJECT_MALFORMED"]);
   assert.equal("refusal.SUBJECT_MALFORMED" in PLAN_WORDS, false);
 });
 

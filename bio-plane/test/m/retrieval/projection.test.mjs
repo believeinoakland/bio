@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, md, T0, infoMd } from "./fixture.mjs";
 import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, RETRIEVAL_TABLES, retrievalRoutes,
-         PROJECTION_RELATION, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
+         PROJECTION_RELATION, PROJECTION_TABLE, RETRIEVAL_ROUTE_OPS } from "../../../src/retrieval/index.mjs";
 import { textOf, FTS_COLUMNS } from "../../../src/query.mjs";
 
 const ftsRow = (w, id) => {
@@ -261,10 +261,9 @@ test("R58: migrate() creates the projection table, its indexes, the keyed text i
   /* The routes: each op answers what the service answers, with the stamps from the query. */
   const url = (op, q = "") => new URL(`http://x/${op}?${q}`);
   const routes = (u, body) => retrievalRoutes(w.retrieval, u, body);
-  /* R73 (T35): op=findin joins the map; its own arm is tested in findin.test.mjs. R85 (T50): so does op=browse, tested in browse.test.mjs. */
-  assert.deepEqual(Object.keys(routes(url("x"))).sort(), ["browse", "contentaxis", "file", "findin", "frontier", "image", "index", "list", "meaningrows",
-    "projection", "projectionclear", "projectionplan", "reproject", "search", "searchfields", "searchindexcheck", "select", "selection",
-    "selectionlist", "selectionrelease"]);
+  /* The map answers exactly the module's own route names (R58, R66, R90); findin and browse join through retrieval-browse. */
+  assert.deepEqual(Object.keys(routes(url("x"))).sort(), [...RETRIEVAL_ROUTE_OPS].sort());
+  assert.ok(RETRIEVAL_ROUTE_OPS.includes("findin") && RETRIEVAL_ROUTE_OPS.includes("browse"), "R90: findin and browse join the map");
   assert.equal(routes(url("search", "q=water&viewer=member:vera")).search().total, 1);
   assert.equal(routes(url("search", "q=water")).search().total, 0, "no viewer stamp, nothing");
   assert.equal(routes(url("projection", "id=INFO-1&viewer=member:vera")).projection().source_status, "live");

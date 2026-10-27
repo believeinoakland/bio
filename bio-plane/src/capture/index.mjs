@@ -3,7 +3,7 @@
  * allowance), the event queue an undetermined capture raises, a member's upload (R86) and the information grammar
  * (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R95). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R96). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -25,14 +25,34 @@
  * T50 (T50-8). R94 `recordCapturedFor` records the asks `acquire`'s `for` makes (table `captured_for`); R83's reader is
  * handed them as `asks`, so R77 and R79 name the questions through it and this module names none itself. R95
  * `captureGradeOf` reads one capture's grade (`op=capturegrade`). R73 passes `openCaptures` through with this store. Plan
- * rule 6 (N1116): the member-facing sentences are read by key through `words.mjs`; this file holds keys, not English. */
-import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
+ * rule 6 (N1116): the member-facing sentences are read by key through `words.mjs`; this file holds keys, not English.
+ *
+ * T51 fix round 2 (the walk's C5, C12, C14, C26). An upload held in parts is kept whole too (R86); `recordLateAttestations` records an
+ * attestation that ended after its capture was answered (R68); a page of held rows is read for the whole page at once and `fields:
+ * "picker"` is the cheap read for a list to choose among (R77, R88); `heldAt` judges change on the determined substance digest (R96).
+ *
+ * T51 fix round 7 (the walk's G79, G78, G75, G73). An upload held in parts is answered once its parts are stored: the buffers of its parts are handed to
+ * `keepWhole` (no part is read back), and a keep past `MULTIPART_KEEP_MAX` goes to the plane's ledger at once (R103); a draw of held captures asks the
+ * evidence store no more for an object this instance has seen held (R77); `heldAt`'s compared copy names its document's `title` (R96).
+ *
+ * T51 (T51-21). R77's rows also answer `actor`, `retrieved` and `bytes`; R88's `held_and_vouched` lists the viewer's
+ * vouched documents beside the held ones (`standing`, `vouched`); R96 `heldAt` (`op=heldat`) says whether the record
+ * already holds an address or a digest and whether the source has since changed. The basis sentences of R88's vouched
+ * rows and of R96's `changed` are held here as inline builder diagnostics: the screens draw their own keyed words from
+ * the answer's `state` (words.json is the design stream's, and WORD_KEYS is its `reads` list for this module). */
+import { isPublicHttpsLocator, createSha256, createResumableSha256, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
+import { normalizeAddress } from "../subresources.mjs";
+import { RENDERED_METHOD } from "../render.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
 import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
-import { acquire, archiveLookup, profileOf, profilesAsText, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho, CAPTURE_MAX } from "../acquisition/index.mjs";
+import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
+         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, LARGE_FETCH_BYTES, textTypeOf, profilesAsText } from "../acquisition/index.mjs";
+/* R111 (fix round 9; G124, G124b): the figures a body is bounded by are quoted, never written here: the capture ceiling is `acquisition`'s `CAPTURE_MAX` (the
+   archive row of `READ_BOUNDS`, `runtime-limits`), the platform's request-body ceiling an entry of `PLATFORM_FIGURES`. */
+import { statement as boundStatement, boundOf, wholeReadRow } from "../read-bounds.mjs";
+import { PLATFORM_FIGURES } from "../byte-ledger.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
    module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
@@ -40,16 +60,17 @@ export { CAPTURE_ACCOUNT_TOKEN, captureAccountStatement } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
-import { unpack, archiveList, memberOf, acquisitionOf, openCaptures } from "../acquisition/index.mjs";
+import { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong, acquisitionOf, openCaptures } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
 import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA } from "../provenance/index.mjs";
 import { attest, attestationOf } from "../attestation/index.mjs";
-import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
+import { viewerPredicate, GATE_MARK, listenerRefusal, membershipOf } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { CAPTURE_SCHEMA } from "./schema.mjs";
 export { MONITOR_FREQ, INFORMATION_GRAMMAR, checkInformationExtension } from "./grammar.mjs";
 
@@ -71,7 +92,8 @@ const rawReplayOf = (archived) => {
   const m = /^(https:\/\/web\.archive\.org\/web\/)(\d{14})(?:[a-z_]*)\/(.+)$/.exec(String(archived || ""));
   return m ? `${m[1]}${m[2]}id_/${m[3]}` : null;
 };
-const REPLAY_MAX = 256 * 1024 * 1024;
+/* R68: a co-archive's replay larger than any capture this surface keeps cannot be the capture, so the comparison reads no more than `CAPTURE_MAX` (R111's figure). */
+const REPLAY_MAX = CAPTURE_MAX;
 
 /* N380: the tag a throw of R86's `within` is carried out of the transaction under. */
 const WITHIN_FAULT = Symbol("within's fault");
@@ -84,14 +106,46 @@ const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declar
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
+/* R109 (fix round 9, G152): the `READ_BOUNDS` row that is the whole-read ceiling of an upload's kind, by what its profile states of it: the row the control-plane's
+   inline gate judges a stated document by (`wholeRowOf` of its `kindOf`): a PDF `pdf.bytes`, a CSV `csv.bytes`, a text kind `text.bytes`, every other kind the
+   whole-load row `pdf.bytes`. */
+const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
+const wholeReadKind = (profile) => {
+  const format = String(profile?.format?.format ?? "").toLowerCase(), declared = String(profile?.source_content_type ?? "").toLowerCase();
+  if (format === "pdf" || declared.startsWith("application/pdf")) return "pdf";
+  if (format === "csv" || declared.startsWith("text/csv")) return "csv";
+  if (TEXT_TYPE.test(declared) || ["text", "tsv", "json", "xml", "html"].includes(format)) return "text";
+  return undefined;
+};
+/** R107: the bytes of a file held in parts that are read as its head when judging it as text: 64 KiB, chosen, not measured. */
+const UPLOAD_HEAD = 64 * 1024;
+/** R107: `bytes` less a UTF-8 code point cut at their end (a lead byte and too few continuation bytes), so a head that ends inside a
+ *  character is still valid UTF-8. Bytes that are not UTF-8 are returned as they are, to be refused by the text rule. */
+function withoutCutCodePoint(bytes) {
+  for (let back = 1; back <= 3 && back <= bytes.length; back++) {
+    const b = bytes[bytes.length - back];
+    if ((b & 0xc0) === 0x80) continue;
+    const need = b >= 0xf0 ? 4 : b >= 0xe0 ? 3 : b >= 0xc0 ? 2 : 1;
+    return need > back ? bytes.subarray(0, bytes.length - back) : bytes;
+  }
+  return bytes;
+}
 /** R94: the longest question id `recordCapturedFor` records, in characters (`acquisition` R47's bound). */
 export const CAPTURED_FOR_QUESTION_MAX = 200;
+/** R100: the longest project id `recordSeenIn` records, in characters. */
+export const SEEN_IN_PROJECT_MAX = 200;
 /** R86: the longest statement of origin, and the longest stated file name, in characters. */
 export const UPLOAD_STATEMENT_MAX = 2000;
 export const UPLOAD_NAME_MAX = 300;
 export const UPLOAD_TYPE_MAX = 255;
-/* R93: the text type a text extension in an upload's name stands for, when the member declared no type. */
-const UPLOAD_NAME_TYPES = { txt: "text/plain", md: "text/markdown", csv: "text/csv" };
+/** R113 (fix round 9; G127f): the size of every part but the last of a file sent in parts: 16 MiB, three times R2's own minimum for a part (5 MiB) and far under the
+ *  request-body ceiling, so a request carries one part and the object holds one part in memory; chosen, not measured. A scaled figure for a test lowers it (`bounds`). */
+export const PARTED_PART_BYTES = 16 * 1024 * 1024;
+/** R113: how long an upload sent in parts may stay open before it is aborted and holds nothing: 24 hours from its begin; chosen. The platform's own cleanup of an
+ *  incomplete multipart upload (seven days) is the backstop under it. */
+export const PARTED_UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
+/** R113: the most expired sessions one begin (or `expireUploads`) aborts; the rest wait for the next. */
+export const PARTED_SWEEP_MAX = 20;
 /** R86: the one sentence `UPLOAD_WITHIN_FAILED` answers, whatever `within` threw or answered (N409's pattern). */
 export const UPLOAD_WITHIN_FAILED_DETAIL =
   "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
@@ -167,6 +221,8 @@ const badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is 
    reads as one; `taskCursorPlace` answers null for anything else, and the read then starts at the head. */
 const TASK_CURSOR_TAG = "task-event";
 const taskCursorOf = (enqueued, captureSha, kind) => cursorOf([TASK_CURSOR_TAG, enqueued, captureSha, kind]);
+/* R104: a fetch's place in `fetchesDone`'s order, tagged so no other read's cursor reads as one. */
+const FETCH_CURSOR_TAG = "fetch-done";
 const taskCursorPlace = (after) => {
   const k = typeof after === "string" && after ? keyOf(after, 4) : null;
   return k && k[0] === TASK_CURSOR_TAG ? { enqueued: k[1], captureSha: k[2], kind: k[3] } : null;
@@ -195,11 +251,22 @@ export const SORT_DIRS = Object.freeze(["asc", "desc"]);
 /* R77: the orders `heldCaptures` sorts by. */
 export const HELD_SORTS = Object.freeze(["age", "source", "project"]);
 /* R88 (N969): the lists `heldCaptures` answers: the held documents (R77), or the ones set aside (R79), which a member
-   restores from (R81). */
-export const HELD_STATES = Object.freeze(["held", "set_aside"]);
+   restores from (R81); T51: `held_and_vouched`, the held ones with the documents a member has vouched for. */
+export const HELD_STATES = Object.freeze(["held", "set_aside", "held_and_vouched"]);
+/* R77 (T51; C14): the rows `heldCaptures` answers: `full` (R77's fields) or `picker`, the cheap read for a screen that lists documents
+   to choose among: the document, its title, its project, its source, when it was collected, its capture's digest and actor, whether the
+   evidence store holds it whole, and its standing, and nothing that asks the examination, the questions, the archives or a grade. */
+export const HELD_FIELDS = Object.freeze(["full", "picker"]);
 /* R77 (DEC-167 (8); K1881, BOB's): the most held files an archive's row carries; the rest are read through
    `acquisition.archiveList`. */
 export const HELD_FILES_IN_ROW = 50;
+/** R77 (fix round 4; P10): the most documents `bundle_ids` names in one read: the ones a screen draws, whose heavy fields it asks for. */
+export const HELD_IDS_MAX = 50;
+/** R105 (fix round 6; G2): the most of a source's body a `check` reads, in bytes: 8 MiB, the size past which `acquisition` hands a fetch to
+ *  the plane. A larger body is not read: the look says so (`large`) and decides nothing. */
+export const HELD_AT_CHECK_MAX = LARGE_FETCH_BYTES;
+/** R96: the most captures at one address `heldAt` counts; `truncated` says when more lie past. */
+export const HELD_AT_VERSIONS_MAX = 200;
 /* R91 (T49; N1080; M-T49-3): the one wait a page of held captures gives its documents' answers, in milliseconds: R78's
    examination of each document the page shows and the archive grouping (DEC-167 (8)) of each row, asked together for
    the whole page. CHOSEN, not measured, like `file-safety`'s `SCAN_WAIT_MS` and `acquisition`'s `REPUTATION_TIMEOUT_MS`
@@ -208,6 +275,14 @@ export const HELD_PAGE_WAIT_MS = 5000;
 /* R91: how many rows of a page are answered at once. Work is begun only while the page's wait has not run out, so a page
    that cannot be answered in time asks no more of the evidence store than it can wait for. */
 const HELD_PAGE_LANES = 8;
+/** R77 (fix round 7; G78): the most digests this instance remembers as proven held, for a draw not to ask the evidence store again; CHOSEN, not
+ *  measured: a digest is 64 characters, so the set is under half a megabyte; past it the set is emptied and fills again. */
+export const HELD_PROVEN_MAX = 5000;
+/* R88 (T51): a vouched row is not asked of R78's examination, so its eligibility reads undetermined with this basis. A
+   builder's diagnostic: screens draw `standing` and `vouched`, not this sentence. */
+const VOUCHED_BASIS = localize("capture.index.vouched_basis", "this document is already vouched for, so whether it could be vouched for in a batch is not asked");
+/* R88 (T51): the state a vouched document is at (released through `ratification`). */
+const VOUCHED_STATE = "verified";
 /* R91: what a wait answers when it ran out first. */
 const TOO_LATE = Symbol(say("capture.symbol.page_wait_ran"));
 /* R91: the answers of an examination that ran out of time, so a file beside an archive can say so (R77's file keeps its shape
@@ -282,7 +357,7 @@ export function captureOf(ctx, opts = {}) {
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
   if (opts.ownHosts != null && !given.has("ownHosts")) { c.ownHosts = Capture.hostsOf(opts.ownHosts); given.add("ownHosts"); }
-  if (typeof opts.now === "function" && !given.has("now")) { c.clock = opts.now; given.add("now"); }
+  if (typeof opts.now === "function" && !given.has("now")) { c.clock = opts.now; c.clockHanded = true; given.add("now"); }
   c.adoptReputation(opts);
   return c;
 }
@@ -311,9 +386,18 @@ function registerFigures(c) {
     throw new Error(`capture: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
+/* R114 (G180): a row's snapshot taken up by record-grammar's stream, which throws on a state it did not write; that answers null, so the caller
+   says the digest is lost (R113's UPLOAD_LOST) rather than hashing on from a wrong state. */
+function resumedOf(state) {
+  try { return createResumableSha256(state); } catch { return null; }
+}
+
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
-  #reputationReader = null; #fileScanner = null;
+  #reputationReader = null; #fileScanner = null; #hasWhole = null; #provenHeld = new Set();
+  /* R113: the live state of the uploads sent in parts that this instance is receiving: the hasher of the bytes so far, in order, and the part it expects next.
+     It is a cache of what the upload's row keeps (`hash_state`, G173): an instance taken out of memory between two parts takes it up again from the row. */
+  #parted = new Map();
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
                          acquisition = null, acquisitionHost = null, ownHosts = [], reputation = null, fileScanner = null,
@@ -327,6 +411,9 @@ export class Capture {
        later caller's (R58). An act that must be judged at the server's instant (`op=sourcereach`) reads it, never a
        request's. */
     this.clock = typeof now === "function" ? now : Date.now;
+    this.clockHanded = typeof now === "function";
+    /* R115: the store's environment as the ops map was handed it, the source of `BIO_NOW_MS` when no clock was handed. */
+    this.clockEnv = null;
     this.provenance = provenance;
     /* R73 (K1224): attestation's instance, which the acquisition act reaches as `cap.attestation` (its R4's
        `signReceipt`). */
@@ -393,12 +480,26 @@ export class Capture {
     return this.credentials;
   }
 
-  /* R90: this module's clock read once, epoch milliseconds; an answer that is not a finite number (a clock at fault)
-     reads the platform's. */
+  /* membership's instance for this storage (R101's project fence, its `projectAuthority`), reached when first needed. */
+  #membership() { return membershipOf({ storage: this.#storage }, { record: this.core }); }
+
+  /* R115 (K5132; R90): this module's clock read once, epoch milliseconds: the function `captureOf` was handed as `now`, else the
+     store's environment's `BIO_NOW_MS` (as the ops map was handed it, else as the instance was built), else the wall clock.
+     An answer that is not a finite number (a clock at fault, a binding that is no number) reads the next. A duration measured
+     for a reply stays on the wall clock. */
   #instant() {
-    let t;
-    try { t = Number(this.clock()); } catch { t = NaN; }
-    return Number.isFinite(t) ? t : Date.now();
+    if (this.clockHanded || this.clock !== Date.now) {
+      let t;
+      try { t = Number(this.clock()); } catch { t = NaN; }
+      if (Number.isFinite(t)) return t;
+    }
+    for (const env of [this.clockEnv, this.env]) {
+      const raw = env ? env.BIO_NOW_MS : undefined;
+      if (raw === undefined || raw === null || raw === "") continue;
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -509,6 +610,21 @@ export class Capture {
   /** R73: `acquisition`'s `acquire` (its R1–R23) with this module's store handed in; answers `{status, body}`. */
   acquire(body, opts) { return acquire(this, body, opts); }
 
+  /** R106 (fix round 6, G32; `acquisition` R22): the digest of the copy a plain fetch of `body.locator` may be made conditional on: the
+   *  newest capture of that address the viewer may see (R96's compared copy) when it came from a plain, direct fetch of that very
+   *  address, recorded as fetched and not rendered; else null, and the fetch runs as it always did. A body that asks for more than the
+   *  plain document (`render`, `via`, `continue`, `file`, `subresources`, an archive `address`) is never conditional, and neither is an
+   *  address that is no public locator or a viewer who sees no copy. A read, never a fetch; never throws. */
+  heldCopyToCompare(body, viewer = "") {
+    try {
+      if (!body || typeof body.locator !== "string" || !isPublicHttpsLocator(body.locator)) return null;
+      for (const k of ["render", "via", "continue", "file", "subresources", "address"]) if (body[k]) return null;
+      const found = this.#heldAtRead({ address: body.locator, sha256: null, viewer });
+      if (!found || found.receipt.via !== "direct" || !found.receipt.plain_address || found.kind !== "plain") return null;
+      return found.copy.sha256;
+    } catch { return null; }
+  }
+
   /** R73: `acquisition`'s `archiveLookup` (its R3), likewise. */
   archiveLookup(args) { return archiveLookup(this, args); }
 
@@ -564,17 +680,15 @@ export class Capture {
      plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
   static #badArgument(op, argument, shape, given) {
     return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
-             error: `${argument} must be one of ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
-             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
-                   + "could use. Nothing was read." };
+             error: localize("capture.index.argument_must_be_one_of", "{argument} must be one of {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
+             detail: localize("capture.index.op_op_needs_argument_in", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was read.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   }
 
   /* R86: the required-argument refusal for an argument given in a shape the act cannot use. */
   static #missingArgument(op, argument, shape, given) {
     return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
-             error: `${argument} must be ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
-             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
-                   + "could use. Nothing was written." };
+             error: localize("capture.index.argument_must_be_shape_stringify", "{argument} must be {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
+             detail: localize("capture.index.op_op_needs_argument_in_2", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was written.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   }
 
   /* N380 (R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
@@ -608,13 +722,21 @@ export class Capture {
    *  actor (R69); and the answer carries the provenance document (`#uploadedDocument`), graded received, never fetched
    *  (`provenance` R63). Bytes the record already holds (`provenance.registerHolds` answers them registered or acquired)
    *  answer `existed: true` with no document, the receipt written as a second
-   *  sighting, and `within` not called. `within` (N380's seam, `store-door` R7): called inside the upload's own
+   *  sighting, and `within` not called; bytes only a receipt names (the register files them under no document, an interrupted
+   *  upload) answer `existed: true` the same way, with the document as a new upload's (T51 fix round 2). `within` (N380's seam, `store-door` R7): called inside the upload's own
    *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
-  async uploadCapture({ bytes, statement, name = null, type = null, by, at = null, within = null } = {}) {
+  async uploadCapture(args = {}) {
+    const tally = Capture.#tally(args && args.ledger);
+    try { return await this.#upload(args ?? {}, tally); } finally { tally.end(); }
+  }
+
+  /* R86, R113: the refusals that come before any byte is looked at, in their order: the member-session fence, the statement of origin (C-118.10), the name
+     and the declared type. The one place they are made, for the upload in one request and the upload in parts. Null when none applies. */
+  static #fence({ by, statement, name, type, op }) {
     if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
-               detail: "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written" };
+               detail: localize("capture.index.refusal_member_brings_file", "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written") };
     /* DEC-49 REGION is-upload-stated */
     if (typeof statement !== "string" || !statement.trim() || [...statement].length > UPLOAD_STATEMENT_MAX) {
       const row = CAPTURE_CHECKS.UPLOAD_NO_STATEMENT;
@@ -623,38 +745,109 @@ export class Capture {
     }
     /* END DEC-49 REGION is-upload-stated */
     if (name != null && (typeof name !== "string" || [...name].length > UPLOAD_NAME_MAX))
-      return Capture.#missingArgument("captureupload", "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name);
+      return Capture.#missingArgument(op, "name", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(UPLOAD_NAME_MAX) }), name);
     /* R92: the media type the member's browser declared, a string of at most 255 characters when given. */
     if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
-      return Capture.#missingArgument("captureupload", "type", `a string of at most ${UPLOAD_TYPE_MAX} characters`, type);
+      return Capture.#missingArgument(op, "type", localize("capture.index.shape_string_max", "a string of at most {max} characters", { max: String(UPLOAD_TYPE_MAX) }), type);
+    return null;
+  }
+
+  /* R86: no evidence store is bound (the installation's storage-absent refusal, `acquisition`'s C-68.1). */
+  static #storageAbsent() {
+    const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+    return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
+             translation: row.translation, status: 503,
+             detail: localize("capture.index.say_so_the_file_cannot", "{say}, so the file cannot be held under its own digest; nothing was written", { say: String(say("capture.response.group_civicsmith_evidence")) }) };
+  }
+
+  /* R111: the byte ledger as one upload counts what it holds (`runtime-limits`' `byteLedger`: `hold(n, tag)`, `release(n, tag)`); no ledger handed, or one that
+     cannot count, is no fault of the upload's. `end` releases whatever the call still holds, on every path out of it. */
+  static #tally(ledger) {
+    const on = !!ledger && typeof ledger.hold === "function" && typeof ledger.release === "function";
+    let held = 0;
+    const t = {
+      hold(n) { if (on && n > 0) { try { ledger.hold(n, "upload"); held += n; } catch { /* a ledger that cannot count */ } } },
+      release(n) { if (on && n > 0) { const k = Math.min(n, held); try { ledger.release(k, "upload"); held -= k; } catch { /* a ledger that cannot count */ } } },
+      end() { t.release(held); },
+    };
+    return t;
+  }
+
+  /* R109 (fix round 9, G152): the evidence store as `profileOf` meets it for a file the upload holds whole: `get` of the file's digest answers the held bytes (a
+     range of them for a ranged read), every other call is the store's own. So the profile of a one-part upload reads the object back from nowhere. */
+  static #holding(ev, sha, bytes) {
+    const slice = (b) => (b.byteOffset === 0 && b.length === b.buffer.byteLength ? b.buffer : b.buffer.slice(b.byteOffset, b.byteOffset + b.length));
+    const get = async (k, o) => {
+      if (k !== sha) return ev.get(k, o);
+      const b = o && o.range ? bytes.subarray(o.range.offset, o.range.offset + o.range.length) : bytes;
+      return { key: k, size: bytes.length, body: b, arrayBuffer: async () => slice(b) };
+    };
+    return new Proxy(ev, { get(t, p) { if (p === "get") return get; const v = Reflect.get(t, p, t); return typeof v === "function" ? v.bind(t) : v; } });
+  }
+
+  /* R111: a ceiling a caller may only LOWER (a scaled figure for a test, K4840): the real figure, or the given one when it is a whole number below it. */
+  static #lowered(real, given) { return Number.isSafeInteger(given) && given >= 0 && given < real ? given : real; }
+
+  /* R111: the 413 an over-large body is refused with: its size and the figure it was judged against (`size`, `bound`; `bytes`, `maxBytes` as R86 always
+     said them) and the key of the sentence. The capture ceiling is the archive row of `READ_BOUNDS`; the request ceiling is the platform's. */
+  static #tooLarge(size, which, bound, keepable = null) {
+    const request = which === "request";
+    /* R113: a file refused for the request-body ceiling that the capture ceiling still admits is to be sent in parts (`in_parts`), the screen's cue to begin one */
+    return { ok: false, reason: "TOO_LARGE", status: 413, bytes: size, maxBytes: bound, size, bound,
+             ...(request && Number.isSafeInteger(keepable) ? { in_parts: size <= keepable } : {}),
+             key: request ? "capture.index.body_over_request_ceiling" : boundStatement("archive", "uploaded_bytes", size).key,
+             detail: request
+               ? localize("capture.index.body_over_request_ceiling", "the file is larger than the {bound} bytes one request may carry, so it was refused whole; nothing was written", { bound: String(bound) })
+               : localize("capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written") };
+  }
+
+  async #upload({ bytes, statement, name = null, type = null, by, at = null, within = null, boundMs = null, keepLater = null,
+                  registerJob = null, armJobs = null, declared = null, bounds = null } = {}, tally) {
+    const startedAt = Date.now();
+    const fenced = Capture.#fence({ by, statement, name, type, op: "captureupload" });
+    if (fenced) return fenced;
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    if (!ev) {
-      const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
-      return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
-               translation: row.translation, status: 503,
-               detail: `${say("capture.response.group_civicsmith_evidence")}, so the file cannot be held under its own digest; nothing was written` };
-    }
+    if (!ev) return Capture.#storageAbsent();
     const reader = uploadReader(bytes);
-    if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: "the upload carried no bytes; nothing was written" };
+    if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: localize("capture.index.upload_no_bytes", "the upload carried no bytes; nothing was written") };
+    /* R111: a body is bounded before it is held. The two ceilings are quoted (`CAPTURE_MAX`, the request-body entry of `PLATFORM_FIGURES`); the lower is the one
+       a member meets, and the one a refusal names. A size declared up front (the request's length) is judged before one byte is read. */
+    const capMax = Capture.#lowered(CAPTURE_MAX, bounds && bounds.capture);
+    const reqMax = Capture.#lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
+    const ceiling = Math.min(capMax, reqMax), ceilingIs = reqMax <= capMax ? "request" : "capture";
+    if (Number.isSafeInteger(declared) && declared > ceiling) {
+      await reader.cancel();
+      return Capture.#tooLarge(declared, ceilingIs, ceiling, capMax);
+    }
     /* `acquisition` R10's form: the whole hashed as it arrives by record-grammar's incremental hasher, the bytes held in
        parts of exactly 8 MiB (the last the remainder), each under its own digest; whether each was held before. */
     const whole = createSha256();
     const parts = [];
     let held = [], heldBytes = 0, total = 0;
+    /* R107: the first `UPLOAD_HEAD` bytes of the file, kept as they arrive, so a file held in parts is also judged as text from its head. */
+    const head = new Uint8Array(UPLOAD_HEAD);
+    tally.hold(UPLOAD_HEAD);
+    let headLen = 0;
+    /* R103 (fix round 7; G79): the buffers of the parts as they are stored, while the file can still be kept whole by this module
+       (up to `MULTIPART_KEEP_MAX`), so `keepWhole` puts the whole from them and reads no part back; dropped once the file is larger. */
+    let partBytes = [], keptBytes = 0;
     const flush = async (all) => {
       while (heldBytes >= UPLOAD_PART || (all && heldBytes > 0)) {
         const n = Math.min(UPLOAD_PART, heldBytes);
         const buf = new Uint8Array(n);
+        tally.hold(n);
         let k = 0;
         while (k < n) {
           const c = held[0], take = Math.min(c.length, n - k);
           buf.set(c.subarray(0, take), k); k += take;
+          tally.release(take);
           if (take === c.length) held.shift(); else held[0] = c.subarray(take);
         }
         heldBytes -= n;
         const psha = hexOf(await crypto.subtle.digest("SHA-256", buf));
         if (!(await ev.head(psha))) await ev.put(psha, buf);
         parts.push({ sha256: psha, bytes: n });
+        if (partBytes) { partBytes.push(buf); keptBytes += n; } else tally.release(n);
       }
     };
     try {
@@ -663,33 +856,141 @@ export class Capture {
         if (done) break;
         if (!value) throw new Error("not bytes");
         total += value.length;
-        if (total > CAPTURE_MAX) {
+        if (total > ceiling) {
           await reader.cancel();
-          return { ok: false, reason: "TOO_LARGE", status: 413, bytes: total, maxBytes: CAPTURE_MAX,
-                   detail: "the file exceeds what this surface will capture even in parts; nothing was written" };
+          return Capture.#tooLarge(total, ceilingIs, ceiling, capMax);
         }
         whole.update(value);
-        held.push(value); heldBytes += value.length;
+        if (partBytes && total > MULTIPART_KEEP_MAX) { partBytes = null; tally.release(keptBytes); keptBytes = 0; }
+        if (headLen < UPLOAD_HEAD) { const k = Math.min(value.length, UPLOAD_HEAD - headLen); head.set(value.subarray(0, k), headLen); headLen += k; }
+        held.push(value); heldBytes += value.length; tally.hold(value.length);
         if (heldBytes >= UPLOAD_PART) await flush(false);
       }
       await flush(true);
     } catch {
       await reader.cancel();
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
-               detail: "the file's bytes could not be read whole or held under their own digest, so nothing was written" };
+               detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
     }
-    if (total === 0) return { ok: false, reason: "EMPTY", status: 400, detail: "the file has no bytes; nothing was written" };
+    if (total === 0) return { ok: false, reason: "EMPTY", status: 400, detail: localize("capture.index.file_no_bytes", "the file has no bytes; nothing was written") };
     const sha = whole.hex();
     const multipart = parts.length > 1;
     if (!multipart && parts[0].sha256 !== sha)
       return { ok: false, reason: "HASH_DISAGREEMENT", status: 500, detail: "the incremental hash and the block hash of the same bytes differ" };
+    /* R86 (T51; `acquisition` R10, C5): a file held in parts is also kept whole under its own digest, as a fetched one is, so its
+       reading, its vouch box and OCR find it; where it cannot be kept the upload is refused and nothing is written. R103 (fix round 7;
+       G79): the buffers of the parts just stored are handed to `keepWhole`, so no part is read back or hashed again: the whole is put
+       once. */
+    if (multipart && !(await keepWhole(ev, { sha, parts, total, bytes: partBytes })).ok)
+      return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
+               detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
+    /* a file in one part is judged as text from the buffer just stored, not read back (it is at most one 8 MiB part); the ledger counts it until then */
+    const onlyPart = !multipart && partBytes && partBytes.length === 1 ? partBytes[0] : null;
+    partBytes = null;
+    if (!onlyPart) { tally.release(keptBytes); keptBytes = 0; }
+    const { reg, arm } = this.#registrar(registerJob, armJobs);
+    /* R103 (fix round 4b, F2; fix round 7, G79): past `MULTIPART_KEEP_MAX` the whole is made from the stored parts by the store itself
+       (`putFromParts`). The plane's owed-work ledger keeps it alive after the answer, so the answer is not held for it: the keep is handed
+       over at once and the answer says `keep_pending`. R109: with the registrar the handover IS the `keep` row, registered in the filing
+       transaction with the parts; else, with the plane's `keepLater`, as before; with neither this call AWAITS the keep within what is left of the door's
+       bound, as a promise nothing keeps alive is not a keep; one that has not ended by then is handed over then. The file is filed in its parts either way,
+       never refused for it. */
+    let keepPending = false, keepRow = false;
+    if (multipart && total > MULTIPART_KEEP_MAX) {
+      if (reg && typeof ev.putFromParts === "function") { keepPending = true; keepRow = true; }
+      else {
+        const later = typeof keepLater === "function" ? keepLater : typeof this.keepLater === "function" ? (k) => this.keepLater(k) : null;
+        if (later && typeof ev.putFromParts === "function") {
+          try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); } catch { keepPending = false; }
+        }
+        if (!keepPending)
+          keepPending = (await keepPast(this, ev, { sha, parts, boundMs: boundMs ?? undefined, elapsedMs: Date.now() - startedAt, keepLater })).keep_pending;
+      }
+    }
+    const pending = keepPending ? { keep_pending: true } : {};
+    const judge = async () => {
+      let ct = null;
+      if (!multipart) {
+        try {
+          const raw = onlyPart ?? await (async () => { const obj = await ev.get(sha); return obj ? new Uint8Array(await obj.arrayBuffer()) : null; })();
+          if (raw && raw.length === total) ct = textTypeOf({ bytes: raw, type, name });
+        } catch { ct = null; }
+      } else {
+        ct = textTypeOf({ bytes: withoutCutCodePoint(head.subarray(0, headLen)), type, name });
+      }
+      return ct;
+    };
+    return this.#file({ ev, sha, total, parts, multipart, partsOwed: multipart, keepRow, pending, reg, arm, by, statement, name, type, at, within,
+                        judge, firstPart: multipart ? head.subarray(0, headLen) : null,
+                        held: onlyPart, settle: () => { tally.release(keptBytes); keptBytes = 0; } });
+  }
+
+  /* R109 (fix round 9; G126; K4835 (2)): the work an upload owes is one job row each, written through the registrar, read as `keepLater` is: the store's
+     `registerJob` when it is a function, else the call's, else none (the answer then says so). The rows are written inside the filing transaction, and the
+     alarm is armed after its commit. */
+  #registrar(registerJob, armJobs) {
+    const reg = typeof this.registerJob === "function" ? (e) => this.registerJob(e) : typeof registerJob === "function" ? registerJob : null;
+    const arm = async () => {
+      const f = typeof this.armJobs === "function" ? () => this.armJobs() : typeof armJobs === "function" ? armJobs : null;
+      if (reg && f) { try { await f(); } catch { /* an alarm not armed is the backstop's, never the upload's */ } }
+    };
+    return { reg, arm };
+  }
+
+  /* R86, R108, R109: the filing of an upload, whether it came in one request or in parts (R113): the receipt, the capturing member, the job rows and `within`,
+     in one transaction, and the answer. `parts` are the stored parts of a file held in parts (none for a file held as one object, a parted upload's
+     included); `partsOwed` says the job rows name them; `judge()` answers the content type the bytes are profiled with; `firstPart` is the head `profileOf`
+     sniffs; `multipart` says the file is held in parts, as against one object (past `PROFILE_TEXT_MAX` and `ODF_DIGEST_MAX` `profileOf` reads one object by
+     ranges of its head and tail, whatever way it came). `held` is the bytes of a file held as one part, which the upload holds already (the profile reads
+     them, never the stored object back, R109); `settle` releases them from the byte ledger once the profile is taken. */
+  async #file({ ev, sha, total, parts, multipart, partsOwed, keepRow, pending, reg, arm, by, statement, name, type, at, within, judge, firstPart, held = null, settle = null }) {
+    /* R109: the rows this upload owes: `reading` always, `unpack` when the profile names `zip` (R110), `keep` when the handover is the row. Called inside the
+       filing transaction; a refusal (or a throw) of the registrar rolls the upload back and is answered, never swallowed. */
+    const isZip = (profile) => !!(profile && profile.format && profile.format.format === "zip");
+    const carrier = `snapshots/upload-${sha}`, partShas = parts.map((p) => p.sha256);
+    /* R109 (fix round 9, G152; K4958): an upload stated over the whole-read ceiling of its kind is never read, so it owes no `reading`; the reader states it
+       at once from the sizes (`control-plane` R132). The kind's row is the one the inline gate judges by: a PDF `pdf.bytes`, a CSV `csv.bytes`, a text `text.bytes`,
+       every other kind the whole-load row `pdf.bytes`. */
+    const stated = (profile) => !!profile && total > boundOf(...wholeReadRow(wholeReadKind(profile)));
+    const register = (profile) => {
+      if (!reg) return { ok: true };
+      const entries = [...(stated(profile) ? [] : [{ kind: "reading", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }]),
+                       ...(isZip(profile) ? [{ kind: "unpack", sha, carrier, ...(partsOwed && partShas.length ? { parts: partShas } : {}) }] : []),
+                       ...(keepRow ? [{ kind: "keep", sha, carrier, parts: partShas }] : [])];
+      for (const e of entries) {
+        let r;
+        try { r = reg(e); } catch { r = null; }
+        if (!(r && r.ok === true))
+          return { ok: false, reason: "JOB_NOT_REGISTERED", status: 502, job: { kind: e.kind, reason: String((r && r.reason) || "REGISTRAR_REFUSED").slice(0, 80) },
+                   detail: localize("capture.index.job_not_registered", "the work this file owes could not be registered, so nothing was filed") };
+      }
+      return { ok: true };
+    };
+    /* R109: with no registrar the answer says which rows it could not register */
+    const jobsNote = (profile) => ({
+      ...(stated(profile) ? { reading_stated: true } : {}),
+      ...(reg ? {} : { jobs: { not_registered: [...(stated(profile) ? [] : [{ kind: "reading", reason: "NO_REGISTRAR" }]), ...(isZip(profile) ? [{ kind: "unpack", reason: "NO_REGISTRAR" }] : [])] } }),
+    });
+    /* the profile of the bytes: from the bytes the upload holds when it holds them, else as `profileOf` reads the store */
+    const profileThe = async (ct) => {
+      /* a declared text type over bytes the one rule judged not text (`ct` null) is no declaration of a format: the declaration never contradicts the bytes (R107) */
+      const declaredFor = (judged) => (typeof type === "string" && type !== "" && !(judged == null && profilesAsText(type, 0, false)) ? type : null);
+      const profile = await profileOf({ ev: held ? Capture.#holding(ev, sha, held) : ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
+                                        retrieved: when, origin: "member", parts: multipart && parts.length ? parts : null, firstPart,
+                                        /* R107 (fix round 9, G170): the file's name and the declared type reach the format, as for a fetched file (acquisition R17) */
+                                        name: typeof name === "string" && name !== "" ? name : null, declaredType: declaredFor(ct) });
+      if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
+      else if (ct) profile.source_content_type = null;
+      return profile;
+    };
     let holds = null;
     try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
     /* The record holds the bytes when its register files them or a receipt names them (provenance R5). Bytes merely in
        the store are not enough: an upload rolled back (by `within`, or a receipt not written) leaves its bytes there,
        content-addressed and named by nothing, and its retry must file them. */
-    const existed = !!(holds && (holds.registered === true || holds.acquired === true));
-    const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
+    const registered = !!(holds && holds.registered === true);
+    const existed = registered || !!(holds && holds.acquired === true);
+    const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const address = `upload:${sha}`;
     const writeReceipt = () => {
       let r;
@@ -699,39 +1000,41 @@ export class Capture {
       return r && r.recorded === true ? r : null;
     };
     const notWritten = { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502,
-                         detail: "the acquisition receipt could not be written, so nothing was filed" };
+                         detail: localize("capture.index.receipt_not_written", "the acquisition receipt could not be written, so nothing was filed") };
     const receiptOf = (r) => ({ address, via: UPLOAD_VIA, retrieved: when, observation: r.observation ?? null });
-    if (existed) {
-      /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called */
-      const r = this.#tx(writeReceipt);
-      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r) } : notWritten;
+    /* a second sighting: the receipt and the rows it owes (one each, by the whole sha, so a second upload leaves the one), in one transaction */
+    const sighting = (profile) => this.#tx(() => { const r = writeReceipt(); if (!r) return notWritten; const j = register(profile); return j.ok === false ? j : { ok: true, receipt: r }; });
+    if (registered) {
+      /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called. Its kind is asked of the bytes only when the
+         file is over the lowest whole-read row, where it may be stated (a smaller one owes its reading whatever it is). */
+      const profile = total > boundOf("pdf", "bytes") ? await profileThe(await judge()) : null;
+      settle?.();
+      const r = sighting(profile);
+      if (!r.ok) return r;
+      await arm();
+      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), ...pending, ...jobsNote(profile) };
     }
-    /* R92: a text type over bytes that are text (valid UTF-8, no NUL) is the profile's declared content type, so the bytes
-       are read as text; any other type, or a text type over bytes that are not text, profiles the bytes as R86 does without
-       it. Either way the type is recorded as the uploader's declaration, never a measured header. */
-    /* R93: with no `type`, a text extension in the name (.txt, .md, .csv) reads the bytes as that text type, under the
-       same test; the name is not a declaration, so no source_content_type or declared_by is recorded for it. */
-    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
-    const readAs = named ? UPLOAD_NAME_TYPES[named[1].toLowerCase()] : type;
-    let ct = null;
-    if (typeof readAs === "string" && readAs !== "" && profilesAsText(readAs, total, multipart)) {
-      try {
-        const obj = await ev.get(sha);
-        const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
-        if (raw && raw.length === total && !raw.includes(0)) { new TextDecoder("utf-8", { fatal: true }).decode(raw); ct = readAs; }
-      } catch { ct = null; }
-    }
-    const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
-                                      retrieved: when, origin: "member", parts: multipart ? parts : null });
-    if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
-    else if (ct) profile.source_content_type = null;
+    const ct = await judge();
+    const profile = await profileThe(ct);
+    settle?.();
     const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
+    if (existed) {
+      /* R86 (T51 fix round 2; C10): a receipt names the bytes but the register files them under no document (an upload
+         interrupted before it was filed): the receipt is written as a second sighting and the document is answered as a new
+         upload's, so the screen can file it for the viewer; no actor is recorded and `within` is not called. */
+      const r = sighting(profile);
+      if (!r.ok) return r;
+      await arm();
+      return { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r.receipt), document, ...pending, ...jobsNote(profile) };
+    }
     let done;
     try {
       done = this.#tx(() => {
         const r = writeReceipt();
         if (!r) return notWritten;
         this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
+        const j = register(profile);
+        if (j.ok === false) return j;
         if (typeof within !== "function") return { ok: true, receipt: r };
         const w = Capture.#callWithin(within, document);
         if (w && typeof w === "object" && w.ok === false) return w;
@@ -743,8 +1046,326 @@ export class Capture {
       throw e;
     }
     if (!done.ok) return done;
-    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document,
+    await arm();
+    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending, ...jobsNote(profile),
              ...(typeof within === "function" ? { within: done.within } : {}) };
+  }
+
+
+  /* ==================================================================== *
+   * A file sent in parts (R113; G127f; K4838 (6), K4891)
+   * ==================================================================== */
+
+  /* R113: the bucket binding when it offers R2's own multipart upload, else null. The parts of a file past the request-body ceiling are written with it
+     directly, so the whole is one object under its digest and no part is stored as an object of its own. */
+  #partedBucket() {
+    const b = this.env && this.env.CAPTURES;
+    return b && typeof b.createMultipartUpload === "function" && typeof b.resumeMultipartUpload === "function" ? b : null;
+  }
+
+  /* R113: the object key of a digest in the evidence bucket, which record-core fixes (its R38) and the composition root knows: handed by the caller as `key`
+     (the function the door hands `op=capture`), else the store's `evidenceKey`, assigned as `keepLater` is. Null when neither is given. */
+  #partedKey(key) {
+    return typeof key === "function" ? key : typeof this.evidenceKey === "function" ? (d) => this.evidenceKey(d) : null;
+  }
+
+  /* R113: the session a member may use: refused when unknown to this instance or another member's (an unseen session and an unknown one read alike), or past
+     its expiry (then aborted here, its row removed). Answers `{row}` or `{refusal}`. */
+  async #partedRow(upload, by, bucket, key) {
+    const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureupload" });
+    if (fenced) return { refusal: fenced };
+    const row = typeof upload === "string" && upload ? this.#one(`SELECT * FROM parted_uploads WHERE upload = ?`, upload) : null;
+    if (!row || memberIdOf(row.by) !== memberIdOf(by))
+      return { refusal: { ok: false, reason: "UPLOAD_UNKNOWN", status: 404,
+                          detail: localize("capture.index.upload_unknown", "your group's Civicsmith holds no upload in parts under that name for you; begin it again") } };
+    if (row.expires <= stampSecond(this.#instant())) {
+      await this.#partedDrop(row, bucket, key);
+      return { refusal: { ok: false, reason: "UPLOAD_EXPIRED", status: 410,
+                          detail: localize("capture.index.upload_expired", "this upload was left open too long, so it was aborted and holds nothing; begin it again") } };
+    }
+    let parts = [];
+    try { parts = JSON.parse(row.parts); } catch { parts = []; }
+    return { row: { ...row, parts } };
+  }
+
+  /* R113 (G173): the live state of an open upload whose `parts` are put: the one this instance holds when it holds the right one, else taken up again from the
+     digest kept with the row. Null only when the row's state is missing or does not describe the parts held (an upload begun before the state was kept, or a
+     row that was altered): then the digest of the parts so far cannot be told and the caller answers `UPLOAD_LOST`. */
+  #liveOf(row) {
+    const held = row.parts.length, have = this.#parted.get(row.upload);
+    if (have && have.next === held) return have;
+    if (held === 0) return have ?? null;
+    const hasher = typeof row.hash_state === "string" ? resumedOf(row.hash_state) : null;
+    if (!hasher || hasher.length !== row.parts.reduce((n, p) => n + p.bytes, 0)) return null;
+    const live = { hasher, next: held, busy: have ? have.busy : false, whole: null };
+    this.#parted.set(row.upload, live);
+    return live;
+  }
+
+  /* R113: abort what a session holds in R2 (when its upload is still open) and remove its row and its live state. True when it is gone; false when the bucket
+     would not abort, the row then staying for the next sweep. */
+  async #partedDrop(row, bucket, key) {
+    if (row.state === "open" && row.r2 && bucket) {
+      try { await bucket.resumeMultipartUpload(key ? key(row.sha256) : row.sha256, row.r2).abort(); }
+      catch { return false; }
+    }
+    this.#tx(() => this.#sql.exec(`DELETE FROM parted_uploads WHERE upload = ?`, row.upload));
+    this.#parted.delete(row.upload);
+    return true;
+  }
+
+  /** R113: aborts the sessions of uploads in parts that were left open past their expiry (`PARTED_UPLOAD_TTL_MS` after their begin), at most `PARTED_SWEEP_MAX`
+   *  at a time, oldest first; each one's multipart upload is aborted in R2 and its row removed, so an abandoned upload holds nothing. A session whose abort the
+   *  bucket refuses is left for the next call. Run at each begin; a caller may run it too. Never throws. */
+  async expireUploads({ key = null } = {}) {
+    try {
+      const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+      const due = this.#rows(`SELECT * FROM parted_uploads WHERE expires <= ? ORDER BY expires, upload LIMIT ?`, stampSecond(this.#instant()), PARTED_SWEEP_MAX);
+      let aborted = 0;
+      for (const row of due) if (await this.#partedDrop(row, bucket, keyOf)) aborted++;
+      return { ok: true, aborted };
+    } catch { return { ok: false, aborted: 0 }; }
+  }
+
+  /** R113 (fix round 9; G127f; K4838 (6), K4891): begins an upload of a file past the request-body ceiling, which the browser then sends in parts through the
+   *  Worker. `{sha256, bytes, statement, name, type, by}`: the whole file's digest and its size as the member's browser declares them, and what R86 asks of an
+   *  upload. Refused as `uploadCapture` refuses before a byte is read (the member-session fence, `UPLOAD_NO_STATEMENT`, `name`, `type`), then a size over the
+   *  capture ceiling (`TOO_LARGE`, 413, with `size` and `bound`, judged before any part). Otherwise R2's multipart upload is begun under the object key of
+   *  `sha256` and the answer is `{ok: true, upload, sha256, bytes, part_bytes, parts, next: 0, held: false, expires}`: the browser cuts the file into `parts`
+   *  parts of `part_bytes` bytes (the last the remainder) and sends them in order. When the evidence store already holds an object of that digest and size
+   *  the answer is `held: true` with no parts to send, and the completion files it. A second begin of the same file by the same member abandons the first.
+   *  Session state is this module's table `parted_uploads` (it holds no byte); a session left open past `PARTED_UPLOAD_TTL_MS` is aborted. */
+  async beginPartedUpload({ sha256 = null, bytes = null, statement, name = null, type = null, by, bounds = null, key = null } = {}) {
+    const fenced = Capture.#fence({ by, statement, name, type, op: "captureuploadbegin" });
+    if (fenced) return fenced;
+    if (typeof sha256 !== "string" || !HEX64.test(sha256))
+      return Capture.#missingArgument("captureuploadbegin", "sha256", localize("capture.index.shape_sha256_whole", "64 lowercase hex characters, the digest of the whole file"), sha256);
+    if (!Number.isSafeInteger(bytes) || bytes < 1)
+      return Capture.#missingArgument("captureuploadbegin", "bytes", localize("capture.index.shape_bytes", "the file's size in bytes, a whole number from 1"), bytes);
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) return Capture.#storageAbsent();
+    /* R111: the size is judged before any part is accepted. A whole may be larger than one request may carry, so only the capture ceiling binds it. */
+    const capMax = Capture.#lowered(CAPTURE_MAX, bounds && bounds.capture);
+    if (bytes > capMax) return Capture.#tooLarge(bytes, "capture", capMax);
+    const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+    if (!bucket || !keyOf)
+      return { ok: false, reason: "PARTED_UPLOAD_UNAVAILABLE", status: 503,
+               detail: localize("capture.index.parted_unavailable", "your group's Civicsmith cannot take a file in parts (its evidence bucket offers no multipart upload, or its key is not known), so nothing was written") };
+    await this.expireUploads({ key });
+    /* the same member's earlier session for this file is abandoned: a restarted upload begins clean */
+    for (const old of this.#rows(`SELECT * FROM parted_uploads WHERE by = ? AND sha256 = ?`, by, sha256)) await this.#partedDrop(old, bucket, keyOf);
+    const reqMax = Capture.#lowered(PLATFORM_FIGURES.request_body_max.value, bounds && bounds.request);
+    const partBytes = Math.max(1, Math.min(Capture.#lowered(PARTED_PART_BYTES, bounds && bounds.part), reqMax));
+    const count = Math.ceil(bytes / partBytes);
+    let held = false;
+    try { const h = await ev.head(sha256); held = !!(h && h.size === bytes); } catch { held = false; }
+    let r2 = null;
+    if (!held) {
+      try { r2 = (await bucket.createMultipartUpload(keyOf(sha256))).uploadId; }
+      catch {
+        return { ok: false, reason: "UPLOAD_NOT_BEGUN", status: 502,
+                 detail: localize("capture.index.parted_not_begun", "the evidence store would not begin an upload in parts, so nothing was written") };
+      }
+    }
+    const now = this.#instant(), upload = crypto.randomUUID().replace(/-/g, "");
+    const created = stampSecond(now), expires = stampSecond(now + PARTED_UPLOAD_TTL_MS);
+    this.#tx(() => this.#sql.exec(
+      `INSERT INTO parted_uploads (upload, sha256, bytes, part_bytes, by, statement, name, type, r2, state, parts, hash_state, created, expires)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?, ?)`,
+      upload, sha256, bytes, partBytes, by, statement, name ?? null, type ?? null, r2, held ? "completed" : "open", held ? null : createResumableSha256().snapshot(), created, expires));
+    if (!held) this.#parted.set(upload, { hasher: createResumableSha256(), next: 0, busy: false, whole: null });
+    return { ok: true, upload, sha256, bytes, part_bytes: partBytes, parts: held ? 0 : count, next: 0, held, created, expires };
+  }
+
+  /** R113: puts one part of an upload begun with `beginPartedUpload`. `{upload, index, bytes, sha256, by, declared, bounds, ledger}`: `index` counts from 0,
+   *  `bytes` the part (a stream, bytes or an async iterable, as R86 takes a file), `sha256` the part's own digest as the browser computed it, checked as the part
+   *  arrives. A part is exactly `part_bytes` bytes, the last the remainder, so a length that differs (`declared` is judged before one byte is read) is
+   *  `PART_SIZE` and the stream is cancelled. Parts go in order, because the whole file's digest is hashed in order across them: a part past the next one is
+   *  `PART_OUT_OF_ORDER` (answering `next`); a part already put, put again, is idempotent, answered `existed: true` and stored once, and one put again with other
+   *  bytes is `PART_CONFLICT`. The part is held once in memory (the byte `ledger` counts it) and written to R2's upload before it is recorded. If this instance
+   *  has been taken out of memory between parts, the digest of the parts so far is taken up again from the upload's row (G173), so the next part is accepted
+   *  whatever the pause; only an upload whose row cannot say that digest is aborted and answered `UPLOAD_LOST`: begin again. */
+  async putUploadPart({ upload = null, index = null, bytes, sha256 = null, by, declared = null, ledger = null, key = null } = {}) {
+    const tally = Capture.#tally(ledger);
+    const reader = uploadReader(bytes);
+    /* G176 (K5005): an answer given without keeping the part is given after the body is read and discarded, never more than the part size, so a client still
+       sending reads the answer and not a closed connection; a body past the part size is cut there (cancelled), as before. The part size is the row's once the
+       row is read, the platform's upper figure before. */
+    let drainTo = PARTED_PART_BYTES, drained = 0;
+    const stop = async (answer) => {
+      if (!reader) return answer;
+      try {
+        for (;;) {
+          if (drained > drainTo) break;
+          const { done, value } = await reader.read();
+          if (done) return answer;
+          drained += value ? value.length : 0;
+        }
+      } catch { /* a body that cannot be read further is answered all the same */ }
+      await reader.cancel();
+      return answer;
+    };
+    try {
+      const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadpart" });
+      if (fenced) return await stop(fenced);
+      if (typeof upload !== "string" || !upload) return await stop(Capture.#missingArgument("captureuploadpart", "upload", localize("capture.index.shape_upload_name", "the upload's name, as the begin answered it"), upload));
+      if (!Number.isSafeInteger(index) || index < 0)
+        return await stop(Capture.#missingArgument("captureuploadpart", "index", localize("capture.index.shape_part_index", "a whole number from 0, the part's place in the file"), index));
+      if (typeof sha256 !== "string" || !HEX64.test(sha256))
+        return await stop(Capture.#missingArgument("captureuploadpart", "sha256", localize("capture.index.shape_sha256_part", "64 lowercase hex characters, the digest of this part"), sha256));
+      const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+      const got = await this.#partedRow(upload, by, bucket, keyOf);
+      if (got.refusal) return await stop(got.refusal);
+      const row = got.row, count = Math.ceil(row.bytes / row.part_bytes);
+      drainTo = row.part_bytes;
+      if (row.state !== "open")
+        return await stop({ ok: false, reason: "UPLOAD_NOT_OPEN", status: 409,
+                            detail: localize("capture.index.upload_not_open", "this upload has no part left to put; complete it") });
+      if (index >= count)
+        return await stop(Capture.#missingArgument("captureuploadpart", "index", localize("capture.index.shape_part_index_last", "a whole number from 0 to {last}", { last: String(count - 1) }), index));
+      if (index < row.parts.length) {
+        if (row.parts[index].sha256 === sha256) return await stop({ ok: true, existed: true, index, next: row.parts.length, parts: count });
+        return await stop({ ok: false, reason: "PART_CONFLICT", status: 409, index, next: row.parts.length,
+                            detail: localize("capture.index.part_conflict", "that part was already put with other bytes, so this one was refused") });
+      }
+      if (index > row.parts.length)
+        return await stop({ ok: false, reason: "PART_OUT_OF_ORDER", status: 409, index, next: row.parts.length,
+                            detail: localize("capture.index.part_out_of_order", "the parts go in order, because the file's digest is taken across them in order; send the part named next") });
+      let live = this.#liveOf(row);
+      if (row.parts.length > 0 && !live) {
+        await this.#partedDrop(row, bucket, keyOf);
+        return await stop({ ok: false, reason: "UPLOAD_LOST", status: 409,
+                            detail: localize("capture.index.upload_lost", "your group's Civicsmith lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") });
+      }
+      if (!live) { live = { hasher: createResumableSha256(), next: 0, busy: false, whole: null }; this.#parted.set(row.upload, live); }
+      if (live.busy)
+        return await stop({ ok: false, reason: "PART_IN_PROGRESS", status: 409, index,
+                            detail: localize("capture.index.part_in_progress", "a part of this upload is still arriving; send the next one when it is answered") });
+      const expected = index === count - 1 ? row.bytes - index * row.part_bytes : row.part_bytes;
+      const wrongSize = (size) => ({ ok: false, reason: "PART_SIZE", status: size > expected ? 413 : 400, index, size, bound: expected,
+                                     detail: localize("capture.index.part_size", "a part must be exactly {bound} bytes (the last one the rest of the file), and this one is not; nothing was stored", { bound: String(expected) }) });
+      if (Number.isSafeInteger(declared) && declared !== expected) return await stop(wrongSize(declared));
+      if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: localize("capture.index.upload_no_bytes", "the upload carried no bytes; nothing was written") };
+      live.busy = true;
+      try {
+        const buf = new Uint8Array(expected);
+        tally.hold(expected);
+        let filled = 0;
+        try {
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (!value) throw new Error("not bytes");
+            drained += value.length;
+            if (filled + value.length > expected) return await stop(wrongSize(filled + value.length));
+            buf.set(value, filled); filled += value.length;
+          }
+        } catch {
+          return await stop({ ok: false, reason: "PART_NOT_READ", status: 502, index,
+                              detail: localize("capture.index.part_not_read", "the part's bytes could not be read, so nothing was stored; send it again") });
+        }
+        if (filled !== expected) return wrongSize(filled);
+        const partDigest = hexOf(await crypto.subtle.digest("SHA-256", buf));
+        if (partDigest !== sha256)
+          return { ok: false, reason: "PART_DIGEST_MISMATCH", status: 400, index, expected: sha256, got: partDigest,
+                   detail: localize("capture.index.part_digest_mismatch", "the part does not hash to the digest given for it, so nothing was stored; send it again") };
+        let etag;
+        try { etag = (await bucket.resumeMultipartUpload(keyOf(row.sha256), row.r2).uploadPart(index + 1, buf)).etag ?? null; }
+        catch {
+          return { ok: false, reason: "PART_NOT_STORED", status: 502, index,
+                   detail: localize("capture.index.part_not_stored", "the evidence store would not take the part, so nothing was recorded; send it again") };
+        }
+        live.hasher.update(buf);
+        live.next = index + 1;
+        const parts = [...row.parts, { sha256, etag, bytes: expected }];
+        /* the part and the digest through it are recorded together (G173): the row never names a part its state does not include */
+        this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET parts = ?, hash_state = ? WHERE upload = ?`, JSON.stringify(parts), live.hasher.snapshot(), row.upload));
+        return { ok: true, existed: false, index, next: parts.length, parts: count, bytes: expected };
+      } finally { live.busy = false; }
+    } finally { tally.end(); }
+  }
+
+  /** R113: completes an upload sent in parts. `{upload, parts, by, within, at, registerJob, armJobs}`: `parts` the digests of the parts in order, which must be
+   *  the ones put: a part not put is `PARTS_MISSING` (naming them) and any other difference `PARTS_OUT_OF_ORDER`, each refusing with nothing written and the upload
+   *  left open. The digest of all the bytes, hashed in order across the parts (never a part's), must be the one declared at the begin, else the upload is aborted,
+   *  nothing is held and the answer is `WHOLE_DIGEST_MISMATCH`. Then R2's upload is completed, making one object under the whole's digest, and the file is
+   *  filed exactly as `uploadCapture` files one that came in a request (R86, R108, R109): one receipt, the actor, one job row through the registrar and `within`
+   *  in one transaction, and the same answer, the document carrying no `parts` (the whole is one object). A retry after a refusal in the filing files the
+   *  object already complete. */
+  async completePartedUpload({ upload = null, parts = null, by, within = null, at = null, registerJob = null, armJobs = null, key = null } = {}) {
+    const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadcomplete" });
+    if (fenced) return fenced;
+    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadcomplete", "upload", localize("capture.index.shape_upload_name", "the upload's name, as the begin answered it"), upload);
+    const named = Array.isArray(parts) ? parts.map((p) => (p && typeof p === "object" ? p.sha256 : p)) : null;
+    if (!named || !named.every((d) => typeof d === "string" && HEX64.test(d)))
+      return Capture.#missingArgument("captureuploadcomplete", "parts", localize("capture.index.shape_parts_digests", "the list of the parts' digests, in order, each 64 lowercase hex characters"), parts);
+    const bucket = this.#partedBucket(), keyOf = this.#partedKey(key);
+    const got = await this.#partedRow(upload, by, bucket, keyOf);
+    if (got.refusal) return got.refusal;
+    const row = got.row, count = Math.ceil(row.bytes / row.part_bytes);
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) return Capture.#storageAbsent();
+    if (row.state === "open") {
+      const missing = []; for (let i = 0; i < count; i++) if (!row.parts[i]) missing.push(i);
+      if (missing.length)
+        return { ok: false, reason: "PARTS_MISSING", status: 409, missing, next: row.parts.length,
+                 detail: localize("capture.index.parts_missing", "the upload lacks parts, so it was not completed and nothing was written; send the parts named in missing") };
+      const differs = row.parts.findIndex((p, i) => named[i] !== p.sha256);
+      if (differs >= 0 || named.length !== row.parts.length)
+        return { ok: false, reason: "PARTS_OUT_OF_ORDER", status: 409, index: differs >= 0 ? differs : row.parts.length,
+                 detail: localize("capture.index.parts_out_of_order", "the parts named are not the ones put, in the order they were put, so the upload was not completed and nothing was written") };
+      const live = this.#liveOf(row);
+      if (!live || live.next !== count) {
+        await this.#partedDrop(row, bucket, keyOf);
+        return { ok: false, reason: "UPLOAD_LOST", status: 409,
+                 detail: localize("capture.index.upload_lost", "your group's Civicsmith lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again") };
+      }
+      if (live.whole === null) live.whole = live.hasher.hex();
+      if (live.whole !== row.sha256) {
+        const claimed = row.sha256, got64 = live.whole;
+        await this.#partedDrop(row, bucket, keyOf);
+        return { ok: false, reason: "WHOLE_DIGEST_MISMATCH", status: 400, expected: claimed, got: got64,
+                 detail: localize("capture.index.whole_digest_mismatch", "the parts, taken in order, do not hash to the digest declared for the file, so the upload was aborted and nothing was held") };
+      }
+      try { await bucket.resumeMultipartUpload(keyOf(row.sha256), row.r2).complete(row.parts.map((p, i) => ({ partNumber: i + 1, etag: p.etag }))); }
+      catch {
+        await this.#partedDrop(row, bucket, keyOf);
+        return { ok: false, reason: "UPLOAD_NOT_COMPLETED", status: 502,
+                 detail: localize("capture.index.parted_not_completed", "the evidence store would not complete the upload, so it was aborted and holds nothing; begin it again") };
+      }
+      this.#tx(() => this.#sql.exec(`UPDATE parted_uploads SET state = 'completed' WHERE upload = ?`, row.upload));
+      this.#parted.delete(row.upload);
+    }
+    /* the object is whole under its digest: file it. Its head is read as a range, which is all the profile asks of a file past one part. */
+    let head = null;
+    try {
+      const o = await ev.get(row.sha256, { range: { offset: 0, length: UPLOAD_HEAD } });
+      head = o ? new Uint8Array(await o.arrayBuffer()) : null;
+    } catch { head = null; }
+    if (!head)
+      return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
+               detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
+    const { reg, arm } = this.#registrar(registerJob, armJobs);
+    const judge = async () => textTypeOf({ bytes: withoutCutCodePoint(head), type: row.type, name: row.name });
+    const filed = await this.#file({ ev, sha: row.sha256, total: row.bytes, parts: [], multipart: false, partsOwed: false, keepRow: false, pending: {}, reg, arm,
+                                     by: row.by, statement: row.statement, name: row.name, type: row.type, at, within, judge, firstPart: head });
+    if (filed.ok === true) await this.#partedDrop({ ...row, state: "completed" }, bucket, keyOf);
+    return filed;
+  }
+
+  /** R113: abandons an upload sent in parts: R2's upload is aborted and the session removed, so it holds nothing. `{upload, by}`. Idempotent: a session this
+   *  member does not hold answers `{ok: true, aborted: false}`. A bucket that will not abort answers `UPLOAD_NOT_ABORTED` (502) and the session stays, to be
+   *  swept at its expiry. */
+  async abortPartedUpload({ upload = null, by, key = null } = {}) {
+    const fenced = Capture.#fence({ by, statement: "-", name: null, type: null, op: "captureuploadabort" });
+    if (fenced) return fenced;
+    if (typeof upload !== "string" || !upload) return Capture.#missingArgument("captureuploadabort", "upload", localize("capture.index.shape_upload_name", "the upload's name, as the begin answered it"), upload);
+    const row = typeof upload === "string" && upload ? this.#one(`SELECT * FROM parted_uploads WHERE upload = ?`, upload) : null;
+    if (!row || memberIdOf(row.by) !== memberIdOf(by)) return { ok: true, aborted: false };
+    if (!(await this.#partedDrop(row, this.#partedBucket(), this.#partedKey(key))))
+      return { ok: false, reason: "UPLOAD_NOT_ABORTED", status: 502,
+               detail: localize("capture.index.parted_not_aborted", "the evidence store would not abort the upload; it stays open and is aborted at its expiry") };
+    return { ok: true, aborted: true };
   }
 
   /* R86: the provenance document of an upload, built as a pulled knock's is (doorbell R13): received from the member, never
@@ -761,9 +1382,8 @@ export class Capture {
       authority_basis: say("capture.authority_basis", { at }),
       provenance_chain: [{
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were uploaded to your group's Civicsmith by ${by} and hashed as they arrived, at ${at}; `
-               + "they were received from the member, not fetched from any address",
-        evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+        asserts: word("capture.upload.asserts", { by: String(by), at: String(at) }),
+        evidence: localize("capture.index.upload_receipt_evidence", "the upload's receipt: its digest, taken as the bytes arrived, and its instant"),
         bound: false, via: UPLOAD_VIA,
       }],
       capture: {
@@ -791,7 +1411,7 @@ export class Capture {
   recordCaptureActor({ captureSha, actor, at = null } = {}) {
     if (typeof captureSha !== "string" || !HEX64.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
     this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
-                                  captureSha, actor, at && ISO_INSTANT.test(at) ? at : stampSecond()));
+                                  captureSha, actor, at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
     return { recorded: true };
   }
 
@@ -808,9 +1428,114 @@ export class Capture {
       if (typeof question !== "string" || !question.trim() || [...question].length > CAPTURED_FOR_QUESTION_MAX) return { recorded: false };
       if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by)) return { recorded: false };
       this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO captured_for (capture_sha, question, asker, at) VALUES (?, ?, ?, ?)`,
-                                    captureSha, question, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond()));
+                                    captureSha, question, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
       return { recorded: true };
     } catch { return { recorded: false }; }
+  }
+
+  /** R104 (fix round 6; G2; K4562): that a large capture fetched in the background was filed, once for each capture session, in the table
+   *  `fetch_done`, for `notice-producers` to tell the opener (`fetchesDone`). `{recorded: false}`, writing nothing, for a session or
+   *  document that is not a non-blank string, an opener that is not a member's stamp (absent, blank, naming no member, or a machine
+   *  identity), a `project` that is neither a string nor null, or a session already recorded. `at` is a whole-second UTC instant,
+   *  this instance's clock when absent. Never throws. */
+  recordFetchDone(args) {
+    try {
+      const { session, document, opener, project = null, at = null } = args ?? {};
+      const text = (x) => typeof x === "string" && x.trim() !== "" && x.length <= 300;
+      if (!text(session) || !text(document)) return { recorded: false };
+      if (typeof opener !== "string" || !memberIdOf(opener).trim() || isMachineIdentity(opener)) return { recorded: false };
+      if (project !== null && typeof project !== "string") return { recorded: false };
+      return this.#tx(() => {
+        if (this.#one(`SELECT 1 AS x FROM fetch_done WHERE session = ?`, session)) return { recorded: false };
+        this.#sql.exec(`INSERT INTO fetch_done (session, document, opener, project, at) VALUES (?, ?, ?, ?, ?)`,
+                       session, document, opener, project || null, at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant()));
+        return { recorded: true };
+      });
+    } catch { return { recorded: false }; }
+  }
+
+  /** R104 (G2): the fetches recorded, oldest first by instant then session, at most `limit` (default 200, clamped 1…1000), each
+   *  `{session, document, opener, project, at, cursor}`; `after` the `cursor` of a row an earlier read answered (one that is not such a
+   *  cursor reads from the head), with `truncated` and `next`. In process, no viewer: `notice-producers` tells `opener` and no one
+   *  else. Writes nothing; never throws (a store that cannot be read answers no fetches). */
+  fetchesDone({ limit = null, after = null } = {}) {
+    const cap = limitOf(limit);
+    try {
+      const from = after ? keyOf(after, 3) : null;
+      const at = from && from[0] === FETCH_CURSOR_TAG ? from : null;
+      const found = this.#rows(`SELECT session, document, opener, project, at FROM fetch_done
+                                 WHERE ${at ? "(at > ? OR (at = ? AND session > ?))" : "1=1"} ORDER BY at, session LIMIT ?`,
+                               ...(at ? [at[1], at[1], at[2]] : []), cap + 1);
+      const page = found.slice(0, cap).map((r) => ({ session: r.session, document: r.document, opener: r.opener, project: r.project ?? null,
+                                                   at: r.at, cursor: cursorOf([FETCH_CURSOR_TAG, r.at, r.session]) }));
+      return { ok: true, fetches: page, limit: cap, truncated: found.length > cap, next: found.length > cap ? page[page.length - 1].cursor : null };
+    } catch { return { ok: true, fetches: [], limit: cap, truncated: false, next: null }; }
+  }
+
+  /** R100 (T51 fix round 3; C9; Intake Doctrine section 8): that a member filed a held document in a project as a reference,
+   *  once for each (capture digest, project), at the first instant, in the table `seen_in`. It makes no second home: the
+   *  document keeps the one home `provenance` records (its R2), and `heldCaptures` (R77) lists it beside the project's own.
+   *  `{recorded: false}`, writing nothing, for a digest that is not 64 lowercase hex, a `project` that is not a non-blank
+   *  string of at most `SEEN_IN_PROJECT_MAX` characters, or a `by` that is not a member's stamp (absent, blank, naming no
+   *  member, or a machine identity). It decides nothing about the project's existence or the viewer's sight of it. Never
+   *  throws. */
+  recordSeenIn(args) {
+    try {
+      const { captureSha, project, by, at = null } = args ?? {};
+      if (typeof captureSha !== "string" || !HEX64.test(captureSha)) return { recorded: false };
+      if (typeof project !== "string" || !project.trim() || [...project].length > SEEN_IN_PROJECT_MAX) return { recorded: false };
+      if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by)) return { recorded: false };
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO seen_in (capture_sha, project, by, at) VALUES (?, ?, ?, ?)`,
+                                    captureSha, project, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
+      return { recorded: true };
+    } catch { return { recorded: false }; }
+  }
+
+  /** R101 (T51 fix round 3; C9; K4370; amends R100): a member files a held document in a project, `op=captureseenin`, calling
+   *  `recordSeenIn` (R100) for the member. Refused in order, each writing nothing: a `by` that is not a signed-in member's stamp
+   *  (`MEMBER_SESSION_REQUIRED`, 403, as R86's fence); a `captureSha` that is not 64 lowercase hex or a `project` that is blank or
+   *  over `SEEN_IN_PROJECT_MAX` characters (the required-argument refusal naming it); a digest no capture the viewer may see holds
+   *  as a document's capture, which is also the document whose home the member cannot see (`CAPTURE_NOT_HELD`, 404, C-118.11, one
+   *  answer for both, naming no holder); a project the member has not joined (membership's `PROJECT_ACT_NOT_A_PARTICIPANT`,
+   *  C-56.1, through `projectAuthority`, 403, which an unknown project meets as well). Answers `{ok: true, recorded, home}`: `home`
+   *  the project the document is held under (`bundles.project`, as `heldCaptures`' `also_here` names it, null when it has none);
+   *  `recorded` false for a repeat, a reference the first press kept at its first instant and member, and for the document's own
+   *  home, which lists it already. The instant is this instance's clock, never the request's. The `contribute` capability is the
+   *  door's (`op-declarations`), as for every corpus write (membership's `isProjectEditor`). */
+  fileSeenIn({ captureSha, project, by, viewer = undefined } = {}) {
+    if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: localize("capture.index.seenin_member_act", "filing a document where it is seen is a signed-in member's act, whose stamp names them; nothing was written") };
+    if (typeof captureSha !== "string" || !HEX64.test(captureSha))
+      return Capture.#missingArgument("captureseenin", "captureSha", "64 lowercase hex characters", captureSha);
+    if (typeof project !== "string" || !project.trim() || [...project].length > SEEN_IN_PROJECT_MAX)
+      return Capture.#missingArgument("captureseenin", "project", `a string of at most ${SEEN_IN_PROJECT_MAX} characters`, project);
+    try {
+      const sight = this.#sightOf(viewer);
+      const home = this.#one(`SELECT b.project AS project FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+                               WHERE r.capture_sha = ? AND (${sight.sql}) ORDER BY julianday(r.registered), r.registered, r.bundle_id LIMIT 1`,
+                             captureSha, ...sight.args);
+      /* DEC-49 REGION is-capture-held */
+      if (!home) {
+        const row = CAPTURE_CHECKS.CAPTURE_NOT_HELD;
+        return { ok: false, reason: "CAPTURE_NOT_HELD", code: "CAPTURE_NOT_HELD", check: row.check, translation: row.translation, status: 404,
+                 detail: localize("capture.index.seenin_not_held", "the record holds no such document that you may see; nothing was written") };
+      }
+      /* END DEC-49 REGION is-capture-held */
+      const denied = this.#membership().projectAuthority(project, `member:${memberIdOf(by)}`, "joined", "captureseenin");
+      if (denied) return { ...denied, status: 403 };
+      const homeProject = home.project || null;
+      const listed = homeProject === project || !!this.#one(`SELECT 1 AS x FROM seen_in WHERE capture_sha = ? AND project = ?`, captureSha, project);
+      if (listed) return { ok: true, recorded: false, home: homeProject };
+      const done = this.recordSeenIn({ captureSha, project, by, at: stampSecond(this.#instant()) });
+      if (done.recorded !== true)
+        return { ok: false, reason: "SEEN_IN_NOT_RECORDED", status: 502,
+                 detail: localize("capture.index.seenin_not_recorded", "the record could not be written, so nothing was filed") };
+      return { ok: true, recorded: true, home: homeProject };
+    } catch {
+      return { ok: false, reason: "SEEN_IN_NOT_RECORDED", status: 502,
+               detail: localize("capture.index.seenin_not_recorded", "the record could not be written, so nothing was filed") };
+    }
   }
 
   /** R69 (DEC-81 item 3(c)): a capture's actor appends a signed account of when and how they captured it. Refused
@@ -819,6 +1544,9 @@ export class Capture {
    *  (`signatures.verifySshsig`, `NS_RATIFY`) over `signatures.captureAccountStatement(captureSha, text)` (its R41) against one of `by`'s
    *  attesting keys (`credentials.attestingKeys`, its R11). Append-only. */
   async recordCaptureAccount({ captureSha, text, signature, by, at = null } = {}) {
+    /* R98 (T51; K4206): an absent captureSha names itself; C-118.5 is for a capture no member recorded as theirs */
+    if (captureSha == null || (typeof captureSha === "string" && !captureSha.trim()))
+      return Capture.#missingArgument("captureaccount", "captureSha", "<64 lowercase hex>", captureSha);
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who = memberIdOf(by);
     const actors = HEX64.test(sha) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha).map((r) => memberIdOf(r.actor)) : [];
@@ -843,9 +1571,9 @@ export class Capture {
     if (!v.ok) {
       const { ok: _ok, reason, ...rest } = v;
       return { ok: false, reason: `SIG_${reason}`, ...rest, captureSha: sha, status: 400,
-               detail: "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written" };
+               detail: localize("capture.index.signature_not_verified", "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written") };
     }
-    const when = at && ISO_INSTANT.test(at) ? at : stampSecond();
+    const when = at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const seq = this.#tx(() => {
       const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha).n) + 1;
       this.#sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -881,7 +1609,7 @@ export class Capture {
    *  are held (a capture held in parts counts when provenance holds its receipt, provenance R5). */
   async reattest({ captureSha, locator = null, by = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-    if (!HEX64.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
+    if (!HEX64.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: localize("capture.index.reattest_needs_sha", "reattest takes the sha256 of a capture the record holds") };
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const p = this.provenance;
     const holds = async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null);
@@ -902,11 +1630,23 @@ export class Capture {
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
     if (!attempts.length && out && out.ok === false && out.reason !== "NO_ATTESTATION" && out.reason !== "ATTEST_FAILED")
       return { ...out, status: 409 };
-    const now = stampSecond();
+    const outcomes = await this.#lateOutcomes(sha, attempts.length ? attempts
+      : [{ service: "attest", ok: false, note: String((out && (out.note || out.reason)) || say("acquisition.string.attempt_reported")) }]);
+    this.#appendLate(sha, outcomes, by);
+    return { ok: true, captureSha: sha, late_attestations: outcomes, attested: out && out.ok === true,
+             ...(out && out.attestation ? { attestation: out.attestation } : {}),
+             note: say("capture.note.attempt_recorded_late") };
+  }
+
+  /* R68: the late outcomes of attestation attempts, each as `reattest` appends it: `kind` (the timestamp or the co-archive), the
+     service, whether it answered, its instant, `late: true` and the sentence of what it proves, a timestamp's token digest and
+     size, a co-archive's locator and whether its replay hashes to the capture. */
+  async #lateOutcomes(sha, attempts) {
+    const now = stampSecond(this.#instant());
     const outcomes = [];
-    for (const a of attempts.length ? attempts : [{ service: "attest", ok: false, note: String((out && (out.note || out.reason)) || say("acquisition.string.attempt_reported")) }]) {
-      const at = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : now;
-      const coArchive = a.service === ARCHIVE_SERVICE || a.kind === "co-archive";
+    for (const a of attempts) {
+      const at = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : typeof a.at === "string" && ISO_INSTANT.test(a.at) ? a.at : now;
+      const coArchive = a.service === ARCHIVE_SERVICE || a.kind === "co-archive" || a.kind === "co_archive";
       const o = { kind: coArchive ? "co_archive" : "timestamp", service: String(a.service || "attest"), ok: a.ok === true, at,
                   late: true, proves: lateSentence(at),
                   ...(a.kind === "rfc3161" ? { token_sha256: a.token_sha256 ?? null, token_bytes: a.token_bytes ?? null } : {}),
@@ -915,15 +1655,33 @@ export class Capture {
       if (coArchive) Object.assign(o, await this.#replayMatches(sha, o.ok ? a.archived_locator : null));
       outcomes.push(o);
     }
+    return outcomes;
+  }
+
+  /* R68: append outcomes to `late_attestations`, in order after what is there, one transaction. */
+  #appendLate(sha, outcomes, by) {
     this.#tx(() => {
       let seq = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM late_attestations WHERE capture_sha = ?`, sha).n);
       for (const o of outcomes)
         this.#sql.exec(`INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at, by, outcome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                        sha, ++seq, o.kind, o.service, o.ok ? 1 : 0, o.at, by ?? null, JSON.stringify(o));
     });
-    return { ok: true, captureSha: sha, late_attestations: outcomes, attested: out && out.ok === true,
-             ...(out && out.attestation ? { attestation: out.attestation } : {}),
-             note: say("capture.note.attempt_recorded_late") };
+  }
+
+  /** R68 (T51; C12; `acquisition` R20): the attempts of an attestation that ended after its capture was answered (the timestamp
+   *  and the co-archive `acquire` asked once the document was kept and did not wait for), recorded against the capture when they
+   *  end, as late attestations, in the order appended; `by` the member whose capture it was. Answers `{ok: true, recorded}`;
+   *  a digest that is not 64 hex, no attempts, or attempts that are not objects record nothing (`recorded: 0`). Never throws:
+   *  an unrecorded late attempt leaves the capture as it was answered. */
+  async recordLateAttestations({ captureSha, attempts, by = null } = {}) {
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+      const list = Array.isArray(attempts) ? attempts.filter((a) => a && typeof a === "object" && !Array.isArray(a)) : [];
+      if (!HEX64.test(sha) || !list.length) return { ok: true, recorded: 0 };
+      const outcomes = await this.#lateOutcomes(sha, list);
+      this.#appendLate(sha, outcomes, by);
+      return { ok: true, recorded: outcomes.length };
+    } catch { return { ok: false, recorded: 0 }; }
   }
 
   /* R68: whether the co-archive's raw replay hashes to the capture digest. Undetermined, with the reason, when there
@@ -1017,6 +1775,230 @@ export class Capture {
   }
 
   /* ==================================================================== *
+   * Already in the record, and whether the source has since changed (R96; A64, K3807, DEC-330)
+   * ==================================================================== */
+
+  /* R96: the required-argument refusal of this read, for an argument given in a shape the read cannot use. */
+  static #readArgument(argument, shape, given) {
+    return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op: "heldat", argument, shape, status: 400,
+             error: localize("capture.index.argument_must_be_shape_stringify_2", "{argument} must be {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
+             detail: `op=heldat needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was read.` };
+  }
+
+  /* R96: the register document of a capture in its home bundle (`data/provenance.json`, the one the capture's digest names), or
+     null when the record holds none. */
+  #registerDocOf(bundleId, sha) {
+    try {
+      const f = this.#one(`SELECT content FROM files WHERE bundle_id = ? AND path = 'data/provenance.json'`, bundleId);
+      const docs = f && typeof f.content === "string" ? JSON.parse(f.content).documents : null;
+      const d = Array.isArray(docs) ? docs.find((x) => x && typeof x === "object" && x.capture?.sha256 === sha) : null;
+      return d && typeof d === "object" ? d : null;
+    } catch { return null; }
+  }
+
+  /* R96: how a document was captured, from its register document: `rendered`, `plain`, or null when the record cannot say. */
+  #captureKindOf(d) {
+    if (!d) return null;
+    return d.capture?.method === RENDERED_METHOD || d.pair?.primary === "rendered" ? "rendered" : "plain";
+  }
+
+  /* R96 (T51; C26): what the copy recorded of its substance, `{digests, handler, handler_version}` from its register document's
+     profile (`acquisition` R17), each null where the record names none. */
+  #baselineOf(d) {
+    const p = d && typeof d.profile === "object" && d.profile ? d.profile : {};
+    return { digests: p.digests && typeof p.digests === "object" ? p.digests : null,
+             handler: typeof p.handler === "string" ? p.handler : null,
+             handler_version: p.handler_version ?? null };
+  }
+
+  /** R96 (T51; A64, K3807; DEC-330; `provenance` R17, R18; `acquisition` R11, R22): whether the record already holds an
+   *  address or a digest, and whether the source has since changed. Exactly one of `address` (a public locator) and
+   *  `sha256`, else the required-argument refusal, nothing read. `{ok: true, held, copy, versions, truncated, changed}`:
+   *  `held` as the viewer may see a capture (its receipts and a register row whose home the viewer may see), an unseen
+   *  capture reading as an unknown one; `copy` the compared copy (the newest visible capture at the address by last
+   *  retrieval; for a digest, that capture); `versions` the distinct captures the viewer sees at that address (at most
+   *  200 counted); `changed` `{state, basis, as_of, looked_at?, served_sha256?, earlier_differs}` relative to `copy` alone.
+   *  Without `check` it is `undetermined`, decided from the record and never by a fetch. With `check: true`, from a member
+   *  session only, one governed request for the copy's address, conditional on the validators of the copy's own fetch,
+   *  decides `unchanged` (a 304, or bytes hashing to the copy's digest) or `changed`; nothing is filed, and the one write is
+   *  R8's outcome. A refusal, a failure, a governed refusal, or a copy that is no plain fetch reads `undetermined`. Never
+   *  throws: a store that cannot be read answers `held: null`. */
+  async heldAt({ address = null, sha256 = null, check = false, viewer = undefined, member = null } = {}) {
+    const given = (x) => x != null && x !== "";
+    if (given(address) === given(sha256))
+      return Capture.#readArgument(given(address) ? "sha256" : "address",
+        "exactly one of `address` (a public https address) and `sha256` (64 lowercase hex characters)", given(address) ? sha256 : address);
+    if (given(address) && (typeof address !== "string" || !isPublicHttpsLocator(address)))
+      return Capture.#readArgument("address", "a public https address", address);
+    if (given(sha256) && (typeof sha256 !== "string" || !HEX64.test(sha256)))
+      return Capture.#readArgument("sha256", "64 lowercase hex characters", sha256);
+    const looking = check === true;
+    if (looking && (typeof member !== "string" || !memberIdOf(member).trim() || isMachineIdentity(member)))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: localize("capture.index.heldat_member_act", "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched") };
+    const undetermined = (basis, asOf = null, differs = false) =>
+      ({ state: "undetermined", basis, as_of: asOf, earlier_differs: differs });
+    let found;
+    try { found = this.#heldAtRead({ address, sha256, viewer }); }
+    catch {
+      return { ok: true, held: null, copy: null, versions: null, truncated: false,
+               changed: undetermined(localize("capture.index.heldat_record_unreadable", "the record could not be read, so whether it holds this, and whether the source has changed, is not known")) };
+    }
+    if (!found)
+      return { ok: true, held: false, copy: null, versions: 0, truncated: false,
+               changed: undetermined(localize("capture.index.heldat_no_copy_seen", "the record holds no copy of this that you may see, so there is nothing to compare")) };
+    const { copy, receipt, kind, baseline, versions, truncated, differs } = found;
+    const asOf = copy.as_of;
+    delete copy.as_of;
+    const base = { held: true, copy, versions, truncated };
+    if (!looking)
+      return { ok: true, ...base, changed: undetermined(
+        localize("capture.index.the_record_holds_this_copy", "the record holds this copy as retrieved at {asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone", { asOf: String(asOf) }), asOf, differs) };
+    const no = (basis) => ({ ok: true, ...base, changed: undetermined(basis, asOf, differs) });
+    if (!receipt.address) return no(localize("capture.index.heldat_no_address", "this copy has no address to look at"));
+    if (receipt.via !== "direct" || kind === null || kind === "rendered" || !receipt.plain_address)
+      return no(receipt.via !== "direct" ? localize("capture.index.heldat_not_plain_fetch", "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it")
+              : kind === "rendered" ? localize("capture.index.heldat_rendered", "this copy is a rendered capture, which a plain look at the site cannot be compared with")
+              : kind === null ? localize("capture.index.heldat_capture_unknown", "the record cannot say how this copy was captured, so a plain look at the site is not compared with it")
+              : localize("capture.index.heldat_export", "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it"));
+    if (!isPublicHttpsLocator(receipt.address))
+      return no(localize("capture.index.heldat_no_public_address", "this copy has no public address to look at"));
+    /* One governed request, conditional on the validators of the copy's own filed fetch when it has them; nothing is filed. */
+    const validators = this.validatorsOf({ addressNorm: receipt.address_norm, captureSha: copy.sha256 });
+    const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
+                                       ...(validators.lastModified ? { "if-modified-since": validators.lastModified } : {}) } : null;
+    const looked = stampSecond(this.#instant());
+    const outcome = async (kindOf, status = null) => {
+      try { await this.recordSourceOutcome({ addressNorm: receipt.address_norm, outcome: kindOf, status, at: looked }); } catch { /* an unrecorded outcome is no answer */ }
+    };
+    let g;
+    try { g = await governedFetch(this, receipt.address, "heldat", null, { headers: conditional }); }
+    catch { await outcome("fetch_failed"); return no(localize("capture.index.heldat_request_incomplete", "the request for the address did not complete, so the source was not looked at")); }
+    if (g.refusedByGovernor) {
+      await outcome("governed");
+      return no(localize("capture.index.heldat_host_paced", "the host is being given time between requests, so the source was not looked at"));
+    }
+    const res = g.res;
+    const drop = async () => { try { await res.body?.cancel?.(); } catch { /* gone */ } };
+    const looks = (state, extra = {}, basis = null) => ({ ok: true, ...base, changed: { state, basis: basis ?? (state === "unchanged"
+      ? localize("capture.index.heldat_same_document", "the site still gives the same document as this copy") : localize("capture.index.heldat_changed_document", "the site now gives a different document from this copy")),
+      as_of: asOf, looked_at: looked, ...extra, earlier_differs: differs } });
+    if (res.status === 304 && conditional) { await drop(); await outcome("success", 304); return looks("unchanged"); }
+    if (!res.ok || !res.body) {
+      await drop(); await outcome("source_refused", res.status);
+      return no(localize("capture.index.the_site_answered_status_so", "the site answered {status}, so it did not give the document to compare", { status: String(res.status) }));
+    }
+    /* R105 (G2): a source that declares more than the bound is not read; neither is one that goes past it while being read */
+    const declared = Number(res.headers.get("content-length"));
+    const tooLarge = async () => {
+      await drop(); await outcome("success", res.status);
+      return { ok: true, ...base, changed: { ...undetermined(localize("capture.index.heldat_over_check_bound", "the document at the address is larger than this look reads, so whether it has changed was not looked at"), asOf, differs),
+                                             large: true, looked_at: looked } };
+    };
+    if (Number.isFinite(declared) && declared > HELD_AT_CHECK_MAX) return tooLarge();
+    const h = createSha256(), reader = res.body.getReader();
+    let total = 0;
+    /* C26: the bytes are kept as they arrive, up to the bound a substance digest is taken within, to be judged by substance */
+    const kept = [];
+    let keeping = true;
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > HELD_AT_CHECK_MAX) { try { await reader.cancel(); } catch { /* gone */ } return tooLarge(); }
+        h.update(value);
+        if (keeping && total <= PROFILE_TEXT_MAX) kept.push(value); else { keeping = false; kept.length = 0; }
+      }
+    } catch { await outcome("fetch_failed"); return no(localize("capture.index.heldat_not_whole", "the document did not arrive whole, so the source was not looked at")); }
+    await outcome("success", res.status);
+    const served = h.hex();
+    if (served === copy.sha256) return looks("unchanged");
+    /* R96 (C26): the bytes differ, which a page that rebuilds itself on every visit does whether or not its substance changed. Change
+       is judged on the determined (substance) digest: both sides must have earned one, over the same member of the package and
+       under the same handler; with no determined digest on the copy, or on what the site serves, the answer is that it cannot be
+       told, never `changed`. */
+    const cannot = (basis) => looks("undetermined", {}, basis);
+    const bd = baseline && baseline.digests;
+    if (!bd || bd.determined !== true || typeof bd.evidentiary !== "string" || !bd.evidentiary)
+      return cannot(localize("capture.index.heldat_baseline_no_digest", "the bytes the site gives differ from this copy's, but this copy recorded no determined digest of its substance, so whether the page itself has changed cannot be told"));
+    if (!keeping) return cannot(localize("capture.index.heldat_served_too_large", "the bytes the site gives differ from this copy's, and are larger than this surface takes a digest of the substance within, so whether the page itself has changed cannot be told"));
+    const whole = new Uint8Array(total);
+    { let at = 0; for (const c of kept) { whole.set(c, at); at += c.length; } }
+    const hdrs = {};
+    for (const [hk, hv] of res.headers) hdrs[hk.toLowerCase()] = hv;
+    const fresh = await servedSubstance({ bytes: whole, headers: hdrs, locator: receipt.address, contentType: res.headers.get("content-type") || null,
+                                          view: profileView(this.core).view });
+    const sameOver = (bd.over || null) === (fresh.digests.over || null);
+    if (!sameOver || fresh.handler !== baseline.handler || String(fresh.handler_version) !== String(baseline.handler_version))
+      return cannot(localize("capture.index.heldat_other_handler", "the bytes the site gives differ from this copy's and are read as another kind of page than this copy was, so whether the page itself has changed cannot be told"));
+    if (fresh.digests.determined !== true)
+      return cannot(localize("capture.index.heldat_served_no_digest", "the bytes the site gives differ from this copy's and earn no determined digest of their substance, so whether the page itself has changed cannot be told"));
+    return fresh.digests.evidentiary === bd.evidentiary
+      ? looks("unchanged", {}, localize("capture.index.heldat_same_substance", "the site gives different bytes from this copy, but their substance is the same: only what the page rebuilds on every visit differs"))
+      : looks("changed", { served_sha256: served }, localize("capture.index.heldat_changed_substance", "the substance of what the site now gives differs from this copy's"));
+  }
+
+  /* R96: what the record holds for an address or a digest, as the viewer may see it: the compared copy with its newest
+     receipt, how it was captured, the distinct visible captures at its address and whether another of them differs.
+     Null when nothing the viewer may see is held. A read that cannot be made throws, and `heldAt` answers it `held: null`. */
+  #heldAtRead({ address, sha256, viewer }) {
+    const sight = this.#sightOf(viewer);
+    const seenAt = (norm) => this.#rows(
+      `SELECT cl.capture_sha AS sha, MAX(julianday(cl.last_retrieved)) AS last FROM captured_locators cl
+         JOIN register r ON r.capture_sha = cl.capture_sha JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE cl.address_norm = ? AND (${sight.sql}) GROUP BY cl.capture_sha
+        ORDER BY last DESC, cl.capture_sha DESC LIMIT ?`, norm, ...sight.args, HELD_AT_VERSIONS_MAX + 1);
+    const addressNorm = address ? normalizeAddress(address) : null;
+    let sha, atNorm = addressNorm;
+    if (address) {
+      const seen = seenAt(addressNorm);
+      if (!seen.length) return null;
+      sha = seen[0].sha;
+    } else {
+      const home = this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ? AND (${sight.sql})`,
+                             sha256, ...sight.args);
+      if (!home) return null;
+      sha = sha256;
+    }
+    const receipt = this.#one(
+      `SELECT address_norm, address, via, retrieval_locator, last_retrieved FROM captured_locators
+        WHERE capture_sha = ? ${address ? "AND address_norm = ?" : ""}
+        ORDER BY julianday(last_retrieved) DESC, via, address_norm LIMIT 1`, sha, ...(address ? [addressNorm] : []));
+    const home = this.#one(`SELECT r.bundle_id, b.project, b.title FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, sha);
+    const regDoc = this.#registerDocOf(home.bundle_id, sha);
+    const first = this.#one(`SELECT first_retrieved AS at FROM captured_locators WHERE capture_sha = ?
+                              ORDER BY julianday(first_retrieved), first_retrieved LIMIT 1`, sha)?.at;
+    const actor = this.#one(`SELECT actor FROM capture_actors WHERE capture_sha = ? ORDER BY at, actor LIMIT 1`, sha)?.actor;
+    let grade = null;
+    try {
+      const g = typeof this.provenance?.captureGrade === "function" ? this.provenance.captureGrade(sha) : null;
+      grade = g && typeof g === "object" && typeof g.then !== "function" ? g : null;
+    } catch { grade = null; }
+    if (!address && receipt) atNorm = receipt.address_norm;
+    /* The address's visible captures: for a digest, those at its own address when that is public, else only itself. */
+    let versions, truncated = false, differs = false;
+    if (atNorm && (address || isPublicHttpsLocator(receipt.address))) {
+      const seen = seenAt(atNorm);
+      truncated = seen.length > HELD_AT_VERSIONS_MAX;
+      versions = Math.min(seen.length, HELD_AT_VERSIONS_MAX);
+      differs = seen.some((x) => x.sha !== sha);
+    } else versions = 1;
+    const at = (x) => { const t = typeof x === "string" ? Date.parse(x) : NaN; return Number.isFinite(t) ? stampSecond(t) : null; };
+    let plain = false;
+    if (receipt) {
+      try { plain = !receipt.retrieval_locator || normalizeAddress(receipt.retrieval_locator) === receipt.address_norm; } catch { plain = false; }
+    }
+    return {
+      copy: { sha256: sha, document: home.bundle_id, project: home.project || null, title: typeof home.title === "string" && home.title.trim() ? home.title : null, retrieved: at(first),
+              actor: typeof actor === "string" && actor ? actor : null, grade, address: receipt ? receipt.address : null,
+              as_of: receipt ? at(receipt.last_retrieved) : null },
+      receipt: receipt ? { ...receipt, plain_address: plain } : { via: null, plain_address: false },
+      kind: this.#captureKindOf(regDoc), baseline: this.#baselineOf(regDoc), versions, truncated, differs,
+    };
+  }
+
+  /* ==================================================================== *
    * Held captures (R77–R79, R81–R84; DEC-97, DEC-141)
    * ==================================================================== */
 
@@ -1043,17 +2025,23 @@ export class Capture {
   /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside (R88: set aside, for
      the `set_aside` list), seen by the viewer, and passing the `member` and `project` filters; with their arguments. One
      builder for the list and for asking whether one document (an archive's, R77's grouping) is a row of it. */
-  #heldWhere({ viewer, who, project, aside = false }) {
+  #heldWhere({ viewer, who, project, bundleId = null, aside = false, vouched = false }) {
     const sight = this.#sightOf(viewer);
     const hasProject = project != null && project !== "";
+    const hasBundle = bundleId != null && bundleId !== "";
+    /* R88 (T51): `held_and_vouched` adds the documents at `verified`, whose held acts are not asked (R79 never sets a
+       vouched document aside). */
+    const standing = vouched ? `((b.current_state = 'collected' AND ${Capture.#NOT_SET_ASIDE}) OR b.current_state = '${VOUCHED_STATE}')`
+                             : `b.current_state = 'collected' AND ${aside ? Capture.#IS_SET_ASIDE : Capture.#NOT_SET_ASIDE}`;
     return {
-      sql: `b.object_type = 'information' AND b.current_state = 'collected'
-            AND ${aside ? Capture.#IS_SET_ASIDE : Capture.#NOT_SET_ASIDE} AND (${sight.sql})
+      sql: `b.object_type = 'information' AND ${standing} AND (${sight.sql})
             AND ${who ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
                                   WHERE r.bundle_id = b.bundle_id
                                     AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
-            AND ${hasProject ? "b.project = ?" : "1=1"}`,
-      args: [...sight.args, ...(who ? [who] : []), ...(hasProject ? [String(project)] : [])],
+            AND ${hasProject ? `(b.project = ? OR EXISTS (SELECT 1 FROM register r JOIN seen_in si ON si.capture_sha = r.capture_sha
+                                                         WHERE r.bundle_id = b.bundle_id AND si.project = ?))` : "1=1"}
+            AND ${hasBundle ? "b.bundle_id = ?" : "1=1"}`,
+      args: [...sight.args, ...(who ? [who] : []), ...(hasProject ? [String(project), String(project)] : []), ...(hasBundle ? [String(bundleId)] : [])],
     };
   }
 
@@ -1073,9 +2061,13 @@ export class Capture {
    *
    *  R91 (T49; N1080): the examination of each document the page shows and the archive grouping of each row are asked
    *  together, once each, under one wait of `HELD_PAGE_WAIT_MS`; an answer not given in time reads undetermined
-   *  (`#pageAnswers`). Nothing else in the answer changes. */
-  async heldCaptures({ member = null, project = null, sort = null, dir = null, limit = null, after = null, viewer = undefined,
-                       now = null, state = null } = {}) {
+   *  (`#pageAnswers`). Nothing else in the answer changes.
+   *
+   *  P10 (fix round 4; K4429): a screen reads the page as `picker` rows, and `bundle_ids` (at most `HELD_IDS_MAX`) for the heavy
+   *  fields of the documents it draws; only those rows are answered, the list and its order are the page's, and the
+   *  store's reads overlap the examinations and groupings of the same page. */
+  async heldCaptures({ member = null, project = null, bundle_id: bundleId = null, bundle_ids: bundleIds = null, sort = null, dir = null, limit = null, after = null,
+                       viewer = undefined, now = null, state = null, fields = null } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
     if (!HELD_SORTS.includes(by)) return Capture.#badArgument("heldcaptures", "sort", HELD_SORTS.join(" | "), by);
     const way = dir == null || dir === "" ? (by === "age" ? "desc" : "asc") : dir;
@@ -1084,7 +2076,13 @@ export class Capture {
        bound and fields, each row also carrying its latest set-aside. */
     const list = state == null || state === "" ? "held" : state;
     if (!HELD_STATES.includes(list)) return Capture.#badArgument("heldcaptures", "state", HELD_STATES.join(" | "), list);
-    const aside = list === "set_aside";
+    const aside = list === "set_aside", vouched = list === "held_and_vouched";
+    /* R77 (T51; C14): `full` (absent or empty) is R77's rows; `picker` the cheap rows; any other is refused as an unknown `state` is. */
+    const shape = fields == null || fields === "" ? "full" : fields;
+    if (!HELD_FIELDS.includes(shape)) return Capture.#badArgument("heldcaptures", "fields", HELD_FIELDS.join(" | "), shape);
+    /* R77 (fix round 4; P10): `bundle_ids` names the documents a screen draws; only they are answered, in the page's order. */
+    const picked = Capture.#idsOf(bundleIds);
+    if (picked === null) return Capture.#badArgument("heldcaptures", "bundle_ids", localize("capture.index.bundle_ids_shape", "a list of at most {max} document ids", { max: HELD_IDS_MAX }), bundleIds);
     const cap = limitOf(limit);
     const from = after ? keyOf(after, 3) : null;
     if (after && !from) return badCursor();
@@ -1094,16 +2092,17 @@ export class Capture {
                                                     : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
     const asc = by === "age" ? way === "desc" : way === "asc";
     const who = typeof member === "string" && member ? memberIdOf(member) : null;
-    const where = this.#heldWhere({ viewer, who, project, aside });
+    const where = this.#heldWhere({ viewer, who, project, bundleId, aside, vouched });
     const window = (key, n) => this.#rows(
-      `SELECT * FROM (SELECT bundle_id, title, project, since, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
-         SELECT b.bundle_id, b.title, b.project, ${Capture.#SINCE} AS since, ${Capture.#SOURCE("address")} AS src_address,
+      `SELECT * FROM (SELECT bundle_id, title, project, since, standing, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
+         SELECT b.bundle_id, b.title, b.project, b.current_state AS standing, ${Capture.#SINCE} AS since, ${Capture.#SOURCE("address")} AS src_address,
                 ${Capture.#SOURCE("via")} AS src_via, ${Capture.#SOURCE("first_retrieved")} AS src_retrieved
-           FROM bundles b WHERE ${where.sql})) q
+           FROM bundles b WHERE ${where.sql}${picked.length ? " AND b.bundle_id IN (SELECT value FROM json_each(?))" : ""})) q
         WHERE ${key ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
         ORDER BY k0 ASC, k1 ${asc ? "ASC" : "DESC"}, bundle_id ASC LIMIT ?`,
-      ...where.args, ...(key ? [key[0], key[0], key[1], key[1], key[2]] : []), n);
-    /* R77 (DEC-167 (8)): whether a document is a row of this list (the same filters), memoised for the page. */
+      ...where.args, ...(picked.length ? [JSON.stringify(picked)] : []), ...(key ? [key[0], key[0], key[1], key[1], key[2]] : []), n);
+    /* R77 (DEC-167 (8)): whether a document is a row of this list (the same filters; `bundle_ids` selects what is answered, it does
+       not shrink the list, so an archive asked by its id still groups the files beside it), memoised for the page. */
     const isRow = new Map();
     const rowOf = (bundleId) => {
       if (!bundleId) return false;
@@ -1129,15 +2128,50 @@ export class Capture {
       }
     }
     const page = kept.slice(0, cap), truncated = kept.length > cap, last = page[page.length - 1];
-    const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
-    /* R91: R78's examination and the archive grouping, asked once for each document the page shows, together, under the
-       page's one wait. */
-    const answers = await this.#pageAnswers(page, { viewer, rowOf });
+    const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : this.#instant();
+    /* R77 (T51; C14): what the page's rows need of the store is read for the whole page at once, never for each row in turn. */
+    const facts = this.#pageFacts(page.map((r) => r.bundle_id), { aside, vouched, picker: shape === "picker" });
+    /* R77 (T51 fix round 2; C10): whether the evidence store holds an object under each row's fingerprint. */
+    /* R77 (T51 fix round 3; C14): the picker row answers it from the size the register recorded and asks the store nothing. */
+    /* R91 (fix round 4; P10): the store's reads and the page's examinations and groupings are begun together, and the page waits for both. */
+    /* R77 (fix round 5; E13; P10): a full row answers `whole` true, without asking the store, for a capture the register records as held
+       in one part (its own whole), and asks the store about the rest (no size recorded, or a capture held in parts, whose whole may be
+       owed); with no evidence store it is undetermined, as before. */
+    const store = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    const [wholes, answers] = shape === "picker" ? [new Map(), null] : await Promise.all([
+      this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)).filter((reg) => reg && Capture.#keptWholeBySize(reg, facts) !== true).map((reg) => reg.capture_sha)),
+      this.#pageAnswers(page, { viewer, rowOf, vouched, facts })]);
+    const wholeOf = shape === "picker"
+      ? (id) => Capture.#wholeBySize(facts.first.get(id))
+      : (id) => {
+        const reg = facts.first.get(id);
+        if (!reg?.capture_sha) return null;
+        return store && Capture.#keptWholeBySize(reg, facts) === true ? true : wholes.get(reg.capture_sha) ?? null;
+      };
+    /* R77 (T51 fix round 3; C9): a document listed because it was seen in the asked project, not because it lives there. */
+    const alsoHere = (r) => (project != null && project !== "" && (r.project || "") !== String(project) ? { also_here: { home: r.project || null } } : {});
+    if (shape === "picker") {
+      /* R77 (T51 fix round 2): and the three a screen's to-do reads of a row: `source`, `collected_since` and `actor`, as the full row gives them. */
+      const rows = page.map((r) => ({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
+                                      source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
+                                      collected_since: r.since,
+                                      capture: facts.first.has(r.bundle_id) ? { sha256: facts.first.get(r.bundle_id).capture_sha } : null,
+                                      actor: this.#captureFacts(facts.first.get(r.bundle_id) ?? null, facts).actor,
+                                      format: facts.first.has(r.bundle_id) ? facts.formats.get(facts.first.get(r.bundle_id).capture_sha) ?? null : null,
+                                      whole: wholeOf(r.bundle_id),
+                                      standing: r.standing === VOUCHED_STATE ? VOUCHED_STATE : "collected", ...alsoHere(r) }));
+      return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
+               next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+    }
+    /* R77 (T51 fix round 2; C14): the page's captures are graded in one batch (provenance R71), never one read for each. */
+    const grades = this.#gradesOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha));
+    const gradeOf = (sha) => grades.get(sha) ?? null;
     const rows = [];
     for (const r of page) {
       const since = Date.parse(r.since);
-      const asked = this.#questionsOf(r.bundle_id, viewer);
+      const asked = this.#questionsOf(r.bundle_id, viewer, { captures: facts.captures.get(r.bundle_id) ?? [], asks: facts.asks.get(r.bundle_id) ?? [] });
       const { eligibility, grouped } = answers.get(r.bundle_id);
+      const reg = facts.first.get(r.bundle_id) ?? null;
       rows.push({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
                   source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
                   collected_since: r.since, age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at - since) / 86400000)) : null,
@@ -1145,32 +2179,232 @@ export class Capture {
                   ...(asked.questions ? { captured_for: Capture.#shown(asked.questions) }
                                       : { captured_for: null, captured_for_basis: asked.basis }),
                   ...(grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})),
-                  capture: this.#captureOfDocument(r.bundle_id),
-                  ...(aside ? { set_aside: this.#latestSetAside(r.bundle_id) } : {}) });
+                  capture: reg ? { sha256: reg.capture_sha, grade: gradeOf(reg.capture_sha) } : null,
+                  ...this.#captureFacts(reg, facts),
+                  format: reg ? facts.formats.get(reg.capture_sha) ?? null : null,
+                  whole: wholeOf(r.bundle_id),
+                  ...alsoHere(r),
+                  ...(aside ? { set_aside: facts.setAside.get(r.bundle_id) ?? null } : {}),
+                  ...(vouched ? this.#standingOf(r.bundle_id, r.standing, facts.history.get(r.bundle_id) ?? null) : {}) });
     }
     return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
   }
 
-  /* R88: a set-aside document's latest set-aside as R79 recorded it, `{reason, author, at}`. */
-  #latestSetAside(bundleId) {
-    const r = this.#one(`SELECT reason, author, at FROM held_acts WHERE bundle_id = ? AND act = 'set_aside' ORDER BY seq DESC LIMIT 1`, bundleId);
-    return r ? { reason: r.reason, author: r.author, at: r.at } : null;
+  /* R77 (fix round 4; P10): the document ids `bundle_ids` names, as a list of at most `HELD_IDS_MAX` distinct non-blank strings: absent,
+     null, blank or empty names none (`[]`); a comma-separated string (the op's query) is split; anything else is `null`, a refusal. */
+  static #idsOf(x) {
+    if (x == null || x === "") return [];
+    const list = typeof x === "string" ? x.split(",").map((i) => i.trim()).filter(Boolean) : x;
+    if (!Array.isArray(list) || list.some((i) => typeof i !== "string" || !i.trim() || i.length > 300)) return null;
+    const distinct = [...new Set(list)];
+    return distinct.length > HELD_IDS_MAX ? null : distinct;
   }
 
-  /* R77 (T47; N979): the capture a held row stands for, `{sha256, grade}`: the digest the register files under the
-     document (provenance R48; of several, the one first registered, ties by digest) and `provenance.captureGrade`'s
-     answer whole, null when provenance does not answer; null for a document under which the register files no capture. */
-  #captureOfDocument(bundleId) {
-    let reg = null;
-    try { reg = this.#one(REGISTER_FIRST, bundleId); } catch { reg = null; }
-    if (!reg || typeof reg.capture_sha !== "string") return null;
-    let grade = null;
+  /* R77 (T51 fix round 3; C14): whether the copy is held whole, from the size the register recorded when the capture was kept
+     (`reg` is the register's first capture of the document): true when that size is one the store keeps whole (up to
+     `MULTIPART_KEEP_MAX`, `acquisition` R10), false past it, where the capture is held in its parts alone; null when the register
+     records no capture or no size. No read of the evidence store. */
+  static #wholeBySize(reg) {
+    const size = reg && (typeof reg.bytes === "number" || typeof reg.bytes === "bigint") ? Number(reg.bytes) : NaN;
+    return Number.isSafeInteger(size) && size >= 0 ? size <= MULTIPART_KEEP_MAX : null;
+  }
+
+  /* R77 (fix round 5; E13; K4530, B20): true when the register recorded a size that fits one part (`UPLOAD_PART`, `acquisition`
+     R10's form), for such a capture is its own whole; null when it recorded none or a larger one, a capture held in parts, whose
+     whole object may be owed (its `keep` row unrun) or held (`keepPast`, R103), so only the store can say. */
+  static #keptWholeBySize(reg, facts = null) {
+    if (reg && (reg.whole === true || (facts && facts.parts.has(reg.capture_sha)))) return null;
+    const size = reg && (typeof reg.bytes === "number" || typeof reg.bytes === "bigint") ? Number(reg.bytes) : NaN;
+    return Number.isSafeInteger(size) && size >= 0 && size <= UPLOAD_PART ? true : null;
+  }
+
+  /* R77 (T51 fix round 2; C10): for the page's capture digests, a Map from digest to whether the evidence store holds an
+     object under it (`head`): true, or false for a copy held in parts only (past `MULTIPART_KEEP_MAX`, or kept before the
+     whole was), which the screens withhold vouch and OCR from; null where it cannot be said (no evidence store, a head that
+     fails, or the page's wait (`HELD_PAGE_WAIT_MS`) ran out first). Each distinct digest is asked once, `HELD_PAGE_LANES` at a
+     time, and nothing is asked once the wait has run out. Never throws; an empty page asks nothing. */
+  async #wholeOf(shas) {
+    const out = new Map();
+    const distinct = [...new Set(shas.filter((s) => typeof s === "string" && s))];
+    if (!distinct.length) return out;
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    for (const s of distinct) out.set(s, null);
+    if (!ev || typeof ev.head !== "function") return out;
+    /* R77 (fix round 7; G78): an object this instance has seen held is held (a stored object is immutable and never removed), so it is not
+       asked again; the register is never the source, and an answer of false or unknown is asked again at every draw. */
+    const ask = distinct.filter((s) => { if (this.#provenHeld.has(s)) { out.set(s, true); return false; } return true; });
+    if (!ask.length) return out;
+    const wait = Capture.#pageWait(HELD_PAGE_WAIT_MS);
+    const began = Date.now();
+    let heads = 0;
     try {
-      const g = typeof this.provenance?.captureGrade === "function" ? this.provenance.captureGrade(reg.capture_sha) : null;
-      grade = g && typeof g === "object" && typeof g.then !== "function" ? g : null;
-    } catch { grade = null; }
-    return { sha256: reg.capture_sha, grade };
+      let next = 0;
+      const lane = async () => {
+        while (next < ask.length && !wait.over()) {
+          const s = ask[next++];
+          heads++;
+          const got = await wait.within((async () => { try { return !!(await ev.head(s)); } catch { return null; } })());
+          out.set(s, got === TOO_LATE ? null : got);
+          if (got === true) {
+            if (this.#provenHeld.size >= HELD_PROVEN_MAX) this.#provenHeld.clear();
+            this.#provenHeld.add(s);
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(HELD_PAGE_LANES, ask.length) }, lane));
+    } finally { wait.stop(); }
+    /* G78 (rides the deploy): what a draw cost the store, so a slow one can be named: the heads asked and the time they took altogether */
+    try { console.log(JSON.stringify({ capture: "heldcaptures", heads, head_ms: Date.now() - began, remembered: distinct.length - ask.length })); } catch { /* a log that cannot be written */ }
+    return out;
+  }
+
+  /* R77 (T51 fix round 2; C14's bound): the grades of a page's captures, a Map from digest to `provenance.captureGrade`'s
+     answer whole, read in ONE batch (`provenance.captureGrades`, its R71), each distinct digest once; a digest nothing answers
+     for, or an answer that is no object (a promise, a string), maps to null, as a throw of the whole batch does. A provenance
+     that serves no batch is asked one digest at a time, as before. An empty page asks nothing. */
+  #gradesOf(shas) {
+    const out = new Map();
+    const distinct = [...new Set(shas.filter((s) => typeof s === "string" && s))];
+    if (!distinct.length) return out;
+    const plain = (g) => (g && typeof g === "object" && typeof g.then !== "function" ? g : null);
+    try {
+      if (typeof this.provenance?.captureGrades === "function") {
+        const got = this.provenance.captureGrades(distinct);
+        distinct.forEach((s, i) => out.set(s, Array.isArray(got) ? plain(got[i]) : null));
+      } else {
+        for (const s of distinct) {
+          let g = null;
+          try { g = typeof this.provenance?.captureGrade === "function" ? plain(this.provenance.captureGrade(s)) : null; } catch { g = null; }
+          out.set(s, g);
+        }
+      }
+    } catch { for (const s of distinct) out.set(s, null); }
+    return out;
+  }
+
+  /* R88 (T51): a row's `standing`, `collected` or `verified`, and for a vouched one `vouched: {by, at}`, the author and
+     instant of the release's entry in the document's own `state_history` (promotion R32; `content`, its `bundle.md`): its
+     latest move to `verified`. A field the entry does not give, or a history that cannot be read, is null. */
+  #standingOf(bundleId, state, content = undefined) {
+    if (state !== VOUCHED_STATE) return { standing: "collected" };
+    let entry = null;
+    try {
+      const text = content !== undefined ? content : this.#one(`SELECT content FROM files WHERE bundle_id = ? AND path = 'bundle.md'`, bundleId)?.content;
+      const hist = typeof text === "string" ? parseFrontmatter(text).data?.state_history : null;
+      if (Array.isArray(hist)) entry = [...hist].reverse().find((e) => e && typeof e === "object" && e.to_state === VOUCHED_STATE) ?? null;
+    } catch { entry = null; }
+    const given = (x) => (typeof x === "string" && x ? x : null);
+    return { standing: VOUCHED_STATE, vouched: { by: given(entry?.author), at: given(entry?.timestamp) } };
+  }
+
+  /* R77 (T51; N1235; C14): the capture's own facts a held row answers, `actor` (`acquisition` R16; for an upload R86's `by`),
+     `retrieved` (the whole-second UTC instant of the capture's first receipt) and `bytes` (the register's size of the
+     whole capture, an archive row's the archive's): each null when the record cannot say. `reg` is the register's first
+     capture of the document, `facts` what `#pageFacts` read for the page. */
+  #captureFacts(reg, facts) {
+    const none = { actor: null, retrieved: null, bytes: null };
+    if (!reg || typeof reg.capture_sha !== "string") return none;
+    const actor = facts.actor.get(reg.capture_sha);
+    const first = facts.retrieved.get(reg.capture_sha);
+    const size = reg.bytes;
+    const bytes = typeof size === "number" || typeof size === "bigint" ? Number(size) : NaN;
+    const at = typeof first === "string" ? Date.parse(first) : NaN;
+    return { actor: typeof actor === "string" && actor ? actor : null, retrieved: Number.isFinite(at) ? stampSecond(at) : null,
+             bytes: Number.isSafeInteger(bytes) && bytes >= 0 ? bytes : null };
+  }
+
+  /* R77, R88 (T51; C14): WHAT A PAGE OF ROWS NEEDS OF THE STORE, READ FOR THE WHOLE PAGE AT ONCE (a bounded number of reads
+     however many rows the page shows, never one set of reads for each row). For the page's documents `bundleIds`:
+       captures  each document's register captures, in digest order, and `first` the one first registered (ties by digest;
+                 provenance R48), with the size the register holds;
+       actor, retrieved  of each first capture: the member recorded first, the instant of its first receipt;
+       asks      the (question, asker) pairs R94 recorded for a document's captures, in question then asker order;
+       setAside  (the set-aside list) each document's latest set-aside as R79 recorded it;
+       history   (the vouched list) each vouched document's own `bundle.md`, which holds the release's entry;
+       formats   the format the document's own register document profiles each capture as, `null` where it names none
+                 (`data/provenance.json`, acquisition R17), so that a capture profiled as no archive is not asked of the archive's
+                 listing, and a document whose profile cannot be read is;
+       opened    the captures acquisition recorded opening as archives.
+     `picker` reads only the captures and their actors. Each read that fails reads as nothing known, which the row states as it always has. */
+  #pageFacts(bundleIds, { aside = false, vouched = false, picker = false } = {}) {
+    const facts = { captures: new Map(), first: new Map(), actor: new Map(), retrieved: new Map(), asks: new Map(),
+                    setAside: new Map(), history: new Map(), formats: new Map(), opened: new Set(), parts: new Set(), notArchives: new Set() };
+    if (!bundleIds.length) return facts;
+    const ids = JSON.stringify(bundleIds);
+    const read = (q, ...a) => { try { return this.#rows(q, ...a); } catch { return []; } };
+    /* G6 (fix round 6): the capture a row stands for is the document's WHOLE, provenance R72's row (`whole` 1) first, then the
+       earliest registered, ties by digest; a store whose register has no `whole` column (a test's stand-in) orders as before. */
+    const wholeFirst = this.#registerHasWhole() ? "COALESCE(whole, 0) DESC, " : "";
+    const regs = read(`SELECT bundle_id, capture_sha, bytes, rn FROM (
+                         SELECT bundle_id, capture_sha, bytes, ROW_NUMBER() OVER (PARTITION BY bundle_id
+                                  ORDER BY ${wholeFirst}julianday(registered), registered, capture_sha) AS rn
+                           FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))) ORDER BY bundle_id, capture_sha`, ids);
+    /* what each document's own register document says: the format each capture is profiled as, and for a capture held in parts
+       its whole (G6: a part is never the row's capture; a part is no archive, G12a) */
+    const wholeOfPart = new Map();
+    for (const r of read(`SELECT bundle_id, content FROM files WHERE path = 'data/provenance.json' AND bundle_id IN (SELECT value FROM json_each(?))`, ids)) {
+      let docs = null;
+      try { docs = typeof r.content === "string" ? JSON.parse(r.content).documents : null; } catch { docs = null; }
+      if (!Array.isArray(docs)) continue;
+      for (const d of docs) {
+        const sha = d && typeof d === "object" && d.capture ? d.capture.sha256 : null;
+        if (typeof sha !== "string") continue;
+        if (!facts.formats.has(sha))
+          facts.formats.set(sha, d.profile && d.profile.format && typeof d.profile.format.format === "string" ? d.profile.format.format : null);
+        if (Array.isArray(d.parts) && d.parts.length) {
+          const size = Number.isSafeInteger(d.capture.bytes) ? d.capture.bytes : d.parts.reduce((n, p) => n + (Number.isSafeInteger(p && p.bytes) ? p.bytes : NaN), 0);
+          for (const p of d.parts) if (p && typeof p.sha256 === "string" && p.sha256 !== sha) { facts.parts.add(p.sha256); wholeOfPart.set(p.sha256, { sha, bytes: Number.isSafeInteger(size) ? size : null }); }
+        }
+      }
+    }
+    for (const r of regs) {
+      if (!facts.captures.has(r.bundle_id)) facts.captures.set(r.bundle_id, []);
+      facts.captures.get(r.bundle_id).push(r.capture_sha);
+      if (Number(r.rn) === 1) {
+        const whole = wholeOfPart.get(r.capture_sha);
+        facts.first.set(r.bundle_id, whole ? { capture_sha: whole.sha, bytes: whole.bytes, whole: true } : { capture_sha: r.capture_sha, bytes: r.bytes });
+      }
+    }
+    const shas = JSON.stringify([...facts.first.values()].map((r) => r.capture_sha));
+    for (const r of read(`SELECT capture_sha, actor FROM (SELECT capture_sha, actor, ROW_NUMBER() OVER (PARTITION BY capture_sha ORDER BY at, actor) AS rn
+                             FROM capture_actors WHERE capture_sha IN (SELECT value FROM json_each(?))) WHERE rn = 1`, shas))
+      facts.actor.set(r.capture_sha, r.actor);
+    if (picker) return facts;
+    for (const r of read(`SELECT capture_sha, first_retrieved AS at FROM (SELECT capture_sha, first_retrieved, ROW_NUMBER() OVER (PARTITION BY capture_sha
+                             ORDER BY julianday(first_retrieved), first_retrieved) AS rn FROM captured_locators
+                            WHERE capture_sha IN (SELECT value FROM json_each(?))) WHERE rn = 1`, shas))
+      facts.retrieved.set(r.capture_sha, r.at);
+    for (const r of read(`SELECT DISTINCT g.bundle_id AS bundle_id, f.question AS question, f.asker AS asker FROM register g
+                            JOIN captured_for f ON f.capture_sha = g.capture_sha WHERE g.bundle_id IN (SELECT value FROM json_each(?))
+                           ORDER BY g.bundle_id, f.question, f.asker`, ids)) {
+      if (!facts.asks.has(r.bundle_id)) facts.asks.set(r.bundle_id, []);
+      facts.asks.get(r.bundle_id).push({ question: r.question, asker: r.asker });
+    }
+    if (aside)
+      for (const r of read(`SELECT bundle_id, reason, author, at FROM held_acts WHERE act = 'set_aside' AND bundle_id IN (SELECT value FROM json_each(?))
+                             ORDER BY bundle_id, seq`, ids))
+        facts.setAside.set(r.bundle_id, { reason: r.reason, author: r.author, at: r.at });
+    if (vouched)
+      for (const r of read(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                             WHERE f.path = 'bundle.md' AND b.current_state = '${VOUCHED_STATE}' AND f.bundle_id IN (SELECT value FROM json_each(?))`, ids))
+        facts.history.set(r.bundle_id, r.content);
+    facts.opened = openedAmong(this, regs.map((r) => r.capture_sha));
+    /* G12a (fix round 6): the digests acquisition holds as no archive (it remembers what it decided, so it is asked once), so
+       the archive grouping asks the store about none of them; acquisition not serving the read, none is known */
+    try {
+      const none = notArchivesAmong(this, regs.map((r) => r.capture_sha));
+      if (none instanceof Set) facts.notArchives = none;
+    } catch { /* nothing known: every candidate is asked, as before */ }
+    return facts;
+  }
+
+  /* G6: whether the register has provenance's `whole` column, read once. */
+  #registerHasWhole() {
+    if (this.#hasWhole === null) {
+      try { this.#hasWhole = this.#cols("register").includes("whole"); } catch { return false; }
+    }
+    return this.#hasWhole;
   }
 
   /* R77 (DEC-167 (8)): for each document of a window, the archives its captures were cut out of or found in
@@ -1186,10 +2420,12 @@ export class Capture {
       regs = this.#rows(`SELECT capture_sha, bundle_id FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
                           ORDER BY bundle_id, capture_sha`, JSON.stringify(bundleIds));
     } catch { regs = []; }
+    /* C14: one read says which of the captures are in an archive at all; only those are asked `memberOf` */
+    const members = membersOf(this, regs.map((r) => r.capture_sha));
     for (const { capture_sha, bundle_id } of regs) {
+      if (!members.has(capture_sha)) continue;
       let of;
       try { of = this.memberOf(capture_sha); } catch { of = []; }
-      if (!Array.isArray(of)) continue;
       for (const m of of) {
         const archiveSha = m && typeof m.archiveSha === "string" ? m.archiveSha.toLowerCase() : null;
         if (!archiveSha || !HEX64.test(archiveSha) || archiveSha === capture_sha) continue;
@@ -1213,12 +2449,6 @@ export class Capture {
     return { over: () => ran || performance.now() - began >= ms, within: (p) => Promise.race([p, late]), stop: () => clearTimeout(timer) };
   }
 
-  /* R77: the digests the register files under a document, in digest order. */
-  #capturesOf(bundleId) {
-    try { return this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
-    catch { return []; }
-  }
-
   /* R91 (T49; N1080): for the documents of one page, R78's examination and the archive grouping (R77, DEC-167 (8)), each
      asked at most once for each document the page shows (a row, or a file beside an archive), all under the page's one
      wait (`HELD_PAGE_WAIT_MS`): the examinations all at once, the archive groupings `HELD_PAGE_LANES` rows at a time.
@@ -1228,22 +2458,32 @@ export class Capture {
      without being named nor counted as listed. A thread-blocking examination cannot be interrupted: the wait then ends
      after the one in progress. Answers a map of the page's rows to `{eligibility, grouped}` (`grouped` null for a document
      that holds no archive). */
-  async #pageAnswers(page, { viewer, rowOf }) {
+  async #pageAnswers(page, { viewer, rowOf, vouched = false, facts }) {
     const answers = new Map();
     if (!page.length) return answers;
     const wait = Capture.#pageWait(HELD_PAGE_WAIT_MS);
     const examined = new Map();
+    /* R88 (T51): a vouched document (`held_and_vouched`) is not asked of the examination, and the wait is not spent on it. A page row's
+       standing is already read; a file beside an archive, which is no row of the page, is asked. */
+    const standing = new Map(page.map((r) => [r.bundle_id, r.standing]));
+    const isVouched = (bundleId) => vouched && (standing.has(bundleId) ? standing.get(bundleId)
+      : this.#one(`SELECT current_state AS s FROM bundles WHERE bundle_id = ?`, bundleId)?.s) === VOUCHED_STATE;
     const examine = (bundleId) => {
-      if (!examined.has(bundleId)) examined.set(bundleId, this.#eligibility(bundleId, wait));
+      if (!examined.has(bundleId))
+        examined.set(bundleId, isVouched(bundleId) ? { eligible: null, eligibility_basis: VOUCHED_BASIS } : this.#eligibility(bundleId, wait));
       return examined.get(bundleId);
     };
     const answer = async (r) => {
-      const shas = this.#capturesOf(r.bundle_id);
+      const shas = facts.captures.get(r.bundle_id) ?? [];
+      /* C14: only a capture that may be an archive is asked of the archive's listing: one acquisition recorded opening, or one its
+         own document profiles `zip` or does not profile (a document whose profile cannot be read is asked, as it always was). */
+      const maybe = shas.filter((x) => !facts.parts.has(x) && !facts.notArchives.has(x)
+        && (facts.opened.has(x) || !facts.formats.has(x) || facts.formats.get(x) === null || facts.formats.get(x) === "zip"));
       const progress = { sha: shas[0] ?? null };
       const [eligibility, group] = await Promise.all([
         examine(r.bundle_id),
-        shas.length === 0 ? null : wait.over() ? TOO_LATE : (() => {
-          const g = this.#archiveGroup(shas, r.bundle_id, { viewer, rowOf, progress, wait });
+        maybe.length === 0 ? null : wait.over() ? TOO_LATE : (() => {
+          const g = this.#archiveGroup(maybe, r.bundle_id, { viewer, rowOf, progress, wait });
           g.catch(() => {});
           return wait.within(g);
         })(),
@@ -1254,7 +2494,9 @@ export class Capture {
       if (!group) return { eligibility, grouped: null };
       const shown = await Promise.all(group.files.slice(0, HELD_FILES_IN_ROW).map(async (f) => {
         const e = await examine(f.document);
-        return { ...f, grade: group.grade, eligible: e.eligible, ...(RAN_OUT.has(e) ? { eligibility_basis: e.eligibility_basis } : {}) };
+        return { ...f, grade: group.grade, eligible: e.eligible,
+                 ...(RAN_OUT.has(e) || e.eligibility_basis === VOUCHED_BASIS ? { eligibility_basis: e.eligibility_basis } : {}),
+                 ...(vouched ? this.#standingOf(f.document, isVouched(f.document) ? VOUCHED_STATE : "collected") : {}) };
       }));
       return { eligibility, grouped: { archive: group.archive, files: shown, files_total: group.files.length,
                                        files_truncated: group.files.length > HELD_FILES_IN_ROW } };
@@ -1349,20 +2591,27 @@ export class Capture {
      none is registered or it does not answer. It is handed the document (its bundle id) and `captures`, the digests the
      register files under it (provenance R48), so the reader can match its own rows without a join of its own. Anything
      but `{questions: [...]}` with every entry well formed is no answer, never a partial list (`capture-requests` R48). */
-  #questionsOf(bundleId, viewer) {
+  #questionsOf(bundleId, viewer, pre = null) {
     const reader = this.#readers.get("captured-for");
     if (!reader) return { questions: null, basis: say("capture.basis.reader_questions_document") };
     const silent = { questions: null, basis: say("capture.basis.did_answer_questions", { module: reader.module }) };
+    /* C14: a page of rows hands in `pre`, the captures and asks it read for the whole page; one document reads its own. */
     let captures = [];
-    try { captures = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
-    catch { captures = []; }
+    if (pre) captures = pre.captures;
+    else {
+      try { captures = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
+      catch { captures = []; }
+    }
     /* R83, R94 (T50): the asks `acquire`'s `for` recorded for those captures, handed on for the reader to answer; this
        module names no question from them itself. */
     let asks = [];
-    try {
-      asks = captures.length ? this.#rows(`SELECT DISTINCT question, asker FROM captured_for WHERE capture_sha IN (SELECT value FROM json_each(?))
-                                             ORDER BY question, asker`, JSON.stringify(captures)).map((r) => ({ question: r.question, asker: r.asker })) : [];
-    } catch { asks = []; }
+    if (pre) asks = pre.asks;
+    else {
+      try {
+        asks = captures.length ? this.#rows(`SELECT DISTINCT question, asker FROM captured_for WHERE capture_sha IN (SELECT value FROM json_each(?))
+                                               ORDER BY question, asker`, JSON.stringify(captures)).map((r) => ({ question: r.question, asker: r.asker })) : [];
+      } catch { asks = []; }
+    }
     let v;
     try { v = reader.fn({ document: bundleId, viewer, captures, asks }); } catch { return silent; }
     if (v && typeof v.then === "function") { Promise.resolve(v).catch(() => {}); return silent; }
@@ -1409,10 +2658,10 @@ export class Capture {
     }
     /* END DEC-49 REGION is-held-act-reasoned */
     if (!Array.isArray(ids) || ids.length === 0)
-      return { ok: false, reason: "NO_IDS", status: 400, detail: "name at least one document; nothing was written" };
+      return { ok: false, reason: "NO_IDS", status: 400, detail: localize("capture.index.names_no_document", "name at least one document; nothing was written") };
     if (ids.length > PER_ITEM_MAX)
       return { ok: false, reason: "TOO_MANY_IDS", status: 400, max: PER_ITEM_MAX, count: ids.length,
-               detail: `at most ${PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written` };
+               detail: localize("capture.index.at_most_per_item_max", "at most {PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written", { PER_ITEM_MAX: String(PER_ITEM_MAX) }) };
     return null;
   }
 
@@ -1432,7 +2681,7 @@ export class Capture {
   /* R79, R81, R84: append one act per document, in one transaction, each recorded with the questions `questionsOf(id)`
      names (R79's waiting questions; R81's, those of the set-aside it undoes), one row per (act, question). */
   #appendHeld(ids, act, reason, author, questionsOf = () => []) {
-    const at = stampSecond();
+    const at = stampSecond(this.#instant());
     this.#tx(() => {
       for (const id of new Set(ids)) {
         const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM held_acts WHERE bundle_id = ?`, id).n) + 1;
@@ -1490,7 +2739,7 @@ export class Capture {
                                 detail: "no document you may see answers to these ids; nothing was written" };
     const notAside = [...standing].filter(([, r]) => r.standing).map(([id]) => id);
     if (notAside.length) return { ok: false, reason: "NOT_SET_ASIDE", ids: notAside, status: 409,
-                                  detail: "these documents are not set aside; nothing was written" };
+                                  detail: localize("capture.index.not_set_aside", "these documents are not set aside; nothing was written") };
     /* The set-aside each restore undoes is the document's latest act (it is set aside now); its questions carry over. */
     const undone = new Map([...standing.keys()].map((id) => [id, this.#rows(
       `SELECT q.question FROM held_act_questions q
@@ -1530,7 +2779,7 @@ export class Capture {
                documents, limit: cap, truncated, next: truncated ? cursorOf([last.at, last.bundle_id, String(last.seq)]) : null };
     } catch {
       return { ok: false, reason: "HELD_ACTS_UNREADABLE", question: typeof question === "string" ? question : null, acts: null,
-               detail: "the set-asides recorded with this question could not be read" };
+               detail: localize("capture.index.held_acts_unreadable", "the set-asides recorded with this question could not be read") };
     }
   }
 
@@ -1572,7 +2821,7 @@ export class Capture {
    *  admission plus reservation, so a render that never reports cannot hold one for ever. */
   renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const day = now.slice(0, 10);
       const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
       /* CEILED, never floored: a reservation rounded DOWN is short of the cost it stands for. */
@@ -1603,7 +2852,7 @@ export class Capture {
       else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, ?, 1, 0, ?)`, day, reserve, now);
       const slot = crypto.randomUUID();
       this.#sql.exec(`INSERT INTO render_slots (slot, admitted_at, expires_ms) VALUES (?, ?, ?)`,
-                     slot, now, (Number.isFinite(nowMs) ? nowMs : Date.now()) + reserve);
+                     slot, now, (Number.isFinite(nowMs) ? nowMs : this.#instant()) + reserve);
       return { state: "admitted", day, spent_ms: spent, reserved_ms: reserved + reserve, reserve_ms: reserve,
                allowance_ms: allowance, renders: (cur ? cur.renders : 0) + 1, deferred: cur ? cur.deferred : 0,
                slot, cap: capN };
@@ -1616,7 +2865,7 @@ export class Capture {
   renderSpend({ ms, releaseMs = 0, slot = null, at = null } = {}) {
     return this.#tx(() => {
       if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const day = now.slice(0, 10);
       const n = typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
       const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -1645,7 +2894,7 @@ export class Capture {
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
     return this.#tx(() => {
       if (!sourceCapture) return { recorded: 0 };
-      const now = stampSecond();
+      const now = stampSecond(this.#instant());
       /* Filed in place: a row this capture already holds is updated and keeps `first_seen`, a new one takes now, and
          the rows the new set no longer names are removed after. The first of two links with one key is the one kept. */
       const kept = new Set();
@@ -1725,7 +2974,7 @@ export class Capture {
     if (!rows.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated, next };
     /* N133: the source's retrieval instant, spelled whole-second UTC as the receipts are (provenance R48), so the
        bracket is decided in SQL by comparing text. */
-    const T = stampSecond(Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now());
+    const T = stampSecond(Date.parse(rows[0].captured_at) || Date.parse(at || "") || this.#instant());
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
     const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
@@ -1814,7 +3063,7 @@ export class Capture {
   recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null,
                       at = null, limit = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       this.#sql.exec(
         `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -1918,9 +3167,8 @@ export class Capture {
       const n = pages.size;
       this.#sql.exec(`INSERT INTO link_chrome (host, address_norm, state, pages, basis, at) VALUES (?, ?, ?, ?, ?, ?)`,
         host, a, n >= 2 ? "chrome" : "undetermined", n,
-        n >= 2 ? `contained in a chrome region and recurred on ${n} distinct pages of ${host}`
-               : `contained in a chrome region on one page of ${host} only: whether it is the site's navigation or `
-                 + "that page's own is undetermined until another page of the host carries it", at || stampSecond());
+        n >= 2 ? localize("capture.index.contained_in_a_chrome_region", "contained in a chrome region and recurred on {n} distinct pages of {host}", { n: String(n), host: String(host) })
+               : localize("capture.index.contained_in_a_chrome_region_2", "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it", { host: String(host) }), at || stampSecond(this.#instant()));
     }
   }
 
@@ -1954,7 +3202,7 @@ export class Capture {
           ORDER BY capture_sha LIMIT ?`,
         from, `https://${h}/`.length, `https://${h}/`, `http://${h}/`.length, `http://${h}/`, cap + 1);
       const page = found.slice(0, cap);
-      const at = stampSecond();
+      const at = stampSecond(this.#instant());
       for (const r of page) this.#chromeDeriveCapture(r.capture_sha, at);
       const truncated = found.length > cap;
       return { host: h, captures: page.length, derived: page.map((r) => r.capture_sha), limit: cap, truncated,
@@ -2021,13 +3269,14 @@ export class Capture {
    * Capture sessions (R22, R46): a capture that needs another tick
    * ==================================================================== */
 
-  /** SCRATCH, not record. Expired rows are pruned on the way past, so an abandoned session costs one row until its
-   *  hour is up. The primary is never stored here: it is in the store under its own digest. */
+  /** SCRATCH, not record. R103 (fix round 4b, F5): a session is the resume state of work still owed (the supporting files or the
+   *  render a capture has not finished), so the clock never prunes it: `expires` says only when it stops being live (R46, the
+   *  member's "Finish it" window), and the row goes when its work ends, by `dropCaptureSession`. The primary is never stored
+   *  here: it is in the store under its own digest. */
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null } = {}) {
     return this.#tx(() => {
-      const now = at ? new Date(at) : new Date();
+      const now = at ? new Date(at) : new Date(this.#instant());
       const iso = (d) => stampSecond(d.getTime());
-      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
       if (!session || !state) return { session: null, saved: false };
       const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
       const body = JSON.stringify(state);
@@ -2046,13 +3295,12 @@ export class Capture {
 
   loadCaptureSession({ session, at = null } = {}) {
     return this.#tx(() => {
-      const now = at ? new Date(at) : new Date();
-      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond(now.getTime()));
+      const now = at ? new Date(at) : new Date(this.#instant());
       const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
       if (!r) return { session, found: false, note: say("capture.note.capture_session_either") };
       let state = null;
       try { state = JSON.parse(r.state); } catch { return { session, found: false, note: "session state did not parse" }; }
-      return { session, found: true, locator: r.locator, primarySha: r.primary_sha,
+      return { session, found: true, expired: r.expires < stampSecond(now.getTime()), locator: r.locator, primarySha: r.primary_sha,
                primaryFile: r.primary_file, base: r.base, ticks: r.ticks, created: r.created, state };
     });
   }
@@ -2067,7 +3315,7 @@ export class Capture {
   /** R46: every live session, for `queue`'s partial-capture condition. Writes nothing, never throws. */
   liveCaptureSessions(now) {
     try {
-      const at = typeof now === "string" ? now : stampSecond(Number.isFinite(Number(now)) ? Number(now) : Date.now());
+      const at = typeof now === "string" ? now : stampSecond(now != null && Number.isFinite(Number(now)) ? Number(now) : this.#instant());
       return this.#rows(`SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, at).map((r) => {
         let state = null; try { state = JSON.parse(r.state); } catch { state = null; }
         return { session: r.session, locator: r.locator, primarySha: r.primary_sha, primaryFile: r.primary_file,
@@ -2129,7 +3377,7 @@ export class Capture {
   recordSiteAssets({ host, primarySha, observations = [], at = null, limit = null } = {}) {
     return this.#tx(() => {
       if (!host || !primarySha) return { host: null, recorded: 0 };
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const cap = limitOf(limit);
       let truncated = false;
       let added = 0, changedCount = 0;
@@ -2155,8 +3403,7 @@ export class Capture {
              SELECT primary_sha, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?
                FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
             host, o.address_norm, cur.sha256, o.sha256,
-            "a later direct capture of this host fetched different bytes for this address; "
-              + "this earlier capture reused the old ones, which are now unverified against the source", now,
+            localize("capture.index.reuse_posthoc_unverified", "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source"), now,
             host, o.address_norm);
           this.#sql.exec(
             `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
@@ -2212,7 +3459,7 @@ export class Capture {
    *  refusals are collected and reported, never thrown. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       let recorded = 0;
       const refusals = [];
       for (const v of verdicts) {
@@ -2295,7 +3542,7 @@ export class Capture {
    *  that MOVED keeps the old value and the date ("51 until Tuesday, now 1000" is the fact worth acting on). */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at = null } = {}) {
     return this.#tx(() => {
-      const now = at || stampSecond();
+      const now = at || stampSecond(this.#instant());
       const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
       if (observed == null) {
         if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -2330,12 +3577,12 @@ export class Capture {
   /** R15. Bounds what it accepts, records no decision, idempotent on (kind, capture_sha); every enqueue (a dedupe
    *  included, since the consumer still owes it a drain) calls the `task` listeners (R44), which arm the drain. */
   async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
-    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
+    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: localize("capture.index.kind_must_be_one_of", "kind must be one of: {TASK_KINDS}", { TASK_KINDS: String(TASK_KINDS.join(", ")) }) };
     if (typeof captureSha !== "string" || !HEX64.test(captureSha))
-      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
+      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: localize("capture.index.sha_identifies_event", "a capture sha256 identifies the event; a record does not exist yet at capture time") };
     const text = boundedSubject(subject) || say("capture.text.capture_whose_authority");
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
-    const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
+    const now = at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const existing = this.#tx(() => {
       const held = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
       if (!held)
@@ -2384,7 +3631,7 @@ export class Capture {
       return this.#tx(() => {
         if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
         this.#sql.exec(`UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
-                       at ?? stampSecond(), kind, captureSha);
+                       at ?? stampSecond(this.#instant()), kind, captureSha);
         return { found: true };
       });
     } catch { return { found: false }; }
@@ -2415,7 +3662,7 @@ export class Capture {
       this.#tx(() => this.#sql.exec(`INSERT INTO capture_validators (address_norm, capture_sha, etag, last_modified, at) VALUES (?, ?, ?, ?, ?)
                                      ON CONFLICT(address_norm, capture_sha) DO UPDATE SET etag = excluded.etag,
                                        last_modified = excluded.last_modified, at = excluded.at`,
-                                    addressNorm, captureSha, etag || null, lastModified || null, at && ISO_INSTANT.test(at) ? at : stampSecond()));
+                                    addressNorm, captureSha, etag || null, lastModified || null, at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant())));
       return { recorded: true };
     } catch { return { recorded: false }; }
   }
@@ -2459,8 +3706,8 @@ export class Capture {
   async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
     if (typeof addressNorm !== "string" || addressNorm === "") return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
-      return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
+      return { ok: false, reason: "BAD_OUTCOME", detail: localize("capture.index.outcome_must_be_one_of", "outcome must be one of: {SOURCE_OUTCOMES}", { SOURCE_OUTCOMES: String(SOURCE_OUTCOMES.join(", ")) }) };
+    const now = at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant());
     const st = Number.isInteger(status) ? status : null;
     this.#tx(() => {
       this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
@@ -2548,9 +3795,12 @@ export function captureOwns(t) {
 
 /* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
    them in, and control-plane's `dispatch` answers every store request over it). `url` carries the control plane's
-   stamps; `body` the parsed body. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
+   stamps; `body` the parsed body; `h` the handler's in-process parts (R73; K4226), of which `timings` is forwarded to
+   `acquire` as its `opts.timings` when given. N90: every read a route answers is bounded here, whatever the caller omits (`limit`
    defaults to READ_LIMIT's), and pages by `after`. */
-export function captureOps(c, url, body, env) {
+export function captureOps(c, url, body, env, h = {}) {
+  /* R115: the store's environment is the instance clock's source (`BIO_NOW_MS`), so every op this map answers reads it */
+  if (env && typeof env === "object") c.clockEnv = env;
   const q = (k) => url.searchParams.get(k);
   const viewerOf = () => (url.searchParams.has("viewer") ? q("viewer") : undefined);
   const page = { limit: q("limit") || READ_LIMIT.default, after: q("after") || null };
@@ -2583,20 +3833,42 @@ export function captureOps(c, url, body, env) {
     gradenote: () => c.gradeNoteOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
     /* R95 (T50): one capture's grade, by the caller's stamped viewer as `gradenote` is. */
     capturegrade: () => c.captureGradeOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
-    heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), sort: q("sort"), dir: q("dir"), ...page,
-                                         state: q("state"), viewer: q("viewer") ?? "" }),
+    /* R96 (T51): `check` is the only act that reaches outside, and only from a member session (the stamp `by`). */
+    heldat: () => c.heldAt({ address: q("address"), sha256: q("sha256"), check: q("check") === "1" || q("check") === "true",
+                              viewer: q("viewer") ?? "", member: q("by") }),
+    /* R101 (fix round 3, C9): a mutating member act; `by` and the viewer are the control plane's stamps, never the body's, and the
+       instant is this instance's clock. */
+    captureseenin: () => c.fileSeenIn({ captureSha: (body && body.captureSha) ?? q("captureSha"), project: (body && body.project) ?? q("project"),
+                                        by: q("by"), viewer: q("viewer") ?? "" }),
+    heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), bundle_id: q("bundle_id"), bundle_ids: q("bundle_ids"), sort: q("sort"), dir: q("dir"), ...page,
+                                         state: q("state"), fields: q("fields"), viewer: q("viewer") ?? "" }),
     heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
                                      viewer: q("viewer") ?? "" }),
     heldrestore: () => c.restoreHeld({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
                                        viewer: q("viewer") ?? "" }),
     reattest: () => c.reattest({ ...(body || {}), by: q("by") ?? (body && body.by) ?? null }),
     lateattestations: () => c.lateAttestationsOf(q("capture") ?? (body && body.captureSha)),
-    captureaccount: () => c.recordCaptureAccount({ ...(body || {}), by: q("by") ?? (body && body.by) }),
+    /* R98 (K4206): the account's instant is this instance's clock, as `op=sourcereach` takes its own (R90): a body's `at` is
+       not read, so a member cannot date an account the signature does not cover. In-process callers may still pass `at`. */
+    captureaccount: () => c.recordCaptureAccount({ ...(body || {}), at: undefined, by: q("by") ?? (body && body.by) }),
     /* N388: the accounts answer by the caller's sight; an unstamped call sees nothing (REC-30's fail-closed posture). */
     captureaccounts: () => c.captureAccountsOf(q("capture") ?? (body && body.captureSha), { viewer: q("viewer") ?? "" }),
+    /* R113 (fix round 9; G127f): a file past the request-body ceiling sent in parts. `by` is the control plane's stamp, never the body's; `captureuploadpart`'s body is the
+       part's raw bytes (as `captureupload`'s is the file's), its fields in the address; the whole's digest, the size and the member's words travel in the begin alone. */
+    captureuploadbegin: () => c.beginPartedUpload({ sha256: body && body.sha256, bytes: body && body.bytes, statement: body && body.statement, name: body && body.name,
+                                                    type: body && body.type, by: q("by") ?? undefined, bounds: h.bounds ?? null, key: h.key ?? null }),
+    captureuploadpart: () => c.putUploadPart({ upload: q("upload"), index: q("index") === null || q("index") === "" ? null : Number(q("index")), sha256: q("sha256"), bytes: body,
+                                              by: q("by") ?? undefined, declared: q("declared") ? Number(q("declared")) : null, ledger: h.ledger ?? null, key: h.key ?? null }),
+    captureuploadcomplete: () => c.completePartedUpload({ upload: body && body.upload, parts: body && body.parts, by: q("by") ?? undefined, key: h.key ?? null }),
+    captureuploadabort: () => c.abortPartedUpload({ upload: (body && body.upload) ?? q("upload"), by: q("by") ?? undefined, key: h.key ?? null }),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
-    acquire: () => c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
-                                          storeName: q("store") || "bio" }),
+    /* R106 (fix round 6, G32): a fetch of an address the record already holds from a plain fetch is made conditional on that copy (the
+       digest handed to `acquisition` as `heldSha`), so an unchanged source is not downloaded again; the caller's sight decides which copy. */
+    acquire: () => {
+      const heldSha = c.heldCopyToCompare(body || {}, q("viewer") ?? "");
+      return c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
+                                    storeName: q("store") || "bio", ...(heldSha ? { heldSha } : {}), ...(h.timings ? { timings: h.timings } : {}) });
+    },
     archivelookup: () => c.archiveLookup({ address: (body && body.address) || q("address") }),
     /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
        plane's stamps, never the body's, and the body names only the archive. */
@@ -2608,3 +3880,58 @@ export function captureOps(c, url, body, env) {
                                        state: q("state"), ...page }),
   };
 }
+
+/* R97 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  gradenote: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.gradenote", "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [] } },
+  archivelist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.archivelist", "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing"),
+    fields: { accepts: ["archive","archiveSha","state","limit","after"], requires: [["archive","archiveSha"]] } },
+  heldcaptures: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.heldcaptures", "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing"),
+    fields: { accepts: ["member","project","bundle_id","bundle_ids","sort","dir","limit","after","state","fields"], requires: [] } },
+  heldsetaside: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldsetaside", "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted"),
+    fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
+  reattest: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: localize("capture.declared.reattest", "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight"),
+    fields: { accepts: ["captureSha","locator"], requires: ["captureSha"] } },
+  heldrestore: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldrestore", "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record"),
+    fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
+  /* K4208 (T51 FR-52, wave 3): the census reads the screens send. `heldat` takes exactly one of `address` and `sha256` (R96; the
+     refusal names the one it was given, or `address` when neither); `by` and `viewer` are stamps. `check` is accepted, never required. */
+  heldat: { classes: ["admin","member","probe"], machineClasses: ["admin","probe"], mutating: false, weight: "read", description: localize("capture.declared.heldat", "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record"),
+    fields: { accepts: ["address","sha256","check"], requires: [["address","sha256"]] } },
+  /* R95: the digest is `capture` in the query or `captureSha` in the body; a missing one is the required-argument refusal naming `captureSha`. */
+  capturegrade: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.capturegrade", "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [["capture","captureSha"]] } },
+  /* R69: an absent or malformed digest answers as an unknown one does, with no accounts (an unseen capture and an unknown one read alike),
+     so it is not required: no refusal names it. */
+  captureaccounts: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.captureaccounts", "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [] } },
+  /* K4206 (T51 FR-52): `acquire` hands its body to acquisition's act, which reads these fields; a call with none of locator,
+     continue or address is refused naming the locator (BAD_LOCATOR), an archive call without address naming it (BAD_ADDRESS).
+     `matchedSweep` is never read from the body (acquisition R31), so it is not declared. */
+  acquire: { classes: ["admin","member","probe","daemon"], mutating: true, weight: "substrate", description: localize("capture.declared.acquire", "substrate: the fetch layer (M2')"),
+    fields: { accepts: ["address","at","authority","coArchive","continue","file","for","locator","project","render","request","subresources","via"], requires: [["locator","continue","address"]] } },
+  /* R101 (T51 fix round 3; C9): a member files a held document in a project; `by` and `viewer` are stamps, so only the two body
+     fields are accepted, and both are required (an absent one is the required-argument refusal naming it). It is a corpus write,
+     so it needs `contribute` (op-declarations R80: a mutating op with no hand row names its capability); the project fence is
+     membership's `projectAuthority`, asked in `fileSeenIn`. */
+  captureseenin: { classes: ["admin","member","probe"], mutating: true, stamps: ["by","viewer"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureseenin", "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)"),
+    fields: { accepts: ["captureSha","project"], requires: ["captureSha","project"] } },
+  /* R113 (fix round 9; G127f; K4891): a file past the request-body ceiling is sent in parts through the Worker: begin (the file's digest and size, and what R86 asks of an
+     upload), each part in order (its raw bytes the body, its index and digest in the address), complete (the parts' digests in order) and abort. `by` is a stamp; each
+     is a member's own act in her own name (the founder's session too, K5056: the classes `captureupload` admits) and needs `contribute` as `captureupload` does. */
+  captureuploadbegin: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadbegin", "upload-directed: a member begins sending a file too large for one request in parts, naming its digest, its size and where it came from; nothing is held until its parts arrive (capture R113)"),
+    fields: { accepts: ["sha256","bytes","statement","name","type"], requires: ["sha256","bytes","statement"] } },
+  captureuploadpart: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadpart", "upload-directed: a member sends one part of a file begun in parts, in order, its raw bytes the request's body (capture R113)"),
+    fields: { accepts: ["upload","index","sha256"], requires: ["upload","index","sha256"] } },
+  captureuploadcomplete: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "observational", description: localize("capture.declared.captureuploadcomplete", "upload-directed: a member completes a file sent in parts, naming the parts' digests in order; the file is then held under its own digest as an upload is (capture R113)"),
+    fields: { accepts: ["upload","parts"], requires: ["upload","parts"] } },
+  captureuploadabort: { classes: ["admin","member"], mutating: true, stamps: ["by"], needs: "contribute", weight: "reversible", description: localize("capture.declared.captureuploadabort", "upload-directed: a member abandons a file begun in parts; what was sent is discarded and nothing is held (capture R113)"),
+    fields: { accepts: ["upload"], requires: ["upload"] } },
+  /* K4206 (T51 FR-52; R98): `text` is read, and an empty one is C-118.6 by its row's words (R69), so it is accepted and not
+     required; a missing captureSha names itself (R98), a missing signature is refused naming the signature. The instant is
+     the server's (R98), so `at` is not declared. */
+  captureaccount: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: localize("capture.declared.captureaccount", "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested"),
+    fields: { accepts: ["captureSha","signature","text"], requires: ["captureSha","signature"] } },
+});

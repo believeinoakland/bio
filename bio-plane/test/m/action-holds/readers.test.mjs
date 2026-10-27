@@ -10,6 +10,7 @@ import { actionHoldsOf } from "../../../src/action-holds/index.mjs";
 import { doorbellOf } from "../../../src/doorbell/index.mjs";
 import * as rat from "../ratification/fixture.mjs";
 import { caseConclusionRowLines } from "../../../src/ratification/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c";
 const M = V("alice"), ALICE = V("alice"), BOB = V("bob"), CAROL = V("carol");
@@ -43,7 +44,7 @@ test("R4 doorbell asks this module's reader: no hold, may clear; a place whose l
   assert.equal(w.h.holdInPlace(), false);
   /* a hold in place on A's entry 0: A is in a project, and no viewer is asked (one who sees nothing still holds it) */
   hold(w, A, 0, "in_place");
-  assert.equal(w.a.actionRead({ id: A, viewer: "nobody" }).reason, "NO_SUCH_BUNDLE", "invisible to this viewer");
+  assert.equal(w.a.actionRead({ id: A, viewer: "nobody" }).reason, "NO_SUCH_ACTION", "invisible to this viewer (actions R106)");
   const held = ask();
   assert.deepEqual([held.may, held.basis], [false, "action-holds reports a litigation hold in place"]);
   assert.equal(w.h.holdInPlace(), true);
@@ -109,7 +110,7 @@ test("R4 registered once per host: a second actionHoldsOf registers nothing, and
   /* negative control: told `doorbell: null` (and actions none), a fresh world's doorbell holds none, fail-closed */
   const bare = world({ holds: { doorbell: null } });
   const empty = doorbellOf(bare.host).mayClearDiscarded();
-  assert.deepEqual([empty.may, empty.basis], [false, "no reader of litigation holds is registered, so a hold cannot be ruled out"]);
+  assert.deepEqual([empty.may, empty.basis], [false, word("doorbell.basis.reader_litigation_holds")]);
   /* a reader held by another module is a defect of the wiring: thrown at start */
   const held = (module) => ({ registerReader: () => ({ ok: false, reason: "LISTENER_DECLARED", module }) });
   for (const module of ["action-holds"])

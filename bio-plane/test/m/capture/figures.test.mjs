@@ -51,7 +51,7 @@ test("R75: a figure that cannot be read is null, never zero; counts writes nothi
   const before = schema();
   assert.deepEqual(c.counts(), { taskQueue: 0, sourceReachability: null });
   assert.deepEqual(record.counts(), { taskQueue: 0, sourceReachability: null });
-  assert.deepEqual(schema(), before, "nothing was created or changed");
+  assert.deepEqual(schema(), before, "the schema is unchanged");
 });
 
 test("R75: a record on which another module already reports one of these figures, or capture registered already, is a wiring defect and loud; a record with no seam is left alone", () => {

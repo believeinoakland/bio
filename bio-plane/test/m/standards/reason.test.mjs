@@ -138,7 +138,7 @@ test("R1 C-112.20's row: STANDARD_NO_REASON in standards' own family after C-112
   assert.equal(STANDARDS_CHECKS.STANDARD_ACT_INVALID.check, "C-112.19");
   assert.equal(ROW.where, "src/standards/index.mjs #declareRefusal > is-standard-reason");
   assert.match(ROW.translation, /your own words/);
-  assert.match(ROW.translation, /why the group holds its government to it/);
+  assert.match(ROW.translation, /why the team holds its government to it/);
   assert.match(ROW.translation, /at most 2,000 characters/);
   assert.match(ROW.translation, /Nothing was written\.$/);
   const checks = Object.values(STANDARDS_CHECKS).map((c) => c.check);

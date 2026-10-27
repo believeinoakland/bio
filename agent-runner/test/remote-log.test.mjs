@@ -12,6 +12,7 @@ const S = {
 };
 const FIELDS = ['event', 'trace', 'member_ref', 'conv', 'step', 'outcome', 'status', 'ms', 'bytes_in', 'bytes_out'];
 
+// fixtures-own: harness a test-local harness counting its own calls (the interface this log writes to)
 // A stub interface: each request answers its status and the bytes sent and received, and is counted.
 function stubInterface() {
   const requests = [];

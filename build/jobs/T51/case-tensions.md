@@ -1,0 +1,84 @@
+# case-tensions (T51)
+
+**Status** · session_01TSmueyvUPtNYuxRUg58uBu · depth 2 · COMPLETE · handled B4
+
+## Completion (T51-229: the words findings)
+
+**Entries applied.** T51-229, the findings of `build/plan/words-pass/case-tensions.md`: the 3 `plain` findings (`index.mjs`), the test copy of the C-92.13 translation (`attribution.test.mjs:68`, with its second line at :69) and the part copy in `fixture.mjs:103`. The words check on this module reported 5 failures on tranche/T51, and this job fixed all of them. In the same words rule, I also converted the test regexes that hold a sentence with a words row (`attribution.test.mjs`, `tensions.test.mjs:55`), which the check does not count.
+
+**Product changes (`bio-plane/src/case-tensions/index.mjs`).** Every sentence a member reads now goes through `localize('case-tensions.index.<slug>', en, vars)`, including the sentences the check does not count (K3964): `NO_PROVIDER` (the reason an undetermined relation gives), "this call carries nobody", "no level was chosen" (an interpolated template), "give the reason you choose this level", "the reason is blank", and the `ATTRIBUTION_NAME_NO_HANDLE` detail. Refusal translations were already `word(...)` rows in `checks.mjs`; no change there.
+
+**Test changes (`bio-plane/test/m/case-tensions/`).**
+- `attribution.test.mjs`: the C-92.13 translation is compared with `word('refusal.ATTRIBUTION_NO_REASON')`; the regex checks on `case_document_carries`, `author_chosen_level`, `author_chose_edition` (with `level3` = handle), `ATTRIBUTION_NOT_AN_OBSERVATION` and `ATTRIBUTION_NOT_THE_AUTHOR` are equality checks with `word()`.
+- `fixture.mjs`: the publication stand-in's "this case document is signed" is `word('publication.why.case_document_signed')`.
+- `tensions.test.mjs`: `/No strength is composed/` is `word('case-tensions.says.contradiction_found_published')`.
+
+**Deferred, and why.**
+- `relation.test.mjs`, two assertions: the undetermined reason (`NO_PROVIDER`, `/publication provider/`) and the revision-flag doctrine (`/SET AND NEVER CLEARED/`) are `localize` text with no `words.json` row, so a test cannot compare them by key (a test copy of the `en` is itself a finding). They now assert the value is stated, not its wording. Restoring the wording check needs a `words.json` row for each (the design stream's file). See REPORT.
+
+**Other modules.** None found from this job's reads. Note: `checks/run.mjs` reports 2,260 words failures and 25 coverage failures across other modules, none in `case-tensions`.
+
+**Checks and tests** (module at `job/T51/case-tensions` after the merge of `tranche/T51` at 6437fd791d; the merge touched no file of this module):
+- `node --test bio-plane/test/m/case-tensions/`: 23 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs case-tensions`: 0 failures (8 files). `checks/coverage.mjs case-tensions`: 11 of 11 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs case-tensions`: 0 failures (was 5).
+- `checks/run.mjs /home/user/bio`: exit 1 from other modules (above); no `case-tensions` line.
+- `setup-words/build.mjs --check`: the stale-rows note, expected: the new `localize` ids are not yet in `rows.mjs` (BOB regenerates it at the layer close). No refusal names this module.
+- `checks/ownership.mjs /home/user/bio case-tensions tranche/T51 job/T51/case-tensions`: see the COMPLETE entry.
+
+Size (session_01BXkX7UvYkvSAS5FNme8396): test runs 2, module lines 972 (`bio-plane/src/case-tensions/*.mjs`).
+
+## J1 · REPORT
+
+Two test assertions in bio-plane/test/m/case-tensions/relation.test.mjs cannot be compared by key yet, so they assert presence only (the value is stated), not wording:
+1. R1, undetermined reason: NO_PROVIDER, "no module has registered the publication provider, so this module reads no case". It is localize text (case-tensions.index.no_module_has_registered) with no words.json row.
+2. R2/R3 flag doctrine: "a revision flag is SET AND NEVER CLEARED ...", localize text (case-tensions.index.a_revision_flag_is_set), no words.json row.
+A test may not copy the en of a localize call (the testcopy check, tag code), so the wording check needs a words.json row for each id. That file is the design stream's. Bob, please decide: add rows for the two ids (then this job, or a later one, compares them with word()), or accept presence-only here. The rows are not added by this job.
+
+## J2 · COMPLETE
+
+T51-229 (case-tensions, words) is done on job/T51/case-tensions at b991d71be9.
+- Words check on case-tensions: 0 failures (was 5). Module tests 23/23. format, architecture, coverage (11 of 11), ownership: 0 failures.
+- Product: every member-read sentence in index.mjs goes through localize('case-tensions.index.<slug>'), including the ones the check does not count (K3964): NO_PROVIDER, the no-level template, the reason details, the name-without-handle detail.
+- Tests compare by key (word) where a words row exists: the C-92.13 translation, the why/says rows, the publication stand-in's "signed" reason.
+- Deferred, see REPORT: two localize-only texts in relation.test.mjs (R1 reason, R2/R3 doctrine) assert presence only until the design stream adds words rows.
+- Other modules: none found in my reads. checks/run.mjs from the process repo exits 1 on other modules (2,260 words failures, 25 coverage failures); none is in case-tensions.
+- setup-words --check: stale-rows note only (expected; BOB regenerates rows.mjs at the layer close).
+Size (session_01BXkX7UvYkvSAS5FNme8396): test runs 2, module lines 972.
+
+## G47 (fix round 6, session_01TSmueyvUPtNYuxRUg58uBu)
+
+**Providers' state.** None of CASE-GRAMMAR #20, PUBLICATION #36 is merged on `tranche/T51` when I ran. `materialAttestationLines` does not yet write `sha`, so the stand-in document cannot carry it.
+
+**Changed.** `bio-plane/src/case-tensions/index.mjs`, `#reauthorCaptureAttestation`, the `mine` predicate: a row is also chosen only if `!r.sha || String(r.sha).toLowerCase() === cap`. The splice spreads rows, so `sha` is kept. A document with no `sha` behaves as before. Nothing stored changes (R-OLD). No census op's accepted keys change. No protective bound set.
+
+**Tests.** New `test/m/case-tensions/g47-reauthor.test.mjs` (two tests, naming R7): k = 2 (two captures of one source, one `ref`), choosing A's level leaves B's row untouched; control: no `sha` on the rows, unchanged behaviour.
+- Control: green.
+- k = 2 test: **red by name (seam)** until CASE-GRAMMAR #20 merges: case-grammar's line builder drops `sha` today, so the document the test builds carries no `sha` and both rows are changed. I could not see it red-then-green on the code change alone for that reason; it turns green when `sha` is written.
+
+**Suite.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/case-tensions/`: 26 tests, 25 pass, 1 fail (the seam test above). Checks: format 0 failures; architecture 0; coverage 12 of 12 ids named; words (case-tensions) 0 failures; ownership 0 failures. `impact.mjs origin/tranche/T51 HEAD`: 0 affected modules besides this one.
+
+**Proposed requirement line (R7, BOB writes it):** When several captures of one source share a `ref`, choosing one capture's level re-authors only the attesting member rows that carry that capture's `sha` (or carry none); rows of other captures are kept as written.
+
+Size (session_01TSmueyvUPtNYuxRUg58uBu): test runs 3, module lines 973
+
+## J3 · COMPLETE
+
+G47 done on job/T51/case-tensions. index.mjs #reauthorCaptureAttestation: 'mine' also requires (!r.sha || r.sha.toLowerCase() === cap); sha kept by the splice; no-sha documents unchanged; no census keys change; no protective bound. New test g47-reauthor.test.mjs: control green; k=2 test RED BY NAME until CASE-GRAMMAR #20 merges (its line builder drops sha today, so I could not see red-then-green on the code change alone). Suite 26 tests, 25 pass, 1 seam red. format/architecture/coverage(12 of 12)/words/ownership 0 failures. Proposed R7 line and Size in my record.
+
+## G47 after B4 (CHANGE, K4680)
+
+Merged `tranche/T51` (CASE-GRAMMAR #20, PUBLICATION #36 G47t, CASE-CARRIAGE, CASE-DISCLOSURES landed). No code change from me beyond the first G47 section.
+- `g47-reauthor.test.mjs`: **green** (both tests). With the one-line predicate removed it is **red** (1 pass, 1 fail); restored, green. Failing-first seen red, then green.
+- Suite under the preload: 26 tests, 26 pass, 0 fail.
+- Users (`test/m/case-authoring/`, `test/m/publication/`, which import this module): 406 tests, 402 pass, 3 fail: `carries.test.mjs` R55 (case-disclosures R7; R4, R8, R9, R10; R11). The same 3 fail identically with my predicate removed, so they are not caused by this change; they are case-authoring's own seam cases (CASE-AUTHORING #41 not merged).
+- Checks: format 0; architecture 0; coverage 12 of 12; words (case-tensions) 0; ownership 0 failures.
+- `impact.mjs` names 57 modules and 1,013 test files transitively; I ran the direct importers' suites above, not all 1,013.
+- No census op's accepted keys change; no protective bound.
+- Proposed R7 line unchanged (see the first G47 section).
+
+Size (session_01TSmueyvUPtNYuxRUg58uBu): test runs 6, module lines 973
+
+## J4 · COMPLETE
+
+G47 complete after B4. Merged tranche/T51. g47-reauthor.test.mjs green (red with the one-line predicate removed, green restored). Suite 26/26 under the preload. Direct users (case-authoring, publication): 406 tests, 3 fail = carries.test.mjs R55 (case-disclosures R7; R4,R8,R9,R10; R11), identical without my change, so case-authoring's own seam awaiting CASE-AUTHORING #41. format/architecture/coverage 12 of 12/words/ownership 0 failures. No census keys change, no protective bound. Details in my record.

@@ -3,6 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { world, body, testView, meetingRow, itemRow, voteRow, matterRow, MEMBER, OUTSIDER, MACHINE, CLIENT, BODY_ID, T0, DAY } from "./fixture.mjs";
+import { nextPage } from "../../../../legistar-reader/index.mjs";
+import { PAGE_SIZE } from "../../../../legistar-reader/index.mjs";
 import { eventsAddress, itemsAddress, votesAddress, mattersAddress, matterAddress } from "../../../src/following/legistar.mjs";
 
 const follow = (w, b, x = {}) => w.f.followBody({ body: b, from: "2026-09-01", author: MEMBER, viewer: MEMBER, ...x });
@@ -158,4 +160,77 @@ test("R18 no place is named in the module's behaviour or outward text: the Legis
   const r = follow(w2, b2);
   assert.equal(r.ok, true);
   assert.equal(w2.f.follows({ viewer: MEMBER }).items[0].subject.legistar.client, "harbourtown");
+});
+
+/* G21 (K4571; S8): a followed body is read whole across ticks, by cursor, every page of every list, the status saying how far. */
+test("R2 (G21) a body of 120 meetings and 1,500 matters is read whole across ticks: the 200-fetch bound is continued by cursor, every Legistar page is followed, and the follow's status says how far it has read", async () => {
+  const w = world();
+  const b = body(w);
+  follow(w, b);
+  const MEETINGS = 120, MATTERS = 1500;
+  const evAt = eventsAddress(CLIENT, BODY_ID, "2026-09-01");
+  w.serve(evAt, Array.from({ length: MEETINGS }, (_, i) => meetingRow(7001 + i, "2026-09-08", "7:00 PM")));
+  for (let i = 0; i < MEETINGS; i++) {
+    w.serve(itemsAddress(CLIENT, 7001 + i), [itemRow(80000 + i, 7001 + i)]);
+    w.serve(votesAddress(CLIENT, 80000 + i), [voteRow(90000 + i, 80000 + i, 501, "Content")]);
+  }
+  const mtAt = mattersAddress(CLIENT, BODY_ID, "2026-09-01");
+  const matters = Array.from({ length: MATTERS }, (_, i) => matterRow(1 + i));
+  w.serve(mtAt, matters.slice(0, PAGE_SIZE));
+  w.serve(nextPage(mtAt), matters.slice(PAGE_SIZE));
+  for (const m of matters) w.serve(matterAddress(CLIENT, m.MatterId), m);
+  const status = () => w.f.follows({ viewer: MEMBER, now: w.t }).items.find((i) => i.kind === "body");
+  assert.equal(status().body_read, null, "nothing is said to be read before a read");
+  let t = await w.f.followTick(T0);
+  assert.equal(t.failed.length, 0, JSON.stringify(t.failed));
+  assert.equal(t.read[0].truncated, true, "the tick's own bound is said");
+  const first = status().body_read;
+  assert.equal(first.whole, false);
+  assert.equal(first.total, MEETINGS);
+  assert.ok(first.read > 0 && first.read < MEETINGS, `read ${first.read} of ${first.total}`);
+  assert.equal(w.f.followDue(T0 + 60000), true, "an unfinished read is due at the next tick, not at the next day");
+  let ticks = 1;
+  for (; ticks < 40 && !status().body_read.whole; ticks++) {
+    w.t = T0 + ticks * 60000;
+    t = await w.f.followTick(w.t);
+    assert.equal(t.failed.length, 0, JSON.stringify(t.failed));
+  }
+  assert.ok(ticks > 1 && ticks < 40, `read in ${ticks} ticks`);
+  assert.deepEqual({ ...status().body_read }, { read: MEETINGS, total: MEETINGS, more: false, whole: true, phase: "done" });
+  const src = (p) => w.one(`SELECT count(*) AS n FROM event_sources WHERE source_key LIKE ?`, p).n;
+  assert.equal(src("legistar:event:%"), MEETINGS, "every meeting is written");
+  const fetched = new Set(w.fetches.map((o) => o.captureRequest.locator));
+  assert.ok(fetched.has(nextPage(mtAt)), "the second page of matters is read");
+  for (const m of matters) assert.ok(fetched.has(matterAddress(CLIENT, m.MatterId)), `matter ${m.MatterId} is read`);
+  /* whole: the next day is a new pass, not a continuation */
+  assert.equal(w.f.followDue(T0 + ticks * 60000 + 1000), false);
+});
+
+test("R2 (G21) one meeting whose items need more fetches than a tick makes is read across ticks, and the next day's pass starts again from the first page", async () => {
+  const w = world();
+  const b = body(w);
+  follow(w, b);
+  const ITEMS = 250;
+  w.serve(eventsAddress(CLIENT, BODY_ID, "2026-09-01"), [meetingRow(7001, "2026-09-08", "7:00 PM")]);
+  w.serve(itemsAddress(CLIENT, 7001), Array.from({ length: ITEMS }, (_, i) => itemRow(8000 + i, 7001)));
+  for (let i = 0; i < ITEMS; i++) w.serve(votesAddress(CLIENT, 8000 + i), [voteRow(9000 + i, 8000 + i, 501, "Content")]);
+  w.serve(mattersAddress(CLIENT, BODY_ID, "2026-09-01"), []);
+  const status = () => w.f.follows({ viewer: MEMBER, now: w.t }).items.find((i) => i.kind === "body").body_read;
+  let t = await w.f.followTick(T0);
+  assert.equal(t.read[0].truncated, true);
+  assert.equal(status().whole, false);
+  assert.equal(status().more, false);
+  w.t = T0 + 60000;
+  t = await w.f.followTick(w.t);
+  assert.equal(t.failed.length, 0, JSON.stringify(t.failed));
+  assert.deepEqual({ ...status() }, { read: 1, total: 1, more: false, whole: true, phase: "done" });
+  const fetched = new Set(w.fetches.map((o) => o.captureRequest.locator));
+  for (let i = 0; i < ITEMS; i++) assert.ok(fetched.has(votesAddress(CLIENT, 8000 + i)), `item ${i}'s votes are read`);
+  /* a whole read waits for its cadence; the next day it is a new pass from the first page (the bytes unchanged: one fetch of the list) */
+  assert.equal(w.f.followDue(T0 + 120000), false);
+  const before = w.fetches.length;
+  w.t = T0 + DAY + 60000;
+  t = await w.f.followTick(w.t);
+  assert.equal(t.read[0].outcome, "unchanged");
+  assert.equal(w.fetches.length - before, 2, "the meetings list and the matters list, both unchanged");
 });

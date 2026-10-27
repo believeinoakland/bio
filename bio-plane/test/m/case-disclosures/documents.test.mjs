@@ -12,16 +12,20 @@ import { readFileSync } from "node:fs";
 import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, DOCUMENT_WORDS, DOCUMENT_STATES, documentRead } from "../../../src/case-disclosures/index.mjs";
 import { COPY_CLEANED_LABEL, OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { CLEAN_REFUSALS as DOC_CLEAN_REFUSALS } from "../../../src/doc-clean/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { copyReadStates } from "../case-carriage/fixtures.mjs";
+import { encryptedRefusal } from "../doc-clean/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const DOC5 = "INFO-2026-0005-e";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const COPY = "c".repeat(64), COPY2 = "d".repeat(64);
 const AT = "2026-09-28T01:00:00Z";
-/* doc-clean's refusals by name (its R3), as case-carriage R16 relays them in `refused.code` */
-const CLEAN_REFUSALS = ["ENCRYPTED", "EMBEDDED_FILE", "IMAGE_NOT_CLEANABLE", "HTML_EMBEDS_IMAGE", "NOT_A_CLEANABLE_FORMAT",
-                        "DOCUMENT_TOO_LARGE", "DOCUMENT_UNREADABLE"];
+/* doc-clean's refusals by name (its R3), as case-carriage R16 relays them in `refused.code`: every code its own table
+   declares (K3268: assembled from the module's declaration, never hand-listed) */
+const CLEAN_REFUSALS = Object.keys(DOC_CLEAN_REFUSALS);
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const wordOf = (key) => (Array.isArray(WORDS) ? WORDS : WORDS.words || Object.values(WORDS).find(Array.isArray)).find((w) => w && w.key === key);
 /* R6 (K2483): a member document's copy, as R6 answers it; R7's row drops the key */
@@ -54,7 +58,7 @@ test("R22: DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CL
   assert.ok(Object.isFrozen(DOCUMENT_WORDS));
   assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_NOT_CLEANABLE.translation, DOCUMENT_WORDS["document.refused.clean"]);
   assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_COPY_PENDING.translation, DOCUMENT_WORDS["document.refused.pending"]);
-  assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_COPY_UNDETERMINED.translation, "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written.");
+  assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_COPY_UNDETERMINED.translation, word("refusal.DOCUMENT_COPY_UNDETERMINED"));
   assert.ok(typeof COPY_CLEANED_LABEL === "string" && COPY_CLEANED_LABEL.length > 0 && COPY_CLEANED_LABEL !== OBSCURED_LABEL,
     "the label is case-carriage's own, not a photo's");
 });
@@ -106,7 +110,7 @@ test("R6 (pending): a member document whose copy is still being made is refused 
     { target: Q, materials: [{ ref: DOC, sha: a }, { ref: DOC2, sha: b }] },
     { target: Q2, materials: [{ ref: DOC, sha: a }] }]);
   assert.equal(r.refusals[0].document, `${DOC}, ${DOC2}`);
-  assert.ok(r.refusals[0].detail.includes(a) && r.refusals[0].detail.endsWith("Nothing was written."));
+  assert.ok(r.refusals[0].detail.includes(a) && r.refusals[0].detail.endsWith(word("consequences.nothing")));
   assert.deepEqual(r.materials.map((m) => [m.included, m.obscured]), [[false, null], [false, null]], "never whole");
   assert.deepEqual(judged(w, [Q, Q2], [Q]).refusals[0].pending.map((x) => x.target), [Q2], "only the load-bearing named");
   const s = judged(w, [Q, Q2], [Q, Q2]);
@@ -134,7 +138,7 @@ test("R6 (refused): a member document doc-clean refused, for every code it refus
       { target: Q, materials: [{ ref: DOC, sha: a, refused: code }, { ref: DOC2, sha: b, refused: code }] },
       { target: Q2, materials: [{ ref: DOC, sha: a, refused: code }] }], code);
     assert.equal(r.refusals[0].document, `${DOC}, ${DOC2}`);
-    assert.ok(r.refusals[0].detail.includes(code) && r.refusals[0].detail.endsWith("Nothing was written."), code);
+    assert.ok(r.refusals[0].detail.includes(code) && r.refusals[0].detail.endsWith(word("consequences.nothing")), code);
     assert.deepEqual(r.materials.map((m) => [m.included, m.obscured]), [[false, null], [false, null]], code);
     assert.deepEqual(r.materials.map((m) => m.document.refused.code), [code, code]);
     assert.deepEqual(w.snapshot(), before, `${code}: nothing written`);
@@ -146,12 +150,12 @@ test("R6 (refused): a member document doc-clean refused, for every code it refus
   }
 });
 
-test("R6 (undetermined): a document whose copy state cannot be read — a read that throws, refuses or answers nothing, case-carriage's own undetermined, an unknown state, copy with no SHA-256, refused with no code, or photo for a document whose marks say it is none — is refused DOCUMENT_COPY_UNDETERMINED, naming it, whichever chain reaches it, held whole or not; it fails closed: it is never included; it writes nothing", () => {
+test("R6 (undetermined): a document whose copy state cannot be read — a read that throws or answers nothing, case-carriage's own undetermined, an unknown state, copy with no SHA-256, refused with no code, or photo for a document whose marks say it is none — is refused DOCUMENT_COPY_UNDETERMINED, naming it, whichever chain reaches it, held whole or not; it fails closed: it is never included; it writes nothing", async () => {
+  const states = await copyReadStates();
   const reads = {
     throws: () => { throw new Error("down"); },
-    refuses: () => ({ ok: false, reason: "NO_SUCH_CAPTURE" }),
     nothing: () => null,
-    "case-carriage's undetermined": () => ({ state: "undetermined", copy: null, refused: null }),
+    "case-carriage's undetermined": () => states.undetermined.answer,
     "an unknown state": () => ({ state: "scrubbed", copy: null, refused: null }),
     "copy with no digest": () => ({ state: "copy", copy: "x", refused: null }),
     "copy with none": () => ({ state: "copy", copy: null, refused: null }),
@@ -250,9 +254,9 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: a, text_sha: held.text_sha, origin: `https://example.org/${DOC}`,
       archived_copy: w.cd.captureFacts(a).co_archive, included: false, rests_under: "load_bearing",
-      obscured: R22(COPY) },
+      title: `Document ${DOC}`, obscured: R22(COPY) },
     { ref: DOC2, kind: "document", sha: d, text_sha: reached.materials[1].held.text_sha, origin: null,
-      archived_copy: null, included: true, rests_under: "load_bearing", obscured: null }]);
+      archived_copy: null, included: true, rests_under: "load_bearing", title: `Document ${DOC2}`, obscured: null }]);
   assert.equal(out.materials.rows[0].archived_copy, "https://archive.example/web/a");
   const own = (ref) => out.materials.attestations.filter((x) => x.ref === ref && x.by_kind !== "co_attestation").map((x) => x.by_kind);
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");
@@ -290,7 +294,7 @@ test("R6, R7 over the real case-carriage (its R15, R16): a member document (no r
   const enc = w.doc(DOC3, {}, { text: "an encrypted file" });
   w.finding(Q2, [{ target: DOC3 }]);
   assert.deepEqual(judged(w, [Q2]).refusals.map((x) => x.reason), ["DOCUMENT_COPY_PENDING"], "queued by the read");
-  w.clean.answer = () => ({ ok: false, code: "ENCRYPTED", detail: "the file is encrypted" });
+  w.clean.answer = () => encryptedRefusal();
   await w.carriage.copyBatch({});
   r = judged(w, [Q2]);
   assert.deepEqual(r.refusals.map((x) => x.reason), ["DOCUMENT_NOT_CLEANABLE"]);

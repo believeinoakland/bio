@@ -39,8 +39,10 @@ test("R103 actionsOps publishes this module's own arms only: none for action-rec
     assert.equal(own[op], undefined, `${op} is not this module's arm`);
   const theirs = actionRecordsOps(w.a.records, url, null);
   for (const op of Object.keys(theirs)) assert.equal(typeof theirs[op], "function", `control: action-records serves ${op}`);
-  for (const op of ["actionmove", "actionlaws", "actionrisktier", "actioncorrespond", "actioncreate", "action", "actions"])
-    assert.equal(typeof own[op], "function", `control: ${op} is still this module's arm`);
+  /* the arms are this module's own map (R103); the acts R15 and R47 name are among them */
+  for (const op of Object.keys(own)) assert.equal(typeof own[op], "function", `control: ${op} is still this module's arm`);
+  for (const op of ["actionmove", "actionlaws", "actionrisktier", "actioncorrespond"])
+    assert.equal(typeof own[op], "function", `control: ${op} is still this module's act`);
   assert.equal(Object.keys(own).some((k) => k in theirs), false, "no op is routed twice");
 });
 

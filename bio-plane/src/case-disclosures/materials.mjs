@@ -8,6 +8,7 @@
  * publisher may not see is not followed and not listed (R17: sight at the act governs). */
 
 import { PHOTO_WORDS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** The material one leg reaches: the passage's own capture when the leg names a content row, else every capture its
  *  document registers. Answers `[{ref, kind, sha}]`; `kind` is `observation` for a member's authored words (provenance
@@ -18,7 +19,10 @@ function materialsOfLeg(leg, io) {
     ? io.rows(`SELECT capture_sha, bundle_id, authored FROM register WHERE capture_sha=?`, cap.capture_sha)
     : io.rows(`SELECT capture_sha, bundle_id, authored FROM register WHERE bundle_id=? ORDER BY capture_sha`, leg.target_id);
   if (cap && cap.capture_sha && !regs.length) return [{ ref: leg.target_id, kind: "document", sha: cap.capture_sha }];
-  return regs.map((r) => ({ ref: r.bundle_id, kind: Number(r.authored) === 1 ? "observation" : "document",
+  /* R34: a capture held in parts is one material, its whole (provenance R73's marks); its parts' rows are files of it. */
+  const parts = !cap && typeof io.registeredFor === "function"
+    ? new Set(io.registeredFor(leg.target_id).filter((r) => r.part_of).map((r) => r.capture_sha)) : new Set();
+  return regs.filter((r) => !parts.has(r.capture_sha)).map((r) => ({ ref: r.bundle_id, kind: Number(r.authored) === 1 ? "observation" : "document",
                             sha: r.capture_sha }));
 }
 
@@ -26,14 +30,19 @@ function materialsOfLeg(leg, io) {
  *  register's `(bundle_id, path)` exists, inline or by blob (`publishCase` is synchronous, `case-authoring` R18, and so is every service here, R23, so object storage is not
  *  asked). A document's extracted text is `case-grammar.extractedTextOf` over `extraction.unitsOf`'s units (its R17;
  *  K1315), held whole only when the index is `whole` and no unit was cut; `text_sha` is its SHA-256. An
- *  observation's text is its own bytes, so it has no separate text (`text_sha` null). Answers `{bytes, text, text_sha,
+ *  observation's text is its own bytes, so it has no separate text (`text_sha` null). (R34) A capture held in parts
+ *  (provenance R72: its register row is marked `whole`, no file of the bundle) holds its bytes through its parts: each part
+ *  `provenance.partsNamed` names is a file of the bundle. Answers `{bytes, text, text_sha,
  *  whole, missing}`, `missing` naming what is not held. */
 export function materialHeld(m, io) {
-  const reg = io.one(`SELECT bundle_id, path FROM register WHERE capture_sha=?`, m.sha);
+  const reg = io.one(`SELECT bundle_id, path, whole FROM register WHERE capture_sha=?`, m.sha);
+  const fileHeld = (b, p) => { const f = io.readFile(b, p); return !!(f && (typeof f.text === "string" || f.blobSha)); };
   let bytes = false;
   try {
-    const f = reg ? io.readFile(reg.bundle_id, reg.path) : null;
-    bytes = !!(f && (typeof f.text === "string" || f.blobSha));
+    if (reg && Number(reg.whole) === 1 && typeof io.partsNamed === "function") {
+      const named = io.partsNamed(reg.bundle_id, m.sha);
+      bytes = !!(named && named.state === "named" && named.parts.length && named.parts.every((p) => fileHeld(reg.bundle_id, p.file)));
+    } else bytes = reg ? fileHeld(reg.bundle_id, reg.path) : false;
   } catch { bytes = false; }
   if (m.kind === "observation")
     return { bytes, text: bytes, text_sha: null, whole: bytes, missing: bytes ? [] : ["text"] };
@@ -52,7 +61,9 @@ export function materialHeld(m, io) {
  *  `{copy, label, kind}` for a member document, `kind` case-carriage's marker as R6 handed it (R32; T47, N953), so the
  *  signed edition records which kind of copy it carries; R6's `label_key` is the reader's surface's and is not written. Its
  *  fingerprints, origin and archived copy stay the original's. `facts(sha)` is R2's read of a capture (grade,
- *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `registered(sha)` its register row,
+ *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `title(m)` the document's title as its
+ *  capture holds it (T51 fix round 4, C47; K4438: `null` when it holds none, and an observation's row is `null` without
+ *  asking), `registered(sha)` its register row,
  *  `member(m)` the attesting member's row or rows as R10 states them, `group` the producing group's slug. Rows, in the
  *  materials' order:
  *   - the attesting member's (`member`): the capturing member's signed accounts, or an observation's author, as their
@@ -60,29 +71,39 @@ export function materialHeld(m, io) {
  *   - its co-attestation (`co_attestation`), a timestamp and a co-archive, each where held (R2);
  *   - the project's (`project`): the register row holding it in the project's record, `recorded_in` its bundle;
  *   - the group's (`group`): one row whose signature is the literal `case`, the case document's own.
+ *  Where the same `ref` is on two or more of `materials` (captures of one source), each of its attestations also states its
+ *  capture's `sha` (G47; K4669), the join a reader makes; with one material to a `ref` none does.
  *  No new table and no new act holds the project's or the group's attestation. */
-export function materialRows(materials, { project, group, at, facts, origin, registered, member }) {
+export function materialRows(materials, { project, group, at, facts, origin, registered, member, title = () => null }) {
   const rows = [], attestations = [];
+  /* G47 (K4669, K4671, K4672): k captures of one source are k materials of one `ref`. Each of their attestations then
+     states its capture's `sha`, so a reader joins it to its own material and not to all k; a `ref` that occurs once
+     states none, and its document is byte for byte what it was. Counted over all the materials of this call: the body
+     and the front matter share that one array, and no reader counts. */
+  const perRef = new Map();
+  for (const m of materials) perRef.set(m.ref, (perRef.get(m.ref) || 0) + 1);
+  const shared = (m) => (perRef.get(m.ref) > 1 ? { sha: m.sha } : {});
   for (const m of materials) {
     const f = m.kind === "document" ? facts(m.sha) : null;
     rows.push({ ref: m.ref, kind: m.kind, sha: m.sha, text_sha: m.held.text_sha, origin: origin(m.sha),
                 archived_copy: f ? f.co_archive ?? null : null, included: m.included, rests_under: m.rests_under,
+                title: m.kind === "document" ? title(m) : null,
                 obscured: m.obscured ? { copy: m.obscured.copy, label: m.obscured.label,
                                          ...(typeof m.obscured.marked === "boolean" ? { marked: m.obscured.marked } : {}),
                                          kind: m.obscured.kind ?? null }
                   : null });
-    attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x })));
+    attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x, ...shared(m) })));
     if (f && f.timestamp_at)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: "timestamp", level: null, at: f.timestamp_at,
-                          signature: null, recorded_in: null });
+                          signature: null, recorded_in: null, ...shared(m) });
     if (f && f.co_archive)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: f.co_archive, level: null, at: null,
-                          signature: null, recorded_in: null });
+                          signature: null, recorded_in: null, ...shared(m) });
     const reg = registered(m.sha);
     if (reg)
       attestations.push({ ref: m.ref, by_kind: "project", by: project, level: null, at: reg.registered ?? null,
-                          signature: null, recorded_in: reg.bundle_id });
-    attestations.push({ ref: m.ref, by_kind: "group", by: group, level: null, at, signature: "case", recorded_in: null });
+                          signature: null, recorded_in: reg.bundle_id, ...shared(m) });
+    attestations.push({ ref: m.ref, by_kind: "group", by: group, level: null, at, signature: "case", recorded_in: null, ...shared(m) });
   }
   return { rows, attestations };
 }
@@ -155,31 +176,31 @@ const HEX64 = /^[0-9a-f]{64}$/i;
 export function photoRead(read) {
   const unread = (why) => ({ photo: null, unread: true, why });
   let a = null;
-  try { a = read(); } catch { return unread("the marks could not be read"); }
+  try { a = read(); } catch { return unread(word("case-disclosures.marks_read")); }
   if (!a || typeof a !== "object" || a.ok !== true)
-    return unread(a && typeof a.reason === "string" ? `the marks read answered ${a.reason}` : "the marks could not be read");
+    return unread(a && typeof a.reason === "string" ? word("case-disclosures.marks_read_answered", { reason: String(a.reason) }) : word("case-disclosures.marks_read"));
   if (a.photo === false) return { photo: false };
   if (a.photo !== true || !PHOTO_STATES.includes(a.state) || !Array.isArray(a.marks)
       || a.marks.some((m) => !m || typeof m !== "object" || !Array.isArray(m.areas)))
-    return unread("the marks read answered a shape it does not state");
+    return unread(word("case-disclosures.marks_read_answered_shape"));
   const standing = a.marks.filter((m) => m.withdrawn == null);
   const state = !standing.length ? "unchecked" : standing.some((m) => m.areas.length) ? "marked" : "nothing_to_obscure";
-  if (state !== a.state) return unread(`the marks read answered ${a.state} where the standing marks say ${state}`);
+  if (state !== a.state) return unread(word("case-disclosures.marks_read_answered_standing", { state: String(a.state), state_2: String(state) }));
   const copy = a.copy && typeof a.copy === "object" && typeof a.copy.sha256 === "string" && HEX64.test(a.copy.sha256)
     ? a.copy.sha256.toLowerCase() : null;
   const refused = a.refused && typeof a.refused === "object" && typeof a.refused.code === "string"
     ? { code: a.refused.code, detail: a.refused.detail ?? null } : null;
   if ((a.copy != null && !copy) || (a.refused != null && !refused))
-    return unread("the marks read answered a shape it does not state");
+    return unread(word("case-disclosures.marks_read_answered_shape"));
   if (state !== "unchecked" && !copy && !refused)
-    return unread(`the photo is checked (${state}) but holds neither a copy nor a refused cover`);
+    return unread(word("case-disclosures.photo_checked_holds", { state: String(state) }));
   const carried = state !== "unchecked" && !refused ? copy : null;
   /* R32 (T47; N953; `case-carriage` R22): a photo carried as its copy is answered with case-carriage's own `obscured`
      object, handed on whole, `kind` included; one that names another copy, another kind, or a `marked` its standing
      marks do not give is an answer R10 does not state */
   const obscured = carried ? obscuredRead(a.obscured, carried, "photo") : null;
   if (carried && (!obscured || obscured.marked !== (state === "marked")))
-    return unread("the marks read answered a copy with no obscured object R22 states for it");
+    return unread(localize("case-disclosures.materials.marks_read_answered_copy", "the marks read answered a copy with no obscured object R22 states for it"));
   return { photo: true, state, marks: a.marks, copy: carried, refused, ...(obscured ? { obscured } : {}) };
 }
 
@@ -209,22 +230,22 @@ export const DOCUMENT_STATES = Object.freeze(["public", "clean", "copy", "refuse
 export function documentRead(read) {
   const unread = (why) => ({ state: "undetermined", copy: null, refused: null, why });
   let a = null;
-  try { a = read(); } catch { return unread("the copy's state could not be read"); }
+  try { a = read(); } catch { return unread(word("case-disclosures.copy_state_read")); }
   if (!a || typeof a !== "object" || a.ok === false)
-    return unread(a && typeof a.reason === "string" ? `the copy's state read answered ${a.reason}` : "the copy's state could not be read");
-  if (!DOCUMENT_STATES.includes(a.state)) return unread("the copy's state read answered a shape it does not state");
-  if (a.state === "undetermined") return unread("case-carriage could not read the copy's state");
-  if (a.state === "photo") return unread("the copy's state read answered photo for a document that is no photo");
+    return unread(a && typeof a.reason === "string" ? word("case-disclosures.copy_state_read_answered", { reason: String(a.reason) }) : word("case-disclosures.copy_state_read"));
+  if (!DOCUMENT_STATES.includes(a.state)) return unread(word("case-disclosures.copy_state_read_answered_shape"));
+  if (a.state === "undetermined") return unread(word("case-disclosures.case_carriage_read"));
+  if (a.state === "photo") return unread(word("case-disclosures.copy_state_read_answered_photo"));
   if (a.state === "copy") {
-    if (typeof a.copy !== "string" || !HEX64.test(a.copy)) return unread("the copy's state read answered copy with no SHA-256");
+    if (typeof a.copy !== "string" || !HEX64.test(a.copy)) return unread(localize("case-disclosures.materials.copy_state_read_answered_copy", "the copy's state read answered copy with no SHA-256"));
     /* R32 (T47): its `obscured` object, `kind` "document", handed on whole */
     const obscured = obscuredRead(a.obscured, a.copy.toLowerCase(), "document");
     return obscured ? { state: "copy", copy: a.copy.toLowerCase(), refused: null, obscured }
-      : unread("the copy's state read answered copy with no obscured object R22 states for it");
+      : unread(localize("case-disclosures.materials.copy_state_read_answered_copy_obscured", "the copy's state read answered copy with no obscured object R22 states for it"));
   }
   if (a.state === "refused")
     return a.refused && typeof a.refused === "object" && typeof a.refused.code === "string" && a.refused.code
       ? { state: "refused", copy: null, refused: { code: a.refused.code, detail: a.refused.detail ?? null } }
-      : unread("the copy's state read answered refused with no code");
+      : unread(word("case-disclosures.copy_state_read_answered_refused"));
   return { state: a.state, copy: null, refused: null };
 }

@@ -102,6 +102,7 @@ test("R25 render_deferral: for a render row expired, or requested with a code, {
   assert.equal(R[held].render_deferral.state, "expired");
   assert.equal(R[held].render_deferral.check, "C-83.4");
   /* a code no family catalogues answers null check and translation */
+  // fixtures-generic: NOT_A_CODE
   w.st.sql.exec(`UPDATE capture_requests SET state='requested', code='NOT_A_CODE' WHERE request=?`, held);
   assert.deepEqual(read()[held].render_deferral, { state: "deferred", content: "undetermined", code: "NOT_A_CODE", check: null, translation: null });
 });

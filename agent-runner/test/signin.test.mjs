@@ -7,6 +7,7 @@ import { readManifest } from '../src/manifest.mjs';
 import { spawn as nodeSpawn } from 'node:child_process';
 import { signinOf, SETUP_ARGS, COLUMNS, anthropicAddress, codeOk, tokenIn, addressIn } from '../src/signin.mjs';
 import { screen } from '../src/screen.mjs';
+import { says } from '../src/says.mjs';
 
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const M = 'member-7d1e', OTHER = 'member-0b42';
@@ -88,7 +89,7 @@ test('R17 R31 an address not https: on an Anthropic sign-in host is never answer
   try {
     const a = await silent.post('/signin', { member: M });
     assert.deepEqual([a.status, a.body.code], [502, 'SIGNIN_UNAVAILABLE']);
-    assert.match(a.body.detail, /no address within 30 seconds/);
+    assert.equal(a.body.detail, says('NO_ADDRESS'));
     memberWords(a.body, 'silent'); details.add(a.body.detail);
     assert.equal(silent.signin.waiting, null);
   } finally { await silent.stop(); }
@@ -96,7 +97,7 @@ test('R17 R31 an address not https: on an Anthropic sign-in host is never answer
   try {
     const a = await exits.post('/signin', { member: M });
     assert.deepEqual([a.status, a.body.code], [502, 'SIGNIN_UNAVAILABLE']);
-    assert.match(a.body.detail, /stopped before it gave an address/);
+    assert.equal(a.body.detail, says('EXITED'));
     assert.ok(!('address' in a.body));
     memberWords(a.body, 'exits'); details.add(a.body.detail);
   } finally { await exits.stop(); }
@@ -107,7 +108,7 @@ test('R17 R31 an address not https: on an Anthropic sign-in host is never answer
     const s = signinOf({ root: none.signinRoot, binary: null });
     const a = await s.start(M);
     assert.deepEqual([a.status, a.body.code], [502, 'SIGNIN_UNAVAILABLE']);
-    assert.match(a.body.detail, /Claude Code is missing/);
+    assert.equal(a.body.detail, says('NO_BINARY'));
     details.add(a.body.detail);
     assert.equal(a.log.binary_present, false);
   } finally { await none.stop(); }
@@ -179,15 +180,21 @@ test('R18 the code and its line end arrive as two writes, the line end after the
 });
 
 test('R27 R18 a refused code, no token in time, or a token of another shape answers SIGNIN_REFUSED with no token', async () => {
-  for (const [mode, code, words] of [['refuses', GOOD_CODE, /Claude did not accept the code \(OAuth error: Request failed/],
-    ['ok', 'no-state-part', /OAuth error: Invalid code/], ['long-token', GOOD_CODE, /not with a token/], ['bad-token', GOOD_CODE, /not with a token/]]) {
+  // the binary's own last words are in the log line's `said_head`; the rest of the detail is the carried row (R41)
+  const detailOf = (r, a, mode) => {
+    if (mode === 'long-token' || mode === 'bad-token') return says('TOKEN_SHAPE');
+    const said = r.lines.filter((l) => l.event === 'signin.runner' && l.step === 'code').at(-1).said_head;
+    assert.ok(said.length > 0, `${mode}: the binary said something`);
+    return says('REFUSED', { v1: ` (${said})` });
+  };
+  for (const [mode, code] of [['refuses', GOOD_CODE], ['ok', 'no-state-part'], ['long-token', GOOD_CODE], ['bad-token', GOOD_CODE]]) {
     const r = await runner(mode);
     try {
       await r.post('/signin', { member: M });
       const a = await r.post('/signin/code', { member: M, code });
       assert.deepEqual([a.status, a.body.code], [409, 'SIGNIN_REFUSED'], mode);
       assert.ok(!('token' in a.body) && !('valid_for' in a.body), `${mode}: no token`);
-      assert.match(a.body.detail, words, mode);
+      assert.equal(a.body.detail, detailOf(r, a, mode), mode);
       assert.ok(!a.body.detail.includes(code.split('#')[0]) && !a.body.detail.includes(TOKEN), `${mode}: neither the code nor a token in the detail`);
       memberWords(a.body, mode);
       assert.equal(a.waiting, '0');
@@ -199,7 +206,7 @@ test('R27 R18 a refused code, no token in time, or a token of another shape answ
     await hangs.post('/signin', { member: M });
     const a = await hangs.post('/signin/code', { member: M, code: GOOD_CODE });
     assert.equal(a.body.code, 'SIGNIN_REFUSED');
-    assert.match(a.body.detail, /no answer within 60 seconds/);
+    assert.equal(a.body.detail, says('NO_OUTCOME'));
   } finally { await hangs.stop(); }
   // an attempt waits for its code at most its wait (10 minutes; shortened here), then is ended
   const late = await runner('ok', { code: 200 });

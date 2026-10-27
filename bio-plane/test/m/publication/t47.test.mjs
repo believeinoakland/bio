@@ -5,7 +5,7 @@
    gives them. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planeWorld as world, infoMd, V, NOW, sha } from "./fixture.mjs";
+import { planeWorld as world, infoMd, V, NOW, sha, absentStandard } from "./fixture.mjs";
 
 const CASE = "CASE-2026-0001", STD = "STD-2026-0001-policy", CLERK = "ENT-2026-0001", C1 = "a1".repeat(32);
 const TIMELINE = [
@@ -21,7 +21,7 @@ const standardsOf = () => ({
     ? { ok: true, id, cite: "AI 4.12 §3", designation: "AI 4.12", edition: "2024", access: "free",
         owner: { label: "Public Works" }, requires: [C1], texts: [{ content_id: C1 }],
         requires_quoted: [{ content_id: C1, text: "Each request is logged." }] }
-    : { ok: false, reason: "NO_SUCH_STANDARD" }),
+    : absentStandard(id)),
   bindsAt: ({ standard, body }) => ({ ok: true, state: standard === STD && body === CLERK ? "binds" : "undetermined" }),
 });
 const entitiesOf = () => ({ readEntity: ({ entityId }) => ({ ok: true, found: true, entity: { label: "City Clerk", entity_id: entityId } }) });

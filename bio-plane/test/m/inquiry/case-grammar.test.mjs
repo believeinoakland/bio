@@ -18,6 +18,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { checkInquiryEntry, checkInquiryBasis } from "../../../src/inquiry/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { world, inquiryMd, V } from "./fixture.mjs";
 
 const errs = (fn) => { const f = []; fn(f); return f.filter((x) => x.severity === "error"); };
@@ -72,8 +73,8 @@ test("R2 the refusal says where the case's facts live and how to repair it; an e
     assert.match(x.message, /CASE DOCUMENT a member reviews and ratifies/, "multifinding (a2): it says where those facts live now");
     assert.match(x.message, /signed ONCE, in the CASE DOCUMENT/, "multifinding REC-47 isolated: signed once, not N times");
     const k = /name a case \((\w+)\)/.exec(x.message)[1];
-    assert.deepEqual(x.repairs, [`remove ${k} from this document's frontmatter`,
-                                 "the case states these facts once, in its own signed document"]);
+    assert.deepEqual(x.repairs, [localize("inquiry-grammar.grammar.remove_k_from_this_documents", "remove {k} from this document's frontmatter", { k }),
+                                 localize("inquiry-grammar.grammar.the_case_states_these_facts", "the case states these facts once, in its own signed document")]);
   }
   /* edge: a key present but empty, null or the word null states nothing, so it names no case */
   for (const v of ['""', "null", "''"]) {
@@ -258,9 +259,9 @@ test("R8 the grounds gate: a machine's spelling of asserted_by is refused C-2.8 
     const rows = [row("charter", { asserted_by: spelling }), row("code")];
     const r = w.try(LEGS, rows);
     assert.deepEqual([r.ok, r.reason, checksOf(r)], [false, "BASIS_REFUSED", ["C-2.8"]], spelling);
-    const want = `grounds[0].asserted_by '${spelling}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's`;
+    const want = localize("inquiry-grammar.grammar.grounds_i_asserted_by_asserted", 'grounds[{i}].asserted_by \'{asserted_by}\' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine\'s', { i: "0", asserted_by: spelling });
     assert.equal(r.findings[0].detail, want);
-    assert.deepEqual(r.findings[0].repairs, ["name the member asserting that this ground is independently sufficient"]);
+    assert.deepEqual(r.findings[0].repairs, [localize("inquiry-grammar.grammar.name_the_member_asserting_that", "name the member asserting that this ground is independently sufficient")]);
     assert.equal(w.record.head(r.id), null, "the refused write landed nothing");
     const pure = errs((f) => checkInquiryBasis(fmWith(LEGS, rows), f, null, null));
     assert.deepEqual(pure.map((x) => [x.check, x.message]), [["C-2.8", want]], "the pure arm is the same finding");
@@ -314,15 +315,18 @@ test("R8 a grounds[] block over NO basis is refused at the write and by the pure
   assert.equal(w.text("INQ-2026-1009-e"), before);
 });
 
-test("R8 the default is AND: a label with no grounds[] block, or a half-labelled basis, is refused at the write", () => {
+test("R8 the default is AND: a label with no grounds[] block is refused at the write, and an unlabelled supporting leg beside a ground is a necessary leg", () => {
   const w = groundsWorld();
   const noBlock = w.try(LEGS, null);
   assert.deepEqual([noBlock.ok, noBlock.reason, checksOf(noBlock)], [false, "BASIS_REFUSED", ["C-2.8"]]);
   assert.match(noBlock.findings[0].detail, /^basis legs 0, 1 name a ground with no grounds\[\] block: .*affirmative, attributed act/);
   assert.equal(w.record.head(noBlock.id), null, "the refused write landed nothing");
+  /* a supporting leg without a label beside a labelled ground is a necessary leg (inquiry-grammar R68), no finding */
   const half = w.try([{ target: DA, ground: "charter" }, { target: DB }], [row("charter")]);
-  assert.deepEqual([half.ok, half.reason], [false, "BASIS_REFUSED"]);
-  assert.match(detailsOf(half), /1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all/);
+  assert.equal(half.ok, true, JSON.stringify(half).slice(0, 300));
+  /* control: a leg that cuts against never names a ground */
+  const cut = w.try([{ target: DA, ground: "charter" }, { target: DB, role: "cuts_against", ground: "charter" }], [row("charter")]);
+  assert.deepEqual([cut.ok, cut.reason], [false, "BASIS_REFUSED"]);
   /* the pure arm names the same document */
   assert.ok(errs((f) => checkInquiryBasis(fmWith(LEGS), f, null, null)).some((x) => /no grounds\[\] block/.test(x.message)));
 });

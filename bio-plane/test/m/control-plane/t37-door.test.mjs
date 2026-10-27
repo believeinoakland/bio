@@ -4,11 +4,12 @@
    `AGENT_WORKER` binding that records each request it is sent and a stand-in object `draft` (plane's `draftOnObject`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { call, opCalls, FORGED } from "./harness.mjs";
+import { O, call, opCalls, FORGED } from "./harness.mjs";
 import { ok, callers, routesForSessions } from "./door-routes.mjs";
 
-const TRANSLATION_OPS = ["translationgrant", "translationadopt", "translationconfirm", "translationrevert", "translationmark",
-                         "translations", "interfacewords"];
+/* instance-setup's translation ops (R66), as op-declarations declares them for it; `translationdraft` is R57's */
+const TRANSLATION_OPS = Object.keys(O.OP_FAMILIES["instance-setup"].kinds)
+  .filter((op) => (op.startsWith("translation") && op !== "translationdraft") || op === "interfacewords");
 const PHOTO_OPS = ["obscuremark", "photomarks"];
 
 /* The stand-in binding: records each request (its path and parsed body) and answers as `reply(path, body)` says. */
@@ -156,7 +157,7 @@ test("R2, R32 (T47; K3167; signin-door R5; answer-envelope C-69.7): `signintrace
    owner's record. */
 function draftWorld({ drafted, status = 200, recordAnswer } = {}) {
   const WORDS = [{ key: "nav.home", en: "Home", note: null, means: null, protected: false },
-                 { key: "nav.cases", en: "Cases", note: "the group's cases", means: "Cases the group has made", protected: true }];
+                 { key: "nav.cases", en: "Cases", note: "the team's cases", means: "Cases the group has made", protected: true }];
   const asked = [];
   const c = callers({ answer: (q) => {
     if (q.route === "translationdraft")
@@ -189,13 +190,13 @@ test("R57 (T37; N669, K2201; instance-setup R67; agent-worker R68–R70): `trans
     assert.deepEqual([a.op, a.direction, a.language, a.words], ["translationdraft", "to_language", "es", WORDS], s.name);
     for (const k of ["told", "act", "field", "firsthand", "grant"]) assert.equal(Object.hasOwn(a, k), false, `${s.name}: no ${k}`);
     const [first] = opCalls(w.env).filter((c) => c.route === "translationdraft");
-    assert.deepEqual([first.params.by, first.params.viewer], [s.by, s.viewer], `${s.name}: the owner's stamps`);
+    assert.deepEqual([first.params.by, first.params.viewer], [s.by.replace(/^member:/, ""), s.viewer], `${s.name}: the owner's stamps (by the bare member id, store-request R7)`);
     const usage = opCalls(w.env).filter((c) => c.route === "askusage");
     assert.equal(usage.length, 1);
     assert.deepEqual([usage[0].params.viewer, usage[0].body], [s.viewer, { mode: "draft", usage: { input_tokens: 5 }, calls: 1 }]);
     const rec = opCalls(w.env).filter((c) => c.route === "translationdraftrecord");
     assert.equal(rec.length, 1);
-    assert.deepEqual([rec[0].params.by, rec[0].params.viewer], [s.by, s.viewer]);
+    assert.deepEqual([rec[0].params.by, rec[0].params.viewer], [s.by.replace(/^member:/, ""), s.viewer]);   /* the hand-back carries the owner's stamps (by: the bare member id) */
     assert.deepEqual(rec[0].body.draft, { words: [{ key: "nav.home", text: "Inicio" }] });
     /* K2238 (3d): instance-setup's hand-back body, the caller's asked `keys` beside the owner's words and the draft */
     assert.deepEqual(rec[0].body, { direction: "to_language", language: "es", keys: ["nav.home", "nav.cases"], words: WORDS,
@@ -208,6 +209,7 @@ test("R57 (T37; N669, K2201; instance-setup R67; agent-worker R68–R70): `trans
 });
 
 test("R57 (T37): a translation draft that ends without one (an ending agent-worker names, an unbound or silent member) is answered as given, its status kept, and nothing is recorded; the grant is never answered", async () => {
+  // fixtures-own: input the endings are the draft the object hands the door; the door must relay each as given, status kept
   for (const [drafted, status, reason] of [[{ ok: false, code: "stopped", detail: "the model stopped", grant: null }, 200, undefined],
                                            [{ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "none", grant: null }, 503, "AGENT_WORKER_UNBOUND"],
                                            [{ ok: false, reason: "AGENT_WORKER_SILENT", detail: "none", grant: "g-secret" }, 502, "AGENT_WORKER_SILENT"]]) {

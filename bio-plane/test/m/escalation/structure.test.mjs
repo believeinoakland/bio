@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, OFFICE, DAY, ms } from "./fixture.mjs";
 import { ESCALATION_CHECKS, TIMELINE_KINDS } from "../../../src/escalation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
 const attach = (w, action, extra = {}) => w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action,
@@ -78,7 +79,7 @@ test("R12 an oversight or audit request lands on a line held on the attachment's
   const open = w.say("appoints", harbour, w.clerk, { from: "2015-01-01" });
   const doubt = refusedFor(act(harbour), "oversight_request", "an undetermined line");
   assert.deepEqual(doubt.undetermined.map((u) => [u.line.line_id, u.line.kind]), [[open, "appoints"]]);
-  assert.match(doubt.undetermined[0].why, /no end is stated/);
+  assert.equal(doubt.undetermined[0].why.key, "civil-time.end_stated");
   /* a held line, direct: it lands, over the flag, and the read names the line with both grade axes apart */
   const direct = w.say("oversees", harbour, w.clerk);
   const a1 = act(harbour);
@@ -227,10 +228,10 @@ test("R30 escalation registers once with events.registerEventSource at start; fo
   const label = (k) => all.items.find((x) => x.kind === k).label;
   assert.equal(label("open"), `Escalation ${w.E} opened at stage 1 (documentation)`);
   assert.equal(all.items.filter((x) => x.kind === "advance")[0].label, `Escalation ${w.E} advanced from stage 1 (documentation) to stage 2 (notification)`);
-  assert.equal(label("evaluate"), `A response evaluated in escalation ${w.E}: denied`);
+  assert.equal(label("evaluate"), word("escalation.response_evaluated_escalation", { id: w.E, reading: "denied" }));
   assert.equal(label("decline"), `Escalation ${w.E}: the move from stage 5 (legal_tools) to stage 7 (political_accountability) declined for now`);
   assert.equal(label("end"), `Escalation ${w.E} ended`);
-  assert.equal(label("stopped_pursuing"), `Escalation ${w.E}: the group stopped pursuing it at stage 5 (legal_tools)`);
+  assert.equal(label("stopped_pursuing"), `Escalation ${w.E}: the team stopped pursuing it at stage 5 (legal_tools)`);
   assert.equal(label("reopened"), `Escalation ${w.E} reopened at stage 5 (legal_tools)`);
   assert.ok(all.items.filter((x) => ["stopped_pursuing", "reopened"].includes(x.kind)).every((x) => x.public === true), "outward acts");
   assert.equal(JSON.stringify(all.items).includes("SECRET"), false, "R30: never the reason");
@@ -267,12 +268,12 @@ test("R30 over the real events: escalation is registered in the timeline's \"wha
   opened(w);
   const t = w.ev.timeline({ set: [w.clerk], viewer: V("bob") });
   assert.equal(t.ok, true, JSON.stringify(t).slice(0, 300));
-  assert.equal(t.ours.label, "what we did");
+  assert.equal(t.ours.label, word("screen.timeline.lane.ours"));
   const mine = t.ours.sources.find((s) => s.source === "escalation");
   assert.ok(mine, JSON.stringify(t.ours).slice(0, 300));
   assert.equal(mine.error, undefined);
   assert.ok(Array.isArray(mine.items));
-  assert.equal(t.world.label, "what they did");
+  assert.equal(t.world.label, word("screen.timeline.lane.world"));
   const again = w.ev.registerEventSource("escalation", () => []);
   assert.deepEqual([again.ok, again.reason], [false, "LISTENER_DECLARED"]);
   void DAY;
@@ -285,7 +286,7 @@ test("R29 a T33 act (conformance R25) is worded from its event: its kind and its
     [{ start: "2026-03-01T00:00:00Z", end: "2026-04-01T00:00:00Z", precision: "month", zone: "America/Halifax" }, null,
      "between 2026-03-01T00:00:00Z and 2026-04-01T00:00:00Z (to the month, America/Halifax)"],
     [{ start: null, end: "2026-03-05T12:00:00Z", precision: "minute" }, null, "on or before 2026-03-05T12:00:00Z (to the minute)"],
-    [null, null, "at no date the record holds (placed nowhere; undetermined)"],
+    [null, null, word("escalation.date_record_holds")],
     ["undetermined", "cache stale", "at a date that is undetermined (cache stale)"],
   ];
   for (const [when, why, words] of cases) {

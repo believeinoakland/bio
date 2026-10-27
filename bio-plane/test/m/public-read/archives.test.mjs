@@ -23,6 +23,7 @@ import { serialiseContainer } from "../../../src/container.mjs";
 import { crc32 } from "../../../src/ooxml.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, caseFileManifestCheck, caseFilePath } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -129,7 +130,7 @@ const blobFile = (w, bundleId, path, blob, bytes) =>
                 bundleId, path, blob, bytes, blob);
 const unpacked = (container, s) => ({ file: `snapshots/zip-${container.archive_sha256}-${container.index}`,
   locator: `https://example.org/a.zip#zip:${container.index}`, retrieved: NOW, authority_state: "undetermined",
-  authority_basis: "a file cut out of an archive", capture: { method: "unpacked", grade: "B", actor_class: "daemon",
+  authority_basis: word("acquisition.authority_basis.file_cut_out", { at: NOW }), capture: { method: "unpacked", grade: "B", actor_class: "daemon",
   sha256: s, encoding: "binary", bytes: container.uncompressed }, container, origin: { kind: "named_request" } });
 /* An archive held in the evidence store on its own bundle, its token beside it, its provenance naming the token; `entry`
    is the archive's own entry when it is itself a member. Its bytes and token are put in the published bucket, as
@@ -161,7 +162,7 @@ function holdMember(w, id, text, container) {
   return sha(text);
 }
 /* The case edition over F, resting on `materials`, signed, F published, F's bytes in the bucket; assembled. */
-async function publish(w, env, materials, attestations = []) {
+async function publish(w, env, materials, attestations = [], { assemble = true } = {}) {
   w.member("olive");
   const proj = w.project("Parks", "olive");
   w.inquiry(F, { legs: materials.map((m) => ({ target: m.ref })) });
@@ -171,6 +172,7 @@ async function publish(w, env, materials, attestations = []) {
   assert.equal(signed.ok, true, JSON.stringify(signed).slice(0, 400));
   assert.equal(w.signFinding(F).ok, true);
   env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(w.text(F)));
+  if (!assemble) return null;
   const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio",
                                             cs: w.p.caseEditionState(CASE, 1, "parks-group"), via: "test" });
   assert.equal(typeof out.manifest_sha, "string", JSON.stringify(out).slice(0, 400));
@@ -282,19 +284,27 @@ test("R32 a member of a nested archive carries each record and archive outward t
   assert.deepEqual(out.unheld.map((u) => u.what), ["extracted_text"], "nothing of the chain is unheld (the fixture states no extracted text)");
 });
 
-test("R32 bytes that do not hash to the digest registered are not carried and are named in unheld; a material that is not a member carries neither file", async () => {
+test("R32 bytes that do not hash to the digest registered are not carried and are named in unheld; a material that is not a member carries neither file; (G54) no case file is recorded while that archive is missing", async () => {
   const { w, env, archiveSha, memberSha } = scene();
   env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new TextEncoder().encode("not the archive"));
   promote(w, PLAIN, [{ file: "snapshots/plain.txt", capture: { method: "acquire", grade: "B", sha256: sha("plain words"), bytes: 11 } }],
           [{ path: "snapshots/plain.txt", text: "plain words", register: true }]);
   w.receipt(sha("plain words"));   // (T39) fetched by this copy (`provenance` R62), so carried whole
-  const { m, out } = await publish(w, env, [docRow(MEM, memberSha), docRow(PLAIN, sha("plain words"))]);
+  await publish(w, env, [docRow(MEM, memberSha), docRow(PLAIN, sha("plain words"))], [], { assemble: false });
+  const facts = await w.read("casefilefacts", { caseId: CASE, edition: 1 });
+  const read = async (x) => { const o = await env.PUBLISHED.get(`bio/published/${x}`); return o ? new Uint8Array(await o.arrayBuffer()) : null; };
+  const built = await buildCaseFile({ facts, group: "parks-group", read });
+  const m = built.manifest, out = built;
   assert.deepEqual(caseFileManifestCheck(m), []);
   assert.equal(pathOf(m, "archive", MEM).length, 0, "the wrong bytes are never carried under the archive's name");
   assert.equal(pathOf(m, "container", MEM).length, 1, "the record, held at its digest, still travels");
   assert.deepEqual(out.unheld.filter((u) => u.what === "archive"), [{ ref: MEM, sha: archiveSha, what: "archive" }]);
   assert.deepEqual([pathOf(m, "archive", PLAIN), pathOf(m, "container", PLAIN)], [[], []], "no member, neither file");
   assert.ok(m.files.some((f) => f.path === caseFilePath("document", PLAIN)), "the plain material itself is carried");
+  /* G54: the assembly records nothing while a material is missing, and states it */
+  const stated = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio", cs: w.p.caseEditionState(CASE, 1, "parks-group"), via: "test" });
+  assert.deepEqual([stated.ok, stated.code, stated.step], [false, "MATERIAL_MISSING", "materials"]);
+  assert.equal(w.row(`SELECT manifest_sha FROM published_cases WHERE case_id=?`, CASE).manifest_sha, null);
   /* negative control: with the right bytes back, the archive travels */
   const w2 = scene();
   const again = await publish(w2.w, w2.env, [docRow(MEM, w2.memberSha)]);
@@ -323,7 +333,7 @@ test("R33 the case file carries the edition's criteria as one file of kind crite
 test("R33 an edition carrying criteria rows carries them whole in the criteria file", async () => {
   const { w, env, memberSha } = scene();
   const rows = [{ standard: "STD-2026-0001-policy", portion: "s.3", body: "ENT-2026-0001", binds: true,
-                  label: "Standard · binds City Clerk", access: "free", access_words: "Free to read", passages: [] }];
+                  label: "Standard · binds City Clerk", access: "free", access_words: word("label.standardaccess.free"), passages: [] }];
   const orig = w.signCase.bind(w);
   w.signCase = (...a) => { const r = orig(...a); w.st.sql.exec(`UPDATE published_cases SET criteria=? WHERE case_id=?`, JSON.stringify(rows), CASE); return r; };
   const { m, read } = await publish(w, env, [docRow(MEM, memberSha)]);

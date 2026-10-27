@@ -13,6 +13,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { list as heldProfiles, combine } from "../../../../jurisdictions/index.mjs";
 import { planeEntry } from "../capture-requests/plane-world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 /* R12's requested address, at a host the governor holds (below) */
@@ -103,7 +104,7 @@ async function promoteReading(id, captureSha, ref, token) {
   const doc = { file, locator: loc, retrieved: C, authority_state: "undetermined",
     authority_basis: `a test fixture: no authority was asserted and none is determined; recorded ${C}`,
     origin: { kind: "named_request" },
-    capture: { method: "bio-plane acquire, https fetch, hashed at receipt", grade: "B", actor_class: "session",
+    capture: { method: "fixture-capture", grade: "B", actor_class: "session",
                sha256: captureSha, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: C,
                entities: [{ ref, kind: "ordinance", key: ref.split(":")[1], label: `Ordinance ${ref}` }] } };
@@ -212,7 +213,7 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
     "produced_by:", "  mode: agent", "  capability_tier: high", "group: a-group", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "", `What does ${INQ} rest on?`, "",
-    "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+    word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
     `### Session ${C} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
   const pr = await POST(`op=promote&token=${RUTH}`, { bundleId: INQ, base: null, snapKey: `${INQ}-s`, register: [],
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],

@@ -36,8 +36,9 @@ import { publicationOf } from "../publication/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { PUBLISH_SCHEDULE_DECLARATIONS, migratePublishSchedule } from "./schema.mjs";
 import * as schedule from "./schedule.mjs";
+import { localize } from "../setup-words/index.mjs";
 
-export { SCHEDULED_EDITIONS_MAX, SCHEDULE_STATES, SCHEDULED_CHECK_UNAVAILABLE } from "./schedule.mjs";
+export { SCHEDULED_EDITIONS_MAX, SCHEDULE_STATES, SCHEDULED_CHECK_UNAVAILABLE, CASE_FILE_MAX, CASE_FILE_CODE_MAX } from "./schedule.mjs";
 export { PUBLISH_SCHEDULE_SCHEMA, PUBLISH_SCHEDULE_TABLES, PUBLISH_SCHEDULE_DECLARATIONS } from "./schema.mjs";
 export { PUBLISH_SCHEDULE_CHECKS } from "./checks.mjs";
 
@@ -70,7 +71,9 @@ export class PublishSchedule {
   /* ---------------------------------------------------------------- R2, R6: the registrations */
 
   /** R2 (K1790): `ratification` fills, once at start, the one publisher of a waiting edition:
-   *  `publishScheduled(entry, now)` → `{published: true, published_at}` or `{stopped: [{code, translation}]}`. Called as
+   *  `publishScheduled(entry, now)` → `{published: true, published_at, after: {containers}}` or
+   *  `{stopped: [{code, translation}]}`; `containers` is `[{case, edition, built, code?}]`, one per case file the publisher
+   *  assembled (G54), stored at settle and stated as `case_file_at_settle`; an answer without it states `unknown`. Called as
    *  `registerScheduledPublisher(publisher)` or `registerScheduledPublisher(module, publisher)`; a second registration is
    *  refused `PROVIDER_DECLARED`, one without the door `PROVIDER_MALFORMED`. With none, a due edition is stopped
    *  `SCHEDULED_CHECK_UNAVAILABLE` and never published unchecked. */
@@ -81,7 +84,7 @@ export class PublishSchedule {
       return { ok: false, reason: "PROVIDER_MALFORMED", detail: "the scheduled publisher gives the door publishScheduled" };
     if (this.#publisher)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#publisher.module,
-               detail: `the scheduled publisher is already registered by ${this.#publisher.module}` };
+               detail: localize("publish-schedule.index.the_scheduled_publisher_is_already", "the scheduled publisher is already registered by {module}", { module: String(this.#publisher.module) }) };
     this.#publisher = { module, publishScheduled: pub.publishScheduled };
     return { ok: true, module };
   }
@@ -168,3 +171,12 @@ export function publishScheduleOps(ps, url, body) {
                                                   limit: q("limit"), viewer: q("viewer") || "" }),
   };
 }
+
+/* R12 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  publishatcancel: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reversible", description: localize("publish-schedule.declared.publishatcancel", "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time"),
+    fields: { accepts: ["case","edition"], requires: ["case","edition"] } },
+  publishatmove: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "irreversible", description: localize("publish-schedule.declared.publishatmove", "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time"),
+    fields: { accepts: ["case","edition","at"], requires: ["case","edition","at"] } },
+});

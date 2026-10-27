@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 # No package's install or lifecycle script runs at build (R16): the lock holds none that needs one.
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
-COPY src/entry.mjs src/runner.mjs src/ws.mjs src/env.mjs src/signin.mjs src/screen.mjs src/waits.mjs ./src/
+COPY src/entry.mjs src/runner.mjs src/ws.mjs src/env.mjs src/signin.mjs src/screen.mjs src/waits.mjs src/says.mjs src/says-words.mjs ./src/
 # The member's sign-in (R17-R21, R27) runs the installed binary's own `setup-token`, unchanged, through util-linux
 # `script`, which the base carries (bsdutils): nothing is installed or changed for it (R16, R22).
 # Nothing of the image is writable to the runner but the temporary directory each conversation or sign-in attempt

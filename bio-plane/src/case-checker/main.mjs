@@ -3,20 +3,18 @@
  * Bundled with `checkCaseFile` and nothing else into one file (`./build-program.mjs`), it runs offline with nothing to
  * install: `node case-checker.mjs <part> [<part> ...] [--document <file> ...] [--keys <file>] [--lens <lens>]`. It reads the files a
  * person names, runs the same `checkCaseFile` Civicsmith runs, and prints each finding's result first, then the whole
- * answer as JSON; a departure in how the case uses its standards (R26) is also printed as a sentence, from the words the program
- * carries as data (`./says-words.mjs`). `--keys` names a file of the group's published keys, one OpenSSH public key per line. `--lens` (R23)
+ * answer as JSON; a departure in how the case uses its standards (R26) is also printed as a sentence, from the word rows the program carries as data. `--keys` names a file of the group's published keys, one OpenSSH public key per line. `--lens` (R23)
  * is `as_published`, `removed`, or a file holding a reader's own lens as JSON, `{statements, applications}`. It makes no
  * network request. Its exit status is 0 when the check ran, whatever the results, and 2 when it could not read its
  * arguments. */
 
 import { checkCaseFile, RESULT_WORDS } from "./check.mjs";
-import { SAYS_WORDS } from "./says-words.mjs";
+import { word, hasWord, localize } from "../setup-words/index.mjs";
 
-/** R26: a departure's `says` as a sentence: the English the program carries for its key, each `{name}` filled from `vars`.
+/** R26: a departure's `says` as a sentence: the English `setup-words` holds for its key, each `{name}` filled from `vars`.
  *  Null when the program holds no words for the key. */
 const sentenceOf = (says) => {
-  const en = says && Object.hasOwn(SAYS_WORDS, says.key) ? SAYS_WORDS[says.key] : null;
-  return en === null ? null : en.replace(/\{([A-Za-z0-9_]+)\}/g, (_, n) => String(says.vars?.[n] ?? ""));
+  try { return says && hasWord(says.key) ? word(says.key, says.vars) : null; } catch { return null; }
 };
 
 /** R13: the program, given its arguments and a way to read a file; answers the text it prints and its exit status. */
@@ -37,7 +35,7 @@ export async function runProgram(argv, readFile) {
       else if (a === "--help" || a === "-h") return { text: usage + "\n", status: 0 };
       else parts.push(await readFile(a));
     } catch (e) {
-      return { text: `could not read ${argv[i] ?? "an argument"}: ${String(e && e.message ? e.message : e)}\n${usage}\n`, status: 2 };
+      return { text: word("case-checker.text.read", { path: argv[i] ?? localize("case-checker.main.an_argument", "an argument"), error: String(e && e.message ? e.message : e), detail: usage }) + "\n", status: 2 };
     }
   }
   if (!parts.length) return { text: usage + "\n", status: 2 };

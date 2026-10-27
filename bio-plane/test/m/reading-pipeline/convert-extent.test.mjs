@@ -206,10 +206,11 @@ test("R12 R21 (capture-container-extent §7): a workbook whose entry itemised no
   assert.deepEqual([r.container_extent.sheets, r.container_extent.levels], [null, ["sheets", "images"]]);
 });
 
-test("R12 R21 R17 (capture-container-extent §5): an HTML page no entry itemised has no container_extent key; a PDF the real entry read carries its one level, images, a measured empty list; its page count and box; the text counts T9 pinned", async () => {
+test("R12 R21 R17 (capture-container-extent §5): an HTML page no entry itemised states only its paragraph count; a PDF the real entry read carries its one level, images, a measured empty list; its page count and box; the text counts T9 pinned", async () => {
   const w = fresh();
   const html = (await readAs(w, HTML, "html", "text/html; charset=utf-8", { fromText: true })).reading;
-  assert.equal("container_extent" in html, false);
+  /* R63: an HTML page no entry itemised states its paragraph count and no other level */
+  assert.deepEqual(html.container_extent, { container: "html", levels: ["paragraphs"], sheets: null, paragraphs: 2, slides: null });
   assert.deepEqual([html.text_chars, html.text_glyphs, html.text_undetermined], [168, 155, null]);
   const pdf = (await readAs(w, PDF, "pdf", "application/pdf")).reading;
   assert.deepEqual(pdf.container_extent, { container: "pdf", levels: ["images"], images: [] });
@@ -226,4 +227,25 @@ test("R12 (fw19-extent-arms §1): a docx carries its table grids in document ord
   assert.deepEqual([b.levels, b.images, "tables" in b], [["sheets", "images"], [], false]);
   const o = (await readAs(w, ODT, "odt", ODT_CT)).reading.container_extent;
   assert.deepEqual([o.container, o.levels, o.tables, o.images], ["odt", ["paragraphs", "tables", "images"], [{ rows: 2, cols: 3 }], [{ part: hash(JPG), mime: "image/jpeg" }]]);
+});
+
+test("R63 R12 R32: a text reading states container_extent.paragraphs equal to the paragraph units it numbers, whole and in pieces, as an office reading does", async () => {
+  const w = fresh();
+  const three = "The council met on Tuesday.\n\nThe budget was adopted.\n\nThe meeting adjourned at nine.";
+  const bytes = new Uint8Array(Buffer.from(three));
+  const o = await readAs(w, bytes, "txt", "text/plain; charset=utf-8", { fromText: true });
+  assert.deepEqual(o.reading.container_extent, { container: o.reading.text_container, levels: ["paragraphs"], sheets: null, paragraphs: 3, slides: null });
+  assert.equal(o.reading.container_extent.paragraphs, o.text_units.length);
+  /* a paragraph with no glyph is no unit but is numbered (R32), so the extent counts the numbers `para` takes */
+  const dots = new Uint8Array(Buffer.from("First paragraph.\n\n...\n\nThird paragraph."));
+  const d = await readAs(w, dots, "txt", "text/plain; charset=utf-8", { fromText: true });
+  assert.deepEqual([d.reading.container_extent.paragraphs, Math.max(...d.text_units.map((u) => u.extent.para)) + 1], [3, 3]);
+  /* a line-split text (R33) counts its lines */
+  const lines = new Uint8Array(Buffer.from("one line\ntwo lines\nthree lines\nfour lines"));
+  assert.equal((await readAs(w, lines, "txt", "text/plain; charset=utf-8", { fromText: true })).reading.container_extent.paragraphs, 4);
+  /* in pieces the count is the whole text's, stated by the first piece */
+  const many = new Uint8Array(Buffer.from(Array.from({ length: 40 }, (_, i) => `Paragraph number ${i + 1} of the minutes.`).join("\n\n")));
+  const d2 = await hold(w.evidence, many);
+  const first = await w.read(doc({ digest: d2, bytes: many.length, ct: "text/plain; charset=utf-8", format: "txt", headers: [["content-type", "text/plain; charset=utf-8"]], fromText: true }), { cursor: null, unitsBudget: 2000, maxUnits: 5 });
+  assert.equal(first.reading.container_extent.paragraphs, 40);
 });

@@ -1,6 +1,7 @@
 /* filing-templates: the template and its versions, drafting, the blanks and the vocabularies (R1, R2, R3, R19, R21),
    at the module's interface, under the test profile. */
 import { test } from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, draft, approved, V, MACHINE, TEST, HARBOUR, TEXT, sha, twoProfiles } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
@@ -166,21 +167,21 @@ test("R19 FILING_BLANKS and FILING_TEXT_MAX are exported frozen and unchanged fr
      adds four after them, which r31.test.mjs pins */
   const moved = Object.fromEntries(Object.entries(ft.FILING_BLANKS).slice(0, 15));
   assert.deepEqual(moved, {
-    counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
-    counterparty_body: "the body of that office (an office's arm only)",
-    counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
-    counterparty_description: "the audience the action is addressed to, as the action describes it",
-    act: "what the government did, as the action's determination states it",
-    act_date: "when it did it (a date, or a period from and to)",
-    standards: "the citations of the standards the determination names",
-    findings: "each finding the determination rests on, with its published case edition",
-    governing_laws: "the governing laws a member stated for the action",
-    law: "the law a records request is made under, as the action states it",
-    clock: "the action's clock entries, each with its basis",
-    venue: "where the kind is filed (the profile's venue name)",
-    venue_how: "by what means it is filed (the profile's venue means)",
-    group: "the producing group",
-    date: "the date the draft was prepared",
+    counterparty_role: word("filing-templates.counterparty_role"),
+    counterparty_body: word("filing-templates.counterparty_body"),
+    counterparty_organisation: word("filing-templates.counterparty_organisation"),
+    counterparty_description: word("filing-templates.counterparty_description"),
+    act: word("filing-templates.act.government_did_action"),
+    act_date: word("filing-templates.act_date"),
+    standards: word("filing-templates.standards"),
+    findings: word("filing-templates.findings"),
+    governing_laws: word("filing-templates.governing_laws"),
+    law: word("filing-templates.law"),
+    clock: word("filing-templates.clock.action_clock_entries"),
+    venue: word("filing-templates.venue"),
+    venue_how: word("filing-templates.venue_how"),
+    group: word("filing-templates.group"),
+    date: word("filing-templates.date"),
   });
   assert.ok(Object.isFrozen(ft.FILING_BLANKS));
   assert.equal(ft.FILING_TEXT_MAX, 65536);
@@ -208,4 +209,19 @@ test("R21 TEMPLATE_STATES, TEMPLATE_USES and REVIEW_OUTCOMES are exported frozen
   w.ft.templateSubmit({ version: two.version, reviewers: ["bob"], author: A, viewer: A });
   const seen = new Set(w.ft.templatesFor({ state: "in_review", viewer: A }).templates.flatMap((t) => t.versions.map((v) => v.state)));
   for (const s of seen) assert.ok(ft.TEMPLATE_STATES.includes(s));
+});
+
+test("R3 (C65): a template kept from a filing is accepted for the project's owner and for a joined member, in the project the action belongs to; a member outside it, an invited one and a filing with no project are refused", () => {
+  const w = seeded();
+  const keep = (who, project, name) => w.ft.templateDraft({ project, kind: "records_request", use: "file", profiles: [TEST], name, text: TEXT,
+    from: { filing: "FIL-2026-0001", sha: sha(TEXT) }, author: V(who), viewer: V(who) });
+  // alice owns P, frank is a joined member of it
+  for (const who of ["alice", "bob", "frank"]) {
+    const r = keep(who, w.P, `kept by ${who}`);
+    assert.equal(r.ok, true, `${who}: ${JSON.stringify(r).slice(0, 200)}`);
+    assert.deepEqual(w.ft.templateRead({ template: r.template, viewer: V(who) }).template.scope, { project: w.P });
+  }
+  // control: dave is outside P, carol is invited and not joined, and a filing that names no project has no scope at all
+  for (const who of ["dave", "carol"]) refused(keep(who, w.P, `by ${who}`), "TEMPLATE_SCOPE_REFUSED");
+  refused(keep("alice", null, "no project"), "TEMPLATE_SCOPE_REFUSED");
 });

@@ -5,6 +5,9 @@
 
 /* ---- the engine (R13) --------------------------------------------------------------------------------------- */
 
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
+import { localize, word } from "../../bio-plane/src/setup-words/index.mjs";
+
 export const ENGINE_NAME = "ironcalc";
 /** The IronCalc commit the engine is built from (`engine/Cargo.toml`), with the `xlsx` feature's reader: npm's
  *  `@ironcalc/wasm` reads no XLSX (courts-workbooks.md §3(c)). */
@@ -25,16 +28,17 @@ export const ENGINE_EXPORTS = Object.freeze(["memory", "book_load", "book_evalua
  * 3 to 7 times a workbook's unzipped size. Under these bounds the largest memory measured was 59.2 MB (8.85 MB
  * unzipped, 17,823 formulas; the largest frame ocr-worker measured completing in an isolate is 61.3 MB) and the
  * longest load plus evaluation 13.3 s. Above them sit the 10.3 MB Annual Progress Reports (74-75 MB, about 57 s) and
- * five workbooks of 14-30 MB that did not finish in 600 s. The job's record holds the full figures. */
+ * five workbooks of 14-30 MB that did not finish in 600 s. The job's record holds the full figures. The three values are
+ * the `sheet_worker` rows of runtime-limits' `READ_BOUNDS` (R14), read through `boundOf` and typed nowhere else. */
 
 /** Unzipped bytes of every part of the package, counted as they decompress. */
-export const MAX_UNZIPPED_BYTES = 9_000_000;
+export const MAX_UNZIPPED_BYTES = boundOf("sheet_worker", "bytes");
 /** `<c>` elements across the worksheets. */
-export const MAX_CELLS = 250_000;
+export const MAX_CELLS = boundOf("sheet_worker", "cells");
 /** Milliseconds the engine may spend loading before evaluation is not started: a backstop, since every load under the
  *  bounds took at most 6.3 s, and evaluation took at most 1.1 times its load, so a load within this leaves evaluation
  *  inside the CPU ceiling. Read after a turn boundary (workerd advances its clock only between turns). */
-export const TIME_BUDGET_MS = 120_000;
+export const TIME_BUDGET_MS = boundOf("sheet_worker", "ms");
 
 /* ---- the switch (R2) ------------------------------------------------------------------------------------------ */
 
@@ -52,7 +56,7 @@ export const PLANE_OPS = Object.freeze({});
 
 /* ---- answers --------------------------------------------------------------------------------------------------- */
 
-export const NOT_RECOMPUTED = "not recomputed here";
+export const NOT_RECOMPUTED = word("workbooks.recomputed");
 
 /** The volatile functions R6 names. The engine marks a formula cell volatile when it calls one of them. */
 export const VOLATILE_FUNCTIONS = Object.freeze(["NOW", "TODAY", "RAND", "RANDBETWEEN", "OFFSET", "INDIRECT", "CELL",
@@ -68,18 +72,17 @@ export const WORKBOOK_REFUSALS = Object.freeze(["ENGINE_ABSENT", "NOT_A_WORKBOOK
 
 export const REFUSALS = Object.freeze({
   BAD_SHA: "capture_sha must be 64 hex characters",
-  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
+  BAD_STORE: localize("sheet-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none"),
   NAMESPACE_UNKNOWN: "no namespace by that name exists, so nothing was read; the two that exist are listed beside "
     + "this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
   R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
-  NOT_FOUND: "no capture with that sha in that store",
-  NOT_ENABLED: "workbook recompute is not enabled on this instance; an administrator enables it after the release "
-    + "deploys this member",
-  ENGINE_ABSENT: "the engine did not load as the pinned build, so no workbook is recomputed",
+  NOT_FOUND: localize("sheet-worker.contract.no_capture_with_that_sha_in", "no capture with that sha in that store"),
+  NOT_ENABLED: localize("sheet-worker.contract.recompute_is_not_enabled_here", "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member"),
+  ENGINE_ABSENT: localize("sheet-worker.contract.the_engine_did_not_load", "the engine did not load as the pinned build, so no workbook is recomputed"),
   NOT_A_WORKBOOK: "the bytes are not an OOXML spreadsheet",
-  OVER_BOUND: "the workbook is larger than this member recomputes; nothing of it was recomputed",
-  EXTERNAL_LINKS: "the workbook refers to other workbooks, whose values are not here",
-  ENGINE_FAILED: "the engine refused or failed on this workbook",
-  TIME_LIMIT: "loading the workbook took longer than the time budget, so evaluation was not started",
+  OVER_BOUND: localize("sheet-worker.contract.the_workbook_is_larger_than", "the workbook is larger than this member recomputes; nothing of it was recomputed"),
+  EXTERNAL_LINKS: localize("sheet-worker.contract.the_workbook_refers_to_other", "the workbook refers to other workbooks, whose values are not here"),
+  ENGINE_FAILED: localize("sheet-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this workbook"),
+  TIME_LIMIT: localize("sheet-worker.contract.loading_the_workbook_took_longer", "loading the workbook took longer than the time budget, so evaluation was not started"),
   UNKNOWN: "POST /recompute or GET /version only",
 });

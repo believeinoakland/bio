@@ -1,6 +1,7 @@
 /* interface-shell R65, R67, R68 (T49-20): the shell draws its own elements with the design's classes and carries no rule
    for them; the test-instance band is the design's; explanations close, nothing is clipped at the phone width, and the
    expected refusal writes no console line. Every sentence is read through `setup-words`' `word` (R70). */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, classLiterals, checkScreens } from "../../../src/interface-shell/index.mjs";
@@ -11,9 +12,12 @@ import { word } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, bytes, SESSION } from "./harness.mjs";
 import { documentOf } from "./dom.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
+import { inWorld, bootAs } from "./world.mjs";
 
 const styleOf = (html) => /<style>([\s\S]*?)<\/style>/.exec(html)[1];
-const REPLACED = ["cs-menuwrap", "cs-menu", "cs-actwrap", "cs-slot", "cs-rowname", "cs-overlay", "cs-image", "cs-areas-box", "cs-area", "cs-testband"];
+const REPLACED = ["cs-menuwrap", "cs-menu", "cs-actwrap", "cs-slot", "cs-rowname", "cs-overlay", "cs-image", "cs-areas-box", "cs-area"];
+/* R67 retired the test band's own `cs-testband`; R92 draws the newer-version band with the design's `cs-testband` and its hook
+   `mk-updband`, so the class is written in the program for that band alone and no rule of it is carried in STYLE */
 const classesOf = (root) => { const out = new Set(); for (const el of root.querySelectorAll("[class]")) for (const c of el.getAttribute("class").split(/\s+/)) if (c) out.add(c); return out; };
 const fn = (body) => new Function("cs", "view", body);
 const HEX = "9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0";
@@ -25,8 +29,9 @@ const ELEMENTS = {
     + cs.areas(cs.image("openoriginal", { capture: "p1" }, { alt: { text: "x" } }), { id: "ph", areas: [{ left: 1, top: 2, width: 3, height: 4 }] }),
 };
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R65 the shell draws its own elements with the design's classes: the member menu (mk-menuwrap, mk-menu over a cs-dialog), an act with its slot (mk-actwrap, mk-slot), a row's name cell (mk-rowname), the scrim behind a dialog (mk-scrim), an image (mk-image), areas on it (mk-imgareas, mk-imgarea), the avatar as a button, the group's name (mk-grp) and the explanation-level control (mk-lvlbtn); none of the replaced classes is drawn or styled", async () => {
-  const p = await boot({ screens: [...ALL, ELEMENTS], path: "/app/ceremony/c1", plane: { openoriginal: bytes(new Uint8Array([1]), "image/png") } });
+  const p = await boot({ screens: [...ALL, ELEMENTS], path: "/app/ceremony/c1", plane: { ...FRAME_ANSWERS, openoriginal: bytes(new Uint8Array([1]), "image/png") } });
   const root = p.root();
   assert.ok(root.querySelector(".mk-menuwrap > button.mk-avatar"));
   assert.ok(root.querySelector(".mk-menuwrap > .mk-menu.cs-dialog#cs-menu"));
@@ -42,10 +47,10 @@ test("R65 the shell draws its own elements with the design's classes: the member
   const html = interfacePage([...ALL, ELEMENTS]);
   const written = classLiterals(html.slice(html.indexOf("<script")));
   for (const c of REPLACED) assert.ok(!written.has(c), c + " is written in the program");
-  for (const c of REPLACED) assert.ok(!new RegExp("\\." + c + "\\b").test(styleOf(html)), c + " is styled");
-  /* STYLE holds only the page's height settings and the reduced-motion rule */
+  for (const c of [...REPLACED, "cs-testband"]) assert.ok(!new RegExp("\\." + c + "\\b").test(styleOf(html)), c + " is styled");
+  /* STYLE holds only the page's height settings and the reduced-motion rule (and, R120, the layout of a row with no first part) */
   const selectors = styleOf(html).replace(/@media[^{]*\{[\s\S]*\}\s*$/, "").split("}").map((r) => r.split("{")[0].trim()).filter(Boolean);
-  for (const sel of selectors) assert.match(sel, /^(html,body\.cs|body\.cs|#cs-root)/, sel);
+  for (const sel of selectors) assert.match(sel, /^(html,body\.cs|body\.cs|#cs-root|\.cs-main \.cs-row\[data-lead=none\])/, sel);
   assert.match(styleOf(html), /@media \(prefers-reduced-motion:reduce\)/);
   /* the design's classes are all defined by the served stylesheets */
   const css = ASSET_FILES["civicsmith.css"].body + ASSET_FILES["shell.css"].body;
@@ -102,6 +107,7 @@ test("R68 explanations close: a card opened by a control closes when the control
   assert.equal(tip(p).hidden, true, "closed when the focus leaves it for the next field");
   assert.equal(act.getAttribute("aria-describedby"), null);
   /* a card opened by the pointer likewise, once the focus goes to a field */
+  p.fire(act, "pointerout", { relatedTarget: p.root() });
   p.fire(act, "pointerover", { pointerType: "mouse" });
   await p.clock.tick(500);
   assert.equal(tip(p).hidden, false);
@@ -114,7 +120,9 @@ test("R68 nothing clipped at the phone width: a long unbroken name, label or dig
   const LONG = "Riverbend" + "x".repeat(60);
   const s = { id: "home", reads: () => ({}), acts: [],
     render: fn(`return cs.title() + cs.ref("project", "P1", "${HEX}", []) + cs.mark("kind", "todo", { reason: "${HEX}" }) + cs.hint("${HEX}");`) };
-  const p = await boot({ screens: [s], phone: true, plane: { groupidentity: ok({ ok: true, group: "g", display_name: LONG }) } });
+  const { world, me } = await inWorld();
+  await me.act("groupnameset", { body: { name: LONG } });
+  const p = await bootAs(world, me, { screens: [s], phone: true });
   const root = p.root();
   const grp = root.querySelector(".cs-mast .mk-grp");
   assert.equal(grp.textContent, LONG, "the name whole");
@@ -141,17 +149,20 @@ function textNodesOf(el) {
 test("R68 an expected refusal writes no console line: an act answered REAUTH_DUE that the shell handles (R34) calls no console method from the page's script (measured at START: the 403 line the browser shows is Chromium's own network log of the answer, which no page code can remove, so journey-check's console check admits it)", async () => {
   const calls = [];
   const was = {};
+  /* the store's own REAUTH_DUE: adding an administrator is one of the acts that always ask the password again (credentials R66) */
+  const { world, me } = await inWorld();
+  const adding = { ...ALL.find((x) => x.id === "members"), acts: [{ op: "memberadd", send: fn('return { body: { memberId: "new-admin", cover: "The new administrator", role: "admin" } };') }] };
   for (const m of ["log", "info", "warn", "error", "debug", "trace"]) { was[m] = console[m]; console[m] = (...a) => { calls.push([m, a]); }; }
   try {
-    const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("REAUTH_DUE", null, 403), reauth: ok({ ok: true }) } });
-    p.doc.getElementById("home-title").value = "T";
-    await p.click('button[data-act="promote"]');
-    const reason = p.root().querySelector('[data-slot="m:0"] textarea');
+    const p = await bootAs(world, me, { screens: [adding], path: "/app/members" });
+    await p.click('button[data-act="memberadd"]');
+    const reason = p.root().querySelector('textarea');
     if (reason) { reason.value = "because"; await p.click('[data-shell="reason-send"]'); }
-    assert.ok(p.byOp("promote").length >= 1, "the act was sent and answered REAUTH_DUE");
+    assert.ok(p.byOp("memberadd").length >= 1, "the act was sent and answered REAUTH_DUE");
     assert.ok(p.root().querySelector('[data-overlay="reauth"]'), "the shell asks the password again (R34)");
   } finally { for (const m of Object.keys(was)) console[m] = was[m]; }
-  assert.deepEqual(calls, [], "no console line from the page's own script");
+  /* the store's own structured log lines (one JSON object a line, written by the world's modules) are not the page's */
+  assert.deepEqual(calls.filter(([, a]) => !(typeof a[0] === "string" && a[0].startsWith("{"))), [], "no console line from the page's own script");
 });
 
 test("R71 the startup bootstrap carries the page's session whenever the page holds one, and none when it holds none; setup's acts admit founderhandleset; control: an act on none of R72's lists still throws, and each R72 act is admitted on its screen", async () => {

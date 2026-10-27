@@ -1,0 +1,105 @@
+# instance-setup: the words check after the conversion (K3949)
+
+Layer 11. 33 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/setup-fleet.mjs:27` [copy] "Before you choose a password: who controls your team's Civicsmith" — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:29` "Whoever can sign in to the hosting account your team's Civicsmith r..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:30` "They can replace the one-time password, claim it again, read everyt..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:31` "and no vote of the team's administrators can stop them." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:32` [copy] "Use a team account for it, not anyone's personal login." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:33` [copy] "Add at least one other trusted person to that account." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:34` [copy] "Where possible, let someone other than the team's administrators ho..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:35` "The same account is the way back in if the password you choose is l..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:36` "your team's Civicsmith to be claimed again." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:39` "If the one-time password may have been seen, replace it: follow the..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:40` "password” in your team's Civicsmith, on its first page and in its m..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:41` [copy] "Replace the one-time password" — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:47` "To open the way back in: sign in to the hosting account, replace th..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:48` "value in this worker's settings, and your team's Civicsmith can be ..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:54` [copy] "If you cannot sign in" — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:56` [copy] "Your team's administrators can help you: ask one of them for a rese..." — leaf: loads nothing
+- inline `bio-plane/src/setup-fleet.mjs:57` [copy] "If none of them can sign in either, whoever holds your team's hosti..." — leaf: loads nothing
+- inline `bio-plane/src/setup.mjs:1130` "a name of {} characters"
+- inline `bio-plane/src/setup.mjs:1225` "{} is not the JSON object your team's Civicsmith reads ({ instance,..."
+- inline `bio-plane/src/setup.mjs:1314` "a stake of {} characters{} is not"
+- inline `bio-plane/src/setup.mjs:1401` "'{}' is not one of"
+- inline `bio-plane/src/setup.mjs:1401` "a list of {} names too many, and the languages are"
+- inline `bio-plane/src/setup.mjs:1976` "Legistar also lists {} under the same name; they are held as"
+- inline `bio-plane/src/setup.mjs:1977` "separate persons and never merged here: whether they are one person..."
+- inline `bio-plane/src/setup.mjs:2133` "a name of {} characters"
+- inline `bio-plane/src/setup.mjs:2352` "the answers are a list of at most {}"
+- inline `bio-plane/src/setup.mjs:2353` "{question, text}, each text at most {} characters. Nothing was saved."
+- inline `bio-plane/src/setup.mjs:2663` "the release ready to install is {}"
+- inline `bio-plane/src/setup.mjs:2726` "a reason of {} characters{} is not"
+- inline `bio-plane/src/setup.mjs:2834` "completed step's elapsed time and below what its next step would ha..."
+- inline `bio-plane/src/setup.mjs:2835` "No run has been cut off yet, so the ceiling is above everything tried."
+- testcopy `bio-plane/test/m/instance-setup/page.test.mjs:58` [part] "If the one-time password may have been seen, replace it: follow the..." — part test copy
+- testcopy `bio-plane/test/m/instance-setup/page.test.mjs:59` [part] "in your team's Civicsmith, on its first page and in its members and..." — part test copy
+
+## Plain findings (K3957)
+
+55 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('instance-setup.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/livefire.mjs:68` "creation with base null succeeds"
+- plain `bio-plane/src/livefire.mjs:74` "update with correct base succeeds"
+- plain `bio-plane/src/livefire.mjs:79` "the lost-update floor, on real storage"
+- plain `bio-plane/src/livefire.mjs:89` "live state is the winning revision"
+- plain `bio-plane/src/livefire.mjs:92` "history holds the superseded revision"
+- plain `bio-plane/src/livefire.mjs:93` "the verbatim promotion record is projected"
+- plain `bio-plane/src/livefire.mjs:96` "classifyDivergence and C-20.1 both read these records; without them the checks are unre..."
+- plain `bio-plane/src/livefire.mjs:101` "oversize inline refused at the write"
+- plain `bio-plane/src/livefire.mjs:104` "canary nonce survived the round trip"
+- plain `bio-plane/src/livefire.mjs:105` "proves the battery actually wrote and read real storage"
+- plain `bio-plane/src/livefire.mjs:114` "lease returns live sha as edit base"
+- plain `bio-plane/src/livefire.mjs:116` "second actor denied while lease holds"
+- plain `bio-plane/src/livefire.mjs:141` "no configured token is a published repository value"
+- plain `bio-plane/src/livefire.mjs:142` "no configured token is shorter than 16 characters"
+- plain `bio-plane/src/livefire.mjs:155` "one bucket bound without the other breaks the fence"
+- plain `bio-plane/src/setup.mjs:965` "this module had already started on this storage"
+- plain `bio-plane/src/setup.mjs:1011` "no producers to register with"
+- plain `bio-plane/src/setup.mjs:1021` "no public-read to register with"
+- plain `bio-plane/src/setup.mjs:1061` "the request names no slug, and a team is recorded as"
+- plain `bio-plane/src/setup.mjs:1130` "the request names no display name, and it is set as"
+- plain `bio-plane/src/setup.mjs:1149` "the request names no domain, and one is claimed as"
+- plain `bio-plane/src/setup.mjs:1171` "this store records no producing team, so there is no slug for the file to name"
+- plain `bio-plane/src/setup.mjs:1306` "declaring what your team has at stake"
+- plain `bio-plane/src/setup.mjs:1313` "the request names no stake, and one is declared as"
+- plain `bio-plane/src/setup.mjs:1314` "an empty stake is not one, and one is declared as"
+- plain `bio-plane/src/setup.mjs:1395` "setting the languages your team's members use"
+- plain `bio-plane/src/setup.mjs:1399` "the languages are sent as a list of"
+- plain `bio-plane/src/setup.mjs:1400` "an empty list names no language, and the languages are"
+- plain `bio-plane/src/setup.mjs:1656` "seeding the offices the jurisdiction profiles name"
+- plain `bio-plane/src/setup.mjs:1724` "the organisation is not held under its identifier, so the line has no identified ends"
+- plain `bio-plane/src/setup.mjs:1756` "seeded only under the profile's own identifier, never by its name"
+- plain `bio-plane/src/setup.mjs:1856` "its normalised forms equal more than one Legistar body's; it is never resolved by choos..."
+- plain `bio-plane/src/setup.mjs:1857` "no Legistar body's normalised form equals it; it is never matched by a near name, and a..."
+- plain `bio-plane/src/setup.mjs:1868` "seeding the seats Legistar records"
+- plain `bio-plane/src/setup.mjs:2031` "as kept away and the assistant is off"
+- plain `bio-plane/src/setup.mjs:2056` "the request names no member"
+- plain `bio-plane/src/setup.mjs:2084` "no disclosure at this version is recorded as shown to this member"
+- plain `bio-plane/src/setup.mjs:2085` "the request names no member, so no disclosure is recorded as shown"
+- plain `bio-plane/src/setup.mjs:2126` "naming the place your team works in"
+- plain `bio-plane/src/setup.mjs:2156` "reading the place your team named"
+- plain `bio-plane/src/setup.mjs:2261` "the request names no level, and one is chosen as"
+- plain `bio-plane/src/setup.mjs:2305` "reading the step of two administrators holding recovery codes"
+- plain `bio-plane/src/setup.mjs:2339` "asking the assistant to draft your team's description"
+- plain `bio-plane/src/setup.mjs:2506` "the release notice could not be fetched"
+- plain `bio-plane/src/setup.mjs:2517` "the notice carries no signature"
+- plain `bio-plane/src/setup.mjs:2523` "the newest release published is the one running"
+- plain `bio-plane/src/setup.mjs:2532` "this release is held already"
+- plain `bio-plane/src/setup.mjs:2596` "reading the updates of your team's Civicsmith"
+- plain `bio-plane/src/setup.mjs:2627` "the updates of your team's Civicsmith"
+- plain `bio-plane/src/setup.mjs:2647` "the updates of your team's Civicsmith"
+- plain `bio-plane/src/setup.mjs:2663` "the request names no version, and a release is decided by its version;"
+- plain `bio-plane/src/setup.mjs:2663` "no release is ready to install"
+- plain `bio-plane/src/setup.mjs:2678` "choosing to update your team's Civicsmith"
+- plain `bio-plane/src/setup.mjs:2691` "setting aside an update of your team's Civicsmith"
+- plain `bio-plane/src/setup.mjs:2719` "skipping an update of your team's Civicsmith"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/instance-setup/fixture.mjs:106` "\"the team keeps its material away from every assistant, so no accoun...\""
+- testcopy `bio-plane/test/m/instance-setup/fixture.mjs:107` "\"whether the team keeps its material away from every assistant could...\""
+- testcopy `bio-plane/test/m/instance-setup/words.test.mjs:95` "\"is an administrator's act\""

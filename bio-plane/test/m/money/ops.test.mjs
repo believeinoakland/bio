@@ -2,10 +2,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, MACHINE, ANN } from "./fixture.mjs";
+import { makeRecord, makeMembership, promotionOver, registeredSteps } from "../promotion/fixtures.mjs";
 import { moneyOps, MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, SET_PURPOSES, FUND_TYPES, BALANCE_FAMILIES,
   CONNECTION_WORD } from "../../../src/money/index.mjs";
 
-const OPS = ["moneyrecord", "moneywithdraw", "money", "moneyof", "moneysummable", "moneyreconcile", "moneysetcreate", "moneyset",
+const OPS = ["moneyrecord", "moneywithdraw", "money", "moneyof", "moneysummable", "moneyreconcile", "moneysetcreate", "moneyset", "moneysets",
   "moneysetinclude", "moneysetexclude", "moneysetpropose", "moneyfundtype", "committedagainstpaid", "authoritychain"];
 const url = (q) => new URL(`https://do.invalid/?${new URLSearchParams(q)}`);
 const strip = (x) => JSON.parse(JSON.stringify(x, (k, v) => (k === "fact_id" || k === "at" ? undefined : v)));
@@ -42,18 +43,12 @@ test("R18 each arm answers what its named service answers: reads from the query 
   assert.equal(run("moneywithdraw", {}, { factId: b, reason: "r", by: ANN }).ok, true);
 });
 
-/* promotion's R39 registry, standing in: one step's check and projection. */
-function promotionStandIn() {
-  const steps = [];
-  return { steps, registerStep(module, st) { if (steps.some((x) => x.module === module)) return { ok: false, reason: "STEP_DECLARED" }; steps.push({ module, ...st }); return { ok: true, module }; } };
-}
-
 test("R5 facts projected from a promoted bundle's reading ride promotion's step, through R1's checks: a fault refuses the promotion, each fact is written once", () => {
   const s = seeded();
-  const p = promotionStandIn();
+  const p = promotionOver({ record: makeRecord(), membership: makeMembership() });
   assert.equal(s.m.joinPromotion(p), true);
   assert.equal(s.m.joinPromotion(p), false, "joined once");
-  const [{ check, project }] = p.steps;
+  const [{ check, project }] = registeredSteps(p);
   const { by: _by, ...good } = s.fact();
   const ctx = (facts) => ({ bundleId: "INFO-1", author: ANN, files: [{ path: "data/money.json", text: JSON.stringify({ facts }) }] });
   const bad = check(ctx([good, { ...good, kind: "spending" }]));

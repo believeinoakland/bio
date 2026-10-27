@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { world, V, sqlOver } from "./fixture.mjs";
 import { Membership, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 /* An invitation for `ann`, issued in a group with two administrators. */
 async function invited(setter = undefined) {
@@ -35,7 +36,7 @@ test("R95 R16 enroll sets the password through the registered setter, inside its
 });
 
 test("R95 a setter that throws or answers ok:false is ENROL_NOT_RECORDED, C-96.18: nothing written, the invitation still live", async () => {
-  for (const failing of [async () => { throw new Error("disk full"); }, async () => ({ ok: false, reason: "X" }),
+  for (const failing of [async () => { throw new Error("disk full"); }, async () => ({ ok: false, reason: "X" }), // fixtures-generic: X
                          () => { throw new Error("sync"); }]) {
     const { w, invite, set } = await invited();
     set(failing);
@@ -48,7 +49,7 @@ test("R95 a setter that throws or answers ok:false is ENROL_NOT_RECORDED, C-96.1
     assert.equal(r.check, MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED.check);
     assert.equal(r.translation, MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED.translation);
     assert.equal(JSON.stringify(w.rows(`SELECT * FROM members ORDER BY member_id`)), before, "nothing written");
-    assert.equal((await w.m.inviteLook({ invite })).ok, true, "the invitation is still live");
+    assert.equal((await w.m.inviteLook({ invite })).ok, true, "invite still live");
     set(async (a) => ({ ok: true, role: a.role }));
     assert.equal((await w.m.enroll({ invite, handle: "ann", password: "ann-passphrase-x" })).ok, true, "and works after");
   }
@@ -140,12 +141,14 @@ test("R12 R57 the audit reports a member held under the reserved id, never renam
   const finding = found[0].finding;
   assert.deepEqual(finding({ bundles: [] }), {
     reservedId: "admin", held: false, role: null, status: null, check: "C-55.1",
-    says: "no member holds the reserved id 'admin'" });
+    says: word("membership.says.member_holds_reserved", { id: "admin" }) });
   /* an instance that enrolled `admin` before the reservation */
   w.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, created, updated)
               VALUES ('admin', 'old', 'oldadmin', 'member', 'active', 't', 't')`);
   const held = finding({ bundles: [] });
   assert.deepEqual([held.held, held.role, held.status, held.check], [true, "member", "active", "C-55.1"]);
-  assert.match(held.says, /has NOT been renamed/);
+  assert.ok(hasWord("membership.says.member_enrolled_under"), "the key is held by setup-words");
+  assert.equal(held.says, word("membership.says.member_enrolled_under", { id: "admin", role: "member", status: "active" }),
+    "the finding's words are the key's, read from the word table");
   assert.equal(w.row(`SELECT member_id FROM members WHERE member_id='admin'`).member_id, "admin", "never renamed");
 });

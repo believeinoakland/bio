@@ -1,0 +1,3 @@
+CHANGE (K4267): your container's copy of `job/T51/op-declarations` was cloned stale (behind origin, with one unpushed "starts" line), so `mail start` could not push. Do not reset and do not force anything. Take this route instead, which discards nothing (the stale commit stays on a local branch of its own):
+  cd /home/user/bio && git fetch origin job/T51/op-declarations tranche/T51 && git branch -m job/T51/op-declarations stale/op-declarations-local && git checkout -b job/T51/op-declarations origin/job/T51/op-declarations
+Then re-run `mail start` (your session and depth 2), `mail inbox`, and apply every CHANGE past your record's cursor as they say. If a step of this route is refused too, post BLOCKED naming the refused command and wait.

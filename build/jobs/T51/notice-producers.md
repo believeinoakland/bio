@@ -1,0 +1,228 @@
+# notice-producers (T51)
+
+**Status** · session_01VGCXrV2bt6soPPDTNLuJ76 · depth 2 · COMPLETE · handled B15
+
+## J1 · COMPLETE
+
+Entry T51-132 (notice-producers) applied. Branch `job/T51/notice-producers` at a680ec0564 (merged `tranche/T51` at fe5d5656fb, never rebased).
+
+**Applied**
+- R25 (words): the security item's `detail` writes its instant as `time.at` (`date.daymonthyear` for the day, `time.clock` with `time.am`/`time.pm` for the clock, in the team's zone; "UTC" after the UTC reading when no zone is held). The clock comes from civil-time's `localClock` (R30, merged in L1), as the entry asks. `id`, `subject.episode`, `basis.episode` and `screen` keep the ISO instants. An instant that cannot be read is not written.
+- R26 (no ISO day): R5, R6, R13, R14, R15 write days through `dayInSentence` only; the raw-`YYYY-MM-DD` fallback and the "an earlier date" literal are removed.
+- The T51-132 reds (18 tests, DEC-333 month first): every date expectation in the suite is built from `words.json` (`date.daymonth`, `date.daymonthyear`, `date.month.*`, `ai.until.*`) through one helper in `fixture.mjs` (`dayOn`). Literal sentences and date fragments in tests are removed or replaced by keyed comparisons.
+- Words findings: `index.mjs` now reads "sign-in or recovery" / "sign-ins or recoveries" by key (`notice-producers.sign_recovery`, `notice-producers.sign_ins_recoveries`); three inline `basis.detail` strings are `localize` calls; test copies of sentences removed (`duties` "What starts the clock…" and "possibly overdue…" become markers; `read` "The system found this…" becomes a marker).
+- New tests naming R25 and R26 (security, duties, waits, policy, files).
+
+**Results**
+- `node --test bio-plane/test/m/notice-producers/*.test.mjs`: 130 pass, 0 fail, 0 skipped.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs`: 0 failures (this module). `checks/coverage.mjs`: 26 of 26 live ids named by a test. `checks/ownership.mjs`: 0 failures (13 files, this module's paths and tests only).
+- `checks/words.mjs notice-producers`: 0 findings. Over the whole product (`checks/run.mjs`), no finding names notice-producers.
+- `setup-words/build.mjs --check`: stale-rows note only (expected); it names the four new localize ids (below).
+
+**Deferred / for BOB (not this module's to change)**
+1. **R12's sentence has no words.json key.** "The security level of your team's Civicsmith has been High since {from}, and in that time {got}." (`notice-producers.index.the_security_level_of_your`) and the no-instant variant (`…_no_time`) are localize-coded. R12 says the words are the design stream's. The test asserts the parts (the instant and the count, by key) rather than the copied sentence. Needs the design's words (BOB / design stream).
+2. **New localize ids awaiting rows regeneration** (BOB regenerates at layer close): `notice-producers.index.the_security_level_of_your_no_time`, `notice-producers.index.a_dated_wait_is_inquirys`, `notice-producers.index.the_level_is_credentials`, `notice-producers.index.an_accounts_ask_is_ai_uses`.
+3. **Product-wide failures outside this module** (seen in `checks/run.mjs`, not this module's to fix): `architecture` 1 failure, `answer-envelope/page-policy.test.mjs` imports `control-plane`'s `signpage.mjs` before it is earlier in the order (T51-109 / K3835 ordering); `coverage` 24 failures and `words` findings in other modules (wizard-scripts and others). None names notice-producers.
+4. **Not run:** the installer suite (its process hangs, N1254) and the layer tests (none named in the manifest).
+
+**Judgement calls**
+- R25's clock: the entry asked for civil-time's clock; R25's text (written before civil-time offered one) names `Intl.DateTimeFormat`. I used `localClock`, which is the entry's reading and the shared owner of time (K3864). Tell me if the requirement text should say so.
+- Test markers (`WHY-MARK`, `REASON-MARK`, `FIND-MARK`) stand where the test passes a record's text through and does not judge it.
+
+Size (session_01LTmvAUsk4PGG8o3fTe2oZD): test runs 12, module lines 1494 (index.mjs 1448, words.mjs 46).
+
+## J2 · QUESTION
+
+QUESTION (re B2 START, G2). The capture job (merge 3) has not yet defined the read of its `fetch_done` record, and I cannot read it without a name. My best reading, which I am building to: `captureOf(host).fetchesDone({ after, limit, viewer })` -> `{ ok: true, done: [{ session, document, opener, project, at }], cursor, truncated }`, oldest first, paged like `file-safety.scanFindings` (cursor null at the end, `truncated` while more), answering `opener` as `member:<id>` or a bare id, and each record carrying the document's bundle id. Notice: one FINDING per record, keyed `FINDING::fetch-done::<session>`, to the opener alone (and only while the opener is active); subject the document, home set from the project; told once by the key (queue mints it once; the record stays, so later cycles make the same item and no second). Window: the last 90 days, bound 1000, as R14. Sentence: new localize ids `notice-producers.index.fetch_done_summary`/`..._detail` standing in; the row owed to the design is `notice.fetch.done` (title, N MB, door). Please tell capture's job to publish exactly this read (or tell me the name it publishes); until it merges, my seam test with the real capture stays red by name and my failing-first tests use a stand-in `capture` dependency with that shape. If you would rather key it differently or read without a window, say so.
+
+## J3 · QUESTION
+
+QUESTION (J3, adds to J2; J2's reading stands). The producer and its tests are written and pushed (R27 proposed: fetch-done, keyed FINDING::fetch-done::<session>, 135 module tests pass except the seam test, red by name until capture merges). Two things only you can settle: (1) `build/modules.json` notice-producers `uses` lacks `capture` (your edge, plan section 3), so `checks/architecture.mjs` fails with 'imports capture/index.mjs ... does not declare in uses'; the file is not mine to edit. Please add the edge on tranche/T51. (2) the name/shape of capture's read (J2). Record shape note: your START's row owed has 'N MB' but the record {session, document, opener, project, at} carries no size, so the stand-in sentence names the title only; if you want the size, capture's record needs a `bytes` field. I wait for your ANSWER and capture's merge; then I merge tranche/T51, run the real seam test and finish.
+
+## Fix round 6 (session_01SbR9Bp7b1UDZG4sWc5dbrm, NOTICE-PRODUCERS #15, depth 2): G2 provider
+
+**Entry applied.** `bio-plane/src/notice-producers/index.mjs`: new producer `#fetchDone` (R27, proposed), kind `fetch-done` (FINDING), key `FINDING::fetch-done::<session>`, to the record's `opener` alone while active; reads `captureOf(host).fetchesDone({after, limit})` as published (B3: `{ok, fetches[{session, document, opener, project, at, cursor}], limit, truncated, next}`), pages of 200 to at most 1,000, records older than 90 days not told (`FETCH_DONE_DAYS`, `FETCH_DONE_MAX`, `FETCH_DONE_PAGE`); `facts.fetch_done`; a read that throws or refuses is named `capture` in `facts.failed`. Subject the document, home set the project, door option "Open the document". `modules.json` edge `capture` added by BOB (architecture: 0 failures).
+
+**Tests** (`fetch.test.mjs`, new; `fixture.mjs` NONE gains a `capture` stand-in; `read.test.mjs` R1 facts gains `fetch_done`): one notice for the opener, the same key on a second cycle (no second item); a record for another member, a machine or nobody makes none; revoked member none; a session listed twice is one; older than the window none; throw/refuse named in `facts.failed`; paging shape (no viewer). Each failing-first case had no producer before (the notice did not exist). **Seam test with the real capture stays red by name** (`R27: seam over the real capture's fetch_done record`) until capture merges; BOB CHANGEs me then.
+
+**Words.** DEC-418's rows `notice.fetch.done` and `.door` are not yet in `words.json`; stand-ins are `localize` ids `notice-producers.index.fetch_done_summary`, `..._detail`, `..._open_the_document` (fill `{document}`, no size). Rows owed: `notice.fetch.done`, `notice.fetch.done.door`; replace by key when they land.
+
+**Results.** Module: 136 tests, 135 pass, 1 red by name (the seam). Checks: format 0, architecture 0, coverage 6619/6619, words 0 failures, ownership 0 failures; `build.mjs --check`: stale-rows note only. Impact users: queue 209/210 pass; the one red is `queue/noticed.test.mjs:288` ("the real notice-producers' items reach the feed"): its `facts.failed` is `['capture']` because the real capture does not publish `fetchesDone` yet; it is the same cause as my seam test and clears at capture's merge (it passes on tranche/T51 without my change). Not run: control-plane, plane, store-door suites (they do not read this producer's items beyond queue's feed).
+
+Size (session_01SbR9Bp7b1UDZG4sWc5dbrm): test runs 9, module lines 1497 (index.mjs 1451, words.mjs 46)
+
+## J4 · COMPLETE
+
+COMPLETE (G2 provider, R27 proposed): fetch-done notice built to capture's published fetchesDone read, tests and checks in my record. Two reds are capture's absence, both by name until it merges: my seam test fetch.test.mjs 'R27: seam over the real capture...', and queue/noticed.test.mjs:288 (facts.failed gains 'capture' because the real capture has no fetchesDone yet; passes on tranche/T51 without my change). CHANGE me at capture's merge and I re-run both. Rows owed to the design: notice.fetch.done, notice.fetch.done.door (stand-ins by localize). Requirement line proposed: R27 (G2, K4562): one FINDING fetch-done per capture fetchesDone record, keyed by session, to the opener alone while active, 90-day window, 1,000 bound, facts.fetch_done, a failing capture named in facts.failed; uses gains capture.
+
+Ring failed: BOB session_01T8rYkDXW3CsEsgBMqu8Zce is archived (create_trigger refused). My pushed COMPLETE (J4) is the message; BOB's backstop reads it (mechanics §13).
+
+## After CHANGE B4 (capture merged at b3b6b6cf16)
+Merged `tranche/T51`. The seam test now runs over the real capture (`recordFetchDone` once, a repeat refused; the opener is told once, a second read answers the same key, another member none): green. `queue/noticed.test.mjs:288`: green. Module + that queue file: 148 pass, 0 fail. Checks: format 0, architecture 0, coverage 6632/6632, words 0, ownership 0 failures. No red remains; no deferred item. Rows owed to the design: `notice.fetch.done`, `notice.fetch.done.door` (stand-ins by localize).
+Size (session_01SbR9Bp7b1UDZG4sWc5dbrm): test runs 14, module lines 1497 (index.mjs 1451, words.mjs 46)
+
+## J5 · COMPLETE
+
+COMPLETE again (re B4): merged tranche/T51 at capture's merge; fetch.test.mjs seam over the real capture (recordFetchDone, told once, other member none) green; queue/noticed.test.mjs:288 green. 148 pass, 0 fail; format, architecture, coverage 6632/6632, words, ownership all 0 failures. No red, nothing deferred. Owed rows: notice.fetch.done, notice.fetch.done.door. Size line in my record.
+
+## J6 · QUESTION
+
+QUESTION (re B5 START, G55). calculations has not published the read of a finished or stopped ingest, and I cannot read it without a name (the entry says only "as that module's contract asks for notice facts"). My best reading, which I build to now:
+`calculationsOf(host).ingestNotices({ after, limit, viewer })` -> `{ ok: true, ingests: [{ ingest, binding, project, state: "done"|"stopped", by, rows_total, written_count, not_written_count, at, cursor }], limit, truncated, next }`, oldest first by (`at`, `ingest`), `limit` default 200 (1..1000), `after` the `cursor` of an earlier row, `by` as `member:<id>`; only ingests the viewer sees (visibility as the act), never `ingesting`; never throws.
+Notice: two kinds, FINDING `ingest-done` and FINDING `ingest-stopped`, keyed `FINDING::ingest-done::<ingest>` / `FINDING::ingest-stopped::<ingest>`, to `by` alone while active, told once by the key; window 90 days, bound 1000, pages of 200 (as R27); subject the ingest, home set the project. Words (localize ids, as BOB's START names): `notice-producers.ingest.done`, `notice-producers.ingest.stopped`, filling the counts. `uses` needs `calculations` (your edge: modules.json lacks it on tranche/T51 today; checks/architecture.mjs fails on my import until it is added). Please tell CALCULATIONS #9 to publish exactly this read, or tell me the name and shape it publishes. Until it merges my seam test with the real calculations stays red by name and my failing-first tests use a stand-in `calculations` of this shape.
+
+## Fix round 6 · G55 (session_01CVXguWMv2q1pfSMTRFJZDM, NOTICE-PRODUCERS #16, depth 2): the ingest notices
+
+**Entry applied (to the shape in J6, awaiting BOB's answer).** `bio-plane/src/notice-producers/index.mjs`: producer `#ingestNotices` (R28, proposed), kinds `ingest-done` and `ingest-stopped` (FINDING), keys `FINDING::ingest-done::<ingest>` / `FINDING::ingest-stopped::<ingest>`, to the record's `by` alone while active; reads `calculationsOf(host).ingestNotices({after, limit, viewer})` (stand-in shape in J6), pages of 200 to at most 1,000 (`INGEST_NOTICE_PAGE`, `INGEST_NOTICE_MAX`), 90 days (`INGEST_NOTICE_DAYS`); an ingest still `ingesting`, another member's, a machine's or nobody's raises none; `facts.ingest`; a read that throws or refuses is named `calculations` in `facts.failed`. Words (localize ids BOB named): `notice-producers.ingest.done`, `notice-producers.ingest.stopped`, filling `{written}`, `{rows}`, `{not_written}`; the row owed to the design is the same pair, T52.
+
+**Tests** (`g55-ingest.test.mjs`, new; `fixture.mjs` NONE gains a `calculations` stand-in; `read.test.mjs` R1 facts gain `ingest`). Seen red on the base (file fails at import: no producer), green after: one notice per done and per stopped ingest for its member and the same keys on a second cycle; the words by id and the counts; running / other member / machine / nobody none; revoked none; older than 90 days none; paging by `next`; throw / refuse named. **Seam test with the real calculations** (`R27`-style, last test of the file) is red by name: `calculations has not published ingestNotices`, until CALCULATIONS #9 merges and BOB CHANGEs me.
+
+**Results.** Module: 143 tests, 142 pass, 1 red by name (the seam). format 0; coverage 27 of 27; words 0 failures; ownership 0 failures. **architecture: 1 failure, named: `imports calculations/index.mjs ... does not declare in uses`; BOB's edge (modules.json `notice-producers.uses` gains `calculations`), asked in J6.** Not run yet: the impact users (queue), after calculations merges.
+
+**Platform check.** Not applicable: a read of two small lists, no new object work (R-FOUR's platform clause: no size, CPU or `waitUntil` involved).
+Waiting on BOB: the answer to J6 and the `modules.json` edge.
+
+## G55 · after B6 (read to the provider's shape)
+Merged `tranche/T51` (the `calculations` edge is in; architecture 0). The earlier stand-in shape in J6 is replaced by BOB's published one: `ingestNotices({after = 0, limit, viewer}) → {ok, items: [{ingest, binding, state, rows_total, written_count, not_written_count, finished_at, stopped?: {reason, says}}], next}`. `#ingestNotices` (`index.mjs`) reads from `after` 0 every cycle (no cursor kept; order is by start, not finish), pages by `next` to 1,000, 90 days of `finished_at`; the subject is the ingest and its binding (no project, no `by`: the viewer is its member); a stop's `says` follows the sentence in the detail. Words `notice-producers.ingest.done` / `.stopped` (localize); row owed to the design: the same pair (T52).
+Tests: `g55-ingest.test.mjs` (7), red on the base (no producer), green after, except the seam over the real calculations, red by name (`calculations has not published ingestNotices`) until CALCULATIONS #9 merges. Added a test that two cycles both read from 0.
+Results: module 143 tests, 142 pass, 1 red by name (the seam). format 0, architecture 0, coverage 27/27, words 0, ownership 0 failures. Impact users: queue `noticed.test.mjs:288` is red for the same cause (`facts.failed` gains `calculations` while the real calculations lacks `ingestNotices`); it clears at calculations' merge (as `capture` did). Other impact users: store-door 6/6; control-plane and plane are not read by this producer.
+Proposed requirement line (BOB writes): R28 (G55, K4562): FINDINGs `ingest-done` / `ingest-stopped`, one per ingest `calculations.ingestNotices` answers the viewer, keyed `FINDING::ingest-<state>::<ingest>`, told to the viewer alone while active; each cycle reads from the start, pages by `next` to 1,000, window 90 days of `finished_at`; `facts.ingest`; a failing read named `calculations` in `facts.failed`; Uses gain `calculations`.
+Census ops owned: none changed.
+Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
+
+## J7 · COMPLETE
+
+COMPLETE (G55, R28 proposed): ingest-done and ingest-stopped notices built to calculations' published ingestNotices shape (B6). Module 143 tests, 142 pass; the one red is the seam over the real calculations, red by name until CALCULATIONS #9 merges, and queue/noticed.test.mjs:288 for the same cause (facts.failed gains calculations). format, architecture, coverage 27/27, words, ownership: 0 failures. Rows owed to the design: notice-producers.ingest.done, notice-producers.ingest.stopped (localize). CHANGE me at calculations' merge and I re-run both. Details in my record.
+Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
+
+## Fix round 9 · NOTICE-PRODUCERS #17 (session_01EzbeHquecfUvWe3Ss9yqdi) · G135f · R29
+
+Merged `tranche/T51`. R29 applied: `#readingsEnded` in `bio-plane/src/notice-producers/index.mjs` (new kind `reading-ended`; consts `READING_ENDED_*`, `READING_JOB_KIND`; `facts.reading_ended`; failures named `readings`; wired in `noticeItems`). Coded against `deps.readingsEnded({after, limit})` as plane merged it (`plane/pending.mjs` `readingsEnded`: `{ok, rows:[{sha, kind, state, why, written, skipped, owed, failed, ended_at, member}], next}`); I read the real contract, so the local implementation in the test is that shape.
+
+**Choices (all inside R29's text).** Only rows of kind `reading` are told; states `finished`, `final` (ended in part, with its `why`), `refused`; `{read}` = `written`, `{total}` = written+skipped+owed+failed (the counted sentence only when total > 0); the document is `provenance.homeOf(sha)` (title as the viewer sees it, else the path's last part, else the sha); a row for another member, a machine or nobody makes none; the 90-day window reads `ended_at`; every cycle reads from the start.
+
+**Failing-first.** `reading-ended.test.mjs` (R29, 8 tests): with the source stashed, red: `SyntaxError: ... does not provide an export named 'READING_ENDED_DAYS'` (0 pass, 1 fail file); with R29, green 8/8. `read.test.mjs` R1's facts line gained `reading_ended` (red 150/151 before, green after).
+
+**Words owed (stand-ins by `localize`, rows for `later-ux.md`):** `notice-producers.reading.finished` ("{document} has been read."), `.finished.counted` ("{document} has been read: {read} of {total}."), `.partial` / `.partial.counted` ("{document} was read in part[: {read} of {total}]. {why}"), `.refused` ("{document} was not taken in: {why}"); the door reuses `notice-producers.index.open_the_document` (design row `notice.fetch.done.door` family). `{why}` is plane's `final_why` as given (a code such as PASSWORD_REQUIRED, or the refusal's limit text): the design should supply the member's words for it.
+
+**Found in another module.** `queue`'s catalogue (`bio-plane/src/queuestate.mjs`, near the `fetch-done` / `ingest-done` entries, G61) does not name `reading-ended`: `test/m/queue/catalogue.test.mjs:242` (R1 G61) is red by name, and without the entry the opener's whole Queue is refused `NO_SUCH_KIND` (the text above those entries). Queue's job adds `"reading-ended"` there, class FINDING, "— LIVE: notice-producers R29".
+
+**Tests.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/notice-producers/`: 151 tests, 151 pass, 0 fail. Impact users (`impact.mjs origin/tranche/T51 HEAD`: queue, store-door, control-plane, plane): queue + store-door 286 tests, 285 pass, 1 fail (the catalogue line above). control-plane's seam section 11 is job 43's. Checks: format 0 failures; architecture 0; coverage 29 of 29 ids named, 0; words inline 0, 0 failures; ownership 0 failures (4 files).
+
+Generated artifacts made stale: none.
+
+Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
+
+## J8 · COMPLETE
+
+COMPLETE (NOTICE-PRODUCERS #17, fix round 9, G135f, R29). Details in my record's 'Fix round 9' section. R29 applied (#readingsEnded, kind reading-ended, facts.reading_ended, failures named 'readings'), coded against plane's merged readingsEnded shape. Failing-first reading-ended.test.mjs red (missing export) then 8/8 green; module 151/151; format/architecture/coverage/words/ownership 0 failures. NEEDS FROM YOU (smallest thing): queue's catalogue (queuestate.mjs, beside fetch-done/ingest-done) must name 'reading-ended' (FINDING, LIVE: notice-producers R29) or queue's catalogue.test.mjs:242 (R1 G61) stays red and the opener's whole Queue is refused NO_SUCH_KIND; queue's job adds it, I cannot. Words owed (localize stand-ins notice-producers.reading.finished/.finished.counted/.partial/.partial.counted/.refused) are in the record. Size (session_01EzbeHquecfUvWe3Ss9yqdi): test runs 9, module lines 1699
+
+## Fix round 10 · NOTICE-PRODUCERS #18 (session_01YTEEz6mMUuYSeNrA5gXVxw) · Wave B batch 6 · 10 fixture lines
+
+Merged `tranche/T51`. No product code changed; test files only (`fixture.mjs`, `investigation.test.mjs`, `policy.test.mjs`, `read.test.mjs`, `security.test.mjs`, `watched.test.mjs`).
+
+**Lines done (10, all FIX-E, each from the provider's published `fixtures.mjs`):**
+- credentials/securityMapRefusal: `fixture.mjs:20` (`NONE.credentials.securityMap` answers `securityRefusals.notAnAdmin`); `security.test.mjs:177` (`refusals.invalidPeriod`).
+- standards/standardReadWorld: `fixture.mjs:27` (`NONE.standards.standardRead` is the real instance's, built on first use); `policy.test.mjs:41` (the refusal branch of `standardsOver` is the real `standardRead`).
+- provenance/homeOfEmpty: `fixture.mjs:31` (`NONE.provenance.homeOf` is the real empty provenance's); provenance/homeOfHomed: `read.test.mjs:50` (the scan finding's capture is really homed in a bundle).
+- steps/stepRead: `investigation.test.mjs:289` (`unknownAnswer`, the real NO_SUCH_STEP). steps' real `laterFound` at `investigation.test.mjs:262`: instead of a hand-built `found: many`, the test lays 201 real looks and arrivals in steps' own world (`laterWorld`), asserts steps answers 201, and the notice read is cut at the bound with `truncated: true`; the control is a world with 3. (`steps/stepsWorld` in `fixtures.mjs` publishes no `laterFound`/`stepsDue`, so the real module of the test's own world is used.)
+- retrieval-browse/browseViewerMissing: `watched.test.mjs:132`; following/watchedByRefusal: `watched.test.mjs:134`.
+
+**Left: none by the fixtures check.** `node checks/fixtures.mjs . notice-producers --list`: 0 failures for the module (was 10). No `fixtures-own` or `fixtures-generic` marker added.
+
+**Needs BOB (edge, `build/modules.json`):** `node checks/architecture.mjs /home/user/bio notice-producers` reads 1 failure: `watched.test.mjs` imports `bio-plane/test/m/retrieval-browse/fixtures.mjs` of `retrieval-browse`, which `notice-producers.uses` does not declare (it declares `retrieval`). The plan's row names `retrieval-browse/browseViewerMissing`; BOB adds `retrieval-browse` to `notice-producers.uses` (or names another provider of the line).
+
+**Tests.** Module: 16 files, 151 tests, 151 pass, 0 fail. Impact (`impact.mjs origin/tranche/T51 HEAD`): workbooks `add.test.mjs`, 4 pass. Checks: format 0 failures; coverage 29 of 29 ids, 0 failures; words 0 failures (no finding in my module); architecture 1 failure (the edge above); ownership run after the commit.
+
+Generated artifacts made stale: none. Census ops owned: none changed.
+
+Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 9, module lines 1699
+
+## J9 · QUESTION
+
+QUESTION (fix round 10, batch 6): all 10 fixture lines are re-pointed and pushed (7874865fea): fixtures check 0 failures for notice-producers, module 151/151, format, coverage, words, ownership clean. One architecture failure remains and only your edge fixes it: watched.test.mjs:132 takes browseViewerMissing from bio-plane/test/m/retrieval-browse/fixtures.mjs (the plan's provider), and notice-producers.uses declares retrieval, not retrieval-browse. Please add retrieval-browse to notice-producers.uses in build/modules.json on tranche/T51 (or name another provider); then I merge tranche/T51 and COMPLETE. Best reading: add the edge.
+
+**Completion (after B9).** Merged `tranche/T51` (the `retrieval-browse` edge). Architecture 0 failures; format 0; coverage 29 of 29, 0; fixtures for notice-producers 0 failures; module tests 151, 151 pass. No `fixtures-own` or `fixtures-generic` marker added. Files outside my paths: none.
+
+Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 10, module lines 1699
+
+## J10 · COMPLETE
+
+COMPLETE (fix round 10, batch 6): 10 fixture lines re-pointed to the providers' published fixtures (FIX-E: credentials, standards, provenance x2, steps, retrieval-browse, following; steps' laterFound bound test uses 201 real entries). fixtures check 0 failures for notice-producers; architecture, format, coverage 0 failures; ownership 0; module 151/151; impact user workbooks 4/4. No fixtures-own/fixtures-generic markers. No files outside paths. Size (session_01YTEEz6mMUuYSeNrA5gXVxw): test runs 10, module lines 1699
+
+## Fix round 10 (NOTICE-PRODUCERS #19, B10): R29's marked clause, the seam over the real job table
+
+Applied: new `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs` (4 tests naming R29): the `reading-ended` producer driven at `noticeItems` over the rows plane's real job table answers. The table is plane's (172, later than this module at 148), so its answer is stated as data, `READING_ROWS` (`// fixtures-contract: plane reading-ended`, now on `readingsEnded`'s return, `reading-ended-seam.test.mjs:36`, per B11), taken from a probe of the real `Store`'s `readingsEnded` (member `member:<id>`, `ended_at` epoch ms, refusal `why` the bound key `pdf.bytes`, final `why` the reader's reason, cursor `<ended_at>\u0001<sha>\u0001<kind>`, cap 500). No product code changed.
+Tests: opener-only recipients over real shapes (`:41`); sentences fill the real counts and reasons, a refused file never said read (`:52`); the real cursor followed in 3 pages (450 rows), each told once, facts bound/days/truncated (`:64`); a row past the window not told, a row given twice one notice (`:75`).
+Failing first: with `bare(g.member)` removed from `#readingsEnded` (index.mjs), all 4 fail (0 pass); restored, 4 pass. The product file is unchanged.
+Found, not in my paths: a refused row's `why` is the bound key (`pdf.bytes`) or `REFUSED`, so the refused sentence reads "was not taken in: pdf.bytes" (R29 fills "the limit where it was refused"; the row states no size or limit, `plane/pending.mjs:231`). Wording that key for people is plane/setup-words work, not mine; reported.
+Owed by plane (REPORT): add `// fixtures-run: notice-producers reading-ended` in `bio-plane/test/m/plane/r10-fixtures-run.test.mjs` and a case there running `READING_ROWS` (reading-ended-seam.test.mjs:18-23) against the real table (register 4 `reading` rows, end them, compare `readingsEnded({})` row for row). The fixtures check lists my marker as `[idle]` until then: the one finding in my files.
+Checks: module 155 tests, 155 pass; format 0; architecture 0; coverage 29 of 29, 0; ownership 0; impact: 0 affected; `run.mjs`: words 16 failures, none in my files (count not risen by me), fixtures 1 (the idle contract above).
+Met ids: R29 (BOB strikes the mark once plane's run is merged). No `fixtures-own` or `fixtures-generic` marker added.
+
+Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 12, module lines 1699
+
+## J11 · COMPLETE
+
+COMPLETE (fix round 10, B10): R29's marked clause. New test file bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs (4 tests naming R29) drives the reading-ended producer over the rows plane's real job table answers (shapes probed from the real Store: member 'member:<id>', ended_at epoch ms, refusal why = bound key 'pdf.bytes', cursor <ended_at>\u0001<sha>\u0001<kind>). Plane is later in the order, so the rows are data under '// fixtures-contract: plane reading-ended' (:18). Failing first: with bare(g.member) removed all 4 fail, restored 4 pass; product code unchanged. Suite 155/155; format 0, architecture 0, coverage 29/29, ownership 0, impact 0 affected; run.mjs: words 16 failures none in my files; fixtures: 1 finding, my marker [idle] until plane runs it. REPORT for BOB: plane must add '// fixtures-run: notice-producers reading-ended' in plane/r10-fixtures-run.test.mjs and a case running READING_ROWS (reading-ended-seam.test.mjs:18-23) against its real table (register 4 reading rows, end them, compare readingsEnded({}) row for row). Also found, outside my paths: a refused row's why is a bound key ('pdf.bytes') or 'REFUSED' (plane/pending.mjs:231), so the notice says 'was not taken in: pdf.bytes'; R29 asks for the limit, the row states no size: plane/setup-words decide the wording. Met ids: R29 (strike the mark once plane's run merges). No fixtures-own/generic marker added. Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 12, module lines 1699
+
+**B11 CHANGE applied:** the `fixtures-contract: plane reading-ended` marker moved from the `READING_ROWS` constant to the line that hands the rows in as the answer, `readingsEnded`'s return (`reading-ended-seam.test.mjs:36`). It is still `[idle]` in the fixtures check only because plane's `fixtures-run: notice-producers reading-ended` is not yet merged (PLANE #63). Contract id: `reading-ended`. Row shape: `{sha, kind: "reading", state: "refused"|"finished"|"final", why: string|null, written, skipped, owed, failed (integers), ended_at: epoch ms, member: "member:<id>"|null}`; answer `{ok: true, rows, next: "<ended_at>\u0001<sha>\u0001<kind>"|null}`; order by `ended_at, sha, kind`; limit capped at 500. Cases to run: refused (`why` the bound key `pdf.bytes`, counters 0, member set), finished (`why` null, written 5), final (`why` `PASSWORD_REQUIRED`, member set), final with no member (member null), and the paged cursor.
+Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 14, module lines 1699
+
+## J12 · COMPLETE
+
+COMPLETE (B11 applied; R29): the fixtures-contract marker now sits on readingsEnded's returned answer (reading-ended-seam.test.mjs:36). Module 155/155, format 0, ownership run after commit. The marker stays [idle] only until plane merges 'fixtures-run: notice-producers reading-ended'. REPORT for plane's run: contract id reading-ended; answer {ok:true, rows, next}; row {sha, kind:'reading', state refused|finished|final, why string|null, written, skipped, owed, failed (ints), ended_at epoch ms, member 'member:<id>'|null}; next '<ended_at>\u0001<sha>\u0001<kind>'|null; order ended_at,sha,kind; limit cap 500. Cases: refused (why 'pdf.bytes', counters 0), finished (why null, written 5), final (why PASSWORD_REQUIRED), final with member null, paged cursor. Met id: R29. Size (session_01P5bsgjRaPhtyPChVVxk1mW): test runs 14, module lines 1699
+
+## J13 · BLOCKED
+
+BLOCKED (cause: needs Bob) on B12 (fix round 10, K5202): the marker placement cannot be done in my paths. No line of the seam is a candidate the fixtures check classes.
+
+What I checked:
+- The marker is at `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs:36` (`readingsEnded`'s return, B11). `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio notice-producers --list` lists exactly one line, that marker, `[idle]`. It lists no answer candidate at all, so there is no other line to move it to.
+- Plane's run is merged: `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30` carries `// fixtures-run: notice-producers reading-ended` (PLANE #63, B101).
+
+Why the check classes nothing: `checks/fixtures.mjs:884` skips any object literal with a `why` key and no `reason` key ("`why` is not the refusal key of any module's answer"). The ended rows that plane's `readingsEnded` returns (`bio-plane/src/store-assembly/pending.mjs:744`) carry the refusal or final reason in `why` (`pdf.bytes`, `PASSWORD_REQUIRED`) and `state`, never `reason`/`code`/`error`/`failure_class`/`refusal`. So the answer is skipped by design, and the marker covers nothing under any placement. The `{ok: true, rows, next}` envelope is not a refusal either.
+
+Options for Bob (one decision):
+1. (Recommended) The checker classes a row carrying `state` and `why` as the refusal answer of its provider, so the marker on `readingsEnded`'s return covers it. Process-repo change (`checks/fixtures.mjs`), not mine to make.
+2. Plane renames the row's reason key to `reason`. This changes plane's shape and its R98 paths; I would not recommend it.
+3. Drop the marker and keep the seam as data. This leaves `READING_ROWS` as hand-built answer data, which K4990 forbids, so I would not recommend it.
+
+Meanwhile: `notice-producers` tests run from the root, `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 pass, 0 fail. The OP-GRADES `DECLARED_OP_DISAGREES` red did not appear on this run. I have made no code change this round. Format, architecture, coverage and ownership checks are not yet run; I will run them once Bob decides, with the COMPLETE.
+
+Met ids: none new this round (R29 stays marked until the fixtures check classes its answer).
+
+## J14 · COMPLETE
+
+COMPLETE (B14 applied; R29). No code change this round: the marker stays at `bio-plane/test/m/notice-producers/reading-ended-seam.test.mjs:36` as BOB's K5204 answer says. The check (civicos-process main `8be32ff`, PR #9) now classes the `{ok: true, rows, next}` answer at `reading-ended-seam.test.mjs:37` as accepted (reading-ended), with plane's `fixtures-run` at `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30`.
+
+Checks, run from /home/user/bio:
+- fixtures `notice-producers --list`: 0 failures, accepted 1 (the reading-ended answer above); no `fixtures-own` or `fixtures-generic` marker added.
+- format: 178 modules, 0 failures.
+- architecture: 20 product files, 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test, 0 failures.
+- ownership (merge-base with tranche/T51 to HEAD): 0 failures.
+- module tests `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 tests, 155 pass, 0 fail.
+- `checks/run.mjs`: no finding in notice-producers files.
+
+Met ids: R29 (BOB strikes the mark). Found outside my paths, already reported at J11/J12: a refused row's `why` is a bound key (`pdf.bytes`) or REFUSED, so the notice reads "was not taken in: pdf.bytes" (plane/setup-words wording).
+
+Size (session_01VGCXrV2bt6soPPDTNLuJ76): test runs 2, module lines 1699
+
+## J15 · COMPLETE
+
+COMPLETE (B15 applied; R29). Merged `origin/tranche/T51` into the job branch (merge commit `778b8e0d22`, pushed; no rebase). OP-GRADES #30 is in, so the stores start again. No product code changed this round.
+
+Checks, run from /home/user/bio after the merge:
+- module tests `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/notice-producers/*.test.mjs`: 155 tests, 155 pass, 0 fail.
+- fixtures `notice-producers`: 0 failures, accepted 1 (the reading-ended answer at `reading-ended-seam.test.mjs:37`, covered by the marker at `:36`, run `bio-plane/test/m/plane/r10-reading-ended.test.mjs:30`).
+- format: 178 modules, 0 failures.
+- architecture: 20 product files, 0 failures.
+- coverage: 29 of 29 live requirement ids named by a test, 0 failures.
+- ownership (merge-base with tranche/T51 to HEAD): 0 failures.
+
+Not mine, not red in this module: `control-plane/r10-caseratify-chain.test.mjs` (until RATIFICATION #39) and `store-assembly/declarations.test.mjs` R83 (until STORE-ASSEMBLY #4), as BOB's B15 notes.
+
+Met ids: R29 (BOB strikes the mark).
+
+Size (session_01VGCXrV2bt6soPPDTNLuJ76): test runs 3, module lines 1699

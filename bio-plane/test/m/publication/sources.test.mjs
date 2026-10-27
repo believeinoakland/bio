@@ -157,7 +157,7 @@ test("R52 no published answer states a source detail except what publishableAt a
   const secretRow = { capture: CAP, stated: "name: Pat Doe", basis: "consent" };
   w.prepare("CASE-2026-0001", 1, { project: proj, roles, blocks: { captures: [], sources: [secretRow] } });
   assert.equal(w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) }).reason, "SOURCE_CONSENT_WITHDRAWN");
-  assert.equal(w.p.caseEditionState("CASE-2026-0001", 1), null, "no published case edition");
+  assert.equal(w.p.caseEditionState("CASE-2026-0001", 1), null, "nothing was published");
   /* what was publishable at the commit is published, and stays exactly that */
   const employer = disclose(w, source);
   const rows = statedRows(w, CAP, source);

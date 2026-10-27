@@ -1,0 +1,282 @@
+# monitoring (T51)
+
+**Status** · session_01YbVRaWcH7WiJvTG3xdtHxz · depth 2 · COMPLETE · handled B15
+
+## J1 · COMPLETE
+
+COMPLETE for T51 monitoring (session session_01QHLkmebmN4o1yN2ZJJmKBE), head 18a9f3808d on job/T51/monitoring (tranche/T51 merged in as c95c43efd0; no rebase).
+
+**Entry applied: T51-243 (words, K3949).** Every finding in build/plan/words-pass/monitoring.md is fixed (the list's line numbers had moved after the merge; the live check's list is the one I worked from).
+
+- Copies of existing words.json rows now read through `word(key)`: `monitoring.content_type`, `monitoring.reason_given`, `monitoring.says.objective_published_finding`, `monitoring.says.published_finding`, `monitoring.time_zone_held`, `monitoring.says.recorded_frequency_governs`, `monitoring.document_served_gathered` (vars locator, id, bundle; the same en).
+- Sentences held only in code now read through `localize`: `monitoring.index.fetched_the_opendocument_export` (the stitched Session Log fragment), and `monitoring.says.an_objective` (the fragment the project-rests sentence takes as its `has` var).
+- Test copies fixed, each compared by key or by equality with `word`/`localize`, never held as text: voice.test.mjs (C-48.8 by `word("refusal.DRIVE_TICK_EXPORT_IS_THE_SHELL")`; C-48.9 and the shape suffix by `localize` with the product's id and en), watch.test.mjs (fixture why by `word("intent.objective_states_condition")`), docket.test.mjs (stub detail by `localize("case-import.index.no_watch_in_force", ...)`), fixture.mjs (link-sweep's uniqueness sentence by `localize("link-sweep.checks.id_is_not_unique_within", ...)`; the literal `id ` prefix stays so the seam test's expected text is unchanged).
+
+**Deferred:** none. **Judged as no member reading:** none. **Found in another module:** none.
+
+**Tests run**
+- `node --test test/m/monitoring/` (bio-plane): tests 145, pass 145, fail 0 (run twice; the second after the last test edit).
+
+**Checks run**
+- `checks/words.mjs /home/user/bio monitoring`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures.
+- `checks/words.mjs /home/user/bio monitoring following link-sweep scheduler`: no line naming monitoring.
+- `checks/run.mjs /home/user/bio` (before my last test fix, then the words check on its own after it): format 176 modules, 0 failures; architecture 3648 files, 0 failures; coverage 175 modules, 5955 of 6092 live ids named, 24 failures (none names monitoring; the module's own coverage is 61 of 61, 0 failures); channels 2 participants, 0 failures; words 1163 failures, of which 1 named monitoring (docket.test.mjs:128), now fixed; the whole-repo words run after the fix shows 1162 and none names monitoring.
+- `checks/format.mjs /home/user/bio`: 176 modules, 175 requirements files, 0 failures.
+- `checks/architecture.mjs /home/user/bio monitoring`: 20 product files, 100 relative imports, 0 failures.
+- `checks/coverage.mjs /home/user/bio monitoring`: 61 of 61 live requirement ids named by a test, 0 failures.
+- `bio-plane/src/setup-words/build.mjs --check`: stale-rows note only, as expected. The two new ids above (monitoring.index.fetched_the_opendocument_export, monitoring.says.an_objective) are not yet in rows.mjs; rows are regenerated at the layer close.
+- `checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`: 6 files changed by monitoring, 0 failures.
+
+**Size (session_01QHLkmebmN4o1yN2ZJJmKBE):** test runs 2, module lines 2820 (an approximate count: non-blank, non-comment lines in src/monitoring/*.mjs; 3789 lines in all).
+
+## J2 · COMPLETE
+
+COMPLETE for T51 monitoring FR-36 (session session_019To67KKnDNVeKq651n8y2v), code at d77afcefff on job/T51/monitoring (tranche/T51 merged in, no rebase). Requirement lines: written by me in `build/requirements/monitoring.md` (B3, B4), not in this record.
+
+**Entries applied (B2, B5).**
+1. **R75** `namedRequestSet` (`op=namedrequestset`, a member session): new file `bio-plane/src/monitoring/named-requests.mjs` (see Size). Refusals in R75's order, each with a control: `MACHINE_CANNOT_SET_REQUEST` (C-18.22), R1's required-argument refusal naming `bundle`, `ABSENT` (absent and unseen identically), `NAMED_REQUEST_REFUSED` (C-18.23; `checkGatheringGrammar` called on the one request, each finding named in `detail` and in `findings`), `NO_SUCH_REQUEST`, then promotion's relayed. Planted and gathered by the next cadence tick (R28); a retired one is not due; two requests survive each other's revision byte for byte; the daemon block and the sweeps are carried; a machine credential and an `http` locator are refused with the file unchanged. Rows C-18.22 and C-18.23 are in `checks.mjs` (`NAMED_REQUEST_CHECKS`, in `MONITORING_CHECKS`), taken as B5 says (link-sweep took C-18.24), awaiting the stamp.
+2. **R76** `namedRequests` (`op=namedrequests`, read): items `{bundle, request, target, locators, authority, criticality, cadence, status, planted, last_attempt, due, next, daemon}` plus `state`, and `unscheduled`/`disabled` reasons; `paused`, `counts`, `limit`, `truncated`. An unseen bundle's request is neither answered nor counted (control). Never throws (a store that cannot be read answers `ok: false` in words).
+3. **R77** `sweepHost().write({bundle, mutate, author, viewer, log})`: the shape B5 asks for, exactly: `mutate` edits the parsed object in place and returns it, `log` is the Session Log sentence. One addition, stated in R77: `mutate` may instead return a refusal `{ok: false, reason, ...}`, which is relayed unchanged with nothing written (the call runs in one record transaction, so an id `mutate` minted is taken back); `link-sweep` can ignore it. The write is synchronous (`promotion.promote` is). Unchanged object: `{ok: true, existed: true}`, nothing written. Canonical form: two-space JSON and a newline.
+4. **K4168 / K4202 `DECLARED_OPS`** in `index.mjs` beside `monitoringOps`: `monitor`, `monitoring`, `monitorpause`, `monitorset`, `monitorslate` (the census) and `namedrequestset`, `namedrequests`. The mechanical pass had NOT declared anything for this module on my branch (no `DECLARED_OPS` in `src/monitoring/` after merging `tranche/T51` at e67a3a1c3c), so I declared all seven; if the pass lands one later it is a duplicate (`declaredOpsOf` reports it): take mine. The first five copy the hand rows (classes, machineClasses, mutating from `op-declarations`; weight and description from `op-grades`: `monitor` observational, `monitorpause` credential, `monitorset` reversible, descriptions word for word; `monitoring`, `monitorslate` and `namedrequests` have no `op-grades` row and get weight `read` and a `read: ...` description). Fields: `monitor` {accepts/requires `bundleId`}; `monitoring` and `monitorslate` {accepts `now`, `limit`, requires none}; `monitorpause` {`paused`}; `monitorset` {accepts `bundleId`, `enabled`, `frequency`; requires `bundleId`, `enabled`}; `namedrequestset` and `namedrequests` as B2 gives them (`namedrequestset` also names `needs: "contribute"` and stamps `author`, `viewer`, which a mutating op with no hand row must). The control plane's `actor` and `actorClass` stamps are not accepted fields (the door composes them). New requirement line for the census: **R78**, written in the requirements file.
+
+**Readings I settled (not blocking; BOB may CHANGE).** (a) A revision states the request whole in the five required fields; `cadence` absent means once (R28), `status` absent keeps the held status (a retired request is not reopened by an edit that does not say so; `open` on a new one), and the original `planted` instant is kept. (b) A minted id is `GATH-<year>-<counter>-<slug of target.text>` (record-core `allocId`, R69). (c) `NO_SUCH_REQUEST` and the unreadable-gathering-file refusal (a held file that is not inline, not JSON or not an object is refused `GATHERING_REFUSED`, never overwritten) carry no catalogue row of their own; `NO_SUCH_REQUEST` is plain like `NO_LOCATOR`.
+
+**Deferred:** none. **Judged as no member reading:** none.
+
+**Hand rows that can now go (other modules', BOB's to schedule).** `op-declarations`: the spec rows of `monitor`, `monitoring`, `monitorpause`, `monitorset`, `monitorslate` (their `needs` and stamps rows stay: I did not declare them for the hand ops). `op-grades`: `monitor` (RUNG_ABSENT, NON_ACTS), `monitorpause` (RUNG_ABSENT, NON_ACTS), `monitorset` (RUNGS, NON_ACTS). The agreement check of both modules passes with my declarations in the collection.
+
+**Found in another module:** nothing in a module I read. Failures that exist without my change (same counts on `tranche/T51` as merged, stashed run): `op-declarations` 1 (R73 registry gaps, `expertisewithdraw` and others), `op-grades` 2 (R42, R46 MARKS, `expertisewithdraw`), `interface-shell` 27, and the whole-repo words check's 8 `testcopy` findings in `op-grades` tests (t36, t47, t48). None names monitoring or an op of mine.
+
+**Tests run** (each new test written first and seen failing: `named-requests.test.mjs` fails to load against the code before this job)
+- `node --test bio-plane/test/m/monitoring/`: tests 168, pass 168, fail 0 (new: `named-requests.test.mjs` 15, `declared-ops.test.mjs` 8; `seam.test.mjs` and `invariants.test.mjs` updated for `write` and the two rows).
+- Users and neighbours: `following` 116/116, `link-sweep` 29/29, `scheduler` 135/135, `test-support` 61/61; `op-declarations`, `op-grades`, `interface-shell` as listed above, identical to baseline.
+
+**Checks run** (from `/home/user/civicos-process`)
+- `checks/run.mjs /home/user/bio`: format 175 modules, 175 requirements files, 0 failures; architecture 3782 product files, 12939 relative imports, 0 failures; coverage 175 modules, 6195 of 6208 live ids named, 6 failures (none names monitoring); channels 0 failures; words 8 failures (all `op-grades` testcopy), none in monitoring.
+- `checks/coverage.mjs /home/user/bio monitoring`: 65 of 65 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio monitoring monitoring following link-sweep scheduler`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0; 0 failures.
+- `checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`: 9 files changed by monitoring, 1 failure: `build/requirements/monitoring.md`, the one file B3 and B4 say is accepted at the merge.
+- `bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (first stale word `ai-accounts.declared.accountusesset`, another module's); the new ids (`monitoring.declared.*`, `monitoring.checks.only_a_member_plants`, `monitoring.checks.this_request_was_not`, `monitoring.named_requests.*`) are not in `rows.mjs` yet, regenerated at the layer close.
+
+**Size (session_019To67KKnDNVeKq651n8y2v):** test runs 5, module lines 3078 (non-blank, non-comment lines in `src/monitoring/*.mjs`; 4114 lines in all, over the P6 mark of about 4,000 as the requirements file foresaw: `index.mjs` grew by 59 lines to 3429, `named-requests.mjs` is new at 251 lines (208 non-comment), `checks.mjs` grew by 18 to 265).
+
+## J3 · QUESTION
+
+QUESTION on C26 (my part): no requirement line is written for it, and the one that governs says the opposite.
+
+What I found (read whole: monitoring R1–R10, R74, R38; code `index.mjs` tick comparison ~l.940–1010; capture R96 and `capture/index.mjs` heldAt):
+- The tick's comparison (monitoring R5, `index.mjs` ~l.969–1010) already prefers the determined evidentiary digest. It falls to the raw SHA-256 whenever the baseline recorded none, or the handler/member differ, or the fresh bytes are undetermined, and says so in `compared: "raw"` + `compared_basis`. R5 *requires* that fallback ("else the raw SHA-256").
+- The walk's "changed" for a static page is NOT produced by the tick: it is `heldAt` (capture R96, `capture/index.mjs` ~l.1130–1160), which compares the served bytes' raw SHA-256 with `copy.sha256` (no determined digest anywhere in that path), and `screens-intake/capture.mjs:366-376` which maps its `changed.state`. Both are capture's / screens-intake's, not monitoring's. I cannot find a plane line in monitoring that says "changed" for an unchanged static page except R5's raw fallback (an ASP.NET-style page with no determined baseline digest reads `modified` on every fetch, which is the same symptom).
+
+Best reading of "monitoring's part" (what I will build unless you say otherwise):
+1. The tick's status is judged only on the determined digest. When the baseline recorded no determined evidentiary digest (or it cannot be compared with the fetched side: different handler/version, different member, fresh side undetermined), the tick answers `compared: null`, `status: null`, `compared_basis` saying why (existing keys), the look is `LOOKED_INDETERMINATE`, nothing is captured (R9 does not fire), and no `modified`/`unchanged` is written. Raw bytes are compared only where the baseline is a shell/rendered frame (R5's `shell` arm is untouched) and the raw "same bytes" equality is no longer evidence of `unchanged` or of `modified`.
+2. That amends R5, R9 (a `modified` capture), R11 (a look's outcome) and R38. I cannot edit the requirements file. If you agree, please write the amended R5 line (marked not yet met) and CHANGE me; I then test it: baseline with no determined digest → cannot-tell; same page re-fetched with unchanged substance → unchanged; control: changed substance → changed.
+
+Questions:
+(a) Is reading 1 right, i.e. does "cannot tell" for the tick mean `status: null` + an indeterminate look, replacing the raw fallback entirely (and so one more thing for `following`, `scheduler` and the screens that read `compared: "raw"` to meet)?
+(b) The determined digest is recorded on the baseline by acquisition/capture's side (not mine). Is that half in the cause-capture job (its C26*), and does `heldAt` get the same rule there? I am not touching either.
+(c) If instead you mean heldAt only, then monitoring has nothing to change for C26: say so and I will COMPLETE with that stated.
+
+I carry on with nothing else (this is my only cause).
+
+## J4 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 2 (B6, answered by B7, K4305; session session_01PtKqTwtHQrKyKtULMgWvUo). tranche/T51 merged in, no rebase.
+
+**C26: nothing to change in monitoring.** BOB's ANSWER (B7, option c): the walk's "changed" comes from `capture`'s `heldat` (R96), held by cause-capture-t51, and the determined digest on the baseline is capture's side too. Monitoring's R5 raw fallback stays as written. No code, test or requirement of monitoring changed in this job.
+
+**Deferred:** none. **Found in another module:** nothing new (the heldAt raw comparison in `capture/index.mjs` is the cause BOB assigned to cause-capture-t51).
+
+**Tests run:** `node --test --test-force-exit bio-plane/test/m/monitoring/`: tests 168, pass 168, fail 0 (after merging tranche/T51).
+**Checks run:** `checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`: 1 file changed by monitoring (this record), 0 failures. No other check was run: no module file changed.
+
+Size (session_01PtKqTwtHQrKyKtULMgWvUo): test runs 1, module lines 0 changed (module unchanged at 3078 non-blank, non-comment lines in `src/monitoring/*.mjs`).
+
+## J5 · COMPLETE
+
+COMPLETE: C26 needs no change in monitoring (B7, option c). Suite 168/168 after merging tranche/T51; ownership 0 failures. Details in J4 of my record.
+
+## J6 · COMPLETE
+
+COMPLETE for T51 monitoring, batch C job 52, G140's consumer half (session session_01PCKo5gn3rH8ZDaWARPfr8H), code at the head of job/T51/monitoring (tranche/T51 merged in, no rebase).
+
+**Entry applied (B8).** `monitoring/index.mjs` `#assess` now reads `id.shell` (site-profiles R2: a CERTAIN client-rendered match) where it read `id.handler.shell` (the handler's class flag, true of a POSSIBLE or LIKELY match too). A page matched only POSSIBLE gets its document type and contract; a CERTAIN shell stays `UNMONITORABLE`. No requirement line changes (R7 already says a shell captured as the document is unmonitorable; "shell" there is now read as site-profiles' R2 defines it).
+
+**Tests.** New in `tick.test.mjs`, named R7: a POSSIBLE client-rendered page, a CSV and plain prose each hold a document type and a contract other than `unmonitorable` (written first, seen failing on the POSSIBLE page: no document type held). Tests that pinned a POSSIBLE match as unmonitorable and now use a CERTAIN shell fixture (control: R7 asserts `identify(...).shell === true` on it): `tick.test.mjs` R7 "a shell captured as the document grades no change", and `invariants.test.mjs` R38 "an equality that costs nothing is not evidence". For the CSV and plain prose shapes, `identify` already answers no handler (class flag false), so those two pass before and after; they are kept as the over-strictness controls. Nothing found in another module.
+
+**Tests run.** `bio-plane/test/m/monitoring/`: tests 169, pass 169, fail 0. Users: following 127/127, link-sweep 41/41, scheduler 163/163. `impact.mjs origin/tranche/T51 HEAD` names 19 modules because `DECLARED_OPS` is a shared table; the three direct users above were run, not the rest.
+
+**Checks.** `checks/coverage.mjs ... monitoring`: 65 of 65, 0 failures. `checks/ownership.mjs ... monitoring tranche/T51 job/T51/monitoring`: 4 files, 0 failures. `checks/run.mjs`: architecture 0 failures; format 1 failure (`office-readers` names `bio-plane/src/office-xml.mjs`, another module's); coverage 21 and words 19, none naming monitoring (words: 0 testcopy, 0 plain). `setup-words/build.mjs --check`: stale-rows note only (first stale word `doc-clean.index.the_package_holds_more_entries`, another module's).
+
+**Deferred:** none. **Found in another module:** only the `office-readers` path above.
+
+Size (session_01PCKo5gn3rH8ZDaWARPfr8H): test runs 9, module lines 3300 (non-blank, non-comment lines in src/monitoring/*.mjs; 4116 in all)
+
+## J7 · QUESTION
+
+QUESTION (J1) · monitoring · fix round 10 batch 5 · the four `intentWorld` / `publicationWorld` lines (fixture.mjs:210, :211; each a declaration and a use)
+
+What stands: the other lines of the START are re-pointed or marked (see my record when I post COMPLETE); the three fixtures are published and tested; 172 module tests pass. These four findings remain.
+
+The stand-ins are `stubIntent` (intent R7's `watchSet` and `registerSource`) and `stubPublication` (publication R42's `restingCapturesOf`). 14 tests use them, in `understanding.test.mjs` (R33) and `watch.test.mjs` (R70). Each test states, per project, which capture digests the project's objective or findings rest on, and the digests are the ones of documents that monitoring's own world holds (so `watched()` can map a digest to its bundle). Some tests set several projects, a watch set longer than two pages, a `watchSet` that throws for one project, and `gaps` / `progress` overrides for investigation.
+
+Why the published fixtures do not fit: `intentWorld()` and `publicationWorld()` each build one project in their own database with digests of their own making (`ent-1-need` and the like, `sha("the text of <doc>")`), and the two worlds name different project ids. A test cannot say "project P1 rests on this document's capture" and "P2 on that one", and `watched({project})` asks both providers about one project id.
+
+My best reading: re-pointing needs the providers to publish a fixture parameterised by what the user holds, for instance intent `watchSetOf({[projectKey]: [digest, ...]})` (a real intent whose projects' conditions read those digests, made by real acts) and publication `restingOf([{finding, projects, digests}])` over the same project ids. Then my `world()` takes those and the stubs go.
+
+What I will do unless you say otherwise: leave these four lines at `stay` in my COMPLETE, named with this reason, and re-point on a CHANGE once intent and publication publish such fixtures. Alternative if you prefer it now: I re-point R33's objective half only onto `intentWorld()` (its three digests, documents made to hold them); that leaves the stub for the rest, so it does not clear the four findings.
+
+## J8 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10, Wave A batch 5 (START B9), session session_013HZfjoGu9DeeFtdAsv1UPN, on job/T51/monitoring. All 36 own lines are done but four, and the one open QUESTION is J7 (named "J1" inside its own text, a slip).
+
+**Fixtures published** in `bio-plane/test/m/monitoring/fixtures.mjs` (new), each made by the real code at test time and called by a test of mine in `fixtures.test.mjs` (names R48; R1 R8 R9 R10; R16 R19 R20 R32 R47 R48):
+- `flaggedRefusal({limit})`: the real unread `flagged` answer `{ok:false, reason:null, items:[], limit, truncated:false, detail}` (the projection it reads is gone).
+- `monitorAnswer({ticks, kind})`: the real `monitor({bundleId})` answer `{status, body}` per tick of the clock (`answers`, `answer` the last). A `modified` source gives a distinct `capture.sha256` per tick; an `unchanged` one gives `capture: null` (the START's shape `status:"unchanged", capture:{sha256}` is not what the real code answers; real unchanged carries no capture, so following's judgment re-point should use `kind: "modified"` where it needs a digest per tick).
+- `monitoringReads()`: `{empty, seeded}`, each with the real `monitoring`, `archiveEligible`, `flagged`, `configured`, `archiveDue` reads; `seeded` has unscheduled, due, modified, removed, quiet monitors (ticked by the real tick), and two failing addresses (one fallback-eligible, one at the floor and not).
+
+**Own lines re-pointed (FIX-E), tests green:**
+- escalation/escalationsDue (12): `ends.test.mjs`, `understanding.test.mjs` take `escalationsDue().emptyWorld.esc` (real escalation, empty world).
+- acquisition/acquireRefusals (5): `docket`, `invariants`, `understanding` take `acquireRefusals({kind: "source_refused" | "not_eligible"})`. A source refusal now carries status 410 where the hand-built one said 503; no test reads it.
+- promotion/projectActNotParticipant (2) and action-clocks/pendingClocksRefusal (1): re-pointed.
+- case-import/watchedImports (2): `stubCaseImport` and `watchOf` are deleted from `fixture.mjs`; `docket.test.mjs` runs over the real case-import (watches made by the member's own `watchImport` act, reads recorded by the real `recordDocketRead`) seen through a spy (pages of two so the cursor is followed, a `reads` log, `refuse` taking `notWatched.refusal`, `fail`). Expected numbers follow the real answers (a docket entry case-import cannot verify is `new_entries: 1, new_refused: 1`; another group's answer is recorded unreadable by the real module, where the old test forced it). The import order is now the real ids', so expected orders are derived from them.
+- conformance/noDeterminations (1): `fixture.mjs` no longer builds a conformance. The published fixture would need a `conformance` edge in monitoring's `uses` (architecture check: monitoring does not declare it), so the world reaches the real conformance on the same host as production does (actions' own default); no determination is held there, which is what the fixture was. If you want the published fixture used, `modules.json` needs the edge (yours).
+
+**Markers I added (K5060), file:line and why:**
+- `docket.test.mjs:112` `fixtures-own: platform`: the docket host's own HTTP 404 answer served by the scripted network (a fake-network double), as your START named.
+- `fixture.mjs:268` `fixtures-own: synthetic`: the calendar content type registered through docprofile's `registerDoctype` seam, as your START named.
+- `fixture.mjs:310` `fixtures-contract: link-sweep sweep-fence` (the registered share's fence refusal), `named-requests.test.mjs:410` `fixtures-contract: link-sweep sweep-mutate` (covers 411, 416, 417), `relay.test.mjs:35` `fixtures-contract: store-door store-envelope`. These show `contract-no-run` until link-sweep's and store-door's own jobs merge a `// fixtures-run: monitoring <id>`: waiting on link-sweep and store-door.
+No `fixtures-generic` marker.
+
+**Left, named (stay):** 4 findings, `fixture.mjs:207` and `:208` (declaration and use of `stubIntent` and `stubPublication`; R33's and R70's 14 tests). Cause in QUESTION J7: the published `intentWorld()` and `publicationWorld()` are one project in their own database with their own digests, and a test must say per project which of monitoring's own documents' digests it rests on. They are the judgment lines for intent and publication; I re-point on a CHANGE once those providers publish fixtures parameterised by what the user holds, or on your other answer.
+
+**List now** (`checks/fixtures.mjs . monitoring --list`): 11 lines: 2 accepted (own), 5 contract-no-run (waiting, above), 4 the stay lines above.
+
+**Found in another module:** `build/plan/fixtures-T51/part-5.md` says `monitorAnswer` is `status:"unchanged"` with `capture:{sha256}`; the real tick answers `capture: null` when unchanged (R9 captures only a modified source). following's stand-in (`following/fixture.mjs:166`) is that unreal shape; its job re-points to `monitorAnswer({kind: "modified"})` or drops the capture. Not a defect of this module.
+
+**Tests run.** `bio-plane/test/m/monitoring/`: tests 172, pass 172, fail 0 (169 before, plus 3 for the fixtures). Users of the files I changed (they import monitoring's `fixture.mjs`): following `watches.test.mjs`, scheduler `rank.test.mjs`, affordances `backing.test.mjs`: 49/49. `build/plan/impact.mjs origin/tranche/T51 HEAD` names 104 modules, 1814 test files, because the diff against `origin/tranche/T51` includes everything the tranche moved since the branch point; no source file of mine changed (tests only), so I ran the three importers, not the rest.
+
+**Checks.** format 178 modules, 0 failures; architecture monitoring 25 files, 129 imports, 0 failures; coverage 65 of 65, 0 failures; words 0 failures; ownership 10 files changed by monitoring between tranche/T51 and HEAD, 0 failures.
+
+**Deferred:** none in the module. Source unchanged.
+
+Size (session_013HZfjoGu9DeeFtdAsv1UPN): test runs 11, module lines 3300
+
+## J9 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10 follow-up 27 (B11; B10 read: the four lines stay named in J7 until this re-point, as B10 says), session session_01GCDV8BWKs6fq93QzdCr4rY, on job/T51/monitoring at befc3a1465 (tranche/T51 merged in, no rebase).
+
+**Entries applied.** B11 (follow-up 27): the four `stubIntent`/`stubPublication` lines are re-pointed, and both stubs are deleted.
+- `fixture.mjs`: no stub is built. An absent intent or publication is now `null`. `undefined` makes monitoring build the real module on this host (`intentOf(host)`), which fails in R41's whole-store purge with `no such table: intent_departures`; that is why the default is `null`. The header says so.
+- `understanding.test.mjs` R33 (N170, N230): `watchSetOf({...}, { page: 2 })` and `restingOf([...])` from the providers' published fixtures. Project ids come from `f.projects`. Publication's answers are followed two at a time through a small wrapper, `pagedResting`, which records each call. The unreadable-publication control stays a fault injection. The R35 `assert.ok(stubIntent)` line goes.
+- `watch.test.mjs` R70 (all three tests): intent is the real module, through `intentFor(f)`, a thin adapter that maps this world's projects to the fixture's project for each name (`w.intent.bind`). The held digests are the sha of the bytes monitored, so the watch sets are real answers. The hand-built `gaps`/`progress` overrides are gone; investigation's quiet state and its reopen hold on the real intent answers.
+  - One held digest is the greatest of P1's (the older capture at the address), so it sits on P1's last page, as the stub made it.
+  - Expectations that followed insertion order now follow sha order, because the real `watchSet` and `restingCapturesOf` page by sha.
+
+**Deferred:** none. **Found in another module:** none. Module code (`src/monitoring/`) is unchanged.
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit`)
+- `bio-plane/test/m/monitoring/*.test.mjs`: tests 172, pass 172, fail 0 (after the `null` fix; before it R41 failed on the missing table, as above).
+- `understanding.test.mjs` and `watch.test.mjs`: 20 of 20 (run first).
+- users of the fixture: `following/watches`, `scheduler/rank`, `affordances/backing`: 49 of 49, as in the START.
+
+**Checks run** (from `/home/user/civicos-process`, absolute root)
+- `checks/fixtures.mjs /home/user/bio monitoring --list`: stub 0 (was 4). The remaining monitoring lines are `accepted(own)` (`docket.test.mjs:113`, `fixture.mjs:268`), `accepted(sweep-fence)` and `accepted(sweep-mutate)` (`fixture.mjs:313`; `named-requests.test.mjs:411`, `416`, `417`; link-sweep later), and `relay.test.mjs:36` (`contract-no-run`, waiting on store-door's `fixtures-run: monitoring store-envelope`; named in J8). The check's 2 failures are that one plus store-door's own `fixtures.test.mjs:34` orphan run (not mine).
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files, 0 failures.
+- `checks/architecture.mjs /home/user/bio monitoring`: 25 files, 132 relative imports, 0 failures.
+- `checks/coverage.mjs /home/user/bio monitoring`: 65 of 65 live ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio monitoring following link-sweep scheduler`: 0 failures (testcopy 0, plain 0, inline 0, missingkey 0).
+- `checks/ownership.mjs /home/user/bio monitoring tranche/T51 job/T51/monitoring`: 4 files changed by monitoring, 0 failures.
+
+**Markers added:** none.
+
+**Stray file.** An early command of mine wrote `/fx.mjs` at the filesystem root (a copy of the first 318 lines of the fixture, made before I noticed an unset `$TMPDIR`). Removing it was refused by the safety check, so it is still there. It is outside the repository. Someone with access should delete it.
+
+Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 5, module lines 3080 (non-blank, non-comment lines in src/monitoring/*.mjs; unchanged this job).
+
+## J10 · COMPLETE
+
+COMPLETE for T51 monitoring, the B12 CHANGE (re J9; K5101), session session_01GCDV8BWKs6fq93QzdCr4rY, on job/T51/monitoring at the head pushed with this entry (origin/tranche/T51 merged in, no rebase).
+
+**Entry applied (B12).** `relay.test.mjs:36` is marked `fixtures-contract: store-door store-replies` and takes the real BAD_JSON reply that store-door's run states: `{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }`. No other line changed.
+
+**Deferred:** none. **Found in another module:** none.
+
+**Tests:** `bio-plane/test/m/monitoring/*.test.mjs`: tests 172, pass 172, fail 0.
+**Checks** (absolute root, from `/home/user/civicos-process`): `checks/fixtures.mjs /home/user/bio monitoring --list`: 0 failures, stub 0, contract 0, answer 0; the seven remaining lines are accepted (own, or link-sweep later). `format`: 0 failures. `words` (monitoring, following, link-sweep, scheduler): 0 failures. `coverage`: 65 of 65, 0 failures. `ownership` (tranche/T51 to job/T51/monitoring): 5 files, 0 failures.
+
+**Markers added:** none.
+
+Size (session_01GCDV8BWKs6fq93QzdCr4rY): test runs 1, module lines 3080 (unchanged this job).
+
+## J11 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10, B13 item 1 (diag2-04 §4), session session_01HedZcxhsZ2J2MxA5Rp8RZy, on job/T51/monitoring (origin/tranche/T51 merged in, no rebase).
+
+**Met ids (BOB strikes the marks):** R4, R8, R32.
+
+**Built.**
+- R4 (a): a first 404/410 is `unconfirmed_removal`, stated, `status` null, `source_status` untouched, not flagged, look `LOOKED_INDETERMINATE`. A look at least 24 hours after the first of the run still unanswered is `removed`: flagged, `LOOKED_ABSENT`, note says it may be concealment. A look the source answered at the address clears the run (the window then starts again).
+- R4 (b): a 2xx whose final `res.url` (normalised) differs from the address fetched is `moved`, naming that address; the bytes are compared there as before (`unchanged`/`modified` stand, `modified` still flags; `moved` itself never does). A redirect ending at the same address is no move.
+- R4 (c): any other non-success is `refused`, reason = the note (`the source answered 403`).
+- The answer carries `look`: `{outcome: unconfirmed_removal|removed, since}`, `{outcome: moved, address}`, `{outcome: refused, reason}`, or null.
+- R32: new table `monitor_address_look` (schema.mjs; one row per normalised address, `absent_since` is the window's start; declared to purge by a whole-store purge, in `MONITORING_TABLES`). Each list row carries `last_look` ({outcome, at, since?, address?, reason?}); a watch whose last look is `refused` or `unconfirmed_removal` is listed `due` (due_at no later than that look) instead of an interval away.
+- New sentences at use, all `localize`: `monitoring.index.removal_confirmed`, `monitoring.index.removal_unconfirmed`, `monitoring.index.moved_note`.
+
+**Readings I settled (BOB may CHANGE).** (1) `moved` is a second statement beside the bytes' status, not a replacement of it, because the requirement says its bytes are compared there. (2) A fetch that throws leaves a held row as it is (neither confirms a removal nor clears it). (3) "Stays due" is read literally: due at the next tick, so a refusing host is asked again each cadence tick; the host governor paces it. (4) R41 names three tables only; `monitor_address_look` is a fourth, whole-store purge, and R41's text should list it.
+
+**Tests (failing first, seen red, then green):** `bio-plane/test/m/monitoring/outcomes.test.mjs`, 5 tests: unconfirmed then confirmed for 404 and 410 (inside the window stays unconfirmed, keeps `since`; later 404 stays removed); control 200 clears and restarts the window; moved to another address, then other bytes there are `modified`; control redirect to the same address is not moved and a move that stops clears the row; refused with its reason, the list row `due` with `last_look`, and the control that an answered watch is `scheduled` with no `last_look`.
+Existing tests that took one 404 as `removed` were brought to the amended R4 by adding the first look a day earlier (tick.test.mjs R4 and R7, queue-reads, watch R70, understanding R31, `monitoringReads` in fixtures.mjs, whose `removed` monitor is now one the real tick confirms); invariants R41 lists the new table. No assertion was weakened.
+
+**Why the tests missed it:** R4 and R8 said "404 or 410 is removed" and the tests pinned that sentence; the window, the move and the list row were in the architecture document and the coverage map, and no requirement carried them until K5148.
+
+**Deferred:** none. **Found in another module:** none. No `fixtures` marker added; `checks/fixtures.mjs /home/user/bio monitoring --list`: 0 failures, accepted 7 (as J10).
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): `bio-plane/test/m/monitoring/*.test.mjs` tests 177, pass 177, fail 0. Users of the fixture and of the tick: queue-producers `producers`, following `watches`, scheduler `rank`, affordances `backing` and `catalogue`, link-sweep: 146 of 146.
+**Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 25 files, 132 imports, 0 failures; coverage 65 of 65, 0 failures; words (monitoring following link-sweep scheduler) 0 failures; ownership (tranche/T51 to job/T51/monitoring) 10 files, 0 failures.
+
+Size (session_01HedZcxhsZ2J2MxA5Rp8RZy): test runs 8, module lines 3140
+
+## J12 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10 (START B14, K5148; plan item 74, K5157), session session_01CECUdTfDDfi9p5Y2ZtFV4w.
+
+**Entry applied: cause 1 (diag2-06 §1), monitoring R79 met.** Every cited line re-read first: the tick promoted the copy with a register row only, called no registrar, and carried `data/provenance.json` forward untouched, so `extraction.#storedDocument` found no document for the digest. Now (`monitoring/index.mjs`): (a) `#withCopyEntry` adds a provenance document entry for the copy to the carried register, in the same promotion as the file and register row: `file`, `locator` (the baseline entry's), `retrieved`, `authority` as the baseline entry states it (else `authority_state: undetermined` with a basis), `origin` (the baseline's when `named_request` or `sweep`, else `named_request`), `attestation_attempts: []`, and `capture` {method, `grade` = record-grammar's `EARNED_CAPTURE_CEILING` (a direct fetch), `actor_class: daemon`, `actor`, `sha256`, `encoding`, `bytes`, `content_type`}. An entry that already names the digest is not added twice. (b) After the promotion that filed the copy, the tick writes `{kind: "reading", sha, carrier}` through `this.capture.registerJob` and then `armJobs`, once per filed copy (a later tick seeing the same bytes owes nothing again). A registrar that refuses or throws is stated in the answer's `note`; a host with no registrar (no owed-work ledger) owes nothing. The baseline entry stays first and unchanged (R3 reads the first row of the locator, so the baseline does not advance; not changed).
+
+**Met ids for BOB to strike:** R79.
+
+**Tests (failing first, seen red on the old code, then green):** `tick.test.mjs` "R79 a copy the tick files ...": the host's registrar (test-support's `jobRegistrarStub`) receives exactly one `reading` for the new digest and the alarm is armed; the provenance holds two entries, the baseline's and one naming the new digest with locator, file, content type and bytes; the register's home of the digest is the bundle; the same bytes seen again file and owe nothing twice; an unregistered copy (promotion refused) owes nothing and files no entry; an unchanged tick owes nothing; a refusing registrar is named in `note`. `invariants.test.mjs` R37 was pinned to the old behaviour (`documents` equal to `[baseline]`); it now asserts the baseline entry is first and unchanged and the copy is a later entry (R79 amends exactly that; R37's text, no hash as current, still holds). No assertion was weakened.
+
+**Why the tests missed it:** R9's test asserted `capture.held/registered/file/why` and the promotion, never what the record could do with the copy afterwards; the fixture host had no registrar; the register assertion in R37 pinned "the register is unchanged" as if it were the doctrine.
+
+**Deferred:** none. **Not in my paths (REPORT):** (1) the walker's full chain through the door (Check now, reading, notice graded, ADOPT) is control-plane's: a through-the-door case for BOB to place; I add none. (2) The diagnosis asks for the extraction read of the digest "by extraction's published fixture": extraction's fixtures read only their own bytes and monitoring does not use extraction, so I test the lookup that read makes (provenance's home of the digest, and the bundle's entry naming it); the real read is the door case in (1). (3) A fixtures marker I added: `tick.test.mjs:7`, `:564`, `:607` (`// fixtures-contract: plane job-registrar`, the import of test-support's `jobRegistrarStub`, the registrar it installs on the host, and one registrar that refuses). They need plane's `bio-plane/test/m/plane/r10-fixtures-run.test.mjs` to add the line `// fixtures-run: monitoring job-registrar` (as acquisition's, there); until then `checks/fixtures.mjs <root> monitoring` shows those four lines as `contract-no-run`. (4) In following: `R1 C-137.1-C-137.20` fails on the tranche without my change too (run with my work stashed): not mine.
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): `bio-plane/test/m/monitoring/` tests 178, pass 178, fail 0. Users of the tick: scheduler 185/185, link-sweep 46/46, machinery-producers 38/38, queue-producers 155/155, following 127/128 (the one above, not mine).
+**Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 26 files, 133 imports, 0 failures; coverage 66 of 66, 0 failures; words monitoring 0 failures; ownership (tranche/T51 to HEAD) 4 files, 0 failures; fixtures `--list`: the four `contract-no-run` lines above, no other new line.
+
+Size (session_01CECUdTfDDfi9p5Y2ZtFV4w): test runs 10, module lines 4233
+
+## J13 · COMPLETE
+
+COMPLETE for T51 monitoring, fix round 10 (START B15, plan item 92, K5186), session session_01YbVRaWcH7WiJvTG3xdtHxz.
+
+**Entry applied: R80 (met).** The copy's provenance document entry now carries what acquisition's entry for the same capture carries. `monitoring/index.mjs`: `#copyProfile` (new) calls acquisition's own exported `profileOf` over the bytes the evidence store now holds (headers the tick saw, the entry's locator, the file name it ends in, `profileView(this.record)`, origin `fetch`) right after the copy is held, into `monCap.profile`; `#withCopyEntry` adds `profile` and a one-hop `provenance_chain` (`who` by acquisition's `firstHopWho` over the tick's `INSTANCE_NAME`/`VERSION`, `asserts` "these bytes were served for <locator> at <retrieved>", `evidence`, `bound: false`, `via: "direct"`). Acquisition exports no chain builder, only `profileOf`, `profileView` and `firstHopWho`, which I use; the hop itself is built here because acquisition's lives inline in `op=acquire`. A profile that cannot be made is null and the copy is still filed without one (R9).
+
+**Met ids for BOB to strike:** R80.
+
+**Test (failing first, seen red `provenance_chain` undefined, then green):** `tick.test.mjs` "R80 ...": the text copy's hop (`who`, `bound`, `via`, the address and instant in `asserts`); its `profile` deep-equal to acquisition's `profileOf` over the same bytes, with `profiled_from_text === true` (what reading-pipeline R2 reads as text); `registerChecks` at `verified` finds no C-18.9 for the copy's entry; a binary (PDF) copy has the chain, `profiled_from_text === false`, format `pdf`, and passes the same check; the baseline stays first and a second tick adds no second entry.
+
+**Why the tests missed it:** R79's test asserted the entry's locator, file, digest and the owed job, never the fields the register and the reader judge an entry by (the chain at or past `verified`, the profile's `profiled_from_text`); no test ran the register checks over the copy's entry.
+
+**Deferred:** none.
+
+**REPORT (outside my paths):** the walker's door test `control-plane/walk-monitoring-checknow-adopt.test.mjs` (run, not edited) now gets past the filing and the reading: the notice for the leg is `state: newer_capture_matched`, `newer: true`, `affects: "affected"`. It still fails at `test.mjs:60`, its own predicate `n && (n.notice || n.id) && ...`: the `versionnotice` entries carry `ord`, `target`, `content_id`, `capture_sha`, `bundle_id`, ... and no `notice` or `id` key, so the find never matches and `adoptversion` cannot be given `notice`. `screens-inquiry/document.mjs:885` reads `o.notice || o.id` from an open-notice list (reevaluation R15), not from `versionnotice`. That is control-plane's test (or the notice id's source) to settle. No copy carrying acquisition's profile is read `final` in this run.
+
+**Tests run** (`node --import ./bio-plane/test/platform-sqlite.mjs --test`): `bio-plane/test/m/monitoring/` tests 179, pass 179, fail 0. Users: scheduler 185/185, link-sweep 48/48, queue-producers 159/159, machinery-producers 38/38, following 128/128. `impact.mjs origin/tranche/T51 HEAD` run before the commit named 0 modules (nothing committed then).
+**Checks** (absolute root, from `/home/user/civicos-process`): format 178 modules, 0 failures; architecture monitoring 26 files, 135 imports, 0 failures; coverage 67 of 67, 0 failures; words monitoring 0 failures (the new ids `monitoring.index.copy_hop_asserts`, `monitoring.index.copy_hop_evidence` are not in `rows.mjs` yet, regenerated at the layer close); fixtures `--list` monitoring: 0 failures, accepted 11, no new marker; ownership (merge-base to HEAD) 3 files, 0 failures.
+
+Size (session_01YbVRaWcH7WiJvTG3xdtHxz): test runs 8, module lines 4260
+
+## J14 · COMPLETE
+
+COMPLETE: monitoring R80 met (J13 in my record). The copy's entry now carries a one-hop provenance_chain and acquisition's profileOf profile (index.mjs #copyProfile, #withCopyEntry). Module 179/179, users green, checks 0. REPORT: control-plane walk-monitoring-checknow-adopt.test.mjs now gets the notice graded (newer_capture_matched, affected) but fails on its own predicate (n.notice || n.id): versionnotice entries carry no such key; details in J13.

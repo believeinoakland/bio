@@ -89,7 +89,7 @@ test("R15 the available-actions block of a published case a live determination r
   /* a case edition no live determination rests on (none of its findings has one): no action is listed against an office */
   const none = y.f.evidenceBlock({ caseId: CASE, edition: 1, findings: [] });
   assert.deepEqual([none.determinations, none.determinations_read], [[], true]);
-  assert.match(none.says, /no live determination/);
+  assert.equal(none.says, word("filings.says.live_determination_rests"));
 });
 
 test("R15 the block is registered with publication once, at start, and computed at each read", async () => {
@@ -119,7 +119,7 @@ test("R21 availableActions answers R15's block for a determination's offices, fr
                            standards: [{ standard: x.S1, outcome: "compliant" }, { standard: x.S2, outcome: "compliant" }] });
   const off = x.f.availableActions({ determination: D8, viewer: V("bo") }).determinations[0].office;
   assert.deepEqual([off.in_profile, off.role], [false, "Harbour Master"]);
-  assert.match(off.says, /not an office the active profile lists/);
+  assert.equal(off.says, word("filings.says.office_active_profile_lists"));
   assert.equal(x.op("availableactions", { determination: x.D, viewer: V("olive") }).ok, true);
 });
 
@@ -154,7 +154,7 @@ test("R18 every filled value, packet item and chronology event names the record 
   const Dp = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption" }) }, standards: [{ standard: x.S1, outcome: "compliant" }, { standard: x.S2, outcome: "compliant" }] });  /* conformance R27: no date binds */
   const P = x.action({ kind: "commitment_claim", legs: [{ target: Dp, kind: "rests_on" }] });
   const pp = x.f.counselPacket({ reason: WHY, action: P, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
-  assert.deepEqual([pp.sections.chronology.from, /earliest/.test(pp.sections.chronology.from_says)], [null, true]);
+  assert.deepEqual([pp.sections.chronology.from, pp.sections.chronology.from_says === word("filings.act_states_date")], [null, true]);
   assert.equal(pp.sections.deadlines.items.find((i) => i.starts === "act")?.date.state ?? "undetermined", "undetermined");
 });
 

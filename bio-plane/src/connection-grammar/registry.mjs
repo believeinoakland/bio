@@ -5,6 +5,7 @@
    answer, and walks nothing. */
 import { CLASSES, connectionErrors } from './shape.mjs';
 import { answerFailures, isRefusal } from './reads.mjs';
+import { localize } from '../setup-words/index.mjs';
 
 /** Words no kind may carry: none offers a measure of how connected a node is, or suspicion (R3, R17; K1486). */
 export const FORBIDDEN_WORDS = Object.freeze(['knows', 'network', 'conflict', 'suspicious', 'most connected', 'centrality', 'score']);
@@ -75,7 +76,7 @@ export function createRegistry() {
   function neighbours(arg) {
     const a = arg !== null && typeof arg === 'object' ? arg : /** @type {any} */ ({});
     if (a.viewer === undefined || a.viewer === null || a.viewer === '') {
-      return refuse('VIEWER_MISSING', 'a read names the member reading; an absent viewer is neither an administrator nor the public');
+      return refuse('VIEWER_MISSING', localize('connection-grammar.registry.viewer_missing', 'a read names the member reading; an absent viewer is neither an administrator nor the public'));
     }
     const e = byOwner.get(a.owner);
     if (!e) return refuse('OWNER_UNKNOWN', `${String(a.owner).slice(0, 60)} is not a registered owner`);
@@ -88,7 +89,7 @@ export function createRegistry() {
     const failures = answerFailures(answer, { owner: e.owner, ownKinds: e.kinds.map((k) => k.kind), kinds: a.kinds,
       node: a.node, at: a.at, scope: a.scope, kindOf });
     if (failures.length) {
-      return { refused: 'OWNER_NONCONFORMING', why: `${e.owner}'s answer breaks the neighbours contract: ${failures[0].check}: ${failures[0].why}`, failures };
+      return { refused: 'OWNER_NONCONFORMING', why: localize('connection-grammar.registry.owner_s_answer_breaks_the', '{owner}\'s answer breaks the neighbours contract: {check}: {why}', { owner: String(e.owner), check: String(failures[0].check), why: String(failures[0].why) }), failures };
     }
     return answer;
   }

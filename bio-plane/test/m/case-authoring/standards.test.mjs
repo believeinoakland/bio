@@ -11,6 +11,8 @@ import { world, sha, V } from "./fixture.mjs";
 import { PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { materialsOf, passagesOf, memberSubjectOf } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
+import { hasWord, word, localize } from "../../../src/setup-words/index.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
 
 const DOC = "INFO-2026-0001-a", SDOC = "INFO-2026-0002-std";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -20,6 +22,9 @@ const VIOLATED = "It does not cover whether the turnout rule was violated after 
 
 /* `standards`, as held: FREE a free policy, PAY a paywalled standard whose text is CID_P (a passage of SDOC's capture);
    `binding` maps `standard|body` to bindsAt's state. `table` and `binding` are the test's to change. */
+/* standards' real refusal of an id it holds none of (its R5), made by its published fixture's real instance. */
+const noSuchStandard = standardReadWorld();
+
 function standardsOf() {
   const table = {
     [FREE]: { access: "free", texts: [CID_F], requires: [CID_F] },
@@ -30,7 +35,7 @@ function standardsOf() {
     table, binding,
     standardRead({ id }) {
       const s = table[id];
-      if (!s) return { ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", standard: id };
+      if (!s) return noSuchStandard.standardRead({ id, viewer: noSuchStandard.member });
       return { ok: true, id, cite: `${id} §1`, kind: "policy", issuer: "ENT-2026-0099", designation: id, edition: "2024",
                access: s.access, owner: { issuer: "ENT-2026-0099", label: "Issuer" }, requires: s.requires,
                texts: s.texts.map((t) => ({ content_id: t, standing: null, newer: null })),
@@ -60,6 +65,17 @@ function setup() {
   return { w, standards, capP, A: ent("Fire Department"), B: ent("Water Board") };
 }
 const subject = (id) => [`subject_entity: ${id}`];
+/* case-checker R26: each departure carries `says`, its key `refusal.<code>` and its own fields as vars. Each `says` is
+   checked here and removed, so the departure's identifiers are compared as before. */
+function saidOf(refusals) {
+  return refusals.map(({ says, ...departure }) => {
+    assert.equal(says.key, `refusal.${departure.code}`);
+    assert.equal(hasWord(says.key), true, says.key);
+    assert.notEqual(word(says.key, says.vars).length, 0, says.key);
+    assert.deepEqual(says.vars, Object.fromEntries(Object.entries(departure).filter(([k]) => k !== "code")));
+    return departure;
+  });
+}
 function refusedStandards(r) {
   assert.equal(r.ok, false, JSON.stringify(r).slice(0, 400));
   const row = PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED;
@@ -102,10 +118,11 @@ test("R61: a finding resting only on a benchmark, beside another body's binding 
   const before = w.snapshot();
   const r = w.publish(P, "alice", [Q, Q2], { statement: VIOLATED });
   refusedStandards(r);
-  assert.deepEqual(r.refusals, [{ code: "BENCHMARK_CALLED_NONCONFORMING", finding: Q, standard: FREE, word: "violated" }]);
+  assert.deepEqual(saidOf(r.refusals), [{ code: "BENCHMARK_CALLED_NONCONFORMING", finding: Q, standard: FREE, word: "violated" }]);
   assert.deepEqual(r.unjudged, []);
-  assert.match(r.detail, new RegExp(`${Q} rests only on benchmarks of ${FREE}.*"violated"`));
-  assert.match(r.detail, /Nothing was prepared\.$/);
+  assert.equal(r.detail, localize("case-authoring.index.map_a_published_case_carries",
+    "{map} A published case carries a standard that is not free to read only as the passages a finding relies on, and a finding that rests only on benchmarks says \"slower than\" or \"below\", never \"violated\" or \"nonconforming\" (K1723, K1739). Change the case and prepare it again. Nothing was prepared.",
+    { map: word("case-authoring.text.rests_benchmarks_binds", { finding: Q, standard: FREE, word: "violated" }) }));
   assert.deepEqual(w.snapshot(), before, "no id drawn, nothing written");
   /* DEC-8: the pre-flight's first is exactly the act's refusal, and it writes nothing either */
   const pre = w.ca.publishPreflight({ ...publishArgs(P, [Q, Q2]), statement: VIOLATED });
@@ -144,7 +161,7 @@ test("R61: a standard not free to read whose capture the case would carry whole 
   const before = w.snapshot();
   const r = w.publish(P, "alice", [Q]);
   refusedStandards(r);
-  assert.deepEqual(r.refusals, [{ code: "COPYRIGHTED_TEXT_CARRIED", standard: PAY, sha: capP },
+  assert.deepEqual(saidOf(r.refusals), [{ code: "COPYRIGHTED_TEXT_CARRIED", standard: PAY, sha: capP },
                                 { code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: PAY, content: CID_P }]);
   assert.deepEqual(w.snapshot(), before);
   assert.deepEqual(w.ca.publishPreflight(publishArgs(P, [Q])).first, r);
@@ -152,7 +169,7 @@ test("R61: a standard not free to read whose capture the case would carry whole 
   w.finding(Q, [{ target: SDOC, content_id: CID_P }, { target: PAY }], { lines: subject(A) });
   const r2 = w.publish(P, "alice", [Q]);
   refusedStandards(r2);
-  assert.deepEqual(r2.refusals, [{ code: "COPYRIGHTED_TEXT_CARRIED", standard: PAY, sha: capP }]);
+  assert.deepEqual(saidOf(r2.refusals), [{ code: "COPYRIGHTED_TEXT_CARRIED", standard: PAY, sha: capP }]);
   /* negative control: free to read, the whole text travels */
   standards.table[PAY].access = "free";
   const r3 = w.publish(P, "alice", [Q]);

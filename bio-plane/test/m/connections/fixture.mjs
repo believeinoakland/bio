@@ -16,6 +16,7 @@ import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { readingSourceJson, readingOccurrenceKey } from "../../../src/textchain.mjs";
 import { normalizeAddress } from "../../../src/subresources.mjs";
+import { unheldStructure } from "../extraction/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -91,8 +92,7 @@ export function world({ now = "2026-09-27T03:00:00.000Z", env = {} } = {}) {
   const readingListeners = [];
   const extraction = {
     onReading: (module, fn) => { readingListeners.push({ module, fn }); return { ok: true }; },
-    pdfStructure: async ({ sha: s }) => (structures[s] ? { status: 200, body: structures[s] }
-      : { status: 404, body: { ok: false, reason: "NOT_FOUND" } }),
+    pdfStructure: async ({ sha: s }) => (structures[s] ? { status: 200, body: structures[s] } : unheldStructure({ sha: s })),
   };
   const content = contentOf(host, { record, membership, provenance: prov,
     extraction: { readingOf: () => null, unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [],

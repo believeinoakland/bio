@@ -17,13 +17,15 @@ const MODULES = JSON.parse(readFileSync(join(REPO, "build/modules.json"), "utf8"
 const isFamily = (k, v) => /_CHECKS$/.test(k) && !!v && typeof v === "object" && !Array.isArray(v);
 
 /* Every plane file of a module, with the module that owns it. */
+/* store-assembly is the plane's second composition root (K5164): its register.mjs registers every owner's declarations again,
+   which R81 refuses in one process, and it exports no family; skipped until plane's Wave B leaves one root (plan item 80). */
 function planeFiles() {
   const out = [];
   const walk = (p, id) => {
     const abs = join(REPO, p);
     if (!existsSync(abs)) return;
     if (statSync(abs).isDirectory()) { for (const f of readdirSync(abs)) if (!["node_modules", "dist", "test"].includes(f)) walk(join(p, f), id); }
-    else if (p.endsWith(".mjs")) out.push([p, id]);
+    else if (p.endsWith(".mjs") && !p.startsWith("bio-plane/src/store-assembly/")) out.push([p, id]);
   };
   for (const m of MODULES) for (const p of m.paths || []) if (/^bio-plane\/(src|checks)(\/|$)/.test(p)) walk(p, m.id);
   return out;
@@ -36,6 +38,9 @@ const reached = (files) => new Set(files.flatMap(([, ns]) => Object.entries(ns).
 
 /* The rows exported anywhere in the plane that `files` does not reach: `<file> <family>`, once per family. */
 async function unreached(files) {
+  /* plane R68: the start registration is the first import of the plane's graph, before any table is read (R81). The walk
+     imports plane files that reach it, so it runs here first. */
+  await import(join(REPO, "bio-plane/src/plane/register.mjs"));
   const have = reached(files);
   const missing = new Set();
   for (const [p] of planeFiles()) {
@@ -169,12 +174,12 @@ test("R2, R7 (K1150): the list reads network-notices' C-127 in its module's plac
   assert.ok(missing.includes(`bio-plane/${path} NETWORK_NOTICE_CHECKS`), missing.join(", "));
 });
 
-test("R2, R7 (K1207; N506): the list reads link-sweep's C-18.16–C-18.18 (`SWEEP_CHECKS`) in its module's place (after monitoring, before tasks), and every one of its rows decorates with its own check and words; monitoring's file no longer holds them (negative control: the list without link-sweep's file misses its family)", async () => {
+test("R2, R7 (K1207; N506; link-sweep R13 C-18.24, K4189): the list reads link-sweep's C-18.16–C-18.18 and C-18.24 (`SWEEP_CHECKS`) in its module's place (after monitoring, before tasks), and every one of its rows decorates with its own check and words; monitoring's file no longer holds them (negative control: the list without link-sweep's file misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const path = "src/link-sweep/checks.mjs";
   assert.ok(paths.indexOf("src/monitoring/checks.mjs") < paths.indexOf(path) && paths.indexOf(path) < paths.indexOf("src/tasks/checks.mjs"));
   const table = (await import(`../../../${path}`)).SWEEP_CHECKS;
-  assert.deepEqual(Object.values(table).map((r) => r.check).sort(), ["C-18.16", "C-18.17", "C-18.18"]);
+  assert.deepEqual(Object.values(table).map((r) => r.check).sort(), ["C-18.16", "C-18.17", "C-18.18", "C-18.24"]);
   for (const [code, row] of Object.entries(table)) assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
   const MON = await import("../../../src/monitoring/checks.mjs");
   for (const code of Object.keys(table))
@@ -202,7 +207,10 @@ test("R2, R7 (N512; K1193): the list reads attestation's C-89 (`ATTEST_CHECKS`) 
     const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
     assert.ok(missing.includes(`bio-plane/${path} ${fam}`), missing.join(", "));
   }
-  for (const code of ["CAPTURE_HELD_IN_PARTS", "ROUTE_MARK_NO_AUTHOR", "ROUTE_MARK_NO_BUNDLE", "ROUTE_MARK_NO_SUCH_BUNDLE", "ROUTE_MARK_NOT_A_DOCUMENT"])
+  /* the codes are read from their owners' own tables, never copied here (K3268) */
+  const { ROUTE_MARK_CHECKS } = await import("../../../src/provenance-routes/checks.mjs");
+  const { ATTEST_CHECKS } = await import("../../../src/attestation/checks.mjs");
+  for (const code of [...Object.keys(ROUTE_MARK_CHECKS), ...Object.keys(ATTEST_CHECKS)])
     assert.ok(M.dec49Row(code), code);
 });
 

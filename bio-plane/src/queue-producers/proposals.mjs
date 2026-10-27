@@ -19,10 +19,12 @@
  * PURE: no storage, no clock, no viewer. What needs them is the caller's, passed in: the subject bundles an instance
  * reaches through the viewer's gate, the homes of a set of subjects (queue R7) and the options on them (queue R12). */
 import { weakerGrade } from "../connections/index.mjs";
+import { localize } from "../setup-words/index.mjs";
+import { say, joined } from "./words.mjs";
 
 export const CARDINALITY_EXCEEDED = "cardinality_exceeded";
 
-const plural = (n, one, many) => (n === 1 ? one : many);
+const count = (n) => (n === 1 ? "one" : "other");
 /* A stage is named by its label, or by its key when it was declared without one: never the word "null". */
 const stageName = (x) => (typeof x.stage_label === "string" && x.stage_label.trim() ? x.stage_label : x.stage_key);
 const cmpKey = (a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
@@ -95,12 +97,11 @@ function groupSeen(g, seen) {
            document_count: instances.reduce((s, i) => s + (Number(i.document_count) || 0), 0), ...gradeOver(instances) };
 }
 
-/** The cardinality sentence, in this module's words: never "required and absent". */
+/** The cardinality sentence (R43), by key: never "required and absent". `.exactly` for a stage declared to hold exactly one
+ *  document, `.atmost` for any other bound; `.one` for one instance, `.other` for more. */
 export function cardinalityDetail(g) {
-  const held = g.cardinality === "1" ? "exactly one" : "at most one";
-  return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at `
-       + `'${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held}: a finding, which decides `
-       + `nothing about which of them belongs (framework 8.2)`;
+  const held = g.cardinality === "1" ? "exactly" : "atmost";
+  return say(`queue.cardinality_exceeded.detail.${held}.${count(g.n)}`, { stage: stageName(g), documents: g.document_count, n: g.n });
 }
 
 /** R2, R10: the FINDING items of `proposalsFeed`'s answer.
@@ -123,7 +124,7 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
   };
   const exceeded = new Map(cardinalityGroups(feed).map((g) => groupSeen(g, seen)).filter(Boolean).map((g) => [g.key, g]));
   const items = [];
-  const item = ({ key, kind, p, subjects, prior, summary, detail, basis }) => ({
+  const item = ({ key, kind, p, subjects, prior, summary, detail, summary_key, detail_key, basis }) => ({
     id: `FINDING::${key}`,
     class: "FINDING",
     kind,
@@ -134,9 +135,10 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
     prior_disposition: prior,
     summary,
     detail,
+    summary_key,
+    detail_key,
     basis: { source: "proposalsFeed", progression_key: p.progression_key, stage_key: p.stage_key, ...basis,
-             detail: "a finding is DERIVED (D-79): the record's own question, aggregated one per "
-                   + "(progression, stage), graded the weakest instance and never averaged." },
+             detail: localize("queue-producers.proposals.a_finding_is_derived_d", "a finding is DERIVED (D-79): the record's own question, aggregated one per (progression, stage), graded the weakest instance and never averaged.") },
     /* A derived finding is recomputed on every read and has no creation instant to age from (U). */
     age: { state: "undetermined", reason: "derived_on_read",
            detail: "a derived finding is recomputed at read time and has no creation instant; "
@@ -156,10 +158,13 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
       key: p.key, p, subjects, prior: p.prior_disposition,
       /* The ESCALATED kind leads when the stage has also crossed a deadline: one kind, the full set on the basis. */
       kind: p.overdue ? "overdue_successor" : "missing_predecessor",
-      summary: `${p.progression_label}: the '${stageName(p)}' stage is ${p.required} required and absent`,
-      detail: `${p.n} ${plural(p.n, "instance", "instances")} of this progression reach${plural(p.n, "es", "")} `
-            + `'${stageName(p)}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : "")
-            + (g ? `; and ${cardinalityDetail(g)}` : ""),
+      ...(() => {
+        const kind = p.overdue ? "overdue_successor" : "missing_predecessor";
+        const fills = { progression: p.progression_label ?? p.progression_key, stage: stageName(p), n: p.n, overdue: p.overdue_count };
+        const detail_key = `queue.${kind}.detail.${count(p.n)}`;
+        return { summary: say(`queue.${kind}.summary`, fills), summary_key: `queue.${kind}.summary`, detail_key,
+                 detail: joined(say(detail_key, fills), g ? say("queue.cardinality_exceeded.also", { cardinality: cardinalityDetail(g) }) : "") };
+      })(),
       basis: { kinds: g ? [...p.kinds, CARDINALITY_EXCEEDED] : p.kinds, n: p.n, grade: p.grade,
                grade_determined: p.grade_determined, overdue_count: p.overdue_count, surfaced_by: p.surfaced_by,
                ...(g ? { cardinality_exceeded: { n: g.n, cardinality: g.cardinality, document_count: g.document_count,
@@ -170,8 +175,10 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
     items.push(item({
       key: g.key, p: g, subjects: subjectsFor(g.instances), prior: priorOf(feed.dispositions, g.key),
       kind: CARDINALITY_EXCEEDED,
-      summary: `${g.progression_label}: the '${stageName(g)}' stage holds more documents than it is declared to hold`,
+      summary: say("queue.cardinality_exceeded.summary", { progression: g.progression_label ?? g.progression_key, stage: stageName(g) }),
+      summary_key: "queue.cardinality_exceeded.summary",
       detail: cardinalityDetail(g),
+      detail_key: `queue.cardinality_exceeded.detail.${g.cardinality === "1" ? "exactly" : "atmost"}.${count(g.n)}`,
       basis: { kinds: [CARDINALITY_EXCEEDED], n: g.n, grade: g.grade, grade_determined: g.grade_determined,
                overdue_count: 0, surfaced_by: "machine", cardinality: g.cardinality, document_count: g.document_count },
     }));

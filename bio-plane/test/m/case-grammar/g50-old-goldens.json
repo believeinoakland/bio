@@ -1,0 +1,147 @@
+{
+ "base": "124e62bfa8",
+ "g1": {
+  "manifest": {
+   "format": "bio-case-file/3",
+   "group": "lakeshore-tenants",
+   "case": "CASE-2026-0001",
+   "edition": 2,
+   "case_document_sha": "fcd033a3e5aa34e29fd1270b06f6f87fa55106a966b442b9ab4fa0b3276033ec",
+   "keys": [
+    {
+     "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyBytesForTheFixture group@lakeshore",
+     "fingerprint": "SHA256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0"
+    }
+   ],
+   "parts": [
+    {
+     "index": 1,
+     "sha256": "9609c1118709d51a96c0a10412e270812ad6d5b901ab55f380dccf4597decc49",
+     "bytes": 19247
+    }
+   ],
+   "files": [
+    {
+     "path": "case.md",
+     "sha256": "fcd033a3e5aa34e29fd1270b06f6f87fa55106a966b442b9ab4fa0b3276033ec",
+     "bytes": 7709,
+     "part": 1,
+     "kind": "case_document"
+    },
+    {
+     "path": "case.md.sig",
+     "sha256": "2b6fb1ee19aa289870f10b44bb62a117b440ffc5e579190567d59af363fd50b9",
+     "bytes": 63,
+     "part": 1,
+     "kind": "case_signature"
+    },
+    {
+     "path": "complete-edition.html",
+     "sha256": "ee8a4aeefd3a3b6f5d25da8bddba52707f4d8e300bbcbed7a025f6afe76b4baf",
+     "bytes": 11394,
+     "part": 1,
+     "kind": "complete_edition"
+    },
+    {
+     "path": "materials/INFO-2026-0004-photo/document",
+     "sha256": "a138931317ea6fcffe794f224956dea84ac8dc8e62e99f5b9aeb0de24a2e7ce9",
+     "bytes": 42,
+     "part": 1,
+     "kind": "document"
+    },
+    {
+     "path": "materials/INFO-2026-0004-photo/extracted.txt",
+     "sha256": "633ecdd67db64b19c91a36ea6fda2f1f7db0be1887f2ca697b25cf7982896167",
+     "bytes": 11,
+     "part": 1,
+     "kind": "extracted_text"
+    },
+    {
+     "path": "materials/INFO-2026-0004-photo/obscured",
+     "sha256": "f092c0a8abbd71e852b96d18f4fc4a3a2aa047773cf61f946e4d26f4e07dfde3",
+     "bytes": 28,
+     "part": 1,
+     "kind": "obscured"
+    }
+   ]
+  },
+  "check_with_rows": [
+   {
+    "at": "files[3]",
+    "rule": "original_carried",
+    "detail": "\"materials/INFO-2026-0004-photo/document\" is a document under \"INFO-2026-0004-photo\", whose material the case carries as its copy: the original never travels"
+   },
+   {
+    "at": "files[4]",
+    "rule": "original_carried",
+    "detail": "\"materials/INFO-2026-0004-photo/extracted.txt\" is a extracted_text under \"INFO-2026-0004-photo\", whose material the case carries as its copy: the original never travels"
+   }
+  ],
+  "check_without_rows": [],
+  "complete_edition": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"color-scheme\" content=\"light\">\n<title>lakeshore-tenants · Case CASE-2026-0001 · Edition 2</title>\n<style>body{font:16px/1.5 Georgia,serif;color:#1b1b1b;background:#fff;max-width:46em;margin:0 auto;padding:1em}h1{font-size:1.6em}h2{font-size:1.3em;border-bottom:1px solid #999;margin-top:2em}h3{font-size:1.1em}.notice{font:13px/1.4 Helvetica,Arial,sans-serif;border:1px solid #555;padding:.5em;background:#f4f4f4}.standing{font-weight:bold}.quote{border-left:3px solid #999;padding-left:.75em}.foot{font-size:12px;color:#555}code{font-size:.9em;word-break:break-all}@media print{.notice{position:fixed;top:0;left:0;right:0}body{margin-top:7em}}</style>\n</head>\n<body>\n<div class=\"notice\">lakeshore-tenants · Case CASE-2026-0001 · Edition 2. Declared bias: We expected the board to defer to the vendor. Bar (floors): capture B, connection C. Case document SHA-256: fcd033a3e5aa34e29fd1270b06f6f87fa55106a966b442b9ab4fa0b3276033ec. Verify it with the checker from the group&#39;s public read casechecker, or against the case file&#39;s manifest and the group&#39;s published record.</div>\n<h1>lakeshore-tenants · Case CASE-2026-0001 · Edition 2</h1>\n<p>Published and signed by lakeshore-tenants.</p>\n<h2>1. The claims</h2><p>What this case is about: Who approved the lease, and on what record.</p><ul><li>INQ-2026-0001-lease: The board approved the lease without a vote.</li><li>INQ-2026-0003-context: the claim is undetermined: no reading named.</li></ul>\n<h2>2. The findings</h2><h3>INQ-2026-0001-lease</h3><p class=\"standing\">Relied on · meets this project&#39;s bar (capture B, connection C)</p><ul><li>Capture: how faithfully the documents this rests on were taken in, so that someone else can check they are what they say. A is the strongest, D the weakest. It never says whether the finding is true. This finding: grade B.</li><li>Connection: how firmly those documents are tied to what the finding is about, so that someone else can follow the link. A is the strongest, D the weakest. It never says whether the finding is true. This finding: grade C.</li></ul><ul><li>Supports: INFO-2026-0001-minutes, capture grade B (capture)</li><li>Supports: INQ-2026-0002-board (inherited), in the set of reasons &#39;the record&#39;<ul><li>Cuts against: INFO-2026-0009-observation, testimony grade D (testimony)</li><li>Supports: INQ-2026-0001-lease<p>INQ-2026-0001-lease is already shown above in this chain.</p></li></ul></li><li>Supports: imported:011864b38f99e5d3d4792d0b27852dfebff8a7d85d1447d277b7b8b348531380/INQ-2026-0042-lease. This is another group&#39;s finding.<ul><li>Accepted by member:olive on 2026-09-30T00:00:00Z, edition 2, because: We read it twice.</li><li>Recreated as: recreated in part; the gaps stated: the 2019 contract, not fetched. Its grades as that edition published them: capture B, connection C.</li><li>Check that finding in its own case file: riverside-watch, case CASE-2026-0007, edition 2, finding INQ-2026-0042-lease, manifest SHA-256 53bba1f086c64b5e7b3d3a01b9231841b32ff52c7f2b55454d730a479f7b1abb.</li><li>An open flag is disclosed: The lease date may be wrong (flagged 2026-09-30T00:00:00Z). The case&#39;s owner says: We disclose it.</li><li>The chain stops here: what that finding rests on is in its own case file.</li></ul></li></ul><p>The passages INQ-2026-0001-lease relies on:</p><blockquote class=\"quote\">No vote was taken on item 7 &lt;the lease&gt;. It&#39;s &quot;final&quot; # here<br><small>In the document captured as 38842f114d3aa0e7b342a2d06f219a416b89c5ced83aa670421e52b7f88dc479, at {&quot;end&quot;:52,&quot;page&quot;:3,&quot;start&quot;:10} (content 0886b051075687c18a9ae5075383feb8400fbe4328c6e4bd45b77b30f1e73b54).</small></blockquote><h3>INQ-2026-0003-context</h3><p class=\"standing\">Supporting · not asked to meet this project&#39;s bar (capture B, connection C)</p><ul><li>Capture: how faithfully the documents this rests on were taken in, so that someone else can check they are what they say. A is the strongest, D the weakest. It never says whether the finding is true. This finding: grade D.</li><li>Connection: how firmly those documents are tied to what the finding is about, so that someone else can follow the link. A is the strongest, D the weakest. It never says whether the finding is true. This finding: undetermined.</li></ul><p>INQ-2026-0003-context rests on nothing.</p>\n<h2>3. The documents and observations</h2><h3>INFO-2026-0004-photo (document)</h3><ul><li>Fingerprint of the original (SHA-256), which the group holds and this case file does not carry: 89e4a19cb58aa16df35dc8a54085b7a5d5d6c634010a0ef0d02de4f3a9b14243</li><li>Origin: a member&#39;s capture</li><li>Archived copy: none recorded</li><li>Carried as a copy with marked areas covered; the copy&#39;s fingerprint (SHA-256): f092c0a8abbd71e852b96d18f4fc4a3a2aa047773cf61f946e4d26f4e07dfde3</li><li>Faces and plates obscured for publication; the group holds the original</li><li>A finding this case relies on rests on it.</li></ul><h3>INFO-2026-0004-photo (document)</h3><ul><li>Fingerprint (SHA-256): a138931317ea6fcffe794f224956dea84ac8dc8e62e99f5b9aeb0de24a2e7ce9</li><li>Extracted text fingerprint: 633ecdd67db64b19c91a36ea6fda2f1f7db0be1887f2ca697b25cf7982896167</li><li>Origin: a member&#39;s capture</li><li>Archived copy: none recorded</li><li>Included whole in this case file.</li><li>A finding this case relies on rests on it.</li></ul>\n<h2>4. What was searched</h2><p>Computed at 2026-09-30T00:00:00Z over 3 subject(s), 2 with a recorded observation. It records what was looked for, not how much exists.</p><ul><li>document level (document): looked: 3 subject(s), 2 looked at, 0 never looked at, 1 undetermined. One was never logged.</li></ul>\n<h2>5. The declared bias</h2><p>The publisher&#39;s acknowledgement: We expected the board to defer to the vendor.</p><ul><li>a source this group checks more closely before relying on it, on ENT-2026-0001: Vendor filings need a second source. Justification: Two were corrected. Evidence: INFO-2026-0003-x. Citations withheld: 1 (which ones is not stated).</li></ul><p>Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.</p><p>This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material.</p>\n<h2>6. Disclosed contradictions</h2><ul><li>INQ-2026-0001-lease: The minutes say no vote, against The press release says a vote. State: open. The case&#39;s owner says: We disclose it.</li></ul><p>a disclosure reaches one level: the contradictions on what each finding rests on directly; deeper findings disclose their own when published.</p>\n<h2>7. Strength</h2><p>A case has two strengths, never one.</p><p>Each finding is graded on its own, on capture and on connection separately, as this case read it. Nothing combines them, and this case has no strength of its own.</p><ul><li>INQ-2026-0001-lease: capture B, connection C.</li><li>INQ-2026-0003-context: capture D, connection undetermined.</li></ul><p>This project&#39;s bar: capture B, connection C.</p>\n<h2>8. How grades are worked out</h2><p>How Civicsmith grades a finding (method bio-grading/1).</p><p>1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony (a member&#39;s own firsthand account) graded beside them. Each is worked out on its own, from the legs graded for it, and they are never combined into one figure. Grades run from A, the strongest, to D.</p><p>2. Which legs count. A leg counts only for the strength its grade names. A capture grade is never above what the record holds for that document; a testimony grade is always D. A leg with no grade, or one marked as a hunch, is listed and counts for nothing: it never lowers or raises a strength. A capture or testimony grade written on a leg to another question, or to another group&#39;s finding, has nothing to grade and is listed, not counted.</p><p>3. Questions resting on questions. A leg to another question contributes that question&#39;s own strengths, worked out the same way, up to six steps down. Past six steps, or where that question&#39;s strength is not known, the strength is stated as undetermined: unknown, not low.</p><p>4. Another group&#39;s work. A leg to a finding of another group&#39;s case that this group has accepted contributes the strengths that accepted edition published for that finding, never more, and nothing below it is followed. If that finding cannot be read, the strength is undetermined. Withdrawing the acceptance later changes no grade.</p><p>5. Sets of reasons. Legs the author did not sort into sets of reasons are all needed together, so they are only as strong as the weakest of them. A set of reasons is only as strong as the weakest leg in it. Where the author named several sets that each carry the finding on their own, the strongest set is what counts. The strength is then the weaker of the legs needed by every set and that strongest set.</p><p>6. When a strength is undetermined. A strength is undetermined only when something it needs is unknown: one of the legs every set needs, or every set at once. A set that is unknown beside a known one could only be stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.</p><p>7. Anonymous testimony and evidence. Testimony from a member credited only to the group or the project, and material from an unnamed source that such a member attests, counts only when something independent beside it bears it out; otherwise it is listed and counts for nothing. What bears it out is a counted leg on a document that shares no origin with it (not the same document, not the same capture, not the same web address) and is not itself credited anonymously; for anonymous testimony, also a member&#39;s testimony credited by cover name or real name, by another member, sharing no origin with it. Testimony or material credited by cover name or real name is graded as usual.</p><p>8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. It also states how many hunches it left out.</p><p>It was checked under catalogue version 1.61.0.</p>\n<h2>9. How to check this case yourself</h2><p>You can check this case yourself, without Civicsmith and without a network connection.</p><p>1. Get the checker, one file, from the publishing group&#39;s public read casechecker, and the specification of the case file&#39;s format from casefilespec.</p><p>2. Run the checker on every part of this case file. It checks every fingerprint and signature, finds each passage where it is said to be, works each grade out again by the method stated above, checks each relied-on finding against the bar, and runs the same publication checks.</p><p>3. Each finding is then recreated, recreated in part (naming what is missing, such as a document to fetch: a document whose fingerprint matches completes it), or did not recreate (naming what differs).</p><p>Recreating a case shows it is intact and consistent. It does not show that it is true.</p>\n<p class=\"foot\">Made with Civicsmith</p>\n</body>\n</html>\n",
+  "complete_edition_sha256": "ee8a4aeefd3a3b6f5d25da8bddba52707f4d8e300bbcbed7a025f6afe76b4baf"
+ },
+ "g2": {
+  "manifest": {
+   "format": "bio-case-file/3",
+   "group": "lakeshore-tenants",
+   "case": "CASE-2026-0001",
+   "edition": 2,
+   "case_document_sha": "ec25dd4c630c0fa30e990ae80237f9b1dccb63d8e178883bccf1fdc486b753f3",
+   "keys": [
+    {
+     "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyBytesForTheFixture group@lakeshore",
+     "fingerprint": "SHA256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0"
+    }
+   ],
+   "parts": [
+    {
+     "index": 1,
+     "sha256": "05cb8f0651c427a354588f89b3027d13d9372229a29d50e9b58b616fca291259",
+     "bytes": 18807
+    }
+   ],
+   "files": [
+    {
+     "path": "case.md",
+     "sha256": "ec25dd4c630c0fa30e990ae80237f9b1dccb63d8e178883bccf1fdc486b753f3",
+     "bytes": 7529,
+     "part": 1,
+     "kind": "case_document"
+    },
+    {
+     "path": "case.md.sig",
+     "sha256": "2b6fb1ee19aa289870f10b44bb62a117b440ffc5e579190567d59af363fd50b9",
+     "bytes": 63,
+     "part": 1,
+     "kind": "case_signature"
+    },
+    {
+     "path": "complete-edition.html",
+     "sha256": "97df4310f04c6d3a53530cbdfc29fe25a3a42c1140efd7396e61623c8f826a92",
+     "bytes": 11162,
+     "part": 1,
+     "kind": "complete_edition"
+    },
+    {
+     "path": "materials/INFO-2026-0004-photo/document",
+     "sha256": "a138931317ea6fcffe794f224956dea84ac8dc8e62e99f5b9aeb0de24a2e7ce9",
+     "bytes": 42,
+     "part": 1,
+     "kind": "document"
+    },
+    {
+     "path": "materials/INFO-2026-0004-photo/extracted.txt",
+     "sha256": "633ecdd67db64b19c91a36ea6fda2f1f7db0be1887f2ca697b25cf7982896167",
+     "bytes": 11,
+     "part": 1,
+     "kind": "extracted_text"
+    }
+   ]
+  },
+  "check_with_rows": [],
+  "check_without_rows": [],
+  "complete_edition": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"color-scheme\" content=\"light\">\n<title>lakeshore-tenants · Case CASE-2026-0001 · Edition 2</title>\n<style>body{font:16px/1.5 Georgia,serif;color:#1b1b1b;background:#fff;max-width:46em;margin:0 auto;padding:1em}h1{font-size:1.6em}h2{font-size:1.3em;border-bottom:1px solid #999;margin-top:2em}h3{font-size:1.1em}.notice{font:13px/1.4 Helvetica,Arial,sans-serif;border:1px solid #555;padding:.5em;background:#f4f4f4}.standing{font-weight:bold}.quote{border-left:3px solid #999;padding-left:.75em}.foot{font-size:12px;color:#555}code{font-size:.9em;word-break:break-all}@media print{.notice{position:fixed;top:0;left:0;right:0}body{margin-top:7em}}</style>\n</head>\n<body>\n<div class=\"notice\">lakeshore-tenants · Case CASE-2026-0001 · Edition 2. Declared bias: We expected the board to defer to the vendor. Bar (floors): capture B, connection C. Case document SHA-256: ec25dd4c630c0fa30e990ae80237f9b1dccb63d8e178883bccf1fdc486b753f3. Verify it with the checker from the group&#39;s public read casechecker, or against the case file&#39;s manifest and the group&#39;s published record.</div>\n<h1>lakeshore-tenants · Case CASE-2026-0001 · Edition 2</h1>\n<p>Published and signed by lakeshore-tenants.</p>\n<h2>1. The claims</h2><p>What this case is about: Who approved the lease, and on what record.</p><ul><li>INQ-2026-0001-lease: The board approved the lease without a vote.</li><li>INQ-2026-0003-context: the claim is undetermined: no reading named.</li></ul>\n<h2>2. The findings</h2><h3>INQ-2026-0001-lease</h3><p class=\"standing\">Relied on · meets this project&#39;s bar (capture B, connection C)</p><ul><li>Capture: how faithfully the documents this rests on were taken in, so that someone else can check they are what they say. A is the strongest, D the weakest. It never says whether the finding is true. This finding: grade B.</li><li>Connection: how firmly those documents are tied to what the finding is about, so that someone else can follow the link. A is the strongest, D the weakest. It never says whether the finding is true. This finding: grade C.</li></ul><ul><li>Supports: INFO-2026-0001-minutes, capture grade B (capture)</li><li>Supports: INQ-2026-0002-board (inherited), in the set of reasons &#39;the record&#39;<ul><li>Cuts against: INFO-2026-0009-observation, testimony grade D (testimony)</li><li>Supports: INQ-2026-0001-lease<p>INQ-2026-0001-lease is already shown above in this chain.</p></li></ul></li><li>Supports: imported:011864b38f99e5d3d4792d0b27852dfebff8a7d85d1447d277b7b8b348531380/INQ-2026-0042-lease. This is another group&#39;s finding.<ul><li>Accepted by member:olive on 2026-09-30T00:00:00Z, edition 2, because: We read it twice.</li><li>Recreated as: recreated in part; the gaps stated: the 2019 contract, not fetched. Its grades as that edition published them: capture B, connection C.</li><li>Check that finding in its own case file: riverside-watch, case CASE-2026-0007, edition 2, finding INQ-2026-0042-lease, manifest SHA-256 53bba1f086c64b5e7b3d3a01b9231841b32ff52c7f2b55454d730a479f7b1abb.</li><li>An open flag is disclosed: The lease date may be wrong (flagged 2026-09-30T00:00:00Z). The case&#39;s owner says: We disclose it.</li><li>The chain stops here: what that finding rests on is in its own case file.</li></ul></li></ul><p>The passages INQ-2026-0001-lease relies on:</p><blockquote class=\"quote\">No vote was taken on item 7 &lt;the lease&gt;. It&#39;s &quot;final&quot; # here<br><small>In the document captured as 38842f114d3aa0e7b342a2d06f219a416b89c5ced83aa670421e52b7f88dc479, at {&quot;end&quot;:52,&quot;page&quot;:3,&quot;start&quot;:10} (content 0886b051075687c18a9ae5075383feb8400fbe4328c6e4bd45b77b30f1e73b54).</small></blockquote><h3>INQ-2026-0003-context</h3><p class=\"standing\">Supporting · not asked to meet this project&#39;s bar (capture B, connection C)</p><ul><li>Capture: how faithfully the documents this rests on were taken in, so that someone else can check they are what they say. A is the strongest, D the weakest. It never says whether the finding is true. This finding: grade D.</li><li>Connection: how firmly those documents are tied to what the finding is about, so that someone else can follow the link. A is the strongest, D the weakest. It never says whether the finding is true. This finding: undetermined.</li></ul><p>INQ-2026-0003-context rests on nothing.</p>\n<h2>3. The documents and observations</h2><h3>INFO-2026-0004-photo (document)</h3><ul><li>Fingerprint (SHA-256): a138931317ea6fcffe794f224956dea84ac8dc8e62e99f5b9aeb0de24a2e7ce9</li><li>Extracted text fingerprint: 633ecdd67db64b19c91a36ea6fda2f1f7db0be1887f2ca697b25cf7982896167</li><li>Origin: a member&#39;s capture</li><li>Archived copy: none recorded</li><li>Included whole in this case file.</li><li>A finding this case relies on rests on it.</li></ul><h3>INFO-2026-0004-photo (document)</h3><ul><li>Fingerprint (SHA-256): 58adc4245d9c7dadb6775f0b70f0fd5b50336cb094dee2ce0a59c6637ce318a9</li><li>Origin: a member&#39;s capture</li><li>Archived copy: none recorded</li><li>Not included: only its fingerprint, origin and archived copy travel.</li><li>A finding this case relies on rests on it.</li></ul>\n<h2>4. What was searched</h2><p>Computed at 2026-09-30T00:00:00Z over 3 subject(s), 2 with a recorded observation. It records what was looked for, not how much exists.</p><ul><li>document level (document): looked: 3 subject(s), 2 looked at, 0 never looked at, 1 undetermined. One was never logged.</li></ul>\n<h2>5. The declared bias</h2><p>The publisher&#39;s acknowledgement: We expected the board to defer to the vendor.</p><ul><li>a source this group checks more closely before relying on it, on ENT-2026-0001: Vendor filings need a second source. Justification: Two were corrected. Evidence: INFO-2026-0003-x. Citations withheld: 1 (which ones is not stated).</li></ul><p>Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.</p><p>This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material.</p>\n<h2>6. Disclosed contradictions</h2><ul><li>INQ-2026-0001-lease: The minutes say no vote, against The press release says a vote. State: open. The case&#39;s owner says: We disclose it.</li></ul><p>a disclosure reaches one level: the contradictions on what each finding rests on directly; deeper findings disclose their own when published.</p>\n<h2>7. Strength</h2><p>A case has two strengths, never one.</p><p>Each finding is graded on its own, on capture and on connection separately, as this case read it. Nothing combines them, and this case has no strength of its own.</p><ul><li>INQ-2026-0001-lease: capture B, connection C.</li><li>INQ-2026-0003-context: capture D, connection undetermined.</li></ul><p>This project&#39;s bar: capture B, connection C.</p>\n<h2>8. How grades are worked out</h2><p>How Civicsmith grades a finding (method bio-grading/1).</p><p>1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony (a member&#39;s own firsthand account) graded beside them. Each is worked out on its own, from the legs graded for it, and they are never combined into one figure. Grades run from A, the strongest, to D.</p><p>2. Which legs count. A leg counts only for the strength its grade names. A capture grade is never above what the record holds for that document; a testimony grade is always D. A leg with no grade, or one marked as a hunch, is listed and counts for nothing: it never lowers or raises a strength. A capture or testimony grade written on a leg to another question, or to another group&#39;s finding, has nothing to grade and is listed, not counted.</p><p>3. Questions resting on questions. A leg to another question contributes that question&#39;s own strengths, worked out the same way, up to six steps down. Past six steps, or where that question&#39;s strength is not known, the strength is stated as undetermined: unknown, not low.</p><p>4. Another group&#39;s work. A leg to a finding of another group&#39;s case that this group has accepted contributes the strengths that accepted edition published for that finding, never more, and nothing below it is followed. If that finding cannot be read, the strength is undetermined. Withdrawing the acceptance later changes no grade.</p><p>5. Sets of reasons. Legs the author did not sort into sets of reasons are all needed together, so they are only as strong as the weakest of them. A set of reasons is only as strong as the weakest leg in it. Where the author named several sets that each carry the finding on their own, the strongest set is what counts. The strength is then the weaker of the legs needed by every set and that strongest set.</p><p>6. When a strength is undetermined. A strength is undetermined only when something it needs is unknown: one of the legs every set needs, or every set at once. A set that is unknown beside a known one could only be stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.</p><p>7. Anonymous testimony and evidence. Testimony from a member credited only to the group or the project, and material from an unnamed source that such a member attests, counts only when something independent beside it bears it out; otherwise it is listed and counts for nothing. What bears it out is a counted leg on a document that shares no origin with it (not the same document, not the same capture, not the same web address) and is not itself credited anonymously; for anonymous testimony, also a member&#39;s testimony credited by cover name or real name, by another member, sharing no origin with it. Testimony or material credited by cover name or real name is graded as usual.</p><p>8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. It also states how many hunches it left out.</p><p>It was checked under catalogue version 1.61.0.</p>\n<h2>9. How to check this case yourself</h2><p>You can check this case yourself, without Civicsmith and without a network connection.</p><p>1. Get the checker, one file, from the publishing group&#39;s public read casechecker, and the specification of the case file&#39;s format from casefilespec.</p><p>2. Run the checker on every part of this case file. It checks every fingerprint and signature, finds each passage where it is said to be, works each grade out again by the method stated above, checks each relied-on finding against the bar, and runs the same publication checks.</p><p>3. Each finding is then recreated, recreated in part (naming what is missing, such as a document to fetch: a document whose fingerprint matches completes it), or did not recreate (naming what differs).</p><p>Recreating a case shows it is intact and consistent. It does not show that it is true.</p>\n<p class=\"foot\">Made with Civicsmith</p>\n</body>\n</html>\n",
+  "complete_edition_sha256": "97df4310f04c6d3a53530cbdfc29fe25a3a42c1140efd7396e61623c8f826a92"
+ }
+}

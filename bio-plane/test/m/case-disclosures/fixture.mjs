@@ -17,7 +17,8 @@
    R49) is a stand-in the test controls (`lensStandIn`, `w.lens`): the statements in force, per scope, and every ask; it
    is bound to `inquiry` (its R61 asks it) and handed to case-disclosures (R30). `people` is handed a stand-in for `duties` (a person's
    duties are no read of this module's), and `entities` is built on the host directly, not reached through inquiry's
-   instance (K1619). Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
+   instance (K1619). (T51; R33) `retrieval`'s `zone` (its R69) is a stand-in the test controls (`w.team.zone`, a Pacific zone
+   unless a test sets another or null): the zone a photo's day is read in. Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -41,6 +42,13 @@ import { moneyOf } from "../../../src/money/index.mjs";
 import { peopleOf } from "../../../src/people/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { importedWorld } from "../case-import/fixtures.mjs";
+
+/* the refusals of two providers' reads, as their real code answers them: retrieval's `selectionResolve` over an empty store, and
+   case-import's `importedCase` for an import that holds no such edition (taken from the providers' published fixtures) */
+const NO_SELECTION = noSelection();
+const REAL_IMPORTS = (await importedWorld()).ci;
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -126,7 +134,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   const people = peopleOf(host, { record, membership, entities, provenance: prov, content, sources, events, lines, money,
                                   duties: { dutiesOf: () => ({ ok: true, duties: [] }) }, now: () => clock.now });
   people.migrate();
-  const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
+  const retrieval = { selectionResolve: (args) => NO_SELECTION.selectionResolve(args) };
   const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, entities, now: () => clock.now });
   inquiry.migrate();
   const lens = lensStandIn();
@@ -186,8 +194,9 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
         return { ok: true, bytes: Uint8Array.from([...bytes, areas.length]), covered: areas.length, width: 8, height: 8 };
       } });
   }
+  const team = { zone: "America/Los_Angeles" };
   const w = {
-    lens, marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
+    team, lens, marks, carriage, evidence, bucket, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
     capture, acquisition, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -200,7 +209,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   };
   w.cd = caseDisclosuresOf(host, { record, inquiry, strength, contradiction, provenance: prov, attestation, capture,
     sources, extraction: ex, promotion, caseImport: imports, entities, events, lines, money, people, membership,
-    caseCarriage: carriage || marks, bias: lens, now: () => clock.now, ...deps });
+    caseCarriage: carriage || marks, bias: lens, retrieval: { zone: () => team.zone }, now: () => clock.now, ...deps });
   let n = 0;
   Object.assign(w, {
     head: (id) => record.head(id)?.bundleSha ?? null,
@@ -224,10 +233,10 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
      *  whole unless `indexed: false`; fetched `direct` by this instance unless `receipt: false` (a Grade B capture,
      *  provenance R13, R24); registered at `snapshots/<name>` (a `.png` name makes it a photo to the real case-carriage,
      *  its bytes put in the evidence store). Answers the capture's sha. */
-    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true, name = "c0.txt" } = {}) {
+    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true, name = "c0.txt", title = `Document ${id}` } = {}) {
       const c = { path: `snapshots/${name}`, text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
-        files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
+        files: [{ path: "bundle.md", text: infoMd(id, title) }, { path: c.path, text: c.text },
                 { path: "data/provenance.json", text: JSON.stringify({ documents: [{ ...provDoc(c), ...extra }] }) }],
         meta: { object_type: "information" },
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
@@ -238,16 +247,34 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
                                         captureSha: c.sha, retrieved: T0, via: "direct" });
       return c.sha;
     },
+    /** An information bundle registering `count` captures of one source (G47: the same `ref` on `n` materials), each with
+     *  its own bytes, its text indexed whole, registered at its own instant (`registered` = `at(i)`), so each capture's
+     *  attestation lines are its own. Answers the captures' shas in order. */
+    captures(id, count, { ext = "txt", at = (i) => `2026-09-27T${String(1 + (i % 20)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}:00Z` } = {}) {
+      const cs = Array.from({ length: count }, (_, i) => { const text = `bytes ${i} of ${id}`; return { path: `snapshots/c${i}.${ext}`, text, sha: sha(text) }; });
+      const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
+        files: [{ path: "bundle.md", text: infoMd(id) }, ...cs.map((c) => ({ path: c.path, text: c.text })),
+                { path: "data/provenance.json", text: JSON.stringify({ documents: cs.map((c) => provDoc(c)) }) }],
+        meta: { object_type: "information" },
+        register: cs.map((c) => ({ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })) });
+      if (!r.ok) throw new Error(`fixture captures refused: ${JSON.stringify(r).slice(0, 400)}`);
+      cs.forEach((c, i) => {
+        w.indexText(c.sha, id);
+        evidence.set(c.sha, Buffer.from(c.text, "utf8"));
+        st.sql.exec(`UPDATE register SET registered=? WHERE capture_sha=?`, at(i), c.sha);
+      });
+      return cs.map((c) => c.sha);
+    },
     /** A content row over `capture` in `bundle` (content R45's read contract). */
     content(id, capture, bundle, ref = `the page of ${bundle}`, extent = "{}") {
       st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, stale)
                    VALUES (?, ?, ?, 'pdf-page', ?, ?, 'plane', '2026-01-01', 0)`, id, capture, bundle, extent, ref);
     },
     /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), concluded in its own bytes. */
-    finding(id, legs, { state = "concluded", lines = [] } = {}) {
+    finding(id, legs, { state = "concluded", lines = [], severed = [] } = {}) {
       const head = record.head(id);
       const r = promotion.promote({ bundleId: id, base: head ? head.bundleSha : null, snapKey: `k${++n}`,
-        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines }) }],
+        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines, severed }) }],
         meta: { object_type: "inquiry" } });
       if (!r.ok) throw new Error(`fixture finding refused: ${JSON.stringify(r).slice(0, 600)}`);
       return r;
@@ -374,7 +401,7 @@ export function importsStandIn() {
       const e = editions.get(key(imp, edition));
       return e ? { ok: true, import: imp, group: e.group, case: e.case, editions: [{ edition: e.edition }],
                    edition: { edition: e.edition, manifest_sha: e.manifest_sha, findings: e.findings } }
-               : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+               : REAL_IMPORTS.importedCase({ import: imp, edition, viewer: V("alice") });
     },
   };
   s.registration = {
@@ -396,22 +423,22 @@ export function importsStandIn() {
   return s;
 }
 
-export function infoMd(id) {
-  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
+export function infoMd(id, title = `Document ${id}`) {
+  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: ${JSON.stringify(title)}`,
           "current_state: collected", "prior_state: null", `created: "${T0}"`,
           `last_updated: "${T0}"`, "references: []", "state_history: []", "criticality: supporting",
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
 
 /** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes. */
-export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
+export function inqMd(id, legs = [], { state = "concluded", lines = [], severed = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
   /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
   const refs = [...new Set(legs.map((l) => l.target).filter((t) => !String(t).startsWith("imported:")))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
-    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",
-                                                              '    note: ""'])] : ["references: []"]),
+    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`,
+                                                              `    status: ${severed.includes(t) ? "severed" : "confirmed"}`, '    note: ""'])] : ["references: []"]),
     "state_history: []",
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => Object.entries({ role: "supports", ...l })
       .sort(([a], [b]) => (a === "target" ? -1 : b === "target" ? 1 : 0))

@@ -6,9 +6,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, profiles, step, V, SCREENS, OPS, MACHINE_REFUSED, MACHINE_DRAFTS, seeded, draft, RECORDS_REQUEST_NAME } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const F = V("frank"), E = V("erin");
-const GET = wz.CIVICSMITH_LIBRARY.find((e) => e.name === "Get a record");
+const GET = wz.CIVICSMITH_LIBRARY.find((e) => e.name === word("wizard.WIZ-cb0ad18a17a04233.name"));
 /* every op the carried registry names, owed ones included, so R12 judges "Get a record" by its template alone */
 const ALL_OPS = [...new Set(wz.SCREEN_REGISTRY.flatMap((s) => [...s.acts, ...s.owed.map((o) => o.op)]))];
 const codes = (r) => r.refusals.map((x) => [x.code, x.step]);

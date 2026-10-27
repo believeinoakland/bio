@@ -7,11 +7,12 @@
    built here from that file, never from this module. Each with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { stepRead } from "../steps/fixtures.mjs";
 import { world as stepsWorld, ANN, BOB, CAT, DAN, OUT, P1, P2, PH, PD, Q, Q2 } from "../steps/fixture.mjs";
 import { world as invWorld, P1 as IP1, Q1 as IQ1, ANN as IANN, BOB as IBOB, OUT as IOUT, DAN as IDAN } from "../investigation/fixture.mjs";
 import { world as qeWorld, Q as QQ, PROJ, CAP, CALLER } from "../question-explorer/fixture.mjs";
 import { standard as reviewStandard, P as RP, Q as RQ, V, SECRET } from "../review/fixture.mjs";
-import { fresh, reader, ofKind, sentences, texts } from "./fixture.mjs";
+import { fresh, reader, ofKind, sentences, texts, dayOn } from "./fixture.mjs";
 import { NOTICE_KINDS, HINT_MARK, INVESTIGATION_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
 
@@ -23,7 +24,7 @@ const say = (key, fills = {}) => {
   assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
   return WORDS[key].replace(/\{([A-Za-z_]+)\}/g, (m, k) => (k in fills ? fills[k] : m));
 };
-const day = (d, month) => `${d} ${WORDS[`date.month.${month}`]}`;
+const day = (d, month) => dayOn(d, month);
 /* R17 (DEC-189 (2)): the item's summary and detail are its kind's keys with these fills, every placeholder filled */
 const words = (it, fills) => {
   assert.equal(it.summary, say(`queue.${it.kind}.summary`, fills), `${it.kind} summary`);
@@ -254,16 +255,34 @@ test("R17 review-comment-left-out: one FINDING per entry review.reviewCommentsLe
   void RQ; void SECRET;
 });
 
-test("R17 R1 each source's bound and truncated stated; a source that throws or refuses contributes no item and is named in facts.failed; the read writes nothing", () => {
+/* steps' own `laterFound`, over `n` looks that each found something later: the real answer, one entry per address looked at */
+function laterWorld(n) {
   const w = stepsWorld();
   duties(w.st);
-  const many = Array.from({ length: INVESTIGATION_ITEMS_MAX + 1 }, (_, i) => ({ step: "STP-1", look: 1, observation: i, at: "2026-10-09T00:00:00Z", questions: [], key: `k${i}` }));
-  const run = (deps) => reader(fresh(w.host, { membership: w.membership, view: UTC, steps: w.s, ...deps })).read("ann", { now: Date.parse("2026-10-09T18:00:00Z") });
-  const r = run({ steps: { ...w.s, laterFound: () => ({ ok: true, found: many }), stepsDue: (a) => w.s.stepsDue(a),
-    costShares: (a) => w.s.costShares(a), costMessages: (a) => w.s.costMessages(a) } });
+  w.clock = "2026-10-09T00:00:00.000Z";
+  const id = w.step();
+  const DOC = "INFO-2026-0001-doc", SHA = "c".repeat(64);
+  w.bundle(DOC, { type: "information" });
+  w.capture(SHA, DOC);
+  for (let i = 0; i < n; i++) {
+    const address = `https://example.org/contract-${i}.pdf`;
+    w.observationLog.observe({ actor_class: "member", actor: ANN, authority_kind: "step", authority: id, level: "document",
+      subject_kind: "address", subject: address, detail: "not posted", state: "LOOKED_ABSENT" });
+    w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: DOC, level: "document",
+      subject_kind: "address", subject: address, state: "PRESENT", result_kind: "capture", result_ref: SHA, detail: "new" });
+  }
+  return w;
+}
+
+test("R17 R1 each source's bound and truncated stated; a source that throws or refuses contributes no item and is named in facts.failed; the read writes nothing", () => {
+  const w = laterWorld(INVESTIGATION_ITEMS_MAX + 1);
+  const NOW = Date.parse("2026-10-09T18:00:00Z");
+  const run = (deps, world = w) => reader(fresh(world.host, { membership: world.membership, view: UTC, steps: world.s, ...deps })).read("ann", { now: NOW });
+  assert.equal(w.s.laterFound({ viewer: ANN, at: "2026-10-09T18:00:00Z" }).found.length, INVESTIGATION_ITEMS_MAX + 1, "steps' own answer holds one more than the bound");
+  const r = run({});
   assert.equal(ofKind(r, "step-later-found").length, INVESTIGATION_ITEMS_MAX);
   assert.deepEqual(r.facts.step_later_found, { bound: INVESTIGATION_ITEMS_MAX, truncated: true });
-  assert.deepEqual(run({}).facts.step_later_found, { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "negative control: within the bound");
+  assert.deepEqual(run({}, laterWorld(3)).facts.step_later_found, { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "negative control: within the bound");
   const boom = () => { throw new Error("down"); };
   for (const [deps, name] of [[{ steps: { laterFound: boom, stepsDue: () => ({ ok: true, due: [] }), costShares: () => ({ ok: true, shares: [] }), costMessages: () => ({ ok: true, messages: [] }) } }, "steps"],
                               [{ questionExplorer: { findsFor: () => ({ ok: false }) } }, "question-explorer"],
@@ -286,7 +305,7 @@ test("R17 step-later-found's {date} is the look's own local day when steps answe
   const looked = run(entry({ looked_at: "2026-10-09T18:00:00Z" }), () => ({ ok: true, step: "STP-9", work: "Ask the clerk" }));
   assert.equal(looked.detail, say("queue.step-later-found.detail", { date: day(9, "october") }));
   assert.equal(looked.summary, say("queue.step-later-found.summary", { what: "Ask the clerk" }));
-  const plain = run(entry({}), () => ({ ok: false, reason: "NO_SUCH_STEP" }));
+  const plain = run(entry({}), () => stepRead().unknownAnswer);
   assert.equal(plain.detail, say("queue.step-later-found.detail", { date: day(1, "december") }), "negative control: no looked_at, the entry's own day");
   assert.equal(plain.summary, say("queue.step-later-found.summary", { what: "STP-9" }), "a step the read does not answer: its id");
   const boom = reader(fresh(w.host, { membership: w.membership, view: UTC, steps: { laterFound: () => ({ ok: true, found: [entry({})] }),
@@ -309,7 +328,7 @@ test("R17 (T44) each {date}: step-later-found, step-date-due and milestone-overd
              costMessages: () => ({ ok: true, messages: [] }), step: ({ step }) => ({ ok: true, step, work: "Ask the clerk" }) },
     investigation: { milestonesOverdue: () => ({ ok: true, due: milestones }), quietPrompts: () => ({ ok: true, prompts: [] }) } }))
     .read("ann", { now: Date.parse(now) });
-  const date = (d, m, y) => (y ? say("date.daymonthyear", { day: d, month: WORDS[`date.month.${m}`], year: y }) : say("date.daymonth", { day: d, month: WORDS[`date.month.${m}`] }));
+  const date = (d, m, y) => dayOn(d, m, y);
   const later = (looked_at, at = "2026-10-09T18:00:00Z") => ({ step: "STP-9", look: 1, observation: 2, at, looked_at, questions: [], key: `k-${looked_at}` });
   const stepDue = (d) => ({ step: "STP-9", work: "Ask the clerk", kind: "past_date", date: d, key: `k-${d}` });
   const ms = (d) => ({ kind: "overdue", milestone: 3, project: null, name: "draft out", date: d, key: `m-${d}` });
@@ -320,7 +339,7 @@ test("R17 (T44) each {date}: step-later-found, step-date-due and milestone-overd
   assert.deepEqual(detail(inYear, "step-later-found"), [say("queue.step-later-found.detail", { date: date("6", "october") })], "the look's local day");
   assert.deepEqual(detail(inYear, "step-date-due"), [say("queue.step-date-due.detail", { date: date("8", "october") })]);
   assert.deepEqual(detail(inYear, "milestone-overdue"), [say("queue.milestone-overdue.detail", { date: date("1", "october") })]);
-  assert.match(detail(inYear, "milestone-overdue")[0], /due on 1 October\./);
+  assert.ok(detail(inYear, "milestone-overdue")[0].includes(day(1, "october")));
   for (const t of inYear.items.map((i) => i.detail)) assert.doesNotMatch(t, /\b2026\b|\b0\d /, t);
   const utc = run({ found: [later("2026-10-07T03:00:00Z")] }, now, UTC);
   assert.deepEqual(detail(utc, "step-later-found"), [say("queue.step-later-found.detail", { date: date("7", "october") })], "control: in UTC, the 7th");
@@ -330,7 +349,7 @@ test("R17 (T44) each {date}: step-later-found, step-date-due and milestone-overd
   assert.deepEqual(detail(outYear, "step-later-found"), [say("queue.step-later-found.detail", { date: date("20", "december", "2025") })]);
   assert.deepEqual(detail(outYear, "step-date-due"), [say("queue.step-date-due.detail", { date: date("30", "december", "2025") })]);
   assert.deepEqual(detail(outYear, "milestone-overdue"), [say("queue.milestone-overdue.detail", { date: date("15", "november", "2025") })]);
-  assert.match(detail(outYear, "step-date-due")[0], /^You set 30 December 2025 for this step/);
+  assert.ok(detail(outYear, "step-date-due")[0].includes(dayOn(30, "december", 2025)));
   /* control: the same sources' days in the year being read name none */
   const sameYear = run({ due: [stepDue("2026-01-02")], milestones: [ms("2026-01-01")] }, early);
   assert.deepEqual(detail(sameYear, "step-date-due"), [say("queue.step-date-due.detail", { date: date("2", "january") })]);

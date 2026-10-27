@@ -10,6 +10,7 @@ import { LEAD_CHECKS as OBSERVATION_LEAD_CHECKS, LEAD_ID_RE } from "../../../src
 import { BUNDLE_CASES, LEG_CASES, REGISTRY_VARIANTS, GROUND_CASES, SUPERSEDE_CASES, LEAD_LEG_CASES, legFm,
          INFO, INFO2, INFO3, SELF, PUBLISHED, EARNED, IMPORTED_BUNDLE_CASES } from "./corpus.mjs";
 import { GOLDEN, run, plain, judge } from "./fixture.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLegExtentGrammar, supersedesEdgeFindings,
         divisionDisclosureFindings, leadLegFindings, checkSupersession, INQUIRY_GRAMMARS, LEAD_CHECKS,
@@ -47,9 +48,9 @@ test("R1 (C-2.8) entry requirements, by hand: surfaced_by, a disposition's reaso
   const msgs = (fm) => sync((f) => checkInquiryExtension(ctxOf({ object_type: "inquiry", surfaced_by: "human", ...fm }), f)).map((x) => x.message);
   const has = (fm, re) => assert.ok(msgs(fm).some((m) => re.test(m)), `${re}: ${JSON.stringify(msgs(fm))}`);
   assert.deepEqual(msgs({}), []);
-  has({ surfaced_by: "robot" }, /^surfaced_by 'robot' is not one of: agent, human$/);
-  has({ current_state: "deferred" }, /^deferred state requires a non-empty disposition_reason$/);
-  has({ current_state: "dismissed", disposition_reason: " " }, /^dismissed state requires a non-empty disposition_reason$/);
+  has({ surfaced_by: "robot" }, /^who surfaced this inquiry is 'robot', which is not one of: agent, human$/);
+  has({ current_state: "deferred" }, /^the deferred state requires a non-empty reason$/);
+  has({ current_state: "dismissed", disposition_reason: " " }, /^the dismissed state requires a non-empty reason$/);
   const concluded = (o) => ({ current_state: "concluded", conclusion: "it is", falsifier: "x", basis: [{ target: INFO, role: "supports" }], ...o });
   assert.deepEqual(msgs({ ...concluded({}), references: [{ target: INFO, rel: "cites" }] }), []);
   has(concluded({ conclusion: "" }), /^concluded state requires a non-empty conclusion$/);
@@ -59,10 +60,10 @@ test("R1 (C-2.8) entry requirements, by hand: surfaced_by, a disposition's reaso
   has(concluded({ falsifier_override_by: "member:a", falsifier_override_at: "2026-07-01T00:00:00Z" }), /BOTH an authored falsifier/);
   assert.ok(!msgs(concluded({ falsifier: "", falsifier_override_by: "member:a", falsifier_override_at: "x" })).some((m) => /falsifier/.test(m)));
   has(concluded({ basis: [] }), /requires at least one basis leg/);
-  has({ subject_entity: "ENT-1" }, /^subject_entity 'ENT-1' is not a subject registry key/);
+  has({ subject_entity: "ENT-1" }, /^the subject entity 'ENT-1' is not an entry in the subject registry/);
   assert.ok(!msgs({ subject_entity: "ENT-2026-0001" }).length);
   for (const k of ["case_id", "case_edition", "case_project", "case_scope", "case_findings", "case_roles", "bias_acknowledgement", "required_strength"])
-    has({ [k]: "x" }, new RegExp(`a finding's bytes name a case \\(${k}\\)`));
+    has({ [k]: "x" }, new RegExp("case facts of its own"));
   assert.ok(!msgs({ case_id: "null", case_edition: "" }).length, "an absent case field is not named");
   for (const t of ["information", "project", undefined]) assert.deepEqual(sync((f) => checkInquiryExtension(ctxOf({ object_type: t, surfaced_by: "x" }), f)), []);
   assert.ok(sync((f) => checkInquiryExtension(ctxOf({ object_type: "problem", surfaced_by: "x" }), f)).length, "a legacy type alias is an inquiry");
@@ -77,19 +78,19 @@ test("R2 (C-2.8) divided, by hand: a division block (reason, a named non-machine
   assert.deepEqual(msgs({}), []);
   const has = (o, re) => assert.ok(msgs(o).some((m) => re.test(m)), `${re}: ${JSON.stringify(msgs(o))}`);
   has({ division: undefined }, /^divided state requires a division block/);
-  has({ division: { ...division, into: ["INQ-2026-0010-a"] } }, /names 1 child inquiry: a division produces at least TWO/);
+  has({ division: { ...division, into: ["INQ-2026-0010-a"] } }, /names 1 child: a division produces at least two inquiries/);
   has({ division: { ...division, into: ["INQ-2026-0010-a", "INQ-2026-0010-a"] } }, /names the same child twice/);
-  has({ division: { ...division, into: ["INQ-2026-0010-a", "nope"] } }, /division.into names 'nope', which is not a canonical record id/);
+  has({ division: { ...division, into: ["INQ-2026-0010-a", "nope"] } }, /the division names 'nope', which is not a valid record reference/);
   has({ division: { ...division, reason: "" } }, /division requires a non-empty reason/);
   for (const who of ["", "class:daemon", "token:x"]) has({ division: { ...division, apportioned_by: who } }, /is not a named member/);
   has({ division: { ...division, at: "2026-07-01" } }, /division requires 'at' as an ISO timestamp/);
-  has({ division_apportionment: undefined }, /requires a division_apportionment field/);
+  has({ division_apportionment: undefined }, /a divided inquiry must say where every leg went/);
   has({ division_apportionment: [rows[0]] }, /^basis leg 1 has no home in the apportionment \(including 1 that cuts AGAINST/);
-  has({ division_apportionment: [rows[0], { ord: 1, to: "INQ-2026-0010-a" }] }, /names INQ-2026-0011-b, which received no leg/);
-  has({ division_apportionment: [{ ...rows[0], target: INFO2 }, rows[1]] }, /names target 'INFO-2026-0002-b' at ord 0, where the basis carries/);
-  has({ division_apportionment: [rows[0], { ord: 2, to: "INQ-2026-0011-b" }] }, /\.ord '2' does not name a leg/);
-  has({ division_apportionment: [rows[0], { ord: 1, to: "INQ-2026-0099-z" }] }, /is not one of the children named in division.into/);
-  has({ division_apportionment: [rows[0], 5] }, /division_apportionment\[1\] is not an object/);
+  has({ division_apportionment: [rows[0], { ord: 1, to: "INQ-2026-0010-a" }] }, /include INQ-2026-0011-b, which received no leg/);
+  has({ division_apportionment: [{ ...rows[0], target: INFO2 }, rows[1]] }, /names 'INFO-2026-0002-b' for leg 0, where the basis carries/);
+  has({ division_apportionment: [rows[0], { ord: 2, to: "INQ-2026-0011-b" }] }, /names leg 2, which is not a leg of this inquiry's basis/);
+  has({ division_apportionment: [rows[0], { ord: 1, to: "INQ-2026-0099-z" }] }, /which is not one of the children named in the division/);
+  has({ division_apportionment: [rows[0], 5] }, /apportionment row 1 is not an object/);
   assert.ok(!msgs({ current_state: "open" }).length, "the block is judged in the divided state only");
 });
 
@@ -104,11 +105,11 @@ test("R3 (C-15.1) the recheck coverage, by hand: absent, not a list or empty is 
   const r = c(inq([{ text: "x", description: "y" }, "s", { text: "x" }, { description: "y" }, { text: "x", description: "y", date: "July" },
                    { text: "x", description: "y", date: "2026-07-01" }, null]));
   assert.deepEqual(r.map((x) => [x.check, x.message]), [
-    ["C-15.1", "recheck_triggers[1] lacks the dual-audience {text, description} shape"],
-    ["C-15.1", "recheck_triggers[2] lacks the dual-audience {text, description} shape"],
-    ["C-15.1", "recheck_triggers[3] lacks the dual-audience {text, description} shape"],
-    ["C-15.1", "recheck_triggers[4].date 'July' is not YYYY-MM-DD"],
-    ["C-15.1", "recheck_triggers[6] lacks the dual-audience {text, description} shape"]]);
+    ["C-15.1", "recheck trigger 1 lacks its text or its description: every trigger has both"],
+    ["C-15.1", "recheck trigger 2 lacks its text or its description: every trigger has both"],
+    ["C-15.1", "recheck trigger 3 lacks its text or its description: every trigger has both"],
+    ["C-15.1", "recheck trigger 4 has the date 'July', which is not in the form YYYY-MM-DD"],
+    ["C-15.1", "recheck trigger 6 lacks its text or its description: every trigger has both"]]);
   for (const s of ["open", "surfaced", "deferred", "concluded", "divided"]) assert.equal(c(inq(undefined, s)).length, 1, s);
   for (const t of ["information", "project", "action"]) assert.deepEqual(c({ object_type: t }), []);
   assert.deepEqual(c(null), []);
@@ -135,12 +136,13 @@ test("R4 negative controls by hand: a lead or a theme is refused by name before 
   assert.deepEqual(legs([{ target: "LEAD-2026-0101-abc", role: "supports" }]).map((x) => [x.check, x.code]), [["C-54.1", "LEAD_NOT_EVIDENCE"]]);
   assert.deepEqual(legs([{ target: "THEME-2026-0101-abc", role: "supports" }]).map((x) => x.check), ["C-81.1"]);
   assert.deepEqual(legs([{ target: INFO2, role: "supports" }]).map((x) => [x.check, x.repairs]),
-                   [["C-6.3", [`add a references[] entry for '${INFO2}'`, "remove the basis leg"]]]);
+                   [["C-6.3", [localize("inquiry-grammar.grammar.add_a_references_entry_for_p", "add a reference for '{t}'", { t: INFO2 }),
+                              localize("inquiry-grammar.grammar.remove_the_basis_leg", "remove the basis leg")]]]);
   assert.match(legs([{ target: "INQ-2026-0003-c", role: "supports", grade: "B", grade_axis: "capture", grade_source: "hunch", author: "a", date: "2026-07-01" }],
                     { references: [{ target: "INQ-2026-0003-c" }] })[0].message, /capture-axis grade on an inquiry leg/);
   assert.deepEqual(legs([{ target: "INQ-2026-0004-pub", role: "supports", grade: "C", grade_axis: "connection", grade_source: "inherited" }],
                         { references: [{ target: "INQ-2026-0004-pub" }] }).map((x) => x.check), ["C-21.2"]);
-  assert.match(legs([{ target: INFO, role: "supports", ground: "a" }])[0].message, /names a ground with no grounds\[\] block/);
+  assert.match(legs([{ target: INFO, role: "supports", ground: "a" }])[0].message, /names a ground, but there is no grounds section/);
   assert.deepEqual(legs([{ target: INFO, role: "supports" }]), []);
 });
 
@@ -163,13 +165,14 @@ test("R4 a connection grade on a leg citing a member's authored observation is g
 
 test("R4 checkLegExtentGrammar: for every leg of the corpus, under C-2.8 and C-25.10, the catalogue's findings; the extent's code travels and the C-number is the caller's", () => {
   for (const [name, legs] of Object.entries(LEG_CASES)) legs.forEach((leg, i) => {
-    assert.deepEqual(sync((f) => checkLegExtentGrammar(leg, "basis[0]", "C-2.8", f)), GOLDEN.extent[name][i].c28, `${name}[${i}] C-2.8`);
+    assert.deepEqual(sync((f) => checkLegExtentGrammar(leg, "basis leg 0", "C-2.8", f)), GOLDEN.extent[name][i].c28, `${name}[${i}] C-2.8`);
     assert.deepEqual(sync((f) => checkLegExtentGrammar(leg, "basis_version_legs[0]", "C-25.10", f)), GOLDEN.extent[name][i].c2510, `${name}[${i}] C-25.10`);
   });
-  const dom = sync((f) => checkLegExtentGrammar({ extent_kind: "dom" }, "basis[2]", "C-25.10", f));
+  const dom = sync((f) => checkLegExtentGrammar({ extent_kind: "dom" }, "basis leg 2", "C-25.10", f));
   assert.deepEqual(dom.map((x) => [x.check, x.code]), [["C-25.10", "CONTENT_EXTENT_NO_PRODUCER"]]);
-  assert.match(dom[0].repairs[0], /name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape —/);
-  assert.deepEqual(sync((f) => checkLegExtentGrammar({ target: INFO }, "basis[0]", "C-2.8", f)), [], "no extent is the whole document");
+  assert.match(dom[0].repairs[0], /name the part as one of these — a cell of this spreadsheet; .*a paragraph of this document/);
+  assert.doesNotMatch(dom[0].repairs[0], /doc-para|pdf-page|sheet-range/);
+  assert.deepEqual(sync((f) => checkLegExtentGrammar({ target: INFO }, "basis leg 0", "C-2.8", f)), [], "no extent is the whole document");
 });
 
 test("R4 (C-6.1) supersedesEdgeFindings and divisionDisclosureFindings, and the slot's arm (edges then disclosure): the catalogue's findings for every case", () => {
@@ -179,7 +182,7 @@ test("R4 (C-6.1) supersedesEdgeFindings and divisionDisclosureFindings, and the 
     assert.deepEqual(disclosure, GOLDEN.supersede[name].disclosure, `${name}: disclosure`);
     assert.deepEqual(sync((f) => checkSupersession({ fm }, f)), [...edges, ...disclosure], `${name}: the slot's arm`);
   }
-  assert.match(GOLDEN.supersede["no-siblings"].disclosure[0].message, /NO_SIBLING_DISCLOSURE/);
+  assert.match(GOLDEN.supersede["no-siblings"].disclosure[0].message, /so a child of one always has at least one sibling to name/);
 });
 
 test("R4 GROUND_LABEL_RE and EARNED_SOURCE_AXIS are the catalogue's", () => {
@@ -191,19 +194,19 @@ test("R4 GROUND_LABEL_RE and EARNED_SOURCE_AXIS are the catalogue's", () => {
 
 test("R5 (C-54.1) leadLegFindings: a lead id at a leg's target or content_id, trimmed, is one C-54.1 error LEAD_NOT_EVIDENCE naming label, field and value, the first field only, answered true; otherwise nothing and false; the catalogue's findings for every case", () => {
   for (const [name, leg] of Object.entries(LEAD_LEG_CASES)) {
-    const r = run((f) => leadLegFindings("basis[3]", leg, f));
+    const r = run((f) => leadLegFindings("basis leg 3", leg, f));
     assert.deepEqual(plain(r.findings), GOLDEN.lead[name].findings, name);
     assert.equal(r.answer, GOLDEN.lead[name].answer, name);
   }
   const L = "LEAD-2026-0101-abc123";
-  const r = run((f) => leadLegFindings("basis[0]", { target: L }, f));
+  const r = run((f) => leadLegFindings("basis leg 0", { target: L }, f));
   assert.equal(r.answer, true);
   assert.equal(r.findings.length, 1);
   assert.deepEqual([r.findings[0].check, r.findings[0].severity, r.findings[0].code], ["C-54.1", "error", "LEAD_NOT_EVIDENCE"]);
-  assert.match(r.findings[0].message, new RegExp(`^basis\\[0\\]\\.target '${L}' is a LEAD`));
+  assert.match(r.findings[0].message, new RegExp(`^the target on basis leg 0 \\('${L}'\\) is a LEAD`));
   const both = run((f) => leadLegFindings("x", { target: ` ${L}`, content_id: L }, f));
   assert.equal(both.findings.length, 1, "the first such field only");
-  assert.match(both.findings[0].message, /^x\.target 'LEAD-/);
+  assert.match(both.findings[0].message, /^the target on x \('LEAD-/);
   assert.ok(LEAD_ID_RE.test(L), "the shape is observation-log's");
 });
 
@@ -219,19 +222,15 @@ test("R5 the row: this module's LEAD_CHECKS is exactly {LEAD_NOT_EVIDENCE: C-54.
 
 test("R7 R16 R18 INQUIRY_GRAMMAR_CHECKS: the twelve rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (stamped by 1.50.0); IMPORTED_LEG_MALFORMED (C-21.3) is new, its translation BOB's draft; the three T33 leg rows, T34's derived-connection row and T41's bias-application row (C-2.8) follow (R16, R18; t33, t34 and t41 tests); the table has one name", async () => {
   assert.ok(Object.isFrozen(INQUIRY_GRAMMAR_CHECKS));
-  assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS),
-                   ["LEAD_NOT_EVIDENCE", "NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND",
-                    "IMPORTED_LEG_MALFORMED", "STANDARD_LEG_AXIS", "CALCULATION_LEG_MALFORMED", "OCCURRENCE_LEG_MALFORMED",
-                    "DERIVED_LEG_MALFORMED", "BIAS_APPLICATION_MALFORMED"]);
   const numbers = { LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
                     MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8", IMPORTED_LEG_MALFORMED: "C-21.3",
                     STANDARD_LEG_AXIS: "C-2.8", CALCULATION_LEG_MALFORMED: "C-2.8", OCCURRENCE_LEG_MALFORMED: "C-2.8",
                     DERIVED_LEG_MALFORMED: "C-2.8", BIAS_APPLICATION_MALFORMED: "C-2.8" };
+  assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS), Object.keys(numbers), "the twelve rows, in R7's order");
   const imported = INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED;
   assert.deepEqual(Object.keys(imported), ["check", "where", "translation"]);
   assert.equal(imported.check, "C-21.3");
-  assert.equal(imported.translation, "A leg on another group's finding names that finding and one edition, and nothing else: "
-    + "its grades are that edition's. Correct the leg. Nothing was written.");
+  assert.equal(imported.translation, word("refusal.IMPORTED_LEG_MALFORMED"));
   assert.equal(imported.where, "src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form");
   for (const [k, row] of Object.entries(INQUIRY_GRAMMAR_CHECKS)) {
     assert.deepEqual(Object.keys(row), ["check", "where", "translation"], k);
@@ -249,9 +248,9 @@ test("R7 R16 R18 INQUIRY_GRAMMAR_CHECKS: the twelve rows, each {check, where, tr
   assert.deepEqual(Object.keys(CHECKS).filter((k) => /_CHECKS$/.test(k)).sort(), ["INQUIRY_GRAMMAR_CHECKS", "LEAD_CHECKS"]);
   assert.equal(LEAD_CHECKS.LEAD_NOT_EVIDENCE.where, "src/inquiry-grammar/grammar.mjs leadLegFindings > is-lead-not-evidence");
   /* the finding carries its row: the code is the row's key, the check its number */
-  const r = run((f) => leadLegFindings("basis[0]", { content_id: "LEAD-2026-0101-abc" }, f)).findings[0];
+  const r = run((f) => leadLegFindings("basis leg 0", { content_id: "LEAD-2026-0101-abc" }, f)).findings[0];
   assert.equal(r.check, INQUIRY_GRAMMAR_CHECKS[r.code].check);
-  const i = run((f) => IG.importedLegFindings("basis[0]", { target: IG.importedFindingRef("c".repeat(64), INFO) }, f)).findings[0];
+  const i = run((f) => IG.importedLegFindings("basis leg 0", { target: IG.importedFindingRef("c".repeat(64), INFO) }, f)).findings[0];
   assert.equal(i.check, INQUIRY_GRAMMAR_CHECKS[i.code].check);
 });
 

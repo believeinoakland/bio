@@ -9,6 +9,8 @@
 
 /* The rows a stream pass reads ahead when a view asks for rows out of order: a pass reads the source once and keeps
    at most this many of its rows. */
+import { word, localize } from "../setup-words/index.mjs";
+
 export const PICK_CHUNK = 16384;
 
 /** A step's stop: a refusal by name, caught by `evaluate`. */
@@ -43,24 +45,24 @@ function iteratorOf(x) {
 /** Why a streamed table cannot be read, or `{size}`: one pass over it, checking every row's shape. */
 export function streamFault(input, name) {
   const it = (() => { try { return iteratorOf(input.rows()); } catch (e) { return e; } })();
-  if (it instanceof Error) return { why: `the input "${name}": its rows could not be read: ${it.message}` };
-  if (!it) return { why: `the input "${name}": a streamed table's rows answers an iterator` };
+  if (it instanceof Error) return { why: word("calc-grammar.why.input_rows_read", { name: String(name), message: String(it.message) }) };
+  if (!it) return { why: word("calc-grammar.why.input_streamed_table", { name: String(name) }) };
   const width = input.fields.length;
   let size = 0;
   try {
     for (let s = it.next(); !s.done; s = it.next()) {
       if (!Array.isArray(s.value) || s.value.length !== width)
-        return { why: `the input "${name}": row ${size} is not an array of its ${width} cells in fields order` };
+        return { why: word("calc-grammar.why.input_row_array", { name: String(name), size: String(size), width: String(width) }) };
       size += 1;
     }
-  } catch (e) { return { why: `the input "${name}": its rows could not be read: ${e.message}` }; }
+  } catch (e) { return { why: word("calc-grammar.why.input_rows_read", { name: String(name), message: String(e.message) }) }; }
   return { size };
 }
 
 /** A streamed input: read again on each pass; a pass that fails, or reads another table, is refused. */
 export function streamTable(fields, input, size, name) {
   const width = fields.length;
-  const bad = (why) => stop("INPUT_INVALID", `the input "${name}": ${why}`, null);
+  const bad = (why) => stop("INPUT_INVALID", localize("calc-grammar.tables.the_input_name_why", "the input \"{name}\": {why}", { name: String(name), why: String(why) }), null);
   function* scan() {
     let it;
     try { it = iteratorOf(input.rows()); } catch (e) { bad(`its rows could not be read again: ${e.message}`); }

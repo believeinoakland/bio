@@ -15,7 +15,13 @@ registerHooks({
   },
 });
 
-export const { Store, STEP_ORDER, stepOrderFrom } = await import("../../../src/plane/store.mjs");
+export const { Store } = await import("../../../src/plane/store.mjs");
+const { assembleStore } = await import("../../../src/store-assembly/index.mjs");
+const { deliverOwedRender } = await import("../../../src/control-plane/index.mjs");
+
+/** The class holds no route map (plane R1): a test that reads the route map reads the assembled store the class builds,
+ *  made again over the same storage (store-assembly R1: a second assembly on one storage builds nothing twice). */
+export const assembledOver = (ctx, env) => assembleStore(ctx, env, { deliver: deliverOwedRender });
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -38,10 +44,15 @@ export function storage(db = new DatabaseSync(":memory:")) {
     },
     get databaseSize() { return 0; },
   };
-  let alarm = null;
+  let alarm = null, n = 0;
   const blocked = [];
   const ctx = {
-    storage: { sql, transactionSync: (fn) => fn(), getAlarm: async () => alarm, setAlarm: async (t) => { alarm = t; },
+    storage: { sql, transactionSync: (fn) => {   /* as workerd's: a savepoint, rolled back and rethrown when the callback throws (B24, K4442); nests */
+      const sp = `sp${n++}`;
+      db.exec(`SAVEPOINT ${sp}`);
+      try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
+      catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
+    }, getAlarm: async () => alarm, setAlarm: async (t) => { alarm = t; },
                deleteAlarm: async () => { alarm = null; } },
     id: { equals: () => false, toString: () => "do" },
     blockConcurrencyWhile(fn) { const p = fn(); blocked.push(p); return p; },
@@ -67,12 +78,20 @@ export async function deployed(ctx, parts = GATE_PARTS) {
 
 /** One object, constructed and settled (its migration and starts run). `routes(path, body)` answers its route map;
  *  `call(path, body)` the route the path names, awaited, as the frame does; `fetch(path, init)` the object's own door. */
-export async function store({ db, env: extra, before = null } = {}) {
+export async function store({ db, env: extra, before = null, retired = false } = {}) {
   const st = storage(db);
   const env = { STORE: { idFromName: (n) => n }, ...(extra || {}) };
   /* a test's own deps for a factory read on its first call only (K61), handed before construction */
   if (typeof before === "function") before(st.ctx, env);
   const s = new Store(st.ctx, env);
+  /* the class holds no route map (plane R1): a test that reads the route map reads the one assembled store over the same
+     storage (store-assembly R1: a second assembly on one storage builds nothing twice), handed to the object as `s.routes` */
+  /* a retired room (R95) builds and writes nothing, so the fixture assembles nothing beside it (the test says which room it made) */
+  if (!retired) {
+    const assembled = assembledOver(st.ctx, env);
+    s.routes = (url, body = null, grant = null) => assembled.routes(url, body, grant);
+    s.read = (op, params) => assembled.read(op, params);
+  }
   for (const p of st.blocked) await p;
   const routes = (path, body = null) => s.routes(new URL("http://do" + path), body);
   const call = async (path, body = null) => {

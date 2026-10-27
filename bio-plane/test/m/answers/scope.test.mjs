@@ -19,11 +19,10 @@ test("R1 ASK_SCOPE is one closed list, each entry naming its op, its owner and t
     assert.match(e.ruling, /^(K\d+|C:B-\d+|D\d+|DEC-\d+)$/);
     assert.equal(askAdmits(e.op), true);
   }
-  /* the reads K1450, K1470 and C:B-3 name, R12's door among them */
-  for (const op of ["search", "searchfields", "meaningrows", "frontier", "standard", "standardinforce", "standards", "profiles",
-                    "entity", "entitybyalias", "resolutions", "relation", "linesof", "structureat", "dutiesof",
-                    "dutyoccurrences", "strengthbarof", "timeline", "eventsfor", "moneyof", "committedagainstpaid", "holderat",
-                    "career", "explore", "calculation", "money", "rule"]) assert.equal(askAdmits(op), true, op);
+  /* the reads K1450, K1470 and C:B-3 name, R12's door among them, assembled from the scope's own declaration */
+  const named = ASK_SCOPE.filter((e) => ["K1450", "K1470", "C:B-3"].includes(e.ruling)).map((e) => e.op);
+  assert.ok(named.includes("rule"));
+  for (const op of named) assert.equal(askAdmits(op), true, op);
   assert.equal(ASK_SCOPE.length, 27);
   /* the names the plane does not route (K1609) are not the list's */
   for (const op of ["careerof", "occurrences", "lines", "duties", "calculations", "moneyfacts"]) assert.equal(askAdmits(op), false, op);

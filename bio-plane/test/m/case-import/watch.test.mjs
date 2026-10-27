@@ -400,7 +400,7 @@ test("R19 importedCases and importedCase answer the watch, the docket unreadable
   await read(w, a, null, { outcome: "unreadable", reason: "fetch_failed", at: "2026-10-22T01:00:00Z" });
   c = w.ci.importedCase({ import: a.import, viewer: V("bob") });
   assert.deepEqual(c.docket_unreadable, { sentence: DOCKET_UNREADABLE, reason: "fetch_failed", at: "2026-10-22T01:00:00Z" });
-  assert.equal(DOCKET_UNREADABLE, "Could not read the publisher's docket");
+  assert.equal(DOCKET_UNREADABLE, word("docket.read_publisher_docket"));
   assert.deepEqual(c.edition.last_read, { at: "2026-10-22T01:00:00Z", outcome: "unreadable", reason: "fetch_failed" });
   /* moves: a new edition 3 and a withdrawal of every edition; edition 2 published again after it */
   const entries = run([[{ kind: "edition", edition: 3, what_changed: "three" }], [{ kind: "withdrawal", edition: "all", reason: "all of it" }],

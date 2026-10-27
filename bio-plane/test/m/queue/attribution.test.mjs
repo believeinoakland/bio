@@ -66,7 +66,7 @@ test("R19, R26, R31: it is refused KIND_NOT_PERSONAL by kind and by its publishe
   for (const r of [w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-1", kinds: ["attribution-unchosen"] }),
                    w.q.queueMute({ member: "alice", viewer: "member:alice", item: ID })])
     assert.deepEqual([r.ok, r.reason, r.kind_class, r.check], [false, "KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27"]);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice', ?, 'OBLIGATION', ?)`, ID, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice', ?, 'OBLIGATION', ?)`, ID, iso(NOW));
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','PRJ-1','attribution-unchosen')`);
   const f = w.feed("alice");
   assert.deepEqual(f.items.map((i) => i.id), [ID]);

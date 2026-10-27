@@ -16,8 +16,10 @@
  * taking that one's pair under the same lens, and answered with `bar_met` and the applications that changed it. A lens
  * re-weighs; it never changes what was checked, so it adds no `differs` entry. Pure; never throws. */
 
+import { word } from "../setup-words/index.mjs";
+
 /** R23: the sentence every answer states. */
-export const LENS_LIMIT_STATEMENT = "A re-check re-weighs the analysis that exists; it cannot write what another lens would have written.";
+export const LENS_LIMIT_STATEMENT = word("case-checker.lens_limit_statement");
 /** R23: the lenses by name. */
 export const LENS_NAMES = Object.freeze(["as_published", "removed", "reader"]);
 /** `inquiry-grammar` R18, `basis-versions` R48: what an application does. */
@@ -45,8 +47,7 @@ export function lensOfArg(lens) {
     const apps = (lens.applications || []).map(applicationOf);
     if (apps.every(Boolean)) return { name: "reader", statements: [...new Set(lens.statements)], applications: apps, departure: null };
   }
-  return { name: "as_published", statements: null, applications: [], departure:
-    "the lens given is not as_published, removed, or a reader's own {statements, applications}, so the case is answered as published" };
+  return { name: "as_published", statements: null, applications: [], departure: word("case-checker.departure.lens_given_published") };
 }
 
 /* An application names a leg when it is recorded at a leg of that finding, at that leg's place. */
@@ -59,7 +60,7 @@ export function pairsUnderLens({ lens, facts, published, recompute }) {
   const keep = (a) => lens.name === "reader" && lens.statements.includes(a.statement);
   const own = lens.name === "reader" ? lens.applications.filter((a) => lens.statements.includes(a.statement)) : [];
   const not_applied = lens.name === "reader"
-    ? lens.applications.filter((a) => !lens.statements.includes(a.statement)).map((a) => ({ ...a, why: "its statement is not among the lens's statements" }))
+    ? lens.applications.filter((a) => !lens.statements.includes(a.statement)).map((a) => ({ ...a, why: word("case-checker.why.statement_among_lens") }))
     : [];
   const used = new Set();
   const pairs = new Map(), changes = new Map(), busy = new Set();
@@ -103,7 +104,7 @@ export function pairsUnderLens({ lens, facts, published, recompute }) {
   for (const id of facts.keys()) pairOf(id);
   for (const a of [...published.filter((x) => !keep(x)), ...own]) if (!used.has(a))
     not_applied.push({ ...a, why: a.target === "conclusion" || a.effect === "scrutiny_raised"
-      ? "it is recorded at a conclusion's claim and moves no grade"
-      : "it names no leg this case file carries, so it moves no grade here" });
+      ? word("case-checker.why.recorded_conclusion_claim")
+      : word("case-checker.why.names_leg_case") });
   return { pairs, changes, not_applied };
 }

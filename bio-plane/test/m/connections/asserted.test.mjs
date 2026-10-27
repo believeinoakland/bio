@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, cursor } from "./fixture.mjs";
 import { membershipBeside } from "../../../src/extraction/filemembership.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 
@@ -16,7 +17,7 @@ test("R31, R53, R54: a member asserts a connection between two held documents wi
   assert.equal(w.k.assert({ a: A, b: B, basis: "x", member: "", viewer: V("alice") }).reason, "CONNECTION_ASSERT_NOT_A_MEMBER");
   assert.equal(w.k.assert({ a: A, b: B, basis: "  ", member: "alice", viewer: V("alice") }).reason, "CONNECTION_ASSERT_NO_BASIS");
   assert.equal(w.k.assert({ a: A, b: B, basis: "x".repeat(4001), member: "alice", viewer: V("alice") }).reason, "CONNECTION_ASSERT_BASIS_TOO_LONG");
-  assert.equal(w.k.assert({ a: A, b: "INFO-2026-0404-z", basis: "x", member: "alice", viewer: V("alice") }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(w.k.assert({ a: A, b: "INFO-2026-0404-z", basis: "x", member: "alice", viewer: V("alice") }).reason, "NO_SUCH_DOCUMENT");
   assert.equal(w.k.assert({ a: A, b: A, basis: "x", member: "alice", viewer: V("alice") }).reason, "CONNECTION_ASSERT_SELF");
   const r = w.k.assert({ a: B, b: A, basis: "the same contract, by its number", member: "alice", viewer: V("alice") });
   assert.equal(r.ok, true); assert.equal(r.wrote, true);
@@ -34,7 +35,7 @@ test("R31, R53, R54: a member asserts a connection between two held documents wi
   /* A hidden end: refused as not held, and a row whose other end is hidden omitted. */
   w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id=?`, B);
   assert.equal(w.k.asserted({ bundleId: A, viewer: V("bob") }).member.length, 0);
-  assert.equal(w.k.assert({ a: A, b: B, basis: "x", member: "carl", viewer: V("bob") }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(w.k.assert({ a: A, b: B, basis: "x", member: "carl", viewer: V("bob") }).reason, "NO_SUCH_DOCUMENT");
 });
 
 /* An agenda (one capture, fetched from its address) whose links are items and files of one stated system. */
@@ -74,7 +75,7 @@ test("R30, R55, R56: the membership is served with its label, beside the links; 
     [["https://agendas.example.org/item/1", "https://agendas.example.org/file/1"],
      ["https://agendas.example.org/item/2", "https://agendas.example.org/file/2"]]);
   for (const p of m.pending) { assert.equal(p.derived, "containment"); assert.equal(p.established, false); assert.equal(p.stored, false); }
-  assert.match(m.says, /never the publisher.s own link/);
+  assert.equal(m.says, localize("connections.index.membership_read_says", "an agenda item's membership in a file, derived from where the file is printed; the publisher linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link"));
   /* Shapes come from the profile: with none stated, nothing is derived and the reason is said. */
   const w2 = world();
   const [ag2] = w2.doc("INFO-2026-0010-agenda", ["the agenda"]);

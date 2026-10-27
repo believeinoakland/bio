@@ -1,0 +1,286 @@
+# wizard-scripts: the words check after the conversion (K3949)
+
+Layer 11. 241 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- handlist `bio-plane/test/m/wizard-scripts/invariants.test.mjs:79` [?] ops: wizardcandidates, wizardcheck, wizardeditorgrant, ... (9 of 17 not the module's own) — handlist
+- handlist `bio-plane/test/m/wizard-scripts/library.test.mjs:105` [?] ops: ailimitset, accountusesset, projectkeyset, ... (9 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/wizard-scripts/library.test.mjs:111` [?] ops: groupkeynoticeseen, disclosureshown, subscriptionsignin, ... (9 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/wizard-scripts/library.test.mjs:182` [?] ops: signout, signouteverywhere, setpassword, ... (5 of 8 not the module's own) — handlist
+- handlist `bio-plane/test/m/wizard-scripts/library.test.mjs:98` [?] ops: projectkeyset, projectsigninset, projectaccountswitch, ... (8 of 9 not the module's own) — handlist
+- inline `bio-plane/src/wizard-scripts/checks.mjs:100` [copy] "A script has at least one step." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:104` [copy] "A step names a screen the interface does not have." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:108` [copy] "A step names an act its screen does not offer." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:112` [copy] "A step says what the member does and why. One leaves either unsaid." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:117` "your team's Civicsmith registers, and this one is none of them." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:122` "may say what to do and why, and the member writes it." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:126` [copy] "A warning: the script has one step, and may not need a wizard." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:130` [copy] "A warning: an offered script already walks the same screens and act..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:134` [copy] "The screens and the library are registered once, at start, and they..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:138` "Use is counted as a start, a step reached (one of the script's) or ..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:139` "Stopping is not counted." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:14` "Only a named member drafts, revises or submits a wizard script. A m..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:144` "by project owners and administrators. You are not one here." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:148` [copy] "The advanced editor is granted to a member of the team, and the one..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:15` "makes them a script's." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:152` [copy] "There is no editor grant by that id." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:158` "always returns to the step they left. This one does not." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:163` "The assistant does not help word this: it is an act the assistant m..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:164` "undone. The words here are yours alone." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:168` [copy] "The assistant never words your reason for an act: your reasons are ..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:172` [copy] "This field already holds a draft. Keep it, edit it or clear it befo..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:176` "Tell the assistant what you want to say first: it works only from w..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:186` "Your suggestions are switched off, so the assistant works only from..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:19` "There is no wizard script by that id that you can read here. One yo..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:191` [copy] "For what you saw yourself, the assistant only helps word what you t..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:195` "The assistant cannot draft this yet. Write it in your own words; no..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:20` "that does not exist." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:201` "question, so it was not offered." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:24` "This is done by a member taking part in the script's project (or, f..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:25` "are not. Nothing was changed." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:29` "Starting a script from nothing, or adding a step it did not record,..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:30` "administrator grants. You may reword, remove or reorder the steps y..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:35` "else, so nothing was kept." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:39` [copy] "Name the script in one line of 1 to 200 characters." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:49` "This version has left draft, so its steps are fixed. Changing them ..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:53` [copy] "Nobody is named as the one proposing these steps. Every proposal na..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:57` [copy] "Say why the steps are proposed, in 1 to 1,000 characters." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:61` "Only a named member approves, widens, retires or withdraws a wizard..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:62` "steps; it never decides." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:66` [copy] "Only a submitted version is approved, and this one is not submitted." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:70` [copy] "Only an approved script is made team-wide, and this version is not ..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:74` "An owner of the script's project approves or retires it, and an adm..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:75` "approves and retires a team-wide one. You are not the one who does ..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:79` [copy] "The version's author is its only member contributor, so someone els..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:83` [copy] "Give the reason in 1 to 500 characters." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:87` "This script is from the Civicsmith library, shipped with the releas..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:88` "team cannot edit, retire or withdraw it; it may write its own." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:92` [copy] "This was already retired or withdrawn, as recorded, and that stands." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/checks.mjs:96` [copy] "Scripts are listed as offered, or by one of: draft, submitted, with..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:17` [copy] "Check a claim" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:17` [copy] "Follow a proceeding" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:17` [copy] "Publication ceremony" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:17` [copy] "Set up and claim" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:19` [copy] "Connect your Claude account" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:19` [copy] "Invite a member" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:22` [copy] "Start and send" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:26` [copy] "Connect your Claude account" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:31` [copy] "Publication ceremony" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:31` [copy] "Set up and claim" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:35` [copy] "Set up and claim" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:37` [copy] "Start and send" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:54` "Comment for the group" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:54` [copy] "Demand a correction" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:54` [copy] "Take an escalation to its next stage" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:55` [copy] "Pick up a plan" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:55` [copy] "Refer it to an oversight body" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:58` "Update your group's Civicsmith" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:62` [copy] "Publication ceremony" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:62` [copy] "Set up and claim" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/data.mjs:62` [copy] "Welcome a new member" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1025` [copy] "a proposal proposes at least one step" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1029` "say why in 1 to {} characters" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1041` [copy] "proposed steps, stored apart: they are no script's until a member d..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1089` "the version is {}: only an approved project script is widened" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1099` "the version is {}, not submitted" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1120` [copy] "approved: offered to every member who may see it; an earlier approv..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1181` "give the reason in 1 to {} characters" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1194` [copy] "retired: none of its versions is offered again; each stays readable..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1254` "state is offered or one of {}" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1264` [copy] "proposed steps: none is offered, and none is a script's until a mem..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1531` "tell the assistant what to say, in 1 to {} characters" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:1568` "a step reached is one of the script's, 1 to {}" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:161` [copy] "steps are a list" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:162` "a script has at most {} steps" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:167` "a step carries only screen, act, what, why, draft and via, not '{}'" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:168` [copy] "a side trip names a script by its id" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:169` [copy] "a step names its screen" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:170` [copy] "an act is an op's name, or none" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:173` "'{}' is text of at most {} characters" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:176` [copy] "a draft is one of {text}, {template} or {machine}" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:177` "a draft's text is 1 to {} characters" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:263` [copy] "a side trip names a script by its id" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:264` [copy] "a side trip cannot go to the script itself" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:265` "no script '{}' is offered here to go to" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:275` "the side trip to '{}' leads back to this script, so it would never ..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:305` "no screen '{}' is registered" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:308` "the screen '{}' offers no act '{}'" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:316` [copy] "a draft is one of {text}, {template} or {machine}" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:317` "no filing template '{}' is offered here" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:318` "'{}' is not a registered machine draft" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:318` "a draft's text is 1 to {} characters" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:329` "the assistant never helps word the act '{}': it is refused to a mac..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:331` "the act '{}' is refused to a machine: no draft is placed on it but ..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:452` "'{}' is a machine identity: a machine proposes steps, labelled, and..." — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:478` "the version is {}, past draft: its steps are fixed" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:864` "a script has at most {} steps" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:925` "a script is named in one line of 1 to {} characters" — drawn module: its L11 job
+- inline `bio-plane/src/wizard-scripts/index.mjs:950` [copy] "a draft: only its author runs it, and it is offered to no one until..." — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/copies.test.mjs:107` "Not a copy" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:293` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:293` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:293` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:310` "Build a timeline" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:310` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:310` "Follow a proceeding" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:310` "Follow the money" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:310` "Keep asking this" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:310` "Pick up a plan" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:310` "Your first question" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:317` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:317` "Say who your team is" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:317` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:317` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:318` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:318` "Get a record" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:318` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:325` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:338` "Start and send" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:339` "Demand a correction" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:339` "Refer it to an oversight body" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:339` "Start and send" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:34` "Say who your team is" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:34` "Update your team's Civicsmith" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:344` "Start and send" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:35` "Comment for the team" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:35` "Use another team's case" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:364` "Demand a correction" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:364` "Pick up a plan" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:364` "Refer it to an oversight body" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:366` "Take an escalation to its next stage" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:37` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:37` "Follow a proceeding" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:37` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:37` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:38` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:38` "Invite a member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:385` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:385` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:385` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:39` "Start and send" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:390` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:402` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:408` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:41` "Demand a correction" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:41` "Pick up a plan" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:41` "Refer it to an oversight body" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:41` "Take an escalation to its next stage" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:424` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:434` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:434` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:438` "Invite a member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:443` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:443` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:447` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:447` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:448` "Follow a proceeding" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:448` "Follow a proceeding" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:449` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:449` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:452` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:452` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:485` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:486` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:487` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:489` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:49` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:492` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:492` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:492` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:50` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:51` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:52` "Follow a proceeding" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:528` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:528` "Translate the interface" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:53` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:538` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:54` "Invite a member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:549` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:55` "Start and send" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:67` "Pick up a plan" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:67` "Refer it to an oversight body" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:67` "Take an escalation to its next stage" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/library.test.mjs:98` "AI for this project" — handlist
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:12` "Invite a member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:12` "Say who your team is" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:12` "Update your team's Civicsmith" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:29` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:29` "Get a record" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:49` "Invite a member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:49` "Say who your team is" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/r40.test.mjs:49` "Update your team's Civicsmith" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t45.test.mjs:11` "Get a record" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:137` "Follow the money" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:137` "Get a record" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:140` "Build a timeline" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:140` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:140` "Get a record" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:140` "Your first question" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:140` "Your first question" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:141` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:141` "Follow a proceeding" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:141` "Get a record" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:141` "Use another team's case" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:142` "Build a timeline" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:142` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:150` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:152` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:221` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:221` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:237` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t47.test.mjs:92` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:142` "Update your team's Civicsmith" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:169` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:170` "Set up and claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:180` "Start and send" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:198` "Check a claim" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:198` "Connect your Claude account" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:198` "Follow a proceeding" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:198` "Invite a member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:198` "Publication ceremony" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:198` "Welcome a new member" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:55` "Follow the money" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/t48.test.mjs:55` "Get a record" — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/writing-help.test.mjs:204` "The assistant never words your reason for an act: your reasons are ..." — drawn module: its L11 job
+- testcopy `bio-plane/test/m/wizard-scripts/writing-help.test.mjs:205` [part] "A step's draft is the script's own words, a filing template offered..." — part test copy
+- testcopy `bio-plane/test/m/wizard-scripts/writing-help.test.mjs:206` [part] "your team's Civicsmith registers, and this one is none of them." — part test copy
+
+## Plain findings (K3957)
+
+36 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('wizard-scripts.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/wizard-scripts/index.mjs:165` "a step is {screen, act, what, why, draft?, via?}"
+- plain `bio-plane/src/wizard-scripts/index.mjs:298` "a script has at least one step"
+- plain `bio-plane/src/wizard-scripts/index.mjs:310` "the step does not say what the member does and why"
+- plain `bio-plane/src/wizard-scripts/index.mjs:334` "the script has one step"
+- plain `bio-plane/src/wizard-scripts/index.mjs:338` "an offered script walks the same screens and acts"
+- plain `bio-plane/src/wizard-scripts/index.mjs:453` "no member is named as the one acting: this call carries nobody"
+- plain `bio-plane/src/wizard-scripts/index.mjs:462` "no wizard script by that id is readable here; one you may not see answers the same"
+- plain `bio-plane/src/wizard-scripts/index.mjs:488` "a Civicsmith script is read-only to every team: teams cannot edit or retire it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:494` "the script was already retired"
+- plain `bio-plane/src/wizard-scripts/index.mjs:494` "the version was already withdrawn"
+- plain `bio-plane/src/wizard-scripts/index.mjs:791` "the registration is made once per construction, and it was"
+- plain `bio-plane/src/wizard-scripts/index.mjs:863` "a recording is a list of {screen, act}"
+- plain `bio-plane/src/wizard-scripts/index.mjs:868` "a recorded step holds its screen and act, never a typed value"
+- plain `bio-plane/src/wizard-scripts/index.mjs:914` "a script is drafted by a joined participant of its project"
+- plain `bio-plane/src/wizard-scripts/index.mjs:918` "a draft starts from one of a recording, a source or a copy"
+- plain `bio-plane/src/wizard-scripts/index.mjs:967` "a draft is revised by its author"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1013` "no stamped proposer: a proposal names who made it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1057` "a draft is submitted by its author"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1091` "an administrator makes a script team-wide"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1101` "an administrator approves a team-wide script"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1101` "an owner of the script's project approves it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1105` "you are the version's author and its only member contributor: another member approves it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1130` "granting the advanced wizard editor"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1134` "no member by that id"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1153` "revoking the advanced wizard editor"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1156` "no editor grant by that id"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1186` "an administrator retires a team-wide script"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1186` "an owner of the script's project retires it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1200` "a version is withdrawn by its author"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1527` "the assistant does not help word this field"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1536` "the assistant's draft is not served yet: nothing was drafted and the field is unchanged"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1566` "use is counted as start, step or finish: stopping is not an event"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1569` "only a step reached names a step"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1585` "a script's use is read by the owners of its project and its authors"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1612` "candidates are read by project owners and administrators"
+- plain `bio-plane/src/wizard-scripts/start.mjs:86` "a rumour part is proposed as a question: it is proposed as a lead"

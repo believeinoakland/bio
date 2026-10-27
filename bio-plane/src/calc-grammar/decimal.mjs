@@ -4,6 +4,8 @@
  * into an interval `[lo, hi]` with its precision, worked on, and written back. Nothing here throws, except
  * `TypeError` for an argument of the wrong JavaScript type. */
 
+import { word } from "../setup-words/index.mjs";
+
 export const MODES = Object.freeze(["half_even", "half_up", "down", "up"]);
 export const PRECISIONS = Object.freeze(["exact", "rounded", "approximate", "range"]);
 export const MAX_PLACES = 64;
@@ -235,7 +237,7 @@ export function divide(a, b, opts) {
   const [x, y] = rs;
   if (dimensioned(y) && !sameDims(x, y)) return mismatch(x, y);
   if (y.lo.n <= 0n && y.hi.n >= 0n)
-    return undetermined(isZeroD(y.lo) && isZeroD(y.hi) ? "division by zero" : "the divisor's range includes zero");
+    return undetermined(isZeroD(y.lo) && isZeroD(y.hi) ? word("calc-grammar.division_zero") : word("calc-grammar.divisor_range_includes"));
   const keep = sameDims(x, y) ? {} : { unit: x.unit, currency: x.currency };
   const approximate = rs.some((q) => q.approximate);
   const precision = combinePrecision(rs);
@@ -274,11 +276,11 @@ export function relate(a, b) {
   }
   const x = readingOf(a); const y = readingOf(b);
   if (!sameDims(x, y)) return mismatch(x, y);
-  if (x.approximate || y.approximate) return undetermined("an approximate figure does not settle a comparison");
+  if (x.approximate || y.approximate) return undetermined(word("calc-grammar.approximate_figure_settle"));
   if (cmpD(x.hi, y.lo) < 0) return "lower";
   if (cmpD(x.lo, y.hi) > 0) return "higher";
   if (x.precision === "exact" && y.precision === "exact") return "equal";
-  return undetermined("the figures' readings overlap (a rounded figure or a range)");
+  return undetermined(word("calc-grammar.figures_readings_overlap"));
 }
 
 /** The stated value of a non-range figure, as a decimal, for ordering (R12); `null` for a range. */

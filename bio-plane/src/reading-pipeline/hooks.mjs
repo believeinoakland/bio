@@ -35,6 +35,12 @@ export class ReadHooks {
     return { ok: true, module, captureClasses: [...captureClasses] };
   }
 
+  /** R43: true exactly when some registered hook's classes include `captureClass`; false for null, a non-string or a
+   *  class no hook holds. It runs nothing and changes nothing. */
+  wants(captureClass) {
+    return typeof captureClass === "string" && this.#hooks.some((h) => h.classes.includes(captureClass));
+  }
+
   /** R26: called by the module that commits a reading, once its transaction has committed (`committed: true`; any
    *  other value runs nothing and answers `{ran: []}`). Each hook whose classes hold `captureClass` is called, one at
    *  a time, in `MODULE_ORDER`, with `{captureSha, captureClass, reading}`; a hook for another class is not. Answers

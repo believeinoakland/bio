@@ -1,16 +1,16 @@
 {
-  "version": "0.85.0",
-  "sha256": "aa48b8cb6f0b6c2b64d76bde1c3227f1a9a5716af4abac2b346071975913d649",
-  "bytes": 21421775,
+  "version": "0.86.0",
+  "sha256": "bdb5004fb4c211eb1d544ddff119f40659af3285a537c11daee749a0db735a8a",
+  "bytes": 29425264,
   "asset": "bio-plane.bundled.mjs",
-  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABAjGmaRgH5lWFXygNJQo44oI/ozIdqwjhIqLsyr7fQvEOptl+rGpo7lk\n+QtKLLo49APRJyRGynZbpEob3mmPpADA==\n-----END SSH SIGNATURE-----\n",
+  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABAA6u70GTSrkm90reTmjQk2WZZPvfMoHyNQUfPczxWTX3NufbSjorj0k\n+XcThsL64D10+XsDNrXJ3Xuy2ikoRHDQ==\n-----END SSH SIGNATURE-----\n",
   "signer": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiA6JRm52rE3agZAKqb/4ATA34c8jEp3Yef0KZyCe18 bio-release",
   "fleet": [
     {
       "member": "agent-runner",
       "asset": "agent-runner.bundled.mjs",
-      "sha256": "77d9925662aedab8046adc33288f1ee671b828d9dfc92d0c94a8895c165e4621",
-      "bytes": 65644,
+      "sha256": "db89775fbaecfed0335df83d6745e53f5f10b49331cc634cfd3fb1ebdea7eed5",
+      "bytes": 71262,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -22,16 +22,22 @@
         {
           "path": "container.json",
           "type": "Container",
-          "sha256": "186aea9c8903d4e7dad03a47ae2e281c082b7bd975c3bb7fd7cd40955c25740f",
-          "bytes": 7982
+          "sha256": "0b79daeafd1678ee08c72d0457216aa4b3a815359af49eff03c5a7c9001311e7",
+          "bytes": 8011
+        },
+        {
+          "path": "worker.json",
+          "type": "Worker",
+          "sha256": "18da0d3cf94b90a1f6d7f851746e217307df8eee3369ae407f30c687c8c5fb1d",
+          "bytes": 293
         }
       ]
     },
     {
       "member": "agent-worker",
       "asset": "agent-worker.bundled.mjs",
-      "sha256": "ce1a9b1f9ddd2c2af5f812fad82eb71efb0ca91137e1d5fa1948bb7e04beaf31",
-      "bytes": 320184,
+      "sha256": "9e69c7c80745b52b53579f984c2f02f4c1676b3a1cfa03988028de6b3933f51b",
+      "bytes": 6136446,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -44,13 +50,20 @@
           "service": "bio-plane"
         }
       ],
-      "parts": []
+      "parts": [
+        {
+          "path": "worker.json",
+          "type": "Worker",
+          "sha256": "6760ce9519bde379138b94e09879ad89dd9bf06dde3609f98ef987fcf4fa2f6c",
+          "bytes": 465
+        }
+      ]
     },
     {
       "member": "file-scanner",
       "asset": "file-scanner.bundled.mjs",
-      "sha256": "cbbb64e9c8f847b75e7492287202287a7b45ad0ef94f53333148f4acd1f5a972",
-      "bytes": 176556,
+      "sha256": "48e5a88df99ac9aa008a699861347c73ce0a24f4330077788255c3614214d140",
+      "bytes": 206118,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -62,28 +75,28 @@
         {
           "path": "container/FileScanner.json",
           "type": "Container",
-          "sha256": "9d510f16cc1550265f866ce9ffabfee9bda67e004b0c5246d4d69e8c27f4eb13",
-          "bytes": 658
+          "sha256": "b483a1dc57fa16a83b2fde970e74eed478d2fad093ab4746f73ab7a9300c46e0",
+          "bytes": 687
         },
         {
           "path": "container/SafeViewRenderer.json",
           "type": "Container",
-          "sha256": "7a47894c0e5db7ff91e42596bb36b34074bb1598a3985b1675a5ca1b61186939",
-          "bytes": 827
+          "sha256": "6f72788fbfa996a4b0d1e7abf5c2c54d3b16fc58c2adf229e16b31df6d064bd7",
+          "bytes": 856
         },
         {
           "path": "worker.json",
           "type": "Worker",
-          "sha256": "de5a85a50c3ea73c430bb34ab3e96b52cde342269f5ea9445342447c532ba6b6",
-          "bytes": 129
+          "sha256": "aa6e13d808d198ff1e2920311327347f883cb2441162bde145435d79563b861d",
+          "bytes": 495
         }
       ]
     },
     {
       "member": "ocr-worker",
       "asset": "ocr-worker.bundled.mjs",
-      "sha256": "da20f40d0c6689e7c37650a677cd8beed442c78a9036138b9d114bda79f6ff44",
-      "bytes": 303361,
+      "sha256": "1c3141d18d1ce91db0af4add0ae9542ffffdfa55fd1f33d4a47deaafb3bbadd7",
+      "bytes": 365281,
       "compat": {
         "date": "2026-07-01",
         "flags": []
@@ -113,8 +126,8 @@
     {
       "member": "pdf-worker",
       "asset": "pdf-worker.bundled.mjs",
-      "sha256": "6cc211a9fd5b8c90d194bac06b40e3be962f3fb0d5bb22327d0d2b3fa761e036",
-      "bytes": 2465783,
+      "sha256": "5a9ad3d3995eaa5792ab0e448a78b4d90f80a7547cb60452503666aad66fab02",
+      "bytes": 2477297,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -134,8 +147,8 @@
     {
       "member": "sheet-worker",
       "asset": "sheet-worker.bundled.mjs",
-      "sha256": "31b70e1d0d9bb9d8eebcdd860af9858e08837ad4365b31047c905707bd173ac6",
-      "bytes": 26160,
+      "sha256": "d29e92b5cfb92ba7b841aec0101a27ef6565aba27ee27d64e6f4791a504cc14f",
+      "bytes": 33942,
       "compat": {
         "date": "2026-07-01",
         "flags": []
@@ -157,5 +170,5 @@
       ]
     }
   ],
-  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABAC8r8YN50Lfgx4itZHvBSA+NYqoXdPZRczd7jnfstCDVGU0\nLhusPburKLvVhYtvGWoItfCTcphJ5mGpCZZ9DDCA==\n-----END SSH SIGNATURE-----\n"
+  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABAKj44xPdIgKyQbCtY4b9k9aSI8OAYrsfNGxxQKuYBy4+gBw\nUeAyB7oAUTh8QZPiHxhS+qJN7ahr3ds//dgqz2Dg==\n-----END SSH SIGNATURE-----\n"
 }

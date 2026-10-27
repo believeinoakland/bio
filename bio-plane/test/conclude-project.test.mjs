@@ -68,6 +68,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { classOfKind, QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
+import { word } from "../src/setup-words/index.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -168,8 +169,8 @@ const inquiryMd = (id, { versions = [], basis = [], concluded = null, extra = []
   "    description: The adopted budget may restate the transfer basis.",
   ...(basis.length ? ["basis:", ...basis.flatMap((b) => [`  - target: ${b}`, "    role: supports"])] : []),
   ...versionLines(versions),
-  "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "",
-  "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+  "---", "", "## Question", "", "Did it?", "", word("conformance.rests"), "",
+  "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
   `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 const infoMd = (id) => ["---",

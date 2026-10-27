@@ -7,6 +7,21 @@
  * TIFF structure holding Orientation alone, or not at all when the picture is stored upright. */
 
 /** A refusal raised inside the module and answered as `{ok:false, code, detail}` by `coverAreas`. */
+import { localize } from "../setup-words/index.mjs";
+import { boundOf } from "../read-bounds.mjs";
+
+/** The largest photo covered or stripped, in bytes; a larger one is refused before a byte of it is read (R3, R4). */
+export const COVER_MAX_BYTES = boundOf("image", "cover_bytes");
+
+/** The most pixels a photo may declare; more is refused from its header, before anything is decoded (R3): a small
+ *  file can declare a huge image, and the cover's time grows with the pixels. */
+export const COVER_MAX_PIXELS = boundOf("image", "pixels");
+
+/** The widest PNG row, in bytes, and the most chunks (PNG), markers (JPEG) or boxes (JP2) an image may hold; a
+ *  breach is refused from the headers, before any buffer is sized for it (R10). */
+export const COVER_MAX_STRIDE = boundOf("image", "row_stride");
+export const COVER_MAX_CHUNKS = boundOf("image", "chunks");
+
 export class CoverRefusal extends Error {
   constructor(code, detail) {
     super(`${code}: ${detail}`);
@@ -26,7 +41,20 @@ export function checkAreas(areas) {
 
 /** Refuse a photo declaring more than `max` pixels (R3 `PHOTO_TOO_LARGE`), from its header alone. */
 export function checkPixels(w, h, max) {
-  if (w * h > max) throw new CoverRefusal("PHOTO_TOO_LARGE", `the photo declares ${w} x ${h} pixels, over the ${max} this module covers`);
+  if (w * h > max) throw new CoverRefusal("PHOTO_TOO_LARGE", localize("image-cover.geometry.the_photo_declares_w_x", "the photo declares {w} x {h} pixels, over the {max} this module covers", { w: String(w), h: String(h), max: String(max) }));
+}
+
+/** Refuse a PNG whose declared row (`stride` bytes) is over the bound (R10 `IMAGE_TOO_LARGE`), before a buffer is sized. */
+export function checkStride(stride) {
+  if (stride > COVER_MAX_STRIDE)
+    throw new CoverRefusal("IMAGE_TOO_LARGE", localize("limit.image.row_stride", "the image declares rows of {size} bytes, over the {bound} this module reads", { size: String(stride), bound: String(COVER_MAX_STRIDE) }));
+}
+
+/** Refuse an image holding more than the bound of `unit` (chunks, markers or boxes; R10 `IMAGE_TOO_LARGE`); `count` is
+ *  the number reached when the walk stopped. */
+export function checkCount(count, unit) {
+  if (count > COVER_MAX_CHUNKS)
+    throw new CoverRefusal("IMAGE_TOO_LARGE", localize("limit.image.chunks", "the image holds at least {size} {unit}, over the {bound} this module reads", { size: String(count), unit: String(unit), bound: String(COVER_MAX_CHUNKS) }));
 }
 
 /** The displayed size of a stored `w` x `h` raster under EXIF orientation `o`. */
@@ -53,7 +81,7 @@ export function storedRects(areas, W, H, o) {
   return areas.map((a, i) => {
     const [x0, y0, x1, y1] = a;
     if (x1 <= 0 || y1 <= 0 || x0 >= DW || y0 >= DH)
-      throw new CoverRefusal("AREA_OUTSIDE", `area ${i} lies wholly outside the ${DW} x ${DH} picture`);
+      throw new CoverRefusal("AREA_OUTSIDE", localize("image-cover.geometry.area_i_lies_wholly_outside", "area {i} lies wholly outside the {DW} x {DH} picture", { i: String(i), DW: String(DW), DH: String(DH) }));
     const cx0 = Math.max(0, x0), cy0 = Math.max(0, y0), cx1 = Math.min(DW, x1), cy1 = Math.min(DH, y1);
     const [ax, ay] = toStored(cx0, cy0, W, H, o), [bx, by] = toStored(cx1 - 1, cy1 - 1, W, H, o);
     return [Math.min(ax, bx), Math.min(ay, by), Math.max(ax, bx) + 1, Math.max(ay, by) + 1];

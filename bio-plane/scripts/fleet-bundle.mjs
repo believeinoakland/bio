@@ -21,7 +21,7 @@
  * drift from its source (D-106's class)". **That objection is ANSWERED here, not
  * overruled.** The instrument is the one this record always reaches for — a
  * hash-verified copy of exact bytes, never a second codebase
- * (`newgroup/scripts/embed-release.mjs`, `scripts/embed-signpage.mjs`) — and the
+ * (`newgroup/scripts/embed-release.mjs`) — and the
  * shape is `check-versions`': EQUALITY, in both directions, refusing rather than
  * preferring whichever side looks newer.
  *
@@ -95,9 +95,10 @@
  */
 import { build, version as ESBUILD_VERSION } from "esbuild";
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { parse as acornParse, tokenizer as acornTokenizer, tokTypes as acornTypes } from "../src/setup-words/vendor/acorn.mjs";   /* R38: the parser setup-words reads calls with; R2: its tokenizer finds the characters to escape */
 /* THIS WALK IS GUARDED RATHER THAN NAMED. Found by the census in the old
    `hygiene.test.mjs` (deleted in T20): it went red on this file the first full
    run after it was written, before anyone read the diff, the sixth time that
@@ -226,12 +227,8 @@ export function discoverMembers(repoRoot = REPO_ROOT) {
  * `scripts/build-plane.mjs`, and `discoverMembers`' walk and the fleet gate's
  * `GUARDED_FLOOR` keep their meaning untouched.
  *
- * The plane's build has ONE pre-step no member has: `embed:sign` regenerates
- * `src/signpage.mjs` from `src/sign-release.html` (K33), deterministically. The
- * generated file is COMMITTED and input-hashed like any other source, and the
- * gate closes the loop the input hashes cannot see — a changed
- * `sign-release.html` whose render was never re-run — by comparing the
- * committed module against `renderSignpage()` in memory. Nothing writes.
+ * The plane's build has no pre-step (bundler R16, K3807): the bundle is cut from the committed sources alone, and
+ * no step generates a source file before it.
  *
  * The entry is the plane's own Worker entry, `src/plane/index.mjs` (plane R6),
  * the same file `wrangler.jsonc`'s `main` names, so the bundle and a wrangler
@@ -242,6 +239,7 @@ export function planeMember(repoRoot = REPO_ROOT) {
     dir: "bio-plane",
     name: "bio-plane",
     abs: join(repoRoot, "bio-plane"),
+    wholeWordTable: true,                /* R38: the plane carries the whole word table */
     entry: PLANE_ENTRY,
     bundle: {
       entry: PLANE_ENTRY,
@@ -480,6 +478,152 @@ export function containerParts(member, memberNames = [], { packages = true } = {
   return { parts };
 }
 
+/* ---- WHAT A CONTAINER IMAGE WAS BUILT FROM (bundler R36, R37; N1210, K3674) ------------------------------------------
+ *
+ * The image itself is built by the GitHub workflow, never in a session (rulings-active §4, K1898). What a session and
+ * the release assembly can do is compare, so "container code changed under an unchanged digest" is a comparison and
+ * not a rebuild: each class's `image` block records, beside its `digest`, `source_sha256`, the SHA-256 of the files
+ * the image is built from. Those files are the class's Dockerfile (`build.dockerfile`, on the class or the member,
+ * member-relative) and every file or directory it COPYs or ADDs from the build context (the member's directory), each
+ * hashed with its member-relative path, in path order, so a changed byte, a renamed or removed file or an added one in
+ * a copied directory moves the hash. The Dockerfile's base image digest is a line of the Dockerfile, so a base moved
+ * moves the hash too. A `COPY --from=` copies from another stage and names no context file; a wildcard, a URL or a
+ * path outside the context cannot be hashed and is unread, never skipped. */
+export const SOURCE_FIELD = "source_sha256";
+const HEX64 = /^[0-9a-f]{64}$/;
+
+const copiedSources = (dockerfile) => {
+  const out = [];
+  const logical = dockerfile.replace(/\\\r?\n/g, " ").split(/\r?\n/);
+  for (const line of logical) {
+    const m = /^\s*(?:COPY|ADD)\s+(.*)$/i.exec(line);
+    if (!m) continue;
+    let rest = m[1].trim(), fromStage = false;
+    while (rest.startsWith("--")) {
+      const flag = /^(--\S+)\s*(.*)$/.exec(rest);
+      if (!flag) break;
+      if (/^--from=/i.test(flag[1])) fromStage = true;
+      rest = flag[2];
+    }
+    if (fromStage) continue;
+    let args;
+    if (rest.startsWith("[")) { try { args = JSON.parse(rest); } catch { return { unread: `a COPY or ADD line it cannot read: ${line.trim()}` }; } }
+    else args = rest.split(/\s+/).filter(Boolean);
+    if (!Array.isArray(args) || args.length < 2 || !args.every((a) => typeof a === "string"))
+      return { unread: `a COPY or ADD line it cannot read: ${line.trim()}` };
+    out.push(...args.slice(0, -1));
+  }
+  return { sources: out };
+};
+
+const filesUnder = (abs, rel, acc) => {
+  let entries;
+  try { entries = readdirSync(abs, { withFileTypes: true }); } catch { return false; }
+  for (const e of entries) {
+    const r = `${rel}/${e.name}`;
+    if (e.isDirectory()) { if (!filesUnder(join(abs, e.name), r, acc)) return false; }
+    else acc.push(r);
+  }
+  return true;
+};
+
+/** The class's `build` block: its own where the marker states several classes, else the member's. */
+const buildOf = (member, className) => {
+  const meta = (member && member.marker) || {};
+  const list = classList(meta);
+  const entry = list ? list.find((c) => c.class_name === className) : null;
+  return isBlock(entry && entry.build) ? entry.build : (isBlock(meta.build) ? meta.build : {});
+};
+
+/** R36, R37: `{sha256}` of the files one class's image is built from, or `{unread}` saying which cannot be read. */
+export function containerSourceHash(member, className) {
+  const dockerfileRel = buildOf(member, className).dockerfile;
+  const label = `${member.dir}/fleet-member.json`;
+  if (typeof dockerfileRel !== "string" || !dockerfileRel || dockerfileRel.startsWith("/") || dockerfileRel.split("/").includes(".."))
+    return { unread: `${label} names no member-relative \`build.dockerfile\` for ${className}` };
+  let text;
+  try { text = readFileSync(join(member.abs, dockerfileRel), "utf8"); }
+  catch { return { unread: `${member.dir}/${dockerfileRel} cannot be read` }; }
+  const copied = copiedSources(text);
+  if (copied.unread) return { unread: `${member.dir}/${dockerfileRel} has ${copied.unread}` };
+  const files = new Set([dockerfileRel.replace(/^\.\//, "")]);
+  for (const src of copied.sources) {
+    const rel = src.replace(/^\.\//, "").replace(/\/+$/, "") || ".";
+    if (/[*?[\]]/.test(rel) || /^[a-z]+:\/\//i.test(rel) || rel.startsWith("/") || rel.split("/").includes(".."))
+      return { unread: `${member.dir}/${dockerfileRel} copies ${src}, which is a wildcard, an address or a path outside the build context` };
+    let st;
+    try { st = statSync(join(member.abs, rel)); } catch { return { unread: `${member.dir}/${dockerfileRel} copies ${src}, which is not in the tree` }; }
+    if (st.isDirectory()) {
+      const acc = [];
+      if (!filesUnder(join(member.abs, rel), rel === "." ? "" : rel, acc)) return { unread: `${member.dir}/${rel} cannot be read` };
+      for (const f of acc) files.add(f.replace(/^\//, ""));
+    } else files.add(rel);
+  }
+  const h = createHash("sha256");
+  for (const f of [...files].sort()) h.update(`${f}\0${sha256(readFileSync(join(member.abs, f)))}\n`);
+  return { sha256: h.digest("hex") };
+}
+
+/** R37: every class of a container member against what its image was built from: `[{class_name, state, why}]`, `state`
+ *  `current`, `stale` (the files differ from what the recorded digest was built from), `unrecorded` (the marker
+ *  records nothing it was built from) or `unread` (the files cannot be hashed). Makes no request and writes nothing. */
+export function containerImageStates(member) {
+  const { classes } = containerClasses(member);
+  return classes.map((cls) => {
+    const name = typeof cls.class_name === "string" && cls.class_name ? cls.class_name : "(unnamed)";
+    const now = containerSourceHash(member, name);
+    if (now.unread) return { class_name: name, state: "unread", why: now.unread };
+    const recorded = isBlock(cls.image) ? cls.image[SOURCE_FIELD] : undefined;
+    if (typeof recorded !== "string" || !HEX64.test(recorded))
+      return { class_name: name, state: "unrecorded", why: `its image block records no \`${SOURCE_FIELD}\`, so what the digest was built from is unknown` };
+    if (recorded !== now.sha256)
+      return { class_name: name, state: "stale", why: `its image files are now ${now.sha256.slice(0, 16)}…, the digest was built from ${recorded.slice(0, 16)}…` };
+    return { class_name: name, state: "current", why: null };
+  });
+}
+
+/** R37: the findings, each `{class_name, text}`, for the classes whose image is not provably built from the files now. */
+export function containerImageFindings(member) {
+  return containerImageStates(member).filter((s) => s.state !== "current").map((s) => ({ class_name: s.class_name,
+    text: `${member.name}: the image of its class ${s.class_name} is not provably built from the code now in the tree — ${s.why}.` }));
+}
+
+/** R36: record the digest the build produced for one class, in both files that name it, in one step: the marker's image
+ *  block (`digest`, and `source_sha256` of the files now) and the image the member's `wrangler.jsonc` container block
+ *  names (its repository kept, its digest replaced). Returns `{files: [member-relative paths written]}` or
+ *  `{refused: CODE, message}`, having written nothing. */
+export function recordContainerDigest(member, className, digest) {
+  const refuse = (refused, message) => ({ refused, message });
+  if (typeof digest !== "string" || !DIGEST.test(digest))
+    return refuse("CONTAINER_DIGEST_INVALID", `${JSON.stringify(digest)} is not an image digest, sha256:<64 hex>`);
+  if (!isContainer(member)) return refuse("CONTAINER_UNDESCRIBED", `${member.name} is not a container member`);
+  const meta = JSON.parse(JSON.stringify(member.marker));
+  const list = classList(meta);
+  const entry = list ? list.find((c) => c.class_name === className) : (meta.class_name === className ? meta : null);
+  if (!entry || !isBlock(entry.image)) return refuse("CONTAINER_UNDESCRIBED", `${member.name} states no container class ${className}`);
+  const src = containerSourceHash(member, className);
+  if (src.unread) return refuse("CONTAINER_UNDESCRIBED", `${member.name}'s class ${className}: ${src.unread}`);
+  const wranglerPath = join(member.abs, "wrangler.jsonc");
+  let wtext, cfg;
+  try { wtext = readFileSync(wranglerPath, "utf8"); cfg = parseJsonc(wtext, `${member.dir}/wrangler.jsonc`); }
+  catch (e) { return refuse("CONTAINER_UNDESCRIBED", `${member.dir}/wrangler.jsonc cannot be read: ${String(e.message).split("\n")[0]}`); }
+  const block = (isBlock(cfg) && Array.isArray(cfg.containers) ? cfg.containers : []).find((c) => isBlock(c) && c.class_name === className);
+  const named = block && typeof block.image === "string" ? /^(.+)@(sha256:[0-9a-f]{64})$/.exec(block.image) : null;
+  if (!named) return refuse("CONTAINER_UNDESCRIBED", `${member.dir}/wrangler.jsonc names no \`<repository>@sha256:<64 hex>\` image for the container of ${className}`);
+  if (wtext.split(block.image).length !== 2)
+    return refuse("CONTAINER_UNDESCRIBED", `${member.dir}/wrangler.jsonc names the image ${block.image} more than once, so which is ${className}'s is not clear`);
+  const image = {};
+  for (const [k, v] of Object.entries(entry.image)) {
+    if (k === SOURCE_FIELD) continue;
+    image[k] = k === "digest" ? digest : v;
+    if (k === "digest") image[SOURCE_FIELD] = src.sha256;
+  }
+  entry.image = image;
+  writeFileSync(join(member.abs, "fleet-member.json"), JSON.stringify(meta, null, 2) + "\n");
+  writeFileSync(wranglerPath, wtext.replace(block.image, `${named[1]}@${digest}`));
+  return { files: [`${member.dir}/fleet-member.json`, `${member.dir}/wrangler.jsonc`] };
+}
+
 /* ---- A MEMBER'S OWN BUCKETS AND SCHEDULE (bundler R25; N772, K2155) -----------
  *
  * The fleet statement's `services` carry a member's service bindings and nothing else, so a member that binds an R2
@@ -488,13 +632,49 @@ export function containerParts(member, memberNames = [], { packages = true } = {
  * `wrangler.jsonc` and never defaulted. A bucket is named by its ROLE, never by the account's bucket name, so the
  * installer binds the copy's own bucket of that role and a later per-copy name needs no new release. The roles are the
  * plane's two buckets, as this project's configs name them; any other bucket is refused by its binding. The statement's
- * format is unchanged: the part rides `parts=` like every other. */
+ * format is unchanged: the part rides `parts=` like every other.
+ * (K4094) A member with its own Durable Objects adds `durable_objects: {bindings: [{name, class_name}], migrations:
+ * [{tag, classes}]}`, copied the same way: the bindings with no `script_name` (another script's object is not the
+ * member's to bind) and its migrations in order, each `new_sqlite_classes` under its tag. The installer reads them from
+ * the signed release rather than from a table of its own. */
 export const WORKER_PART_PATH = "worker.json";
 export const BUCKET_ROLES = Object.freeze({ "bio-captures": "captures", "bio-published": "published" });
 
-/** A member's `Worker` part from its parsed `wrangler.jsonc`: `{part: null}` when it binds no bucket and states no
- *  cron; `{part: {descriptor, bytes}}`; or `{missing: [what, …]}` naming each binding whose bucket has no role (by its
- *  binding name) and each list that is not one (`r2_buckets`, `triggers.crons`). Never throws. */
+/** A member's own Durable Objects from its parsed config (K4094): `{bindings, migrations}`, or null when it owns none.
+ *  Names each binding without a name or class and each migration that is not `{tag, new_sqlite_classes}` (the forms
+ *  the installer reads) into `missing`. */
+function ownDurableObjects(c, missing) {
+  const dob = c.durable_objects === undefined ? {} : c.durable_objects;
+  const list = isBlock(dob) && dob.bindings !== undefined ? dob.bindings : [];
+  if (!isBlock(dob) || !Array.isArray(list)) missing.push("durable_objects.bindings");
+  const bindings = [];
+  for (const b of Array.isArray(list) ? list : []) {
+    if (isBlock(b) && b.script_name !== undefined) continue;
+    if (!isBlock(b) || typeof b.name !== "string" || !b.name || typeof b.class_name !== "string" || !b.class_name) {
+      missing.push("durable_objects.bindings");
+      continue;
+    }
+    bindings.push({ name: b.name, class_name: b.class_name });
+  }
+  const migs = c.migrations === undefined ? [] : c.migrations;
+  if (!Array.isArray(migs)) missing.push("migrations");
+  const migrations = [];
+  for (const m of Array.isArray(migs) ? migs : []) {
+    const classes = isBlock(m) ? m.new_sqlite_classes : undefined;
+    if (!isBlock(m) || Object.keys(m).some((k) => k !== "tag" && k !== "new_sqlite_classes") || typeof m.tag !== "string" || !/^v[0-9]+$/.test(m.tag)
+        || !Array.isArray(classes) || !classes.every((x) => typeof x === "string" && x)) {
+      missing.push("migrations");
+      continue;
+    }
+    migrations.push({ tag: m.tag, classes: [...classes] });
+  }
+  return bindings.length || migrations.length ? { bindings, migrations } : null;
+}
+
+/** A member's `Worker` part from its parsed `wrangler.jsonc`: `{part: null}` when it binds no bucket, states no cron
+ *  and owns no Durable Object; `{part: {descriptor, bytes}}`; or `{missing: [what, …]}` naming each binding whose bucket
+ *  has no role (by its binding name), each list that is not one (`r2_buckets`, `triggers.crons`) and each Durable Object
+ *  or migration the part cannot state. Never throws. */
 export function workerPart(cfg) {
   const c = isBlock(cfg) ? cfg : {};
   const missing = [];
@@ -511,10 +691,85 @@ export function workerPart(cfg) {
   const crons = isBlock(triggers) && triggers.crons !== undefined ? triggers.crons : (isBlock(triggers) ? [] : null);
   if (!Array.isArray(crons) || !crons.every((x) => typeof x === "string" && x.trim()))
     missing.push("triggers.crons");
+  const objects = ownDurableObjects(c, missing);
   if (missing.length) return { missing };
-  if (!buckets.length && !crons.length) return { part: null };
-  const descriptor = { r2_buckets: buckets, crons: [...crons] };
+  if (!buckets.length && !crons.length && !objects) return { part: null };
+  const descriptor = { r2_buckets: buckets, crons: [...crons], ...(objects ? { durable_objects: objects } : {}) };
   return { part: { descriptor, bytes: Buffer.from(JSON.stringify(descriptor, null, 2) + "\n") } };
+}
+
+/* ---- THE RELEASE IS COHERENT: EVERY BINDING NAMES WHAT THE RELEASE EXPORTS (bundler R39; K4176) ---------------------
+ *
+ * agent-worker 0.86.0 bound `REMOTE` to agent-runner's class `RemoteSession`, which agent-runner's bundle did not
+ * export, and Cloudflare refused agent-worker (code 10061) at deploy: nothing on the build machine could see it. The
+ * names a member's configuration binds are checked here against the names the bundles that would ship export, read from
+ * the build's own metafile (never from the source, where a class can exist and not be exported). */
+
+/** The names a built bundle exports (`default` included), from the build's metafile: the output that is the member's
+ *  artifact, else the build's only output. */
+export function bundleExports(member, built) {
+  const outputs = (built && built.metafile && built.metafile.outputs) || {};
+  const out = outputs[member.bundle.outfile] || Object.values(outputs)[0];
+  return new Set(out && Array.isArray(out.exports) ? out.exports : []);
+}
+
+/** R39: the bindings of a release that name something the release does not export. `units` is the plane and every member
+ *  the release carries, each `{name, config, exports}`: its parsed `wrangler.jsonc` (null: none) and the names its
+ *  bundle exports. Returns one finding per binding, `{member, binding, name, text}`: `name` is the class or service,
+ *  `text` says it for a person. A service names the plane or a member; a Durable Object binding with a `script_name`
+ *  names a member exporting its class, one without names its own bundle's; a container class and each class a migration
+ *  creates, renames to or transfers are its own bundle's. Never throws. */
+export function bindingFindings(units) {
+  const list = Array.isArray(units) ? units : [];
+  const byName = new Map(list.map((u) => [u.name, u]));
+  const names = (x) => (Array.isArray(x) ? x : []);
+  const out = [];
+  for (const u of list) {
+    const c = isBlock(u.config) ? u.config : {};
+    const mine = new Set(u.exports);
+    const found = (binding, name, text) => out.push({ member: u.name, binding, name, text: `${u.name}: ${text}` });
+    for (const s of names(c.services)) {
+      if (!isBlock(s) || byName.has(s.service)) continue;
+      found(s.binding, s.service, `service binding ${s.binding} names ${s.service}, which is neither the plane nor a member of this release`);
+    }
+    const dob = isBlock(c.durable_objects) ? c.durable_objects : {};
+    for (const b of names(dob.bindings)) {
+      if (!isBlock(b)) continue;
+      const host = b.script_name === undefined || b.script_name === u.name ? u : byName.get(b.script_name);
+      if (!host) found(b.name, b.class_name, `Durable Object binding ${b.name} names class ${b.class_name} of the script ${b.script_name}, which is not a member of this release`);
+      else if (!new Set(host.exports).has(b.class_name))
+        found(b.name, b.class_name, `Durable Object binding ${b.name} names class ${b.class_name}, which the bundle of ${host.name} does not export`);
+    }
+    for (const k of names(c.containers)) {
+      if (isBlock(k) && !mine.has(k.class_name))
+        found(k.class_name, k.class_name, `container class ${k.class_name} is not exported by its bundle`);
+    }
+    for (const m of names(c.migrations)) {
+      if (!isBlock(m)) continue;
+      const created = [...names(m.new_classes), ...names(m.new_sqlite_classes),
+        ...names(m.renamed_classes).map((r) => (isBlock(r) ? r.to : undefined)),
+        ...names(m.transferred_classes).map((r) => (isBlock(r) ? r.to : undefined))];
+      for (const cls of created)
+        if (typeof cls === "string" && !mine.has(cls)) found(`migration ${m.tag}`, cls, `migration ${m.tag} creates class ${cls}, which its bundle does not export`);
+    }
+  }
+  return out;
+}
+
+/** R39 over a set of members (the plane's descriptor included): builds each without writing, reads its configuration
+ *  and returns `{findings, unchecked}`; a member that cannot be built here is named in `unchecked` with why, never
+ *  left out silently. */
+export async function releaseBindingFindings(members) {
+  const units = [], unchecked = [];
+  for (const m of members) {
+    let built, config = null;
+    try { built = await buildMember(m, { write: false }); }
+    catch (e) { unchecked.push({ name: m.name, reason: `a fresh build failed here: ${String(e.message).split("\n")[0]}` }); continue; }
+    try { config = parseJsonc(readFileSync(join(m.abs, "wrangler.jsonc"), "utf8"), `${m.name}/wrangler.jsonc`); }
+    catch (e) { if (e.code !== "ENOENT") { unchecked.push({ name: m.name, reason: String(e.message).split("\n")[0] }); continue; } }
+    units.push({ name: m.name, config, exports: bundleExports(m, built) });
+  }
+  return { findings: bindingFindings(units), unchecked };
 }
 
 /** The three repository-relative paths a guarded member stands on. */
@@ -547,6 +802,77 @@ export function fleetProvenance(members, { repoRoot = REPO_ROOT, log = console.l
     corpus: `${members.length} fleet member(s)`, log });
 }
 
+/* ---- A PURE-ASCII BUNDLE (bundler R2; T51 fix round 6, G39; diagnosis-R6-idle.md) ------------------------------------
+ *
+ * V8 holds a script's source one byte a character only when every character is ASCII; one character above U+00FF anywhere
+ * in it makes it hold the WHOLE text two bytes a character. The plane's bundle was 32.5 MB of source held as 65 MB, which
+ * is 36 MB of the 86 MB its Store idles at in workerd (measured in raw workerd by bisecting V8's old-space cap: 86 as built,
+ * 76 with comments stripped alone, 50 pure ASCII). esbuild already writes strings and identifiers ASCII (`charset`); what
+ * it leaves are its comments (`minifyWhitespace` strips them), the text of template literals (lowered to strings, which
+ * `charset` then escapes) and the non-ASCII characters of regex literals, which no esbuild option escapes. So the recipe is
+ * those three options and `asciiOutput`, a token-aware pass over the result: a string or regex literal's non-ASCII
+ * character becomes `\uXXXX` (`\u{X}` for an astral one in a `u`/`v` regex), which means the same in both; a licence
+ * banner (`legalComments: "eof"`, the default, kept) has its characters written as `\uXXXX` text; anything else, above all
+ * the raw text of a template literal that was not lowered (which would change a tagged template's `raw`), refuses the build
+ * `[NON_ASCII_REMAINS]` and is never edited.
+ *
+ * Which builds: a fleet member and the plane. The standalone case checker (`case-checker/build-program.mjs`, DEC-112) is the
+ * open, auditable program a person reads, so its descriptor, which is neither, keeps its form; `bundle.ascii` (a boolean)
+ * overrides the rule either way. The options are recorded in the manifest's `recipe.ascii` and `verifyStatic` checks them. */
+export const ASCII_RECIPE = Object.freeze({ charset: "ascii", legalComments: "eof", minifyWhitespace: true, templateLiterals: "lowered" });
+
+/** The esbuild options the recipe adds (for a caller that builds with its own esbuild call: pair them with `asciiOutput`). */
+export const asciiOptions = () => ({ charset: ASCII_RECIPE.charset, legalComments: ASCII_RECIPE.legalComments,
+  minifyWhitespace: ASCII_RECIPE.minifyWhitespace, supported: { "template-literal": false } });
+
+/** Does this member's bundle get the pure-ASCII recipe? */
+export const asciiOf = (member) =>
+  member && member.bundle && typeof member.bundle.ascii === "boolean" ? member.bundle.ascii : !!(member && (member.marker || member.wholeWordTable));
+
+const NON_ASCII = /[^\x00-\x7f]/gu;
+const HAS_NON_ASCII = /[^\x00-\x7f]/;
+const hex4 = (c) => `\\u${c.toString(16).padStart(4, "0")}`;
+/** The ASCII spelling of `text`'s characters: surrogate pairs as two `\uXXXX`, or as one `\u{X}` when `braced`. */
+function escapeChars(text, braced) {
+  return text.replace(NON_ASCII, (ch) => {
+    const cp = ch.codePointAt(0);
+    if (cp > 0xffff) return braced ? `\\u{${cp.toString(16)}}` : hex4(0xd800 + ((cp - 0x10000) >> 10)) + hex4(0xdc00 + ((cp - 0x10000) & 0x3ff));
+    return hex4(cp);
+  });
+}
+
+/** R2: the bytes with every character above 0x7F escaped as above; the same bytes when there is none. Throws
+ *  `REFUSED [NON_ASCII_REMAINS]` naming the line and the token when a character is anywhere else. */
+export function asciiOutput(bytes) {
+  let any = false;
+  for (let i = 0; i < bytes.length; i++) if (bytes[i] > 0x7f) { any = true; break; }
+  if (!any) return bytes;
+  const text = Buffer.from(bytes).toString("utf8");
+  const where = (pos) => `line ${text.slice(0, pos).split("\n").length}`;
+  const refuse = (pos, what) => { throw new Error(`REFUSED [NON_ASCII_REMAINS]: a character above U+007F is in ${what} at ${where(pos)}, which the ASCII pass will not edit (bundler R2)`); };
+  const edits = [];
+  const comment = (_block, _t, start, end) => {
+    const raw = text.slice(start, end);
+    if (HAS_NON_ASCII.test(raw)) edits.push([start, end, escapeChars(raw, false)]);
+  };
+  for (const tok of acornTokenizer(text, { ecmaVersion: "latest", sourceType: "module", allowHashBang: true, onComment: comment })) {
+    const raw = text.slice(tok.start, tok.end);
+    if (!HAS_NON_ASCII.test(raw)) continue;
+    if (tok.type === acornTypes.string) edits.push([tok.start, tok.end, escapeChars(raw, false)]);
+    else if (tok.type === acornTypes.regexp) {
+      const flags = tok.value && tok.value.flags ? tok.value.flags : "";
+      edits.push([tok.start, tok.end, escapeChars(raw, /[uv]/.test(flags))]);
+    } else refuse(tok.start, tok.type === acornTypes.template ? "the raw text of a template literal" : `a ${tok.type.label} token`);
+  }
+  edits.sort((a, b) => a[0] - b[0]);
+  let out = "", at = 0;
+  for (const [start, end, to] of edits) { out += text.slice(at, start) + to; at = end; }
+  out += text.slice(at);
+  const left = out.search(HAS_NON_ASCII);
+  if (left !== -1) refuse(left, "text outside every token");
+  return Buffer.from(out, "latin1");
+}
+
 /** The esbuild options for one member. Exported so the build step and the gate
  *  cannot disagree about the recipe — there is one expression of it. */
 export function optionsFor(member) {
@@ -561,6 +887,7 @@ export function optionsFor(member) {
     platform: RECIPE.platform,
     external: [...(b.external || DEFAULT_EXTERNAL)],
     metafile: true,
+    ...(asciiOf(member) ? asciiOptions() : {}),
   };
 }
 
@@ -576,10 +903,215 @@ export function assetsOf(member) {
   return Array.isArray(a) ? a.filter((p) => typeof p === "string" && p) : [];
 }
 
+/* ---- THE WORD ROWS A MEMBER CARRIES (bundler R38; K3953) ----------------------------------------------------------
+ *
+ * `setup-words/rows.mjs` is the interface's whole word table (some 18,000 rows, 3.4 MB). A fleet member reads a few
+ * dozen keys of it, yet bundled whole it is parsed on every cold start. So a member's bundle carries only the rows its
+ * own inputs can read, found in two steps: a PROBE build (the table stubbed empty) names the member's first-party
+ * inputs; each is parsed with the vendored parser setup-words itself uses (never a pattern), and every call of `word`,
+ * `localize` or `hasWord` gives its first argument's literal key, or the literal prefix a built key starts with
+ * (`'refusal.' + code`, `` `refusal.${code}` ``). The real build then replaces the `rows.mjs` import with a module of
+ * exactly those rows (all the rows named, all the rows under a prefix), in the table's own order.
+ *
+ * A key with no literal prefix (a bare variable, a call's result: a wrapper reading a variable key) cannot be bounded, and
+ * neither can anything that could read the table other than through a call: `word` used as a value, `WORD_ROWS`
+ * imported outside setup-words' own index, a dynamic import of the table. For such a member the build keeps the WHOLE
+ * table, never failing and never leaving a row out, and its manifest says `words: "all"` with `wordSites`, every site by
+ * file and line (K3958): each is an entry of its own module's job, and once none is left every member keeps only its own
+ * rows. The plane's bundle carries the whole table (`wholeWordTable`), as does any build that is not a fleet member's
+ * (the standalone case checker's), and a member whose inputs do not reach the table
+ * is built exactly as before and records nothing. */
+const WORD_FUNCTIONS = new Set(["word", "localize", "hasWord"]);
+const WORD_ROWS_PATH = /(^|[\\/])setup-words[\\/]rows\.mjs$/;
+const WORD_INDEX_PATH = /(^|[\\/])setup-words[\\/]index\.mjs$/;
+const SCOPES = /^(Program|BlockStatement|StaticBlock|SwitchStatement|CatchClause|ForStatement|ForInStatement|ForOfStatement|FunctionDeclaration|FunctionExpression|ArrowFunctionExpression)$/;
+
+/** The names a binding pattern declares. */
+function patternNames(p, into) {
+  if (!p) return;
+  if (p.type === "Identifier") into.add(p.name);
+  else if (p.type === "ObjectPattern") p.properties.forEach((q) => patternNames(q.type === "RestElement" ? q.argument : q.value, into));
+  else if (p.type === "ArrayPattern") p.elements.forEach((q) => patternNames(q, into));
+  else if (p.type === "AssignmentPattern") patternNames(p.left, into);
+  else if (p.type === "RestElement") patternNames(p.argument, into);
+}
+
+/** The names a scope-making node declares for its own body (parameters and function name, `var`s anywhere inside it
+ *  but a nested function, the lets, consts, classes and functions of its statement lists, an exported one too). Import
+ *  bindings are left out: `word` imported is the call this reads. The rule of setup-words' build, so both agree on
+ *  what a call is. */
+function declaredNames(node) {
+  const into = new Set();
+  const hoist = (n, top) => {
+    if (!n || typeof n.type !== "string") return;
+    if ((n.type === "ExportNamedDeclaration" || n.type === "ExportDefaultDeclaration") && n.declaration) return hoist(n.declaration, top);
+    if (n.type === "VariableDeclaration") for (const d of n.declarations) { if (n.kind === "var" || top) patternNames(d.id, into); }
+    else if ((n.type === "FunctionDeclaration" || n.type === "ClassDeclaration") && n.id) { if (top) into.add(n.id.name); return; }
+    if (/Function/.test(n.type) || n.type === "ClassBody") return;
+    for (const k of Object.keys(n)) {
+      const v = n[k];
+      if (Array.isArray(v)) v.forEach((c) => hoist(c, false));
+      else if (v && typeof v.type === "string") hoist(v, false);
+    }
+  };
+  if (/Function/.test(node.type)) {
+    node.params.forEach((q) => patternNames(q, into));
+    if (node.type === "FunctionExpression" && node.id) into.add(node.id.name);
+    hoist(node.body, false);
+    if (node.body.type === "BlockStatement") node.body.body.forEach((st) => hoist(st, true));
+  } else if (node.type === "Program" || node.type === "BlockStatement" || node.type === "StaticBlock") {
+    node.body.forEach((st) => hoist(st, true));
+    node.body.forEach((st) => hoist(st, false));
+  } else if (node.type === "SwitchStatement") node.cases.forEach((c) => c.consequent.forEach((st) => hoist(st, true)));
+  else if (node.type === "CatchClause") patternNames(node.param, into);
+  else if (/^For(In|Of)?Statement$/.test(node.type)) { const i = node.init ?? node.left; if (i?.type === "VariableDeclaration") hoist(i, true); }
+  return into;
+}
+
+/** What a key expression starts with, as `[{text, whole}]` (`whole`: the text is the entire key), or null when some
+ *  branch has no literal prefix: a string, a template, a `+` chain from its left, both arms of a `?:`, `||` or `??`. */
+function keyShapes(node) {
+  if (!node) return null;
+  if (node.type === "Literal") return typeof node.value === "string" ? [{ text: node.value, whole: true }] : null;
+  if (node.type === "TemplateLiteral") {
+    if (node.expressions.length === 0) return [{ text: node.quasis[0].value.cooked, whole: true }];
+    const head = node.quasis[0].value.cooked;
+    return head ? [{ text: head, whole: false }] : null;
+  }
+  if (node.type === "BinaryExpression" && node.operator === "+") {
+    const left = keyShapes(node.left);
+    if (!left) return null;
+    const right = keyShapes(node.right);
+    return left.flatMap((l) => {
+      if (!l.whole) return [l];
+      return right ? right.map((r) => ({ text: l.text + r.text, whole: r.whole })) : [{ text: l.text, whole: false }];
+    });
+  }
+  if (node.type === "ConditionalExpression") {
+    const a = keyShapes(node.consequent), b = keyShapes(node.alternate);
+    return a && b ? [...a, ...b] : null;
+  }
+  if (node.type === "LogicalExpression" && (node.operator === "||" || node.operator === "??")) {
+    const a = keyShapes(node.left), b = keyShapes(node.right);
+    return a && b ? [...a, ...b] : null;
+  }
+  return null;
+}
+
+/** R38: what one source text asks of the word table: `{exact, prefixes, sites}` (sets of keys and of literal prefixes,
+ *  and a `where:line: why` for each call whose key has no literal prefix, each use of `word` other than as a callee,
+ *  and each read of the whole table). `index` is true for setup-words' own index, the one input that holds `WORD_ROWS`. */
+export function wordKeysOf(source, where, { index = false } = {}) {
+  const options = { ecmaVersion: "latest", locations: true, allowHashBang: true, allowReturnOutsideFunction: true };
+  let ast;
+  try { ast = acornParse(source, { ...options, sourceType: "module" }); }
+  catch { try { ast = acornParse(source, { ...options, sourceType: "script" }); }
+    catch (e) { throw new Error(`${where} cannot be parsed to find the word rows it reads: ${e.message}`); } }
+  const exact = new Set(), prefixes = new Set();
+  const sites = [];
+  const refuse = (node, why) => { sites.push(`${where}:${node.loc.start.line}: ${why}`); };
+  const visit = (node, parent, shadowed) => {
+    if (!node || typeof node.type !== "string") return;
+    if (SCOPES.test(node.type)) {
+      const own = declaredNames(node);
+      if ([...WORD_FUNCTIONS].some((f) => own.has(f))) shadowed = new Set([...shadowed, ...[...WORD_FUNCTIONS].filter((f) => own.has(f))]);
+    }
+    if (node.type === "CallExpression" && node.callee.type === "Identifier" && WORD_FUNCTIONS.has(node.callee.name) && !shadowed.has(node.callee.name)) {
+      const name = node.callee.name;
+      const arg = node.arguments[0];
+      const shapes = arg && arg.type !== "SpreadElement" ? keyShapes(arg) : null;
+      if (!shapes || shapes.some((s) => s.text === "")) refuse(node, `the key of ${name}(…) has no literal prefix, so the word rows it can read are unknown; write the key, or a literal prefix and the rest (bundler R38)`);
+      else for (const s of shapes) (s.whole ? exact : prefixes).add(s.text);
+    } else if (node.type === "Identifier" && WORD_FUNCTIONS.has(node.name) && !shadowed.has(node.name)) {
+      const p = parent;
+      const named = !p
+        || (p.type === "CallExpression" && p.callee === node)
+        || p.type === "ImportSpecifier" || p.type === "ExportSpecifier" || p.type === "ImportDefaultSpecifier"
+        || (p.type === "MemberExpression" && p.property === node && !p.computed)
+        || (p.type === "Property" && p.key === node && !p.computed && !p.shorthand)
+        || (p.type === "MethodDefinition" && p.key === node && !p.computed) || (p.type === "PropertyDefinition" && p.key === node && !p.computed)
+        || (p.type === "FunctionDeclaration" && p.id === node) || (p.type === "VariableDeclarator" && p.id === node);
+      if (!named) refuse(node, `${node.name} is used other than as a call, so the word rows it can read are unknown (bundler R38)`);
+    }
+    if (!index && node.type === "ImportDeclaration" && (WORD_ROWS_PATH.test(String(node.source.value))
+        || node.specifiers.some((s) => s.type === "ImportSpecifier" && s.imported.name === "WORD_ROWS")))
+      refuse(node, "imports the whole word table, which a member's bundle does not carry (bundler R38)");
+    if (!index && (node.type === "ExportNamedDeclaration" || node.type === "ExportAllDeclaration") && node.source
+        && (WORD_ROWS_PATH.test(String(node.source.value))
+          || (node.specifiers || []).some((s) => s.local && s.local.name === "WORD_ROWS")))
+      refuse(node, "re-exports the whole word table, which a member's bundle does not carry (bundler R38)");
+    if (node.type === "ImportExpression" && !(node.source.type === "Literal" && !WORD_ROWS_PATH.test(String(node.source.value))))
+      refuse(node, "imports a module by a dynamic address, which could read the whole word table (bundler R38)");
+    for (const k of Object.keys(node)) {
+      const v = node[k];
+      if (Array.isArray(v)) v.forEach((c) => visit(c, node, shadowed));
+      else if (v && typeof v.type === "string") visit(v, node, shadowed);
+    }
+  };
+  visit(ast, null, new Set());
+  return { exact, prefixes, sites };
+}
+
+/** R38 trims the bundle of a fleet member (one a `fleet-member.json` enrols, which `discoverMembers` marks). The plane
+ *  (`wholeWordTable`) and any other descriptor handed to `buildMember` (the standalone case checker's) carry the table whole. */
+const trimsWords = (member) => !!member.marker && !member.wholeWordTable;
+const isWordRows = (p) => WORD_ROWS_PATH.test(p);
+const SOURCE_EXT = /\.(mjs|js|cjs)$/;
+const WORD_STUB = "export const WORDS_COMMIT = \"\";\nexport const WORD_ROWS = Object.freeze([]);\n";
+
+/** An esbuild plugin that answers the `rows.mjs` import with `contents` (the stub, or the trimmed module). */
+const wordRowsPlugin = (contents) => ({
+  name: "bundler-r38-word-rows",
+  setup(b) { b.onLoad({ filter: WORD_ROWS_PATH }, () => ({ contents, loader: "js" })); },
+});
+
+/** R38: the word rows a member keeps, or null when its inputs do not reach the table (or it is the plane, which
+ *  carries the whole table). `probe` is a build of the member with the table stubbed out. Returns `{rows, total,
+ *  text, sha256}`: the kept rows' count, the table's size, the module that stands for the table in the bundle and the
+ *  SHA-256 of the kept rows; or, when some site could read any row (K3958), `{rows: "all", total, sites, text: null}`
+ *  and the table is left whole. */
+export async function keptWordRows(member, probe) {
+  const paths = Object.keys(probe.metafile.inputs);
+  const rowsInput = paths.find(isWordRows);
+  if (!trimsWords(member) || !rowsInput) return null;
+  const exact = new Set(), prefixes = new Set(), sites = [];
+  for (const p of paths) {
+    if (isWordRows(p) || isVendored(p) || !SOURCE_EXT.test(p)) continue;
+    const keys = wordKeysOf(readFileSync(join(member.abs, p), "utf8"), p, { index: WORD_INDEX_PATH.test(p) });
+    keys.exact.forEach((k) => exact.add(k));
+    keys.prefixes.forEach((k) => prefixes.add(k));
+    sites.push(...keys.sites);
+  }
+  const table = await import(pathToFileURL(join(member.abs, rowsInput)).href);
+  if (sites.length)
+    return { rows: "all", total: table.WORD_ROWS.length, text: null, sha256: null,
+      sites: [...new Set(sites.map((x) => x.match(/^(.*?:\d+): /)[1]))].sort() };
+  const prefixList = [...prefixes];
+  const kept = table.WORD_ROWS.filter((r) => exact.has(r[0]) || prefixList.some((pre) => r[0].startsWith(pre)));
+  const body = kept.map((r) => `  ${JSON.stringify(r)},`).join("\n");
+  const text = "/* GENERATED INTO THE BUNDLE by bundler R38: the rows of the word table this member's inputs can read, "
+    + `${kept.length} of ${table.WORD_ROWS.length}, in the table's order. */\n`
+    + `export const WORDS_COMMIT = ${JSON.stringify(table.WORDS_COMMIT)};\n`
+    + `export const WORD_ROWS = Object.freeze([\n${body}\n]);\n`;
+  return { rows: kept.length, total: table.WORD_ROWS.length, text, sha256: sha256(JSON.stringify(kept)) };
+}
+
+/** R38: the manifest's account of the word rows a build carries, as the fields to spread into it: `{words: {rows,
+ *  sha256}}` for a trimmed table, `{words: "all", wordSites}` for the whole table kept for the sites named, `{}` for a
+ *  member whose inputs do not reach the table or the plane. */
+export const wordsManifest = (w) => !w ? {} : w.rows === "all" ? { words: "all", wordSites: w.sites } : { words: { rows: w.rows, sha256: w.sha256 } };
+
 /** Build one member. `write: false` (the default) NEVER touches the tree. */
 export async function buildMember(member, { write = false, mutateEntry = null } = {}) {
   /* Silent: a failure arrives as the thrown error, never as stray stderr. */
-  const opts = { ...optionsFor(member), write, logLevel: "silent" };
+  const opts = { ...optionsFor(member), write: false, logLevel: "silent" };   /* esbuild never writes: R2's pass runs on the bytes first */
+  /* R38: which word rows this member's bundle carries (null: the whole table, or none reachable). */
+  let words = null;
+  if (trimsWords(member)) {
+    const probe = await build({ ...optionsFor(member), write: false, logLevel: "silent", plugins: [wordRowsPlugin(WORD_STUB)] });
+    words = await keptWordRows(member, probe);
+  }
+  opts.plugins = words && words.text ? [wordRowsPlugin(words.text)] : [];
   /* The independence proof's hook, and the ONLY way anything mutates a source
      here: an in-memory suffix on the ENTRY's contents. Nothing on disk moves.
      **A CALLER MUST PASS SOMETHING THAT SURVIVES THE BUILD.** esbuild STRIPS
@@ -587,7 +1119,7 @@ export async function buildMember(member, { write = false, mutateEntry = null } 
      — measured 2026-09-10, and it is the reason the input-hash arm is not
      redundant with the byte-identity arm but STRICTER than it. */
   if (mutateEntry) {
-    opts.plugins = [{
+    opts.plugins.push({
       name: "fl9-mutate-entry",
       setup(b) {
         const entryAbs = join(member.abs, member.bundle.entry);
@@ -596,16 +1128,19 @@ export async function buildMember(member, { write = false, mutateEntry = null } 
           return { contents: readFileSync(args.path, "utf8") + mutateEntry, loader: "js" };
         });
       },
-    }];
+    });
   }
   const res = await build(opts);
-  const bytes = write
-    ? readFileSync(join(member.abs, member.bundle.outfile))
-    : Buffer.from(res.outputFiles[0].contents);
+  let bytes = Buffer.from(res.outputFiles[0].contents);
+  if (asciiOf(member)) bytes = asciiOutput(bytes);
+  if (write) {
+    mkdirSync(join(member.abs, dirname(member.bundle.outfile)), { recursive: true });
+    writeFileSync(join(member.abs, member.bundle.outfile), bytes);
+  }
   const inputs = Object.entries(res.metafile.inputs)
     .map(([path, v]) => ({ path, bytes: v.bytes }))
     .sort((a, b) => a.path.localeCompare(b.path));
-  return { bytes, sha256: sha256(bytes), inputs, metafile: res.metafile };
+  return { bytes, sha256: sha256(bytes), inputs, metafile: res.metafile, words };
 }
 
 /** The committed manifest, computed from a build. */
@@ -635,6 +1170,7 @@ export function manifestFrom(member, built) {
       external: [...(member.bundle.external || DEFAULT_EXTERNAL)],
       absWorkingDir: "<member directory>",   /* pinned; never an absolute path, which would not travel */
       esbuild: ESBUILD_VERSION,
+      ascii: asciiOf(member) ? { ...ASCII_RECIPE } : false,   /* R2, G39 */
     },
     /* Paths are as ESBUILD names them, which — with `absWorkingDir` pinned — is
        member-relative and therefore identical in every checkout. THREE of
@@ -670,6 +1206,8 @@ export function manifestFrom(member, built) {
       bytes: (() => { try { return readFileSync(join(member.abs, rel)).length; } catch { return null; } })(),
       sha256: hashOf(rel),
     })) } : {}),
+    /* R38: the word rows the bundle carries, only for a member whose inputs reach the table. */
+    ...wordsManifest(built.words),
     lock,
   };
 }
@@ -706,8 +1244,8 @@ const isAllowed = (allowed, specifier) =>
 export function unresolvableSpecifiers(text, allowed = DEFAULT_EXTERNAL) {
   const ok = (s) => isAllowed(allowed, s);
   const found = new Set();
-  const re = /(?:^|[;\n])\s*(?:import|export)\b[^;]*?\bfrom\s*["']([^"']+)["']/g;
-  const bare = /(?:^|[;\n])\s*import\s*["']([^"']+)["']/g;
+  const re = /(?:^|[;}\n])\s*(?:import|export)\b[^;]*?\bfrom\s*["']([^"']+)["']/g;   /* `}`: a minified statement can follow one (R2) */
+  const bare = /(?:^|[;}\n])\s*import\s*["']([^"']+)["']/g;
   for (const re2 of [re, bare]) {
     let m;
     while ((m = re2.exec(text))) if (!ok(m[1])) found.add(m[1]);
@@ -862,6 +1400,7 @@ export function verifyStatic(member) {
     external: [...(member.bundle.external || DEFAULT_EXTERNAL)],
     absWorkingDir: "<member directory>",
     esbuild: ESBUILD_VERSION,
+    ascii: asciiOf(member) ? { ...ASCII_RECIPE } : false,
   };
   for (const k of Object.keys(want)) {
     const a = JSON.stringify(want[k]), b = JSON.stringify((manifest.recipe || {})[k]);
@@ -930,6 +1469,15 @@ export async function verifyFresh(member, committed) {
       + `${committed.length} B / sha256 ${sha256(committed)}. They must be byte-identical. `
       + `${REBUILD}, and commit the artifacts with the change.`);
 
+  /* R38: the rows kept are covered too. The bytes already carry them; this names the disagreement, and catches a
+     manifest that records rows a fresh build no longer keeps (or keeps none of). */
+  if (manifest) {
+    const was = JSON.stringify({ words: manifest.words, wordSites: manifest.wordSites });
+    const now = JSON.stringify(wordsManifest(built.words));
+    if (was !== now)
+      findings.push(`${member.name}: STALE BUNDLE — the manifest's word rows are ${was}, a fresh build's are ${now}. ${REBUILD}, and commit the artifacts with the change.`);
+  }
+
   /* THE PARSER'S OWN ANSWER to "what does this output still import", which is the
      half a lexical scan of the bytes cannot give honestly — it covers DYNAMIC
      imports too, and it cannot mistake a string for a statement. It is available
@@ -994,7 +1542,7 @@ export function startVerdict(member, ms, budget = BUDGET) {
 /* The names an artifact imports statically from each `cloudflare:*` specifier, so its stub can export exactly them. */
 function cloudflareImports(text) {
   const out = new Map();
-  for (const m of text.matchAll(/(?:^|[;\n])\s*import\s*\{([^}]*)\}\s*from\s*["'](cloudflare:[^"']+)["']/g)) {
+  for (const m of text.matchAll(/(?:^|[;}\n])\s*import\s*\{([^}]*)\}\s*from\s*["'](cloudflare:[^"']+)["']/g)) {
     const names = out.get(m[2]) || new Set();
     for (const part of m[1].split(",")) {
       const name = part.trim().split(/\s+as\s+/)[0].trim();

@@ -8,9 +8,10 @@
  */
 import { CONFIDENCE, CONTRACT } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful } from "../site-profiles/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export default {
-  key: "generic", label: "a document of no recognised type", version: 1, fallback: true,
+  key: "generic", label: localize("doctypes.generic.label", "a document of no recognised type"), version: 1, fallback: true,
   /* Watch its substance: with no reader for its members, the whole document is the
      unit. This is the declared contract (CONSTRUCTS Step 0 #4), not one derived from
      the stack that served it. */
@@ -32,9 +33,8 @@ export default {
      derived from the catalogue here as everywhere else (R14), never asserted. */
   assess() {
     const events = [event("substance_changed", {
-      why: "the substance of this document changed; what kind of document it is has not been worked out" })];
+      why: localize("doctypes.generic.changed", "the substance of this document changed; what kind of document it is has not been worked out") })];
     return { meaningful: isMeaningful(events), significance: worstSignificance(events), events, confirmed: null,
-             why: "the substance of this document changed; what kind of document it is has not "
-                + "been worked out, so what changed is not described" };
+             why: localize("doctypes.generic.changed_undescribed", "the substance of this document changed; what kind of document it is has not been worked out, so what changed is not described") };
   },
 };

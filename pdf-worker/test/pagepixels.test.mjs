@@ -17,13 +17,19 @@
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS } from "../src/picturepixels.mjs";
+import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS, PNG_CODE_REASONS, PREPARE_TILT_MAX, PREPARE_TILT_FLOOR, PREPARE_LINE_PX, PREPARE_SCALE_MAX } from "../src/picturepixels.mjs";
 import { PNG_REFUSES } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
+import { boundOf } from "../../bio-plane/src/read-bounds.mjs";
+import { generate as generatePdf } from "../../bio-plane/test/pdfgen.mjs";
+import { generate } from "../../bio-plane/test/imggen.mjs";
+import { pixelRefusal, pageRefusal, renderedPage } from "./pdf-pixels-fixtures.mjs";
+import { cropImage } from "../src/imagecrop.mjs";
 import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
 
 const { Miniflare } = await (async () => {
@@ -117,6 +123,13 @@ console.log("\n--- R16: a page that shows text ---");
   }
   const allowed = await render(withOps("BT /F1 1 Tf (a) Tj ET", "/Fm 7 0 R"), 0, { allowTextPage: true });
   t("R16 allowTextPage renders it", [allowed.ok, allowed.page_marks?.hasTextOps], [true, true]);
+  {
+    /* G132i: a page of a scan with a text line over it (pdfgen "mixed"), generated, through the real render */
+    const folio = await generatePdf({ kind: "pdf", seed: "folio", size: { pages: 2, lines: 3 }, kinds: ["mixed"], scan: { dpi: 100, bits: 1 } }).bytes();
+    const refused = await render(folio, 0), allowedFolio = await render(folio, 0, { allowTextPage: true });
+    t("R16 a scan with a text line is refused PAGE_HAS_TEXT_LAYER without the option", [refused.ok, refused.reason], [false, "PAGE_HAS_TEXT_LAYER"]);
+    t("R16 a scan with a text line is rendered with allowTextPage: its scan, its text noted", [allowedFolio.ok, allowedFolio.page_marks?.hasTextOps, allowedFolio.upright], [true, true, true]);
+  }
   for (const [label, ops] of [["a bare BT … ET", "BT ET"], ["BT with only a font set", "BT /F1 1 Tf ET"],
     ["Tj spelled inside a string", "/Span << /ActualText (a note Tj about it) >> BDC EMC"]]) {
     const r = await render(withOps(ops), 0);
@@ -193,7 +206,7 @@ console.log("\n--- R20, R23, R40: the scanned CCITT page against an independent 
 {
   const r = await render(SCAN, 0);
   t("R20 the success shape", Object.keys(r).sort(), ["bytes", "ccitt", "height", "mediaType", "ok", "page", "page_geometry",
-    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "upright", "width"]);
+    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "turned_deg", "upright", "width"]);
   t("R20 route, media type, page", fields(r, "ok", "page", "route", "mediaType"), [true, 0, "decoded-ccitt-g4", "image/png"]);
   t("R20 source", r.source, { filters: ["CCITTFaxDecode"], colorSpace: "DeviceGray", bitsPerComponent: 1, imageMask: false });
   t("R20 page geometry", r.page_geometry, { mediaBoxPt: { w: 792, h: 612 }, rotate: 270, dpi: { x: 300, y: 300 } });
@@ -251,10 +264,10 @@ console.log("\n--- R24: raw samples, no filter or FlateDecode ---");
   const pad = (u) => Uint8Array.from(u, (b, i) => (i % 2 ? b & 0b11000000 : b));
   for (const [label, extra, want] of [
     ["1-bpc grey", "/ColorSpace /DeviceGray /BitsPerComponent 1", pad(bits)],
-    ["1-bpc grey with /Decode [1 0]", "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [1 0]", pad(bits.map((b) => ~b & 0xff))],
+    ["1-bpc grey with the default /Decode [0 1]", "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [0 1]", pad(bits)],
     ["an /ImageMask", "/ImageMask true", pad(bits)],
     ["an /ImageMask, FlateDecode", "/ImageMask true /Filter /FlateDecode", pad(bits)],
-    ["an /ImageMask with /Decode [1 0]", "/ImageMask true /Decode [1 0]", pad(bits.map((b) => ~b & 0xff))],
+    ["an /ImageMask with the default /Decode [0 1]", "/ImageMask true /Decode [0 1]", pad(bits)],
   ]) {
     const data = /FlateDecode/.test(extra) ? deflateSync(bits) : bits;
     const r = await render(imagePage(image(10, 3, extra, data), { w: 10, h: 3 }), 0);
@@ -517,7 +530,7 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
   const pe = PV.variants.find((v) => v.name === "photo-4032x3024-o6").expect[0];
   const ph = await picture(PHOTO, 0, { maxEdge: 1568, grey: true });
   t("R42 the success shape", Object.keys(ph).sort(), ["bytes", "height", "mediaType", "ok", "orientation", "page", "pixels_sha256",
-    "reduced_by", "route", "source", "upright", "width"]);
+    "reduced_by", "route", "source", "turned_deg", "upright", "width"]);
   t("R42 R43 a 4032×3024 colour JPEG, Orientation 6: a portrait grey PNG, long edge at most 1,568, Pillow's pixels",
     [ph.ok, ph.page, ph.route, ph.mediaType, ph.upright, ph.orientation, ph.reduced_by, ph.width, ph.height, ph.height > ph.width,
       Math.max(ph.width, ph.height) <= 1568, ph.pixels_sha256],
@@ -653,8 +666,8 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
     const r = await picture(bytes, 0, { maxEdge: 64, grey: true });
     t(`R42 the PNG codec's refusal, mapped: ${label} is ${reason}, no bytes`, fields(r, "ok", "reason", "page", "bytes"), [false, reason, 0, undefined]);
   }
-  t("R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, the memory bound IMAGE_TOO_LARGE",
-    [Object.keys(PNG_REFUSAL_REASONS).sort(), Object.values(PNG_REFUSAL_REASONS).every((x) => x in REFUSALS), PNG_REFUSAL_REASONS["an image past the memory bound"]],
+  t("R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, and the codec's IMAGE_TOO_LARGE code maps to IMAGE_TOO_LARGE",
+    [Object.keys(PNG_REFUSAL_REASONS).sort(), Object.values(PNG_REFUSAL_REASONS).every((x) => x in REFUSALS), PNG_CODE_REASONS.IMAGE_TOO_LARGE],
     [Object.keys(PNG_REFUSES).sort(), true, "IMAGE_TOO_LARGE"]);
   const withText = await picture(afterIhdr(chunk("tEXt", Buffer.from("Comment\0a member's note"))), 0, { maxEdge: 64, grey: true });
   t("R42 never the file's own bytes: a PNG's text chunk does not reach the answer",
@@ -669,6 +682,426 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
   const key = (r) => JSON.stringify({ ...r, bytes: r.bytes ? hex(r.bytes) : null });
   const a = await picture(pic("orient-7"), 0, { maxEdge: 10, grey: false }), b = await picture(pic("orient-7"), 0, { maxEdge: 10, grey: false });
   t("R40 R42 the same picture and options: the same answer twice", key(a) === key(b), true);
+}
+
+console.log("\n--- R44: a photographed page, made ready for the engine ---");
+{
+  /* The photographs are `pages` of `fixtures/picture-variants.json` (made by `make-picture-fixtures.py`): a page of
+     printed words drawn, then tilted, reduced, lit unevenly, flattened, blurred and given noise from formulas. The
+     words each one holds are the page's own text; the real engine (tesseract-wasm 0.11.0 and the tessdata_fast model `ocr-worker` pins) reads the prepared and the unprepared picture, and the
+     share of the page's words found (each word counted once per occurrence, case and punctuation ignored) is
+     compared with the floor. The tilt and the contrast are measured on the returned pixels by the readings below,
+     written here from their definitions, not by the subject. */
+  const PV = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8"));
+  const PAGES = Object.fromEntries(PV.pages.map((p) => [p.name, p]));
+  const bytesOf = (name) => new Uint8Array(Buffer.from(PAGES[name].b64, "base64"));
+  const variant = (name) => new Uint8Array(Buffer.from(PV.variants.find((v) => v.name === name).b64, "base64"));
+  const FLOOR = 0.9;
+  /* C18 (T51 fix round 2): the walk's hard photograph is a whole page of small print, blurred. `page-hard` is its twin
+     (231 words, 110 dpi, a 2.4 degree tilt, perspective, noise, blur 1.0): measured through the engine, unprepared 2
+     percent, prepared 56 percent (48 with lines enlarged to 40 px, the measure before this entry), so the floor on it is 52 percent. Its blur leaves nothing to read in a smaller page
+     (`page-hard-blur`, under 10 percent: the engine's own legibility is `ocr-worker`'s to state), so no floor is
+     claimed there. */
+  const HARD_FLOOR = 0.52;
+  /* The engine is the vendor package `ocr-worker` pins, resolved through that module's package.json (as miniflare is
+     above, through bio-plane's), and the model is the file that module ships; no source of `ocr-worker` is imported. */
+  const ocrPkg = createRequire(fileURLToPath(new URL("../../ocr-worker/package.json", import.meta.url)));
+  const { createOCREngine } = await import(pathToFileURL(ocrPkg.resolve("tesseract-wasm")).href);
+  const engineWasm = readFileSync(ocrPkg.resolve("tesseract-wasm").replace(/lib\.js$/, "tesseract-core.wasm"));
+  const engineModel = new Uint8Array(readFileSync(fileURLToPath(new URL("../../ocr-worker/assets/eng.traineddata", import.meta.url))));
+  const words = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean);
+  const shareRead = (truth, got) => {
+    const left = new Map();
+    for (const w of words(got)) left.set(w, (left.get(w) || 0) + 1);
+    const want = words(truth);
+    let hit = 0;
+    for (const w of want) if (left.get(w) > 0) { hit++; left.set(w, left.get(w) - 1); }
+    return want.length ? hit / want.length : 0;
+  };
+  const readByEngine = async (png) => {
+    const p = readPng(png), rgba = new Uint8ClampedArray(p.width * p.height * 4);
+    for (let i = 0; i < p.width * p.height; i++) rgba.fill(p.samples[i], i * 4, i * 4 + 3), rgba[i * 4 + 3] = 255;
+    const engine = await createOCREngine({ wasmBinary: engineWasm });
+    try {
+      engine.loadModel(engineModel);
+      engine.loadImage({ data: rgba, width: p.width, height: p.height });
+      return (engine.getTextBoxes("line") || []).map((b) => b.text).join(" ");
+    } finally { engine.destroy(); }
+  };
+  const photo = async (name, opts = {}) => { const r = await renderPictureToPixels(bytesOf(name), 0, { maxEdge: 4096, grey: true, ...opts }); answers.push(r); return r; };
+  /* The tilt of the lines in grey samples, in degrees (positive when they rise to the right): the angle, over a
+     tenth-degree sweep, at which the ink's rows are most unevenly filled. */
+  const tiltOf = (png) => {
+    const p = readPng(png), pts = [];
+    for (let y = 0; y < p.height; y++) for (let x = (y % 3); x < p.width; x += 3) if (p.samples[y * p.width + x] < 100) pts.push([x, y]);
+    let best = 0, bestScore = -1;
+    for (let a = -6; a <= 6.0001; a += 0.1) {
+      const sl = Math.tan((a * Math.PI) / 180), rows = new Map();
+      for (const [x, y] of pts) { const k = Math.round(y + x * sl); rows.set(k, (rows.get(k) || 0) + 1); }
+      let sq = 0; for (const c of rows.values()) sq += c * c;
+      if (sq > bestScore) { bestScore = sq; best = a; }
+    }
+    return best;
+  };
+  /* The text lines of grey samples: the runs of rows holding ink, and the median one's height in pixels. */
+  const lineHeight = (png) => {
+    const p = readPng(png), runs = [];
+    let run = 0;
+    for (let y = 0; y <= p.height; y++) {
+      let ink = 0;
+      if (y < p.height) for (let x = 0; x < p.width; x++) if (p.samples[y * p.width + x] < 100) ink++;
+      if (ink > p.width * 0.004) run++; else { if (run >= 4) runs.push(run); run = 0; }
+    }
+    runs.sort((a, b) => a - b);
+    return runs.length ? runs[runs.length >> 1] : 0;
+  };
+  /* The light: the mean of the brighter half of the pixels in each third of the width, and the darkest half percent. */
+  const light = (png) => {
+    const p = readPng(png), mean = [];
+    for (let i = 0; i < 3; i++) {
+      const v = [];
+      for (let y = 0; y < p.height; y++) for (let x = Math.floor((i * p.width) / 3); x < Math.floor(((i + 1) * p.width) / 3); x++) v.push(p.samples[y * p.width + x]);
+      v.sort((a, b) => a - b);
+      const up = v.slice(v.length >> 1);
+      mean.push(up.reduce((a, b) => a + b, 0) / up.length);
+    }
+    const all = Array.from(p.samples).sort((a, b) => a - b);
+    return { paper: Math.min(...mean), spread: Math.max(...mean) - Math.min(...mean), ink: all[Math.floor(all.length * 0.005)] };
+  };
+
+  t("R44 (the constants the requirement states)", [PREPARE_TILT_MAX, PREPARE_TILT_FLOOR, PREPARE_LINE_PX, PREPARE_SCALE_MAX], [10, 0.1, 20, 4]);
+  t("R44 (the fixture set holds the entry's pictures: a 2.4 degree tilt, 110 dpi, noise, and a picture with no text)",
+    ["page-tilt-2.4", "page-110dpi", "page-noise-shade", "page-combined-a", "page-combined-b", "page-big-text", "page-blank"].every((n) => PAGES[n]), true);
+
+  const READ_PAGES = PV.pages.filter((p) => p.words);
+  const shares = {};
+  for (const pg of READ_PAGES) {
+    const prepared = await photo(pg.name, { prepare: true });
+    const raw = await photo(pg.name);
+    shares[pg.name] = { prepared: shareRead(pg.words, await readByEngine(prepared.bytes)), raw: shareRead(pg.words, await readByEngine(raw.bytes)) };
+    if (!pg.name.startsWith("page-hard"))
+      t(`R44 the floor: ${pg.name} read through the engine after preparation, at least ${FLOOR * 100} percent of its words`, shares[pg.name].prepared >= FLOOR, true);
+  }
+  t(`R44 the floor (C18): page-hard, the walk's hard photograph, read through the engine after preparation, at least ${HARD_FLOOR * 100} percent of its words`,
+    shares["page-hard"].prepared >= HARD_FLOOR, true);
+  t("R44 control (C18): page-hard unprepared falls under that floor (the preparation is the cause)", shares["page-hard"].raw < HARD_FLOOR, true);
+  t("R44 control (C18): the preparation never reads fewer of page-hard-blur's words than the unprepared picture", shares["page-hard-blur"].prepared >= shares["page-hard-blur"].raw, true);
+  console.log("  (words read, prepared / unprepared: " + Object.entries(shares).map(([n, v]) => `${n} ${Math.round(v.prepared * 100)}/${Math.round(v.raw * 100)}`).join(", ") + ")");
+  /* The control: what the preparation fixes is what falls under the floor without it. */
+  for (const n of ["page-noise-shade", "page-combined-a", "page-combined-b"])
+    t(`R44 control: ${n} unprepared falls under the floor (the preparation is the cause)`, shares[n].raw < FLOOR, true);
+
+  for (const n of ["page-tilt-2.4", "page-combined-a", "page-combined-b"]) {
+    const pg = PAGES[n], r = await photo(n, { prepare: true }), raw = await photo(n);
+    t(`R44 tilt: ${n} (true tilt ${pg.tilt_deg}) is found within half a degree`, Math.abs(r.prepared.tilt_deg - pg.tilt_deg) <= 0.5, true);
+    t(`R44 tilt: ${n} prepared is level to within half a degree, by the test's own reading of its pixels`, Math.abs(tiltOf(r.bytes)) <= 0.5, true);
+    t(`R44 tilt control: ${n} unprepared is still tilted past half a degree, the cause being the preparation`, Math.abs(tiltOf(raw.bytes) - pg.tilt_deg) <= 0.5 && Math.abs(tiltOf(raw.bytes)) > 0.5, true);
+  }
+  {
+    const level = await photo("page-clean", { prepare: true });
+    t("R44 tilt: a level page is not turned (under PREPARE_TILT_FLOOR)", level.prepared.tilt_deg, 0);
+  }
+
+  for (const n of ["page-noise-shade", "page-combined-a", "page-combined-b"]) {
+    const r = await photo(n, { prepare: true }), raw = await photo(n), lp = light(r.bytes), lr = light(raw.bytes);
+    t(`R44 contrast: ${n} prepared has paper at least 243, thirds within 12 of one another, ink at most 30`, [lp.paper >= 243, lp.spread <= 12, lp.ink <= 30], [true, true, true]);
+    t(`R44 contrast control: ${n} unprepared has none of the three`, [lr.paper >= 243, lr.spread <= 12, lr.ink <= 30], [false, false, false]);
+  }
+
+  {
+    const raw = await photo("page-110dpi"), r = await photo("page-110dpi", { prepare: true });
+    const lines = lineHeight(raw.bytes), got = lineHeight(r.bytes);
+    t("R44 scale: 110 dpi lines (under PREPARE_LINE_PX) are enlarged to it, the factor answered, the size following it",
+      [lines < PREPARE_LINE_PX, Math.abs(got - PREPARE_LINE_PX) <= 3, r.prepared.scale > 1 && r.prepared.scale <= PREPARE_SCALE_MAX,
+       Math.abs(r.width - Math.round(raw.width * r.prepared.scale)) <= 2, r.width > raw.width],
+      [true, true, true, true, true]);
+    const capped = await photo("page-110dpi", { prepare: true, maxEdge: 1200 });
+    t("R44 scale: never past maxEdge", [Math.max(capped.width, capped.height) <= 1200, capped.prepared.scale > 1], [true, true]);
+    const big = await photo("page-big-text", { prepare: true }), bigRaw = await photo("page-big-text");
+    t("R44 scale control: lines of PREPARE_LINE_PX or more keep their size", [big.prepared.scale, big.width, big.height, lineHeight(bigRaw.bytes) >= PREPARE_LINE_PX], [1, bigRaw.width, bigRaw.height, true]);
+  }
+
+  {
+    const blank = await photo("page-blank", { prepare: true }), plain = await photo("page-blank");
+    t("R44 no text: a picture with no text lines says so and is handed on as R42 made it",
+      [blank.ok, blank.prepared, blank.pixels_sha256, blank.width, blank.height], [true, { text_found: false, tilt_deg: 0, scale: 1, line_px: 0 }, plain.pixels_sha256, plain.width, plain.height]);
+    t("R44 no text: the engine reads no words from it (it says so, it does not return a short text)", words(await readByEngine(blank.bytes)), []);
+    t("R44 no text control: a page with text says text_found", (await photo("page-clean", { prepare: true })).prepared.text_found, true);
+  }
+
+  /* R44 (a), (d) (fix round 10, cause 6; K5053): a sparse page. The walkers' pictures hold three lines of text, under half a
+     percent ink: the ink level was taken from the darkest half percent of all the pixels, so the paper went dark and the page
+     was found to hold no text. The pictures are made by test-support's imggen, the walkers' recipes. */
+  {
+    /* The ink of a page however little of it there is: the darkest twentieth of the pixels under 128 (the 0.5th percentile
+       of all the pixels, `light().ink`, is paper on a page whose ink is under half a percent). */
+    const inkLevel = (png) => {
+      const v = Array.from(readPng(png).samples).filter((x) => x < 128).sort((a, b) => a - b);
+      return v.length ? v[Math.floor(v.length * 0.05)] : 255;
+    };
+    const sparse = async (recipe, opts = {}) => {
+      const g = generate({ kind: "png", seed: "rw9-A-7", size: { pages: 1, lines: 3 }, ...recipe });
+      const r = await renderPictureToPixels(await g.bytes(), 0, { maxEdge: 4096, grey: true, prepare: true, ...opts });
+      answers.push(r);
+      return { r, truth: g.truth };
+    };
+    for (const frame of [undefined, [4096, 3000], [4097, 3000]]) {
+      const { r, truth } = await sparse(frame ? { frame } : {});
+      const inkShare = (() => { const p = readPng(r.bytes); let n = 0; for (const v of p.samples) if (v < 96) n++; return n / p.samples.length; })();
+      t(`R44 sparse page: three lines of text${frame ? ` framed ${frame.join(" x ")}` : ""} are found to hold text, the lines 15 to 30 px`,
+        [r.ok, r.prepared.text_found, r.prepared.line_px >= 15 && r.prepared.line_px <= 30], [true, true, true]);
+      t(`R44 sparse page: ${frame ? frame.join(" x ") : "the letter page"} keeps its paper light (read 243 or more) and holds under half a percent ink`,
+        [light(r.bytes).paper >= 243, inkShare > 0 && inkShare < 0.005, truth.pages[0].lines.length], [true, true, 3]);
+      t(`R44 sparse page: ${frame ? frame.join(" x ") : "the letter page"}'s ink reads at most 30, however little of it there is`, inkLevel(r.bytes) <= 30, true);
+    }
+    const noise = await sparse({ seed: "rw9-A-noise", size: { pages: 1, lines: 0 }, degrade: { noise: 0.4 } });
+    t("R44 sparse page control: noise is still no text", [noise.r.ok, noise.r.prepared.text_found], [true, false]);
+    t("R44 sparse page control: a blank page is still no text", (await photo("page-blank", { prepare: true })).prepared.text_found, false);
+    const dense = await sparse({ size: { pages: 1, lines: 18 } });
+    t("R44 sparse page control: a dense page is still text, its ink at most 30", [dense.r.prepared.text_found, inkLevel(dense.r.bytes) <= 30], [true, true]);
+    const words3 = words(await readByEngine((await sparse({})).r.bytes));
+    t("R44 sparse page: the engine reads words from the prepared three-line page", words3.length > 0, true);
+  }
+
+  {
+    const a = await photo("page-combined-a", { prepare: true }), b = await photo("page-combined-a", { prepare: true });
+    t("R44 R40 the same bytes and options prepare to the same pixels, and the answer's keys are R42's with `prepared`",
+      [a.pixels_sha256 === b.pixels_sha256, Object.keys(a).sort(), a.route, a.mediaType, a.upright, a.page],
+      [true, ["bytes", "height", "mediaType", "ok", "orientation", "page", "pixels_sha256", "prepared", "reduced_by", "route", "source", "turned_deg", "upright", "width"], "decoded-picture", "image/png", true, 0]);
+    t("R44 the pixels_sha256 is over the prepared samples", a.pixels_sha256, createHash("sha256").update(readPng(a.bytes).samples).digest("hex"));
+    t("R44 control: without prepare the answer carries no `prepared` and is R42's grey", [(await photo("page-combined-a")).prepared, (await photo("page-combined-a")).width], [undefined, PAGES["page-combined-a"].width]);
+    const colour = await renderPictureToPixels(variant("reduce"), 0, { maxEdge: 200, prepare: true });
+    t("R44 prepare implies grey: a colour JPEG answers an 8-bit grey PNG", [colour.ok, readPng(colour.bytes).colorType], [true, 0]);
+    const png = await renderPictureToPixels(variant("png-rgb"), 0, { maxEdge: 200, prepare: true });
+    t("R44 a PNG is prepared by the same rule (no text lines in this one: text_found false)", [png.ok, png.prepared.text_found], [true, false]);
+    const tiny = await renderPictureToPixels(variant("orient-1"), 0, { maxEdge: 64, prepare: true });
+    t("R44 R42 a refusal still refuses as R42 does (bytes that are no picture)", (await renderPictureToPixels(new Uint8Array([1, 2, 3, 4]), 0, { maxEdge: 64, prepare: true })).reason, "NOT_A_PICTURE");
+    t("R44 a tiny picture with no text lines is answered, not refused", [tiny.ok, tiny.prepared.text_found], [true, false]);
+  }
+}
+
+console.log("\n--- the published fixtures: pixelRefusal, pageRefusal, renderedPage give the module's own real answers ---");
+{
+  for (const [reason, extra] of [["NOT_A_PDF", {}], ["PAGE_HAS_TEXT_LAYER", { imageCount: 1 }], ["MULTIPLE_IMAGES_ON_PAGE", { imageCount: 2 }],
+    ["UNSUPPORTED_FILTER", { filters: ["LZWDecode"] }], ["PIXELS_UNDETERMINED", { detail: "decode_array" }]]) {
+    const r = await pixelRefusal(reason);
+    t(`fixtures pixelRefusal(${reason}) is the renderer's refusal, its why that reason's own text`, [r.ok, r.reason, r.why, r.bytes, ...Object.keys(extra).map((k) => r[k])],
+      [false, reason, REFUSALS[reason], undefined, ...Object.values(extra)]);
+  }
+  const big = await pixelRefusal("IMAGE_TOO_LARGE");
+  t("fixtures pixelRefusal(IMAGE_TOO_LARGE) is the picture renderer's, naming PICTURE_FRAME_MAX", [big.ok, big.reason, big.bound_name, big.bound], [false, "IMAGE_TOO_LARGE", "PICTURE_FRAME_MAX", PICTURE_FRAME_MAX]);
+  t("fixtures pixelRefusal refuses a reason it makes no input for", await pixelRefusal("A_REASON_NOBODY_DECLARED").then(() => "answered", (e) => e.message.slice(0, 12)), "pixelRefusal");
+  const text = await pageRefusal("PAGE_HAS_TEXT_LAYER"), prog = await pageRefusal("UNSUPPORTED_JPEG_PROCESS"), none = await pageRefusal("NOT_A_PICTURE");
+  t("fixtures pageRefusal: PAGE_HAS_TEXT_LAYER, UNSUPPORTED_JPEG_PROCESS (with jpeg, process and page), NOT_A_PICTURE",
+    [[text.ok, text.reason], [prog.ok, prog.reason, prog.page, typeof prog.jpeg, typeof prog.process], [none.ok, none.reason, none.why]],
+    [[false, "PAGE_HAS_TEXT_LAYER"], [false, "UNSUPPORTED_JPEG_PROCESS", 0, "string", "string"], [false, "NOT_A_PICTURE", REFUSALS.NOT_A_PICTURE]]);
+  const pdf = await renderedPage("pdf"), pic = await renderedPage("picture", { prepare: true });
+  t("fixtures renderedPage('pdf') is the page renderer's success: route, size, digest, geometry",
+    [pdf.ok, pdf.route, pdf.mediaType, [pdf.width, pdf.height], pdf.upright, pdf.rotate_deg, pdf.pixels_sha256 === createHash("sha256").update(readPng(pdf.bytes).samples).digest("hex"), "page_geometry" in pdf],
+    [true, "raw-samples-grey8", "image/png", [3, 2], true, 0, true, true]);
+  t("fixtures renderedPage('picture', {prepare}) is the picture renderer's success, prepared",
+    [pic.ok, pic.route, pic.mediaType, pic.upright, pic.prepared.text_found, pic.pixels_sha256 === createHash("sha256").update(readPng(pic.bytes).samples).digest("hex")], [true, "decoded-picture", "image/png", true, true, true]);
+}
+
+console.log("\n--- R45: wrong pixels are never ok:true ---");
+{
+  const undetermined = async (label, bytes, detail, opts = {}) => {
+    const r = await render(bytes, 0, opts);
+    t(`R45 ${label}: PIXELS_UNDETERMINED, ${detail}, no bytes`, [r.ok, r.reason, r.detail, r.bytes], [false, "PIXELS_UNDETERMINED", detail, undefined]);
+    return r;
+  };
+  const grey = (extra, data = G) => imagePage(image(3, 2, `/ColorSpace /DeviceGray /BitsPerComponent 8 ${extra}`, data), { w: 3, h: 2 });
+  const bits1 = Uint8Array.from([0b10110011, 0b01000000, 0b00001111, 0b11000000, 0b11111111, 0b00000000]);
+  const rgb = Uint8Array.from({ length: 18 }, (_, i) => (i * 29 + 3) & 0xff);
+
+  /* /Decode (R24): a sample inverted by the dictionary is never presented as it is stored */
+  await undetermined("8-bit grey with /Decode [1 0]", grey("/Decode [1 0]"), "decode_array");
+  await undetermined("8-bit RGB with /Decode [1 0 1 0 1 0]", imagePage(image(3, 2, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Decode [1 0 1 0 1 0]", rgb), { w: 3, h: 2 }), "decode_array");
+  await undetermined("1-bit grey with /Decode [1 0]", imagePage(image(10, 3, "/ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [1 0]", bits1), { w: 10, h: 3 }), "decode_array");
+  await undetermined("an /ImageMask with /Decode [1 0]", imagePage(image(10, 3, "/ImageMask true /Decode [1 0]", bits1), { w: 10, h: 3 }), "decode_array");
+  await undetermined("8-bit grey with /Decode [0 0.5] (a stretch)", grey("/Decode [0 0.5]"), "decode_array");
+  await undetermined("8-bit grey with /Decode of the wrong length", grey("/Decode [0 1 0 1]"), "decode_array");
+  t("R45 (control) 8-bit grey with the default /Decode [0 1] is rendered, the same pixels as with none",
+    [(await render(grey("/Decode [0 1]"), 0)).pixels_sha256, (await render(grey(""), 0)).pixels_sha256], [hex(G), hex(G)]);
+  t("R45 (control) 8-bit RGB with the default /Decode [0 1 0 1 0 1] is rendered",
+    (await render(imagePage(image(3, 2, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Decode [0 1 0 1 0 1]", rgb), { w: 3, h: 2 }), 0)).pixels_sha256, hex(rgb));
+
+  /* /SMask and /Mask (R24) */
+  const withObj = (extra, obj) => onePage({ box: [0, 0, 3, 2], res: "/XObject << /Im 5 0 R >>", ops: "q 3 0 0 2 0 0 cm /Im Do Q",
+    more: [image(3, 2, `/ColorSpace /DeviceGray /BitsPerComponent 8 ${extra}`, G), obj] });
+  const alpha = image(3, 2, "/ColorSpace /DeviceGray /BitsPerComponent 8", new Uint8Array(6).fill(128));
+  await undetermined("an image with an /SMask", withObj("/SMask 6 0 R", alpha), "smask");
+  await undetermined("an image with a stencil /Mask stream", withObj("/Mask 6 0 R", image(3, 2, "/ImageMask true /BitsPerComponent 1", new Uint8Array(2))), "mask");
+  await undetermined("an image with a colour-key /Mask [0 10]", withObj("/Mask [0 10]", "<< >>"), "mask");
+  t("R45 (control) the same page with neither is rendered", (await render(withObj("", "<< >>"), 0)).pixels_sha256, hex(G));
+
+  /* a TIFF predictor (R24) */
+  const flate = (extra, data) => imagePage(image(3, 2, `/ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode ${extra}`, deflateSync(data)), { w: 3, h: 2 });
+  await undetermined("FlateDecode with /Predictor 2", flate("/DecodeParms << /Predictor 2 /Colors 1 /BitsPerComponent 8 /Columns 3 >>", G), "tiff_predictor");
+  t("R45 (control) FlateDecode with /Predictor 1 is rendered", (await render(flate("/DecodeParms << /Predictor 1 >>", G), 0)).pixels_sha256, hex(G));
+  const png15 = Uint8Array.from([0, ...G.subarray(0, 3), 0, ...G.subarray(3, 6)]);
+  t("R45 (control) a PNG predictor (15), which pdf-reader undoes, is rendered",
+    (await render(flate("/DecodeParms << /Predictor 15 /Colors 1 /BitsPerComponent 8 /Columns 3 >>", png15), 0)).pixels_sha256, hex(G));
+
+  /* CCITT /Columns against /Width (R23) */
+  const ccitt = (parms) => imagePage(image(3300, 2550, `/ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /CCITTFaxDecode /DecodeParms ${parms}`, CCITT), { w: 792, h: 612, pageExtra: "/Rotate 270" });
+  const cc = await undetermined("CCITT /Columns 3000 on a 3300-wide image", ccitt("<< /K -1 /Columns 3000 /Rows 2550 >>"), "ccitt_columns");
+  t("R45 ...naming both figures", [cc.columns, cc.width], [3000, 3300]);
+  await undetermined("CCITT with no /Columns (1,728) on a 3300-wide image", ccitt("<< /K -1 /Rows 2550 >>"), "ccitt_columns");
+  t("R45 (control) CCITT with /Columns equal to /Width is rendered, the independent decoder's pixels",
+    (await render(ccitt("<< /K -1 /Columns 3300 /Rows 2550 >>"), 0)).pixels_sha256, IND_UPRIGHT_SHA);
+
+  /* the DCT pass-through is examined (R22) */
+  const dctPage = (w, h, cs, data = jpeg("rgb-444")) => imagePage(image(w, h, `/ColorSpace ${cs} /BitsPerComponent 8 /Filter /DCTDecode`, data), { w: 63, h: 47 });
+  await undetermined("a pass-through whose JPEG is 63 wide under a dictionary that says 64", dctPage(64, 47, "/DeviceRGB"), "dct_unexamined");
+  await undetermined("a pass-through whose JPEG is 47 high under a dictionary that says 48", dctPage(63, 48, "/DeviceRGB"), "dct_unexamined");
+  await undetermined("a pass-through whose JPEG has 3 components under /DeviceGray", dctPage(63, 47, "/DeviceGray"), "dct_unexamined");
+  await undetermined("a pass-through whose stream states no frame at all", dctPage(63, 47, "/DeviceRGB", Uint8Array.from([0xff, 0xd8, 0xff, 0xd9, 0, 0, 0, 0])), "dct_unexamined");
+  const okp = await render(dctPage(63, 47, "/DeviceRGB"), 0);
+  t("R45 (control) the agreeing pass-through is the publisher's bytes", [okp.ok, okp.route, hex(okp.bytes)], [true, "passthrough-dct", hex(jpeg("rgb-444"))]);
+  const prog = await render(dctPage(63, 47, "/DeviceRGB", jpeg("refuse-progressive")), 0);
+  t("R45 (control) an agreeing progressive JPEG is still passed through (its frame is read, not decoded)", [prog.ok, prog.route], [true, "passthrough-dct"]);
+  const crop = await cropImage(dctPage(64, 47, "/DeviceRGB"), { kind: "image", page: 0, rect: [0, 0, 63, 47] });
+  t("R45 a crop of the disagreeing image says the decoder's reason", [crop.ok, crop.reason, crop.decoder], [false, "DECODE_REFUSED", "PIXELS_UNDETERMINED"]);
+}
+
+console.log("\n--- R46: declared sizes are judged before any decode, with the table's figures ---");
+{
+  const PIXELS = boundOf("image", "pixels"), EDGE = boundOf("image", "edge");
+  const sized = (w, h, filter, parms, data) => imagePage(image(w, h, `/ColorSpace /DeviceGray /BitsPerComponent 1 ${filter ? `/Filter /${filter}` : ""} ${parms}`, data), { w: 8, h: 8 });
+  const over = async (label, bytes) => {
+    const r = await render(bytes, 0);
+    t(`R46 ${label}: IMAGE_TOO_LARGE with the declared size and the bounds, no decode, no bytes`,
+      [r.ok, r.reason, r.declared?.width, r.declared?.height, r.bound, r.bytes, r.rowsDecoded, r.jbig2, r.jpx, r.jpeg],
+      [false, "IMAGE_TOO_LARGE", r.declared?.width, r.declared?.height, { pixels: PIXELS, edge: EDGE }, undefined, undefined, undefined, undefined, undefined]);
+    return r;
+  };
+  const big = await over("an 8 KB CCITT stream declaring 60,000 x 60,000", sized(60000, 60000, "CCITTFaxDecode", "/DecodeParms << /K -1 /Columns 60000 /Rows 60000 >>", new Uint8Array(8000)));
+  t("R46 ...its figures", [big.declared.width, big.declared.height, big.declared.pixels], [60000, 60000, 3.6e9]);
+  await over("a DCT pass-through declaring 60,000 x 60,000 (judged before the header is compared)", imagePage(image(60000, 60000, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", jpeg("rgb-444")), { w: 8, h: 8 }));
+  await over("a JBIG2 stream declaring 16,000 x 16,000", sized(16000, 16000, "JBIG2Decode", "", new Uint8Array(20)));
+  await over("a JPX stream declaring 30,000 x 30,000", sized(30000, 30000, "JPXDecode", "", new Uint8Array(20)));
+  await over("raw samples declaring 12,000 x 10,001 (one row over the pixel bound)", sized(12000, 10001, "", "", new Uint8Array(8)));
+  const wide = await over("a raw image 65,536 wide and one row high (under the pixel bound, over the edge bound)", sized(EDGE + 1, 1, "", "", new Uint8Array(8)));
+  t("R46 ...the edge is what it breaks", [wide.declared.pixels <= PIXELS, wide.declared.width > EDGE], [true, true]);
+  /* the controls: at the bounds the route is reached and gives its own answer */
+  const atPixels = await render(sized(12000, 10000, "", "", new Uint8Array(8)), 0);
+  t("R46 (control) 12,000 x 10,000, exactly the pixel bound, reaches its route: TRUNCATED_IMAGE_DATA", [atPixels.reason, 12000 * 10000 === PIXELS], ["TRUNCATED_IMAGE_DATA", true]);
+  const atEdge = await render(sized(EDGE, 1, "", "", new Uint8Array(8)), 0);
+  t("R46 (control) 65,535 x 1, exactly the edge bound, reaches its route: TRUNCATED_IMAGE_DATA", atEdge.reason, "TRUNCATED_IMAGE_DATA");
+  /* a crop reads the same rule */
+  const c = await cropImage(sized(60000, 60000, "CCITTFaxDecode", "/DecodeParms << /K -1 /Columns 60000 /Rows 60000 >>", new Uint8Array(8000)), { kind: "image", page: 0, rect: [0, 0, 8, 8] });
+  t("R46 a crop of it: DECODE_REFUSED naming IMAGE_TOO_LARGE", [c.ok, c.reason, c.decoder], [false, "DECODE_REFUSED", "IMAGE_TOO_LARGE"]);
+}
+
+console.log("\n--- R48: a turned page or picture is turned upright on request ---");
+{
+  const rgb = Uint8Array.from({ length: 18 }, (_, i) => (i * 29 + 3) & 0xff);
+  const page = (rot, img = GREY_IMG) => imagePage(img, { w: 3, h: 2, pageExtra: `/Rotate ${rot}` });
+  const wantGrey = (deg) => { const tr = turn((x, y) => G[y * 3 + x], 3, 2, deg); const o = []; for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) o.push(tr.at(X, Y)); return [tr.W, tr.H, hex(Uint8Array.from(o))]; };
+  for (const deg of [0, 90, 180, 270]) {
+    const r = await render(page(0), 0, { turn: deg });
+    t(`R48 an 8-bit page, turn ${deg}: the samples turned exactly, turned_deg ${deg}, upright`, [r.width, r.height, r.pixels_sha256, r.turned_deg, r.rotate_deg, r.upright], [...wantGrey(deg), deg, 0, true]);
+    t(`R48 (control) the same page, turn ${deg}: the png's samples are the digest's`, hex(readPng(r.bytes).samples), r.pixels_sha256);
+  }
+  const both = await render(page(90), 0, { turn: 90 });
+  t("R48 the turn follows the page's own /Rotate (90 then 90 is 180); rotate_deg stays the page's", [both.pixels_sha256, both.rotate_deg, both.turned_deg, both.upright], [wantGrey(180)[2], 90, 90, true]);
+  const plain = await render(page(0), 0);
+  for (const bad of [45, "90", -90, 360, null, 1.5, undefined]) {
+    const r = await render(page(0), 0, { turn: bad });
+    t(`R48 a turn of ${JSON.stringify(bad)} is ignored as 0`, [r.pixels_sha256, r.turned_deg], [plain.pixels_sha256, 0]);
+  }
+  t("R48 no turn asked: turned_deg 0", plain.turned_deg, 0);
+  const ign = await render(page(90), 0, { turn: 0, rotate: 180 });
+  t("R48 R21 opts.rotate is still ignored", ign.pixels_sha256, wantGrey(90)[2]);
+  /* 1-bit: a bit lands on a bit */
+  const bits = Uint8Array.from([0b10110011, 0b01000000, 0b00001111, 0b11000000, 0b11111111, 0b00000000]);
+  const bitAt = (x, y) => (bits[y * 2 + (x >> 3)] >> (7 - (x & 7))) & 1;
+  for (const deg of [90, 180, 270]) {
+    const r = await render(imagePage(image(10, 3, "/ImageMask true", bits), { w: 10, h: 3 }), 0, { turn: deg });
+    const tr = turn(bitAt, 10, 3, deg), rb = Math.ceil(tr.W / 8), want = new Uint8Array(rb * tr.H);
+    for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) if (tr.at(X, Y)) want[Y * rb + (X >> 3)] |= 0x80 >> (X & 7);
+    t(`R48 a 1-bit mask, turn ${deg}: every bit on its bit`, [r.width, r.height, r.pixels_sha256, r.turned_deg], [tr.W, tr.H, hex(want), deg]);
+  }
+  /* a DCT page: the pass-through cannot be turned, so a turn decodes it */
+  const dctPg = imagePage(image(63, 47, "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode", jpeg("rgb-420-h2v2")), { w: 63, h: 47 });
+  const dt = await render(dctPg, 0, { turn: 90 });
+  t("R48 a DCT page with turn 90 is decoded and turned: Pillow's own turn of the same JPEG",
+    [dt.route, dt.upright, dt.width, dt.height, dt.turned_deg, dt.pixels_sha256], ["decoded-dct", true, 47, 63, 90, VARIANTS.find((v) => v.name === "rgb-420-rotate90").pillow_sha256]);
+  const d0 = await render(dctPg, 0, { turn: 0 });
+  t("R48 (control) turn 0 leaves the pass-through as it was", [d0.route, d0.upright, d0.turned_deg], ["passthrough-dct", true, 0]);
+  const sc = await render(SCAN, 0, { turn: 180 });
+  t("R48 the CCITT scan (/Rotate 270) with turn 180 is 90 in all: width and height follow", [sc.ok, sc.width, sc.height, sc.rotate_deg, sc.turned_deg], [true, 2550, 3300, 270, 180]);
+
+  /* a picture: after the EXIF orientation, a PNG too */
+  const PV = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8"));
+  const pic = (name) => new Uint8Array(Buffer.from(PV.variants.find((v) => v.name === name).b64, "base64"));
+  const samplesOf = (r) => { const p = readPng(r.bytes); return { w: p.width, h: p.height, s: p.samples, c: p.colorType === 2 ? 3 : 1 }; };
+  const check = async (name, comps) => {
+    const base = await renderPictureToPixels(pic(name), 0, { maxEdge: 4096, grey: true });
+    const b = samplesOf(base);
+    for (const deg of [90, 180, 270]) {
+      const r = await renderPictureToPixels(pic(name), 0, { maxEdge: 4096, grey: true, turn: deg });
+      answers.push(r);
+      const tr = turn((x, y) => b.s[y * b.w + x], b.w, b.h, deg), g = samplesOf(r), want = new Uint8Array(tr.W * tr.H);
+      for (let Y = 0; Y < tr.H; Y++) for (let X = 0; X < tr.W; X++) want[Y * tr.W + X] = tr.at(X, Y);
+      t(`R48 ${name} (EXIF ${base.orientation}), turn ${deg}: the oriented picture turned exactly`,
+        [r.ok, g.w, g.h, hex(g.s), r.turned_deg, r.orientation, r.upright], [true, tr.W, tr.H, hex(want), deg, base.orientation, true]);
+    }
+  };
+  for (let o = 1; o <= 8; o++) await check(`orient-${o}`);
+  await check("png-rgb");
+  const p0 = await renderPictureToPixels(pic("orient-6"), 0, { maxEdge: 4096, grey: true });
+  t("R48 a picture with no turn states turned_deg 0", p0.turned_deg, 0);
+  for (const bad of [45, "90", null, 360])
+    t(`R48 a picture's turn of ${JSON.stringify(bad)} is ignored`, (await renderPictureToPixels(pic("orient-6"), 0, { maxEdge: 4096, grey: true, turn: bad })).pixels_sha256, p0.pixels_sha256);
+}
+
+console.log("\n--- R47: a page is rendered from the page's own bytes ---");
+{
+  const sourceOf = (bytes) => { const log = { reads: 0, bytes: 0 }; return { log, size: bytes.length, readRange: async (o, n) => { log.reads++; const out = bytes.slice(o, o + n); log.bytes += out.length; return out; } }; };
+  const same = (a, b) => JSON.stringify({ ...a, bytes: a.bytes ? hex(a.bytes) : null }) === JSON.stringify({ ...b, bytes: b.bytes ? hex(b.bytes) : null });
+  const enc = onePage({ ops: "q 8 0 0 8 0 0 cm /Im Do Q", res: "/XObject << /Im 5 0 R >>", more: [GREY_IMG, "<< /Filter /Standard /V 1 /R 2 /O (owner) /U (user) /P -4 >>"], trailer: "/Encrypt 6 0 R" });
+  for (const [label, bytes, page, opts] of [
+    ["the CCITT scan", SCAN, 0, {}], ["the DCT scan decoded", DCT_SCAN, 0, { decodeDct: true }],
+    ["a small page", imagePage(GREY_IMG, { w: 3, h: 2 }), 0, {}], ["a page past the end", imagePage(GREY_IMG, { w: 3, h: 2 }), 5, {}],
+    ["an encrypted file", enc, 0, {}], ["bytes that are no PDF", new Uint8Array(64).fill(7), 0, {}],
+  ]) {
+    const a = await render(bytes, page, opts), b = await render(sourceOf(bytes), page, opts);
+    t(`R47 ${label}: the source answers what the bytes answer`, same(a, b), true);
+  }
+  /* a many-page scan: one page costs about that page, not the file (needs pdf-reader's pageSource) */
+  const file = generatePdf({ kind: "pdf", seed: "r47", size: { pages: 24, lines: 4 }, kinds: ["scan"], scan: { dpi: 150, bits: 1 }, structure: "classic" });
+  const whole = await file.bytes();
+  for (const [page, label] of [[19, "page 20"], [0, "page 1"], [23, "the last page"]]) {
+    const src = sourceOf(whole);
+    const a = await render(whole, page, { decodeDct: true }), b = await render(src, page, { decodeDct: true });
+    t(`R47 ${label} of 24, through pdf-reader's pageSource: the same answer as the whole file's`, same(a, b), true);
+    t(`R47 ${label}: the bytes read are the page's, under a quarter of the ${whole.length}-byte file (read ${src.log.bytes})`, src.log.bytes < whole.length / 4, true);
+  }
+  const pv = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8")).variants.find((v) => v.name === "orient-6");
+  const picBytes = new Uint8Array(Buffer.from(pv.b64, "base64"));
+  t("R47 a picture given as a source answers what its bytes answer",
+    same(await renderPictureToPixels(sourceOf(picBytes), 0, { maxEdge: 64, grey: true }), await renderPictureToPixels(picBytes, 0, { maxEdge: 64, grey: true })), true);
+}
+
+console.log("\n--- R49: no ceiling of the module's own ---");
+{
+  const src = (f) => readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8");
+  const code = (f) => src(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  /* the figures READ_BOUNDS holds for the rows this module quotes, as literals in any spelling */
+  const figures = ["image.pixels", "image.edge", "image.picture_frame", "image.picture_source"].map((k) => boundOf(...k.split(".")));
+  const spellings = (n) => [String(n), n.toLocaleString("en-US"), n.toString(16), `0x${n.toString(16)}`];
+  const seen = (f, n) => spellings(n).some((x) => new RegExp(`(^|[^0-9A-Za-z_.])${x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^0-9A-Za-z_.]|$)`).test(code(f)));
+  const MINE = ["imagecrop.mjs", "pagepixels-worker.mjs", "pagepixels.mjs", "picturepixels.mjs"];
+  t("R49 no figure READ_BOUNDS holds for these rows is written as a literal in the module's code",
+    MINE.flatMap((f) => figures.filter((n) => seen(f, n)).map((n) => `${f}:${n}`)), []);
+  t("R49 no product of literals spells a frame bound (4096 * 3072 * 3, 16384 * 12288 * 3)",
+    MINE.filter((f) => /\b4096\s*\*\s*3072|\b16384\s*\*\s*12288/.test(code(f))), []);
+  t("R49 the /Parent walk's depth is the table's too: no literal bound on the loop", MINE.filter((f) => /d\s*<=?\s*\d+\s*;/.test(code(f))), []);
+  t("R49 (the check sees a literal where one is written)", seen("pagepixels.mjs", 1728) && !seen("pagepixels.mjs", 120000000), true);
+  t("R49 the exported frame bounds are the table's", [PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX], [boundOf("image", "picture_frame"), boundOf("image", "picture_source")]);
+  t("R49 the quoted rows are the figures the requirements name", [boundOf("image", "pixels"), boundOf("image", "edge")], [120000000, 65535]);
 }
 
 console.log("\n--- R41: no place named ---");
@@ -697,6 +1130,28 @@ console.log("\n--- R39: every refusal is declared, in its own words ---");
   t("R39 every reason is a key of REFUSALS", refusals.filter((r) => !(r.reason in REFUSALS)).map((r) => r.reason), []);
   t("R39 every why is exactly that key's text", refusals.filter((r) => r.why !== REFUSALS[r.reason]).map((r) => r.reason), []);
   t("R39 no refusal carries bytes", refusals.filter((r) => "bytes" in r).length, 0);
+  /* words (setup-words R14, K874): every sentence this module refuses with or notes is read through a word id. */
+  const WORD_IDS = [
+    "pdf-pixels.pagepixels.the_document_is_encrypted_streams",
+    "pdf-pixels.pagepixels.the_page_index_is_outside",
+    "pdf-pixels.pagepixels.the_page_object_could_not",
+    "pdf-pixels.pagepixels.the_page_carries_a_text",
+    "pdf-pixels.pagepixels.the_page_carries_marks_that",
+    "pdf-pixels.pagepixels.the_page_paints_no_image",
+    "pdf-pixels.pagepixels.the_page_composes_several_images",
+    "pdf-pixels.pagepixels.the_image_xobject_s_stream",
+    "pdf-pixels.pagepixels.the_image_s_filter_chain",
+    "pdf-pixels.pagepixels.the_image_s_sample_layout",
+    "pdf-pixels.pagepixels.the_decoded_image_is_short",
+    "pdf-pixels.pagepixels.the_decoder_could_not_read",
+    "pdf-pixels.pagepixels.decoding_the_image_would_need",
+    "pdf-pixels.pagepixels.an_inline_image_reading_inline",
+    "pdf-pixels.pagepixels.the_jbig2globals_stream_could_not",
+    "pdf-pixels.pagepixels.a_jbig2_image_is_1",
+    "pdf-pixels.pagepixels.a_colour_space_other_than",
+    "pdf-pixels.pagepixels.this_reader_cannot_give_the",
+  ];
+  t("words R14 every id is a dotted pdf-pixels.pagepixels word id, named once", WORD_IDS.filter((id) => !/^pdf-pixels\.pagepixels\.[a-z0-9_]+$/.test(id)).concat(WORD_IDS.length - new Set(WORD_IDS).size ? ["duplicate"] : []), []);
 }
 
 finish();

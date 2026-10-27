@@ -5,8 +5,10 @@
 
    `html(s)` reads an HTML string into a small tree (elements, attributes, text), so the tests can find what a screen
    drew: its text nodes, its acts (`[data-act]`), its fields and its links. `w`/`said` give a word's expected text. */
+import { storeWorld } from "../store-request/fixtures.mjs";   // the world registers every owner's declarations once, as the plane does at start-up (store-assembly R83)
+export { storeWorld };
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, pending, silent } from "../interface-shell/harness.mjs";
+import { boot, ok, pending, silent, counted } from "../interface-shell/harness.mjs";
 import { decode } from "../interface-shell/dom.mjs";
 import { SCREENS } from "../../../src/screens-settings/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -86,6 +88,8 @@ export const day = (iso) => { const [y, m, d] = String(iso).slice(0, 10).split("
 
 // ---- the served page, over the shell's harness ----
 
+const SHELL_REASON = "Because the team agreed to it.";
+
 /** An answer as the fake plane gives it (`fixtures.mjs`), turned into the harness's response. */
 function toResponse(a) {
   if (a === "pending") return pending;
@@ -99,16 +103,21 @@ export const screen = (id) => SCREENS.find((s) => s.id === id);
 /** Boots the page at `/app/<id>[/<subject>]` as `me`, over `table` (op → answer or `(query, body) => answer`).
  *  `reachable` answers the frame's reads so the assistant is reachable (interface-shell R20). `words` answers
  *  `interfacewords` (the member's shown words). */
-export async function open(id, { me, table, subject = null, reachable = false, words = null, screens = SCREENS } = {}) {
+export async function open(id, { me, table = {}, subject = null, reachable = false, words = null, screens = SCREENS, world = null, as = null } = {}) {
   const plane = {};
-  for (const [op, a] of Object.entries(table)) plane[op] = (req) => { const q = { ...req.query }; delete q.op; return toResponse(typeof a === "function" ? a(q, req.body) : a); };
-  if (reachable) {
-    if (!table.assistantstate) plane.assistantstate = ok({ ok: true, on: true });
-    if (!table.groupkeystate) plane.groupkeystate = ok({ ok: true, on: true });
+  for (const [op, a] of Object.entries(table)) plane[op] = async (req) => { const q = { ...req.query }; delete q.op; return toResponse(typeof a === "function" ? await a(q, req.body) : a); };
+  /* over a world (store-request R18): the real store answers every op the table does not hold, `as` is the session that asks, and the frame's
+     reads (`whoami`, `groupidentity`, the queue, the words, the assistant's state) are the world's own */
+  const door = world ? world.boot(as) : null;
+  if (!world) {
+    if (reachable) {
+      if (!table.assistantstate) plane.assistantstate = ok({ ok: true, on: true });
+      if (!table.groupkeystate) plane.groupkeystate = ok({ ok: true, on: true });
+    }
+    plane.whoami = ok({ ...me, session: true });
+    if (words) plane.interfacewords = ok({ ok: true, language: "en", words });
   }
-  plane.whoami = ok({ ...me, session: true });
-  if (words) plane.interfacewords = ok({ ok: true, language: "en", words });
-  const b = await boot({ screens, plane, path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
+  const b = await boot({ screens, plane, ...(door ? { door: counted(door.door), session: door.session } : {}), path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
   await b.settle(80);
   const main = () => b.doc.getElementById("cs-main");
   // the shell's own reads, `bootstrap` among them (sent once, public, for the test-instance band; interface-shell R36). The shell exports
@@ -127,6 +136,16 @@ export async function open(id, { me, table, subject = null, reachable = false, w
     const el = b.doc.getElementById(fid);
     if (!el) throw new Error(`${id}: no choice ${fid} drawn`);
     el.value = value;
+    b.fire(el, "change");
+    await b.settle(40);
+    out.redraw();
+  };
+  /** Ticks (or unticks) a box or picks a radio the screen drew, as a member would, and settles with the screen drawn again (a `redraw` choice). */
+  out.tick = async (fid, on = true) => {
+    const el = b.doc.getElementById(fid);
+    if (!el) throw new Error(`${id}: no box ${fid} drawn`);
+    if (el.type === "radio" && on) for (const r of b.doc.querySelectorAll('input[type="radio"]')) if (r.getAttribute("name") === el.getAttribute("name")) r.checked = false;
+    el.checked = on;
     b.fire(el, "change");
     await b.settle(40);
     out.redraw();
@@ -150,16 +169,26 @@ export async function open(id, { me, table, subject = null, reachable = false, w
     const before = b.requests.length;
     b.fire(btn, "click");
     await b.settle(80);
-    // an act whose send awaits the browser's own work (the signer's key, WebCrypto) is waited for until it is sent
-    for (let i = 0; i < 200 && wait && !b.requests.slice(before).some((r) => r.op === op); i++) await new Promise((res) => setTimeout(res, 5)).then(() => b.settle(10));
+    // an act whose send awaits the browser's own work (the signer's key, WebCrypto) is waited for until its request is sent,
+    // bounded by time: a fixed number of polls gives up before a slow key is made
+    const until = Date.now() + 20000;
+    while (wait && Date.now() < until && !b.requests.slice(before).some((r) => r.op === op)) {
+      await new Promise((res) => setTimeout(res, 5));
+      await b.settle(10);
+    }
     const ta = doc.getElementById("cs-reason-" + String(ai).replace(":", "-"));
-    if (ta && reason !== undefined) { ta.value = reason; b.fire(doc.querySelector(`[data-shell="reason-send"][data-for="${ai}"]`), "click"); await b.settle(80); }
-    const sent = b.requests.slice(before).map((r) => { const q = { ...r.query }; delete q.op; return { op: r.op, query: q, body: r.body, headers: r.headers, method: r.method }; });
+    // a member gives the reason an act asks (interface-shell R107); a test that means to leave it unanswered passes `reason: null`
+    const give = reason === undefined ? SHELL_REASON : reason;
+    if (ta && give !== null) { ta.value = give; b.fire(doc.querySelector(`[data-shell="reason-send"][data-for="${ai}"]`), "click"); await b.settle(80); }
+    // the reason the harness gave in the shell's box is the shell's mark, not a declared field (B18): it is left out of `sent` unless the test gave its own
+    const sent = b.requests.slice(before).map((r) => { const q = { ...r.query }; delete q.op; let body = r.body;
+      if (reason === undefined && ta && body && body.reason === SHELL_REASON) { body = { ...body }; delete body.reason; }
+      return { op: r.op, query: q, body, headers: r.headers, method: r.method }; });
     const slot = main().querySelector(`[data-slot="${ai}"]`);
     const said2 = slot ? squash(decode(slot.textContent)) : "";
     out.refused = said2 ? { text: said2, key: keyOf(said2) } : null;
     out.redraw();
-    return { sent, refused: !!said2 && !ta, asked: !!ta };
+    return { sent, refused: !!said2 && (!ta || give !== null), asked: !!ta };
   };
   return out;
 }

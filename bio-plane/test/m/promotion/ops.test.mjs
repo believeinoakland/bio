@@ -18,10 +18,10 @@ function spied() {
   return { ...env, asked };
 }
 
-test("R54: promotionOps holds exactly promote, reopen and projectfork, each a function of no arguments", () => {
+test("R54: promotionOps holds exactly bundlehistory, promote, reopen and projectfork, each a function of no arguments", () => {
   const { p } = spied();
   const ops = promotionOps(p, url({}), null);
-  assert.deepEqual(Object.keys(ops).sort(), ["projectfork", "promote", "reopen"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["bundlehistory", "projectfork", "promote", "reopen"]);
   for (const f of Object.values(ops)) { assert.equal(typeof f, "function"); assert.equal(f.length, 0); }
 });
 
@@ -72,4 +72,22 @@ test("R54: projectfork is forkProject({projectId, newId, title, visibility, by, 
   assert.deepEqual([g.ok, g.visibility], [true, "discoverable"]);
   const n = promotionOps(p, url({ projectId: o.bundleId, newId: "PROJ-2026-0009-mine", title: "Third", by: "ann" })).projectfork();
   assert.equal(n.reason, "PROJECT_FORK_ID_SUPPLIED");
+});
+
+test("R54: bundlehistory is bundleHistory({bundle, viewer}) from the query; the body's stamps are never read", () => {
+  const { p } = spied();
+  const id = "INFO-2026-0001";
+  assert.equal(p.promote(create(id, infoDoc(id))).ok, true);
+  const asked = [];
+  const real = p.bundleHistory.bind(p);
+  p.bundleHistory = (args) => { asked.push(args); return real(args); };
+  const body = { bundle: "INFO-2026-9999", viewer: "member:body" };
+  const r = promotionOps(p, url({ bundle: id, viewer: "member:ann" }), body).bundlehistory();
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.deepEqual(asked, [{ bundle: id, viewer: "member:ann" }]);
+  /* Absent parameters are null: no bundle is NO_BUNDLE, and no viewer sees nothing. */
+  asked.length = 0;
+  assert.equal(promotionOps(p, url({ viewer: "member:ann" }), body).bundlehistory().reason, "NO_BUNDLE");
+  assert.equal(promotionOps(p, url({ bundle: id }), body).bundlehistory().reason, "NO_SUCH_BUNDLE");
+  assert.deepEqual(asked, [{ bundle: null, viewer: "member:ann" }, { bundle: id, viewer: null }]);
 });

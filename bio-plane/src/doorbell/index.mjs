@@ -15,7 +15,7 @@
  * no later module: a later module registers the litigation-hold reader (`registerReader`, R3). At its creation it
  * creates its six tables and declares them to record-core's purge as exempt. */
 import { DOORBELL_VIA } from "../provenance/index.mjs";
-import { profileOf, profileView, firstHopWho, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
+import { profileOf, profileView, firstHopWho, textTypeOf, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
 import { viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -23,6 +23,7 @@ import { evidenceAbsent } from "../capture/ops.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { DOORBELL_SCHEMA, DOORBELL_ADDITIVE_COLUMNS, DOORBELL_EXEMPT_TABLES } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { DOORBELL_SCHEMA, DOORBELL_EXEMPT_TABLES } from "./schema.mjs";
 
 /* The helpers below are copied from `capture`, which keeps its own for its other code (the map's §2). */
@@ -81,6 +82,16 @@ export const DOORBELL_READERS = Object.freeze(["litigation-hold"]);
 export const REASON_MAX = 2000;
 /* R3: a reason is a string with something other than white space in it, at most REASON_MAX characters. */
 const reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
+
+/* R27: the bounds, in characters, on the file name and media type a knock's sender states. */
+export const STATED_MAX = Object.freeze({ fileName: 255, mediaType: 127 });
+/* R27: what the sender stated, kept as text: control characters dropped, white space trimmed, cut at the bound; a value that is
+   not a string, or is empty once cleaned, is absent (null). Never read as a type check: the file-safety scan decides. */
+const statedOf = (value, max) => {
+  if (typeof value !== "string") return null;
+  const clean = [...value.replace(/[\u0000-\u001f\u007f]/g, "").trim()].slice(0, max).join("");
+  return clean || null;
+};
 
 /* R19 (BOB's privacy ruling): how many UTC days the tally keeps. */
 export const TALLY_DAYS = 30;
@@ -189,13 +200,13 @@ export class Doorbell {
    *  that fails or answers anything else, nothing discarded is cleared. Writes nothing and never throws. */
   mayClearDiscarded() {
     const reader = this.#readers.get("litigation-hold");
-    if (!reader) return { may: false, basis: "no reader of litigation holds is registered, so a hold cannot be ruled out" };
+    if (!reader) return { may: false, basis: word("doorbell.basis.reader_litigation_holds") };
     let held;
     try { held = reader.fn(); } catch { held = undefined; }
-    if (held === false) return { may: true, basis: `${reader.module} reports no litigation hold in place` };
-    if (held === true) return { may: false, basis: `${reader.module} reports a litigation hold in place` };
+    if (held === false) return { may: true, basis: word("doorbell.basis.reports_litigation_hold", { module: String(reader.module) }) };
+    if (held === true) return { may: false, basis: word("doorbell.basis.reports_litigation_hold_place", { module: String(reader.module) }) };
     if (held && typeof held.then === "function") Promise.resolve(held).catch(() => {});
-    return { may: false, basis: `${reader.module} did not answer whether a litigation hold is in place` };
+    return { may: false, basis: word("doorbell.basis.did_answer_litigation", { module: String(reader.module) }) };
   }
 
   /* ==================================================================== *
@@ -255,13 +266,13 @@ export class Doorbell {
   async knockerDigestOf(secret) {
     try {
       if (typeof secret !== "string" || secret === "")
-        return { knocker_digest: null, pseudonym: null, basis: "no secret was presented" };
+        return { knocker_digest: null, pseudonym: null, basis: word("doorbell.basis.secret_presented") };
       const key = this.#knockerKey({ create: false });
       if (!key) return { knocker_digest: null, pseudonym: null,
-                         basis: "no knock carrying a secret has been received by your group's Civicsmith, so no secret is recognised" };
+                         basis: localize("doorbell.index.no_secret_recognised", "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised") };
       const knocker_digest = await Doorbell.#knockerDigest(key, secret);
       return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
-    } catch { return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" }; }
+    } catch { return { knocker_digest: null, pseudonym: null, basis: word("doorbell.basis.digest_computed") }; }
   }
 
   /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from this module's
@@ -297,7 +308,7 @@ export class Doorbell {
   }
 
   /* R19: the mark a rate refusal carries, unseen in its answer, saying whether the whole doorbell was full. */
-  static #LIMIT_REACHED = Symbol("the whole-doorbell limit was reached");
+  static #LIMIT_REACHED = Symbol(word("doorbell.symbol.whole_doorbell_limit"));
 
   /** R19: count one knock the doorbell turned away in the day's tally, and whether it found the whole-doorbell limit
    *  reached (R5), dropping any day older than the last `TALLY_DAYS`. Two counters and a date: no address, fingerprint,
@@ -354,7 +365,7 @@ export class Doorbell {
   doorbellTally({ viewer = null, now = null } = {}) {
     if (!viewerPredicate(viewer).member || !/^member:/.test(String(viewer)))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
-               detail: "the doorbell's tally is read by a signed-in member; nothing was read" };
+               detail: localize("doorbell.index.tally_member_only", "the doorbell's tally is read by a signed-in member; nothing was read") };
     const at = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const today = new Date(at).toISOString().slice(0, 10);
     const oldest = new Date(Date.parse(`${today}T00:00:00Z`) - (TALLY_DAYS - 1) * 86400000).toISOString().slice(0, 10);
@@ -409,12 +420,12 @@ export class Doorbell {
    *  removed unless another knock's row already names the same digest. */
   async knock({ contentB64 = null, content = null, note, contact, sourceAddress = null, windowMs = KNOCK.windowMs,
                 perIpLimit = KNOCK.perIp, globalLimit = KNOCK.global, now = null, knockerSecret = null,
-                generateSecret = false, country = null } = {}) {
+                generateSecret = false, country = null, fileName = null, mediaType = null } = {}) {
     const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     let bytes;
     try {
       bytes = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te.encode(String(content ?? ""));
-    } catch { return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs, country); }
+    } catch { return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: localize("doorbell.index.content_did_not_decode", "the content did not decode") }, nowMs, country); }
     /* R10, R14: a weak secret before the rate: nothing is stored, and nothing counted but the tallies (R19, R20). */
     if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs, country);
     const sha = hexOf(await crypto.subtle.digest("SHA-256", bytes));
@@ -430,7 +441,7 @@ export class Doorbell {
         if (!held) { await bucket.put(key, bytes, { sha256: await crypto.subtle.digest("SHA-256", bytes) }); stored = true; }
       } catch (e) {
         return { ok: false, reason: "KNOCK_NOT_STORED", status: 502,
-                 detail: "the material could not be stored, so nothing was received and no inbox row was written" };
+                 detail: localize("doorbell.index.material_not_stored", "the material could not be stored, so nothing was received and no inbox row was written") };
       }
     }
     /* R14: the knocker's continuity. A supplied secret is used; `generateSecret` makes one of 128 random bits, shown
@@ -449,11 +460,11 @@ export class Doorbell {
       const late = this.#countKnock(rate);
       if (late) return late;
       this.#sql.exec(
-        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64)
-         VALUES (?,?,?,?,?,?,?,?,'new',?,?,?)`,
+        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64,file_name,media_type)
+         VALUES (?,?,?,?,?,?,?,?,'new',?,?,?,?,?)`,
         knockId, sha, bytes.length, bucket ? null : new TextDecoder().decode(bytes), bucket ? 1 : 0,
         String(note ?? "").slice(0, 2000), String(contact ?? "").slice(0, 300), received, knockerDigest, pseudonym,
-        bucket ? null : b64Of(bytes));
+        bucket ? null : b64Of(bytes), statedOf(fileName, STATED_MAX.fileName), statedOf(mediaType, STATED_MAX.mediaType));
       return { ok: true, knockId, sha256: sha, bytes: bytes.length, pseudonym, ...(generated ? { secret: generated } : {}) };
     });
     if (!answer.ok && stored && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha)) {
@@ -488,7 +499,7 @@ export class Doorbell {
     const found = this.#rows(
       `SELECT * FROM (SELECT i.knock_id, i.sha256, i.bytes, i.in_r2, i.note, i.contact, i.received, i.status, i.resolved,
                              i.resolved_by, i.resolve_reason, i.knocker_digest, i.pseudonym, i.capture_sha, i.pulled_by,
-                             i.pulled_at, b.project AS project, ${k0} AS k0, ${k1} AS k1
+                             i.pulled_at, i.file_name, i.media_type, b.project AS project, ${k0} AS k0, ${k1} AS k1
                         FROM inbox i LEFT JOIN register r ON r.capture_sha = i.capture_sha
                         LEFT JOIN bundles b ON b.bundle_id = r.bundle_id
                        WHERE ${status ? "i.status = ?" : "1=1"}) q
@@ -505,9 +516,8 @@ export class Doorbell {
      (the control plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
   static #badArgument(op, argument, shape, given) {
     return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
-             error: `${argument} must be one of ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
-             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
-                   + "could use. Nothing was read." };
+             error: localize("doorbell.index.argument_must_be_one_of", "{argument} must be one of {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
+             detail: localize("doorbell.index.op_op_needs_argument_in", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was read.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   }
 
   /* R3 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
@@ -523,7 +533,7 @@ export class Doorbell {
   inboxGet(knockId) {
     if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
     const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status, resolved, resolved_by,
-                                resolve_reason, knocker_digest, pseudonym, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id=?`, knockId);
+                                resolve_reason, knocker_digest, pseudonym, capture_sha, pulled_by, pulled_at, file_name, media_type FROM inbox WHERE knock_id=?`, knockId);
     return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
   }
 
@@ -535,7 +545,7 @@ export class Doorbell {
    *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
    *  them. T50 (N1194, R13): it takes `viewer`, the control plane's stamp, and passes it to the pull, which names the holder of
    *  bytes the record already holds only to a viewer who may see it. */
-  inboxResolve({ knockId, status, by, reason, at = null, within = null, viewer = null } = {}) {
+  inboxResolve({ knockId, status, by, reason, at = null, within = null, viewer = null, registerJob = null, armJobs = null } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
@@ -546,7 +556,7 @@ export class Doorbell {
                knockId, status: 400, maxChars: REASON_MAX };
     }
     /* END DEC-49 REGION is-resolve-reasoned */
-    if (status === "pulled") return this.#pull({ knockId, by, at, within, viewer }, reason);
+    if (status === "pulled") return this.#pull({ knockId, by, at, within, viewer, registerJob, armJobs }, reason);
     this.#tx(() => this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
                                   status, new Date().toISOString(), by ?? null, reason, knockId));
     return { ok: true, knockId, status, resolve_reason: reason };
@@ -567,14 +577,14 @@ export class Doorbell {
    *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
    *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
    *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
-  pullKnock({ knockId, by, at = null, within = null, viewer = null } = {}) { return this.#pull({ knockId, by, at, within, viewer }, null); }
+  pullKnock({ knockId, by, at = null, within = null, viewer = null, registerJob = null, armJobs = null } = {}) { return this.#pull({ knockId, by, at, within, viewer, registerJob, armJobs }, null); }
 
   /* R13, and R3's `pulled` arm: the pull, with the resolve's admitted reason recorded on the row beside it (null for a
      pull asked directly, which takes no reason). */
-  async #pull({ knockId, by, at = null, within = null, viewer = null } = {}, reason) {
+  async #pull({ knockId, by, at = null, within = null, viewer = null, registerJob = null, armJobs = null } = {}, reason) {
     if (typeof by !== "string" || !by.trim())
       return { ok: false, reason: "NO_PULLER", status: 400,
-               detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written" };
+               detail: localize("doorbell.index.no_puller_named", "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written") };
     if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
     const row = this.#one(`SELECT * FROM inbox WHERE knock_id = ?`, knockId);
     if (!row) return this.#noSuchKnock(knockId);
@@ -608,7 +618,7 @@ export class Doorbell {
       const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
       return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
                translation: row.translation, status: 503, knockId,
-               detail: "this group's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+               detail: localize("doorbell.index.no_evidence_storage_knock", "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written") };
     }
     /* The bytes as received: the evidence bucket's inbox object, else the inline copy. They must hash to the row's digest. */
     let bytes = null;
@@ -626,26 +636,43 @@ export class Doorbell {
     if (bytes && hexOf(await crypto.subtle.digest("SHA-256", bytes)) !== row.sha256) bytes = null;
     if (!bytes) {
       const a = evidenceAbsent(row.sha256, "bio", { knockId, status: 404,
-        detail: "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written" });
+        detail: localize("doorbell.index.knock_bytes_no_longer_held", "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written") });
       return a.body;
     }
     const sha = row.sha256;
     try { if (!(await ev.head(sha))) await ev.put(sha, bytes); }
     catch { return { ok: false, reason: "PULL_NOT_STORED", status: 502, knockId,
-                     detail: "the knock's bytes could not be held under their own digest, so nothing was written" }; }
+                     detail: localize("doorbell.index.bytes_not_held_digest", "the knock's bytes could not be held under their own digest, so nothing was written") }; }
     const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
     const address = `knock:${knockId}`;
     /* N615 (K1683, K1773): the origin `doctypeFor` is handed. `"member"` is only for bytes a member supplied by their own
        act under their session; a knock is made with no account (R1) and its row names no member session, so no knock
        is one, and every pull is profiled as `"fetch"`: a type read only from a member's own capture (court-doctypes R2)
        never matches a stranger's knock, whoever brings it in. */
-    const profile = await profileOf({ ev, sha, ct: null, total: bytes.length, multipart: false, headers: {}, locator: address,
+    /* R13 (fix round 5, E5): the knock's stated media type and file name go through acquisition's one text rule, as an upload's
+       do; the stated type is never a type check, so bytes that are not text profile as they always did. */
+    const ct = textTypeOf({ bytes, type: row.media_type, name: row.file_name });
+    const profile = await profileOf({ ev, sha, ct, total: bytes.length, multipart: false, headers: {}, locator: address,
                                       view: profileView(this.core), retrieved: when, origin: "fetch" });
     const document = this.#pulledDocument(row, { by, at: when, profile });
     const receiptOf = (fn) => { try { return fn(); } catch (e) { return { recorded: false, error: String(e && e.message || e).slice(0, 200) }; } };
     /* N409 (K609): one fixed sentence. A thrown message is the caller's internals (a store fault names a table, a
        stack names a file), so it never rides in the answer; the fault is a programming fault, found in the caller. */
     const withinFailed = () => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId, detail: PULL_WITHIN_FAILED_DETAIL });
+    /* R28 (fix round 9; G126; K4835 (2)): the reading this pull owes is one job row, written through the registrar inside the pull's
+       transaction, read as `keepLater` is: capture's instance's `registerJob` when it is a function, else the call's, else none (the answer then
+       says so). A refusal, or a throw, of the registrar rolls the pull back and is answered with `knockId`, never swallowed. The alarm is armed
+       after the commit. */
+    const reg = typeof this.capture?.registerJob === "function" ? (e) => this.capture.registerJob(e) : typeof registerJob === "function" ? registerJob : null;
+    const armer = typeof this.capture?.armJobs === "function" ? () => this.capture.armJobs() : typeof armJobs === "function" ? armJobs : null;
+    const register = () => {
+      if (!reg) return { ok: true };
+      let r;
+      try { r = reg({ kind: "reading", sha, carrier: document.file }); } catch { r = null; }
+      return r && r.ok === true ? { ok: true }
+        : { ok: false, reason: "JOB_NOT_REGISTERED", status: 502, knockId, job: { kind: "reading", reason: String((r && r.reason) || "REGISTRAR_REFUSED").slice(0, 80) },
+            detail: localize("doorbell.index.job_not_registered", "the reading this knock owes could not be registered, so the knock stays as it was and nothing was filed") };
+    };
     let done;
     try {
       done = this.#tx(() => {
@@ -653,11 +680,13 @@ export class Doorbell {
                                                                             via: DOORBELL_VIA, retrievalLocator: null }));
         if (!receipt || receipt.recorded !== true)
           return { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502, knockId,
-                   detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed" };
+                   detail: localize("doorbell.index.receipt_not_written", "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed") };
         this.#sql.exec(`UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
                           pulled_document = ?, resolve_reason = ? WHERE knock_id = ?`,
                        when, by, sha, by, when, JSON.stringify(document), reason, knockId);
         this.capture.recordCaptureActor({ captureSha: sha, actor: by, at: when });
+        const job = register();
+        if (!job.ok) return job;
         if (typeof within !== "function") return { ok: true, receipt };
         const w = Doorbell.#callWithin(within, document);
         if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
@@ -668,9 +697,11 @@ export class Doorbell {
       throw e;
     }
     if (!done.ok) return done;
+    if (reg && armer) { try { await armer(); } catch { /* an alarm not armed is the backstop's, never the pull's */ } }
     return { ok: true, existed: false, knockId, capture: { sha256: sha, bytes: bytes.length }, pulled_by: by, pulled_at: when,
              receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null }, document,
-             ...(typeof within === "function" ? { within: done.within } : {}) };
+             ...(typeof within === "function" ? { within: done.within } : {}),
+             ...(reg ? {} : { jobs: { not_registered: [{ kind: "reading", reason: "NO_REGISTRAR" }] } }) };
   }
 
   /* R13: the home of bytes the record holds, from provenance's register (its R4); null when none, or when it cannot be read. */
@@ -712,18 +743,17 @@ export class Doorbell {
       file: `snapshots/${name}`, locator, retrieved: at,
       profile,
       authority_state: "undetermined",
-      authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
+      authority_basis: word("doorbell.authority_basis", { at: String(at) }),
       provenance_chain: [{
         /* R13 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
            before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were received at the doorbell of your group's Civicsmith as knock ${row.knock_id} at ${row.received}, `
-               + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
-        evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
+        asserts: localize("doorbell.index.these_bytes_were_received_at", "these bytes were received at the doorbell of your team's Civicsmith as knock {knock_id} at {received}, and brought into the record by {by} at {at}; they were received, not fetched from any address", { knock_id: String(row.knock_id), received: String(row.received), by: String(by), at: String(at) }),
+        evidence: localize("doorbell.index.knock_receipt_evidence", "the knock's receipt: its digest, taken as the bytes arrived, and its instant"),
         bound: false, via: DOORBELL_VIA,
       }],
       capture: {
-        method: "doorbell knock, received, hashed at receipt",
+        method: localize("doorbell.index.capture_method_label", "doorbell knock, received, hashed at receipt"),
         grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
         actor_class: "member", actor: by,
         sha256: row.sha256, encoding: "binary", bytes: row.bytes,
@@ -740,15 +770,15 @@ export class Doorbell {
    *  sentence and never an identity: no contact is answered (R16). At most `limit` (N90), paged by `after`. */
   knocksOf({ pseudonym, limit = null, after = null } = {}) {
     if (typeof pseudonym !== "string" || !pseudonym)
-      return { ok: false, reason: "NO_PSEUDONYM", detail: "knocksOf names the pseudonym whose knocks it lists" };
+      return { ok: false, reason: "NO_PSEUDONYM", detail: localize("doorbell.index.knocks_of_names_pseudonym", "knocksOf names the pseudonym whose knocks it lists") };
     const cap = limitOf(limit);
     const from = after ? keyOf(after, 2) : ["", ""];
     if (!from) return badCursor();
     const found = this.#rows(
-      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha FROM inbox
+      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha, file_name, media_type FROM inbox
         WHERE pseudonym = ? AND (received, knock_id) > (?, ?) ORDER BY received, knock_id LIMIT ?`, pseudonym, ...from, cap + 1);
     const knocks = found.slice(0, cap), truncated = found.length > cap, last = knocks[knocks.length - 1];
-    return { ok: true, pseudonym, continuity: "the same knocker secret was presented", knocks, count: knocks.length,
+    return { ok: true, pseudonym, continuity: word("doorbell.continuity"), knocks, count: knocks.length,
              limit: cap, truncated, next: truncated ? cursorOf([last.received, last.knock_id]) : null };
   }
 
@@ -788,3 +818,24 @@ export function doorbellOps(d, url, body) {
     pulledknocks: () => d.pulledKnocksOf(q("capture") ?? (body && body.captureSha)),
   };
 }
+
+/* R26 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  knock: { classes: null, mutating: true, weight: "credential", description: localize("doorbell.declared.knock", "an unauthenticated request to be let in"),
+    fields: { accepts: ["content","contentB64","note","contact","knockerSecret","generateSecret","fileName","mediaType"], requires: [] } },
+  inboxlist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("doorbell.declared.inboxlist", "read: the knocks in the inbox, newest first, bounded and paged, sortable by received time, status, secret or project; never a contact in a pulled document; writes nothing"),
+    fields: { accepts: ["status","sort","dir","limit","after"], requires: [] } },
+  inboxget: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("doorbell.declared.inboxget", "read: one knock in the inbox, keyed by knock id; writes nothing"),
+    fields: { accepts: ["id"], requires: ["id"] } },
+  doorbelltally: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.doorbelltally", "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing"),
+    fields: { accepts: [], requires: [] } },
+  pulledknocks: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.pulledknocks", "read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [] } },
+  knocksof: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.knocksof", "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing"),
+    fields: { accepts: ["pseudonym","limit","after"], requires: ["pseudonym"] } },
+  inboxpull: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("doorbell.declared.inboxpull", "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle"),
+    fields: { accepts: ["knockId","id"], requires: [["knockId","id"]] } },
+  inboxresolve: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("doorbell.declared.inboxresolve", "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)"),
+    fields: { accepts: ["knockId","status","reason"], requires: ["knockId","status","reason"] } },
+});

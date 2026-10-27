@@ -33,8 +33,8 @@ export function patternsOf(q, args) {
   return [...literal, ...bound];
 }
 
-export function storage({ schema = true } = {}) {
-  const db = new DatabaseSync(":memory:");
+export function storage({ schema = true, file = ":memory:", db: over = null } = {}) {
+  const db = over ?? new DatabaseSync(file);
   let n = 0;
   const sql = {
     exec(q, ...args) {
@@ -69,4 +69,54 @@ export function bucket() {
     async get(k) { calls.push(["get", k]); return held.has(k) ? { key: k, bytes: held.get(k) } : null; },
     async put(k, bytes, opts) { calls.push(["put", k, opts]); held.set(k, bytes); return { key: k }; },
   };
+}
+
+/* An evidence bucket stand-in with R2's multipart upload (`createMultipartUpload(key)` → `{uploadPart, complete, abort}`),
+   recording what R87 needs measured: the parts it handed out by `get` and not yet taken by an `uploadPart` (`peak` is the
+   most it ever had out at once), the uploads begun, completed and aborted, and the objects it holds. An object's `get`
+   answers as R2's does, with `arrayBuffer()`. A part that is not the last must be `minPart` bytes at least, as R2's. */
+export function multipartBucket({ minPart = 0, failComplete = null } = {}) {
+  const base = bucket();
+  const state = { out: 0, peak: 0, begun: 0, completed: 0, aborted: 0, uploaded: [] };
+  return Object.assign(base, {
+    state,
+    async get(k, opts) {
+      base.calls.push(opts && opts.range ? ["get", k, opts] : ["get", k]);
+      if (!base.held.has(k)) return null;
+      const whole = base.held.get(k);
+      /* R2's `range` (K4855): `{offset, length}` or `{suffix}`; `size` stays the object's, the body is the range's */
+      let bytes = whole, range;
+      const r = opts && opts.range;
+      if (r) {
+        const offset = r.suffix != null ? Math.max(0, whole.length - r.suffix) : Math.min(r.offset ?? 0, whole.length);
+        const end = r.suffix != null ? whole.length : Math.min(whole.length, r.length != null ? offset + r.length : whole.length);
+        bytes = whole.subarray(offset, end); range = { offset, length: end - offset };
+      }
+      state.out += 1; state.peak = Math.max(state.peak, state.out);
+      return { key: k, size: whole.length, ...(range ? { range } : {}), async arrayBuffer() { return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength); } };
+    },
+    async createMultipartUpload(k) {
+      base.calls.push(["createMultipartUpload", k]); state.begun += 1;
+      const parts = new Map(); let done = false;
+      return {
+        async uploadPart(n, bytes) {
+          if (done) throw new Error("upload is over");
+          state.out = Math.max(0, state.out - 1);
+          parts.set(n, new Uint8Array(bytes)); state.uploaded.push([k, n, bytes.length]);
+          return { partNumber: n, etag: `e${n}` };
+        },
+        async complete(list) {
+          if (done) throw new Error("upload is over");
+          if (failComplete) { done = true; throw new Error(failComplete); }
+          const ordered = list.map((p) => parts.get(p.partNumber));
+          if (ordered.some((b, i) => !b || (i < ordered.length - 1 && b.length < minPart))) { done = true; throw new Error("a part is below the minimum part size"); }
+          const whole = new Uint8Array(ordered.reduce((n, b) => n + b.length, 0)); let at = 0;
+          for (const b of ordered) { whole.set(b, at); at += b.length; }
+          done = true; base.held.set(k, whole); state.completed += 1; base.calls.push(["complete", k]);
+          return { key: k, size: whole.length };
+        },
+        async abort() { done = true; state.aborted += 1; base.calls.push(["abort", k]); },
+      };
+    },
+  });
 }

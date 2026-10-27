@@ -52,6 +52,18 @@
  * turns each into one of its declared refusals.
  */
 
+import { localize } from "../../bio-plane/src/setup-words/index.mjs"
+import { READ_BOUNDS, boundOf, statement } from "../../bio-plane/src/read-bounds.mjs"
+
+/* THE DECLARED FRAME (R12, fix round 9, G125a): a frame's width and height are judged against the table once its
+ * header is read, before a plane, a strip or the output is allocated. A JPEG's own fields are 16 bits wide, so its
+ * edge never passes the table's; the pixels bound is what a hostile frame meets. */
+const PIXELS_MAX = boundOf("image", "pixels");
+/* The row-by-row decoder (R11) holds no full-size plane, so BOB ruled it keeps today's ceiling in a row of its own, `image.rows_pixels`
+ * (K4862). Until runtime-limits has added it the row of the whole-frame decode is read; the guard needs no edit when the row lands. */
+const ROWS_ROW = Object.hasOwn(READ_BOUNDS.image, "rows_pixels") ? "rows_pixels" : "pixels";
+const ROWS_PIXELS_MAX = boundOf("image", ROWS_ROW);
+
 export class DctRefusal extends Error {
   constructor(code, detail = {}) {
     super(`${code}${detail.note ? `: ${detail.note}` : ""}`);
@@ -104,7 +116,7 @@ export function readJpegHeader(d) {
     if (p + 2 > d.length) throw new DctRefusal("TRUNCATED", { note: "marker length past end" });
     const len = (d[p] << 8) | d[p + 1];
     const seg = d.subarray(p + 2, p + len);
-    if (p + len > d.length) throw new DctRefusal("TRUNCATED", { note: `marker 0x${m.toString(16)} runs past end` });
+    if (p + len > d.length) throw new DctRefusal("TRUNCATED", { note: localize("image-codecs.dctdecode.marker_0x_m_runs_past", "marker 0x{m} runs past end", { m: String(m.toString(16)) }) });
     if (m in SOF_PROCESS) {
       if (!DECODED_SOF.has(m))
         throw new DctRefusal("UNSUPPORTED_PROCESS", { process: SOF_PROCESS[m], marker: `0x${m.toString(16)}` });
@@ -136,13 +148,13 @@ export function readJpegHeader(d) {
       let q = 0;
       while (q < seg.length) {
         const tc = seg[q] >> 4, th = seg[q] & 15, table = `${tc === 0 ? "dc" : "ac"} ${th}`;
-        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table class or id past the four tables", class: tc, id: th });
-        if (q + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table counts run past their DHT", table });
+        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_class_or_id", "Huffman table class or id past the four tables"), class: tc, id: th });
+        if (q + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_counts_run_past", "Huffman table counts run past their DHT"), table });
         const counts = seg.subarray(q + 1, q + 17);
         let total = 0;
         for (let i = 0; i < 16; i++) total += counts[i];
         if (total > 256 || q + 17 + total > seg.length)
-          throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table of ${total} symbols ${total > 256 ? "past 256" : "runs past its DHT"}`, table });
+          throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_of_total_symbols", "Huffman table of {total} symbols {v1}", { total: String(total), v1: String(total > 256 ? "past 256" : "runs past its DHT") }), table });
         const symbols = seg.subarray(q + 17, q + 17 + total);
         const why = bogusHuffman(counts, symbols, tc === 0);
         const list = tc === 0 ? hts.dc : hts.ac;
@@ -167,7 +179,7 @@ export function readJpegHeader(d) {
       for (let i = 0; i < ns; i++) scomps.push({ id: seg[1 + 2 * i], td: seg[2 + 2 * i] >> 4, ta: seg[2 + 2 * i] & 15 });
       for (const sc of scomps) for (const table of [`dc ${sc.td}`, `ac ${sc.ta}`]) {
         if (bogus.has(table))
-          throw new DctRefusal("CORRUPT_DATA", { note: `bogus Huffman table definition: ${bogus.get(table)}`, table, component: sc.id });
+          throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.bogus_huffman_table_definition_get", "bogus Huffman table definition: {get}", { get: String(bogus.get(table)) }), table, component: sc.id });
       }
       return { frame, qt, hts, jfif, adobe, restart, scan: { comps: scomps, dataAt: p + len } };
     }
@@ -183,10 +195,10 @@ function bogusHuffman(counts, symbols, isDC) {
   let code = 0;
   for (let l = 1; l <= 16; l++) {
     code += counts[l - 1];
-    if (code >= 1 << l) return `${counts[l - 1]} codes of ${l} bits overflow the code space, or use the all-ones code`;
+    if (code >= 1 << l) return localize("image-codecs.dctdecode.v1_codes_of_l_bits", "{v1} codes of {l} bits overflow the code space, or use the all-ones code", { v1: String(counts[l - 1]), l: String(l) });
     code <<= 1;
   }
-  if (isDC) for (const s of symbols) if (s > 15) return `DC symbol ${s} past 15`;
+  if (isDC) for (const s of symbols) if (s > 15) return localize("image-codecs.dctdecode.dc_symbol_s_past_15", "DC symbol {s} past 15", { s: String(s) });
   return null;
 }
 
@@ -260,7 +272,7 @@ class Bits {
     for (;;) {
       code = (code << 1) | this.bits(1);
       l++;
-      if (l > 16) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman code longer than 16 bits" });
+      if (l > 16) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_code_longer_than_16", "Huffman code longer than 16 bits") });
       if (h.maxcode[l] >= 0 && code <= h.maxcode[l]) return h.symbols[h.valptr[l] + code - h.mincode[l]];
     }
   }
@@ -385,7 +397,7 @@ export function colourTransformOf(h) {
   if (h.jfif) return { ycc: true, why: "JFIF" };
   if (h.adobe) return { ycc: h.adobe.transform !== 0, why: `Adobe APP14 transform=${h.adobe.transform}` };
   if (ids[0] === 82 && ids[1] === 71 && ids[2] === 66) return { ycc: false, why: "component ids R,G,B" };
-  return { ycc: true, why: "libjpeg's default for three components" };
+  return { ycc: true, why: localize("image-codecs.dctdecode.libjpeg_s_default_for_three", "libjpeg's default for three components") };
 }
 
 /**
@@ -455,7 +467,7 @@ export function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTra
  */
 export function decodeBaselineJpegRows(d, { expectComps = null, colorTransform = null, onRows } = {}) {
   if (typeof onRows !== "function") throw new TypeError("decodeBaselineJpegRows needs an onRows(rows, y0, count) function");
-  return decodeStrips(d, expectComps, colorTransform, (rows, y0, count) => { onRows(rows, y0, count); });
+  return decodeStrips(d, expectComps, colorTransform, (strip, y0, count) => { onRows(strip, y0, count); }, true);
 }
 
 /* ── the strip-wise decode R1 and R11 share ──────────────────────────────────
@@ -467,7 +479,7 @@ export function decodeBaselineJpegRows(d, { expectComps = null, colorTransform =
  * the one above or below, edges REPLICATED at the component's own height. So the
  * last output row of an MCU row, which reads the first sample row of the next,
  * waits for it, and each strip after the first begins with the one before. */
-function decodeStrips(d, expectComps, colorTransform, emit) {
+function decodeStrips(d, expectComps, colorTransform, emit, viaRows = false) {
   const h = readJpegHeader(d);
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
@@ -485,7 +497,7 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
       throw new DctRefusal("COLOR_TRANSFORM_CONFLICT", { pdf: colorTransform, stream: colour });
   }
   if (scan.comps.length !== nc)
-    throw new DctRefusal("UNSUPPORTED_PROCESS", { process: "multi-scan sequential", note: `${scan.comps.length} of ${nc} components in the first scan` });
+    throw new DctRefusal("UNSUPPORTED_PROCESS", { process: "multi-scan sequential", note: localize("image-codecs.dctdecode.length_of_nc_components_in", "{length} of {nc} components in the first scan", { length: String(scan.comps.length), nc: String(nc) }) });
 
   const hmax = Math.max(...frame.comps.map((c) => c.h)), vmax = Math.max(...frame.comps.map((c) => c.v));
   const sampling = frame.comps.map((c) => `${c.h}x${c.v}`).join(",");
@@ -493,9 +505,14 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
     const hx = hmax / c.h, vx = vmax / c.v;
     const ok = (hx === 1 || hx === 2) && (vx === 1 || vx === 2) && Number.isInteger(hx) && Number.isInteger(vx);
     if (!ok || c.h < 1 || c.v < 1) throw new DctRefusal("UNSUPPORTED_SAMPLING", { sampling });
-    if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: `quantisation table ${c.tq} missing` });
+    if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.quantisation_table_tq_missing", "quantisation table {tq} missing", { tq: String(c.tq) }) });
   }
   const W = frame.width, H = frame.height;
+  const [limitName, limit] = viaRows ? [ROWS_ROW, ROWS_PIXELS_MAX] : ["pixels", PIXELS_MAX];
+  if (W * H > limit)
+    throw new DctRefusal("IMAGE_TOO_LARGE", {
+      note: localize("image-codecs.dctdecode.the_picture_is_width_by_height", "the picture is {width} by {height}, past the {bound} pixels the decoder reads", { width: String(W), height: String(H), bound: String(limit) }),
+      bound_name: limitName, ...statement("image", limitName, W * H), width: W, height: H, components: nc });
   /* A single-component scan is non-interleaved and walks its OWN block grid (for
    * a grey file, the same grid): its strip is one block row, and it is upsampled
    * by nothing. */
@@ -506,7 +523,7 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
   const outPerStrip = single ? 8 : 8 * vmax;
   const planes = frame.comps.map((c) => {
     const sc = scan.comps.find((s) => s.id === c.id);
-    if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table missing for component ${c.id}` });
+    if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_missing_for_component", "Huffman table missing for component {id}", { id: String(c.id) }) });
     const hx = single ? 1 : hmax / c.h, vx = single ? 1 : vmax / c.v;
     const stride = mcux * c.h * 8, rowsPer = single ? 8 : 8 * c.v;
     const dw = Math.ceil((W * c.h) / hmax);
@@ -656,7 +673,7 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
    * so it is REFUSED here — the caller's TRUNCATED_IMAGE_DATA. The reader's own
    * look-ahead into the EOI is not counted: only zero bits actually CONSUMED. */
   if (br.fabricated())
-    throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br.fabricated()} bits zero-filled)` });
+    throw new DctRefusal("TRUNCATED", { note: localize("image-codecs.dctdecode.entropy_coded_data_ended_before", "entropy-coded data ended before the last MCU ({fabricated} bits zero-filled)", { fabricated: String(br.fabricated()) }) });
 
   return {
     width: W, height: H, comps: nc,

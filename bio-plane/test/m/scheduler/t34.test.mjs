@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, Scheduler } from "../../../src/scheduler/index.mjs";
-import { world, storage, writes, NOW } from "./fixture.mjs";
+import { world, storage, writes, NOW, pinNow } from "./fixture.mjs";
 import { world as publishScheduleWorld, V as PV, SIG, KEY } from "../publish-schedule/fixture.mjs";
 import { world as dutiesWorld } from "../duties/fixture.mjs";
 import { world as peopleWorld, ANN } from "../people/fixture.mjs";
@@ -106,7 +106,7 @@ test("R22, R3, R15: an edition still waiting after a tick at or past its time wa
 
 /* ---- R9, R22: publish-schedule's notice ---- */
 
-test("R9, R22, R17: it registers once with publish-schedule's onPublishScheduled; a set or a move arms the alarm at once, a cancel arms nothing new; the notice runs no tick and writes nothing but the alarm", async () => {
+test("R9, R22, R17: it registers once with publish-schedule's onPublishScheduled; a set or a move arms the alarm at once, a cancel arms nothing new; the notice runs no tick and writes nothing but the alarm", async (t) => { pinNow(t);
   const T = Date.parse("2026-10-01T12:00:00Z"), LATER = T + 7 * 86_400_000;
   /* another consumer wants a later wake, so a cancel is seen to leave the alarm where it was */
   const { s, st, calls, set } = world({ "scheduled-publish": { wake: null }, "dated-waits": { wake: iso(LATER) } });
@@ -153,7 +153,7 @@ test("R22, R1: a take's notice arrives inside the scheduled-publish tick and arm
 
 /* ---- R23: answers' notice ---- */
 
-test("R23, R17: it registers once with answers' onStandingSet; a question set re-arms the standing questions' wake at once; one ended arms nothing new; the notice writes nothing but the alarm", async () => {
+test("R23, R17: it registers once with answers' onStandingSet; a question set re-arms the standing questions' wake at once; one ended arms nothing new; the notice writes nothing but the alarm", async (t) => { pinNow(t);
   const W = Date.parse("2026-10-05T07:00:00Z"), LATER = W + 7 * 86_400_000;
   const { s, st, calls, set } = world({ "standing-questions": { due: 0, wake: null }, "dated-waits": { wake: iso(LATER) } });
   const heard = [];
@@ -217,7 +217,7 @@ test("R9, R21, R17: a duty tracked, a check changed, a detector switched on asks
 
 /* ---- against the real owners: the act driven, the alarm read ---- */
 
-test("R22, R9: against the real publish-schedule, an edition set to wait arms the alarm at its time; a firing in the grace before it takes nothing; the firing at it publishes through the registered publisher; a move and a cancel re-arm through onPublishScheduled", async () => {
+test("R22, R9: against the real publish-schedule, an edition set to wait arms the alarm at its time; a firing in the grace before it takes nothing; the firing at it publishes through the registered publisher; a move and a cancel re-arm through onPublishScheduled", async (t) => { pinNow(t);
   const w = publishScheduleWorld();
   w.member("olive");
   const proj = w.project("Parks", "olive");

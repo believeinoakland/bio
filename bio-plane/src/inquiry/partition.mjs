@@ -7,7 +7,8 @@ const isMap = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 /** R65: `{grouped, groups, ungrouped}` over one inquiry document's frontmatter. `groups` are the document's grounds in
  *  its order, each `{ground, statement, asserted_by, at, legs}` (`statement` null when none, `legs` the ordinals of the
  *  legs naming the ground, R27); `ungrouped` the ordinals of the legs that name no ground; `grouped` whether any leg names
- *  one. A leg is an object entry of `basis[]`, addressed as `ground` addresses it. */
+ *  one; `answered` whether the question was partitioned at all, a held `grounds: []` (no ground, every supporting leg
+ *  necessary, R85) being an answer. A leg is an object entry of `basis[]`, addressed as `ground` addresses it. */
 export function partitionOfDoc(fm) {
   const legs = isMap(fm) && Array.isArray(fm.basis) ? fm.basis.filter(isMap) : [];
   const label = legs.map((l) => (typeof l.ground === "string" && l.ground.trim() ? l.ground.trim() : null));
@@ -16,7 +17,8 @@ export function partitionOfDoc(fm) {
     ground: r.ground.trim(), statement: typeof r.statement === "string" ? r.statement : null,
     asserted_by: typeof r.asserted_by === "string" ? r.asserted_by : null, at: typeof r.at === "string" ? r.at : null,
     legs: label.flatMap((g, i) => (g === r.ground.trim() ? [i] : [])) }));
-  return { grouped: label.some((g) => g !== null), groups,
+  return { grouped: label.some((g) => g !== null), answered: label.some((g) => g !== null) || (isMap(fm) && Array.isArray(fm.grounds)),
+           groups,
            ungrouped: label.flatMap((g, i) => (g === null ? [i] : [])) };
 }
 

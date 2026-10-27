@@ -22,6 +22,7 @@ import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf, PROJECT_QUESTIONS_MAX } from "../basis-versions/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R2: the held questions one `projectStage` reads, in pages of basis-versions' PROJECT_QUESTIONS_MAX (500). */
 export const STAGE_QUESTIONS_MAX = 2000;
@@ -39,29 +40,24 @@ export const STAGE_NEEDS = Object.freeze({
   investigating: Object.freeze(["held_question_with_leg"]),
   matured: Object.freeze(["concluded_held_question", "ratified_case_edition"]),
 });
-/** R4: every `why` a stage states, fixed, filled with counts only (`{read}`, `{with_legs}`, `{concluded}`,
- *  `{editions}`); never a member, a question's text or a place (R9). The undetermined answers' `detail` stands in for
- *  a stage the read could not decide. */
+/** R4: every `why` a stage states, as the word id of its fixed sentence (`stageSentence`), filled with counts only
+ *  (`{read}`, `{with_legs}`, `{concluded}`, `{editions}`); never a member, a question's text or a place (R9). The
+ *  undetermined answers' `detail` stands in for a stage the read could not decide. */
 export const STAGE_SENTENCES = Object.freeze({
-  forming_reached: "every project starts forming; this stage needs nothing from the record",
-  investigating_reached: "{with_legs} of the {read} held questions read have at least one leg in their basis",
-  investigating_skipped: "reached because a later stage is reached; none of the {read} held questions read has a leg "
-                       + "in its basis",
-  investigating_none_held: "the project holds no question yet; a held question with a leg in its basis reaches this stage",
-  investigating_no_leg: "the project holds {read} questions and none has a leg in its basis; a leg on any one of them "
-                      + "reaches this stage",
-  matured_reached: "the project has concluded {concluded} of the {read} held questions read and owns {editions} "
-                 + "ratified case editions",
-  matured_not_reached: "the project has concluded none of the {read} held questions read and owns no ratified case "
-                     + "edition; concluding one of them, or a ratified case edition of a case it owns, reaches this stage",
-  closed_project: "the project is closed, so no further stage is needed; a reopening is the owner's act",
-  closed_reached: "the owner recorded the close with its reason; a reopening is the owner's act",
-  closed_not_recorded: "a close is the owner's recorded act with its reason (resolved, superseded or abandoned), not a "
-                     + "stage the record grows into",
-  closed_unrecognised: "the document records a close, but its reason is not resolved, superseded or abandoned, so the "
-                     + "close is not read",
+  forming_reached: "project-stage.project_starts_forming",
+  investigating_reached: "project-stage.held_questions_read",
+  investigating_skipped: "project-stage.reached_later_stage",
+  investigating_none_held: "project-stage.project_holds_question",
+  investigating_no_leg: "project-stage.project_holds_questions",
+  matured_reached: "project-stage.project_concluded_held",
+  matured_not_reached: "project-stage.project_concluded_none",
+  closed_project: "project-stage.project_closed_further",
+  closed_reached: "project-stage.owner_recorded_close",
+  closed_not_recorded: "project-stage.close_owner_recorded",
+  closed_unrecognised: "project-stage.document_records_close",
 });
-const fillCounts = (sentence, n) => sentence.replace(/\{(read|with_legs|concluded|editions)\}/g, (_, k) => String(n[k]));
+/** R4: one of STAGE_SENTENCES' fixed sentences, its counts filled from `n`. */
+export const stageSentence = (name, n = {}) => word(STAGE_SENTENCES[name], n);
 /* R4: a stage's fixed sentence, by whether it is reached and what earned it. */
 function stageWhy(stage, reached, earned, n) {
   const key = stage === "forming" ? "forming_reached"
@@ -69,7 +65,7 @@ function stageWhy(stage, reached, earned, n) {
       ? (reached ? (earned ? "investigating_reached" : "investigating_skipped")
                  : (n.read ? "investigating_no_leg" : "investigating_none_held"))
     : reached ? "matured_reached" : "matured_not_reached";
-  return fillCounts(STAGE_SENTENCES[key], n);
+  return stageSentence(key, n);
 }
 /* R4: what a computed stage not reached needs, each condition with how much of it the record has now. */
 function stageNeeds(stage, n) {
@@ -135,7 +131,8 @@ export class ProjectStage {
    *  Writes nothing; never throws (a part it cannot read is stated undetermined, R7). */
   projectStage({ project = null, viewer = null } = {}) {
     const pid = str(project);
-    if (!pid) return { ok: false, reason: "NO_ID", detail: "projectStage names a project" };
+    if (!pid) return { ok: false, reason: "NO_ID",
+                       detail: localize("project-stage.index.names_a_project", "projectStage names a project") };
     let row = null;
     try { row = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid); } catch { row = null; }
     if (!row || row.object_type !== "project") return noSuchProject(pid);
@@ -151,7 +148,7 @@ export class ProjectStage {
     if (work.failed) {
       /* R1, R7: never thrown; the cases it owns could not be read, so what rule 2's second half and R3 would say is
          undetermined, stated as for an unread document. */
-      const detail = "the cases this project owns could not be read, so its stage and its readiness are undetermined";
+      const detail = word("project-stage.cases_project_owns");
       return { ok: true, project: pid, stage: "undetermined", closed_reason: null,
                questions: { read: 0, with_legs: 0, concluded: 0, truncated: false }, published_editions: null,
                work_products: [], work_products_limit: WORK_PRODUCTS_MAX, work_products_truncated: false,
@@ -166,7 +163,7 @@ export class ProjectStage {
        `forming`, `investigating` or `matured` is never read (R2, R5). */
     const text = this.#fileText(pid, "bundle.md");
     if (!text) {
-      const detail = "the project's own document could not be read, so whether its owner closed it is undetermined";
+      const detail = word("project-stage.project_document_read");
       return { ...out, stage: "undetermined", detail, stages: this.#stages({ unread: detail }) };
     }
     const fm = parseFrontmatter(text.content).data || {};
@@ -185,10 +182,11 @@ export class ProjectStage {
       /* The cap reached, or the read failed, with rules 1–2 unmet: what was established, never filled in (R7). */
       computed = { stage: "undetermined", at_least: read.legged ? "investigating" : "forming",
                    detail: read.failed
-                     ? "the questions this project holds could not all be read, so its stage is undetermined"
-                     : `this project holds more than the ${STAGE_QUESTIONS_MAX} questions one read examines, none of `
-                       + "those read is concluded and it has published no case, so whether it has matured is "
-                       + "undetermined; it is at least as far as stated" };
+                     ? localize("project-stage.stage.questions_unread",
+                         "the questions this project holds could not all be read, so its stage is undetermined")
+                     : localize("project-stage.stage.questions_over_cap",
+                         "this project holds more than the {max} questions one read examines, none of those read is concluded and it has published no case, so whether it has matured is undetermined; it is at least as far as stated",
+                         { max: String(STAGE_QUESTIONS_MAX) }) };
     else if (read.legged)
       computed = { stage: "investigating", basis: { rule: "investigating", question: read.legged, case: null, edition: null } };
     else computed = { stage: "forming", basis: { rule: "forming", question: null, case: null, edition: null } };
@@ -259,18 +257,18 @@ export class ProjectStage {
       const earned = reached ? earnedOf[stage] : null;
       const since = earned ? sinceOf[stage]() : null;
       if (reached) return { stage, reached, earned, since, needs: null, why: stageWhy(stage, true, earned, n) };
-      if (closed) return { stage, reached, earned: null, since: null, needs: null, why: STAGE_SENTENCES.closed_project };
+      if (closed) return { stage, reached, earned: null, since: null, needs: null, why: stageSentence("closed_project") };
       return { stage, reached, earned: null, since: null, needs: stageNeeds(stage, n), why: stageWhy(stage, false, null, n) };
     });
     let closedStage;
     if (closed)
       closedStage = { stage: "closed", reached: true, earned: { closed_reason: fm.closed_reason },
-                      since: closedSince(fm), needs: null, why: STAGE_SENTENCES.closed_reached };
+                      since: closedSince(fm), needs: null, why: stageSentence("closed_reached") };
     else if (undetermined)
       closedStage = { stage: "closed", reached: null, earned: null, since: null, needs: null, why: computed.detail };
     else
       closedStage = { stage: "closed", reached: false, earned: null, since: null, needs: null,
-                      why: closeRecorded ? STAGE_SENTENCES.closed_unrecognised : STAGE_SENTENCES.closed_not_recorded };
+                      why: stageSentence(closeRecorded ? "closed_unrecognised" : "closed_not_recorded") };
     if (closeRecorded && !closed)
       closedStage.recorded = fm.closed_reason == null ? null : String(fm.closed_reason).slice(0, CLOSED_RECORDED_MAX);
     return [...computedStages, closedStage];
@@ -326,12 +324,12 @@ export class ProjectStage {
       const ed = this.#one(`SELECT COUNT(*) AS n, MAX(edition) AS latest FROM published_cases
                              WHERE case_id=? AND ratified_at IS NOT NULL`, id) || {};
       const editions = Number(ed.n) || 0;
-      const notEvaluated = { met: false, why: "no evaluation is recorded" };
+      const notEvaluated = { met: false, why: word("project-stage.why.evaluation_recorded") };
       const rungs = {
-        draft: drafted ? { met: true } : { met: false, why: "no unsigned case document of this case is stored" },
+        draft: drafted ? { met: true } : { met: false, why: word("project-stage.why.unsigned_case_document") },
         internally_checked: notEvaluated,
         externally_compliant: notEvaluated,
-        distributed: editions ? { met: true } : { met: false, why: "no edition of this case is ratified" },
+        distributed: editions ? { met: true } : { met: false, why: word("project-stage.why.edition_case_ratified") },
       };
       const readiness = [...READINESS_RUNGS].reverse().find((r) => rungs[r].met) ?? "none";
       items.push({ case: id, readiness, editions, latest_edition: editions ? Number(ed.latest) : null, rungs });

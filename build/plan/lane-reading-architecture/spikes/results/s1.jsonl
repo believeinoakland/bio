@@ -1,0 +1,44 @@
+{"flags":"(none)","path":"ab","mb":64,"out":"HTTP 200 {\"ok\":true,\"mb\":64,\"mem\":0}","rssMB":107,"processExited":null}
+{"flags":"(none)","path":"ab","mb":128,"out":"HTTP 200 {\"ok\":true,\"mb\":128,\"mem\":0}","rssMB":170,"processExited":null}
+{"flags":"(none)","path":"ab","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":243,"processExited":null}
+{"flags":"(none)","path":"ab-nofill","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":242,"processExited":null}
+{"flags":"(none)","path":"abs","mb":400,"out":"HTTP 200 {\"ok\":true,\"mb\":400,\"mem\":0}","rssMB":443,"processExited":null}
+{"flags":"(none)","path":"heap","mb":60,"out":"HTTP 200 {\"ok\":true,\"mb\":60,\"mem\":0}","rssMB":133,"processExited":null}
+{"flags":"(none)","path":"heap","mb":100,"out":"HTTP 200 {\"ok\":true,\"mb\":100,\"mem\":0}","rssMB":196,"processExited":null}
+{"flags":"(none)","path":"heap","mb":150,"out":"HTTP 200 {\"ok\":true,\"mb\":150,\"mem\":0}","rssMB":249,"processExited":null}
+{"flags":"(none)","path":"heap","mb":300,"out":"HTTP 200 {\"ok\":true,\"mb\":300,\"mem\":0}","rssMB":391,"processExited":null}
+{"flags":"(none)","path":"str","mb":100,"out":"HTTP 200 {\"ok\":true,\"mb\":100,\"mem\":0}","rssMB":62,"processExited":null}
+{"flags":"(none)","path":"str","mb":300,"out":"HTTP 200 {\"ok\":true,\"mb\":300,\"mem\":0}","rssMB":79,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"ab","mb":64,"out":"HTTP 200 {\"ok\":true,\"mb\":64,\"mem\":0}","rssMB":107,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"ab","mb":128,"out":"HTTP 200 {\"ok\":true,\"mb\":128,\"mem\":0}","rssMB":170,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"ab","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":243,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"ab-nofill","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":243,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"abs","mb":400,"out":"HTTP 200 {\"ok\":true,\"mb\":400,\"mem\":0}","rssMB":444,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"heap","mb":60,"out":"HTTP 200 {\"ok\":true,\"mb\":60,\"mem\":0}","rssMB":132,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"heap","mb":100,"out":"FETCH-ERROR UND_ERR_SOCKET","rssMB":null,"processExited":{"code":1,"signal":null},"tail":"workerd/jsg/setup.c++:38: fatal: V8 fatal error; location = Reached heap limit; message = : allocation failed: JavaScript heap out of memory | *** Received signal #6: Aborted | stack: /lib/x86_64-linux-gnu/libc.so.6@9ec0b /lib/x86_64-linux-gnu/libc.so.6@4527d /lib/x86_64-linux-gnu/libc.so.6@288fe /h"}
+{"flags":"--max-old-space-size=64","path":"heap","mb":150,"out":"FETCH-ERROR UND_ERR_SOCKET","rssMB":null,"processExited":{"code":1,"signal":null},"tail":"workerd/jsg/setup.c++:38: fatal: V8 fatal error; location = Reached heap limit; message = : allocation failed: JavaScript heap out of memory | *** Received signal #6: Aborted | stack: /lib/x86_64-linux-gnu/libc.so.6@9ec0b /lib/x86_64-linux-gnu/libc.so.6@4527d /lib/x86_64-linux-gnu/libc.so.6@288fe /h"}
+{"flags":"--max-old-space-size=64","path":"heap","mb":300,"out":"FETCH-ERROR UND_ERR_SOCKET","rssMB":null,"processExited":{"code":1,"signal":null},"tail":"workerd/jsg/setup.c++:38: fatal: V8 fatal error; location = Reached heap limit; message = : allocation failed: JavaScript heap out of memory | *** Received signal #6: Aborted | stack: /lib/x86_64-linux-gnu/libc.so.6@9ec0b /lib/x86_64-linux-gnu/libc.so.6@4527d /lib/x86_64-linux-gnu/libc.so.6@288fe /h"}
+{"flags":"--max-old-space-size=64","path":"str","mb":100,"out":"HTTP 200 {\"ok\":true,\"mb\":100,\"mem\":0}","rssMB":62,"processExited":null}
+{"flags":"--max-old-space-size=64","path":"str","mb":300,"out":"HTTP 200 {\"ok\":true,\"mb\":300,\"mem\":0}","rssMB":79,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"ab","mb":64,"out":"HTTP 200 {\"ok\":true,\"mb\":64,\"mem\":0}","rssMB":106,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"ab","mb":128,"out":"HTTP 200 {\"ok\":true,\"mb\":128,\"mem\":0}","rssMB":171,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"ab","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":242,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"ab-nofill","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":242,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"abs","mb":400,"out":"HTTP 200 {\"ok\":true,\"mb\":400,\"mem\":0}","rssMB":443,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"heap","mb":60,"out":"HTTP 200 {\"ok\":true,\"mb\":60,\"mem\":0}","rssMB":134,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"heap","mb":100,"out":"HTTP 200 {\"ok\":true,\"mb\":100,\"mem\":0}","rssMB":193,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"heap","mb":150,"out":"HTTP 200 {\"ok\":true,\"mb\":150,\"mem\":0}","rssMB":232,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"heap","mb":300,"out":"FETCH-ERROR UND_ERR_SOCKET","rssMB":null,"processExited":{"code":1,"signal":null},"tail":"workerd/jsg/setup.c++:38: fatal: V8 fatal error; location = Reached heap limit; message = : allocation failed: JavaScript heap out of memory | *** Received signal #6: Aborted | stack: /lib/x86_64-linux-gnu/libc.so.6@9ec0b /lib/x86_64-linux-gnu/libc.so.6@4527d /lib/x86_64-linux-gnu/libc.so.6@288fe /h"}
+{"flags":"--max-old-space-size=128","path":"str","mb":100,"out":"HTTP 200 {\"ok\":true,\"mb\":100,\"mem\":0}","rssMB":61,"processExited":null}
+{"flags":"--max-old-space-size=128","path":"str","mb":300,"out":"HTTP 200 {\"ok\":true,\"mb\":300,\"mem\":0}","rssMB":78,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"ab","mb":64,"out":"HTTP 200 {\"ok\":true,\"mb\":64,\"mem\":0}","rssMB":107,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"ab","mb":128,"out":"HTTP 200 {\"ok\":true,\"mb\":128,\"mem\":0}","rssMB":170,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"ab","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":243,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"ab-nofill","mb":200,"out":"HTTP 200 {\"ok\":true,\"mb\":200,\"mem\":0}","rssMB":243,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"abs","mb":400,"out":"HTTP 200 {\"ok\":true,\"mb\":400,\"mem\":0}","rssMB":444,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"heap","mb":60,"out":"HTTP 200 {\"ok\":true,\"mb\":60,\"mem\":0}","rssMB":131,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"heap","mb":100,"out":"HTTP 200 {\"ok\":true,\"mb\":100,\"mem\":0}","rssMB":193,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"heap","mb":150,"out":"HTTP 200 {\"ok\":true,\"mb\":150,\"mem\":0}","rssMB":247,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"heap","mb":300,"out":"HTTP 200 {\"ok\":true,\"mb\":300,\"mem\":0}","rssMB":340,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"str","mb":100,"out":"HTTP 200 {\"ok\":true,\"mb\":100,\"mem\":0}","rssMB":62,"processExited":null}
+{"flags":"--max-old-space-size=256","path":"str","mb":300,"out":"HTTP 200 {\"ok\":true,\"mb\":300,\"mem\":0}","rssMB":77,"processExited":null}

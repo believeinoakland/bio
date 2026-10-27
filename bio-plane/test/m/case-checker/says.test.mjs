@@ -10,7 +10,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as CC from "../../../src/case-checker/index.mjs";
 import { buildProgram } from "../../../src/case-checker/build-program.mjs";
-import { SAYS_WORDS } from "../../../src/case-checker/says-words.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { contentIdFor } from "../../../src/content/extent.mjs";
@@ -25,9 +24,9 @@ const LOOSE = sha("a passage no finding relies on");
 const criteria = () => [
   { standard: BENCH, portion: null, designation: "Peer response times", edition: "2024", issuer: "an association", citation: "PRT 2024",
     access: "paywalled", body: BODY, binds: false, passages: [{ content: RELIED, text: "The lease was approved without a vote." }, { content: LOOSE, text: "the whole chapter" }],
-    captures: [MINUTES_SHA], label: "Benchmark · not binding on the board", access_words: "Behind a paywall" },
+    captures: [MINUTES_SHA], label: "Benchmark · not binding on the board", access_words: word("label.standardaccess.paywalled") },
   { standard: CODE, portion: "s. 4", designation: "Lease code", edition: "2023", issuer: "the council", citation: "LC s. 4",
-    access: "free", body: BODY, binds: true, passages: [], captures: [], label: "Standard · binds the board", access_words: "Free to read" }];
+    access: "free", body: BODY, binds: true, passages: [], captures: [], label: "Standard · binds the board", access_words: word("label.standardaccess.free") }];
 const facts = () => {
   const f = gradingFacts();
   const std = (target) => ({ target, kind: "standard", role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture", ground: null });
@@ -115,10 +114,7 @@ test("R26 (control): an {ok: true} answer carries no says, nor does a standards_
   for (const code of CC.STANDARDS_USE_CODES) assert.equal(hasWord(`refusal.${code}`), true, code);
 });
 
-test("R26 R13: the program carries the keys it uses as data and prints each departure as the sentence word(key, vars) reads, in-process and run offline from a fresh build", async () => {
-  /* the data the program carries is what word reads, key for key */
-  assert.deepEqual(Object.keys(SAYS_WORDS), [...CC.STANDARDS_USE_KEYS]);
-  for (const k of CC.STANDARDS_USE_KEYS) assert.equal(SAYS_WORDS[k], word(k), `${k}: says-words.mjs is stale; run node bio-plane/src/case-checker/build-program.mjs`);
+test("R26 R13: the program carries the rows of the keys it uses as data and prints each departure as the sentence word(key, vars) reads, in-process and run offline from a fresh build", async () => {
   const cf = refusing();
   const expected = await CC.checkCaseFile({ parts: cf.parts });
   const sentences = expected.standards_use.refusals.map((d) => word(d.says.key, d.says.vars));
@@ -140,9 +136,9 @@ test("R26 R13: the program carries the keys it uses as data and prints each depa
     const out = execFileSync(process.execPath, ["case-checker.mjs", ...cf.parts.map((_, i) => `part${i + 1}.zip`)], { cwd: dir, encoding: "utf8", env: { PATH: process.env.PATH } });
     const outLines = out.split("\n");
     assert.deepEqual(outLines.slice(results, results + sentences.length), sentences);
-    assert.equal(built.text.includes("refusal.COPYRIGHTED_TEXT_CARRIED"), true);
+    for (const k of CC.STANDARDS_USE_KEYS) assert.equal(built.text.includes(`"${k}"`), true, `${k}: the program carries its row`);
   } finally { rmSync(dir, { recursive: true, force: true }); }
   /* control: a case with nothing to refuse prints no sentence of these */
   const clean = await CC.runProgram(["a.zip"], async () => caseFile().parts[0]);
-  for (const s of Object.values(SAYS_WORDS)) assert.equal(clean.text.includes(s), false);
+  for (const k of CC.STANDARDS_USE_KEYS) assert.equal(clean.text.includes(word(k)), false, k);
 });

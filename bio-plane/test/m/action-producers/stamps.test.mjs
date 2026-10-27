@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world as clocksWorld, V, CLK } from "../action-clocks/fixture.mjs";
 import { actionProducersOf } from "../../../src/action-producers/index.mjs";
-import { defaultFakes, ofKind } from "./world.mjs";
+import { defaultFakes, ofKind, escalationsAnswer } from "./world.mjs";
 
 const A = "ACTN-2026-0001-a";
 function real() {
@@ -52,7 +52,7 @@ test("R1, R2, R3, R5, R6, R7, R8, R9, R10, R12 (K3000): every member a provider 
   const now = w.clock.ms;
   const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
   F.planWork.takeUpsFor = () => ({ ok: true, truncated: false, cursor: null, items: [{ take_up: 1, item: { kind: "clock", action: A, entry: 0 }, member: V("bob"), at: iso(now) }] });
-  F.escalation.escalationsDue = () => ({ ok: true, truncated: false, items: [{ id: A, project: null, opened_by: V("alice"), from: 1, to: 2, stage: "s", instant: iso(now), ids: [] }] });
+  F.escalation.escalationsDue = () => escalationsAnswer({ id: A, project: null, opened_by: V("alice"), from: 1, to: 2, stage: "s", instant: iso(now), ids: [] });
   F.actionHolds.holdsDue = () => ({ ok: true, truncated: false, cursor: null, items: [{ action: A, ord: 0, note: "n", marked_by: V("alice"), marked_at: iso(now), project: null, arrived: { action: A, ord: 0 } }] });
   F.actionHolds.holdsReleased = () => ({ ok: true, truncated: false, cursor: null, items: [{ action: A, ord: 0, seq: 2, released_by: V("ada"), released_at: iso(now), reason: "r", placers: [V("alice")], restarted: [] }] });
   F.following.watchQuestions = () => ({ ok: true, cursor: null, questions: [{ link: 1, plan: "PLN-1", watch: { kind: "follow", id: "F" }, due_at: iso(now), cause: "closed", relied_on: false, offered: ["keep", "stop"], recipients: [V("alice")] }] });

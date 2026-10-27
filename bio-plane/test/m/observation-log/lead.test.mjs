@@ -8,6 +8,7 @@ import { storage } from "./fixture.mjs";
 import { migrateObservationLog } from "../../../src/observation-log/schema.mjs";
 import { CAPTURE_TEXT_UNIT_CAP } from "../../../src/extraction/index.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => r && (r.code || r.reason);
 const check = (r) => r && r.check;
@@ -225,7 +226,7 @@ test("R18 R21 leadRead: C-54.5; the looks in seq order bounded (200 by default, 
   assert.deepEqual([r.state, r.looks, r.limit, r.truncated, r.shared_to, r.shared_to_truncated, r.evidence], ["NEVER_LOOKED", [], 200, false, [], false, false]);
   assert.deepEqual(r.vocabulary, LEAD_VOCABULARY);
   assert.deepEqual(Object.keys(r.vocabulary.states).sort(), ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "NEVER_LOOKED", "PRESENT", "partial"]);
-  assert.equal(r.vocabulary.states.partial, "we looked and got part of it", "a member's words, the maintainers' note cut");
+  assert.equal(r.vocabulary.states.partial, word("observation-log.partial.looked_got_part"), "a member's words, the maintainers' note cut");
   assert.deepEqual([...r.vocabulary.outcomes], ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"]);
   for (const s of Object.values(OBSERVATION_STATE_WORDS)) assert.doesNotMatch(s, /\(/);
   // a capture look whose document later becomes hidden

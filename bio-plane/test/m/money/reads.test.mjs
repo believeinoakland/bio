@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, ANN, BOB, OUTSIDER } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R7 a withdrawal states why; it is kept with who, when and why, a repeat answers already, and nothing is deleted", () => {
   const s = seeded();
@@ -54,7 +55,7 @@ test("R9 moneyOf answers the facts naming the entity as party (entity or fund) o
   assert.deepEqual(s.m.moneyOf({ entity: s.harbour, viewer: ANN }).facts.map((f) => f.fact_id), [viaFund]);
   assert.deepEqual(s.m.moneyOf({ entity: s.contract, viewer: ANN }).facts.map((f) => f.fact_id), [concerning]);
   const r = s.m.moneyOf({ entity: s.vendor, viewer: ANN });
-  assert.equal(r.says, "facts, never a total");
+  assert.equal(r.says, word("money.says.facts_total"));
   assert.equal(["total", "sum"].some((k) => k in r), false);
   assert.equal(s.m.moneyOf({ viewer: ANN }).reason, "NO_ENTITY");
   // any id a fact's concerns may name (K1563): an event, a line

@@ -17,6 +17,7 @@ import { readHooksOf } from "../../../src/reading-pipeline/hooks.mjs";
 import { layerChainFor } from "../../../src/reading-pipeline/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
+import { promotionOver } from "../promotion/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -44,9 +45,6 @@ export function storage() {
       catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
     },
   };
-}
-function promotionStub() {
-  return { registerStep() { return { ok: true }; }, registerFact() { return { ok: true }; }, onCommitted() { return { ok: true }; } };
 }
 
 export const MACHINE = "class:daemon";
@@ -95,7 +93,7 @@ export function world({ view = testView(), now = null, profiles = true } = {}) {
   if (profiles) record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const promotion = promotionStub();
+  const promotion = promotionOver({ record, membership, host });
   const x = new Extraction(st, { record, membership, promotion });
   x.migrate();
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });

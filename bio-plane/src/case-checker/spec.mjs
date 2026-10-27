@@ -25,7 +25,7 @@ Every part carries the same manifest, byte for byte, as the entry \`manifest.jso
 The manifest is a JSON object with exactly these fields:
 
 - \`format\`: \`bio-case-file/1\`.
-- \`group\`: the slug of the group that published the case.
+- \`group\`: the slug of the team that published the case.
 - \`case\`, \`edition\`: the case's id and its edition (a whole number from 1).
 - \`case_document_sha\`: the SHA-256 (64 lowercase hex) of the case document's bytes.
 - \`keys\`: the signing keys, at least one, each \`{key, fingerprint}\`. \`key\` is an OpenSSH \`ssh-ed25519\` public key on one line; \`fingerprint\` is its OpenSSH fingerprint, \`SHA256:\` followed by the unpadded base64 of the SHA-256 of the key's wire bytes.
@@ -41,7 +41,7 @@ Each kind is carried at one path, so a file's path says which finding or materia
 - \`complete_edition\` at \`complete-edition.html\`: the complete edition (section 6). Exactly one.
 - \`finding\` at \`findings/<finding>/finding.md\`: one finding's published bytes.
 - \`finding_signature\` at \`findings/<finding>/finding.md.sig\`: a member finding's signature.
-- \`grading_facts\` at \`findings/<finding>/grading-facts.json\`: one finding's grading facts as recorded at the act, JSON \`{legs}\`. Each leg is \`{target, kind, role, grade, grade_axis, grade_source, ground, target_edition?, answer?, origins?, origins_complete?, captures?, author_key?, undetermined?}\`: \`kind\` is \`document\`, \`observation\`, \`inquiry\` (another finding), \`imported\` (another group's finding), or a leg counted on the capture axis only (\`calculation\`, whose \`target\` names a \`calculations:\` row by its \`calc\`, a held \`standard\`, or an \`occurrence\`); \`undetermined\`, on such a leg, the reason its capture grade is undetermined, or null (a row written before the field reads it null); \`grade_axis\` one of \`capture\`, \`connection\`, \`testimony\`; \`answer\`, for an \`inquiry\` leg, the pair the finding it rests on answered, per axis \`{state, grade}\`; \`captures\` the SHA-256 of each capture a document leg rests on.
+- \`grading_facts\` at \`findings/<finding>/grading-facts.json\`: one finding's grading facts as recorded at the act, JSON \`{legs}\`. Each leg is \`{target, kind, role, grade, grade_axis, grade_source, ground, target_edition?, answer?, origins?, origins_complete?, captures?, author_key?, undetermined?}\`: \`kind\` is \`document\`, \`observation\`, \`inquiry\` (another finding), \`imported\` (another team's finding), or a leg counted on the capture axis only (\`calculation\`, whose \`target\` names a \`calculations:\` row by its \`calc\`, a held \`standard\`, or an \`occurrence\`); \`undetermined\`, on such a leg, the reason its capture grade is undetermined, or null (a row written before the field reads it null); \`grade_axis\` one of \`capture\`, \`connection\`, \`testimony\`; \`answer\`, for an \`inquiry\` leg, the pair the finding it rests on answered, per axis \`{state, grade}\`; \`captures\` the SHA-256 of each capture a document leg rests on.
 - \`passages\` at \`findings/<finding>/passages.json\`: one finding's relied-on passages, a JSON list of \`{content_id, capture_sha, extent, chain, quoted}\`: \`extent\` in the extent grammar's canonical form (section 7), \`chain\` the text chain the passage was read through, or null.
 - \`document\` at \`materials/<ref>/document\`: a captured document's bytes, whole.
 - \`extracted_text\` at \`materials/<ref>/extracted.txt\`: a document's extracted text, the canonical JSON of its reading's units in order, each \`{extent, ref, text}\`. Its SHA-256 is the material's \`text_sha\`.
@@ -53,20 +53,20 @@ Each kind is carried at one path, so a file's path says which finding or materia
 
 ## 4. The case document
 
-The case document is text: a front matter between two lines \`---\`, in the record's restricted grammar (top-level keys; a key whose value is a block holds a map or a list of flat maps; scalars are \`null\`, \`true\`, \`false\`, integers, decimals, double- or single-quoted strings, or bare words), then a Markdown body. Its format is \`bio-case-document/7\`, or \`bio-case-document/6\`, which is identical in fields (\`/5\` to \`/1\` are older). The two differ only in the product name the complete edition renders (section 6). A checker reads these fields:
+The case document is text: a front matter between two lines \`---\`, in the record's restricted grammar (top-level keys; a key whose value is a block holds a map or a list of flat maps; scalars are \`null\`, \`true\`, \`false\`, integers, decimals, double- or single-quoted strings, or bare words), then a Markdown body. Its format is \`bio-case-document/9\`, \`bio-case-document/8\`, \`bio-case-document/7\` or \`bio-case-document/6\`, which are identical in fields except the optional attestation \`sha\` that \`/9\` declares (\`/5\` to \`/1\` are older). They differ otherwise only in the words the complete edition renders (section 6). A document is \`/9\` when any of its attestation rows carries a \`sha\`; a document without one keeps \`/8\`. A checker reads these fields:
 
 - \`case_id\`, \`case_edition\`, \`case_findings\` (the members), \`case_roles\` (per member \`{target, role, version_sha, edition}\`, \`role\` \`load_bearing\` or \`supporting\`, \`version_sha\` the SHA-256 of the member's published bytes).
 - \`case_strength\`: each member's frozen pair, one row per member and axis \`{target, axis, state, grade, …}\`. A case has no strength of its own.
 - \`required_strength\`: the bar, \`{declared, capture, connection, …}\`; an axis with a grade is declared.
 - \`method:\` \`{grading, checks}\`: the grading method's version and the catalogue version the document was checked under.
 - \`materials:\` one row per document or observation any member's chain reaches, \`{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}\`. \`included\` is true when the material travels whole. Material whose source's identity is withheld is listed like any other.
-- \`material_attestations:\` one row per attestation, \`{ref, by_kind, by, level, at, signature, recorded_in}\`. \`by_kind\` is \`member\` (a capturing member's signed account, or an observation's author; at \`group\` or \`project\` level it carries no handle, key or signature), \`co_attestation\` (a trusted timestamp or a co-archive), \`project\` (the project's record holds the material) or \`group\` (\`signature\` is the literal \`case\`: the case document's signature covers it).
+- \`material_attestations:\` one row per attestation, \`{ref, by_kind, by, level, at, signature, recorded_in}\`, and, in a \`bio-case-document/9\` document, an optional \`sha\`: the SHA-256 of the one capture of \`ref\` the row attests. A source captured more than once has one material row for each capture, all with the same \`ref\`; a row with a \`sha\` belongs to the material whose \`ref\` and \`sha\` it names, and a row without one (every earlier document) belongs to the materials of its \`ref\`. \`by_kind\` is \`member\` (a capturing member's signed account, or an observation's author; at \`group\` or \`project\` level it carries no handle, key or signature), \`co_attestation\` (a trusted timestamp or a co-archive), \`project\` (the project's record holds the material) or \`group\` (\`signature\` is the literal \`case\`: the case document's signature covers it).
 - \`capture_accounts:\` each signed account \`{capture, by, at, text_b64, signature_b64}\`: the account's text and its signature, each base64.
 - \`observation_attributions:\` per observation (or attested capture, by its SHA-256 as \`capture\`) the attribution \`level\` in force, which the grading method reads.
 - \`grading_facts:\` one row per leg of each finding a member's chain reaches, \`{finding, ord}\` and the leg's fields (section 3), and \`passages:\` one row per relied-on passage, \`{finding, ord, content_id, capture_sha, extent, chain, quoted}\`. Each value that is not null, a number or a boolean is its canonical JSON in one single-quoted value. These blocks are what a grade is recomputed from and where a passage is said to be: the manifest is not signed, so a finding's \`grading_facts\` and \`passages\` files must say the same, row for row in \`ord\` order.
 - \`calculations:\` one row per calculation any member's chain reaches, \`{calc, recipe, inputs, method_version, results, result_key, recompute, disclosed}\`: \`recipe\` the recipe in the closed grammar \`bio-calc/1\` (its canonical JSON in one single-quoted value); \`inputs\` each input's name and SHA-256; \`method_version\` the engine's version; \`results\` the stored results by key; \`result_key\` the SHA-256 of the canonical JSON of \`{recipe, inputs, method_version}\`; \`recompute\` the status recorded at the act (\`agrees\`, \`differs\` or \`unbound\`; a workbook row, whose \`calc\` is its capture's SHA-256, with no recipe, no inputs and a null \`result_key\`, may state \`not_recomputed\`); \`disclosed\` the publisher's disclosure of a differing or unbound calculation, or null. A grading leg of kind \`calculation\` names its row by \`calc\`.
-- \`timeline:\` the published timeline, one row per item, \`{lane, ord, when, label, ref, source}\`: \`lane\` \`they_did\` (the world's events concerning the case's findings) or \`we_did\` (the group's own acts), every \`they_did\` row first, the two lanes never mixed; \`ord\` its place in its lane; \`when\` the item's when as held; \`source\` what it rests on (an item without one is not an item). The complete edition prints it.
-- \`accepted_work:\` one row per member and leg resting on another group's finding, \`{member, leg_of, ref, group, case, edition, finding, manifest_sha, pair, result, gaps, accepted_by, accepted_at, reason}\`.
+- \`timeline:\` the published timeline, one row per item, \`{lane, ord, when, label, ref, source}\`: \`lane\` \`they_did\` (the world's events concerning the case's findings) or \`we_did\` (the team's own acts), every \`they_did\` row first, the two lanes never mixed; \`ord\` its place in its lane; \`when\` the item's when as held; \`source\` what it rests on (an item without one is not an item). The complete edition prints it.
+- \`accepted_work:\` one row per member and leg resting on another team's finding, \`{member, leg_of, ref, team, case, edition, finding, manifest_sha, pair, result, gaps, accepted_by, accepted_at, reason}\`.
 
 ## 5. Signatures
 
@@ -76,11 +76,11 @@ Every signature is an armored SSH signature (SSHSIG) by an \`ssh-ed25519\` key, 
 - a member finding: \`bio-ratify <finding id> <version_sha>\` and a newline;
 - a member's account of a capture: \`bio-capture-account <capture sha>\`, a newline, then the account's text.
 
-The key a signature embeds must be among the manifest's \`keys\`. A checker given the group's published keys also says whether each signing key is among them; a checker given none says the keys were not checked against that list.
+The key a signature embeds must be among the manifest's \`keys\`. A checker given the team's published keys also says whether each signing key is among them; a checker given none says the keys were not checked against that list.
 
 ## 6. The complete edition
 
-The complete edition is one HTML file rendered from the case file's other files, with every style inline, no script and no external reference. The same case file always renders the same bytes, so a checker renders it and compares. The product's name in its words (the credit at its foot, the line saying the case can be checked without the product, and the grading method's text) follows the case document's format: a \`bio-case-document/6\` document, or an earlier one, renders \`CivicOS\`, and a \`bio-case-document/7\` document renders \`Civicsmith\`. So a case file published before \`/7\` still renders its own carried edition byte for byte.
+The complete edition is one HTML file rendered from the case file's other files, with every style inline, no script and no external reference. The same case file always renders the same bytes, so a checker renders it and compares. The product's name in its words (the credit at its foot, the line saying the case can be checked without the product, and the grading method's text) follows the case document's format: a \`bio-case-document/6\` document, or an earlier one, renders \`CivicOS\`, and a \`bio-case-document/7\` document renders \`Civicsmith\`. A \`bio-case-document/8\` document renders \`Civicsmith\` too, and says \`team\` where the earlier formats say \`group\` in the sentences of the edition that name the body publishing the case; identifiers (a manifest's \`group\` slug, a row's \`group\` value) stay as they are. A checker renders each document in its own format's words. So a case file published before \`/7\` still renders its own carried edition byte for byte.
 
 ## 7. Canonical JSON, and the canonical extent
 
@@ -106,7 +106,7 @@ Two extents of one document overlap when they are the same place, or one lies in
 A checker answers, for each finding (a member, or a finding a member's chain reaches through its \`inquiry\` legs), one result: \`recreated\` (nothing missing, nothing differs), \`recreated_in_part\` (something is missing and nothing differs) or \`did_not_recreate\` (something differs). A check of the whole case that finds something missing or differing counts for every finding. Each entry names what is missing or what differs in words a reader can act on, such as a document to fetch with its fingerprint and origin.
 
 1. Integrity. The manifest follows section 2. Every file's SHA-256 and length match its row; every part's files recompute its \`sha256\`. Since only the case document is signed, each material's carried bytes must also match the signed \`materials:\` row (\`sha\` for a document or an observation, \`text_sha\` for extracted text), a member's published bytes its \`version_sha\`, and each finding's grading facts and passages files the signed blocks. An absent file is missing for each finding that needs it; one that does not match differs.
-2. Signatures. Each signature is verified as section 5 says; one that fails differs, for the case and every finding it covers. Each \`material_attestations:\` row is checked by its kind: a \`member\` row with a signature is verified over its account; a \`group\` row is the case document's signature; a \`project\` or \`co_attestation\` row must name a material the manifest lists. A failed row differs for each finding whose chain reaches that material.
+2. Signatures. Each signature is verified as section 5 says; one that fails differs, for the case and every finding it covers. Each \`material_attestations:\` row is checked by its kind: a \`member\` row with a signature is verified over its account; a \`group\` row is the case document's signature; a \`project\` or \`co_attestation\` row must name a material the manifest lists. A failed row differs for each finding whose chain reaches that material; a failed row with a \`sha\` differs only for the finding whose chain reaches that capture, and its entry names the \`sha\`.
 3. Passages. Each passage's quoted text occurs (whitespace compared as single spaces) in its document's extracted text at its extent (the text of every unit whose extent overlaps the passage's, in order, joined by newlines; for an observation, its text), and its \`content_id\` is the SHA-256 (of the UTF-8 bytes) of the canonical JSON of \`{v: 1, capture_sha, extent, chain}\`, where \`extent\` is a string holding the canonical JSON of the extent in its canonical form, and \`chain\` a string holding the canonical JSON of the chain, or null. Not found differs; extracted text not carried is missing.
 4. Grades. Each finding's pair is recomputed from its grading facts by the grading method the case states (\`method.grading\`), whose text is published with the case's complete edition. A recomputed grade unlike the recorded one differs; a method version the checker does not hold is missing.
 5. The bar. A load-bearing member reaches the recorded bar on every declared axis, or differs naming each axis. A supporting member is not asked; a case with no bar has none to meet.
@@ -114,7 +114,7 @@ A checker answers, for each finding (a member, or a finding a member's chain rea
 7. Presentability. Every material a load-bearing member's chain reaches is listed in \`materials:\` as \`included: true\` and carried whole (its bytes and extracted text, or an observation's text). Not carried is missing; not listed, or listed as not included, differs.
 8. Completion. Bytes supplied later whose SHA-256 is a missing file's fingerprint fill that gap. Bytes whose SHA-256 is a calculation input's stated SHA-256, where the case file lacks that input (absent, or carried with other bytes), fill that input: the calculation is recomputed with them (rule 11), and every finding resting on it takes its new entries. Other bytes are named and never used.
 9. The complete edition. The carried complete edition equals the one rendered from the rest of the case file, or differs.
-10. Another group's work. A leg on another group's finding (\`imported\`) is recreated up to that leg: its grade is the \`accepted_work:\` row's \`pair\`, passages and material are not followed past it, it adds nothing missing, and the answer names that group's case file (group, case, edition, finding and manifest SHA-256) as the place to check it.
+10. Another team's work. A leg on another team's finding (\`imported\`) is recreated up to that leg: its grade is the \`accepted_work:\` row's \`pair\`, passages and material are not followed past it, it adds nothing missing, and the answer names that team's case file (team, case, edition, finding and manifest SHA-256) as the place to check it.
 11. Calculations. Each \`calculations:\` row is recomputed by the \`bio-calc/1\` engine over the inputs the case file carries, each first checked against its SHA-256, at the method version the row states, and answered \`agrees\`, \`differs\` or \`not_recomputed\`. A result or result key that recomputes differently differs, naming the result, the stated and the recomputed value; an input absent or unlike its hash, or a method version the checker does not hold, is missing. A row the document discloses as differing or unbound is answered with that disclosure, and is not counted as differing for being so. A workbook, or a value from another engine, is answered \`not_recomputed\`, recomputed by the publishing copy's engine, never as agreeing. A finding whose chain rests on a calculation takes its entries.
 `;
 
@@ -240,7 +240,60 @@ const V3 = edit(V2, [
    + "is a finding's, so offline only the first can depart).\n"],
 ]);
 
+/* R14 (fix round 6, G50; K4688): version 4 is version 3 with the path of a material's files when one `ref` is on several rows
+   of the `materials:` block (`case-grammar` R13): `materials/<ref>/<sha>/<leaf>`, the row's capture a segment of the path, and
+   the five departures that keep the spelling and the format together. No kind and no field is added. A case file with no such
+   path stays `bio-case-file/3`. Built as version 3 is, by named changes; the specification's test reads every addition. */
+const V4 = edit(V3, [
+  ["# The case file, format bio-case-file/3\n\nThis document specifies version 3 of the case file:",
+   "# The case file, format bio-case-file/4\n\nThis document specifies version 4 of the case file:"],
+  [/\nVersion 2 added three kinds of file to version 1 [^\n]*\n/,
+   "\nVersion 2 added three kinds of file to version 1 (`archive`, `container` and `criteria`, section 3) and one check (rule 12, "
+   + "section 8). Version 3 added one kind of file to version 2 (`obscured`, section 3), the `obscured` fields of a `materials:` "
+   + "row (section 4) and their checks (rules 1 and 7), and the criteria rows' `captures` (section 3, rule 12). Version 4 adds "
+   + "no kind and no field: it spells the path of a material's files differently when one `ref` is on several rows of the "
+   + "`materials:` block, a source captured more than once (section 3), and adds the departures that keep that spelling and the "
+   + "format together (rule 1). A case file is `bio-case-file/4` when at least one of its paths states a capture, and keeps "
+   + "`bio-case-file/3` otherwise. A `bio-case-file/3`, `/2` or `/1` case file is read as written, by its own specification, each "
+   + "held beside this one, and never by this one's spelling of a path: a `/3` manifest with a path that states a capture departs "
+   + "from its format, and a checker meeting a format it does not hold departs at `format`.\n"],
+  ["- `format`: `bio-case-file/3`.", "- `format`: `bio-case-file/4`."],
+  ["`<finding>` is a finding's id, `<ref>` a material's `ref` and `<calc>` a calculation's `calc` (section 4).\n",
+   "`<finding>` is a finding's id, `<ref>` a material's `ref` and `<calc>` a calculation's `calc` (section 4).\n\n"
+   + "**One `ref` on several rows.** A source captured more than once is several rows of the `materials:` block with one `ref` "
+   + "(section 4), counted over all its rows, carried or not. For such a `ref`, each file of the kinds `document`, "
+   + "`extracted_text`, `observation` and `obscured` takes its row's capture as a segment of its path: "
+   + "`materials/<ref>/<sha>/<leaf>`, where `<sha>` is the row's `sha`, in lower case, 64 hex (for a row carried as its copy, the "
+   + "original's), and `<leaf>` is that kind's leaf in the paths above (`document`, `extracted.txt`, `observation.md`, `obscured`). "
+   + "A `ref` on one row keeps its path as above, and so does every case file whose `ref`s are each on one row. The `archive` and "
+   + "`container` kinds are already named by a digest and keep their paths (`materials/<ref>/archives/<sha256>`, "
+   + "`materials/<ref>/containers/<sha256>.json`); a path of four segments is read as such a file when its third segment is "
+   + "`archives` or `containers`, and as a file of a capture when its third segment is 64 lower-case hex and its fourth is a "
+   + "material leaf. An `attestation` keeps its path. A checker decides the spelling from the manifest's format, never from the "
+   + "rows alone: the spelling is `bio-case-file/4`'s alone.\n"],
+  ["under that row's `ref`, at most one per `ref`. An `obscured` file no row names,",
+   "under that row's `ref`, at `materials/<ref>/obscured` for a `ref` on one row and, for a `ref` on several rows, one for each "
+   + "row at `materials/<ref>/<sha>/obscured`. An `obscured` file no row names,"],
+  ["under its `ref` at the original's fingerprints (the original never travels) each depart (rule 1).",
+   "under its `ref` at the original's fingerprints (the original never travels) each depart (rule 1); for a `ref` on several "
+   + "rows the departure is judged for the row whose capture the path states, and for `archive` and `container` only when every "
+   + "row of that `ref` is a copy."],
+  ["Every file's SHA-256 and length match its row; every part's files recompute its `sha256`.",
+   "Every file's SHA-256 and length match its row; every part's files recompute its `sha256`. A `bio-case-file/4` manifest "
+   + "departs when: a path states a capture and the manifest's format is not `/4` (`path_format`); its format is `/4` and no path "
+   + "states a capture (`format_unused`); given the case document's rows, a plain path of a material's file stands under a `ref` on "
+   + "several rows (`capture_missing`), a path stating a capture stands under a `ref` on one row (`capture_needless`), or a path "
+   + "states a capture that no row of that `ref` names, `sha` compared in lower case (`capture_unnamed`). No path repeats in any "
+   + "format (`path_twice`)."],
+  ["is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref`, whose bytes rule 1 checks;",
+   "is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref` (for a `ref` on several rows, under "
+   + "the row's capture), whose bytes rule 1 checks;"],
+  ["Not carried is missing; not listed, or listed as not included, differs. A row stating",
+   "Not carried is missing; not listed, or listed as not included, differs. For a `ref` on several rows, each row is asked for "
+   + "the files of its own capture, and a passage in a capture is found in that capture's text. A row stating"],
+]);
+
 /** R14: every specification held, by the format it specifies. */
-export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1, "bio-case-file/2": V2, "bio-case-file/3": V3 });
+export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1, "bio-case-file/2": V2, "bio-case-file/3": V3, "bio-case-file/4": V4 });
 /** R15: the versions held, oldest first. */
 export const CASE_FILE_SPEC_VERSIONS = Object.freeze(Object.keys(CASE_FILE_SPECS));

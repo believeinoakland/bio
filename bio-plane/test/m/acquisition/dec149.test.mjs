@@ -36,20 +36,20 @@ test("R29 (DEC-149): no row this module holds speaks of \"this instance\" or \"t
 
 test("R29 (DEC-149, index.mjs:569): acquire without evidence storage says \"your group's Civicsmith has no evidence storage configured\", never \"this instance has no evidence storage configured\"", async () => {
   const r = await run(world({ evidence: false }), {}, { locator: "https://a.example/x" });
-  assert.equal(r.body.error, "your group's Civicsmith has no evidence storage configured");
+  assert.equal(r.body.error, word("capture.response.group_civicsmith_evidence"));
   assert.doesNotMatch(JSON.stringify(r.body), OLD);
 });
 
 test("R1 (DEC-149, index.mjs:577): the capture-request arm's refusal says \"your group's Civicsmith fetches a requested document only from inside its own drain\"", async () => {
   const r = await run(world(), {}, { via: "capture-request", locator: "https://a.example/x" });
-  assert.match(r.body.detail, /^your group's Civicsmith fetches a requested document only from inside its own drain/);
+  assert.match(r.body.detail, /^your team's Civicsmith fetches a requested document only from inside its own drain/);
   assert.doesNotMatch(r.body.detail, /this instance fetches a requested document/);
 });
 
 test("R4 (DEC-149, index.mjs:658): a supplied hop fact's refusal says the facts are \"DERIVED by your group's Civicsmith\"", async () => {
   const r = await run(world(), {}, { locator: "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit", export_address: "https://x.example/" });
   assert.equal(r.body.reason, "DRIVE_HOP_FACT_SUPPLIED");
-  assert.match(r.body.detail, /the producer are DERIVED by your group's Civicsmith from the file id/);
+  assert.match(r.body.detail, /the producer are DERIVED by your team's Civicsmith from the file id/);
   assert.doesNotMatch(r.body.detail, /DERIVED by this instance/);
 });
 
@@ -59,7 +59,7 @@ test("R5 (DEC-149, index.mjs:752): a render over the concurrency cap says \"rend
   for (let i = 0; i < 10; i++) w.store.renderAdmit({ allowanceMs: 1e12, reserveMs: 1000, cap: 10 });
   const r = await run(w, {}, { locator: "https://a.example/x", render: true });
   assert.equal(r.body.reason, "RENDER_AT_CAPACITY");
-  assert.match(r.body.detail, /^\d+ renders are running in your group's Civicsmith, which runs at most \d+ at once; /);
+  assert.match(r.body.detail, /^\d+ renders are running in your team's Civicsmith, which runs at most \d+ at once; /);
   assert.doesNotMatch(r.body.detail, /running on this instance/);
 });
 
@@ -67,13 +67,13 @@ test("R4 (DEC-149, index.mjs:878): an unreachable Drive export says the export a
   const exp = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/export?format=odt";
   const r = await run(world(), { [exp]: new Response("no", { status: 404 }) }, { locator: "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit" });
   assert.equal(r.body.reason, "DRIVE_EXPORT_UNREACHABLE");
-  assert.match(r.body.detail, /, which your group's Civicsmith composed from the document id in /);
+  assert.match(r.body.detail, /, which your team's Civicsmith composed from the document id in /);
   assert.doesNotMatch(r.body.detail, /which this instance composed/);
 });
 
 test("R36 (DEC-149, keyed.mjs:65): an unknown keyed service's refusal says \"the keyed services your group's Civicsmith speaks to are\"", async () => {
   const r = await keyedFetch({}, { service: "nowhere" });
   assert.equal(r.reason, "UNKNOWN_KEYED_SERVICE");
-  assert.match(r.detail, /^the keyed services your group's Civicsmith speaks to are courtlistener; nothing was fetched$/);
+  assert.match(r.detail, /^the keyed services your team's Civicsmith speaks to are courtlistener; nothing was fetched$/);
   assert.doesNotMatch(r.detail, /this copy/);
 });

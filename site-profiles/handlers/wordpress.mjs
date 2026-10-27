@@ -19,25 +19,28 @@
  */
 import { CONFIDENCE } from "../recogniser.mjs";
 import { REGION } from "../region.mjs";
+import { factsOf, hasSingleClass } from "../scan.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export default {
   key: "wordpress",
-  label: "a page published with WordPress",
+  label: localize("site-profiles.wordpress.a_page_published_with_wordpress", "a page published with WordPress"),
   version: 1,
   textual: true,
 
   detect(ctx) {
-    const text = ctx.text || "";
+    const f = factsOf(ctx);
     const signals = [];
     /* wp-content and wp-includes are the theme and core asset paths and appear on
        essentially every WordPress page. Two of them together is conclusive; one
-       could in principle be a copied asset path on some other site. */
-    if (/\/wp-content\//i.test(text)) signals.push("wp-content asset paths");
-    if (/\/wp-includes\//i.test(text)) signals.push("wp-includes asset paths");
-    if (/\/wp-json\//i.test(text)) signals.push("wp-json API link");
-    const gen = /<meta[^>]+name="generator"[^>]+content="([^"]*WordPress[^"]*)"/i.exec(text);
-    if (gen) signals.push("generator: " + gen[1]);
-    if (/\bid="wp-block-|\bclass="[^"]*wp-block-/i.test(text)) signals.push("block editor markup");
+       could in principle be a copied asset path on some other site. Linear in the
+       text (R20): the tags and the markers are read once, by `scan.mjs`. */
+    if (f.marks.has("wp_content")) signals.push("wp-content asset paths");
+    if (f.marks.has("wp_includes")) signals.push("wp-includes asset paths");
+    if (f.marks.has("wp_json")) signals.push("wp-json API link");
+    const gen = f.generator;
+    if (gen) signals.push("generator: " + gen);
+    if (f.marks.has("wp_block")) signals.push("block editor markup");
 
     if (gen || signals.length >= 2) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     if (signals.length) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
@@ -57,15 +60,14 @@ export default {
      listing is recognisable from its address with no ambiguity, so the address is
      asked first and the markup only gets a say when the address is silent. */
   kind(ctx) {
-    const text = ctx.text || "";
     const p = String(ctx.locator || "");
     if (/^https?:\/\/[^/]+\/?(?:\?|#|$)/.test(p)) return "index";
     if (/\/(?:category|tag|author|page|section|topics?)\//i.test(p)) return "index";
     if (/\/(?:feed|search)\/?$/i.test(p) || /[?&]s=/.test(p)) return "index";
     if (/\/\d{4}\/\d{2}\//.test(p)) return "article";
-    if (/<meta[^>]+property="og:type"[^>]+content="article"/i.test(text)
-        && !/<meta[^>]+property="og:type"[^>]+content="website"/i.test(text)) return "article";
-    if (/\bclass="[^"]*\bsingle(?:-post)?\b/i.test(text)) return "article";
+    const f = factsOf(ctx);
+    if (f.ogArticle && !f.ogWebsite) return "article";
+    if (hasSingleClass(ctx)) return "article";
     return "page";
   },
 
@@ -83,9 +85,9 @@ export default {
          is captured and hashed on its own, so the stamp is addressing rather than
          content. Kept narrow deliberately: only ?ver= and only on an asset-looking
          path, because a bare ?v= elsewhere is content often enough to matter. */
-      { key: "wp_asset_version", region: REGION.MECHANICAL, label: "a version stamp on a design file",
+      { key: "wp_asset_version", region: REGION.MECHANICAL, label: localize("site-profiles.wordpress.a_version_stamp_on_a_design", "a version stamp on a design file"),
         patterns: [/((?:\/wp-content\/|\/wp-includes\/)[^"'\s>]*[?&]ver=)([^"'&\s>]+)()/gi] },
-      { key: "wp_ads", region: REGION.MECHANICAL, label: "an advertising or analytics slot",
+      { key: "wp_ads", region: REGION.MECHANICAL, label: localize("site-profiles.wordpress.an_advertising_or_analytics", "an advertising or analytics slot"),
         patterns: [
           /(\bdata-google-query-id=")([^"]*)(")/gi,
           /(\bid="div-gpt-ad-)([0-9]{6,}[^"]*)(")/gi,

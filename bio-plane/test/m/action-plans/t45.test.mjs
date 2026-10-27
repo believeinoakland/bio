@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, FIRST } from "./fixture.mjs";
 import { noSuchPlan, actionPlansOps, ACTION_PLAN_CHECKS, machineCannotPlan } from "../../../src/action-plans/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const at = (w, iso) => { w.clock.now = iso; };
@@ -210,7 +211,7 @@ test("R41: a matter that may be an infraction has two standing offers, documenta
   const doc = adopt({ offer: { subject: w.S1, kind: "document_infraction" } });
   assert.equal(doc.ok, true, JSON.stringify(doc));
   assert.deepEqual(doc.offer, { subject: w.S1, kind: "document_infraction" });
-  assert.deepEqual(doc.fields.subjects, [w.S1]); assert.equal(doc.fields.summary, "Document the infraction");
+  assert.deepEqual(doc.fields.subjects, [w.S1]); assert.equal(doc.fields.summary, word("action-plans.summary.document_infraction"));
   const fix = adopt({ offer: { subject: `outcome:${w.D}#STD-2026-0001-a`, kind: "chance_to_fix" }, summary: "Ask the clerk to fix it", addressee: OFFICE });
   assert.equal(fix.ok, true, JSON.stringify(fix)); assert.equal(fix.fields.summary, "Ask the clerk to fix it");
   const offers = () => read(w).offers.find((o) => o.key === `outcome:${w.D}#STD-2026-0001-a`).offers;

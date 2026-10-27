@@ -47,7 +47,7 @@ test("R31 an edition not written is never supplied; overlapping readings of diff
     [["AI 4.12 §3", ["harbor/ai", "tidewater/ai"]]]);
   assert.match(amb.undetermined.why, /never one chosen/);
   /* overlapping with a different number is ambiguous too */
-  const wide = { ...SERIES[0], series: { key: "ai", label: "Administrative Instruction" }, key: "harbor", cite: { re: "\\bAI\\s+(?<number>\\d{1,2})" } };
+  const wide = { ...SERIES[0], series: { key: "ai", label: "Harbor directive" }, key: "harbor", cite: { re: "\\bAI\\s+(?<number>\\d{1,2})" } };
   const differ = recogniseSeries({ ...H, standard_sources: [SERIES[0], { ...wide, key: "harbor2" }] }, "AI 4.12");
   assert.deepEqual(differ.undetermined.ambiguous[0].readings.map((x) => x.number), ["4.12", "4"]);
   /* two entries reading the same family and number are one citation */

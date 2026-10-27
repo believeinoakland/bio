@@ -221,3 +221,23 @@ test("R54 (T46) disclosureOf answers shown: false for a member with no disclosur
   assert.equal((await call(w.m, "disclosureof?member=ruth")).result.shown, true);
   assert.equal((await call(w.m, "disclosureof?member=ada")).result.shown, false);
 });
+
+/* C92, C93 (fix round 2): the assistant's runner is read from agent-worker's `runner`, which agent-worker states as whether
+   the remote class answered its version. A not-ready runner that answers it is a present part (part_signin true, the member
+   SERVING through its binding); one that answers it 503 (the old stub) read false and UNBOUND although agent-worker served. */
+test("R17 R81 R82 C92 C93 a runner that answers its version while not ready reads part_signin true and agent-runner SERVING through agent-worker's binding alone; the runner refusing its version reads false and UNBOUND (control: no agent-worker binding is UNBOUND)", async () => {
+  /* agent-worker's /version states `runner` from the remote class's answer to its version request (agent-worker R110) */
+  const asking = (remoteStatus) => ({
+    async fetch() {
+      return Response.json({ ok: true, name: "agent-worker", version: "aw-9", runner: remoteStatus === 200 });
+    },
+  });
+  const notReady = asking(200), refused = asking(503);
+  assert.deepEqual(await partsOf({ AGENT_WORKER: notReady }), P(true, false), "present and not ready: the part is there");
+  assert.deepEqual((await memberVersions({ AGENT_WORKER: notReady }))["agent-runner"],
+    { binding: "AGENT_WORKER", via: "agent-worker", state: "SERVING", version: "aw-9" }, "bound by its binding, not UNBOUND");
+  assert.deepEqual(await partsOf({ AGENT_WORKER: refused }), P(false, false));
+  assert.equal((await memberVersions({ AGENT_WORKER: refused }))["agent-runner"].state, "UNBOUND");
+  assert.deepEqual(await partsOf({}), P(false, false), "a missing runner reads false");
+  assert.equal((await memberVersions({}))["agent-runner"].state, "UNBOUND");
+});

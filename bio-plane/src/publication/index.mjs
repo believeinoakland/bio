@@ -113,10 +113,11 @@ import { parseFrontmatter, createSha256, sectionText as caseSectionText,
          BUNDLE_ID_RE } from "../record-grammar/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { rowOf } from "./checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS, migratePublication,
-         registerCaseDocumentSha, caseDocumentPath } from "./schema.mjs";
+         registerCaseDocumentSha, caseDocumentPath, ATTESTATION_SHA_UPSERT } from "./schema.mjs";
 import { corpusExportOf } from "../corpus-export/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
@@ -130,7 +131,8 @@ import { caseDocumentStatesMemberBlocks, caseDocumentBlocks, SECTIONS, REAUTHORA
          caseFilePath, materialsOf } from "../case-grammar/index.mjs";
 
 export { CASE_SOURCES_CHECKS, rowOf as publicationRowOf } from "./checks.mjs";
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+export { WORDS, caseWordsOf, lensClosingSentencesOf } from "../case-grammar/index.mjs";
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
@@ -148,6 +150,41 @@ export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION
 export const EDITION_STAMP_EFFECTS = Object.freeze(["remove", "redact", "seal", "unseal"]);
 /** R37: the ratified editions one `publishedEditionsOf` read answers. */
 export const EDITIONS_OF_MAX = 500;
+/** R21 (G47; K4666): the most a case document's text may be, in UTF-8 bytes. A protective bound, above the 1 MiB a stored
+ *  row value keeps to (K4639) and 0.5 MiB under the platform's 2,098,176 B bound on a bound value; BOB reports it (K1881). */
+export const CASE_DOCUMENT_BYTES_MAX = 1572864;
+const utf8Exact = (t) => new TextEncoder().encode(t).length;
+/** R15 (G54; K4426, K4565, K4566): the case file's ledger on `published_cases`. The states a caller writes (`stopped` is
+ *  the writer's own: it follows the bound below), the steps an attempt names (`why.step`; the log's `step`), and the
+ *  provisional constants the sweep's backoff and bound are made of (set by the job; pinned by `g54-casefile.test.mjs`). */
+export const CASEFILE_STATES = Object.freeze(["building", "failed", "stopped", "built"]);
+export const CASEFILE_STEPS = Object.freeze(["facts", "copy", "materials", "build", "bucket_put", "quartet", "record", "manifest_put"]);
+/** `MATERIAL_MISSING` failures in a row, with the evidence store's absence confirmed, after which an edition is `stopped`. */
+export const CASEFILE_MISSING_MAX_ATTEMPTS = 6;
+/** A never-attempted edition is due this long after `ratified_at`, so a sweep does not race the request still copying. */
+export const CASEFILE_GRACE_MS = 120000;
+/** A `building` is waited on at least this long; a `failed` waits `min(FIRST * 2^(attempts-1), MAX)`. */
+export const CASEFILE_BUILDING_WAIT_MS = 120000;
+export const CASEFILE_BACKOFF_FIRST_MS = 15000;
+export const CASEFILE_BACKOFF_MAX_MS = 3600000;
+/** The editions one `caseFilesOwed` read answers at most, and the bound on a stored `casefile_why`, in UTF-8 bytes, and on
+ *  the error name and message it carries, in characters (the row bound is 2,098,176 B). */
+export const CASEFILES_OWED_MAX = 100;
+export const CASEFILE_WHY_BYTES_MAX = 1024;
+export const CASEFILE_TEXT_MAX = 160;
+const CASEFILE_CODE = /^[A-Z][A-Z0-9_]{0,39}$/;
+/** R15 (G54): a caller's `why`, reduced to its known keys and cut to the bounds; null when it names no code or step. */
+function caseFileWhy(why, bounded = true) {
+  if (!why || typeof why !== "object") return null;
+  if (typeof why.code !== "string" || !CASEFILE_CODE.test(why.code) || !CASEFILE_STEPS.includes(why.step)) return null;
+  const out = { code: why.code, step: why.step };
+  for (const k of ["error", "detail"]) if (typeof why[k] === "string" && why[k]) out[k] = why[k].slice(0, CASEFILE_TEXT_MAX);
+  for (const k of ["bytes", "files", "run"]) if (Number.isInteger(why[k]) && why[k] >= 0) out[k] = why[k];
+  if (bounded) for (const k of ["detail", "error"])
+    if (new TextEncoder().encode(JSON.stringify(out)).length > CASEFILE_WHY_BYTES_MAX) delete out[k];
+  return out;
+}
+const backoffMs = (attempts) => Math.min(CASEFILE_BACKOFF_FIRST_MS * 2 ** (Math.max(1, Number(attempts) || 1) - 1), CASEFILE_BACKOFF_MAX_MS);
 /** R41: the cited parts one `caseCitedParts` read answers. */
 export const CITED_PARTS_MAX = 1000;
 /** R42, R43: the page of `restingCapturesOf` and of `ratifiedCases`, its default and its ceiling. */
@@ -178,9 +215,10 @@ const HEX64 = /^[0-9a-f]{64}$/;
 /* R72: a leg's target that names a held standard (inquiry-grammar R13): a bundle id of the `STD` prefix, slug included. */
 const isStandardId = (v) => BUNDLE_ID_RE.test(v) && v.startsWith("STD-");
 /* R72: what an edition committed before T35 states of its criteria. */
-const CRITERIA_NOT_RECORDED = "the criteria were not recorded: this edition was committed before published cases recorded them";
+const CRITERIA_NOT_RECORDED = word("public-read.criteria_recorded_edition");
 /* R72 (DEC-145 (6)): a standard's access in the members' words. */
-const ACCESS_WORDS = Object.freeze({ free: "Free to read", reading_room: "Reading room only", paywalled: "Behind a paywall" });
+const ACCESS_WORDS = Object.freeze({ free: word("label.standardaccess.free"), reading_room: word("label.standardaccess.reading_room"),
+                                     paywalled: word("label.standardaccess.paywalled") });
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 /* R77 (K2438, K2529): the doors the source of waiting editions gives. */
 const WAITING_DOORS = Object.freeze(["isWaiting", "signedAtOf", "signerOf"]);
@@ -200,17 +238,33 @@ const NO_REVIEW_PROVIDER = Object.freeze({
   draftForMember: () => null, draftIdentity: () => null, caseIdentitySentence: () => null, statedEdition: () => null,
   liveGrant: () => null, grantAdmitsCaseEdition: () => false,
   deadAnswer: () => ({ ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY" }),
-  detail: "no module has registered the review provider, so no grant admits and no draft is read through it",
+  detail: localize("publication.index.no_module_has_registered_the", "no module has registered the review provider, so no grant admits and no draft is read through it"),
 });
+
+/* R78: what a refused counsel-matter commit says, from its parts: the project, the findings made in a counsel matter,
+   or both. The closing sentence is one for all of them. */
+function counselDetail(counsel) {
+  const list = counsel.findings.join(", "), many = counsel.findings.length > 1;
+  const lead = counsel.project
+    ? (counsel.findings.length
+        ? (many ? localize("publication.index.the_project_this_case_belongs_were",
+                           "the project this case belongs to is a counsel matter, and {findings} were made in a counsel matter", { findings: list })
+                : localize("publication.index.the_project_this_case_belongs_was",
+                           "the project this case belongs to is a counsel matter, and {findings} was made in a counsel matter", { findings: list }))
+        : localize("publication.index.the_project_this_case_belongs", "the project this case belongs to is a counsel matter"))
+    : (counsel.findings.length
+        ? (many ? localize("publication.index.findings_were_made_in_a", "{findings} were made in a counsel matter", { findings: list })
+                : localize("publication.index.findings_was_made_in_a", "{findings} was made in a counsel matter", { findings: list }))
+        : "");
+  return `${lead}${localize("publication.index.a_counsel_matter_is_never", ". A counsel matter is never published, so nothing was committed.")}`;
+}
 
 /* THE ONE "NO SUCH CASE DOCUMENT" ANSWER (REC-130). Both the genuinely-absent
    branch and the no-standing branch return THIS, so "does not exist" and "you
    may not see it" are the same bytes by construction rather than by care. */
 function noCaseDocument(id, ed) {
   return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed,
-           detail: `no case document has been authored for ${id} edition ${ed}. A case document `
-                 + `is written by op=publish, which is the act that authors the assertions it `
-                 + `carries — this plane does not compose one.` };
+           detail: localize("publication.index.no_case_document_has_been", "no case document has been authored for {id} edition {ed}. A case document is written by op=publish, which is the act that authors the assertions it carries — this plane does not compose one.", { id: String(id), ed: String(ed) }) };
 }
 
 export class Publication {
@@ -304,10 +358,10 @@ export class Publication {
                  : str(provider && provider.module) || "unnamed";
     if (!provider || typeof provider !== "object" || !REVIEW_DOORS.every((d) => typeof provider[d] === "function"))
       return { ok: false, reason: "PROVIDER_MALFORMED",
-               detail: `the review provider gives the doors ${REVIEW_DOORS.join(", ")}` };
+               detail: localize("publication.index.the_review_provider_gives_the", "the review provider gives the doors {doors}", { doors: REVIEW_DOORS.join(", ") }) };
     if (this.#review)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#review.module,
-               detail: `the review provider is already registered by ${this.#review.module}` };
+               detail: localize("publication.index.the_review_provider_is_already", "the review provider is already registered by {module}", { module: String(this.#review.module) }) };
     this.#review = { module, ...Object.fromEntries(REVIEW_DOORS.map((d) => [d, provider[d]])) };
     return { ok: true, module };
   }
@@ -328,10 +382,10 @@ export class Publication {
     const source = typeof moduleOrSource === "string" ? maybeSource : moduleOrSource;
     const module = typeof moduleOrSource === "string" ? str(moduleOrSource) : str(source && source.module) || "unnamed";
     if (!source || typeof source !== "object" || typeof source.courtOrderOf !== "function")
-      return { ok: false, reason: "PROVIDER_MALFORMED", detail: "the court-order source gives the door courtOrderOf" };
+      return { ok: false, reason: "PROVIDER_MALFORMED", detail: localize("publication.index.the_court_order_source_gives", "the court-order source gives the door courtOrderOf") };
     if (this.#orders)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#orders.module,
-               detail: `the court-order source is already registered by ${this.#orders.module}` };
+               detail: localize("publication.index.the_court_order_source_is", "the court-order source is already registered by {module}", { module: String(this.#orders.module) }) };
     this.#orders = { module, courtOrderOf: source.courtOrderOf };
     return { ok: true, module };
   }
@@ -351,10 +405,10 @@ export class Publication {
     const source = typeof moduleOrSource === "string" ? maybeSource : moduleOrSource;
     const module = typeof moduleOrSource === "string" ? str(moduleOrSource) : str(source && source.module) || "unnamed";
     if (!source || typeof source !== "object" || !WAITING_DOORS.every((d) => typeof source[d] === "function"))
-      return { ok: false, reason: "PROVIDER_MALFORMED", detail: `the waiting editions' source gives the doors ${WAITING_DOORS.join(", ")}` };
+      return { ok: false, reason: "PROVIDER_MALFORMED", detail: localize("publication.index.the_waiting_editions_source_gives", "the waiting editions' source gives the doors {doors}", { doors: WAITING_DOORS.join(", ") }) };
     if (this.#waiting)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#waiting.module,
-               detail: `the waiting editions' source is already registered by ${this.#waiting.module}` };
+               detail: localize("publication.index.the_waiting_editions_source_is", "the waiting editions' source is already registered by {module}", { module: String(this.#waiting.module) }) };
     this.#waiting = { module, ...Object.fromEntries(WAITING_DOORS.map((d) => [d, source[d]])) };
     return { ok: true, module };
   }
@@ -463,7 +517,12 @@ export class Publication {
                       draft = null } = {}) {
     const id = str(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || typeof text !== "string" || !text)
-      return { ok: false, reason: "MALFORMED", detail: "a case document names its case, a positive edition and its text" };
+      return { ok: false, reason: "MALFORMED", detail: localize("publication.index.a_case_document_names_its", "a case document names its case, a positive edition and its text") };
+    /* R21 (G47): a text over the bound is refused before anything is read or written (the prefilter is 3 bytes a UTF-16 unit). */
+    if (text.length * 3 > CASE_DOCUMENT_BYTES_MAX) {
+      const bytes = utf8Exact(text);
+      if (bytes > CASE_DOCUMENT_BYTES_MAX) return { ok: false, reason: "CASE_DOCUMENT_TOO_LARGE", bytes, bound: CASE_DOCUMENT_BYTES_MAX };
+    }
     const docSha = shaOf(text);
     /* R21, R77: a document R77's source answers waiting counts as signed; asked first, in the caller's transaction. */
     const waits = this.#waits(id, ed);
@@ -493,23 +552,30 @@ export class Publication {
     const bodyLines = lines && Array.isArray(lines.body) ? lines.body.map(String) : null;
     if (!id || !Number.isInteger(ed) || ed < 1 || !locate || !fmLines || !bodyLines)
       return { ok: false, reason: "MALFORMED",
-               detail: `a re-author names a case edition, one of the sections ${REAUTHORABLE_SECTIONS.join(", ")}, `
-                     + "and its front matter and body lines" };
+               detail: localize("publication.index.a_reauthor_names_a_case", "a re-author names a case edition, one of the sections {sections}, and its front matter and body lines", { sections: REAUTHORABLE_SECTIONS.join(", ") }) };
     const doc = this.#one(`SELECT case_id, edition, doc_sha, text, sig_armored FROM case_documents
                             WHERE case_id=? AND edition=?`, id, ed);
     const held = { case_id: id, edition: ed, doc_sha: doc ? doc.doc_sha : null };
-    if (!doc) return { ok: true, ...held, reauthored: false, why: "no case document is held for this edition" };
-    if (doc.sig_armored) return { ok: true, ...held, reauthored: false, why: "this case document is signed, and a signed document never changes" };
+    if (!doc) return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_held") };
+    if (doc.sig_armored) return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_signed") };
     /* R21, R77: a document waiting to be published at a set time is signed, and its signature is over these bytes. */
     if (this.#waits(id, ed))
-      return { ok: true, ...held, reauthored: false, why: "this case document is signed and waits to be published at a set time" };
+      return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_signed_waits") };
     if (str(docSha) && doc.doc_sha !== str(docSha))
-      return { ok: true, ...held, reauthored: false, why: "this case document has moved since it was read, so nothing was spliced" };
+      return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_moved") };
     const all = doc.text.split("\n");
     const at = locate(all);
-    if (!at) return { ok: true, ...held, reauthored: false, why: `this case document carries no ${section} section to re-author` };
+    if (!at) return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_carries", { section: String(section) }) };
     const text = [...all.slice(0, at.f0), ...fmLines, ...all.slice(at.f1, at.b0), ...bodyLines, ...all.slice(at.b1)].join("\n");
     if (text === doc.text) return { ok: true, ...held, reauthored: false };
+    /* R21 (G47): a splice whose result is over the bound AND larger than the stored text is refused; one that shrinks or
+       keeps an over-bound unsigned text is allowed, so a document stored before the bound can be mended. */
+    if (text.length * 3 > CASE_DOCUMENT_BYTES_MAX) {
+      const bytes = utf8Exact(text);
+      if (bytes > CASE_DOCUMENT_BYTES_MAX && bytes > utf8Exact(doc.text))
+        return { ok: true, ...held, reauthored: false, too_large: { bytes, bound: CASE_DOCUMENT_BYTES_MAX },
+                 why: localize("publication.index.the_case_document_would_pass", "the case document would pass {bound} bytes ({bytes}) and was left as it was", { bytes, bound: CASE_DOCUMENT_BYTES_MAX }) };
+    }
     const newSha = shaOf(text);
     this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
                    AND sig_armored IS NULL`, newSha, text, id, ed, doc.doc_sha);
@@ -570,9 +636,7 @@ export class Publication {
     const existed = !!(same && same.bundle_sha === bundleSha);
     if (same && !existed)
       return { ok: false, reason: "EDITION_EXISTS", bundleId, edition: ed, published: same.bundle_sha,
-               detail: `edition ${ed} of ${bundleId} is already published at a different sha. An edition is a `
-                     + `SEPARATE DOCUMENT and answers forever: republishing different bytes under the same `
-                     + `number would leave a reader who cited edition ${ed} unable to say which one they read.` };
+               detail: localize("publication.index.edition_of_is_already_published", "edition {ed} of {bundleId} is already published at a different sha. An edition is a SEPARATE DOCUMENT and answers forever: republishing different bytes under the same number would leave a reader who cited edition {ed} unable to say which one they read.", { ed: String(ed), bundleId: String(bundleId) }) };
     /* CASE-5 corrects the WORDING and not the rule: this refusal always keyed
        `published_bundles`, which is one BUNDLE's chain, and said "this case".
        Before the flip a bundle's chain and its case's editions were the same
@@ -581,11 +645,7 @@ export class Publication {
        at 3 inside a case at edition 5 would go looking at the wrong altitude. */
     if (!existed && highest && ed <= highest)
       return { ok: false, reason: "EDITION_NOT_INCREMENTED", bundleId, edition: ed, highest,
-               detail: `${bundleId} is published through edition ${highest} on its OWN version chain; a `
-                     + `revision must increment it (DEC-12). Editions do not overwrite each other — edition `
-                     + `${highest} keeps its own signature, attestor, time and gate version, and a new one `
-                     + `joins it. This is the FINDING's edition, not the edition of any case it is a member `
-                     + `of: since CASE-5 the two are separate numbers.` };
+               detail: localize("publication.index.is_published_through_edition_on", "{bundleId} is published through edition {highest} on its OWN version chain; a revision must increment it (DEC-12). Editions do not overwrite each other — edition {highest} keeps its own signature, attestor, time and gate version, and a new one joins it. This is the FINDING's edition, not the edition of any case it is a member of: since CASE-5 the two are separate numbers.", { bundleId: String(bundleId), highest: String(highest) }) };
     const now = str(at) || this.#when();
     /* REC-44: THE CASE ROW AND THE MEMBERSHIP, both written from the RATIFIED
        BYTES the control plane read out of the signed document and out of
@@ -720,11 +780,7 @@ export class Publication {
       const legacyDoc = !this.caseDocMemberFrozen(one.case_id, oneEd);
       if (legacyDoc && cRow && cComp && (cRow.completeness ?? null) !== cComp)
         return { ok: false, reason: "CASE_ASSERTION_DIVERGED", bundleId, caseId: one.case_id, edition: oneEd,
-                 detail: `this finding's signed bytes freeze a different completeness assertion for case `
-                       + `${one.case_id} edition ${oneEd} than the CASE DOCUMENT a member signed for it. A case `
-                       + `edition asserts ONE completeness claim, and since CASE-5b that claim is signed `
-                       + `once, in the case's own document — so a member whose bytes say something else `
-                       + `has not been re-published through op=publish since the case was authored.` };
+                 detail: localize("publication.index.this_findings_signed_bytes_freeze", "this finding's signed bytes freeze a different completeness assertion for case {caseId} edition {ed} than the CASE DOCUMENT a member signed for it. A case edition asserts ONE completeness claim, and since CASE-5b that claim is signed once, in the case's own document — so a member whose bytes say something else has not been re-published through op=publish since the case was authored.", { caseId: String(one.case_id), ed: String(oneEd) }) };
       /* ==== CASE-4 / DEC-72: THE DISCHARGE. THE OWNING PROJECT HAS ACTED. ===
          *"New editions are each owning project's deliberate act."* A ratified
          edition of this case IS that act, and this is the moment it becomes
@@ -989,8 +1045,8 @@ export class Publication {
     const id = str(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || !str(sigArmored) || !str(attestorKey) || !str(gateVersion)
         || !Array.isArray(roster))
-      return { ok: false, reason: "MALFORMED", detail: "a case edition names its case, a positive edition, the signature, "
-                                                     + "the attesting key, the gate version and its roster" };
+      return { ok: false, reason: "MALFORMED",
+               detail: localize("publication.index.a_case_edition_names_its", "a case edition names its case, a positive edition, the signature, the attesting key, the gate version and its roster") };
     const members = roster.filter((m) => m && typeof m.bundle_id === "string" && m.bundle_id);
     const doc = this.#one(`SELECT doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
     if (!doc) return noCaseDocument(id, ed);
@@ -1007,14 +1063,12 @@ export class Publication {
     if (doc.sig_armored)
       return doc.sig_armored === sigArmored ? outcome(true)
         : { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
-            detail: `case ${id} edition ${ed} is already signed, and a signed edition answers forever; a correction is a `
-                  + "new edition" };
+            detail: localize("publication.index.case_is_already_signed_and", "case {id} edition {ed} is already signed, and a signed edition answers forever; a correction is a new edition", { id: String(id), ed: String(ed) }) };
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
     if (owner && owner.project_id !== (project ?? null))
       return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", caseId: id, edition: ed,
                declared: owner.project_id, signed: project ?? null,
-               detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
-                     + `${project}. A case does not change hands between editions (DEC-72).` };
+               detail: localize("publication.index.case_is_the_production_and", "case {id} is {owner}'s production and this signed case document names {project}. A case does not change hands between editions (DEC-72).", { id: String(id), owner: String(owner.project_id), project: String(project) }) };
     /* R78 (T45; N892; Actions D4; v0.2 rule 15): NOTHING OF A COUNSEL MATTER ENTERS A CASE OR AN EDITION, asked before
        every other refusal of this commit's own and writing nothing. The scope is project-roster's (its R23), read here, at
        the commit, and never earlier: an edition already signed answered above whatever its project's scope is now, so a
@@ -1024,11 +1078,7 @@ export class Publication {
       /* DEC-49 REGION is-counsel-matter-published */
       return { ok: false, reason: "COUNSEL_MATTER_NOT_PUBLISHED", ...rowOf("COUNSEL_MATTER_NOT_PUBLISHED"), caseId: id,
                edition: ed, ...counsel,
-               detail: (counsel.project ? "the project this case belongs to is a counsel matter" : "")
-                     + (counsel.project && counsel.findings.length ? ", and " : "")
-                     + (counsel.findings.length ? `${counsel.findings.join(", ")} ${counsel.findings.length > 1 ? "were" : "was"} `
-                       + "made in a counsel matter" : "")
-                     + ". A counsel matter is never published, so nothing was committed." };
+               detail: counselDetail(counsel) };
       /* END DEC-49 REGION is-counsel-matter-published */
     }
     /* R58 (DEC-112; K1268, BOB's decision 5): EVERY EDITION COMMITTED FROM T28 ON CARRIES ITS METHOD AND MATERIALS, so a
@@ -1041,8 +1091,7 @@ export class Publication {
       /* DEC-49 REGION is-case-format-current */
       return { ok: false, reason: "CASE_FORMAT_SUPERSEDED", ...rowOf("CASE_FORMAT_SUPERSEDED"), caseId: id, edition: ed,
                format: typeof docFm.format === "string" ? docFm.format : null,
-               detail: "this case document was prepared in a format that carries no method and no materials, so nothing "
-                     + "was committed. Prepare the case again, and sign the new preparation." };
+               detail: localize("publication.index.this_case_document_was_prepared", "this case document was prepared in a format that carries no method and no materials, so nothing was committed. Prepare the case again, and sign the new preparation.") };
       /* END DEC-49 REGION is-case-format-current */
     }
     const when = str(at) || this.#when();
@@ -1055,9 +1104,7 @@ export class Publication {
       /* DEC-49 REGION is-source-consent-withdrawn */
       return { ok: false, reason: "SOURCE_CONSENT_WITHDRAWN", ...rowOf("SOURCE_CONSENT_WITHDRAWN"), caseId: id,
                edition: ed, captures: [...new Set(lapsed.map((x) => x.capture))].slice(0, 200),
-               detail: `${lapsed.length} statement(s) this case document makes about a source are no longer what may be `
-                     + "published of that source, so nothing was committed. What is published under a consent stays "
-                     + "published; this edition was not, and a new preparation leaves the detail out." };
+               detail: localize("publication.index.statements_this_case_document_makes", "{count} statement(s) this case document makes about a source are no longer what may be published of that source, so nothing was committed. What is published under a consent stays published; this edition was not, and a new preparation leaves the detail out.", { count: String(lapsed.length) }) };
       /* END DEC-49 REGION is-source-consent-withdrawn */
     }
     /* R57 (T37; N757, DEC-180 (4), K2206): A PHOTO WHOSE MARKS CHANGED SINCE THE CASE WAS PREPARED IS RE-READ AT THE
@@ -1071,7 +1118,7 @@ export class Publication {
        is the first of them, and `refusals` lists each (one or both), C-122.6 then C-122.7. An answer that is not a list is the photos'
        marks unread (fail closed, as before T39). */
     const answered = this.caseCarriage.marksLapsed(docFm);
-    const lapses = Array.isArray(answered) ? answered : [{ ref: null, sha: null, why: "the photos' marks could not be read" }];
+    const lapses = Array.isArray(answered) ? answered : [{ ref: null, sha: null, why: word("publication.why.photos_marks_read") }];
     const named = (m) => ({ ref: m?.ref ?? null, sha: m?.sha ?? null, why: m?.why ?? null });
     const docs = lapses.filter((m) => m?.kind === "document"), marks = lapses.filter((m) => m?.kind !== "document");
     const refusals = [];
@@ -1081,19 +1128,14 @@ export class Publication {
       const photos = marks.slice(0, 200).map(named);
       refusals.push({ reason: "PHOTO_MARKS_CHANGED_SINCE", ...rowOf("PHOTO_MARKS_CHANGED_SINCE"), photos,
                       photo: photos.map((x) => x.ref ?? x.sha ?? "a photo").join(", "),
-                      detail: `${marks.length} photo(s) this case document carries cannot be published as prepared (a mark `
-                            + "made or withdrawn after the case was prepared, a photo carried whole rather than as the copy the "
-                            + "group marked, or marks that cannot be read), so nothing was committed. Prepare the case again." });
+                      detail: localize("publication.index.photos_this_case_document_carries", "{count} photo(s) this case document carries cannot be published as prepared (a mark made or withdrawn after the case was prepared, a photo carried whole rather than as the copy the team marked, or marks that cannot be read), so nothing was committed. Prepare the case again.", { count: String(marks.length) }) });
       /* END DEC-49 REGION is-photo-marks-current */
     }
     if (docs.length) {
       /* DEC-49 REGION is-document-copy-current */
       refusals.push({ reason: "DOCUMENT_COPY_CHANGED_SINCE", ...rowOf("DOCUMENT_COPY_CHANGED_SINCE"),
                       documents: docs.slice(0, 200).map(named),
-                      detail: `${docs.length} document(s) a member supplied that this case document carries cannot be `
-                            + "published as prepared (a copy that is no longer the document's current copy, a document carried "
-                            + "whole that needs a copy, or one whose state cannot be read), so nothing was committed. Prepare "
-                            + "the case again." });
+                      detail: localize("publication.index.documents_a_member_supplied_that", "{count} document(s) a member supplied that this case document carries cannot be published as prepared (a copy that is no longer the document's current copy, a document carried whole that needs a copy, or one whose state cannot be read), so nothing was committed. Prepare the case again.", { count: String(docs.length) }) });
       /* END DEC-49 REGION is-document-copy-current */
     }
     if (refusals.length)
@@ -1108,12 +1150,10 @@ export class Publication {
       if (standing.withdrawn.length)
         return { ok: false, reason: "ACCEPTANCE_WITHDRAWN_SINCE", ...rowOf("ACCEPTANCE_WITHDRAWN_SINCE"), caseId: id,
                  edition: ed, accepted_work: standing.withdrawn,
-                 detail: `${standing.withdrawn.length} acceptance(s) of another group's work this case document rests on `
-                       + "are no longer known to be in force, so nothing was committed. Prepare the case again." };
+                 detail: localize("publication.index.acceptances_of_another_teams_work", "{count} acceptance(s) of another team's work this case document rests on are no longer known to be in force, so nothing was committed. Prepare the case again.", { count: String(standing.withdrawn.length) }) };
       return { ok: false, reason: "FLAG_OPENED_SINCE", ...rowOf("FLAG_OPENED_SINCE"), caseId: id, edition: ed,
                flags: standing.undisclosed,
-               detail: `${standing.undisclosed.length} open flag(s) on another group's work this case document rests on `
-                     + "are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them." };
+               detail: localize("publication.index.open_flags_on_another_teams", "{count} open flag(s) on another team's work this case document rests on are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them.", { count: String(standing.undisclosed.length) }) };
       /* END DEC-49 REGION is-accepted-work-standing */
     }
     /* R72 (N649): the published criteria, read after every refusal and frozen on the edition's row below; R75's read. */
@@ -1158,9 +1198,17 @@ export class Publication {
        every file it answers by hash, every write to `published_shas` being this module's. A material this copy cannot
        hold at its stated digest never refuses the commit: it is named, and the case file shows it missing. */
     const held = this.caseCarriage.holdMaterials(docFm, { caseId: id, edition: ed, at: when });
-    for (const f of held.files)
-      this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
-                     ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when);
+    for (const f of held.files) {
+      /* G47t (K4677): an attestation token records the capture it stamps. A stored capture that differs from the new
+         one is cleared to NULL (the token is shared: edition 2 adds capture B naming edition 1's token); a stored NULL
+         is never rewritten to a value (an old row keeps the ref join); the same capture again changes nothing. */
+      if (f.kind === "attestation") {
+        const cap = typeof f.capture_sha === "string" && f.capture_sha ? f.capture_sha.toLowerCase() : null;
+        this.sql.exec(ATTESTATION_SHA_UPSERT, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when, cap);
+      } else
+        this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+                       ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when);
+    }
     /* R22 (K1632; public-read R23): EACH CALCULATION'S INPUTS, COMMITTED AS A MATERIAL'S. Every input a `calculations:` row
        names (case-grammar R18) is registered by its SHA-256 at its case-file path, and answered `held: "evidence"`: a
        declared table's canonical bytes are held in the evidence store under that hash (calculations R1), so ratification's
@@ -1280,7 +1328,8 @@ export class Publication {
     return { standard, portion, designation: s.designation ?? null, edition: s.edition ?? null,
              issuer: (s.owner && s.owner.label) || s.issuer || null, citation: s.cite ?? null, access: s.access ?? null,
              body, binds, passages: ids.map((c) => ({ content: c, text: quoted.has(c) ? quoted.get(c) : null })),
-             label: binds ? `Standard · binds ${name}` : body ? `Benchmark · not binding on ${name}` : "Benchmark · not binding",
+             label: binds ? word("standard.binding.binds", { body: String(name) })
+                  : body ? word("standard.binding.benchmark", { body: String(name) }) : word("publication.label.benchmark_binding"),
              access_words: ACCESS_WORDS[s.access] ?? null };
   }
 
@@ -1393,22 +1442,21 @@ export class Publication {
       : Array.isArray(parts) && parts.every((x) => typeof x === "string" && x.trim()) ? parts.map((x) => x.trim()) : undefined;
     if (!id || !EDITION_STAMP_EFFECTS.includes(fx) || !named || partsList === undefined || entry == null)
       return { ok: false, reason: "MALFORMED",
-               detail: `a stamp names its case, the editions (a list of numbers, or all), the docket entry, one of the effects `
-                     + `${EDITION_STAMP_EFFECTS.join(", ")}, and the parts as a list of names when it names any` };
+               detail: localize("publication.index.a_stamp_names_its_case", "a stamp names its case, the editions (a list of numbers, or all), the docket entry, one of the effects {effects}, and the parts as a list of names when it names any", { effects: EDITION_STAMP_EFFECTS.join(", ") }) };
     const signed = this.#signedEditions(id);
     const eds = named === "all" ? signed : named;
     const missing = eds.filter((e) => !signed.includes(e));
     if (!eds.length || missing.length)
       return { ok: false, reason: "NO_SUCH_CASE_EDITION", case: id, editions: eds.length ? missing : [],
-               detail: eds.length ? `edition(s) ${missing.join(", ")} of ${id} are not ratified editions, so nothing was stamped`
-                                  : `${id} holds no ratified edition, so nothing was stamped` };
+               detail: eds.length ? localize("publication.index.editions_of_are_not_ratified", "edition(s) {editions} of {id} are not ratified editions, so nothing was stamped", { editions: missing.join(", "), id: String(id) })
+                                  : localize("publication.index.holds_no_ratified_edition_so", "{id} holds no ratified edition, so nothing was stamped", { id: String(id) }) };
     let order = null;
     try { order = this.#orders ? this.#orders.courtOrderOf(id, entry) : null; } catch { order = null; }
     const seq = order && Number.isInteger(Number(order.seq)) ? Number(order.seq) : null;
     if (!order || seq == null || str(order.effect) !== fx)
       return { ok: false, reason: "STAMP_NO_ORDER", case: id,
-               detail: this.#orders ? "that entry is not a posted court-order entry of this case with this effect, so nothing was stamped"
-                                    : "no court-order source is registered, so no entry can be confirmed and nothing was stamped" };
+               detail: this.#orders ? localize("publication.index.that_entry_is_not_a", "that entry is not a posted court-order entry of this case with this effect, so nothing was stamped")
+                                    : localize("publication.index.no_courtorder_source_is_registered", "no court-order source is registered, so no entry can be confirmed and nothing was stamped") };
     const when = str(at) || this.#when();
     const json = partsList && partsList.length ? JSON.stringify(partsList) : null;
     let wrote = 0;
@@ -1429,7 +1477,7 @@ export class Publication {
   stampsOf({ case: caseArg = null, caseId = null, edition = null } = {}) {
     const id = str(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1)
-      return { ok: false, reason: "NO_ID", detail: "stampsOf names a case and a positive edition" };
+      return { ok: false, reason: "NO_ID", detail: localize("publication.index.stampsof_names_a_case_and", "stampsOf names a case and a positive edition") };
     const stamps = this.#rows(`SELECT case_id, edition, effect, parts, entry_seq, stamped_at FROM edition_stamps
                                 WHERE case_id=? AND edition=? ORDER BY rowid`, id, ed)
       .map((r) => ({ case: r.case_id, edition: Number(r.edition), effect: r.effect, parts: safeJson(r.parts),
@@ -1464,10 +1512,10 @@ export class Publication {
   editionTimeline({ case: caseArg = null, caseId = null, edition = null } = {}) {
     const id = str(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1)
-      return { ok: false, reason: "NO_ID", detail: "editionTimeline names a case and a positive edition" };
+      return { ok: false, reason: "NO_ID", detail: localize("publication.index.editiontimeline_names_a_case_and", "editionTimeline names a case and a positive edition") };
     const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NOT NULL`, id, ed);
     if (!d) return { ok: false, reason: "NO_SUCH_CASE_EDITION", case: id, edition: ed,
-                     detail: "no ratified edition of that case answers here, so it states no published timeline" };
+                     detail: localize("publication.index.no_ratified_edition_of_that", "no ratified edition of that case answers here, so it states no published timeline") };
     return { ok: true, case: id, edition: ed, ...this.#timelineOfText(d.text) };
   }
 
@@ -1486,7 +1534,7 @@ export class Publication {
    *  `conformance` R2 uses. */
   publishedEditionsOf({ finding = null, version = null, project = null } = {}) {
     const id = str(finding);
-    if (!id) return { ok: false, reason: "NO_ID", detail: "publishedEditionsOf requires a finding" };
+    if (!id) return { ok: false, reason: "NO_ID", detail: localize("publication.index.publishededitionsof_requires_a_finding", "publishedEditionsOf requires a finding") };
     const where = [`m.bundle_id=?`, `c.ratified_at IS NOT NULL`], args = [id];
     if (str(version)) { where.push(`m.version_sha=?`); args.push(str(version)); }
     if (str(project)) { where.push(`k.project_id=?`); args.push(str(project)); }
@@ -1531,7 +1579,7 @@ export class Publication {
    *  no case named, `NO_ID`. Writes nothing. */
   caseCitedParts({ case: caseArg = null, caseId = null, edition = null } = {}) {
     const id = str(caseArg ?? caseId);
-    if (!id) return { ok: false, reason: "NO_ID", detail: "caseCitedParts names a case" };
+    if (!id) return { ok: false, reason: "NO_ID", detail: localize("publication.index.casecitedparts_names_a_case", "caseCitedParts names a case") };
     const want = edition == null || edition === "" ? null : Number(edition);
     const row = Number.isInteger(want)
       ? this.#one(`SELECT edition FROM published_cases WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`, id, want)
@@ -1540,7 +1588,7 @@ export class Publication {
         : null;
     if (!row || row.edition == null)
       return { ok: false, reason: "NO_SUCH_CASE_EDITION", case: id, edition: Number.isInteger(want) ? want : null,
-               detail: "no ratified edition of that case answers here, so it cites nothing yet" };
+               detail: localize("publication.index.no_ratified_edition_of_that_2", "no ratified edition of that case answers here, so it cites nothing yet") };
     const ed = Number(row.edition);
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
     /* The signed bytes, and nothing else: an unsigned re-authoring of the same edition cannot reach here. */
@@ -1787,7 +1835,8 @@ export class Publication {
          (the testimony row, the per-ground rows). Read at the PIN and never at the working version:
          the frozen pair is this case's reading of those bytes. A member whose pinned bytes this store
          cannot produce is ABSENT from the map, which leaves those two arms unasked for it rather than
-         asked of a basis nobody pinned — `checkCaseDocument` reads absence as absence. */
+         asked of a basis nobody pinned — `checkCaseDocument` reads absence as absence. Each entry is `{basis, references}`
+         (R79): the member's basis array and the references its pinned bytes state. */
       memberBasis: this.#pinnedMemberBasis(doc.text),
       /* R2, R20 (N364): a /5 document's `captures:` and `sources:` blocks, as its bytes state them; null (with
          `blocks_detail`) for an older format or a block it does not carry. */
@@ -1804,7 +1853,12 @@ export class Publication {
       const text = this.record.textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
       if (text === null) continue;
       const mfm = parseFrontmatter(text).data || {};
-      out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
+      /* R79 (fix round 10): the member's references travel with its basis, as case-catalogue's live-leg filter reads them
+         from the member's own frontmatter; a severed citation the pinned bytes state must reach the case's member arm. */
+      out[r.target] = {
+        basis: Array.isArray(mfm.basis) ? mfm.basis : [],
+        references: Array.isArray(mfm.references) ? mfm.references : [],
+      };
     }
     return out;
   }
@@ -1939,7 +1993,28 @@ export class Publication {
                 version, so the answer states that rather than reading the project's edges as they stand
                 today — which would be the case claiming citations it never signed — and it is never
                 re-signed (rule 1). */
-             citations: signedCitations(d.text) };
+             citations: signedCitations(d.text),
+             /* T51 E4: THE FINDINGS THE DOCUMENT PINS, under its own names, beside the citations (whose rows are the
+                project's citation edges, never the roster). A reloaded ceremony rebuilds what the edition names from
+                this; null when the bytes state no roster (R28). */
+             findings: this.#pinnedFindings(d.text) };
+  }
+
+  /* `case_findings` in the document's order, each with the pin and role its `case_roles` row states (null where the
+     roster names a finding no row pins). Null, never `[]`, when the bytes state no roster; never throws. */
+  #pinnedFindings(docText) {
+    try {
+      const dfm = parseFrontmatter(String(docText || "")).data || {};
+      if (!Array.isArray(dfm.case_findings)) return null;
+      const rows = new Map((Array.isArray(dfm.case_roles) ? dfm.case_roles : [])
+        .filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => [r.target, r]));
+      return dfm.case_findings.map((f) => {
+        const target = String(f ?? "").trim();
+        const r = rows.get(target);
+        return { target, version_sha: typeof r?.version_sha === "string" ? r.version_sha : null,
+                 role: typeof r?.role === "string" ? r.role : null };
+      });
+    } catch { return null; }
   }
 
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member's edition and frozen pair as the RATIFIED
@@ -2177,11 +2252,8 @@ export class Publication {
              ...(c.criteria == null ? { criteria_detail: CRITERIA_NOT_RECORDED } : {}),
              complete, awaiting, findings,
              detail: complete
-               ? "every finding in this case edition is ratified, so the container can be assembled whole"
-               : `this case edition is INCOMPLETE: ${awaiting.length} of ${roster.length} findings are not yet `
-               + `ratified. The findings that are published answer individually; the container cannot be `
-               + `assembled until the last one lands, because it would otherwise claim to carry findings it `
-               + `does not have.` };
+               ? localize("publication.index.every_finding_in_this_case", "every finding in this case edition is ratified, so the container can be assembled whole")
+               : localize("publication.index.this_case_edition_is_incomplete", "this case edition is INCOMPLETE: {awaiting} of {total} findings are not yet ratified. The findings that are published answer individually; the container cannot be assembled until the last one lands, because it would otherwise claim to carry findings it does not have.", { awaiting: String(awaiting.length), total: String(roster.length) }) };
   }
 
   /* REC-44: the case CONTAINER's manifest, handed back by the control plane
@@ -2191,26 +2263,30 @@ export class Publication {
      every member finding's parts and every member's own signature. The
      published_shas row is what makes it answerable by its own hash and what
      op=publishedbytes checks before serving anything. */
-  recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null } = {}) {
-    /* R15: a case id, a whole edition, a manifest object, its SHA-256 as 64 lowercase hex, and a byte count that is a
-       whole number or absent; anything else is MALFORMED and nothing is written (never a throw). */
+  recordCaseManifest({ caseId, edition, manifest, manifestSha, bytes = null, built = undefined } = {}) {
+    /* R15: a case id, a whole edition, a manifest object, its SHA-256 as 64 lowercase hex, a byte count that is a
+       whole number or absent, and `built` absent or a boolean; anything else is MALFORMED and nothing is written (never a
+       throw). `built: true` (fix round 10, cause 27a; K5084) records the case file built in the same transaction, the caller
+       passing it only after every file of the manifest, its own bytes included, is stored. */
+    if (!(built == null || typeof built === "boolean")) built = Symbol.for("malformed");
     if (typeof caseId !== "string" || !caseId.trim() || !Number.isInteger(Number(edition)) || Number(edition) < 1
         || !manifest || typeof manifest !== "object" || typeof manifestSha !== "string" || !/^[0-9a-f]{64}$/.test(manifestSha)
-        || !(bytes == null || (Number.isInteger(bytes) && bytes >= 0)))
+        || !(bytes == null || (Number.isInteger(bytes) && bytes >= 0)) || typeof built === "symbol")
       return { ok: false, reason: "MALFORMED",
-               detail: "a case manifest names its case, its edition, the manifest and its SHA-256 (64 lowercase hex)" };
+               detail: localize("publication.index.a_case_manifest_names_its", "a case manifest names its case, its edition, the manifest and its SHA-256 (64 lowercase hex)") };
     const ed = Number(edition);
     return this.record.transact(() => {
       const c = this.#one(`SELECT manifest_sha FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
       if (!c) return { ok: false, reason: "NO_SUCH_CASE_EDITION", caseId, edition: ed };
       /* R15, R24: recorded once. The same hash again is a retry and writes nothing (the manifest held is the one that
          hash was recorded for, whatever this call carries); another hash is refused. */
-      if (c.manifest_sha === manifestSha) return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, existed: true };
+      if (c.manifest_sha === manifestSha) {
+        if (built === true) this.#markCaseFileBuilt(caseId, ed);
+        return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, existed: true };
+      }
       if (c.manifest_sha)
         return { ok: false, reason: "MANIFEST_EXISTS", caseId, edition: ed, manifest_sha: c.manifest_sha,
-                 detail: `case ${caseId} edition ${ed} already has a manifest at a different hash. An edition is `
-                       + `a SEPARATE DOCUMENT and its container answers forever; a second manifest under the `
-                       + `same number would leave a reader unable to say which container they checked.` };
+                 detail: localize("publication.index.case_edition_already_has_a", "case {caseId} edition {ed} already has a manifest at a different hash. An edition is a SEPARATE DOCUMENT and its container answers forever; a second manifest under the same number would leave a reader unable to say which container they checked.", { caseId: String(caseId), ed: String(ed) }) };
       this.sql.exec(`UPDATE published_cases SET manifest_sha=?, manifest=? WHERE case_id=? AND edition=?`,
                     manifestSha, JSON.stringify(manifest), caseId, ed);
       this.sql.exec(
@@ -2229,8 +2305,111 @@ export class Publication {
           Number.isInteger(f.bytes) ? f.bytes : null, this.#when());
         files++;
       }
+      if (built === true) this.#markCaseFileBuilt(caseId, ed);
       return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, ...(files ? { files } : {}) };
     });
+  }
+
+  /* R15: the case file built, for an edition whose manifest is recorded, inside the caller's transaction; a built file is
+     left as it is. Written by `recordCaseManifest`'s `built: true`; `recordCaseFileAttempt` writes `built` itself. */
+  #markCaseFileBuilt(caseId, ed) {
+    this.sql.exec(`UPDATE published_cases SET casefile_state='built', casefile_attempted_at=?, casefile_why=NULL
+                   WHERE case_id=? AND edition=? AND manifest_sha IS NOT NULL AND casefile_state IS NOT 'built'`,
+                  this.#when(), caseId, ed);
+  }
+
+  /* R15 (G54; K4426, K4565, K4566, K4571): the one writer of the case file's ledger, the four `casefile_*` columns of
+     `published_cases`. `building` and `failed` add one to `casefile_attempts` (a `building` left by a cancelled request or a
+     memory kill is therefore already an attempt); `built` is written only on an edition whose manifest is recorded (the
+     caller puts the manifest's own bytes first) and adds none. `stopped` is this writer's own: a `failed` whose
+     `why.code` is `MATERIAL_MISSING`, with `absent: true` (the caller's probe of the evidence store confirmed the object
+     gone), that is the `CASEFILE_MISSING_MAX_ATTEMPTS`th in a row (counted in `why.run`) is stored `stopped`. A built or
+     stopped edition is not rewritten by a late `building` or `failed`; a `built` is accepted over anything. It is a
+     store-internal hop (`recordcasefile`), no caller's op, and `recordCaseManifest` leaves these columns alone but for `built: true`. */
+  recordCaseFileAttempt({ caseId, edition, state, why = null, at = null, absent = false } = {}) {
+    const ed = Number(edition);
+    const whyOf = state === "built" ? null : caseFileWhy(why);
+    if (typeof caseId !== "string" || !caseId.trim() || !Number.isInteger(ed) || ed < 1
+        || !["building", "failed", "built"].includes(state)
+        || (at != null && !(typeof at === "string" && Number.isFinite(Date.parse(at))))
+        || (state === "failed" && !whyOf) || (why != null && state === "building" && !whyOf))
+      return { ok: false, reason: "MALFORMED" };
+    return this.record.transact(() => {
+      const c = this.#one(`SELECT manifest_sha, casefile_state, casefile_attempts, casefile_why FROM published_cases
+                           WHERE case_id=? AND edition=?`, caseId, ed);
+      if (!c) return { ok: false, reason: "NO_SUCH_CASE_EDITION", caseId, edition: ed };
+      const when = at ?? this.#when();
+      const attempts = Number(c.casefile_attempts) || 0;
+      if (state === "built") {
+        if (!c.manifest_sha) return { ok: false, reason: "NO_MANIFEST", caseId, edition: ed };
+        if (c.casefile_state === "built") return { ok: true, caseId, edition: ed, state: "built", attempts, existed: true };
+        this.sql.exec(`UPDATE published_cases SET casefile_state='built', casefile_attempted_at=?, casefile_why=NULL
+                       WHERE case_id=? AND edition=?`, when, caseId, ed);
+        return { ok: true, caseId, edition: ed, state: "built", attempts };
+      }
+      if (c.casefile_state === "built" || c.casefile_state === "stopped")
+        return { ok: true, caseId, edition: ed, state: c.casefile_state, attempts, existed: true };
+      let prev = null;
+      try { prev = c.casefile_why ? JSON.parse(c.casefile_why) : null; } catch { prev = null; }
+      const missingBefore = prev && prev.code === "MATERIAL_MISSING" ? Number(prev.run) || 0 : 0;
+      let next = state, kept = whyOf;
+      if (state === "failed" && whyOf.code === "MATERIAL_MISSING") {
+        kept = caseFileWhy({ ...whyOf, run: missingBefore + 1 });
+        if (absent === true && missingBefore + 1 >= CASEFILE_MISSING_MAX_ATTEMPTS) next = "stopped";
+      } else if (state === "building" && !whyOf && prev) kept = prev;   // a `building` keeps the run it interrupts
+      else if (state === "building" && whyOf && prev && prev.code === "MATERIAL_MISSING" && whyOf.code === "MATERIAL_MISSING")
+        kept = caseFileWhy({ ...whyOf, run: missingBefore });
+      this.sql.exec(`UPDATE published_cases SET casefile_state=?, casefile_attempts=?, casefile_attempted_at=?, casefile_why=?
+                     WHERE case_id=? AND edition=?`, next, attempts + 1, when, kept ? JSON.stringify(kept) : null, caseId, ed);
+      return { ok: true, caseId, edition: ed, state: next, attempts: attempts + 1 };
+    });
+  }
+
+  /* R15 (G54): the complete case editions owing a case file, each with the instant it is next due, oldest due first.
+     One rule, here: an edition is owed when it is complete (`caseEditionState`) and not `stopped` and either has no
+     manifest or has a ledger state that is not `built`. It is due at `ratified_at` + `CASEFILE_GRACE_MS` while never
+     attempted, else at `casefile_attempted_at` + `min(FIRST * 2^(attempts-1), MAX)` (a `building` waits at least
+     `CASEFILE_BUILDING_WAIT_MS`). An edition with a manifest and no ledger state is built and never owed (R-OLD). */
+  #caseFilesOwing() {
+    const out = [];
+    for (const r of this.#rows(
+      `SELECT case_id, edition, ratified_at, manifest_sha, casefile_state, casefile_attempts, casefile_attempted_at, casefile_why
+         FROM published_cases WHERE casefile_state IS NOT 'stopped'
+          AND (manifest_sha IS NULL OR casefile_state IN ('building', 'failed')) ORDER BY case_id, edition`)) {
+      const s = this.caseEditionState(r.case_id, Number(r.edition));
+      if (!s || !s.complete) continue;
+      const ratified = Date.parse(s.ratified_at ?? r.ratified_at);
+      let base = ratified + CASEFILE_GRACE_MS;
+      if (r.casefile_state) {
+        const attempted = Date.parse(r.casefile_attempted_at);
+        const wait = backoffMs(r.casefile_attempts);
+        if (Number.isFinite(attempted)) base = attempted + (r.casefile_state === "building" ? Math.max(CASEFILE_BUILDING_WAIT_MS, wait) : wait);
+      }
+      if (!Number.isFinite(base)) continue;
+      let why = null;
+      try { why = r.casefile_why ? JSON.parse(r.casefile_why) : null; } catch { why = null; }
+      out.push({ case: r.case_id, edition: Number(r.edition), manifest_sha: r.manifest_sha ?? null, state: r.casefile_state ?? null,
+                 attempts: Number(r.casefile_attempts) || 0, attempted_at: r.casefile_attempted_at ?? null, why,
+                 ratified_at: s.ratified_at ?? r.ratified_at ?? null, due: base });
+    }
+    return out.sort((a, b) => a.due - b.due || (a.case < b.case ? -1 : a.case > b.case ? 1 : a.edition - b.edition));
+  }
+
+  /** R15 (G54): the editions owed a case file and due at `now` (default the module's clock), oldest due first, at most `limit`
+   *  (default and ceiling `CASEFILES_OWED_MAX`); each carries the instant it was due (`next_at`). Writes nothing but
+   *  `caseEditionState`'s completion stamp; never throws. */
+  caseFilesOwed({ now = null, limit = null } = {}) {
+    try {
+      const t = typeof now === "number" ? now : Date.parse(now ?? this.#when());
+      if (!Number.isFinite(t)) return [];
+      return this.#caseFilesOwing().filter((x) => x.due <= t).slice(0, pageOf(limit, CASEFILES_OWED_MAX))
+        .map(({ due, ...x }) => ({ ...x, next_at: new Date(due).toISOString() }));
+    } catch { return []; }
+  }
+
+  /** R15 (G54): the earliest instant an owed case file is due (an ISO string, as `publishWake`), null when none is owed. */
+  caseFileNextAt() {
+    try { const o = this.#caseFilesOwing(); return o.length ? new Date(o[0].due).toISOString() : null; } catch { return null; }
   }
 
   /* REC-22 / R4: the PUBLISHED GRAPH, written inside the publishing act's own
@@ -2532,7 +2711,7 @@ export class Publication {
      D-15: viewer-gated like every other read that can name a bundle, and fails
      closed on an absent viewer. */
   excludedBy(targetId, viewer = null) {
-    if (!targetId) return { ok: false, reason: "NO_ID", detail: "excludedby requires ?id=" };
+    if (!targetId) return { ok: false, reason: "NO_ID", detail: localize("publication.index.excludedby_requires_id", "excludedby requires ?id=") };
     const gate = viewerPredicate(viewer);
     /* inquiry R18: the live exclusions naming the target that the viewer may see, from `inquiry_exclusions`. */
     const rows = [...this.inquiry.exclusionsNaming(targetId, viewer)];
@@ -2558,8 +2737,7 @@ export class Publication {
         ORDER BY x.case_id, x.edition, x.bundle_id, x.ord`,
       targetId, ...gate.args, ...(standing.startsWith("EXISTS") ? gate.args : [])));
     return { ok: true, targetId, cases: rows,
-             detail: "each row is a case that named this document in its completeness exclusions, with the "
-                   + "edition the assertion was taken from and the case's current state." };
+             detail: localize("publication.index.each_row_is_a_case", "each row is a case that named this document in its completeness exclusions, with the edition the assertion was taken from and the case's current state.") };
   }
 
   /* REC-14: the published projection as the CHECK CATALOG needs it — the shape
@@ -2734,6 +2912,8 @@ export function publicationOps(p, url, body) {
        itself since T33-90; this module no longer spreads them (N597). */
     /* REC-44: internal only, and no caller's op (R15). */
     recordcasemanifest: () => p.recordCaseManifest(b),
+    /* G54: the case file's ledger, internal like the manifest's and no caller's op (R15). */
+    recordcasefile: () => p.recordCaseFileAttempt(b),
     publishedtargets: () => p.publishedTargets(q("ids")),
     excludedby: () => p.excludedBy(q("id"), q("viewer")),
     /* REC-130: both carry the viewer the control plane STAMPS, and fail closed on its absence. */

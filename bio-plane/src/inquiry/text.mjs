@@ -7,6 +7,8 @@
 
 /** Rewrite ONE column-0 scalar inside the frontmatter, leaving every other byte alone; the text unchanged when the key
  *  is absent. */
+import { localize } from "../setup-words/index.mjs"
+
 export function setScalar(text, key, value) {
   const lines = text.split("\n");
   const end = lines.indexOf("---", 1);
@@ -96,7 +98,7 @@ export function setSection(text, heading, lines) {
  *  account). */
 export function appendSessionLog(text, entry) {
   const at = text.indexOf("## Session Log");
-  if (at < 0) return text + "\n## Session Log\n\n" + entry;
+  if (at < 0) return localize("inquiry.text.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", { text: String(text), entry: String(entry) });
   const nxt = text.indexOf("\n## ", at + 1);
   const cut = nxt === -1 ? text.length : nxt + 1;
   return text.slice(0, cut) + entry + "\n" + text.slice(cut);

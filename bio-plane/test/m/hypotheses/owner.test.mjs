@@ -5,13 +5,14 @@ import assert from "node:assert/strict";
 import { world, ANN, OUTSIDER, INQ, E1, E2, E3 } from "./fixture.mjs";
 import { ownerConformance, defaultRegistry, chainGrade, chainLabel, BOUNDS } from "../../../src/connection-grammar/index.mjs";
 import { HUNCH_KINDS, ownerNeighbours } from "../../../src/hypotheses/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = "2026-10-01T12:00:00Z";
 
 test("R4 the module registers as the owner of the kind hunch, class hunch, in the registry the plane wires and once in a test's own; its neighbours passes the owner-conformance battery, declaring its kind undated so the at check is inapplicable (connection-grammar R9; K1563 (2))", () => {
-  assert.deepEqual(defaultRegistry.kindOf("hunch"), { owner: "hypotheses", word: "a member's hunch", class: "hunch" });
+  assert.deepEqual(defaultRegistry.kindOf("hunch"), { owner: "hypotheses", word: word("hypotheses.member_hunch"), class: "hunch" });
   const w = world();
-  assert.deepEqual(w.registry.owners(), [{ owner: "hypotheses", kinds: [{ kind: "hunch", word: "a member's hunch", class: "hunch" }] }]);
+  assert.deepEqual(w.registry.owners(), [{ owner: "hypotheses", kinds: [{ kind: "hunch", word: word("hypotheses.member_hunch"), class: "hunch" }] }]);
   w.h.migrate();
   assert.equal(w.registry.owners().length, 1, "once");
   const inq = w.fenced(INQ);
@@ -28,7 +29,7 @@ test("R4 the module registers as the owner of the kind hunch, class hunch, in th
   for (const at of [AT, "1990-01-01T00:00:00Z", { value: "2026-10-01", precision: "day", zone: "UTC" }]) {
     const a = w.registry.neighbours({ owner: "hypotheses", node: E1, at, viewer: ANN, scope: inq });
     assert.deepEqual(a.items.map((i) => i.id), [hunch]);
-    assert.ok(a.items.every((i) => typeof i.undetermined.why === "string"));
+    assert.ok(a.items.every((i) => i.undetermined.why.key === "hypotheses.hunch_states_period" && i.undetermined.why.vars !== undefined));
   }
   assert.deepEqual(w.registry.neighbours({ owner: "hypotheses", node: E1, at: AT, viewer: OUTSIDER, scope: inq }), { items: [] });
 });

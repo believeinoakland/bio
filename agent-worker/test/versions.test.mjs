@@ -48,7 +48,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { PLANE_OPS } from "../src/ops.mjs";
 import { documentHoldings, holdingsNote } from "../../agent-harness/src/subsession.mjs";
-import { meaningRowsBranch } from "./plane-meaning.mjs";
+import { meaningRowsBranch } from "../../agent-steps/test/plane-meaning.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

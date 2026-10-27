@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, provDoc } from "./fixture.mjs";
 import { ARCHIVE_DEPTH_MAX } from "../../../src/ooxml.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
 
 const PATH = "data/provenance.json";
@@ -73,9 +74,7 @@ test("R7: a file cut out of an archive answers the archive's timestamp and co-ar
     const fa = w.att.attestationsOf(f.sha);
     assert.deepEqual({ ...fa, note: undefined }, { ok: true, sha256: f.sha, registered: true, note: undefined,
       attestations: stated(za, "INFO-2026-0001-records", { from: zip.sha, through: [3] }) });
-    assert.match(fa.note, /no timestamp authority or archive was asked, and no token's signature was verified/);
-    assert.match(fa.note, /cut out of a captured archive/);
-    assert.match(fa.note, /token proves the archive existed at its instant, and so every byte cut out of it/);
+    assert.equal(fa.note, word("attestation.note.read_record_holds", { value: word("attestation.capture_cut_captured") }));
     /* A file with an attestation of its own (a later direct capture's, K1852 (3)): its own first, with no `inherited`. */
     const g = w.cap("agenda", "another file of the archive");
     const ga = attested("agenda", { coArchive: false });
@@ -172,8 +171,8 @@ test("R7: an archive whose register cannot be read, an archive no register names
     w.promoteInfo("INFO-2026-0002-m1", { captures: [m1], docs: [unpackedDoc(m1, broken, 2, own.fields)], replay: true });
     const a = w.att.attestationsOf(m1.sha);
     assert.deepEqual([a.registered, a.attestations], [true, stated(own, "INFO-2026-0002-m1", null)], "what was read stands");
-    assert.match(a.undetermined, new RegExp(`for the archive ${broken.sha} it was cut out of \\(through entries 2\\)`));
-    assert.match(a.undetermined, /cannot be read as a register/);
+    assert.ok(a.undetermined.includes(word("attestation.archive_cut_through", { archive: broken.sha, path: "2", why: "" })));
+    assert.ok(a.undetermined.includes(word("attestation.home_cannot_read", { path: "data/provenance.json" })));
     /* An archive no register row names. */
     const ghost = { sha: sha("an archive the record never registered"), path: "snapshots/ghost.zip" };
     const m2 = w.cap("m2", "a file of an unregistered archive");
@@ -194,8 +193,8 @@ test("R7: an archive whose register cannot be read, an archive no register names
     for (const c of [m3, m4, m5]) {
       const r = w.att.attestationsOf(c.sha);
       assert.deepEqual([r.ok, r.attestations], [true, []], c.path);
-      assert.match(r.undetermined, /names no archive digest of 64 hex and whole entry index/, c.path);
-      assert.match(r.note, /cut out of a captured archive/, c.path);
+      assert.ok(r.undetermined.includes(word("attestation.record_states_cut", { named: "this capture" })), c.path);
+      assert.ok(r.note.includes(word("attestation.capture_cut_captured")), c.path);
     }
   });
 });

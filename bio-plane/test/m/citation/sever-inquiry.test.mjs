@@ -6,10 +6,14 @@ import assert from "node:assert/strict";
 import { world, V, STAMP, inqMd } from "./fixture.mjs";
 import { CITE_CHECKS } from "../../../src/citation/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
+import { dividedCannotRestructure } from "../../../src/inquiry/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 const VERA = { viewer: V("vera"), owner: "v", author: "member:vera", identity: V("vera") };
 const DOC = "INFO-2026-0001-doc", DOC2 = "INFO-2026-0002-doc", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
+/* The two questions a division of Q writes, sharing out Q's three legs (DOC, DOC2, Q2). */
+const KIDS = [{ id: "INQ-2026-0010-a", question: "First half?", legs: [0] },
+              { id: "INQ-2026-0011-b", question: "Second half?", legs: [1, 2] }];
 
 const blockOf = (md, key) => {
   const m = new RegExp(`\\n${key}:\\n((?:  .*\\n)+)`).exec(md);
@@ -194,19 +198,21 @@ test("R15, R7: on a question sever and reinstate are refuse weight: a moved sele
   assert.equal(w.md(Q), before);
 });
 
-test("R15: a refusal of the write (a question whose document cannot be revised, inquiry R11) is answered unchanged with the handle and drift, nothing written; the write refusing nothing, the leg is severed", async () => {
+test("R15, R64: a sever on a divided question is refused by inquiry's own R64 answer, DIVIDED_CANNOT_RESTRUCTURE naming the question and its children, relayed unchanged with the handle and drift; nothing is written", async () => {
   const { w } = await setup();
-  let refusal = null;
-  w.promotion.registerStep("citation-test", { check: (c) => (c.bundleId === Q ? refusal : null) });
+  const d = w.inquiryModule.divide({ target: Q, reason: "two questions", children: KIDS, viewer: ANN.viewer, author: ANN.author });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  assert.equal(w.fm(Q).current_state, "divided", "a control: the question is divided");
   const one = await w.select([DOC]);
-  refusal = { ok: false, reason: "DIVIDED_CANNOT_RESTRUCTURE", code: "DIVIDED_CANNOT_RESTRUCTURE", detail: "refused" };
   const before = w.md(Q);
-  const r = w.cit.sever({ project: Q, handle: one, ...ANN, reason: "x" });
-  assert.deepEqual(r, { ...refusal, project: Q, handle: one, drift: r.drift });
+  const r = w.cit.sever({ project: Q, handle: one, ...ANN, reason: "cut" });
+  const children = KIDS.map((k) => k.id);
+  assert.deepEqual([r.ok, r.reason, r.code, r.target, r.from, r.children],
+                   [false, "DIVIDED_CANNOT_RESTRUCTURE", "DIVIDED_CANNOT_RESTRUCTURE", Q, "divided", children]);
+  assert.deepEqual(r, { ...dividedCannotRestructure(r.detail, { target: Q, children }), project: Q, handle: one, drift: r.drift });
   assert.equal(r.drift.kind, "enumerated");
-  assert.equal(w.md(Q), before);
-  refusal = null;
-  assert.equal(w.cit.sever({ project: Q, handle: one, ...ANN, reason: "x" }).ok, true);
+  assert.equal(w.md(Q), before, "nothing written");
+  assert.equal(entry(w, Q, DOC).status, "confirmed");
 });
 
 test("R15, R1: a leg severed on a question is not re-cited by cite (SEVERED_EDGE), and is restored only by reinstate", async () => {

@@ -84,11 +84,11 @@ import { PLANE_OPS } from "../src/ops.mjs";
 /* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
    registry and refusal catalog rather than typed here. See `plane-meaning.mjs`
    for why a fixture that says yes to everything is not a fixture. */
-import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+import { MEANING_ARMS, meaningRowsBranch } from "../../agent-steps/test/plane-meaning.mjs";
 /* D-276: the arm the MEMBER actually sends, imported rather than retyped — a
    suite asserting about its own copy of the value is the failure this item is
    about, one file over. */
-import { MEANING_ARM } from "../src/ops.mjs";
+import { MEANING_ARM } from "../../agent-steps/src/index.mjs";
 
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WRANGLER = fileURLToPath(new URL("../wrangler.jsonc", import.meta.url));
@@ -103,6 +103,7 @@ import { NAMESPACES } from "../src/ops.mjs";
 /* N421: the fence measured at the member's interface, in this process (section 6). */
 import { SURFACE } from "../src/index.mjs";
 import { MODEL_ENDPOINT } from "../../agent-model/src/model.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { driveMember, AIK as INPROCESS_AIK, AIK_SECOND as INPROCESS_AIK_SECOND,
          CLAUDE_TOKEN as INPROCESS_CLAUDE } from "./inprocess.mjs";
 /* The writes this member declares: exactly the mutating members of `PLANE_OPS`, pinned floor and ceiling (R37). */
@@ -722,7 +723,7 @@ console.log("\n--- D-451: runContextTarget over a project run's published questi
   const P = "PROJ-2026-9451-d451";
   t("D-451a: a project run publishing ONE question seeds it, and says why",
     at({ type: "project", id: P, questions: ["INQ-2026-9451-a"] }),
-    { target: "INQ-2026-9451-a", basis: "the one question the run's project confirmed-cites" });
+    { target: "INQ-2026-9451-a", basis: localize("agent-harness.harness.the_one_question_the_runs", "the one question the run's project confirmed-cites") });
   t("D-451b: SEVERAL questions are not picked between — UNDETERMINED, with the count",
     [at({ type: "project", id: P, questions: ["INQ-A", "INQ-B"] }).target,
      /^UNDETERMINED: .* 2 questions/.test(at({ type: "project", id: P, questions: ["INQ-A", "INQ-B"] }).basis)],

@@ -5,8 +5,8 @@
  * source's retrieval instant. That one capture is both the last at-or-before the
  * retrieval and the first at-or-after it, so the two-sided arm of `resolveLinks`
  * read it as a BRACKET and said "the target changed somewhere between the
- * captures bracketing this document's retrieval", naming ONE hash twice. The UI
- * renders the plane's basis and detail verbatim (`civicos-ui/app.html` linkRow),
+ * captures bracketing this document's retrieval", naming ONE hash twice. The
+ * interface renders the plane's basis and detail verbatim (the links of a document),
  * so that sentence reached a member as a fact about the source.
  *
  * What this suite holds, THROUGH THE OP (`op=acquire` files the page and its
@@ -133,7 +133,7 @@ console.log(`  (corpus: ${(res.links || []).length} links; tally ${JSON.stringif
 console.log("\n--- the self-link is still LISTED and COUNTED (how a liar passes) ---");
 t("the self-link is in the answer", !!self, true);
 t("resolved against the record, not dropped as offsite", self && self.resolution, "linked");
-t("its target is this very capture", self && self.target_capture, SHA);
+t("its target capture is the document's own digest", self && self.target_capture, SHA);
 t("the tally counts all three held targets, the self-link among them", res.tally && res.tally.linked, 3);
 t("and the verdicts account for every one of them",
   res.verdicts && (res.verdicts.contemporaneous + res.verdicts.superseded + res.verdicts.undetermined), 3);

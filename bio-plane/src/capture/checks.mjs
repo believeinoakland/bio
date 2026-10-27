@@ -18,12 +18,13 @@
  *
  * R37 (T43; N849, N851; K2609): C-85.1–C-85.5 and C-118.2, .3, .4 and .7 moved with their raisers to `doorbell` (its
  * R21), numbers and translations kept, and are defined in doorbell's table alone; this table holds none of them.
- * C-118's next free number stays this module's to mint: C-118.11.
+ * C-118's next free number stays this module's to mint: C-118.12.
  *
  * T50 (N1116; K3366, K3368): each row's `translation` is words.json's `refusal.<CODE>`, read by key through
  * `words.mjs`; this module holds no member-facing English. */
 
 import { rowWord } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
@@ -53,5 +54,12 @@ export const CAPTURE_CHECKS = Object.freeze({
   UPLOAD_NO_STATEMENT: Object.freeze({
     check: 'C-118.10', where: inIndex("uploadCapture", "is-upload-stated"),
     translation: rowWord("UPLOAD_NO_STATEMENT"),
+  }),
+  /* R101 (T51 fix round 3; C9; K4370): the next free row of C-118, awaiting promotion's stamp. The words are the design's
+     `refusal.CAPTURE_NOT_HELD`, read through `localize` as a stand-in until the design adds the key to capture's `reads`
+     (words-reads.json is its file): the list wins, so the sentence is the design's. */
+  CAPTURE_NOT_HELD: Object.freeze({
+    check: 'C-118.11', where: inIndex("fileSeenIn", "is-capture-held"),
+    translation: localize("refusal.CAPTURE_NOT_HELD", "Your team's Civicsmith holds no captured document like that, or you cannot see it. Nothing was written."),
   }),
 });

@@ -10,7 +10,7 @@
  * 1.54.0. These are the only copies: T19's layer 1 deleted the catalogue's (legacy-checks, K717, K769). C-48.8 and
  * C-48.9 are `monitoring`'s; the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
 
@@ -140,24 +140,20 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
   /* A FOLDER. There is nothing to export and no single set of bytes a capture could honestly hold. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: Object.freeze({
     check: 'C-48.2',
-    where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
-         + '(op=monitor, ungoverned span, D-472): a folder is not a document to capture and not '
-         + 'a document to watch, and one sentence is true of both',
+    where: localize('acquisition.checks.at_and_the_same_condition', '{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both', { at: String(at('is-drive-capture')) }),
     translation: word("refusal.DRIVE_FOLDER_NOT_A_DOCUMENT"),
   }),
   /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an export address here would mean
      guessing which conversion to ask for, and filing bytes whose format the record had invented. */
   DRIVE_KIND_UNDETERMINED: Object.freeze({
     check: 'C-48.3',
-    where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
-         + '(op=monitor, ungoverned span, D-472)',
+    where: localize('acquisition.checks.at_and_the_same_condition_2', '{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)', { at: String(at('is-drive-capture')) }),
     translation: word("refusal.DRIVE_KIND_UNDETERMINED"),
   }),
   /* A DRIVE HOST WITH AN UNREAD PATH: not a document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: Object.freeze({
     check: 'C-48.4',
-    where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
-         + '(op=monitor, ungoverned span, D-472)',
+    where: localize('acquisition.checks.at_and_the_same_condition_3', '{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)', { at: String(at('is-drive-capture')) }),
     translation: word("refusal.DRIVE_SHAPE_UNRECOGNISED"),
   }),
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the export address with `text/html` when
@@ -358,6 +354,18 @@ export const ARCHIVE_CHECKS = Object.freeze({
   }),
 });
 
+/* R10, R96 (C5; K4370): a capture of several parts the store could not keep whole. Nothing is filed and the parts are named by
+   no document. The sentence is the design's (`refusal.CAPTURE_NOT_KEPT`), read by key. `check` is the next free number in the
+   catalogue's series (C-154, unused at T51; BOB confirms it at the close). The detail the answer carries is unchanged
+   (index.mjs `notKept`). */
+export const CAPTURE_KEEP_CHECKS = Object.freeze({
+  CAPTURE_NOT_KEPT: Object.freeze({
+    check: 'C-154.1',
+    where: at('is-capture-kept'),
+    translation: word("refusal.CAPTURE_NOT_KEPT"),
+  }),
+});
+
 /** R29: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
 export const ACQUISITION_CHECKS = Object.freeze({ ...CAPTURE_REQUEST_ARM_CHECKS, ...RENDER_CAPTURE_CHECKS, ...DRIVE_CAPTURE_CHECKS,
-                                                  ...INSTALLATION_CHECKS, ...SWEEP_SCOPE_CHECKS, ...ARCHIVE_CHECKS });
+                                                  ...INSTALLATION_CHECKS, ...SWEEP_SCOPE_CHECKS, ...ARCHIVE_CHECKS, ...CAPTURE_KEEP_CHECKS });

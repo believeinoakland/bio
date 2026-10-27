@@ -189,9 +189,9 @@ test("R3 a revision carries exactly its fields, absent ones omitted, collaborate
   assert.equal(full.wording, "Tracing the budget transfers");
   /* a stop carries status stopped and its handoff */
   const p = await post(w);
-  const stop = JSON.parse((await prepare(w, { notice: p.notice, final: "stopped", handoff: "See the other group" })).revision);
+  const stop = JSON.parse((await prepare(w, { notice: p.notice, final: "stopped", handoff: "See the other team" })).revision);
   assert.equal(stop.status, "stopped");
-  assert.equal(stop.handoff, "See the other group");
+  assert.equal(stop.handoff, "See the other team");
   assert.equal(stop.previous, p.prepared.digest);
 });
 

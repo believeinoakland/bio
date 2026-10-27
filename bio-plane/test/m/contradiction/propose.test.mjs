@@ -231,7 +231,7 @@ test("R19: no act here judges, grades, edits or closes a side, and no read shows
   assert.doesNotMatch(JSON.stringify(pairsAfter), /"candidate"|"proposed"|contradiction_candidates/);
 });
 
-test("R20: C-60.1–C-60.3 and C-93.1–C-93.39 are this module's invariants, each with its row, its translation, and a refusal test", () => {
+test("R20, R61: C-60.1–C-60.3 and C-93.1–C-93.42 are this module's invariants, each with its row, its translation, and a refusal test", () => {
   assert.deepEqual(Object.entries(CONTRADICTION_PAIR_CHECKS).map(([k, r]) => [k, r.check]), [
     ["CONTRADICTION_KEY_UNKNOWN", "C-60.1"], ["CANDIDATES_NO_SUBJECT", "C-60.2"], ["TENSIONS_TOO_MANY", "C-60.3"]]);
   const codes = Object.entries(CONTRADICTION_CANDIDATE_CHECKS).map(([k, r]) => [k, r.check]);
@@ -239,7 +239,7 @@ test("R20: C-60.1–C-60.3 and C-93.1–C-93.39 are this module's invariants, ea
     ["CANDIDATE_NO_PROPOSER", "C-93.1"], ["CANDIDATE_NO_RUN", "C-93.2"], ["CANDIDATE_RUN_NOT_RUNNING", "C-93.3"],
     ["CANDIDATE_NO_PROPOSALS", "C-93.4"], ["CANDIDATE_LABEL_UNKNOWN", "C-93.5"], ["CANDIDATE_NO_REASON", "C-93.6"],
     ["CANDIDATE_PAIR_NOT_FORMED", "C-93.7"]]);
-  assert.deepEqual(codes.map(([, c]) => c), Array.from({ length: 39 }, (_, i) => `C-93.${i + 1}`));
+  assert.deepEqual(codes.map(([, c]) => c), Array.from({ length: 42 }, (_, i) => `C-93.${i + 1}`));
   /* The N345 rows and their translations are exactly the requirement's table (R20; N345). */
   const req = readFileSync(fileURLToPath(new URL("../../../../build/requirements/contradiction.md", import.meta.url)), "utf8");
   const table = [...req.matchAll(/^\| (C-(?:60|93)\.\d+) \| `([A-Z_]+)` \| "(.+)" \|$/gm)].map((m) => [m[1], m[2], m[3]]);

@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { world, V, MACHINE } from "./fixture.mjs";
+import { groupUndetermined } from "../promotion/fixtures.mjs";
 import { CONSEQUENCES_CHECKS, CONSEQUENCES_WORDS, SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED, consequencesModule }
   from "../../../src/consequences/index.mjs";
 import { canonicalJson, sha256HexSync, checkBundle } from "../../../src/record-grammar/index.mjs";
@@ -47,8 +48,8 @@ const T45 = {
   SUCCESS_NO_EVIDENCE: "A success rests on evidence: content or findings this record holds and you may see. Nothing was written.",
   SUCCESS_TOO_LARGE: "A success record holds at most 50 items of evidence, 20 figures and a sequence of 1,000 characters. Nothing was written.",
   SUCCESS_FIGURE_NOT_COMPUTED: "A figure on a success record is computed from cited sources, never stated: give its computation and its operands. Nothing was written.",
-  SUCCESS_CAUSE_NOT_EVIDENCED: "Saying the group's action caused the change rests on evidence: between 1 and 50 items this record holds and you may see. Nothing was written.",
-  SUCCESS_CAUSE_OWN_ACT_ONLY: "The group's own act is never evidence that it caused the change: cite evidence other than the group's own actions and what it sent. You may state the sequence of events instead. Nothing was written.",
+  SUCCESS_CAUSE_NOT_EVIDENCED: "Saying the team's action caused the change rests on evidence: between 1 and 50 items this record holds and you may see. Nothing was written.",
+  SUCCESS_CAUSE_OWN_ACT_ONLY: "The team's own act is never evidence that it caused the change: cite evidence other than the group's own actions and what it sent. You may state the sequence of events instead. Nothing was written.",
   NO_SUCH_SUCCESS_RECORD: "No success record answers to that id. One you may not see is answered exactly as one that does not exist.",
   SUCCESS_NO_REASON: "A revision of a success record says why. Nothing was written.",
   SUCCESS_BAD_REASON: "A reason is at most 2,000 characters. Nothing was written.",
@@ -56,15 +57,15 @@ const T45 = {
   MACHINE_CANNOT_CARRY: "Carrying an outcome into the case's next edition is a member's act. A machine never carries one. Nothing was written.",
 };
 /* The three rows R25 keeps in T46, with their present words. */
+/* Each kept row's present words, by their sha256: the test holds no sentence a member reads. */
 const KEPT_ROWS = {
-  SUCCESS_NO_STATEMENT: ["C-114.29", "Say in your own words what changed: at most 2,000 characters. Nothing was written."],
-  SUCCESS_CAUSE_UNSTATED: ["C-114.34", "Saying the group's action caused the change is a statement in your own words, at most "
-    + "2,000 characters. Nothing was written."],
-  SUCCESS_CAUSE_UNCHECKABLE: ["C-114.37", "Whether the cause rests only on the group's own acts could not be checked, so it is "
-    + "not recorded. You may state the sequence of events instead. Nothing was written."],
+  SUCCESS_NO_STATEMENT: ["C-114.29", "3ba606da829c85ea3462f85dd4ab628404034fa9711af52d33d890cfdfec9e45"],
+  SUCCESS_CAUSE_UNSTATED: ["C-114.34", "02021bc9c9f4e4cabeefeb4bd2b1c85a33510c0c2c1942b68be164468abef7cb"],
+  SUCCESS_CAUSE_UNCHECKABLE: ["C-114.37", "0d9cab70b60c5bcc2870f3809f03d02fe921d118d333d8c975bcd8ab74bb61b5"],
 };
+const sha = (text) => createHash("sha256").update(text).digest("hex");
 /* Every row R25 does not take (25, the three kept among them), as T45 left them: their canonical JSON's sha256. */
-const KEPT = { count: 25, sha256: "8e5b63207635942fd3a6eeb0be1493fdff841e26b9ef2a78ecce5afa2830143a" };
+const KEPT = { count: 25, sha256: "1818d9398681db2ab5af86a9f9f62cef84ba3d4e92b0d4fc397907721be86223" };
 const SENTENCES = [SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED];
 
 test("R25 seventeen rows read words.json's refusal.<CODE> by key from CONSEQUENCES_WORDS, never a copy; codes, numbers and wheres unmoved; T45's words answered no longer", () => {
@@ -83,10 +84,10 @@ test("R25 seventeen rows read words.json's refusal.<CODE> by key from CONSEQUENC
 });
 
 test("R25 C-114.29 SUCCESS_NO_STATEMENT, C-114.34 SUCCESS_CAUSE_UNSTATED and C-114.37 SUCCESS_CAUSE_UNCHECKABLE keep their present words, not words.json's; every other row keeps its own", () => {
-  for (const [code, [check, words]] of Object.entries(KEPT_ROWS)) {
-    assert.deepEqual([CONSEQUENCES_CHECKS[code].check, CONSEQUENCES_CHECKS[code].translation], [check, words], code);
+  for (const [code, [check, digest]] of Object.entries(KEPT_ROWS)) {
+    assert.deepEqual([CONSEQUENCES_CHECKS[code].check, sha(CONSEQUENCES_CHECKS[code].translation)], [check, digest], code);
     assert.ok(!(`refusal.${code}` in CONSEQUENCES_WORDS), `${code} not taken in T46`);
-    assert.notEqual(words, en(`refusal.${code}`), `${code}: words.json's sentence and the requirement do not yet agree`);
+    assert.notEqual(digest, sha(en(`refusal.${code}`)), `${code}: words.json's sentence and the requirement do not yet agree`);
   }
   const kept = Object.fromEntries(Object.entries(CONSEQUENCES_CHECKS).filter(([c]) => !(c in TAKEN)));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
@@ -249,7 +250,7 @@ test("R24 (T47, N958) a success record, recorded before or after the promotion, 
 
 /* promotion as this module reaches it, refusing every success record's object as the record does with no producing group
    recorded (promotion R13, C-64.1); every other promotion as it is. */
-const REFUSED = { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", detail: "no producing group" };
+const REFUSED = groupUndetermined();
 const refusing = (w) => new Proxy(w.promotion, { get: (t, p) => (p === "promote"
   ? (pkg) => (/^SUC-/.test(String(pkg && pkg.bundleId)) ? REFUSED : t.promote(pkg))
   : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });

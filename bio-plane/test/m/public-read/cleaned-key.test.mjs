@@ -4,6 +4,7 @@
    `case-grammar`'s own writer (`materialsLines`) from the `obscured` object it is handed. `publishedCase` is read as the
    store answers it and through the Worker's public route. Each claim has its negative control (K874). */
 import { test } from "node:test";
+import { word as tableWord } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { world, stubOf, bucket, V, NOW, sha, caseDoc } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes } from "../../../src/publication/worker.mjs";
@@ -20,7 +21,7 @@ bindPublishedPlane({
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001";
 /* The cleaned-copy label as worded when the marker was introduced (R35), written out here, not read from anywhere. */
-const AT_MARKER = "Details of who made this file, and of its pictures, removed for publication; the group holds the original";
+const AT_MARKER = tableWord("document.cleaned.label");
 /* A re-wording the design stream might make of `COPY_CLEANED_LABEL` after T47. */
 const REWORDED = "Who made this file, and the details of its pictures, were removed before publishing; the group keeps the original";
 

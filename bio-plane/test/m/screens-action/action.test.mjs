@@ -36,7 +36,7 @@ test("R5 (action-producers R1; v0.2 rule 6): each due date is drawn with mark.du
 });
 
 test("R5: 'Record a reply' sends actioncorrespond with the day and the member's account; 'Mark a reply as pressure' marks a received one once", async () => {
-  const p = await open(ROUTES.action, { ...DATA_PLANE, actioncorrespond: ok({}), actionpressure: ok({}) });
+  const p = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: ok({ ...PRESSURE, items: [] }), actioncorrespond: ok({}), actionpressure: ok({}) });
   const b = await press(p, "actioncorrespond", { reason: "it came" });
   assert.ok(beside(p, b).includes(W("screen.action.reply.at.needed")));
   await press(p, "actioncorrespond", { values: { "reply-at": "2026-10-11", "reply-account": "They will answer by 26 October." }, reason: "it came" });
@@ -49,6 +49,19 @@ test("R5: 'Record a reply' sends actioncorrespond with the day and the member's 
   said(q, "screen.action.pressure.legal");
 });
 
+test("R5 (diagnosis 11 §17): a reply marked through `actionpressure` is drawn marked, read from `pressurefor`, and not offered again; another received reply still offers it", async () => {
+  const two = { ...ACTION, correspondence: [...ACTION.correspondence, { ord: 3, direction: "received", at: "2026-10-04", medium: "email", party: "Office of the City Clerk", author: "member:mai" }], entries: [{ ord: 2 }, { ord: 3 }] };
+  const marked = { ...PRESSURE, items: [{ arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, kind: "legal", note: "a letter", by: "member:mai", at: "2026-10-04T09:00:00Z" }] };
+  const p = await open(ROUTES.action, { ...DATA_PLANE, action: ok(two), pressurefor: ok(marked), actionpressure: ok({}) });
+  assert.equal(p.doc.getElementById("pressure-kind-2"), null, "ord 2 is marked: no choice to mark it again");
+  assert.ok(p.doc.getElementById("pressure-kind-3"), "ord 3 is not marked: it is still offered");
+  const row = main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes(D("2026-10-03")));
+  assert.ok(text(p, row).includes(W("screen.action.pressure.legal")), "the mark is drawn beside the reply it was made on");
+  // control: a mark on another action's reply is not read as this one's
+  const other = await open(ROUTES.action, { ...DATA_PLANE, action: ok(two), pressurefor: ok({ ...marked, items: [{ ...marked.items[0], arrived: { action: "ACTN-2026-9999999999999999", ord: 2 } }] }) });
+  assert.ok(other.doc.getElementById("pressure-kind-2"));
+});
+
 test("R5: 'Move the action' to a state its edges allow, with the reason in the query actions reads; resolving names how", async () => {
   const p = await open(ROUTES.action, { ...DATA_PLANE, actionmove: ok({}) });
   const to = p.doc.getElementById("move-to").querySelectorAll("option").map((o) => o.value);
@@ -58,17 +71,13 @@ test("R5: 'Move the action' to a state its edges allow, with the reason in the q
   assert.deepEqual([r.query.target, r.query.to, r.query.resolution, r.query.reason], [ACTION_ID, "resolved", "complied", "the logs came"]);
 });
 
-test("R5: 'Remind me' on a dated entry; 'Record a litigation hold' with a reason, then drawn as in place; confidential or not with a reason, a published case keeping what it said", async () => {
-  let hold = null;
-  const p = await open(ROUTES.action, { ...DATA_PLANE, reminderset: ok({}), actionhold: () => { hold = "in_place"; return ok({}); },
-    actionholdpreview: () => ok({ target: ACTION_ID, hold }), actionscope: ok({}) });
+test("R5: 'Remind me' on a dated entry; confidential or not with a reason, a published case keeping what it said; the litigation hold is no longer placed here (R32)", async () => {
+  const p = await open(ROUTES.action, { ...DATA_PLANE, reminderset: ok({}), actionscope: ok({}) });
   await press(p, "reminderset", { nth: 1, values: { "remind-1": "2099-10-20" } });
   assert.deepEqual(last(p, "reminderset").body, { target: ACTION_ID, entry: 1, on: "2099-10-20" });
   said(p, "screen.action.scope.open");
-  await press(p, "actionhold", { reason: "a claim is coming" });
-  assert.deepEqual(last(p, "actionhold").body, { target: ACTION_ID, hold: "in_place", reason: "a claim is coming" });
-  said(p, "screen.action.held");
-  assert.ok(!ops(p).includes("actionhold"));
+  assert.ok(!ops(p).includes("actionhold"), "R5 drops actionhold: it is placed on `hold`");
+  assert.equal(p.byOp("actionholdpreview").length, 0, "the hold's preview is not read here");
   await press(p, "actionscope", { reason: "names a witness" });
   assert.deepEqual(last(p, "actionscope").body, { target: ACTION_ID, confidential: true, reason: "names a witness" });
 });
@@ -100,8 +109,14 @@ test("R12: the pressure marks from pressurefor are drawn with where each arrived
   assert.equal(p.byOp("pressurefor")[0].query.action, ACTION_ID);
   said(p, "screen.action.pressuremarks");
   said(p, "screen.action.pressuremark.reply", { ord: "2" });
-  said(p, "screen.action.pressuremark.by", { who: "mai" });
-  assert.ok(text(p).includes(`${W("screen.action.pressure.legal")} · a letter from the city's counsel`));
+  // R31 (3): a legal mark is drawn as `screen.action.legalmark` with its note and, while it has no hold, `screen.action.holdnone`
+  said(p, "screen.action.legalmark", { member: "mai" });
+  said(p, "screen.action.holdnone");
+  assert.ok(text(p).includes(`${W("screen.action.legalmark", { member: "mai" })} · a letter from the city's counsel`));
+  const retaliation = { arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, kind: "retaliation", note: "a threat to the lease", by: "member:asha", at: "2026-10-05T09:00:00Z", hold: null };
+  const r = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: ok({ ...PRESSURE, items: [retaliation] }) });
+  said(r, "screen.action.pressuremark.by", { who: "asha" });
+  unsaid(r, "screen.action.holdnone");
   assert.ok(text(p).includes(D("2026-10-04")));
   const other = { arrived: { action: "ACTN-2026-ffffffffffffffff", ord: 1 }, project: PROJECT, kind: "retaliation", note: "a threat on the other action", by: "member:dev", at: "2026-10-05T09:00:00Z" };
   const q = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: ok({ ...PRESSURE, items: [...PRESSURE.items, other] }) });
@@ -156,28 +171,28 @@ test("R16: 'Change the law…' sends actionlaws with the law chosen from those t
   const p = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: ok({}), actionlawspropose: ok({}) });
   assert.ok(button(p, "actionlaws").textContent.includes(W("law.change")));
   assert.ok(button(p, "actionlawspropose").textContent.includes(W("law.propose")));
-  // the choice offers the laws of this action's kind the places name; the proposal offers those not yet chosen
+  // R54: one list offers the laws of this action's kind the places name, for both acts
   assert.deepEqual(p.doc.getElementById("law-pick").querySelectorAll("option").map((o) => o.value), ["Gov. Code § 7922.535(b)", "Mun. Code § 2.20.230"]);
-  assert.deepEqual(p.doc.getElementById("lawp-pick").querySelectorAll("option").map((o) => o.value), ["Mun. Code § 2.20.230"]);
-  await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
+  assert.equal(p.doc.getElementById("lawp-pick"), null, "no second list");
+  await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } });
   assert.deepEqual(last(p, "actionlaws").body, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] });
-  await press(p, "actionlawspropose", { values: { "lawp-pick": "Mun. Code § 2.20.230", "lawp-level": "city" } });
+  await press(p, "actionlawspropose", { values: { "law-pick": "Mun. Code § 2.20.230" } });
   assert.deepEqual(last(p, "actionlawspropose").body, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] });
   assert.equal(p.byOp("actionlaws").length, 1, "proposing sent no actionlaws");
   // a law already chosen keeps its level when it is chosen again
-  await press(p, "actionlaws", { values: { "law-pick": "Gov. Code § 7922.535(b)", "law-level": "federal" } });
+  await press(p, "actionlaws", { values: { "law-pick": "Gov. Code § 7922.535(b)" } });
   assert.deepEqual(last(p, "actionlaws").body.laws, [{ level: "state", citation: "Gov. Code § 7922.535(b)" }]);
 });
 
 test("R16: refusals are drawn by their words, beside the act", async () => {
   assert.ok(hasWord("refusal.BAD_CITATION"));
   const p = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: refusedIn("BAD_CITATION", "the owner's own sentence") });
-  const b = await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
+  const b = await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } });
   assert.ok(beside(p, b).includes(W("refusal.BAD_CITATION")), "by its word");
   assert.ok(!beside(p, b).includes("the owner's own sentence"));
   // a code the design holds no word for is drawn by the owner's own sentence
   const q = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: refusedIn("CODE_NO_ONE_HAS_A_WORD_FOR", "That law cannot be kept.") });
-  assert.ok(beside(q, await press(q, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } })).includes("That law cannot be kept."));
+  assert.ok(beside(q, await press(q, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } })).includes("That law cannot be kept."));
 });
 
 /* ---------- R17 (T49; N1093; DEC-239 (2); actions R23–R25; action-records R2): its risk ---------- */
@@ -231,7 +246,7 @@ const DECLARED = Object.hasOwn(OPS, "actioninquiry");
 const INQ = "INQ-2026-aaaaaaaaaaaaaaaa";
 const FUTURE = FUTURE_ACTION;
 
-test("R23: where a reply's date has passed with none recorded, 'Open a question from this' is offered at once with a field for the question; 'Open a question' sends actioninquiry and opens the new question", async () => {
+test("R23, R26: where a reply's date has passed with none recorded, 'Open a question from this' is offered at once with a field for the question; it sends actioninquiry, the page stays and says where the question is open, with a reference to it", async () => {
   const p = await open(ROUTES.action, { ...DATA_PLANE, actioninquiry: ok({ ok: true, inquiry: INQ, action: ACTION_ID, project: PROJECT }) });
   if (!DECLARED) {
     assert.ok(!ops(p).includes("actioninquiry"), "not declared: not registered, not drawn");
@@ -242,7 +257,7 @@ test("R23: where a reply's date has passed with none recorded, 'Open a question 
   said(p, "action.noreply.says");
   said(p, "action.noreply.question.help");
   assert.ok(button(p, "actioninquiry").textContent.includes(W("action.noreply.question")));
-  assert.equal(main(p).querySelector("details"), null, "at once, not behind a fold");
+  assert.equal(p.doc.getElementById("action-question").closest("details"), null, "at once, not behind a fold");
   const field = p.doc.getElementById("action-question");
   assert.equal(field.value, "", "control: nothing is filled from the action into the question");
   assert.equal(field.getAttribute("maxlength"), "500");
@@ -255,8 +270,13 @@ test("R23: where a reply's date has passed with none recorded, 'Open a question 
   assert.equal(sent.action, ACTION_ID);
   assert.equal(sent.question, "Why has the Clerk not answered the request?");
   assert.deepEqual(Object.keys(sent).filter((k) => !["action", "question", "reason"].includes(k)), [], "control: nothing else is sent, nothing filled from the action");
-  assert.equal(p.location.pathname, `/app/question/${INQ}`, "the new question opens");
+  // R26: the screen does not navigate away: the receipt and the reference to the question
+  assert.equal(p.location.pathname, ROUTES.action, "the page stays on the action");
+  said(p, "screen.action.ask.done", { project: "Pothole repairs" });
+  assert.ok(main(p).querySelector(`a[href="/app/question/${INQ}"]`), "the reference to the question");
   assert.equal(p.byOp("action").length, reads, "the action page is unchanged: it is not read again");
+  said(p, "screen.action.ask.heading");
+  assert.ok(p.doc.getElementById("action-question").parentNode.textContent.includes(W("action.noreply.question.label")), "the field's label is `action.noreply.question.label`");
 });
 
 test("R23: on request on any action: a date not yet passed offers it behind a fold, with no 'no reply recorded' box; control: it is the same act", async () => {

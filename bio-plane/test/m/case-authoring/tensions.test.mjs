@@ -8,6 +8,7 @@ import { CASE_DOCUMENT_FORMAT, caseTensionsOf } from "../../../src/publication/i
 import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE,
          CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED } from "../../../src/case-authoring/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", F = "INQ-2026-0001-q", G = "INQ-2026-0002-g";
 const RUN = "RUN-2026-0001", ADMIN = "class:admin";
@@ -66,9 +67,9 @@ test("R29 (N529): C-120.1–C-120.3, a case's disclosures, are case-disclosures'
   assert.deepEqual(Object.entries(CASE_DISCLOSURE_CHECKS).slice(0, 3).map(([k, v]) => [k, v.check]),
     [["TENSION_NOT_DISCLOSED", "C-120.1"], ["DISCLOSURE_NOT_STANDING", "C-120.2"], ["TENSIONS_UNDETERMINED", "C-120.3"]]);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.translation), [
-    "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published.",
-    "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published.",
-    "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."]);
+    word("refusal.TENSION_NOT_DISCLOSED"),
+    word("refusal.DISCLOSURE_NOT_STANDING"),
+    word("refusal.TENSIONS_UNDETERMINED")]);
   for (const row of Object.values(CASE_DISCLOSURE_CHECKS))
     assert.match(row.where, /^src\/case-disclosures\/index\.mjs \S+ > [a-z-]+$/);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.where), [
@@ -120,7 +121,7 @@ test("R55 (case-disclosures R1), R14: the tension section lists each one — the
   assert.match(s[0].sentence, /Disclosed by alice/);
   /* the body: the section, the owner's words marked as the owner's, the member block's sentence */
   const body = text.slice(text.indexOf("\n---\n", 4) + 5);
-  assert.ok(body.includes("## Tensions Disclosed"));
+  assert.ok(body.includes(localize("case-disclosures.document.tensions_disclosed_heading", "## Tensions Disclosed")));
   assert.ok(body.includes("In the owner's words: we read the later page as the award"));
   assert.ok(body.includes("The explanation recorded: the two pages speak of different years"));
   assert.ok(body.includes(`Acknowledged by alice on ${w.clock.now}`));
@@ -180,7 +181,7 @@ test("R55 (case-disclosures R1) (C-120.2): a listed candidate the read does not 
 });
 
 test("R55 (case-disclosures R1) (C-120.3): a read that fails or is truncated is TENSIONS_UNDETERMINED — what cannot be read cannot be disclosed — and nothing is written; a whole read publishes", () => {
-  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: "the read failed" }, /the read failed/],
+  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: word("case-disclosures.why.read_failed") }, /the read failed/],
                                [{ ok: true, candidates: [], truncated: true, bound: 200 }, /more than 200/],
                                [null, /no answer/], ["throws", /boom/]]) {
     const calls = [];
@@ -319,20 +320,20 @@ test("R55 (case-disclosures R1): tensionsDisclosed absent or null is none; a can
     assert.deepEqual([r.reason, r.field], ["BAD_COMPLETENESS", field], JSON.stringify(list));
   }
   const a = seen();
-  const apostrophe = a.w.publish(a.P, "alice", [F], { tensionsDisclosed: disclose(a.id, "the group's reading") });
+  const apostrophe = a.w.publish(a.P, "alice", [F], { tensionsDisclosed: disclose(a.id, "the team's reading") });
   assert.equal(apostrophe.ok, true, "an apostrophe is legal inside the grammar's quoted string");
-  assert.equal(a.w.fm(docOf(a.w, apostrophe).text).case_tensions[0].words, "the group's reading");
+  assert.equal(a.w.fm(docOf(a.w, apostrophe).text).case_tensions[0].words, "the team's reading");
   const n = world(); n.member("alice"); n.doc(DOC); n.finding(F, [{ target: DOC }]);
   assert.equal(n.publish(n.project("Team", "alice", [F]), "alice", [F], { tensionsDisclosed: null }).ok, true);
 });
 
-test("R14: the document's format is bio-case-document/7 (identical in fields to /6, which states everything /5 states; DEC-124), and its tension section reads back through publication's caseTensionsOf (K498) — both sides of a seen one, the seen side only of a highlighted one, each member's sentences, the unread legs", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
+test("R14: the document's format is bio-case-document/8 (identical in fields to /6, which states everything /5 states; DEC-124), and its tension section reads back through publication's caseTensionsOf (K498) — both sides of a seen one, the seen side only of a highlighted one, each member's sentences, the unread legs", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/8");
   const { w, P, id } = seen();
   const r = w.publish(P, "alice", [F], { tensionsDisclosed: disclose(id, "we read the later page") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const text = docOf(w, r).text;
-  assert.equal(w.fm(text).format, "bio-case-document/7");
+  assert.equal(w.fm(text).format, "bio-case-document/8");
   const back = caseTensionsOf(text);
   assert.equal(back.detail, null);
   assert.deepEqual([back.highlighted, back.depth, back.tensions.length], [0, TENSIONS_DEPTH_STATED, 1]);

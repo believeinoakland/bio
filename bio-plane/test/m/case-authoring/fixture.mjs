@@ -39,6 +39,8 @@ import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { importedWorld } from "../case-import/fixtures.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
@@ -130,7 +132,7 @@ function reviewProvider(w) {
     draftForMember, draftFor: draftForMember,
     draftIdentity: identity,
     caseIdentitySentence: (caseId, edition, newCase) => (caseId ? `the next edition (${edition}) of ${caseId}`
-      : newCase ? "a new case" : "a derived case"),
+      : newCase ? "NEW-CASE" : "DERIVED-CASE"),
     statedEdition: (ident, newCase) => (ident.caseId || newCase ? ident.edition : null),
     liveGrant,
     grantAdmitsCaseEdition: (s, c, e) => { const l = liveGrant(s); return !!(l && l.grant.case_id === c && Number(l.grant.edition) === Number(e)); },
@@ -140,7 +142,7 @@ function reviewProvider(w) {
 }
 
 export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
-                        inquiry: inqWrap = null, deps = {}, realImports = false, standards = null } = {}) {
+                        inquiry: inqWrap = null, deps = {}, realImports = false, standards = null, copying = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -161,6 +163,29 @@ export function world({ group = "test-group", provider = true, now = null, recor
      use it itself: the fixture reaches the one instance through inquiry's (below). */
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
+  /* G9 (fix round 6; K4573): `copying` gives case-carriage the evidence store and the bucket a member document's copy is
+     made from and held in (as the live plane binds them), so a test can run its real `copyBatch` and `copyNow`: bytes held
+     in `w.evidence.held` by digest, copies in `w.bucket.held`. The instance is made here, before any module that reaches it
+     without them (the host keeps the first). */
+  const evidence = copying ? (() => {
+    const held = new Map();
+    return { held,
+      async head(k) { const b = held.get(k); return b ? { size: b.length } : null; },
+      async get(k) { const b = held.get(k); return b ? { arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) } : null; },
+      async put(k, bytes) { held.set(k, Buffer.from(bytes)); return { key: k }; } };
+  })() : null;
+  const bucket = copying ? (() => {
+    const objects = new Map();
+    return { held: objects,
+      async put(k, bytes, opts = {}) { objects.set(k, { bytes: Buffer.from(bytes), opts }); return { key: k }; },
+      async get(k) { const o = objects.get(k); return o ? { arrayBuffer: async () => o.bytes, ...o.opts } : null; },
+      async head(k) { const o = objects.get(k); return o ? { size: o.bytes.length } : null; } };
+  })() : null;
+  if (copying) {
+    record.evidenceStore = () => ({ head: (d) => evidence.head(String(d)), get: (d) => evidence.get(String(d)),
+                                    put: (d, b) => evidence.put(String(d), b) });
+    caseCarriageOf(host, { record, membership, bucket, store: "bio", provenance: prov, now: () => clock.now });
+  }
   /* attestation (layer 3, after provenance), the real one: the attestations a capture holds (its R7), R55 (case-disclosures R2)'s read. */
   const attestation = attestationOf(host, { record, provenance: prov });
   /* capture (layer 3), its late attestations and signed accounts (its R68, R69) and its inbox (R72's read), and sources
@@ -183,7 +208,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   };
   const content = contentOf(host, { record, membership, provenance: prov, extraction: exProvider, now: () => clock.now });
   content.migrate();
-  const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
+  const retrieval = noSelection().retrieval;
   /* the record of people (layer 5), each the real module built on this host (K1619: never reached through inquiry):
      the registry, the world's events, the lines between entities, money facts and people, which case-disclosures reads
      for the people a case names (its R24–R27) and R57's timeline reads through events. */
@@ -300,10 +325,15 @@ export function world({ group = "test-group", provider = true, now = null, recor
      to an answer R16's read gives case-disclosures in place of the real one, or to a function of the digest answering
      it (one that throws: a read that fails). A test's own `deps.caseCarriage` replaces it whole. */
   w.copies = new Map();
+  if (copying) Object.assign(w, { evidence, bucket });
   const carriage = caseCarriageOf(host);
+  /* `w.copyNow`, when a test sets it, answers `copyNow` in place of the real one (G9: the act's wiring, apart from case-carriage's
+     own copy); unset, the real instance answers, whatever it has. */
   const caseCarriage = new Proxy(carriage, { get: (t, p) => (p === "documentCopy"
     ? (captureSha) => { const a = w.copies.get(captureSha); return typeof a === "function" ? a(captureSha) : a ?? t.documentCopy(captureSha); }
+    : p === "copyNow" && w.copyNow ? w.copyNow
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+  w.cc = carriage;
   const disclosures = caseDisclosuresOf(host, { storage: st, entities, events, lines, money, people, membership,
     now: () => clock.now, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
     extraction: ex, caseImport: imports, promotion, inquiry, strength, caseCarriage,
@@ -325,15 +355,22 @@ export function world({ group = "test-group", provider = true, now = null, recor
     ? { run: String(id), status: runs.get(String(id)).status, mode: "draft" } : null) };
   const clockOf = now || ((p) => (p === "millisecond" ? clock.ms : clock.now));
   const caseInquiry = inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry;
-  w.cacc = caseAccountOf(host, { record: caseRecord, membership, inquiry: caseInquiry, runs: aiRuns,
-                                 disclosures: judgedDisclosures, now: clockOf });
-  w.ci = caseInputsOf(host, { record: caseRecord, membership, publication, publishSchedule, account: w.cacc, now: clockOf });
-  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions, inputs: w.ci,
-    strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    networkNotices, now: clockOf,
-    disclosures: judgedDisclosures, events,
-    ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
-    inquiry: caseInquiry });
+  const chain = (h, cacc = null, ci = null) => {
+    cacc ??= caseAccountOf(h, { record: caseRecord, membership, inquiry: caseInquiry, runs: aiRuns,
+                                disclosures: judgedDisclosures, now: clockOf });
+    ci ??= caseInputsOf(h, { record: caseRecord, membership, publication, publishSchedule, account: cacc, now: clockOf });
+    const ca = caseAuthoringOf(h, { record: caseRecord, membership, basisVersions, inputs: ci,
+      strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
+      networkNotices, now: clockOf, caseCarriage: deps.caseCarriage || caseCarriage,
+      disclosures: judgedDisclosures, events,
+      ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
+      inquiry: caseInquiry });
+    return { cacc, ci, ca };
+  };
+  ({ cacc: w.cacc, ci: w.ci, ca: w.ca } = chain(host));
+  /* A reload: a second host over the same storage, with its own instance of this module (a Durable Object coming up again),
+     holding nothing in memory that the first held; the modules it asks keep their one instance and their tables. */
+  w.reload = () => chain({ storage: st }, w.cacc, w.ci).ca;
   Object.assign(w, { events, lines, money, people });
   let n = 0;
   Object.assign(w, {
@@ -373,10 +410,10 @@ export function world({ group = "test-group", provider = true, now = null, recor
     },
     /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), in `state`; `concluded` carries its own
      *  conclusion and falsifier (the no-project relationship's conclusion, §7.1 item 5). */
-    finding(id, legs, { state = "concluded", lines = [] } = {}) {
+    finding(id, legs, { state = "concluded", lines = [], severed = [] } = {}) {
       const head = record.head(id);
       const r = promotion.promote({ bundleId: id, base: head ? head.bundleSha : null, snapKey: `k${++n}`,
-        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines }) }],
+        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { state, lines, severed }) }],
         meta: { object_type: "inquiry" } });
       if (!r.ok) throw new Error(`fixture finding refused: ${JSON.stringify(r).slice(0, 600)}`);
       return r;
@@ -468,6 +505,9 @@ export function world({ group = "test-group", provider = true, now = null, recor
 /** `case-import` at its ruled interface (its R4, R9, R16), standing in until it is composed here: another group's
  *  imported editions, the acceptances in force and the open flags, as a test sets them. `accept(...)` answers the ref a
  *  leg names; `flagsRead`, when set, answers `openFlagsOn` in place of the held flags (a failed or incomplete read). */
+/* case-import's real refusal of an import and edition it holds none of (its R4), taken from its published fixture. */
+const NO_SUCH_EDITION = (await importedWorld()).ci.importedCase({ import: "IMP-2026-9999", edition: 1 });
+
 export function importsStandIn() {
   const editions = new Map(), acceptances = new Map(), flags = [];
   const key = (...a) => a.join("#");
@@ -493,7 +533,7 @@ export function importsStandIn() {
       const e = editions.get(key(imp, edition));
       return e ? { ok: true, import: imp, group: e.group, case: e.case, editions: [{ edition: e.edition }],
                    edition: { edition: e.edition, manifest_sha: e.manifest_sha, findings: e.findings } }
-               : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+               : { ...NO_SUCH_EDITION, import: imp, edition };
     },
   };
   s.registration = {
@@ -522,14 +562,16 @@ export function infoMd(id) {
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
 
-/** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes. */
-export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
+/** An inquiry document: `legs` its basis (each cited by a `cites` reference, confirmed unless its target is in `severed`);
+ *  concluded in its own bytes. */
+export function inqMd(id, legs = [], { state = "concluded", lines = [], severed = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
   /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
   const refs = [...new Set(legs.map((l) => l.target).filter((t) => !/^(imported:|CALC-)/.test(String(t))))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
-    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",
+    ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`,
+                                                              `    status: ${severed.includes(t) ? "severed" : "confirmed"}`,
                                                               '    note: ""'])] : ["references: []"]),
     "state_history: []",
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => Object.entries({ role: "supports", ...l })

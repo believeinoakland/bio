@@ -149,7 +149,7 @@ test("R3 boundary.fences is published.fences unchanged, member_only_acts is memb
   assert.deepEqual(boundary.fences, machineFences(owners));
   assert.ok(boundary.fences.length > 0);
   /* Whatever the plane publishes is what is carried: a fence from a module's own family arrives as published. */
-  const moved = [...pub.fences, { code: "MACHINE_CANNOT_MOVED", family: "MODULE_CHECKS", check: "C-9.9", says: "moved words" }];
+  const moved = [...pub.fences, { code: "MACHINE_CANNOT_MOVED", family: "MODULE_CHECKS", check: "C-9.9", says: "moved words" }]; // fixtures-own: input a fence the test makes up to prove the pack carries what the plane publishes; no source holds its code
   assert.equal(renderPack(published({ fences: moved })).resident.boundary.fences, moved);
   assert.deepEqual(boundary.member_only_acts, memberOnlyActs(pub.catalog));
   assert.equal(boundary.fences_sourcing, "driven");
@@ -227,7 +227,7 @@ test("R27 measured, the contradiction layer carries contradiction's RECOMMEND_PR
   const unmeasuredVersion = renderWithContradiction({ RECOMMEND_PROMPT_SHA256: null }).rendered.version;
   assert.equal(new Set([measuredVersion, editedVersion, unmeasuredVersion]).size, 3);
   /* The skill holds no gate (R24), and the words it may render carry no control-flow authority (R16). */
-  assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "contradiction's recommender prompt");
+  assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "R16: the recommender prompt, read whole");
 });
 
 test("R6 version is packVersion(pack), id is investigative-session, edition the authored edition", () => {

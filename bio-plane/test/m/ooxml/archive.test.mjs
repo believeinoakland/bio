@@ -16,6 +16,7 @@ import { join } from "node:path";
 import {
   listArchive, streamMember, ARCHIVE_LIMITS, ARCHIVE_ENTRIES_MAX, ARCHIVE_TOTAL_MAX, MEMBER_MAX,
   ARCHIVE_RATIO_MAX, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
+  OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX,
 } from "../../../src/ooxml.mjs";
 import { makeZip, zipBomb, nestedZip } from "../../make-zip.mjs";
 import { buildZip } from "./zip.mjs";
@@ -282,7 +283,7 @@ test("R28 listArchive refuses unreadable archives by R3's names and ARCHIVE_ENTR
   assert.deepEqual(await listArchive(sigless), R("central_directory_truncated"));
   // more entries declared than the limit: refused before the directory is walked
   const many = makeZip([{ name: "a", data: "a" }], { eocd: { entries: ARCHIVE_ENTRIES_MAX + 1, diskEntries: ARCHIVE_ENTRIES_MAX + 1, cdSize: 0 } });
-  assert.deepEqual(await listArchive(many), R("ARCHIVE_ENTRIES_MAX", { limit: ARCHIVE_ENTRIES_MAX }));
+  assert.deepEqual(await listArchive(many), R("ARCHIVE_ENTRIES_MAX", { limit: ARCHIVE_ENTRIES_MAX, final: true }));
   const exactly = makeZip(Array.from({ length: ARCHIVE_ENTRIES_MAX }, (_, i) => ({ name: `${i}`, data: "", method: 0 })));
   const ex = await listArchive(exactly);
   assert.equal(ex.ok, true); assert.equal(ex.count, ARCHIVE_ENTRIES_MAX);
@@ -437,7 +438,7 @@ test("R29 streamMember: a member not ok is refused by its verdict, nothing read"
     const { reads, source } = ranged(z);
     const { bytes, result } = await cutAll(source, row);
     const [why, limit] = wants[row.index];
-    assert.deepEqual(result, { ok: false, why, index: row.index, ...(limit ? { limit } : {}) });
+    assert.deepEqual(result, { ok: false, why, index: row.index, ...(limit ? { limit, final: true } : {}) });
     assert.equal(bytes.length, 0);
     assert.deepEqual(reads, []);
   }
@@ -563,27 +564,29 @@ test("R29 the streamed SHA-256 is the host's own where it has DigestStream, and 
 
 test("R30 the limits, each exported by its name, and together as the frozen ARCHIVE_LIMITS", async () => {
   const want = {
-    ARCHIVE_ENTRIES_MAX: 10000, ARCHIVE_TOTAL_MAX: 268435456, MEMBER_MAX: 268435456, ARCHIVE_RATIO_MAX: 1100,
+    ARCHIVE_ENTRIES_MAX: 10000, ARCHIVE_TOTAL_MAX: 268435456, MEMBER_MAX: 268435456, OFFICE_ENTRIES_MAX: 100000,
+    ARCHIVE_DIRECTORY_MAX: 16777216, ARCHIVE_NAME_MAX: 4096, ARCHIVE_RATIO_MAX: 1100,
     ARCHIVE_DEPTH_MAX: 3, ARCHIVE_TREE_TOTAL_MAX: 268435456, ARCHIVE_TREE_ENTRIES_MAX: 10000,
   };
   assert.deepEqual({ ...ARCHIVE_LIMITS }, want);
   assert.deepEqual(Object.keys(ARCHIVE_LIMITS), Object.keys(want));
   assert.ok(Object.isFrozen(ARCHIVE_LIMITS));
   assert.deepEqual(
-    { ARCHIVE_ENTRIES_MAX, ARCHIVE_TOTAL_MAX, MEMBER_MAX, ARCHIVE_RATIO_MAX, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX },
+    { ARCHIVE_ENTRIES_MAX, ARCHIVE_TOTAL_MAX, MEMBER_MAX, OFFICE_ENTRIES_MAX, ARCHIVE_DIRECTORY_MAX, ARCHIVE_NAME_MAX, ARCHIVE_RATIO_MAX, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX },
     want,
   );
   assert.equal(256 * 1024 * 1024, ARCHIVE_TOTAL_MAX);
   // a refusal on a limit names it exactly and carries its figure (the listing, its rows, the cut)
   const entriesMax = await listArchive(makeZip([], { eocd: { entries: 10001, diskEntries: 10001 } }));
-  assert.deepEqual([entriesMax.why, entriesMax.limit], ["ARCHIVE_ENTRIES_MAX", ARCHIVE_ENTRIES_MAX]);
+  assert.deepEqual([entriesMax.why, entriesMax.limit, entriesMax.final], ["ARCHIVE_ENTRIES_MAX", ARCHIVE_ENTRIES_MAX, true]);
   const half = ARCHIVE_TOTAL_MAX / 2;
   const total = await listArchive(makeZip([0, 1, 2].map((i) => ({ name: `${i}`, data: "x", method: 0, local: { uncompressedSize: half }, central: { uncompressedSize: half } }))));
-  assert.deepEqual([total.verdict, total.limit], ["ARCHIVE_TOTAL_MAX", ARCHIVE_TOTAL_MAX]);
+  assert.deepEqual([total.verdict, total.limit, total.final], ["ARCHIVE_TOTAL_MAX", ARCHIVE_TOTAL_MAX, true]);
   const exact = await listArchive(makeZip([0, 1].map((i) => ({ name: `${i}`, data: "x", method: 0, local: { uncompressedSize: half }, central: { uncompressedSize: half } }))));
   assert.equal(exact.declared_total, ARCHIVE_TOTAL_MAX);
   assert.equal(exact.verdict, "ok");
   assert.equal("limit" in exact, false);
-  for (const row of total.entries) assert.deepEqual([row.verdict, row.limit], ["ARCHIVE_RATIO_MAX", ARCHIVE_RATIO_MAX]);
-  assert.deepEqual((await cutAll(makeZip([]), total.entries[0])).result, { ok: false, why: "ARCHIVE_RATIO_MAX", index: 0, limit: ARCHIVE_RATIO_MAX });
+  assert.equal("final" in exact, false);
+  for (const row of total.entries) assert.deepEqual([row.verdict, row.limit, row.final], ["ARCHIVE_RATIO_MAX", ARCHIVE_RATIO_MAX, true]);
+  assert.deepEqual((await cutAll(makeZip([]), total.entries[0])).result, { ok: false, why: "ARCHIVE_RATIO_MAX", index: 0, limit: ARCHIVE_RATIO_MAX, final: true });
 });

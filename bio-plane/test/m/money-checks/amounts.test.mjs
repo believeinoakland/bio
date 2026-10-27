@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, contract, ALICE, ADMIN_BOB, MACHINE, FORBIDDEN, texts } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const byCheck = (r) => Object.fromEntries(r.checks.map((c) => [c.check, c]));
 const share = (w, value = "10%", con = null) =>
@@ -54,7 +55,7 @@ test("R2 R3: change orders above a stated share; none stated answers undetermine
   const k = contract(w, { award: "1000", orders: ["60", "50"] });
   const before = byCheck(w.c.amountChecks({ contract: k.id, viewer: ALICE })).change_orders_past_share;
   assert.equal(before.holds, "undetermined");
-  assert.equal(before.why, "no threshold stated");
+  assert.equal(before.why, word("money-checks.why.threshold_stated"));
   assert.equal(share(w, "10%").ok, true);
   const c = byCheck(w.c.amountChecks({ contract: k.id, viewer: ALICE })).change_orders_past_share;
   assert.equal(c.holds, true);
@@ -110,7 +111,7 @@ async function threaded(w, { hiddenSigned = false } = {}) {
   const signedCap = w.held("INFO-2026-0102-signed", "b".repeat(64), hiddenSigned ? "PROJ-2026-0009-hidden" : null);
   w.resolution(awardCap, "INFO-2026-0101-award", k.id);
   w.resolution(signedCap, "INFO-2026-0102-signed", k.id);
-  const d = w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the group's reading", declaredBy: ALICE,
+  const d = w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the team's reading", declaredBy: ALICE,
     stages: [{ key: "award", cardinality: "1", required: "always" }, { key: "signed", after: "award", cardinality: "1", required: "always" }] });
   assert.equal(d.ok, true, JSON.stringify(d));
   const t = await w.progressions.threadInstance({ progressionKey: "proc", entityId: k.id, threadedBy: ALICE,

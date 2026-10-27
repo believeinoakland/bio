@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { AI_CREDENTIAL_CHECKS } from "../../../src/credentials/index.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SHA = (c) => c.repeat(64);
 const row = (code) => AI_CREDENTIAL_CHECKS[code];
@@ -58,7 +59,7 @@ test("R13 an organisation-scoped credential is minted only by an active administ
   const org = { secretSha: SHA("b"), principalKind: "organisation" };
   const r = w.c.aiCredentialMint({ ...org, tokenId: "o1", who: "ann" });
   assert.deepEqual(r, notAnAdmin("ann", "minting an organisation-wide AI credential",
-    { remedy: "A member-scoped AI credential, which acts for you alone, is open to every member." }));
+    { remedy: word("credentials.member_scoped_credential") }));
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.by], [false, "NOT_AN_ADMIN", "NOT_AN_ADMIN", "C-96.1", "ann"]);
   assert.match(r.remedy, /member-scoped/);
   assert.equal(r.message, `${MEMBERSHIP_CHECKS.NOT_AN_ADMIN.translation} ${r.remedy}`);

@@ -3,7 +3,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRegistry, BOUNDS, ownerConformance } from "../../../src/connection-grammar/index.mjs";
-import { KINDS, NODE, HUB, AT, INQUIRY, makeNeighbours, fixture } from "./fixtures/owner.mjs";
+import { validAt, reasonText } from "../../../src/civil-time/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { KINDS, NODE, HUB, AT, INQUIRY, makeNeighbours, fixture, valid, tie } from "./fixtures/owner.mjs";
 
 const withOwner = (broken) => {
   const r = createRegistry();
@@ -142,4 +144,40 @@ test("R20 R19 an owner may add unread: [{what, why}], carried unchanged; an answ
   assert.equal(ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread }), fixture: fixture() }).ok, true);
   const bad = ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread: [{ what: "w" }] }), fixture: fixture() });
   assert.ok(checks(bad).includes("unread"));
+});
+
+test("R6 an undetermined item not marked so breaks the at rule, its reason read by connection-grammar.reads.name_is_undetermined_at_the", () => {
+  const a = firstRefusal(withOwner("unmarked"));
+  assert.equal(a.refused, "OWNER_NONCONFORMING");
+  const why = reasonText(validAt({ valid: valid("2025-01-01", null) }, AT).why);
+  assert.ok(a.failures.some((f) => f.check === "at" && f.why === localize("connection-grammar.reads.name_is_undetermined_at_the",
+    "{name} is undetermined at the date asked and is not marked undetermined: {why}", { name: "c-undetermined", why })), a.failures[0].why);
+});
+
+test("R6 an undetermined item marked with a reason the word list cannot fill is refused, its reason read by connection-grammar.reads.reason_not_filled", () => {
+  const bad = { ...tie("c-u", NODE, "ENT-2026-0002", valid("2025-01-01", null)), undetermined: { why: "a string, not a reason" } };
+  const r = createRegistry();
+  r.registerOwner({ owner: "sample", kinds: KINDS, neighbours: () => ({ items: [bad] }) });
+  const a = read(r);
+  assert.equal(a.refused, "OWNER_NONCONFORMING");
+  assert.ok(a.failures.some((f) => f.check === "at" && f.why === localize("connection-grammar.reads.reason_not_filled",
+    "{name} is marked undetermined, but its reason is not a key with the vars the word list fills, nor a localize id", { name: "c-u" })), a.failures[0].why);
+});
+
+test("R20 an unread entry missing what or why is refused, its shape read by connection-grammar.reads.unread_shape", () => {
+  const r = createRegistry();
+  r.registerOwner({ owner: "sample", kinds: KINDS, neighbours: () => ({ items: [], unread: [{ what: "w" }] }) });
+  const a = read(r);
+  assert.equal(a.refused, "OWNER_NONCONFORMING");
+  assert.ok(a.failures.some((f) => f.check === "unread" && f.why === localize("connection-grammar.reads.unread_shape",
+    "unread is a list of entries, each with a non-empty what and a non-empty why")), a.failures[0].why);
+});
+
+test("R6 a hub answered with items is refused, its reason read by connection-grammar.reads.hub_with_items", () => {
+  const r = createRegistry();
+  r.registerOwner({ owner: "sample", kinds: KINDS, neighbours: () => ({ items: [tie("c-x", NODE, "ENT-2026-0002")], hub: { set_size: 5000, why: "a hub" } }) });
+  const a = read(r);
+  assert.equal(a.refused, "OWNER_NONCONFORMING");
+  assert.ok(a.failures.some((f) => f.check === "hub" && f.why === localize("connection-grammar.reads.hub_with_items",
+    "a hub is answered with no items, never a partial set shown as whole")), a.failures[0].why);
 });

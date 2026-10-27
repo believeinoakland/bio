@@ -73,7 +73,7 @@ test("R19, R26, R31: each is refused KIND_NOT_PERSONAL by kind and by its publis
     for (const r of [w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-1", kinds: [kind] }),
                      w.q.queueMute({ member: "alice", viewer: "member:alice", item: id })])
       assert.deepEqual([r.ok, r.reason, r.kind_class, r.check], [false, "KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27"], id);
-    w.run(`INSERT INTO queue_item_mutes VALUES ('alice', ?, 'OBLIGATION', ?)`, id, iso(NOW));
+    w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice', ?, 'OBLIGATION', ?)`, id, iso(NOW));
   }
   assert.equal(w.all(`SELECT count(*) c FROM queue_state`)[0].c, 0, "a refusal writes nothing");
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','PRJ-1','local-fact-due,template-review-requested')`);

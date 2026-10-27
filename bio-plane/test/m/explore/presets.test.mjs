@@ -2,6 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { exploreOf, OVERLAP_SENTENCE, HUB_WORDS } from "../../../src/explore/index.mjs";
+import { othersWords } from "../../../src/explore/presets.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { AT, ZONE, valid, ent, evt, conn, world, byOwner, OWNER_KINDS, makeStore, makeOwner } from "./fixtures/owners.mjs";
 
@@ -56,7 +58,7 @@ test("R10 R15 each preset is the one walk over its set: chain, flowsFrom (payer 
   assert.equal(x.chain({ from: A, viewer: V }).refused, "NO_DATE");
   assert.equal(x.chain({ from: A, at: AT }).refused, "VIEWER_MISSING");
   const none = exploreOf(null, { registry: createRegistry() }).chain({ from: A, at: AT, viewer: V });
-  assert.match(none.preset_note, /no owner has registered/);
+  assert.equal(none.preset_note, word("explore.preset_note", { name: "chain" }));
 });
 
 test("R11 overlaps: each record both reach in one step of the same kind whose validities meet at the date or in the period, three-valued, with both steps, the shared span and the size of the shared set; never stated as acquaintance", () => {
@@ -85,7 +87,7 @@ test("R11 overlaps: each record both reach in one step of the same kind whose va
   assert.equal(b.intersection.from, "2024-06-01T07:00:00Z");
   assert.equal(b.intersection.to, "2027-01-01T08:00:00Z");
   assert.deepEqual([b.others.held, b.others.undetermined], [1, 1], "r held in the span, t not settled, s long gone");
-  assert.match(b.others.words, /with 1 others held/);
+  assert.equal(b.others.words, othersWords(1, 1));
   assert.equal(b.sentence, OVERLAP_SENTENCE);
   assert.equal(by[FIRM].intersection.holds, "undetermined", "an open end does not settle the shared span");
   // Over a period, the school years are checked against it.
@@ -114,7 +116,7 @@ test("R11 R5 an overlap at a hub names the hub as too common to walk, with its s
   assert.equal(o.node, BIG);
   assert.equal(o.others.hub, true);
   assert.equal(o.others.set_size, 1003);
-  assert.match(o.others.words, new RegExp(`with 1003 others held; ${HUB_WORDS}`));
+  assert.equal(o.others.words, word("explore.words.others_held", { set_size: "1003", words: HUB_WORDS }));
   assert.equal(r.hubs[0].node, BIG);
   assert.equal(r.hubs[0].words, HUB_WORDS);
 });

@@ -126,11 +126,11 @@ test("R31 R2: a live leg on a ref at an edition a withdrawal names carries accep
   assert.deepEqual([o.target, o.target_state, o.reeval], [REF, null, { flag: true, since: T2, source: "acceptance" }]);
   /* the source group and case are read for the viewer (case-import answers a machine credential null, its R16) */
   assert.deepEqual([o.causes[0].group, o.causes[0].case], [null, null]);
-  assert.match(o.causes[0].detail, /at edition 2, and this group's acceptance/);
+  assert.match(o.causes[0].detail, /at edition 2, and this team's acceptance/);
   const c = w.r.reevaluations({ viewer: V("ann") }).obligations[0].causes[0];
   assert.deepEqual([c.ref, c.import, c.group, c.case, c.edition, c.withdrawal],
                    [REF, IMP, "other-group", "CASE-2026-0007-theirs", 2, "AW-1"]);
-  assert.match(c.detail, /another group's finding .* at edition 2, of case CASE-2026-0007-theirs by other-group, and this group's acceptance of that edition was withdrawn \(AW-1, at 2026-09-30/);
+  assert.match(c.detail, /another team's finding .* at edition 2, of case CASE-2026-0007-theirs by other-group, and this team's acceptance of that edition was withdrawn \(AW-1, at 2026-09-30/);
   assert.match(c.detail, /leg is unchanged/);
   assert.deepEqual(o.legs, [{ ord: 0, role: "supports", grade: null, grade_axis: null, grade_source: null, target_edition: 2,
                               status: "confirmed", grade_authored: null, grade_why: null }]);
@@ -262,8 +262,8 @@ test("R31 (N531): the telling reads the acceptance detail as the plane, with no 
   assert.equal(h.dependents.length, 3);
   for (const d of h.dependents) {
     assert.deepEqual([d.group, d.case], ["other-group", "CASE-2026-0007-theirs"], d.bundle_id);
-    assert.match(d.detail, new RegExp(`another group's finding ${d.target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} at edition 2, `
-      + "of case CASE-2026-0007-theirs by other-group, and this group's acceptance of that edition was withdrawn \\(AW-1"));
+    assert.match(d.detail, new RegExp(`another team's finding ${d.target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} at edition 2, `
+      + "of case CASE-2026-0007-theirs by other-group, and this team's acceptance of that edition was withdrawn \\(AW-1"));
   }
   /* one withdrawal's dependents only: AW-2 names edition 1, D1's leg */
   heard.length = 0;

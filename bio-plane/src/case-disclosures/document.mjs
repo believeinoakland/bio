@@ -10,6 +10,7 @@
 
 import { EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
 import { fmSafe, pairLine, ANONYMOUS_ATTESTATION_LEVELS } from "../case-grammar/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* ===========================================================================
  * EACH DOCUMENT'S GRADE AND CO-ATTESTATION, AND ITS SOURCE (R2–R4; N364: DEC-81 items 1 and 3, DEC-78 item 5). The
@@ -20,10 +21,31 @@ import { fmSafe, pairLine, ANONYMOUS_ATTESTATION_LEVELS } from "../case-grammar/
  * =========================================================================== */
 
 /** R3: DEC-81 item 3's reader sentence, verbatim, carried by every self-attested document's block. */
-export const SELF_ATTESTED_SENTENCE = "Without co-attestation an outsider can verify the copy has not changed since "
-  + "capture and can follow the reasoning, but cannot independently verify that the source served those bytes, or when.";
-const BASIS_WORDS = Object.freeze({ consent: "stated with the source's consent",
-  public_elsewhere: "stated because it is already public, as cited" });
+export const SELF_ATTESTED_SENTENCE = word("case-disclosures.without_attestation_outsider");
+const BASIS_WORDS = Object.freeze({ consent: word("case-disclosures.stated_source_consent"),
+  public_elsewhere: word("case-disclosures.stated_already_public") });
+
+const BASIS_NOT_STATED = localize("case-disclosures.document.basis_not_stated", "basis not stated");
+const NO_SIGNATURE = localize("case-disclosures.document.no_signature_held", "(none held)");
+
+/** R2: a capture's grade and its basis, or that it earned no letter. */
+const gradeWords = (c) => (c.grade
+  ? localize("case-disclosures.document.grade_basis", "grade {grade} ({grade_basis})", { grade: String(c.grade), grade_basis: String(c.grade_basis ?? BASIS_NOT_STATED) })
+  : word("case-disclosures.capture_letter", { grade_basis: String(c.grade_basis ?? BASIS_NOT_STATED) }));
+
+/** R2: whether a capture is co-attested, as the body states it: a timestamp and a co-archive both held (obtained late, said
+ *  so), else NOT CO-ATTESTED and what it does hold. */
+function attestationWords(c) {
+  if (c.co_attested) {
+    const held = c.timestamp_at
+      ? localize("case-disclosures.document.co_attested_timestamp", "; co-attested: a timestamp at {timestamp_at} and a co-archive at {co_archive}", { timestamp_at: String(c.timestamp_at), co_archive: String(c.co_archive) })
+      : localize("case-disclosures.document.co_attested_untimed", "; co-attested: a timestamp and a co-archive at {co_archive}", { co_archive: String(c.co_archive) });
+    return c.late ? `${held}, ${word("case-disclosures.obtained_late_proves")}` : held;
+  }
+  return [localize("case-disclosures.document.not_co_attested", "; NOT CO-ATTESTED"),
+    c.timestamp_at ? word("case-disclosures.timestamp_archive", { timestamp_at: String(c.timestamp_at) }) : "",
+    c.co_archive ? word("case-disclosures.archive_timestamp", { co_archive: String(c.co_archive) }) : ""].filter(Boolean).join(" ");
+}
 
 export function captureBodyLines(captures, sources) {
   const byCapture = new Map();
@@ -33,44 +55,28 @@ export function captureBodyLines(captures, sources) {
     held.members.push(c.member);
     if (Array.isArray(c.accounts)) held.accounts.push(...c.accounts);
   }
-  return ["## Each Document's Grade And Co-attestation", "",
+  return [word("case-disclosures.document_grade_attestation"), "",
     ...(byCapture.size
-      ? ["Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a "
-         + "trusted timestamp and a third party's co-archive attest it. "
-         + `A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; `
-         + "one that is not is published only as self-attested, by the owner's stated acknowledgement.", "",
+      ? [localize("case-disclosures.document.each_document_this_cases_findings", "Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade {EARNED_CAPTURE_CEILING} document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgement.", { EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING) }), "",
          ...[...byCapture.values()].flatMap((c) => [
-           `- ${c.capture} (under ${c.members.join(", ")}): `
-             + (c.grade ? `grade ${c.grade} (${c.grade_basis ?? "basis not stated"})`
-                        : `no capture letter (${c.grade_basis ?? "basis not stated"})`)
-             + (c.co_attested
-               ? `; co-attested: a timestamp${c.timestamp_at ? ` at ${c.timestamp_at}` : ""} and a co-archive at ${c.co_archive}`
-                 + (c.late ? ", obtained LATE: it proves the bytes existed by then, not at capture" : "")
-               : "; NOT CO-ATTESTED"
-                 + (c.timestamp_at ? ` (a timestamp at ${c.timestamp_at}, no co-archive)` : "")
-                 + (c.co_archive ? ` (a co-archive at ${c.co_archive}, no timestamp)` : ""))
-             + ".",
+           localize("case-disclosures.document.capture_under_members_v1_v2", "- {capture} (under {members}): {v1}{v2}.", { capture: String(c.capture), members: String(c.members.join(", ")), v1: gradeWords(c), v2: attestationWords(c) }),
            ...(c.grade_why ? [`  - ${c.grade_why}`] : []),
            ...(c.self_attested_only
-             ? [`  - SELF-ATTESTED ONLY, acknowledged by ${c.acknowledgement.acknowledged_by} on ${c.acknowledgement.at}: `
-                + `${c.acknowledgement.reason}`, `  - ${SELF_ATTESTED_SENTENCE}`]
+             ? [`  ${word("case-disclosures.self_attested_acknowledged", { acknowledged_by: String(c.acknowledgement.acknowledged_by), at: String(c.acknowledgement.at), reason: String(c.acknowledgement.reason) })}`, `  - ${SELF_ATTESTED_SENTENCE}`]
              : []),
            ...c.accounts.flatMap((a, k) => (a.by === null && a.signature === null
              /* R10: an off-the-record capture's attesting member not named: the account's words, nothing of who. */
-             ? [`  - The attesting member's account ${k + 1}, on ${a.at}, in its own words; the member is not named, as `
-                + "their credit allows:", "", "```", a.text, "```", ""]
-             : [`  - The capturing member's signed account ${k + 1}, by ${a.by} on ${a.at}, in its own words:`, "",
-                "```", a.text, "```", "", "    Its signature:", "", "```", a.signature ?? "(none held)", "```", ""]))])]
-      : ["This case's findings rest on no document the record holds a capture of, one level deep."]),
+             ? [`  ${word("case-disclosures.attesting_member_account", { key: String(k + 1), at: String(a.at) })}`, "", "```", a.text, "```", ""]
+             : [`  ${word("case-disclosures.capturing_member_signed", { key: String(k + 1), by: String(a.by), at: String(a.at) })}`, "",
+                "```", a.text, "```", "", `    ${word("case-disclosures.signature")}`, "", "```", a.signature ?? NO_SIGNATURE, "```", ""]))])]
+      : [word("case-disclosures.case_findings_rest")]),
     "",
-    "## Sources Of Material Given To The Group",
+    word("case-disclosures.sources_material_given"),
     "",
     ...(sources.length
-      ? ["What may be said of whoever gave the group a document this case rests on: only what the source consented to, "
-         + "or what is already public elsewhere. Nothing else is stated, and no identifier links this source to any "
-         + "other case.", "",
+      ? [word("case-disclosures.said_whoever_gave"), "",
          ...sources.map((x) => `- ${x.capture}: ${x.stated}` + (x.basis ? `, ${BASIS_WORDS[x.basis] ?? x.basis}.` : "."))]
-      : ["No document this case rests on was given to the group by a source: each was fetched, or brought in by a member."]),
+      : [word("case-disclosures.document_case_rests")]),
     ""];
 }
 
@@ -80,50 +86,51 @@ export function captureBodyLines(captures, sources) {
  * the body, which a person reads, is this module's, in plain sentences until the UX design stream gives the words.
  * =========================================================================== */
 
-const MATERIAL_KIND_WORDS = Object.freeze({ document: "a document", observation: "a member's firsthand observation" });
+const MATERIAL_KIND_WORDS = Object.freeze({ document: localize("case-disclosures.document.a_document", "a document"),
+  observation: word("case-disclosures.member_firsthand_observation") });
+const TIME_NOT_STATED = localize("case-disclosures.document.a_time_not_stated", "a time not stated");
+const NOT_STATED = localize("case-disclosures.document.not_stated", "not stated");
+const NOT_STATED_BRACKETED = localize("case-disclosures.document.not_stated_bracketed", "(not stated)");
 
 /* R10: who attests a material, as the row states them, never more. */
 function attesterWords(a, group) {
-  if (a.by_kind === "group") return `${group ?? "the group"} vouches for it by signing this case`;
-  if (a.by_kind === "project") return `the record of ${a.by} holds it, registered ${a.at ?? "at a time not stated"}, in ${a.recorded_in}`;
+  if (a.by_kind === "group") return word("case-disclosures.vouches_signing_case", { group: String(group ?? localize("case-disclosures.document.the_team", "the team")) });
+  if (a.by_kind === "project") return word("case-disclosures.record_holds_registered", { by: String(a.by), at: String(a.at ?? word("case-disclosures.time_stated")), recorded_in: String(a.recorded_in) });
   if (a.by_kind === "co_attestation")
-    return a.by === "timestamp" ? `a trusted timestamp of ${a.at ?? "a time not stated"}` : `a third party's co-archive at ${a.by}`;
+    return a.by === "timestamp" ? word("case-disclosures.trusted_timestamp", { at: String(a.at ?? TIME_NOT_STATED) }) : word("case-disclosures.third_party_archive", { by: String(a.by) });
   if (ANONYMOUS_ATTESTATION_LEVELS.includes(a.level))
-    return `a member of the ${a.level}, not named, as they chose`;
-  if (!a.level && !a.by) return "a member who has not yet chosen how they are credited, so not named";
-  return `${a.by}${a.level ? `, credited at the ${a.level} level as they chose` : ""}${a.at ? `, on ${a.at}` : ""}`
-    + (a.signature ? ", with their signature" : "");
+    return word("case-disclosures.member_named_chose", { level: String(a.level) });
+  if (!a.level && !a.by) return word("case-disclosures.member_chosen_credited");
+  return [String(a.by), a.level ? word("case-disclosures.credited_level_chose", { level: String(a.level) }) : "",
+    a.at ? localize("case-disclosures.document.attested_on", "on {at}", { at: String(a.at) }) : "",
+    a.signature ? word("case-disclosures.with_their_signature") : ""].filter(Boolean).join(", ");
 }
 
 /* R7 (T41; K2541; DEC-185 (1)): a material R6 carries as its copy (`obscured`, a photo's or a member document's) travels
    with the case as that copy, printed with the copy's fingerprint and, word for word, the label shown beside it; never
    as "NOT INCLUDED". Only a row stating `obscured` prints so, so every row without it renders byte for byte as before. */
 const copyCarried = (o) => !!o && typeof o === "object" && typeof o.copy === "string" && o.copy !== "";
-const copyWords = (o) => `travels with this case as its copy, fingerprint ${o.copy}, the original kept by the group`
-  + (typeof o.label === "string" && o.label ? `, shown with the label "${o.label}"` : "");
+const copyWords = (o) => word("case-disclosures.travels_case_copy", { copy: String(o.copy), label: String(typeof o.label === "string" && o.label ? `, ${word("case-disclosures.shown_label", { label: String(o.label) })}` : "") });
 
+/** R7: what a material row says of what travels. */
+const travelsAs = (m) => (m.included ? word("case-disclosures.travels_whole_case")
+  : copyCarried(m.obscured) ? copyWords(m.obscured)
+  : word("case-disclosures.included_fingerprint_origin"));
+
+/* R7 (G47): an attestation that states a `sha` belongs to that capture's row alone (captures of one source share a `ref`);
+   one that states none belongs to every row of its `ref`, as before. */
 export function carriesBodyLines(method, materials, group) {
   const rows = materials && Array.isArray(materials.rows) ? materials.rows : [];
   const att = materials && Array.isArray(materials.attestations) ? materials.attestations : [];
-  return ["## How This Case Was Graded And Checked", "",
-    `Each grade in this case was reached by the grading method ${method ? method.grading ?? "(not stated)" : "(not stated)"}, `
-    + `and the case was checked under the publication checks ${method ? method.checks ?? "(not stated)" : "(not stated)"}. `
-    + "Both versions are inside what is signed, so anybody can recompute each grade by the stated method.", "",
-    "## What This Case Carries", "",
+  return [word("case-disclosures.case_graded_checked"), "",
+    word("case-disclosures.grade_case_reached", { method: String(method ? method.grading ?? NOT_STATED_BRACKETED : NOT_STATED_BRACKETED), method_2: String(method ? method.checks ?? NOT_STATED_BRACKETED : NOT_STATED_BRACKETED) }), "",
+    word("case-disclosures.case_carries"), "",
     ...(rows.length
-      ? ["Every document and observation this case's findings reach. One a load-bearing finding relies on travels whole "
-         + "with the case. One that only a supporting finding reaches, and that is not held whole, is listed "
-         + "with its fingerprint, origin and archived copy.", "",
+      ? [word("case-disclosures.document_observation_case"), "",
          ...rows.flatMap((m) => [
-           `- ${m.ref}, ${MATERIAL_KIND_WORDS[m.kind] ?? m.kind}, fingerprint ${m.sha}: `
-             + (m.included ? "travels whole with this case"
-                : copyCarried(m.obscured) ? copyWords(m.obscured)
-                : "NOT INCLUDED: only its fingerprint, origin and archived copy travel")
-             + `; relied on by ${m.rests_under === "load_bearing" ? "a load-bearing" : "only a supporting"} finding`
-             + `; origin ${m.origin ?? "not stated"}; archived copy ${m.archived_copy ?? "none held"}`
-             + (m.text_sha ? `; extracted text ${m.text_sha}` : "") + ".",
-           ...att.filter((a) => a.ref === m.ref).map((a) => `  - Attested: ${attesterWords(a, group)}.`)])]
-      : ["This case's findings reach no document or observation the record holds."]),
+           word("case-disclosures.fingerprint_relied_finding", { ref: String(m.ref), material_kind_words: String(MATERIAL_KIND_WORDS[m.kind] ?? m.kind), sha: String(m.sha), rests_under: travelsAs(m), origin: String(m.rests_under === "load_bearing" ? localize("case-disclosures.document.a_load_bearing", "a load-bearing") : localize("case-disclosures.document.only_a_supporting", "only a supporting")), archived_copy: String(m.origin ?? NOT_STATED), text_sha: String(m.archived_copy ?? localize("case-disclosures.document.none_held", "none held")), first: String(m.text_sha ? localize("case-disclosures.document.extracted_text_sha", "; extracted text {text_sha}", { text_sha: String(m.text_sha) }) : "") }),
+           ...att.filter((a) => (a.sha ? a.sha === m.sha : a.ref === m.ref)).map((a) => localize("case-disclosures.document.attested_by", "  - Attested: {attester}.", { attester: attesterWords(a, group) }))])]
+      : [word("case-disclosures.case_findings_reach")]),
     ""];
 }
 
@@ -140,20 +147,13 @@ export function acceptedBodyLines(accepted) {
   const rows = accepted && Array.isArray(accepted.rows) ? accepted.rows : [];
   const flags = accepted && Array.isArray(accepted.flags) ? accepted.flags : [];
   if (!rows.length) return [];
-  return ["## Another Group's Work This Case Rests On", "",
-    "A finding of this case rests on a finding of another group's published case, which this group accepted. That "
-    + "work, and everything it rests on, is the other group's, in its own case file: check it there.", "",
-    ...rows.map((r) => `- ${r.member} rests, through ${r.leg_of}, on ${r.finding} of ${r.group ?? "another group"}'s case `
-      + `${r.case ?? "(not stated)"}, edition ${r.edition}: accepted by ${r.accepted_by} on ${r.accepted_at}, because: `
-      + `${sentence(r.reason)} It was ${String(r.result ?? "not recorded").replace(/_/g, " ")} from that case file`
-      + (r.gaps ? `, with the gaps stated: ${sentence(r.gaps)}` : ".") + ` Its grades as that edition publishes them: ${pairLine(r.pair)}. `
-      + `Its case file's manifest is ${r.manifest_sha ?? "not stated"}.`),
+  return [word("case-disclosures.group_work_case"), "",
+    word("case-disclosures.finding_case_rests"), "",
+    ...rows.map((r) => word("case-disclosures.rests_through_case", { member: String(r.member), leg_of: String(r.leg_of), finding: String(r.finding), group: String(r.group ?? localize("case-disclosures.document.another_team", "another team")), case: String(r.case ?? NOT_STATED_BRACKETED), edition: String(r.edition), accepted_by: String(r.accepted_by), accepted_at: String(r.accepted_at), reason: String(sentence(r.reason)), result: String(String(r.result ?? localize("case-disclosures.document.not_recorded", "not recorded")).replace(/_/g, " ")), gaps: String(r.gaps ? `, ${word("case-disclosures.gaps_stated", { gaps: String(sentence(r.gaps)) })}` : "."), pair: String(pairLine(r.pair)), manifest_sha: String(r.manifest_sha ?? NOT_STATED) })),
     ...(flags.length
-      ? ["", "Each open flag on that work is disclosed here, and never blocks the case (DEC-96 item 4):", "",
-         ...flags.map((f) => `- Flag ${f.flag} on ${f.ref}, edition ${f.edition}, raised ${f.flagged_at ?? "at a time not stated"}: `
-           + sentence(f.issue) + (f.words ? ` In the owner's words: ${sentence(f.words)}` : "")
-           + ` Disclosed by ${f.acknowledged_by} on ${f.acknowledged_at}.`)]
-      : ["", "No flag was open on that work when this case was published."]),
+      ? ["", localize("case-disclosures.document.each_open_flag_on_that", "Each open flag on that work is disclosed here, and never blocks the case (DEC-96 item 4):"), "",
+         ...flags.map((f) => word("case-disclosures.flag_edition_raised", { flag: String(f.flag), ref: String(f.ref), edition: String(f.edition), flagged_at: String(f.flagged_at ?? word("case-disclosures.time_stated")), words: String(sentence(f.issue)), acknowledged_by: String(f.words ? ` ${word("case-disclosures.owner_words", { words: String(sentence(f.words)) })}` : ""), acknowledged_at: String(f.acknowledged_by), value: String(f.acknowledged_at) }))]
+      : ["", word("case-disclosures.flag_open_work")]),
     ""];
 }
 
@@ -167,19 +167,17 @@ export function acceptedBodyLines(accepted) {
 
 /** R1: the member block's sentence per tension, by the candidate's standing (`template`). */
 export const TENSION_TEMPLATES = Object.freeze({
-  in_tension: "In tension, not yet resolved: ",
-  explained: "Explained, not yet shown: ",
-  irreconcilable: "Held irreconcilable by the group: ",
-  unseen: "Rests on a side in conflict with a record not shown: ",
+  in_tension: `${word("case-disclosures.tension_resolved")} `,
+  explained: `${word("case-disclosures.explained_shown")} `,
+  irreconcilable: `${word("case-disclosures.held_irreconcilable_group")} `,
+  unseen: `${word("case-disclosures.rests_side_conflict")} `,
 });
 /** R1 (DEC-85): the highlighted entry's fixed sentence. */
-export const HIGHLIGHT_SENTENCE = "This finding rests on a side in conflict with a record not shown here. The record and "
-  + "who holds it are not named.";
+export const HIGHLIGHT_SENTENCE = word("case-disclosures.finding_rests_side");
 /** R1 (C-120.1): how a refusal names a candidate whose other side the owner may not see. */
-export const NOT_SHOWN_WORDS = "in conflict with a record not shown";
+export const NOT_SHOWN_WORDS = word("case-disclosures.conflict_record_shown");
 /** R1, from `contradiction` R29: the disclosure reaches one level (DEC-84 item 12). */
-export const TENSIONS_DEPTH_STATED = "Each conflict disclosed here is on something a finding of this case rests on, "
-  + "one level deep: a finding it rests on in turn discloses its own when that finding is published.";
+export const TENSIONS_DEPTH_STATED = word("case-disclosures.conflict_disclosed_something");
 
 /** A side as the document states it: its text verbatim (a claim's or stance's claim, a leg's note or reference, an
  *  extent's reference), its source, stated date, doctype and capture, each null where the record states none. */
@@ -201,26 +199,25 @@ export function tensionTemplate(t) {
   return "in_tension";
 }
 
-const quoted = (x) => (x.text == null ? "(no text stated)" : `'${x.text}'`) + (x.source ? ` (${x.source})` : "");
+const quoted = (x) => (x.text == null ? word("case-disclosures.text_stated") : `'${x.text}'`) + (x.source ? ` (${x.source})` : "");
 
 /** R1: the member block's sentence for one disclosed entry, from its template, attributed to who disclosed it. It names
  *  nothing of a side not seen (R17). */
 export function tensionSentence(t) {
   const k = tensionTemplate(t);
   const what = k === "unseen" ? quoted(t.side)
-    : k === "explained" ? `${t.explanation ?? "(no explanation stated)"} — ${quoted(t.a)} against ${quoted(t.b)}`
-    : `${quoted(t.a)} against ${quoted(t.b)}`;
-  return `${TENSION_TEMPLATES[k]}${what} (conflict ${t.candidate}). Disclosed by ${t.acknowledged_by} on `
-    + `${t.acknowledged_at}.`;
+    : k === "explained"
+      ? localize("case-disclosures.document.explanation_against", "{explanation} — {a} against {b}", { explanation: String(t.explanation ?? word("case-disclosures.explanation_stated")), a: quoted(t.a), b: quoted(t.b) })
+    : localize("case-disclosures.document.a_against_b", "{a} against {b}", { a: quoted(t.a), b: quoted(t.b) });
+  return word("case-disclosures.conflict_disclosed", { tension_templates: String(TENSION_TEMPLATES[k]), what: String(what), candidate: String(t.candidate), acknowledged_by: String(t.acknowledged_by), acknowledged_at: String(t.acknowledged_at) });
 }
 
-const STATE_WORDS = Object.freeze({ open: "open", explained_not_shown: "explained, not yet shown",
-  taken_up: "taken up as a question", resolved: "held irreconcilable, to be reopened by new evidence" });
+const STATE_WORDS = Object.freeze({ open: localize("case-disclosures.document.state_open", "open"), explained_not_shown: word("case-grammar.explained_not_shown"),
+  taken_up: word("case-disclosures.taken_question"), resolved: word("case-disclosures.held_irreconcilable_reopened") });
 
 /** R18: a leg a conflict could not be looked for on (it names no content row), stated per member, never filled. */
 export function tensionsUnreadStated(unread) {
-  return unread.map((u) => `${u.legs} leg(s) of ${u.finding} name no passage the record holds, so a conflict on `
-    + "them could not be looked for; that is stated, not read as none.").join(" ");
+  return unread.map((u) => word("case-disclosures.leg_name_passage", { legs: String(u.legs), finding: String(u.finding) })).join(" ");
 }
 
 export function tensionFrontmatterLines(tensions, unread = []) {
@@ -257,26 +254,21 @@ export function tensionFrontmatterLines(tensions, unread = []) {
 }
 
 export function tensionBodyLines(tensions, unread = []) {
-  const side = (label, x) => `  - ${label}: ${x.text == null ? "(no text stated)" : x.text}`
-    + ` — source ${x.source ?? "not stated"}, dated ${x.date ?? "not stated"}, ${x.doctype ?? "doctype not stated"}`
-    + (x.capture ? `, capture ${x.capture}` : "");
-  return ["## Tensions Disclosed", "",
+  const notStated = localize("case-disclosures.document.not_stated", "not stated");
+  const side = (label, x) => localize("case-disclosures.document.label_v1_source_v2_dated", "  - {label}: {v1} — source {v2}, dated {v3}, {v4}{v5}", { label: String(label), v1: String(x.text == null ? word("case-disclosures.text_stated") : x.text), v2: String(x.source ?? notStated), v3: String(x.date ?? notStated), v4: String(x.doctype ?? localize("case-disclosures.document.doctype_not_stated", "doctype not stated")), v5: String(x.capture ? localize("case-disclosures.document.capture_stated", ", capture {capture}", { capture: String(x.capture) }) : "") });
+  return [localize("case-disclosures.document.tensions_disclosed_heading", "## Tensions Disclosed"), "",
     ...(tensions.length
-      ? ["Each unresolved conflict the record holds on what this case's findings rest on, disclosed by the "
-         + "publisher. A case is published with its conflicts disclosed, and never refused because one exists "
-         + "(DEC-76 item 4).", "",
+      ? [localize("case-disclosures.document.each_unresolved_conflict_the_record", "Each unresolved conflict the record holds on what this case's findings rest on, disclosed by the publisher. A case is published with its conflicts disclosed, and never refused because one exists (DEC-76 item 4)."), "",
          ...tensions.flatMap((t) => [
-           `- **${t.finding}**, conflict ${t.candidate}: ${STATE_WORDS[t.state] ?? t.state}`
-             + `${t.unseen_other_side ? " — HIGHLIGHTED" : ""}.`,
+           localize("case-disclosures.document.tension_entry", "- **{finding}**, conflict {candidate}: {state}{highlighted}.", { finding: String(t.finding), candidate: String(t.candidate), state: String(STATE_WORDS[t.state] ?? t.state), highlighted: String(t.unseen_other_side ? localize("case-disclosures.document.highlighted", " — HIGHLIGHTED") : "") }),
            ...(t.unseen_other_side
-             ? [side("the side this case rests on", t.side), `  - ${HIGHLIGHT_SENTENCE}`]
-             : [side("one side", t.a), side("the other side", t.b),
-                ...(t.explanation != null ? [`  - The explanation recorded: ${t.explanation}`] : [])]),
-           ...(t.words != null ? [`  - In the owner's words: ${t.words}`] : []),
-           `  - Acknowledged by ${t.acknowledged_by} on ${t.acknowledged_at}.`]),
+             ? [side(word("case-disclosures.side_case_rests"), t.side), `  - ${HIGHLIGHT_SENTENCE}`]
+             : [side(localize("case-disclosures.document.one_side", "one side"), t.a), side(word("case-disclosures.side"), t.b),
+                ...(t.explanation != null ? [`  ${word("case-disclosures.explanation_recorded", { explanation: String(t.explanation) })}`] : [])]),
+           ...(t.words != null ? [`  - ${word("case-disclosures.owner_words", { words: String(t.words) })}`] : []),
+           `  ${word("case-disclosures.acknowledged", { acknowledged_by: String(t.acknowledged_by), acknowledged_at: String(t.acknowledged_at) })}`]),
          "", TENSIONS_DEPTH_STATED]
-      : ["The record held no unresolved conflict on what this case's findings rest on when it was published, "
-         + "one level deep. " + TENSIONS_DEPTH_STATED]),
+      : [word("case-disclosures.record_held_unresolved", { value: String(TENSIONS_DEPTH_STATED) })]),
     ...(unread.length ? ["", tensionsUnreadStated(unread)] : []),
     ""];
 }

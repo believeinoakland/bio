@@ -35,8 +35,7 @@ const viewerOnly = (c) => ({ q: { viewer: c.viewer } });
 const ROUTES = {
   contradictioncandidates: [READ, viewerOnly], contradictiontensions: [READ, viewerOnly], contradictionfacts: [READ, viewerOnly],
   contradictionnotices: [READ, viewerOnly], contradictionresponses: [READ, viewerOnly],
-  ...Object.fromEntries(["contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve",
-                         "contradictionoptin", "contradictionrespond"].map((op) => [op, [ACT, (c) => ({ q: { viewer: c.viewer, author: c.identity } })]])),
+  ...Object.fromEntries([...O.CONTRADICTION_ACTIONS].map((op) => [op, [ACT, (c) => ({ q: { viewer: c.viewer, author: c.identity } })]])),
   contradictionrecommend: [ACT, (c) => ({ q: { viewer: c.viewer, proposedBy: c.machine, principal: c.principal } })],
   resolutiondefect: [ACT, (c) => ({ q: {}, b: { by: c.member } })],
   entity: [READ, viewerOnly], entitybyalias: [READ, viewerOnly],

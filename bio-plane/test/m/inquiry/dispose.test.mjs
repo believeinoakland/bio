@@ -52,7 +52,8 @@ test("R20 refusals in order, each moving nothing and naming every offender", () 
   caseMembers.delete(Q2);
   w.select("q1", [Q1]);
   assert.equal(go(w, "q1", "deferred").ok, true);
-  const again = go(w, "q1", "deferred");
+  w.select("q1-again", [Q1]);   /* the set moved with the act, as a real selection does (retrieval R20): a new one */
+  const again = go(w, "q1-again", "deferred");
   assert.equal(again.reason, "ILLEGAL_TRANSITION", "deferred -> deferred is not an edge"); assert.deepEqual(again.offenders.map((o) => o.id), [Q1]);
   /* CITED: a dismissal while a live leg rests on a member */
   w.inquiry("INQ-2026-0003-s", { legs: [{ target: Q2 }] });
@@ -113,7 +114,7 @@ test("R22 the whole set moves or none of it does: a refusal after the first memb
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const wordOf = (key) => (Array.isArray(WORDS) ? WORDS : WORDS.words ?? Object.values(WORDS)).find((x) => x && x.key === key)?.en;
 const discoverable = (w, P, by) => {
-  const r = w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to the group",
+  const r = w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to the team",
                                                 by, viewer: V(by) });
   assert.equal(r.ok, true, JSON.stringify(r));
 };

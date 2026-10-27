@@ -1,9 +1,14 @@
 /* people's reads at its interface: R13–R19, and M-P5 (a person read at 50,000 lines within the response budget). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, doc, ANN, OUT } from "./fixture.mjs";
+import { world, doc, ANN, OUT, BOSS } from "./fixture.mjs";
 import { READ_LIST_MAX, peopleOf } from "../../../src/people/index.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { validAt } from "../../../src/civil-time/index.mjs";
+import { hasWord, word } from "../../../src/setup-words/index.mjs";
+
+/* civil-time's own reason for a validity open at the end, at a date: what personAt passes on or fills a key with (R40) */
+const openEnd = (from, at) => validAt({ valid: { from, to: null, precision: "day", zone: "UTC" }, basis: null }, { value: at, precision: "day", zone: "UTC" }).why;
 
 const span = (from, to) => ({ from, to });
 
@@ -69,7 +74,7 @@ test("R14 personAt refuses NO_ENTITY and NO_DATE and answers names and life fact
   assert.ok(r.duties.some((d) => d.duty_id === duty));
   assert.ok(!r.duties.some((d) => d.duty_id === gone), "a withdrawn duty binds nothing");
   assert.deepEqual(r.undetermined.map((x) => x.line_id), [open]);
-  assert.match(r.undetermined[0].undetermined.why, /no end is stated/);
+  assert.deepEqual(r.undetermined[0].undetermined.why, openEnd("2018-01-01", "2020-06-01"), "R40: an owner's reason passed on exactly as it answers");
   assert.equal(w.p.personAt({ entityId: p, at: "2020-06-01", viewer: null }).ok, false, "fails closed with no viewer");
 });
 
@@ -77,7 +82,7 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   const w = world();
   const { a, b } = linked(w);
   const gov = w.entity("office", "Clerk"), co = w.entity("institution", "Harbour Co");
-  const l2 = w.line("holds", b, co, span("2015-01-01", "2019-12-31"), { capacity: "officer or director", title: "Vice-President, Harbour Operations" });
+  const l2 = w.line("holds", b, co, span("2015-01-01", "2019-12-31"), { capacity: word("label.linecapacities.officer_or_director"), title: "Vice-President, Harbour Operations" });
   const l1 = w.line("holds", a, gov, span("2010-01-01", "2014-12-31"), { capacity: "elected" });
   const l0 = w.line("holds", a, w.entity("institution", "Early Co"), span(null, null));
   w.line("educated_at", a, w.entity("institution", "Marlow College"), span("1990-01-01", "1994-06-01"));
@@ -89,7 +94,7 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   const guilded = w.line("credentialed_by", a, guild, span("1998-01-01", "2026-12-31"));
   const career = w.p.careerOf({ entityId: a, viewer: ANN }).career;
   assert.deepEqual(career.map((x) => x.line_id), [l1, l2, l0], "validity order, unstated last");
-  assert.equal(career[1].capacity, "officer or director");
+  assert.equal(career[1].capacity, word("label.linecapacities.officer_or_director"));
   for (const x of career) assert.ok("grade" in x && "citation" in x && "valid" in x && "title" in x);
   assert.equal(career[1].title, "Vice-President, Harbour Operations", "the title as the line's basis words it");
   assert.deepEqual([career[0].title, career[2].title], [null, null], "not stated: null, never composed from the office or capacity");
@@ -125,7 +130,7 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   assert.deepEqual(i.interests.map((x) => x.line_id), [share]);
   assert.deepEqual(i.money.map((m) => `${m.fact_id}:${m.side}`).sort(), [`${contrib}:payer`, `${gift}:payee`, `${inc}:payee`].sort());
   for (const m of i.money) assert.ok(m.citation && m.grade, "each cited and graded");
-  assert.ok(!("total" in i), "facts, never a total");
+  assert.ok(!("total" in i), word("money.says.facts_total"));
 });
 
 test("R16 statementsOf answers each member's statements and acts (decider, signatory, implementer, author) merged in events' order, three-valued: two events whose order the record does not settle are answered as such, never placed", () => {
@@ -182,7 +187,7 @@ test("R18 staffingAt answers, for an organisation and its parts at a date, the p
   const r = w.p.staffingAt({ organisation: dept, at: "2020-01-01", viewer: ANN });
   assert.deepEqual(r.staff.map((s) => s.person).sort(), [p1, p2].sort());
   assert.deepEqual(r.units, [dept, unit]);
-  assert.deepEqual(r.rosters, [{ source: null, level: "held as a table, not read" }]);
+  assert.deepEqual(r.rosters, [{ source: null, level: word("people.held_as_a_table_not") }]);
   w.p.registerRosterSource("calculations", ({ organisation }) => ({ rows: [{ name: "K. Orr", organisation }] }));
   const r2 = w.p.staffingAt({ organisation: dept, at: "2020-01-01", viewer: ANN });
   assert.equal(r2.rosters[0].level, "held as a table, read by calculations");
@@ -243,13 +248,15 @@ test("R14 peopleOf given no services reaches the real modules on the same host (
   const after = plane.personAt({ entityId: p, at: "2024-06-01", viewer: ANN });
   assert.deepEqual(after.posts, []);
   assert.deepEqual(after.undetermined.map((x) => x.line_id), [open]);
-  assert.match(after.undetermined[0].undetermined.why, /current through 2022-12-31/);
+  assert.deepEqual(after.undetermined[0].undetermined.why, { key: "lines.why.stated_current_through", vars: { why: word(openEnd("2018-01-01", "2024-06-01").key, openEnd("2018-01-01", "2024-06-01").vars), day: "2022-12-31" } }, "R40: civil-time's reason, read as its sentence in lines' composed key");
+  assert.ok(hasWord("lines.why.stated_current_through"));
   /* a stale bound cache (lines R7) */
   const shut = w.line("holds", p, w.entity("office", "Dock Warden"), span("2010-01-01", "2030-01-01"));
   w.st.sql.exec(`UPDATE line_bound_cache SET to_instant='2011-01-01' WHERE line_id=?`, shut);
   const stale = plane.personAt({ entityId: p, at: "2020-06-01", viewer: ANN });
   assert.ok(!stale.posts.some((x) => x.line_id === shut));
-  assert.match(stale.undetermined.find((x) => x.line_id === shut).undetermined.why, /cache stale/);
+  assert.deepEqual(stale.undetermined.find((x) => x.line_id === shut).undetermined.why, w.lines.readLine({ lineId: shut, viewer: ANN }).line.valid.why,
+    "R40: the owner's reason, passed on exactly as lines answers it");
   /* the other services resolve too: candidates (entities), statements (events), interests (money), duties */
   for (const r of [plane.samePersonCandidates({ entityId: p, viewer: ANN }), plane.statementsOf({ entityId: p, viewer: ANN }),
                    plane.interestsOf({ entityId: p, viewer: ANN }), plane.careerOf({ entityId: p, viewer: ANN })]) assert.equal(r.ok, true);
@@ -267,8 +274,8 @@ test("R39 personAt answers claims: every unwithdrawn identity claim the viewer m
   assert.deepEqual(r.cluster.members, [a, b].sort());
   assert.deepEqual(r.claims.map((x) => x.claim_id), [same.claim_id, unsure.claim_id], "both, each with its id, in the order made");
   assert.equal(r.claims_truncated, false);
-  for (const x of r.claims) assert.deepEqual(Object.keys(x).sort(), ["a", "at", "b", "by", "claim_id", "grade", "kind", "why"]);
-  assert.deepEqual(r.claims[0], { claim_id: same.claim_id, a, b, kind: "same_as", grade: same.grade, why: same.why, by: ANN, at: same.at },
+  for (const x of r.claims) assert.deepEqual(Object.keys(x).sort(), ["a", "at", "b", "basis", "by", "claim_id", "grade", "kind", "why"]);
+  assert.deepEqual(r.claims[0], { claim_id: same.claim_id, a, b, kind: "same_as", basis: "testimony", grade: same.grade, why: same.why, by: ANN, at: same.at },
                    "as claimIdentity answered it (R1, R2)");
   assert.deepEqual([r.claims[1].kind, r.claims[1].by, r.claims[1].grade, r.claims[1].why], ["unsure", OUT, unsure.grade, unsure.why]);
   /* a member names the claim to withdraw from the page itself */
@@ -318,4 +325,51 @@ test("R39 personAt's claims are bounded at 1,000 (R5's bound) with claims_trunca
   assert.deepEqual([out.claims.length, out.claims_truncated], [1000, false], "the hidden claim is not counted");
   assert.deepEqual([ann.claims.length, ann.claims_truncated], [1000, true], "one past the bound is read");
   assert.deepEqual(ann.claims.map((c) => c.claim_id), whole.claims.map((c) => c.claim_id), "the first 1,000 in their order");
+});
+
+test("R43 each claim row personAt answers carries basis, as stored and as identityOf serves it, stored basis", () => {
+  const w = world();
+  const c = w.capture("c");
+  const a = w.person("Bea Roy"), b = w.person("Bea Roy");
+  const made = w.p.claimIdentity({ a, b, kind: "same_as", basis: "testimony", note: "I know her", by: ANN });
+  const other = w.person("Bea Roy");
+  const named = w.p.claimIdentity({ a, b: other, kind: "unsure", basis: "testimony", note: "maybe", by: OUT });
+  assert.equal(made.ok, true);
+  const r = w.p.personAt({ entityId: a, at: "2020-01-01", viewer: ANN });
+  const served = w.p.identityOf({ entityId: a, viewer: ANN });
+  const byId = new Map(r.claims.map((x) => [x.claim_id, x]));
+  assert.equal(byId.get(made.claim_id).basis, "testimony");
+  const theirs = [...served.links, ...served.unsure, ...served.not_same_as].map((x) => [x.claim_id, x.basis]);
+  assert.ok(theirs.length >= 1);
+  for (const [id, basis] of theirs) assert.equal(byId.get(id).basis, basis, "as identityOf serves it");
+  assert.equal(byId.get(named.claim_id).basis, "testimony");
+  for (const x of r.claims) assert.ok(["identifier", "corroborated_name", "name", "testimony"].includes(x.basis), x.claim_id);
+});
+
+test("R44 personAt answers the person's withdrawn facts the viewer may see, each marked withdrawn with who, when and why, apart from the facts not withdrawn, which are answered as before; control: a withdrawn fact on a capture the viewer may not see is absent, and an expunged fact is not listed", () => {
+  const w = world();
+  const p = w.person("Lea Ng");
+  const c = w.capture("c"), fenced = w.capture("d", { fenced: true });
+  const valid = { from: "1970-01-01", to: "2090-12-31", precision: "day", zone: "UTC" };
+  const keep = w.p.recordPersonFact({ person: p, kind: "name", value: "Lea Ng", valid, citation: doc(c), by: ANN });
+  const gone = w.p.recordPersonFact({ person: p, kind: "birth", value: "1970-01-01", valid, citation: doc(c), by: ANN });
+  const hidden = w.p.recordPersonFact({ person: p, kind: "locality", value: "Dock", valid, citation: doc(fenced), by: ANN });
+  const addr = w.p.recordPersonFact({ person: p, kind: "address", value: "2 Dock Rd", valid, citation: doc(c), by: ANN });
+  for (const [f, why] of [[gone, "misread the year"], [hidden, "wrong"], [addr, "old"]]) assert.equal(w.p.withdrawPersonFact({ factId: f.fact_id, reason: why, by: ANN }).ok, true);
+  const read = (viewer) => w.p.personAt({ entityId: p, at: "2024-01-01", viewer });
+  const ann = read(ANN), out = read(OUT);
+  assert.deepEqual(ann.facts.map((f) => f.fact_id), [keep.fact_id], "the facts not withdrawn are answered as before");
+  assert.deepEqual(ann.withdrawn_facts.map((f) => f.fact_id).sort(), [gone.fact_id, hidden.fact_id, addr.fact_id].sort());
+  const row = ann.withdrawn_facts.find((f) => f.fact_id === gone.fact_id);
+  assert.equal(row.withdrawn.by, ANN);
+  assert.equal(row.withdrawn.reason, "misread the year");
+  assert.ok(row.withdrawn.at);
+  assert.equal(row.kind, "birth");
+  assert.equal(ann.withdrawn_facts.find((f) => f.fact_id === addr.fact_id).publishable, false);
+  assert.equal(ann.truncated.withdrawn_facts, false);
+  assert.deepEqual(out.withdrawn_facts.map((f) => f.fact_id).sort(), [gone.fact_id, addr.fact_id].sort(), "control: the fenced capture's fact is absent");
+  assert.ok(!JSON.stringify(out).includes(hidden.fact_id));
+  /* an expunged fact is removed, not listed */
+  assert.equal(w.p.expunge({ id: gone.fact_id, ground: "unlawful", reason: "x", by: BOSS }).ok, true);
+  assert.ok(!read(ANN).withdrawn_facts.some((f) => f.fact_id === gone.fact_id));
 });

@@ -1,0 +1,29 @@
+== past alarm
+0.21 {"mode":"ok","n":1,"info":{"scheduledTime":1792792602372,"retryCount":0,"isRetry":false},"id":"188fc6","cur":null}
+0.19 ARM past ok -5000 armed ok
+== rearm inside handler
+3.23 ARM rearm rearm 200 armed rearm
+3.43 {"mode":"rearm","n":1,"info":{"scheduledTime":1792792605615,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null}
+3.93 {"mode":"rearm","n":2,"info":{"scheduledTime":1792792606120,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null}
+4.44 {"mode":"rearm","n":3,"info":{"scheduledTime":1792792606625,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null}
+4.95 {"mode":"rearm","n":4,"info":{"scheduledTime":1792792607131,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null}
+== throwing alarm (observe 150s)
+9.24 ARM throw throw 200 armed throw
+9.45 {"mode":"throw","n":1,"info":{"scheduledTime":1792792611633,"retryCount":0,"isRetry":false},"id":"2c31a2","cur":null}
+11.54 {"mode":"throw","n":2,"info":{"scheduledTime":1792792611633,"retryCount":1,"isRetry":true},"id":"2c31a2","cur":null}
+15.92 {"mode":"throw","n":3,"info":{"scheduledTime":1792792611633,"retryCount":2,"isRetry":true},"id":"2c31a2","cur":null}
+24.16 {"mode":"throw","n":4,"info":{"scheduledTime":1792792611633,"retryCount":3,"isRetry":true},"id":"2c31a2","cur":null}
+41.00 {"mode":"throw","n":5,"info":{"scheduledTime":1792792611633,"retryCount":4,"isRetry":true},"id":"2c31a2","cur":null}
+78.78 {"mode":"throw","n":6,"info":{"scheduledTime":1792792611633,"retryCount":5,"isRetry":true},"id":"2c31a2","cur":null}
+147.24 {"mode":"throw","n":7,"info":{"scheduledTime":1792792611633,"retryCount":6,"isRetry":true},"id":"2c31a2","cur":null}
+== persistence: alarm 25s ahead, dispose at +3s, restart after 40s total
+159.27 ARM persist ok 25000 armed ok
+162.28 disposed
+199.39 restarted (alarm was due at +25s, so overdue)
+199.39 {"mode":"ok","n":1,"info":{"scheduledTime":1792792786452,"retryCount":0,"isRetry":false},"id":"3fd5f7","cur":null}
+== persistence 2: alarm 20s ahead, dispose at +2s, restart at +5s (before due)
+207.40 ARM persist2 ok 20000 armed ok
+209.41 disposed
+212.52 restarted early (alarm not yet due)
+227.41 {"mode":"ok","n":1,"info":{"scheduledTime":1792792829592,"retryCount":0,"isRetry":false},"id":"85424d","cur":null}
+[{"at":"0.21","mode":"ok","n":1,"info":{"scheduledTime":1792792602372,"retryCount":0,"isRetry":false},"id":"188fc6","cur":null},{"at":"3.43","mode":"rearm","n":1,"info":{"scheduledTime":1792792605615,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null},{"at":"3.93","mode":"rearm","n":2,"info":{"scheduledTime":1792792606120,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null},{"at":"4.44","mode":"rearm","n":3,"info":{"scheduledTime":1792792606625,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null},{"at":"4.95","mode":"rearm","n":4,"info":{"scheduledTime":1792792607131,"retryCount":0,"isRetry":false},"id":"bc8b17","cur":null},{"at":"9.45","mode":"throw","n":1,"info":{"scheduledTime":1792792611633,"retryCount":0,"isRetry":false},"id":"2c31a2","cur":null},{"at":"11.54","mode":"throw","n":2,"info":{"scheduledTime":1792792611633,"retryCount":1,"isRetry":true},"id":"2c31a2","cur":null},{"at":"15.92","mode":"throw","n":3,"info":{"scheduledTime":1792792611633,"retryCount":2,"isRetry":true},"id":"2c31a2","cur":null},{"at":"24.16","mode":"throw","n":4,"info":{"scheduledTime":1792792611633,"retryCount":3,"isRetry":true},"id":"2c31a2","cur":null},{"at":"41.00","mode":"throw","n":5,"info":{"scheduledTime":1792792611633,"retryCount":4,"isRetry":true},"id":"2c31a2","cur":null},{"at":"78.78","mode":"throw","n":6,"info":{"scheduledTime":1792792611633,"retryCount":5,"isRetry":true},"id":"2c31a2","cur":null},{"at":"147.24","mode":"throw","n":7,"info":{"scheduledTime":1792792611633,"retryCount":6,"isRetry":true},"id":"2c31a2","cur":null},{"at":"199.39","mode":"ok","n":1,"info":{"scheduledTime":1792792786452,"retryCount":0,"isRetry":false},"id":"3fd5f7","cur":null},{"at":"227.41","mode":"ok","n":1,"info":{"scheduledTime":1792792829592,"retryCount":0,"isRetry":false},"id":"85424d","cur":null}]

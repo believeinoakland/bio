@@ -3,6 +3,8 @@
    measures how connected a node is (R17): each limits work, never ranks. */
 
 /** The hub bound of every kind not named in `hub_by_kind` (R10). */
+import { word } from '../setup-words/index.mjs';
+
 const HUB = 1000;
 
 /**
@@ -37,20 +39,20 @@ export const hubBoundOf = (kind) => (typeof kind === 'string' && HUB_BY_KIND[kin
 export function depthOf(requested) {
   if (requested === undefined || requested === null) return BOUNDS.depth_default;
   if (typeof requested !== 'number' || !Number.isInteger(requested) || requested < 1) {
-    return { refused: 'DEPTH_INVALID', why: `a depth is a whole number of hops from 1 to ${BOUNDS.depth_max}; ${String(requested).slice(0, 40)} is not` };
+    return { refused: 'DEPTH_INVALID', why: word('connection-grammar.why.depth_whole_number', { depth_max: String(BOUNDS.depth_max), requested: String(String(requested).slice(0, 40)) }) };
   }
   if (requested > BOUNDS.depth_max) {
-    return { refused: 'DEPTH_OVER_MAX', why: `a walk goes at most ${BOUNDS.depth_max} hops; ${requested} were asked` };
+    return { refused: 'DEPTH_OVER_MAX', why: word('connection-grammar.why.walk_goes_hops', { depth_max: String(BOUNDS.depth_max), requested: String(requested) }) };
   }
   return requested;
 }
 
 const WHY = Object.freeze({
-  depth: 'the walk reached its depth bound before it was done',
-  nodes: `the walk visited its bound of ${BOUNDS.nodes} nodes before it was done`,
-  fanout: `a node had more than ${BOUNDS.fanout} connections in one hop, so not every path from it was followed`,
-  hub: `the walk reached a hub (a node with more connections of one kind than that kind's bound: ${BOUNDS.hub}, a member's vote ${HUB_BY_KIND.event_voted}), which is named, never expanded`,
-  time: 'the walk used its time budget before it was done',
+  depth: word('connection-grammar.walk_reached_depth'),
+  nodes: word('connection-grammar.walk_visited_bound', { nodes: String(BOUNDS.nodes) }),
+  fanout: word('connection-grammar.node_connections_hop', { fanout: String(BOUNDS.fanout) }),
+  hub: word('connection-grammar.walk_reached_hub', { hub: String(BOUNDS.hub), event_voted: String(HUB_BY_KIND.event_voted) }),
+  time: word('connection-grammar.walk_used_time'),
 });
 
 /** The bounds a walk can stop at (R15). */
@@ -64,10 +66,10 @@ export const EXHAUSTION_REASONS = Object.freeze(Object.keys(WHY));
 export function exhausted(arg) {
   const { visited, reason } = arg && typeof arg === 'object' ? arg : /** @type {any} */ ({});
   if (typeof reason !== 'string' || !Object.hasOwn(WHY, reason)) {
-    return { refused: 'REASON_UNKNOWN', why: `a walk stops at one of ${EXHAUSTION_REASONS.join(', ')}; ${String(reason).slice(0, 40)} is none of them` };
+    return { refused: 'REASON_UNKNOWN', why: word('connection-grammar.why.walk_stops_none', { exhaustion_reasons: String(EXHAUSTION_REASONS.join(', ')), reason: String(String(reason).slice(0, 40)) }) };
   }
   if (typeof visited !== 'number' || !Number.isInteger(visited) || visited < 0) {
-    return { refused: 'VISITED_INVALID', why: 'visited is the count of nodes the walk reached, a whole number of at least 0' };
+    return { refused: 'VISITED_INVALID', why: word('connection-grammar.why.visited_count_nodes') };
   }
   return { truncated: true, undetermined: true, why: WHY[/** @type {keyof typeof WHY} */ (reason)], visited };
 }

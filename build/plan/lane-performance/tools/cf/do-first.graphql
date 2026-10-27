@@ -1,0 +1,3 @@
+{ viewer { accounts(filter:{accountTag:"ACCOUNT"}) {
+  durableObjectsInvocationsAdaptiveGroups(limit:5, orderBy:[datetimeHour_ASC], filter:{objectId:"fe1a4ee512b8a8acbc442ef250ca272024a220b61f05279eae083cc6bf305f0a", datetime_geq:"2026-09-25T00:00:00Z", datetime_leq:"2026-10-23T15:00:00Z"}) {
+    dimensions { datetimeHour coloCode } sum { requests } } } } }

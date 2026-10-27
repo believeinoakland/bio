@@ -102,6 +102,7 @@ test("R52: the projections' answers are joined, in order, into the slot's answer
 
 test("R52: the first check that refuses refuses the promotion with its refusal as it came, before anything is written; later checks are not asked", () => {
   const { w } = slotted();
+  // fixtures-generic: CONTENT_EXTENT_REFUSED
   const refusal = { ok: false, reason: "CONTENT_EXTENT_REFUSED", code: "CONTENT_EXTENT_REFUSED", check: "C-45.1",
                     translation: "a stand-in row", detail: "the extent is not the document's" };
   const asked = [];

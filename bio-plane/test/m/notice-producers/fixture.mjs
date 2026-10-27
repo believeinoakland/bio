@@ -6,6 +6,16 @@
    R12), passed in by R1; here they record what they were asked and answer a walk that finds nothing above the subjects,
    so a home set is the item's own cases. Every test drives `noticeItems` at its interface. */
 import { noticeProducersOf, NoticeProducers } from "../../../src/notice-producers/index.mjs";
+import { securityMapRefusal } from "../credentials/fixtures.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
+import { homeOfEmpty } from "../provenance/fixtures.mjs";
+
+/** The refusals and the empty reads below are each provider's own, from its published fixtures (K4990): made by the real
+ *  code, the world built on first use. */
+const once = (make) => { let v; return () => (v ??= make()); };
+const securityRefusals = await securityMapRefusal();
+const standardsWorld = once(standardReadWorld);
+const emptyProvenance = once(homeOfEmpty);
 
 /** Providers answering nothing, each in its requirements' shape. */
 export const NONE = Object.freeze({
@@ -17,18 +27,22 @@ export const NONE = Object.freeze({
   answers: { standingAnswersFor: () => ({ ok: true, entries: [], cursor: null }) },
   inquiry: { datedWaits: ({ member }) => ({ ok: true, member, waits: [] }) },
   credentials: { securityLevel: () => ({ level: "Ordinary", levelAt: null }),
-                 securityMap: () => ({ ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN" }) },
+                 securityMap: () => securityRefusals.notAnAdmin },
   /* R16 (T48; N996 §5): the suspended sign-ins are ai-accounts' (its R13), no longer credentials' */
   aiAccounts: { projectAccountsSuspended: () => [] },
   following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }), dutyWatchEndAt: () => null,
                watchedBy: () => ({ ok: true, watchers: [] }) },
   /* R24 (T50; retrieval R85): the viewer's own watches */
   retrieval: { browse: ({ only }) => ({ ok: true, kinds: [], only, items: [], count: 0, limit: 200, truncated: false, next: null }) },
-  standards: { standardRead: ({ id }) => ({ ok: false, reason: "NO_SUCH_STANDARD", id }) },
+  standards: { standardRead: (a) => standardsWorld().standardRead(a) },
   fileSafety: { scanFindings: ({ after }) => ({ ok: true, findings: [], cursor: after ?? null, truncated: false }),
                 securityToolEvents: ({ after }) => ({ ok: true, events: [], cursor: after ?? null, truncated: false }),
                 securityTools: () => ({ ok: true, tools: [] }) },
-  provenance: { homeOf: () => null },
+  provenance: { homeOf: (sha) => emptyProvenance().homeOf(sha) },
+  /* R27 (G2): capture's fetch_done records */
+  capture: { fetchesDone: () => ({ ok: true, fetches: [], limit: 200, truncated: false, next: null }) },
+  /* R28 (G55): calculations' finished or stopped background ingests */
+  calculations: { ingestNotices: () => ({ ok: true, items: [], next: null }) },
   /* R16 (ai-use R5, R9; ai-accounts R13), R17 (steps, question-explorer, investigation, review), T41 */
   aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached: [] }) },
   steps: { laterFound: () => ({ ok: true, found: [] }), stepsDue: () => ({ ok: true, due: [] }),
@@ -103,3 +117,13 @@ export function snapshot(sqlExec) {
   for (const { name } of rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)) out[name] = JSON.stringify(rows(`SELECT * FROM "${name}"`));
   return out;
 }
+
+/** A local day as a sentence names it, from `words.json` (R16, R20): `date.daymonth` ("October 9"), or
+ *  `date.daymonthyear` ("December 31, 2025") when a year is given. Built from the words, never copied (K3810). */
+import { WORDS as DAY_WORDS } from "../ai-use/fixture.mjs";
+export const dayOn = (day, month, year) => {
+  const m = DAY_WORDS[`date.month.${month}`];
+  return year === undefined
+    ? DAY_WORDS["date.daymonth"].replace("{day}", String(day)).replace("{month}", m)
+    : DAY_WORDS["date.daymonthyear"].replace("{day}", String(day)).replace("{month}", m).replace("{year}", String(year));
+};

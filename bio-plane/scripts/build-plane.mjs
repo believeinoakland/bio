@@ -8,10 +8,9 @@
  * `scripts/fleet-bundle.mjs` — ONE expression, shared with both fleet members
  * and with the gate that verifies all three.
  *
- * `npm run build` runs `embed:sign` FIRST (package.json chains them), so the
- * generated `src/signpage.mjs` is fresh before the bundle is cut. This script
- * does not re-run it: a build step that silently regenerated a committed
- * source would hide exactly the staleness the gate exists to name.
+ * The build calls no step that generates a source file (bundler R16): the
+ * bundle is cut from the committed sources alone, so a stale committed source
+ * is named by the gate and never silently regenerated here.
  *
  * Run from bio-plane/: `npm run build`.
  */

@@ -23,6 +23,7 @@ export const MATCHES_MAX = 20;
 /** R28: the most parts of one message read. */
 export const PARTS_MAX = 50;
 
+import { word } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -83,5 +84,5 @@ export function checkStartProposal({ proposal = null, parts = [] } = {}) {
 function rumourRefusal(part) {
   const row = rowOf("START_RUMOUR_AS_QUESTION");
   return { ok: false, reason: "START_RUMOUR_AS_QUESTION", code: "START_RUMOUR_AS_QUESTION", check: row.check, translation: row.translation,
-           part, detail: "a rumour part is proposed as a question: it is proposed as a lead" };
+           part, detail: word("wizard-scripts.refusal.rumor_as_lead") };
 }

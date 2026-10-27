@@ -106,7 +106,7 @@ test("R1 a source id that cannot be drawn answers record-core's mintExhausted fo
     assert.equal(r.check, "C-59.6");
     assert.equal(r.translation, row.translation);
     /* the detail as record-core R82 words it (T35-13; DEC-149): the group's own Civicsmith, never "the plane" */
-    assert.equal(r.detail, "your group's Civicsmith could not find a free source id: every one it drew was already taken. Nothing was written.");
+    assert.equal(r.detail, "your team's Civicsmith could not find a free source id: every one it drew was already taken. Nothing was written.");
     assert.deepEqual(r, mintExhausted("SRC"), "record-core's one answer, nothing of this module's added or replaced");
   }
   assert.deepEqual(w.snapshot(), before, "nothing is written: the pseudonym's knock read beside it is not bound either");

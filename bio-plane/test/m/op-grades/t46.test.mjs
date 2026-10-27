@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import * as T46 from "../../../src/op-grades/t46.mjs";
+import { declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -30,8 +31,7 @@ test("R33: infolevelset `caller-owned` as memberlanguageset, with its personal-s
   assert.equal(gradeOf("infolevelset"), gradeOf("memberlanguageset"), "as memberlanguageset");
   assert.ok(!Object.hasOwn(RUNGS, "infolevelset"));
   assert.match(RUNG_ABSENT.infolevelset.is, /\(instance-setup R79\)$/);
-  assert.equal(NON_ACTS.infolevelset, "personal state, keyed by member: how quickly explanations open, promptly or after "
-    + "a longer pause; nothing is hidden");
+  assert.equal(NON_ACTS.infolevelset, declaredSentence("instance-setup", "infolevelset"));
   assert.ok(isRead("infolevel"));
   assert.equal(gradeOf("infolevel"), null, "a read takes no grade");
   /* negative controls: another ground, or the read graded, would be seen */
@@ -192,7 +192,7 @@ test("R34: handlechange stays where R29 puts it (`caller-owned`, no rung, phone 
     assert.doesNotMatch(s, /formerly/, s);
     assert.match(s, /HANDLE_FIXED/, s);
   }
-  assert.equal(NON_ACTS.handlecheck, "read: whether a handle is free, taken or not allowed, never who holds it");
+  assert.equal(NON_ACTS.handlecheck, declaredSentence("member-roster", "handlecheck"));
   /* negative control: R29's earlier sentence would be seen */
   const old = "member-directed: the caller's own handle, changeable until their work is first in a published case; "
     + "earlier handles kept and shown as formerly; moves no bundle";

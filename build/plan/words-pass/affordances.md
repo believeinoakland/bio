@@ -1,0 +1,50 @@
+# affordances: the words check after the conversion (K3949)
+
+Layer 11. 46 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- handlist `bio-plane/test/m/affordances/backing.test.mjs:519` [?] ops: lead, leadlook, leadshare, ... (11 of 30 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:324` [?] codes: NO_REASON, VERSION_NO_REASON, NO_ACKNOWLEDGMENT, ... (21 of 21 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:404` [?] ops: standardpropose, comparisonpropose, consequencerecord, ... (15 of 41 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:411` [?] ops: standard, standards, determination, ... (16 of 19 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:427` [?] ops: matteroutcomeset, planreviewrhythm, planreviewrecord, ... (9 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:429` [?] ops: matters, plantimeline, planreviewopen, ... (10 of 10 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:435` [?] ops: scenariosetaside, scenariorestore, planpause, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:453` [?] ops: standardforce, standardforcepropose, standardforcewithdraw, ... (14 of 14 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:568` [?] ops: contradictiondismiss, contradictionclarify, contradictiontakeup, ... (7 of 8 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:570` [?] ops: contradictioncandidates, contradictiontensions, contradictionfacts, ... (5 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:58` [?] ops: holdnoticeprepare, holdnoticesent, actionreceipt, ... (11 of 22 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:597` [?] codes: DISMISSAL_REASON_UNKNOWN, CLARIFY_NO_EXPLANATION, WRONG_SIDE_NO_REASON, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:599` [?] codes: NO_CANDIDATE, NO_SUCH_CANDIDATE, MACHINE_CANNOT_ACT_ON_CANDIDATE, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:615` [?] ops: sourcedisclose, sourceconsentwithdraw, reattest, ... (5 of 10 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:617` [?] ops: sourceof, sourcerung, sourcereadlog, ... (8 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:625` [?] ops: knockerconsent, sourceconsentwithdraw, sourcedisclose, ... (7 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:671` [?] ops: templateretire, templatereviewgrant, templategrantrevoke, ... (13 of 14 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:675` [?] ops: templates, templateread, templatecomments, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/catalogue.test.mjs:770` [?] ops: escalationreasondraft, whatchangeddrafts, sweeps, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/plane.test.mjs:946` [?] ops: actionreplybearing, actionbearingpropose, actionreplyquoting, ... (11 of 15 not the module's own)
+- handlist `bio-plane/test/m/affordances/t31.test.mjs:100` [?] ops: wizardread, wizardsat, wizarduse, ... (7 of 8 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33-backing.test.mjs:11` [?] ops: participantcorrect, eventmerge, eventsplit, ... (30 of 30 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:113` [?] ops: capturerequestplatformhosts, assistantstate, disclosureof, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:51` [?] ops: event, eventforact, datedfacts, ... (9 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:54` [?] ops: line, linesof, structureat, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:57` [?] ops: money, moneyof, moneysummable, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:60` [?] ops: moneyamountchecks, moneyjunction, moneycheckparams, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:63` [?] ops: duty, dutiesof, dutyoccurrences, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:68` [?] ops: identity, samepersoncandidates, person, ... (11 of 11 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:70` [?] ops: explore, explorepreset, exploreverify, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:77` [?] ops: table, tablesat, calculationevaluate, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t33.test.mjs:89` [?] ops: inforceat, standardsfor, lawrelations, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t34.test.mjs:157` [?] ops: invitewithdraw, websitekeycreate, websitekeyset, ... (21 of 21 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t34.test.mjs:164` [?] ops: checkrequests, checksof, groupkeystate, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t34.test.mjs:174` [?] ops: invitewithdraw, websitekeycreate, websitekeyset, ... (14 of 14 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t34.test.mjs:177` [?] ops: groupkeyset, groupkeyremove, groupkeyswitch, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t35-backing.test.mjs:11` [?] ops: standardforce, standardforcewithdraw, standardrelease, ... (9 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t36-backing.test.mjs:11` [?] ops: standardinforcethrough, standardinforcethroughwithdraw, spotcheckvisit, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t36.test.mjs:115` [?] ops: captureupload, ask, subscriptiondisconnect, ... (24 of 33 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t36.test.mjs:192` [?] ops: readtranslate, planask, stepsource, ... (13 of 13 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t36.test.mjs:23` [?] ops: projectstakeset, actionstake, watchitem, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t36.test.mjs:25` [?] ops: readtranslate, updatestart, updatelater, ... (6 of 11 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t36.test.mjs:42` keys: act.accountdrafts.does, act.accountpropose.does, act.handlechange.does, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t41-backing.test.mjs:11` [?] ops: projectaikeepaway, milestoneremove, milestoneitemremove, ... (8 of 8 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t41.test.mjs:23` [?] ops: handlechange, handlecheck, projectkeyset, ... (10 of 10 not the module's own) — handlist
+- handlist `bio-plane/test/m/affordances/t45-backing.test.mjs:12` [?] ops: scenariosetaside, scenariorestore, planpause, ... (11 of 11 not the module's own) — handlist

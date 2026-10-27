@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { checkRecipe, evaluate, OPS, TESTS, METHOD, SUM_RULE } from "../../../src/calc-grammar/index.mjs";
 import { bothWays } from "./fixtures/stream.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fig = (s, extra = {}) => (s.startsWith("-") ? { value: s.slice(1), sign: "-", precision: "exact", ...extra }
   : { value: s, sign: "+", precision: "exact", ...extra });
@@ -290,4 +291,15 @@ test("R20 undetermined never reads as zero: a total with an undetermined amount 
   assert.equal(evaluate(rec, { t: { fields: [{ name: "a", type: "money" }], rows: [] } }).refused, "INPUT_INVALID");
   assert.throws(() => evaluate(rec, null), TypeError);
   assert.throws(() => evaluate(rec, {}, { resolveId: "x" }), TypeError);
+});
+
+test("R20 calc-grammar.recipe.field_shape: a table field of an unknown type is refused INPUT_INVALID, its why naming every type; calc-grammar.composed_quantity: a composed sort field says so by key", () => {
+  const rec = recipe([{ op: "count", as: "c", from: "t" }], "c", [{ name: "t", kind: "table" }]);
+  const shape = evaluate(rec, { t: { fields: [{ name: "a", type: "money" }], rows: [] } });
+  assert.equal(shape.refused, "INPUT_INVALID");
+  for (const type of ["string", "number", "integer", "date", "datetime", "boolean"]) assert.ok(shape.why.includes(type), type);
+  const composed = { fields: [{ name: "c", type: "number", composed: true }], rows: [] };
+  const sorted = run([{ op: "sort", as: "o", from: "t", by: "c", order: "asc" }], { t: composed });
+  assert.equal(sorted.refused, "SORT_NOT_QUANTITY");
+  assert.ok(sorted.why.includes(word("calc-grammar.composed_quantity")));
 });

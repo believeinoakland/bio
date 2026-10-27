@@ -1,10 +1,11 @@
 /* file-safety R39, R40 (N762; K2129, K2153): its own cadences, each batch's instant read from its own kept state, and the
    arming notice a later module registers for. At the module's interface, over the scripted scanner (fixture.mjs) and a
    clock the test moves; an instant is epoch milliseconds, as the scheduler's own `due(now)` reads it. */
+import { reputationRefresh } from "../../../../file-scanner/test/fixtures.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, T0, DAY } from "./fixture.mjs";
-import { FileSafety, FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS, RESCAN_INTERVAL_MS, FILE_WORK_BATCHES } from "../../../src/file-safety/index.mjs";
+import { filedWorld as world, pdf, sha, T0, DAY } from "./fixture.mjs";
+import { FileSafety, FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS, RESCAN_INTERVAL_MS, FILE_WORK_BATCHES, WAITING_RECHECK_MS } from "../../../src/file-safety/index.mjs";
 
 const HOUR = 3_600_000;
 const POLL = FILE_SAFETY_POLL_MS;
@@ -68,7 +69,7 @@ test("R39: scanWake answers null with no scanner bound or no file held; now whil
   assert.ok(a && b && c && big && lastRun);
 });
 
-test("R39: renderWake answers null while no file's view and no safe copy is queued, else the later of now and the last renderBatch plus FILE_SAFETY_POLL_MS (now before any); deeperWake null while no check is queued or running, else the earliest of the last deeperBatch plus the poll for a queued check and each running sandbox's next poll, never before now, and the last deeperBatch plus the poll while its checks cannot be read; each kept across a restart, writes nothing and never throws", async () => {
+test("R39: renderWake answers null while no file's view and no safe copy is queued, else now (a view or safe copy left queued by the last renderBatch, K4900); deeperWake null while no check is queued or running, else the earliest of the last deeperBatch plus the poll for a queued check and each running sandbox's next poll, never before now, and the last deeperBatch plus the poll while its checks cannot be read; each kept across a restart, writes nothing and never throws", async () => {
   const w = world({ scan: { polls: 3 } });
   /* render */
   assert.equal(w.fs.renderWake(T0), null);
@@ -77,10 +78,8 @@ test("R39: renderWake answers null while no file's view and no safe copy is queu
   assert.equal(w.fs.renderWake(w.clock.now), w.clock.now, "queued, never rendered: now");
   await w.fs.renderBatch({ limit: 1 });
   const rendered = w.clock.now;
-  assert.equal(w.fs.renderWake(rendered), rendered + POLL);
-  assert.equal(w.fs.renderWake(rendered + 2 * POLL), rendered + 2 * POLL, "the later of now and the poll");
-  assert.equal(restarted(w).renderWake(rendered), rendered + POLL, "kept across a restart");
-  w.tick(POLL);
+  assert.equal(w.fs.renderWake(rendered), rendered, "a view left queued by the batch: now (K4900)");
+  assert.equal(restarted(w).renderWake(rendered), rendered, "kept across a restart");
   await w.fs.renderBatch({});
   assert.equal(w.fs.renderWake(w.clock.now), null, "nothing queued");
   /* a safe copy queued alone keeps it */
@@ -162,7 +161,8 @@ test("R39: forwardWake answers null while no log tool is on, else the start of t
   assert.equal(restarted(w).reputationWake(w.clock.now), ok + REPUTATION_REFRESH_MS, "kept across a restart");
   /* a failed refresh: due (ok + 6 h has passed), but no sooner than a poll after the failed try */
   w.tick(REPUTATION_REFRESH_MS + 1);
-  gwr = () => ({ ok: false, error: "LIST_UNREADABLE" });
+  const unreadable = await reputationRefresh("unreadable");
+  gwr = () => unreadable;
   await w.fs.refreshReputationLists({});
   const tried = w.clock.now;
   assert.equal(w.fs.reputationWake(tried), tried + POLL);
@@ -220,7 +220,8 @@ test("R40: onFileWork(module, fn) registers once (a second by one module LISTENE
   /* after a batch moves the answer later, a new receipt is sooner again */
   await w.fs.scanBatch({}); await w.fs.renderBatch({});
   assert.equal(w.fs.scanWake(w.clock.now) > w.clock.now, true, "as the scheduler asks after a tick");
-  assert.equal(w.fs.renderWake(w.clock.now), null);
+  /* the two receipts above named bytes the store never held: their views wait for them (R51), looked at again in an hour */
+  assert.equal(w.fs.renderWake(w.clock.now), w.clock.now + WAITING_RECHECK_MS);
   w.tick(1000);
   await w.capture(pdf(false, "c3"));
   await settle();
@@ -244,8 +245,9 @@ test("R40: onFileWork(module, fn) registers once (a second by one module LISTENE
   heard.length = 0;
   const ct = await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   w.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);
-  await w.fs.renderBatch({});
-  assert.equal(w.fs.renderWake(w.clock.now), null, "as the scheduler asks after a tick");
+  for (let i = 0; i < 6; i++) await w.fs.renderBatch({});   /* one render is begun per tick (R12) */
+  /* nothing is queued: only the views waiting for bytes the store never held (R51) are left, at their own instant */
+  assert.equal(w.fs.renderWake(w.clock.now), Date.parse(w.row("SELECT MIN(render_wait_at) AS t FROM fs_files WHERE render_state = 'waiting'").t), "as the scheduler asks after a tick");
   w.tick(POLL + 1);
   const q = await w.capture(pdf(false, "copied"));
   await settle();

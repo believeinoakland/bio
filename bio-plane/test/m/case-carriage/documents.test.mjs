@@ -5,13 +5,15 @@
    author), held only in the evidence store, as a member's upload is; `doc-clean` runs for real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, caseFm, makePng, sha, NOW } from "./fixture.mjs";
+import { world, caseFm, makePng, sha, NOW, supplied } from "./fixture.mjs";
 import { pdf, has, SECRETS } from "../doc-clean/fixtures.mjs";
-import { makeZip } from "../../make-zip.mjs";
+import { makeZip, zipChunks64 } from "../../make-zip.mjs";
+import { docx, unzipCopy, enc } from "../doc-clean/fixtures.mjs";
 import { CLEAN_MAX_BYTES } from "../../../src/doc-clean/index.mjs";
-import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
+import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_NOW_MAX_BYTES, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
          CASE_CARRIAGE_DOCUMENT_TABLES, MEMBER_DOCUMENT_ONLY_AS_COPY, ARCHIVE_SUPPLIED_BY_MEMBER, obscuredKey }
   from "../../../src/case-carriage/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const KNOCKED = pdf();                                                    // EXIF with GPS in its image, /Info, XMP
@@ -22,21 +24,6 @@ const docRow = (ref, s, over = {}) => ({ ref, kind: "document", sha: s, text_sha
 const copyRow = (ref, s, copy) => docRow(ref, s, { included: false, obscured: { copy, label: COPY_CLEANED_LABEL } });
 const LATER = (ms) => new Date(Date.parse(NOW) + ms).toISOString().replace(".000Z", "Z");
 
-/* A document a member supplied: its bytes only in the evidence store, registered on its own bundle as a PDF, its
-   home's provenance recording its type; `via` the receipt it arrives by (null: none, a capture with no receipt). */
-function supplied(w, id, bytes, { via = "doorbell", name = "file.pdf", type = "application/pdf", stated = null } = {}) {
-  const b = Buffer.from(bytes), s = sha(b);
-  w.doc(id, { text: `the page about ${id}` });
-  const path = `snapshots/${name}`;
-  w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
-                s, id, path, stated ?? b.length, NOW);
-  w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`, id, path, s, b.length, s);
-  w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`,
-    JSON.stringify({ documents: [{ file: path, capture: { method: "acquire", sha256: s, encoding: "binary", bytes: b.length, content_type: type } }] }), id);
-  w.evidence.held.set(s, b);
-  if (via) w.receipt(s, via);
-  return s;
-}
 const queue = (w) => w.rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`);
 const copies = (w) => w.rows(`SELECT capture, state, sha256, refused_code FROM document_copies ORDER BY seq`);
 
@@ -82,7 +69,7 @@ test("R15 copyBatch: a knock PDF whose image carries EXIF is cleaned by doc-clea
   assert.deepEqual(held.opts.customMetadata, { derived: "cleaned", original: knock, label: COPY_CLEANED_LABEL });
   for (const secret of SECRETS) assert.equal(has(held.bytes, secret), false, `${secret} is not in the copy`);
   assert.ok(has(KNOCKED, "GPSSECRET") && has(KNOCKED, "AUTHORSECRET"), "negative control: the original carries them");
-  assert.equal(sha(w.evidence.held.get(knock)), knock, "the original is unchanged");
+  assert.equal(sha(w.evidence.held.get(knock)), knock, "original digest unchanged");
   assert.equal(w.count("register"), register, "the copy is never registered");
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM register WHERE capture_sha=?`, k.copy).n, 0);
   assert.deepEqual(w.cc.documentCopy(refused), { state: "refused", copy: null,
@@ -149,7 +136,7 @@ test("R15 a read of the evidence store that fails leaves the document queued, tr
   assert.deepEqual({ ok: no.ok, code: no.code, check: no.check, translation: no.translation },
                    { ok: false, code: "DOCUMENT_COPY_NO_STORE", check: "C-141.11", translation: CASE_CARRIAGE_CHECKS.DOCUMENT_COPY_NO_STORE.translation });
   assert.equal(CASE_CARRIAGE_CHECKS.DOCUMENT_COPY_NO_STORE.translation,
-               "Your group's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made.");
+               word("refusal.DOCUMENT_COPY_NO_STORE"));
   assert.deepEqual(w2.snapshot(), before, "nothing derived or written");
   assert.equal(w2.cc.documentCopy(s).state, "pending");
 });
@@ -270,8 +257,8 @@ test("R1 a knock PDF with EXIF is carried as its copy only: the copy held derive
   const before = w.snapshot();
   const whole = w.cc.holdMaterials(caseFm({ materials: [docRow("INFO-2026-0101-knock", knock)] }), { caseId: CASE, edition: 2, at: NOW });
   assert.deepEqual([whole.materials, whole.files], [[], []]);
-  assert.deepEqual(whole.unheld, [{ ref: "INFO-2026-0101-knock", kind: "document", sha256: knock, why: "a member's document travels only as its copy" }]);
-  assert.equal(MEMBER_DOCUMENT_ONLY_AS_COPY, "a member's document travels only as its copy");
+  assert.deepEqual(whole.unheld, [{ ref: "INFO-2026-0101-knock", kind: "document", sha256: knock, why: word("case-carriage.member_document_only_as_copy") }]);
+  assert.equal(MEMBER_DOCUMENT_ONLY_AS_COPY, word("case-carriage.member_document_only_as_copy"));
   assert.deepEqual(w.snapshot(), before);
   /* the same for a pending, a refused and an undetermined one; a clean one is carried whole */
   const pending = supplied(w, "INFO-2026-0107-pending", REFUSED.slice(1), { via: null });
@@ -286,7 +273,7 @@ test("R1 a knock PDF with EXIF is carried as its copy only: the copy held derive
   assert.deepEqual(r2.materials, [{ sha: clean, held: "evidence" }]);
   /* a copy not held at the digest the row names */
   const wrong = w.cc.holdMaterials(caseFm({ materials: [copyRow("X", knock, sha("no such copy"))] }), { caseId: CASE, edition: 4, at: NOW });
-  assert.deepEqual(wrong.unheld, [{ ref: "X", kind: "obscured", sha256: sha("no such copy"), why: "the obscured copy is not held" }]);
+  assert.deepEqual(wrong.unheld, [{ ref: "X", kind: "obscured", sha256: sha("no such copy"), why: word("case-carriage.why.obscured_copy_held") }]);
 });
 
 test("R8 a member document carries none of R8's files, carried whole (clean) or as its copy; a walk that reaches an archive this copy did not fetch carries it for no material and stops", async () => {
@@ -313,7 +300,7 @@ test("R8 a member document carries none of R8's files, carried whole (clean) or 
   assert.deepEqual(r.files.map((f) => f.kind), ["document", "container"]);
   assert.deepEqual(r.unheld.filter((u) => u.kind === "archive"),
                    [{ ref: "INFO-2026-0011-notes", kind: "archive", sha256: archiveSha, why: ARCHIVE_SUPPLIED_BY_MEMBER }]);
-  assert.equal(ARCHIVE_SUPPLIED_BY_MEMBER, "the archive was supplied by a member, and a member's file leaves only as its copy");
+  assert.equal(ARCHIVE_SUPPLIED_BY_MEMBER, word("case-carriage.archive_supplied_by_member"));
   /* negative control: the archive fetched, it is carried */
   w.receipt(archiveSha, "direct");
   const fetchedArchive = w.cc.holdMaterials(caseFm({ materials: [docRow("INFO-2026-0011-notes", notes)] }), { caseId: CASE, edition: 2, at: NOW });
@@ -357,8 +344,8 @@ test("R13 (T39) kind document: a row stating a member document's copy that is no
   /* undetermined */
   w.cc.provenance = { fetchedByThisCopy: () => { throw new Error("down"); } };
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [copyRow("K", knock, copy), docRow("C", clean)] })).map((x) => [x.ref, x.kind, x.why]),
-    [["K", "document", "the document's copy could not be read, so it cannot be confirmed"],
-     ["C", "document", "the document's copy could not be read, so it cannot be confirmed"]]);
+    [["K", "document", word("case-carriage.document_unread")],
+     ["C", "document", word("case-carriage.document_unread")]]);
 });
 
 /* ---------------------------------------------------------------- R12, the label */
@@ -381,7 +368,7 @@ test("R12 (T39) the queue and the record of member documents' copies are declare
   const now = w.rows(`SELECT * FROM document_copies`);
   assert.deepEqual(now.slice(0, kept.length), kept, "never rewritten or removed");
   assert.equal(now.length, kept.length + 1);
-  assert.equal(COPY_CLEANED_LABEL, "Details of who made this file, and of its pictures, removed for publication; the group holds the original");
+  assert.equal(COPY_CLEANED_LABEL, word("document.cleaned.label"));
   assert.notEqual(COPY_CLEANED_LABEL, OBSCURED_LABEL);
 });
 
@@ -436,7 +423,7 @@ test("R18 (T40; N818, K2383) a refused onReceipt registration ({ok: false}, a th
        { notice: "onReceipt", reason: "LISTENER_MALFORMED", detail: "refused here" }],
       ["a throw", { onReceipt: () => { throw new Error("provenance is down"); } },
        { notice: "onReceipt", reason: "REGISTRATION_THREW", detail: "provenance is down" }],
-      ["no onReceipt to ask", {}, { notice: "onReceipt", reason: "NO_RECEIPT_NOTICE", detail: "no provenance onReceipt to register the receipt listener with" }],
+      ["no onReceipt to ask", {}, { notice: "onReceipt", reason: "NO_RECEIPT_NOTICE", detail: localize("case-carriage.index.no_provenance_onreceipt", "no provenance onReceipt to register the receipt listener with") }],
       ["an answer that is no answer", { onReceipt: () => undefined },
        { notice: "onReceipt", reason: "REGISTRATION_UNANSWERED", detail: "the registration answered undefined" }],
     ];
@@ -461,4 +448,141 @@ test("R18 (T40; N818, K2383) a refused onReceipt registration ({ok: false}, a th
   const before = w.snapshot();
   assert.doesNotThrow(() => w.cc.faults());
   assert.deepEqual(w.snapshot(), before, "faults() writes nothing");
+});
+
+/* ---------------------------------------------------------------- R15 (T51; K4570 G9) copyNow */
+
+test("R15 (T51; G9) copyNow: a queued 356-byte text document is made in the act, awaited: copyNow answers it clean and the next documentCopy answers clean, with no scheduler tick; a 5 MB document is not copied by copyNow, is never read, and stays queued for the alarm's copyBatch", async () => {
+  assert.equal(COPY_NOW_MAX_BYTES, 2 * 1024 * 1024);
+  const w = world();
+  const text = Buffer.from("street,count\n".padEnd(356, "x"));
+  assert.equal(text.length, 356);
+  const small = supplied(w, "INFO-2026-0101-small", text, { name: "notes.txt", type: "text/plain" });
+  const big = supplied(w, "INFO-2026-0102-big", Buffer.alloc(5 * 1024 * 1024, "a"), { name: "big.txt", type: "text/plain" });
+  assert.equal(w.cc.documentCopy(small).state, "pending", "the prepare's own answer, before copyNow: queued, nothing runs");
+  const r = await w.cc.copyNow({ shas: [small, big], maxBytes: COPY_NOW_MAX_BYTES });
+  assert.deepEqual(r, { ok: true, copied: 0, clean: 1, public: 0, refused: 0, failed: 0, skipped: 1, remaining: 1 });
+  assert.deepEqual(w.cc.documentCopy(small), { state: "clean", copy: null, refused: null });
+  assert.equal(w.cc.documentCopy(big).state, "pending", "the large one is left to the alarm");
+  assert.deepEqual(queue(w).map((q) => q.capture), [big]);
+  assert.equal(w.evidence.calls.some(([op, k]) => op === "get" && k === big), false, "a document over the bound is not read");
+  const alarm = await w.cc.copyBatch({});
+  assert.deepEqual([alarm.clean, alarm.remaining], [1, 0], "the alarm path makes it");
+  assert.equal(w.cc.documentCopy(big).state, "clean");
+});
+
+test("R15 (T51; G9) copyNow keeps copyBatch's rules: only documents named and queued are made; a maxBytes above COPY_NOW_MAX_BYTES is held to it; a read that fails leaves the document queued; with no evidence store it answers DOCUMENT_COPY_NO_STORE and derives nothing; a document with a doc-clean refusal is recorded refused; a copy is held as copyBatch holds it", async () => {
+  const w = world();
+  const a = supplied(w, "INFO-2026-0101-knock", KNOCKED);
+  const other = supplied(w, "INFO-2026-0104-csv", CSV, { name: "c.csv", type: "text/csv" });
+  const refused = supplied(w, "INFO-2026-0103-refused", REFUSED, { via: null });
+  w.cc.documentCopy(refused);
+  const r = await w.cc.copyNow({ shas: [a, refused, sha("never captured"), "not a digest"], maxBytes: 1e12 });
+  assert.deepEqual(r, { ok: true, copied: 1, clean: 0, public: 0, refused: 1, failed: 0, skipped: 0, remaining: 1 });
+  assert.deepEqual(queue(w).map((q) => q.capture), [other], "a document not named stays queued");
+  const k = w.cc.documentCopy(a);
+  assert.equal(k.state, "copy");
+  assert.ok(w.bucket.held.get(obscuredKey("bio", k.copy)), "held as copyBatch holds it");
+  assert.equal(w.cc.documentCopy(refused).refused.code, "IMAGE_NOT_CLEANABLE");
+  /* the bound is held whatever maxBytes says */
+  const w2 = world();
+  const huge = supplied(w2, "INFO-2026-0105-huge", REFUSED, { stated: COPY_NOW_MAX_BYTES + 1 });
+  assert.equal((await w2.cc.copyNow({ shas: [huge], maxBytes: 1e12 })).skipped, 1);
+  assert.equal(w2.evidence.calls.some(([op]) => op === "get"), false);
+  /* a read that fails leaves it queued */
+  const w3 = world();
+  const s3 = supplied(w3, "INFO-2026-0101-knock", KNOCKED);
+  w3.evidence.held.delete(s3);
+  const f = await w3.cc.copyNow({ shas: [s3] });
+  assert.deepEqual([f.failed, f.remaining], [1, 1]);
+  assert.equal(w3.cc.documentCopy(s3).state, "pending");
+  /* no store bound: nothing derived */
+  const w4 = world();
+  const s4 = supplied(w4, "INFO-2026-0101-knock", KNOCKED);
+  w4.record.evidenceStore = () => null;
+  const before = w4.snapshot();
+  assert.equal((await w4.cc.copyNow({ shas: [s4] })).code, "DOCUMENT_COPY_NO_STORE");
+  assert.deepEqual(w4.snapshot(), before);
+  /* never rejects on bad input */
+  for (const bad of [undefined, null, {}, { shas: "x" }, { shas: [] }]) assert.equal((await w.cc.copyNow(bad)).ok, true);
+});
+
+test("R15 (T51; G136c) the attempt is stamped (tried) before the clean runs, so a cleaner that crashes mid-clean is not re-run on every wake: a clean that throws is attempted once and not again until DOCUMENT_COPY_RETRY_MS; copyWake reads the stamp; a clean that succeeds after a stamped attempt stores as before", async () => {
+  /* the stamp is in the table while the clean is still running (a crash there leaves it) */
+  const w = world();
+  const knock = supplied(w, "INFO-2026-0101-knock", KNOCKED);
+  const real = w.cc.clean;
+  let seen = null;
+  w.cc.clean = async (bytes) => { seen = queue(w); return real(bytes); };
+  const ok = await w.cc.copyBatch({});
+  assert.deepEqual(seen, [{ capture: knock, queued: NOW, tried: NOW }], "tried is stamped before the clean is called");
+  assert.deepEqual([ok.copied, ok.failed, ok.remaining], [1, 0, 0], "a clean that succeeds stores as before");
+  assert.equal(w.cc.documentCopy(knock).state, "copy");
+  assert.deepEqual(queue(w), []);
+  /* a clean that throws: attempted once; the next wake does not call it until its back-off */
+  const t = world();
+  const crash = supplied(t, "INFO-2026-0101-crash", KNOCKED);
+  let calls = 0;
+  t.cc.clean = async () => { calls++; throw new Error("the cleaner crashed mid-clean"); };
+  const first = await t.cc.copyBatch({});
+  assert.deepEqual([calls, first.failed, first.remaining], [1, 1, 1]);
+  const now = Date.parse(NOW);
+  assert.equal(t.cc.copyWake(now), now + DOCUMENT_COPY_RETRY_MS, "the wake waits for the back-off");
+  t.clock.now = LATER(1000);
+  assert.equal((await t.cc.copyBatch({})).failed, 0);
+  assert.equal(calls, 1, "the next wake does not call the cleaner again");
+  t.clock.now = LATER(DOCUMENT_COPY_RETRY_MS);
+  await t.cc.copyBatch({});
+  assert.equal(calls, 2, "after the back-off it is tried again");
+  assert.equal(t.cc.documentCopy(crash).state, "pending");
+  /* copyNow stamps before too (it ignores the delay, as the act asked) */
+  const n = world();
+  const named = supplied(n, "INFO-2026-0101-named", KNOCKED);
+  const realN = n.cc.clean;
+  let sawNow = null;
+  n.cc.clean = async (bytes) => { sawNow = queue(n)[0].tried; return realN(bytes); };
+  await n.cc.copyNow({ shas: [named] });
+  assert.equal(sawNow, NOW, "copyNow stamps before the clean");
+});
+
+/* The entry count a ZIP's end record states: the 16-bit field, or ZIP64's 64-bit one when that is 0xffff. */
+function endCount(z) {
+  const b = Buffer.from(z), e = b.length - 22;
+  assert.equal(b.readUInt32LE(e), 0x06054b50, "an end record at the end");
+  const c16 = b.readUInt16LE(e + 10);
+  if (c16 !== 0xffff) return c16;
+  assert.equal(b.readUInt32LE(e - 20), 0x07064b50, "ZIP64's locator precedes the end record");
+  return Number(b.readBigUInt64LE(Number(b.readBigUInt64LE(e - 20 + 8)) + 32));
+}
+
+test("R15 (T51; G136c, DOCS C1) a 70,009-entry DOCX through the real doc-clean: a cleaner that crashes after its work is attempted once and not re-run on the next wake; after the back-off the copy is made with its written count equal to the read count", async () => {
+  const entries = unzipCopy(docx({ meta: false })).parts.map((p) => ({ name: p.name, data: p.data, method: p.method }));
+  for (let i = 0; i < 70000; i++) entries.push({ name: `x/${i}`, data: enc("p"), method: 0, zip64: false });
+  const chunks = [];
+  for await (const c of zipChunks64(entries)) chunks.push(c);
+  const big = new Uint8Array(Buffer.concat(chunks));
+  const read = endCount(big);
+  assert.equal(read, entries.length, "the fixture states its entries all");
+  const w = world();
+  const s = supplied(w, "INFO-2026-0101-big", big, { name: "file.docx", type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+  const real = w.cc.clean;
+  let calls = 0, made = null;
+  w.cc.clean = async (bytes) => {
+    calls++;
+    made = await real(bytes);
+    if (calls === 1) throw new Error("the cleaner died after its work");
+    return made;
+  };
+  const first = await w.cc.copyBatch({});
+  assert.deepEqual([calls, first.failed, first.remaining], [1, 1, 1]);
+  w.clock.now = LATER(1000);
+  await w.cc.copyBatch({});
+  assert.equal(calls, 1, "the next wake does not loop");
+  w.clock.now = LATER(DOCUMENT_COPY_RETRY_MS);
+  const again = await w.cc.copyBatch({});
+  assert.equal(calls, 2);
+  assert.equal(made.ok, true, made.detail);
+  assert.equal(again.copied + again.clean, 1, "the copy is made after the back-off");
+  assert.equal(again.remaining, 0);
+  if (made.bytes) assert.equal(endCount(made.bytes), read, "written count == read count");
 });

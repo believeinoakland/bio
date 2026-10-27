@@ -4,6 +4,7 @@
    node cannot resolve, so the one specifier is answered here by an in-thread resolve hook with a stand-in
    `DurableObject` class; nothing else is stubbed and no shared helper is touched. Every test drives the module at its
    interface. */
+import "./register-declared.mjs";
 import { registerHooks } from "node:module";
 import { createHash, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
@@ -39,6 +40,8 @@ const ok = (result, status = 200) => new Response(JSON.stringify({ ok: true, res
  *  row (looked up by SHA-256, as the module asks). `answer(call)` may return a Response to override any route. */
 export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], group = null } = {}) {
   const calls = [];
+  /* every `get()` of the namespace: the id it was given and its options (G83: a location hint is the second argument) */
+  const gets = [];
   /* admission R21: the public ops' window, asked of bio's store before the op; kept apart from the op's own calls */
   const windowCalls = [];
   /* admission R22 (K2166): the security tally's counts, written through the store's internal `securitycount` after a
@@ -47,10 +50,11 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], g
   const bySha = new Map(Object.entries(creds).map(([v, c]) => [sha(v), c]));
   const env = {
     ADMIN_TOKEN: hex64(), MEMBER_TOKEN: hex64(), PROBE_TOKEN: hex64(), DAEMON_TOKEN: hex64(), VERSION: "9.8.7",
-    calls, windowCalls, countCalls,
+    calls, windowCalls, countCalls, gets,
     STORE: {
       idFromName(n) { return n; },
-      get(id) {
+      get(id, opts) {
+        gets.push({ id, opts, at: new Error().stack });
         return {
           async fetch(input, init) {
             const req = input instanceof Request ? input : new Request(String(input), init);

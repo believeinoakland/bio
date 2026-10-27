@@ -6,7 +6,8 @@ import { world, V, MACHINE, STRANGER, PROFILE, attributed, templatesOver, WHY } 
 import { FILING_BLANKS, unfilledMarker, Filings } from "../../../src/filings/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 
 const prep = (x, action, over = {}) => x.f.filingPrepare({ action, preparer: V("bo"), viewer: V("bo"), ...over });
 
@@ -75,7 +76,7 @@ test("R1 R28 TEMPLATE_NOT_NAMED (never the retired KIND_NO_TEMPLATE) also when n
   const x = world({ profiles: [PROFILE, clash] });
   const c = prep(x, x.action());
   assert.equal(c.reason, "TEMPLATE_NOT_NAMED");
-  assert.match(c.detail, /different templates/);
+  assert.ok(c.detail.includes(localize("filings.index.the_active_profiles_give_different_templates", "the active profiles give different templates for this kind, so none is given")));
   assert.equal(prep(x, x.action(), { template: { id: "TPL-test-clash" } }).ok, true, "a named one is still filled");
 });
 
@@ -95,13 +96,13 @@ test("R2 the stricter of the kind's tier and the action's governs; an undetermin
   const y = world({ profiles: [rekind(x0, "test-filings-untiered", { tier: undefined })] });
   const alone = prep(y, y.action({ risk_tier: 1 }));
   assert.deepEqual([alone.ok, alone.tier, alone.governing.kind_tier], [true, 1, null]);
-  assert.match(alone.governing.says, /gives this kind no tier.*action's own tier alone governs/);
+  assert.equal(alone.governing.says, word("filings.says.action_tier_alone", { withheld: word("filings.says.profile_gives_kind") }));
   const tierClash = rekind(x0, "test-filings-third", { tier: 2 });
   assert.equal(validate(tierClash).ok, true);
   const z = world({ profiles: [PROFILE, tierClash] });
   const c = prep(z, z.action({ risk_tier: 1 }));
   assert.deepEqual([c.tier, c.governing.kind_tier], [1, null]);
-  assert.match(c.governing.says, /disagree on this kind's tier/);
+  assert.equal(c.governing.says, word("filings.says.action_tier_alone", { withheld: word("filings.says.active_profiles_disagree") }));
 });
 
 test("R3 every blank is filled from the record naming its source, or left as a visible [UNFILLED: name] marker listed with why; never from the preparer", async () => {
@@ -116,9 +117,9 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   assert.deepEqual(r.unfilled.map((u) => u.name), ["counterparty_organisation", "counterparty_description", "law",
                                                   "records", "period", "form", "cost_limit"],
                    "a bylaw complaint states no law, an office holds no organisation or description, and the member-filled blanks (filing-templates R31) are the member's to fill (R55); every other blank filled");
-  assert.match(r.unfilled[2].why, /undetermined/);
-  for (const u of r.unfilled.slice(3)) assert.match(u.why, /the member fills it in/, u.name);
-  for (const u of r.unfilled.slice(0, 2)) assert.match(u.why, /addressed to an office, which holds no/);
+  assert.equal(r.unfilled[2].why, word("filings.action_states_law"));
+  for (const u of r.unfilled.slice(3)) assert.equal(u.why, word("filings.why.record_holds_value"), u.name);
+  for (const u of r.unfilled.slice(0, 2)) assert.equal(u.why, word("filings.action_addressed_office", { part: u.name.replace("counterparty_", "") }));
   assert.deepEqual([by.counterparty_role.value, by.counterparty_role.source], ["Selectboard", B]);
   assert.deepEqual([by.counterparty_body.value, by.counterparty_body.source], ["Port Ellery Selectboard", B]);
   assert.deepEqual([by.act.value, by.act.source], [`the adoption recorded as ${x.ACT_EVENT}`, x.ACT_EVENT], "conformance R25: the act is its event");
@@ -149,15 +150,15 @@ test("R3 every blank is filled from the record naming its source, or left as a v
     assert.ok(u.text.includes(unfilledMarker(n)), n);
     assert.ok(why[n], n);
   }
-  assert.match(why.counterparty_role, /undetermined/);
-  assert.match(why.governing_laws, /undetermined/);
+  assert.equal(why.counterparty_role, word("filings.action_counterparty_undetermined"));
+  assert.equal(why.governing_laws, word("filings.member_stated_action"));
   assert.equal(why.group, word("filings.why.producing_group_recorded"));
-  assert.match(why.act_date, /placed nowhere.*undetermined/, "an act placed nowhere has no date");
+  assert.equal(why.act_date, word("filings.act_date_undetermined", { act: word("filings.act_event", { words: word("filings.placed_nowhere_record") }) }), "an act placed nowhere has no date");
   assert.ok(u.text.includes(unfilledMarker("act_date")));
   /* Not visible: quinn, outside the project, may not see the determination. */
   const h = prep(x, B, { viewer: V("quinn"), preparer: V("quinn") });
   const hw = Object.fromEntries(h.unfilled.map((b) => [b.name, b.why]));
-  for (const n of ["act", "act_date", "standards", "findings"]) assert.match(hw[n], /not one you may see/, n);
+  for (const n of ["act", "act_date", "standards", "findings"]) assert.equal(hw[n], word("filings.determination_action_rests"), n);
   /* the preparer supplies no value: two preparers, one text */
   x.groupRef.value = "test-group";
   const y = world();
@@ -188,8 +189,8 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   const failed = prep(x, A);
   const fg = group(failed);
   assert.equal(fg.blank, null);
-  assert.match(fg.unfilled.why, /undetermined/);
-  assert.doesNotMatch(fg.unfilled.why, /is recorded/);
+  assert.equal(fg.unfilled.why, word("filings.why.module_answers_fact", { reason: word("filings.why.provider_failed") }));
+  assert.notEqual(fg.unfilled.why, word("filings.why.producing_group_recorded"));
   assert.ok(failed.text.includes(unfilledMarker("group")));
   Object.defineProperty(x.groupRef, "value", { value: "test-group", writable: true, configurable: true });
   /* no provider at all: a real promotion on which no module registered the fact (FACT_UNAVAILABLE) */
@@ -202,22 +203,21 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   const ug = group(un);
   assert.equal(un.ok, true);
   assert.equal(ug.blank, null);
-  assert.match(ug.unfilled.why, /undetermined/);
-  assert.match(ug.unfilled.why, /no provider/);
-  assert.doesNotMatch(ug.unfilled.why, /is recorded/);
+  assert.equal(ug.unfilled.why, word("filings.why.module_answers_fact", { reason: word("filings.why.provider_registered") }));
+  assert.notEqual(ug.unfilled.why, word("filings.why.producing_group_recorded"));
   assert.ok(un.text.includes(unfilledMarker("group")));
   /* no promotion module reachable (no host, none given; N355): undetermined, said so, with no refusal code of
      promotion's spelled by filings */
   const f3 = new Filings({ storage: x.st, record: x.record, actions: x.actions, publication: x.p, provenance: x.prov,
                            content: x.content, profiles: () => [other], now: () => x.clock.now, filingTemplates });
-  assert.equal(f3.promotion, null, "no promotion module is reachable");
+  assert.equal(f3.promotion, null, "promotion absent");
   const np = f3.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   const npg = group(np);
   assert.equal(np.ok, true);
   assert.equal(npg.blank, null);
-  assert.match(npg.unfilled.why, /no promotion module is reachable/);
-  assert.match(npg.unfilled.why, /undetermined/);
-  assert.doesNotMatch(npg.unfilled.why, /is recorded|FACT_/);
+  assert.equal(npg.unfilled.why, word("filings.why.promotion_module_reachable"));
+  assert.notEqual(npg.unfilled.why, word("filings.why.producing_group_recorded"));
+  assert.doesNotMatch(npg.unfilled.why, /FACT_/);
   assert.doesNotMatch(JSON.stringify(np), /FACT_UNAVAILABLE/);
   assert.ok(np.text.includes(unfilledMarker("group")));
   /* a reader handed in (as the retired legacy store's was) still works: a value, or the fact's own answer */
@@ -226,7 +226,7 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
     .filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") }));
   assert.deepEqual([handed(() => "handed-group").blank.value, handed(() => "handed-group").blank.source], ["handed-group", "fact:producingGroup"]);
   assert.equal(handed(() => null).unfilled.why, word("filings.why.producing_group_recorded"));
-  assert.match(handed(() => bare.fact("producingGroup")).unfilled.why, /undetermined/);
+  assert.equal(handed(() => bare.fact("producingGroup")).unfilled.why, word("filings.why.module_answers_fact", { reason: word("filings.why.provider_registered") }));
   assert.equal(handed(() => x.promotion.fact("producingGroup")).blank.value, "test-group");
 });
 
@@ -245,7 +245,7 @@ test("R4 a Tier 2 draft carries the profile's advisory note first in the text an
   assert.equal(n.advisory, null);
   assert.ok(n.text.startsWith(`${unfilledMarker("advisory")}\n\n`));
   assert.equal(n.unfilled[0].name, "advisory");
-  assert.match(n.unfilled[0].why, /undetermined/);
+  assert.equal(n.unfilled[0].why, word("filings.why.profile_gives_advisory"));
 });
 
 test("R5 any credential may prepare; the draft is stored apart, labelled with its preparer and whether it is machine work, answered evidence: false with a sentence; preparing again makes a new draft, never an edit", async () => {
@@ -256,8 +256,8 @@ test("R5 any credential may prepare; the draft is stored apart, labelled with it
   assert.equal(m.ok, true);
   assert.deepEqual([m.label.state, m.label.machine_work, m.label.by], ["machine_proposed", true, MACHINE]);
   assert.equal(m.evidence, false);
-  assert.match(m.says, /nobody has approved or sent it/);
-  assert.match(m.label.says, /machine work/);
+  assert.equal(m.says, word("filings.draft_prepared_record"));
+  assert.equal(m.label.says, proposalLabel(MACHINE, "filing_draft").says);
   const b = prep(x, A);
   assert.deepEqual([b.label.state, b.label.machine_work], ["member_proposed", false]);
   assert.notEqual(b.id, m.id);

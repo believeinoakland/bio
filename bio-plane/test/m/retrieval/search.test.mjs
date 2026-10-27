@@ -5,6 +5,7 @@ import { world, V, MACHINE } from "./fixture.mjs";
 import { PROJECTION_RELATION, FIELD_VIEWS } from "../../../src/retrieval/index.mjs";
 import { FIELDS, FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX, PROVENANCE_COLS, cachedNotes, compile, meaningVocabulary }
   from "../../../src/query.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 /* A small corpus: four documents, two states, two schemas, one hidden project. */
 function corpus() {
@@ -20,13 +21,13 @@ function corpus() {
 test("R6: mode page (default), ids or count; the answer carries query, gate {scope, applied}, total, limit, offset; hits carry the provenance columns and a snippet and no score; ids every id in the page's order with truncated at the cap", () => {
   const { w } = corpus();
   const s = w.retrieval.search({ q: "water", viewer: V("vera") });
-  assert.deepEqual(Object.keys(s.query), ["q", "terms", "match", "sort", "warnings", "mode"]);
+  assert.deepEqual(Object.keys(s.query), ["q", "terms", "match", "sort", "warnings", "mode", "scope"]);
   assert.equal(s.query.mode, "page");
   assert.deepEqual([s.gate.scope, s.total, s.limit, s.offset], ["participant", 2, 50, 0]);
   assert.equal(s.gate.applied, 1 + 1 + 1, "count, page and the facet scan each ran through the gate");
   assert.deepEqual(s.hits.map((h) => h.bundle_id).sort(), ["INFO-1", "INFO-2"]);
   for (const h of s.hits) {
-    assert.deepEqual(Object.keys(h), [...PROVENANCE_COLS.map((c) => String(c).replace(/^b\./, "").split(/\s+AS\s+/i).pop()), "snippet", "snippet_from"]);   /* query-language R14/R33 (T50): the page shape also carries snippet_from */
+    assert.deepEqual(Object.keys(h).filter((k) => k !== "snippet_unit"), [...PROVENANCE_COLS.map((c) => String(c).replace(/^b\./, "").split(/\s+AS\s+/i).pop()), "snippet", "snippet_from", "document", "kind", "capture_sha", "extent_kind", "extent", "ref"]);   /* query-language R14/R33 (T50): the page shape also carries snippet_from; R92: and the hit's document; R95, R96: the part it was found in and where, null for a hit that is not a passage's; `snippet_unit` is query-language R34's (red by name until its job merges), the key this module reads them by */
     assert.equal(typeof h.snippet, "string");
     assert.equal(h.snippet_from, "text");
     assert.equal(Object.keys(h).some((k) => /score|rank|bm25/i.test(k)), false, "no score is published");
@@ -82,7 +83,7 @@ test("R9: a conjunction of more than one atom that finds nothing counts the OR r
   const miss = w.retrieval.search({ q: "water library", viewer: V("vera") });
   assert.equal(miss.total, 0);
   assert.deepEqual(miss.widen, { interpretation: "OR", total: 3, q: "water library",
-    detail: "no record matches all of these terms; this many match any of them" });
+    detail: localize("retrieval.index.no_record_matches_all", "no record matches all of these terms; this many match any of them") });
   assert.equal(w.retrieval.search({ q: "water library", viewer: V("vera"), widen: false }).widen, null);
   assert.equal(w.retrieval.search({ q: "zzqx yyqx", viewer: V("vera") }).widen, null, "the OR reading finds nothing");
   assert.equal(w.retrieval.search({ q: "zzqx", viewer: V("vera") }).widen, null, "one atom is not a conjunction");
@@ -143,7 +144,7 @@ test("R16: searchFields publishes the fields {type, freeText, column}, ftsColumn
   assert.deepEqual([f.ftsColumns, f.defaultFacets, f.idsMax], [FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX]);
   assert.deepEqual(f.meaning, meaningVocabulary());
   assert.ok(f.syntax.every((s) => typeof s === "string" && s.length));
-  assert.ok(f.syntax.some((s) => /content: does NOT search the text of the documents/.test(s)));
+  assert.ok(f.syntax.includes(localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says")));
   assert.ok(f.syntax.some((s) => /cited or marked citable/.test(s)));
 });
 
@@ -165,7 +166,7 @@ test("R17: searchIndexCheck finds NO_FTS_ID, NO_INDEX_ROW and DIVERGED over visi
   assert.equal(bad.ok, false);
   assert.deepEqual(bad.findings.map((f) => [f.bundleId, f.finding]),
     [["INFO-1", "NO_FTS_ID"], ["INFO-2", "NO_INDEX_ROW"], ["INFO-3", "DIVERGED"]]);
-  assert.equal(bad.findings[0].detail, "the record has no text index key");
+  assert.equal(bad.findings[0].detail, localize("retrieval.index.record_no_text_index_key", "the record has no text index key"));
   const div = bad.findings[2];
   assert.deepEqual(div.columns, ["body"]);
   assert.deepEqual(div.chars.body[0], "tampered".length);

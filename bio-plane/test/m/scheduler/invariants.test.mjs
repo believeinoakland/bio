@@ -9,13 +9,14 @@ import { world, consumer, NOW } from "./fixture.mjs";
 const config = (p) => JSON.parse(readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf8")
   .replace(/"(?:[^"\\]|\\.)*"|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => (m[0] === '"' ? m : "")).replace(/,\s*([}\]])/g, "$1"));
 
-test("R14: the deployed configuration declares no cron trigger; the Durable Object's alarm is the one periodic mechanism", () => {
+test("R14: the deployed configuration declares at most one cron trigger, the watchdog's every five minutes; the Durable Object's alarm is the one periodic mechanism", () => {
   const c = config("../../../wrangler.jsonc");
   const crons = (c.triggers && c.triggers.crons) || [];
-  assert.deepEqual(crons, []);
+  assert.ok(crons.length <= 1, "one cron at most: the plane's watchdog (K4566)");
+  for (const cron of crons) assert.equal(cron, "*/5 * * * *", "the watchdog's cycle is five minutes (R28, R29)");
   assert.ok(Array.isArray(c.durable_objects?.bindings) && c.durable_objects.bindings.some((b) => b.class_name === "Store"),
     "the plane runs in the Durable Object whose alarm this is");
-  for (const env of Object.values(c.env || {})) assert.deepEqual((env.triggers && env.triggers.crons) || [], []);
+  for (const env of Object.values(c.env || {})) assert.ok((((env.triggers && env.triggers.crons) || []).length) <= 1);
 });
 
 test("R14: no consumer sets an alarm of its own: each firing and each arm sets the one alarm at most once, to the earliest wake", async () => {

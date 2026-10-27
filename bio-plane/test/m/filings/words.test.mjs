@@ -9,7 +9,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V, F, WHY, MACHINE, actionsWith } from "./fixture.mjs";
 import { wordsRead, WORDS_OWED, CHRONOLOGY_MAX, PRESSURE_MAX } from "../../../src/filings/index.mjs";
-import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { word, hasWord, localize } from "../../../src/setup-words/index.mjs";
+import { timelineRefusal } from "../events/fixtures.mjs";
+import { pressureMarks } from "../docket/fixtures.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const READS = async () => JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules.filings.reads;
@@ -116,13 +118,13 @@ test("R52 a documenting version and a chance-to-fix notice are assembled in the 
   assert.equal(doc.ok, true, JSON.stringify(doc).slice(0, 300));
   const by = Object.fromEntries(doc.parts.map((p) => [p.part, p.text]));
   assert.equal(by["still uncertain"], word("filings.uncertain_nothing_record"));
-  assert.equal(by["a time for review and response"], word("filings.time_review_response_undetermined"));
+  assert.equal(by[localize("filings.time_review_response", "a time for review and response")], word("filings.time_review_response_undetermined"));
   assert.equal(by["the act"], word("filings.act", { words: word("state.undetermined", { reason: word("filings.action_rests_live") }), office: "" }));
   assert.equal(by["the standard"], word("filings.standard_measured_against", { words: word("state.undetermined", { reason: word("filings.action_rests_live") }) }));
   const fix = f.communicationPrepare({ action: bare, purpose: "chance_to_fix", preparer: V("bo"), viewer: V("bo"), language: "en" });
   const parts = Object.fromEntries(fix.parts.map((p) => [p.part, p.text]));
-  assert.equal(parts["correcting the act"], word("filings.correcting_act_undetermined"));
-  assert.equal(parts["remedying the harm"], word("filings.remedying_harm_consequence"));
+  assert.equal(parts[localize("filings.correcting_act", "correcting the act")], word("filings.correcting_act_undetermined"));
+  assert.equal(parts[localize("filings.remedying_harm", "remedying the harm")], word("filings.remedying_harm_consequence"));
   assert.equal(parts["a time"], word("filings.time_undetermined_profile"));
   /* the group's own window, when the action's clock states one */
   const win = x.action({ kind: "recognition_letter", legs: [], clock: [] });
@@ -131,7 +133,7 @@ test("R52 a documenting version and a chance-to-fix notice are assembled in the 
   assert.equal(w.parts.find((p) => p.part === "a time").text, word("filings.time_set", { date: "2026-05-01", basis: "our own window" }));
   /* the fixture's own action: an uncertain point and a recorded time */
   const real = f.communicationPrepare({ action: x.action(), purpose: "document_infraction", audience: "violating_party", preparer: V("bo"), viewer: V("bo"), language: "en" });
-  assert.equal(real.parts.find((p) => p.part === "a time for review and response").text.startsWith(word("filings.invite_review_response", { date: "2026-04-01", basis: "P.E.B.L. § 4" })), true);
+  assert.equal(real.parts.find((p) => p.part === word("filings.time_review_response")).text.startsWith(word("filings.invite_review_response", { date: "2026-04-01", basis: "P.E.B.L. § 4" })), true);
 });
 
 test("R52 a defence packet's gaps are told by key: no challenged statement, no pressure, a docket or pressure read that cannot be read or is not answered, a truncated pressure list; no consequences read", async () => {
@@ -142,15 +144,16 @@ test("R52 a defence packet's gaps are told by key: no challenged statement, no p
   assert.equal(base.ok, true, JSON.stringify(base).slice(0, 300));
   assert.equal(base.sections.challenged.says, word("filings.says.member_named_challenged"));
   assert.equal(base.sections.pressure.says, word("filings.says.pressure_recorded_action"));
+  const marks = pressureMarks();
   const silent = defence(x.filingsWith({ docket: {}, actionHolds: {} }));
   assert.equal(silent.sections.pressure.says, word("filings.module_answers_pressure"));
-  const unread = defence(x.filingsWith({ docket: { docketPressureMarks: () => ({ ok: false }) }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
+  const unread = defence(x.filingsWith({ docket: { docketPressureMarks: () => marks.unreadable }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
   assert.equal(unread.sections.pressure.says, word("filings.docket_legal_marks"), "the docket's read is the last said");
-  const holdsOnly = defence(x.filingsWith({ docket: { docketPressureMarks: () => ({ ok: true, marks: [] }) }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
+  const holdsOnly = defence(x.filingsWith({ docket: { docketPressureMarks: () => marks.empty }, actionHolds: { pressureFor: () => ({ ok: false }) } }));
   assert.equal(holdsOnly.sections.pressure.says, word("filings.pressure_recorded_read"));
   const noDocket = defence(x.filingsWith({ docket: {}, actionHolds: { pressureFor: () => ({ ok: true, items: [] }) } }));
   assert.equal(noDocket.sections.pressure.says, word("filings.module_answers_docket"));
-  const cut = defence(x.filingsWith({ docket: { docketPressureMarks: () => ({ ok: true, marks: [] }) }, actionHolds: { pressureFor: () => ({ ok: true, items: [], truncated: true }) } }));
+  const cut = defence(x.filingsWith({ docket: { docketPressureMarks: () => marks.empty }, actionHolds: { pressureFor: () => ({ ok: true, items: [], truncated: true }) } }));
   assert.equal(cut.sections.pressure.says, word("filings.pressure_items_read", { pressure_max: PRESSURE_MAX }));
   /* no consequences read; no profile, so no defence deadline is known */
   const noCons = defence(x.filingsWith({ consequences: { consequencesOf: () => ({ ok: false }) } }));
@@ -169,8 +172,8 @@ test("R52 the chronology's gaps are told by key: no set to read, no timeline mod
   const real = x.action();
   assert.equal(chron(x.filingsWith(), real).says, word("filings.says.world_events_group"));
   assert.equal(chron(x.filingsWith({ events: {} }), real).says, word("filings.module_answers_timeline"));
-  assert.equal(chron(x.filingsWith({ events: { timeline: () => ({ ok: false, reason: "BAD" }) } }), real).says,
-               word("filings.timeline_read_chronology", { dated: " (BAD)" }));
+  assert.equal(chron(x.filingsWith({ events: { timeline: () => timelineRefusal().badDate } }), real).says,
+               word("filings.timeline_read_chronology", { dated: " (BAD_DATE)" }));
   const t = x.events;
   const cut = x.filingsWith({ events: new Proxy(t, { get: (o, k) => (k === "timeline"
     ? (a) => { const r = o.timeline(a); return r && r.world ? { ...r, world: { ...r.world, truncated: true }, ours: { sources: [{ source: "s1", error: "boom" }, { source: "s2", items: [], truncated: true }] } } : r; }

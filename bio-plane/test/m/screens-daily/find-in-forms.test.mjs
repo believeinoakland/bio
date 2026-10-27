@@ -8,10 +8,10 @@ import { Event } from "../interface-shell/harness.mjs";
 const SHA = "9f2c0d1e".padEnd(64, "a");
 const R = "looking";
 const PQ = ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: "Is the city repairing potholes?" }], cursor: null });
-const ZONE = (id) => ok({ ok: true, count: 1, facts: [{ path: "p.time_zone", fact: { profile: "p1", fact: "time_zone" }, status: "confirmed", governs: { value: id, origin: "profile" } }] });
+const ZONE = (id) => ok({ ok: true, path: "@team/time_zone", status: "confirmed", governs: { value: id, origin: "profile" } });
 const kinds = (list) => ok({ ok: true, scope: { form: "project", project: "PROJ-1", captures: 3, title: "The Coliseum lease" }, kinds: list });
 const PERSON = { kind: "people", items: [{ kind: "people", words: "Dana Reyes, director", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, entity: "ENT-9", recorded: [] }], count: 1 };
-const PLANE = (list, zone = "America/Los_Angeles") => ({ projectquestions: PQ, factstatus: ZONE(zone), findin: kinds(list), image: ok({ "bundle.md": '---\ntitle: "The Coliseum lease"\n---\n' }) });
+const PLANE = (list, zone = "America/Los_Angeles") => ({ memberlist: ok({ members: [{ member_id: "u-mai", handle: "Mai", status: "active" }] }), projectquestions: PQ, factstatus: ZONE(zone), findin: kinds(list), image: ok({ "bundle.md": '---\ntitle: "The Coliseum lease"\n---\n' }) });
 const shown = async (list, extra = {}) => {
   const p = await open("/app/find-in/PROJ-1", { ...PLANE(list), ...extra });
   await press(p, "findin", { values: { "findin-kind-people": true, "findin-question": "INQ-1" }, reason: R });
@@ -115,7 +115,9 @@ test("R48: the money form asks the flow step only for an actual payment: who pai
   assert.equal(beside(p, none), word("findin.fieldneeded", { field: word("screen.find-in.field.payee.short") }));
   await press(p, "recordfact", { values: { [m + "-payee"]: "Acme Paving" } });
   const b = last(p, "recordfact").body;
-  assert.deepEqual([b.from, b.to, b.date, b.phase, b.stage], [{ as_written: "City of Oakland" }, { as_written: "Acme Paving" }, "2024-03-01", "actual", "paid"]);
+  // R81: `recordfact` accepts no `date` (the guard); the day of the payment is the period the fact holds over.
+  assert.deepEqual([b.from, b.to, b.date, b.phase, b.stage], [{ as_written: "City of Oakland" }, { as_written: "Acme Paving" }, undefined, "actual", "paid"]);
+  assert.deepEqual(b.period, { from: "2024-03-01", to: "2024-03-01", precision: "day" });
 });
 
 test("R48: after a record the acknowledgement is drawn with a link to the screen, and the passage keeps its acts and counts its facts; an already-cited passage says who", async () => {
@@ -141,7 +143,7 @@ test("R48: after a record the acknowledgement is drawn with a link to the screen
 });
 
 test("R48: a match found in a sheet says its sheet and row and draws its cells apart; a formula the file never calculated says so; a person named in a passage by a held alias says so", async () => {
-  const sheet = { kind: "money", count: 1, items: [{ kind: "money", words: "Total", capture_sha: SHA, title: "Budget", extent: { "sheet-range": "A10:B10" }, sheet: "Summary", recorded: [],
+  const sheet = { kind: "money", count: 1, items: [{ kind: "money", words: "Total", capture_sha: SHA, title: "Budget", extent: { "sheet-range": "A10:B10" }, sheet: "Summary", row: 10, recorded: [],
     cells: [{ cell: "A10", value: "Total", type: "string" }, { cell: "B10", value: null, type: "formula", formula: "=SUM(B2:B9)", cached: null }] }] };
   const named = { ...PERSON, items: [{ ...PERSON.items[0], correspondence: "name_in_passage" }] };
   const p = await shown([sheet, named]);
@@ -153,4 +155,16 @@ test("R48: a match found in a sheet says its sheet and row and draws its cells a
   const plain = await shown([PERSON]);
   assert.ok(!text(plain).includes(word("findin.match.nameinpassage")));
   assert.ok(!text(plain).includes(word("findin.match.sheet", { sheet: "Summary", row: "10" })));
+});
+
+test("R62: a sheet match draws the match's own row, whatever its extent says; a match answering none draws the sheet and its cells without a row number and parses nothing", async () => {
+  const mk = (extra) => ({ kind: "money", count: 1, items: [{ kind: "money", words: "Total", capture_sha: SHA, title: "Budget", extent: { "sheet-range": "A10:B10" }, sheet: "Summary", recorded: [],
+    cells: [{ cell: "A10", value: "Total", type: "string" }], ...extra }] });
+  const withRow = await shown([mk({ row: 12 })]);
+  assert.ok(text(withRow).includes(word("findin.match.sheet", { sheet: "Summary", row: "12" })), "row 12 whatever the extent");
+  assert.ok(!text(withRow).includes(word("findin.match.sheet", { sheet: "Summary", row: "10" })));
+  const none = await shown([mk({ row: null })]);
+  assert.ok(text(none).includes(word("findin.match.sheet.norow", { sheet: "Summary" })), "no row number");
+  assert.ok(text(none).includes("Total"), "its cells are still drawn");
+  assert.ok(!text(none).includes(word("findin.match.sheet", { sheet: "Summary", row: "10" })), "control: the extent's A10 is not parsed into a row");
 });

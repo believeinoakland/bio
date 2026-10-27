@@ -48,7 +48,9 @@ test("R1 R12 R36: publishat, publishatmove and publishatcancel — ratification 
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
   assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
-  assert.ok(A.unaccounted([{ op: "publishschedule", mutating: false, gated: false }]).stale.includes("publishschedule"));
+  /* K4279 (R12): an owner's declared read carried ungated is not stale; carried by no row it is */
+  assert.ok(!A.unaccounted([{ op: "publishschedule", mutating: false, gated: false }]).stale.includes("publishschedule"));
+  assert.ok(A.unaccounted([]).stale.includes("publishschedule"));
 });
 
 /* ---- a member's own notes (op-grades R15) ---------------------------------------------------------------------------- */
@@ -88,12 +90,13 @@ test("R1 R12: groupdescriptiondraft and writinghelp are no act; with the control
    + "them and baseupdates nothing is unaccounted, and carried as mutating each would read unranked", () => {
   for (const op of ["groupdescriptiondraft", "writinghelp"]) assert.ok(!published(op), op);
   const OPS = ["groupdescriptiondraft", "writinghelp", "baseupdates"];
-  /* T48 (op-grades R39): `groupdescriptiondraft` is given a `RUNG_ABSENT` row (`caller-owned`), so it is carried as mutating, as
-     every op with a rung or an absence is; the other two stay gated reads */
-  const table = OPS.map((op) => ({ op, mutating: op === "groupdescriptiondraft", gated: true }));
+  /* K4247 (op-grades R39 as amended): `groupdescriptiondraft` is a read, its NON_ACTS reason its owner's word, and holds no row, so
+     every gated op here is a gated read; carried as a write it would read unranked */
+  const table = OPS.map((op) => ({ op, mutating: false, gated: true }));
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => OPS.includes(op)), []);
+  assert.deepEqual(A.unaccounted([{ op: "groupdescriptiondraft", mutating: true, gated: true }]).unranked, ["groupdescriptiondraft"]);
   assert.deepEqual(A.unaccounted([{ op: "writinghelp", mutating: true, gated: true }]).unranked, ["writinghelp"]);
   assert.ok(A.unaccounted([]).stale.includes("writinghelp"), "carried by no row, it reads stale");
 });
@@ -150,34 +153,39 @@ test("R44 R17 R21: the door passes the screens route's writing_help_refused into
 /* ---- the ops T34 declares (op-grades R17; K1864) ------------------------------------------------------------------- */
 import { membershipOps } from "../../../src/membership/index.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
-import { T34_NON_ACTS, OP_ALIASES } from "../../../src/op-grades/t34.mjs";
-/* Each op op-grades R17 grades, by owner (its grade pinned in op-grades' tests); reads apart. `tasks` and
-   `instance-setup` are later in the order (P4), so their ops are named as op-declarations R23, R26 and R28 name them;
-   membership's and credentials' maps are read. */
-const T34_WRITES = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable",
-  "joinlinkset", "joinlinkreplace", "joinlinkoff", "websiteinvite", "joinlinkinvite", "courtnoticeset",
-  "groupdescriptionset", "checkrequest", "checktake", "checkrecord", "groupkeyset", "groupkeyremove", "groupkeyswitch",
-  "groupkeynoticeseen", "placewanted", "memberlanguageset"];
+import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS, OP_ALIASES } from "../../../src/op-grades/t34.mjs";
+/* Each op op-grades R17 grades is derived from op-grades' own T34 tables (its grade pinned in op-grades' tests): a write is a
+   key of its rungs or stated absences, a read a further key of its NON_ACTS; an op with no NON_ACTS row is public (op-declarations
+   R22: `classes: null`), graded where it writes. `tasks` and `instance-setup` are later in the order (P4), so their ops are
+   not imported; the ops membership and credentials own are those T34's own text names them for ("(membership R98)"), and each
+   must be in that owner's map, which is read. */
+const T34_WRITES = [...new Set([...Object.keys(T34_RUNGS), ...Object.keys(T34_RUNG_ABSENT)])];
+const T34_READS = Object.keys(T34_NON_ACTS).filter((op) => !T34_WRITES.includes(op));
+const T34_PUBLIC = T34_WRITES.filter((op) => !Object.hasOwn(T34_NON_ACTS, op));
+const ownerOf = (op) => /\((membership|credentials) R\d+/.exec(T34_RUNG_ABSENT[op]?.is ?? "")?.[1] ?? null;
 /* op-grades R30 (DEC-188 (8); K2437, K2445): `groupswitchset`, graded `substrate` here since T34, is retired to
    credentials' `accountusesset` (graded in op-grades' t41.mjs): no grade, no reason, and no owner serves it. */
 const T34_RETIRED = ["groupswitchset"];
-const T34_READS = ["checkrequests", "checksof", "groupkeystate", "groupkeynotice", "placewantedstate",
-  "memberlanguage", "startfrom"];
-/* public, with no NEEDS row (op-declarations R22: `classes: null`; `courtnotice` a plain read, K1883 (1)): graded where
-   they write, named in no NON_ACTS (R12) */
-const T34_PUBLIC = ["websiteinvite", "joinlinkinvite", "groupdescription", "courtnotice"];
+/* ungated plain reads of membership (op-declarations R22; `courtnotice` a plain read, K1883 (1)): graded nowhere, named in no NON_ACTS (R12) */
 const UNGATED_READS = ["groupdescription", "courtnotice"];
 test("R1 R12: every op T34 declares in op-declarations R22–R24, R26, R28 and R15 that membership and credentials serve "
    + "is in its owner's map, the retired groupswitchset in none, no op is an act — and with their rows nothing is "
    + "unaccounted; an ungated read carried gated is seen", () => {
-  const m = keysOf(membershipOps), c = keysOf(credentialsOps);
-  for (const op of ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-    "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset", "websiteinvite", "joinlinkinvite",
-    "courtnotice", "groupdescription"]) assert.ok(m.includes(op), `membership serves ${op}`);
-  for (const op of ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice",
-    "groupkeynoticeseen"]) assert.ok(c.includes(op), `credentials serves ${op}`);
+  const maps = { membership: keysOf(membershipOps), credentials: keysOf(credentialsOps) };
+  assert.ok(T34_WRITES.length > 0 && T34_READS.length > 0 && T34_PUBLIC.length > 0);
+  for (const op of T34_WRITES) {
+    const o = ownerOf(op);
+    if (o) assert.ok(maps[o].includes(op), `${o} serves ${op}`);
+  }
+  assert.ok(T34_WRITES.some((op) => ownerOf(op) === "membership") && T34_WRITES.some((op) => ownerOf(op) === "credentials"));
+  for (const op of UNGATED_READS) assert.ok(maps.membership.includes(op), `membership serves ${op}`);
+  /* the credentials reads T34 grades are in its map (no further owner is named for a read) */
+  for (const op of ["groupkeystate", "groupkeynotice"]) {
+    assert.ok(T34_READS.includes(op), op);
+    assert.ok(maps.credentials.includes(op), `credentials serves ${op}`);
+  }
   for (const op of T34_RETIRED) {
-    assert.ok(!c.includes(op), `credentials no longer serves ${op}`);
+    assert.ok(!maps.credentials.includes(op), `credentials no longer serves ${op}`);
     /* op-grades' content its own tests do not yet pin (N877; reported to BOB): T34's table names it no longer */
     assert.equal(Object.hasOwn(T34_NON_ACTS, op), false, op);
   }
@@ -192,6 +200,8 @@ test("R1 R12: every op T34 declares in op-declarations R22–R24, R26, R28 and R
   /* negative controls */
   for (const op of UNGATED_READS)
     assert.deepEqual(A.unaccounted([{ op, mutating: false, gated: true }]).unpublished, [op], `${op}, carried gated, is seen`);
+  for (const op of T34_PUBLIC)
+    assert.ok(A.unaccounted([{ op, mutating: true, gated: true }]).unpublished.includes(op), `${op}, carried gated, is seen`);
 });
 
 test("R12: with a row for each of op-declarations R21's 27 aliases (K2059: `expunge` dropped, no op since K1901; K2245, "

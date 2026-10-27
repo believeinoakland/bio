@@ -7,12 +7,14 @@
    the bytes are put where R39 puts them. The case file is then built by the Worker's assembly and read back as a stranger
    reads it. Each claim has its negative control. */
 import { test } from "node:test";
+import { word as tableWord } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { world, stubOf, bucket, V, NOW, sha } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { ARCHIVE_HOLDS_ORIGINAL, ORIGINAL_NOT_CARRIED } from "../../../src/public-read/casefile.mjs";
 import { serialiseContainer } from "../../../src/container.mjs";
+import { buildCaseFile } from "../../../src/public-read/casefile.mjs";
 import { readContainer, readPart, crc32 } from "../../../src/ooxml.mjs";
 import { CASE_FILE_FORMAT, caseFileManifestCheck, caseFilePath, materialsOf } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -36,7 +38,7 @@ const hex = (b) => createHash("sha256").update(b).digest("hex");
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001";
 const PHOTO = "INFO-2026-0020-photo", DOC = "INFO-2026-0001-minutes";
-const LABEL = "Faces and plates obscured for publication; the group holds the original";
+const LABEL = "Faces and plates obscured for publication; the team holds the original";
 /* The copy's bytes: what `image-cover` derived (any bytes do here; public-read never reads inside them). */
 const COPY = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, ...new TextEncoder().encode("the photo, its marked areas covered"), 0xff, 0xd9]);
 const COPY_SHA = hex(COPY);
@@ -59,7 +61,7 @@ function registerCopy(w, env, ref, bytes = COPY) {
 /* The case edition over F, resting on `materials`, signed and published, F's bytes in the bucket; `before` runs after the
    commit and before the assembly (where R57's registration and R39's copy land). A commit refusal from `case-carriage`'s
    lapsed marks (`publication` R57, T37) is not this module's: the world's photos carry no marks, so it is answered none. */
-async function publish(w, env, materials, { edition = 1, before = () => {} } = {}) {
+async function publish(w, env, materials, { edition = 1, before = () => {}, assemble = true } = {}) {
   if (w.p.caseCarriage && typeof w.p.caseCarriage.marksLapsed === "function") w.p.caseCarriage.marksLapsed = () => [];
   if (edition === 1) w.member("olive");
   const proj = edition === 1 ? w.project("Parks", "olive") : w.p.caseEditionState(CASE, 1).project;
@@ -71,6 +73,14 @@ async function publish(w, env, materials, { edition = 1, before = () => {} } = {
   if (edition === 1) assert.equal(w.signFinding(F).ok, true);
   env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(w.text(F)));
   before();
+  if (!assemble) {
+    /* G54: no case file is recorded while a material is missing, so what the build names unheld is read from the build itself */
+    const facts = await w.read("casefilefacts", { caseId: CASE, edition });
+    const read = async (x) => { const o = await env.PUBLISHED.get(`bio/published/${x}`); return o ? new Uint8Array(await o.arrayBuffer()) : null; };
+    const built = await buildCaseFile({ facts, group: "parks-group", read });
+    const stated = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio", cs: w.p.caseEditionState(CASE, edition, "parks-group"), via: "test" });
+    return { out: built, m: built.manifest, stated };
+  }
   const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio",
                                             cs: w.p.caseEditionState(CASE, edition, "parks-group"), via: "test" });
   assert.equal(typeof out.manifest_sha, "string", JSON.stringify(out).slice(0, 400));
@@ -115,16 +125,17 @@ test("R23 a row carried as its copy carries the copy as one file of kind obscure
 
 test("R23 a copy whose bytes do not hash to obscured.copy, or that the commit did not register, is not carried and is named in unheld; the original is never carried in its place", async () => {
   const s1 = scene();
-  const wrong = await publish(s1.w, s1.env, [copyRow(PHOTO, s1.original)], { before: () => {
+  const wrong = await publish(s1.w, s1.env, [copyRow(PHOTO, s1.original)], { assemble: false, before: () => {
     registerCopy(s1.w, s1.env, PHOTO);
     s1.env.PUBLISHED.m.set(`bio/published/${COPY_SHA}`, new TextEncoder().encode("not the copy"));
   } });
   assert.deepEqual(under(wrong.m, PHOTO), [], "the wrong bytes are never carried under the copy's name");
   assert.deepEqual(wrong.out.unheld.filter((u) => u.ref === PHOTO), [{ ref: PHOTO, sha: COPY_SHA, what: "obscured" }]);
   assert.equal(wrong.m.files.some((f) => f.sha256 === s1.original), false);
+  assert.deepEqual([wrong.stated.code, wrong.stated.step], ["MATERIAL_MISSING", "materials"], "G54: and no case file is recorded while the copy is missing");
   /* bytes in the bucket at the copy's digest, but no registration under the row's ref: the projection does not carry it */
   const s2 = scene();
-  const unregistered = await publish(s2.w, s2.env, [copyRow(PHOTO, s2.original)], { before: () => {
+  const unregistered = await publish(s2.w, s2.env, [copyRow(PHOTO, s2.original)], { assemble: false, before: () => {
     s2.env.PUBLISHED.m.set(`bio/published/${COPY_SHA}`, COPY);
   } });
   assert.deepEqual(under(unregistered.m, PHOTO), []);
@@ -242,7 +253,7 @@ function registeredBeforeT38(w, ref, archiveSha, bytes) {
                  ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, archiveSha, ref, `materials/${archiveSha}`, "archive", bytes, NOW);
 }
 const unpacked = (container, s, file) => ({ file, locator: `https://example.org/a.zip#zip:${container.index}`, retrieved: NOW,
-  authority_state: "undetermined", authority_basis: "a file cut out of an archive",
+  authority_state: "undetermined", authority_basis: tableWord("acquisition.authority_basis.file_cut_out", { at: NOW }),
   capture: { method: "unpacked", grade: "B", actor_class: "daemon", sha256: s, encoding: "binary", bytes: container.uncompressed },
   container, origin: { kind: "named_request" } });
 function holdMember(w, id, text, container) {
@@ -340,7 +351,7 @@ test("R32 R23 the archive pool keeps only what this edition's commit held (K2223
    member document whole), its bytes in the published bucket: whatever registered it, it is never served. */
 
 const MEMDOC = "INFO-2026-0030-letter";
-const CLEANED_LABEL = "Details of who made this file, and of its pictures, removed for publication; the group holds the original";
+const CLEANED_LABEL = tableWord("document.cleaned.label");
 function pdfText() {
   const page = "BT /F1 12 Tf 72 720 Td (The letter the member was sent) Tj ET";
   const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",

@@ -3,6 +3,8 @@
    and `roles(kind)` answer them frozen, for `affordances` to publish. */
 
 /* Structure: the bodies and offices, who funds and contracts, who acts for and answers for whom (K1441, K1470). */
+import { word } from "../setup-words/index.mjs";
+
 export const STRUCTURE_KINDS = Object.freeze(["part_of", "post_in", "holds", "reports_to", "oversees", "appoints",
   "seat_on", "funds", "contracts_with", "acts_for", "responsible_for", "custodian_of", "successor_of"]);
 /* People: memberships, schooling, credentials, interests and ties (K1452, K1453; K1455: `related_to` without condition). */
@@ -14,7 +16,7 @@ export const LINE_KINDS = Object.freeze([...STRUCTURE_KINDS, ...PEOPLE_KINDS, ..
 
 /* `holds` only: the capacity a post is held in. */
 export const CAPACITIES = Object.freeze(["employee", "elected", "appointed", "acting", "interim", "ex officio",
-  "board member", "officer or director", "partner", "military service", "volunteer", "contractor", "other"]);
+  "board member", word("label.linecapacities.officer_or_director"), "partner", "military service", "volunteer", "contractor", "other"]);
 
 /* The OCDS party-role codelist, for `contracts_with`. */
 export const OCDS_PARTY_ROLES = Object.freeze(["buyer", "procuringEntity", "supplier", "tenderer", "funder", "enquirer",
@@ -38,16 +40,9 @@ export const END_KINDS = Object.freeze({
   remanded_to: Object.freeze({ from: ["proceeding"], to: ["proceeding"], code: "PROCEEDING_ENDS" }),
 });
 
-/* The members' words for each kind (K1486): positions and memberships, never "knows", "network" or a measure. */
-const WORDS = {
-  part_of: "part of", post_in: "a post in", holds: "held the post", reports_to: "reports to", oversees: "oversees",
-  appoints: "appoints", seat_on: "a seat on", funds: "funds", contracts_with: "has a contract with",
-  acts_for: "acts for", responsible_for: "responsible for", custodian_of: "keeps the records of",
-  successor_of: "successor of", belongs_to: "a member of", educated_at: "studied at",
-  credentialed_by: "holds a credential from", owns_interest_in: "has an interest in", related_to: "related to",
-  associate_of: "an associate of", party_to: "a party to", appeal_of: "an appeal of",
-  consolidated_with: "consolidated with", remanded_to: "remanded to", arises_from: "arises from",
-};
+/* The members' words for each kind (K1486): positions and memberships, never "knows", "network" or a measure. Each is
+   read by DEC-253's key `label.linekinds.<kind>`; `holds` reads as the post held, with its capacity beside it. */
+const WORDS = Object.fromEntries(LINE_KINDS.map((k) => [k, k === "holds" ? word("lines.holds.held_post") : word(`label.linekinds.${k}`)]));
 
 /* R14: one connection kind per line kind, `holds` one per capacity. */
 export const OWNER = "lines";
@@ -56,7 +51,7 @@ export const connectionKind = (kind, capacity = null) =>
   (kind === "holds" ? `line:holds:${slug(capacity ?? "other")}` : `line:${kind}`);
 export const CONNECTION_KINDS = Object.freeze([
   ...LINE_KINDS.filter((k) => k !== "holds").map((k) => Object.freeze({ kind: connectionKind(k), word: WORDS[k], class: "evidentiary" })),
-  ...CAPACITIES.map((c) => Object.freeze({ kind: connectionKind("holds", c), word: `${WORDS.holds} (${c})`, class: "evidentiary" })),
+  ...CAPACITIES.map((c) => Object.freeze({ kind: connectionKind("holds", c), word: `${WORDS.holds} (${word(`label.linecapacities.${slug(c)}`)})`, class: "evidentiary" })),
 ]);
 /* A connection kind back to its line kind and, for `holds`, its capacity; null for none of this owner's. */
 export function lineKindOf(ck) {

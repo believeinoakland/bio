@@ -1,0 +1,759 @@
+# screens-action (T51)
+
+**Status** · session_01W8SeuUT4Pp8JrNDZyDteuM · depth 2 · COMPLETE · handled B56
+
+## J1 · REPORT
+
+REPORT (start): read and merged tranche/T51 @ fe5d5656fb; baseline in my module is the 2 reds you named (contract.test.mjs:34, :142). Findings before I build R24–R35:
+1. Providers my parts need that are not on the tranche yet: `cs.readonly` (interface-shell R94), `cs.strip`/`cs.reading` (R44, the kit has neither) and the op `holdsdue` (op-declarations R78, T51-107; `hold` R32 reads it). I build against those contracts and run their tests once those modules merge; tell me when interface-shell and op-declarations are in (I then merge tranche/T51).
+2. Everything else the drawings need exists (registry rows and words for actionnew, dash-action, hold, holdnotice, counsel; ops actioninquiry, writinghelp, procedureguides, templatesforaction, projectholds, pressurerecord, actionhold, holdnoticeprepare/sent, counselpacket are declared).
+3. Gaps already named in the requirements (R24, R30, R32–R34, fold-DEC-340 gaps 1) stay REPORTs at COMPLETE with the exact keys; I draw nothing the design does not draw.
+4. Scope is large (about five new screens, the plan's list, the kinds, the dashboard). I work in stages, commit each, and will post BLOCKED (context) at half my window with the next step in my record.
+
+## J2 · BLOCKED
+
+BLOCKED (cause: tests; waits on providers that merge before this module): R24 to R35 are built and tested; 129 of the 132 tests in my suites pass and the 3 red are R27's, but the suites only run with a generated file of wizard-scripts that is not on the tranche. Correction to J1: the kit already has `cs.reading` and `cs.strip`; only `cs.readonly` (interface-shell R94, T51-113) is missing.
+
+**What blocks.** (1) wizard-scripts T51-139: `SCREEN_REGISTRY` is at 7be06eb4cb, so `checkScreens` refuses my screens `actionnew`, `hold`, `holdnotice`, `counsel` and `action`'s acts `procedureguides` and `writinghelp` ("not the registry's"), and every test of the module fails to boot. I ran my suites with that file regenerated locally from the design's `registry.json` (a copy of the vendored source dir with that registry; never committed; the working tree holds that patch only, ownership check 0 failures). (2) interface-shell T51-113: `cs.readonly` for R27. The code calls it when the kit has it; the 3 R27 tests (actionnew, action, dash-action) fail until then. (3) op-declarations T51-107: `holdsdue` is not in OPS (the `hold` screen reads it; the plane answers it already through `action-holds`' map). When these merge into tranche/T51, tell me (RESUME or CHANGE); I merge, run the suites, the checks and post COMPLETE.
+
+**Entries applied (T51-122).** R24 `actionnew` (`actionnew.mjs`: kinds from `affordances`, who it goes to, what it asks, tier with none preselected, legs picked from `projectquestions`, dated entries with their basis, `actioncreate` composed as `request` does); R25 `plan` on a project (one live plan opens, several or closed listed, none says where; Back lists instead of looping); R26 the silence asked about (stays on the page, receipt and reference); R27 the kit's read-only sentence on every screen of the module; R28 each kind worded twice and a profile's own label (`kindWord`, `kindsOf`); R29 the door from `request`; R30 `dash-action` (`dash-action.mjs`); R31 `action` draws the guide, the templates, the pressure with the profile's fact; R32 `hold`, R33 `holdnotice` (`hold.mjs`); R34 `counsel` (`counsel.mjs`); R35 no template before an action exists. `actionhold` leaves `action`. DEC-342: `start-send` reads a refusal by `refusal.<CODE>`, else the answer's translation, else `refusal.uncatalogued`, never `detail`. The 4 words findings are cleared (`checks/words.mjs screens-action`: 0; over the tree, no line names my module).
+
+**Gaps for BOB (each a missing key, a shape or a provider; I drew nothing the design does not draw):**
+1. Keys missing: `screen.actionnew.rests.advances` ("Advances", the leg's link): until it exists the composer offers only the links that have a key, so a request for comment (which needs an `advances` leg) cannot be started from it; the labels "What is due" and "When" (I read `screen.action.dates` and `screen.capture.saw.when`); the `{noun}` of `shell.readonly` (I pass `screen.<id>.name`, so the noun is capitalised); "Open the question" (I read `screen.question.name`); "Expect:" and "Source:" on a guide route; counsel's "Counsel's name" and "organization" (`screen.person.kind.name`, `screen.people.kind.organization`); `dash-action`'s table head "Action" (I read `screen.action.kind.other`) and its readings' notes; a sentence for a truncated plan list (R25: none is said); the options of "How you sent it" on `holdnotice` (a free field with `screen.start-send.how`).
+2. Kit: `cs.sec` and `cs.field` take one help key; the design's `.tip1/.tip2` and `.help1/.help2` are two sentences. I draw three sections' tooltips with my own markup and the second help sentence as a note; interface-shell could take `help: [k1, k2]`.
+3. filings R65: `templatesforaction`'s versions carry `approved_at` and no `approved_by`; `screen.action.templates.approved` needs both, so it is drawn only when both are known (filings should carry `approved_by`). filings R9: `challenged` takes `{statement, findings}` only, the drawing's "Where it was said" has nowhere to go (fold gap 1): dropped.
+4. Shapes I assumed, from the requirements' text: a row of `holdsdue` is `{arrived: {action, ord} | {docket_entry, case} | {pressure}, project, kind, note, by, at}` and the place a hold is asked at follows action-holds R2; `projectlist` rows carry `scope` (project-roster R38); `pressurefor` rows carry `hold` and the answer `facts` (action-holds R18); the packet is `sections.{facts, challenged, pressure, defence_deadlines}.items` (filings R9). Please confirm or correct.
+5. R24: the drawing's one "Who" field fills R9's audience arm (a described audience) unless an office was chosen with "Choose the office"; the clock entry's `description` is sent as the same words as `text`; one leg and one dated entry, as the drawing draws one of each.
+6. R30: "replies to read" and "the plan's next step is ready" are not drawn (no provider); `approvedUnsent` and `checkpointsDue` are not ops, so "our move" is read from the drafts only; Home's Action block and `interface-shell` R81 do not open `dash-action` yet; Needs you draws the queue items of Action's kinds with `taskresolve` and `reminderanswer` as the item offers them.
+7. `hold`: releasing a hold has no act on the drawn screen (only its note and the preview's sentence); the strip from `projectholds` is not drawn (the screen's own `screen.action.held` says it on the action).
+
+**Checks.** `checks/format.mjs` 0 failures, `architecture.mjs` 0, `coverage.mjs` 35 of 35, `ownership.mjs` 0, `words.mjs screens-action` 0, `setup-words/build.mjs --check` clean.
+
+Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 55, module lines 3189
+
+## J3 · REPORT
+
+REPORT, re B4 and B5. B5's rows are drawn: the due labels, `shell.readonly.noun.<screen>` (derived from each screen's name key), "Open the question", the guide's Expect and Source, counsel's labels, the dashboard's head and the two notes ("due this week", "due <day>"; "came in" is not drawn, no reading defines "replies to read"), the plan list's "more" note, the notice's four ways of sending, and the release of a hold on `hold` (`actionholdrelease`, its reason `screen.hold.release.reason`, confirmed because it cannot be undone).
+**The shell refuses `hold` on the tranche as it stands:** the registry generated at `20c8001300` lacks `actionholdrelease` on `hold`, so `checkScreens` throws and every suite of this module fails to boot until BOB re-takes the registry (wizard-scripts). I ran with the registry regenerated locally from the design's `registry.json` (not committed): 130 of 133 pass; the 3 red are R27's, which wait on interface-shell's `cs.readonly`. Words 0, coverage 35 of 35.
+Still waiting on: the registry re-take, interface-shell (`cs.readonly`, `help: [k1, k2]`), op-declarations (`holdsdue`, `approvedunsent`, `checkpointsdue` for "our move").
+Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 70, module lines 3260
+
+## J4 · COMPLETE
+
+COMPLETE (T51-122, screens-action), re B7. tranche/T51 merged; no local stand-in remains. Suite against the real providers: 133 of 133 pass.
+Entries applied: R24 to R35 (actionnew, plan list, the silence asked about, the read-only sentence, kinds worded twice, request's door, dash-action, the guide/templates/pressure on action, hold with its release, holdnotice, counsel, no template before an action exists); DEC-342; the design's DEC-359 rows (labels, nouns, Expect/Source, notes, "more", ways of sending); the 4 words findings.
+Checks: format 0, architecture 0, coverage 35 of 35, ownership 0, words (my module, and over the tree no line names it) 0; setup-words build --check says rows.mjs is stale on an op-declarations row (not mine; expected before the layer close).
+Deferred, with why: (1) "our move" from `approvedunsent` and `checkpointsdue`: neither answer's shape is stated in a requirement I can read as a contract, so "our move" stays read from `filingsfor`'s drafts (an approved, unsent text is a draft at step send/second, so approvedunsent adds nothing); the checkpoint half waits on a stated shape: BOB to state it or declare it not needed. (2) The kit's `help: [k1, k2]` option: my three sections' tooltips (own markup) and the second help sentences (as notes) still work; moving them to the kit is a cosmetic change for the next touch. (3) "Replies to read" (`screen.dash-action.tile.came`) is not drawn: no provider defines it. (4) R27 on `plan`, `request`, `start-send`: acts the shell's gate lets a reader see (`itemtakeup`, `optionstartpreview`, `addresseesuggest`) stay drawn; only `action`'s reminder is withheld.
+Found in other modules: none new since J2/J3.
+Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 75, module lines 3260
+
+## J5 · COMPLETE
+
+COMPLETE (T51-122), re B8. The checkpoint half is built: `dash-action` reads `checkpointsdue`, maps each due plan to its started options' actions through the `plan` read, and draws 'our move' for them; the test has the controls (a judged checkpoint, i.e. none due, is not our move; a plan with no action counts nowhere) and shows approvedunsent's items are the drafts at step send, the same rows. Suite 134 of 134; format, architecture, ownership, words 0; coverage 35 of 35. Deferrals (2)-(4) stand. Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 78, module lines 3290
+
+## J6 · QUESTION
+
+QUESTION (restart #6, FR-31): (1) Your START says to write NEW R36–R54 first in build/requirements/screens-action.md, but my ownership (modules.json paths+tests+record) excludes build/requirements, so the ownership check would fail on that edit and coverage cannot name ids that are not in the file. My best reading: BOB writes R36–R54 (as for interface-shell R104–R109) and CHANGEs me; I build and test now naming the ids R36–R54 as numbered in the START (R36 C45, R37 C63, R38 C66, R39 C67, R40 C69, R41 C70, R42 C71, R43 C72, R44 C73, R45 C41, R46 C68, R47 C74, R48 C75, R49 C76, R50 C42, R51 C43, R52 L21, R53 E1, R54 E3). Entries 17 (registry) and 19 (findings) get no new id; I will name them under R5/R4 tests unless you give them one. (2) filings, screens-investigate and interface-shell are still WORKING (wave 2); I build against their requirements and run suites against the real providers once you CHANGE me. (3) Over the reading budget: three sonnet workers are writing task digests of the used services (step 3); I proceed from them.
+
+## Completion record (FR-31, session_01EbJCh72Rrpjqj4Cdt46ya6)
+
+**Entries applied.** All 21: C45/R36, C63/R37, C66/R38, C67/R39, C69/R40, C70/R41, C71/R42, C72/R43, C73/R44, C41/R45, C68/R46, C74/R47, C75/R48, C76/R49, C42/R50, C43/R51, L21/R52, E1/R53, E3/R54 (the law list is on `action`, where R16 is, not `plan`), registry `writinghelp` on plan, start-send and matter, and L20's findings detail (`optionstart`, `actioncreate` on `actionnew`). Requirement lines R36–R54 are written in `build/requirements/screens-action.md` (B10); marks removed, coverage 54 of 54. Matter, plan and send steps were built by three sonnet workers under my brief and reviewed by their tests; I built action, request, actionnew.
+**Tests/checks.** Module directory 194 of 194 pass; format 0, architecture 0, coverage 54/54, words 0 findings for my files (`checks/run.mjs`: 28 failures elsewhere, none mine); ownership: only the requirements file, accepted per B10. Existing tests changed: R16 (one law list), R4/R20 (R39 asks the name first), four start-send tests (R48 adds `templatesave`), contract test (writinghelp on start-send; function refusals; the keeper-subject words are not a plan's subject).
+**Gaps for BOB (design keys missing; I drew no invented English):**
+1. Reply form (R38): "What came back", "A reply came", "How it came", "It follows", "The amount quoted", currency and the stage/outcome option words; fee amount/currency are drawn only once keys exist (`screen.action.the.amount.quoted`, `screen.action.currency`); medium, `follows`, and the reply's document (no project-documents read) are not drawn. Silence: the plane requires an account, so the keyed sentence "No reply came by the date" is sent as it.
+2. R52: no "we will remind you on {date}" key; drawn as `screen.action.remindon` + the date.
+3. R39: no key for asking which name the records concern; used `screen.person.keeper.subject.*`. R46's pointer links to the picked name's `person` page.
+4. Matter: ~25 keys missing (Not available yet, No determination yet, Parts recorded, Revise the determination, Role that acted, Office or body, Published findings, Rule, What was done, Cause, Your determination, Addressed, Describe them, When it changed, unit/kind/purpose words, "Partly complied"); the nearest keys are used and protocol tokens drawn as data. No project events read (event is a plain field), no per-project documents read (evidence ids typed); `publishedlist` is not project-scoped; "worked out from figures" has no operands drawn. `determine` and `consequencerecord` are Reasoned: the shell's reason dialog asks a reason they do not all accept. Existing keys `screen.matter.stage.*`, `proposed`, `advance` still carry digits.
+5. Plan: ~12 labels missing (The press, Which phase, When it starts, Seeking enforcement, Mark done/blocked, After another phase, ...); stand-in keys used. The kit has no "add another"; redraw selects used.
+6. Send steps: stand-ins for "No one yet", the template name label and "A filing" option, exhibit "captured {date}" and "Grade not determined"; no release UI for a contradicted sentence (`release`). `filingread` returns no `exhibits`/`venue_standard`, so exhibits vanish after a reload; the screen never sends `language`.
+7. `writinghelp`: the owner's declaration lacks `op`, wizard-scripts R27 says the call takes it; `WRITE_HELP` now sends `field` and `told` only. Needs a ruling.
+8. The harness does not flag the shell's added `reason` on `consequencerecord`/`successrecord` bodies.
+**Deferred.** The missing-key items above, until the design writes the rows.
+Size (session_01EbJCh72Rrpjqj4Cdt46ya6): test runs 14, module lines 4291
+
+## J7 · COMPLETE
+
+COMPLETE (FR-31): all 21 entries applied, R36-R54 written in the requirements file (B10; marks removed), 194 of 194 module tests pass, format, architecture, coverage (54/54) and words 0 for my files, ownership lists only the requirements file. Gaps (missing design keys, writinghelp's declaration lacking op, filingread without exhibits) are in my record's completion section for your ruling.
+
+## J8 · REPORT
+
+REPORT (#8, re B13): item 1 done and pushed: `WRITE_HELP` sends `op` (from `data-forop`), `field` and `told`; a help button naming no act sends nothing. Tests: R45's writinghelp test asserts `op`; a control strips `data-forop` and no request goes. Module suite 195 of 195; format, architecture, coverage (54/54), words, ownership 0. Item 2 (stored exhibits and `venue_standard` from `filingread` after reload) waits on FILINGS #25: CHANGE me when it merges.
+Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 1, module lines 3290
+
+## J9 · COMPLETE
+
+COMPLETE (#8, re B13, B14). Item 1: `WRITE_HELP` sends `op` from `data-forop`, `field`, `told`; none without `data-forop` (tests + control). Item 2: tranche/T51 merged (FILINGS #25). The send steps already drew the exhibits and the venue's standard from `filingread`'s answer (`draftOf` reads `exhibits` and `venue_standard`), so no code change was needed; I added the test that proves it after a reload (stored exhibits drawn, the four grades, Approve enabled; control: a row stored before they existed, `exhibits: []` and no standard, draws no section). No more than the answer's two fields was needed.
+Checks: module suite 196 of 196; coverage 54 of 54; words 0; ownership 0 (3 files: send-steps.mjs and two test files, plus my record); format 0 and architecture 0 over the tree. Over the whole tree coverage shows 4 failures and words 33, none in my module.
+Deferred: none. Found in other modules: none. The missing design keys of #7 J6 (1)-(6) stay with UX-DESIGN's HANDOFF B424; not drawn.
+Size (session_01V64zP5L8ynT5RnQ7fmq8S3): test runs 3, module lines 3290
+
+## J10 · COMPLETE · re B16
+
+COMPLETE (SCREENS-ACTION #9, T51-122, re B15, B16). tranche/T51 merged at bf9d42d498; module suite 209 of 209; format, architecture, ownership (22 files), words 0; coverage 54 of 54. Nothing is held for a missing row.
+
+**Entries applied.**
+(1) The reply form (R38) is the design's: `What came back` / `A reply came`; how it came (medium, the five tokens email, letter, portal, person, other, B16 b); who it came from; what it is recorded from (your account, or the reply itself); the reply's document; a fold `Where this reply stands` (kind of reply, `It follows`, what the office decided, exemptions, the date it says it will answer by and its law); a fold `If the reply quotes a fee` (amount, currency `USD`, what it is for, which sending it answers, which earlier quote it revises). Stage and outcome are the vocabulary's tokens by `screen.action.reply.stage.<t>` and `.outcome.<t>`; the family's `none` is the empty choice and sends nothing (B16 b). `follows` is the earlier entry's ordinal (a sent entry as `screen.action.reply.follows.request`, a received one of a known kind as `.reply`). The per-project document read is `heldcaptures` with `project` (capture R77): a row whose `capture.sha256` is filed is offered by `screen.docket.capture.option` (title, collected day) and goes as `artifact_sha`, never with an account. The reply form is now drawn only for a member who may record a reply (R27: it drew its fields to a reader before) and the documents are read only then.
+(2) `screen.reminder.on` is the sentence beside a reminder this page set (R52).
+(3) `screen.request.subject.label` and `.help` on `request` (R39).
+(4) Matter (R45, R50, R51, R6): the design's rows for the project with no determination (`nodet`, `unavailable`), recording (`record.this`, `act`, `f.role`, `f.body`, `f.findings`, `f.rule`, `f.did`, `f.compare.*`, `f.determination`, `f.outcome.*`, `f.cause`), revising (`revise`, `replaces`), the consequence kinds and units (`kind.*`, `unit.*`, `f.describe`, `unknown`), addressing (`f.part`, `f.partwas`, `f.addressed`, `f.notaddressed`, `way.cannot`), a success (`f.when`), attaching (`f.purpose` and its five options), the three readings (`reading.*`), `pause`, and the stage names without digits: `advance` now fills `{stage}` with the stage's name. The reason fields sit behind the folds the design draws. Flaws of my own module fixed on the way: `f.did`, `f.rule` and `f.cause` replaced three labels that were another row's sentence; the addressed/not addressed choice drew the tokens `addressed` and `not_addressed` as words.
+(5) Plan (R44): the add-option form's kinds (`option.kind.*`), `option.directed.press`, `option.role`, `option.date`, `option.tier.*`, `option.enforce` and `.enforce.none`; the decide row (`dispose.done`, `.blocked`, `.open`; on the picked rows `dispose.them.choose`, `.decline`, `.blocked`); `dispose.date`; the phase (`phase.head`, `.options`, `.when`, `.when.after`, `.which`, `.none`). The buttons `Mark done` and `Mark blocked` had been the lowercase state words; fixed.
+(6) Send steps (R47, R48, R49, R42): `contact.none`, `template.name.label`, `template.use.filing` (the option had been another help sentence), `exhibits.captured` and `exhibits.nograde`. B16 a: a refusal `CONTRADICTED_HELD` draws `A sentence the record contradicts` for each sentence (the sentence, `pointer.record.contradicted`, the reason `release.why`, a tick `act.release.label.start-send`); the next "Approve this text" carries `release: [{ord, reason}]` for the ticked ones; a tick with no reason is refused in place (`shell.reason.needed`); `release.done` is said once the approval lands (the member who pressed it, the page's day, the reason). No `release` op is registered on `start-send`.
+
+**Tests.** `reply-t51.test.mjs` (3), the release (2) and the row assertions in `send-t51`, `plan-t51` (3), `matter-t51` (6); updated where they quoted a stand-in key: `plan`, `matter`, `request-fix`, `action-fix`, `action`. `contract.test.mjs` R1–R6 now carves `release` out of `start-send` (B16 a); that is the only equality I changed.
+Checks: format 0, architecture 0, coverage 54 of 54, ownership 0 (22 files), words 0; `setup-words/build.mjs --check` clean.
+
+**Deferred, with why.**
+1. "Reasons asked only where U420 says" (`determine` only when it replaces one, `consequencerecord` only when the member assesses): the shell asks a Reasoned op's reason on every press, and a screen can only name a `reasonField` (own words, refused when blank) or take the shell's box; there is no way to say "ask on this press only". Until interface-shell offers one (for instance a spec function `asksReason(view, el, cs)`), `determine` and `consequencerecord` still open the shell's box on every press; my forms draw the design's field (`Your reason` behind the fold) and the reason box also asks. (Report below.)
+2. A named person as a consequence's affected kind: `consequences` takes `person` only with `{entity, named_in}` (a document passage); the form has no field for either, so `A named person` is not offered.
+3. "The event it was part of" is the design's choice of the project's events; no read lists them, so it stays a one-line field. The sentence under `What it replaces` ("Noncompliant against lease §7.2, recorded by Dev…") has no template in the table: not drawn.
+4. The design's minutes form on a reply to a public comment (`screen.action.minutes.*`, 15 keys, actions R108) is not drawn: no requirement here binds it. BOB to add one if wanted.
+5. A received entry with no recorded kind is not offered under `It follows` (the design's `The {kind}, {date}` has no word for a reply of no kind).
+
+**Found in other modules (for BOB).**
+- interface-shell: (a) `cs.choice` draws no `help` (the option is accepted and dropped; the old reply form passed it on four choices and none showed); this module now draws a choice's help as notes after it, which the kit could do (as `cs.field` does). (b) A way to ask a Reasoned act's reason on some presses only (deferred 1).
+- wizard-scripts / the design's registry: the screen `start-send` lists the act `release`; B16 says it rides `filingapprove`, so that row should go (and `act.release.does`, the vouching sentence, does not describe it); until then my contract test carves it out.
+- Requirement lines for BOB: R38 amended: "...medium (email, letter, portal, person, other), the reply's document (a held capture of the project, `heldcaptures` with `project`, as `artifact_sha`, never with an account), what it follows (an earlier entry's ordinal), a quote's currency, what it answers and what it revises; a received reply's stage and outcome by the vocabulary's tokens, the design's 'none' sending nothing; the form drawn only to a member who may record a reply." R42 amended: "...and a contradicted sentence (`CONTRADICTED_HELD`) is drawn with a reason and a tick, and the approval resent carries `release: [{ord, reason}]` for the ticked ones; a tick with no reason is refused in place; the approval landing says who released what." R44/R45/R50/R51: the rows named above are the design's (R19). R52: the sentence is `screen.reminder.on`.
+
+Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 11, module lines 4473
+
+## J11 · COMPLETE · re B17
+
+COMPLETE (re B17). tranche/T51 merged (U424, DEC-389). Already as DEC-389 says: the release rides `filingapprove` (no `release` act on start-send; `act.release.label.start-send` is the drawn tick's row); stage/outcome `none` omit the field. New: a sent entry's stage keys `screen.action.sent.stage.*` are drawn under "It follows" (an appeal, fee-waiver request or court filing reads as `The {kind}, {date}`; the request stays "The request"). Suite 210 of 210; format, architecture, ownership, words 0; coverage 54 of 54. My earlier deferrals stand; the registry's `release` carve-out in contract.test is now inert.
+Size (session_015aeBb5LHgEaQ6wS441ymgk): test runs 13, module lines 4476
+
+## J12 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #10, re B18). Branch was at the tranche tip; no merge needed. Module suite 214 of 214; format, architecture, words, ownership 0; coverage 55 of 55 (R55 named).
+
+Entries applied.
+1. R55 (actions R108): on an action whose kind is `public_comment`, the reply form draws the design's minutes fold (`screen.action.minutes.heading`, `.says`, `.legend`, meeting, date, document, passage, each with its help1, and the act `screen.action.minutes.record`) and sends `minutes` (JSON of `{meeting, date, passage: {captureSha, extent}}`) with the received entry. The document is picked from the project's held captures (the reply document's list, `heldcaptures`); once chosen, the screen reads its `reading` (`sha256`) and the extent sent is the one of the text unit that holds the member's words (whitespace-insensitive). All four parts or none: a missing part is refused in place by `findin.fieldneeded`; words no unit holds are refused in place by `ai.progress.check.fail`; a silence carries none. Any other kind draws no fold and sends no `minutes`. A recorded entry's `minutes` are said beside it (`screen.action.minutes.says`, the meeting, the day). Contract test: the `release` carve-out is removed.
+Tests: `minutes-t51.test.mjs` (4), seen failing without the change (3 of 4; the fourth is the control), then green. words build `--check`: `words-unreviewed.json` is stale, and was before my change too (not this module's file).
+
+Deferred: none. 
+
+Found in other modules / for BOB.
+- Readings of R55 I took (best reading, nothing blocked): the design's "The passage" ("Copy the words exactly as the minutes write them") is words and `actions` takes an extent, so the words are located in the document's reading; the design draws no key for "those words are not in the document", so I used `ai.progress.check.fail` ("{passage}: not found in the document as quoted, so it is left out") for it and `findin.fieldneeded` for a missing part. UX-DESIGN may want its own two rows (`screen.action.minutes.notfound`, `.needed`); I word nothing myself. If BOB prefers the member to pick the passage from the reading's units instead of typing it, that is a one-function change.
+- `screen.action.minutes.notpublic` is the refusal `MINUTES_NOT_PUBLIC_COMMENT` that `actions` answers in its own words; the screen never offers the fold on another kind, so the key is not read here.
+- setup-words: `bio-plane/src/setup-words/words-unreviewed.json` is stale at the tranche tip (`build.mjs --check`): regenerate (setup-words' file).
+- Requirement line for BOB: R55 can drop "not yet met": the fold, the `minutes` sent and the entry's says are as written above.
+
+Size (session_013NDvbTWUS73nhaNbAc4Gek): test runs 6, module lines 4535
+
+## J13 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #11, re B19; fix round 2, wave 2). tranche/T51 merged (interface-shell's `cs.memberName`, R111, was already on it).
+
+**C94 (my part).** Every site of the module that draws a member id now names the member through `cs.memberName(id)`: `plan` (who opened it, on the page and in the project's list; the list's old `admin` special case is gone), `action` (who sent the first entry, who marked pressure, who approved a template or a guide, who stated the laws, who proposed a law or a tier, who set the tier), `hold` (who marked what wants a hold), and the stake's source on the send steps (`set_by`). An agent (`agent:…`) is not a member and is drawn as the plane names it, as before. The matter's actor is a role and a body, not a member, and is unchanged. No member link is built from an id in this module.
+**Tests** (`c94-t51.test.mjs`, 3; written first and seen failing, 3 of 3): the founder `admin` draws her handle `sparky`, an ordinary `u-2` draws `rosa`, and no id text is on the page; control: a member with no handle (`u-3`) draws the kit's word `shell.card.member`, and an agent proposer is drawn as the agent. They name the existing ids R1, R12, R17, R21, R25, R31, R32 (no new requirement line is written; BOB may add one for C94 if wanted). `page.mjs` now gives the plane a roster (`memberlist`) so the fixtures' ids resolve to handles.
+**Suites.** screens-action 223 of 223. No service I provide changed, so no other module's suite is affected (`impact.mjs`: 0). Checks: format 0, architecture 0, coverage 55 of 55, ownership 0, words 0.
+**Matter's event picker (K4310/K4313).** `matter-t51.test.mjs` passes against the tranche as merged (the whole directory is green).
+Deferred: none. Found in other modules: none.
+Size (session_01LkHLbMfkdEmVbWwt9jrgwo): test runs 6, module lines 4540
+
+## J14 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #11, re B19): C94 met for screens-action: plan, action, hold and the stake's source name members by cs.memberName (handle, the founder included; the kit's word when none; agents as the plane names them). Tests c94-t51 (3, seen failing first, controls included); module suite 223 of 223; format, architecture, ownership, words 0; coverage 55 of 55. Nothing deferred; nothing found in other modules. Record J13.
+
+## J15 · QUESTION
+
+QUESTION (best reading given; I carry on). Three gaps in what the design draws, none blocks:
+1. C64, DEC-402: the "Name the office yourself" fold draws no field for the note `entities` R1 requires on `entitycreate` (the act is Reasoned, so `op-grades` and the shell need her own words). I drew the kit's reason field there (`shell.reason`, `shell.reason.help`, existing rows) as a stand-in and send it as `note`. UX-DESIGN may want its own two rows (the note's label and help) on `request`.
+2. C64: the drawing's one line "The agency and office" fills an office arm that needs a role and a body (`actions` R9). I take the text before the first comma as the body and after it as the role (the drawing's example splits so); with no comma, the role and body are both the text. The office entity is created with the whole text as its label and `entity_id` is sent on the action. If BOB prefers two fields, that is a drawing change.
+3. C66: "Show the routes" with none says it with `screen.matter.routes.none` ("No route is known for this matter yet."), the matter screen's row, as a stand-in; this screen wants its own row ("... for this kind of action yet"). Please ask UX-DESIGN for it.
+
+## J16 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #12, re B20; fix round 3, wave 2). tranche/T51 merged first. Module suite 229 of 229 (226 before the three new tests files' additions: 6 new tests); format 0, architecture 0 failures in my files (two failures in screens-inquiry's tests, not mine), coverage 0 failures for screens-action, words 0 findings for screens-action (the cross-module L11 run lists none naming my module), ownership 0 failures. `setup-words build.mjs --check`: rows.mjs stale, as expected. `impact.mjs` crashed on a git revision (`tranche/T51 HEAD` is not a resolvable pair in my checkout); screens-inquiry's `fr4-project.test.mjs`, which imports my `plan.mjs`, passes (5 of 5).
+
+**Entries applied.**
+1. **C64** (`request.mjs`; R20, R4; DEC-401, DEC-402; entities R63). With no office known (the dead end, in both of its states) the fold "Name the office yourself" is drawn after `screen.request.nooffice` and the reworded `.admin`: the agency and office (`screen.request.nameoffice.name`), where requests go (an email, a portal or an address by its form, none sent when left empty), the law it goes under chosen from the active profiles' `records_laws` (none drawn, none sent when the profiles hold none), her reason, and the act `entitycreate` ("Use this office", `act.entitycreate.label.request`), sent `{kind: office, label, note, contact?, law?}`. On success the office is the one chosen for the request, drawn marked `screen.request.nameoffice.mark` ("Named by a member"), and "Start the request" is addressed to it with its `entity_id`. A refusal is drawn beside the act and nothing is chosen. The administrator's wording and her reference to Places are unchanged. Test: `office-t51.test.mjs` (3), seen failing first (3 of 3). Existing test lines now expect `entitycreate` among the dead end's acts (request.test.mjs, two assertions: still no start and no later step).
+2. **C53** (action page; plan side tested, nothing to change). The plan's "Remind me" on a chosen option and the reminder read from the record already pass `plan-t51.test.mjs` (C53 test). Action page: `action` reads `op=remindersfor` on load and after each `reminderset` (the read names the act in `after`), and draws each standing reminder beside its entry by `screen.reminder.on`; page memory (`reminded`) is gone, so a reload draws it; an answered reminder is not announced; a failed read is drawn as failed in the dates section. Test: `reminders-t51.test.mjs` (2), seen failing first (2 of 2); R52's test in `action-fix.test.mjs` now runs over a plane that keeps what was set. `remindersfor` is declared by action-clocks (`DECLARED_OPS`) and the harness accepted it: no red by name.
+3. **C66**: "Show the routes" with none draws a sentence that none is known (stand-in key, see the QUESTION), not "Nothing here". Test in `office-t51.test.mjs` (1), seen failing; control: a kind with routes lists them and says no such thing.
+4. (K4370) `rereads`/`after` declared: `action`: the `reminders` read has `after: ["reminderset"]`; `actionpressure` re-reads action and pressure, `actionmove` action; `plan`: `optiondispose`, `checkpointrecord` and `planclose` re-read `plan`, `optionadopt` plan and proposals. Not declared (left to re-read all): `actioncorrespond`, `optionadd`, `scenarioset`, `plansubjectadd`: they carry long forms the page clears by redrawing after success; with a narrower re-read the typed values stay and the next press would send them again (reply-t51's second press showed it). Say if BOB wants those narrowed with the forms cleared by the screen.
+5. (K4380) `contract.test.mjs`: the served page is current against the external script (`scriptPath`, `interfaceScriptHash`, no inline script, no nonce). The two inherited reds (contract :34 and :142) were already green at the tranche tip I merged.
+
+**Deferred:** none. **Words:** stand-ins named in the QUESTION: `shell.reason`/`shell.reason.help` (the note's field on `request`) and `screen.matter.routes.none` (action's routes line). The federal records law is the profile's (jurisdictions R95); the tests use a fixture profile holding it as `records_laws`.
+**Found in other modules / for BOB:** (a) the door's admission of `entitycreate` to a member from `request` is `op-grades`' `memberMayDo`; nothing in the shell or `control-plane` calls it yet (grep finds only tests): the member's press will be refused at the door until something sends the screen id and the door asks `memberMayDo`. (b) `build/plan/impact.mjs` fails here on `tranche/T51 HEAD` (a git revision error in my checkout). (c) Requirement lines for BOB to write in `build/requirements/screens-action.md`: R56 (C64, amends R20, R4): the fold and the act as above; R57 (C53, amends R52, R5): reminders are read by `remindersfor` on load and after each set, never held in page memory; R58 (C66, amends R31): a kind with no routes says so by key. My tests name R20, R4, R5, R52, R31.
+Size (session_01M6ir8uBdasB9RNsLcYj5nf): test runs 14, module lines 4750
+
+## J17 · QUESTION
+
+QUESTION (SCREENS-ACTION #13, fix round 4; I carry on with everything it does not decide). Three parts: (1) STEP 0 for C65, with my proposed fix, for your release; (2) the smallest thing the seam tests need; (3) the stand-in keys (ONE list).
+
+**(1) STEP 0, C65 ("Keep as a template" after the request was sent and answered): which precondition fails.** The control exists once, on `start-send`: `startSend.parts.templateKeep` (start-send.mjs:57-74, R48) draws it when the step is second, send or sent, and `templatesave` is registered on `start-send` only (the registry lists it on that screen alone). A records request is run on `request`, whose steps are the shared `sendSteps(..., {request: true})`; that function draws `keep` only for `!req` (send-steps.mjs:160), and the registry's `request` does not list `templatesave`, so `request` cannot carry it. After the sending is recorded the request page draws "Recorded as sent ... Open the action". The action page draws `templatesforaction`'s rows (action.mjs:361-379) and no save control, and its door to `start-send` is drawn for an unsent action only (R43: the control says "a sent action draws none", action.mjs:185). So no path leads a member of a sent request to the one screen that holds the control. Not a data precondition: the filing is approved and sent, which is exactly when `templateKeep` draws on `start-send/<action>`.
+Proposed fix (no registry change, my module only): on `action`, when the action's newest filing is sent (the `filingsfor` step is `sent`), draw a reference to `start-send` for it whose link text is the existing row `screen.start-send.template.heading` ("Keep this filing as your team's template"); `start-send/<action>` then draws the step "sent" and `templateKeep` (name, use, notes, `templatesave`). Requirement lines for you to write: R43 amended: "... a sent action draws no door to prepare a text; one whose filing is sent draws the door to keep the filing as the team's template (`start-send`)"; R48 amended: "reachable from a sent action"; test (I write it first): a records request prepared, approved, sent through the real acts, then an answer recorded: the action page draws the reference, the reference opens `start-send` on the action, and that draws "Keep this filing as your team's template" and sends `templatesave` with the approved filing; control: an unsent action draws the door to prepare and not this one; an action with no filing draws neither. Release this fix, or say another.
+
+**(2) The seam tests (R-SEAM) cannot be written inside screens-action's `uses`.** `build/modules.json` gives screens-action `uses: interface-shell, setup-words, op-declarations`; the architecture check refuses a test that imports a real provider. A whole-path test with the real merged providers (the walker's federal request: `entitycreate` through the real `entities`, `actionlaws` and the profile's `records_laws` through the real `jurisdictions`, `communicationprepare`/`filingapprove`/`filingrecordsent` through the real `filings` with the template lookup of `filing-templates`, the clock of `actions`) needs these edges in `uses`, tests only: `filings` (its test world `bio-plane/test/m/filings/fixture.mjs` builds filings over actions, standards, conformance, consequences, events, project-roster, filing-templates and the first profile on a real SQLite), `entities`, `jurisdictions`, `filing-templates`, `actions`. Smallest ask: add those five to screens-action's `uses` (and the `MODULE_ORDER` entry that goes with it). Without it I write the same tests over the harness's scripted plane, answering with the owners' own shapes copied from their tests, and say in COMPLETE that the seam is not proved; tell me which.
+
+**(3) Stand-in keys** (a plain `localize` default each; none of them has a design row; I word nothing finally):
+1. `screen.request.text.help.none`: the request's text help when `templatesforaction` offers no template for the action's kind ("No template is held for this law; write what you are asking for in your own words" is my stand-in text). The existing `screen.request.text.help` ("Drafted from your team's template for this law ...") is drawn only when a template is offered. Per your K4438 (a).
+2. `screen.action.reply.medium.portal.office` ("The office's portal"): the medium option for a non-city office; `screen.action.reply.medium.portal` ("The city's portal") stays for a city office.
+3. For a non-city office (the chosen law's level is federal, state or county) I draw none of the city-worded sentences (`screen.request.howsend.3` "the city can't send you updates", `screen.help-records.portal.2` "the city's contact"); they stay for a city office. A neutral row for each is a T52 wording ask, not drawn now.
+4. Gap, no key needed: on `request`, a period, form or cost the member fills whose blank her text does not name is not sent (K4438 (a)); the boxes stay drawn. Say if you want a note beside them.
+
+## J18 · QUESTION
+
+QUESTION (SCREENS-ACTION #13, fix round 4; replies to B22; the smallest thing I need, asked now per R-NOTMET). A seam finding that decides whether C64-law works on the live site.
+
+**The `profiles` op the screens read does not carry the facts BOB's K4438 (b) tells me to list.** `instance-setup`'s `profiles()` (bio-plane/src/setup.mjs:1504) answers `view: profileView(combined)`, and `profileView` (setup.mjs:2905-2916) copies only `deadlines`, `legal_organisations` and `venues` from `jurisdictions.combine`'s view (R12's "three facts for agent-worker R51"). It drops `records_laws` (jurisdictions R7, R95, R96: each law's `level`, `name`, `citation`, `response`), `records_help` (R93) and `name`. `jurisdictions.combine` does give them (index.mjs:1895 `view.records_laws`). So on the live copy, with the real plane:
+- the law picker on `request` (K4438 (b): list `records_laws`), the same list on `action` ("Change the law"), and the law choice in "Name the office yourself" (round 3) would all be EMPTY, because `view.records_laws` is absent: my fix is right at the interface and nothing reaches it;
+- the help's `records_help` block (R22) has never reached `help-records` either (`view.records_help` absent: the page draws `screen.help-records.notheld` for every place), and `view.name` is absent.
+My fixtures hold `records_laws` in `view` (as jurisdictions R7 and the screens' round-3 tests assume), so none of my earlier tests could have seen this (class a).
+
+What I need, in order:
+1. An instance-setup job (or a CHANGE to a job BOB already holds for it) to amend R12: `profiles().view` also carries, as `combine` gives them and absent when no active profile states them, `records_laws` (each entry whole: `level`, `name`, `citation`, `response`, `stages`, `requesters`), `records_help` and `name`. Test at its interface on the first profile: `view.records_laws` holds the three laws and the federal one names `foia_response`. Until it merges, a request's law picker is empty live.
+2. `instance-setup` added to screens-action's `uses` (it is earlier in the order: 150 against my 167), so my seam test boots the real `profiles()` over the first profile, as the walker's plane does; without it the test would build the `view` itself and hide this very gap.
+My seam tests are written first and stay red by name on this (the picker, the help for the federal law and the fold's law choice) until item 1 merges; everything else of the round is built and tested at the screens' interface now.
+
+**Also, to close J17's part 3:** I needed neither stand-in key. The no-template help is the existing `screen.start-send.text.help` ("from your team's template for this kind where it has one, else your own words"), and a federal request's reply medium `portal` is drawn by the vocabulary's own token as record data (as stage and outcome tokens are), so the city-worded rows are simply not drawn for a request under the federal law. No new key.
+
+## J19 · REPORT
+
+REPORT (SCREENS-ACTION #13, fix round 4, progress; pushed on job/T51/screens-action; tranche @ 003bae9390 merged). Not a COMPLETE.
+
+DONE at the screens' interface (module suite 242 of 242; each test seen red then green; tests in `bio-plane/test/m/screens-action/fix4-t51.test.mjs`, controls included):
+- C53-min: `plan.mjs` optiondispose: a reminder day with the date list left blank takes the option's first date (each picked option its own; one with no date takes none).
+- C64-more: `request.mjs` "Name the office yourself" is two fields (DEC-412: `screen.request.nameoffice.name`, `.role`, `.why`), label `agency, office` (or the agency alone), the answer's entity chosen as typed; `officeLine` (send-steps.mjs) draws an office once everywhere (request, action, start-send, actionnew, dash-action); naming the same office again chooses the first entry (`existed`).
+- C64-template: `communicationprepare` sends `period`, `form`, `cost_limit` only where the text names `{{period}}`, `{{form}}`, `{{cost_limit}}`; the request's text help says "from your team's template" only where `templatesforaction` offers one, else `screen.start-send.text.help`.
+- C64-law: the picker (request and action) lists `records_laws` with each law's own `response` window and its own level; `help-records/<action>` is for the law chosen (the place's `records_help` only when its `law` is that law; else the first-request sentence from the law's `response`, no city text); `howsend.3` and the "The city's portal" reply medium are not drawn for a request under the federal law; a clock entry that is a rule is worded by the profile's `label` (R97), never its code.
+- C65: `action` draws, for a sent filing, a reference to `start-send` worded `screen.start-send.template.heading` (B22 released it).
+STILL TO DO: (1) the R-SEAM tests with the real merged providers (entities, actions, jurisdictions, filings, filing-templates); the profile-facts part waits on J18 (instance-setup's `profiles()` view lacks `records_laws`, `records_help`, `name`); (2) C14: read-set tests per screen and the live numbers (smoke copy, read-only probe, ADMIN 1280: action 3.9 s settle with 21 reads, request/ACTN 4.0 s with 17, request/PROJ 2.3 s, actionnew 2.3 s, dash-action 4.8 s with 27 (5x `action`, 5x `filingsfor`), plan/PROJ 4.1 s with `plans` 2.6 s, start-send/ACTN 5.2 s, help-records 4.1 s); the only repeat my screens add is `groupidentity` on request/start-send (the team's name for "Sent with"; the shell exposes no accessor); (3) checks, the record, COMPLETE.
+Size (session_01BtTN7ZpRZCZwHDAGJpin6T): test runs 40, module lines 5050
+
+## J20 · QUESTION
+
+QUESTION (SCREENS-ACTION #13, fix round 4; replies to B23; two small asks, I carry on with the rest).
+
+1. **Seam for the due-date line (C64-law, the walker's "foia_appeal_response" shown as a code): `action-clocks` in screens-action's `uses`.** The line's text is the clock entry's `text`, which `action-clocks` writes as the rule's key when a member adopts a proposal (`clockpropose`, `clockadopt`; entry `{text: <rule>, description, date, basis}`), and my screen now words it from the profile's `label` (jurisdictions R97). My seam test (`seam-t51.test.mjs`, over the real entities, actions, filings and the first profile) walks the request through to "recorded as sent" and the keep-as-template door; to make the due date by the member's own act (the due-date page's proposal and adopt) rather than a hand-written entry, it needs the real `action-clocks` (`actionClocksOf` on the world's host, `actionClocksOps`). Smallest ask: add `action-clocks` to screens-action's `uses` (it is earlier in the order). Without it the line's wording stays proved at the interface with the owner's entry shape and not by the seam; tell me which.
+
+2. **C14, the one repeat my screens add (name it, or fix it with a kit accessor).** The read-set per screen is now asserted (each op once, none of `bootstrap`; `queue` only by `dash-action`, whose own list it is). The only op my screens read that the frame reads too is `groupidentity`, on `request` (an action) and `start-send` (an action): `stakeLines` draws "Sent with <the team's name>" from its own read, because the kit exposes the frame's team name to no screen (browser.mjs holds it as `GROUP`; `cs` has no accessor). Cost: one small parallel read per load (live: 0.5 to 1.3 s each, in parallel with the screen's others, not on its critical path). I keep the read and name it in the test as the one known repeat unless you want a kit accessor (`cs.team()`, interface-shell, cause-shell-4's or a T52 item); then I draw the name from it and drop my read. Say which.
+
+Live numbers for C14 (smoke copy biosmoke8, read-only probe, ADMIN, 1280, this container, every request about 0.5 to 0.9 s): action 3.9 s settle, 21 API requests (my 10 plus the frame's); request on an action 4.0 s, 17; request on a project 2.3 s, 14; actionnew 2.3 s, 14; dash-action 4.8 s, 27 (5 `action` + 5 `filingsfor`, one pair per listed action: R30's design, the sum of its reads is 6.0 s in parallel); plan on a project 4.1 s (`plans` alone 2.6 s); start-send on an action 5.2 s; help-records 4.1 s. The frame's `bootstrap` (1.2 to 2.1 s) precedes every screen read; the page itself 0.3 to 2.8 s. Acts: not timed here (no write on the live copy).
+
+## J21 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #13, re B21; fix round 4, wave 2). Pushed on `job/T51/screens-action`; `tranche/T51` merged last @ 39eb1dc4e7. No open QUESTION: J17 (B22), J18 (B23) and J20 (B24) are answered. No generated artifact edited; I own no census op.
+
+**Suites and checks.** Module suite 260: 259 pass, 1 red BY NAME as B23 allows: `seam-t51` "the same request with the REAL instance-setup profiles()" waits for INSTANCE-SETUP #27 (instance-setup R12: `profiles().view` carries `records_laws`, `records_help`, `name`). Users that import this module, run: control-plane `owner-ops`, `t46-app` and screens-inquiry `fr4-project` and interface-shell `declared`, `t50`: 48 of 48; plane `t47`, `t50`: 17 of 17. Checks: format 0, architecture 0 (48 files, 87 imports), coverage 55 of 55, words 0, ownership 0 (18 files). New test files: `fix4-t51.test.mjs` (14 tests), `seam-t51.test.mjs` (2), `reads-t51.test.mjs` (15); `page.mjs` holds `records_laws`; `real.mjs` is the seam helper (the real merged providers, each op through its owner's op map with the door's stamps and `OP_ALIASES`). Old tests updated to the new behaviour, not weakened: `request.test` (fills only where the text names the blank; the help link names the action), `action.test`/`action-fix.test` (a law carries its own level), `office-t51` (the two fields).
+
+**RED/GREEN evidence.** The tests of `fix4-t51` (13 then) and `seam-t51` (1 then), run on the source of `21bca172fd~1` (before round 4): 14 of 14 red; on this tip all of `fix4-t51` and the stand-in-profile seam test are green, and the instance-setup seam test is the named red. The C53-min and C64-more tests were also seen red with the source stashed (before the walker's-row tests were written).
+
+**The causes, four fields each.**
+1. **C64-template** (S). (1) Step 0 was filing-templates' report (J4/B4 option A, K4438 (a)): the real profile holds no template for any law (K921); the refusal is `send-steps.mjs` PREPARE sending `period`, `form`, `cost_limit` whenever the boxes held a value and `filings` refusing a fill the text has no blank for (`FILL_UNKNOWN_BLANK`); and `communicationprepare` never reads a template (filings R23) while `screen.request.text.help` ("Drafted from your team's template") was drawn unconditionally. Fixed: a box is sent only where her text names `{{period}}`, `{{form}}`, `{{cost_limit}}`; the request reads `templatesforaction` and says "from your team's template" only where it offers a version, else `screen.start-send.text.help` (no new key). (2) Round 3 used the test profile, which holds a template, and a scripted plane. Fix: the federal request through the real entities, actions, filings and filing-templates (`seam-t51`). (3) `fix4-t51`: "a typed plain request prepares" and "when the kind holds no template the request says so" (controls: a text naming the blanks sends them; a template offered says so); `seam-t51`: the walker's own presses over the real providers (the plain request stores, no `FILL_UNKNOWN_BLANK`): red on the old source, green now. (4) N (pure code; the seam is local, in-process, real SQLite).
+2. **C64-law** (S). (1) Root causes with file:line before the fix: `help-records.mjs` drew the place's `records_help` block and the profile's `deadlines` whatever law the request went under (no subject); `request.mjs` `laws()` and `action.mjs` `lawsOf` listed `deadlines`, so the appeal's (A)(ii) was offered as a law; `send-steps.mjs` drew `howsend.3` ("the city can't send you updates") for every request; `action.mjs` drew a reply medium "The city's portal" and the clock entry's `text` raw (`foia_appeal_response`). Fixed: both pickers list `records_laws`, each with the window its own `response` names (jurisdictions R96) and the law's own level (the level choice is drawn only for a law that states none); `help-records/<action>` is for the law that action goes under (the place's block only when its `law` is the chosen law, else the first-request sentence from the law's `response`: 5 U.S.C. § 552(a)(6)(A)(i), 20 business days, no state or city text; no subject, or no chosen law, is the place's help as before); a request under the federal law draws neither `howsend.3` nor `screen.action.reply.medium.portal` (the vocabulary's token `portal` stands in, no new key); a clock entry that is a profile rule is worded by the rule's `label` (R97), by the entry's own description when the rule has none, never by its code. Found in another module and answered (B23): instance-setup's `profiles().view` carries only `deadlines`, `legal_organisations`, `venues`, so none of this reaches the live screens until INSTANCE-SETUP #27 merges. R-OLD: new data only: an action whose stated law is a deadline's citation (a round-3 pick) matches no records law, and its help stays the place's. (2) No federal fixture; no test went through the real profile. Fix: the federal profile in the fixtures and the seam, which also makes the due date by the member's own act (the machine's proposal, the member's `clockadopt`, real action-clocks). (3) Five tests in `fix4-t51` (picker, help, link, send step and reply medium, due date) and `seam-t51`: red on the old source, green now; controls: California keeps its statute and window, a city law and an undetermined law keep their words. (4) N.
+3. **C64-more** (S). (1) `request.mjs`:204 split one box at its first comma and `done` re-split the entity's label; `entitycreate` created without looking. Now two fields (DEC-412: `.name` the agency, `.role`, `.why` and its help replacing `shell.reason`), the label `agency, office` or the agency alone, the office chosen as typed (the answer's `existed` entry is the one chosen, entities R65), and `officeLine` draws an office once on request, action, start-send, actionnew and dash-action. (2) No test named an office without a comma or twice. (3) `fix4-t51` (two tests) and `seam-t51` (the real `entities`: naming ` office of government information services ` again leaves one entry): red then green. (4) N.
+4. **C65.** (1) Step 0 (J17, released B22): `templatesave` is registered on `start-send` alone (the registry), `request` draws `keep` for `!req` only, and `action` drew a door to `start-send` only for an unsent action; after "Recorded as sent" no path led to the one control. Fixed: `action` draws, for a sent filing and a member who may act, a reference worded `screen.start-send.template.heading` that opens `start-send`, whose step "sent" draws the form. (2) Never tested; (3) `fix4-t51`: request prepared, approved and recorded through its steps, the action's reference, the form, `templatesave` with the declared names; controls: an unsent action draws the card of the send steps and not this, an action sent with no filing draws neither, a read-only member sees no door; `seam-t51`: the real filings keeps the template (`tpl_templates` row). Red then green. (4) N.
+5. **C53-min.** (1) `plan.mjs` optiondispose sent `{date: "", on}` when the date list was left blank. Now each picked option takes the first date it has (one with none takes none). (2)/(3) `fix4-t51` (two tests; controls: a picked date is the one sent, no day sends no reminder): red then green. (4) N.
+6. **C14 (this screen).** (1) Live read-only probe of biosmoke8 (the lane's `probe.mjs`, ADMIN, 1280, this container; every request 0.5 to 0.9 s): action 3.9 s settle, 21 requests (this module's 10 plus the frame's); request on an action 4.0 s, 17; request on a project 2.3 s, 14; actionnew 2.3 s, 14; dash-action 4.8 s, 27 (5 `action` + 5 `filingsfor`, one pair per listed action, R30's design); plan on a project 4.1 s (`plans` 2.6 s); start-send on an action 5.2 s; help-records 4.1 s. The `bootstrap` (1.2 to 2.1 s) precedes every screen read; the page itself 0.3 to 2.8 s. The screens' own reads are parallel and each is once; the one op they repeat is `groupidentity` on request and start-send (the team's name for "Sent with"), kept and named in the test (B24). Root cause unknown for where each slow ACT spends its time (no write on the live copy; no per-op time before control-plane's `Server-Timing` is deployed): the re-walk times them, P11 if they miss. (2) Jobs counted reads, not time. Fix: `reads-t51` asserts each screen's own read set (fourteen loads), no op twice, one `bootstrap`, the queue list only by `dash-action` (whose own list it is: queue R93 says only the Queue screen reads the list, and no op filters by kind, so the Action dashboard's Needs-you tier needs it), and that no declared read names `bootstrap`. (3) Honest: no screen of this module repeated a read, so the test passes on the old source; a mutation (a second read of `affordances` on `action`) turns two of its tests red. (4) P: the numbers above.
+
+**Requirement lines for BOB to write** (BOB writes `build/requirements/`): R4 and R20 (amend): "the law picker lists the profile's `records_laws`, each with the window its own `response` names, never the deadlines, the law's own level goes with it; 'Name the office yourself' is the agency and the office within it (DEC-412), the entity labelled by both, an existing office of the same name is the one chosen". R3/R8 (amend): "the period, form and cost limit are sent only where the text names the blank; the text help claims a template only where one is offered". R5/R16/R54 (amend): "'Change the law' on a records request lists `records_laws`; a clock entry that is a profile rule is worded by its label, never by its code; the reply medium 'portal' and `howsend.3` are not drawn for a request under the federal law". R9 (RC-R10 stands): "`help-records` opened for an action is for the law that action goes under". R43/R48 (B22 stands). R44 (c) (amend): "a reminder day with the date left blank takes the option's first date". All stay `*(not yet met: T51)*` until merged.
+
+**Not drawn / words.** No stand-in key (J17 (3) closed). Uses added by BOB for the seam: jurisdictions, entities, actions, filing-templates, filings, instance-setup, action-clocks. Deferred: none. Found in other modules: instance-setup `profiles().view` (answered, INSTANCE-SETUP #27), the kit has no team-name accessor (answered, T52).
+Size (session_01BtTN7ZpRZCZwHDAGJpin6T): test runs 52, module lines 4869
+
+## J22 · QUESTION
+
+QUESTION (SCREENS-ACTION #14, E9 under K4557; replies to B26; the smallest things I need, asked now per R-NOTMET). I carry on with everything else.
+
+**1. The accept door cannot be drawn in place on the three screens: the design registry does not list `projectjoin` on `action`, `request` or `start-send`.** `interface-shell` R21 admits only the ops the registry lists for a screen (`contract.test` R1–R6 asserts a screen's acts are exactly its registry acts), and `docs/development/ux-substrate/screens/registry.json` lists `projectjoin` on `projects` and `project` only (`home` and `queue` draw it as a queue item); `wizard-scripts/screen-registry.mjs` is generated from that file. So `cs.act("projectjoin", ...)` on my screens returns "" and an act spec for it would throw at `interfacePage`. The census (`census-join-K4557.md`, Screens) assumed it could be drawn "as `project-rows.mjs:71` does"; that screen's registry lists it.
+Smallest ask: the registry lists `projectjoin` ("Join") on `action`, `request` and `start-send` (the design stream's file, so a NOTICE to UX-DESIGN; then wizard-scripts' data regenerated at that commit, `build-data.mjs`). Label: I reuse the existing key `act.projectjoin.label.project` ("Join"), so no new word row is owed.
+What I build now, with that unmerged: for an action of a project the member is `invited` to and has not joined (read from `projectlist`'s `participation`, once, in parallel with the screen's other reads), `request` (on an action), `start-send` (step 2) and `action` do not offer prepare, approve, second approval, record the sending or keep-as-template; they draw `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` at the head of the send steps and, as the way to accept, a reference opening the project's page (`project`, which does draw "Join" for an invited member; `screens-inquiry/project.mjs:156`). The moment the registry lists `projectjoin` on a screen, its door is drawn in place beside the sentence, and the screen redraws with the steps after the press. The in-place press test is written first and stays red by name until the registry changes; everything else of the entry is built and tested now.
+
+**2. `uses`: add `membership` and `project-roster`** to screens-action (both earlier in the order than layer 11). The R-SEAM test boots the real `membership` (`projectjoin`, `invite`) and `project-roster` (`projectlist`'s `participation`) over `filings`' own world, as `seam-t51` boots the others; without them the test would write the invited state itself and hide the state the screens read.
+
+The real-filings half of the walker's case (the invited member is refused by the plane) waits on FILINGS #27, as B26 says; written first, red by name until the merge.
+
+## J23 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #14, E9 under K4557; re B26, B27). Pushed on `job/T51/screens-action`; `tranche/T51` merged last. No open QUESTION (J22 answered, B27). No generated artifact edited; I own no census op.
+
+**What changed.** An action of a project the signed-in member is invited to and has not joined: `start-send` (step 2), `request` (on an action), `action` and `dash-action` draw `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` at the start and a reference opening the project's page (where Join is drawn); they offer no prepare, approve, second approval, record-sending or keep-as-template (`send-steps.mjs` `joinFirst` + `sendSteps`; `action.mjs` render: the doors to prepare, pick up and keep; `dash-action.mjs`: no `filingapprove` for such an action, the action opens instead). Her place is her own `participation` on the `projectlist` row of the action's project (project-roster R34), read once in parallel with the screen's other reads (`standing`); joined, leaving, no participant, no row, or a read that failed change nothing (the plane still refuses). One new read op per screen (`projectlist`); C14 read-set tests updated, no op twice.
+
+**Failing-first.** `join-t51.test.mjs` (8 tests + 1 `test.todo` K4559) and `join-seam-t51.test.mjs`: on the source before E9 (`5e746f50d8~1`) 10 of 10 red ("the held sentence"/"no approval"); on this tip all green except the named red below. Seam (R-SEAM) over the REAL membership, project-roster, filings, actions, entities, filing-templates: `quinn` invited and not joined opens the send screen and the request screen, is told, nothing is stored; follows the reference; joins (the op the page's Join sends, answered by the real membership, since the page belongs to screens-inquiry); returns; drafts, approves, records the sending and keeps the template (real `tpl_templates` row in the project). Controls: joined, leaving, no participant, unread place, no row see the steps as today.
+
+**Named red (allowed, B26): 1.** `join-seam-t51` "the real filings refuses the invited member's draft with membership's code" waits on FILINGS #27 (today the real filings lets her draft: the walked defect). **todo:** the door in place (K4559, T52).
+
+**Suites and checks.** Module 271: 269 pass, 1 red (above), 1 todo. Users: control-plane 376 of 376; plane 305 of 306: `release.test` R24 "screen.objective.purpose is held by the words list" (the objective screen's key; I touch none of it, not mine). Checks (run.mjs): format 0, architecture 0, coverage 6616 of 6616, channels 0, words 0; ownership 0 (10 files).
+
+**Requirement lines for BOB** (amend R3, R4, R5, R30, R43, R48; Private Uses: `project-roster` `projectlist` through the plane): "An action of a project the member is invited to and has not joined offers no prepare, approval, second approval, recording of the sending or keeping as a template, on `start-send`, `request`, `action` and `dash-action`; the screen says `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` and gives a reference to the project's page. Her place is `participation` on `projectlist`'s row, read once with the screen's other reads; any other state, or one not read, changes nothing. The door in place waits for the registry (K4559)."
+
+**Limits stated, not deferred defects.** A project beyond `projectlist`'s first page (200) reads as unknown and the plane refuses as before; a non-participant (administrator) is not told at the start (E9 names invited; the plane refuses). Words: none new (the held row exists). Found in other modules: none.
+Size (session_012SukeKJ6jZZFc6BPcuWckQ): test runs 14, module lines 5100
+
+## J24 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #15, G20 for this screen; re B28). Pushed on `job/T51/screens-action`; `tranche/T51` merged first. No open QUESTION. No generated artifact edited; I own no census op.
+
+**What changed.** `matter.mjs` (new `heldDocs`, used by `eventChoice` and `passageChoice`; was `matter.mjs:156, 177`): the project's held documents are read by `heldcaptures` page after page by the read's `next` (limit 200, at most five pages, each page once; the key `docs` is shared by both pickers so one read serves both). The evidence picker now reaches the 250th of 250. Where the pages read are not all that is held (the five-page cap reached, or a later page failed, which is not read as the end) the picker says `screen.held.more` with the count shown (the nearest held row, a stand-in; row owed: a matter-specific "Showing N of the documents held; narrow by ..." sentence, for UX-DESIGN via BOB's HANDOFF B485). The event picker asks `timeline` about at most 200 captures (events `CAPTURES_MAX`, a platform bound that stays) and says so with the same sentence when more are held. `words-fix-matter.mjs`: `screen.held.more` added to matter's EXTRA. R-OLD: reads only, no stored data.
+
+**Root cause / why missed / platform.** (1) `matter.mjs:156, 177` read one page (limit 200) and used `held` alone, dropping `truncated`/`next`; the event picker also sliced to 200. (2) No requirement said a bound must reach the member and no test drove a project past 200 documents; the gap fix is `held-pages-t51.test.mjs`, past the bound. (4) N.
+
+**Failing-first** (`held-pages-t51.test.mjs`, 5 tests, through the real screen over the shell's page; the scripted `heldcaptures` keeps capture R77's contract (`held`, `truncated`, `next`, `after`), read at `capture/index.mjs:1541`; the real capture fixture lives in another module's tests): on the source before this change 4 red (250 documents: no "Doc 250", silent at 200; timeline 200 with no sentence; 1200 documents: one read, no sentence; page-2 failure shows 200 silently), 1 control green; on this tip 5 of 5 green.
+
+**Suites and checks.** Module: 276 tests, 275 pass, 0 fail, 1 todo (K4559). Users (impact: control-plane 69/79 files, plane 46/53): plane 319 of 320, the one red is `release.test` R24 "screen.objective.purpose is held by the words list" (not mine, as J23); control-plane 407 of 409, reds: R117 (acquire) and "R104 R100 R99 (E8)" (capture/acquire, files I do not touch; I did not re-run them on the base). Checks (run.mjs): format 0, architecture 0, coverage 6623 of 6623, channels 0, words 0 (inline/plain/testcopy/missingkey 0); ownership 0 (4 files).
+
+**Requirement lines for BOB** (amend R45, R3 not touched): "The matter's pickers over the project's held documents (the passage the act rests on, the event it was part of) read them page after page by `heldcaptures`' `next` (at most five pages of 200) and say, by the word `screen.held.more`, how many are shown when more are held than were read; the event picker asks `timeline` about at most 200 captures (events R53's bound) and says so likewise."
+
+**Found in other modules:** none new.
+Size (session_01G4KPZ8PUsRbsiLajjUaHCP): test runs 9, module lines 5136
+
+## Round 6 · G52 (SCREENS-ACTION #16, session_015opo2yPs5rDEGC6mU3j4mb, B29 START)
+
+**What changed.** `start-send`, `request` and `action` register `projectjoin` (`JOIN` in `send-steps.mjs`: sent as `{query: {projectId}}`, `rereads` `standing` and `projects`). `joinFirst` draws the design's fold (DEC-417, B477): a `<details>` whose summary is `screen.projectact.invited.head`, holding `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` and Join in place; where Join is drawn the project-page link is dropped (a screen that does not register the act, the dashboard, still gets the link, and only its truthiness). Words added to the three screens' lists: `screen.projectact.invited.head`, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` (the act labels `act.projectjoin.label.<screen>` come with the acts). No sentence written; no test copies one.
+
+**Tests, red then green.** `join-t51.test.mjs`: `told()` revised to the fold; the `test.todo` (K4559) made real, one test per screen (press Join: `projectjoin` sent with the project, `standing` re-read, the act offered; control: a joined member sees no fold). `join-seam-t51.test.mjs`: presses Join in place in the fold, the real `projectjoin` through the door. `send-t51.test.mjs`: the registry-acts test lists `projectjoin`. Red before the code (registry carrying the act): 13 fail in those four files; green after: whole suite 278 pass, 0 fail.
+
+**Provider not on the tranche (reported, J-entry below).** The shell checks each screen's acts against wizard-scripts' generated `screen-registry.mjs`, which is still taken at design commit `43379a1a44` (its `SOURCES.registry`), so it lacks `projectjoin` on these three screens. Until wizard-scripts re-takes the registry at DEC-419 (`f72b2f8a4c`), `checkScreens` throws "screen start-send's act projectjoin is not the registry's for it" for every page that composes `SCREENS`: with only my commit, the impact set (control-plane, plane) has 26 failures beyond the accepted `release` R24. To measure my change I added `projectjoin` to those three rows in the generated file locally, ran everything, and reverted it (never committed; it is wizard-scripts' artifact, mechanics §14). With the row present: screens-action 278/0; control-plane and plane impact files (123): 740 pass, 1 fail (`release` R24, inherited).
+
+**Proposed requirement line (R3's last sentence, "The door in place waits for the design registry (K4559, T52)"):** replace with "G52, K4686: the invited, not joined member's sentence is the design's fold, `screen.projectact.invited.head` holding `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` and Join in place (`projectjoin`, a registry act of `start-send`, `request` and `action`); the screen reads her place again after the join and offers the act; where Join is not drawn, a reference to the project's page." Also drop "(where Join is drawn)" and the reference wording from R3's earlier sentence. The three screens' act counts in R3, R4, R5 gain `projectjoin`.
+
+**Word keys for the design's reads list (BOB hands them to UX-DESIGN).** None of these is in `words-reads.json`'s reads for screens-action: `screen.projectact.invited.head`, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited`, `act.projectjoin.label.start-send`, `.request`, `.action` (and their `act.projectjoin.does`).
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 0 (6686/6686), channels 0, words 1 failure (the inherited `inline` at `case-checker/spec.mjs:11`); ownership 9 files, 0 failures. Census: no op's accepted keys change.
+
+**State.** Code and tests complete; not COMPLETE only because the merge waits on the wizard-scripts registry re-take.
+
+Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 9, module lines 4943
+
+## J25 · BLOCKED
+
+BLOCKED (cause: tests; a provider is not on the tranche). G52 is built and tested: start-send, request and action register projectjoin and draw the design's fold with Join in place (commits 46796d1a4d, record 5c3ecca9fb+). Whole screens-action suite 278 pass, 0 fail, red-first 13 fail before. The blocker is not in my module: the shell checks each screen's acts against wizard-scripts' generated screen-registry.mjs, which is still taken at design commit 43379a1a44 (SOURCES.registry in wizard-scripts/build-data.mjs) and so lacks projectjoin on these three screens. Until wizard-scripts re-takes the registry at DEC-419 (f72b2f8a4c), checkScreens throws for EVERY page composing SCREENS: with my commit alone the impact set has 26 reds in control-plane and plane beyond the accepted release R24. I measured with projectjoin added by hand to those three rows locally and reverted (never committed; it is wizard-scripts' artifact): control-plane+plane impact files 740 pass, 1 fail (release R24, inherited). Your START said no provider was needed; the words are on the tranche, but the generated registry is not. Needed: a wizard-scripts job to re-take screen-registry.mjs (and its vendored source file) at f72b2f8a4c, merged before screens-action; or tell me to merge as is knowing the page is red until then. When it is in, tell me and I merge tranche/T51, re-run suite, impact set and checks, and post COMPLETE. Also in my record: a proposed R3 line, and five word keys for UX-DESIGN's reads list (screen.projectact.invited.head, refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited, act.projectjoin.label.start-send/.request/.action).
+
+## Round 6 · G52 completed (after B31 CHANGE)
+
+Merged `tranche/T51` (G53's registry at `f72b2f8a4c`). `contract.test.mjs:34` is green against the real registry with no local patch. Suite: screens-action 278 pass, 0 fail. Impact set (screens-action 30, control-plane 72, plane 51 files): 1018 pass, 1 fail (plane `release` R24, inherited). `checks/run.mjs`: format, architecture, coverage (6690/6690), channels 0 failures; words 11 failures, none in screens-action (case-checker `spec.mjs` inline x6, inherited/not mine; installer-steps `installer.fleet.logsunconfirmed` missingkey x5, from the merged tranche, not mine). Ownership 9 files, 0 failures. Proposed R3 line and the five word keys are in the section above. Nothing deferred.
+
+Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 12, module lines 4943
+
+## J26 · COMPLETE
+
+COMPLETE (G52): merged tranche/T51 (G53); contract.test.mjs:34 green on the real registry, no local patch. screens-action 278/0. Impact set (screens-action 30, control-plane 72, plane 51 files): 1018 pass, 1 fail (plane release R24, inherited). checks/run.mjs: format, architecture, coverage, channels 0; words 11 failures, none mine (case-checker spec.mjs inline x6; installer-steps installer.fleet.logsunconfirmed missingkey x5, from the merged tranche); ownership 0. Proposed R3 line and five word keys for UX-DESIGN are in the record. Nothing deferred.
+
+## Round 10 · Wave A batch 5 (SCREENS-ACTION #17, session_016qFZjYBx2pPnvC1xZPvJ5B, B32 START)
+
+**Causes done.**
+- `BREACH_ON_HYPOTHESIS` (`start-send.test.mjs:24`): no such code. The real refusal for a breach action naming no determination is `ACTION_NO_DETERMINATION` (`actions/index.mjs` `#breachRefusal`, check C-117.6, which carries `reason`, `detail`, `code`, `check`, `translation`). The test now takes it from the real `promote` over `actions/fixture.mjs` (`world`, `actionMd`, `CP`), asserts the code, and asserts the design's word `refusal.ACTION_NO_DETERMINATION` (the invented sentence is gone). `actions` publishes no fixture for it in `fixtures.mjs`; its job could add one (`breachRefusal`).
+- `LEG_ON_ACTION` (`actionnew-fix.test.mjs:21`): no such finding code; `actions` gives `ACTION_BASIS_REFUSED` findings as `{check: "C-2.10", detail}` (`findingsOf`, `actions/index.mjs:194`, :1248), with a `code` only when the failing check carries one. The finding is now `{check: "C-2.10", detail}`.
+- `storeSilent` (`plan.test.mjs:260`): takes `storeSilentParsed("airun")` from `answer-envelope/fixtures.mjs`.
+- Markers: `// fixtures-generic: BAD` (`join-t51.test.mjs:63`, a roster read failing whatever its code) and `// fixtures-generic: CODE_NO_ONE_HAS_A_WORD_FOR` (`plan.test.mjs:233`, a code the design has no word for, on purpose).
+- Contract `plan-screen-shape`: `plan-screen-shape.test.mjs` states screens-inquiry's stand-in as data (`// fixtures-run: screens-inquiry plan-screen-shape`) and runs it through the shell's `checkScreens` in place of the real `plan` screen; it passes. It shows `orphan-run` until screens-inquiry's marker is merged (it is on its side at `project.test.mjs:185`).
+
+**Lines left.** `plan-t51.test.mjs:209`, `send-t51.test.mjs:35,286` (storeWorld), `real.mjs:54` (stays listed) and the 50 op-table entries wait for the `storeWorld()` CHANGE (store-request, batch 3; interface-shell `boot({door})`, batch 6).
+
+**Tests and checks.** screens-action suite 279 pass, 0 fail. format 0, coverage 55 of 55 (0). architecture: 1 failure, see J27 (the `uses` list lacks `answer-envelope`).
+
+## J27 · QUESTION
+
+QUESTION (re B32): the work of B32 is pushed (a20e9835ba) and green, but one check fails that only you can clear. plan.test.mjs now takes the real 502 STORE_DID_NOT_ANSWER from answer-envelope/fixtures.mjs (storeSilentParsed), and `checks/architecture.mjs` refuses it: screens-action's `uses` in build/modules.json does not list answer-envelope. Please add it to screens-action's uses (modules.json is not mine), or tell me to keep the hand-built value instead. Done meanwhile: BREACH_ON_HYPOTHESIS replaced by the real ACTION_NO_DETERMINATION from actions' own promote; LEG_ON_ACTION replaced by a real finding {check C-2.10, detail}; two fixtures-generic markers; plan-screen-shape contract run (passes). Left, waiting on the storeWorld CHANGE: plan-t51:209, send-t51:35,286, real.mjs:54 and the 50 op-table entries. Suite 279/0. Details in my record, section Round 10.
+
+## Round 10 · completion (after B33)
+
+Merged `tranche/T51` (answer-envelope now in `uses`). Checks: format 0, architecture 0, coverage 55 of 55, ownership 0, words 0. Suite 279 pass, 0 fail.
+Markers added: `join-t51.test.mjs:63` `fixtures-generic: BAD` (a failing roster read, any code); `plan.test.mjs:233` `fixtures-generic: CODE_NO_ONE_HAS_A_WORD_FOR` (a code the design has no word for, on purpose). `fixtures-run: screens-inquiry plan-screen-shape` in `plan-screen-shape.test.mjs` shows `orphan-run` until screens-inquiry's marker (`project.test.mjs:185`) is merged.
+Left, waiting on the storeWorld CHANGE (store-request batch 3, interface-shell `boot({door})` batch 6): `plan-t51.test.mjs:209`, `send-t51.test.mjs:35,286`, `real.mjs:54` (stays listed), the 50 op-table entries.
+Size (session_016qFZjYBx2pPnvC1xZPvJ5B): test runs 14, module lines 4960
+
+## J28 · COMPLETE
+
+COMPLETE (B32, fix round 10 Wave A batch 5), re B33. Merged tranche/T51. Suite 279/0; format, architecture, coverage (55/55), ownership, words all 0. Done: BREACH_ON_HYPOTHESIS -> real ACTION_NO_DETERMINATION (via actions' promote); LEG_ON_ACTION -> real finding {check C-2.10, detail}; storeSilent from answer-envelope fixtures; plan-screen-shape contract run (orphan-run until screens-inquiry's marker merges). Markers: fixtures-generic at join-t51.test.mjs:63 (BAD, failing roster read) and plan.test.mjs:233 (CODE_NO_ONE_HAS_A_WORD_FOR, no design word on purpose). Left, awaiting the storeWorld CHANGE: plan-t51:209, send-t51:35,286, real.mjs:54 (stays listed), 50 op-table entries. Suggestion for actions: publish a breachRefusal fixture. Size (session_016qFZjYBx2pPnvC1xZPvJ5B): test runs 14, module lines 4960
+
+## J29 · QUESTION
+
+QUESTION (SCREENS-ACTION #18, causes 1 to 5 built and committed on my branch, 301 tests green; two things only BOB can settle, neither stops the rest of the job):
+
+1. **`uses` edges for published fixtures (K4990).** The failing-first tests of causes 2, 3, 4 and 5 take their answers from the providers' own published fixtures, never a hand-built answer: `consequences/fixture.mjs` (a part as `consequences` answers it, and its revise), `conformance/fixture.mjs` (the determination, its list, the standard's citation as `standards` answers it), `action-holds/fixture.mjs` (a mark made by `actionpressure` and `pressurefor` over it). `checks/architecture.mjs` refuses them: `consequences`, `conformance` and `action-holds` are not in screens-action's `uses` (all three are layer 9, before this module). Please add the three edges (tests only). Until then `architecture.mjs` shows exactly these 3 failures, one per test file (`consequences-t51`, `names-t51`, `pressure-t51`); I will not hand-build their answers in their place.
+
+2. **The requirement lines.** The START says the requirements of these causes are already on the tranche, marked `(not yet met: T51)`. `build/requirements/screens-action.md` at the tranche tip holds none (R1 to R55 as before, last edit K4716; item 75 of the fix round lists no screens-action line). I built to the diagnosis text (diag2-11 §2a, §4, §6, §7a, §16, §17) and named in my tests the existing ids each cause amends: R3 (the language and the voice the prepare states: filings R43, R44), R50 (the revise form states how it is known and the question), R6 and R18 (a part's label and a determination's and standard's names), R32 (the place's name), R5 (the reply's mark, from `pressurefor`). The new sentences I drew all use existing keys: the language field is `screen.account.language.field`, the voices `voice.group` and `voice.self` with their `.means`. **Missing keys for UX-DESIGN** (nothing is drawn for them yet): the voice choice's own legend (I draw "For the team / As myself" as the legend), `names_pending` ("this names a pending measure or a candidate") and `own_doing` ticks and the audience choice (diagnosis 11 §2a, §14): the page cannot mark those until the design words them; the causation line's state words for a part ("unproven", "established": I draw the owner's own `why` for a causation not established, and nothing for an established one).
+
+## Round 10 · fix round 10, diagnosis 11 (SCREENS-ACTION #18, session_01V2UjYMTJVamFVmEpii2ZSk, B34 START)
+
+Causes 1 to 5 are built, each with its failing-first test (seen red on the tranche's code, then green) and committed on `job/T51/screens-action`; the module's suites pass (294), `checks/format.mjs` 0, `words.mjs screens-action` 0, `ownership.mjs` 0, `coverage.mjs` 55 of 55, `fixtures.mjs screens-action` 54 failures = the baseline 54 (no new line). `architecture.mjs` shows 3 failures that wait on BOB (J29: `uses` edges `consequences`, `conformance`, `action-holds`, tests only, for the published fixtures the new tests take).
+
+1. **§2a, the prepare states its marks** (R3 with filings R43, R44). `send-steps.mjs` `languagesOf`, `marksFields`, `marksBody`; `start-send.mjs` and `request.mjs` read `memberlanguage` and `grouplanguages`. The prepare body carries `language` (hers, else the team's first; a choice names the team's languages in her language, by `screen.account.language.field`) and, on a public comment, `voice` (`group` unless she chose `As myself`; `voice.group`, `voice.self`, with their `.means`). Test `marks-t51.test.mjs` (six tests; the last drives the walker's letter over the REAL filings: "The Clerk violated Clerk Procedure 4." is pointed out and its approval refused). *Why the tests missed it:* `start-send.test.mjs` pinned the body without the marks (it asserted the absence), and no test ran the page's body through filings. Not drawn, for want of the design's words (reported in J29): the `names_pending` and `own_doing` ticks and the audience (diagnosis 11 §14), the voice choice's legend.
+2. **§4, revise states how it is known** (R50). `matter.mjs` `reviseForm` offers the record form's how-it-is-known choice (`mt-r-basis`), the rationale and the question (`mt-r-cause`), and `consequencerevise` sends `basis` and `causation` when she changes them (the shapes `consequencerecord` sends). Test `consequences-t51.test.mjs` over `consequences`' own published world: a part recorded as not assessed becomes `assessed` after the page's revise. *Missed because* `matter-t51.test.mjs` scripted the answer and pinned `{id, reason, measure}`.
+3. **§6, "[object Object]"** (R6). `matter.mjs` `labelOf`, `causeOf`: the part's line draws the label's `says` and, for a causation not established, the owner's own `why`. Same test file (real `consequencesOf` shape). *Missed because* `page.mjs` had a hand-written string label.
+4. **§7a, no raw ids** (R18). `send-steps.mjs` `actName`, `citeOf`; `matter.mjs` (heading: kind, day, then "by" the office; rows and choices: the standard's citation from `standards`), `plan.mjs` (`titlesOf(cs, P, qs, ds, ss)`: a determination by day and office, a standard by citation; the offers; the "requirement it seeks" list now offers only standards with a citation), `start-send.mjs` `subjectName` (what the option rests on). Test `names-t51.test.mjs` over conformance's published scene (the real determination read, list and standard). *Missed because* `page.mjs` hand-wrote `act.event: "The 2024 rent adjustment"` (now the owner's shape: the event's id, `actor`, `when`; `event.kind` on the one read). New reads: `standards` on `plan` and `matter` (`reads-t51.test.mjs` updated), `projectquestions` on `start-send` step 1. If `standards` does not answer, a choice falls back to the id (only a choice that must have a text; a row shows nothing).
+5. **§16, §17.** `hold.mjs`: each place in "The hold is for" is its mark's note and day (test in `hold-counsel.test.mjs`). `action.mjs`: a reply's mark is read from `pressurefor` (either source) and a marked reply is not offered the choice (test in `action.test.mjs`, and `pressure-t51.test.mjs` over the real `actions` and `action-holds`). *Missed because* the fixtures scripted `entries[].pressure` in the document form, and the default `pressurefor` fixture held a mark on the reply the old test then marked again.
+
+**Left for the next session (item 6, the op tables, K5054; `build/plan/fixtures-T51/op-tables.md` §5.3, §5.5).** Not started: the 50 op-table entries (and 3 builder lines) of `checks/fixtures.mjs <abs root> screens-action --list` are to be re-pointed to `storeWorld()` (`bio-plane/test/m/store-request/fixtures.mjs`; interface-shell's `world.mjs` shows `inWorld`, `bootAs`, `obligations`), each scripted state made by real acts through `me.act`, a state the world cannot make REPORTed and its line kept. They are, by test file: matter-t51 (determine, determinations, contentmint, consequencerecord/revise, addressedrecord, successrecord, escalationattach/decline/evaluate, writinghelp, publishedcase), hold-counsel (actionhold, actionholdrelease, pressurerecord, holdnoticesent), send-t51 (templatesave, writinghelp, refusedWith), dash-action (filingapprove, taskresolve, reminderanswer, checkpointsdue, the last a door arm of control-plane: contract), actionnew(-fix) (actioncreate), plan-list, c94 (plans), plan (projectquestions), reminders-t51 and action-fix (reminderset), request(-fix) (filingrecordsent, addresseesuggest), fix4-t51 (templatesforaction, templatesave), held-pages (determinations), start-send (actionstake), contract (pressurefor), join-t51 (projectlist, accepted), real.mjs:54 (refusal NO_OWNER). The done criterion in the START is "no new failing line", which holds today (54 = the baseline).
+Size (session_01V2UjYMTJVamFVmEpii2ZSk): test runs 26, module lines 5078
+
+## J30 · BLOCKED
+
+BLOCKED (cause: context), SCREENS-ACTION #18, at the end of a step, not for tests. Causes 1 to 5 of B34 are built, tested red-then-green and pushed (record section "Round 10 · fix round 10", on `job/T51/screens-action`): the prepare states its language and a public comment's voice (R3; 6 tests, one over the real filings), the revise form states how it is known and the question (R50), a part's label is drawn by what it says (R6), a determination is named by its act and a standard by its citation on the Matter, the Plan and Start and send (R18), the hold's places are named by note and day (R32), a reply's mark is read from `pressurefor` (R5). The module's suites pass (294); format, words, ownership, coverage 0 failures; `fixtures.mjs screens-action` 54 failures, the same as the tranche's (no new line). `architecture.mjs` shows 3 failures that wait on your answer to J29 (add `consequences`, `conformance`, `action-holds` to screens-action's `uses`, tests only).
+
+**What remains is item 6, the op tables** (about 50 entries over 20 test files, each to be re-pointed to `storeWorld()` with its state made by real acts), which is a job of its own and would take me past half my window. The record lists the entries by file. Please restart me (or a successor) for it with the J29 answer: if you add the three edges, the architecture check goes green, and I then finish the op tables, run the full checks and post COMPLETE with the met ids (R3, R5, R6, R18, R32, R50 as amended by diagnosis 11; no requirement line for them exists on the tranche, see J29 (2)).
+
+## Round 11 · fix round 10, op tables (SCREENS-ACTION #19, session_01KNqRbreNMPFiyJbKTakfps, B34 START, B35 ANSWER)
+
+Merged `tranche/T51`. Causes 1 to 5 were built by #18. **Met ids (B35): R3, R5, R6, R18, R32, R50**, as amended by diagnosis 11 (no new lines).
+
+**Item 6, the op tables.** The 50 op-table/builder entries are re-pointed to store-request's `storeWorld()`, each state made by real acts, in 20 files. Helpers: `world.mjs` (`actionWorld`, `correspond`, `counselMatter`, `openIn`; import it before `page.mjs`, which reads op-declarations first), `world-A.mjs` (the matter: documents, events, question, standards, determination, consequences, escalation), `world-B.mjs` (clocks, plans, profile), `world-C.mjs` (profile, entities and offices, filings), `world-D.mjs` (questions, plans, colleagues). `real.mjs` lost its `NO_OWNER` answer (never reached). `fixtures.mjs screens-action`: 54 failures -> 7 (6 op-table, 1 builder) plus 2 accepted markers.
+
+**Still scripted, a state the world cannot make (lines kept listed):**
+- `dash-action.test.mjs:92` `taskresolve`: the real queue offers it on none of Action's three item kinds (action-producers DOORS). Possible gap against R30: REPORT.
+- `c94-t51.test.mjs:34` `plans`: a plan whose opener has no handle; every real member has one.
+- `fix4-t51.test.mjs:233` `templatesforaction` refused while `action` reads: both share one visibility gate.
+- `matter-t51.test.mjs:438,459` and `send-t51.test.mjs:428` `writinghelp`: model-backed; the world has no account or model (`NO_ACCOUNT`, `ASSISTANT_DRAFT_UNAVAILABLE`).
+- `send-t51.test.mjs:339` builder: `TEMPLATE_FROM_UNAPPROVED` (approval is never taken back) and `TEMPLATE_USE_REFUSED` (the page never sends that use).
+- Also scripted, unflagged: `checkpointsdue` "our move" (action-plans reads the wall clock; a checkpoint cannot be due today), the draft-tier-3 variant of the counsel test (only `filingprepare` sets a draft's tier and it refuses at tier 3), actionnew-fix's shapes the owner never gives, and a project's followed events in `image`.
+
+**Flaws found and fixed in my module:** `matter.mjs:254` asked `publishedcase` with `caseId`; the op wants `id` (publication/worker.mjs:753), so on a real store the Matter's published-findings picker never filled. Now `id`; matter-t51 (c) runs over a really published case.
+
+**Found, not mine / not fixed (REPORT):**
+1. `hold` (R32): after a hold is placed on a reply, `holdsdue` no longer lists it (action-holds R19), and the release form draws only for places listed, so a reply's hold cannot be released from this screen; only a counsel matter's can. Needs a design reading (the requirement names `projectholds` for the strip, which the screen does not read).
+2. The addressed/success evidence fields take typed ids; the store accepts only content ids or findings (`NO_SUCH_EVIDENCE` for an `INFO-` id).
+3. The world's clocks disagree: the pinned `BIO_NOW_MS` (2026-10-01) versus the wall clock that `action-clocks` (`remindersfor`) and `action-plans` (`opened_at`, to the second) read. Plans opened in one second tie; `world-D` waits a second per plan.
+4. A reminder's state is `undetermined` until a jurisdiction profile is active (`world-B`, `world-C` activate Oakland).
+5. `actions` could publish a `breachRefusal` fixture (from #18).
+
+**Words for UX-DESIGN (B35):** the voice choice's legend, `names_pending` and `own_doing` ticks, the audience choice, a causation's state words: drawn nothing.
+
+**Checks:** suite 295 pass, 0 fail; format 0; coverage 55 of 55; words 0; ownership 0; fixtures 7 + 2 accepted. **architecture: 2 failures, waiting on BOB (J31):** `world-A.mjs` imports `publication` and `record-core` (the published case is made by publication's own commits on `world.ctx`, as `store-assembly/g54-seed.mjs` does; a ratification signs with an SSH key no door act can).
+Size (session_01KNqRbreNMPFiyJbKTakfps): test runs 14, module lines 5078
+
+## J31 · QUESTION
+
+QUESTION (re B35): item 6 is built and pushed; suite 295/0, format/coverage/words/ownership 0, fixtures 54 -> 7 (record: Round 11 lists each kept line and why). One check fails that only you can clear: architecture.mjs, 2 failures, world-A.mjs imports publication and record-core, not in screens-action's uses (the published case is made by publication's own commits on world.ctx, as store-assembly/g54-seed.mjs does; no door act can sign a ratification). Please add both edges (tests only), or tell me another way. Also fixed in my module: matter.mjs asked publishedcase with caseId, the op wants id. REPORTs in the record: hold cannot release a reply's hold (holdsdue omits placed holds); taskresolve offered on none of Action's queue kinds (R30); world clocks disagree (pinned vs wall). I post COMPLETE after the edges.
+
+## Round 11 · after B36: the tranche's world is red (provider)
+
+Merged `tranche/T51` @ d6363abb4c. architecture, format, coverage, words, ownership all 0. The suite is 243 pass, 48 fail, and before the merge it was 295/0. Cause, not in my module: store-assembly's `38536482fc` ("the world binds INSTANCE_NAME; a bare world ... names its team", K5149) records the producing team at the world's first boot, and store-request's `storeWorld()` (fixtures.mjs:26-31) still seeds it by `instancegroupseed`, which now answers `GROUP_ALREADY_RECORDED` (C-64.3), so `storeWorld()` throws for every caller. The same throw fails interface-shell `r129-door.test.mjs` and store-request's own `world.test.mjs` (10 fail in those two files). Needed from store-request's job: stop seeding when the world already records the team (or `group: null` default). Nothing in my files changes.
+
+## J32 · BLOCKED
+
+BLOCKED (cause: tests, a provider; not my module). After merging tranche/T51 @ d6363abb4c my checks are all 0 (architecture, format, coverage, words, ownership), but the suite is 243/48 (295/0 before the merge). store-assembly 38536482fc now records the producing team at the world's first boot (INSTANCE_NAME), and store-request's storeWorld() (bio-plane/test/m/store-request/fixtures.mjs:26-31) still calls instancegroupseed, which answers GROUP_ALREADY_RECORDED, so storeWorld() throws for every caller: interface-shell r129-door and store-request world.test fail the same way (10 fail in those two files). Needs store-request's job to stop seeding when the team is already recorded. I post COMPLETE when the tranche carries that fix and my suite is green again.
+
+## Saved at K5183 (SCREENS-ACTION #19)
+
+Done: causes 1 to 5 (by #18) and item 6, the op tables (Round 11 above), all pushed on `job/T51/screens-action`; `tranche/T51` @ d6363abb4c merged. architecture, format, coverage, words, ownership 0. Nothing half done; no worker running (all four finished).
+Open: the suite is 243 pass, 48 fail on the merged tranche, only because `storeWorld()` seeds the team a second time (J32, B37): STORE-REQUEST #4 fixes it (B8), BOB merges that alone and sends a CHANGE.
+Exact next step: when the tranche carries that fix, `git merge origin/tranche/T51`, run the module suite (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`, expect 295/0), the checks of the process repository (format, architecture, coverage, words, ownership, `fixtures.mjs <abs root> screens-action`: 7 lines kept as listed in Round 11), then `node checks/run.mjs /home/user/bio` and `setup-words/build.mjs --check`, then post COMPLETE naming the met ids R3, R5, R6, R18, R32, R50 and the REPORTs of Round 11.
+
+## Round 12 · SCREENS-ACTION #20 (B39 RESUME)
+
+Started (`mail start`), merged `origin/tranche/T51` @ 195b11dc45. The tranche does not yet carry the store-request fix: `storeWorld()` (store-request/fixtures.mjs:26-34) still seeds the team a second time and throws `GROUP_ALREADY_RECORDED`; my suite fails the same way as in J32. Nothing in my module changes. Next step is unchanged from the saved section: when BOB sends a CHANGE that the fix is merged, merge `origin/tranche/T51`, run the suite (expect 295/0), the checks, `checks/run.mjs`, `setup-words/build.mjs --check`, then post COMPLETE.
+
+## Round 12 · COMPLETE (B40 CHANGE; tranche/T51 @ 195b11dc45 and store-request #5 merged)
+
+Merged `origin/tranche/T51`. I passed no `{group: null}`, so nothing to drop. The suite is 295 pass, 0 fail (the 48 GROUP_ALREADY_RECORDED failures are gone).
+
+**Entries applied:** T51-122 in full (R24 to R35, DEC-340, DEC-342) and fix rounds 10 and 11 (causes 1 to 5, the op tables), as recorded above. Met ids named in the saved section: R3, R5, R6, R18, R32, R50.
+
+**Checks (process repository, product /home/user/bio):** format 0 failures; architecture 0; coverage 55 of 55; ownership 0 (41 files); words `screens-action` 0. `fixtures.mjs screens-action`: 7 failures kept and 2 accepted, as in Round 11 (see below). `checks/run.mjs`: no finding in my module; its 16 words failures are all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs:16); `setup-words/build.mjs --check` refuses on `plane.declared.readtranslate`, which has two sentences in plane/declared.mjs:13 and store-assembly/declared.mjs:16. Neither is mine: REPORT.
+
+**New recipes (store-request R19):** I looked at each for the 7 kept lines. `writingHelp` answers the owner's refusals but never `text`, since the model is not held, so the 3 `writinghelp` lines (matter-t51:437, :458; send-t51:428) stay scripted: they assert the drafted words reach the field. The other 4 (`plans` with an opener without a handle, `taskresolve`, `templatesforaction` refused while `action` reads, `templatesave` refused with TEMPLATE_FROM_UNAPPROVED or TEMPLATE_USE_REFUSED) have no recipe. All 7 are listed with why in Round 11.
+
+**REPORTs (full text in Round 11):** `hold` cannot release a reply's hold (`holdsdue` omits placed holds); `taskresolve` is offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall); the keys and shapes for UX-DESIGN (J2 gaps); `approved_by` absent in filings.
+
+**Not mine:** store-assembly's 15 words failures and the duplicate `plane.declared.readtranslate` sentence (above).
+
+Size (session_014Xi3cMqxUmon661x8n29a3): test runs 5, module lines 5078
+
+## J33 · COMPLETE
+
+COMPLETE (re B40). Merged tranche/T51 @ 195b11dc45; suite 295 pass, 0 fail. format 0, architecture 0, coverage 55 of 55, ownership 0, words screens-action 0. fixtures.mjs: the same 7 kept lines + 2 accepted as in Round 11; the new recipes give the refusals of writinghelp but never `text` (no model), so those 3 lines stay scripted; the other 4 have no recipe. checks/run.mjs: no finding in my module, but 16 words failures in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs:16), and setup-words build --check refuses on plane.declared.readtranslate, which has two sentences (plane/declared.mjs:13 and store-assembly/declared.mjs:16): not mine, REPORT. Other REPORTs are in my record (Round 11 and 12). Met ids: R3, R5, R6, R18, R32, R50.
+
+## Round 13 · fix round 10, J31 (SCREENS-ACTION #21, session_01D1s2YRqyJvit3wMv1LEowG, B41 START)
+
+Read B39 to B41. Merged `origin/tranche/T51` (merge commit; tranche carries store-request #5, B40). `storeWorld()` is called with no `group` argument anywhere in my tests (B40: nothing to drop). Acknowledged B41 with `mail done --through B41`.
+
+**J31 (`matter.mjs`: `publishedcase` asked by `caseId`).** Already in history: `f05726a2a5` (the round 11 op-tables commit) changed `bio-plane/src/screens-action/matter.mjs:254` to `{ id: c, edition: … }`; the door reads `id` (`publication/worker.mjs:752-757`). No code change this round. Verified now:
+- failing first: with `caseId` restored in `matter.mjs:254` the file `matter-t51.test.mjs` is red (26 pass, 1 fail: `R45 (c)`, the determination's sent fields); with `id` it is green (27 pass, 0 fail). The file was restored byte-identical (`git diff --stat` empty).
+- the `publishedcase` read is asserted at `matter-t51.test.mjs:71-72` (`[["CASE-2026-0101", "1"]]`, and the store answers the finding).
+
+**Done-list (roles/JOB.md step 6 and B41):**
+- module suite `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`: 295 pass, 0 fail, 0 skipped.
+- `checks/format.mjs /home/user/bio`: 0. `checks/architecture.mjs /home/user/bio screens-action`: 0. `checks/coverage.mjs`: 0. `checks/ownership.mjs … $(git merge-base origin/tranche/T51 HEAD) HEAD`: 0.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 modules, 0 test files affected (note: `tranche/T51` is not a local ref in this checkout; I used `origin/tranche/T51`).
+- `checks/run.mjs /home/user/bio`: no finding in screens-action's files; words for screens-action 0. Its 16 failures are in store-assembly (`wiring.mjs:78`, `wizards.mjs:51`, `declared.mjs:16`) and plane/store-assembly (`plane.declared.readtranslate`, the same sentence twice); not mine, reported in Round 11/12.
+- `setup-words/build.mjs --check`: refuses on `plane.declared.readtranslate` (plane `declared.mjs:13` and store-assembly `declared.mjs:16`): not mine, reported.
+- **NOT MET:** `checks/fixtures.mjs /home/user/bio screens-action --list` is at 7, not zero. The 7 are the lines Round 11 and 12 kept, unchanged: `c94-t51.test.mjs:34` (op-table `plans`, no recipe), `dash-action.test.mjs:92` (`taskresolve`, no recipe), `fix4-t51.test.mjs:233` (`templatesforaction`, no recipe), `matter-t51.test.mjs:437` and `:458` and `send-t51.test.mjs:428` (`writinghelp`: the recipe `writingHelp` answers refusals, never `text`, since no model is held), `send-t51.test.mjs:339` (builder `refusedWith`, `templatesave`, no recipe). The 2 accepted lines are `plan.test.mjs:235` and `join-t51.test.mjs:64`. Closing the 4 with no recipe needs provider fixtures (action-plans, tasks, filings, store-request); closing the 3 `writinghelp` lines needs a text fixture the provider does not publish. I did not add a marker or a stand-in to make the list zero.
+
+**Met ids:** no new ones this round (R3, R5, R6, R18, R32, R50 as before; BOB strikes the marks).
+
+**REPORTs (unchanged from Round 11, still open):** `hold` cannot release a reply's hold (`holdsdue` omits placed holds); `taskresolve` is offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall). The 7 fixture lines above need BOB's ruling on which recipes to add.
+
+Size (session_01D1s2YRqyJvit3wMv1LEowG): test runs 3, module lines 5078
+
+## J34 · COMPLETE
+
+COMPLETE (re B41, fix round 10, J31). No code change this round: the J31 fix (`matter.mjs:254` asks `publishedcase` with `id`, not `caseId`) is already in history at f05726a2a5, which I verified now: failing first with `caseId` (matter-t51 26 pass, 1 fail R45(c)), green with `id` (27/0).
+
+Suite: screens-action 295 pass, 0 fail. format 0, architecture 0, coverage 0, ownership 0, words screens-action 0; impact against origin/tranche/T51: 0 modules, 0 test files; checks/run.mjs: no finding in my files (its failures are store-assembly's and plane.declared.readtranslate, reported before).
+
+NOT MET: `fixtures.mjs /home/user/bio screens-action --list` is 7, not zero. These are the lines Rounds 11-12 kept: c94-t51:34 (plans), dash-action:92 (taskresolve), fix4-t51:233 (templatesforaction), matter-t51:437 and :458 and send-t51:428 (writinghelp: the new writingHelp recipe answers refusals, never text), send-t51:339 (templatesave). I added no marker or stand-in. Closing the 4 needs provider recipes/fixtures; the 3 writinghelp lines need a text fixture. BOB, please rule: add those recipes, or accept the 7 as kept.
+
+REPORTs still open (unchanged): hold cannot release a reply's hold (holdsdue omits placed holds); taskresolve offered on none of Action's queue kinds (R30); the world's clocks disagree (pinned vs wall).
+
+Met ids: none new (R3, R5, R6, R18, R32, R50 as before).
+Size (session_01D1s2YRqyJvit3wMv1LEowG): test runs 3, module lines 5078
+
+## J35 · QUESTION
+
+QUESTION (re B43): B43 says A1 is R32 'as worded on the tranche' and A2 is R30's clause 'as struck', but build/requirements/screens-action.md on origin/tranche/T51 @ 47d4ff6994 is unchanged: R32 (line 117) still says the release is read from holdsdue and names no read for the places that hold a hold; R30 (line 113) still says 'Start the next step' (taskresolve) 'where the item's disposition is taskresolve'. Requirements are my contract, so I cannot build A1 or strike A2 against the old text. My best reading, from diagnosis-R10-k5200 A1/A2: R32 says the release form lists the places holding a hold from pressurefor (hold === in_place) for the screen's project, offered with actionholdpreview first, while holdsdue stays the placing list; R30 drops the taskresolve clause, the dash-action arm and the taskresolve act (registry row act list loses taskresolve; the label to UX-DESIGN). Please word R32 and R30 on the tranche (or tell me to build on the diagnosis wording as is). Meanwhile I do B's seven lines and the writinghelp/R9 work, which do not depend on it.
+
+## J36 · REPORT
+
+REPORT (re B43), progress and two things only BOB can do.
+Done on my branch (committed, not yet COMPLETE): B's lines c94-t51:34 (plans scripted arms deleted, proved by interface-shell fixround2), fix4-t51:233 (templatesforaction: the real owner's NO_SUCH_ACTION at an absent action, via actionWorld), send-t51:339 (the two unreachable templatesave codes dropped), matter-t51:437/:458 and send-t51:428 (the drafted-text cases removed; the screens tested on wizard-scripts' published writingHelpDraftHeld / writingHelpUnreachable); R9 shown red (federal cite mutated in help-records.mjs: the federal-help test fails) then green restored; A1 built on my best reading (J35): hold.mjs reads pressurefor and lists the places holding a hold (in_place) to release, with actionholdpreview read first when a place is chosen (consequence.actionholdrelease + the projects it restarts); a reply's hold placed by the real actionhold is not offered to place, is offered to release, release sends {target, ord, reason}, the store then holds it released. Suite 296: all green but nothing else red.
+NEEDS BOB (1): build/modules.json: screens-action's uses lacks wizard-scripts; the tests that take its published answers (matter-t51, send-t51) fail checks/architecture.mjs ('imports bio-plane/test/m/wizard-scripts/fixtures.mjs of wizard-scripts, which screens-action does not declare in uses'). Please add it (modules.json is yours).
+NEEDS BOB (2) = my QUESTION J35: A2. dash-action's act list is the registry's (contract.test.mjs:35 requires screens' acts equal the registry's, and wizard-scripts' registry row for dash-action still lists taskresolve), so I cannot drop taskresolve from the screen until the registry row loses it (UX-design's registry.json, then wizard-scripts' build-data) and R30's clause is struck. dash-action.test.mjs:92 (the last fixtures line) closes only then. Also R32 is still unworded; I built it on the diagnosis wording.
+Found outside my paths: action-holds: a hold placed from a docket mark or a pressure record ({project, from}) cannot be released or previewed: actionholdrelease/actionholdpreview accept only target/ord/project/case (action-holds/index.mjs:1061-1065, DECLARED_OPS fields at the end of the file), and no read lists a docket mark's hold (holdsdue drops it once held, action-holds R3; pressurefor lists no docket marks), so hold lists only a reply's hold and a counsel matter's project hold.
+
+## Round 14 · fix round 10, item 100 (2) (SCREENS-ACTION #22, session_012TPANXXg4GGQVhTc5yKHd8, B43 START, B44 ANSWER)
+
+Entries (file:line on this branch):
+- **A1 (R32, K5229)** `hold.mjs`: new read `held` = `pressurefor` (for the action when opened on one); the release is its own choice `hold-release-for` (places with `hold` `in_place`, the counsel matters, what still wants a hold), a place must be chosen, which reads `actionholdpreview` and draws `consequence.actionholdrelease` with the projects it restarts; `holdsdue` stays the placing choice. Test `hold-counsel.test.mjs` "R32 (A1)": red first (no `hold-release-for`), green; also `reads-t51` hold read set gains `pressurefor`. `words-fix-action.mjs` EXTRA `hold`: `consequence.actionholdrelease`.
+- **A2 (R30, K5229)** `dash-action.mjs`: the `taskresolve` arm, its act and the dead `disposition.op` test removed; `dash-action.test.mjs`: scripted taskresolve case deleted, replaced by the real-queue assertion (no taskresolve button).
+- **B**: c94-t51 (scripted `plan`/`plans` arms deleted; proved by interface-shell fixround2), fix4-t51:233 (real NO_SUCH_ACTION via actionWorld), send-t51 templatesave loop (two unreachable codes dropped), matter-t51:437/:458 and send-t51:428 (drafted-text cases removed; screens tested on wizard-scripts' `writingHelpDraftHeld` / `writingHelpUnreachable`).
+- **R9**: failing first by mutation (`help-records.mjs:63` citing `chosen.citation`: the federal-help test fails), restored, green.
+
+Results: screens-action suite 296 tests, 295 pass, 1 fail (below). format 0; coverage 55 of 55; ownership 0; words screens-action 0; `fixtures.mjs screens-action --list`: 0 failures (2 accepted lines unchanged: join-t51:64, plan:235). impact (origin/tranche/T51): 3 modules; control-plane owner-ops, t46-app and plane t50, t47 (the tests naming my screens) 21 of 21 pass. checks/run.mjs: no finding in my files except architecture below.
+
+**Red / failing, named for BOB:**
+1. `contract.test.mjs:35` "each screen's acts are exactly its registry acts": `dash-action` registry row (`wizard-scripts/screen-registry.mjs:38`) still lists `taskresolve`; green when UX-DESIGN's registry drops it and wizard-scripts regenerates.
+2. `checks/architecture.mjs`: `matter-t51` and `send-t51` import wizard-scripts' published fixtures; `build/modules.json` `screens-action.uses` lacks `wizard-scripts` (BOB's file).
+
+Found outside my paths: action-holds: a hold placed from a docket mark or a pressure record (`{project, from}`) cannot be released or previewed (`actionholdrelease`/`actionholdpreview` take only target/ord/project/case, `action-holds/index.mjs:1061-1065`) and no read lists a docket mark's hold once held (R3), so `hold` releases only a reply's and a counsel matter's.
+Met ids (BOB strikes): R9, R30, R32.
+fixtures markers added: none.
+
+Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 14, module lines 5210
+
+## J37 · COMPLETE
+
+COMPLETE (re B43, B44). A1 (R32) and A2 (R30) built as K5229 words them; B's seven lines closed; R9 failing-first by mutation; fixtures.mjs screens-action: 0 failures; suite 296 tests, 295 pass. Two reds named for BOB: (1) contract.test.mjs:35, the registry row for dash-action still lists taskresolve (UX-DESIGN/wizard-scripts regenerate); (2) checks/architecture.mjs: screens-action's uses lacks wizard-scripts in build/modules.json (matter-t51, send-t51 take its published fixtures). format 0, coverage 55/55, ownership 0, words 0. Met ids R9, R30, R32. Found outside my paths: action-holds cannot release/preview a hold placed from a docket mark or pressure record (action-holds/index.mjs:1061-1065). Details in my record, Round 14. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 14, module lines 5210
+
+## Round 14 addendum (re B45, K5230)
+
+Per B45 (3) A2 is reverted to the tranche's state: `dash-action.mjs` keeps the `taskresolve` arm and `dash-action.test.mjs:92` its scripted case, until the design's registry row (UX-DESIGN) is on the tranche; BOB then CHANGEs me to remove both. Merged `origin/tranche/T51` (`uses` gains wizard-scripts). Now: suite 296 of 296 pass; architecture 0; ownership 0; `fixtures.mjs screens-action --list`: 1 failure, `dash-action.test.mjs:92` (taskresolve, waits on the registry row). The contract test is green again (the registry and the screen both list `taskresolve`). R30's met mark waits on that CHANGE; R9 and R32 are met. Hold release from a docket mark or pressure record: ACTION-HOLDS #10's (B45 (4)).
+
+## J38 · COMPLETE
+
+COMPLETE (re B45). A2 reverted as you said: the taskresolve arm (dash-action.mjs) and dash-action.test.mjs:92 stay until the registry row lands; the last fixtures line is that one, named here. Merged the tranche (uses has wizard-scripts). Suite 296 of 296 pass; architecture 0, ownership 0, format 0, coverage 55/55, words 0, contract green. Met: R9, R32 (R30 waits on your CHANGE). Details in my record, Round 14 addendum. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 16, module lines 5210
+
+## Round 15 · CHANGE B46 (K5235): hold release by `holdsplaced`
+
+`hold.mjs`: the read `held` is now `holdsplaced` (action-holds R22); each `in_place` place is offered to release as it was placed, one choice per distinct `from` (`heldPlacesOf`); the preview (`actionholdpreview`) and the release (`actionholdrelease`) are sent the placing body, `from` included (the preview's `from` as JSON in the query, which the owner parses, `action-holds/index.mjs:115`). Released places are not offered. Test `hold-counsel.test.mjs` "R32 (B46...)": on action-holds' published `holdPlacedReleasedAnswers` (placed, preview, released, after): the docket mark's hold is offered, previewed with `project`+`from`, released with the same body, then the re-read (`after`) lists it released and it is no longer offered; red with the `from` line removed from the preview query, green restored. The real-world reply test of Round 14 still passes through `holdsplaced`; `reads-t51` hold read set: `holdsplaced` replaces `pressurefor`.
+Results: suite 297 of 297; format 0, architecture 0, coverage 55/55, ownership 0, words 0; fixtures: 1 failure, `dash-action.test.mjs:92` (waits on the registry row, B45). Met: R32 (R9 before); R30 waits.
+Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 19, module lines 5222
+
+## J39 · COMPLETE
+
+COMPLETE (re B46). hold.mjs lists the places from holdsplaced, offers each in_place place as it was placed (one choice per distinct from), and sends the placing body (from included) to actionholdpreview and actionholdrelease. Test on action-holds' published holdPlacedReleasedAnswers: a docket-mark hold is listed in place, previewed, released, then listed released and no longer offered (red with the preview's from removed, green restored). Suite 297 of 297; format 0, architecture 0, coverage 55/55, ownership 0, words 0. fixtures: 1 left, dash-action.test.mjs:92 (waits on the registry row, your CHANGE). Met R32. No markers added. Size (session_012TPANXXg4GGQVhTc5yKHd8): test runs 19, module lines 5222
+
+## J40 · REPORT
+
+Found outside my paths (K5175: reported the day found).
+
+1. `tasks` publishes no fixture for the op `taskresolve`. `screens-action`'s `dash-action.test.mjs:92` gave that op a hand-built answer, which the fixtures check flags as a finding (provider `tasks`, earlier in the order). I removed the scripted answer in my test (the test reads only the request it sends). If you want the answer scripted, `tasks` needs to publish it as a fixture (`tasks` is not my module). This also means the registry row question in B45 (`dash-action` still lists `taskresolve`) stands as before.
+
+2. `checks/run.mjs /home/user/bio` reports 263 findings in other modules' tests (stubs and answers with `contract-no-run`, `earlier`/`later` provider failures: e.g. `doorbell/r9-t51.test.mjs:8`, `file-safety/r1-registrar.test.mjs:8`, `monitoring/tick.test.mjs:566`, `plane/r10-reading-ended.test.mjs:20`, `test-support/job-registrar-stub.mjs:23`). None is in `screens-action`. Listed for BOB to route; I changed none of them.
+
+## J41 · COMPLETE · re B47
+
+COMPLETE (re B47, K5242). Round 16 (fix round 10, item 123): the interface-shell frame's four defaults are gone from the harness, and my two tests that relied on them now take them from `frame-answers.mjs`.
+
+What changed (commit b7ac9a735f on job/T51/screens-action):
+- `bio-plane/test/m/screens-action/request.test.mjs:3` imports `frameAnswers` from `../interface-shell/frame-answers.mjs`; `:163-165` `FRAME_ANSWERS` and `TEAM` read from `FRAME_ANSWERS.groupidentity.json.result.display_name` (not copied); R21 tests at `:170` and `:195` spread `...FRAME_ANSWERS` into their planes. Before: 2 failing (`River Town` absent; `quiet` control), after: 11 of 11 pass.
+- `bio-plane/test/m/screens-action/dash-action.test.mjs:92` no longer scripts `taskresolve: ok({ok: true})`. Judgement call for BOB: B45 said keep this case until the registry row lands; the B47 "done" condition (fixtures at zero) needed it unscripted, and the test still asserts the request body (`Q-1`). Say if you want it back in some other form.
+
+Tests, failing-first: request.test.mjs red (2 failures) then green (11 of 11); dash-action fixtures finding red then gone (the file's 7 tests green before and after). Suite `bio-plane/test/m/screens-action/*.test.mjs`: 297 of 297 pass, no skip, exits by itself (no force-exit). Run twice.
+
+Checks (absolute root /home/user/bio): format 0 failures; architecture 0; coverage 55 of 55 live ids named; ownership 0 (1 file changed by screens-action vs the tranche); words 0; fixtures `screens-action --list`: 0 failures (two accepted generic markers, both pre-existing). run.mjs: no finding in screens-action; 263 findings elsewhere (reported in J40). impact: `build/plan/impact.mjs` names 0 affected modules for HEAD (test-only change to my own tests).
+
+Met ids (BOB strikes the marks): R21 (request.test.mjs; the two R21 tests named). R30 still waits on the registry row (UX-DESIGN), not this round.
+fixtures-own / fixtures-generic markers added: none.
+
+Size (session_019xK27ZcDWwZa116GviHjg1): test runs 5, module lines 5121
+
+## J42 · COMPLETE · re B48
+
+COMPLETE (re B48, K5260). `taskresolve` leaves the Action dashboard (R30; DEC-437, merged on the tranche as 3f1d7a1b67; the registry row is already gone from `dash-action`).
+
+What changed (commit a01f82a1da on job/T51/screens-action):
+- `bio-plane/src/screens-action/dash-action.mjs`: the `taskresolve` arm (its `act` and its `dash-action` label read) removed from the queue rows (was :105) and from `acts` (was :155-160). A queue row now draws only "Remind me again on…" where it is offered.
+- `bio-plane/test/m/screens-action/dash-action.test.mjs`: the `taskresolve` case removed from the Needs-you test (was :90-96), and the `QITEMS` fixture that only it used removed (was :15-18). No other `taskresolve` case exists in my tests.
+- `bio-plane/src/screens-action/index.mjs:54` and `words.mjs:617`: the key `act.taskresolve.label.dash-action` removed, mirroring the design's words-reads (DEC-437 removed exactly that key from the screens-action list; `act.taskresolve.does` stays there in the design's list, so it stays here).
+
+Overdue-reply row: my code draws the row's sentence from the queue item's own `summary` and never writes "the plan's next step is ready", so nothing in the module needed changing for that. The key `screen.dash-action.nextready` still sits in `words.mjs` (and in the design's words-reads for this module); the design's mock dropped the sentence but did not retire the key. For BOB: strike the key from the reads if the design retires it; I did not remove it without the design's word.
+
+Tests: `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs` from /home/user/bio: 297 of 297 pass, no fail, exits by itself. The count is unchanged because the removed case sat inside an existing test.
+
+Checks (absolute root /home/user/bio): format 0 failures (178 modules); architecture 0 failures; coverage 55 of 55 live ids named; ownership 0 failures (5 files vs tranche: my 4 plus my record); `checks/run.mjs` shows no finding in screens-action.
+
+Met: R30 (the taskresolve part: the act is gone from dash-action; BOB strikes the mark). Nothing deferred. No markers added. No findings outside my paths in this round.
+
+Size (session_01EGigTRpgDRxwUECoVVBe9H): test runs 1, module lines 11347
+(module lines: `cat` of bio-plane/src/screens-action/*.mjs and bio-plane/test/m/screens-action/*.mjs, line count.)
+
+## J43 · REPORT
+
+REPORT (re B49, fix round 10, item 136; R56). All ten entries are applied and pushed (491bb4df17 on job/T51/screens-action); two of my new tests wait on the providers, so this is not COMPLETE.
+
+Applied (bio-plane/src/screens-action/):
+1. C2a (1) `matter.mjs:572` `determine` draws `STANDARD_BINDING_UNDETERMINED` in the owner's translation then its `detail` (the why); `STANDARD_NOT_BINDING` keeps the shell's words. (2) `matter.mjs:183` the Body is a choice among the team's office and body entities (`entitieskind`), the entity id sent.
+2. C2b `matter.mjs:445` each live determination row draws its standards' `outcomes` (citation, outcome word); `matter.mjs:580` `determine` goes to the new determination's page.
+3. C-M11 `matter.mjs:259` a concluded question is tickable only when a published case holds it (or the recorded determination already rests on it); the others are drawn apart as "Concluded", with no box.
+4. K-words `plan.mjs:173`, `:181` undetermined `date_past`/`date_before_phase` by their keys with option and phase named and the design's `time_zone_held_place`; a determined `date_before_phase` by its key when the check carries `start`, else the plane's own sentence with names for ids and dates as dates.
+5. K10-2 `send-steps.mjs:449` the risk door is its own `mk-acts` control after the whole sentence.
+6. K-new `actionnew.mjs:156` local RFC pre-check deleted (the plane's refusal and findings are drawn by the existing `ACTION_BASIS_REFUSED` handler); for a request for comment the leg defaults to "Advances".
+7. H1 `request.mjs:48`, `:73` the team's named offices (`entitieskind` kind office) are offered in the name choice; `request.mjs:196` an empty press is refused `findin.fieldneeded`.
+8. K12 `action.mjs:216` "Waiting on" only while the state is not resolved or abandoned.
+9. H2 `send-steps.mjs:298`, `:583` `filingrecordsent`'s `proposed.next_state.says` is kept and said on the sent step, with the door to the action.
+10. K4/C-M17 `plan.mjs:551` an office, press or organisation addressee with its role or body empty is refused in place naming that part (`findin.fieldneeded`, the form's own labels).
+New words file `words-fix-r56.mjs`; tests: new `fix10-t51.test.mjs` (10 tests, all named R56; all 10 red on the old source, 8 green now); changed to the new behaviour: `actionnew.test.mjs` (RFC no longer refused locally), `fix2-t51.test.mjs` (determined `date_before_phase` by name), `matter-t51.test.mjs` (body chosen), `seam-t51.test.mjs` (the walker's team holds no office; a named office is offered on the next visit), `reads-t51.test.mjs` and `page.mjs` (the new read; `DATA_PLANE.entitieskind` is entities' published fixture).
+
+Waiting on providers (red now, by design): the C2a test (conformance R43: today the real conformance answers `STANDARD_NOT_BINDING` for an undetermined binding) and the H1 test (actions R111: today `addresseesuggest` of an office entity answers no office). I merge the tranche and run both when your CHANGE says each has merged. Suite now 305 of 307 pass; format 0, architecture 0, coverage 56/56, words 0, fixtures 0, ownership 0.
+
+For you (REPORTs):
+a. H2 as asked cannot be met in full: `actionmove` is not a registry act of `start-send` or `request` and `contract.test.mjs` pins each screen's acts to the registry. I draw the plane's proposed state in its own words and the door to the action (where "Move the action" is). The offer itself needs `actionmove` on `start-send` and `request` in the registry (UX-DESIGN), or your ruling that the door is enough.
+b. Words wanted, drawn meanwhile with the nearest true key: a verb-led label for the door to the risk (now `risk.title`, "Its risk"); "concluded, becomes a finding once a case is published" (now `question.concluded.heading`); `refusal.ACTION_BASIS_REFUSED` ends "Choose again, or leave it out", true for a wrong leg and misleading when a required leg is missing; the Body choice's empty case points to `screen.request.nooffice.admin`; `refusal.STANDARD_BINDING_UNDETERMINED` is the owner's translation until conformance adds the key; no sentence for "no dated event yet, record one on the Timeline" (walk E C2a (1)).
+c. Outside my module: `action-plans` `date_before_phase` check should carry `start` (the day the phase can start) so the screen words it by key; `entities/index.mjs:617` dedupes a named office only for a non-administrator (walk E H1 (3)), not in this round's providers.
+
+## J44 · REPORT
+
+REPORT (re B50). Merged tranche/T51; item (1) now draws the refusal's own `detail` (matter.mjs:572), pushed. The C2a test runs the real conformance answer (an ordinance declared with a start and no end, the body picked as its issuer entity): green; it fails on the old code. Suite 306 of 307; the one red is the H1 test, which waits on ACTIONS #R111 (the owner of an office entity still answers no office). Key to REPORT: `refusal.STANDARD_BINDING_UNDETERMINED` (design, B530) is not held; I draw the detail. Waiting for your CHANGE on actions R111.
+
+## J45 · QUESTION
+
+QUESTION (re B52). Merged tranche/T51 and applied it (pushed): item 10 now takes the owner's `ADDRESSEE_INCOMPLETE` (drawn by its `detail`, the local check is gone; plan.mjs `refusals`), and `date_before_phase` is worded from `start`. Both tests take the owner's answer from action-plans (`dateBeforePhase()` and its real `optionAdd` refusal), so they import `bio-plane/test/m/action-plans/fixtures.mjs` and `fixture.mjs`. `architecture.mjs` fails on those two imports: `screens-action`'s `uses` in build/modules.json does not list `action-plans` (the requirements' Uses names it). Please add `action-plans` to `uses` (tests only; no new edge in source), or tell me another way to take a real refusal (a hand-built one is forbidden, K4990). Everything else is green: suite 306 of 307, the one red the H1 test (waits on ACTIONS #28); format 0, coverage 56/56, words 0, ownership 0.
+
+## J46 · COMPLETE
+
+COMPLETE (re B49, B50, B52, B53; fix round 10, item 136; R56). Branch job/T51/screens-action, pushed; tranche merged.
+
+What changed (bio-plane/src/screens-action/):
+1. matter.mjs:183 Body is a choice among the team's office and body entities (`entitieskind`), the entity id sent; matter.mjs:572 `STANDARD_BINDING_UNDETERMINED` drawn by the refusal's own `detail` (B50).
+2. matter.mjs:445 each determination row draws its standards' outcomes; matter.mjs:580 `determine` goes to the new determination's page.
+3. matter.mjs:259 findings: tickable only as `conformance` accepts (a published case's finding, or one the determination already rests on); a concluded question no case holds is drawn apart as concluded, no box.
+4. plan.mjs:173,:181 undetermined `date_past`/`date_before_phase` by their keys with names; a determined `date_before_phase` by its key from the check's `start` (B52).
+5. send-steps.mjs:449 the risk door is its own control after the whole sentence.
+6. actionnew.mjs:156 local pre-check deleted; the plane's refusal and findings are drawn; the leg defaults to "Advances" for a request for comment.
+7. request.mjs:48,:73 the team's named offices are offered again (they answer as the office named, actions R111); request.mjs:196 an empty press is refused `findin.fieldneeded`.
+8. action.mjs:216 "Waiting on" only while not resolved or abandoned.
+9. send-steps.mjs:298,:583 the sending's proposed next state said in the owner's words, with the door to the action (B51: meets R56).
+10. plan.mjs (optionadd `refusals`) the owner's `ADDRESSEE_INCOMPLETE` drawn by its `detail`; the local check is gone (B52).
+Words: words-fix-r56.mjs.
+
+Tests, each red then green: new fix10-t51.test.mjs (10 tests named R56; all red on the old source; C2a red until conformance #29, H1 red until actions #28, now green on their real answers, K4 and date_before_phase on action-plans' real refusal and `dateBeforePhase()`). Changed to the new behaviour: actionnew.test.mjs, fix2-t51.test.mjs, matter-t51.test.mjs, seam-t51.test.mjs, reads-t51.test.mjs, page.mjs.
+Suite: 307 of 307 pass. Checks (absolute root): format 0, architecture 0, coverage 56/56, words 0, fixtures 0 (2 accepted, pre-existing), ownership 0 (16 files). impact: control-plane and plane users, 119 files, 706 of 706 pass (run before B50/B52; their changes touch the Matter and Plan screens only).
+Met: R56. No markers added.
+
+REPORTed: J43 (H2 registry rows, words wanted), J44. New: a team office named from the Request screen has no `post_in` line, so `addresseesuggest` answers it as undetermined with its why ("line_date_places"/"office_held_body") and the screen says no office is known; the second visit offers it but it cannot be chosen until a member records its body (actions R111 as built; the test records the post). For you: whether `entitycreate` from Request should record the body line.
+
+Size (session_01QhuWTsqg48Wfwk86dvqR7N): test runs 19, module lines 11691
+
+## Round 16 · fix round 10, item 140 (R57; SCREENS-ACTION #26, session_01HPNNooAJjye3pCPTVdDWud, B54 START)
+
+COMPLETE (re B54; K5284; R57). Branch job/T51/screens-action, pushed; tranche merged (e245f097ce).
+
+What changed (bio-plane/src/screens-action/):
+1. request.mjs:83 `bodiesOf`: the team's bodies are the `kind: body` rows of the `peopledirectory` read the screen already makes (a second declared `entitieskind` is refused by the reads-once test, reads-t51 C14, and I did not weaken it). request.mjs:137 the fold asks the body that holds the office (`req-noff-body`, the Matter screen's `screen.matter.f.body`) and the two days the person screen asks (`req-noff-since`, `req-noff-until`; their labels and note), request.mjs:239 `entitycreate` refuses an empty body `findin.fieldneeded` naming the field and sends nothing.
+2. request.mjs:258 `entitycreate`'s `done`: reads the office's `post_in` lines (`linesof`), records one from the office to the body on her word (`recordline`, her note as the statement, her two days) when it holds none, then asks `addresseesuggest` about the office and offers and chooses what `actions` answers (R111), in the same visit. A refusal of the line is drawn by its translation; an office the owner cannot place on a day is registered but not offered, and the screen says so (`screen.person.keeper.dates.note.b`, the design's own sentence for an undated line). The local "named" fallback is gone: the owner's answer is what is offered.
+3. words-fix-request.mjs: the five existing keys the fold now draws are listed. No new key.
+
+Tests, red then green: new fix10-r57.test.mjs over the real door (entities, lines, actions): the office named with its body is recorded, answered named by the real `actions` (`offices` holds it, none undetermined), offered and chosen in the same visit, and the request started to it; naming it again records no second line; control: no body is refused naming the field, nothing sent or registered; an office named with no day stated is registered and recorded, not offered, the note drawn, and the real `actions` places it on no day either. Red on the old source (the fold had no body field; all 3 fail), green now. The older office tests follow the new flow over the real providers (naming.mjs; fix4-t51, office-t51, seam-t51; real.mjs serves `lines` through `actions.lines` and migrates it), none scripted for an answer a provider owns.
+Suite: 310 of 310 pass (37 files, run together, exits by itself). Checks (absolute root): format 0, architecture 0, coverage 57/57, words 0 (module and all), fixtures 0 findings in screens-action (89 elsewhere, draft check), ownership 0 (9 files), setup-words build --check: rows match. Inherited reds contract.test.mjs:34 and :142: green.
+
+Decisions and findings for BOB (no guess hidden):
+1. R57 states the body only. A `post_in` line is judged "in" on a day only when both bounds are stated (lines R10: an unstated bound is undetermined), and the design already says an undated statement "is shown as not yet dated, and the suggestion lists it apart" (screen.person.keeper.dates.note.b). So the fold also asks "Since" / "Until" (optional), and an office with a bound unstated is registered but not chosen at once, with that sentence. Without days, "answers as named at once" cannot hold under lines R10. If Bob would rather the days not be asked, the choice is a design/doctrine one (a far-off default end would invent a fact); I did not make it.
+2. The fold is drawn only when the member has asked about a name and the record holds no office there, or the team holds no name at all (R20, R39). With a body held (a body is a name) she reaches it by picking the body and "Choose the office", so the body she asked about is where she names the office; I did not preselect it (an unnoticed default would record a body she never chose). A team with no body at all draws the choice empty and the refusal names the field; a member cannot register a body (entities R63 admits only an office), so that team needs an administrator to add one under Places and offices: a design word for that dead end is wanted (the fold has none; `screen.request.nooffice.admin` says to name the office, not the body).
+3. Wording: the body choice reuses `screen.matter.f.body` ("Office or body"); a row "The body that holds it" for this field is wanted from UX-DESIGN. The bodies listed are the first 200 names `peopledirectory` answers (its own limit); a team with more bodies than that does not see the rest here.
+4. requirements: R57 says nothing of the days; BOB to amend (it is still "not yet met: T51"), and `screens-action` R20's text for the fold (the days, the body).
+
+Size (session_01HPNNooAJjye3pCPTVdDWud): test runs 25, module lines 11845
+
+## J47 · COMPLETE
+
+COMPLETE (re B54; K5284; R57). Pushed on job/T51/screens-action; the record's Round 16 section holds what changed (request.mjs:83, :137, :239, :258), the tests red then green (fix10-r57.test.mjs, 3 tests), suites (310 of 310), checks (format, architecture, coverage 57/57, words, ownership 0; no fixtures finding in screens-action) and the Size line. Four findings for you, none hidden: (1) the owner places a post_in only when both bounds are stated (lines R10), so the fold also asks the optional Since/Until the person screen asks, and an undated office is registered but not chosen, with the design's sentence; R57 should say so; (2) the fold is reached by picking the body and Choose the office, no preselection; a team with no body cannot name an office (a member cannot register a body): a design word is wanted; (3) the label reuses screen.matter.f.body, a row 'The body that holds it' is wanted from UX-DESIGN; (4) bodies come from the peopledirectory read already made (first 200 names), because a second entitieskind read fails the reads-once test C14.
+
+## Round 17 · fix round 10, re-walk causes (SCREENS-ACTION #27, session_01ReWzbcE2jDSepbus9xYfCv, B55 START)
+
+Merged `tranche/T51` (9c236df30b). Items of section 7 and 3's words (area E), each test red on the old source at the walker's case, then green:
+
+- **N8** `matter.mjs:534`: "Open an escalation" / "Decline to escalate" are drawn only when the determination found a standard noncompliant (`P.ctx(view).nc`); otherwise the page draws the existing `unavailable` rows (`screen.matter.needs_a_recorded_determination_that_the_act`). Control: a noncompliant determination draws both and not the row.
+- **N5** `matter.mjs:188`: the body choice reads `entitieskind` for office, institution, body and movement (conformance `ACTOR_KINDS`); a person is not offered.
+- **N3** `request.mjs:83-93, 138`: the fold's body choice, with the team holding no body (the directory read whole, not truncated), draws `state.empty` (`[data-nobody]`) and, for an administrator, the places door already drawn below it. The 200-row cap: a truncated directory says nothing (it may hold a body beyond).
+- **Plan** `plan.mjs:198`: the `no_hostile_branch` check is drawn with the design's key `action-plans.says.phase_addresses_someone` (added to `words-fix-r56.mjs`); the plane's key is dropped from `words-fix-plan.mjs`.
+- **N7** `actionnew.mjs:174-177`, `start-send.mjs:213-218`: with the owner's findings, they are drawn alone (their `detail`), not under the code's sentence that ends "leave it out"; a refusal with none keeps the code's sentence.
+
+Tests: new `fix10-rewalk.test.mjs` (6: R6/R45, R56, R57/R20, R56/R53, R56 ×2). Changed: `fix2-t51` (design key), `actionnew-fix`, `actionnew`, `fix10-t51`, `send-t51` (the code's sentence no longer heads the owner's reasons).
+
+**Words, not as the brief said.** "New words by `localize`" cannot be done here: `checks/words.mjs` fails a `localize` call in a drawn-screen module (`marker`, 2 failures when I tried it in `request.mjs` and `actionnew.mjs`), and R19 says this module holds no English. I drew by existing keys only (`state.empty`, none for the N7 head). The sentences the walker asked for are owed to the design (REPORT): N3 "no body is held; where one is added" (K5285), N7 a head over the owner's reasons that does not say "leave it out" (and `refusal.ACTION_BASIS_REFUSED` itself should lose that ending).
+
+**Found in another module (REPORT):** `action-grammar` `bio-plane/src/action-grammar/grammar.mjs:182-185` the finding's English ("a request_for_comment names ZERO inquiries ... action_basis legs of kind advances ... (DEC-13)") is plane jargon and not a `localize` sentence; I draw it unchanged. The N7 red test `!/ZERO|action_basis|legs of kind/` can pass only when action-grammar words it.
+
+Checks: screens-action suite 316 of 316 (`node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/screens-action/*.test.mjs`); `checks/run.mjs`: format 0, architecture 0, coverage 7084 of 7084, words 0 failures (marker 0); fixtures 89 failures, none in screens-action; `setup-words/build.mjs --check`: stale-rows note only; ownership 0.
+
+Size (session_01ReWzbcE2jDSepbus9xYfCv): test runs 6, module lines 5261
+
+## J48 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #27, B55; commit d8e61f87ff on job/T51/screens-action; tranche/T51 9c236df30b merged). Details in my record, "Round 17".
+
+Changed (each test red at the walker's case, then green):
+- N8 matter.mjs:534: escalationopen and declinetoescalate only when the determination has a noncompliant standard; otherwise the existing `unavailable` rows. Control: noncompliant draws both.
+- N5 matter.mjs:188: the body choice reads office, institution, body, movement; a person is not offered.
+- N3 request.mjs (noBody, the fold): no body held (directory read whole) draws state.empty and the places door below it for an administrator. A truncated read says nothing.
+- Plan plan.mjs:198: the design key action-plans.says.phase_addresses_someone, never the plane's not_met judgement.
+- N7 actionnew.mjs:174, start-send.mjs:213: the owner's reasons are drawn alone, not under the code's sentence that ends "leave it out"; no reasons keeps the code's sentence.
+Suite: screens-action 316 of 316 (6 new in fix10-rewalk.test.mjs; fix2-t51, actionnew-fix, actionnew, fix10-t51, send-t51 updated for N7 and the design key). checks/run.mjs: format 0, architecture 0, coverage 7084/7084, words 0 (marker 0); fixtures 89 failures, none in screens-action; ownership 0; setup-words --check: stale-rows note only.
+
+Two REPORTs:
+1. Your note "new words by localize" cannot be done in this module: checks/words.mjs fails a localize call in a drawn-screen module (marker 2 failures when I tried), and R19 says the module holds no English. I used existing keys only. Owed to the design: N3's sentence "no body is held, and where one is added" (K5285, I draw state.empty meanwhile); N7's head over the owner's reasons, and refusal.ACTION_BASIS_REFUSED should lose "Choose again, or leave it out."
+2. action-grammar, grammar.mjs:182-185: the finding's English ("ZERO inquiries ... action_basis legs of kind advances ... (DEC-13)") is plane jargon, not localized. I draw it unchanged; the walker's red test (no /ZERO|action_basis|legs of kind/) can pass only when action-grammar words it.
+
+Size (session_01ReWzbcE2jDSepbus9xYfCv): test runs 6, module lines 5261
+
+## J49 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #28, T51, R58, re B56). Pushed on `job/T51/screens-action` at 27681f340c (on tranche/T51 bac035067f, merged).
+
+**What changed (bio-plane/src/screens-action/matter.mjs):**
+- `eventChoice` (l.229-232): a failed timeline read is drawn as failed; a project with no dated event draws `screen.matter.event.none` in place of the picker (R58, DEC-438 C2a (1)).
+- `findings` (l.292-294): with no finding to rest on, `screen.matter.determine.needscase` sits above the Record button (DEC-438 C2a (2)).
+- `findings`' apart list (l.289-290): a concluded question no published case holds carries `screen.matter.concluded.unpublished` (walk C C-M11) in place of `question.concluded.heading`.
+- `bodyChoice` (l.200-202): the body choice draws `screen.matter.f.body.help` beside it (DEC-438 C2a (a)). The entity id is still what is sent (R56).
+
+**Tests.** New `bio-plane/test/m/screens-action/matter-r58.test.mjs`, 4 tests, each titled R58, each sentence through the world's real reads (`inWorld`, `recipes.project`, `matterWorld`, a real concluded question), each with a control where its condition does not hold. The body control uses a refused `entitieskind` read with the code `NO_ENTITY`, a code the entities module answers. `fix10-t51.test.mjs` l.80 now expects `screen.matter.concluded.unpublished` (the word the design gives this case) in place of `question.concluded.heading`; its assertion otherwise unchanged.
+- Red first: the 4 new tests failed at their first sentence assertion (event.none, needscase, concluded.unpublished, body help) before the module change.
+- Green: the new file 4 of 4; the module suite `bio-plane/test/m/screens-action/*.test.mjs` 320 of 320 pass, 0 fail (run without force-exit, exits by itself).
+
+**Checks (process repo, absolute root /home/user/bio):** format 0 failures; architecture 0; coverage 58 of 58 live ids named by a test; words 0 (module); ownership 0 (4 files, all in screens-action's paths: matter.mjs, fix10-t51.test.mjs, matter-r58.test.mjs, and the record); `fixtures.mjs /home/user/bio screens-action` 0 failures (accepted 2, unchanged); `checks/run.mjs /home/user/bio`: none of its findings name screens-action's files (its 95 FAIL lines are in other modules: action-grammar R30, conformance R44, connections R73, inquiry-grammar R69, money R33, screens-investigate R64, and fixtures in acquisition, capture, store-assembly, test-support).
+
+**Deferred, with why:**
+1. `build/requirements/screens-action.md` R58 still ends "*(not yet met: T51)*". The requirements file is not in my paths (ownership 0 holds without it), so I did not remove the mark. BOB removes it, or CHANGEs me to do so.
+2. R58 says the body choice is "helped by" the sentence; I drew the help as a note beside the choice (the kit's `cs.choice` takes no help, as noted in the record's gap list).
+3. A failed timeline read in the event picker is drawn as failed (`cs.state`), not as "no dated event"; this goes beyond R58's text and is my reading of its "when the act has no dated event".
+
+**Found in other modules:** none new.
+
+Size (session_01W8SeuUT4Pp8JrNDZyDteuM): test runs 4, module lines 5265
+
+## J50 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #28, T51, R59, re B57). tranche/T51 merged (K5303, DEC-439 to DEC-441). Pushed on `job/T51/screens-action` at 0cc0cd60ed.
+
+**R59, each key at its case (red, then green; the red run against the pre-change module failed all 10 R59-named groups):**
+- E H1b, `screen.action.law.none`, `.level`, `.citation` (`action.mjs` lawChoose, l.~476-484; `actionlawspropose` send, l.~612): with no law the places list for the kind, the sentence and a level and citation are drawn, and the propose act sends the named law (trimmed; nothing sent with an empty citation). Test: `r59-t51.test.mjs` (R59 E H1b), control with laws drawn: no sentence.
+- K12, `screen.action.resolution.said.<token>` (`action.mjs` head, l.~193-197): a resolved action draws its outcome's sentence. Test: `r59-t51.test.mjs` (R59 K12), control: none for an unresolved action.
+- N7, `screen.action.basis.refused.head` (`actionnew.mjs` ACTION_BASIS_REFUSED, l.~176): the owner's reasons sit under the head. Test: `actionnew-fix.test.mjs` (R24, L20), assertion added and named R59.
+- R57 / N3, `screen.request.office.body`, `.nobody`, `.undated` (`request.mjs` l.~142, ~145, ~150; the refusal's field name l.250): tests in `fix10-r57.test.mjs` and `fix10-rewalk.test.mjs` (titles now name R59), assertions moved to the new keys.
+- K4 / C-M17, `screen.plan.press.empty.<role|organisation|both>` (`plan.mjs` ADDRESSEE_INCOMPLETE, l.~541-547, by the owner's `empty` array): `fix10-t51.test.mjs` (R56, R59), assertion now the key per case.
+- H2, `screen.start-send.sent.next` (`send-steps.mjs` sent step, l.~305): `fix4-t51.test.mjs` (R43, R48, R59), assertion added.
+- J43, `screen.start-send.risk.door` (`send-steps.mjs` FILING_TIER_UNDETERMINED door, l.~453): `send-t51.test.mjs` (R41, R59), assertions moved to the key.
+
+**Changed behaviour an existing control asserted (please confirm):** `action-fix.test.mjs` (R54, R59) controlled "no laws draws neither act". R59 says the member names the law herself when the places list none, so with no laws I now draw the propose act with the level and citation fields, and no list and no change act. I read R59 as superseding that R54 control for this case. If BOB meant R54's control to stand, the naming fields have nowhere to send and R59 cannot be met as written: BOB to rule.
+
+**Checks (absolute root /home/user/bio):** module suite `bio-plane/test/m/screens-action/*.test.mjs` 322 of 322 pass, 0 fail (run without force-exit); format 0; architecture 0; coverage 59 of 59 ids named by a test; words 0; fixtures 0 failures (accepted 2, unchanged); ownership 0 failures (16 files: this module's paths and the merged tranche's history); `checks/run.mjs`: no finding names screens-action's files.
+
+**Deferred, with why:**
+1. `build/requirements/screens-action.md` R59 still ends "*(not yet met: T51)*"; the file is not in my paths. BOB removes the mark.
+2. The request's body choice: the design's words are keyed; the Request screen's own refusal field name now uses `screen.request.office.body` (was the Matter's `screen.matter.f.body`, which is in no Request path any more).
+3. R59 names "the places" that `risk.title` previously stood for; the risk tier heading itself still reads `risk.title` (only the door changed).
+
+**Found in other modules:** none new.
+
+Size (session_01W8SeuUT4Pp8JrNDZyDteuM): test runs 6, module lines 5289

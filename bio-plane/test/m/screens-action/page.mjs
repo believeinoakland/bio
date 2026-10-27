@@ -9,6 +9,7 @@ import { SCREENS } from "../../../src/screens-action/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { wordsOf, interfacePage } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, refusedIn, settle, textNodes, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
+import { entitieskind as entitiesListing } from "../entities/fixtures.mjs";
 
 export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER, ADMIN, word, hasWord };
 /** A word read through `setup-words` as a drawn text node holds it (whitespace collapsed): the tests assert keys, never a sentence's text (R19). */
@@ -21,6 +22,8 @@ export const D = (iso) => {
   return word("date.daymonthyear", { day: String(d), month: word("date.month." + month), year: String(y) }).replace(/\s+/g, " ").trim();
 };
 export const W = (key, vars) => String(word(key, vars)).replace(/\s+/g, " ").trim();
+/** What `escalation` says of the compliance exit when no compliant determination is live: its word, never a copy of it. */
+export const COMPLIANCE_SAYS = W("escalation.live_compliant_determination");
 /* R14: the classes a served stylesheet defines: the visual language's `civicsmith.css`, the design page's product rules (what
    interface-assets R7 serves as `shell.css`) and the shell's own `<style>` in the page. */
 const DOCS = join(dirname(fileURLToPath(import.meta.url)), "../../../../docs/development/ux-substrate");
@@ -32,6 +35,16 @@ export function servedClasses() {
   return new Set(parts.flatMap((t) => [...css(t).matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1])));
 }
 export const screen = (id) => SCREENS.find((s) => s.id === id);
+/** A change to a choice that drives its screen (`cs.choice` with `acts`): the select takes the value and the page redraws. */
+export async function choose(p, id, value) {
+  const el = p.doc.getElementById(id);
+  if (!el) throw new Error(`no choice ${id}`);
+  el.value = value;
+  p.fire(el, "change");
+  await settle();
+}
+/** The member who may read and not act: no capability. */
+export const READER = { ...MEMBER, capabilities: [] };
 
 export const open = (path, plane = {}, o = {}) => boot({ screens: SCREENS, plane, path, ...o });
 /** The path's steps, as the kit draws them (a link or span per earlier step, the current page last). */
@@ -93,7 +106,9 @@ export const QUESTION = "INQ-2026-ffffffffffffffff";
 export const QUESTION_TITLE = "Is closed the same as repaired?";
 export const PROJECT_QUESTIONS = { ok: true, project: PROJECT, items: [{ inquiry: QUESTION, title: QUESTION_TITLE },
   { inquiry: "INQ-2026-9999999999999999", title: "Who signed the closure memo?" }], cursor: null };
-export const DETERMINATIONS = { ok: true, items: [{ id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment" },
+/** The act as `conformance` answers it (R25): the event's id, the office and the day; the kind of the event is on the one read's `event` alone. */
+const ACT = { id: "EVT-2024-0001", event: "EVT-2024-0001", actor: { role: "City Administrator", body: "City" }, evidence: ["CON-1"], when: { value: "2024-03-01", precision: "day" } };
+export const DETERMINATIONS = { ok: true, items: [{ id: DET, project: PROJECT, act: ACT,
   outcomes: [{ standard: "STD-1", outcome: "noncompliant" }, { standard: "STD-2", outcome: "compliant" }], live: true, superseded_by: null }], limit: 200, truncated: false, cursor: null };
 export const PROJECTS = { bundles: [{ bundle_id: PROJECT, object_type: "project", title: "Pothole repairs" }], limit: 500, cursor: null, total: 1 };
 
@@ -155,7 +170,7 @@ export const PRESSURE = { ok: true, items: [{ arrived: { action: ACTION_ID, ord:
 /** `filingread` as filings R59 answers a prepared communication, as it was stored. */
 export const READ = (o = {}) => ({ ok: true, id: FILING, filing: FILING, action: ACTION_ID, form: "communication", purpose: "request",
   text: "We request the logs for 2025.", blanks: [{ name: "period", value: "2025", source: "fills:member:mai", label: { kind: "member_fill", by: "member:mai", machine_work: false, says: "x" } },
-    { name: "office", value: "City Clerk", source: ACTION_ID }], unfilled: [{ name: "cost_limit", why: "the record holds no value for this blank: the member fills it in" }],
+    { name: "office", value: "City Clerk", source: ACTION_ID }], unfilled: [{ name: "cost_limit", why: W("filings.why.record_holds_value") }],
   fills: [], template: null, disclosure: { machine: false }, notices: [], label: "x", at: "2026-10-09T10:00:00Z", approval: null, second_approval: null, sending: null, ...o });
 export const draft = (o = {}) => ({ filing: FILING, form: "communication", purpose: "request", label: "x", at: "2026-10-09T10:00:00Z",
   approval: null, second_approval: null, second_needed: false, signatories: [], voice: "group", sending: null, ...o });
@@ -170,7 +185,11 @@ export const PROFILES = { profiles: [{ id: "p", name: "p", covers: [] }], confli
     { rule: "records_response", applies_to: "records_request", units: "days", amount: 10, count: "calendar", citation: "Gov. Code § 7922.535(b)",
       extension: { days: 14, citation: "Gov. Code § 7922.535(c)" } },
     { rule: "immediate_disclosure", applies_to: "records_request", units: "days", amount: 3, count: "business", citation: "Mun. Code § 2.20.230" },
-    { rule: "meeting_notice", applies_to: "comment", amount: 72, count: "calendar", citation: "Open meetings law" }] } };
+    { rule: "meeting_notice", applies_to: "comment", amount: 72, count: "calendar", citation: "Open meetings law" }],
+  // `jurisdictions` R7, R96: the laws a records request can go under, each naming its own first-request window (`response`, a `deadlines` rule)
+  records_laws: [
+    { level: "state", name: "Testland Records Act", citation: "Gov. Code § 7922.535(b)", response: "records_response" },
+    { level: "city", name: "Testville Sunshine Ordinance", citation: "Mun. Code § 2.20.230", response: "immediate_disclosure" }] } };
 
 /** The test profile's `records_help` block (`jurisdictions` R93, R84: differing in every value from any first profile's). */
 export const RECORDS_HELP = { law: "Testland Records Act", days: 7, extra_days: 9, status: "researched", basis: "TEST",
@@ -181,7 +200,8 @@ export const RECORDS_HELP = { law: "Testland Records Act", days: 7, extra_days: 
     cost: "TRA § 8", cost_electronic: "TRA § 9", inspect_photograph: "TRA § 10", purpose: "TRA § 11" } };
 export const PROFILES_WITH_HELP = (help = RECORDS_HELP) => ({ ...PROFILES, view: { ...PROFILES.view, name: "Testville", records_help: help } });
 
-export const DETERMINATION = { id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment", actor: { role: "City Administrator", body: "City" }, when: "2024-03-01" },
+export const DETERMINATION = { id: DET, project: PROJECT, act: ACT, event: { id: ACT.id, kind: "vote", status: "EventScheduled", when: ACT.when },
+  findings: [{ finding: "INQ-1" }],
   outcomes: [{ standard: "STD-1", outcome: "noncompliant" }, { standard: "STD-2", outcome: "compliant" }],
   standards: [{ standard: "STD-1", outcome: "noncompliant", in_force: true, rows: [{ requires: "a council vote", did: "adjusted without a vote" }] },
     { standard: "STD-2", outcome: "compliant", in_force: true, rows: [{ requires: "notice within 30 days", did: "noticed on day 21" }] }],
@@ -193,17 +213,57 @@ export const STATUS_NONE = { determination: DET, status: "neither", escalations:
 export const STATUS_OPEN = { determination: DET, status: "escalated", escalations: [{ id: ESC, state: "open", stage: 2, stage_name: "notification" }], declines: [] };
 export const ESCALATION = { id: ESC, project: PROJECT, determination: DET, state: "open", stage: 2, stage_name: "notification",
   actions: [{ action: ACTION_ID, stage: 2, reason: "the demand" }], proposed: [{ from: 2, to: 3, stage: "clock", says: "its trigger was met 5 days ago" }],
-  exit: { compliance: { state: "not_yet", says: "no live compliant determination" }, consequences: { state: "not_yet", says: "not every part addressed" } } };
+  exit: { compliance: { state: "not_yet", says: W("escalation.live_compliant_determination") }, consequences: { state: "not_yet", says: "not every part addressed" } } };
 
-/** A plane answering every read of the six screens with data. */
+/** `affordances` as the composer reads it: the kinds (the product's and a profile's own), the leg kinds and the tiers. */
+export const KINDS = ["cpra_request", "records_request", "request_for_comment", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "party_participation", "other"];
+export const AFFORDANCES = { vocabularies: { action_kind: [...KINDS, "profile_kind_x", "profile_kind_unlabelled"], action_kind_labels: { profile_kind_x: "Hearing statement" },
+  action_basis_kinds: ["rests_on", "advances"], risk_tiers: { 1: "x", 2: "x", 3: "x", undetermined: "x" } } };
+export const OFFICES = { ok: true, subject: QUESTION, offices: [{ addressee: { state: "named", kind: "office", role: "City Clerk", body: "Office of the City Clerk", entity_id: "ENT-2026-1111111111111111" } }] };
+/** `holdsdue` (action-holds R19): what still wants a hold, wherever it arrived. */
+export const HOLDS_DUE = { ok: true, items: [
+  { arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, note: "a letter from the city's counsel", marked_by: "member:mai", marked_at: "2026-10-09T09:00:00Z" },
+  { arrived: { docket_entry: "DKT-2026-1", case: "CASE-2026-1" }, project: PROJECT, note: "a notice of claim", marked_by: "member:dev", marked_at: "2026-10-01T09:00:00Z" },
+  { arrived: { pressure: "PRS-2026-1" }, project: PROJECT, note: "a letter from the owner's lawyer", marked_by: "member:ana", marked_at: "2026-10-03T09:00:00Z" }], truncated: false, cursor: null };
+export const COUNSEL_PROJECT = "PROJ-2026-cccccccccccccccc";
+export const ROSTER = { ok: true, count: 2, limit: 200, truncated: false, projects: [{ id: PROJECT, name: "Pothole repairs", stage: null, scope: "none" },
+  { id: COUNSEL_PROJECT, name: "The rent dispute", stage: null, scope: "counsel_matter" }] };
+export const ACTIONS = { ok: true, items: [{ id: ACTION_ID, state: "awaiting_response", kind: "records_request", counterparty: { role: "City Clerk" }, counterparty_state: "named" },
+  { id: "ACTN-2026-9999999999999999", state: "resolved", kind: "request_for_comment", counterparty: null, counterparty_state: "undetermined" }], limit: 200, truncated: false, cursor: null };
+export const TEMPLATES = { ok: true, action: ACTION_ID, kind: "records_request", governing: { tier: 2 },
+  versions: [{ template: "TPL-1", name: "Records request, with our follow-up questions", origin: "group", state: "approved", approved_at: "2026-09-30T10:00:00Z", approved_by: "member:ana" }],
+  not_offered: [{ handle: "@records-request", name: "Records request", lacks: ["writer", "sources", "professional_review"] }], court_petition: false };
+export const GUIDES = { ok: true, kind: "records_request", guides: [{ origin: "profile", status: "researched", basis: "TEST", items: [
+  { route: "Ask in writing, naming the records", expect: "the office says within 10 days whether it will release them", citation: "Gov. Code § 7922.535" }] },
+  { origin: "group", guide: "GUIDE-1", approved_by: "member:ana", approved_at: "2026-10-01", items: [{ route: "Call the clerk's desk first", expect: "a name for the file", citation: "Mun. Code § 2.20.230" }] }], withheld: [], label: {} };
+export const FACTS = [{ key: "anti_slapp", statement: "A special motion to strike generally must be filed within 60 days of being served with the complaint.", citation: "Code Civ. Proc. § 425.16", status: "researched", basis: "TEST", profile: "p" }];
+export const PACKET = { ok: true, id: "CP-1", version: 1, action: ACTION_ID, purpose: "claim", marking: "Prepared for review by Priya Shah, Tenant Law Center.", fileable: false,
+  sections: { facts: { title: "Facts", items: [{ finding: "FND-1", kind: "published", claim: { conclusion: "Closed means repaired" }, determined: true }, { finding: "INQ-2026-ffffffffffffffff", matter: "INQ-2026-ffffffffffffffff", determined: false }] } } };
+export const NOTICE = { ok: true, place: { target: ACTION_ID, ord: 2 }, text: "Please keep, outside Civicsmith, messages and files about this matter." };
+
+/** A plane answering every read of the screens with data. */
 export const DATA_PLANE = {
   plan: ok(PLAN), planproposals: ok(PROPOSALS), list: ok(PROJECTS), optionstartpreview: ok(PREVIEW),
   projectquestions: ok(PROJECT_QUESTIONS), determinations: ok(DETERMINATIONS),
   action: ok(ACTION), filingsfor: ok(FILINGS([])), actionholdpreview: ok({ target: ACTION_ID, ord: null, hold: null, restarts: [] }),
   pressurefor: ok(PRESSURE), stakeatpreparation: ok(STAKE()),
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),
+  standards: ok({ ok: true, items: [{ id: "STD-1", cite: "Lease §7.2" }, { id: "STD-2", cite: "Lease §9.1" }], truncated: false }),
+  affordances: ok(AFFORDANCES), holdsdue: ok(HOLDS_DUE), projectlist: ok(ROSTER), templatesforaction: ok(TEMPLATES), procedureguides: ok(GUIDES),
+  actions: ok(ACTIONS), queue: ok({ items: [] }),
+  // R56: the team's bodies as `entities` lists them (its published fixture: the real `entitiesOfKind`); the team holds no office until a test says so
+  entitieskind: (req) => ok(req.query.kind === "body" ? entitiesListing({ kind: "body" }) : { ...entitiesListing({ kind: req.query.kind }), entities: [], count: 0 }),
+  // R3: the language the member states for a draft (`memberlanguage`) among those the team's profiles answer (`grouplanguages`)
+  memberlanguage: ok({ language: "en" }), grouplanguages: ok({ languages: ["en", "es"] }),
+  // the roster the fixtures' member ids are named from (C94, interface-shell R111): each id's handle is its own
+  memberlist: ok({ members: ["mai", "dev", "ana", "asha"].map((h) => ({ member_id: h, handle: h })) }),
 };
 export const ROUTES = {
   plan: `/app/plan/${PLAN_ID}`, "start-send": `/app/start-send/${PLAN_ID}~opt-1`, request: `/app/request/${ACTION_ID}`,
   action: `/app/action/${ACTION_ID}`, matter: `/app/matter/${DET}~${ESC}`, "help-records": "/app/help-records",
+  actionnew: `/app/actionnew/${PROJECT}`, hold: `/app/hold/${ACTION_ID}`, holdnotice: `/app/holdnotice/${encodeURIComponent(JSON.stringify({ target: ACTION_ID, ord: 2 }))}`,
+  counsel: `/app/counsel/${ACTION_ID}`, "dash-action": "/app/dash-action",
 };
+
+/** The kit's read-only sentence for a screen (`interface-shell` R94): the screen's noun by its key, the path to Members as its word. */
+export const RO = (id) => W("shell.readonly", { noun: W(`shell.readonly.noun.${id}`), members: W("shell.readonly.members") });

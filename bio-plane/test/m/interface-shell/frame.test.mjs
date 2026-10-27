@@ -1,14 +1,18 @@
 /* interface-shell R7, R8, R9, R20, R26, R28, R30, R35–R37, R43, R45, R48: the working frame and the public and setup frames, the path, the router and unavailable, the dock, the places, the band, the mark and the rail. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
 import { PATHS, FRAMES, PLACE_SCREENS } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
+import { fitSend, boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
+import { inWorld, bootAs, obligations } from "./world.mjs";
+import { countWithItem } from "../queue/fixtures.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }] });
+const FRAME_ANSWERS = await frameAnswers();
 const PLANE = { image: IMAGE, heldcaptures: HELDA, projectdirectory: ok({ projects: [] }) };
 const en = (k) => (WORD_ROWS.find((r) => r[0] === k) || [])[1];
 const texts = (els) => els.map((e) => e.textContent.trim());
@@ -22,9 +26,12 @@ async function press(p, op) {
 }
 
 test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your group\" when it has no display name, never its slug), search opening Find, the explanation-level control, the To do count from op=queue, the member's initial; no assistant button while not reachable", async () => {
-  const p = await boot({ screens: ALL, plane: PLANE });
+  const { world, me } = await inWorld();
+  const name = (await me.act("groupnameset", { body: { name: "River Town" } })).display_name;
+  const items = await obligations(world, me, 3);
+  const p = await bootAs(world, me, { screens: ALL, plane: PLANE });
   const mast = p.root().querySelector(".cs-mast");
-  assert.equal(mast.querySelector(".mk-grp").textContent, "River Town");
+  assert.equal(mast.querySelector(".mk-grp").textContent, name);
   assert.equal(p.byOp("groupidentity").length, 1);
   await p.click('a[href="/app/settings"]');
   assert.equal(p.byOp("groupidentity").length, 1, "read once");
@@ -32,23 +39,25 @@ test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your gr
   assert.equal(m.querySelector('a[href="/app/find"]').textContent, word("shell.search"));
   assert.ok(m.querySelector('a[href="/app/find"]').classList.contains("mk-mastsearch"));
   assert.ok(m.querySelector('[data-shell="level"]').textContent.includes(word("shell.level.button.prompt")));
-  assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: 2 }));
-  assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, "M");
+  assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: items.length }), "R96: the sum of the queue's three kinds");
+  assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, me.handle[0].toUpperCase());
   assert.equal(m.querySelector('[data-shell="dock"]'), null);
   /* R60: never the slug: "Your group" when no display name */
-  const q = await boot({ screens: ALL, plane: { ...PLANE, groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
+  const bare = await inWorld();
+  const slug = (await bare.me.read("groupidentity")).group;
+  const q = await bootAs(bare.world, bare.me, { screens: ALL, plane: PLANE });
   assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, word("shell.group.unnamed"));
-  assert.ok(!q.root().innerHTML.includes("river-town"));
+  assert.ok(!q.root().innerHTML.includes(slug));
 });
 
 test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven places in order with rail.<k>.name and guidance rail.<k>.holds, one column of work, and at the phone width the five tabs Home, Queue, Add, Find, More", async () => {
-  const p = await boot({ screens: ALL, plane: PLANE });
+  const p = await boot({ screens: ALL, plane: { ...FRAME_ANSWERS, ...PLANE } });
   const band = p.root().querySelector(".cs-band");
   assert.equal(band.getAttribute("data-band"), "working");
   assert.equal(band.textContent, word("mark.path.working.name") + " " + word("shell.band.working"), "R57: the band as drawn");
   assert.ok(band.querySelector("[data-tip]").getAttribute("data-tip").startsWith(en("mark.band.means").replace(/'/g, "&#39;")));
   const rail = p.root().querySelectorAll(".cs-rail a");
-  assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name")), "the shell's places, in its order");
+  assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name") + (k === "queue" ? String(countWithItem().count) : "")), "the shell's places, in its order (R96: the queue's count on Queue alone)");
   rail.forEach((a, i) => assert.ok(a.getAttribute("data-tip").length > 10, i));
   assert.equal(p.root().querySelectorAll("main").length, 1);
   const tabs = p.root().querySelectorAll(".cs-tabs a");
@@ -111,7 +120,7 @@ const pathAt = (commit) => {
   return new Function(/(const PATH = \{[\s\S]*?\n\};)/.exec(src)[1] + "; return PATH;")();
 };
 const PROJECTS = new Set(["The Coliseum lease", "Pothole repairs", "Sewer fund transfers"]);
-const step = (s) => (s === "@project" ? "@project" : /^(shell|screen)\./.test(s) ? word(s) : word("rail." + s + ".name"));
+const step = (s) => (s === "@project" ? "@project" : /\.crumb$/.test(s) ? word(s, { name: "<name>" }) : /^(shell|screen)\./.test(s) ? word(s) : word("rail." + s + ".name"));
 const T46 = ["home", "queue", "inbox", "finder", "answers", "capture", "held", "open-file", "find-in", "project", "document", "question", "assistant", "members", "account", "connect", "notes"];
 
 test("R8 each screen's path is mock-shell.js' PATH for its id at 3f40899950, a project's step its title (members: Settings › Members; held: Add › Held captures; document: Projects › <project> › Document)", () => {
@@ -130,7 +139,8 @@ test("R28 every screen of the new screen modules has its path from mock-shell.js
   const NEW = ["wizards", "person", "explore", "timeline", "money", "calculation", "proceeding", "due-date", "standard", "ties", "case-editor", "review-copy", "ceremony", "imported", "docket", "plan", "start-send", "request", "action", "matter", "archive", "group-identity", "security", "translations"];
   /* the design's PATH is in its words of the day; the interface says "team" where it said "group" (setup-words) */
   const team = (x) => x.replace(/\bgroup('s)?\b/g, "team$1");
-  for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team), id);
+  /* R110 (K4217): the standard's last step is the design's crumb word (DEC-384 entry 9), not its name; every step before it is the design's */
+  for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team).map((x, i, all) => (id === "standard" && i === all.length - 1 ? step("screen.standard.crumb") : x)), id);
   for (const id of ["people", "settings", "projects", "group", "places", "recovery"]) assert.deepEqual(PATHS[id].map(step).map(team), B[id].map(team), id);
   assert.deepEqual(PATHS.plan.map(step), [word("rail.projects.name"), "@project", word("screen.plan.name")]);
   assert.deepEqual(PATHS.wizards.map(step), [word("rail.settings.name"), word("screen.wizards.name")]);
@@ -177,7 +187,7 @@ test("R20 the assistant is reachable when assistantstate answers on and the memb
     assert.ok(p.root().querySelector("#cs-frame").classList.contains("with-dock"));
     assert.ok(p.root().querySelector("#cs-main"), "beside the screen it serves");
     await p.click(dock.querySelector('button[data-act="airunopen"]'));
-    assert.deepEqual(p.byOp("airunopen")[0].body.context, { screen: "document", subject: "c1" });
+    assert.deepEqual([p.byOp("airunopen")[0].body.contextType, p.byOp("airunopen")[0].body.contextId], ["document", "c1"]);
   }
   const NOT = [{ assistantstate: ok({ on: false }), accountreference: ok({ held: true }) }, { ...ON }, { ...ON, groupkeystate: ok({ held: true, on: false }) },
     { ...ON, groupkeystate: ok({ held: false, on: true }) }, { assistantstate: silent, accountreference: ok({ held: true }) },
@@ -218,7 +228,8 @@ test("R26 the rail's width: 184 px by default, 64 to 320, set by the keyboard (a
   await p.settle();
   assert.match(frame().getAttribute("style"), /--rail:250px/);
   assert.equal(p.local.get("cs-railw"), "250");
-  for (const r of p.requests) assert.ok(!JSON.stringify(r).includes("250") && !/railw/.test(JSON.stringify(r)));
+  /* what a request carries (its address, query, body and headers), never its timing stamp, in which "250" may occur by chance */
+  for (const r of p.requests) { const sent = JSON.stringify({ url: r.url, query: r.query, body: r.body, headers: r.headers }); assert.ok(!/\b250\b/.test(sent) && !/railw/.test(sent)); }
   assert.equal(p.root().querySelector(".cs-tabs").getAttribute("style"), null);
   const q = await boot({ screens: ALL, local: { "cs-railw": "250" } });
   assert.match(q.root().querySelector("#cs-frame").getAttribute("style"), /--rail:250px/);
@@ -228,6 +239,25 @@ test("R26 the rail's width: 184 px by default, 64 to 320, set by the keyboard (a
   }
 });
 
+
+test("R132 (DEC-155) a double-click on the rail's edge restores 184 px and keeps it, though the grip was redrawn by the drag before; control: a double-click elsewhere changes nothing", async () => {
+  const p = await boot({ screens: ALL });
+  const grip = () => p.root().querySelector('[data-shell="grip"]');
+  p.fire(grip(), "pointerdown", { clientX: 184 });
+  for (const f of p.win.listeners.pointermove || []) f({ clientX: 263 });
+  for (const f of p.win.listeners.pointerup || []) f({});
+  await p.settle();
+  assert.equal(grip().getAttribute("aria-valuenow"), "263");
+  assert.equal(p.local.get("cs-railw"), "263");
+  p.fire(p.root().querySelector(".cs-rail a"), "dblclick");
+  await p.settle();
+  assert.equal(grip().getAttribute("aria-valuenow"), "263", "elsewhere changes nothing");
+  p.fire(grip(), "dblclick");
+  await p.settle();
+  assert.equal(grip().getAttribute("aria-valuenow"), "184");
+  assert.equal(p.local.get("cs-railw"), "184");
+  assert.match(p.root().querySelector("#cs-frame").getAttribute("style"), /--rail:184px/);
+});
 
 test("R9 /app/review maps to review-outside (screens-publish R17), drawn in its published frame", async () => {
   const review = { id: "review-outside", reads: () => ({}), acts: [], render: (cs) => cs.title() };
@@ -280,7 +310,7 @@ test("R35 unavailable: an unknown screen or subject draws Nothing is here; NOT_V
 
 test("R35 what was typed is kept while the screen can't be reached and comes back with it", async () => {
   let up = true;
-  const s = { id: "document", reads: (view) => ({ d: { op: "image", query: { id: view.subject }, subject: true } }), acts: [{ op: "cite", send: () => ({ body: {} }) }],
+  const s = { id: "document", reads: (view) => ({ d: { op: "image", query: { id: view.subject }, subject: true } }), acts: [{ op: "cite", send: fitSend("cite") }],
     render: (cs, view) => cs.state("d", view, (d) => cs.title(d.title)) + cs.field("note", "shell.reason") + cs.act("cite") };
   const p = await boot({ screens: [s], path: "/app/document/c1", plane: { image: () => (up ? IMAGE : silent) } });
   p.doc.getElementById("note").value = "kept words";
@@ -306,7 +336,7 @@ test("R30 a screen of the public or published frame is drawn without a session: 
   p.doc.getElementById("d-what").value = "a leaked memo";
   await p.click('button[data-act="knock"]');
   assert.equal(p.byOp("knock")[0].headers.Authorization, undefined);
-  assert.deepEqual(p.byOp("knock")[0].body, { text: "a leaked memo" });
+  assert.deepEqual(p.byOp("knock")[0].body, { content: "a leaked memo" });
   /* control: /app/home with no record still draws front, never the working frame */
   const q = await boot({ screens: [...ALL, FRONT], path: "/app/home", session: null });
   assert.equal(q.root().querySelector("#cs-main").getAttribute("data-screen"), "front");
@@ -314,22 +344,27 @@ test("R30 a screen of the public or published frame is drawn without a session: 
 });
 
 test("R45 a screen of the setup frame is drawn without rail, tabs or dock, with or without a record: before one, no whoami and only public ops with no header; once its own act has made one, the acts R12 allows", async () => {
-  const plane = { enroll: ok({ ok: true }), login: ok({ token: "tok-j", expires: 0 }), invitelook: ok({ ok: true }) };
-  const p = await boot({ screens: [...ALL, JOIN], path: "/app/join", session: null, plane });
+  /* the invitation is the administrator's real `memberadd`; the enrolment, the sign-in and the reads after it are the world's */
+  const { world, me } = await inWorld();
+  const { invite } = await me.act("memberadd", { body: { memberId: "newbie", cover: "the world's new member" } });
+  const p = await bootAs(world, null, { screens: [...ALL, JOIN], path: "/app/join", hash: "#invite=" + invite });
   assert.equal(p.root().querySelector("#cs-frame").getAttribute("data-frame"), "setup");
   for (const sel of [".cs-rail", ".cs-tabs", ".cs-dock", ".cs-mast"]) assert.equal(p.root().querySelector(sel), null, sel);
   assert.equal(p.byOp("whoami").length, 0);
   assert.ok(p.root().querySelector('button[data-act="enroll"]'), "a public act drawn");
   assert.equal(p.root().querySelector('button[data-act="memberlanguageset"]'), null, "a member's act is not, before a session");
   p.doc.getElementById("j-handle").value = "newbie";
+  p.doc.getElementById("j-pass").value = "pw-pw-pw-pw-pw";
   await press(p, "enroll");
   assert.equal(p.byOp("enroll")[0].headers.Authorization, undefined);
   assert.equal(p.byOp("login")[0].headers.Authorization, undefined);
-  assert.equal(p.byOp("whoami")[0].headers.Authorization, "Bearer tok-j");
+  const token = JSON.parse(p.local.get(STORE_KEY)).t;
+  assert.ok(token && !/^tok-/.test(token), "the world's own session token");
+  assert.equal(p.byOp("whoami")[0].headers.Authorization, "Bearer " + token);
   assert.equal(p.location.pathname, "/app/join", "stays on the screen");
   assert.ok(p.root().querySelector('button[data-act="memberlanguageset"]'), "R12 now allows the member's act");
   await press(p, "memberlanguageset");
-  assert.equal(p.byOp("memberlanguageset")[0].headers.Authorization, "Bearer tok-j");
+  assert.equal(p.byOp("memberlanguageset")[0].headers.Authorization, "Bearer " + token);
   /* control: R3's front does not apply: /app/join with no record draws join and sends no header */
   const q = await boot({ screens: [...ALL, JOIN, FRONT], path: "/app/join", session: null });
   assert.equal(q.root().querySelector("#cs-main").getAttribute("data-screen"), "join");
@@ -369,12 +404,12 @@ test("R36 while bootstrap answers test_instance true every frame shows the test-
 
 test("R43 every working screen's masthead opens with the mark (the plumb bob, before the group's name), explaining itself; the public frame's page body draws none", async () => {
   for (const path of ["/app", "/app/held", "/app/settings", "/app/nowhere"]) {
-    const p = await boot({ screens: ALL, path, plane: PLANE });
+    const p = await boot({ screens: ALL, path, plane: { ...FRAME_ANSWERS, ...PLANE } });
     const mast = p.root().querySelector(".cs-mast");
     const mark = mast.children[0];
     assert.ok(mark.classList.contains("cs-mark"), path);
     assert.equal(mark.querySelector("use").getAttribute("href"), "/app/assets/icons.svg#i-mark");
-    assert.equal(mark.nextElementSibling.classList.contains("mk-grp"), true, "before the group's name");
+    assert.equal(mark.nextElementSibling.classList.contains("mk-grp"), true, "before the team's name");
     assert.equal(mark.getAttribute("aria-label"), word("shell.mark"));
     assert.ok(mark.getAttribute("data-tip").includes(word("shell.mark.means").replace(/'/g, "&#39;")));
     assert.equal(mark.getAttribute("data-level"), "1");
@@ -386,7 +421,7 @@ test("R43 every working screen's masthead opens with the mark (the plumb bob, be
 test("R48 the main frame's root carries data-screen of the registered screen it drew; the shell's own fallbacks carry none", async () => {
   const cases = [["/app", "home"], ["/app/held", "held"], ["/app/document/c1", "document"], ["/app/settings", null], ["/app/people", null], ["/app/nowhere", null], ["/app/more", null]];
   for (const [path, id] of cases) {
-    const p = await boot({ screens: ALL, path, plane: PLANE });
+    const p = await boot({ screens: ALL, path, plane: { ...FRAME_ANSWERS, ...PLANE } });
     assert.equal(p.root().querySelector("#cs-main").getAttribute("data-screen"), id, path);
   }
   const nf = await boot({ screens: ALL, path: "/app/document/zz", plane: { ...PLANE, image: refused("NO_SUCH_CAPTURE") } });

@@ -5,15 +5,17 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import * as P from "../../../src/provenance/index.mjs";
 import * as CHECKS from "../../../src/provenance/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const { PROVENANCE_ACT_CHECKS, DOORBELL_ORIGIN } = P;
 
-test("R58: PROVENANCE_ACT_CHECKS is exported whole (C-103.1–C-103.7), each row {check, where, translation}, and DOORBELL_ORIGIN beside it", () => {
+test("R58: PROVENANCE_ACT_CHECKS is exported whole (C-103.1–C-103.12), each row {check, where, translation}, and DOORBELL_ORIGIN beside it", () => {
   assert.equal(P.PROVENANCE_ACT_CHECKS, CHECKS.PROVENANCE_ACT_CHECKS, "one table, read from the module or its checks file");
   assert.deepEqual(Object.entries(PROVENANCE_ACT_CHECKS).map(([code, r]) => [code, r.check]), [
     ["PROVENANCE_REGISTER_REFUSED", "C-103.1"], ["ORIGIN_NOT_A_MEMBER", "C-103.2"], ["NO_BUNDLE", "C-103.3"],
     ["ORIGIN_NOT_A_DOCUMENT", "C-103.4"], ["ORIGIN_NO_SYSTEM", "C-103.5"], ["RECEIPT_MALFORMED", "C-103.6"],
-    ["RECEIPT_NO_KEY", "C-103.7"]]);
+    ["RECEIPT_NO_KEY", "C-103.7"], ["AUTHORITY_NOT_A_MEMBER", "C-103.8"], ["AUTHORITY_NOT_A_DOCUMENT", "C-103.9"],
+    ["AUTHORITY_NO_BASIS", "C-103.10"], ["AUTHORITY_NO_ISSUER", "C-103.11"], ["AUTHORITY_OUTCOME_UNKNOWN", "C-103.12"]]);
   for (const [code, r] of Object.entries(PROVENANCE_ACT_CHECKS)) {
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], code);
     assert.ok(typeof r.translation === "string" && r.translation.split(/\s+/).length >= 8, code);
@@ -21,11 +23,9 @@ test("R58: PROVENANCE_ACT_CHECKS is exported whole (C-103.1–C-103.7), each row
   }
   /* Translations unchanged by the split (N512 moved no words); C-103.7's re-worded by DEC-149's sweep (T35-18, plan
      rule 4: "the instance" goes, "your group's Civicsmith" names it), its code and number unchanged. */
-  assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_MALFORMED.translation, "A receipt names the captured document's fingerprint, "
-    + "the address it was fetched from and when, and one of those was missing or not in its form, so no receipt was signed.");
-  assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation, "Your group's Civicsmith holds no key to sign its receipts "
-    + "with, so this receipt was not signed, and nothing claims that it was. Whoever hosts your group's Civicsmith can add one.");
-  assert.equal(PROVENANCE_ACT_CHECKS.NO_BUNDLE.translation, "This did not say which document it is about, so nothing was done.");
+  assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_MALFORMED.translation, word("refusal.RECEIPT_MALFORMED"));
+  assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation, word("refusal.RECEIPT_NO_KEY"));
+  assert.equal(PROVENANCE_ACT_CHECKS.NO_BUNDLE.translation, word("refusal.NO_BUNDLE"));
   assert.equal(DOORBELL_ORIGIN, "doorbell");
   assert.equal(P.DOORBELL_VIA, "doorbell");
 });
@@ -40,6 +40,11 @@ test("R58: each row's `where` names the site that raises it: the signed receipt'
   assert.equal(where("NO_BUNDLE"), "src/provenance/index.mjs declareOrigin > is-origin-act; "
     + "src/provenance-routes/index.mjs provenanceChainRebuild");
   for (const code of ["ORIGIN_NOT_A_DOCUMENT", "ORIGIN_NO_SYSTEM"]) assert.equal(where(code), "src/provenance/index.mjs declareOrigin > is-origin-statement");
+  /* R65 (T51): a member's decision on a document's authority raises its own five, from three regions of declareAuthority. */
+  assert.equal(where("AUTHORITY_NOT_A_MEMBER"), "src/provenance/index.mjs declareAuthority > is-authority-act");
+  assert.equal(where("AUTHORITY_NOT_A_DOCUMENT"), "src/provenance/index.mjs declareAuthority > is-authority-document");
+  for (const code of ["AUTHORITY_NO_BASIS", "AUTHORITY_NO_ISSUER", "AUTHORITY_OUTCOME_UNKNOWN"])
+    assert.equal(where(code), "src/provenance/index.mjs declareAuthority > is-authority-statement");
   /* This module raises the rows it names as its own, each carrying its row; it signs nothing, so it raises neither
      receipt row (no service of it signs: the instance key is attestation's). */
   const w = world();
@@ -71,5 +76,5 @@ test("R41, N516: the copies held through T25 are gone: no route marker, statemen
   for (const m of ["provenanceChainRebuild", "provenanceRouteAssess", "provenanceRoutesMarked", "routeOf", "routeTally"])
     assert.equal(typeof w.prov[m], "undefined", `${m} is provenance-routes'`);
   /* Nor are the moved tables this module's (R41). */
-  assert.deepEqual(P.PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations"]);
+  assert.deepEqual(P.PROVENANCE_TABLES, ["register", "register_parts", "captured_locators", "origin_declarations", "authority_decisions"]);
 });

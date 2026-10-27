@@ -3,7 +3,8 @@
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
+import { groupName, open, openWorld, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, PUBLISHED_CASE, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
+const GROUP = await groupName();
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -17,7 +18,7 @@ test("R6 the published case at /app/published/<case>, in the public frame with n
   const t = text(p);
   assert.ok(drew(p, "screen.published.dated", { edition: "2", signed: day("2026-11-18"), published: day("2026-11-19") }));
   assert.ok(drew(p, "screen.published.edition", { n: "1" }), "the other edition");
-  assert.ok(drew(p, "screen.published.whose", { group: "River Town" }));
+  assert.ok(drew(p, "screen.published.whose", { group: GROUP }));
   assert.ok(drew(p, "screen.published.howtoread"));
   assert.ok(t.includes("The 2024 adjustments were made without the council vote the lease requires."));
   assert.ok(t.includes(word("mark.scale.capture.name") + "B") && t.includes(word("mark.scale.connection.name") + "C"), "two strengths");
@@ -42,7 +43,7 @@ test("R6 \"Check the signature\" (verify, the manifest's sha) and \"Read the cas
   assert.ok(drew(q, "screen.published.verify.no"));
 });
 
-const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...plane().publishedcase.json.result, captures }), ...o });
+const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...PUBLISHED_CASE, captures }), ...o });
 const opens = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').filter((b) => b.textContent.includes(word("screen.published.evidence.open")));
 
 test("R19 each evidence row with a full SHA-256 opens its bytes through publishedbytes by that hash, as a public op with no Authorization header", async () => {
@@ -107,7 +108,7 @@ test("R19 a refused download says why and saves nothing; an edition with no mani
   await p.settle();
   assert.equal(p.files.length, 0);
   assert.match(text(p), /A part of the case file is missing\./);
-  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok({ ...plane().publishedcase.json.result, manifest_sha: "" }) } });
+  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok({ ...PUBLISHED_CASE, manifest_sha: "" }) } });
   assert.equal(download(q), undefined);
   const silent = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: ok(null) } });
   await silent.click(download(silent));
@@ -132,7 +133,7 @@ test("R7 another group's case: each finding recreated, in part or not, read-only
   const r = main(p).querySelectorAll("[data-r]").map((x) => x.getAttribute("data-r"));
   assert.deepEqual(r, ["yes", "part", "no"]);
   for (const k of ["yes", "part", "no"]) assert.ok(drew(p, `screen.imported.result.${k}`), k);
-  assert.deepEqual(ops(p).sort(), ["caseimport", "importaccept", "importflag", "importwatch"]);
+  assert.deepEqual(ops(p).sort(), ["caseimport", "importaccept", "importflag", "importregrade", "importwatch", "rerunstart"]);
   await press(p, "importaccept", { values: { "im-checked": "Each document's hash against theirs.", "im-reason": "It recreated whole." } });
   carries(last(p, "importaccept").body, { import: "IMP-2026-0001", edition: 2, findings: ["FND-W-1"], checked: "Each document's hash against theirs.", reason: "It recreated whole." });
   await press(p, "importflag", { values: { "im-issue": "Their arrears figure double-counts March." }, reason: R });
@@ -159,8 +160,20 @@ test("R8 the docket's entries, each drafted or posted; \"File a docket entry\" w
   assert.ok(t.includes(`${word("screen.docket.kind.edition")} · Edition 2 published, superseding Edition 1`) && drew(p, "screen.docket.posted"));
   assert.ok(t.includes(`${word("screen.docket.kind.court-order")} · Order of 20 November: seal exhibit 4`) && drew(p, "screen.docket.drafted"));
   assert.equal(last(p, "docketprepare").query.entry, "2", "the draft entry is prepared for its post");
-  await press(p, "docketfile", { values: { "dk-kind": "response", "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-proposed": "public", "dk-reason": "It answers a published finding." } });
-  carries(last(p, "docketfile").body, { case: C, kind: "response", from: { kind: "other", name: "Port of Oakland" }, summary: "The Port disputes finding 1.", proposed: "public", reason: "It answers a published finding." });
+  /* B420 2 (DEC-387): the form is drawn whole: the edition it answers (one per ratified edition, the latest first and chosen), the captured
+     document it rests on (the project's captures), and the door to capture it first */
+  assert.equal(last(p, "heldcaptures").query.project, P);
+  const ed = p.doc.getElementById("dk-edition"), cap = p.doc.getElementById("dk-capture");
+  assert.ok(ed && cap, "both choices are drawn");
+  assert.deepEqual([...ed.querySelectorAll("option")].map((o) => o.getAttribute("value")), ["2", "1"], "the latest edition first");
+  assert.equal(ed.value, "2");
+  assert.ok(drew(p, "screen.docket.capture.add") && drew(p, "screen.docket.edition.label") && drew(p, "screen.docket.capture.label"));
+  await press(p, "docketfile", { values: { "dk-kind": "response", "dk-edition": "1", "dk-capture": E1, "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-proposed": "public", "dk-reason": "It answers a published finding." } });
+  carries(last(p, "docketfile").body, { case: C, edition: 1, capture: E1, kind: "response", from: { kind: "other", name: "Port of Oakland" }, summary: "The Port disputes finding 1.", proposed: "public", reason: "It answers a published finding." });
+  /* control: with no document chosen nothing is sent */
+  const q = await open(`/app/docket/${P}/${C}`, { plane: { heldcaptures: ok({ held: [] }) } });
+  await press(q, "docketfile", { values: { "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-reason": "It answers a published finding." } });
+  assert.equal(q.byOp("docketfile").length, 0, "no captured document, nothing sent");
 });
 
 test("R8 R16 \"Post it, signed\": docketStatement in NS_DOCKET through the signer kit, posted with its digest; declined, nothing is sent", async () => {
@@ -197,14 +210,14 @@ test("R9 the doorbell at /app/doorbell with no session: headed by the group's pu
   assert.equal(p.byOp("whoami").length, 0);
   assert.ok(p.byOp("groupidentity").length > 0);
   const t = text(p);
-  assert.ok(drew(p, "screen.doorbell.heading", { group: "River Town" }));
+  assert.ok(drew(p, "screen.doorbell.heading", { group: GROUP }));
   for (const k of ["only", "reads", "phrase", "court"]) assert.ok(drew(p, `screen.doorbell.happens.${k}`), k);
   assert.ok(p.doc.getElementById("db-file") && p.doc.getElementById("db-note") && p.doc.getElementById("db-secret"));
 });
 
 test("R9 R11 \"Hand it over\" sends the file, note and phrase with no credential, says it was received, and keeps no phrase", async () => {
   const phrase = "SENTINEL-PHRASE-correct-horse-battery";
-  const p = await open("/app/doorbell", { boot: PUBLIC });
+  const p = await openWorld("/app/doorbell"); // the real doorbell behind the page's door (store-request's world)
   choose(p, "db-file", new Uint8Array([104, 105]));
   await press(p, "knock", { values: { "db-note": "Inspection sheets.", "db-secret": phrase } });
   const k = last(p, "knock");
@@ -235,7 +248,7 @@ test("R9 the knock's refusals are drawn by their words; nothing chosen sends not
    `verify` says whether a hash is published; `publishedcase` read by a finding's pinned hash names its case and finding, and
    answers a file's hash (evidence) `NOT_PUBLISHED`, so the edition's own parts name the finding for a file. */
 const FIND = "FND-2026-0031";
-const EDITION = () => plane().publishedcase.json.result;
+const EDITION = () => PUBLISHED_CASE;
 const checkButton = (p) => main(p).querySelectorAll('button[data-act="verify"]').find((b) => b.getAttribute("data-check") === "1");
 const checkIt = (p, typed) => press(p, "verify", { nth: 1, values: { "pb-sha": typed } });
 const published = (pins, o = {}) => ({
@@ -309,6 +322,7 @@ test("R22 \"Check the signature\" still checks the manifest, and the page keeps 
 });
 
 test("R22 a verify answered ok that carries a refusal is no match found (D29)", async () => {
+  // fixtures-generic: VERIFY_NOT_RUN (a made-up refusal code: the page draws the plane's canned translation for a code it holds no word for)
   const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { verify: ok({ started: false, code: "VERIFY_NOT_RUN", translation: "The check did not run." }) } });
   await checkIt(p, E1);
   assert.ok(text(p).includes("The check did not run."), "the refusal in the plane's words");
@@ -323,4 +337,88 @@ test("R6 a finding below the project's bar is said so; one the bar was not asked
     const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: one({ role: "supporting", bar: { capture: null, connection: null }, meets }) });
     assert.ok(!drew(p, "screen.published.below", { capture: "–", connection: "–" }) && !drew(p, "screen.published.meets", { capture: "–", connection: "–" }), String(meets));
   }
+});
+
+/* ---------- fix round 10 (K5148; WALK-FINAL-10B C5): the page draws what `publishedcase` carries ---------- */
+
+const C5S = (o = {}) => ({ ...PUBLISHED_CASE, ...o });
+const C5F = (o = {}) => ({ ...PUBLISHED_CASE.findings[0], ...o });
+const c5pub = (o, p = {}) => open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S(o)), ...p } });
+
+test("R6 R81 (C5 a) a finding's unrated axis draws the design's 'not graded yet' words by key, and a case with no bar declared draws the plane's bar sentence; with a bar and grades neither is drawn (control)", async () => {
+  const UNRATED = "Not graded yet on capture: none of the documents this conclusion rests on has a grade that can be counted.";
+  const NOBAR = "No standard of evidence was recorded for this case, which is not a standard of zero.";
+  const p = await c5pub({ bar: null, bar_detail: NOBAR, findings: [C5F({
+    strength: [{ axis: "capture", state: "unrated", grade: null, detail: UNRATED }, { axis: "connection", state: "graded", grade: "B" }],
+    standing: { role: "load_bearing", bar: { capture: null, connection: null }, meets: "no_bar", short: [], line: "x" } })] });
+  const card = main(p).querySelector('[data-finding]');
+  assert.ok(drew(p, "screen.published.strength.unrated", {}, card), "the unrated axis says it is not graded yet, by its key");
+  assert.ok(!text(p, card).includes(UNRATED), "the served sentence is not drawn (R81)");
+  assert.equal(main(p).querySelectorAll("[data-ungraded]").length, 1, "one axis is ungraded: one line");
+  assert.ok(text(p).includes(NOBAR) && main(p).querySelectorAll("[data-bar-none]").length === 1, "the case says no bar was declared");
+  assert.ok(!drew(p, "screen.published.meets", { capture: "–", connection: "–" }) && !drew(p, "screen.published.below", {}), "no bar: neither met nor below is said");
+  const q = await c5pub({ bar: { capture: "B", connection: "C" }, bar_detail: "the standard this case was held to" });
+  assert.equal(main(q).querySelectorAll("[data-ungraded]").length, 0, "graded axes draw no ungraded line");
+  assert.equal(main(q).querySelectorAll("[data-bar-none]").length, 0, "a declared bar draws no 'no bar' line");
+});
+
+test("R6 (C5 b, R96 a) an older edition quotes the newer edition's What-changed beside its link; a successor whose document an order withholds is pointed to, with its detail and no statement; none draws nothing (control)", async () => {
+  const one = await open(`/app/published/${encodeURIComponent(C + "/1")}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S({ edition: 1,
+    successor: { edition: 2, statement: "The newer reading adds the 2025 schedules." } })) } });
+  const link = main(one).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/2")}"]`);
+  assert.ok(link, "the newer edition is linked");
+  const beside = main(one).querySelector('[data-successor="2"]');
+  assert.ok(beside && text(one, beside).includes("The newer reading adds the 2025 schedules."), "its statement is quoted beside the link");
+  const held = await open(`/app/published/${encodeURIComponent(C + "/1")}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S({ edition: 1,
+    successor: { edition: 2, statement: null, withheld: true, detail: "A court order withholds it." } })) } });
+  assert.ok(text(held).includes("A court order withholds it.") && !text(held).includes("null"), "the withheld successor's detail is drawn, no statement");
+  const none = await open(`/app/published/${encodeURIComponent(C + "/2")}`, { boot: PUBLIC, plane: { publishedcase: ok(C5S({ successor: null })) } });
+  assert.equal(main(none).querySelectorAll("[data-successor]").length, 0);
+});
+
+test("R6 (C5 c) the lens: its statements and the document's closing sentences are drawn under the lens heading; an edition with only the fingerprint says so; none draws no lens section (control)", async () => {
+  const lens = { bias_acknowledgement: "We read the lease as tenants.", statements: [{ bundle: "B", id: "S1", kind: "statement", subject: "x", text: "A tenant's account counts as evidence.", justification: "Tenants hold the notices.", citations: [], withheld: 0 }],
+    closing: ["Everyone who investigates looks through a lens.", "We state ours so you can discount it."], print: "…" };
+  const p = await c5pub({ bias_acknowledgement: "We read the lease as tenants.", lens });
+  const sec = main(p).querySelector("[data-lens]");
+  assert.ok(sec, "the lens section");
+  const t = text(p, sec);
+  for (const s of ["We read the lease as tenants.", "A tenant's account counts as evidence.", "Tenants hold the notices.", ...lens.closing]) assert.ok(t.includes(s), s);
+  const fp = await c5pub({ bias_acknowledgement: null, lens: null, lens_fingerprint: "f".repeat(64), lens_detail: "x" });
+  assert.ok(drewIn(main(fp).querySelector("[data-lens]"), "screen.published.this_edition_carries_only_the", { fingerprint: "f".repeat(64) }));
+  const none = await c5pub({ bias_acknowledgement: null, lens: null, lens_fingerprint: null });
+  assert.equal(main(none).querySelectorAll("[data-lens]").length, 0, "nothing signed, nothing drawn");
+});
+
+test("R6 (C5 d) the header holds the case id and the manifest's hash; without a manifest no hash is drawn (control)", async () => {
+  const p = await c5pub({ scope: "The Coliseum lease" });
+  const head = main(p).querySelector("[data-case-head]");
+  assert.ok(head && text(p, head).includes(C) && text(p, head).includes(SHA), "the case id and the manifest hash, whole");
+  const q = await c5pub({ manifest_sha: null });
+  assert.ok(text(q, main(q).querySelector("[data-case-head]")).includes(C) && !main(q).querySelector("[data-manifest]"), "no manifest: no hash drawn");
+});
+
+test("R6 R81 (C5 e, R95 a) the verification explanation is drawn by key with the signature check; an answer without one draws none (control)", async () => {
+  const SAID = "tamper-EVIDENT, not tamper-proof; the deliverer is this team's Civicsmith's record, not covered by any signature.";
+  const p = await c5pub({ verification: { container: "x", manifest: "y", case_file: null, findings: [], detail: SAID } });
+  assert.ok(drew(p, "screen.published.verify.detail", {}, main(p).querySelector("[data-verification]")), "by its key");
+  assert.ok(!text(p).includes(SAID), "the served sentence is not drawn (R81)");
+  const q = await c5pub({});
+  assert.equal(main(q).querySelectorAll("[data-verification]").length, 0);
+});
+
+test("R7 (C6; case-import R4) an imported case is named by its scope and its findings by their titles, in the list and on its page, never by an id; an answer stating none draws the screen's name and 'Finding n' (control)", async () => {
+  const ID = "CASE-2026-3549", FID = "INQ-2026-0001-did-the-clerk-stamp-the-contract-before";
+  const ed = { edition: 1, imported_by: "dev", imported_at: "2026-10-01T09:00:00Z", importer: { member: "dev", handle: "dev" } };
+  const list = await open("/app/imported", { plane: { importedcases: ok({ imports: [{ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: ID, scope: "Did the clerk stamp the contract before the vote?", latest_edition: 1,
+    editions: [{ ...ed, findings: 1, recreated: 1, recreated_in_part: 0, did_not_recreate: 0 }] }], count: 1, wrote: false }) } });
+  assert.ok(text(list).includes("Did the clerk stamp the contract before the vote?") && !text(list).includes(ID), "the list names the case by its scope");
+  const one = await open("/app/imported/IMP-2026-0001", { plane: { importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: ID, scope: "Did the clerk stamp the contract before the vote?",
+    edition: { ...ed, findings: [{ finding: FID, title: "The clerk stamped it a day late", result: "recreated" }] }, wrote: false }) } });
+  assert.ok(text(one).includes("Did the clerk stamp the contract before the vote?") && text(one).includes("The clerk stamped it a day late"), "the page names the case and the finding");
+  assert.ok(!text(one).includes(ID) && !text(one).includes(FID), "no id is drawn");
+  const bare = await open("/app/imported/IMP-2026-0001", { plane: { importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: ID, scope: null,
+    edition: { ...ed, findings: [{ finding: FID, title: null, result: "recreated" }] }, wrote: false }) } });
+  assert.ok(!text(bare).includes(ID) && !text(bare).includes(FID), "an answer that states no name draws no id either");
+  assert.ok(drew(bare, "screen.published.finding", { n: "1" }));
 });

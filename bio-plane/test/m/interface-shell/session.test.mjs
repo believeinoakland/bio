@@ -1,5 +1,6 @@
 /* interface-shell R3, R4, R24, R32: the session record this module keeps in localStorage, its token only in the
    Authorization header, sign-in handed over, sign out, every tab told, and nothing kept of who opened what. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refused, silent, MEMBER, settle, tabs, STORE_KEY } from "./harness.mjs";
@@ -152,6 +153,8 @@ test("R3 driving every screen and act with a sentinel token, the token is in eac
       assert.ok(!r.url.includes(SENTINEL), r.url);
       assert.ok(!JSON.stringify(r.body ?? "").includes(SENTINEL), r.op);
     }
+    /* R92: the version poll is public and carries no session at all */
+    for (const r of p.polls) { assert.equal(r.headers.Authorization, undefined, "the poll carries no session token"); assert.ok(!r.url.includes(SENTINEL)); }
     assert.ok(!p.root().innerHTML.includes(SENTINEL));
     assert.ok(!pushed.some((u) => u.includes(SENTINEL)));
     for (const [k, v] of p.local) if (k !== STORE_KEY) assert.ok(!String(v).includes(SENTINEL), k);
@@ -202,13 +205,17 @@ test("R4 the member's initial opens a menu with Sign out: it sends op=signout, t
   assert.ok(q.root().querySelector("#cs-main").textContent.includes(word("session.signedout")));
 });
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R24 nothing the shell does records who opened what: no storage holds a read or a screen visited, and no request but the screens' own reads and acts and the frame's", async () => {
-  const p = await boot({ screens: SCREENS, path: "/app/held", plane: { heldcaptures: HELD, image: IMAGE } });
+  const p = await boot({ screens: SCREENS, path: "/app/held", plane: { ...FRAME_ANSWERS, heldcaptures: HELD, image: IMAGE } });
   for (const a of p.root().querySelectorAll("a[data-nav]")) await p.click(a);
   await p.click(p.root().querySelector('a[href="/app/held"]') || p.root().querySelector("a[data-nav]"));
-  for (const k of p.local.keys()) assert.match(k, /^(cs-(level|theme|railw|level-asked|first:[\w-]*)|bio-session(:active)?)$/, k);
+  for (const k of p.local.keys()) assert.match(k, /^(cs-(level|theme|railw|level-asked|group|first:[\w-]*)|bio-session(:active)?)$/, k);
   for (const [k, v] of p.local) if (k !== STORE_KEY) assert.doesNotMatch(v, /held|document|home|members|\/app/);
-  assert.deepEqual([...p.store.keys()], []);
+  /* R124 (G12b): the tab keeps the frame's six constants for the session, and nothing else: no read of a screen, no route (R24 holds) */
+  assert.deepEqual([...p.store.keys()], [STORE_KEY + ":frame"]);
+  assert.deepEqual(Object.keys(JSON.parse(p.store.get(STORE_KEY + ":frame")).reads).sort(), [...["groupidentity", "infolevel"], ...["assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"]].sort());
+  assert.doesNotMatch(p.store.get(STORE_KEY + ":frame"), /heldcaptures|document|home|members|\/app/);
   /* the ops the frame and the fixture screens declare they call: the shell's own list, and each fixture screen's reads (R24) */
   const ALLOWED = new Set([...SHELL_OPS, ...SCREENS.flatMap((x) => (x.reads ? Object.values(x.reads({ subject: "s", data: {}, ui: {} })).map((r) => r.op) : []))]);
   for (const op of ALLOWED) assert.ok(Object.hasOwn(OPS, op), op + ": declared by its owner");

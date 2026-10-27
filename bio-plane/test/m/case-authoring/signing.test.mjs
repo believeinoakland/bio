@@ -33,7 +33,9 @@ test("R75: the sign step answers publish_at exactly as ratification's pre-flight
   assert.deepEqual(none.w.snapshot(), before, "nothing written");
   assert.equal(a.first, null, JSON.stringify(a.first).slice(0, 300));
   assert.equal(sign(a).ratification.reached, true);
-  assert.deepEqual(sign(a).publish_at, { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" });
+  /* ratification R44, R58: the offer is `{offered, zone, reason?}` with `source` and `why` beside it; read as it answers (below) */
+  assert.deepEqual({ offered: sign(a).publish_at.offered, zone: sign(a).publish_at.zone, reason: sign(a).publish_at.reason },
+                   { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" });
   assert.equal("publish_at_stated" in sign(a), false, "an answer read is stated as answered");
   /* the same answer ratification gives directly over the document op=publish stores */
   const r = none.w.ca.publishCase(args(none));

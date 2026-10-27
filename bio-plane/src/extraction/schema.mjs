@@ -382,7 +382,18 @@ CREATE TABLE IF NOT EXISTS capture_text_state (
   truncated      INTEGER NOT NULL,
   skipped_named  INTEGER NOT NULL,
   chain_kind     TEXT,
-  at             TEXT    NOT NULL
+  at             TEXT    NOT NULL,
+  -- R90 (fix round 6, G13): a text read in pieces. more is 1 while pieces follow, cursor is reading-pipeline's for the next,
+  -- read_through and total say how far the text has been read (units are bytes of text). All null/0 for a read not in pieces.
+  more           INTEGER NOT NULL DEFAULT 0,
+  cursor         TEXT,
+  read_through   INTEGER,
+  total          INTEGER,
+  words_read     INTEGER,
+  -- R101 (fix round 9, G129b): why a read in pieces ended before its last piece, so it is never partial without a reason; null otherwise.
+  ended_why      TEXT,
+  -- R101 (K4904 (1)): the windows stepped past because they killed their reader three times, [{at, why}] as JSON; null when none.
+  stated         TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_text_state_bundle ON capture_text_state(bundle_id);
 
@@ -416,4 +427,18 @@ CREATE TABLE IF NOT EXISTS reading_migrations (
   migrated   INTEGER NOT NULL DEFAULT 0,
   at         TEXT    NOT NULL
 );
+
+-- extraction R89 (fix round 6, G8): THE REPAIR OF A "NOT READ AS TEXT" READING, TRIED. A reading stored final as "the document was
+-- not read as text" is repairable when the held bytes now say what they are (R85); the start-up repair owes the ledger a read of
+-- each, and the reading states repairable until a read has looked at the bytes and found nothing to read them by. One row for
+-- each capture so tried, with the release it was tried under (a later release may detect more, so it is tried again). Derived,
+-- keyed to its bundle, purged on both arms.
+CREATE TABLE IF NOT EXISTS reading_repairs (
+  capture_sha TEXT PRIMARY KEY,
+  bundle_id   TEXT NOT NULL,
+  version     TEXT NOT NULL,
+  outcome     TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reading_repairs_bundle ON reading_repairs(bundle_id);
 `;

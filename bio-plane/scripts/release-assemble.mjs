@@ -138,7 +138,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
   REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerParts,
-  workerPart, WORKER_PART_PATH,
+  workerPart, WORKER_PART_PATH, containerImageFindings, bundleExports, bindingFindings,
 } from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
@@ -223,6 +223,18 @@ for (const m of discovered.filter((x) => isContainer(x) && x.bundle)) {
       + "A member with several classes states them as `containers: [{ class_name, image, max_instances?, bind? }]`, each\n"
       + "class's max_instances and bind read from the class, else from the member's top level.");
   }
+  /* R37 (N1210, K3674): the digest the part will carry must be the one built from the code now in the tree. A class whose
+     files differ from what its recorded digest was built from is refused here, naming it, before anything is built or
+     written; so is a class that records nothing it was built from, which no comparison can clear. */
+  const imageFindings = containerImageFindings(m);
+  if (imageFindings.length)
+    die("CONTAINER_IMAGE_STALE",
+      `${m.name} is a container member and the code of its image changed under an unchanged digest.`,
+      imageFindings.map((f) => `  - ${f.text}`).join("\n") + "\n"
+      + "The release builds the image of a changed container member in the GitHub workflow and records the digest it\n"
+      + "produced with `node bio-plane/scripts/bundles.mjs --record-image <member> <class> <digest>` (R36), which writes\n"
+      + "the marker's digest and the files it was built from, and the container's image in the member's wrangler.jsonc.\n"
+      + "`node bio-plane/scripts/bundles.mjs --containers` lists the classes that need it.");
   /* R27 (F20): each image's packages — npm's from the lockfile its `npm ci --omit=dev` installs from, or a system
      image's from the member's committed package statement pinned with its base digest — so the fleet signature states
      what each image runs without building it. Unread is a refusal, never an empty list. */
@@ -256,7 +268,8 @@ for (const m of members) {
       "The release copies a member's buckets and schedule from its own config and never defaults them:\n"
       + "  r2_buckets     [{ binding, bucket_name }] — each bucket one of the plane's own, named by its role in the part:\n"
       + "                 bio-captures (captures) or bio-published (published); any other has no role an installer can bind\n"
-      + "  triggers.crons a list of cron expressions, where the member states a schedule");
+      + "  triggers.crons a list of cron expressions, where the member states a schedule\n"
+      + "  durable_objects, migrations  its own Durable Objects ({name, class_name}) and migrations ({tag, new_sqlite_classes}), as its config states them");
   if (w.part) workerPartOf.set(m.name, { path: WORKER_PART_PATH, type: "Worker", sha256: sha256(w.part.bytes),
     bytes: w.part.bytes.length, data: w.part.bytes });
 }
@@ -276,6 +289,7 @@ for (const m of all) console.log(`   ${m.name.padEnd(14)} ${m.bundle.outfile}`);
 /* ---- REFUSAL 1: every asset proved fresh, by the landed guard -------------- */
 
 const entries = [];
+const bindingUnits = [];   /* R39: each member's configuration and the names its fresh bundle exports */
 for (const m of all) {
   const committed = committedArtifact(m);
   const manifestPath = join(m.abs, m.bundle.manifest);
@@ -318,6 +332,7 @@ for (const m of all) {
     ? parseJsonc(readFileSync(wrangler, "utf8"), `${m.name}/wrangler.jsonc`)
     : null;
   const services = (wcfg?.services || []).map((s) => ({ binding: s.binding, service: s.service }));
+  bindingUnits.push({ name: m.name, config: wcfg, exports: bundleExports(m, built) });
   /* IC-82, under FLEET's copy-never-default condition: the member's UPLOAD
      FACTS are COPIED from its own config at cut time, and a member whose
      config does not state them REFUSES assembly — a default supplied here is
@@ -407,6 +422,20 @@ for (const m of all) {
                  bytes: committed.length, from: join(m.abs, m.bundle.outfile), services, parts,
                  ...(compat ? { compat } : {}) });
   console.log(`guard: ${m.name} fresh — ${built.bytes.length} B, sha256 ${sha256(committed).slice(0, 16)}…`);
+}
+
+/* ---- REFUSAL 1b: THE RELEASE IS COHERENT (R39; K4176) --------------------------------------------------------
+   agent-worker 0.86.0 bound REMOTE to agent-runner's class RemoteSession, which agent-runner did not export, and
+   Cloudflare refused it at deploy (10061): a release that cannot deploy whole. Every service and Durable Object
+   binding, every container class and every migration class is held here to the names the FRESH bundles export (the
+   bytes that would ship), before anything is written. */
+{
+  const incoherent = bindingFindings(bindingUnits);
+  if (incoherent.length)
+    die("BINDING_NOT_EXPORTED", `${incoherent.length} binding(s) of this release name a class or service the release does not export.`,
+      incoherent.map((f) => `  - ${f.text}`).join("\n") + "\n"
+      + "Cloudflare refuses such a member at deploy (code 10061 for a class, 10143 for a service). Export the class from the\n"
+      + "bundle that hosts it, or correct the binding in the member's wrangler.jsonc, rebuild, and assemble again.");
 }
 
 /* ---- the version, and that the WHOLE FLEET agrees on it ------------------

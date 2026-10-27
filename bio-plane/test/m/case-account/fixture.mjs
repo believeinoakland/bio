@@ -19,6 +19,9 @@ import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { caseAccountOf } from "../../../src/case-account/index.mjs";
+/* retrieval's published fixture (fix round 10): the real retrieval over an empty store, whose `selectionResolve` answers
+   NO_SUCH_SELECTION for any handle; `retrieval.selectionResolve` is what this world's inquiry reads. */
+import { noSelection } from "../retrieval/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -71,7 +74,7 @@ export function world({ group = "test-group", deps = {}, create = true } = {}) {
   migrateContent(st.sql);
   execAll(st, EXTRACTION_SCHEMA);
   migratePublication(st.sql);
-  const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
+  const retrieval = noSelection();
   const inquiry = inquiryOf(host, { record, membership, retrieval, now: () => clock.now });
   inquiry.migrate();
   const promotion = inquiry.promotion;

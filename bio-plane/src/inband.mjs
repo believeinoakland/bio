@@ -18,6 +18,8 @@
  * reader holding the answer can re-hash it: parse it, remove `inband`, serialise it the same way.
  */
 
+import { localize } from "./setup-words/index.mjs";
+
 export const INBAND_FORMAT = "bio-inband/1";
 
 /* THE CANONICAL BYTES of a JSON value. */
@@ -43,10 +45,8 @@ export function floorsOf(bar) {
   return {
     capture, connection, declared,
     detail: declared
-      ? "the floors on the two strength axes this case is held to: its publishing project's required "
-        + "strength (DEC-72). They are independent, and neither is a default for the other."
-      : "NO FLOOR IS DECLARED, and that is not a floor of zero: the publishing project states no required "
-        + "strength, so nothing here claims to have cleared a standard.",
+      ? localize("public-read.inband.the_floors_on_the_two", "the floors on the two strength axes this case is held to: its publishing project's required strength (DEC-72). They are independent, and neither is a default for the other.")
+      : localize("public-read.inband.no_floor_is_declared_and", "NO FLOOR IS DECLARED, and that is not a floor of zero: the publishing project states no required strength, so nothing here claims to have cleared a standard."),
   };
 }
 

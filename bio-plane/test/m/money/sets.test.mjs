@@ -1,7 +1,8 @@
-/* money sets and the change notice at money's interface: R12, R13, R23. */
+/* money sets and the change notice at money's interface: R12, R13, R23, R32. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, MACHINE, ANN, BOB, OUTSIDER } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R12 createSet refuses an unknown purpose, no label, and an attribution set concerning no contract; it allocates MSR-<year>-NNNN", () => {
   const s = seeded();
@@ -42,13 +43,56 @@ test("R13 a machine's proposal is held apart, labelled with its method, and incl
   let r = s.m.readSet({ setId: set, viewer: ANN });
   assert.deepEqual(r.inclusions, []);
   assert.deepEqual([r.proposals.length, r.proposals[0].method, r.proposals[0].by], [1, "same fund code and period", MACHINE]);
-  assert.match(r.proposals[0].label, /proposed by the machine/);
+  assert.equal(r.proposals[0].label, word("screen.money.proposed"));
   const inc = s.m.include({ setId: set, factId: f, reason: "checked the fund code", by: ANN });
   assert.equal(inc.adopted_proposal, p.proposal_id);
   r = s.m.readSet({ setId: set, viewer: ANN });
   assert.deepEqual([r.inclusions.length, r.proposals.length], [1, 0]);
   assert.equal(s.m.readSet({ setId: "", viewer: ANN }).reason, "NO_SET");
   assert.equal(s.m.readSet({ setId: "MSR-2026-9999", viewer: ANN }).found, false);
+});
+
+test("R32 R12 R13 exclude closes a figure's open proposal exactly as include does: after either act readSet lists the figure once, never also under proposals; control: include still closes one", () => {
+  const s = seeded();
+  const set = s.m.createSet({ purpose: "trail", label: "t", by: ANN }).set_id;
+  const f = s.rec();
+  const p = s.m.proposeInclusion({ setId: set, factId: f, method: "same fund code and period", by: MACHINE });
+  const ex = s.m.exclude({ setId: set, factId: f, reason: "a different project", by: ANN });
+  assert.equal(ex.ok, true);
+  assert.equal(ex.adopted_proposal, p.proposal_id);
+  let r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [0, 0, 1]);
+  assert.deepEqual([r.exclusions[0].by, r.exclusions[0].reason], [ANN, "a different project"]);
+  /* control: include closes an open proposal as before */
+  const g = s.rec();
+  const q = s.m.proposeInclusion({ setId: set, factId: g, method: "same fund code and period", by: MACHINE });
+  const inc = s.m.include({ setId: set, factId: g, reason: "checked the fund code", by: ANN });
+  assert.equal(inc.adopted_proposal, q.proposal_id);
+  r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length], [1, 0]);
+});
+
+test("R33 a machine's proposal of a figure the set already includes or excludes holds no proposal: the member's latest act stands; control: a figure with no member act is held as a proposal", () => {
+  const s = seeded();
+  const set = s.m.createSet({ purpose: "trail", label: "t", by: ANN }).set_id;
+  const f = s.rec();
+  const g = s.rec();
+  const h = s.rec();
+  s.m.exclude({ setId: set, factId: f, reason: "a different project", by: ANN });
+  const after = s.m.proposeInclusion({ setId: set, factId: f, method: "same fund code and period", by: MACHINE });
+  assert.deepEqual([after.ok, after.already], [true, "excluded"]);
+  let r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [0, 0, 1]);
+  s.m.include({ setId: set, factId: g, reason: "checked the fund code", by: ANN });
+  const again = s.m.proposeInclusion({ setId: set, factId: g, method: "same fund code and period", by: MACHINE });
+  assert.deepEqual([again.ok, again.already], [true, "included"]);
+  r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [1, 0, 1]);
+  /* control: no member act, so the machine's proposal is held apart as before */
+  const held = s.m.proposeInclusion({ setId: set, factId: h, method: "same fund code and period", by: MACHINE });
+  assert.equal(held.already, undefined);
+  r = s.m.readSet({ setId: set, viewer: ANN });
+  assert.deepEqual([r.inclusions.length, r.proposals.length, r.exclusions.length], [1, 1, 1]);
 });
 
 test("R13 readSet answers only the facts the viewer may see", () => {

@@ -51,7 +51,8 @@ import { biasOf } from "../bias/index.mjs";
 import { schedulerOf, viewZone } from "../scheduler/index.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
@@ -86,6 +87,9 @@ const clampLimit = (limit, dflt, max) => {
 
 export class Queue {
   #host; #deps; #env; #clock;
+  /* R94 (fix round 8, G116): the derivations made, by (member, viewer), each with the signature it was made under, and this
+     module's own writes (its mutes, snoozes and decisions), which the record's write counter does not see. */
+  #derived = new Map(); #ownWrites = 0;
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -100,8 +104,13 @@ export class Queue {
       if (stmt.trim()) this.sql.exec(stmt);
     /* R55: a store made before the instants of a case's muted kinds were kept lacks their column; it is added, and the
        kinds muted before it answer no instant (`at: null`), never back-filled. */
-    const have = this.#rows(`PRAGMA table_info(queue_state)`).map((c) => c.name);
-    if (have.length && !have.includes("muted_at")) this.sql.exec(`ALTER TABLE queue_state ADD COLUMN muted_at TEXT`);
+    /* R59 (T51): likewise `snoozed_at`, the instant a snooze was made; R58 (T51): likewise the item mutes' `item_kind`,
+       `item_title` and `item_subject`, each null for a row made before it was kept. */
+    for (const [table, column] of [["queue_state", "muted_at"], ["queue_state", "snoozed_at"], ["queue_item_mutes", "item_kind"],
+                                   ["queue_item_mutes", "item_title"], ["queue_item_mutes", "item_subject"]]) {
+      const have = this.#rows(`PRAGMA table_info(${table})`).map((c) => c.name);
+      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+    }
   }
 
   /* ------------------------------------------------------------------ the providers (Uses), reached lazily */
@@ -112,6 +121,7 @@ export class Queue {
   get #record() { return this.#dep("record", () => recordOf(this.#host)); }
   get #membership() { return this.#dep("membership", () => membershipOf(this.#host)); }
   get #tasks() { return this.#dep("tasks", () => tasksOf(this.#host)); }
+  get #projectRoster() { return this.#dep("projectRoster", () => projectRosterOf(this.#host)); }
   get #connections() { return this.#dep("connections", () => connectionsOf(this.#host)); }
   get #progressions() { return this.#dep("progressions", () => progressionsOf(this.#host)); }
   get #bias() { return this.#dep("bias", () => biasOf(this.#host)); }
@@ -165,6 +175,58 @@ export class Queue {
    *  that supplies one; `queueOf` refuses a different one before calling this. */
   get clock() { return this.#clock; }
   adoptClock(fn) { if (this.#clock === null && typeof fn === "function") this.#clock = fn; }
+
+  /** R93 (G80), R94: the number of writes this module made itself (a mute, a snooze, a decision), which the record's write counter
+   *  does not see: they are kept in this module's own tables. Part of the derivation's signature beside record-core's counter. */
+  #wrote() { this.#ownWrites += 1; }
+  /** R94: the tasks the derivation asks `tasks` for: the largest a list's limit could reach (500, R6) twice over, so the one
+   *  derivation serves every limit and the count, which is the length of the list with no cut. */
+  static QUEUE_TASKS_READ_MAX = 1000;
+  /** R94: a copy of a derivation, or of a part of one, that an answer may hand out and its caller change. */
+  static #copyOf(v) { return structuredClone(v); }
+  /** R94, R-LOG (K4428): runs the derivation `fn` and states what it cost in rows: the sum of the `rowsRead` and `rowsWritten`
+   *  of every cursor the storage's SQL handed out meanwhile (the platform's own counters, so no clock in it, R-CLOCK), each
+   *  null when the runtime states none, never a made-up number. The storage's `exec` is wrapped only for the call, and put
+   *  back whatever it does; a storage that cannot be wrapped states null. One log line carries the figures. */
+  #measured(fn) {
+    const cursors = [];
+    const sql = this.sql;
+    let restore = null;
+    try {
+      const real = sql.exec;
+      if (typeof real === "function") {
+        const had = Object.prototype.hasOwnProperty.call(sql, "exec");
+        sql.exec = function (...a) { const c = real.apply(sql, a); cursors.push(c); return c; };
+        restore = () => { if (had) sql.exec = real; else delete sql.exec; };
+      }
+    } catch { restore = null; }
+    let out;
+    try { out = fn(); } finally { if (restore) { try { restore(); } catch { /* left as wrapped is harmless: it passes through */ } } }
+    if (out && out.ok === true) {
+      const sum = (key) => {
+        let n = 0, any = false;
+        for (const c of cursors) { const v = c ? c[key] : undefined; if (typeof v === "number" && Number.isFinite(v)) { n += v; any = true; } }
+        return any ? n : null;
+      };
+      out.measure = { rows_read: sum("rowsRead"), rows_written: sum("rowsWritten"), ...out.measure };
+      try { console.log(JSON.stringify({ event: "queue_derive", module: "queue", ...out.measure, items: out.items.length })); } catch { /* logged where it can be */ }
+    }
+    return out;
+  }
+  /** R93, R94: a derivation is reused for the same viewer while the record's write counter, this module's own writes and the
+   *  clock's bucket are all unchanged; the bucket bounds how stale a feed that depends on the clock (a date that passed, an
+   *  item's age) can be. A snooze is read at each ask's own instant. */
+  static QUEUE_COUNT_BUCKET_MS = 5000;
+  /** R93, R94: viewers whose derivation is kept; past it the kept ones are dropped whole (a cache, never a record). */
+  static QUEUE_COUNT_VIEWERS_MAX = 256;
+  /** R93, R94: the signature a derivation was made under, or null when the record states no write counter (record-core R90):
+   *  with none, nothing is reused, never guessed. */
+  #countSignature(now) {
+    let w;
+    try { w = typeof this.#record.writeCount === "function" ? this.#record.writeCount() : null; } catch { w = null; }
+    if (!Number.isInteger(w) || w < 0) return null;
+    return `${w}|${this.#ownWrites}|${Math.floor(now / Queue.QUEUE_COUNT_BUCKET_MS)}`;
+  }
 
   /** The instant this read or act is at: an in-plane caller's (ms), else this module's clock (R53: the clock a caller of
    *  `queueOf` gave, else the instance binding `BIO_NOW_MS`, else the wall clock). A request never supplies the first:
@@ -253,6 +315,14 @@ export class Queue {
    *  fact about OUR OWN MACHINERY. CONDITION is therefore last and was
    *  appended rather than inserted (REC-32). */
   static QUEUE_CLASSES = ["OBLIGATION", "FINDING", "CONDITION"];
+
+  /** R91 (T51; L13): a stopwatch for the feeds of one ask, in milliseconds (two decimals) off `performance.now()` where the
+   *  runtime has it, else the wall clock; never negative. It measures how long a read took and is no instant of the record,
+   *  so it is no part of R53's clock. */
+  static #stopwatch() {
+    const now = typeof performance !== "undefined" && typeof performance.now === "function" ? () => performance.now() : () => Date.now();
+    return { start: () => now(), since: (t0) => Math.max(0, Math.round((now() - t0) * 100) / 100) };
+  }
 
   /** R6's order: something a named person must do outranks something the record noticed, which outranks a fact about
    *  our own machinery, then stable on id so the feed does not shuffle. It is the order AMONG EQUALS of every sort R49
@@ -387,7 +457,8 @@ export class Queue {
    *  costed against the alternative: teaching `refs` a `status` column would
    *  change a projection twelve readers and an export manifest build against,
    *  for a fact only the document can be authoritative about anyway (D-21). */
-  #queueAncestorEdges(nodeId) {
+  #queueAncestorEdges(nodeId, memo = null) {
+    if (memo && memo.edges.has(nodeId)) return memo.edges.get(nodeId);
     const up = new Map();
     const consider = (id, rel) =>
       up.set(id, (up.get(id) || false) || !this.#refEdgeSevered(id, nodeId, rel));
@@ -397,7 +468,9 @@ export class Queue {
     for (const r of this.#rows(
       `SELECT DISTINCT bundle_id FROM refs WHERE target_id=? AND kind='cites'`, nodeId))
       consider(r.bundle_id, "cites");
-    return [...up.entries()].filter(([, live]) => live).map(([id]) => id).sort();
+    const out = [...up.entries()].filter(([, live]) => live).map(([id]) => id).sort();
+    if (memo) memo.edges.set(nodeId, out);
+    return out;
   }
 
   /** DEC-16's EVERY-ANCESTOR walk, bounded, viewer-gated, and honest about both
@@ -429,7 +502,20 @@ export class Queue {
    *
    *  An EMPTY set with no reasons is UNGROUPED, and that is a real answer: an
    *  item nothing rests on sits ungrouped and is never given an invented home. */
-  #queueAncestors(subjectIds, viewer) {
+  #queueAncestors(subjectIds, viewer, memo = null) {
+    /* R91 (T51; L13): within one ask nothing is written, so a set of subjects has one answer: asked again (by another item of
+       the same subject, or another producer) it is copied from the first, and the reads of a node's edges and of an
+       ancestor's row are made once however many subjects reach it. */
+    const mk = memo ? JSON.stringify([...new Set((subjectIds || []).filter((x) => typeof x === "string" && x))].sort()) : null;
+    if (memo && memo.homes.has(mk)) {
+      const h = memo.homes.get(mk);
+      return { ...h, reasons: [...h.reasons], ancestors: h.ancestors.map((a) => ({ ...a })) };
+    }
+    const r = this.#walkAncestors(subjectIds, viewer, memo);
+    if (memo) memo.homes.set(mk, { ...r, reasons: [...r.reasons], ancestors: r.ancestors.map((a) => ({ ...a })) });
+    return r;
+  }
+  #walkAncestors(subjectIds, viewer, memo) {
     const bound = Queue.QUEUE_ANCESTOR_DEPTH;
     /* D-15 through the ONE compilation point. Fail closed: an absent or
        unrecognised viewer compiles to the deny predicate, so a caller that
@@ -445,13 +531,18 @@ export class Queue {
       depth += 1;
       const next = [];
       for (const node of frontier) {
-        for (const up of this.#queueAncestorEdges(node)) {
+        for (const up of this.#queueAncestorEdges(node, memo)) {
           if (seen.has(up)) continue;
           seen.add(up);
           next.push(up);
-          const row = this.#one(
-            `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
-             WHERE b.bundle_id=? AND (${gate.sql})`, up, ...gate.args);
+          let row;
+          if (memo && memo.rows.has(up)) row = memo.rows.get(up);
+          else {
+            row = this.#one(
+              `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
+               WHERE b.bundle_id=? AND (${gate.sql})`, up, ...gate.args);
+            if (memo) memo.rows.set(up, row);
+          }
           if (!row) {
             /* Absent and invisible are indistinguishable TO THE CALLER (REC-25),
                but they are not the same fact and this producer must not report
@@ -492,7 +583,7 @@ export class Queue {
        lookup per remaining node, and the difference between an honest
        undetermined and a reflexive one. */
     if (frontier.length > 0
-        && frontier.some((n) => this.#queueAncestorEdges(n).some((u) => !seen.has(u))))
+        && frontier.some((n) => this.#queueAncestorEdges(n, memo).some((u) => !seen.has(u))))
       reasons.add("depth_bound");
     const ancestors = [...found.values()]
       .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -526,7 +617,7 @@ export class Queue {
    *
    *  Union order is ACTS order, preserved: a single-subject item's options are
    *  byte-for-byte op=affordances' `acts`. */
-  #queueOptions(subjectIds, viewer, identity = null) {
+  #queueOptions(subjectIds, viewer, identity = null, memo = null) {
     const byId = new Map();
     /* D-311: the two act stamps `op=affordances` now sends (`author`, `by`), recovered from what the
        queue already carries so an item's options stay byte-for-byte that answer. A session's are its
@@ -536,10 +627,14 @@ export class Queue {
     const member = this.#positionalMember(viewer, identity);
     const actor = member !== null ? member : (isMachineIdentity(viewer) ? String(viewer).trim() : null);
     for (const id of (subjectIds || []).slice(0, Queue.QUEUE_OPTION_SUBJECTS_MAX)) {
-      const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });
-      if (!facts || facts.ok !== true) continue;
-      for (const a of deriveActs(facts))
-        if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
+      /* R91 (L13): a subject's acts are derived once per ask, whoever asks for them. */
+      let acts = memo ? memo.acts.get(id) : undefined;
+      if (acts === undefined) {
+        const facts = this.#affordances.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });
+        acts = !facts || facts.ok !== true ? [] : deriveActs(facts).map((a) => ({ id: a.id, label: a.label, weight: a.weight }));
+        if (memo) memo.acts.set(id, acts);
+      }
+      for (const a of acts) if (!byId.has(a.id)) byId.set(a.id, { ...a });
     }
     return [...byId.values()];
   }
@@ -598,6 +693,12 @@ export class Queue {
    *  publication below. A list of field names rather than a list of kinds: the
    *  kinds change every wave and this pair has not changed since REC-7. */
   static QUEUE_DISPOSITION_KEY = ["progression_key", "stage_key"];
+  /** R39, R59 (T51; tasks R21; K4213): the history entry that resolved a task: the last `resolved`, or `resolved_undecided`
+   *  (a task `taskresolve` put aside before anyone decided it; it carries no `resolved`), else null. */
+  static resolvingEntry(history) {
+    return [...(Array.isArray(history) ? history : [])].reverse()
+      .find((h) => h && (h.event === "resolved" || h.event === "resolved_undecided")) || null;
+  }
   /** R8: the task statuses an OBLIGATION is live in (N373). */
   static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
@@ -628,11 +729,25 @@ export class Queue {
     /* R57 (T50; N1091, N1204; queue-producers R41, R42): an invitation is answered by joining the project (leaving it is the
        other answer, a member's own on the project), a request by the owners' answer. */
     "project-invitation": "projectjoin", "project-request": "projectrequestanswer",
+    /* Fix round 10 (queue-producers R54; K5157): a request to leave a project is answered by an owner's removal of her. */
+    "project-leave": "projectremove",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
-  /** The door R12 and R28 name for an OBLIGATION of `kind`: its entry above (a list copied), else `taskresolve`. */
-  static doorOf(kind) {
+  /** R12 (T51; C62, K4171): the door a producer declared on an item it minted, or null: `door` is an op name, or a non-empty
+   *  list of op names, the first the one the screen leads with. Anything else (blank, a list holding a non-name, a
+   *  non-string) declares nothing. A list is copied. */
+  static declaredDoor(door) {
+    if (typeof door === "string") return door.trim() ? door.trim() : null;
+    if (Array.isArray(door) && door.length > 0 && door.every((d) => typeof d === "string" && d.trim()))
+      return door.map((d) => d.trim());
+    return null;
+  }
+  /** The door R12 and R28 name for an OBLIGATION of `kind`: the door its producer declared on the item (`declared`, R12),
+   *  else its entry above (a list copied), else `taskresolve`. */
+  static doorOf(kind, declared) {
+    const own = Queue.declaredDoor(declared);
+    if (own !== null) return own;
     const d = Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOORS, kind) ? Queue.OBLIGATION_DOORS[kind] : null;
     return Array.isArray(d) ? [...d] : d || "taskresolve";
   }
@@ -654,77 +769,34 @@ export class Queue {
   }
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
-    "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
-      + "a task, so it is settled through op=biasdebtresolve with a stated reason — or "
-      + "by a re-run under the lens now in force, or by the lens moving back "
-      + "(BOB #32, 2026-09-23).",
-    "signer-self-registered": " This one is a signing key a member registered for themselves, which is keyed by the "
-      + "KEY rather than by a task, so it leaves when an administrator revokes the key "
-      + "(op=signerset), or when it is otherwise no longer active.",
-    "plan-checkpoint-due": " This one is a checkpoint your group set in an action plan, keyed by the plan, scenario "
-      + "and phase rather than by a task: it leaves when a member records whether its condition was met "
-      + "(op=checkpointrecord), or when the plan is closed.",
-    "escalation-stage-proposed": " This one is an escalation's next stage, proposed because its trigger was met and "
-      + "keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or "
-      + "declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
-    "action-reminder": " This one is a reminder you asked for on one of the group's action deadlines, keyed by the "
-      + "action, the entry and the day rather than by a task: you answer it with another reminder or with none "
-      + "(op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
-    "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry "
-      + "rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place "
-      + "by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a "
-      + "docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way.",
-    "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by "
-      + "the version and by you rather than by a task: it leaves when you review the version's present text "
-      + "(op=templatereview), or when the version is no longer in review.",
-    "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the "
-      + "fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no "
-      + "live action reads it.",
-    "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed "
-      + "by the edition and the observation rather than by a task: it leaves when you choose a credit level for it "
-      + "(op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
-    "docket-core-due": " This one is an item the docket of a case you manage must list, keyed by the case, the item's "
-      + "kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on "
-      + "the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason "
-      + "(op=docketdecline), or when it is otherwise placed, receipted or disclosed.",
-    "wizard-approval-requested": " This one is a wizard script's version submitted for your approval, keyed by the "
-      + "version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version "
-      + "is withdrawn or its script retired.",
-    "inquiry-recheck-due": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and "
-      + "the date rather than by a task, and it is yours alone: it leaves when you record that you looked "
-      + "(op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
-    "step-date-due": " This one is a date you set on a step, keyed by the step and the date rather than by a task, and "
-      + "it is yours alone: it leaves when the step is ended (op=stepend), or when you set the step a new date.",
-    "step-reminder": " This one is a reminder you asked for on a step's date, keyed by the reminder rather than by a task, "
-      + "and it is yours alone: you answer it with another reminder or with none (op=stepreminder), and it is told on "
-      + "its day only.",
-    "milestone-reminder": " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a "
-      + "task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it "
-      + "is told on its day only.",
+    "bias-debt": localize("queue.index.this_one_is_a_bias", " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason — or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23)."),
+    "signer-self-registered": localize("queue.index.this_one_is_a_signing", " This one is a signing key a member registered for themselves, which is keyed by the KEY rather than by a task, so it leaves when an administrator says they know of the key (op=signerknown) or revokes it (op=signerset), or when it is otherwise no longer active."),
+    "plan-checkpoint-due": localize("queue.index.this_one_is_a_checkpoint", " This one is a checkpoint your team set in an action plan, keyed by the plan, scenario and phase rather than by a task: it leaves when a member records whether its condition was met (op=checkpointrecord), or when the plan is closed."),
+    "escalation-stage-proposed": localize("queue.index.this_one_is_an_escalations", " This one is an escalation's next stage, proposed because its trigger was met and keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended."),
+    "action-reminder": localize("queue.index.this_one_is_a_reminder", " This one is a reminder you asked for on one of the team's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed."),
+    "litigation-hold": localize("queue.index.this_one_is_a_reply", " This one is a reply your team marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way."),
+    "template-review-requested": localize("queue.index.this_one_is_a_review", " This one is a review a member asked of you on a filing template's version, keyed by the version and by you rather than by a task: it leaves when you review the version's present text (op=templatereview), or when the version is no longer in review."),
+    "local-fact-due": localize("queue.index.this_one_is_a_holiday", " This one is a holiday calendar or office hours one of the team's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it."),
+    "attribution-unchosen": localize("queue.index.this_one_is_a_case", " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced."),
+    "docket-core-due": localize("queue.index.this_one_is_an_item", " This one is an item the docket of a case you manage must list, keyed by the case, the item's kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason (op=docketdecline), or when it is otherwise placed, receipted or disclosed."),
+    "wizard-approval-requested": localize("queue.index.this_one_is_a_wizard", " This one is a wizard script's version submitted for your approval, keyed by the version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version is withdrawn or its script retired."),
+    "inquiry-recheck-due": localize("queue.index.this_one_is_a_date", " This one is a date you set to look again at a question, keyed by the inquiry, the wait and the date rather than by a task, and it is yours alone: it leaves when you record that you looked (op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes."),
+    "step-date-due": localize("queue.index.this_one_is_a_date_2", " This one is a date you set on a step, keyed by the step and the date rather than by a task, and it is yours alone: it leaves when the step is ended (op=stepend), or when you set the step a new date."),
+    "step-reminder": localize("queue.index.this_one_is_a_reminder_2", " This one is a reminder you asked for on a step's date, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=stepreminder), and it is told on its day only."),
+    "milestone-reminder": localize("queue.index.this_one_is_a_reminder_3", " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it is told on its day only."),
     /* T45 (action-producers R10, R12; following R25, plan-work R4, action-plans R40). */
-    "watch-keep-or-stop": " This one is a watch a plan set running, asked about once because the plan closed or every "
-      + "promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the "
-      + "watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown "
-      + "with no door.",
-    "plan-review-due": " This one is a review day your group set for a plan, keyed by the plan and the day rather than by "
-      + "a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed.",
-    "plan-look-again": " This one is the date your group set to look again at a paused plan, keyed by the plan and the "
-      + "day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it.",
+    "watch-keep-or-stop": localize("queue.index.this_one_is_a_watch", " This one is a watch a plan set running, asked about once because the plan closed or every promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown with no door."),
+    "plan-review-due": localize("queue.index.this_one_is_a_review_2", " This one is a review day your team set for a plan, keyed by the plan and the day rather than by a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed."),
+    "plan-look-again": localize("queue.index.this_one_is_the_date", " This one is the date your team set to look again at a paused plan, keyed by the plan and the day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it."),
     /* R54 (machinery-producers R11, instance-setup R89; DEC-226 (1)). */
-    "update-ready": " This one is a release of your group's Civicsmith that is ready to install, one to-do for every "
-      + "administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them "
-      + "updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that "
-      + "release or newer. A newer release replaces it.",
+    "update-ready": localize("queue.index.this_one_is_a_release", " This one is a release of your team's Civicsmith that is ready to install, one to-do for every administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that release or newer. A newer release replaces it."),
     /* R57 (queue-producers R41, R42; membership's project acts). */
-    "project-invitation": " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: "
-      + "it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn.",
-    "project-request": " This one is a member's request to join a project you own, keyed by the request rather than by a task: "
-      + "it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn.",
+    "project-invitation": localize("queue.index.this_one_is_an_invitation", " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn."),
+    "project-leave": localize("queue.index.this_one_is_a_participants", " This one is a participant's request to leave a project you own, keyed by the project and the participant rather than by a task: it leaves when an owner removes them (op=projectremove), or when they withdraw the request."),
+    "project-request": localize("queue.index.this_one_is_a_members", " This one is a member's request to join a project you own, keyed by the request rather than by a task: it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn."),
     /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
        member's own; taking it and recording the check are its other ways out. */
-    "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a "
-      + "reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays "
-      + "open to the others asked. Once someone takes it, everyone else's closes, naming who took it.",
+    "check-requested": localize("queue.index.this_one_is_a_check", " This one is a check a project owner asked for: take it (op=checktake) and record your check or a reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays open to the others asked. Once someone takes it, everyone else's closes, naming who took it."),
   });
 
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
@@ -807,6 +879,14 @@ export class Queue {
       ? item.subject.definition_version : null;
     const contradiction = this.#contradictionDisposition(item);
     if (contradiction) return contradiction;
+    /* R96 (fix round 10; DEC-439 to DEC-441, K5303, A-03; credentials R83): an administrator may answer a self-registered
+       key with "I know about this key" (op=signerknown), keyed by the key; revoking it (op=signerset) stays its door. */
+    if (item.kind === "signer-self-registered") {
+      const key = pick(item.subject, "id");
+      return { available: key !== null, op: "signerknown", scope: "key", keyed_on: ["keyB64"], key, acts: ["signerknown"],
+               requires: ["keyB64"], instead: Queue.doorOf(item.kind, item.door),
+               detail: localize("queue.index.an_administrator_who_knows_this", "an administrator who knows of this key says so (op=signerknown) and it leaves every administrator's list; revoking it (op=signerset) ends it too.") };
+    }
     if (item.class === "OBLIGATION")
       /* REC-207: AND `instead` NAMES THE DOOR THIS ITEM ACTUALLY HAS. N375 (R12; J1): a self-registered signing key is
          keyed by the KEY, not a task, and leaves when an administrator revokes it (op=signerset, membership R26). `op=taskresolve` addresses rows in
@@ -816,19 +896,14 @@ export class Queue {
          resolved somewhere else will need its own answer here and will find this line when it does. */
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
-               instead: Queue.doorOf(item.kind),
-               detail: "a to-do is something a named person must do for the record to proceed "
-                     + "and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside "
-                     + "is not a narrower version of that act, it is a different one."
-                     + (Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOOR_DETAIL, item.kind)
-                        ? Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "") };
+               instead: Queue.doorOf(item.kind, item.door),
+               detail: localize("queue.index.a_to_do_is_something", "a to-do is something a named person must do for the record to proceed and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside is not a narrower version of that act, it is a different one.{v1}", { v1: String(Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOOR_DETAIL, item.kind)
+                        ? Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "") }) };
     if (item.class === "CONDITION")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
                instead: "queuemute",
-               detail: "a status item is a fact about our own machinery, and the only thing a member "
-                     + "does to it is acknowledge or QUIET it — personally, with the status item "
-                     + "persisting and every other member still seeing it." };
+               detail: localize("queue.index.a_status_item_is_a", "a status item is a fact about our own machinery, and the only thing a member does to it is acknowledge or QUIET it — personally, with the status item persisting and every other member still seeing it.") };
     /* R12 (N172): a newer capture affecting a member's reference is decided by that member through reevaluation's
        door (its R15): adopt the newer version, or keep the earlier one. Keyed on the notice, never on a project.
        K1035 (reevaluation R15, C-110.29 VERSION_ADOPT_NO_REASON): adopting takes a why and keeping's stays optional;
@@ -839,18 +914,13 @@ export class Queue {
     if (item.kind === "standing-answer")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_answer_told_to_you_alone_is_quieted", instead: "queuemute",
-               detail: "your standing question's answer is told to you once and to nobody else, so no team's list "
-                     + "holds it and there is no team for a disposition to speak for. Quiet it for yourself "
-                     + "(op=queuemute, naming this item) once you have read it; your question keeps running and a "
-                     + "later run's new finds are told to you as a new item." };
+               detail: localize("queue.index.your_standing_questions_answer_is", "your standing question's answer is told to you once and to nobody else, so no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; your question keeps running and a later run's new finds are told to you as a new item.") };
     /* R57 (T50; N1204; DEC-304; notice-producers R24): a watched item's change is told to its watcher alone, as a standing
        question's answer is: no team's list holds it, so its watcher quiets it for themselves (R30). */
     if (item.kind === "watched-changed")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_watched_change_is_told_to_you_alone_and_quieted", instead: "queuemute",
-               detail: "something you watch changed, and you alone are told: no team's list holds it and there is no team "
-                     + "for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you "
-                     + "have read it; the watch goes on and a later change is told as a new item." };
+               detail: localize("queue.index.something_you_watch_changed_and", "something you watch changed, and you alone are told: no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; the watch goes on and a later change is told as a new item.") };
     /* R12 (T40; N812): an explore ask, a limit reached and a suspended project account are facts about an account,
        told to its owners or the member it served; no team decides them. */
     if (Object.prototype.hasOwnProperty.call(Queue.ACCOUNT_DOORS, item.kind)) {
@@ -859,29 +929,20 @@ export class Queue {
                reason: door === "exploreapprove" ? "an_ask_is_answered_by_its_act" : "an_account_notice_is_quieted",
                instead: door,
                detail: door === "exploreapprove"
-                 ? "one of your accounts may explore today, and the ask is yours as its owner: approve it "
-                   + "(op=exploreapprove), or let the day pass and it lapses. No team's list holds it."
-                 : "this is about an account and is told to whom it concerns; no team's list holds it and there is no "
-                   + "team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once "
-                   + "you have read it." };
+                 ? localize("queue.index.one_of_your_accounts_may", "one of your accounts may explore today, and the ask is yours as its owner: approve it (op=exploreapprove), or let the day pass and it lapses. No team's list holds it.")
+                 : localize("queue.index.this_is_about_an_account", "this is about an account and is told to whom it concerns; no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it.") };
     }
     /* R12 (T45; action-producers R9): a member who left had items routed to them; the take-ups lead its options, so
        there is no finding for a team to decide, and its recipient quiets it once read. */
     if (Queue.QUIETED_FINDINGS.includes(item.kind))
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_departure_is_taken_up_not_disposed", instead: "queuemute",
-               detail: "this tells the project's owners that a member who left had items routed to them. There is "
-                     + "nothing here for a team to set aside: take up the items you choose (the acts this item offers "
-                     + "first), and quiet it for yourself (op=queuemute, naming this item) once you have read it." };
+               detail: localize("queue.index.this_tells_the_projects_owners", "this tells the project's owners that a member who left had items routed to them. There is nothing here for a team to set aside: take up the items you choose (the acts this item offers first), and quiet it for yourself (op=queuemute, naming this item) once you have read it.") };
     if (item.kind === "newer-capture-affects-reference") {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
       return { available: notice !== null, op: null, scope: "notice", keyed_on: ["notice"], key: notice,
                notice, acts: ["versionadopt", "versionkeep"], requires: ["notice"],
-               detail: "a newer capture of what your reference is pinned to was graded as affecting it or as "
-                     + "undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which "
-                     + "writes a new version of your reference and keeps the old one readable, and takes a why of "
-                     + "up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). "
-                     + "Either closes this notice." };
+               detail: localize("queue.index.a_newer_capture_of_what", "a newer capture of what your reference is pinned to was graded as affecting it or as undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which writes a new version of your reference and keeps the old one readable, and takes a why of up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). Either closes this notice.") };
     }
     if (pk && sk)
       return { available: true, op: "proposedispose", scope: "instance", keyed_on: KEYED_ON,
@@ -894,11 +955,7 @@ export class Queue {
                   a surface holding this block has every argument for. */
                definition_version: dv,
                requires: ["definitionVersion"],
-               detail: "this finding carries a progression stage, the identity the disposition act is keyed on, so "
-                     + "Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a "
-                     + "decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still "
-                     + "checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a "
-                     + "fact about the shared record, so one act clears it under every case (D-266, DEC-16)." };
+               detail: localize("queue.index.this_finding_carries_a_progression", "this finding carries a progression stage, the identity the disposition act is keyed on, so Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a fact about the shared record, so one act clears it under every case (D-266, DEC-16).") };
     /* ==================================================================== D-266
      * THE PROJECT-SCOPED HALF, AND IT IS A PROPERTY RATHER THAN A LIST OF SLUGS.
      *
@@ -939,18 +996,10 @@ export class Queue {
                finding: fid, projects: [], ...acts,
                reason: "no_project_scope",
                instead: muted ? "queuemute" : null,
-               detail: "this finding carries no progression stage, so its disposition is one project's judgment, "
-                     + "scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: "
-                     + "there is no team to record a decision for. A decision, where one can be made, ages the finding "
-                     + "out of the team's open list until it is re-triaged, and deletes nothing (D-79)."
-                     + (muted ? " Quiet it for yourself instead (op=queuemute, naming this item)." : "") };
+               detail: localize("queue.index.this_finding_carries_no_progression", "this finding carries no progression stage, so its disposition is one project's judgment, scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: there is no team to record a decision for. A decision, where one can be made, ages the finding out of the team's open list until it is re-triaged, and deletes nothing (D-79).{v1}", { v1: String(muted ? " Quiet it for yourself instead (op=queuemute, naming this item)." : "") }) };
     return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON,
              key: null, finding: fid, projects: homes, requires: ["project", "finding"], ...acts,
-             detail: "this finding carries no progression stage, so its disposition is a judgment-layer act, and a "
-                   + "stance is one project's own property (§7, D-216): one team's decision governs that team's feed "
-                   + "and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting "
-                   + "project is yours to name) and `finding` with your disposition and reason. The decision ages the "
-                   + "finding out of that team's open list until it is re-triaged, and deletes nothing (D-79)." };
+             detail: localize("queue.index.this_finding_carries_no_progression_2", "this finding carries no progression stage, so its disposition is a judgment-layer act, and a stance is one project's own property (§7, D-216): one team's decision governs that team's feed and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting project is yours to name) and `finding` with your disposition and reason. The decision ages the finding out of that team's open list until it is re-triaged, and deletes nothing (D-79).") };
   }
 
   /** R46 (N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13; DEC-85): the doors of the contradiction kinds, or null for any
@@ -975,32 +1024,24 @@ export class Queue {
         const own = inquiry ? "contradictionresolve" : ["contradictionclarify", "contradictiontakeup"];
         return closed("an_obligation_is_resolved_not_disposed",
           { instead: relay.length ? [...[own].flat(), ...relay] : own, ...(inquiry ? { inquiry } : {}) },
-          "a conflict the record holds is a duty: it is never muted, dismissed or set aside, and it leaves every "
-          + "list only when a member of a project it reaches resolves it, by saying what it turned out to be or by "
-          + "taking it up as a question and concluding it (DEC-84 item 2).");
+          localize("queue.index.a_conflict_the_record_holds", "a conflict the record holds is a duty: it is never muted, dismissed or set aside, and it leaves every list only when a member of a project it reaches resolves it, by saying what it turned out to be or by taking it up as a question and concluding it (DEC-84 item 2)."));
       }
       case "contradiction-duty-unseen":
         return closed("an_obligation_is_resolved_not_disposed", { instead: relay.length ? relay : ["contradictionoptin"] },
-          "something this project rests on is in conflict with a record you cannot see. It is never muted: your "
-          + "project can ask to resolve it, and once every project holding a side has asked, the projects are named to "
-          + "each other and you can respond (DEC-85).");
+          localize("queue.index.something_this_project_rests_on", "something this project rests on is in conflict with a record you cannot see. It is never muted: your project can ask to resolve it, and once every project holding a side has asked, the projects are named to each other and you can respond (DEC-85)."));
       case "contradiction-lead":
         return { available: true, op: null, scope: "candidate", keyed_on: ["candidate"], key: candidate, candidate,
                  acts: ["contradictiondismiss", "contradictiontakeup"], requires: ["candidate"],
-                 detail: "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or "
-                       + "takes it up as a question (DEC-84 item 1)." };
+                 detail: localize("queue.index.a_lead_is_the_records", "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or takes it up as a question (DEC-84 item 1).") };
       case "contradiction-plurality":
         return notSetAside(["contradictionclarify", "contradictiontakeup", ...relay],
-          "two projects' conclusions may not both hold. Setting it aside would not clear it: naming the difference "
-          + "does, or taking it up as a question (DEC-84 item 3).");
+          localize("queue.index.two_projects_conclusions_may_not", "two projects' conclusions may not both hold. Setting it aside would not clear it: naming the difference does, or taking it up as a question (DEC-84 item 3)."));
       case "contradiction-plurality-unseen":
         return notSetAside(relay.length ? relay : ["contradictionoptin"],
-          "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: "
-          + "your project can ask to resolve it (DEC-85).");
+          localize("queue.index.this_projects_conclusion_may_not", "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: your project can ask to resolve it (DEC-85)."));
       case "tension-after-publication":
         return closed("a_published_tension_is_disclosed", { instead: "publish" },
-          "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it "
-          + "or the conflict is resolved.");
+          localize("queue.index.a_finding_this_case_published", "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it or the conflict is resolved."));
       default:
         return null;
     }
@@ -1012,11 +1053,71 @@ export class Queue {
     return this.#producers.feedItems(args);
   }
 
+  /** R60 (T51; DEC-330 A62): the feeds the answer was assembled from, each with the classes it can raise: `tasks` (R8),
+   *  `queue-producers`' own feeds by the ids its R45 names, and `notice-producers` (R51). A feed that can raise a class and did
+   *  not answer withholds that class's all-clear; the classes are the catalogue's (R1) for each feed's kinds, over-stated
+   *  where a feed raises more than one, which only ever withholds an all-clear. */
+  static QUEUE_FEEDS = Object.freeze([
+    ["tasks", ["OBLIGATION"]], ["bias-debts", ["OBLIGATION"]], ["proposals", ["FINDING"]], ["shared-inquiries", ["FINDING"]],
+    ["leads", ["FINDING"]], ["exports", ["FINDING"]], ["references", ["FINDING"]], ["objectives", ["FINDING"]],
+    ["sources", ["FINDING"]], ["machinery", ["OBLIGATION", "CONDITION"]], ["contradictions", ["OBLIGATION", "FINDING"]],
+    ["signing-keys", ["OBLIGATION"]], ["action", ["OBLIGATION", "FINDING", "CONDITION"]], ["attribution", ["OBLIGATION"]],
+    ["docket", ["OBLIGATION", "FINDING"]], ["cited-cases", ["FINDING", "CONDITION"]], ["wizards", ["OBLIGATION", "FINDING"]],
+    ["schedule", ["FINDING"]], ["places", ["CONDITION"]], ["projects", ["OBLIGATION"]],
+    ["members", ["OBLIGATION"]], ["notice-producers", ["OBLIGATION", "FINDING"]]]);
+
+  /** R60: one row `{feed, classes, answered, failed}` for each feed in QUEUE_FEEDS, then one for any other feed id the
+   *  producers name. `facts` is `queue-producers`' (its R45: `failed` `[{feed, reason}]` and `absent` the feed ids no provider
+   *  is composed for), `noticed` is R51's read. `answered` is true only when the feed's read returned and named no failure, and
+   *  never when it is absent; `failed` is what the feed named: the reason codes of R45's entries, or `notice-producers`' failed
+   *  producers. A read that said nothing of failure names none. A failure that names the read that refused (`read`) or its
+   *  `code` (queue-producers R50) carries them onto its row; a row with no such failure has neither key. */
+  #feedRows(facts, noticed, own = {}) {
+    /* R91 (T51; L13): `ms`, the milliseconds the feed's read took: this module's own measure for `tasks` and `notice-producers`,
+       `facts.ms[feed]` (queue-producers R45) for a producer's feed, and null where none is stated, never a made-up number. */
+    const stated = facts.ms && typeof facts.ms === "object" && !Array.isArray(facts.ms) ? facts.ms : {};
+    const msOf = (feed) => {
+      const v = Object.prototype.hasOwnProperty.call(own, feed) ? own[feed] : stated[feed];
+      return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
+    };
+    const codes = new Map();
+    const absent = new Set();
+    const named = new Map();
+    const note = (feed, code) => { if (typeof feed === "string" && feed) codes.set(feed, [...(codes.get(feed) || []), code]); };
+    for (const e of Array.isArray(facts.failed) ? facts.failed : [])
+      if (typeof e === "string") note(e, "failed");
+      else if (e && typeof e === "object") {
+        note(e.feed, typeof e.reason === "string" && e.reason ? e.reason : "failed");
+        /* R60 (T51 fix round, B7): the read that refused and its code, as the producers name them (queue-producers R50), carried
+           onto the feed's row; the first failure that names either one. */
+        const why = {};
+        if (typeof e.read === "string" && e.read) why.read = e.read;
+        if (typeof e.code === "string" && e.code) why.code = e.code;
+        if (typeof e.feed === "string" && e.feed && Object.keys(why).length > 0 && !named.has(e.feed)) named.set(e.feed, why);
+      }
+    for (const e of Array.isArray(facts.absent) ? facts.absent : []) {
+      const feed = typeof e === "string" ? e : e && typeof e === "object" ? e.feed : null;
+      if (typeof feed === "string" && feed) absent.add(feed);
+    }
+    const known = new Set(Queue.QUEUE_FEEDS.map(([f]) => f));
+    const rows = [...Queue.QUEUE_FEEDS, ...[...new Set([...codes.keys(), ...absent])].filter((f) => !known.has(f))
+      .sort().map((f) => [f, [...Queue.QUEUE_CLASSES]])].map(([feed, classes]) => {
+      if (feed === "tasks") return { feed, classes: [...classes], answered: true, failed: [], ms: msOf(feed) };
+      if (feed === "notice-producers")
+        return { feed, classes: [...classes], answered: noticed.failed.length === 0 && noticed.absent !== true,
+                 failed: [...noticed.failed], ms: msOf(feed) };
+      const failed = codes.get(feed) || [];
+      return { feed, classes: [...classes], answered: failed.length === 0 && !absent.has(feed), failed: [...failed], ms: msOf(feed),
+               ...(named.get(feed) || {}) };
+    });
+    return rows;
+  }
+
   /** R51: `notice-producers.noticeItems`, as `{items, facts, failed}`. Its contract is never to throw; were it to, the
    *  read is named failed whole rather than taking the feed down, and contributes no item. */
   #noticeItems(args) {
     const np = this.#notices;
-    if (!np || typeof np.noticeItems !== "function") return { items: [], facts: {}, failed: [] };
+    if (!np || typeof np.noticeItems !== "function") return { items: [], facts: {}, failed: [], absent: true };
     let r;
     try { r = np.noticeItems(args); } catch { return { items: [], facts: {}, failed: ["noticeItems"] }; }
     const facts = r && r.facts && typeof r.facts === "object" ? r.facts : {};
@@ -1024,62 +1125,18 @@ export class Queue {
     return { items: r && Array.isArray(r.items) ? r.items : [], facts, failed };
   }
 
-  /** op=queue: the member's ONE feed.
-   *
-   *  `member` and `viewer` are BOTH stamped server-side by the control plane and are
-   *  never taken from the caller — whose queue this is, and whose view its
-   *  case names are compiled for, are server decisions or they are not
-   *  decisions at all.
-   *
-   *  WHOSE OBLIGATIONS. Tasks assigned to the caller, PLUS tasks honestly
-   *  `unassigned`. D-98 intends an unassigned task to stay claimable and
-   *  routable by hand, and DEC-7 keeps it claimable rather than stranded, so
-   *  hiding it from every queue would strand exactly the work routing could
-   *  find nobody for. A machine credential has no member behind it and gets
-   *  the whole live set, which is the operator view the token exists for.
-   *
-   *  `refers_to` POINTS AT THE SUBJECT, NOT AT THE CASE. They are different
-   *  columns and the contract carries both: `subject` is what the item is
-   *  about, `case` is where it is filed. Collapsing them is how a queue
-   *  invents a home. */
-  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false } = {}) {
-    /* R55 (N1094; DEC-240 (D3)): the muted list, in place of the feed: asked for by `muted: true` (or the query's "true" or
-       "1"), it answers what this member has muted and takes neither `sort` nor `limit`. */
-    if (muted === true || muted === "true" || muted === "1")
-      return this.#mutedList(typeof member === "string" && member.trim() ? member.trim() : null, viewer);
-    /* R49 (DEC-110 (1)): the order asked for is checked FIRST, before anything is read, so a refusal costs no read and
-       a caller learns the four orders this feed keeps. Absent or blank is DEC-110 (3)'s default. */
-    const order = typeof sort === "string" ? sort.trim() : (sort === null || sort === undefined ? "" : null);
-    /* DEC-49 REGION is-queue-sort — R49/C-33.51. The code is a STRING LITERAL at its site; the check and the translation
-       come off its row (R49's test compares them). */
-    if (order === null || (order !== "" && !QUEUE_SORTS.includes(order)))
-      return queueRefusal("QUEUE_SORT_UNKNOWN", QUEUE_ACT_CHECKS.QUEUE_SORT_UNKNOWN, {
-        sort: typeof sort === "string" ? sort.slice(0, 40) : null, sorts: [...QUEUE_SORTS],
-        detail: `the feed keeps four orders besides its default (grouped by case): ${QUEUE_SORTS.join(", ")}. `
-              + "Send one of them as `sort`, or none for the default. Nothing was read." });
-    /* END DEC-49 REGION is-queue-sort */
-    const cap = clampLimit(limit, 200, 500);
-    const now = this.#nowMs(nowMs);
-    const me = typeof member === "string" && member.trim() ? member.trim() : null;
-    /* REC-132 / D-422: the queue's act options ask D-310's owner fact of the POSITIONAL
-       identity, which is `member` — already the control plane's stamp of who asks —
-       spelled in the viewer grammar. A machine credential stamps no member and keeps
-       the fallback to its viewer, byte-unchanged. */
-    const identity = me ? `member:${me}` : null;
+  /** R94 (fix round 8, G116): the one derivation of a viewer's feed at one instant: the tasks' OBLIGATIONs and the producers'
+   *  and notices' items, minted (R11), with the project decisions (R13) and the member's mutes (R14) applied, and the figures
+   *  every answer made from it needs (the disposed block's rows, the feeds' rows, the all-clear). It reads and writes nothing
+   *  else; the list, the count and the bridge's reads are made from it. A refusal of the mint is returned as it is. */
+  #derive({ me, viewer, now, identity }) {
     const items = [];
+    /* R91 (L13): what this ask has already read, for its walks and its option derivations (nothing is written in an ask). */
+    const memo = { edges: new Map(), rows: new Map(), homes: new Map(), acts: new Map() };
+    const clock = Queue.#stopwatch();
     /* R56 (N1123): the title of the bundle a subject names, when the viewer may see it, else null; asked once per id, through
        the one gate (D-15), and never of a bundle this viewer may not see (R33). */
-    const titleGate = viewerPredicate(viewer);
-    const titles = new Map();
-    const titleOf = (id) => {
-      if (typeof id !== "string" || !id.trim()) return null;
-      const key = id.trim();
-      if (!titles.has(key)) {
-        const row = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${titleGate.sql})`, key, ...titleGate.args);
-        titles.set(key, row && typeof row.title === "string" && row.title.trim() ? row.title : null);
-      }
-      return titles.get(key);
-    };
+    const titleOf = this.#titleReader(viewer);
 
     /* ---------------------------------------------------- OBLIGATION · tasks
        REC-30: the CASE set was gated from birth (#queueAncestors) but the
@@ -1096,7 +1153,8 @@ export class Queue {
        open one needs (it used to read every status and drop the resolved ones after the cap). */
     /* N410 (tasks R6's `assignees`): a member's read asks for their own and the unassigned tasks itself, so other
        members' live tasks never take a place theirs need; a machine credential (no member) reads every assignee. */
-    for (const row of this.#tasks.recentTasks({ viewer, limit: cap * 2, statuses: Queue.TASK_LIVE_STATUSES,
+    const tTasks = clock.start();
+    for (const row of this.#tasks.recentTasks({ viewer, limit: Queue.QUEUE_TASKS_READ_MAX, statuses: Queue.TASK_LIVE_STATUSES,
                                                 ...(me ? { assignees: [me, "unassigned"] } : {}) })) {
       if (me && row.assignee !== me && row.assignee !== "unassigned") continue;
       const subject = row.refers_to;
@@ -1108,7 +1166,7 @@ export class Queue {
          except the first, as a queue_state row keyed by (member, case) would —
          and a resolved event with two ancestors leaves a stale unresolved copy
          under the second. */
-      const homes = this.#queueAncestors([subject], viewer);
+      const homes = this.#queueAncestors([subject], viewer, memo);
       if (!this.#queueEventLive(row)) continue;
       const createdMs = Date.parse(row.created);
       items.push({
@@ -1121,34 +1179,42 @@ export class Queue {
         detail: row.subject && row.subject.description !== undefined ? row.subject.description : null,
         basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
                  status: row.status,
-                 detail: "a to-do is a routed task: a named person must act for the record "
-                       + "to proceed (D-98). refers_to points at the SUBJECT; case is derived." },
+                 detail: localize("queue.index.a_to_do_is_a", "a to-do is a routed task: a named person must act for the record to proceed (D-98). refers_to points at the SUBJECT; case is derived.") },
         age: Number.isFinite(createdMs)
           ? { state: "determined", since: row.created, ms: Math.max(0, now - createdMs) }
           : { state: "undetermined", reason: "unparseable_created",
-              detail: "the task row carries a created stamp this producer cannot read as an instant" },
+              detail: localize("queue.index.the_task_row_carries_a", "the task row carries a created stamp this producer cannot read as an instant") },
         assignee: row.assignee,
         assignee_role: row.assignee_role,
-        options: this.#queueOptions([subject], viewer, identity),
+        ...(Queue.declaredDoor(row.door) !== null ? { door: Queue.declaredDoor(row.door) } : {}),
+        options: this.#queueOptions([subject], viewer, identity, memo),
       });
     }
+
+    const tasksMs = clock.since(tTasks);
+    const fromTasks = items.length;
 
     /* ------------------------------------------- the producers (queue-producers R8; N363)
        Every item that is not a task comes from the producers' one read, handed this module's R7 walk and R12
        options so there is one walk and one derivation; its `facts` are published below (R6, R15). Pushed above the
        mint, like every producer, so the mint validates what it mints. */
+    const tFeeds = clock.start();
     const produced = this.#feedItems({ member: me, viewer, now, identity,
-      homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
-      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });
+      homesOf: (subjects) => this.#queueAncestors(subjects, viewer, memo),
+      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity, memo) });
+    const feedsMs = clock.since(tFeeds);
     const facts = produced && produced.facts && typeof produced.facts === "object" ? produced.facts : {};
+    const fromProducers = produced && Array.isArray(produced.items) ? produced.items.length : 0;
     items.push(...(produced && Array.isArray(produced.items) ? produced.items : []));
     /* R51 (T33-83): `notice-producers`' one read, beside them, handed the same walk and options, its items treated
        exactly as theirs (minted, homed, muted, decided and sorted below). It writes nothing and never throws (its R1),
        and a producer it names in `facts.failed` contributes no item; the answer states which (`notice_producers`). A
        closed gate is that module's alone to honour: nothing here re-judges what it raises. */
+    const tNotices = clock.start();
     const noticed = this.#noticeItems({ member: me, viewer, now, identity,
-      homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
-      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });
+      homesOf: (subjects) => this.#queueAncestors(subjects, viewer, memo),
+      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity, memo) });
+    const noticesMs = clock.since(tNotices);
     items.push(...noticed.items);
 
     /* THE MINT, and PL-15 SWEPT IT FOR THE CLASS RATHER THAN ADDING TO IT.
@@ -1207,36 +1273,21 @@ export class Queue {
        * that claims too much — and whose set would GROW with the function. The
        * helper sits ABOVE the marker so its own variable-coded return is not
        * inside the governed span, and every code below is a STRING LITERAL at
-       * its site, as the old DEC-49 guard's arm C (`civicos-ui/check-refusal-codes.mjs`,
-       * deleted in T20) needed in order to COMPARE them (PL-3's convention, REC-71's
-       * measurement); the R11 tests compare code, check and translation now. */
+       * its site, so a test can COMPARE them (PL-3's convention, REC-71's measurement);
+       * the R11 tests compare code, check and translation. */
       if (!Queue.QUEUE_CLASSES.includes(it.class))
         return refusal("NO_CLASS",
-          `every queue item says which of ${Queue.QUEUE_CLASSES.map((c) => `"${QUEUE_CLASS_LABELS[c]}"`).join(", ")} `
-          + `it is, and this one `
-          + `carries ${it.class === undefined ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. `
-          + `The feed is DERIVED rather than stored, so the constraint a column would have carried is `
-          + `enforced at the one place an item is minted.`,
+          localize("queue.index.every_queue_item_says_which", "every queue item says which of {map} it is, and this one carries {v1}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.", { map: String(Queue.QUEUE_CLASSES.map((c) => `"${QUEUE_CLASS_LABELS[c]}"`).join(", ")), v1: String(it.class === undefined ? "none" : JSON.stringify(String(it.class).slice(0, 40))) }),
           { id: it.id ?? null });
       if (classOfKind(it.kind) === null)
         return refusal("NO_SUCH_KIND",
-          `${it.kind === undefined || it.kind === null || it.kind === ""
-              ? "this item carries no kind at all"
-              : `'${String(it.kind).slice(0, 60)}' is not a kind this record's catalogue names`}. `
-          + `The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute `
-          + `refuses against, what op=affordances publishes, and what carries the sentence a member `
-          + `reads instead of the slug. A kind invented at a producer would reach a surface with no `
-          + `words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that `
-          + `no code has ever used.`,
+          it.kind === undefined || it.kind === null || it.kind === ""
+            ? localize("queue.index.this_item_carries_no_kind", "this item carries no kind at all. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.")
+            : localize("queue.index.kind_is_not_a_kind", "'{kind}' is not a kind this record's catalogue names. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.", { kind: String(String(it.kind).slice(0, 60)) }),
           { id: it.id ?? null, kind: it.kind ?? null });
       if (classOfKind(it.kind) !== it.class)
         return refusal("KIND_MISCLASSED",
-          `'${String(it.kind).slice(0, 60)}' is catalogued as "${QUEUE_CLASS_LABELS[classOfKind(it.kind)]}" and this `
-          + `item mints it as "${QUEUE_CLASS_LABELS[it.class]}". That is not a spelling mistake, it is a change of `
-          + `doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an `
-          + `AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would `
-          + `let one member silence a task the record believes reached a person, and minting a `
-          + `status item's kind as something noticed would make a fact about our own machinery undismissable.`,
+          localize("queue.index.string_is_catalogued_as_v1", "'{String}' is catalogued as \"{v1}\" and this item mints it as \"{v2}\". That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would let one member silence a task the record believes reached a person, and minting a status item's kind as something noticed would make a fact about our own machinery undismissable.", { String: String(String(it.kind).slice(0, 60)), v1: String(QUEUE_CLASS_LABELS[classOfKind(it.kind)]), v2: String(QUEUE_CLASS_LABELS[it.class]) }),
           { id: it.id ?? null, kind: it.kind ?? null,
             catalogued_as: classOfKind(it.kind), minted_as: it.class });
       /* END DEC-49 REGION is-queue-mint */
@@ -1332,8 +1383,7 @@ export class Queue {
           ...it.case, ancestors: kept,
           ungrouped: it.case.state === "determined" && kept.length === 0,
           disposed_by: decided.map((p) => ({ id: p, reason: "disposed_by_that_project",
-            detail: "this team decided this finding at the judgment layer, so it has left their open list; it "
-                  + "is still live for the teams named above, whose feed that act did not touch (D-266)." })),
+            detail: localize("queue.index.this_team_decided_this_finding", "this team decided this finding at the judgment layer, so it has left their open list; it is still live for the teams named above, whose feed that act did not touch (D-266).") })),
         };
         it.disposition = { ...dsp, projects: homes.filter((p) => !decided.includes(p)),
                            disposed_by: decided };
@@ -1387,6 +1437,117 @@ export class Queue {
     items.length = 0;
     items.push(...admitted);
 
+
+    /* D-266 / IC-60. ONE LIST, TWO SCOPES, AND `scope` SAYS WHICH — never two
+       arrays. What a member wants from this block is *what did I set aside and
+       why*, which is one question; splitting it by the act's key shape would
+       make a surface join two lists to answer it and would put the plane's
+       internal distinction where a reader has to care about it. What the reader
+       DOES have to be able to tell is whose feed each decision governs, and
+       `scope` (with `project` beside it) says exactly that on every row. */
+    const dispAll = [
+      ...(Array.isArray(facts.dispositions) ? facts.dispositions : []).map((d) => ({
+        /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
+           surface ties a decision to the thing it removed without rebuilding
+           the identity from two columns — the drift class IC-53 closed one
+           field over. */
+        id: `FINDING::${d.key}`, scope: "instance", project: null,
+        key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
+        state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
+        /* REC-184: the definition version the decision judged, and whether it still ages the
+           finding — false once the definition is revised, when the finding is an OPEN item again. */
+        definition_version: d.definition_version,
+        definition_version_state: d.definition_version_state,
+        applies: d.applies, applies_because: d.applies_because,
+      })),
+      ...scopedDisposed,
+    ];
+    /* R60 (T51; DEC-330 A62): which feeds answered, and the per-class all-clear: a class is clear only when every feed that can
+       raise it answered and the unsuppressed feed (before the limit's cut) holds no item of it. A muted item is not a failure. */
+    const feeds = this.#feedRows(facts, noticed, { tasks: tasksMs, "notice-producers": noticesMs });
+    const classesAnswered = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, feeds.filter((f) => f.classes.includes(c)).every((f) => f.answered)]));
+    const allClear = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, classesAnswered[c] && !items.some((i) => i.class === c)]));
+    return { ok: true, items, suppressed, mutes, itemMutes, facts, noticed, feeds, feedsMs, dispAll, classesAnswered, allClear, resolved: null,
+             measure: { items_by_producer: { tasks: fromTasks, "queue-producers": fromProducers, "notice-producers": noticed.items.length } } };
+  }
+
+  /** op=queue: the member's ONE feed.
+   *
+   *  `member` and `viewer` are BOTH stamped server-side by the control plane and are
+   *  never taken from the caller — whose queue this is, and whose view its
+   *  case names are compiled for, are server decisions or they are not
+   *  decisions at all.
+   *
+   *  WHOSE OBLIGATIONS. Tasks assigned to the caller, PLUS tasks honestly
+   *  `unassigned`. D-98 intends an unassigned task to stay claimable and
+   *  routable by hand, and DEC-7 keeps it claimable rather than stranded, so
+   *  hiding it from every queue would strand exactly the work routing could
+   *  find nobody for. A machine credential has no member behind it and gets
+   *  the whole live set, which is the operator view the token exists for.
+   *
+   *  `refers_to` POINTS AT THE SUBJECT, NOT AT THE CASE. They are different
+   *  columns and the contract carries both: `subject` is what the item is
+   *  about, `case` is where it is filed. Collapsing them is how a queue
+   *  invents a home. */
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false, answered = false,
+              aside = false, after = null, count = false } = {}) {
+    const flag = (v) => v === true || v === "true" || v === "1";
+    /* R55 (N1094; DEC-240 (D3)): the muted list, in place of the feed: asked for by `muted: true` (or the query's "true" or
+       "1"), it answers what this member has muted and takes neither `sort` nor `limit`. */
+    if (flag(muted))
+      return this.#mutedList(typeof member === "string" && member.trim() ? member.trim() : null, viewer);
+    /* R59 (T51; DEC-330 A61): what left this member's queue because of her, or because another did it for everyone, in place
+       of the feed, as the muted list is (it takes neither `sort` nor `limit`). */
+    if (flag(answered))
+      return this.#answeredList(typeof member === "string" && member.trim() ? member.trim() : null, viewer, this.#nowMs(nowMs));
+    /* R61 (T51; DEC-330 A63): the set-aside findings of both scopes, in place of the feed, paged by `after` and `limit`. */
+    if (flag(aside))
+      return this.#asideList(viewer, this.#nowMs(nowMs), limit, after);
+    /* R49 (DEC-110 (1)): the order asked for is checked FIRST, before anything is read, so a refusal costs no read and
+       a caller learns the four orders this feed keeps. Absent or blank is DEC-110 (3)'s default. */
+    const order = typeof sort === "string" ? sort.trim() : (sort === null || sort === undefined ? "" : null);
+    /* DEC-49 REGION is-queue-sort — R49/C-33.51. The code is a STRING LITERAL at its site; the check and the translation
+       come off its row (R49's test compares them). */
+    if (order === null || (order !== "" && !QUEUE_SORTS.includes(order)))
+      return queueRefusal("QUEUE_SORT_UNKNOWN", QUEUE_ACT_CHECKS.QUEUE_SORT_UNKNOWN, {
+        sort: typeof sort === "string" ? sort.slice(0, 40) : null, sorts: [...QUEUE_SORTS],
+        detail: localize("queue.index.the_feed_keeps_four_orders", "the feed keeps four orders besides its default (grouped by case): {QUEUE_SORTS}. Send one of them as `sort`, or none for the default. Nothing was read.", { QUEUE_SORTS: String(QUEUE_SORTS.join(", ")) }) });
+    /* END DEC-49 REGION is-queue-sort */
+    const cap = clampLimit(limit, 200, 500);
+    const now = this.#nowMs(nowMs);
+    const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    /* REC-132 / D-422: the queue's act options ask D-310's owner fact of the POSITIONAL
+       identity, which is `member` — already the control plane's stamp of who asks —
+       spelled in the viewer grammar. A machine credential stamps no member and keeps
+       the fallback to its viewer, byte-unchanged. */
+    const identity = me ? `member:${me}` : null;
+    /* R94 (fix round 8, G116): the list, the count and what they are made from are ONE derivation for a viewer at one signature
+       (the record's write counter, this module's own writes, the clock's 5-second bucket), kept for the bucket; a hit is served
+       by copying it, a miss makes it once. Nothing is kept when the record states no counter, nor for a refusal. */
+    const derivedKey = JSON.stringify([me, viewer ?? null]);
+    const derivedSig = this.#countSignature(now);
+    let d = null, served = "miss";
+    if (derivedSig !== null) {
+      const kept = this.#derived.get(derivedKey);
+      if (kept && kept.sig === derivedSig) { d = kept.d; served = "hit"; }
+    }
+    if (d === null) {
+      d = this.#measured(() => this.#derive({ me, viewer, now, identity }));
+      if (d.ok !== true) return d;
+      if (derivedSig !== null) {
+        if (!this.#derived.has(derivedKey) && this.#derived.size >= Queue.QUEUE_COUNT_VIEWERS_MAX) this.#derived.clear();
+        this.#derived.set(derivedKey, { sig: derivedSig, d });
+      }
+    }
+    /* R94: what the Server-Timing marks carry (control-plane's phase clock): `queue-count` is `served`, and `rows-queue` the
+       derivation's own figures, stated for a miss only. */
+    const derivation = served === "hit" ? { served } : { served, ...d.measure };
+    /* R93 (T51 fix round 4, P9; K4429): the number of open items the list would hold (after the mutes and the project
+       decisions, before the limit's cut), without the list, so the frame's bell and sidebar do not read the whole feed. */
+    if (flag(count)) return { ok: true, member: me, count: d.items.length, derivation };
+    /* the answer is made from a copy: a caller changing what it was handed changes no other answer made from the derivation */
+    const kept = Queue.#copyOf(d);
+    const { items, suppressed, mutes, itemMutes, facts, noticed, feeds, feedsMs, dispAll, classesAnswered, allClear } = kept;
     /* R40 (DEC-10 (a)): a snoozed case's items are MARKED, never withheld: a surface may hold them back until the
        instant, and the plane keeps reporting them (a snooze defers re-notification; it removes nothing). */
     const snoozes = this.#queueSnoozes(me, now);
@@ -1439,11 +1600,11 @@ export class Queue {
      * it, with nothing anywhere in the answer saying so — indistinguishable
      * from a finding the record never derived, which is exactly what D-79
      * forbids and exactly the sparse-level failure CLAUDE.md makes a first-class
-     * obligation. The surface had noticed and had done the only thing it could:
-     * `civicos-ui/app.html` keeps a page-local Map of the dispositions IT
-     * performed and renders them under the queue. That is honest and it is a
+     * obligation. A surface could only keep a page-local Map of the dispositions
+     * IT performed and render them under the queue, which is honest and is a
      * SECOND PLACE A FACT IS STATED (D-21/DEC-8) that survives neither a reload
-     * nor a second member. The record holds the fact; the op now publishes it.
+     * nor a second member. The record holds the fact; the op publishes it
+     * (`disposed` here, and R61's `aside` list whole, unbounded by this block's 64).
      *
      * **IT PUBLISHES THE DECISION AND ASSERTS NOTHING ABOUT THE GAP.** Whether
      * the underlying finding would fire again today is deliberately NOT claimed
@@ -1454,30 +1615,6 @@ export class Queue {
      * RECORD ACT carrying its author and reason and clears the finding under
      * every case it appears in. */
     const dispCap = Queue.QUEUE_DISPOSED_MAX;
-    /* D-266 / IC-60. ONE LIST, TWO SCOPES, AND `scope` SAYS WHICH — never two
-       arrays. What a member wants from this block is *what did I set aside and
-       why*, which is one question; splitting it by the act's key shape would
-       make a surface join two lists to answer it and would put the plane's
-       internal distinction where a reader has to care about it. What the reader
-       DOES have to be able to tell is whose feed each decision governs, and
-       `scope` (with `project` beside it) says exactly that on every row. */
-    const dispAll = [
-      ...(Array.isArray(facts.dispositions) ? facts.dispositions : []).map((d) => ({
-        /* THE ITEM ID THIS DECISION AGED, in the feed's own spelling, so a
-           surface ties a decision to the thing it removed without rebuilding
-           the identity from two columns — the drift class IC-53 closed one
-           field over. */
-        id: `FINDING::${d.key}`, scope: "instance", project: null,
-        key: d.key, progression_key: d.progression_key, stage_key: d.stage_key,
-        state: d.state, reason: d.reason, decided_by: d.decided_by, at: d.at,
-        /* REC-184: the definition version the decision judged, and whether it still ages the
-           finding — false once the definition is revised, when the finding is an OPEN item again. */
-        definition_version: d.definition_version,
-        definition_version_state: d.definition_version_state,
-        applies: d.applies, applies_because: d.applies_because,
-      })),
-      ...scopedDisposed,
-    ];
     const disposedOut = dispAll.slice(0, dispCap);
     return {
       ok: true, member: me, items: out,
@@ -1496,6 +1633,10 @@ export class Queue {
       class_labels: QUEUE_CLASS_LABELS,
       /* R54 (N1047; DEC-226 (1)): the kinds a surface files under a named section, not under "no case". */
       sections: QUEUE_SECTIONS,
+      /* R60 (T51; DEC-330 A62): the feeds this answer was assembled from and whether each answered; a surface says "looked and
+         found none" for a class exactly when `all_clear` holds for it, and names a failed feed by its id. Asking again is the
+         retry: no state is kept between asks. */
+      feeds, feeds_ms: feedsMs, all_answered: feeds.every((f) => f.answered), classes_answered: classesAnswered, all_clear: allClear,
       classes_deferred: Queue.QUEUE_CLASSES_DEFERRED,
       ancestor_depth_bound: Queue.QUEUE_ANCESTOR_DEPTH,
       /* REC-21. What this member has chosen not to be told about, REPORTED
@@ -1515,7 +1656,7 @@ export class Queue {
            on `suppressed`) could be neither named nor undone — the case form's
            unmute takes the kinds. A map BESIDE `cases` rather than objects IN
            it, because every reader of `cases` holds it as a list of ids (the
-           module's R14 tests and civicos-ui); this adds and moves nothing. */
+           module's R14 tests and the screens); this adds and moves nothing. */
         case_kinds: Object.fromEntries([...mutes.keys()].sort()
           .map((c) => [c, [...mutes.get(c)].sort()])),
         /* D-125: every item id this member muted, whether or not it is live
@@ -1525,12 +1666,7 @@ export class Queue {
         snoozed_until: Object.fromEntries([...snoozes.entries()].sort()),
         suppressed,
         suppressed_count: suppressed.length,
-        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed "
-              + "from the record and nothing here left another member's queue. A status item or a noticed item "
-              + "can be here, quieted by case over the kinds you named or by its own id (`scope`); a "
-              + "to-do never can, because it leaves every list only when it is DONE. A quieted "
-              + "noticed item is still open for the team and in op=proposals: it leaves the team's list only "
-              + "when it is adopted, deferred or dismissed, an act the record keeps.",
+        detail: localize("queue.index.muting_is_personal_and_dismissing", "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A status item or a noticed item can be here, quieted by case over the kinds you named or by its own id (`scope`); a to-do never can, because it leaves every list only when it is DONE. A quieted noticed item is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps."),
       },
       /* D-266. The other half of the sentence `mute` has just finished — a
          FINDING leaves this list when it is dismissed, and here is every one
@@ -1544,25 +1680,13 @@ export class Queue {
         recorded: dispAll.length,
         bound: dispCap,
         truncated: dispAll.length > disposedOut.length,
-        detail: "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) "
-              + "carrying its author and their reason — never by a preference, which is the block "
-              + "above. It has NOT left the record: the decision is keyed on the finding's own "
-              + "identity, the same id the open feed mints for it, and it stands until it is "
-              + "RE-TRIAGED. Whether the underlying gap still fires is NOT asserted here and does not "
-              + "matter to the decision (D-79) — op=proposals is the op that answers that. **WHOSE "
-              + "FEED EACH DECISION GOVERNS IS ON THE ROW AND IS NOT ONE ANSWER (D-266, IC-60): "
-              + "`scope: instance` cleared this finding for EVERYBODY, because a progression-stage "
-              + "finding is a fact about the shared record and one act clearing it under every case is "
-              + "dedup (DEC-16); `scope: project` cleared it for THAT PROJECT AND NO OTHER, because a "
-              + "stance is one project's own property (§7, D-216) and R5 makes forks at the judgment "
-              + "layer legitimate.** So `personal: false` means no member's preference did this, and "
-              + "it never means every team's feed moved. AN EMPTY LIST MEANS THE RECORD LOOKED AND "
-              + "HOLDS NONE, never that this plane cannot say; and which act any given finding is "
-              + "open to is published on the item's own `disposition`, never inferred from its kind.",
+        detail: localize("queue.index.every_finding_here_left_the", "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) carrying its author and their reason — never by a preference, which is the block above. It has NOT left the record: the decision is keyed on the finding's own identity, the same id the open feed mints for it, and it stands until it is RE-TRIAGED. Whether the underlying gap still fires is NOT asserted here and does not matter to the decision (D-79) — op=proposals is the op that answers that. **WHOSE FEED EACH DECISION GOVERNS IS ON THE ROW AND IS NOT ONE ANSWER (D-266, IC-60): `scope: instance` cleared this finding for EVERYBODY, because a progression-stage finding is a fact about the shared record and one act clearing it under every case is dedup (DEC-16); `scope: project` cleared it for THAT PROJECT AND NO OTHER, because a stance is one project's own property (§7, D-216) and R5 makes forks at the judgment layer legitimate.** So `personal: false` means no member's preference did this, and it never means every team's feed moved. AN EMPTY LIST MEANS THE RECORD LOOKED AND HOLDS NONE, never that this plane cannot say; and which act any given finding is open to is published on the item's own `disposition`, never inferred from its kind."),
       },
       /* R39 (DEC-16): the obligations resolved lately on subjects this viewer sees, each with who resolved it and
          when, so a member who did not resolve one reads "resolved by X on this date" rather than a gap. */
-      resolved: this.#resolvedLately(viewer, now),
+      resolved: Queue.#copyOf(d.resolved ??= this.#resolvedLately(viewer, now)),
+      /* R94: how this answer was served: `hit` (the derivation kept) or `miss` (made now, with its figures). */
+      derivation,
       /* N172: the bound on the projects `objective-gap` asks about, published beside whether it cut. */
       objective_gap_projects_bound: facts.objective_gap ? facts.objective_gap.bound ?? null : null,
       objective_gap_projects_truncated: !!(facts.objective_gap && facts.objective_gap.truncated === true),
@@ -1573,9 +1697,7 @@ export class Queue {
       /* R51 (T33-83): what `notice-producers` said of its read: each producer's bound and `truncated` as it states
          them, and `failed`, the producers that contributed no item because they could not be read. */
       notice_producers: { ...noticed.facts, failed: [...noticed.failed],
-        detail: "the machine's and the assistant's noticed items, duties come due and dated waits come round are read "
-              + "here beside the rest of the feed. A producer named in `failed` could not be read, so it contributed "
-              + "nothing this time: its absence from the feed is not a statement that it has nothing to say." },
+        detail: localize("queue.index.the_machines_and_the_assistants", "the machine's and the assistant's noticed items, duties come due and dated waits come round are read here beside the rest of the feed. A producer named in `failed` could not be read, so it contributed nothing this time: its absence from the feed is not a statement that it has nothing to say.") },
       /* D-266's SECOND, SMALLER HALF — the folded gap, counted rather than
          closed, because closing it needs an identity this record does not
          hold and inventing one would be the overclaim the silence exists to
@@ -1584,18 +1706,7 @@ export class Queue {
         count: Number(facts.unattributed && facts.unattributed.count) || 0,
         inquiries: facts.unattributed && Array.isArray(facts.unattributed.inquiries)
           ? facts.unattributed.inquiries : [],
-        detail: "readings of a SHARED question that this read met and could not attribute to a team, "
-              + "so no `new-version-arrived-from-another-team` item was minted for them. The source "
-              + "team is a run's own stored context or it is nothing: a member does not name a team in "
-              + "this record, and guessing one from who authored a reading would manufacture the very "
-              + "connection the notification claims attention for. SO THE COUNT IS PUBLISHED AND THE "
-              + "ATTRIBUTION IS NOT — an empty item list and an unattributable set are different facts "
-              + "and until now they read the same. The questions are named so a member can go and look "
-              + "(op=basisversions); the readings are not named and no author is implied. Why each one "
-              + "could not be attributed is deliberately NOT distinguished: telling a hand-composed "
-              + "reading from one whose run sat under something other than a project would mean "
-              + "projecting a stored column of `ai_runs`, which this reader's declared role forbids "
-              + "(REC-74). Zero means this read attributed everything it met, not that it did not look.",
+        detail: localize("queue.index.readings_of_a_shared_question", "readings of a SHARED question that this read met and could not attribute to a team, so no `new-version-arrived-from-another-team` item was minted for them. The source team is a run's own stored context or it is nothing: a member does not name a team in this record, and guessing one from who authored a reading would manufacture the very connection the notification claims attention for. SO THE COUNT IS PUBLISHED AND THE ATTRIBUTION IS NOT — an empty item list and an unattributable set are different facts and until now they read the same. The questions are named so a member can go and look (op=basisversions); the readings are not named and no author is implied. Why each one could not be attributed is deliberately NOT distinguished: telling a hand-composed reading from one whose run sat under something other than a project would mean projecting a stored column of `ai_runs`, which this reader's declared role forbids (REC-74). Zero means this read attributed everything it met, not that it did not look."),
       },
       counts: {
         obligation: out.filter((i) => i.class === "OBLIGATION").length,
@@ -1692,7 +1803,7 @@ export class Queue {
     /* tasks R6: the tasks resolved since then on visible subjects, one past the bound so the cut is observed. */
     const rows = this.#tasks.resolvedTasks({ viewer, since, limit: cap + 1 });
     const tasks = rows.slice(0, cap).map((t) => {
-      const by = [...t.history].reverse().find((h) => h && h.event === "resolved");
+      const by = Queue.resolvingEntry(t.history);
       return { id: t.id, class: "OBLIGATION", kind: t.kind, refers_to: t.refers_to, summary: t.subject.text,
                resolved_by: by ? by.actor : null, resolved_at: t.resolved_at ?? (by ? by.at : null) };
     });
@@ -1707,13 +1818,8 @@ export class Queue {
              bias_debts: { read: settled.undetermined !== true, debts, count: debts.length,
                            bound: settled.limit ?? cap, truncated: settled.truncated === true,
                            ...(settled.undetermined === true || settled.stated ? { stated: settled.stated ?? null } : {}),
-                           detail: "bias debts settled in the window on runs this viewer may read (bias R44), each with "
-                                 + "the member who settled it. `resolved_by` is null when no member settled it (the lens "
-                                 + "moved back, or a re-run under the lens now in force discharged it), and "
-                                 + "`settled_kind` says which; null never means nobody acted." },
-             detail: "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one "
-                   + "member's resolution clears the item for everyone, and this is where everyone else reads that "
-                   + "it happened." };
+                           detail: localize("queue.index.bias_debts_settled_in_the", "bias debts settled in the window on runs this viewer may read (bias R44), each with the member who settled it. `resolved_by` is null when no member settled it (the lens moved back, or a re-run under the lens now in force discharged it), and `settled_kind` says which; null never means nobody acted.") },
+             detail: localize("queue.index.to_dos_that_left_the", "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one member's resolution clears the item for everyone, and this is where everyone else reads that it happened.") };
   }
 
   /** The case a personal preference may be attached to, resolved through the
@@ -1731,7 +1837,7 @@ export class Queue {
   #queueCaseFor(caseId, viewer) {
     const id = typeof caseId === "string" ? caseId.trim() : "";
     if (!id) return { ok: false, reason: "NO_CASE",
-                      detail: "a personal preference is keyed (member, case); name the case it is about" };
+                      detail: localize("queue.index.a_personal_preference_is_keyed", "a personal preference is keyed (member, case); name the case it is about") };
     const gate = viewerPredicate(viewer);
     /* `FROM bundles b` and not `FROM bundles`: viewerPredicate compiles a
        predicate over the alias `b`, which is the shape every other gated read in
@@ -1740,19 +1846,187 @@ export class Queue {
       `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
         WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
     if (!row) return { ok: false, reason: "NO_SUCH_CASE", case: id,
-      detail: "no case by that id is visible to you. A case you may not see and a case that does not "
-            + "exist answer identically here (D-15), so this refusal reveals nothing either way." };
+      detail: localize("queue.index.no_case_by_that_id", "no case by that id is visible to you. A case you may not see and a case that does not exist answer identically here (D-15), so this refusal reveals nothing either way.") };
     const ty = normalizeType(row.object_type);
     if (!Queue.QUEUE_CASE_TYPES.includes(ty))
       return { ok: false, reason: "NOT_A_CASE", case: id, object_type: ty,
-        detail: "a queue entry is filed under a CASE — an inquiry or a project — and personal state is "
-              + "keyed to that. A document is a SUBJECT, not a home: muting one would be muting every "
-              + "question that rests on it, for reasons none of those questions' owners could see." };
+        detail: localize("queue.index.a_queue_entry_is_filed", "a queue entry is filed under a CASE — an inquiry or a project — and personal state is keyed to that. A document is a SUBJECT, not a home: muting one would be muting every question that rests on it, for reasons none of those questions' owners could see.") };
     const spec = vocabFor(STATES, row.object_type);
     return { ok: true, id: row.bundle_id, type: ty, title: row.title ?? null,
              state: row.current_state ?? null,
              known_state: !!(spec && spec.edges
                && Object.prototype.hasOwnProperty.call(spec.edges, row.current_state)) };
+  }
+
+  /** R56: a reader of the title of a bundle by id, for this viewer: the bundle's title when the viewer may see it, else null
+   *  (never of a bundle they may not, R33); asked once per id, through the one gate (D-15). */
+  #titleReader(viewer) {
+    const gate = viewerPredicate(viewer);
+    const titles = new Map();
+    return (id) => {
+      if (typeof id !== "string" || !id.trim()) return null;
+      const key = id.trim();
+      if (!titles.has(key)) {
+        const row = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, key, ...gate.args);
+        titles.set(key, row && typeof row.title === "string" && row.title.trim() ? row.title : null);
+      }
+      return titles.get(key);
+    };
+  }
+
+  /** R58 (T51): the item `itemId` as this member's current feed holds it, for the mute to store with its row: its kind, the
+   *  title of its subject (R56) and the subject's id, each null when the item is not among her feed's items (not live, or
+   *  already muted). Looked up once; never throws. */
+  #liveItem(member, viewer, itemId) {
+    const none = { kind: null, title: null, subject: null };
+    try {
+      const f = this.queueFeed({ member, viewer, limit: 500 });
+      const it = f && f.ok === true && Array.isArray(f.items) ? f.items.find((i) => i && i.id === itemId) : null;
+      if (!it) return none;
+      const sub = it.subject && typeof it.subject === "object" ? it.subject : {};
+      const title = typeof sub.title === "string" && sub.title.trim() ? sub.title : null;
+      return { kind: typeof it.kind === "string" && it.kind ? it.kind : null, title,
+               subject: title !== null && typeof sub.id === "string" && sub.id ? sub.id : null };
+    } catch { return none; }
+  }
+
+  /** R59, R61: rows newest first by `at` (as a time, not as text), the undated after the dated, ties in the order `tie`
+   *  gives (a text per row). */
+  static #newestFirst(tie) {
+    const ms = (x) => { const t = typeof x.at === "string" ? Date.parse(x.at) : NaN; return Number.isFinite(t) ? t : null; };
+    return (a, b) => {
+      const ma = ms(a), mb = ms(b);
+      if (ma !== mb) return ma === null ? 1 : mb === null ? -1 : mb - ma;
+      const ta = tie(a), tb = tie(b);
+      return ta < tb ? -1 : ta > tb ? 1 : 0;
+    };
+  }
+
+  /** R59 (T51; DEC-330 A61, K3806; `tasks` R6, R3; amends R39): what left this member's queue because of her, or because
+   *  another member did it for everyone, in place of the feed: `{ok, answered, count, window_days, bound, truncated}`, newest
+   *  first, within R39's window and bound. Four kinds of row, each `act`: `resolved` (R39's tasks that were hers, assigned to
+   *  her or unassigned or resolved by her, and its settled bias debts; `by` the member who resolved it, null when none did,
+   *  `by_you` true when she did), `forwarded` (a to-do she forwarded, from the task's own history: `to` is the task's
+   *  assignee now when the entry is its latest forward, else null), `snoozed` (each case she snoozed whose snooze is still in
+   *  the future), `set_aside` (each finding she dismissed or deferred in the window) and, from R95, `join_answer` (each join
+   *  request she answered in the window, from project-roster's read by `closed_by` (its R44): `{act: "join_answer", project,
+   *  title, requester: {member, handle}, answer: "granted" | "declined", at}`). Only `resolved` rows are about other
+   *  members' acts; the rest are the asker's own. A caller with no member gets `resolved` rows only. A row names no subject
+   *  or case the viewer may not see (R33). Reads only; never throws on stored text. */
+  #answeredList(member, viewer, now) {
+    const cap = Queue.QUEUE_RESOLVED_MAX, days = Queue.QUEUE_RESOLVED_WINDOW_DAYS;
+    const sinceMs = now - days * 86400000;
+    const since = stampInstant("second", sinceMs);
+    const gate = viewerPredicate(viewer);
+    const titleOf = this.#titleReader(viewer);
+    const inWindow = (at) => { const t = typeof at === "string" ? Date.parse(at) : NaN; return Number.isFinite(t) && t >= sinceMs; };
+    const rows = [];
+    const resolved = this.#tasks.resolvedTasks({ viewer, since, limit: 1000 });
+    for (const t of resolved) {
+      const by = Queue.resolvingEntry(t.history);
+      const resolvedBy = by && typeof by.actor === "string" ? by.actor : null;
+      if (member && t.assignee !== member && t.assignee !== "unassigned" && resolvedBy !== member) continue;
+      rows.push({ act: "resolved", id: t.id, class: "OBLIGATION", kind: t.kind, title: titleOf(t.refers_to),
+                  by: resolvedBy, by_you: member !== null && resolvedBy === member, at: t.resolved_at ?? (by ? by.at : null) });
+    }
+    const settled = this.#bias.settled({ gate, since, limit: cap }) || {};
+    for (const d of Array.isArray(settled.debts) ? settled.debts : [])
+      rows.push({ act: "resolved", id: `OBLIGATION::bias-debt::${d.run}`, class: "OBLIGATION", kind: "bias-debt",
+                  title: titleOf(d.context_id), by: d.actor ?? null, by_you: member !== null && d.actor === member,
+                  at: d.settled_at ?? null, settled_kind: d.settled_kind ?? null });
+    if (member) {
+      const seen = new Set();
+      for (const t of [...this.#tasks.recentTasks({ viewer, limit: 1000, statuses: Queue.TASK_LIVE_STATUSES }), ...resolved]) {
+        if (seen.has(t.id)) continue;
+        seen.add(t.id);
+        const hist = Array.isArray(t.history) ? t.history : [];
+        const latest = hist.reduce((m, h, i) => (h && h.event === "forwarded" ? i : m), -1);
+        hist.forEach((h, i) => {
+          if (h && h.event === "forwarded" && h.actor === member && inWindow(h.at))
+            rows.push({ act: "forwarded", id: t.id, kind: t.kind, title: titleOf(t.refers_to), to: i === latest ? t.assignee : null,
+                        at: h.at });
+        });
+      }
+      for (const r of this.#rows(`SELECT case_id, snoozed_until, snoozed_at FROM queue_state WHERE member_id=? AND snoozed_until IS NOT NULL`, member)) {
+        const until = Date.parse(r.snoozed_until);
+        if (!(Number.isFinite(until) && until > now)) continue;
+        const c = this.#one(`SELECT b.bundle_id, b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, r.case_id, ...gate.args);
+        if (!c) continue;
+        rows.push({ act: "snoozed", case: { id: c.bundle_id, title: typeof c.title === "string" && c.title.trim() ? c.title : null },
+                    until: r.snoozed_until, at: r.snoozed_at ?? null });
+      }
+      for (const r of this.#rows(`SELECT project_id, finding_id, state, at FROM finding_dispositions WHERE decided_by=?`, member)) {
+        if (!inWindow(r.at) || !this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, r.project_id, ...gate.args)) continue;
+        rows.push({ act: "set_aside", scope: "project", project: r.project_id, finding: r.finding_id, state: r.state, at: r.at });
+      }
+      const feed = this.#progressions.proposalsFeed(now) || {};
+      for (const d of Array.isArray(feed.dispositions) ? feed.dispositions : [])
+        if (d && d.decided_by === member && (d.state === "dismissed" || d.state === "deferred") && inWindow(d.at))
+          rows.push({ act: "set_aside", scope: "instance", project: null, finding: `FINDING::${d.key}`, state: d.state, at: d.at });
+      /* R95: the join requests she answered; project-roster already leaves out a project she cannot see in full (its R44), and
+         the gate here is the same R33 rule, so a project she is out of names nothing whichever reads it. */
+      let joins = null;
+      try { joins = this.#projectRoster.projectRequestsAnswered({ by: member, viewer, limit: cap }); } catch { joins = null; }
+      for (const j of joins && joins.ok === true && Array.isArray(joins.answered) ? joins.answered : []) {
+        if (!j || typeof j.projectId !== "string" || !inWindow(j.closed)) continue;
+        const p = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, j.projectId, ...gate.args);
+        if (!p) continue;
+        rows.push({ act: "join_answer", project: j.projectId, title: typeof p.title === "string" && p.title.trim() ? p.title : null,
+                    requester: j.requester ?? null, answer: j.answer, at: j.closed });
+      }
+    }
+    rows.sort(Queue.#newestFirst((x) => `${x.act}\u0000${x.id ?? x.finding ?? x.case?.id ?? x.project}\u0000${x.project ?? ""}\u0000${x.requester?.handle ?? ""}`));
+    const page = rows.slice(0, cap);
+    return { ok: true, answered: page, count: page.length, window_days: days, bound: cap, truncated: rows.length > cap };
+  }
+
+  /** R61 (T51; DEC-330 A63, K3839; amends R15): every set-aside finding of both scopes in place of the feed, newest first by
+   *  `at` then `scope`, `project` and `finding`, each `{scope, finding, project, key, state, reason, decided_by, at,
+   *  definition_version, title}`: an instance row is `progressions.proposalsFeed`'s `dispositions[]` (its R18) with the version
+   *  it judged, a project row is `finding_dispositions`' with `definition_version: null`. Not cut at R15's 64: paged by `after`
+   *  (the previous page's `next`, an opaque cursor naming the last row) and `limit` (default 200, at most 500). A row whose
+   *  project, or a bundle its finding's id names, the viewer may not see is left out and not counted (R33); its `title` is the
+   *  title of the first visible bundle the finding's id names, else null. */
+  #asideList(viewer, now, limit, after) {
+    const cap = clampLimit(limit, 200, 500);
+    const gate = viewerPredicate(viewer);
+    const titleOf = this.#titleReader(viewer);
+    const sees = (id) => !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+    const exists = (id) => !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id);
+    const rows = [];
+    const feed = this.#progressions.proposalsFeed(now) || {};
+    for (const d of Array.isArray(feed.dispositions) ? feed.dispositions : [])
+      if (d && (d.state === "dismissed" || d.state === "deferred"))
+        rows.push({ scope: "instance", finding: `FINDING::${d.key}`, project: null, key: d.key, state: d.state, reason: d.reason ?? null,
+                    decided_by: d.decided_by ?? null, at: d.at ?? null, definition_version: d.definition_version ?? null, title: null });
+    for (const r of this.#rows(`SELECT project_id, finding_id, state, reason, decided_by, at FROM finding_dispositions`)) {
+      if (!sees(r.project_id)) continue;
+      /* the bundles the finding's id names: one the viewer may not see leaves the row out, the first they may names its title */
+      const named = String(r.finding_id).split(/::|@|#/).filter((x) => x && exists(x));
+      if (named.some((x) => !sees(x))) continue;
+      rows.push({ scope: "project", finding: r.finding_id, project: r.project_id, key: `${r.project_id}::${r.finding_id}`, state: r.state,
+                  reason: r.reason ?? null, decided_by: r.decided_by ?? null, at: r.at ?? null, definition_version: null,
+                  title: named.length ? titleOf(named[0]) : null });
+    }
+    const cmp = Queue.#newestFirst((x) => `${x.scope}\u0000${x.project ?? ""}\u0000${x.finding}`);
+    rows.sort(cmp);
+    let from = 0;
+    if (typeof after === "string" && after) {
+      let c = null;
+      try { c = JSON.parse(Buffer.from(after, "base64url").toString("utf8")); } catch { c = null; }
+      if (c && typeof c === "object" && typeof c.scope === "string" && typeof c.finding === "string") {
+        const mark = { at: typeof c.at === "string" ? c.at : null, scope: c.scope, project: typeof c.project === "string" ? c.project : null,
+                       finding: c.finding };
+        from = rows.findIndex((x) => cmp(x, mark) > 0);   // the rows after the cursor's place in the one total order
+        if (from < 0) from = rows.length;
+      }
+    }
+    const page = rows.slice(from, from + cap);
+    const truncated = from + cap < rows.length;
+    const last = page.at(-1);
+    return { ok: true, aside: page, count: page.length,
+             next: truncated && last ? Buffer.from(JSON.stringify({ at: last.at, scope: last.scope, project: last.project, finding: last.finding }), "utf8").toString("base64url") : null,
+             truncated };
   }
 
   /** R55 (T50; N1094; DEC-240 (D3); amends R14, R19, R20): what this member has muted and nobody else's, one row per kind
@@ -1774,8 +2048,16 @@ export class Queue {
         rows.push({ kind, case: { id: c.bundle_id, title: typeof c.title === "string" && c.title.trim() ? c.title : null },
                     at: ats[kind] ?? null });
     }
-    for (const r of this.#rows(`SELECT item_id, item_class, muted_at FROM queue_item_mutes WHERE member_id=?`, member))
-      rows.push({ item: r.item_id, class: r.item_class, at: r.muted_at ?? null });
+    /* R58 (T51): an item's row names it: its `kind` as her feed held it when she muted it, else the id's second segment where
+       `classOfKind` names it a kind of the row's class, else null; and its `title`, the title recorded with the mute, never
+       back-filled, and null when its subject is a bundle she may no longer see (R33). */
+    for (const r of this.#rows(`SELECT item_id, item_class, muted_at, item_kind, item_title, item_subject FROM queue_item_mutes WHERE member_id=?`, member)) {
+      const seg = String(r.item_id).split("::")[1];
+      const kind = typeof r.item_kind === "string" && r.item_kind ? r.item_kind : (seg && classOfKind(seg) === r.item_class ? seg : null);
+      const shown = typeof r.item_title === "string" && r.item_title.trim() && typeof r.item_subject === "string" && r.item_subject
+        && this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, r.item_subject, ...gate.args);
+      rows.push({ item: r.item_id, class: r.item_class, kind, title: shown ? r.item_title : null, at: r.muted_at ?? null });
+    }
     /* newest first by the instant (as a time, not as text), the undated after them; ties in a fixed order. */
     const ms = (x) => { const t = x.at === null ? NaN : Date.parse(x.at); return Number.isFinite(t) ? t : null; };
     const tie = (x) => (x.item !== undefined ? `1\u0000${x.item}` : `0\u0000${x.case.id}\u0000${x.kind}`);
@@ -1820,8 +2102,7 @@ export class Queue {
               viewer = null, at = null } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
     if (!me) return { ok: false, reason: "NO_MEMBER",
-      detail: "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine "
-            + "credential has no member behind it. There is no instance-wide mute and there must not be." };
+      detail: localize("queue.index.a_mute_is_personal_it", "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it. There is no instance-wide mute and there must not be.") };
     const mutableKinds = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
     const itemId = typeof item === "string" ? item.trim() : "";
     const named = Array.isArray(kinds) ? kinds.map((k) => (typeof k === "string" ? k.trim() : "")).filter(Boolean) : [];
@@ -1833,8 +2114,7 @@ export class Queue {
          ends up believing the wrong thing is silenced. */
       if (named.length > 0 || (typeof caseId === "string" && caseId.trim()))
         return { ok: false, reason: "BAD_KIND", item: itemId,
-          detail: "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are "
-                + "two different preferences and this plane will not guess which one you meant" };
+          detail: localize("queue.index.name_either_one_item_item", "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are two different preferences and this plane will not guess which one you meant") };
       /* The class is the id's own first segment; an OBLIGATION's id is an
          opaque task id with none, so `tasks` is asked to NAME it — the refusal
          must say OBLIGATION rather than merely "unknown". */
@@ -1851,25 +2131,20 @@ export class Queue {
       if (c.ok !== true) return c;
       if (named.length === 0)
         return { ok: false, reason: "NO_KINDS", case: c.id,
-          detail: "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it "
-                + "was made — that is what lets a NEW kind on this case still reach you — so there is no "
-                + "whole-case mute to ask for.",
+          detail: localize("queue.index.name_the_kinds_to_mute", "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it was made — that is what lets a NEW kind on this case still reach you — so there is no whole-case mute to ask for."),
           available: mutableKinds };
       for (const k of named) subjects.push({ kind: k, cls: classOfKind(k) });
     }
     for (const sb of subjects) {
       if (sb.kind !== undefined && sb.kind.includes(","))
         return { ok: false, reason: "BAD_KIND", kind: sb.kind, case: c.id,
-          detail: "a kind is a slug and may not contain a comma; the stored set is comma-separated" };
+          detail: localize("queue.index.a_kind_is_a_slug", "a kind is a slug and may not contain a comma; the stored set is comma-separated") };
       if (sb.cls === null)
         return { ok: false, reason: "UNKNOWN_KIND", ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
           case: c ? c.id : null,
           detail: sb.item
-            ? "no queue item by that id is one this plane can classify: a noticed item's or a status item's id "
-              + "begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is "
-              + "not the same as forbidden, and this refusal is the first rather than the second."
-            : "the notification catalogue does not name that kind. Unknown is not the same as "
-              + "forbidden, and this refusal is the first rather than the second.",
+            ? localize("queue.index.no_queue_item_by_that", "no queue item by that id is one this plane can classify: a noticed item's or a status item's id begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is not the same as forbidden, and this refusal is the first rather than the second.")
+            : localize("queue.index.the_notification_catalogue_does_not", "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second."),
           available: mutableKinds };
       /* DEC-49 REGION is-mute-class — REC-64/C-33.27. */
       if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
@@ -1886,22 +2161,31 @@ export class Queue {
       const cls = subjects[0].cls;
       const had = !!this.#one(
         `SELECT item_id FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
+      this.#wrote();
       if (unmute) this.sql.exec(
         `DELETE FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
-      else this.sql.exec(
-        `INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES (?, ?, ?, ?)
-         ON CONFLICT(member_id, item_id) DO UPDATE SET muted_at=excluded.muted_at`,
-        me, itemId, cls, stamp);
+      else {
+        /* R58 (T51; amends R20): the item is looked up once among her current feed's items, and its kind, its subject's
+           title (R56) and that subject's id are stored with the row; an item that is not live (or is already muted, so is not
+           in her feed) stores none, and a re-mute keeps what the row already held. */
+        const live = this.#liveItem(me, viewer, itemId);
+        this.sql.exec(
+          `INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at, item_kind, item_title, item_subject)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(member_id, item_id) DO UPDATE SET muted_at=excluded.muted_at,
+             item_kind=COALESCE(excluded.item_kind, item_kind), item_title=COALESCE(excluded.item_title, item_title),
+             item_subject=COALESCE(excluded.item_subject, item_subject)`,
+          me, itemId, cls, stamp, live.kind, live.title, live.subject);
+      }
+      /* R94: the feed was derived (for the live item above) before this write, so the write is counted again: nothing made
+         from that derivation outlives the mute. */
+      this.#wrote();
       return {
         ok: true, member: me, form: "item", item: itemId, item_class: cls,
         muted_items: [...this.#queueItemMutes(me)].sort(),
         added: !unmute && !had ? [itemId] : [], removed: unmute && had ? [itemId] : [], at: stamp,
         wrote: { queue_item_mutes: 1, queue_state: 0, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-        detail: "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. "
-              + "Nothing left the record, no other member's feed moved, no disposition was written, and "
-              + "op=proposals still carries the finding. A finding leaves the team's list only when it is "
-              + "adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the "
-              + "same item arising again stays muted for you until you unmute it.",
+        detail: localize("queue.index.a_mute_is_personal_this", "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. Nothing left the record, no other member's feed moved, no disposition was written, and op=proposals still carries the finding. A finding leaves the team's list only when it is adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the same item arising again stays muted for you until you unmute it."),
       };
     }
     const row = this.#one(
@@ -1919,6 +2203,7 @@ export class Queue {
     const ats = parseMutedAt(row ? row.muted_at : null);
     const keptAt = Object.fromEntries(next.map((k) => [k, ats[k] ?? (had.includes(k) ? undefined : stamp)])
       .filter(([, v]) => v !== undefined));
+    this.#wrote();
     this.sql.exec(
       `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, muted_at)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -1933,10 +2218,7 @@ export class Queue {
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing "
-            + "left the record, nothing left another member's queue, no disposition was written, and a "
-            + "to-do on this case still reaches you: a to-do leaves every list only when it is "
-            + "DONE, which is record state.",
+      detail: localize("queue.index.a_mute_is_personal_and", "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing left the record, nothing left another member's queue, no disposition was written, and a to-do on this case still reaches you: a to-do leaves every list only when it is DONE, which is record state."),
     };
   }
 
@@ -1960,8 +2242,7 @@ export class Queue {
                 viewer = null, at = null } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
     if (!me) return { ok: false, reason: "NO_MEMBER",
-      detail: "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a "
-            + "machine credential has no member behind it." };
+      detail: localize("queue.index.a_snooze_is_personal_it", "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it.") };
     const c = this.#queueCaseFor(caseId, viewer);
     if (c.ok !== true) return c;
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
@@ -1969,9 +2250,7 @@ export class Queue {
     if (!clear) {
       if (typeof until !== "string" || !until)
         return { ok: false, reason: "NO_UNTIL", case: c.id,
-          detail: "name the instant to snooze until. There is no default and there must not be one: "
-                + "P-87 requires re-notification at the stage's OWN declared interval, never at a "
-                + "global one, so this plane holds no instance-wide snooze constant to fall back on." };
+          detail: localize("queue.index.name_the_instant_to_snooze", "name the instant to snooze until. There is no default and there must not be one: P-87 requires re-notification at the stage's OWN declared interval, never at a global one, so this plane holds no instance-wide snooze constant to fall back on.") };
       /* R21 (K1444 (iii)): `until` is an instant, or a calendar date read as the start of that local day in the
          instance profile's zone (`civil-time.dayRange`), never as a UTC midnight. A date is in the past when it is
          before TODAY'S local day there (`civil-time.localDay`), never the UTC day. */
@@ -1981,57 +2260,51 @@ export class Queue {
       if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
         if (!isCalendarDate(text))
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD) naming a "
-                  + "real day" };
+            detail: localize("queue.index.until_must_be_an_instant", "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD) naming a real day") };
         const zone = this.#zone();
         if (zone === null)
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "a calendar date is snoozed until the start of that day where this group is, and no time zone "
-                  + "is held for this copy (its jurisdiction profile gives none), so the day cannot be read without "
-                  + "guessing one. Send an instant instead (ISO-8601, with its time)." };
+            detail: localize("queue.index.a_calendar_date_is_snoozed", "a calendar date is snoozed until the start of that day where this team is, and no time zone is held for this copy (its jurisdiction profile gives none), so the day cannot be read without guessing one. Send an instant instead (ISO-8601, with its time).") };
         const today = localDay(new Date(nowMs).toISOString().replace(/\.\d{3}Z$/, "Z"), zone);
         const range = dayRange(text, text, zone);
         if (typeof today !== "string" || !range || typeof range.start !== "string")
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "the day could not be read in this copy's time zone; send an instant instead" };
+            detail: localize("queue.index.the_day_could_not_be", "the day could not be read in this copy's time zone; send an instant instead") };
         if (text < today)
           return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id, today,
-            detail: `that day is before today (${today}) where this group is; a snooze that has already expired is `
-                  + "not a snooze, it would report as deferred while deferring nothing" };
+            detail: localize("queue.index.that_day_is_before_today", "that day is before today ({today}) where this team is; a snooze that has already expired is not a snooze, it would report as deferred while deferring nothing", { today: String(today) }) };
         day = text;
         ms = Date.parse(range.start);
       } else {
         ms = /^\d{4}-\d{2}-\d{2}T/.test(text) ? Date.parse(text) : NaN;
         if (!Number.isFinite(ms))
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD)" };
+            detail: localize("queue.index.until_must_be_an_instant_2", "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD)") };
         if (ms <= nowMs)
           return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id,
-            detail: "a snooze that has already expired is not a snooze; it would report as deferred while "
-                  + "deferring nothing" };
+            detail: localize("queue.index.a_snooze_that_has_already", "a snooze that has already expired is not a snooze; it would report as deferred while deferring nothing") };
       }
       iso = new Date(ms).toISOString();
       if (day !== null) dated = { day, lapsed: ms <= nowMs };
     }
     const row = this.#one(
       `SELECT muted_kinds FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
+    this.#wrote();
     this.sql.exec(
-      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, snoozed_at)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(member_id, case_id) DO UPDATE SET snoozed_until=excluded.snoozed_until,
-                                                     last_seen=excluded.last_seen`,
-      me, c.id, row ? row.muted_kinds ?? null : null, iso, stamp);
+                                                     last_seen=excluded.last_seen, snoozed_at=excluded.snoozed_at`,
+      me, c.id, row ? row.muted_kinds ?? null : null, iso, stamp, iso === null ? null : stamp);   /* R59: when it was made */
     return {
       ok: true, member: me, case: c.id, case_type: c.type, snoozed_until: iso, at: stamp,
       ...(dated ? { until_day: dated.day } : {}),
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
       detail: dated && dated.lapsed
-        ? "that day has already begun where this group is, so the snooze, which holds until its start, has already "
-        + "lapsed and defers nothing. The items are unchanged and no other member's feed moved."
+        ? localize("queue.index.that_day_has_already_begun", "that day has already begun where this team is, so the snooze, which holds until its start, has already lapsed and defers nothing. The items are unchanged and no other member's feed moved.")
         : iso
-        ? "re-notification about this case is deferred for YOU until that instant. The items themselves "
-        + "are unchanged, they still appear in your feed, and no other member's feed moved."
-        : "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it.",
+        ? localize("queue.index.re_notification_about_this_case", "re-notification about this case is deferred for YOU until that instant. The items themselves are unchanged, they still appear in your feed, and no other member's feed moved.")
+        : localize("queue.index.the_snooze_is_cleared_re", "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it."),
     };
   }
 
@@ -2098,21 +2371,46 @@ export class Queue {
     /* END DEC-49 REGION is-dispose-scope */
   }
 
+  /** R28 (T51; C62): the door the bridge names for an OBLIGATION key of `kind`: the door its producer declared on the caller's
+   *  live item with that id (`Queue.doorOf`'s first source), else the kind's hand list, else `taskresolve`. The caller's feed is
+   *  read once (and once for a whole set); nothing is written, and a feed that cannot be read names the hand list's door. */
+  #bridgeFeeds = null;
+  #bridgeDoor(id, kind, viewer, identity) {
+    if (typeof id !== "string" || !id.trim()) return Queue.doorOf(kind);
+    try {
+      const member = typeof identity === "string" && identity.startsWith("member:") && identity.slice(7).trim() ? identity.slice(7).trim() : null;
+      const ck = JSON.stringify([viewer ?? null, member]);
+      let feed = this.#bridgeFeeds ? this.#bridgeFeeds.get(ck) : undefined;
+      if (feed === undefined) {
+        feed = this.queueFeed({ member, viewer, limit: 500 });
+        if (this.#bridgeFeeds) this.#bridgeFeeds.set(ck, feed);
+      }
+      const it = feed && feed.ok === true && Array.isArray(feed.items) ? feed.items.find((i) => i && i.id === id.trim()) : null;
+      return Queue.doorOf(kind, it && it.kind === kind && it.class === "OBLIGATION" ? it.door : undefined);
+    } catch { return Queue.doorOf(kind); }
+  }
+
   proposeDispose({ progressionKey, stageKey, key, project, finding, kind,
                    to, state, reason, definitionVersion = null,
                    decidedBy = null, viewer = null, identity = null, items } = {}) {
     /* D-126: WITH `items`, the act takes a SET under the PER-ITEM weight (`#perItem`), each item decided by
        THIS method's single-key path. The decider (the control plane's stamp) and the viewer and identity
        (the URL's, spread after the body at the dispatch) are forced onto every item. */
-    if (items !== undefined)
-      return this.#perItem("proposedispose",
-        /* REC-211: `definitionVersion` is SHARED so a set over ONE progression names the version
-           once; `#perItem` spreads each item AFTER the shared fields, so a set spanning several
-           progressions still gives each item its own. It is not stamped like the decider, because
-           the decider is a fact about the actor and this is a fact about what the actor READ. */
-        { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason,
-          definitionVersion },
-        { decidedBy, viewer, identity }, (b) => this.proposeDispose(b));
+    if (items !== undefined) {
+      /* R28 (T51; C62): a set's refusals read the caller's live feed for the door a producer declared, once for the whole set. */
+      const own = this.#bridgeFeeds === null;
+      if (own) this.#bridgeFeeds = new Map();
+      try {
+        return this.#perItem("proposedispose",
+          /* REC-211: `definitionVersion` is SHARED so a set over ONE progression names the version
+             once; `#perItem` spreads each item AFTER the shared fields, so a set spanning several
+             progressions still gives each item its own. It is not stamped like the decider, because
+             the decider is a fact about the actor and this is a fact about what the actor READ. */
+          { items, progressionKey, stageKey, key, project, finding, kind, to, state, reason,
+            definitionVersion },
+          { decidedBy, viewer, identity }, (b) => this.proposeDispose(b));
+      } finally { if (own) this.#bridgeFeeds = null; }
+    }
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
     /* WHICH ACT THIS IS, decided by what the caller SENT and never by inspecting the id's shape.
@@ -2129,17 +2427,9 @@ export class Queue {
       if (!sk) sk = key.slice(i + 2).trim();
     }
     if (scoped && !find) return { ok: false, reason: "NO_FINDING", project: proj,
-      detail: "a project-scoped disposition names the FINDING it ages, by the queue item's own id "
-            + "(op=queue publishes it as disposition.finding). A project with no finding names a "
-            + "team and no decision." };
+      detail: localize("queue.index.a_project_scoped_disposition_names", "a project-scoped disposition names the FINDING it ages, by the queue item's own id (op=queue publishes it as disposition.finding). A project with no finding names a team and no decision.") };
     if (scoped && !proj) return this.#noProjectScope({ finding: find,
-      detail: "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, "
-            + "and that act is scoped to ONE project's feed (D-266: a stance is expressly one "
-            + "project's own property, §7/D-216, and R5 makes forks at the judgment layer "
-            + "legitimate). Name the project you are acting for — op=queue publishes the candidates "
-            + "as disposition.projects. It is not defaulted even when there is only one, because a "
-            + "plane choosing whose judgment the record carries is the single shared stance §7 "
-            + "rejected, arriving through a defaulted parameter." });
+      detail: localize("queue.index.a_finding_that_carries_no", "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, and that act is scoped to ONE project's feed (D-266: a stance is expressly one project's own property, §7/D-216, and R5 makes forks at the judgment layer legitimate). Name the project you are acting for — op=queue publishes the candidates as disposition.projects. It is not defaulted even when there is only one, because a plane choosing whose judgment the record carries is the single shared stance §7 rejected, arriving through a defaulted parameter.") });
     /* THE BRIDGE FOR A SURFACE BUILT BEFORE IC-60, AND IT NAMES THE FIX RATHER THAN THE SYMPTOM.
        A page that learned this act before the second shape existed composes `key` from the queue
        item's own id, so a stance-scoped finding arrives here as key='<kind>::<rest>'. Read as the
@@ -2187,13 +2477,8 @@ export class Queue {
                check: row.check, translation: row.translation,
                class: keyClass, kind: keyKind,
                /* R28 (K607): the same per-kind door R12 publishes on the item. */
-               instead: keyClass === "CONDITION" ? "queuemute" : Queue.doorOf(keyKind),
-               detail: `this names ${keyClass === "CONDITION" ? "a status item" : "a to-do"}, and `
-                     + `${keyClass === "CONDITION" ? "a status item" : "a to-do"} is not DISPOSED: a disposition is `
-                     + "an authored record act on something the record noticed, and op=queue publishes the act that does "
-                     + "reach this item as its `disposition.instead`. Nothing was written. The rest of "
-                     + "a selection is unaffected — under the per-item weight this item alone is kept, "
-                     + "carrying this reason." };
+               instead: keyClass === "CONDITION" ? "queuemute" : this.#bridgeDoor(keyed, keyKind, viewer, identity),
+               detail: localize("queue.index.this_names_v1_and_v2", "this names {v1}, and {v2} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its `disposition.instead`. Nothing was written. The rest of a selection is unaffected — under the per-item weight this item alone is kept, carrying this reason.", { v1: String(keyClass === "CONDITION" ? "a status item" : "a to-do"), v2: String(keyClass === "CONDITION" ? "a status item" : "a to-do") }) };
     }
     /* END DEC-49 REGION is-dispose-class */
     if (keyClass === "FINDING")
@@ -2201,11 +2486,7 @@ export class Queue {
                finding: byId ? keyed : `FINDING::${pk}::${sk}`,
                kind: keyKind,
                requires: ["project", "finding"],
-               detail: "this names a FINDING that carries no progression stage, so this is the "
-                     + "project-scoped disposition and it needs the project you are acting for. "
-                     + "Send `project` (one of op=queue's disposition.projects for this item) and "
-                     + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
-                     + "and no team's feed moved." });
+               detail: localize("queue.index.this_names_a_finding_that", "this names a FINDING that carries no progression stage, so this is the project-scoped disposition and it needs the project you are acting for. Send `project` (one of op=queue's disposition.projects for this item) and `finding` (its disposition.finding) instead of `key`. Nothing was written and no team's feed moved.") });
     if (!scoped) return this.#progressions.disposeProposal({ progressionKey: pk, stageKey: sk, to, state, reason,
                                                                   definitionVersion, decidedBy });
     /* N285 (K275): a word that is no disposition is answered by progressions' `notADisposition` (its R35), the one
@@ -2216,17 +2497,14 @@ export class Queue {
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
-               detail: "deferring or dismissing the record's own question is recorded with a reason, in the "
-                     + "member's own words — a disposition with no reason ages a finding with no account of why" };
+               detail: localize("queue.index.deferring_or_dismissing_the_records", "deferring or dismissing the record's own question is recorded with a reason, in the member's own words — a disposition with no reason ages a finding with no account of why") };
     if (why.length > Queue.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${Queue.EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+               detail: localize("queue.index.a_reason_is_at_most", "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { EDGE_REASON_MAX: String(Queue.EDGE_REASON_MAX) }) };
     const by = decidedBy == null ? "" : String(decidedBy).trim();
     if (!by)
       return { ok: false, reason: "NO_DECIDER",
-               detail: "a disposition is recorded under the deciding member, stamped from the session. An "
-                     + "unnamed decider cannot age the record's question." };
+               detail: localize("queue.index.a_disposition_is_recorded_under", "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.") };
     /* ================================================ D-266 · THE JUDGMENT-LAYER ARM
        Everything above is SHARED and is reached by both shapes on purpose: the vocabulary, the
        required reason, its grammar bound and the server-stamped decider are properties of the ACT
@@ -2260,6 +2538,7 @@ export class Queue {
       if (denied) return denied;
       const atS = stampInstant("millisecond", this.#nowMs(null));
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
+      this.#wrote();
       this.sql.exec(
         `INSERT INTO finding_dispositions (project_id,finding_id,kind,state,reason,decided_by,at)
          VALUES (?,?,?,?,?,?,?)
@@ -2270,11 +2549,7 @@ export class Queue {
       return { ok: true, scope: "project", project: proj, finding: find.slice(0, 400),
                key: `${proj}::${find.slice(0, 400)}`, kind: kd,
                to: st, state: st, reason: why, decided_by: by, at: atS, bundle: null,
-               detail: "recorded for THIS project and for no other. One team's dismissal of a "
-                     + "judgment-layer finding governs that team's feed and nothing else (D-266, "
-                     + "§7/D-216, R5) — no other project's queue moved by an item, and the finding "
-                     + "itself is aged rather than deleted (D-79): it stands until it is "
-                     + "re-triaged, whether or not the underlying fact still fires." };
+               detail: localize("queue.index.recorded_for_this_project_and", "recorded for THIS project and for no other. One team's dismissal of a judgment-layer finding governs that team's feed and nothing else (D-266, §7/D-216, R5) — no other project's queue moved by an item, and the finding itself is aged rather than deleted (D-79): it stands until it is re-triaged, whether or not the underlying fact still fires.") };
     }
   }
 
@@ -2388,7 +2663,7 @@ export function queueOps(q, url, body) {
   return {
     /* R53 (N983): judged at this module's clock; a `now` in the query or the body is never read. */
     queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), limit: s("limit"), sort: s("sort"),
-                              muted: s("muted") }),
+                              muted: s("muted"), answered: s("answered"), aside: s("aside"), after: s("after"), count: s("count") }),
     queuemute: () => q.queueMute({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q.queueSnooze({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q.proposeDispose({ ...(body || {}), viewer: s("viewer"), identity: s("identity") }),
@@ -2402,10 +2677,29 @@ export function queueOps(q, url, body) {
  *  the app reads them there (K1717, K1863). Pure; never throws on a well-formed answer. */
 export function queueAnswer(r, { gate } = {}) {
   if (!r || r.ok !== true) return { status: 400, refusal: r };
-  /* R55: the muted list is the answer in place of the feed: it has no items to decorate. */
-  if (Array.isArray(r.muted)) return { status: 200, result: r };
+  /* R55, R59, R61: the muted list, what a member answered and the set-aside findings are each the answer in place of the
+     feed: they have no items to decorate. R93: nor has the count. */
+  if (Array.isArray(r.muted) || Array.isArray(r.answered) || Array.isArray(r.aside) || (typeof r.count === "number" && !Array.isArray(r.items)))
+    return { status: 200, result: r };
   return { status: 200, result: {
     ...r,
     items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),
   } };
 }
+
+/* R92 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops of this module the screens send, declared by their owner
+   beside the ops map: each row's classes, mutating, weight and description are the op's existing rows' (`op-declarations`,
+   `op-grades`), its fields are what the arm reads. `decidedBy` (the control plane's stamp on `proposedispose`), `viewer`,
+   `member` and `identity` are stamps, not fields. `queuemute` and `queuesnooze` also read an `at` (an instant), which only
+   in-plane callers and tests send. A SET (`items`, queue-states' set arm) names each item's identity in its own item, so `items`
+   satisfies the two identity groups; the disposition and the reason stay top-level, because the set shares them onto every item
+   (`#perItem`). */
+export const DECLARED_OPS = Object.freeze({
+  proposedispose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("queue.declared.proposedispose", "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle"),
+    fields: { accepts: ["items","key","progressionKey","stageKey","project","finding","kind","to","state","reason","definitionVersion"],
+              requires: [["project","key","progressionKey","items"],["finding","key","progressionKey","items"],["to","state"],"reason"] } },
+  queuemute: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuemute", "personal state, keyed (member, case) over the kinds named or (member, item) by the item's own id: a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)"),
+    fields: { accepts: ["case","kinds","item","unmute","at"], requires: [["item","case"]] } },
+  queuesnooze: { classes: ["admin","member"], mutating: true, weight: "caller-owned", description: localize("queue.declared.queuesnooze", "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)"),
+    fields: { accepts: ["case","until","clear","at"], requires: ["case",["until","clear"]] } },
+});

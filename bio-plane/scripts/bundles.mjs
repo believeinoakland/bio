@@ -41,9 +41,8 @@
  * esbuild strips (measured both ways, c20-batch14).
  *
  * **HOW IT REBUILDS: `npm run build` IN THE MEMBER'S OWN DIRECTORY**, never
- * `writeMember` from here. Two members have a PRE-STEP that a direct call would
- * silently skip — the plane's `embed:sign` regenerates `src/signpage.mjs` from
- * `src/sign-release.html`, and `ocr-worker`'s build regenerates
+ * `writeMember` from here. A member may have a PRE-STEP that a direct call would
+ * silently skip — `ocr-worker`'s build regenerates
  * `src/tesslib.mjs` from its vendor — and a rebuild that skipped them would leave
  * a generated source stale while reporting the bundle fresh, which is this
  * defect's own shape one layer down. `package.json`'s `build` script is the ONE
@@ -76,6 +75,19 @@
  *   node bio-plane/scripts/bundles.mjs --install-dirs
  *                    print, one per line, each directory whose `npm ci` the byte guard needs, the plane's first
  *                    (run after the plane's own `npm ci`): the release-sign workflow's install list (R30, R22)
+ *   node bio-plane/scripts/bundles.mjs --containers
+ *                    list each container member's classes whose image is not provably built from the code now in the
+ *                    tree (R37), as `STALE <member> <class>` (or UNRECORDED, UNREAD); writes nothing; 0 none, 1 any.
+ *                    The release workflow builds exactly these images (R36)
+ *   node bio-plane/scripts/bundles.mjs --record-image <member> <class> <digest>
+ *                    R36's recording half, run by the workflow after it has built and pushed the image: writes the
+ *                    digest the build produced and the files it was built from into the member's fleet-member.json,
+ *                    and the digest into the image its wrangler.jsonc container block names, both or neither
+ *
+ * HOW THE IMAGE BUILD AND THIS MODULE MEET (R36, R37; rulings-active §4, K1898). The image is built by the GitHub
+ * workflow `container-images.yml`, never in a session or by this module. The workflow asks `--containers` which images
+ * the code has outrun, builds and pushes those, and gives each class's digest to `--record-image`; the release
+ * assembly (`release-assemble.mjs`) then refuses `[CONTAINER_IMAGE_STALE]` for any class still outrun.
  */
 import { spawnSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
@@ -227,6 +239,35 @@ export async function installDirs(repoRoot = null) {
     .map((m) => m.dir)];
 }
 
+/** R37: the state of every container member's classes, one line each for those not current, and the exit status:
+ *  0 when every image is provably built from the code now in the tree, 1 otherwise. Writes nothing. */
+export async function containerImages({ repoRoot = null, log = console.log } = {}) {
+  const lib = await library();
+  let bad = 0, classes = 0;
+  for (const m of lib.discoverMembers(repoRoot || lib.REPO_ROOT).filter((x) => lib.isContainer(x))) {
+    for (const st of lib.containerImageStates(m)) {
+      classes++;
+      if (st.state === "current") continue;
+      bad++;
+      log(`${st.state.toUpperCase()} ${m.name} ${st.class_name} — ${st.why}`);
+    }
+  }
+  log(`containers: ${classes - bad} of ${classes} image(s) provably built from the code now in the tree`);
+  return bad ? 1 : 0;
+}
+
+/** R36: record the digest the workflow's build produced for one class. Returns the exit status; a refusal prints
+ *  `REFUSED [CODE]: …` and writes nothing. */
+export async function recordImage(memberName, className, digest, { repoRoot = null, log = console.log, err = console.error } = {}) {
+  const lib = await library();
+  const member = lib.discoverMembers(repoRoot || lib.REPO_ROOT).find((m) => m.name === memberName);
+  const r = member ? lib.recordContainerDigest(member, className, digest)
+    : { refused: "CONTAINER_UNDESCRIBED", message: `${JSON.stringify(memberName)} is not a fleet member` };
+  if (r.refused) { err(`REFUSED [${r.refused}]: ${r.message}`); return 1; }
+  log(`recorded: ${memberName} ${className} ${digest} — ${r.files.join(", ")}`);
+  return 0;
+}
+
 /* Run as a command, never when IMPORTED — compared as RESOLVED PATHS rather than
    by a filename suffix, which an importing test file (`bundles.test.mjs`, retired)
    satisfied on some spellings, and which is how a module that exits the importing
@@ -235,6 +276,11 @@ const INVOKED = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(im
 if (INVOKED && process.argv.includes("--install-dirs")) {
   for (const d of await installDirs()) console.log(d);
   process.exit(0);
+}
+if (INVOKED && process.argv.includes("--containers")) process.exit(await containerImages());
+if (INVOKED && process.argv.includes("--record-image")) {
+  const [member, cls, digest] = process.argv.slice(process.argv.indexOf("--record-image") + 1);
+  process.exit(await recordImage(member, cls, digest));
 }
 if (INVOKED) {
   const check = process.argv.includes("--check");

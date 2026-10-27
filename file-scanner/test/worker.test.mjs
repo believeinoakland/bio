@@ -40,12 +40,21 @@ test('R10 the bundle exports the Worker and its two container classes, each with
   for (const name of ['FileScanner', 'SafeViewRenderer']) {
     const c = new mod[name](ctx, {});
     assert.equal(c.enableInternet, false, `${name} has no internet (R12)`);
+    c.containerFetch = async () => new Response('');
+    await c.fetch(new Request('http://container/sigs'));
+    assert.equal(c.enableInternet, false, `${name} serving a scan or a render still has none`);
     assert.ok(!c.allowedHosts || c.allowedHosts.length === 0, `${name} allows no host`);
     assert.equal(c.defaultPort, 8080);
   }
+  const updater = new mod.FileScanner(ctx, {});
+  updater.containerFetch = async () => new Response('');
+  await updater.fetch(new Request('http://container/update/r1', { method: 'POST', headers: { 'x-signature-updater': '1' } }));
+  assert.equal(updater.enableInternet, true, 'the signature-updater instance the mirror starts has internet, for freshclam alone (R6, R34)');
+  const renderer = new mod.SafeViewRenderer(ctx, {});
+  assert.equal(renderer.enableInternet, false);
 });
 
-test('R10 through the binding: the bundle answers R8 and R9 from its env, and its scheduled trigger runs the mirror against ClamAV\'s host alone', async () => {
+test('R10 through the binding: the bundle answers R8 and R9 from its env, and its scheduled trigger runs the mirror through the signature-updater instance, the Worker opening no connection', async () => {
   const mod = await loadWorker();
   const bucket = memoryBucket();
   const env = { CAPTURES: bucket, VERSION: pkg.version };
@@ -53,16 +62,26 @@ test('R10 through the binding: the bundle answers R8 and R9 from its env, and it
   assert.deepEqual([v.ok, v.name, v.version], [true, 'file-scanner', pkg.version]);
   const u = await mod.default.fetch(new Request('https://file-scanner/nothing'), env);
   assert.equal(u.status, 404);
-  const hosts = [];
+  const hosts = [], asked = [];
   const saved = globalThis.fetch;
   globalThis.fetch = async (req) => { hosts.push(new URL(req.url ?? req).hostname); return new Response('no', { status: 503 }); };
+  const SCANNER = { idFromName: (n) => n, get: (n) => ({ fetch: async (req) => { asked.push([n, req.method, new URL(req.url).pathname, req.headers.get('x-signature-updater')]);
+    return new Response(JSON.stringify({ ok: false, code: 'MIRROR_REFUSED', detail: 'exit 58: 403 Forbidden' }), { status: 200 }); } }) };
   const waits = [];
   try {
-    mod.default.scheduled({ cron: '17 4 * * *', scheduledTime: NOW }, env, { waitUntil: (p) => waits.push(p) });
+    mod.default.scheduled({ cron: '*/10 * * * *', scheduledTime: NOW }, { ...env, SCANNER }, { waitUntil: (p) => waits.push(p) });
     const r = await waits[0];
     assert.equal(r.ok, false);
+    assert.equal(r.error, 'MIRROR_REFUSED:exit 58: 403 Forbidden');
   } finally { globalThis.fetch = saved; }
-  assert.deepEqual([...new Set(hosts)], ['database.clamav.net']);
+  assert.deepEqual(hosts, [], 'the Worker itself reaches no host');
+  // R6: through the Worker's own fetch, the async start hands the run to the platform's waitUntil and answers 202.
+  const handed = [];
+  const a = await mod.default.fetch(new Request('https://file-scanner/mirror?async=1', { method: 'POST' }), { ...env, SCANNER }, { waitUntil: (p) => handed.push(p) });
+  assert.deepEqual([a.status, await a.json(), handed.length], [202, { ok: true, started: true }, 1]);
+  assert.equal((await handed[0]).ok, false, 'the run it handed over ended in the updater\'s refusal');
+  assert.deepEqual(asked[0], ['file-scanner-signature-updater', 'POST', asked[0][2], '1'], 'the run goes to the signature-updater instance');
+  assert.ok(asked.every(([n, , , h]) => n === 'file-scanner-signature-updater' && h === '1'), 'and to no other instance');
   assert.ok(bucket.calls.filter(([op]) => op === 'put').every(([, k]) => k.startsWith('clamav/')));
   assert.deepEqual(dialled, []);
 });
@@ -87,7 +106,7 @@ test('R10 the marker states a container member with two digest-pinned classes, i
   assert.deepEqual(m.callers, [{ member: 'bio-plane', binding: 'FILE_SCANNER', kind: 'service' }]);
   assert.deepEqual(m.triggers.crons, wrangler().triggers.crons);
   assert.equal(m.optional_bindings[0].binding, 'SECURITY_VPC');
-  assert.deepEqual(m.egress.containers, []);
+  assert.deepEqual(m.egress.containers, ['FileScanner, the signature-updater instance alone: database.clamav.net, by freshclam (R6, R34)']);
   // as bundler reads it: one part per class, each image's Debian packages from its statement
   const member = discoverMembers().find((x) => x.name === 'file-scanner');
   const published = { ...member, marker: { ...member.marker, containers: member.marker.containers.map((c) => ({ ...c, image: { ...c.image, digest: `sha256:${'a'.repeat(64)}` } })) } };
@@ -96,31 +115,29 @@ test('R10 the marker states a container member with two digest-pinned classes, i
   for (const c of containerClasses(member).classes) assert.equal(classPackages(member, c).ecosystem, 'Debian:12');
 });
 
-// R10 (T47; N990, K2816 (4), K2912): the release's registry rule. Both images are named as agent-runner's is,
-// `ghcr.io/believeinoakland/<image>@sha256:<64 hex>`, the digest the release published, the same reference in the
-// marker and the configuration, and no other registry named for them. Cloudflare Containers do not pull from ghcr.io:
-// an instance runs each image copied by that digest into its own account's registry (bundler R25, R26).
-const RULE = /^ghcr\.io\/believeinoakland\/[a-z0-9][a-z0-9._-]*@sha256:[0-9a-f]{64}$/;
+// R10 (T47; N990, K2816 (4), K2912): the release's registry rule. Both images are named
+// `docker.io/civicsmith/<image>@sha256:<64 hex>` (N1242; K3805, K3808; bundler R35), the digest the release
+// published, the same reference in the marker and the configuration, and no other registry named for them. Cloudflare
+// Containers do not pull from ghcr.io; a public Docker Hub image is pulled by its digest with no credential.
+const RULE = /^docker\.io\/civicsmith\/[a-z0-9][a-z0-9._-]*@sha256:[0-9a-f]{64}$/;
 const references = (m) => m.containers.map((c) => `${c.image.repository}@${c.image.digest}`);
 
-test('R10 the release\'s registry rule: both images named ghcr.io/believeinoakland/<image>@sha256:<64 hex>, as agent-runner\'s is, the same reference in the marker and the configuration, no other registry', () => {
-  const runner = JSON.parse(readFileSync(new URL('../../agent-runner/fleet-member.json', import.meta.url), 'utf8'));
-  assert.match(`${runner.image.repository}@${runner.image.digest}`, RULE, 'agent-runner\'s image is named by the rule');
+test('R10 the release\'s registry rule: both images named docker.io/civicsmith/<image>@sha256:<64 hex>, the same reference in the marker and the configuration, no other registry', () => {
   const m = marker();
-  assert.deepEqual(m.containers.map((c) => c.image.repository), ['ghcr.io/believeinoakland/file-scanner-scanner', 'ghcr.io/believeinoakland/file-scanner-renderer']);
+  assert.deepEqual(m.containers.map((c) => c.image.repository), ['docker.io/civicsmith/file-scanner-scanner', 'docker.io/civicsmith/file-scanner-renderer']);
   for (const r of references(m)) assert.match(r, RULE, 'the digest the release published, 64 hex');
   assert.equal(new Set(m.containers.map((c) => c.image.digest)).size, 2, 'each image its own digest');
   assert.deepEqual(wrangler().containers.map((c) => c.image), references(m), 'the same reference in the configuration');
   // No other registry names an image: every image reference in the marker and the configuration is under the rule's
   // namespace (the Dockerfiles' base, pinned by digest, is the base's own coordinate and names neither image).
   const named = [...m.containers.map((c) => c.image.repository), ...wrangler().containers.map((c) => c.image)];
-  assert.deepEqual(named.filter((r) => !r.startsWith('ghcr.io/believeinoakland/')), []);
+  assert.deepEqual(named.filter((r) => !r.startsWith('docker.io/civicsmith/')), []);
   for (const t of [text('fleet-member.json'), text('wrangler.jsonc'), text('Dockerfile.scanner'), text('Dockerfile.renderer')]) {
-    assert.ok(!/docker\.io\/civicos|registry\.cloudflare\.com|UNPUBLISHED/.test(t), 'no other registry and no unpublished placeholder');
+    assert.ok(!/ghcr\.io|registry\.cloudflare\.com|UNPUBLISHED/.test(t), 'no other registry and no unpublished placeholder');
   }
 });
 
-test('R10 an instance runs each image copied by its digest: the release describes each class by exactly that ghcr.io reference, never a tag', () => {
+test('R10 an instance runs each image copied by its digest: the release describes each class by exactly that docker.io reference, never a tag', () => {
   const member = discoverMembers().find((x) => x.name === 'file-scanner');
   const parts = containerParts(member, discoverMembers().map((x) => x.name));
   assert.equal(parts.conflict ?? null, null);
@@ -172,7 +189,7 @@ test('R12 the sources\' egress: the mirror\'s host alone in the Worker\'s own fe
     for (const m of src.matchAll(/\bfetch\(/g)) {
       const line = src.slice(src.lastIndexOf('\n', m.index) + 1, src.indexOf('\n', m.index));
       if (/^\s*(async\s+)?fetch\(/.test(line)) continue; // a handler's definition, not a call
-      assert.ok(/deps\.fetch\(`https:\/\/\$\{MIRROR_HOST\}|via\(|\.fetch\(new Request\(`http:\/\/container|fetch: \(req\) => fetch\(req\)|deps\.fetch\(req\)|vpc\.fetch\(req\)|ns\.get/.test(line), `${f}: ${line.trim()}`);
+      assert.ok(/via\(|\.fetch\(new Request\(`http:\/\/container|fetch: \(req\) => fetch\(req\)|deps\.fetch\(req\)|vpc\.fetch\(req\)|ns\.get/.test(line), `${f}: ${line.trim()}`);
     }
     assert.ok(!/\bconnect\(\s*\{/.test(src) || f === 'src/providers/net.mjs', `${f} opens a socket only through net.mjs`);
   }
@@ -193,8 +210,8 @@ test('R15 the namespace set is exactly ["bio", "scratch"], frozen, with PLANE_OP
 
 test('R16 the limits, by name; the bundle states the Worker\'s own limits once, equal to its configuration', async () => {
   assert.deepEqual([limits.SCAN_MAX_BYTES, limits.SCAN_BATCH_MAX, limits.SIGNATURES_MAX_AGE_MS, limits.SAFE_VIEW_DPI, limits.SAFE_VIEW_PAGES_MAX,
-    limits.PROVIDER_TIMEOUT_MS, limits.SANDBOX_TIMEOUT_MS, limits.REPUTATION_LIST_MAX_AGE_MS],
-  [268_435_456, 200, 259_200_000, 150, 500, 120_000, 3_600_000, 86_400_000]);
+    limits.SAFE_VIEW_BYTES_MAX, limits.PROVIDER_TIMEOUT_MS, limits.SANDBOX_TIMEOUT_MS, limits.REPUTATION_LIST_MAX_AGE_MS],
+  [268_435_456, 200, 259_200_000, 150, 500, 33_554_432, 120_000, 3_600_000, 86_400_000]);
   assert.deepEqual(limits.LOG_COUNT_KINDS, ['files_scanned', 'files_found', 'holds_placed', 'holds_released', 'deeper_checks', 'sandbox_submissions',
     'safe_views', 'safe_copies', 'reputation_listed', 'signin', 'credential', 'rate', 'handover', 'through']);
   assert.ok(Object.isFrozen(limits.LOG_COUNT_KINDS));
@@ -207,7 +224,7 @@ test('R16 the limits, by name; the bundle states the Worker\'s own limits once, 
   const mod = await loadWorker();
   assert.equal(mod.default.limits, stated);
   const v = await (await handle(new Request('https://file-scanner/version'), depsWith())).json();
-  assert.deepEqual(v.bounds.SCAN_MAX_BYTES, limits.SCAN_MAX_BYTES);
+  assert.deepEqual(v.bounds.SCAN_MAX_BYTES, { value: limits.SCAN_MAX_BYTES, source: 'alpha' });
 });
 
 // R18's one exemption (as agent-runner's, K1905): the images' registry address is a distribution coordinate, not a

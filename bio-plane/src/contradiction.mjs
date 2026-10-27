@@ -29,19 +29,19 @@
 export const CONTRADICTION_LABELS = Object.freeze(["world", "record", "precision", "unrelated", "undetermined"]);
 
 export const JUDGEMENT_PROMPT = `You are judging CANDIDATE CONTRADICTIONS for a civic research record. For each pair below, a deterministic pairing
-put two assertions side by side for a stated reason (its KEY). You propose ONE label per pair. A member of the group
+put two assertions side by side for a stated reason (its KEY). You propose ONE label per pair. A member of the team
 will see your proposal and decide; you decide nothing.
 
 KEYS (why the two were paired):
 - K1: two SOURCES one inquiry rests on, one cited as supporting and one as cutting against it.
-- K2: two claims our group HOLDS, on two inquiries about the same subject.
-- K3: two claims our group HOLDS, both resting on the same source passage (given as context).
+- K2: two claims our team HOLDS, on two inquiries about the same subject.
+- K3: two claims our team HOLDS, both resting on the same source passage (given as context).
 - K4: two SOURCES about the same entity, of different document kinds or dates (each side's doctype/date given).
 
 LABELS — exactly one per pair:
 - world: the two SOURCES say incompatible things about the same matter (e.g. a rule requires X and the record shows
   the body did not-X; a body said X at one date and the contrary at another). Only for source sides (K1, K4).
-- record: two things our group HOLDS cannot both be true. Only for held claims (K2, K3).
+- record: two things our team HOLDS cannot both be true. Only for held claims (K2, K3).
 - precision: the same fact stated at different precision or with different emphasis — rounded vs exact figures,
   "approximately N" vs a stated number, a summary vs the table it summarises, "reduced a little" vs "dropped a lot".
   NOT a contradiction.
@@ -63,7 +63,7 @@ Output the JSON only.
 `;
 
 /* sha256 of JUDGEMENT_PROMPT as M-162 measured it. Moved ONLY with a new measurement. */
-export const JUDGEMENT_PROMPT_SHA256 = "79ea662afed716df7db276bac07c4c85db7b9adf12a573bfc36459c3e721a061";
+export const JUDGEMENT_PROMPT_SHA256 = "aad3ac9e557fba904331c788a946d42e7b5c59b3d13e17972f4b45422716d08c";
 
 /* §5: the machine sees ONLY the two sides and their immediate context. A side's fields are the ones the pairing
    read carries for it: a claim's text, or a passage with the doctype, date and role its reader states. A field the
@@ -97,7 +97,7 @@ export function renderJudgementInput(pairs) {
  * run is made the digest is null, which says the prompt has passed no measurement: this module writes it and never
  * claims it measured. */
 export const RECOMMEND_PROMPT = `You are recommending, for CONTRADICTIONS a civic research record holds, the RESPECTS in which the two sides
-of each pair may differ, so that they need not conflict. A member of the group will see your recommendation and
+of each pair may differ, so that they need not conflict. A member of the team will see your recommendation and
 decide; you decide nothing.
 
 Each pair carries its KEY (why the two were paired) and the RESPECTS you may name for it:

@@ -8,6 +8,7 @@ import { LawRecords, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD, LAW_RE
   from "../../../src/law-relations/index.mjs";
 import { ownerConformance, createRegistry, derivedId, BOUNDS, LOWEST_GRADE } from "../../../src/connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const rel = (w, type, from, to, citation, effective, by = "bob") => {
   const r = w.law.lawRelate({ type, from, to, citation, ...(effective ? { effective } : {}), reason: REASON, author: V(by), viewer: V(by) });
@@ -144,8 +145,8 @@ test("R7 CONNECTION_KINDS holds this module's law-relation kinds and court links
   assert.equal(CONNECTION_OWNER, "standards");
   assert.deepEqual(CONNECTION_KINDS.map((k) => k.kind), [...LAW_RELATIONS.temporal.map((t) => `law_${t}`), ...LAW_RELATIONS.referential.map((t) => `law_${t}`),
                                                          ...COURT_LINKS.map((t) => `court_${t}`), "in_force_at_event"]);
-  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["amends", "repeals", "renumbers", "recodifies", "refers to", "defines a term of",
-    "makes an exception to", "implements", "incorporates", "interprets", "applies", "holds invalid", "requires", "was in force on the date of"]);
+  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["amends", "repeals", "renumbers", "recodifies", "refers to", word("label.connectionkinds.law_defines"),
+    word("label.connectionkinds.law_excepts"), "implements", "incorporates", "interprets", "applies", "holds invalid", "requires", word("label.connectionkinds.in_force_at_event")]);
   assert.deepEqual(CONNECTION_KINDS.filter((k) => k.class === "derived").map((k) => k.kind), ["in_force_at_event"]);
   assert.ok(CONNECTION_KINDS.every((k) => Object.isFrozen(k)) && Object.isFrozen(CONNECTION_KINDS));
   const reg = createRegistry();
@@ -207,7 +208,7 @@ test("R7 R12 an evidentiary item is graded by its passage's transcription ceilin
   const gone = w.standard({ from: "2010-01-01", to: "2011-01-01" }).id;
   assert.ok(!w.law.neighbours({ node: meeting, at, viewer: V("carol") }).items.some((i) => i.to === gone), "not in force on the day");
   const u = a.items.find((i) => i.to === open);
-  assert.deepEqual([u.in_force.state, typeof u.undetermined.why], ["undetermined", "string"], "an undetermined in-force answer is marked");
+  assert.deepEqual([u.in_force.state, typeof u.undetermined.why.key], ["undetermined", "string"], "an undetermined in-force answer is marked, its reason keyed");
   assert.deepEqual(w.law.neighbours({ node: fenced, at, viewer: V("carol") }).items, [], "an event the viewer may not read");
   assert.ok(w.law.neighbours({ node: fenced, at, viewer: V("alice") }).items.length > 0);
   assert.deepEqual(w.law.neighbours({ node: undated, at, viewer: V("carol") }).items, [], "an event with no when");

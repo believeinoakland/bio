@@ -170,6 +170,7 @@ export function world({ caseMembers = new Set(), group = "test-group", caseFact 
 }
 
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 const parseFm = (t) => (t ? parseFrontmatter(t).data : null);
 
 /** An inquiry document. `legs`: [{target, role?, grade?, grade_axis?, grade_source?, ground?, author?, date?, note?,
@@ -196,8 +197,8 @@ export function inquiryMd(id, { question = `Is ${id} answered?`, legs = [], refs
     ...(grounds ? ["grounds:", ...grounds.flatMap((g) => [`  - ground: ${g.ground}`, `    asserted_by: ${g.asserted_by}`,
       `    at: "${g.at}"`])] : []),
     ...extra,
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", ...body, "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", ...body, "## Review Notes", ""].join("\n");
 }
 
 export function infoMd(id) {

@@ -12,6 +12,7 @@ import { CONTENT_MINTED_BY_PLANE } from "../../../src/content/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
 const V = "class:member";
+const UNDETERMINED = "undetermined";
 const sorted = (a) => [...a].sort();
 const uniq = (a) => [...new Set(a)];
 
@@ -204,8 +205,8 @@ test("R6 R18 (content-arm) rows=content's `cited` and `chain_last` state what th
     assert.deepEqual(w.run({ q: `content:${kind}`, viewer: V, rows: "content" }, "meaning").rows
       .filter((r) => docsWith((x) => x.chain_last === kind).includes(r.bundle_id) && r.chain_last !== kind)
       .map((r) => r.content_id), [], `content:${kind}: the rows of the documents it selects say ${kind} where they are`);
-  assert.deepEqual(sorted(w.ids({ q: "content:chain=does-not-apply", viewer: V })), docsWith((r) => r.chain_last === CHAIN_DOES_NOT_APPLY));
-  assert.deepEqual(sorted(w.ids({ q: "content:chain=undetermined", viewer: V })), docsWith((r) => r.chain_last === null));
+  assert.deepEqual(sorted(w.ids({ q: `content:chain=${CHAIN_DOES_NOT_APPLY}`, viewer: V })), docsWith((r) => r.chain_last === CHAIN_DOES_NOT_APPLY));
+  assert.deepEqual(sorted(w.ids({ q: `content:chain=${UNDETERMINED}`, viewer: V })), docsWith((r) => r.chain_last === null));
 });
 
 test("R15 (content-arm) rows=content returns each selected document's whole content set, and rows=leg one row per leg with its content", () => {

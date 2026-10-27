@@ -28,7 +28,8 @@ function renderArchive(cs, view) {
   const body = cs.state(data, (v) => {
     const a = v.archive || {}, sum = v.summary || {};
     const entries = Array.isArray(v.entries) ? v.entries : [];
-    const g = a.grade && typeof a.grade === "object" ? a.grade : null;
+    /* the owner answers the grade as its bare letter (acquisition `archivelist`); an object carrying it is read the same */
+    const g = a.grade && typeof a.grade === "object" ? a.grade : typeof a.grade === "string" && a.grade ? { grade: a.grade } : null;
     const grade = g && g.grade ? cs.grade("capture", g.grade)
       : `<span class="meta">${cs.w("state.undetermined", { reason: cs.w("screen.archive.ungraded") })}</span>`;
     const note = U.note !== undefined ? U.note : view.data.note && view.data.note.state === "ok" ? view.data.note.value && view.data.note.value.note : null;
@@ -141,9 +142,9 @@ export const ARCHIVE_SCREEN = Object.freeze({
   reads: archiveReads,
   render: renderArchive,
   acts: Object.freeze([
-    Object.freeze({ op: "gradenote", label: "act.gradenote.label.archive", send: sendGradeNote, done: doneGradeNote }),
-    Object.freeze({ op: "archivelist", label: "act.archivelist.label.archive", send: sendList, done: doneList }),
-    Object.freeze({ op: "heldsetaside", label: "act.heldsetaside.label.archive", send: sendSetAside, done: doneSetAside }),
-    Object.freeze({ op: "release", label: "act.release.label.archive", send: sendRelease, done: doneArchiveRelease, reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
+    Object.freeze({ op: "gradenote", rereads: Object.freeze(["note"]), label: "act.gradenote.label.archive", send: sendGradeNote, done: doneGradeNote }),
+    Object.freeze({ op: "archivelist", rereads: Object.freeze(["list"]), label: "act.archivelist.label.archive", send: sendList, done: doneList }),
+    Object.freeze({ op: "heldsetaside", rereads: Object.freeze(["list"]), label: "act.heldsetaside.label.archive", send: sendSetAside, done: doneSetAside }),
+    Object.freeze({ op: "release", rereads: Object.freeze(["list"]), label: "act.release.label.archive", send: sendRelease, done: doneArchiveRelease, reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
   ]),
 });

@@ -5,9 +5,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { readRefusals } from "../contradiction/fixtures.mjs";
+
+/* contradiction's own refusal of a viewer who holds no place in the project (its published fixture) */
+const NOT_A_PARTICIPANT = readRefusals().notAParticipant;
 
 const claim = (inquiry, text) => ({ kind: "claim", inquiry, version: "v1", claim: text, text, source: { inquiry, title: inquiry } });
-const cand = (id, weight, state, a, b, extra = {}) => ({ candidate: id, key: "K2", why: "one subject, two held claims", a, b,
+const cand = (id, weight, state, a, b, extra = {}) => ({ candidate: id, key: "K2", why: word("contradiction.name.subject_two_held"), a, b,
   machine: { label: "record", reason: "they differ", at: iso(NOW - 5000), origin: "machine", machine_work: true },
   weight, state, resolution: null, inquiry: null, recommendations: [], reach: { projects: [], truncated: false }, ...extra });
 
@@ -144,7 +149,7 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
   /* The notices contradiction R50 answers each project's members: the side they may see, and nothing of the other. */
   const state = { optedA: false, optedB: false, responses: [] };
   const notice = (project, side, own, other) => ({
-    candidate: "cand-1", project, weight: "duty", state: "open", side, says: "Something this project rests on is in conflict with a record you cannot see. Neither that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, the projects are named to each other's members, and you can respond.",
+    candidate: "cand-1", project, weight: "duty", state: "open", side, says: word("contradiction.notice_sentence"),
     opted_in: own ? { member: "m", at: iso(NOW), words: null } : null, asked_by_another: other,
     revealed: own && other, ...(own && other ? { parties: [{ id: project === "PRJ-A" ? "PRJ-B" : "PRJ-A", name: "the other" }] } : {}),
     responses: own && other ? state.responses.filter((x) => x.project.id !== project) : [], responses_truncated: false });
@@ -155,7 +160,7 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
       return { ok: true, truncated: false, cursor: null, notices: [notice("PRJ-A2", claim("INQ-A", "x is 3"), false, state.optedA || state.optedB)] };
     if (project === "PRJ-B" && viewer === "member:bob")
       return { ok: true, truncated: false, cursor: null, notices: [notice("PRJ-B", claim("INQ-B", "x is 4"), state.optedB, state.optedA)] };
-    return { ok: false, reason: "PROJECT_NOT_PARTICIPANT" }; } } });
+    return NOT_A_PARTICIPANT; } } });
   w.member("alice"); w.member("bob");
   w.bundle("INQ-A", "inquiry"); w.bundle("INQ-B", "inquiry");
   for (const p of ["PRJ-A", "PRJ-A2", "PRJ-B"]) w.bundle(p, "project");
@@ -177,7 +182,9 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
   const { case: homes, ...own } = a[0];
   assert.deepEqual(keys(own).filter((k) => /count|bound|truncated/.test(k)), [], "no count, bound or truncated flag of its own");
   assert.deepEqual(homes.reasons, [], "the homes walk states nothing of the other side either");
-  assert.equal(a[0].detail, a[0].basis.says); assert.equal(a[0].basis.asked_by_another, false);
+  assert.equal(a[0].detail, word("queue.contradiction-duty-unseen.detail"), "R43: the keyed sentence replaces the notice's fixed one");
+  assert.equal(a[0].summary, word("queue.contradiction-duty-unseen.summary"));
+  assert.ok(a[0].basis.says, "the notice's own sentence stays on the basis"); assert.equal(a[0].basis.asked_by_another, false);
   // after bob's project opts in, alice's item reads asked_by_another
   state.optedB = true;
   a = unseen(w.read("alice"));

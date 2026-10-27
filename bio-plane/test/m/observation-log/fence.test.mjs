@@ -164,7 +164,7 @@ function d54() {
   w.participant("PROJ-H", "adm-inv", "invited");
   const disc = w.projectDoc("PROJ-D", "discoverable bytes");
   w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES ('PROJ-D', 'own', 'joined', 1, 't', 't')`);
-  const set = w.membership.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", reason: "open to the group", by: "own" });
+  const set = w.membership.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", reason: "open to the team", by: "own" });
   assert.equal(set.ok, true, JSON.stringify(set));
   return { w, open, hidden, disc };
 }

@@ -17,6 +17,7 @@
  * `idPattern("LEAD")` (`ID_TABLE`, its R46–R47), so no copy of the id's shape is held here. */
 
 import { idPattern } from "../record-grammar/ids.mjs";
+import { word } from '../setup-words/index.mjs';
 
 /* C-22 — THE INVESTIGATIVE RUN'S FAMILY, AND SINCE REC-93 THE OBSERVATION LOG'S (IS-6, INVESTIGATIVE-SESSION.md §11 and
  * §14b.6). REC-93 (2026-09-14) folded `ai_run_log` into `observation_log` (`OBSERVATION-LOG-DESIGN.md` §4.4), so
@@ -38,9 +39,7 @@ export const AI_RUN_CHECKS = {
   AI_LOG_STATE_UNKNOWN: {
     check: 'C-22.1',
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
-    translation: 'That observation does not say which kind of absence it found. '
-      + 'The record distinguishes never having looked, having looked and found nothing, '
-      + 'having looked and being unable to tell, having found it, and having found part of it.',
+    translation: word('refusal.AI_LOG_STATE_UNKNOWN'),
   },
   /* D-104, and CLAUDE.md states the general rule it instantiates: "our governor
      refusing is not the source failing". An entry recording LOOKED_ABSENT when
@@ -50,9 +49,7 @@ export const AI_RUN_CHECKS = {
   AI_LOG_GOVERNED_ABSENCE: {
     check: 'C-22.2',
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
-    translation: 'That observation was stopped by our own pacing of the source, not by the source. '
-      + 'It can only record that we could not tell — recording an absence there would be a claim '
-      + 'about the world made from a fact about us.',
+    translation: word('refusal.AI_LOG_GOVERNED_ABSENCE'),
   },
   /* §11's third rule, SWEEP §3's false-coverage hazard: "A client-rendered
      shell capture is LOOKED_INDETERMINATE, never PRESENT". `client-rendered-shell`
@@ -61,8 +58,7 @@ export const AI_RUN_CHECKS = {
   AI_LOG_SHELL_PRESENT: {
     check: 'C-22.3',
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
-    translation: 'That capture is a page shell with nothing evidential in it, so it cannot be '
-      + 'recorded as having found the material. It records that we could not tell.',
+    translation: word('refusal.AI_LOG_SHELL_PRESENT'),
   },
   /* DEC-8 as amended by DEC-49: a surface may render a translation keyed on a
      code the plane SENT, which only holds if the plane never sends a condition
@@ -73,8 +69,7 @@ export const AI_RUN_CHECKS = {
   AI_RUN_CONDITION_UNKNOWN: {
     check: 'C-22.4',
     where: 'src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate',
-    translation: 'The run tried to end on a condition the record has no name for. '
-      + 'A condition nobody can read is not an explanation.',
+    translation: word('refusal.AI_RUN_CONDITION_UNKNOWN'),
   },
   /* §11: "the observation log cannot live in bundle.md, which is written only on
      success — the log's whole value is the failure path." The log is a different
@@ -86,7 +81,7 @@ export const AI_RUN_CHECKS = {
   AI_LOG_NOT_A_BUNDLE: {
     check: 'C-22.6',
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
-    translation: 'The observation log is not part of any published document and cannot be filed into one.',
+    translation: word('refusal.AI_LOG_NOT_A_BUNDLE'),
   },
   /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
      `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
@@ -115,11 +110,7 @@ export const AI_RUN_CHECKS = {
   OBS_AUTHORITY_UNNAMED: {
     check: 'C-22.9',
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
-    translation: 'That observation does not say why the look was made. '
-      + 'The record keeps what it looked for only when something can be named as the reason — '
-      + 'an investigation, a monitoring sweep, a link in a document, a ratification, an acquisition, '
-      + 'an extraction, a derivation, a lead somebody wrote down, a standing objective, or a step '
-      + 'taken for a question. A look with no reason behind it is not recorded.',
+    translation: word('refusal.OBS_AUTHORITY_UNNAMED'),
   },
   /* REC-93, 2026-09-14 — THE WARC LESSON, AND THE FALSE-COVERAGE HAZARD FROM
      THE OTHER DIRECTION. `OBSERVATION-LOG-DESIGN.md` §3: *"`PRESENT` with no
@@ -181,10 +172,7 @@ export const AI_RUN_CHECKS = {
   OBS_PRESENT_NO_REFERENT: {
     check: 'C-22.10',
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
-    translation: 'That observation says the thing is there without saying what was found. '
-      + 'A record that something is present has to point at what it found — the captured '
-      + 'document, the passage, the entity — or nobody can check it later, and a claim of '
-      + 'coverage that cannot be checked is worse than no claim at all.',
+    translation: word('refusal.OBS_PRESENT_NO_REFERENT'),
   },
   /* N118 (LEGACY-TESTS #3 REPORT 10; observation-log R3, K148; T6, legacy-checks) — C-22.1 WAS MINTED FOR A SECOND
      CONDITION. observation-log's `checkObservation` refuses a look that states NEVER_LOOKED (R3: NEVER_LOOKED is the
@@ -196,9 +184,7 @@ export const AI_RUN_CHECKS = {
   AI_LOG_NEVER_LOOKED_STORED: {
     check: 'C-22.17',
     where: 'src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored',
-    translation: 'That observation says nobody looked, and an observation is the record of a look. Never having '
-      + 'looked is what the record says of a subject with no observation at all, so it is not written as one. A '
-      + 'look that happened records what it found: nothing, something, part of it, or that it could not tell.',
+    translation: word('refusal.AI_LOG_NEVER_LOOKED_STORED'),
   },
 };
 
@@ -239,63 +225,49 @@ export const LEAD_CHECKS = {
   LEAD_NOT_A_MEMBER: {
     check: 'C-54.2',
     where: 'src/observation-log/index.mjs lead > is-lead-act',
-    translation: 'A lead is a person saying what they were told or have reason to believe, in their '
-      + 'own name. The credential that asked is an automated one, which has nobody behind it to have '
-      + 'been told anything. Sign in and write it yourself.',
+    translation: word('refusal.LEAD_NOT_A_MEMBER'),
   },
   LEAD_NO_WORDS: {
     check: 'C-54.3',
     where: 'src/observation-log/index.mjs lead > is-lead-act',
-    translation: 'The lead is empty. Write what you were told or suspect, and where it might be found; '
-      + 'nothing is filled in for you.',
+    translation: word('refusal.LEAD_NO_WORDS'),
   },
   LEAD_TOO_LONG: {
     check: 'C-54.4',
     where: 'src/observation-log/index.mjs lead > is-lead-act',
-    translation: 'The lead, or the place to look you suggested, is longer than one passage this record '
-      + 'stores. It is refused rather than cut, because a lead silently shortened would be words you '
-      + 'did not write standing in your name. Write it more briefly or split it into two leads.',
+    translation: word('refusal.LEAD_TOO_LONG'),
   },
   LEAD_NOT_FOUND: {
     check: 'C-54.5',
     where: 'src/observation-log/index.mjs #leadFor > is-lead-source',
-    translation: 'That request does not name a lead this record holds and you can read. A lead is named '
-      + 'by the id its own act returned, and a lead is readable by the member who wrote it.',
+    translation: word('refusal.LEAD_NOT_FOUND'),
   },
   LEAD_LOOK_STATE: {
     check: 'C-54.6',
     where: 'src/observation-log/index.mjs leadLook > is-lead-look',
-    translation: 'Say what the look found: that the thing is not there, that you could not tell, that '
-      + 'you found part of it, or that it is there. "Nobody looked" is never recorded — it is what '
-      + 'the record says when there is no look at all.',
+    translation: word('refusal.LEAD_LOOK_STATE'),
   },
   LEAD_LOOK_REFERENT: {
     check: 'C-54.7',
     where: 'src/observation-log/index.mjs leadLook > is-lead-look',
-    translation: 'What the look found has to be something this record holds and you can read — a '
-      + 'captured document or a part of one — and only a look that found something can point at '
-      + 'anything. Capture the document first, then record the look against it.',
+    translation: word('refusal.LEAD_LOOK_REFERENT'),
   },
   LEAD_LOOK_NOT_A_MEMBER: {
     check: 'C-54.8',
     where: 'src/observation-log/index.mjs leadLook > is-lead-look',
-    translation: 'Following a lead is recorded in the name of the member who looked. The credential '
-      + 'that asked is an automated one; an automated search is recorded under its own run, not '
-      + 'under a member\'s lead.',
+    translation: word('refusal.LEAD_LOOK_NOT_A_MEMBER'),
   },
   /* BOB #14's ruling, 2026-09-18: a lead reaches a project's participants only
      through an AUTHORED, DATED share by its author. */
   LEAD_SHARE_NOT_A_PARTICIPANT: {
     check: 'C-54.9',
     where: 'src/observation-log/index.mjs leadShare > is-lead-share',
-    translation: 'You can share a lead only to a project you have joined. Sharing it somewhere you are '
-      + 'not working would put your words in front of people you are not working with.',
+    translation: word('refusal.LEAD_SHARE_NOT_A_PARTICIPANT'),
   },
   LEAD_SHARE_NOT_AUTHOR: {
     check: 'C-54.10',
     where: 'src/observation-log/index.mjs leadShare > is-lead-share',
-    translation: 'Only the member who wrote a lead can share it. A lead is what one person was told; '
-      + 'passing someone else\'s on is theirs to decide.',
+    translation: word('refusal.LEAD_SHARE_NOT_AUTHOR'),
   },
   /* DEC-88 (K1025, R17): a look is the looker's account of where they looked and what they found, and a look with no
      words is a state with nobody's account behind it. Asked after C-54.7 and before C-54.4, which stays the over-cap
@@ -303,15 +275,13 @@ export const LEAD_CHECKS = {
   LEAD_LOOK_NO_DETAIL: {
     check: 'C-54.11',
     where: 'src/observation-log/index.mjs leadLook > is-lead-look',
-    translation: 'Say in your own words where you looked and what you found. A look is recorded with the account '
-      + 'of the member who made it, and a look with no account is a result nobody can check or follow up.',
+    translation: word('refusal.LEAD_LOOK_NO_DETAIL'),
   },
   /* DEC-88 (K1025, R16): a share discloses one member's lead to a project, and the disclosure carries its reason, in
      the sharer's words, recorded with the share. Asked after C-54.9, before the repeat check and the insert. */
   LEAD_SHARE_NO_REASON: {
     check: 'C-54.12',
     where: 'src/observation-log/index.mjs leadShare > is-lead-share',
-    translation: 'Say why you are sharing this lead with that project, in no more than 2,000 characters. Sharing '
-      + 'puts what you were told in front of the project\'s participants, and the reason is kept with the share.',
+    translation: word('refusal.LEAD_SHARE_NO_REASON'),
   },
 };

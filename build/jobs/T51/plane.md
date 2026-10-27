@@ -1,0 +1,1382 @@
+# plane (T51)
+
+**Status** · session_01PjmHFtZEgQ8wUSxwtd6dLq · depth 2 · WAITING ON BOB (J79) · handled B116
+
+## Record (PLANE #41, T51-125)
+
+**Entries applied**
+- R24: `plane/screens.mjs` deleted (the 21 legacy entries); `store.mjs` hands `answers` `wizard-scripts`' `SCREEN_REGISTRY` (no copy); `wizards.mjs`' `screenFailures` defaults to it, reads `name` for `title`, and leaves `owed` apart. `t43`, `release`, `words` follow; `release` reads the screen count from the design's `registry.json` (71 in the file today, 73 after BOB's regeneration; the test accepts 71 up to the file's count).
+- R64: `package.json` `build` is `node scripts/build-plane.mjs`; `embed:sign` deleted; `worker.test.mjs` pins both; its stale comment/title at :43 now says the interface page at the root.
+- R65, R66 (new `t51.test.mjs`): the T51 reads are in the route map through their owners' maps and answer through the door as the owners' maps do; ops are read from `maps.mjs` (`opsServedBy`, `servedThroughDoor`: new helpers over `ownMaps`), never listed.
+- K3997 `compose.test.mjs`:84 (the inherited red) cleared; `accepted`, `docket`, `t46`, `t47`, `t48`, `t50` hand-lists replaced by the owners' maps.
+- K4051: `filingsOf` is handed `env` (`store.mjs`), so filings R64's registration with case-inputs runs in production; `t51.test.mjs` pins it with a bare-host control (checked red without the change).
+- Words: 9 findings and the 6 test copies cleared (`release` keys, `hosts`/`t36` name the refusal by its declaration `CAPTURE_CREDENTIAL_CHECKS`, `disclosures`/`t39` assertion messages). `words.mjs plane`: 0 failures; over the whole product no line names the plane.
+
+**Deferred:** none.
+
+**Found in other modules (for BOB)**
+- `bio-plane/src/setup-words/rows.mjs` still holds the `plane.screens.*` rows (stale until BOB regenerates; `build.mjs --check` names one).
+- `docs/development/ux-substrate/screens/words-reads.json` still lists the 26 `screen.*` keys for plane (the design lane's file); `words.test.mjs` no longer asserts them.
+- `screen-registry.mjs` holds 71 screens; R24 expects 73 after regeneration (`glossary`, `actionnew`).
+- `op-declarations` does not yet declare R77's reads or `holdsdue`, `templatebyhandle`, `rulefields` (`OPS`); the plane's tests do not depend on it.
+- `scripts/embed-signpage.mjs` and the comment in `scripts/fleet-bundle.mjs`:24 remain (control-plane's / bundler's).
+- `answers` reads no `deps.screens` (as the requirement already notes).
+
+**Tests and checks**
+- `node --test "bio-plane/test/m/plane/*.test.mjs"`: tests 264, pass 264, fail 0 (before: 258, 1 red inherited).
+- `bio-plane/test/system/migrate-released.test.mjs`: pass 1, fail 0.
+- format 0 failures; architecture 0 failures; coverage 66 of 66; ownership 22 files, 0 failures; words (plane) 0 failures; `setup-words build --check`: stale rows, expected.
+
+Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 5, module lines 2295
+
+## J1 · COMPLETE
+
+T51-125 applied; plane suite 264/264, migrate-released 1/1; format, architecture, coverage (66/66), ownership and words checks 0 failures. Details and findings for other modules in the record.
+
+## Record: CHANGE B2 (K4076, instance-setup R95)
+- `door.mjs` `publicOp`: the bootstrap report is handed `caller` as the control plane resolves it (`caseReader`, admission's `readerOf`): `{cls: "admin"}` for an admin-class token or an administrator's session, none otherwise (no credential, a member or unknown token, a store silence).
+- `worker.test.mjs`: an admin token is told the seven facts; no credential, a member token and an unknown token are not (key set read from `BOOTSTRAP_FACT_KEYS`). `door.test.mjs`: 45 routes, `bootstrapfacts` driven.
+- Verified with instance-setup's branch merged without committing (`git merge --no-commit`, then aborted): plane suite 265/265. `tranche/T51` does not yet hold instance-setup's change, so the two new assertions need it to merge first; on the tranche alone the admin assertion fails and the route count is 44.
+- Checks: format, architecture, coverage (66/66), words, ownership: 0 failures.
+- Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 7, module lines 2306
+
+## J2 · COMPLETE
+
+CHANGE B2 applied: publicOp hands bootstrapOp the resolved admin caller; door.test counts 45 routes. Suite 265/265 with instance-setup's branch merged uncommitted; tranche/T51 alone needs instance-setup merged first for those two assertions. Checks 0 failures.
+
+## Record: CHANGE B3 (K4098, control-plane R110)
+- `store.mjs`: `controlPlaneOwnerOps` is handed `filings` and `actionPlans` getters. `t51.test.mjs`: `approvedunsent` and `checkpointsdue` answer through the plane (checked red without the getters). `door.test.mjs`: affordances' ops read from its map (its `affordancevocab` is new from the merged tranche), no pin.
+- Merged `tranche/T51`. control-plane's change (the owner arms) is not on the tranche yet: with `origin/job/T51/control-plane` merged uncommitted (then aborted) the suite is 266/266 after the door.test fix; on the tranche alone two tests fail until it merges (the new one, and `op=sweeps` link-sweep R5, which control-plane's change also fixes). You merge plane after control-plane.
+- Checks: format, architecture, coverage 66/66, words: 0 failures.
+- Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 10, module lines 2308
+
+## J3 · COMPLETE
+
+CHANGE B3 applied: filings and actionPlans getters handed to controlPlaneOwnerOps; both ops answer through the plane. 266/266 with control-plane's branch merged uncommitted; on the tranche alone 2 tests wait for control-plane to merge (merge it first).
+
+## Record: CHANGE B4 (K4100, t50 R63 `groupidentity` 502)
+- Diagnosis: not a route or wiring flaw. `groupIdentityOp` (and `instanceGroupOp`) ask the store stub `fetch("http://do/groupidentity")` with an address string, as a Durable Object stub accepts; `t50.test.mjs`' `askWorld` bound `env.STORE.get` to the bare `Store`, whose `fetch(req)` needs a Request, so the call threw and the door answered 502 `STORE_DID_NOT_ANSWER`. Screens-daily's Home reading is the first widest-screen read to go that way. Directly (`/groupidentity` through the store door) the route answers 200.
+- Fix (test world, as the host builds it): `askWorld`'s stub wraps `fetch` to accept an address or a Request and delegates every other method. t50 8/8; plane suite 266/266; format, architecture, coverage 66/66, words: 0 failures. Nothing deferred; no other module affected.
+- Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 12, module lines 2308
+
+## J4 · COMPLETE
+
+CHANGE B4: the t50 R63 502 was the test world's store stub (a bare Store whose fetch needs a Request, asked with an address as a Durable Object stub accepts); fixed in the world, no plane flaw. Suite 266/266, checks 0 failures.
+
+## J5 · COMPLETE
+
+CR-24 (R67) applied: the ask's reading language is read from `translations` (`translationsOf(ctx).readingLanguage`, its R10) at `plane/ask.mjs`; instance-setup's delegate is no longer asked by the plane.
+- `test/m/plane/door.test.mjs` (R1, R5, R67): instance-setup's routes are 36; translations' nine are compared against `translationsOps` and driven through the door; route set equals instance-setup's 36 plus translations' 9.
+- `test/m/plane/t48.test.mjs` (R50, R67): the spy moves to `translations.readingLanguage`; controls unchanged (no language set answers LANGUAGE_NOT_SET; a malformed tag answers LANGUAGE_MALFORMED).
+Deferred: none.
+
+Found in other modules (for BOB, not fixed here):
+- `checks/coverage.mjs` over all modules reports 7 modules with ids named by no test: agent-harness R17, agent-runner R36 R37 R38 R40, installer-steps R26 R31, instance-setup R99 (CHANGE after this merges, per CR-24), journey-check R19, screens-inquiry R83, screens-settings R62.
+- Full `npm test` in bio-plane (all test/m, not only plane) shows 107 failures in other modules: journey-check (12 files), case-checker program R13/R25, doc-clean R4 (workerd memory). Plane's suite is green.
+
+Tests and checks:
+- `node --test "test/m/plane/*.test.mjs" test/system/migrate-released.test.mjs`: tests 267, pass 267, fail 0.
+- door.test.mjs 6/6; t48.test.mjs 13/13.
+- format 0 failures; architecture 0 failures; coverage (plane) 67 of 67; ownership (plane, tranche/T51, job/T51/plane) 0 failures; words 0 failures; `checks/run.mjs` ran: coverage fails only in other modules listed above.
+
+Size (session_011vKkDz3Fp8T8FuWAfs336Z): test runs 4, module lines 2307
+
+## J6 · QUESTION
+
+QUESTION (PLANE #43, B6 / FR-32). Three points; I carry on with entries 1 and 5 on my best readings.
+
+1. Entries 2, 3 and part of 4 need exports that are not on tranche/T51 (tip 62068caf14, merged into my branch): `captureSourcesOps` (capture-sources, FR-11, C20) and `investigationOps` (investigation, FR-15, C65) do not exist in any file under bio-plane/src, and the job branches job/T51/capture-sources and job/T51/investigation hold no such map either (their records show J2 COMPLETE / J1 COMPLETE from the earlier round). The START says every owner above merges before me. I cannot spread, test or write R69/R70 truthfully until they are on the tranche. Best reading: I do entries 1, 5 and the iterable parts of 4 now, post COMPLETE-pending-owners as a REPORT, and wait for a CHANGE that says capture-sources and investigation are merged; then I apply 2, 3 and re-run 4.
+
+2. Entry 5, `ask`: the plane's arm (`askOp` / `askOnObject`) refuses nothing for a missing `question`; agent-worker's /ask does. Best reading: `fields.requires: []` and `accepts: ["question","conversation","project","store","token"]` (token: body or query, as `presentedToken` reads it). `readtranslate`: `accepts: ["subject","language"]`, `requires: ["subject"]` (the arm answers BAD_TASK 400 naming `subject`). `ask` is copied as classes admin+member, machineClasses [], mutating true, weight `caller-owned` (RUNG_ABSENT), description the NON_ACTS sentence; `readtranslate` as mutating false, weight `read`, description its NON_ACTS sentence. Tell me if `question` should be required.
+
+3. Entry 1, shape: ES modules cannot enumerate their imports, so the assembly is `plane/declarations.mjs`: one static import per composed module that exports `DECLARED_OPS` (as `DECLARED_OPS as <module>`), the plane's own included, called once at the top of store.mjs before the Store class exists. Seven modules (answers, attestation, content, escalation, explore, provenance-routes, workbooks) declare in `ops.mjs` and do not re-export from `index.mjs`; I import their `ops.mjs` directly. `sources` is composed through store-door, not store.mjs; I import its declaration too. The test iterates `declaredOpsOf(root)` (modules.json) against the assembled table, so a module missing from the file fails by name; no test lists a module's ops.
+
+## J7 · REPORT
+
+REPORT (PLANE #43, FR-32): entries 1, 5 and the iterable part of 4 are applied and pushed; 2 and 3 wait for the owners.
+
+Applied
+- R68 (entry 1): `plane/declarations.mjs` (one static import per declaring module, the plane's own included; `assembleDeclaredOps` refuses a duplicate naming the op and both modules before either registration is called) and `plane/register.mjs`, the first import of both `index.mjs` and `store.mjs`. Registering inside store.mjs was not enough: `control-plane/index.mjs` reads the op tables when it loads and `index.mjs` imports it before `store.mjs`, so a late call would crash the Worker's start (R81, registered after the first read). Consequence for tests: a test that reads an op table before it imports the plane must import `register.mjs` first; t42 to t45 now do. The real modules register with no duplicate and no disagreement (219 ops, 55 owners).
+- R72 (entry 5): `plane/declared.mjs` declares `ask` and `readtranslate`, copied from their hand rows; fields as BOB accepted at B7.
+- R71 (entry 4, iterable part): every declared op is in the route map (door name or alias) or answered by a Worker arm or the plane's own doors; the ops of provenance, case-inputs, case-import, citation, monitoring, link-sweep and the store door (tasks, queue) answer through the door once each. Nothing needed spreading: all those maps were already spread (tasks and queue through store-door's map).
+- Requirement lines R68 to R72 are written in build/requirements/plane.md (K4210); the ownership check lists that file, accepted. R69 and R70 are marked not yet met.
+
+Waiting
+- R69, R70 (entries 2, 3): `captureSourcesOps` and `investigationOps` are still not on tranche/T51 (tip 1cd462473b merged). Send a CHANGE when capture-sources and investigation are merged; I then spread them, add them to test/m/plane/maps.mjs, test them and re-run R71.
+
+For BOB (modules.json, other modules)
+1. architecture FAIL: plane/declarations.mjs imports `sources/index.mjs` (its DECLARED_OPS; sources is composed through store-door), and plane does not declare `sources` in uses. Please add the edge (earlier than plane). I keep the import; it is the only architecture failure.
+2. `test/m/plane/release.test.mjs` R24 "a title or purpose a surface draws is the screen's own key" fails: `screen.bias.purpose` is not in docs/development/ux-substrate/screens/words.json (also so on the tranche, not caused by this job). The words list or the registry, not plane.
+3. coverage fails in other modules only (agent-harness R17, agent-runner, citation R16 to R18, installer-steps, journey-check R19, link-sweep R13 to R15, monitoring R75 to R77).
+
+Tests and checks: `node --test "test/m/plane/**/*.test.mjs"`: 235 tests, 230 pass, 5 fail at the first run; the 4 import-order failures (t42 to t45) fixed and re-run green (18, 6, 6, 14 pass); the fifth is item 2. New: declarations.test.mjs (6), declared-ops.test.mjs (3). format 0, words 0, ownership 0 failures (requirements file listed, accepted).
+Size (session_01Wi1UPiyBRVvgj1bzVSUFVr): test runs 4, module lines 164 new (declarations 140, declared 16, register 8)
+
+## Record: CHANGE B8, B9, B10 (K4213, K4219, K4221) · PLANE #44
+- B8 (2): `store.mjs` spreads `captureSourcesOps(captureCredentialsOf(ctx), url, body)` and `investigationOps(investigationOf(ctx), url, body)` after capture-requests' map (R69, R70); `maps.mjs` lists both. B8 (3), B9 (b): `linkSweepOps` and `citationOps` are handed `body`. `t51.test.mjs`: R69 (the three credential ops once each, through the door as the owner's map answers, a machine credential refused each), R70 (`projectclose`, a non-owner's close refused by the owner's arm), the body hand-over (`sweepratify` answers for the sweep the body names; control: `{}` is the argument's refusal). All checked red without the change.
+- B8 (1): `sources` is in plane's `uses`; B9 (a): case-import's ops (including the four new) are spread by `caseImportOps`; `accepted.test.mjs` reads them from the owner's map, nothing listed.
+- B10: `registerCaseInputsPublicReads(ctx, {publicRead})` is called in `store.mjs` right after `caseAuthoringOf(ctx, …)`, not beside case-checker's: case-inputs' factory reads its deps on its first call and case-authoring's creation hands it its record, membership and clock, and `accepted.test.mjs` R17 pins case-inputs after case-import. `casedetailspublic` answers at `/publicread?name=casedetailspublic` (test; control: a second registration refused, an unknown name no read).
+- R68: `declarations.mjs` imports the 22 modules that declare ops since the first job (member-roster, project-roster, credentials, provenance, capture-sources, file-safety, connections, inquiry, citation, run-productions, capture-requests, investigation, case-import, case-inputs, case-authoring, review, filings, monitoring, link-sweep, tasks, instance-setup (`setup.mjs`), store-door (`dispatch.mjs`)); `OWNERS` is in `modules.json` order. `t47` R45 reads case-inputs' ops from its map (no hand list); `notices` R2 expects case-inputs' public read beside case-checker's.
+
+**For BOB (other modules and artifacts; none is plane's to change)**
+1. The plane does not boot on `tranche/T51`: `register.mjs` stops at the first owner row that disagrees. Found by registering the owners one op at a time (nine ops, seven modules): citation `citeimported`, `withdrawimported` (op-declarations: NEEDS_MISSING); link-sweep `sweepset`, `sweepratify` (NEEDS_MISSING) and `sweeps` (op-grades: DECLARED_OP_BAD_WEIGHT, rung-on-read); ai-accounts `accountusesset` (description differs from op-grades' hand row, `t41.mjs`:126, "…switched by its owner…"); credentials `securitymap` (weight hand=caller-owned, owner=read); ratification `caseratify` (description differs from the hand row); store-door `groupdescriptiondraft` (DECLARED_OP_BAD_WEIGHT, rung-on-read). With those nine skipped (a local, uncommitted skip) the plane suite is 271 of 282.
+2. `casedetailspublic` (case-inputs R24) is not routed: `control-plane/index.mjs`:97 `CASE_CHECKER_PUBLIC_READS` lists only case-checker's two, so `declarations.test.mjs` R71 ("every op an owner declares is reachable") names it. Add it to that list (or a case-inputs list beside it); the read answers at `op=publicread&name=casedetailspublic` today.
+3. architecture: `plane/declarations.mjs` imports `member-roster/index.mjs` (its `DECLARED_OPS`), and `member-roster` is not in plane's `uses`: add the edge (as `sources` was).
+4. ownership: `build/requirements/plane.md` (R68 to R72, K4210, written by the earlier job) is still listed as outside the paths; accepted as before. R69 and R70 are met by this job; their *(not yet met)* marks are BOB's to clear.
+5. `release.test.mjs` R24 (`screen.bias.purpose` absent from words.json): the design's, accepted by name (B8 (4)).
+
+**Tests and checks** (the nine ops skipped locally; workerd-run tests cannot take the skip and fail on the first row above: t42 R37, t46 R42, worker R6 ×2)
+- `node --test "bio-plane/test/m/plane/*.test.mjs"`: tests 282, pass 271, fail 11: the three workerd files and R68 and R5 (`op=sweeps`) because of the skip, R71 (item 2), R24 (item 5).
+- format 0 failures; coverage 72 of 72; words 0 failures; architecture 1 failure (item 3); ownership 1 failure (item 4).
+- Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 14, module lines 150 new
+
+## Record: CHANGE B11 (K4226) · PLANE #44
+- (1) The queue's timing fields vary by run: every `mask` in the plane's tests (and `maps.mjs`' `servedThroughDoor`) now also masks `"ms"` and `"feeds_ms"` as `"<n>"`; the assertions are kept (the queue's answer is still compared whole). `door.test.mjs` R2, R5 (N13) and `t47.test.mjs` R45, R48 pass.
+- (2) `door.mjs`: `gatedOp` takes `timings` (default null) and hands it to `captureOp` as `h.timings`. Deferred, with why: the end-to-end test (a timed-out `acquire` through the door answers the stages that ran) cannot be written green yet. `control-plane`'s part (R115: it creates `timings` and passes it to `gatedOp`) is on `job/T51/control-plane` only, not on `tranche/T51`; `capture/ops.mjs` (`acquireOp`) does not forward `h.timings` yet (CAPTURE #39), and `acquire` runs in the Store through `store.fetch`, so the hand-over from the arm to `acquisition`'s `opts.timings` is capture's design. Send a CHANGE when both are merged; I then add the test.
+- Declarations: since B8 the ops of `action-holds` (`actionpressure`, `pressurerecord`: description differs from the hand row) also disagree and citation's two no longer do: nine ops in seven modules on this tranche tip (link-sweep `sweepset`, `sweepratify`, `sweeps`; ai-accounts `accountusesset`; credentials `securitymap`; ratification `caseratify`; action-holds `actionpressure`, `pressurerecord`; store-door `groupdescriptiondraft`).
+- Suite with those nine skipped locally (uncommitted): tests 282, pass 271, fail 11 (the three workerd files, R68 and R5 `op=sweeps` because of the skip; R71 `casedetailspublic`, R24 as listed above). Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 20, module lines 160 new
+
+## J8 · REPORT
+
+REPORT (PLANE #44; B8 to B11): pushed on job/T51/plane; full detail in the record.
+Applied: R69, R70 (capture-sources' and investigation's maps spread; tests checked red without); body to citation and link-sweep; case-inputs' public read registered at start (after case-authoring's creation, which keeps case-inputs after case-import); R68's assembly now imports the 22 modules that declare since; the queue's timing fields masked; `gatedOp` hands `timings` to captureOp.
+Waiting on others (BOB):
+1. The plane does not boot on tranche/T51: nine owner rows disagree with hand rows: link-sweep sweepset, sweepratify (NEEDS_MISSING), sweeps (rung-on-read); ai-accounts accountusesset, ratification caseratify, action-holds actionpressure and pressurerecord (descriptions); credentials securitymap (weight); store-door groupdescriptiondraft (rung-on-read). With them skipped locally the suite is 271 of 282; the 11 are explained in the record.
+2. casedetailspublic is not routed: control-plane/index.mjs:97 CASE_CHECKER_PUBLIC_READS (R71 names it).
+3. architecture: plane imports member-roster's DECLARED_OPS; add member-roster to plane's uses. ownership: build/requirements/plane.md (accepted as before); R69, R70 marks are yours to clear.
+4. B11 (2) end-to-end test deferred: control-plane's R115 is only on its job branch and capture's acquireOp does not forward h.timings yet; send a CHANGE when both are merged.
+
+## J9 · QUESTION
+
+QUESTION (re B13; K4231): the timings cannot be carried on the answer, because on a timeout there is no answer, and the door's object cannot reach the object. Read from the code on the merged tranche:
+- Worker side: `plane/door.mjs` `gatedOp` now hands `h.timings` to `captureOp` (capture/ops.mjs), but its `acquireOp` ignores it: it only does `store.fetch('http://x/acquire?…')`. Nothing there keeps or sends it.
+- Object side: `plane/store.mjs`:765 calls `captureOps(captureOf(ctx), url, body, env)` with no `h`; capture's `acquire` arm would pass `h.timings` to `acquisition` (R95), which fills it as the stages run and puts `stageTimes` in the answer only when it ends. The object keeps running after the door's bound, so the object's times exist only inside the object.
+Best reading, the smallest design that holds: (a) the route map passes a fresh `{timings}` into `captureOps` for `acquire` and keeps it in a small holder in the plane's Store keyed by the door's `trace` (already sent to the object as a query/body string, plane R55); (b) a new store-internal read `acquiretimings?trace=…` in the plane's route map answers `stageTimes` of the held object (undefined trace: none); (c) on its timeout the door (control-plane, R115) asks the object that read and answers `timings` from it, instead of from its own empty object; (d) capture's `acquireOp` must send `trace` with the `/acquire` request (capture). I build (a) and (b) with an in-process end-to-end test (a store whose acquire stalls, then the read answers the stages that ran); (c) and (d) are control-plane's and capture's, and the Worker-level proof waits for them. Alternatives: the object holds the timings in its answer to a later poll with no new op (not possible: nothing identifies the call). Please answer: (a)+(b) as above, or a different split.
+
+## Record: CHANGE B13, ANSWER B14 (K4231, K4234) · PLANE #44
+- New `plane/acquire-timings.mjs`: a holder per host (bounded at 64, each entry kept 60 s from its start, ended acquires included so a door that asks just after the end still reads them: a small departure from "dropped when the acquire ends", for that race), `acquireHandlerParts(host, url)` (the `h` for `captureOps`: `timings` is made when the `acquire` arm reads it, keyed by the request's `trace`; with no trace a fresh object is held nowhere) and `acquireTimingsOps` (`acquiretimings?trace=` answers `{ok, timings: stageTimes(...) | null}`).
+- `store.mjs`: `acquiretimings` at acquisition's place (before capture's map, with the co-archive pair); `captureOps(..., acquireHandlerParts(ctx, url))`. `maps.mjs` lists the read in the `acquisition` entry (as the co-archive pair is), so R5 and R9 hold.
+- Test `t51.test.mjs` R73: a stalled `acquire` (fetch held) through the route map, with `trace`, is read by `acquiretimings` while running (names the running stage) and after it ends (stages that ran, none running); controls: another trace, no trace, an unkeyed call, the bound. Red without the change (`acquiretimings` is an unknown op).
+- For BOB: R73 is the id the test names; its requirement text (plane R73: the holder, the read, the bound and time to live) is yours to write. (c) control-plane #41 and (d) capture #40 are the remaining parts; the Worker-level proof follows them.
+- Suite with the nine ops skipped locally: tests 283, pass 272, fail 11, the same eleven as before (accepted by name, B12). Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 26, module lines 210 new
+
+## J10 · COMPLETE
+
+COMPLETE (PLANE #44; B8 to B14): pushed on job/T51/plane; record in full.
+B13/B14 built: `plane/acquire-timings.mjs` (bounded holder keyed by the door's trace, 64 entries, 60 s; `acquiretimings?trace=` read at acquisition's place in the route map; `acquire` is handed the held object); end-to-end test R73 in t51.test.mjs (stalled acquire read while running and after), red without the change. Departure: an ended acquire's entry stays until the time to live, so a late ask still reads it. R73's requirement text is BOB's to write (the test names R73). Remaining: (c) control-plane #41 asks the read on its timeout, (d) capture #40 sends trace with /acquire; the Worker-level proof follows.
+Checks: format, architecture, coverage (72/72), words 0 failures; ownership as before.
+Accepted reds (B12), 11 of 283 with the nine disagreeing owner rows skipped locally: t42 R37, t46 R42, worker R6 x2 (workerd), R68, R5 op=sweeps, R6 bootstrap (instance-setup R95), R71 (casedetailspublic, CONTROL-PLANE #41), R24 (design). After OP-GRADES #18 and LINK-SWEEP #5 merge I merge the tranche and re-run.
+
+## Record: CHANGE B15 (K4236) · PLANE #44
+- `door.mjs`: `gatedOp` hands the door's `trace` to `captureOp` beside `timings` (capture R99 sends it as `x-civicsmith-trace`).
+- The object reads the header: `store-door`'s `HANDED` list names only its own headers, so `Store.fetch` (`store.mjs`) first calls `traceStamped` (`acquire-timings.mjs`): for a POST `acquire` it sets the in-process `trace` parameter from the header (printable, at most 200 characters) and removes any `trace` a caller put in the address, so the key is the door's alone. (A header handed on by store-door itself would be tidier: for BOB if wanted, store-door's R9 list.)
+- `acquiretimings` answers `{ok: true, stageTimes}` (null when none is held), the shape control-plane R115 reads.
+- `t51.test.mjs` R73 now runs the whole hop: `gatedOp` (door, with `trace`) -> capture's header -> the Store (held fetch) -> `acquiretimings` while running (names the running stage) and after (stages that ran); controls: another trace, none, an address trace, an unkeyed call, the bound.
+- Suite with the seven still-disagreeing owner rows skipped locally: tests 283, pass 272, fail 11, the accepted eleven. Size (session_01HpHBfhUsJDqQs6EQDqvKuj): test runs 29, module lines 240 new
+
+## J11 · COMPLETE
+
+COMPLETE (PLANE #44; B15): pushed. `gatedOp` hands `trace` to captureOp; the object reads capture's header `x-civicsmith-trace` (Store.fetch sets the in-process `trace` for a POST acquire and strips a caller's own, because store-door's HANDED list does not carry it: you may prefer store-door to hand it on); `acquiretimings` answers {ok, stageTimes}. R73's test runs the whole hop (door -> header -> object's timings under the trace -> read, while running and after). Checks: format, architecture, coverage 0 failures. Suite (seven owner rows still disagreeing skipped locally): 272 of 283, the accepted eleven. R73's requirement text is yours to write.
+
+## Record: CHANGE B16 (K4254) · PLANE #45
+- (3) R68: `declarations.mjs` imports and lists `wizard-scripts`, `queue` and `control-plane` (`owner-ops.mjs`), in `modules.json` order. `declarations.test.mjs` R68 passes.
+- (4) R71: the test now counts as reachable an op the control-plane door's own map serves (`OWNERS["control-plane"]`: `subscriptionsignin`) and a public read a module registered at start (`publicReadOf(ctx).publicReads()`: `casedetailspublic`; t51 R17 asks it). The two had a route, the door's own, which the test did not know. R71 passes.
+- (2) R5: `sweep.test.mjs` expects link-sweep's map to hold `sweeps`, `sweepset`, `sweepratify` and finds monitoring's last op from `monitoringOps` (monitoring has more ops after `addressfrequencyset`). The route map already spread the whole map. Passes.
+- (1) R24, not plane's: `screen.contradiction.purpose` is absent from `docs/development/ux-substrate/screens/words.json`. The registry (wizard-scripts, generated from the design) holds the screen's purpose; the design's `build_words.mjs` writes `screen.<id>.purpose` from `SCREEN_HELP` in `mock-refs.js`, which has no `contradiction` entry. The design's to add. The test stays unchanged and red until then.
+- Suite: `node --test bio-plane/test/m/plane/`: 280 tests, 279 pass, 1 fail (R24 above). t46-e2e and t47-e2e: 7 of 7 pass. The plane boots on the tranche tip.
+- Checks: format 0 failures; architecture 0; coverage 73 of 73; ownership 0.
+- For BOB (requirement lines): R68 names `wizard-scripts`, `queue` and `control-plane` among the owners assembled. R71: an op reached through the control-plane door's own map or registered as a public read counts as reachable. R73's text is still yours to write (earlier entry).
+- Size (session_01CLRkcMHppRTA6yFfn5t1Zg): test runs 8, module lines 8 new (declarations 6; tests 4 changed lines)
+
+## J12 · COMPLETE
+
+COMPLETE (PLANE #45; B16): R68, R71, R5 fixed; R24 is the design's. Details in the record. (3) R68: declarations.mjs assembles wizard-scripts, queue, control-plane. (4) R71: test counts the control-plane door's own ops (subscriptionsignin) and registered public reads (casedetailspublic) as reachable; both were routed. (2) R5: test expects sweeps, sweepset, sweepratify. (1) R24: screen.contradiction.purpose is missing in the design's words.json (SCREEN_HELP in mock-refs.js has no contradiction entry); the design's to add; test unchanged, red. Suite 279 of 280 (only R24); t46-e2e, t47-e2e 7 of 7. Checks: format, architecture, coverage 73/73, ownership 0 failures. Requirement lines: R68 lists wizard-scripts, queue, control-plane among assembled owners; R71 counts door-own ops and public reads as reachable. R73 text still yours.
+
+## J13 · COMPLETE · re B17
+
+## Record: CHANGE B17 (K4262) · PLANE #46
+
+- (B17) `record-core` is added to `plane/declarations.mjs`: a static import of `DECLARED_OPS` beside the others, and an `OWNERS` entry in `build/modules.json` order (after `member-roster`). Two lines of module code (`c23360679f`).
+- The `allocid` row (record-core R85) is accepted by both hand registrations (`op-declarations`, `op-grades`), checked alone in a process of its own.
+- R68 test (`declarations.test.mjs`): the plane's start is refused at import by `DECLARED_OP_DISAGREES: groupdescriptiondraft description` (op-grades), the accepted red by name (K4258, until OP-GRADES #22 merges). That refusal names no other op, so the test cannot reach its assertions yet. The whole plane suite is held by the same refusal until OP-GRADES #22 merges; then re-run `node --test bio-plane/test/m/plane/`.
+- Checks (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; ownership 0 failures (1 file, `bio-plane/src/plane/declarations.mjs`). Coverage and words show failures in other modules only (below).
+- Deferred: none.
+- Node modules installed where missing (K4113): `agent-runner`, `bio-plane/src/journey-check`, `file-scanner`, `sheet-worker`, `site`.
+
+**Found in other modules (for BOB)**
+- Coverage: live ids named by no test: `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19; `screens-inquiry` R110, R119; `screens-intake` R53.
+- Words: `testcopy` at `bio-plane/test/m/op-grades/t37.test.mjs:32` (`translation-directed`, op-grades).
+
+**For BOB (requirement line)**: R68 now names `record-core` among the assembled owners (T51, B17). The R68 test's assertions wait on OP-GRADES #22.
+
+Size (session_019i2asULg4gBbzGXKQyLGgG): test runs 4, module lines 2
+
+## J14 · QUESTION
+
+R74 (C5, C14) is built in `bio-plane/src/plane/store.mjs` (the two getters `extraction` and `projectRoster`, beside the others in `controlPlaneOwnerOps`). Its two tests (`bio-plane/test/m/plane/fix3-r74.test.mjs`) drive the real door: `readheld` must reach extraction's one instance and `projectlist` must hand review's shared-drafts reader to project-roster. Both arms are CONTROL-PLANE #44's (its branch has neither yet), so the two tests are red on the tranche until control-plane merges. Nothing else in the suite is new-red: R24 (screen word `screen.objective.purpose`) is red as named.
+Options: (a) control-plane merges first and the two tests go green at once (reverses the START's order); (b) plane merges first and the two tests stay red by name until control-plane merges. Recommendation: (a), so no tranche state carries a red I introduced. I will hold the COMPLETE until you choose; the rest of my checks run meanwhile.
+
+## J15 · COMPLETE
+
+FIX ROUND 3, PLANE: cause met (C5, C14; K4389, B19 (b) K4393).
+
+Applied
+- R74: `bio-plane/src/plane/store.mjs`, `controlPlaneOwnerOps` getters now include `extraction: () => extractionOf(ctx)` and `projectRoster: () => projectRosterOf(ctx)`, each asked only when its op is served. Commit 53694d7fbb.
+- Tests: `bio-plane/test/m/plane/fix3-r74.test.mjs`, three tests naming R74. Fail-first seen: `no route readheld` and the missing `sharedDraftsOf`. Control (building route maps calls neither getter) passes.
+
+Accepted reds (named, B19 (b))
+- fix3-r74.test.mjs: the two door tests (readheld, projectlist) need CONTROL-PLANE #44's arms; green when it merges.
+- release.test.mjs R24: `screen.objective.purpose` not in the words list (design's, accepted red).
+
+Suite: `node --test test/m/plane/*.test.mjs`: 2 of the new/R24 reds above, all other tests pass.
+
+Checks
+- format: 0 failures. coverage (plane): 74 of 74. ownership (tranche/T51 -> job/T51/plane): 0 failures. words (plane): 0 failures.
+- architecture: 1 failure, not from my change: `bio-plane/test/m/plane/t47.test.mjs` imports `screens-wizards`, which plane does not declare in `uses`. Reported to BOB here; not fixed.
+- checks/run.mjs over other modules: journey-check R19, op-grades R53 unnamed by tests; op-grades words inline/plain (t33.mjs:214, t51.mjs:41, :45). Other modules, not fixed.
+
+Requirement line for BOB (proposed, R74 already on tranche): none new.
+Size (session_01Ti86WihtuNpDK1TTmcsSAd): test runs 3, module lines 2610
+
+## J16 · QUESTION
+
+QUESTION (PLANE #48; C5c, R75; replaces none): the contract between acquisition's pending keep and the plane's alarm is written in neither module, and acquisition (#3) has not merged. My reading, which I am building now:
+
+- The plane holds the table `keeps_pending` (in the object's storage: `sha` key, `kind` keep|reading, `parts` (the part digests in order), `attempts`, `registered_at`, `last_try`) and registers one scheduler consumer, `pending-work`: due at once for a new entry, `putFromParts(sha, parts)` for a `keep`, then `extraction.readHeld({sha})` (a keep's reading follows; a `reading` entry is only the second); an entry is removed only when its work has ended (`already` counts), a failure leaves it for the next alarm, at most 5 attempts (back-off 15 s, doubling), then it stays named, never retried again.
+- Acquisition cannot import the plane, so it is handed the registration: `acquisitionOf(ctx, {record, provenance, keepLater})` built by the plane before capture's first use (the factory keeps its first instance per storage). `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}` writes the row and arms the alarm in the same call; it never throws. ACQUISITION #24 reads `deps.keepLater` and, when the awaited keep will not end in the bound, calls it and answers `keep_pending: true`. With none handed, acquisition behaves as it does without a plane.
+- control-plane's deferred reading (R120) reaches the object by a store-internal route `pendingadd` (`kind=reading&sha=`), which only the door can reach; CONTROL-PLANE #45 calls it.
+- The stage record of an acquisition (R73) moves to the object's storage (key `acqstages:<trace>`), bounded as now (64 entries, 60 s), so it survives a restart.
+
+Please confirm or correct three things: (1) `deps.keepLater` is acquisition's to read (does #24's START carry it? its record names only `opts.waitUntil`); (2) the route name `pendingadd` for control-plane; (3) R9 says the plane writes no row: R75 gives it `keeps_pending` and the stage keys, so I read R9 as amended by R75 and declare the table to purge through `record-core`. Until you answer I build the plane's half against a scripted `keepLater` caller, and write the seam test with the real acquisition first, red by name until it merges.
+
+## J17 · QUESTION
+
+QUESTION (PLANE #48; replaces J16 item (1) only; the rest of J16 stands): I read the code after posting J16 and the hook I named there is wrong. `acquisition.acquire(cap, body, opts)` is a function over the capture instance, not over `acquisitionOf`'s object, and today it reads `opts.waitUntil`, else `cap.waitUntil` (acquisition/index.mjs:1540); capture's `acquire` arm hands it only `h.timings` (capture/index.mjs:3151).
+
+Smallest contract that needs one module besides mine: ACQUISITION #24 reads `opts.keepLater ?? cap.keepLater`, an async function `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}` (never throws; with none, acquisition behaves as without a plane), exactly as it reads `cap.waitUntil`; and the plane sets `captureOf(ctx).keepLater` at start (an assignment on the capture instance, as nothing else sets `waitUntil` there). No change in `capture`. The alternative, `h.keepLater` through capture's arm like `h.timings`, also needs a CAPTURE job (not in wave 0).
+
+Please answer: (a) `cap.keepLater` (recommended), or (b) `h.keepLater` with a capture CHANGE; and tell ACQUISITION #24 (its START names only `opts.waitUntil`). I build against (a) now; switching to (b) is a one-line change in `acquireHandlerParts`.
+
+## Record: fix round 4 (B20) · PLANE #48 (session_01PBzWna63QzDA6ZtwyhmSwV)
+
+Contract (B21, K4433): acquisition #24 reads `opts.keepLater ?? cap.keepLater` (async `keepLater({sha, parts}) -> {ok: true}`, never throws); the plane assigns `captureOf(ctx).keepLater`; the door's deferred reading reaches the object by the store-internal route `pendingadd` (`kind=reading&sha=`), whose use by the door waits on control-plane R120.
+
+**C5c · the alarm (plane R75; seam owner S)**
+1. Root cause (certain, START): `acquisition/index.mjs:336-360` `keepFromParts` ran after the answer on `opts.waitUntil`, which nothing hands; in the object an un-awaited promise is not kept alive. Decision (plan 5.1): awaited within the bound, else `keeps_pending` finished by the alarm. Built: `plane/pending.mjs` (table `keeps_pending`: sha, kind keep|reading, parts, attempts, registered_at, due_at, last_try, last_why; scheduler consumer `pending-work`; `keepLater`, `add`, `list`), wired in `store.mjs` (declared to `record-core`'s purge; `capture.keepLater`; consumer registered before the scheduler's start so a restart re-derives the alarm; route `pendingadd`; migration). A keep is put by `evidenceStore().putFromParts`, then `extraction.readHeld` in the same tick; no home yet (`NO_HOME`) ends it after a keep (the door reads at promotion, control-plane R117), is an attempt for a `reading` entry; `READING_HELD` ends; any failure leaves the entry, back-off 15 s doubling, 5 attempts, then the entry stays named and is not tried again.
+2. Why the tests missed it: acquisition's test used a scripted `putFromParts` (class b), and nothing ran an alarm. Fix: `fix4-r75.test.mjs` (real `Store`, real `record-core` `putFromParts` over `multipartBucket`, the real scheduler alarm, a restart as a second construction over one database) and `fix4-seam.test.mjs` (below).
+3. Failing-first, walker's case on the same path (press -> stored result): `fix4-seam.test.mjs` presses `acquire` of a 40 MiB document (5 parts of 8 MiB) against a store whose first multipart upload never ends, within `boundMs: 4000`: the answer is `keep_pending: true` with every part held and no whole; then the object's own alarm makes the whole (second upload) and `readHeld` writes the reading (`readingFor` found), nothing left pending, a second alarm does nothing. Control: the same press with a working store and a long bound answers without `keep_pending`. RED seen: (a) on this branch without acquisition's `keepLater` (acquisition #24 unmerged): the seam test fails by name; (b) in a worktree with acquisition #24's branch merged, the plane's hook disabled: "the answer says the whole follows" fails; GREEN in that worktree with the hook (2 of 2). It stays red here until acquisition merges (R-SEAM). `fix4-r75.test.mjs` was first run with `pending.mjs` absent (module not found), then green.
+4. Platform check **L** (workerd under Miniflare, `l75.test.mjs`, entry `l75-entry.mjs`): 40 MiB in 3 parts left pending through `keepLater`: the object's own alarm made the whole over R2 multipart and removed the entry in 1533 ms with no further request; `readHeld` asked 1510 ms after the registration (alarm armed and fired at once, the instant being due). Not covered by L: Miniflare's R2 is local; the 25 s door bound and the ~30 s `waitUntil` cut are not what the alarm depends on (it is a separate invocation).
+
+**C5a · the stage record survives a restart (R75, R73; seam owner control-plane)**
+1. Root cause (START): `acquiretimings` read an in-memory holder (`plane/acquire-timings.mjs`), lost when the object restarts or is evicted; the door then read `{}`. Built: the holder also writes a snapshot (`stageTimes`) to the table `acquire_stages` each time acquisition sets a field of its timings object (a stage begins or ends; a `Proxy` over the held object), bounded as R73 (64 entries, 60 s from the start; an entry pushed out writes no more), and `acquiretimings` answers `{ok, stageTimes, restarted: true}` from storage when the live object is gone. A running stage's time in such an answer is as of the last write (acquisition times with `performance.now()`, which does not span a restart); its name is what a stalled call needs.
+2. Why missed: R73's test read the holder in the same process. Fix: the restart test below.
+3. Failing-first (`fix4-r75.test.mjs`): an `acquire` stalled in its fetch, a second construction over the same database answers the stages that ran and the running one, `restarted: true`; the live object does not say so; another trace has none. RED seen against the old holder (assertion "answered from the object's storage"), GREEN with the table. The bound test (HOLD_MAX in storage, TTL) likewise.
+4. Platform check **L**: the stage table is written and read on workerd (`l75.test.mjs`, second test: a running stage named, another trace none). **Not run**: a real eviction of a workerd object mid-acquire (Miniflare gives no way to force one); the restart is proved as a second construction over the same storage.
+
+**Found in other modules / for BOB**
+- Requirement lines: R9 (BOB's line, K4433) says "stage keys"; the stage record is a table, `acquire_stages`, declared with `keeps_pending` to `record-core`'s purge. R75 is met as written, with `restarted: true` beside `stageTimes` in `acquiretimings`' answer (control-plane R115 reads `result.stageTimes` only). `pendingadd` is the plane's own store-internal route (no spec, like `acquiretimings`): the plane tests' model of the map (`maps.mjs`) lists it under "plane".
+- Stale tests brought to the requirements (B22, K4435): the door's owner getters are now one list, `plane/owners.mjs` `ownerGettersOf`, read by `store.mjs` and by `maps.mjs`, so `readheld` and the next owner op stale no test; `roster.test.mjs` compares `projectlist` with review's reader handed in.
+- `keepFromParts` in acquisition keeps a module-level `KEEPING` map by digest for the life of the process, so two tests of one process pressing the same bytes share a keep; the seam test gives each press its own document. Not a defect in production (one object, one digest).
+
+## J18 · REPORT
+
+REPORT (PLANE #48; B20, B21, B22): the plane's half of C5c and C5a is built and pushed (df34eb824b); I cannot COMPLETE until the seam test is green, and it needs ACQUISITION #24 merged on tranche/T51.
+
+Built: `plane/pending.mjs` (`keeps_pending`, consumer `pending-work`, `captureOf(ctx).keepLater`, route `pendingadd`), the stage record kept in storage (`acquire_stages`, `restarted: true`), `plane/owners.mjs` (B22: the door's owner getters in one list, read by the store and the tests' model of it; roster test follows R118). Plane suite: 290 of 291 before the seam test was added; the one red is R24 (the design's `screen.objective.purpose`, accepted by name). Platform check L (workerd, real alarm, R2 multipart, 40 MiB in 3 parts): the alarm made the whole in 1533 ms with no request after the keep.
+
+The seam test `fix4-seam.test.mjs` (a 40 MiB `acquire` pressed with a lost first upload, `keep_pending`, the alarm, `readHeld`) is red on this branch by name until acquisition's `keepLater` is on the tranche; I ran it green in a scratch worktree with ACQUISITION #24's branch merged (2 of 2), and red with the plane's hook off.
+
+What I need: tell me (RESUME or CHANGE) when ACQUISITION #24 is merged on tranche/T51. I then merge the tranche, re-run the suite and the seam test, and COMPLETE. Nothing else is open; no question is open (J16, J17 answered by B21).
+
+## Record: CHANGE B23 (K4440) · PLANE #48
+- (1) `door.mjs`: `gatedOp` takes `deferReading` (control-plane R120 hands it for an `acquire`) and its `readAcquired` skips the read when `deferReading(answer.document) === true`, answering the filed document with `reading_pending: true` and no reading or text units (the grade note is still added); a hook that throws defers nothing. Capture needed no change: `captureOp` already calls `readAcquired(answer, store)` and relays its `{body}`. `fix4-defer.test.mjs` (three tests, through `gatedOp` and the real object over a scripted network): the deferred press answers `reading_pending` with the reading not run (`extraction.read` calls 0) and the hook asked once, of the document filed; controls: no hook, a hook answering false and a hook that throws read as before. RED first (the deferred press: "Expected values to be strictly equal", controls green), GREEN after.
+- (2) `fix3-r74.test.mjs` asks `/readheldfor`: RED on the tranche ("no route readheldfor", control-plane's arm is not merged), GREEN in a scratch worktree with CONTROL-PLANE #45's branch merged.
+- Proposed requirement line for BOB (the next free id is R76): **R76** *(not yet met: T51)* (fix round 4, C5a/P8; K4440; `control-plane` R120) The door's hook `gatedOp` for `acquire` is handed `deferReading(document)`; when it answers true the plane's read step (`readAcquired`) is skipped and the filed document is answered with `reading_pending: true`, no `reading` and no `text_units`, the reading following by `extraction.readHeld` and the alarm (R75); a hook that is absent, answers false or throws leaves the reading to be made. Test: `fix4-defer.test.mjs`. Control: the same press with no hook carries the reading. (Its tests are named R75 until the id is written; rename to R76 then.)
+
+## COMPLETE (PLANE #48; B20, B21, B22, B23)
+**Entries applied.** C5c: `plane/pending.mjs`, the alarm consumer, `captureOf(ctx).keepLater`, `pendingadd`; C5a: the stage record in storage; B22: `plane/owners.mjs` and the stale tests; B23: the deferred read and the `readheldfor` test. Four fields of each cause are in the records above.
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/plane/`: tests 297, pass 293, fail 4. The four, by name: `fix3-r74.test.mjs` "readheldfor arm" (needs CONTROL-PLANE #45's `readheldfor` arm, merges after this job: green with its branch merged); `fix4-seam.test.mjs` both tests (need ACQUISITION #24's `keepLater` call, merges before this job in BOB's order: green with its branch merged, 2 of 2); `release.test.mjs` R24 (`screen.objective.purpose` absent from the design's words list, accepted red). In a scratch worktree with `job/T51/acquisition` and `job/T51/control-plane` merged: fix3-r74, fix4-defer, fix4-seam 8 of 8.
+- `bio-plane/test/system/migrate-released.test.mjs`: see the line below.
+- `checks/run.mjs`: format 0 failures; architecture 0; coverage: no plane id unnamed (R75 named by fix4-r75, fix4-seam, fix4-defer, l75); ownership 14 files, 0 failures; words: none in plane. Failures in other modules, not mine: coverage (control-plane R120, R121, R122 and others), words (op-grades).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: users of plane's change: affordances `t36.test.mjs`, 14 of 14 after merging the tranche tip.
+**Platform check L**: workerd under Miniflare (l75.test.mjs): 40 MiB in 3 parts, the alarm made the whole over R2 multipart in 1533 ms with no request after the registration. Not run: a real object eviction (Miniflare cannot force one) and the deployed copy's R2 (no mid-round deploy).
+**Deferred: none. Questions open: none** (J16, J17 answered by B21).
+
+## Record: CHANGE B24 (K4442) · PLANE #48
+- `test/m/plane/fixture.mjs` `storage()`: `transactionSync` is now a savepoint around the callback, released on success, rolled back and rethrown on a throw (nests), as workerd's. Plane suite after: 297 tests, 293 pass, the same four reds as before (readheldfor, the two seam tests, R24); no new red. No test outside `m/plane/` imports the fixture. Waiting for the CHANGE that says ACQUISITION #24 is merged.
+
+## COMPLETE (PLANE #48; B25, K4448): final
+Tranche merged (acquisition #24 on it). `node --test --test-force-exit bio-plane/test/m/plane/`: tests 297, pass 295, fail 2: `fix3-r74` "readheldfor arm" (needs CONTROL-PLANE #45's arm, merges after this job; green with its branch merged) and R24 (the design's `screen.objective.purpose`, accepted). `fix4-seam` 2 of 2 green with the real merged acquisition. `migrate-released.test.mjs`: pass 1, fail 0. B24 applied (above). format 0, architecture 0, ownership 0 failures. Open questions: none.
+Size (session_01PBzWna63QzDA6ZtwyhmSwV): test runs 24, module lines 2822
+
+## J19 · COMPLETE
+
+COMPLETE (PLANE #48; B20-B25): C5c (keeps_pending, pending-work alarm, cap.keepLater, pendingadd), C5a (stage record in storage, restarted:true), B22 (owners.mjs), B23 (deferReading -> reading_pending; fix3-r74 asks readheldfor), B24 (fixture transactionSync rolls back). Four fields per cause in build/jobs/T51/plane.md. Suite 297, pass 295; reds: fix3-r74 readheldfor (needs CONTROL-PLANE #45's arm, merges after me; green with its branch merged) and R24 (design's, accepted). fix4-seam 2/2 green with real acquisition; L on workerd: 40 MiB keep finished by the alarm in 1533 ms. migrate-released 1/1. format/architecture/ownership 0. Requirement lines: R9 says 'stage keys' but it is a table (acquire_stages); propose R76: gatedOp takes deferReading(document); true skips the read step and answers reading_pending:true with no reading (tests named R75 until written); acquiretimings adds restarted:true beside stageTimes.
+
+## J20 · QUESTION
+
+QUESTION (R77, the ledger's hand-offs to the other jobs; best reading below, I carry on with it)
+
+Plane's ledger is built and green; the lower modules reach it only through hooks plane hands them, and your START does not name the owners' side. I built these, so the six other jobs (acquisition, capture, extraction, cause-reading-4, control-plane, store-door) must match; please confirm or correct, and relay:
+
+1. Registration: `captureOf(ctx).owe({kind, sha, parts?, detail?})` beside `keepLater({sha, parts})` (same hook, async, never throws, re-arms an entry already held). `kind` is keep | reading | ocr | subresources | unpack; `detail` is a plain object the owner chooses (an ocr cursor `{next_page, pages_left}`, a web session's key). The door's `pendingadd?kind=&sha=` accepts every kind but keep. Acquisition reads it as it reads keepLater (`cap.owe`).
+2. Reading and ocr entries: plane calls `extraction.readHeld({sha, storeName, env, owed: {kind, detail}})`. extraction answers `{ok:true, read:true}` or `{ok:true, done:true}` (ended); `{ok:true, more:true, detail}` (a stage done, the rest follows at once, detail is the new cursor); `{final:true, why}` (ended for the document's own reason, kept on the row and shown on the page by `owedwork`); `NO_HOME`, a store error or anything else is tried again (backoff to one hour, never given up).
+3. subresources and unpack entries: plane calls `acquisitionOf(ctx).finishOwed({kind, sha, detail, storeName, env, at})`, answering the same shapes. Until acquisition exports it the entry stays owed (`last_why: NO_OWNER`), never dropped.
+4. `owedwork` (declared; classes admin and member; read): `?sha=` lists that digest's entries `{sha, kind, state: owed|final, attempts, next_try, why, detail}`; without `sha` it answers counts by kind and state, no digest.
+Old ledger rows (one row per digest, exhausted) are carried over and re-armed at migration; rows the old code already deleted at 'NO_HOME after a keep' are gone (no source to rebuild them from): new data only for those.
+
+## Record: fix round 4b (B26, B27) · PLANE #49 (session_018hyuuzAysk4N5zXFHkNnwL) · R77
+
+**Root cause** (audit F1, F5, F9, F11): `plane/pending.mjs` (before) ended an entry by a count (`PENDING_ATTEMPTS_MAX` = 5, `live()` selecting `attempts <` it) and, after a keep, by `NO_HOME` (`:76`, "the door reads it at the promotion", which no code does); a second registration was a no-op (`put`, `:47-54`); one row per digest; `list()` exposed by no op.
+**Why the tests missed it**: `fix4-r75.test.mjs` pinned the faulty behaviour ("a digest with no home yet ends there"; "past the attempt count it is not tried again"); `l75-entry.mjs` answered `NO_HOME` and the workerd test asserted the entry gone.
+
+**What changed**
+- `src/plane/pending.mjs` (rewritten): table `keeps_pending` keyed `(sha, kind)`, columns `detail`, `final_why`; kinds keep, reading, ocr, subresources, unpack; no count ends an entry; back-off 15 s doubling to `PENDING_RETRY_MAX_MS` (1 h) and on; `put` re-arms (attempts 0, due now, final cleared); `NO_HOME` retries; a keep that succeeds becomes a `reading` entry read in the same tick; owner answers per B27: `final: true` + why/reason stops the entry with the reason kept (listed by `owedwork`), `owed: true` continues at once (ocr; `READING_HELD` with `owed` is no end; an ocr answer without `owed` ends), `read`/`done` end. `subresources` (keyed by session, B27) runs `acquisition.owedRun(cap, {kind, session})`; `unpack` runs as the archive-unpack drain (`op=unpack` as the daemon through `env.SELF`), ending on `complete` or a `waiting_on` of `ARCHIVE_TREE_*`/`ARCHIVE_DEPTH_MAX` (stopped, stated), a daily-budget `waiting_on` stays owed; a missing owner leaves the entry owed (`NO_OWNER`/`NOT_CONFIGURED`). `migrate()` carries an old-shape table over (rename, copy, re-arm every entry, drop). `pendingOps` adds `owedwork`.
+- `src/plane/store.mjs:415-416`: `capture.keepLater` and `capture.owedLater` handed to the lower modules.
+- `src/plane/declared.mjs`: `owedwork` declared (read; admin, member; accepts `sha`).
+- Tests: new `test/m/plane/fix4b-r77.test.mjs` (7), `fix4-r75.test.mjs` two tests made current, `l75.test.mjs` + `l75-entry.mjs` (workerd: old assertion fixed, migration test added).
+
+**Failing-first**: `fix4b-r77.test.mjs` against the old `pending.mjs`/`store.mjs`/`declared.mjs` fails at import (no `PENDING_RETRY_MAX_MS`), so red; green after. The audit's case (a reading with no home for 20 minutes of alarms, then read) and the 40 MB keep promoted at 90 s are in it, with re-arm after exhaustion and after a final stop.
+**R-OLD**: entries still held are carried over and re-armed at migration (tested, and on workerd). Rows the old code had already deleted at "NO_HOME after a keep" cannot be rebuilt: new data only for them.
+**Measurements (workerd, Miniflare)**: 40 MiB in 3 parts: keep finished by the alarm and the entry gone 1520 to 1547 ms after registration, readHeld asked at 1499 to 1521 ms. Migration of the old table on workerd's storage: passes (ALTER TABLE RENAME, copy, DROP allowed).
+**Suites**: `node --test --test-force-exit test/m/plane/`: 305 tests, 304 pass, 1 fail: R24 `release.test.mjs`:78 "screen.objective.purpose is held by the words list", present on `tranche/T51` before my change (setup-words `rows.mjs` stale since other modules' words, `build.mjs --check` stale at the same word with and without my edit); BOB's regeneration clears it. `impact.mjs origin/tranche/T51 HEAD`: plane only (45 of 48 test files, all run above). Users of the ledger are the lower modules' hooks; their seam tests are theirs.
+**Checks**: format 0 failures; architecture 0 failures; coverage: plane none, the nine listed are other modules' unmerged ids; words 18421 (unchanged); ownership 0 failures.
+**Wording owed**: one row, `plane.declared.owedwork` (the op's description via `localize`, as the plane's other declared ops), to setup-words' next regeneration.
+**Requirement lines proposed** (R77, BOB writes): hooks `captureOf(ctx).keepLater({sha, parts})` and `.owedLater({kind, sha, session?, parts?, detail?})`; the owner answers of B27; `owedwork` op; old-ledger carry-over; no count or clock ends an entry.
+
+Size (session_018hyuuzAysk4N5zXFHkNnwL): test runs 9, module lines 330
+
+## J21 · COMPLETE
+
+COMPLETE (PLANE #49, R77). B27's shapes built: `captureOf(ctx).owedLater` (subresources keyed by session, unpack), `acquisition.owedRun`, unpack as the daemon through the door, ocr by `readHeld({sha, kind:"ocr"})` with `owed`, `failure` untouched by plane. Ledger never ends by count or clock; final reasons stay on the row and show in `owedwork`; old ledgers carried over and re-armed. fix4b-r77 (7 tests) red on the old code, green now; plane suite 305, 304 pass, the one red is R24 on stale setup-words rows (red on tranche before my change; clears at your regeneration). workerd: 40 MiB keep finished in ~1.5 s; migration passes. Checks clean, ownership 0 failures. Record in build/jobs/T51/plane.md has the lines for R77 and the Size line. One wording row owed: plane.declared.owedwork.
+
+## J22 · COMPLETE
+
+COMPLETE (PLANE #49, R77) again after B28: failure:"final" ends an entry with its reason, readHeld now gets {sha, storeName, env, kind} for reading too; fix4b-r77 and fix4-r75 14/14 green. Record unchanged otherwise.
+
+## J23 · QUESTION
+
+QUESTION (B29, the one place for the render's promotion; best reading below)
+
+Plane's side is built: the alarm calls `acquisition.owedRun(cap, {kind:"subresources", session}, {storeName, env, deliver})`, with `deliver` = `controlPlane.deliverOwedRender({ctx, env, storeName, answer, session})` when control-plane exports it; without it owedRun answers DELIVERY_NOT_HANDED and the render stays the member's "Finish it". A `final` answer's reason is now stated before `done`.
+
+The promotion is not plain for plane to do: screens-intake's `promoteDocument` mints the INFO id (`allocid`), builds the information bundle text, and files it under the page's project (`filedFor`) as the member. Best reading: it belongs to the door (control-plane R123's neighbour), so please have CONTROL-PLANE #46 export `deliverOwedRender({ctx, env, storeName, answer, session}) -> {ok:true}|{ok:false, reason}`: promote the rendered document in the shell document's home (project read from the shell document, member = the session's opener) through the same `promote` step, then give R123's read (`reading_pending`). Plane then carries no promotion code.
+
+My seam test in fix4b-r77.test.mjs ("R77 B29 (seam, control-plane)") is red by name until that export exists; it asserts the export and that plane hands `deliver`. I stay available; once control-plane merges, a CHANGE brings me to run the whole path (render delivered by the alarm, the document's reading pending). If you would rather plane do the promotion itself, say so and I will, but it would duplicate screens-intake's bundle building.
+
+**B28 to B30 additions (PLANE #49).** `failure: "final"` ends an entry with its reason; `readHeld` gets `{sha, storeName, env, kind}`; a `final` answer from `owedRun` is stated before `done`; the `subresources` run passes `{storeName, env, deliver}`, `deliver` being `controlPlane.deliverOwedRender({ctx, env, storeName, answer, session})` when control-plane exports it (ruled B30, K4493: CONTROL-PLANE #46 exports it). Seam test `fix4b-r77.test.mjs` "R77 B29 (seam, control-plane)" is red by name until that export merges; a CHANGE brings me back to run the whole path. Other plane tests: fix4b-r77 7 of 8, fix4-r75 7 of 7; the one stale-words red (R24) as before.
+
+## J24 · COMPLETE
+
+COMPLETE (PLANE #49, R77) after B29/B30: plane hands acquisition.owedRun {storeName, env, deliver} with deliver = controlPlane.deliverOwedRender when exported; seam test red by name until CONTROL-PLANE #46 merges it (ruled B30). Rest as J21/J22.
+
+## Record: CHANGE B31, B32 (PLANE #49)
+
+**Red 1 (`adminendorse: registered after the first read (R81)`), root cause**: my `pending.mjs` imported `control-plane/index.mjs` at load (for `deliverOwedRender`), and control-plane reads the op tables as it loads, before `plane/register.mjs` registered them; `fixture.mjs` -> `register.mjs` -> `pending.mjs` order. A dynamic `import()` at the call cured the load but left the bundled plane's top-level await unsettled (`fleet-bundle.mjs` `measureStart` never answered: `t47` R43 and `t48` hung at 240 s, which also stalled the whole suite at 244 results). Fixed for good: `store.mjs` imports `deliverOwedRender` (after `register.mjs`) and hands it to `pendingOf(ctx, {deliver})`; `pending.mjs` imports nothing from control-plane. Red then green: `fix4-r75` 0 tests run -> 7 of 7; `t47` and `t48` timeout -> 9 and 13 of 13. B32's ten files (`disclosures`, `fix4-r75`, `fix4-seam`, `roster`, `t46`-`t51`, `release`) load and pass in the full run; `release` has one red, R24, below.
+**Red 2 (R123 F2, a 40 MB upload)**: not plane's. The ledger works: the keep ends, a `reading` entry follows in the same tick, `readHeld` writes the reading (the probe printed it). The reading is marked `failure: "final"`: "the capture is 41943040 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read". Owner: `reading-pipeline/index.mjs:1494` (`bytesOf`, `tooBig` at `WHOLE_READ_MAX` 24 MiB, R37), against `control-plane/t51-reading-follows.test.mjs:106-121` which expects text out of a 40 MB file. Plane's own 40 MB test (`fix4b-r77`, keep at 15 s, promoted at 90 s) is green.
+**B32 seam** (`fix4b-r77-owners.test.mjs`, 2 tests, green, through the real alarm with the real owners): (b) a 60-page scan, `ocr` entry by extraction's real `readHeld({sha, kind:"ocr"})`, 24 pages a pass until none is left, every page indexed; a member that stays down leaves work owed; (a) a pending render, acquisition's real `owedRun` and control-plane's real `deliverOwedRender`: the rendered document is promoted beside its shell, the session dropped, the entry ends. Ledger changes it forced: an `owed` answer that read no pages backs off (an `ocr` pass that read pages goes on at once); a `reading` that leaves scan pages owes an `ocr` entry besides; `subresources` uses acquisition's exported `owedRun`. The tests are red on the old ledger (it fails at import); I did not mutate the new ledger to show them red.
+**Suites**: plane suite 308 tests, 307 pass, 1 fail: R24 (`release.test.mjs`, `screen.objective.purpose` not in the words list: stale setup-words `rows.mjs`, red on the tranche before my change). `fix4b-r77` 8, `fix4b-r77-owners` 2, `fix4-r75` 7, `l75` 3: all green. `t51-reading-follows`: F1 and F6 green, F2 red (owner above). Checks: format 0, architecture 0, coverage plane 77 of 77, ownership 0, words 18421 unchanged.
+Size (session_018hyuuzAysk4N5zXFHkNnwL): test runs 30, module lines 320
+
+## J25 · REPORT
+
+REPORT (R123 F2, the 40 MB upload; owner is not plane). The ledger ends the keep in a reading: keep entry -> `reading` entry in the same tick -> `readHeld` writes the reading. The stored reading is `failure: "final"`, basis "the capture is 41943040 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read". Owner: reading-pipeline `index.mjs:1494` (`bytesOf` -> `tooBig` at `WHOLE_READ_MAX` = 24 MiB, R37/D5). The test `control-plane/t51-reading-follows.test.mjs:106-121` expects the text of a 40 MB plain-text file. Either D5's bounded-piece reading must reach plain text over 24 MiB (the plan said office, ODF and CSV), or the test's file must be one the ceiling allows (a PDF the 24 MiB ceiling accepts cannot also exceed the 32 MiB keep bound, so F2's keep path would then be tested with a final-stated reading only).
+
+## J26 · COMPLETE
+
+COMPLETE (PLANE #49) for B31 and B32. Red 1 root-caused (control-plane imported at load before register.mjs; a dynamic import then left the bundle's top-level await unsettled and hung t47 and t48) and fixed: store.mjs hands deliverOwedRender to the ledger, pending.mjs imports nothing from control-plane; fix4-r75 0 -> 7 of 7, t47 9, t48 13. Red 2 is not plane's: REPORT J26 names reading-pipeline index.mjs:1494. B32's real-owner seam tests (ocr by extraction's readHeld, a pending render by owedRun and deliverOwedRender) are green. Plane suite 308, 307 pass, 1 red (R24, stale setup-words rows, red on the tranche before my change). Record has the details and the Size line.
+
+## Record: fix round 5 (PLANE #50, B33; E2 owner, E6 ledger half, E10 in-object time)
+
+**Root cause (E2, plan E2 (1) d, certain).** `bio-plane/src/plane/pending.mjs` `tick` (was :236-246) wrote a row's `attempts` and `due_at` only after its owner returned (`attempt`, was :71-75). An owner that kills the isolate never returns, so the row stayed first by `due_at` at every alarm, and up to `PENDING_BATCH` (3) heavy rows ran one after another in the object that answers every screen. `put` reset `attempts` to 0 on a re-registration, so a re-registered row would never end. `owedwork&sha=` took a 64-hex digest only (`BAD_SHA` for a `subresources` row's session key).
+**Why the tests missed it.** `fix4b-r77.test.mjs` scripts `readHeld` with answers that return (a failure, `NO_HOME`, a final); no test ran an owner that never returns, and no test counted heavy rows per tick.
+
+**What changed** (`bio-plane/src/plane/pending.mjs`, `store.mjs`; table `keeps_pending` gains `started_at`, `interrupted`, `last_ms`, `last_mem`, added by `migrate()` to a ledger of the round before; new data only, an old row starts with none):
+- `stamp` (`pending.mjs`): a row is stamped `started_at` and `attempts+1`, with its back-off `due_at` set, **before** its owner runs (`run`, and the keep's follow-on reading). Every answer clears `started_at` and notes `last_ms` and `last_mem` (the memory marker: `process.memoryUsage().rss` where the runtime has it, else null).
+- `reapInterrupted`: at each tick a row found started and not in this isolate's `running` set is an interrupted run: `interrupted+1`, `last_why: OBJECT_STOPPED`; at 3 the row is `final` with `localize("plane.pending.interrupted", "the reading did not finish; the object stopped")`, stated by `owedwork` (`why`, with `interrupted`, `running`, `last_ms`, `last_mem` per entry). The consumer's `due` and `wake` answer "now" while a started row of a gone isolate exists, so it is reaped at the next alarm and not at its back-off. `put` never touches `interrupted`: a re-registration keeps the count.
+- `tick`: the light kinds (`subresources`, `unpack`, up to `PENDING_BATCH`) first, then at most one heavy row (`keep`, `reading`, `ocr`). A keep that succeeds still reads in its own tick (R77).
+- `owedwork&sha=<session key>`: a key that is not a digest is read when a `subresources` row holds it, else `BAD_SHA` as before (step 0 §3).
+- E10 (`store.mjs` `fetch`): the object sets `server-timing: object;dur=<ms>`, replacing any value carried in. control-plane reads it for `do-<route>` beside its own timing (see the QUESTION).
+
+**Failing-first, red then green** (`bio-plane/test/m/plane/fix5-r77.test.mjs`, the real `Store` over storage, the alarm; a run that never returns is a promise the test abandons, then a second object over the same storage, as a restart):
+- red before the change (`node --test` at the unchanged code, 2026-10-22): "its try is counted before the owner ran" (attempts 0, expected 1); "one heavy row in the tick, the oldest" (actual 3 asked, expected 1); the E6 case "never two heavy rows in a tick" (2); `owedwork` by session key `{"ok":false,"reason":"BAD_SHA"}`; the header `null`; the re-registered row hung the second object for 20 s (the row first again). Green after: 6 of 6.
+- R77 (E2) never-returns: counted before, not first at the next tick, the following row runs, the third interruption ends it with the stated reason, owedwork states it; control: a returned failure is never an interruption (4 tries, `interrupted` 0, `started_at` null).
+- R77 (E2) re-registration keeps the interrupted count; R77 (E2) one heavy row per tick and the light kind before it; R77 (E6) a 60-page scan's `ocr` entry (OCR scripted at its real 24-page call) reaches 60 pages in 3 ticks with a heavy `reading` row registered before it, never two heavy rows in a tick; R77 (E2) the session key; R78 (E10) the header, its body unchanged, a carried-in value replaced.
+- `l77.test.mjs` (L, workerd under Miniflare, the real alarm and storage): a read that never returns is stamped (attempts 1, running) in the first runtime; after `dispose()` the next runtime over the same storage reaps it (`interrupted` 1, not running) and does not run it first. 35 s.
+
+**Platform check L, real sizes (E2 (4)).** Not yet done: it needs `pdf-reader`, `reading-pipeline` and `extraction` merged into `tranche/T51` (the 21 MB/1,300-page synthetic, the 15.9 MB many-object PDF and E1's 22 MiB PDF through `readHeld` and the real alarm at `--max-old-space-size` of the object's share). Miniflare enforces no 128 MB and no CPU limit; the runs above prove the ledger's accounting on workerd, not the size. The per-row accounting (`last_ms`, `last_mem`, `interrupted`, `running`) is in the deploy and `owedwork` names it for any row (K4428).
+**Whole-suite status.** plane suite: 320 tests, 319 pass, 1 fail: R24 (`release.test.mjs`, `screen.objective.purpose` not in the words list: setup-words' `rows.mjs` stale, red on the tranche before my change, identical without it).
+**Requirement lines proposed** (BOB writes `build/requirements/`): R77 amended: *a row is stamped started and its try counted before its owner runs; a row found started and not finished at a later alarm, by an isolate that is not running it, is an interrupted run, counted in `interrupted` (kept across a re-registration), and the third ends it with "the reading did not finish; the object stopped"; a tick runs the light kinds and at most one of `keep`, `reading`, `ocr`; `owedwork&sha=` also answers a `subresources` row by its session key; each entry states `interrupted`, `running`, `last_ms`, `last_mem`.* R78 new: *the object answers every route with `server-timing: object;dur=<ms>`, whole milliseconds it spent on the route (a stream's, to its first byte), set by the object and never taken from the caller.*
+**Words.** One new sentence, `plane.pending.interrupted` (BOB's wording); wording waits for T52 (K4269), the row is owed to the design lane.
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 6605 of 6605, channels 0, words 0 failures; `checks/ownership.mjs plane`: 0 failures; `build/plan/impact.mjs`: plane only (47 of 2309 test files), run.
+
+## J27 · QUESTION
+
+QUESTION (PLANE #50, fix round 5; two things, nothing else open)
+
+Built and pushed on job/T51/plane (7a38e2021e): E2's ledger accounting (a row stamped started and its try counted before its owner runs; a started row found by a later alarm is an interrupted run, kept across re-registration, the third ends it "the reading did not finish; the object stopped"; light kinds first and one heavy row per tick), E6's ledger half (the 60-page scan reaches 60 pages in 3 ticks behind a heavy reading), `owedwork&sha=` by a subresources session key, E10's in-object time. Failing-first tests red then green and an L check on workerd (a read that never returns, runtime ended, the next runtime reaps it) are in my record. Checks: run.mjs 0 failures, ownership 0; plane suite 319 of 320, the one red is R24 `release.test.mjs` (stale setup-words rows, red on the tranche before me).
+
+1. For control-plane (merge 10, before me), E10: the object answers every route with the response header `server-timing: object;dur=<ms>`. Please hand that name to CONTROL-PLANE #47 so its `Server-Timing` writes `do-<route>` beside `obj-<route>` from it; if it already chose another name, tell me and I will use its name.
+2. E2 (4) L at real sizes (the 21 MB/1,300-page synthetic, a 15.9 MB many-object PDF, E1's 22 MiB PDF through `readHeld` and the real alarm at the object's memory share) needs pdf-reader, reading-pipeline and extraction merged into tranche/T51; none of the round's jobs is merged yet. The smallest thing I need: tell me when those three have merged (a RESUME or CHANGE saying so); I then merge tranche/T51, run the three files, put the numbers in my record and COMPLETE. If you would rather close my job now and run L as the re-walk's check, say so and I post COMPLETE with the per-row logging (`owedwork` states interrupted, running, last_ms, last_mem) as the K4428 fallback.
+
+## J28 · REPORT
+
+REPORT (PLANE #50): B34 applied and pushed: every route answers server-timing: object;dur=<ms> (set by the object, a carried-in value replaced); tested on three routes in fix5-r77.test.mjs, 6 of 6 green. Still open is only J27 item 2: the L run at real sizes waits for pdf-reader, reading-pipeline and extraction to merge into tranche/T51; tell me when, or say close now.
+
+## Record: B34 and B36 (PLANE #50), L at size
+
+**B34 applied.** The object answers every route `server-timing: object;dur=<ms>` (`store.mjs` `fetch`; set by the object, a carried-in value replaced); tested on three routes in `fix5-r77.test.mjs` (R78).
+**B36: L through the real ledger and alarm, on the merged providers** (`l77-size.test.mjs`, child `l77-size-child.mjs`: the real `Store`, `keeps_pending`, `onAlarm`, extraction's real `readHeld`, the file promoted as the capture screen files one; peak = sampled heap + array buffers above idle after the file is held; node 26, no heap cap, GC not forced during the read, so each peak includes uncollected garbage; runs vary):
+| file | read by the alarm | peak above idle (idle ≈108 MB incl. the held bytes) | time |
+|---|---|---|---|
+| 21 MB / 1,300-page synthetic | 1 tick, ledger empty, 134 units, words in `text_units` | 112 MB (other runs 178, 354, 366) | 25 s |
+| 15.9 MB many-object PDF (≈100k small objects, 18.9 MB) | 1 tick, ledger empty, words in `text_units` | 79 MB | 2.4 s |
+| 22 MiB PDF (600 pages) | 1 tick, ledger empty, 266 units, words in `text_units` | 276 MB (one run, with a 160 MB old-space cap: completes, peak 65 MB above idle) | 6.2 s |
+With `--max-old-space-size` set the synthetic did not complete at 110, 130, 160, 200, 240 or 300 MB through the whole plane (extraction's own `c5b-memory` completes the same read in 88 MB), and the 22 MiB PDF failed at 110 and 130 and completed at 160. So through the assembled plane the 1,300-page read needs far more than extraction's isolated measure; the cause is not found (not extraction's units budget, now the index bound; the other 2 MiB-class candidates are the plane's promotion/index writes and the stand-in bucket's copies). Miniflare and node enforce no CPU limit and no 128 MB object. **What the deploy names:** `owedwork` states, per row, `interrupted`, `running`, `last_ms`, `last_mem` (K4428), so a row killed by memory or CPU shows as interrupted with its last markers, and ends stated after three.
+**Suite.** plane 318 tests, 317 pass, 1 fail (R24 `release.test.mjs`, stale setup-words rows, red on the tranche before). `checks/run.mjs`: 0 failures all five; ownership 0.
+Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 22, module lines 3,070
+
+## J29 · COMPLETE
+
+COMPLETE (PLANE #50, B33-B36). Pushed on job/T51/plane. What changed: pending.mjs ledger (run counted before it happens, started_at/interrupted/last_ms/last_mem columns added by migrate, reap of a started row found by a later alarm, the third interruption final with "the reading did not finish; the object stopped", re-registration keeps the count, light kinds then one heavy row per tick, owedwork by subresources session key); store.mjs fetch answers server-timing: object;dur=<ms>. Failing-first red then green: fix5-r77.test.mjs (6 tests: red before = attempts 0 not 1, 3 heavy rows in a tick, BAD_SHA on a session key, no header); l77.test.mjs (workerd: a read that never returns, next runtime reaps it); E6 60-page scan reaches 60 pages in 3 ticks behind a heavy reading. L at size on the merged providers (l77-size.test.mjs): 21 MB/1,300-page, 15.9 MB many-object and 22 MiB PDFs are all read by the real alarm, ledger empty, words in text_units; peaks above idle 112 (other runs up to 366), 79 and 276 MB uncapped; the 1,300-page read did not complete under any node old-space cap up to 300 MB through the whole plane, where extraction's own c5b-memory completes it in 88 MB. I did not find why (not the units budget); the deploy's owedwork logging (interrupted, running, last_ms, last_mem) names a kill by memory or CPU. FOR YOU, BOB: that gap is a finding in another module's path or the plane's promotion/index writes, to place; details in my record. Suites: plane 317 of 318 (the red is R24 release.test.mjs, stale setup-words rows, red on the tranche before me); checks/run.mjs 0 failures, ownership 0. Requirement lines proposed: R77 amended and R78 new, in my record.
+Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 22, module lines 3070
+
+**Ring failed (PLANE #50, J29):** the BOB session read from `mail addr --bob` (session_01G6Txo7f9iCv4SnYdk5Zypv) is archived, so no doorbell was rung; the pushed COMPLETE is the message and the backstop reads it (mechanics §13).
+
+## Record: B38 (PLANE #50), traffic and a due entry
+
+**Root cause (certain, reproduced).** `bio-plane/src/plane/pending.mjs` consumer `wake` (was :221) answered `Math.max(due, at)`, "now" for any due entry. The scheduler's R27 (`scheduler/index.mjs:462-467`, `#holding`) holds a registered consumer whose `wake`, read after its tick, equals the one read before it and is at or before the firing's `now`, so it cannot spin the alarm. After a pass that went on (an `ocr` pass with pages left, due again at once) both reads were "now": the consumer was held, the alarm was set for the next other consumer (hours, a day), and the entry waited for an `arm` made outside a firing (a start, another producer's registration). It is not traffic that postpones it; traffic only sometimes supplied the release. Node: `nextAt` 25,007,285 ms after the tick; workerd (Miniflare): pass 2 never began in 60 s with no request at all (`l75/ocr` entry, 2 s a pass).
+**Why the tests missed it.** Every ledger test fired `onAlarm(now)` by hand for each pass, which is what the alarm the platform keeps would not do; none read the alarm the tick left set.
+**Fix.** `wake` answers the entry's own due instant, never raised to "now" (a pass that went on moves it), so R27 sees a changed wake and the alarm stays set for the due time.
+**Failing-first.** `fix5-r77.test.mjs` "R77 (B38)": after pass 1 the alarm must be within 250 ms of the tick; red (25,007,285 ms), green after; three passes with no request between them. `l77-traffic.test.mjs` (workerd, real alarm): a quiet entry and one with a request every 4 s both begin their passes at 5, 2013, 4021 ms and 6, 2017, 4027 ms (a pass takes 2000); before the fix pass 2 never began in 60 s.
+**control-plane's `t51-hops` E10 (i):** green (2 of 2) with the server-timing header.
+**Suites.** plane 320 tests, 319 pass, 1 fail (R24 `release.test.mjs`, stale setup-words rows, red on the tranche before); `checks/run.mjs` 0 failures. Still owed: the `l77-size` gate (B37) when BOB says roster-reader is merged.
+
+## J30 · REPORT
+
+REPORT (PLANE #50, B38 done; the l77-size gate of B37 still waits for roster-reader). Root cause, reproduced: not traffic. Plane's pending consumer answered wake = max(due, now); after an ocr pass that went on (due again at once) the wake read after the tick equalled the one before it and was in the past, so scheduler R27 (#holding, scheduler/index.mjs:462) held the consumer, the alarm was set hours or a day away, and the entry waited for an arm outside a firing (requests sometimes supplied one). Fixed in pending.mjs (wake = the entry's own due instant). Failing-first: fix5-r77 "R77 (B38)" (alarm after pass 1 was 25,007,285 ms away, now within 250 ms; three passes with no request between) and l77-traffic.test.mjs on workerd (quiet and a request every 4 s both pass at 5/2013/4021 ms; before the fix pass 2 never began in 60 s). control-plane t51-hops E10 (i) is green with the header. plane suite 319 of 320 (R24 stale rows as before); checks 0 failures. Pushed.
+
+## Record: B39 (PLANE #50), the l77-size gate (K4551), COMPLETE again
+
+`l77-size.test.mjs` is now a gate on the assembled plane (real `Store`, `keeps_pending`, alarm, extraction's `readHeld`; roster-reader merged, tranche merged). The child's idle is measured first (the whole plane built, the file held, the heap collected; old space in use): **idle 87.4 MB**; the read runs in a child with `--max-old-space-size` = ceil(idle) + 88 = **176 MB** (the object's 128 MB less 20 MB of headroom, less the 20 MB file, which is array buffers outside old space). **Five of five** complete for each file, ledger empty, words in `text_units`: the 21 MB / 1,300-page synthetic (134 units; 26-30 s; peak above idle 87-90 MB) and the 22 MiB PDF (266 units; 6-7 s; peak above idle 70-76 MB). A run that dies is red. The 15.9 MB small-object PDF is read and printed with no cap (3 s, peak 52 MB). Earlier finding closed: before roster-reader the synthetic did not complete under any cap up to 300 MB.
+**Suites.** plane 320 tests, 319 pass, 1 fail (R24 `release.test.mjs`, stale setup-words rows, red on the tranche before); `checks/run.mjs` 0 failures; ownership 0.
+**Requirement lines proposed.** R77 amended: *a row is stamped started and its try counted before its owner runs; a row found started and not finished at a later alarm by an isolate that is not running it is an interrupted run, counted in `interrupted` (kept across a re-registration), and the third ends it with "the reading did not finish; the object stopped"; a tick runs the light kinds and at most one of `keep`, `reading`, `ocr`; the consumer's wake is the entry's own due instant, never raised to now (an entry that went on and is due again at once keeps the alarm; scheduler R27); `owedwork&sha=` also answers a `subresources` row by its session key; each entry states `interrupted`, `running`, `last_ms`, `last_mem`.* R78 new: *the object answers every route with `server-timing: object;dur=<ms>`, the milliseconds it spent on the route (a stream's, to its first byte), set by the object, a value carried in replaced.* R77 test line: the assembled plane reads a 21 MB / 1,300-page PDF and a 22 MiB PDF through the real alarm in a child capped at the measured idle plus 88 MB, five of five.
+Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 30, module lines 3,080
+
+## J31 · COMPLETE
+
+COMPLETE (PLANE #50, B37-B39). Pushed. The l77-size gate is on the assembled plane (roster-reader merged): harness idle measured 87.4 MB (old space in use, plane built, file held, collected); cap = idle + 88 = 176 MB; the 21 MB/1,300-page synthetic and the 22 MiB PDF complete through the real alarm 5 of 5 each (ledger empty, words in text_units; synthetic 26-30 s, peak above idle 87-90 MB; 22 MiB 6-7 s, 70-76 MB); a run that dies is red; the 15.9 MB small-object PDF is read and printed (3 s, 52 MB). Earlier in the job: B34 header, B38 root cause (scheduler R27 held plane's wake=max(due,now); fixed, node and workerd failing-first). plane suite 319 of 320 (R24 release.test.mjs, stale setup-words rows, red on the tranche before me); checks/run.mjs 0 failures; ownership 0.
+Requirement lines proposed: R77 amended (a row stamped started and its try counted before its owner runs; a started row found by a later alarm of a gone isolate is an interrupted run, counted in interrupted, kept across re-registration, third ends it "the reading did not finish; the object stopped"; a tick runs the light kinds and at most one of keep, reading, ocr; the consumer's wake is the entry's own due instant, never raised to now; owedwork&sha= also answers a subresources session key; entries state interrupted, running, last_ms, last_mem; the assembled plane reads the 21 MB/1,300-page and 22 MiB PDFs through the real alarm at idle+88 MB, 5 of 5). R78 new (every route answers server-timing: object;dur=<ms>, set by the object, a carried-in value replaced). Word owed to the design lane for T52: plane.pending.interrupted.
+Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 30, module lines 3080
+
+## Record: B40, B41 (PLANE #51), fix round 6: G1, G2, G13, G12e
+
+**Merged** `tranche/T51` (SCHEDULER #39 in: `watch`, `health`). Acquisition's `owedFetch` and extraction's cursor are NOT merged: R81 and R82 are tested against a scripted double of the stated interface (`fix6-pending.test.mjs`); their real seams are the owners' and need a re-run after they merge.
+
+**What changed.** `plane/watchdog.mjs` (new): `watchdog(controller, env)`, both objects asked in parallel, fresh stub each, 10 s bound, `busy`/`broken`/`failed` recorded in one `console.error` JSON line, then THROW; late rejections caught. `plane/index.mjs`: `scheduled` beside `fetch`, header updated. `store.mjs`: `Store.watchdog(at)` = `schedulerOf.watch(at)`; `owedwork` handed `{health, administers}`; R78 comments reworded to I/O time (compute = `do-` minus `in-` minus the ~115-160 ms hop). `pending.mjs`: `fetch` kind (session-keyed, heavy, `owedFetch` with `deliver`, `NO_OWNER` while unmerged); `readHeld` is handed the row's `detail` (cursor); `more` answers set due `at+1` and clear `interrupted` when the cursor moved; `owedwork` answers fetch rows by session key; admin-only `last_run, alarm_at, stale, oldest_overdue, watchdog_seen` (from `health()`). `wrangler.jsonc`: `triggers.crons: ["*/5 * * * *"]`.
+
+**Root causes / why tests missed / red then green.**
+- G1: no cron, no second clock (plan). Tests never began from a lost alarm. `watchdog.test.mjs` (10) and `l79.test.mjs` (5, workerd): all red before (handler absent; Store.watchdog absent; owedwork fields absent), green after. Cases: owed rows + no alarm (row runs once, 32-42 ms after the fire), double fire, fire 20 min late, restart over same storage then fire, object held 14 s (`blockConcurrencyWhile`): handler returned at 10,026 ms, outcome exception, scratch still asked; handler with throwing/hanging/broken/missing STORE: bounded, both tried, one line, no unhandled rejection; wrangler holds exactly one cron.
+- G2: `fix6-pending.test.mjs` R81 (5 tests) red on old pending.mjs, green.
+- G13: R82 (3 tests; one is a control that passed before). Found while writing: after a killed piece, the tick's "before" wake reads "now", so a `more` due "now" looked unchanged to the scheduler's R27 hold and the next piece stalled until an arm; the accounting test was red for that reason and green with due `at+1`.
+
+**Platform findings.** (1) Miniflare runs a seeded past alarm at once, so it cannot hold a spent alarm; the spent shape is the node test's (a storage whose `getAlarm` reports it). (2) A synchronous spin in a Durable Object blocks the whole local workerd process (all isolates share a thread), so "busy" is shown by a held concurrency gate. (3) **For BOB:** `owedwork` is refused CLASS_FORBIDDEN to the ADMIN_TOKEN (`machineClasses: []`); only a member session of role admin reaches it, so the admin-only fields are judged by the `viewer` stamp through membership (`class:admin` or an active admin member), never a caller's `cls` (not stripped by the door). If the lane must read it with the token, the op's `machineClasses` is op-declarations'/op-grades' to change. (4) `oldest_overdue` is the scheduler's `health()` value (earliest wake of any consumer), not a ledger-only MIN; in an unticked fixture a daily pass counts.
+
+**Suites.** plane 343 tests, 342 pass, 1 fail: R24 `release.test.mjs` (accepted by name). Scheduler 148/148. control-plane t46-e2e, t47-e2e, t51-hops 9/9. checks: format 0, architecture 0, coverage 6619 of 6619, words 0 for plane, ownership 0. `impact.mjs` names 123 modules (plane's index is imported widely); I ran the users that exercise the Worker, not all 1802 files.
+
+**Requirement lines proposed (BOB writes).** R6: default export is `{fetch, scheduled}`. R79: the Worker's `scheduled` asks `bio` and `scratch` once a cycle, bounded 10 s, fresh stub, both tried, failure = one structured line then a throw; `Store.watchdog(at)` = scheduler `watch(at)`; `wrangler.jsonc` holds exactly one cron `*/5 * * * *` (equal to control-plane's `bio-plane-crons/1` literal: its own test; I could not compare, it is unmerged). R80: `owedwork` gives an administrator the five watchdog fields, a member none, read-only. R81: `fetch` ledger kind, session-keyed, heavy, run by acquisition's `owedFetch` with `deliver`. R82: a `reading` row goes on by the cursor it was left (`more` + `detail`), one heavy piece per tick, due one millisecond on, `interrupted` cleared when the cursor moved. R78: I/O time only; compute = `do-` minus `in-` minus the hop.
+
+**Wording owed:** none (no member-read sentence). **Not mine:** the "only pulled earlier" test (BOB). Generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` is stale by this change (BOB regenerates).
+
+Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3,300
+
+## J32 · COMPLETE
+
+COMPLETE (PLANE #51, B40, B41). Pushed. G1 watchdog (scheduled, Store.watchdog, cron */5, admin owedwork fields) R79/R80; G2 fetch kind R81 and G13 cursor continuation R82 against a scripted double (acquisition owedFetch and extraction cursor unmerged: re-run seams after they merge); G12e R78 reworded. Plane 343 tests, 342 pass, 1 fail R24 release (accepted). Scheduler 148/148; control-plane e2e 9/9; checks 0, ownership 0. For BOB: owedwork is CLASS_FORBIDDEN to the ADMIN_TOKEN (machineClasses []), so admin is judged by viewer through membership; bundle bio-plane.bundled.mjs stale. Details and requirement lines in the record. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3300
+
+## Record: B42 (PLANE #51), extraction's two items and the real owedFetch
+
+**Merged** `tranche/T51` (acquisition in). (1) `store.mjs` beside `capture.owedLater`: `extractionOf(ctx).registerOwe((a) => pending.owedLater(a))`, guarded by `typeof registerOwe === "function"` until extraction merges. Test R83 in `fix6-pending.test.mjs`: red without the line, green with it; control: an extraction without `registerOwe` builds as before. (2) Extraction's `round6-plane.test.mjs` (commit d319b550dc) taken over as `round6-extraction.test.mjs` (import paths only changed, header says whose it was): R87 (G4), R89 (G8), R90 (G13) are RED BY NAME until extraction and reading-pipeline merge (failing on the missing behaviour: "never a 502", "read in 1 ticks"). (3) G2 seam against the REAL `owedFetch` (`fix6-pending.test.mjs`): the real `acquire` parks a 9 MiB declared source as a `fetch` row with 0 body bytes pulled (stream with highWaterMark 0), the tick runs the real `owedFetch`, which pulls the body and is handed `deliver`; green. The real answers (`done:false` + `reason`, `final`, `done`) are what my owner already reads.
+
+**Suites.** plane 348 tests, 344 pass, 4 fail: R24 (accepted) and the three named seams above. checks: format 0, architecture 0, coverage 6623/6623, words 0, ownership 0. Requirement line proposed: R83: the composition hands extraction the ledger's `owedLater` once at construction (`registerOwe`, extraction R89).
+
+Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3,107
+
+## J33 · COMPLETE
+
+COMPLETE (PLANE #51, B42). Pushed. (1) registerOwe handed to extraction at construction, guarded (R83, test red without). (2) extraction's G4/G8/G13 seam tests taken over as round6-extraction.test.mjs: R87, R89, R90 red by name until extraction and reading-pipeline merge. (3) G2 seam against the real owedFetch green (real acquire parks a 9 MiB source, 0 bytes pulled; tick runs real owedFetch with deliver). Plane 348 tests, 344 pass, 4 fail = R24 (accepted) + the 3 named seams. checks 0, ownership 0. Correction to J32: module lines are 3107, not 3300. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3107
+
+## J34 · BLOCKED
+
+BLOCKED · cause: a provider I wait on has not merged (nothing for Bob to do; BOB's merges decide).
+
+My START (B43) says every G41 provider is merged and TEST-SUPPORT #9's preload is on `tranche/T51`. On `origin/tranche/T51` at 4dbc2cc2be (K4643) neither holds:
+- `bio-plane/test/platform-sqlite.mjs` is not on `tranche/T51`; it exists only on `job/T51/test-support` (e1b7913b6d), whose branch also holds `bio-plane/test/m/test-support/platform-sqlite.test.mjs`. START says to post BLOCKED naming it.
+- The job branches of CSV-READER #3, OFFICE-READERS #15, READING-PIPELINE #26, EXTRACTION #38, CONTENT #19, RETRIEVAL-BROWSE #4, CALCULATIONS #8 and SCREENS-INQUIRY #24 have each only had their START (the plan lines name their sessions; no `merge job/T51/<module>` for them is on `tranche/T51`). My probe and test (failing-first red on the tranche before the providers, green after) need them merged.
+
+Done so far: branch checked out and fast-forwarded, `tranche/T51` merged in, `mail start` pushed, reading set identified. Nothing changed in module code. I will resume on a RESUME or a ring after the merges.
+
+## Record: B43/B44/B45/B46 (PLANE #52), G41 the shape proof, built ahead of the providers
+
+**Merged** `tranche/T51` (CSV-READER #3, OFFICE-READERS #15 in). Still to merge before green: READING-PIPELINE, EXTRACTION, CONTENT, RETRIEVAL-BROWSE, CALCULATIONS, SCREENS-INQUIRY, and `bio-plane/test/platform-sqlite.mjs` (runs use a copy outside the tree through `BIO_PLATFORM_SHIM`).
+
+**Built** (tests only, `bio-plane/test/m/plane/`): `shape/harness.mjs` (child `args` carry `--import SHIM`, default `bio-plane/test/platform-sqlite.mjs`; `largest` stored value over `readings`, `reading_history`, `capture_text` per tick and at the end, `r.largestStored`/`r.overBound` against `STORED_VALUE_BOUND` 1 MiB; `xlsxDoc(rows)`; `csvDoc` marks FIRSTROWMARK/MIDROWMARK/LASTROWMARK; `readingEachTick`; `cellsOf` of the last row through `extractionOf(ctx).cellsOf`; `unread_pages` in the reading event); `shape/xlsx-gen.mjs` (streamed zip, 200,000 rows = 30,512,306 B of declared sheet text, a 3,163,243 B file, read by `xlsxEntry.text`); `shape/g41.probe.mjs` (cap `128 + 39 - N`, `failures()`, prints the largest CSV that fits on a failure); `g41-shape.test.mjs` (R84 proposed; heavy, run alone); `shape/g26.probe.mjs` check is units + `unread_pages` = 1,354.
+
+**Red on the pre-G41 tip** (`tranche/T51` before csv-reader merged, shim copy): `g41.probe.mjs csv4`, the 4 MB CSV at cap 163: `CHILD DIED (SIGABRT): FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory`; a 2 MB CSV at cap 165 never ends (the ledger still owes `reading` after 600 ticks). Green: owed until the providers merge.
+
+Size so far: not yet final.
+
+## J35 · REPORT
+
+REPORT with two asks (G41 shape proof, run on tranche/T51 with csv-reader, office-readers, reading-pipeline, extraction, content, retrieval-browse merged; the shim from a copy). Pushed on job/T51/plane (c912847df5).
+
+PASS at the real shape: 4 MB CSV (cap 163, 2 ticks, max 3.5 s, peak 130 MB) and the 200,000-row xlsx (cap 163, 2 ticks, max 9.0 s, peak 153 MB; cellsOf of row 200000 gives the 3 cells in 421 ms); child alive, first/middle/last row in the index and found by op=search, largest stored value 131,071 B (under 1 MiB), readingFor states its state at every tick.
+Red before the providers: the 4 MB CSV at cap 163 died (heap out of memory, SIGABRT).
+
+1. CELLS OF A FILE OVER ONE PART (8 MB and 17 MiB CSV): the text is read whole and found (all three markers, 60 and 128 units, peaks 125 and 148 MB, alive at caps 159 and 150), but `cellsOf` of the last row answers `cells_not_interpretable`. Cause, measured: an upload over one 8 MiB part is stored with `capture_format` "undetermined" (capture's text rule R92/R93 sniffs "within one part"; the profile says "no content type was declared" although the upload declared text/csv), so `readings.capture_format` is "undetermined" and reading-pipeline `cellsInRange` finds no entry (`getFormat("undetermined")`), while the ledger read it as csv text (sheet-range units). The 4 MB (one part) CSV has format csv and works. Smallest thing needed, BOB's to place: either extraction's `cellsOf` (`extraction/index.mjs:1650`) falls back to the reading's `text_container` when `capture_format` is null or "undetermined" (as `#unreadOf` does for pictures), or capture profiles a multipart upload from its declared type or name. Until then my 8 MB and 17 MiB cases are red by name on this.
+
+2. TICK TIME on this machine (node child, wall clock, nothing else running): the first tick, which starts the read, is the long one: 8 MB 7.2 s, 12 MB 10.5 s, 16 MB 14.2 s, 17 MiB (16,663,800 B stated bound) 15.0 s, every later tick about 3.4 s. The START's pass is every tick under 10 s, so as the criterion stands the largest CSV that passes is between 8 and 12 MB (6 MB and 8 MB pass at caps 161 and 159); the memory fits at 17 MiB (peak 147.6 MB at cap 150). Smallest thing needed: BOB's choice between (a) csv-reader/reading-pipeline shorten the first tick (what it does before the first piece is cut), or (b) the bound for this round is the largest N under 10 s and csv-reader lowers `MEASURED_CSV_TEXT_BOUND_BYTES` with a stated-refusal test at N+1 (K1881), or (c) the 10 s criterion is relaxed to the platform's 30 s CPU limit, R-CLOCK saying node wall time is not the object's CPU. I keep the 10 s assertion in the suite until you answer.
+
+I carry on with the rest (merge of the tranche with the shim and CALCULATIONS; G44 after).
+
+## J36 · REPORT
+
+REPORT (answers B52 (2)): where the first tick's time goes for the 17 MiB CSV (16,663,800 B stated bound; csvDoc, cap 150, node child, Profiler at 0.5 ms sampling from the first alarm to its end, one tick: 16.1 s wall, 16,121 ms sampled). Harness: `profileFirstTick: <path>` (pushed on job/T51/plane). Inclusive time is per function once per stack.
+
+Stage shares of the first tick (the first tick alone is "read the whole file once and classify it", the later ticks are the cuts at 3.4 s):
+- **Classification of the sheet's whole text, 6.8 s (42%)**: `readInner` calls `readText` (`reading-pipeline/index.mjs:2163`, docprofile `readtext.mjs:273`) which calls `doctypeFor` (`docprofile/doctypes/registry.mjs:85`) over the CSV's entire 13+ MB of text. Inside it: site-profiles `recognise` (`recogniser.mjs:54`) 3.5 s (21.5%); `alsoFor` (`registry.mjs:102`) 3.4 s (20.9%); the roster-reader detectors on the whole text: `staff-roster.mjs:193`/`:123` 2.2 s (13.6%) and `org-chart.mjs:109`/`:50` 2.1 s (13.3%), through `eachLine` (`roster-reader/lines.mjs:266`) 4.3 s (26.7%) with `isUnitLine` :362 1.0 s, `withoutContacts` :165 1.0 s, `countWords` :63 0.7 s, `cutAll` :186 0.6 s; `doctypes/regulation.mjs:225` 1.15 s; `doctypes/windows.mjs` `flatWindows` :34 1.4 s (`flatPieces` :21 0.9 s, `scanFlatMany` :65 0.9 s); `meeting-minutes.mjs:165` 0.56 s; `meeting-agenda.mjs:132` 0.28 s. The owners are docprofile (the call), site-profiles, roster-reader and doctypes; none of them needs the whole of a 13 MB sheet to classify it.
+- **Per-unit counts and cuts, 3.7 s (23%)**: `pieceUnitsOf` (`reading-pipeline/index.mjs:1387`) 1.9 s; `allUnitsOf` `arm` (`:857-860`) 1.4 s; `wordsIn` (`:918`) 1.1 s, `withOwnWords` :935 0.8 s; `glyphCount` (`textchain.mjs:1839`) 1.8 s across these (self 1.36 s, a per-character pass); `textCountsOf` (`:1573`) 0.45 s, `glyphsOfDocument` (`:103`) 0.45 s. Owner: reading-pipeline (and textchain's `glyphCount`).
+- **csv-reader, 0.7 s (4.3%)**: `text` (`csv-reader/index.mjs:981`) -> `csvText` :751 -> `forEachRecord` :610 -> `feed` :456 (the whole body once; the 17 MiB bound is not what costs).
+- **SHA-256 of the body for the provenance, 0.18 s**: `readingProvenance` (`readingprov.mjs:180`) -> `sha256Stream` :53.
+- **Garbage collection 4.7 s (29%)** self time, spread over all stages (cap 150 MB with the 128 MB object's idle).
+
+Placement suggestion, BOB's: (a) docprofile/site-profiles/roster-reader/doctypes classify a sheet's text from its head and a few windows (a 13 MB table is not a staff roster or a regulation), which removes up to 6.8 s of 16.1 s and brings the first tick to about 9 s; with the per-unit counts (3.7 s) being done piecewise by the pieces path, the first tick would be near the later ticks' 3.4 s. At 12 MB the same stage is about 4.9 s of 10.5 s, so the classification alone brings 12 MB under 10 s; 17 MiB needs both. The raw profile is not committed (it is a measure); the harness option reproduces it: `profileFirstTick` in `shapeRun`'s spec.
+
+## J37 · REPORT
+
+REPORT with one ask (J35/J36 follow-up; G41 and G48 shape results on tranche/T51 at c6c42f28b6 plus my merges; pushed on job/T51/plane).
+
+GREEN at the real shape (node child, shim, nothing else running): G48 first ticks — 8 MB (cap 159) 1.9 s, 12 MiB (155) 2.2 s, 16 MiB (151) 2.3 s, 17 MiB (16,663,800 B, cap 150) 2.6 s (3.0-3.3 s under the profiler); all later ticks under 1.4 s; marks found, child alive, `cellsOf` of the last row equal to the generator's in 0.2-0.5 s at the same cap, largest stored value 131,071 B; peak 142 MB at cap 150 for the 17 MiB. (J36 had 16.1 s for the 17 MiB first tick.) The stage report of the 17 MiB first tick now (3.3 s sampled): readInner 66%: csv-reader `text` :981 0.77 s (23%; `feed` :456 0.60 s), `readText` docprofile/readtext.mjs:377 0.48 s (14.6%; `doctypeFor` registry.mjs:85 0.41 s; recognise recogniser.mjs:54 0.47 s), `wordsIn` reading-pipeline:920 0.44 s (13%), `readingProvenance` readingprov.mjs:180 0.26 s (SHA-256), glyphCount textchain.mjs:1843 0.18 s; GC self 0.59 s (18%). `--trace-gc` by tick for the 17 MiB: tick 1 601 scavenges + 20 mark-compacts = 734 ms of 3.0 s; ticks 2-3 about 305 scavenges + 5 mark-compacts, 182-199 ms of 1.1 s. G13 (12,000,060 B and 24 MiB text: max tick 3.0 s and 6.2 s), G15 (1 MB CSV), the 40 MB keep probe: green, marks found, child alive. g13/g15 check passes; g26's check is now units plus unread_pages = 1,354.
+
+ONE RED, and it is not G48's: G26 (BUDGET-2024-APP, the 1,354-page 15.2 MiB PDF, cap 112): the first tick is 11.7 s, over the 10 s bar (second run 11.7 s, third profile run 13.6 s; ticks 2 to 6 are 7.4 to 8.1 s, tick 7 5.6 s). On the tip BEFORE G48 (713e63be2e, a scratch worktree, same machine, same harness) the first tick was 12.8 s and the others 4.9 to 7.0 s, so G48 did not cause it and made it slightly faster. Profile of its first tick (13.6 s sampled): the garbage collector is 5.85 s self (43%) at the 112 MB cap (peak 128 MB: the object holds the 15.2 MB file, array buffers outside the cap, and the page-range extraction's objects); the rest is spread: `pdfstructure.mjs` `run` :2361 1.5 s, `show` :2112 1.1 s, doc-clean `inlineImages` pdf.mjs:189 0.72 s (`cleanPdf` :35 0.86 s), `tokenizeContent` :1424 0.53 s, `streamDecoded`/`inflate` :775/:162 0.5 s, `loadPdf` :4244 0.44 s, `pdfPageImages` :2945 0.48 s, `readText` 0.77 s, `#copyOne` case-carriage:1334 0.58 s. Whether G26 passed the 10 s bar at its own close I cannot tell from the tip (the START of G26 may have been measured on another machine); this machine runs a node child at about 160% CPU with nothing else on it.
+Smallest thing I need: BOB's place for it — (a) reading-pipeline's page-range piece smaller (fewer pages a tick lowers the live heap and the GC time, the cost is more ticks; the pieces are 190-197 pages now), or (b) the bar for a PDF tick is stated against the platform's CPU limit and this ledger's pieces are accepted at 12 s node-wall on this machine (R-CLOCK says node wall is not the object's CPU), or (c) the G26 check is run on the machine it was measured on. Until you answer I keep the 10 s assertion in `g26.probe.mjs` red by name. Not my module's to change (reading-pipeline).
+
+## Record: B43-B57 (PLANE #52), G41 shape proof, G44 harness, G48 proof and composition test
+
+**Providers merged when run** (`tranche/T51` c6c42f28b6 and later): csv-reader, office-readers, reading-pipeline (G41 and G48), extraction (G41 and its `cellsOf` format follow-up), content, retrieval-browse, calculations, screens-inquiry, text-chain, docprofile; test-support's preload `bio-plane/test/platform-sqlite.mjs` is on the tranche. **G44's providers (FILE-SAFETY, WORKBOOKS, SCREENS-INTAKE #20) were NOT merged at this writing**: G44's cases below are red by name on them.
+
+**What changed** (tests only, `bio-plane/test/m/plane/`): `shape/harness.mjs` (child `args` carry `--import SHIM`, `BIO_PLATFORM_SHIM` overrides; the largest stored value over `readings`, `reading_history`, `capture_text` against 1 MiB, `r.largestStored`/`r.overBound`; `xlsxRowsDoc(rows)` (G41), `xlsxDoc(declaredMiB, {rowsPerSheet, sheets})`, `odsDoc`, `heldCsvDoc` (G44) fed HELD; `spec.project`, `spec.noReading`, `spec.ops` (the real door's `fetch`); `readingEachTick`, `cellsOf`, `profileFirstTick`, `traceGc` by tick; csvDoc marks FIRST/MID/LASTROWMARK); `shape/xlsx-gen.mjs`, `shape/g44-gen.mjs` (streamed zips); `shape/g41.probe.mjs` + `g41-shape.test.mjs` (R84 proposed); `shape/g44.probe.mjs` + `g44-shape.test.mjs` (R85 proposed); `g48-classify.test.mjs` + `g48-corpus.mjs` + `make-g48-plane-answers.mjs` + `fixtures/g48-plane-answers.json` (R86 proposed, recorded on 713e63be2e); `shape/g26.probe.mjs` check is units + `unread_pages` = 1,354.
+
+**G41 red, then green.** Red on the tip before the providers: the 4 MB CSV at cap 163 died (SIGABRT, heap out of memory); a 2 MB CSV at cap 165 never ended in 600 ticks. Green on the merged tip, `g41-shape.test.mjs` 7 of 7 (run alone, under the shim), caps `128 + 39 - N`: 4 MB (163) 2 ticks, max 3.5 s, peak 130 MB; 8 MB (159) first tick 1.9 s, peak 144 MB; 12 MiB (155) 2.2 s, peak 146 MB; 16 MiB (151) 2.3 s; 17 MiB, 16,663,800 B, the stated bound (150) 2.6 s, peak 148 MB; 200,000-row xlsx (3.16 MB file, 30.5 MB declared, cap 163) max tick 9.0 s, peak 153 MB; each: child alive, FIRST/MID/LASTROWMARK in the index and found by `op=search`, `cellsOf` of the last row equal to the generator's (0.2-0.5 s; the xlsx's row 200,000 in 0.4 s), `readingFor` stating its state at every tick, largest stored value 131,071 B. G13 (12,000,060 B max tick 3.0 s; 24 MiB max 6.2 s), G15 (1 MB CSV), the 40 MB keep probe: green, alone, at their caps. **Finding that led to extraction's follow-up (J35):** an upload over one part is stored `capture_format` "undetermined" (capture profiles text within one part), so `cellsOf` found no entry; fixed on the tranche (the 8 MB and 17 MiB cases are green).
+
+**G48 proof.** J36's profile of the 17 MiB first tick (16.1 s: classification of the whole text 6.8 s, per-unit counts 3.7 s, csv-reader 0.7 s, GC 4.7 s) is now 2.6 s (3.0-3.3 s under the profiler). Stage report now (3.3 s sampled): readInner 66%: csv-reader `text` :981 0.77 s (feed :456 0.60 s); `readText` docprofile/readtext.mjs:377 0.48 s (`doctypeFor` registry.mjs:85 0.41 s); `wordsIn` reading-pipeline:920 0.44 s; `readingProvenance` 0.26 s; `glyphCount` textchain.mjs:1843 0.18 s; GC self 0.59 s. `--trace-gc` by tick (17 MiB): tick 1 601 scavenges + 20 mark-compacts = 734 ms of 3.0 s; ticks 2-3 about 305 + 5 = 182-199 ms of 1.1 s. `g48-classify.test.mjs`: 13 of 13 green. (c1) 69 readings of the doctype, roster, budget and court fixtures through all 17 real types equal what the tip before G48 gave (`doctypeFor` type, confidence, signals, considered, also; `readText`'s type, confidence, also, parse_error, stack), `also` is `alsoFor`'s, none states `classified_over`. (c2) 3 MiB sheets of a roster's, a directory's, a chart's, a budget table's (fund and amount header, content type csv) and a budget volume's rows: type, confidence and `also` keys equal the whole text's, the stack equals `identify`'s, `classified_over` stated; 1 MiB: whole, none stated. (c3) regulation, minutes, agenda, staff report, directory: the fixture's own document set in a gap between the windows is generic with `classified_over` stated while the whole text gives the type; in a window it gives the type. **Two findings about the plan's expectations, pinned:** (i) a small budget sheet with no cells reaches `budget_table` through the sheet heads only when it lies in a gap (heads come first in the view); a small budget sheet that is the LAST sheet is inside the last window (after the rows), is not among the first 20 lines the type reads, and gives generic, as the whole text does: pinned in two tests; (ii) the budget CSV fixtures read as `staff_roster` "likely" when read as bare text with no content type: `budget_table` needs the CSV content type (or locator) in `ctx`, as the reading path passes it; the test passes it. The calendar case has no row-shaped fixture (HTML) and is not built.
+
+**G26 (answer K4693: reading-pipeline's G56; the red is kept by name).** `g26.probe.mjs` now checks units + `unread_pages` = 1,354 (1,328 + 26, true). Its first tick is 11.7 s on this machine (the tip before G48: 12.8 s), GC 43% of it at cap 112; the 10 s assertion stays red by name until G56 merges and BOB sends the CHANGE.
+
+**G44 (harness built; red by name on providers).** First step answered: the real door reaches both ops (`/workbookadd` with `{captureSha, question, period, project, by}`, `/safeview?capture=<sha>&viewer=<member>`), with a project (`spec.project`: a project bundle owned by `ann`, the document filed in it) and member `member:ann`; the files are fed HELD, no reading ticks. Red at cap 165 (`capFor(1.44) + 39`): the 10 MiB-declared short-row workbook (73,843 rows, 221,529 cells, a 1,426,626 B file) through `/workbookadd` and through `/safeview` each kill the child (SIGABRT, heap out of memory), as the diagnosis found. Cases in `g44.probe.mjs`: add10, view10, small (20,000 cells: add, read, lint, inputs, view), sheets (60), ods (25 MiB declared), csv4, csv17 (17.7 MB). Control "previewed whole" is read as: the preview answers with any cut stated (the contract cuts a sheet at `SAFE_VIEW_CELLS_MAX`); to be confirmed when FILE-SAFETY merges. Words: none (tests only). Size: below.
+
+**Suites.** plane non-heavy suite (57 files): 352 tests, 351 pass, 1 fail = R24 (accepted red). Heavy, alone: `g41-shape.test.mjs` 7/7; `g48-classify.test.mjs` 13/13. `g44-shape.test.mjs` and G26 red by name as above. Requirement lines proposed: R84 (G41 shape proof: the four CSVs and the 200,000-row xlsx at `128 + 39 - N`, alive, ticks under 10 s and first tick at most 8 s, marks found, `cellsOf` of the last row equal, stored values under 1 MiB), R85 (G44: both callers through the real door at cap 165), R86 (G48 composition: c1 unchanged answers, c2 sheets, c3 the named limit).
+
+## J38 · REPORT
+
+REPORT (G54 step 0, PLANE #52; B58). On the tree as it stands (no G54 provider merged; `tranche/T51` plus my branch), pushed on job/T51/plane.
+
+- Ratification's L step 0 (J8, `ratification/test/g54-l.test.mjs`, workerd under Miniflare) already reproduces candidates (b) a bucket put that throws, (b') only the manifest's put throwing (manifest_sha set over unstored bytes) and (c) `recordcasemanifest` unanswered, red; (a) a cancelled caller not reproduced. I did not repeat those in workerd: they run the same Worker half and the same `Store` I would boot, and a second copy would add no fact. My L (the sweep's tick through the object's alarm in workerd, the killed-mid-sweep restart, the disconnected request, the manifest-only put, the 500-file 40 MB edition) needs the sweep and is written after ratification, publication and public-read merge; I will reuse ratification's entry (`g54-entry.mjs`: `G54Held` seeds through the modules' own commits) so the two agree.
+- The plane's own step 0, in the plane's real `Store` and scheduler (node, the modules' own commits for the editions: `test/m/plane/g54-seed.mjs`, ported from ratification's L seed): `test/m/plane/g54-sweep.test.mjs`, 5 tests, all RED today. Facts read from the tree: `schedulerOf(ctx, env).registry()` holds no consumer named `casefile-sweep` (the plane registers only `pending-work`, `store.mjs:493`); three seeded complete editions with `manifest_sha` null stay so after alarms at +10, +11 and +12 minutes (nothing builds them: no consumer, no owed read); the tick's answer carries no `casefilesweep` key; a restart arms nothing for them. That is the plane half of the cause: "nothing re-runs an edition except a person re-sending the signature" is true of the alarm too.
+- Scheduler needs no change (checked in code, to be proven by the test when the consumer exists): `register("plane", {name, key, due, wake, tick})` takes any consumer whose key is not an answer field (`scheduler/index.mjs:458-472`); the answer carries each consumer's return under its own key (the test reads `casefilesweep`); R27's hold is lifted by a tick that answers `finished` above zero (`#holding`, `endedWork`), so the sweep's tick will answer `{finished: <editions built>}` and the two-a-tick bound never strands the third.
+Nothing needed from BOB now. I wait for ratification, publication, public-read and publish-schedule to merge (BOB's CHANGE), then register the consumer, turn `g54-sweep.test.mjs` green and write the Miniflare L.
+
+## Record: B59 (PLANE #52), G56 re-run of G26 and the shape set (merged tranche, G56 in)
+
+On `tranche/T51` with pdf-reader `maxBytes` and reading-pipeline `PDF_RANGE_PAGES` 100 / `PDF_RANGE_BYTES` merged; one process at a time, under the shim, at the real caps; `g26.probe.mjs` now ends with a verdict (`g26Failures`): the first tick at most 8 s (target), every tick at most 10 s (bar), no `interrupted`, state whole, `units` as stated, ledger empty, G26 in 14 ticks or more, a page-span check for the heavy case.
+
+- **G26** (BUDGET-2024-APP, cap 112): PASS. 14 ticks (was 7), first tick 7.4 s (7.4 s and 8.1 s on two runs; the earlier 11.7-13.6 s), later ticks 3.0-3.6 s, last 1.7 s; peak 125 MB; `units` 1,328, state whole, no `interrupted`; 1,328 + `unread_pages` 26 = 1,354. The second full run's first tick 7,423 ms; the first run's 8,069 ms, 69 ms over the 8 s target and under the 10 s bar (reported here with its figure, not sized down).
+- **Heavy synthetic PDF** (reading-pipeline's `bigpdf.mjs` `synthPdf`, 450 pages, 30 lines a page, 24,017,760 B = 53,373 B a page, 4.5 times G26's 11.8 KB; cap 105 via `capFor`): PASS. 19 ticks, 24 pages a tick (no piece near 100), first tick 255 ms, slowest 561 ms, peak 118 MB, 450 units, state whole, no `interrupted`. The generator's text is light per byte (padding is image bytes), so its ticks are fast; its purpose here is the span bound by bytes, which holds.
+- **G13** (12,000,060 B text, cap 116): green, 30 ticks, first tick 3.5 s, max later 0.9 s, ENDMARKER found by `op=search`; (24 MiB, cap 104): green, 62 ticks, first tick 6.0 s, ENDMARKER found. **G15** (1 MB CSV, cap 127): green, 1 tick, marks found. **keep40** (cap 112): green, states the 40 MB file from its size (units 0, as designed, never loaded). **fault** (cap 127): green, 10,001 units, `fault mode holds: true`. Largest stored value in each under 131,071 B.
+- Harness: `synthPdfDoc({pages, linesPerPage, targetBytes})` (file written once to the fixture cache). `g26.probe.mjs heavy` runs the BUDGET volume then the heavy case; `heavy-only` just the heavy one.
+
+## J39 · REPORT
+
+REPORT (B59, G56 re-run on the merged tranche; pushed on job/T51/plane; record section "B59").
+G26 PASS at cap 112: 14 ticks (was 7), first tick 7.4 s on the final run (8.1 s on the first run: 69 ms over the 8 s target, under the 10 s bar; reported, not sized down), later ticks 3.0-3.6 s, last 1.7 s, peak 125 MB, `units` 1,328, state whole, no `interrupted`, 1,328 + 26 `unread_pages` = 1,354. G13 (12,000,060 B and 24 MiB: first ticks 3.5 s and 6.0 s, every other tick under 1 s), G15, keep40 and fault all green at their caps, marks found, children alive. New heavy synthetic PDF (reading-pipeline's `bigpdf.mjs`, 450 pages of 53 KB, 4.5 times G26's bytes a page, cap 105): PASS, 19 ticks, 24 pages a tick (no piece near 100), first tick 255 ms, slowest 561 ms. G26's red is closed.
+Still open in my queue, each waiting on providers: G44 (FILE-SAFETY, WORKBOOKS, SCREENS-INTAKE #20 not merged), G54 (ratification, publication, public-read, publish-schedule, bundler not merged; my test `g54-sweep.test.mjs` is written and red, the registration waits for ratification's `caseFileSweep`/`caseFileWake`). Nothing needed from BOB.
+
+## J40 · QUESTION
+
+QUESTION + REPORT (B60; G44's result on the merged providers). Pushed on job/T51/plane.
+
+REPORT, G44 at the real door (`g44-shape.test.mjs`, 9 of 9 green, run alone under the shim; `g44.probe.mjs`): both ops asked through the object's own `fetch` with a project and member `member:ann`, the file held, no reading ticks. Cap `capFor(N) + 39`:
+- 10 MiB-declared short-row workbook (73,843 rows, 221,529 cells, a 1,426,626 B file, cap 165): was red (child killed, heap out of memory, both ops). Now the add answers WORKBOOK_TOO_LARGE {cells 221,529, bound_cells 50,000, condition cell_bytes}, nothing written (peak 114 MB, 2.6 s); the safe view answers kind data, 999 cells of the first 333 rows, truncated true, next_row 334, total_rows 73,843, 45,025 B (peak 124 MB, 4.6 s).
+- 20,000-cell workbook (cap 166): add ok, read, lint, inputs ok, view ok (999 cells of 333 of 6,646 rows, cut stated; the "previewed whole" of the START reads here as previewed with the cut stated, since the view cuts a sheet at about 1,000 cells); peaks 107-134 MB.
+- 60-sheet workbook: all 60 listed, `sheets_total` 60, 218,068 B answer (under the 262,144 B I set for a view).
+- ODS 25 MiB declared (61.4 MB of declared text): SAFE_VIEW_FAILED PREVIEW_NOT_DRAWN with size 61,375,412 and bound 8,388,608; an ODS of about 6 MB declared (cap 166): data, cut at 333 rows of 18,461, stated.
+- 26.2 MB-declared xlsx: the add WORKBOOK_FILE_TOO_LARGE with size "27.3" and bound "21.0" (MB, size_bytes 27,261,172); the view PREVIEW_NOT_DRAWN size 27,261,172 bound 20,971,520.
+- 4 MB CSV (cap 163): data, 1,000 cells of 250 of 70,713 rows, cut stated; 17.7 MB CSV (cap 150): data, 1,000 cells of 250 of 287,210 rows, 1.5 s, peak 104 MB.
+Largest stored value 0 B (no reading is written). Census: no op's accepted keys change; the harness only asks `workbookadd`, `workbook`, `workbooklint`, `workbookinputs`, `safeview`. Words: none. Requirement line proposed: R85 (the two callers at the platform's shape through the real door at cap 165).
+
+QUESTION (BOB's, `build/modules.json` is yours): `node checks/run.mjs` architecture shows 5 failures that are mine and are only `uses` edges: plane's tests import modules plane does not declare: `case-grammar` (`g54-seed.mjs`, the case document's materials lines, ported from ratification's L seed), `csv-reader` (`shape/harness.mjs`, `shape/g41.probe.mjs`: the sheet name `CSV_SHEET_NAME` and `MEASURED_CSV_TEXT_BOUND_BYTES`, so the 17 MiB case follows csv-reader's stated bound) and `reading-pipeline` (`shape/harness.mjs`: `cellsInRange` for the diagnosis line of a failed `cellsOf`, and its test helper `bigpdf.mjs` for the heavy-page case). The smallest thing I need: add `case-grammar`, `csv-reader` and `reading-pipeline` to plane's `uses`. If you would rather not, I hard-code `"csv"`, the bound and the generator's call, which loses the link to the provider; say which. (The words failures in that run, `case-checker/spec.mjs` inline 6 and installer-steps `missingkey` 5, are not in my files.)
+
+## Record: B58-B62 (PLANE #52), G54: the case-file sweep registered; G44 result; the whole round-6 set
+
+**G54 (plane's part).** Providers merged when run (`tranche/T51` K4721): publication (`caseFilesOwed`, `caseFileNextAt`, the ledger), public-read (the assembly with `prior`, `recordCaseFileFailure`, `publishedcase`'s `case_file`), publish-schedule, bundler, ratification (`caseFileSweep(now)`, `caseFileWake(now)`, R57), screens-publish.
+- **Changed:** `bio-plane/src/plane/casesweep.mjs` (new, 29 lines): `casefileSweepConsumer(ratification)` returns the scheduler consumer `{name: "casefile-sweep", key: "casefilesweep", due, wake, tick}`: `wake` is ratification's `caseFileWake` and never raised to the instant asked (so scheduler R27's hold applies), `due` is that wake once it has come, `tick` runs `caseFileSweep(at)` and answers `{casefilesweep: {asked, finished, retried, built, failed, files, bytes}}` with `finished` = the editions BUILT (so R27's hold never strands the owed editions that follow a tick, G35); `bio-plane/src/plane/store.mjs` (import and the registration, 3 lines, beside `pending-work` at the same place, before the scheduler's start, so a restart re-derives the alarm). Scheduler (141) is not changed: `register("plane", ...)` took the consumer as it stands and the tick's answer carries it under its own key (tested).
+- **Failing-first (R-FOUR):** `test/m/plane/g54-sweep.test.mjs` (R87 proposed), the real `Store` and scheduler over the real modules, editions laid by the modules' own commits (`g54-seed.mjs`, ported from ratification's L seed): RED on the tree before the providers and the registration, seen red as J38 reported (5 of 5: no consumer named `casefile-sweep`; three complete editions stayed without a manifest after alarms at +10, +11, +12 minutes; no `casefilesweep` key; a restart armed nothing). GREEN now, 5 of 5: registered after `pending-work`; two editions a tick, the third the next tick, a third alarm writes nothing; an assembly that fails once is `failed` in the ledger, not retried inside its backoff, built after it; no wake with nothing owed and a restart over the same storage re-derives the alarm of an owed edition and builds it; the tick's answer holds `casefilesweep` beside the other consumers' keys.
+- **L** (`g54-l-entry.mjs`, `g54-l.test.mjs`, 6 of 6 green, Miniflare/workerd: the plane's REAL `Store` with its scheduler, a real Durable Object, real R2 buckets and storage; the Worker's `/g54w/...` routes are ratification's `g54-entry.mjs` (the Worker half's post-commit block), every other path the plane's own Worker): (1) the object's own `onAlarm` builds three complete editions, two then one, the answer carries `casefilesweep` among 14 keys, an alarm was armed for the owed editions, a further alarm asks nothing; (2) a bucket `put` that throws once, and one that throws only for the manifest's bytes: tick 1 `failed` (codes `BUCKET_FAILED`, steps `bucket_put` and `manifest_put`), nothing retried inside the backoff, built by the tick after it, ledger `built`; (3) the kill: the bucket never answers after 2 puts, the Miniflare instance is disposed while the sweep runs and started again over the same storage: the edition is `building`, attempts 1, the manifest recorded over bytes the kill never stored (the step-0 candidate (b')), an alarm re-derived at the restart, and the next tick builds it (`finished` 1, ledger `built`); (4) the disconnected request: the caller aborts after the commit, under Miniflare the request ran to its end (as ratification's J8 found: not shown to cancel); the edition is built either way; (5) the measure, an edition of 250 documents of 160 KiB and their texts, 508 files, 41,380,792 B of case file: one tick of the object's alarm builds it without a memory kill; the bucket was asked get 501, head 509, put 3, 41,188,168 B read; the sweep's bounds as ratification set them (2 editions, 400 files / 16 MiB a tick stop AFTER an edition, 4,000 files `TOO_LARGE`) hold for it: one edition is built whole in the tick that takes it; (6) `publishedcase` through the real Worker: `being_prepared` before, `retrying` with `BUCKET_FAILED` after a recorded failure, `built` after the sweep, no `step`, `error`, `detail` or `why` key, the injected message is not in the answer.
+- **What P at the re-walk will read** (account 20b53357... only; no hook in production code): after the redeploy and within two ticks of the alarm (the first tick is due when the object starts: a restart re-derives it), `publishedcase` of CASE-2026-6227 and CASE-2026-4783: `case_file.state` `built` with `manifest_sha` set and every file and the manifest answering 200 by `publishedbytes` (RATIFICATION's correction K4704: 4783 is repairable, nothing missing, so `built`, not `stopped`); the three healthy editions' manifests answer 200 (a 404 is reported); the Worker logs carry the `casefile_attempt` lines of the sweep's tick (bundler's `observability`), `via` `casefilesweep`; a case the walker completes has its case file. A forced failure is not made on the real plane: the failure paths are L's.
+- **Observation (publication's, not mine):** one failed attempt is recorded as `attempts` 2 (a `building` and a `failed` each add one, per the plan's writer), so the first failure backs off 30 s, not 15 s, and a clean build ends at `attempts` 1; `publishedcase`'s `attempts` carries it (2 after one failure, 3 after the retry's build).
+- **Census (K4208):** none changes: this job owns no op; the sweep is a scheduler consumer and its tick answer gains a key. `casefile_attempt` lines and the `taken` entries are the providers'. Words: none (tests and a 29-line consumer; no sentence).
+- **Checks:** format 0, architecture 0 (the three `uses` edges added by BOB, K4714), coverage 6692 of 6692, ownership 0 failures; the words check shows 11 failures, none in plane's files (`case-checker/spec.mjs` inline 6, `installer-steps` missingkey 5, as before); the process repository's `checks/` has no `fixplan` check (no such line or file), so no count to report. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (plane), 64 test files, all run in the suite below.
+
+**Suites (final).** Plane non-heavy suite (60 files, shim): 376 tests, 375 pass, 1 fail = R24 (accepted red). Heavy, each alone: `g41-shape.test.mjs` 7 of 7; `g44-shape.test.mjs` 9 of 9; `g48-classify.test.mjs` 13 of 13; `g54-l.test.mjs` 6 of 6 with `g54-sweep.test.mjs` 5 of 5 (11 of 11 together). G26 (`g26.probe.mjs` verdict PASS: 14 ticks, first tick 7.4 s) and the heavy-page synthetic PDF PASS; G13, G15, keep40, fault green (record section B59).
+
+Size (session_019MQdmdBDvLzCM4txninn2N): test runs 90, module lines 32
+
+## J41 · COMPLETE
+
+COMPLETE (PLANE #52, B43-B62): G41, G44, G48, G54 and G56 proofs, one COMPLETE. Pushed on job/T51/plane (record `build/jobs/T51/plane.md`: sections B43-B57, B59, B58-B62).
+
+WHAT CHANGED. Tests: `bio-plane/test/m/plane/shape/` (harness: the child runs under the shim, the largest stored value against 1 MiB, held xlsx/ods/csv feeds, `spec.ops` through the real door, `profileFirstTick`, `traceGc`, `synthPdfDoc`; `xlsx-gen.mjs`, `g44-gen.mjs`, `g41.probe.mjs`, `g44.probe.mjs`, `g26.probe.mjs` with verdicts) and `test/m/plane/` (`g41-shape`, `g44-shape`, `g48-classify` + `g48-corpus` + `fixtures/g48-plane-answers.json`, `g54-sweep`, `g54-l` + `g54-l-entry`, `g54-seed`). Source: `src/plane/casesweep.mjs` (29 lines, new) and 3 lines in `src/plane/store.mjs` registering `casefile-sweep`.
+
+EACH TEST RED, THEN GREEN. G41: the 4 MB CSV at cap 163 died (heap out of memory, SIGABRT) and a 2 MB CSV never ended in 600 ticks on the tip before the providers; `g41-shape.test.mjs` 7 of 7 green (4/8/12/16 MiB and 17 MiB CSVs at `128+39-N` with first ticks 1.9-3.5 s, every later tick under 1.5 s, marks found by `op=search`, `cellsOf` of the last row equal, largest stored value 131,071 B; the 200,000-row xlsx, cap 163, max tick 9.0 s). G48: J36's 16.1 s first tick for the 17 MiB CSV is 2.6 s; `g48-classify.test.mjs` 13 of 13 (c1 69 readings equal what the 17 types gave before G48, c2 3 MiB sheets get the whole text's type, c3 the named limit pinned). G44: both ops died at cap 165 (SIGABRT); `g44-shape.test.mjs` 9 of 9 green (add refused WORKBOOK_TOO_LARGE 221,529 cells against 50,000; the safe view 999 cells of 73,843 rows, 45 KB, cut stated; the controls; ODS, 26.2 MB, CSVs stated). G56: G26 red 11.7-13.6 s first tick; PASS now (14 ticks, first tick 7.4 s, every page once), the heavy synthetic PDF PASS. G54: `g54-sweep.test.mjs` 5 of 5 red before, green now; `g54-l.test.mjs` 6 of 6 green in workerd.
+
+MEASURES. 17 MiB CSV first tick: 16.1 s to 2.6 s (3.3 s sampled; stages in the record). The 8 MB, 12, 16 and 17 MiB first ticks 1.9, 2.2, 2.3, 2.6 s; peaks 144-148 MB against caps 159-150. G26 ticks 7.4 s then 3.0-3.6 s, peak 125 MB at cap 112. G44 peaks 114 MB (add) and 124 MB (view) at cap 165. G54 L: a 508-file, 41.4 MB edition built in one tick (get 501, head 509, put 3, 41.2 MB read).
+
+SEAM TESTS STILL RED: none. (Plane `release` R24 is the accepted red.) Suites: plane non-heavy 60 files, 376 tests, 375 pass, 1 fail (R24); heavy alone as above; impact set: plane only (64 files, all in the run).
+
+CHECKS. format 0, architecture 0, coverage 6692 of 6692, ownership 0 failures; words 11 failures, none in plane (`case-checker/spec.mjs` inline 6, `installer-steps` missingkey 5, unchanged). The `fixplan` count you asked for is not produced: `checks/` in the process repository has no such check.
+
+PROPOSED REQUIREMENT LINES (BOB writes them). R84 (G41): the real plane reads a 4/8/12/16 MiB CSV, the 17 MiB stated bound and a 200,000-row xlsx to the end at the cap `128 + 39 - N` under the platform's value limit: child alive, every tick under 10 s and the first at most 8 s, the first, a middle and the last row found by `op=search`, `cellsOf` of the last row equal to the generator's, no stored value over 1 MiB. R85 (G44): `/workbookadd` and `/safeview` asked of the real door at cap 165 for the 10 MiB-declared workbook (the add refused WORKBOOK_TOO_LARGE with its count and bound, nothing written; the view data with the cut stated; the child alive) and the controls. R86 (G48): the classification of fixtures through all 17 real types equals the answers before G48; a 3 MiB sheet gets its whole-text type; the named limit is pinned and stated. R87 (G54): the plane registers `casefile-sweep` as a scheduler consumer (`finished` counts the editions built), and the object's own alarm builds a complete edition that has no case file, retries a failed one after its backoff, re-derives its alarm at a restart, and heals a manifest recorded over bytes never stored.
+
+WHAT P AT THE RE-WALK WILL READ (G54 (4) P). After the redeploy, within two ticks: `publishedcase` of CASE-2026-6227 and 4783 shows `case_file.state` `built`, `manifest_sha` set, and every listed file and the manifest answer 200 by `publishedbytes`; the three healthy editions' manifests answer 200; the Workers Logs carry the `casefile_attempt` lines of the sweep (`via` casefilesweep); a case the walker completes has its case file. For G41 P: a 20 MB-class CSV uploaded by a member is read to the end with its last row found.
+
+OBSERVATIONS (not plane's). Publication records one failed attempt as `attempts` 2 (a `building` and a `failed` each add one), so the first backoff is 30 s, not 15 s. G44's "previewed whole" is read as previewed with the cut stated, since the view cuts a sheet at about 1,000 cells.
+
+Size (session_019MQdmdBDvLzCM4txninn2N): test runs 90, module lines 32
+
+## Record (PLANE #53, B63: G55's alarm residual, K4726)
+
+**What changed.** Tests only, no plane source: `bio-plane/test/m/plane/g55-alarm-l.test.mjs` (workerd/Miniflare) and its entry `g55-alarm-l-entry.mjs` (the plane's real `Store` as a subclass: routes `/g55/seed`, `/g55/session`, `/g55/state`, `/g55/release`; its `alarm()` only counts a firing and, past the binding `G55_GATE`, holds it until released; no route fires a tick). The act goes **through the real door as a member**: the entry lays a session row (a 64-hex token's digest, role `member:bob`, as `credentials.login` stores one; the password flow is not the subject) and the test sends `POST /api?op=moneyingest` and `GET /api?op=moneyingestread` with `Authorization: Bearer`. Real DO SQLite and R2; Miniflare's persisted directories for the restart.
+
+**Test 1** (25,000 resolving rows): the act answers `ingesting`, `rows_total` 25,000, 0 written; with no hand-fired tick the object's own alarm runs it to `done` (bounded by firings, 60, never a time): **14 firings, 25,000 facts, 25,000 distinct `source_row`**, cursor 25,000, the marker `money_ingests` opened once and closed, `moneyingestread` `complete: true` with 25,000 written, notice-producers' `FINDING::ingest-done::<ingest>` raised for Bob, `ingestDue` false and `ingestWake` null; control: once done no further firing and no fact. **Test 2** (kill): the first three firings go through (two slices: 4,000 facts, cursor 4,000, `ingesting`), the fourth is held, the runtime disposed (the kill), a fresh Miniflare over the persisted store: the committed 4,000 survive; the restarted object arms its alarm by itself (a firing reached the gate with nothing hand-fired); released, it finishes in **11 more firings: 25,000 facts, no duplicate**, marker closed, done notice raised.
+**One reading to note.** The alarm is not empty after the ingest in the whole plane: other consumers keep later wakes (about a day off). So the test asserts what scheduler R15 asks of the ingest (not due, no wake, no alarm within 30 s of now, another consumer's later instant allowed), not `getAlarm() === null`.
+
+**Red first.** With `scheduler/index.mjs` temporarily not registering the `ingest` consumer (`if (false && this.#owners.calculations)`, reverted at once; `git status` shows only my two new files), both tests fail: the alarm fires once, the record stays `ingesting` at `next_row` 0 (the first test after 188.7 s of waiting, the second 186.0 s). Green on the tip.
+
+**Suites and checks.** plane non-heavy (54 files, concurrency 4): 338 tests, 337 pass, 1 fail = `release` R24 (accepted). Heavy, each alone: `g54-l` 6/6, `g55-alarm-l` 2/2, `l75` 3/3, `l77-size` 1 of 3 (R77 L twice, accepted), `l77-traffic` 1/1, `l77` 1/1, `l79` 5/5, `t42` 18/18, `t46` 13/13, `worker` 7/7. `checks/run.mjs`: format 0, architecture 0, coverage 6696 of 6696, channels 0; words `inline 6`, `missingkey 5` (the accepted ones, none in plane). `checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`: 0 failures. Census ops: none change. Deferred: none. Found in other modules: none.
+
+**Proposed requirement line (BOB writes it).** plane **R88** (fix round 6, G55's residual; K4426 (4), K4726; `scheduler` R24, `calculations` R14): **A money ingest over the inline threshold is run to its end by the object's own alarm.** In the real plane on workerd, a member's `moneyingest` of 25,000 resolving rows through the door answers started; the object's alarm, with no tick fired by hand, runs every slice until the record is `done`, with 25,000 facts, no `source.row` twice, the marker closed, `moneyingestread` `complete`, the viewer's `ingest-done` notice raised, and no alarm wanted for the ingest; an object killed after two slices and restarted over its persisted store re-arms its alarm by itself and finishes with no duplicate. Test: `g55-alarm-l.test.mjs` (workerd). Control: once done, no further firing writes a fact.
+
+Size (session_01SuLrPmukVhtAycT1EbpVTg): test runs 5, module lines 0
+
+## J42 · COMPLETE
+
+COMPLETE (PLANE #53, B63): G55's alarm residual. Tests only, no plane source: bio-plane/test/m/plane/g55-alarm-l.test.mjs + g55-alarm-l-entry.mjs (workerd/Miniflare, the real Store, real DO SQLite and R2). The act goes through the real door as a member (a session row laid by the entry, then POST /api?op=moneyingest with a bearer token). 25,000 resolving rows: the object's own alarm, no hand-fired tick, ran 14 firings to done: 25,000 facts, 25,000 distinct source rows, marker closed, moneyingestread complete, the viewer's ingest-done notice raised, the ingest wants no alarm (other consumers keep later wakes, so getAlarm is not null in the whole plane; asserted as scheduler R15 asks). Killed after two slices (4,000 facts) and restarted over the persisted store: re-armed its alarm by itself and finished in 11 more firings, 25,000 facts, no duplicate. Seen red with the ingest consumer unregistered (record stays ingesting at row 0). Plane suite: non-heavy 337 of 338 (release R24 accepted); heavy alone green except l77-size R77 L (accepted). checks/run.mjs: format, architecture, coverage 0; words only the accepted inline 6, missingkey 5; ownership 0. Proposed requirement: plane R88 (text in my record). Census ops: none. Found in other modules: none. Awaiting G57's CHANGE.
+
+## Record (PLANE #53, B64: G57's plane test, K4724, K4727)
+
+**What changed.** Tests only, no plane source: `bio-plane/test/m/plane/g57-heal.test.mjs` and its entry `g57-heal-entry.mjs` (workerd/Miniflare; `G57Plane` extends PLANE #52's `G54Plane`, the plane's real `Store` with its scheduler and the `casefile-sweep` consumer, real DO SQLite and R2); `g54-seed.mjs` gains two optional parameters (`findingMd`, `findingSuffix`) so a finding the ratify gate admits can be seeded (defaults unchanged; g54-sweep, g54-l pass).
+
+**The edition is completed by the real `op=ratify`.** The entry lays what a member's earlier acts leave (the owner, her case edition by the modules' own commits, a gate-clean finding `INQ-2026-<n>-m1`, her key registered through `signerRegisterOwn`, the `publish` capability, a session with the re-ask window open as `op=reauth` leaves it); the test makes a real Ed25519 key and a real SSH signature (`ratification/fixture.mjs`' `newKey`, `signBundle`) and sends `POST /api?op=ratify` through the Worker's door with a bearer token. The real gate, publish and `copyFinding` run. The published bucket refuses the act's first put (`G54Plane`'s `put_throws_once`).
+
+**Test 1.** The act answers 200 with `published.reason` `COPY_FAILED`; the edition is complete with no manifest, the ledger says `failed` (step `copy`, `BUCKET_FAILED`, 1 attempt), `publishedcase` says `retrying`, and `publishedbytes` of the finding's `bundle.md` is not 200. Then the object's alarm handler (`onAlarm`, what the runtime calls; no hand-fired `caseFileSweep`) runs the consumer: `{asked 1, finished 1, built [the edition], files 9, bytes 6802}`, the log shows `casefile_heal {examined 1, copied 1, bytes 687}`; the manifest is recorded, the ledger `built`, `publishedcase` `case_file.state` `built`, `publishedbytes` of the finding answers 200; a second alarm asks nothing. **Control** (healthy edition, no fault): built by the act itself; the sweep's tick puts 0 files.
+
+**Red first.** With `ratification/index.mjs:872` temporarily passing no `textAt` (the heal off, which is the tree before cfe063d2e5 as far as this test sees; reverted at once, `git status` clean of it): the tick answers `{finished 0, retried 1, failed [{code FINDING_MISSING}]}` and builds nothing; test 1 fails at "built by the object's own alarm", the control stays green. Green with the heal.
+
+**Observation (not a flaw I could fix; plane source untouched).** The plane's consumer answer (`src/plane/casesweep.mjs:23`) carries `{asked, finished, retried, built, failed, files, bytes}` and drops ratification's `healed`; the heal is seen in the `casefile_heal` log line and in `files`/`bytes`. R87 lists that key set, so I left it; BOB decides whether `healed` should pass through.
+
+**Suites and checks.** Plane non-heavy (54 files, concurrency 4): 338 tests, 337 pass, 1 fail = `release` R24 (accepted). Heavy alone: `g54-l` 6/6, `g55-alarm-l` 2/2, `g57-heal` 2/2, `l75` 3/3, `l77-size` 1 of 3 (R77 L twice, accepted), `l77-traffic` 1/1, `l77` 1/1, `l79` 5/5, `t42` 18/18, `t46` 13/13, `worker` 7/7. `checks/run.mjs`: format 0, architecture 0, coverage 6697 of 6697, channels 0; words the accepted `inline 6`, `missingkey 5`. Ownership 0 failures. Census ops: none change. Deferred: none. Found in other modules: none.
+
+**Proposed requirement line (BOB writes it).** plane **R89** (fix round 6, G57; K4720, K4724, K4727; `ratification` R57, R6): **A finding the act's copy did not store is healed by the object's own alarm.** In the real plane on workerd, an edition completed by a member's `op=ratify` through the door whose finding copy failed (the answer `published.reason` `COPY_FAILED`, the ledger `failed` at step `copy`, the finding's `bundle.md` not served) is healed by the `casefile-sweep` consumer's tick run by the object's alarm: the finding's `bundle.md` is copied from the record, the case file is built, `publishedcase` answers `case_file.state` `built` and `publishedbytes` of the finding's `bundle.md` answers 200; a second alarm asks nothing. Test: `g57-heal.test.mjs` (workerd). Control: a healthy edition is built by the act and the sweep puts no file.
+
+Size (session_01SuLrPmukVhtAycT1EbpVTg): test runs 12, module lines 0
+
+## J43 · COMPLETE
+
+COMPLETE (PLANE #53, B64): G57's plane test. Tests only, no plane source: bio-plane/test/m/plane/g57-heal.test.mjs + g57-heal-entry.mjs (workerd/Miniflare, the real Store, scheduler, casefile-sweep). The edition is completed by the REAL op=ratify through the Worker's door (session, registered key, real SSH signature, real gate); the bucket refuses the act's first put: 200 COPY_FAILED, ledger failed/copy/BUCKET_FAILED, finding bundle.md not served. The object's alarm handler then heals it (casefile_heal examined 1 copied 1), builds the case file; publishedcase case_file.state built, publishedbytes of the finding 200; second alarm asks nothing. Control: healthy edition built by the act, sweep puts 0. Seen red with the heal off (FINDING_MISSING, nothing built), control green. Suite: non-heavy 337/338 (release R24 accepted); heavy alone green except l77-size R77 L (accepted). checks: format, architecture, coverage 0, words only accepted, ownership 0. Proposed requirement plane R89 (in my record). Observation: src/plane/casesweep.mjs:23's tick answer drops ratification's healed key (R87 lists the key set); your call. Census ops: none.
+
+## J44 · QUESTION
+
+QUESTION (G82, PLANE #54, B65): L ran the contention run first. On workerd/Miniflare (the plane's real Worker and Store, `bio-plane/test/m/plane/r7-contention.test.mjs`, run alone five times), twelve cheap reads (`op=whoami` through the real door, timed by the test's own clock) while the object's own alarm reads one held file:
+- CONTROL, the plane's own consumer and alarm with the reading owner stubbed to answer at once: p95 18-37 ms, max 44 ms. The plane's consumer holds nothing: one heavy row a tick, a few SQL statements.
+- REAL reading, per file, p95 / longest wait over the five runs: 12 MiB CSV 1.30-1.56 s / 1.30-1.56 s; 17 MiB CSV (the stated bound) 1.70-2.12 s; 21 MB PDF (1,300 pages) 0.56-0.84 s. Idle p95 is 31-41 ms. A request that never enters the object (`/version`) waits as long on local workerd (one thread for every isolate), so the figure is the longest stretch without a yield, which the object's own requests wait behind in production too.
+So the block is real and L names the stretch as inside ONE call of `extraction.readHeld` (reading-pipeline's piece), not in the plane's consumer: the plane runs at most one heavy row a tick and cannot cut a piece. I therefore build nothing in the plane for G82 (a timer between rows would not shorten a piece). The pieces' slicing (units counted, a real I/O or timer await between slices, as the START says) belongs to extraction / reading-pipeline.
+What I need, the smallest thing: your ruling on who owns G82's fix, so that the plane's file `r7-contention.test.mjs` takes the under-500-ms assertion for that owner's real reads when it merges (today it asserts the control and PRINTS the real reads). If you rule that I close G82 here as "L shows the block; owner named; nothing built in plane", say so and I complete with that. Also for your record of G67's L: an `ocr` row awaiting a stubbed 25 s OCR member over the real service binding states last_ms 25,011 / own_ms 2 / wait_ms 25,009, and the cheap reads stayed at p95 24 ms during the wait.
+
+## Record (PLANE #54, B65: fix round 7, G58 G67 G69 G82)
+
+**Entries applied**
+- **G58** (`owedwork` for the founder). `plane/pending.mjs` gains `administersOf(isAdministrator)`: `class:admin`, the founder's bare `admin` (`member-roster` `ROOT_ADMIN`, through `baseViewer`, the spelling the door stamps: admission `resolveSession`), or `member:<id>` (`viewerMember`) judged by membership's `isAdministrator`; `store.mjs` hands it in place of the literal. K4566 hardening: for an administrator whose `health` throws or answers no object, `pendingOps` answers the five fields as `null` plus `watchdog_why`; a member still gets none. Tests: `r7-founder.test.mjs` (4). **Red first:** the founder case (`viewer=admin`, with and without `sha`) failed on the old wiring with no own property of the five; the unit and hardening rows failed on the missing export. The through-the-door cases (founder, member, administrator member, `class:admin`) are control-plane's seam file.
+- **G67** (`last_ms` is the row's own). `stamp` now sets `started_at` to the row's own `now()` (the alarm's `at` still dates `last_try` and `due_at`); the row's end writes `last_ms`, `own_ms` and `wait_ms`: `wait_ms` is the union of the time the row's owner spent in a call of a service binding (`PDF_WORKER`, `OCR_WORKER`, `SHEET_WORKER`, `AGENT_WORKER`, `FILE_SCANNER`, `SELF`), measured by the plane around the `env` it hands `readHeld`, `owedRun`, `owedFetch` and the unpack call; `own_ms` is the rest, and it is the 10 s bar's (BOB's reading). `list()` states the three. Tests: `r7-lastms.test.mjs` (3; 40 s render then a 2 s reading: row `last_ms` 2000, was 42000; the overlap case; a failing row) and the L case below. **Red first:** all three failed before the change (`last_ms` 42000, `own_ms`/`ledgerLast` absent).
+- **G69** (`last_mem` and the last run). `memory()` answers NULL where the platform reports nothing (workerd: `{rss:0,...}`), never 0; a new table `keeps_last` (one row per digest-or-session and kind: `last_ms`, `own_ms`, `wait_ms`, `last_mem`, `outcome` finished/retried/more/final, `at`) keeps the last run after the row ends; `ledgerLast({sha})` reads it and `owedwork&sha=` answers it as `last`. `keeps_last` is declared to purge with `keeps_pending`. A ledger of the earlier shape gains `own_ms`, `wait_ms` and the table at the next start (new data only: no repair). Tests: `r7-lastmem.test.mjs` (3). **Red first:** zeros gave `0` on the row and `ledgerLast` did not exist.
+- **G82** (the tick holds the thread?). The L run first, as the START says, `r7-contention.test.mjs` with `r7-contention-entry.mjs` (the plane's real Worker and `Store` on workerd/Miniflare; the real alarm; a file held as the capture screen files one; twelve `op=whoami` reads through the real door at a time, timed by the test's own clock). Five runs, alone. **Control** (the reading owner stubbed to answer at once, the plane's own consumer and alarm only): cheap read p95 18-37 ms, max 44 ms, asserted under 500 ms. **Real reads:** idle p95 31-41 ms; while the tick runs, p95 / longest wait over the five runs: 12 MiB CSV 1.30-1.56 s; 17 MiB CSV (stated bound) 1.70-2.12 s (p50 about 0.75 s); 21 MB PDF 0.56-0.84 s. A request that never enters the object (`/version`) waits as long (local workerd shares one thread across isolates), so the figure is the longest stretch without a yield. **L names the stretch: inside one call of `extraction.readHeld` (reading-pipeline's piece)**, not the plane's consumer (one heavy row a tick, a few SQL statements). I built no slicing in the plane (a timer between rows would not shorten a piece). QUESTION J44 asks BOB who owns the slicing so the file takes the under-500 ms assertion for that owner's real reads; the file prints them today.
+- **G67 L** (the OCR row's wait, over the real service binding): `ocr` row awaiting a stubbed OCR member for 25 s through a Miniflare service binding: `last_ms` 25,011, `own_ms` 2, `wait_ms` 25,009; the cheap reads during the wait p95 24 ms (the member's wait does not hold the object). The 93 s / 75 s PDF outliers and the 40.7 s render are not settled by this: they are read at **P** (BOB's), where `own_ms` and `wait_ms` show whether they were inherited time.
+
+**Platform check.** G58 **P**, G67 **P**, G69 **P**, G82 **P** are BOB's after the one redeploy: read `op=owedwork` (founder: five keys, `watchdog_seen` within about 5 minutes, `alarm_at` in the future; `&sha=` also `last`), the new `own_ms`/`wait_ms` on the same files, `last_mem` NULL. Nothing here probes biosmoke8. No old records: the new columns are new data only.
+
+**Deferred.** None. Found in another module: the reading piece's un-yielding stretch (G82, above), for reading-pipeline / extraction; `last_mem` cannot be measured on workerd at all (`process.memoryUsage()` answers zeros), so G39's "last_mem on the first heavy row" stays the capped-child harness's.
+
+**Proposed requirement lines (BOB writes them; numbers are the next free).**
+- plane **R90** (fix round 7, G58; K4566; diagnosis-R7-g1-live.md Finding 2; amends R80): **The founder's session is an administrator for `owedwork`.** `administersOf` judges the viewer the door stamps: `class:admin`, the founder's bare `admin`, `member:<id>` naming an active administrator; any other spelling or none is not one. An administrator whose `health` throws or answers no object is shown the five fields as `null` and a `watchdog_why`; a member none. Test: `r7-founder.test.mjs`; through the door, control-plane's seam file.
+- plane **R91** (fix round 7, G67; amends R77): **A row's time is its own.** `started_at` is the row's own start; the row states `last_ms`, `own_ms` (the part that is not awaiting a worker; the 10 s bar's) and `wait_ms` (the union of its owner's calls through a service binding). Test: `r7-lastms.test.mjs`; L in `r7-contention.test.mjs`.
+- plane **R92** (fix round 7, G69; amends R77, R9): **`last_mem` is NULL when unmeasured and a finished row leaves its last run.** `keeps_last` (the plane's table, declared to purge with `keeps_pending`; R9 names it beside `keeps_pending` and `acquire_stages`) holds the last run of each digest-or-session and kind: `ledgerLast` and `owedwork&sha=`'s `last`. Test: `r7-lastmem.test.mjs`.
+- plane **R93** (fix round 7, G82; K4426 (4)): **The plane's own consumer does not hold the object.** On workerd, with the reading owner answering at once, twelve cheap reads through the door wait under 500 ms at p95 while the object's alarm runs the ledger; the real reads' waits are printed beside it, and the bar is asserted for each owner L names when that owner merges. Test: `r7-contention.test.mjs` (heavy: run alone).
+- (Uses) `member-roster`: `ROOT_ADMIN`, `baseViewer`, `viewerMember` (already a use).
+
+**Suites and checks.** Plane suite whole (concurrency 2): 414 tests, 411 pass, 3 fail = `release` R24 and `l77-size` R77 L twice (accepted by name; `l77-size` fails identically on the merge commit's source, checked). Heavy alone: `r7-contention` 5 of 5 runs green. Users: control-plane `t51-round5-press-seam`, `t51-round5-seam`, `t51-round6-seam` 19/19.
+
+**B66 (l79 restart test).** Merged tranche/T51 (1c73a7bba7 and after). `l79.test.mjs` 5/5 green twice on the merged tree (restart test 15.2 s and 17.3 s) and once on the tranche tip's plane source (17.6 s); it does not reproduce. Cause read from the test: after a Miniflare reboot the test waits with `until(..., 30_000)` for the object's own alarm; boot plus the alarm take 15-17 s alone, so a loaded host (other suites beside it) passes 30 s. Not scheduler's code. Fixed in the plane's test: the wait bound is 90 s (the assertion is unchanged; no test skipped or weakened).
+
+## J45 · REPORT
+
+REPORT (B66): l79's restart test does not reproduce: green twice on the merged tree and once on the tranche tip's plane source (15-18 s). Cause: its 30 s wait for the object's own alarm after a Miniflare reboot is too close to the 15-17 s it takes alone; under host load it passes. Not scheduler's code. Fixed in the plane's test (wait bound 90 s, assertion unchanged), pushed. G82's QUESTION J44 is still open: I need your ruling on who owns the piece slicing.
+
+Ringing BOB for J45 failed: BOB's session (session_019nbajVa3dgbtMJtymhoSVB) is archived. The pushed entries J44 (G82 owner QUESTION, still open) and J45 are the message; BOB's backstop reads them.
+
+## Record (PLANE #54, B67 and B68)
+
+**B67 (G82).** Closed in plane as ruled: L shows the block; the owner is reading-pipeline (G68); nothing built in plane. `r7-contention.test.mjs` keeps asserting the control under 500 ms and printing the real reads.
+
+**B66 (l79).** Answered in J45: not reproducible, not scheduler's code; the test's wait bound is 90 s.
+
+**B68 (G79's plane half).** `plane/pending.mjs`, the `keep` owner: after the whole is put, the reading is asked in the same tick; an answer `NO_HOME` now ends the keep owing nothing (the entered `reading` row is deleted; the filing's promotion owes the reading through control-plane's `unreadDocuments`); every other answer settles as before, so a filed document's keep still owes its reading and a transient failure still leaves it owed. **Red first:** with `origin/job/T51/capture` merged (merge dropped afterwards, so this branch carries none of capture's files), control-plane `t51-round6-seam` G7 failed ("no reading row owed", the row `NO_HOME`, attempts 1); with the change G7 passes (26 s). New `r7-keephome.test.mjs` (3: no home owes nothing, red without the change; filed-home control; transient-failure control). Two older plane tests asserted the opposite (a keep's `NO_HOME` stays owed) and are re-pointed to the ruling, not weakened: `fix4-r75` "R75 R77 (C5c)" (NO_HOME now leaves no row; READING_HELD, NO_WHOLE_OBJECT, throw as before) and `fix4b-r77` "R77 (F1)" (no row after the keep; the promotion's `pendingadd` then reads it). Proposed requirement line (BOB writes it): plane **R94** (G79; amends R77): after a keep, a digest with no home owes nothing; one with a home and no reading owes its reading.
+
+**Found in another module (not plane's).** `g48-classify.test.mjs` R86 G48 (c1) is red on the merged tree: `fw18:minutes@held` is now classified `handler: 'conservative'`, the recorded answer is `handler: 'client_rendered', kind: 'shell'`. Nothing in plane touches doctype detection; it appeared with the merge of tranche/T51 at 1493568889 (site-profiles / doctype side). For BOB to route.
+
+**Suites.** Plane suite: reds are only `release` R24, `l77-size` R77 L twice (accepted) and the `g48` c1 above. Checks rerun below.
+
+Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 22, module lines 148
+
+## J46 · COMPLETE
+
+COMPLETE (PLANE #54, B65-B68). G58 founder's owedwork carries the five watchdog fields (+K4566 hardening); G67 row's own time (last_ms/own_ms/wait_ms, L: 25 s OCR wait stated apart); G69 last_mem NULL when unmeasured, keeps_last holds the last run; G82 closed as ruled (control asserted <500 ms, real reads printed; owner reading-pipeline); B66 l79 not reproducible, test wait bound 90 s; B68 a keep with no home owes nothing (G7 red with capture merged, green after; two older tests re-pointed to the ruling). Plane suite reds: release R24, l77-size R77 L x2 (accepted) and g48-classify c1, which is another module's (fw18 now 'conservative' where the record has 'client_rendered'; appeared with the tranche merge; for BOB to route). Checks: format, architecture, coverage 89/89, ownership 0 failures. Proposed lines R90-R94 are in the record. Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 22, module lines 148.
+
+## Record (PLANE #54, B69)
+
+**B69 (`g48-classify` c1).** Merged tranche/T51. Cause as BOB said: site-profiles' G76 (K4739) answers `handler: conservative` for markup-free text; 28 of the 69 corpus readings are plain-text fixtures whose recorded stack was `client_rendered`/`shell`. Re-recorded from the real classifier, never by hand: `make-g48-plane-answers.mjs --update <reason>` recomputes every reading and rewrites only those whose answer differs, listing them with the reason in `rerecorded` in `fixtures/g48-plane-answers.json`. The diff changes only `read.stack` (handler and kind) of those 28: every `type`, `confidence`, `signals`, `considered` and `also` is unchanged, so the test's intent (the 17 types classify as before G48) stands. The corpus inputs belong to the doctype, roster, budget and court modules' fixtures, so no markup was added to them. `g48-classify` 13/13. Test and fixture files only.
+
+Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 24, module lines 148
+
+## J47 · COMPLETE
+
+COMPLETE (PLANE #54, B69). g48-classify c1 re-recorded from the real classifier (make-g48-plane-answers.mjs --update, 28 plain-text readings, only read.stack handler/kind changed; listed in 'rerecorded' with the reason); 13/13. Plane suite 414 of 417: only the accepted reds (release R24, l77-size R77 L x2). Checks: format, architecture, coverage 89/89, ownership 0 failures. Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 24, module lines 148.
+
+## Record (PLANE #54, B70: G83, R95)
+
+**Entries applied.** The plane obtains the team's room only through `runtime-limits`: `watchdog.mjs` (both `bio` and `scratch`), `door.mjs` (`gatedOp`'s `store()`), `ask.mjs` (the ask and the draft door) call `storeStub(env, name)`; `store.mjs`' `#ownNamespace()` loops over the logical names and compares with `storeId(env, name)`, answering the logical name (`"bio"` inside `bio~g2`), so every `store=`, the evidence prefix `bio/captures/` and `bio/published/` are unchanged. **A retired room is inert** (R95, review2 D4): `Store` knows it is retired at construction (`#isRetired`: not the current `bio` or `scratch` room, and named like a room, `bio`, `scratch` or either with `~g<n>`, by `ctx.id.name`; a suite's private instance has no such name and is never retired); a retired object returns from its constructor before any module is built, any table migrated or consumer registered; `alarm`, `onAlarm`, `watchdog` delete its alarm; `fetch` and `ask`/`draft` answer 410 `ROOM_RETIRED` (a reason code, no sentence, so no word is owed); `dispatchMemberRun`, `groupFields` answer `{ok:false, reason:"ROOM_RETIRED"}`; its data is untouched, and removing the generation makes it current again.
+
+**Provider not merged.** `bio-plane/src/store-place.mjs` is runtime-limits' (R27, R28). It is not on `tranche/T51` yet; I read it from `origin/job/T51/runtime-limits` and placed it UNTRACKED in my tree to run the tests (not committed: it is not mine). Until it merges, this branch's imports of `../store-place.mjs` do not resolve and the plane suite is red for that; BOB posts the CHANGE when it merges and I merge the tranche. The proof below ran with that file present.
+
+**Tests (all seen red first where they could be).** T1 `g83-census.test.mjs` (code-only scanner with its own unit rows; `stewards` excluded by name, though none sits under `bio-plane/src`): red today on exactly **15** sites, all other owners' (ai-runs 2106, 2155; admission 309; control-plane 625, 819, 1045, 1057, 1314; instance-setup `livefire.mjs:29`, `setup.mjs` 3085, 3095, 3107, 3118, 3201, 3307); this module's five (watchdog, door, ask x2, store 766) are gone. **Red by name until ai-runs, admission, instance-setup and control-plane merge.** T2 `g83-location.test.mjs`: (a) the plane's own sites over a recording namespace in six settings (no binding; `wnam`; generation 2; both with `apac-ne` and 12; `bogus`/`02`; `WNAM`/`1`) green; (b) G1: inside `scratch~g2` the evidence prefix is `scratch/captures/`, never the room's name, green; (c) T-retired in the fixture (nothing migrated, 410 on fetch/ask/draft, `ROOM_RETIRED` on the RPCs, alarm deleted by `alarm`, `onAlarm` and `watchdog`, nothing written) and its controls (current rooms and a private instance not inert), green; (d) the whole Worker on workerd/Miniflare (`g83-entry.mjs`: the plane's default export with `env.STORE` a recording proxy over the real binding; a real `SELF` service binding for `livefire`): public read, the plane's gated door (`registeraudit`), the generic forward (`stats`), `selftest`, `livefire`, the scheduled watchdog, for five settings; the `neither` and bad-values cases are green; the `wnam` and generation-2 cases are **red by name** only on the public read (`instancegroup`, instance-setup's `setup.mjs`) until instance-setup merges. **Proof that nothing else stands in the way:** with the other owners' 15 sites re-pointed to `storeStub` in my working tree (a temporary copy, restored; not committed), all 15 tests of `g83-location.test.mjs` pass, including the workerd cases. (e) T-retired on workerd: the room `bio` of generation 1, after a deploy with `STORE_GENERATION=2` over the same storage, answers 410 `ROOM_RETIRED`, the new room serves, and removing the generation makes the old room serve again with its data as it was; green. An alarm cannot be fired over RPC on workerd (`alarm` is reserved), so the alarm deletion is proved in (c). The admission window and control-plane's forwards are covered in the Worker-wide cases once their owners merge.
+
+**Why missed / L.** No test recorded `get()`'s arguments, and a location is invisible locally; T2 proves the option passes on every path and the name, not placement. **P** is BOB's: the new room's colo and `selftest` after the re-creation.
+
+**Findings.** `ctx.id.name` is the retirement test's only handle on workerd (present on ids from `idFromName`, measured); a room's id without a name is never judged retired (fails open to "current", never inert by guess). If BOB prefers an id comparison against generations below the current one as a fallback, it is a small addition.
+
+**Generated artifacts made stale (BOB regenerates):** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest (plane source changed, and `store-place.mjs` joins its inputs).
+
+**Proposed requirement wording (BOB writes it).** R95 stands as written; add that the retired test is the object's room name (`bio`, `scratch`, with or without `~g<n>`) read from its id, so a suite's private instance is never retired, and that a retired object answers status 410 with reason `ROOM_RETIRED`.
+
+Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 14, module lines 190
+
+## J48 · COMPLETE
+
+COMPLETE (PLANE #54, B70: G83, R95), with the provider and four owners still to merge. Done: watchdog, door, ask (x2) obtain the room by storeStub; store.mjs #ownNamespace compares by storeId and answers the logical name; a retired room is inert (no module built, nothing written, alarm deleted by alarm/onAlarm/watchdog, 410 ROOM_RETIRED on fetch/ask/draft, ROOM_RETIRED on the RPCs, data left; removing the generation makes it current). Tests: g83-census (T1), g83-location (T2 plane's own sites x6 settings, G1 evidence prefix, T-retired fixture + controls, whole Worker on workerd x5 settings, T-retired on workerd). ACCEPTED REDS BY NAME until merges: store-place.mjs is runtime-limits' and not on the tranche (I ran with it read from origin/job/T51/runtime-limits, untracked, not committed; until it merges my imports of ../store-place.mjs do not resolve: merge it first); T1 is red on exactly 15 sites of ai-runs (2106, 2155), admission (309), control-plane (625, 819, 1045, 1057, 1314), instance-setup (livefire 29, setup 3085, 3095, 3107, 3118, 3201, 3307); T2's wnam and generation-2 Worker cases fail only on the public read (instance-setup). With those 15 sites re-pointed temporarily in my tree (restored), all 15 tests of g83-location pass on workerd. Checks: format, architecture, coverage 90/90, ownership 0 failures. Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (+ manifest). Record has proposed wording. Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 14, module lines 190.
+
+## J49 · COMPLETE
+
+COMPLETE (PLANE #54, B71). Merged tranche/T51 (store-place.mjs now tracked; my untracked copy removed). Plane suite 431 tests (l77-size run apart: its 2 accepted reds): 427 pass; reds are release R24 (accepted) and, BY NAME until the other owners merge, g83 T1 (15 sites: ai-runs 2106 2155; admission 309; control-plane 625 819 1045 1057 1314; instance-setup livefire 29, setup 3085 3095 3107 3118 3201 3307) and the two g83 Worker-wide cases wnam and generation-2, which fail only on instance-setup's public read (with those sites re-pointed in my tree, all 15 g83-location tests passed). Impact set: plane only (71 files). Checks: architecture, coverage, ownership 0 failures. Branch pushed. Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 16, module lines 190.
+
+## Record (PLANE #55, B72: R96, fix round 8)
+
+**Entries applied.** (1) `door.mjs`: `publicOp` and `gatedOp` take an optional `stateTiming` field (control-plane's side not yet merged; accepted as optional) and put it, only when it is a function, into the context of every handler they build (`publicReadDoorOp`, `publicationDoorOp`, `doorbellPublicOp`, `bootstrapOp`, `askOp`, `actionDraftOp`, `affordancesOp`, `queueOp`, `registerAuditOp`, `instanceSetupOp`, `connectionsOp`, `governorOpResponse`, `captureOp`, `extractionOp`, `pageTranscribeOp`, `attestOp`, `monitorOp`, `ratificationOp`); absent when not handed. (2) `store.mjs`: every route answer states `server-timing: object;dur=<ms>, object-age;dur=<ms>`, the age from an instant taken when the Store is constructed. control-plane's `phase-clock.mjs` reads `object;` entries by a pattern that does not match `object-age;`, so R78's read is unchanged; control-plane reads the new entry (R129).
+
+**Cause fields.** (1) Root cause: no hook carried the door's timing into module contexts (`door.mjs` gatedOp/publicOp built contexts without it) and the object stated no age (`store.mjs` `objectTiming`). (2) Why missed: no test asked the door's context for a timing hook or the object's age; now `r8-timing-hook.test.mjs` does. (3) Failing-first, seen RED then green: `AssertionError [ERR_ASSERTION]: captureOp receives stateTiming  actual: 'undefined', expected: 'function'` and `AssertionError: object-age;dur in object;dur=19  actual: null, expected: true`; both green after. Handlers are real-door-reached, replaced by recording stand-ins in a child (node module mocks) that state one entry each; controls: none handed (handlers receive none), a younger instance states less age. (4) Platform check N.
+
+**Existing test changed.** `fix5-r77.test.mjs` R78: the header shape now `object;dur=<n>, object-age;dur=<n>` and a carried-in value is still replaced (R96 changes the header's content).
+
+**Tests and checks.** Plane suite 436 tests: 433 pass; reds are the accepted ones only (release R24, l77-size R77 L x2). `impact.mjs origin/tranche/T51 HEAD`: plane only (60 of 74 plane files, no other module). format 0 failures; architecture 0 failures; coverage 96 of 96, 0 failures; ownership 0 failures; words 0 failures.
+
+**Stale generated artifact (BOB regenerates):** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest (plane source changed).
+
+**Proposed requirement wording.** Mark R96 met; add that the entry is `object-age;dur` in the same `server-timing` value as `object;dur`, and that the door accepts the hook as an optional `stateTiming` field of `publicOp` and `gatedOp`'s arguments.
+
+Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52
+
+## J50 · COMPLETE
+
+COMPLETE (PLANE #55, B72: R96). Door: publicOp/gatedOp take an optional stateTiming and put it in every handler context (absent when not handed). Store: every answer states 'object;dur=<ms>, object-age;dur=<ms>' (age from the instant of construction). Test r8-timing-hook.test.mjs (R96): seen RED (captureOp receives stateTiming: undefined; object-age;dur absent) then green; control none handed; fix5-r77 R78 shape updated. Plane suite 436: only accepted reds (release R24, l77-size R77 L x2). impact: plane only. Checks: format, architecture, coverage 96/96, words, ownership 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (+manifest). Proposed R96 wording in record. Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52.
+
+## Record (PLANE #55, B73, B74: bootstrap caller, two test fixes)
+
+**B73 (1) applied.** `door.mjs` `publicOp`: `caller` for `bootstrapOp` now also carries `viewer`, the session's viewer from `caseReader` (only for a `member` or `admin` session reader, never a `class:` machine identity, absent without a session); the door's `stateTiming` rides in the same io object (R96). Test (`r8-timing-hook.test.mjs`, R96, real door and real object, only admission's session read stood in, in a child): RED before (`language` actual undefined, expected 'es'), green after; a member's bootstrap carries `language` and `words_version`; no session or a machine identity carries neither; an administrator's session carries them too; the report states `fleet` and `facts` entries through the door's hook. **B73 (2) applied (test only):** `compose.test.mjs` R11 writes a member row between the two reads (queue R94's kept derivation is keyed on the record's write counter); 5/5 green (was red).
+
+**B74 applied (test only).** `shape/g41.probe.mjs`: the tick bars (10 s, first tick 8 s) stay as G37/G48 state them and are multiplied by a same-run control (a fixed SHA-256 plus 5e7 integer steps timed in the test process before and after the case, best of three, against an idle reference of 60 ms, never below 1); an idle machine meets the bars as stated. `g41-shape.test.mjs` gains a test of the control (an idle control leaves the bars, a slow one widens them, a slow tick on an idle machine still fails). All 8 pass alone.
+
+**Tests and checks.** Plane suite 438: 435 pass; reds are the accepted ones only (release R24, l77-size R77 L x2). Impact (`origin/tranche/T51`..HEAD): plane only. format, architecture, coverage 96 of 96, words, ownership: 0 failures. Stale generated artifact (BOB regenerates): `bio-plane/dist/bio-plane.bundled.mjs` and manifest.
+
+Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 14, module lines 70
+
+## J51 · COMPLETE
+
+COMPLETE (PLANE #55, B72-B74). B73(1): door hands bootstrapOp caller.viewer (member/admin session, never a machine identity) and stateTiming; test RED (language undefined) then green. B73(2): compose R11 writes a row between reads, 5/5. B74: g41 tick bars scaled by a same-run control, never below the stated bars, test of the control, 8/8 alone. Plane suite 438: only accepted reds (release R24, l77-size R77 L x2). impact: plane only. Checks: format, architecture, coverage 96/96, words, ownership 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (+manifest). Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 14, module lines 70.
+
+## J52 · QUESTION
+
+QUESTION (plane-1, PLANE #56). Three names the plane-2 instruments need, and two readings of mine; best readings given, I carry on with them.
+
+1. **Where the tick's figures surface (R105).** My `r8-lag` red reads them from the administrator's `owedwork&sha=` answer, in each entry of `last` (beside `last_ms`, `own_ms`, `wait_ms`, `last_mem`): `max_stretch_ms`, `rows_read`, `rows_written`, `units`, each a non-negative number or null (never 0 for unmeasured). Is that the place? If not, name the answer and the key.
+2. **The Server-Timing entry for the object-call count (R105).** My `r8-wave` red expects `object-calls;dur=<n>` on every route (the count in the `dur` slot, as `bytes;dur=` states bytes today), equal to the calls the counting door made (`x-wrap-calls`), absent (not 0) when unmeasured. Is `object-calls` the name? If not, name it.
+3. **The one cap convention (G123a).** `runtime-limits` is not merged, so `shape/cap.mjs` holds a local copy of R33's contract and takes `runtime-limits`' `capFor` and `PLATFORM_FIGURES` the moment a file of `src/` exports them (it tries `byte-ledger.mjs`, `read-bounds.mjs`, `cpu.mjs`). My reading of R33: `capFor(N) = 128 + (node child idle 89 - platform idle_bytes 50 MiB) - N` = `167 - N`, the convention the sheet runs passed under; so the PDF runs' `128 - N` is retired and their cap grows by 39 MB. If runtime-limits' formula differs, the harness follows it with no edit of mine, and a sheet or PDF case that then dies is a finding for its owner, not a harness change.
+4. **`r8-headofline` size.** The plan says "a ~1 MB text"; a 1 MB text is read INSIDE the request (the door's own reading), so the ledger makes no pass and the head of the line has nothing to hold. The smallest size seen deferred is 4 MB; the test uses 4,000,060 B (R-FOUR (3), smallest size that shows the cause). A pass is a `readHeld` that read (not one that answers `NO_HOME`).
+5. **`r8-wave` and the derivations.** The wave's derivations (1 per viewer) and hops (queue 2, bootstrap 4, ...) already hold on the merged tranche (G116, G119); the red of `r8-wave` is the Server-Timing count of point 2 only.
+
+## Record: fix round 9, PLANE #56 (plane-1, test-only; session_011em5NMVJqsV8WDNmpEHRAd)
+
+**Entries applied** (test-only plus `bio-plane/package.json`:6; no product code)
+- G123h: `npm test` runs `node --import ./test/platform-sqlite.mjs --test ...`; `g123h-preload.test.mjs` (seen red first) pins that npm test and the module runner apply the same preload and that a 2,100,000 B row is refused under both; `worker.test.mjs` R7/R64 pin re-pointed to the new script.
+- G123a (harness side): one cap convention. `shape/cap.mjs` re-exports `capFor`/`PLATFORM_FIGURES` from `byte-ledger.mjs` (runtime-limits R33, 206 - N); `harness.mjs`, `g41.probe` (`D_MB` and `g41Cap`'s 39 retired), `g44.probe` (`+ D_MB` retired), `g26.probe` all take it. Re-pointed files: `shape/harness.mjs`, `shape/g41.probe.mjs`, `shape/g44.probe.mjs`, `shape/g26.probe.mjs`, `g41-shape.test.mjs`, `g44-shape.test.mjs` (comment). `g15/g13/keep40/fault` probes already called `capFor`. g41 (4 MB, 12 MiB, 17 MiB CSV, 200k xlsx) and g44 pass at the new caps.
+- G123b: sampler stays on and has in-tick sampling points (every evidence read served, every 64th statement); per-tick COUNTS (`counts`: evidence reads, bytes served, statements, rows out, units written); `shape/bars.mjs` replaces the wall bars (`TICK_MS_MAX`, `FIRST_TICK_MS_MAX`, `loadFactor`, `referenceMs`, g26's) with count bars; search judged by extent (`markExtents` against the generator's `markRows`). Tests in `g41-shape.test.mjs` and `shape-harness.test.mjs` (leak inside one tick shows in `peakMB`; seen red with the sampler off).
+- K4843: g41's wall bar replaced by counts; `g41-shape` 9/9 alone and 2/2 (12 MiB CSV, xlsx) with every core busy.
+- G123c: fault injectors in `harness.mjs` (`faults`: `leakAt`, `storeFailAt`, `entryThrowsAt`, `objectGoneAt`, `killAt`+`killAfterSql`, `restartAt`, `pokeAfterRestart`) and `shimApplied()`; `shape-harness.test.mjs` 7/7.
+- G123f: `cellRanges` and `opsAfter` in the harness: last row, a range crossing a block edge, an over-bound range read by `next_row`, the same two CITED (`contentMint`, `cellsAt`), then `tabledeclare` and `workbookadd`; `g123f-cells.test.mjs` 3/3 (CSV and xlsx hold today; the other formats arrive with test-support's `sheetgen`; the P-list walk row is BOB's).
+- Reds by name (right reason, seen): `r8-headofline.test.mjs` (40 s scanner: 0 passes at the first scan-end; founder's `owedwork` `alarm_at` null in 24 answers while a firing runs; 3 s control green) with `r8-headofline-entry.mjs`; `r8-heal-door.test.mjs` (alarm stays lost after an ordinary read; control green); `r8-lag.test.mjs` (no `max_stretch_ms`/`rows_read`/`rows_written`/`units`); `r8-wave.test.mjs` (`object-calls;dur` absent; derivations and hops already hold). Shared `r8-wave-kit.mjs`. Names per BOB's B77.
+
+**Deferred:** none. R100's harness-side bound (heap + backing stores inside `capFor(N)`) is not asserted: today's csv12 peaks 167 MB (heap + buffers) against cap 194 and the product ledger is not wired; printed in the report, waits for the product's use of `byteLedger` (plane-2 / owners).
+
+**For BOB (other modules)**
+- `bio-plane/src/setup-words/rows.mjs`, `case-checker/program.mjs` etc. stale as ever (generated). Reading re-serves the whole file several times a tick (csv12: 4 evidence reads of 12 MiB each per tick; 5x the file): inside the count bar of 8x, worth a look by reading-pipeline.
+- Files created outside `paths`: none.
+
+**Tests and checks**
+- Whole plane suite before the merge of runtime-limits: tests 464, pass 444, fail 20: 11 intended reds (3 heal-door, 1 wave, 1 lag, 1 headofline 40 s, 1 founder owedwork... listed above), inherited `release` R24, `l77-size` R77 L (2), plus 9 R85 G44 and the R7/R64 pin that my own harness refactor/script change broke and I then fixed (re-run green: g44-shape, worker).
+- Re-run after the fix and the merge: g41-shape 9/9, g44-shape + shape-harness + g123f + g123h 21/21.
+- format 0; architecture 0; ownership 20 files 0 failures; words (plane) 0; coverage: R97 R98 R100 R101 R104 R106 named by no test (plane-2's, expected).
+- Five alone-runs of the heavy reds: not made (red by name; they run five times when they go green).
+
+Size (session_011em5NMVJqsV8WDNmpEHRAd): test runs 16, module lines 1629 (test files written or changed)
+
+## J53 · COMPLETE
+
+COMPLETE (plane-1, PLANE #56): G123a (harness side, caps re-pointed to byte-ledger `capFor`: shape/harness.mjs, g41.probe, g44.probe, g26.probe, g41-shape, g44-shape), G123b, G123c, G123f, G123h and K4843 applied; reds by name written for G91 (`r8-headofline`), G93 (`r8-heal-door`), G123g (`r8-lag`, `r8-wave`), each seen red for its stated reason, controls green. New files outside paths: none. Checks: format, architecture, ownership, words 0 failures; coverage names R97 R98 R100 R101 R104 R106 as untested (plane-2's). Whole-suite reds are the intended ones plus inherited R24 and l77-size. Details, the R100 harness-bound note and a reading re-serve finding in my record.
+
+### CHANGE B76/B77/B78 (plane-1)
+- B76: tranche merged; `shape/cap.mjs` imports `capFor`/`PLATFORM_FIGURES` from `byte-ledger.mjs` (no formula kept); caps re-pointed: `shape/harness.mjs`, `g41.probe.mjs`, `g44.probe.mjs`, `g26.probe.mjs`, `g41-shape.test.mjs`, `g44-shape.test.mjs`.
+- B78 (1): the harness's xlsx is now `sheetgen`'s (`sheetDoc`/`xlsxRowsDoc` in `harness.mjs`; marks `<seed>-R<row>-C<col>` in a non-header cell; extent/search checks, fts and cell truth read from `sheetgen`'s truth); `shape/xlsx-gen.mjs` deleted. (2): `shape/g44-gen.mjs` takes `zipChunks64` from `make-zip.mjs`; no local ZIP writer remains.
+- FINDING (for the owner of the xlsx reader; REPORT, not a harness edit): a sheetgen xlsx of 200,000 rows x 3 cols (seed `hx200000`, types text/integer/text, 4.88 MB) is read `stated`/`final`: "the text of this document is undetermined (1 undecodable region(s))", no unit written; 150,000 rows (3.66 MB) and below read whole. `g41-shape` "200,000-row xlsx" is red by name for it (R84); the CSV cases and G123f/G44 pass.
+- Tests: g41-shape 8/9 (the xlsx above), g123f 3/3, g44-shape + shape-harness 16/16.
+
+## J54 · COMPLETE
+
+COMPLETE again (plane-1, re B76-B78). B76: caps follow byte-ledger `capFor` (files named in my record and in J53). B78 (1): the harness xlsx is sheetgen's, marks in a non-header cell, search/cell truth from its truth; (2) g44-gen's ZIP writer is make-zip's `zipChunks64`; xlsx-gen.mjs deleted. REPORT (other module, xlsx reader): a sheetgen 200,000-row x 3-col xlsx (seed hx200000, 4.88 MB) is read stated/final "text undetermined (1 undecodable region)", no unit written; 150,000 rows reads whole. `g41-shape`'s 200,000-row xlsx case is therefore red by name (R84); every other plane test in the files I touched passes. Details in my record.
+
+## J55 · QUESTION
+
+PLANE #57 (job 37), three readings; I carry on with each, none blocks me.
+
+1. **How extraction receives the registrar (2c item 1: "extraction receives it as `opts.registerJob`").** Extraction-1 (job 28) is not merged, so I cannot read which `opts` it means. My reading: the plane hands it BOTH ways, so either reading of job 28 finds it: (a) `extractionOf(ctx, {..., registerJob})` at construction (a function calling the ledger's `registerJob`, asked lazily), and (b) `registerJob` (and `armJobs`) in every `readHeld({...})` call the ledger makes; the existing `registerOwe` hook stays wired and now writes the same job table (its `owe({kind, sha, ...})` is `registerJob` of that kind, R98's "retired as a separate one" by being the same write). Please confirm with job 28 which one it reads, or rule one.
+
+2. **`watchdog_ran` (G94, R103) is scheduler's (`watch` records `ran`, scheduler R29; job 33), and job 33 has no round-9 START yet.** My reading: the plane adds `watchdog_ran` and `running_since` to `WATCHDOG_FIELDS` for the administrator only, read from `health()` (null until the scheduler answers it); my unit test of the route uses a scripted `health`; the test through the real scheduler (`watchdog_ran` within the test's bracket for a 26-minute-late fire) is written now and stays RED BY NAME until job 33 merges (R-SEAM). The Store passes `at` (the slot) to `watch(at)` as today; no plane clock invents `ran`.
+
+3. **The object-call count (K4848 (2)).** The object cannot see the Worker's calls to it, so the entry is made in the plane's Worker entry (`plane/index.mjs`, mine): each request's `env.STORE` is wrapped so its stubs' `fetch` calls are counted (the counting door's `do` count; RPC methods are not counted, as `doCalls` does not count them), and `object-calls;dur=<n>` is appended to the answer's `server-timing`, absent when the request made no call (never 0). Calls after the answer (`waitUntil`) are not counted, as the counting door does not.
+
+## Record (PLANE #57, fix round 9, job 37: plane-2, the job table)
+
+**Entries applied** (B79; B80 K4898; B81 K4899; B82 K4904; B83 K4905)
+- **R97 (G126, G126g, G126j, G129d, G127c)** `keeps_pending` is the job table: additive columns `state` (`queued`, `fetching`, `reading`, `partial`, `refused`, `finished`, `final`), `verdict`, `cursor`, `written`, `skipped`, `owed`, `failed`, `failed_why`, `last_progress_at`, `rate_per_s`, `carrier`, `reader_version`, `priority`, `ended_at`, `member`; tables `job_unit_attempts` and `job_batches` (`landBatch`, once by (sha, kind, batch)); kinds `scan`, `safe_view`, `grade`, `ingest` added (owner from the composition's `workers`, else `NO_OWNER`, owed). An ended row stays (`finished`/`refused`/`final`) for its readers; the member's `owedwork` list is unchanged in shape (`state` owed/final, plus `job_state` and the counters). A row ends only when its counters say nothing is owed (G126j); an `ocr` pass that read nothing (`UNREADABLE`) is no end (G129d); a stated end keeps the refused digest, its holder and `whole`/`part` in `failed_why` (G127c). Old ledger: columns added, a stated end becomes `final`, the rest `queued`. All three new tables declared to purge by the plane (R9).
+- **R98** one registrar `registerJob` (synchronous, never throws, idempotent, re-arm keeps counters, `raised` never lowered, a `verdict.ok:false` registers `refused`), `armJobs`; `capture.registerJob`/`armJobs` wired beside `keepLater`; extraction's `registerOwe` hook IS the registrar and every `readHeld` the ledger makes carries `registerJob`/`armJobs` (K4898 (1)); `readingsEnded({after, limit})` handed to notice-producers.
+- **R99 (G126i)** `wrangler.jsonc` `limits.cpu_ms` 300000 = `PLATFORM_FIGURES.cpu_ms` (source K4838, named in the comment).
+- **R100** memory stated as a total: `r9-memory.test.mjs` (the largest CSV the alpha takes held inside `capFor(N)`; a leak inside one tick fails the same judge; no "above idle" figure in the requirements).
+- **R101 (G129a-c, G129b at pending.mjs's end clause)** no-progress: a `more` that moved neither cursor nor counter ends `final` `NO_PROGRESS`; a transient answer (`transient`, `failure: "transient"`) is tried again at any tick, never the end; poison: each run stamps its unit (`p<page>`, `c<cursor>`, `whole`) before the reader runs, a dead run counts one kill, a member's `killed`/`ocr_killed` pages count one each; a page killed twice is handed in `halfBudgetPages`, three times in `killedPages`; a window cursor killed three times is handed as `killedCursor` (K4904) and the row goes on; only the whole of a cursor-less read ends `final` `PAGE_KILLED_READER`. `PENDING_INTERRUPTED_MAX` and its sentence (`plane.pending.interrupted`) retired.
+- **R102 (G93)** `Store.fetch` calls `scheduler.heal(now)` before the dispatch, caught.
+- **R103 (G94)** `WATCHDOG_FIELDS` + `watchdog_ran`, `running_since`, administrator only.
+- **R104** handlers idempotent on re-entry (the row's cursor, the unit stamp, `landBatch`), tested.
+- **R105 (G123g)** per-run lag meter (`max_stretch_ms`), `rows_read`/`rows_written` (platform cursor counts, NULL when unmeasured), `units`, on each `last` of `owedwork&sha=`; the Worker entry appends `object-calls;dur=<n>` (stub `fetch` calls of the request, absent when none; K4848, K4898 (3)).
+- **R106 (G126e)** the transcriber reads by `acquisition.readRange`, sizes from the store's record (head, else the register's parts), loads nothing over `TRANSCRIBE_LOAD_MAX` (see REPORT), owes left pages as an `ocr` row, states `asked`, `sent`, `owed` and names unread pages (`refused` on NO_PAGE_RENDERED as T44 had it; `unread` on a posted answer).
+- **G129e** the unpack row's and the drain's `op=unpack` carry the archive's `project` when given.
+- **R84 (K4855)** `g41-shape`: 150,000-row xlsx read whole; 200,000-row xlsx refused, final in one tick, 42.66 MiB and 32.00 MiB stated; the later-tick bar (`laterTickBytes`, 5 MiB, J-5) seen red against a whole-file re-read. A due `keep` is the tick's heavy row before its reading.
+- **K4899** `capture.evidenceKey = (d) => <namespace>/captures/<d>`; through the Store a parted begin answers `ok` with its parts.
+- Tests re-pinned to the amended requirements: `fix4-r75`, `fix4b-r77`, `fix4b-r77-owners`, `fix5-r77`, `fix6-pending` (owed rows exclude `finished`; R101's reason and `killedCursor`), `l77-size-child`, `shape/harness.mjs` (same), `watchdog` (seven fields; the frame's one look, R102), `worker` (`fetch` keeps the door's `limits`), `t42`/`t44` (R106's fields), `r8-heal-door` (the setup's own look of five seconds waited out by the test's clock).
+
+**The four fields per cause**
+- G126 / G126g / G126j / G129d / G127c: (1) `pending.mjs:179, 206-207, 261` (round-8 numbering: an end on `read`/`READING_HELD` whatever was owed, the `ocr` row ended on any `ok`, no registrar, no detail on a stated end); (2) tests passed a hand-written hook and ended rows by count; gap: `r9-jobs` R97/R98 tests on the real table; (3) red first on the merged tip: `SyntaxError: The requested module '../../../src/plane/pending.mjs' does not provide an export named 'JOB_KINDS'` → `not ok 1 - test/m/plane/r9-jobs.test.mjs`; green: r9-jobs 29/29; (4) L (unit) and the seam's section 11 (control-plane 43).
+- G129a-c: (1) `pending.mjs:63, 193-202` (`PENDING_INTERRUPTED_MAX`), `settle`'s `more` with an unmoved cursor retried for ever; (2) no `killPage` fault, first-tick tests; (3) same red line; green: the six R101 tests (300-page scan, page 150 stated, 299 read; NO_PROGRESS; password in one tick; transient at tick 3); (4) L.
+- G93: (1) `heal` had no caller (`scheduler/index.mjs:684`); (2) no request through the door then asked the alarm; (3) red on the tip: `✖ R102 G93 L: a member's ordinary read (op=whoami) re-arms a lost alarm as well`; green 4/4 (workerd); (4) L.
+- G94: (1) `WATCHDOG_FIELDS` (`pending.mjs:388`) withheld `running_since`; `watchdog_ran` is scheduler's (merged K4905); (2) only five fields' presence was asked; (3) red: `✖ R103 watchdogRan G94 ... watchdog_ran undefined` before job 33; green after the merge; (4) L.
+- G123g: (1) no instrument in the object (`pending.mjs:89, 133-137`); (2) the G82 L run asserted `whoami` only; (3) red on the tip: `✖ R105 G123g L: the ledger's last run of a 12 MB text ... states max_stretch_ms, rows_read, rows_written and units` and `✖ R105 G123g L: each route of the wave states its object-call count in Server-Timing`; green r8-lag 2/2, r8-wave 3/3 (alone; worst p95 443 ms, reported); (4) L.
+- G126e: (1) `plane/transcribe.mjs:64` loaded the whole object and cut to 8 pages silently; (2) no test of the press at size; (3) red: `SyntaxError: ... transcribe.mjs' does not provide an export named 'OWED'` → `not ok 2 - test/m/plane/t42.test.mjs`; green t42 20/20, t44 6/6; (4) L.
+- G126i: (1) `wrangler.jsonc:175` set `subrequests` only; (2) no test read the limit; (3) red: R99's test (`cpu_ms undefined`) before the edit; green; (4) P is BOB's (the deployed value).
+- G129e (plane's piece): (1) `plane/unpack.mjs:83`, `pending.mjs:261` sent `archiveSha` alone; (2) no fault in unpack; (3)/(4): carried by the seam's section 6 (control-plane 38) with acquisition's merged fix; the plane passes `project` when its row or event names it.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT J56)**
+- `READ_BOUNDS` has no row for the inline ceiling G126e names ("none loads a PDF over 2 MB in a request"): proposed row `pdf.request_bytes` {standard 2 MiB, alpha 2 MiB, protective 2 MiB}, key `limit.pdf.request_bytes`; `transcribe.mjs` quotes it by `boundOf` and falls back to 2 MiB marked "proposed; BOB records" until it exists (control-plane's `READING_DEFER_PDF_BYTES` holds the same figure unexported).
+- record-core's `BOOKKEEPING_TABLES` (its R91) lacks `job_unit_attempts` and `job_batches`, which a tick writes: `writeCount()` moves on a ledger tick.
+- `r8-headofline` "R80 G91 L: ... never answers an alarm_at in the past" is red on the tip before and after this job, with scheduler 33 and file-safety merged: during a 12 s scan held past the firing's budget, `getAlarm()` answers a past wake for many seconds (the firing's reconcile, not a plane arm: the heal frame does not look during a firing). Scheduler's to place.
+- extraction's suite: 7 reds (`g40` 2, `g41` 3, `n26` 1, `r82` 1), identical on the merged tip without this change (job 28 open).
+- Proposed requirement wording (BOB writes): R101 add "a window its cursor names, killed three times, is handed to the reader as `killedCursor` and stepped past (K4904); only a read with no cursor ends stated"; R106 "a posted answer names the pages left unread in `unread`, the NO_PAGE_RENDERED answer in `refused` (T44)".
+
+**Stale generated artifacts:** `bio-plane/src/setup-words/rows.mjs` (the retired `plane.pending.interrupted` row), `bio-plane/dist/bio-plane.bundled.mjs`.
+**Words owed (T52):** none new; DEC-417's "three interruptions" sentence retired (`plane.pending.interrupted`), a HANDOFF for UX-DESIGN.
+**New files outside my paths:** none (new tests under `test/m/plane/`: `r9-jobs.test.mjs`, `r9-memory.test.mjs`).
+
+**Tests and checks**
+- Plane suite on the merged tree (scheduler 33 in), concurrency 2: tests 500, pass 496, fail 4: `release` R24 and `l77-size` R77 (inherited, accepted), `r8-headofline` alarm_at (REPORT above), `g41-shape` csvmax (the keep order, fixed after: `g41-shape` alone 11/11).
+- Re-run alone after the last fix: g41-shape 11/11, r9-jobs 29/29, fix4-r75 7/7, fix4b-r77 8/8, fix5-r77 7/7, fix6-pending 10/10, r8-heal-door 4/4, r8-lag 2/2, r8-wave 3/3, r9-memory 3/3, t42 20/20, t44 6/6, watchdog 10/10.
+- Users (impact set, the modules the change touches): capture 312/0, doorbell 97/0, acquisition 321/0, scheduler 163/0, notice-producers 143/0, record-core 207/0, extraction 321/7 (identical on the tip).
+- Checks: format 0, architecture 0, coverage 106 of 106, words (plane) 0, ownership 0 failures; `run.mjs` whole product: no failure names plane.
+
+Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 38, module lines 3733
+
+## J56 · REPORT
+
+PLANE #57 (job 37), four findings outside my module (each in my record, "Found in other modules"):
+1. **READ_BOUNDS (runtime-limits), a ceiling with no row (K4842 (1)).** G126e's inline ceiling ("none loads a PDF over 2 MB in a request"), which the transcriber now keeps: kind `pdf`, name `request_bytes`, standard 2 MiB, alpha 2 MiB, protective 2 MiB, key `limit.pdf.request_bytes`. `plane/transcribe.mjs` quotes it by `boundOf("pdf", "request_bytes")` and falls back to 2 MiB marked "proposed; BOB records" until the row exists (control-plane's unexported `READING_DEFER_PDF_BYTES` holds the same figure).
+2. **record-core R91's `BOOKKEEPING_TABLES`** lacks the job table's `job_unit_attempts` and `job_batches`, which every ledger tick writes: `writeCount()` moves on a tick. A requirement change of record-core's.
+3. **`r8-headofline` "R80 G91 L: ... never answers an alarm_at in the past"** is red on the tip before and after this job, with scheduler 33 and file-safety merged: during a 12 s scan held past the firing's budget, `getAlarm()` answers one past wake for many seconds (e.g. alarm 1792841480751 against polls at +2.1 s ... +6 s). Not a plane arm: the heal frame does not look during a firing and the ledger arms only on registration. The scheduler's reconcile at the budget's end with a consumer in flight looks like the setter; scheduler's to place. The other two tests of the file are green.
+4. **extraction**: 7 reds (g40 2, g41 3, n26 1, r82 1), identical on the merged tip without this job (job 28 open).
+
+## J57 · COMPLETE
+
+COMPLETE (PLANE #57, job 37, B79-B83): the job table and its one registrar (R97, R98), cpu_ms (R99), memory as a total (R100), no-progress and poison rules with killedCursor (R101, K4904), the heal frame (R102), the watchdog's fields (R103, green with scheduler 33), idempotent handlers (R104), the instruments and object-call count (R105), the transcriber by ranges (R106), G129e's project, R84's split and later-tick bar (K4855), capture.evidenceKey (K4899). Plane suite 496/500 on the merged tree (R24, R77 inherited; r8-headofline alarm_at REPORTED J56; csvmax fixed after, 11/11 alone); users green but extraction's 7 (identical on the tip). format, architecture, coverage 106/106, words, ownership: 0 failures. Record: build/jobs/T51/plane.md, section PLANE #57. Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 38, module lines 3733
+
+### PLANE #57, CHANGEs B84 (K4912) and B85 (K4916)
+
+- **B84 (1)** `transcribe.mjs`: `TRANSCRIBE_LOAD_MAX = boundOf("pdf", "request_bytes")` alone (the row exists since RUNTIME-LIMITS #11, K4902); no literal, no `try`.
+- **B84 (2)** `g41-shape` "R84 G41 K4855": the refusal is judged as data, never by its sentence (K3810): the harness's reading event carries the reading's own `{reason, size, bound}` (reading-pipeline R54); `runRefused` asserts `size` equal to the generator's declared sheet text (44,732,492 B, `xl/worksheets/sheet1.xml`'s uncompressed size read from the generated file's own central directory) and `bound` equal to `boundOf("xlsx", "declared_text")`, the reading final in one tick, nothing owed, the child alive. Green (3 of 3 of its tests).
+- **B84 (3)** `r8-heal-door`: **a test depending on timing, not a race in the heal frame.** Evidence: on one core it failed 4 of 5 runs (`not ok 2` "a member's ordinary read ... re-arms": `actual 1792844443394, expected null` at "nothing armed it meanwhile"; `not ok 3` at "the alarm is still lost"). A trace of every `setAlarm` with its caller (a temporary instrumented copy of the entry, removed) showed, in the failing run: `KILL 1792845171018`, then `SETALARM 1792845171294 ... at #reconcile ... at async Scheduler.onAlarm`: a firing already running when the test deleted the alarm set it again when it ended, before any request reached the frame; in test 3 the firings the first look's arm starts (the reading in pieces) re-set the alarm inside the window. The frame itself only looked and armed where it should. Fix (test only): the entry counts the frame's own work (`heals: {calls, looks, arms}`, each `getAlarm`/`setAlarm` made inside a `heal` call); `lose()` repeats the delete until a quiet second shows no firing re-arms it, then waits out the setup's look; test 3 asserts the frame made no second look and no arm inside five seconds and looked again after. Five runs alone: 4/4 each; five runs on one core (`taskset -c 0`): 4/4 each.
+- **B85 R107** store-internal `jobrow?sha=&kind=` (`pendingOps`): `{ok: true, row}` from `jobRow`, ended rows whole, `row: null` when none, `BAD_SHA`, `BAD_KIND`; a read; not declared (as `pendingadd`). Red first: `error: 'no route jobrow'`; green (`r9-jobs` 30/30).
+- **B85 R76** `door.mjs`: `readAcquired` is async and awaits `deferReading`'s answer; a rejection defers nothing. Red first: `not ok 1 - R76 (amended, K4916) ...` (a promise of true was not `=== true`); green (`fix4-defer` 4/4).
+- Plane suite on the merged tree (tranche at B85): tests 502, pass 500, fail 2: `release` R24 and `l77-size` R77 (accepted). `r8-headofline` is green on this tree (job 62).
+- Checks: format 0, architecture 0, coverage 107 of 107, words 0, ownership 0 failures.
+
+Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 62, module lines 3741
+
+## J58 · COMPLETE
+
+COMPLETE (PLANE #57, B84 K4912 and B85 K4916). (1) transcribe.mjs quotes boundOf("pdf", "request_bytes") alone. (2) g41-shape's refused workbook is judged by the refusal's size (the generator's declared sheet text, 44,732,492 B) and bound (boundOf xlsx.declared_text) as data, never the sentence. (3) r8-heal-door: a timing-dependent test, not a heal race: a traced setAlarm showed a firing in flight at the delete re-arming before any request; the test now counts the frame's own looks and arms and waits for a quiet stretch; 5/5 alone and 5/5 on one core, 4/4 each. R107 jobrow route and R76's awaited deferReading, each red first then green. Plane suite 500/502 on the merged tree (R24, R77 accepted; r8-headofline green). Checks 0 failures, coverage 107/107. Record: build/jobs/T51/plane.md, 'PLANE #57, CHANGEs B84 and B85'. Size (session_01U3Cn7msFQfwLaBjAPpmVKZ): test runs 62, module lines 3741
+
+### PLANE #58 (job 74, B87): R108, a deferred job keeps its project
+
+- **R108** `pending.mjs`: `add({kind, sha, project})` keeps a non-empty `project` of at most 200 characters as the row's `detail.project` (through `owe`/`registerJob`); `pendingadd` reads `project` from the address. Absent, empty or over 200: no `detail.project`, as before. A second registration without a project leaves the held one (`registerJob` replaces `detail` only when given). The drain's existing read (`unpack` owner) already sends `detail.project` with `op=unpack`.
+- Tests: new `r108-project.test.mjs` (3): the route with a project writes `detail.project` and the drain's `op=unpack` request carries it; control: none, empty, 201 characters write none; a re-registration without a project keeps it. The seam §6 end to end (members filed in the archive's project) is control-plane's seam, after its job 38 sends `project` from `jobs.mjs` `ask`.
+- Red first: `actual {}` against `{project: 'PROJ-2026-0001'}` (and `PROJ-2026-0002`); the control green before the change. Green after: 3 of 3.
+- Plane suite, the 66 affected files (`impact.mjs` names plane only: 1 of 176 modules): tests 445, pass 444, fail 1: `release.test.mjs`:74 R24 "screen.objective.purpose is held by the words list", the accepted red (not in this diff; `words.json` lacks the key, the design's file, BOB's regeneration).
+- Checks: format 0, architecture 0, coverage 108 of 108, words 0, ownership 0 failures.
+- Cause: the door's `pendingadd` and `holder.add` took only `kind` and `sha`. Why missed: R98/R97 gave `owe` a `detail` and the drain read `detail.project`, but no requirement named the route's parameter until control-plane R130 (G151). Platform check: none needed (SQL storage write, no workerd behaviour).
+- Found in other modules: the continuation's own registration by acquisition (`unpack.mjs`:671, no project) is registered before the door's; `registerJob` keeps the later `detail.project`, so control-plane's `promoteFiled` must register with the project (diagnosis item (a)); nothing for me to change.
+
+Size (session_01Di3H5CJCeTUBedG79gEybu): test runs 4, module lines 3752
+
+## J59 · COMPLETE
+
+COMPLETE (PLANE #58, job 74, B87): R108 met. pendingadd takes project and writes detail.project (pending.mjs add and route); absent, empty or over 200 chars: none. Red first, 3 new tests green (r108-project). Affected suite (66 files, plane only): 445 tests, 444 pass, 1 fail: release R24 screen.objective.purpose (accepted red, words.json lacks the key). Checks: format 0, architecture 0, coverage 108/108, words 0, ownership 0. Control-plane's promoteFiled must pass project for the continuation case (diagnosis a). Record updated.
+
+## Record (PLANE #59, fix round 9 batch D, job 84; B88)
+
+**Entries applied**
+- R109 (G159): `registerJob` arranges the alarm after the commit (`Promise.resolve().then(arm)` on success, so it runs once the caller's synchronous transaction returned); a refused registration arms nothing; `armJobs` stays. Tests: `r9-jobs.test.mjs` "R109 …" (daily alarm hours ahead brought forward and the row runs in one tick; second row; refusal; inside `transactionSync`).
+- R110 (G165): readers of `reading` and `ocr` rows are handed `stampUnit(unit)` (`p<page>` or `c<cursor>`; only while the row runs); it writes that unit in flight and clears every other stamp, and `reapInterrupted` charges the kill to the stamped unit (else the cursor's, else `whole`). `halfBudgetPages` unchanged. Tests: a page 5 (not first, not in `detail`) killed three times ends `killedPages: [5]`, pages 0-4, 6-7 read, `whole` uncharged; control: whole read charged to `whole`, ends stated; a `fetch` is handed none.
+- R97 (G160): `heldOf` now writes `{kind, capture_sha, holder}` into `failed_why` from the answer's `detail`, its refusal's `detail` or its top level; `holder` null where none is named (D-15). The G127c test is re-pointed to the new shape; new test for null holder, top-level facts and a no-facts control.
+
+**Red first:** all new tests failed before the change (`q.stampUnit is not a function`, alarm not forward, `failed_why` lacked the facts).
+**Cause / why missed:** the registrar was synchronous and armed nothing; plane stamped `unitOf(row.detail)` so extraction's rows (`detail {}`) were always `whole`; the old kill test only killed a page named in `detail.next_page`.
+**Deferred:** none. **Rows owed:** none (no sentence added).
+**Found in other modules:** none new. `release` R24 and `l77-size` R77 stay red as BOB listed them. Acquisition's `oweOf` still never calls `armJobs`, now harmless (the plane arms itself).
+
+**Tests and checks**
+- Light plane files: tests 472, pass 470, fail 2 (`release` R24 words; R77 L gate: both inherited, not mine). r9-jobs alone: 35/35.
+- Heavy, alone: r8-heal-door 4/4, r7-contention 5/5, g54-l 6/6, g55-alarm-l 2/2 (platform check L, workerd), r9-memory 3/3. `g41-shape` and `g44-shape` not run (untouched by this change).
+- `impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (plane); no other user named.
+- format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
+
+Size (session_01AWoVVqkqd48jwuoT2GtVPZ): test runs 9, module lines 2310
+
+## J60 · COMPLETE
+
+Job 84 done: R109 (registerJob arms after the commit), R110 (stampUnit; kill charged to the page), R97 failed_why {kind, capture_sha, holder}. Red first for each. Light suite 470/472 (release R24 and l77 R77, inherited); heavy alone green incl. L files; impact: plane only; format, architecture, coverage, words, ownership 0 failures. Record has the four fields and Size.
+
+## Record (PLANE #60, fix round 9 batch D, job 93; B90)
+
+**Entries applied**
+- R97 amended (G168, K4985): in `settle`, a `reading` row answered `{ok: true, read: false, why: "NO_HOME"}` goes through the new `wait` (backed off, `last_why` NO_HOME, `state` queued/partial, no `failed`, no `failed_why`); the `ocr` kind is unchanged (ends, `OCR_NOTHING_OWED`). A non-`ocr` row answered `READING_HELD` with `counters` keeps `written = MAX(row, answer)` and `skipped` alike, then `finish`; a held answer without `counters` ends as before. An owner's real failure is still counted (control test).
+- Tests (`r9-jobs.test.mjs`): "R97 NO_HOME …" (NO_HOME then READING_HELD counters 8 → finished, written 8, skipped 1, failed 0, due later after the first) and its control (MAX with a row at 5 vs answer 3; `{ok:false, why:"BROKEN"}` still `failed 1`).
+
+**Red first:** both new tests failed on `tranche/T51`'s `pending.mjs` (row `failed 1, written 0`); green after.
+**Cause:** `settle`'s last line sent a `reading` NO_HOME to `attempt` (counts a failure), and the finishing READING_HELD answer's counters were never read. **Why missed:** plane's tests stubbed `readHeld` and asserted `[kind, attempts]`, never counters. **Platform check:** seam §11 (L) once extraction's job 94 merges; no workerd behaviour here.
+**Deferred:** none. **Rows owed:** none (no sentence a member reads).
+**Found in other modules:** none.
+
+**Tests and checks**
+- Light plane files (77): tests 469, pass 467, fail 2, both inherited: `release` R24 (words.json lacks the key) and `l77-size` R77 L gate. r9-jobs alone: 37/37.
+- Heavy, alone: g54-sweep 5/5, g55-alarm-l 2/2, r7-contention 5/5, r8-heal-door 4/4, r9-memory 3/3; `g54-l` 5/6: "R87 G54 L publishedcase" fails identically on `tranche/T51`'s own `pending.mjs` (checked), so inherited and unrelated to this change (casefile sweep).
+- `impact.mjs origin/tranche/T51 HEAD`: 1 of 176 modules (plane), 66 test files; no other user named.
+- format 0 failures; architecture 0; coverage 110 of 110, 0; words (plane) 0; ownership 0.
+
+Size (session_01MuMF5vhSWNsf1HhrqP9yuH): test runs 9, module lines 3769
+
+## J61 · COMPLETE · re B90
+
+Job 93 done: R97 amended (G168). A reading row answered NO_HOME waits uncounted (no failure); READING_HELD with counters keeps written/skipped as MAX(row, answer), then finishes. Red first (2 new tests failed on the tranche's pending.mjs), green after. Light suite 467/469 (release R24 words, l77 R77 L: inherited); heavy alone green except g54-l R87 publishedcase, which fails identically on the tranche's own pending.mjs (inherited). Impact: plane only. format, architecture, coverage 110/110, words, ownership: 0 failures. Cause: settle sent reading NO_HOME to attempt and never read READING_HELD counters; missed: tests asserted [kind, attempts], not counters. Platform check L: seam section 11 once extraction job 94 merges. Record has Size.
+
+## Record (PLANE #61, fix round 10, Wave A batch 1; B91)
+
+Session session_01J62mKtsqgL6Mp8fpdgGVVo. The tranche (5906a22054) is merged. **Coupled merge:** `declarations.mjs` imports signin-door's `DECLARED_OPS`, which exists only on `job/T51/signin-door`; until BOB merges that branch with this one **every plane test fails at import** (that is the coupling BOB asked for). I verified the coupled state with `git merge --no-commit origin/job/T51/signin-door` (aborted after) and, for the one row below, a local deletion that I did not commit: plane light suite **521/521** and the heavy files below.
+
+### 1. First step: LOAD-RED 5 (1), the g54-l "(measure)" queued `state` request closed at the alarm's end (K5050, a study)
+
+**Answer: not reproduced; no cause established; none of (a) workerd's queued-request behaviour, (b) the Node socket, (c) product is shown.**
+- **Whole-file L-PIN** (3 burners and the test process all on core 0), the measure test as it was before `disarm` (a copy with client and object-side logging: client send/answer/throw with `cause`, object `fetch` and `alarm()` begin/end): **9 valid runs, the measure test green 9 of 9** (a first batch with the burners on other cores was too light, 78 s a file, and is not counted; run 6 is void: I had the `signin-door` import in the tree and Miniflare's restart in the kill test read it; my own Node runs beside runs 1-5 perturbed them slightly). The only `UND_ERR_SOCKET: other side closed` in any run is the kill test's deliberate `mf.dispose()`, once a run.
+- **Deterministic overlap**, same load, 20 trials: the object's platform alarm armed to start at once and made to run 8 s (R2 puts and waits), nine `fetch` requests sent at +0, +30, +200, +1000, +2500, +4000, +6000, +7900 and +8100 ms: **180 of 180 answered**, 2-22 ms each (the first trial's two at the alarm's start 109 and 120 ms). workerd answers requests while an alarm awaits.
+- **What did reproduce, 9 of 9:** the *other* whole-file race. The `publishedcase` test failed every time: the alarm the completing act arms (its first-attempt grace is past) fired at once, beside the test, and built the case file before the injected bucket failure was met (`scheduled_for` = the finding's instant, `alarm() begin` 0.2 s after the finding). Every ordinary request also re-arms a lost alarm (R102), so `disarm` alone is not enough. **Fixed in my tests** (`g54-l-entry.mjs` `/g54p/hold`: the runtime's alarm does nothing while held; the measure and `publishedcase` tests hold it): **g54-l 6/6 in three whole-file L-PIN runs** (before 5/6, `publishedcase` red every run), 6/6 quiet. No request was closed in any of these overlaps either.
+- Not checked (BOB's to place): the live platform. The deployed-plane check of a request sent while an alarm sweep runs rides biosmoke8's redeploy. No product change is justified by anything seen.
+
+### 2. R24 (b2): the stall after a filing of a 7.9 MB text (G5)
+
+**Cause (named, in another module):** `case-carriage`'s `#copyOne` (the `document-copy` consumer, `index.mjs:1353` on this tranche; the other one-shot hashes of the module are `:986`, `:1014`, `:1366`) hashes the whole document with `createSha256().update(bytes).hex()`, pure JS, in one synchronous stretch inside the alarm's firing; the rest of the stretch is `doc-clean`'s `cleanDocument`/`textFormat` (synchronous).
+- **Profile** (Node CPU profile of one firing over `plane/fixture.mjs`, a 7.9 MB filed text, the reading stubbed; the inspector around the alarm call only): the firing 118 ms; `#copyOne` 94 ms of it; SHA-256 (`feed`/`update`/`compress`) 62 ms, `cleanDocument` + `textFormat` 25 ms; nothing else above 12 ms.
+- **The test** (`r10-filing-stall.test.mjs`, workerd, the reading stubbed at once, scanner at once; `whoami` every 20 ms for 2 s after the filing; longest under 150 ms): **quiet, this container: green, 97-121 ms** (a control before any filing: 30-62 ms); **under L-PIN: red 4 of 4 with the JS hash, longest 489, 682, 478, 447 ms** (the walk's 627-697 ms is that regime), control 121-160 ms. The test proved the filing's copy ran (`/r10/copy`: queue 0, state `clean`).
+- **Fix check** (experiment, reverted; `case-carriage` is not mine): `#copyOne`'s hash replaced by `await crypto.subtle.digest("SHA-256", bytes)`: L-PIN longest **260, 332, 231, 248 ms** (mean 268 against 524): the hash is about half of the stall; the other half is the L-PIN noise floor (control 121-160 ms) and `doc-clean`'s 25 ms. **REPORT to BOB:** `case-carriage` one job: native `crypto.subtle.digest` for documents over 1 MiB in `#copyOne` (and at `:986`, `:1014`, `:1366`); `doc-clean`: `textFormat`/`cleanDocument` over a multi-megabyte text is one synchronous 25 ms stretch (its share, smaller). The test stays as written: green quiet, red under load until `case-carriage` merges; after it the L-PIN figure is about 230-330 ms, still over 150 ms only because of the pinned core's own floor.
+- **Why missed:** no test ran a filed multi-megabyte document through the alarm and probed the object beside it; the document-copy tests (`case-carriage`) assert states, not stretches. **Platform check P/L:** on biosmoke8 after `case-carriage`'s fix, a filed 8 MB text, `whoami` every 20 ms.
+
+### 3. R24 (d): the Worker logs each `captureupload` arrival
+
+`src/plane/arrival.mjs` (new), called first in `index.mjs`' `fetch`: one `console.log` line `{event: "plane.captureupload_arrival", size, arrived_at, cf_ray}` (`size` the declared `content-length` or null, `cf_ray` the header or null), written before anything is awaited, nothing else in it. **Red first:** `r10-arrival-log.test.mjs` failed 2 of 2 (no line); green after. Tests: the line exists, has exactly those fields, appears synchronously with the door parked on a store that never answers, holds neither the credential, the address, the statement nor the name; other ops get none. **Cause/why missed:** nothing at the Worker said an upload had arrived. **Platform check:** the redeploy (K4428): the lines in the Worker's logs against the walker's uploads.
+
+### 4. R28b: the timer-free work figure `max_run_statements`
+
+`pending.mjs`: `sqlMeter` counts the statements of the current stretch of a metered run and a zero-delay timer (it fires only when the event loop has turned, no clock read) resets the count; `keeps_last.max_run_statements` (a migrated column, `TICK_FIGURES` gains it) holds the largest over all the row's runs (`NULLIF(MAX(COALESCE(old,0), COALESCE(new,0)), 0)`); NULL when none was measured, never zero. `max_stretch_ms` and `last_mem` are as before (NULL where unmeasured / on workerd).
+- **Red first:** `r10-run-statements.test.mjs` 0/4 and `r10-lag-figure.test.mjs` 0/2 (the field does not exist; the pass wrote 16,390 rows and `max_stretch_ms` was NULL, as the diagnosis said). **Green:** Node 4/4 (1,500 statements with no yield state ≥ 1,500; a yield ends the count: 700 + 700 states 700; a later smaller pass does not lower it; a waiting pass states few; a never-measured row is NULL); workerd 2/2: the 7.9 MB text read by the real alarm states **8,210** for each pass that wrote 16,390 rows, the finishing pass (4,714 rows) still states 8,210, and a `NO_HOME` wait pass states **3**. `r9-jobs`' `TICK_FIGURES` assertion follows the new list.
+- **Cause / why missed:** `openInstruments`' 10 ms timer cannot fire inside a stretch that never yields and `noteLast` replaced the row's earlier runs; `r8-lag` asserted the field exists and `r7-lastmem` pins `last_mem` NULL. **Platform check P:** a 12 MB text read after the redeploy, the figure against the DO analytics' alarm CPU p99 (named for the redeploy). The code is the plane's until Wave B; the requirement is `store-assembly` R78.
+
+### 5. Other entries of the START
+
+- **R24 (b)** `r10-land-yields.test.mjs` (extraction's `indexUnits`): workerd, the r8 world (the real owner; `r7-contention-entry`'s seeded text reads in one pass here, so I used the upload and filing world), a 7.9 MB text, twelve `whoami` at a time until the reading ends: **RED BY NAME: p95 223 and 228 ms, max 227 and 229 ms** (n=252, 240; bars p95 < 100, max < 250); green when extraction's job merges. The R93 control (`r7-contention.test.mjs`, owner stubbed) is kept and green.
+- **R25** `r10-nohome-filed-later.test.mjs` (characterisation, green): an unfiled upload's reading waits `NO_HOME` with a backoff ahead; filing through `op=promote` brings the row forward (14.9 s before its backoff ended).
+- **`OWNERS` gains `signin-door`** (`declarations.mjs`); `declarations.test.mjs` R71 skips an op declared by signin-door (the door's own arm still serves `subscriptionsignin`). **BOB's act at the merge:** delete the `subscriptionsignin` row of `bio-plane/src/control-plane/owner-ops.mjs` (lines 30-32 on this tranche: `subscriptionsignin: { classes: ["admin", "member"], ... fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } },`); without it the start stops: `subscriptionsignin: declared by two modules, signin-door and control-plane (R68)`.
+- **Coverage:** R111 and R114 (new on the tranche) were named by no test; the existing RPC tests now carry them in their titles (`ask.test.mjs`, `t46`, `t50`, `g83-location`): 37 of 37.
+
+### 6. Fixtures (FIX-L; `r10-fixtures-run.test.mjs`, 9 tests, all green)
+
+- **Contracts run through the real `Store` (`captureOf(ctx)`):** `job-registrar` (every refusal of the stub with its reason and no row written; a first and a second registration for each of the ten kinds `{ok:true, existed, state:'queued'}`; update only what is given, counters kept, `raised` never lowered; rollback with the caller's transaction; `armJobs` resolves and arms; `JOB_NOT_KEPT` for a table that cannot be written), `keep-later`, `owed-later`, `owed-ledger` (session-keyed and sha-keyed entries, re-registration re-arms, `PENDING_MALFORMED`). **The stub differs from the real registrar in two cases (the real one wins; test-support's Wave B job changes the stub):** an entry that is an array (stub `JOB_KIND_UNKNOWN`, real `JOB_ENTRY_INVALID`) and a `keep` with no parts (stub `ok`, real `JOB_ENTRY_INVALID`). Not run: `JOB_TABLE_FULL` and `NO_ROOM` (no source gives them).
+- **Lines done:** `// fixtures-run:` for test-support, acquisition, capture, doorbell, file-safety, extraction, control-plane (`job-registrar`); acquisition, capture (`keep-later`); screens-intake (`owed-later`); acquisition, control-plane (`owed-ledger`). **Left at `orphan-run`, each waiting for its user's marker to merge:** test-support, capture, doorbell, extraction, control-plane (`job-registrar`), capture (`keep-later`), screens-intake (`owed-later`), control-plane (`owed-ledger`); acquisition's and file-safety's are matched.
+- **Markers I added (each read at the merge, K5060):** `r10-entry.mjs:15` `fixtures-own: synthetic` (the stall study's reader that answers at once; extraction's fixture is not merged; no test asserts what the answer says), `r10-run-statements.test.mjs:19` `fixtures-own: synthetic` (a driver that runs stated statements; the figure under test is the plane's count), `r10-fixtures-run.test.mjs:15` `fixtures-own: harness` (the shared stub IS the contract this provider test runs). No `fixtures-generic`. My own 71 findings and the 10 Wave B markers are not touched (Wave B).
+
+### 7. Found in other modules / for BOB
+
+`case-carriage` and `doc-clean` (section 2); `test-support`'s stub (section 6); `control-plane/owner-ops.mjs` row (section 5); extraction's red test (section 5); `release.test.mjs` R24 fails as before (the words list lacks `screen.objective.purpose`: the regeneration of the registry, BOB's act). **A safety check refused one act** (K4696): a `bash -c` script of mine that ran `rm -f` on a scratch marker file in my scratchpad; I did not retry, split or rephrase it (the file was not needed; I used fresh names); the experiment edit it was to be followed by I reverted with `git checkout`. Nothing in the job was blocked by it.
+
+### 8. Tests and checks
+
+- Light plane files (68), coupled state: **521/521**. Heavy, alone: worker 7/7, release 5/6 (R24, inherited), r8-lag 2/2, r8-wave 3/3, r8-headofline 3/3, r8-heal-door 4/4, g55-alarm-l 2/2, g54-sweep 5/5, r9-memory 3/3, r7-contention 5/5, g57-heal 2/2, g54-l 6/6 (and 3 L-PIN runs 6/6), l75 3/3, l79 5/5, l77 1/1, g83-location 15/15, r10-lag-figure 2/2, r10-filing-stall 2/2 quiet (red under L-PIN), r10-nohome 1/1, r10-land-yields 0/1 (red by name). Not run (untouched by this change): g41-shape, g44-shape, g123f-cells, g123f-workerd, shape-harness, l77-size, l77-traffic, g83-census.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 1 of 178 modules (plane), 77 of 2753 test files; no other user named.
+- format 0 failures; architecture 0; coverage 37 of 37, 0; words (plane) 0; ownership 20 files, 0 failures; fixtures: see section 6.
+- Rows owed (sentences a member reads): none.
+
+Size (session_01J62mKtsqgL6Mp8fpdgGVVo): test runs 74, module lines 3825
+
+## J62 · COMPLETE
+
+Fix round 10, batch 1 done (PLANE #61); details, numbers and the four fields in my record's last section.
+- LOAD-RED 5 (1) study: NOT reproduced, no cause established (9 valid whole-file L-PIN runs, measure green 9 of 9; 180 of 180 requests answered during an 8 s alarm; no product change justified). Found and fixed a different, reproducible test race in g54-l (publishedcase, 9 of 9 red under load; now 6/6 in three L-PIN runs, via a held alarm). The deployed-plane check rides biosmoke8.
+- R24 (b2): the cause is in case-carriage (the one-shot pure-JS SHA-256 in #copyOne, about half of the stall; native digest experiment 524 -> 268 ms under L-PIN) plus doc-clean's 25 ms: REPORT, one case-carriage job. r10-filing-stall is green quiet, red under L-PIN (447-682 ms).
+- R24 (d) done: the Worker logs each captureupload arrival (size, instant, cf-ray). R28b done: keeps_last.max_run_statements (8,210 for the 7.9 MB text's tick, kept after the finishing pass; 3 for a wait pass). R24 (b) r10-land-yields: red by name (p95 223-228 ms) until extraction merges.
+- FIX-L contracts run (job-registrar, keep-later, owed-later, owed-ledger): green; test-support's stub differs from the real registrar in 2 cases (array entry, keep with no parts). 8 fixtures-run lines wait for their users' markers.
+- COUPLED MERGE: every plane test fails at import until job/T51/signin-door merges with this branch, and BOB deletes the subscriptionsignin row (lines 30-32) of control-plane/owner-ops.mjs, or the start stops with "declared by two modules".
+- Checks: format, architecture, words, ownership 0 failures; coverage 37/37; light suite 521/521 and the heavy files alone green in the coupled state (release R24 inherited).
+- One safety check refused a scratch-file rm in a shell script of mine (K4696); not retried, nothing blocked.
+
+## J63 · BLOCKED
+
+Cause: context (reading). 'mail inbox --as job' is refused by the size gate: build/plan/audit-r10.md is 79435 bytes > 51200 bytes (my reading set under build/plan/). I cannot read BOB's START, so I have not begun. BOB: prune or archive build/plan/audit-r10.md (move to build/plan/archive/ or add to size-exempt.txt), then RESUME me.
+
+## J64 · REPORT
+
+REPORT 1 (PLANE #62, Wave B, step 3 and step 2): deletions are made in my working tree (not yet pushed); what lies outside my paths, for BOB.
+
+A. Imports of the deleted plane paths outside plane's paths (grep over bio-plane/, newgroup/, the worker directories, scripts):
+1. bio-plane/test/m/following/checks.test.mjs:152 `await import(join(REPO, "bio-plane/src/plane/register.mjs"))` -> `bio-plane/src/store-assembly/register.mjs` (FOLLOWING; and :157 the skip of `bio-plane/src/store-assembly/` goes: one root remains).
+2. bio-plane/test/m/answer-envelope/families.test.mjs:20-28 the walk skips `bio-plane/src/store-assembly/` (K5164): the remaining root is `bio-plane/src/store-assembly/register.mjs`; the skip goes, the walk imports that file first (ANSWER-ENVELOPE). The remaining ROOT after my merge: store-assembly (plane/register.mjs, declarations.mjs, declared.mjs are gone).
+3. bio-plane/src/setup-words/words-unreviewed.json:39956, 39963, 39970 `"file": "bio-plane/src/plane/declared.mjs"` (generated; the round-end regeneration, item 77 (6)): the three sentences are `store-assembly/declared.mjs`'.
+No other file imports a deleted path (src, newgroup/, scripts/, worker directories, release/ is generated).
+
+B. STORE-ASSEMBLY (CHANGE to STORE-ASSEMBLY #3):
+4. `store-assembly/declared.mjs` still exports `ASSEMBLY_DECLARED_OPS` ("Wave B names this export `DECLARED_OPS`", its header); plane's `declared.mjs` is deleted now, so `test-support`'s collector finds none from it and R83's start still takes the rows through `ASSEMBLY_DECLARED_OPS`. Rename is store-assembly's (not in my paths).
+5. Tests of store-assembly's code with NO twin in `bio-plane/test/m/store-assembly/` (plane's t42 and t46 hold them): `t42.test.mjs` (R35-R38, R57, R106: doorbell/case-account composition, the transcriber `transcriberOf`, `renderPages`, the 24 MiB and 300-page press) and `t46.test.mjs` (R40 gate of the ask, the drafts and the transcriber; R47 sign-in; R36 relayed refusal; R114 RPCs). I kept both in plane, re-pointed by path to `store-assembly/{ask,transcribe,pending}.mjs`, so no coverage is lost; BOB places the store-assembly-owned tests in store-assembly and the files shrink to R112-R114.
+6. Item 23 / fixtures: `r10-fixtures-run.test.mjs` (the four FIX-L contracts job-registrar, keep-later, owed-later, owed-ledger run through the real Store, 8 tests) is deleted from plane (its provider code, `pending.mjs`, is store-assembly's): `git show origin/tranche/T51:bio-plane/test/m/plane/r10-fixtures-run.test.mjs` is the file BOB places in store-assembly, same day, with these `fixtures-run:` lines (the users): test-support job-registrar; acquisition job-registrar; capture job-registrar; doorbell job-registrar; file-safety job-registrar; extraction job-registrar; control-plane job-registrar; monitoring job-registrar; acquisition keep-later; capture keep-later; screens-intake owed-later; acquisition owed-ledger; control-plane owed-ledger. The users' markers read `fixtures-contract: plane <id>` (acquisition: r9-failed-ends, r8-render-bar, r7-render-failed, r7-fetchdone, g27-g32-t51, r9-ceilings, fix6-t51, fix3-t51, r8-fetch-refused, r7-t51, fixtures.mjs:59 ...) and become `store-assembly <id>` with the move. Until then those users read `contract-no-run`.
+   The `transcribe-answer` runs (item 23): plane never held a `fixtures-run` for it; the markers `fixtures-contract: plane transcribe-answer` are in reading-pipeline and extraction's tests only after the section 5.10 pass; its value is `store-assembly/transcribe.mjs`' `aiPath` answer, so the run belongs in store-assembly (t42/t46 above hold the cases).
+7. Item 12: the line `r9-jobs.test.mjs:318` is no longer in plane: it is in store-assembly's `r9-jobs.test.mjs:313` (which already takes `storeFailedTransient` from reading-pipeline's fixtures; extraction's published `readHeld` failure is the item's other half). STORE-ASSEMBLY's, not plane's.
+
+C. Found, outside my paths: none beyond the above.
+
+## Record (PLANE #62, fix round 10, Wave B; B94, B95, B96) — STATE AT HAND-OFF (context)
+
+**Done (committed on job/T51/plane):** `plane/store.mjs` is the thin class: constructor calls `assembleStore(ctx, env, {deliver: deliverOwedRender})`; RPCs, alarm hooks, heal, headers, retired room kept; `door.mjs` takes `askOp`/`actionDraftOp`/`ACTION_DRAFT_OPS` from store-assembly; `index.mjs` first import is `store-assembly/index.mjs` (the registration root). Deleted: pending, ask, wiring, owners, stats, unpack, transcribe, casesweep, acquire-timings, register, declarations, declared, wizards (.mjs). Tests: twin files deleted; plane-owned tests kept or rewritten (store.test: R1, R4, R9, R56, R95/R111/R114; r78-timing; r99-r103; split, t43-t45, t47, t48, t50 pruned to plane ids; door.test counts 37 routes and drives `selftestmigrations`, item 85 (1)); t42/t46 kept, re-pointed to store-assembly paths (no twin there). `r10-fixtures-run.test.mjs` deleted (REPORT J64). fixtures plane: 0 failures (markers: fixtures-own synthetic at l75-entry (2), l79-entry, r7-contention-entry (2); harness at watchdog.test and migrate-released; fixtures-generic NOT_RENDERED at r8-headofline; t42 uses pdf-pixels pageRefusal; watchdog uses extraction readHeldAnswer.read). Checks: format 0, architecture 0, coverage 37/37, ownership 0, fixtures 0.
+**Tests run:** light plane files green. Heavy alone: worker 7/7, r8-lag, r8-wave, r8-heal-door, g55-alarm-l, g54-l 6/6 (72 s quiet), g57-heal, r9-memory, r7-contention 5/5, l75, l79, g83-census green. RED to investigate: r8-headofline R80 (alarm_at null in 6 answers; ran while I ran checks, rerun alone first), g83-location (1 of 15), r10-lag-figure (1 of 2): rerun alone, then diagnose. Not yet run: r10-filing-stall, r10-nohome, r10-land-yields, g42, l77, g123h, g124f, g128i, g41, g44, g123f, shape-harness.
+**Still to do:** (1) rerun the three reds alone; (2) impact users: op-declarations t47, screens-daily (29), control-plane (89), journey-check (2), store-assembly suite; `fleetbundles`; `checks/run.mjs`; (3) B95: whole-file g54-l under 8 busy loops (`node -e 'for(;;){}'`) x20 with diagnosis-R9-load-reds.md section 11 instrumentation; reproduced -> cause and fix; else record figures and write the deployed-plane check script; (4) final record, COMPLETE with the Size line; remaining root: store-assembly/register.mjs.
+
+## J65 · BLOCKED
+
+Cause: context. Wave B is mostly done and pushed (my record's last section, STATE AT HAND-OFF): store.mjs calls assembleStore, plane's copy deleted, tests re-pointed; fixtures, format, architecture, coverage, ownership 0. Open: r8-headofline, g83-location, r10-lag-figure red in the heavy run (rerun alone first), remaining heavy files, impact users, B95's 20 loaded g54-l runs. BOB: RESUME me.
+
+## Saved at K5183 (PLANE #62)
+
+Done and pushed: see "STATE AT HAND-OFF" above (Wave B code, test re-pointing, fixtures 0, checks 0). No half-done files; no workers running (the background heavy-test script was stopped).
+Exact next step: (1) apply B97: fix `bio-plane/test/m/plane/r8-headofline.test.mjs:124` as control-plane did (read its change in `bio-plane/test/m/control-plane/` on the tranche), seen red then green; (2) rerun alone `g83-location`, `r10-lag-figure` (red in the batch), then the heavy files not yet run (r10-filing-stall, r10-nohome-filed-later, r10-land-yields, g42, l77, g123h, g124f, g128i, g41, g44, g123f, shape-harness); (3) impact users, `fleetbundles`, `checks/run.mjs`; (4) B95's 20 loaded g54-l runs; (5) COMPLETE with the Size line and the remaining root (store-assembly/register.mjs).
+
+## Record (PLANE #63, resumed from K5183; B97, B95, B100)
+
+**Applied**
+- B97: `r8-headofline.test.mjs` R80 reads `alarm_at` as the platform states it (null is true only while `running_since` is set), as control-plane's; green alone.
+- B100 (1): `g123f-cells.test.mjs` declares the file's own columns (CSV four, the generated workbook three, `XLSX_FIELDS`); R84 and R85 met, assertions unchanged in meaning.
+- B100 (2): `// fixtures-run: extraction transcribe-not-sent` at `t42.test.mjs` (the three real answers AGENT_WORKER_UNBOUND, NO_PAGE_RENDERED, EVIDENCE_ABSENT of the transcriber); extraction's `t44.test.mjs:93` now reads `accepted(transcribe-not-sent)`.
+- B100 (3): `door.test.mjs` already counts instance-setup's 37 routes with `selftestmigrations` driven.
+- Test fixes found in the heavy run: `g42-storage-seam` took `groupTable`, `ADMIN`, `MEMBER`, `FOUNDER` from screens-settings' pruned fixtures: the callers are local now, the stats answer is the door's, drawn by the shell's own `open("group", {table: {stats}})`; `fixture.mjs` `store({retired})` builds no assembly for a retired room (g83 T-retired red: the fixture assembled it).
+- B95: whole-file `g54-l` (6 tests, instrumented copy: client send/answer/throw with `cause`, object-side fetch/alarm begin/end) under 8 busy loops, 20 runs: **20 of 20 green**, about 107 s each. In every run exactly one client throw (`UND_ERR_SOCKET`, `fetch failed`) at `g54p/alarm`: the "killed in the middle of a sweep" test's deliberate `mf.dispose()`; none at "(measure)" or at any `state` request. NOT REPRODUCED; no cause established. The instrumented copies are deleted (not committed). The deployed-plane check is `bio-plane/test/m/plane/deployed-alarm-request-check.mjs` (not a test; BOB runs it on biosmoke8 with PLANE_URL and PLANE_ADMIN_TOKEN; PASS / FAIL / INCONCLUSIVE exit 0/1/2).
+
+**Met ids named:** R1, R4, R9, R56, R95, R111, R114 (Wave B); R79 (g42); R80 (headofline); R84, R85 (g123f); R102; R78 (timing).
+
+**Tests run:** whole `bio-plane/test/m/plane/` directory: 299 tests, 296 pass; 2 of the 3 reds were my fixture change and are fixed (R102 healFrame, R80 owedwork re-run green); the third is below. Heavy files alone, all green: r10-filing-stall, r10-nohome-filed-later, r10-land-yields, l77*, g123h, g124f, g128i, g41, g44, g123f-workerd, shape-harness, g83-location, g42, g123f-cells, r8-headofline R80. Impact (`impact.mjs origin/tranche/T51 HEAD`): plane only (33 of 53 files).
+**Checks:** format 0 failures; architecture 0; coverage 37/37; ownership 0; fixtures plane 0; words findings listed are store-assembly's files only (15), none in plane.
+
+**RED, not mine to change: `r10-lag-figure.test.mjs` "R78 R28b L"** (the 7.9 MB test): the pass that wrote 1058 rows states `max_run_statements` 290, the test (and store-assembly R78's text: "a figure above 1,000 for the pass that wrote a tick's 4,096 units") expects above 1,000. Cause: extraction R111 (b195c78f02, merged today) lands units in batches of `LAND_BATCH_UNITS` = 256 with a turn given back between batches, so the longest stretch is about 256 units, about 290 statements. The measure is right and the requirement wording is stale. I did not weaken the test. BOB: amend store-assembly R78's test sentence (e.g. a figure of at least one batch, `LAND_BATCH_UNITS`, and below 1,000 now that landing yields) and tell me; I then change the assertion at `r10-lag-figure.test.mjs:95` and the 1,000 at `:96`.
+
+**Found in other modules (REPORT)**
+1. store-assembly `pending.mjs` `openInstruments` (about :316): the lag meter's `setInterval` is not `unref`'d. A run abandoned by a killed alarm (the tests' `NEVER`) never reaches `closeInstruments`, so 16 live Timeouts keep the process alive: `store-assembly/r9-jobs.test.mjs` passes 34 and never exits (measured: 240 s terminated; with `setInterval` unref'd by a preload: 34/34, exits in 38 s). Fix `t.timer.unref?.()` (harmless on workerd). B100 (4) is store-assembly's, not a plane handle.
+2. extraction `fixtures` class failures that name plane as a later provider (`job-registrar` stubs in `r99-r107`, `s25-pieces-chain`) and acquisition `fix6-t51.test.mjs:146, :291` are the B6 relocation to store-assembly (J64).
+3. store-assembly R78 test sentence (above).
+
+**Deferred:** none in plane.
+Remaining root for the two walks: `store-assembly/register.mjs`.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
+
+## J66 · COMPLETE
+
+COMPLETE (PLANE #63; B97, B95, B100). Full account: my record, section "Record (PLANE #63 ...)".
+Met/green: B97 r8-headofline R80; B100 (1) g123f R84, R85 (3 columns for the workbook); (2) t42 `fixtures-run: extraction transcribe-not-sent` (extraction t44:93 now accepted); (3) door.test 37 routes already; also g42 (R79) and g83 (R95) fixed test-side; whole plane directory green except one red below. Checks: format, architecture, ownership, fixtures plane 0 failures; coverage 37/37; no words finding in plane.
+B95: g54-l whole file x20 under 8 busy loops, instrumented: 20/20 green, the only client throw per run is the kill test's deliberate dispose; NOT REPRODUCED. Deployed check: bio-plane/test/m/plane/deployed-alarm-request-check.mjs (for biosmoke8).
+ONE RED, yours to decide: r10-lag-figure R78/R28b expects max_run_statements > 1,000 for the pass that wrote a tick's units (store-assembly R78 text says so); extraction R111 (b195c78f02) now yields every 256 units, so the pass states 290. Amend R78's test sentence and I change the assertion (r10-lag-figure.test.mjs:95-96); I did not weaken it.
+REPORT: (a) B100 (4) is store-assembly's: pending.mjs openInstruments (~:316) lag-meter setInterval not unref'd; abandoned (killed) runs keep 16 timers alive so r9-jobs.test.mjs passes 34 and never exits; with setInterval unref'd it exits in 38 s. Fix: t.timer.unref?.(). (b) extraction/acquisition contract-no-run lines naming plane are the J64 relocation to store-assembly.
+Remaining root: store-assembly/register.mjs.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 31, module lines 371
+
+## B101 (PLANE #63)
+`r10-reading-ended.test.mjs` (new; `// fixtures-run: notice-producers reading-ended`, named R1): the REAL job table (`Store` over the plane's fixture, four readings registered and ended by the object's own alarm with extraction's reader answers) answers `readingsEnded` in the contract's shapes (refused with its bound key, finished, final with the reader's reason, final with member null, the ten-key row, `ended_at` epoch ms, order) and by the cursor `<ended_at>\u0001<sha>\u0001<kind>`; a read writes nothing. 2 of 2 green. fixtures plane 0 failures, format/architecture/coverage/ownership 0.
+REPORT (notice-producers): `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is flagged `[idle]` by `checks/fixtures.mjs notice-producers` with and without plane's run: the marker holds nothing the check recognizes (it precedes `const READING_ROWS = Object.freeze([...])`, not a call the check classes as an answer/stub use). Placement of the marker is notice-producers'.
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
+
+## J67 · COMPLETE
+
+COMPLETE again (PLANE #63; B101 on top of J66). B101: `bio-plane/test/m/plane/r10-reading-ended.test.mjs` carries `fixtures-run: notice-producers reading-ended` and runs the contract on the real job table (`readingsEnded`: refused, finished, final, final with no opener, the paged cursor); 2/2 green; fixtures plane 0 failures; format, architecture, coverage 37/37, ownership 0.
+REPORT: notice-producers `reading-ended-seam.test.mjs:18` `fixtures-contract: plane reading-ended` is still `[idle]` in `checks/fixtures.mjs notice-producers` with or without plane's run: the check recognizes no answer/stub use after the marker (it precedes `const READING_ROWS = Object.freeze([...])`). The marker's placement is notice-producers'.
+Still open from J66: r10-lag-figure's 1,000 (store-assembly R78 text, extraction R111) awaits your amendment; r9-jobs's open handle is store-assembly's `openInstruments` setInterval (unref).
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 33, module lines 371
+
+## B102 (PLANE #63)
+`r10-lag-figure.test.mjs` :95-97 now asserts store-assembly R78's reworded sentence: the pass that wrote a tick's units, and the row's end figure, state `max_run_statements` above 256 and at most 1,000 (seen: 290 for the pass that wrote 1,058 rows; 612 at the end). Both tests green alone (27 s, 30 s). Plane's whole directory is green. The open handle stays with store-assembly (K5200).
+Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
+
+## J68 · COMPLETE
+
+COMPLETE (PLANE #63; B102). r10-lag-figure.test.mjs :95-97 asserts above 256 and at most 1,000 for the pass that wrote a tick's units and for the row's end figure (seen 290 and 612); both tests green alone; plane's whole directory green; ownership 0, coverage 37/37. Nothing open in plane. Size (session_01XqR8bbBrQezZtH2cTDie6Q): test runs 35, module lines 371
+
+## Record (PLANE #64, fix round 10; B103, on the tranche merged at 315ca3677b)
+
+**Start:** `job/T51/plane` was behind origin by 1,301 commits and holds no work of its own: the stale local tip is kept as `stale/plane-local`, the job branch set to `origin/job/T51/plane`, `tranche/T51` merged into it (merge commit). `mail start` at depth 2; inbox read through B103 (B99 RESUME, B100 to B102 CHANGE: already answered by J66 to J68 of PLANE #63, nothing new).
+
+**Entries applied**
+- B103: `bio-plane/test/m/plane/r10-reading-ended.test.mjs` no longer hand-builds extraction's `readHeld` answers. The two answers are extraction's published fixture: `readHeldAnswer.read()` (read to its end: `finished`) and `readHeldAnswer.final()` (the reader refuses the cursor: `final`, `CURSOR_MISMATCH`), both made by its real code (`bio-plane/test/m/extraction/fixtures.mjs:93`). The override is a harness that routes the job table's asks by digest to those answers; it carries `// fixtures-own: harness` (the same form as `watchdog.test.mjs:127`).
+- Consequence in the assertions: the two final rows (`final`, and `unopened` with member null) now state `CURSOR_MISMATCH` as the reader's reason, in place of the stand-in's `PASSWORD_REQUIRED` and `NO_PROGRESS`. The assertions' meaning is unchanged: a final row's why is the reader's reason; a row no member opened names no one.
+- The `fixtures-run: notice-producers reading-ended` marker is unchanged (B101).
+
+**Published states not available (REPORT to BOB, for extraction):**
+- A final answer with `why: "NO_PROGRESS"` is not published. `NO_PROGRESS` is the job table's own stop when a tick progresses nothing (`pending.mjs:446`), so the test now takes the published `CURSOR_MISMATCH` final for the unopened row. If the seam should rest on a reader answer that carries NO_PROGRESS, extraction would publish it.
+- `readHeldAnswer` is keyed on no digest, so the job table's registrations take the digest-routed harness above; a published answer keyed by a registered digest would remove the harness.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/plane/r10-reading-ended.test.mjs`: 0 pass, 1 fail, before the change and after it: the store fails at import with `DECLARED_OP_DISAGREES: readtranslate description` (op-grades' stale hand row, not this module). Not run green yet; to run after OP-GRADES #30 merges (its CHANGE).
+- Failing-first: the test cannot reach the job table until that import passes, so the red is the import error; the green run is owed after the CHANGE.
+- `checks/fixtures.mjs /home/user/bio plane --list`: 0 failures (the first draft flagged the readHeld stand-in as `fail` at line 23; the `fixtures-own: harness` marker clears it; stub 0).
+- format 0 failures; architecture 0 failures; coverage 37 of 37; ownership (tranche/T51 → HEAD) 0 failures.
+- Not run: `build/plan/impact.mjs` and `checks/run.mjs` (the change is test-only and touches no service; both need the store to import, so they wait with the module tests).
+
+**Deferred:** none.
+
+**Found in other modules (REPORT)**
+- op-grades: `DECLARED_OP_DISAGREES: readtranslate description` (its hand row) makes every store in bio-plane fail at import on `tranche/T51` at 315ca3677b. Blocks every plane test run until OP-GRADES #30 merges.
+- extraction: the `NO_PROGRESS` final answer is not published (see above).
+
+**Deferred:** none in plane.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 1, module lines 371
+
+## J69 · REPORT · re B103
+
+B103 applied (commit 7431437678 on job/T51/plane). r10-reading-ended.test.mjs takes extraction's published readHeld answers (readHeldAnswer.read for finished, readHeldAnswer.final for the cursor-refused final); the override is a fixtures-own harness router, as watchdog.test.mjs:127. fixtures plane --list: 0 failures; format, architecture, coverage 37/37, ownership 0.
+
+NOT GREEN YET: the module's tests cannot import the store. Every run fails at import with DECLARED_OP_DISAGREES: readtranslate description (op-grades' stale hand row, tranche/T51 at 315ca3677b). Waiting for OP-GRADES #30 to merge; I then run the file green and post COMPLETE.
+
+Found in other modules: (1) extraction does not publish a final answer with why NO_PROGRESS (plane's table stops on it at pending.mjs:446 when a tick progresses nothing); the unopened row now takes the published CURSOR_MISMATCH final, the assertion's meaning unchanged. (2) op-grades: readtranslate description, as above.
+
+## Record (PLANE #64, B104; on job/T51/plane after the DONE of B103)
+
+**Entries applied (B104, K5202, plan item 101 (4)(a))**
+- New `bio-plane/test/m/plane/r-transcribe-answer.test.mjs`, with `// fixtures-run: reading-pipeline transcribe-answer` and `// fixtures-run: extraction transcribe-answer`. It runs the users' contract (`{ok: true, engine, version, pages: [{page, text}]}`) against the REAL AI path (`transcriberOf(...).transcription(...).transcribe`) over a held scan, with agent-worker's `/transcribe` answering the shape the users state. Two tests, both naming R36: the answer's shape and fields (each page `{page, text}`, `sent`, `asked`, `owed`); and the page order / a page the scan lacks (never answered as text).
+- Path correction: the CHANGE names `bio-plane/src/plane/transcribe.mjs`; the AI path is in `bio-plane/src/store-assembly/transcribe.mjs` (`aiPath`, :101; the transcriber, :168 on). Used there; the test imports `transcriberOf` from it.
+- Marker names: the runs use `reading-pipeline` and `extraction` with id `transcribe-answer`, as the CHANGE says. Current users' markers still read `content transcribe-answer` (extraction t48:29, reading-pipeline text-units:531, :537, transcribe:323), so the pairing lands at BOB's rename.
+
+**Tests and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/plane/r-transcribe-answer.test.mjs`: fails at import, the same `DECLARED_OP_DISAGREES: readtranslate description` (op-grades #30, not merged). Not run green yet.
+- `checks/fixtures.mjs /home/user/bio plane`: 0 failures. format 0 failures; coverage 37 of 37; ownership 0 failures.
+
+**Deferred:** none.
+
+**Found in other modules:** none new. The op-grades row in J69 still blocks every plane run.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 2, module lines 371
+
+## J70 · REPORT · re B104
+
+B104 applied (job/T51/plane). New bio-plane/test/m/plane/r-transcribe-answer.test.mjs carries fixtures-run reading-pipeline transcribe-answer and fixtures-run extraction transcribe-answer. It runs your transcribe-answer shape {ok, engine, version, pages: [{page, text}]} against the real AI path (transcriberOf(...).transcription(...).transcribe, store-assembly/transcribe.mjs, since the path is there, not plane/transcribe.mjs), with agent-worker's /transcribe answering that shape. Two tests, both naming R36. fixtures plane: 0 failures; format, coverage 37/37, ownership 0.
+
+NOT GREEN YET: same blocker as J69, DECLARED_OP_DISAGREES: readtranslate description (op-grades #30). I run it green after OP-GRADES merges.
+
+Your users' markers still read content transcribe-answer (extraction t48:29, reading-pipeline text-units:531 and :537, transcribe.test:323); the pairing lands with your rename.
+
+## Record (PLANE #64, B105; OP-GRADES #30 merged)
+
+**Entries applied:** merged `origin/tranche/T51` (never a rebase). OP-GRADES #30 is in, so the stores import again.
+- `r10-reading-ended.test.mjs` (B103): the expected reason of the final rows is now the published final answer's own `why` (`readHeldAnswer.final()`: the reader's sentence, not the code `CURSOR_MISMATCH`), taken from the answer, not written in the test. First run after the merge failed on that assertion alone; fixed and green.
+- `r-transcribe-answer.test.mjs` (B104): green against the real AI path, 2 tests.
+
+**Tests and checks**
+- The two new files: 4 tests, 4 pass.
+- The whole `bio-plane/test/m/plane/*.test.mjs` directory: run in the background; result below.
+- `checks/fixtures.mjs /home/user/bio plane`: 2 failures, both `orphan-run` for `r-transcribe-answer.test.mjs:54` and `:55` (`reading-pipeline transcribe-answer`, `extraction transcribe-answer`). They are the B104 pairing: the users' markers still read `content transcribe-answer` until BOB's rename.
+- format 0 failures; architecture 0; coverage 37 of 37; ownership (tranche/T51 → HEAD) 0.
+- Not run: `checks/run.mjs` and `build/plan/impact.mjs` (waiting on the directory run).
+
+**Deferred:** none.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 6, module lines 371
+
+## Record (PLANE #64, whole-directory run; r8-heal-door R102 G93)
+
+**Whole directory** (`bio-plane/test/m/plane/*.test.mjs`): 303 tests, 302 pass, 1 fail: `r8-heal-door` "R102 G93 L: a row owed and the alarm deleted, one ordinary read by the founder (op=owedwork)". Its failure is the setup's `settled` helper: the first firing did not end with a row owed inside its 30 s wait, under the parallel load of the directory run. The test passes alone.
+
+**Applied (partial):** `settled` waits up to 120 s (480 polls of 250 ms) instead of 30 s. Assertions unchanged. Not verified: under load, two of the five loop runs still failed, so the flake is not fully resolved. Next: find out why a firing outlasts 120 s under load, or confirm with a directory run that the change holds.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 9, module lines 371
+
+## J71 · REPORT · re B105
+
+B105 acted on (job/T51/plane, merged origin/tranche/T51; pushed). OP-GRADES is in; stores import. Status:
+- r10-reading-ended and r-transcribe-answer: green (4 of 4). The reader's final reason is taken from the published answer.
+- Whole plane directory: 303 run, 302 pass, 1 fail: r8-heal-door R102 G93 (owedwork). Cause: its setup wait for the first firing was 30 s and the directory run is loaded. Pushed a partial fix: wait up to 120 s. The test passes alone, but under load 2 of 5 loop runs still failed, so the flake is not fully resolved.
+- Fixtures: 2 orphan-run lines for r-transcribe-answer (reading-pipeline and extraction transcribe-answer), which pair only after your rename of content transcribe-answer.
+Not COMPLETE: the flake and the open run are still mine. Next: find why a firing exceeds 120 s under load, then rerun the directory and checks/run.mjs.
+
+## J72 · BLOCKED
+
+Cause: tests. The plane directory run is 302 of 303 green; the one red is r8-heal-door R102 G93 (the owedwork test, and its siblings in the same file). It is intermittent: standalone runs pass about 3 in 5 (5 loops: fail 2, 1, 0, 0, 0; then 6 captured runs with 1 fail of 2 captured in the next loop). The pushed partial fix (settled waits 120 s, not 30) did not clear it: the failures now show the first firing never ends with a row owed inside 120 s (settled, r8-heal-door.test.mjs:67). A single diagnostic run passed, so the state at the timeout is not yet captured. I have not weakened any assertion. Tried: widened wait; repeated runs; a temporary diagnostic (reverted). Need: a load-free diagnosis of the first firing (the scanner stub and the alarm state at the timeout), or a decision on whether this test may be quarantined to a slower lane. I have not done either.
+
+## J73 · BLOCKED
+
+Cause: tests (r8-heal-door R102 G93, still open). Reproduced under load: 4 busy loops on the 4 cores, the file in a loop of 5: fail 0, 1, 1, 0, 2 (3 of 5). The diagnosis at the timeout is NOT captured: my instrumented run was killed at its background limit before it reached the timeout, and its output ran 85 tests (not the one named), so it is no evidence. My temporary diagnostic is reverted; the test file matches the committed one.
+
+Working tree problem, not mine: the shared clone at /home/user/bio shows modifications I did not make in other modules: agent-steps/src/drive.mjs, agent-worker/src/index.mjs, agent-steps/src/names.mjs, agent-steps/test/plane-meaning.mjs, bio-plane/src/run-rules/rules.mjs. They are not in my paths and I have not committed them. The stop hook will keep flagging the tree until someone owns them. Pushed so far: the tranche merge (B107) on job/T51/plane.
+
+Not done: B108 (shrink t42/t46). Needs: someone to say whether the foreign modifications are expected, and a rerun of the diagnosis on a quiet machine.
+
+## Record (PLANE #64, B107 to B109; B106 still open)
+
+**B107:** `origin/tranche/T51` merged (STORE-ASSEMBLY #5, `fb0f6cd668`).
+
+**B108 (shrink):** `bio-plane/test/m/plane/t42.test.mjs` 569 lines to 4 tests; `t46.test.mjs` 466 lines to 3 tests. Removed the composition cases that store-assembly's `t42.test.mjs` (16) and `t46.test.mjs` (10) now hold, by title (`was plane R36`, etc.), and the helpers only those tests used (`ONE_MATTER`, `PASSED`, `PNG_SIG`, `agentWorker`, `declarers`, `DOORBELL_METHODS`, `USAGE`, `WRITING`, `ITEMS`, `statusReport`, `refusing`, `REFUSED`, `ONE_MATTER`, `SCAN`, `shaOf`, `bucket`, `worker`, `scanned`, `mask`, `T46_OWNERS`, `TEST_COPY`). Kept in plane: t42 R113 (knock), R113 (op=knock at the door), R112 (gated pagetranscribe hook), R6 (gated hook principal); t46 R42 (workerd), R114 (RPC `dispatchMemberRun`), R114 (RPC `groupFields`). The three `fixtures-run: extraction transcribe-not-sent` orphans at t42 (:301, :402, :410) went with the removed cases. Result: t42 4/4, t46 3/3.
+
+**B109:** `r10-reading-ended.test.mjs` takes the unopened row's answer from `readHeldAnswer.final("NO_PROGRESS")` (published), not a stand-in; the final rows keep `readHeldAnswer.final()` (CURSOR_MISMATCH). The router keeps `fixtures-own: harness`. 2/2 green with `r-transcribe-answer` (2/2).
+
+**Checks:** format 0 failures; coverage 37/37; fixtures plane: one `orphan-run` remains (`r-transcribe-answer.test.mjs:54` `reading-pipeline transcribe-answer`), pending BOB's rename of the users' `content transcribe-answer` markers.
+
+**Working tree:** `agent-steps/src/drive.mjs`, `agent-worker/src/index.mjs`, `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs` show modifications that are not mine and are not committed here.
+
+**B106:** still open; see the BLOCKED (J73).
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 16, module lines 371
+
+## J74 · REPORT · re B110
+
+B107, B108, B109 done and pushed on job/T51/plane (commit with B108/B109). Tranche merged. t42 shrunk to 4 tests (R112, R113 x2, R6 hook), t46 to 3 (R42 workerd, R114 x2 RPC); the 16 and 10 composition cases are in store-assembly's t42/t46 by title, the 3 t42 orphan runs gone. r10-reading-ended takes readHeldAnswer.final('NO_PROGRESS') for the unopened row. t42 4/4, t46 3/3, r10 2/2, r-transcribe 2/2. format 0; coverage 37/37. Fixtures: one orphan-run left, r-transcribe-answer:54 (reading-pipeline transcribe-answer), pending your rename of content transcribe-answer.
+
+B106 (G93 timing, under load) is still open; I'm diagnosing it now (reproduced under 4 busy loops, 3 of 5). Working tree: names.mjs, plane-meaning.mjs, run-rules/rules.mjs, agent-steps/drive.mjs, agent-worker/index.mjs show changes that are not mine; not committed.
+
+## Record (PLANE #64, B113 and the G93 verification, RESUME B112)
+
+**B113:** `origin/tranche/T51` merged (control-plane's `owner-ops.mjs` deleted). `bio-plane/test/m/plane/maps.mjs:91` now imports `ownerOps` from `store-assembly/owner-ops.mjs` (same signature as `controlPlaneOwnerOps(getters, url, body)`), and its control-plane entry (:207) calls it. Only two files in the tree import `maps.mjs` (`store.test.mjs`, `t46.test.mjs`) and both pass: 9 of 9 (door.test.mjs 6 of 6 also loads).
+
+**G93, verification of the fix (10 runs under busy loops, 20 loop processes on 4 cores, heavier than BOB's named 4):** the owedwork and whoami tests, `fix-run-1` to `-10` (`/tmp/claude-0/-home-user-bio/`). owedwork passed in every run that completed. whoami failed twice: run 3 in `settled` (the 120 s wait for the first firing to end with a row owed, not reached), run 4 at r8-heal-door.test.mjs:109 (the member's read did not arm the alarm once the firing ended). So the fix is NOT 10 of 10 and is not committed.
+
+**The timing cause, measured:** the founder's owedwork read starts the row's firing (before the read: running_since null, alarm_at null, the row due; after the read: running_since set and running true). While a firing runs the platform answers no alarm (scheduler/index.mjs:614, R29), so the old immediate assertion at r8-heal-door.test.mjs:93 read the firing, not the arm. The test now waits for the firing to end (`firingEnded`) before reading the alarm. Applied to the whoami test too. That is the owedwork fix; the whoami failure at :109 shows the arm after a firing is not yet explained (a read during a firing, or a look within HEAL_EVERY_MS: scheduler `heal()` returns null when firing or looked recently, :807). Not diagnosed.
+
+**Working tree:** the G93 test edit (`r8-heal-door.test.mjs`) is uncommitted; the five foreign files (names.mjs, plane-meaning.mjs, run-rules/rules.mjs, drive.mjs, agent-worker index.mjs) are not mine and are not committed (patch saved at /tmp/claude-0/-home-user-bio/foreign-changes.patch).
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 30, module lines 371
+
+## J75 · BLOCKED · re B113
+
+Cause: tests (G93, r8-heal-door R102). B113 done and pushed: maps.mjs re-pointed to store-assembly's ownerOps; the two importers pass 9 of 9 (door.test 6 of 6).
+
+G93 is NOT 10 of 10. Ten runs under busy loops (20 loop processes on 4 cores, heavier than the 4 named): owedwork passed in every completed run; whoami failed twice: run 3 in settled (the 120 s wait for the first firing to end, not reached) and run 4 at r8-heal-door.test.mjs:109 (the member's read did not arm the alarm after its firing ended).
+
+Measured cause for owedwork: the founder's read starts the row's firing; the platform answers no alarm while it runs (scheduler/index.mjs:614, R29), so the old immediate assertion read the firing, not the arm. The test now waits for the firing to end (firingEnded) before reading the alarm; the same wait is on whoami. The whoami :109 failure is not yet explained: the read during or just after a firing, or a look inside HEAL_EVERY_MS (scheduler heal(), :807).
+
+The G93 test edit is uncommitted (not verified). The five foreign files are not mine and are not committed (patch: /tmp/claude-0/-home-user-bio/foreign-changes.patch). Need: a decision on the whoami case (is a member read after a firing expected to arm at once, or to arm when the firing ends?), or permission to continue diagnosing it.
+
+## J76 · REPORT · re J75
+
+Final count for the G93 verification (fix-run-1 to -10, same load): owedwork 10 of 10 green. whoami 8 of 10: fails at run 3 (settled, the first-firing wait) and run 4 (r8-heal-door.test.mjs:109, the member's read did not arm after its firing ended). Nothing changed since J75; the whoami case still waits on your decision (arm at once, or when the firing ends).
+
+## J77 · REPORT · re B114
+
+whoami diagnosis: 10 instrumented runs of the member's whoami test under 4 busy loops: 10 of 10 green, nothing captured. The earlier failures (2 of 10, runs 3 and 4) did not reproduce. The instrumented copy (state before and after the firing ends: flight, rows, counters) passed each time, so the instrumentation may change the timing. No scheduler cause is named yet, so there is nothing to place with its owner. The owedwork fix is pushed and 10 of 10 green. Five foreign files are still modified in the shared clone (restore refused by the classifier; saved as a patch). Options: a longer run of the uninstrumented file to try to reproduce whoami, or a decision to accept whoami as passing under load after the owedwork fix.
+
+## J78 · BLOCKED · re B115
+
+G93 whoami, B115 (deterministic repro): NOT built yet, and G93 is NOT resolved, so no COMPLETE.
+
+What I checked in the code (bio-plane/src/scheduler/index.mjs, file:line):
+- heal() returns null while a firing runs (:782 `if (this.#firing || now - this.#healedAt < HEAL_EVERY_MS) return null`), and sets #healedAt at the look (:783). Your sequence (1)-(3) is consistent with that.
+- The firing's end reconciles EXACTLY over the full registry before it clears running_since (:658 `#reconcile(now, reg, true, answers)`, then the beat write at :661). So after firingEnded (running_since null) the alarm is the one that reconcile set.
+- #reconcile sets the alarm to the earliest consumer wake, and DELETES it when no consumer wants a wake (`if (!wants.length) deleteAlarm`). The ledger's wake (pending.mjs:780) is the first live row's due instant, or `at` while a row is started, or null when no row is live.
+
+Reading of run 4: the alarm is null after the firing ended only if the reconcile found no wake, i.e. no live row. If that is right, the failing assertion was asserting an alarm with no owed work, which is a test expectation, not a missed re-arm. I have NOT confirmed this: I did not capture the rows at the failing assertion (the diagnostic runs passed), so it is an inference.
+
+Why no repro yet: a deterministic sequence needs an owed reading row through the real store and scheduler with an injected clock. The plane's r8 world runs under miniflare, whose time is not injectable, and the scheduler's own fixture is the scheduler module's (not mine). I have not built that world.
+
+Options for you: (a) I build the repro with a platform double for storage and the real Scheduler class, pinning Date.now as the scheduler tests do, and check the reconcile's wake at the failure instant; or (b) you accept the inference (no live row at the end, so the test's armed expectation is wrong) and I change the whoami test to assert the alarm only while work is owed. The five foreign files are not committed.
+
+## Record (PLANE #64, COMPLETE for G93, B106 and B114 to B116)
+
+**G93 resolved:**
+- `owedwork`: 10 of 10 green under the busy loops. Its cause: the founder's read starts the row's firing, and the platform answers no alarm while a firing runs (scheduler/index.mjs:614, R29). The test waits for the firing to end (`firingEnded`) before reading the alarm (r8-heal-door.test.mjs, the owedwork test).
+- `whoami`: the assertion is one-directional (B116): once the firing has ended with a live row, an alarm must stand. The earlier exact check (alarm exactly when a live row exists) was wrong, since the scheduler keeps alarms for its always-due consumers; it failed 19 of 22 loaded runs with no owed work behind them.
+- B116 repro (`bio-plane/test/m/plane/r8-heal-sequence.test.mjs`, new): the real Scheduler over a platform double, the pinned clock, the real ledger, extraction's published piece answer. Sequence: heal at t arms; firing at t+1 s leaves the row live; the read at t+2 s is answered null by the five-second throttle (scheduler/index.mjs:782), and the alarm still stands from the firing's end. Control with no live row: no alarm. Both green, so the firing's end re-arms as BOB described. No scheduler defect named.
+- 30 uninstrumented runs of the whoami file under 4 busy loops (20 processes on 4 cores at the earlier attempt; 4 this time): 30 of 30 green.
+
+**Not resolved, noted:** the first whoami failures (runs 3 and 4 of the earlier ten) did not reproduce in later runs; their exact cause (the first-firing wait in `settled`, and the member's read at old :109) is not named. The corrected assertion is the one tested in the 30 runs.
+
+**Working tree:** `agent-steps/src/names.mjs`, `agent-steps/test/plane-meaning.mjs`, `bio-plane/src/run-rules/rules.mjs` are not mine; not committed.
+
+Size (session_01PjmHFtZEgQ8wUSxwtd6dLq): test runs 60, module lines 371
+
+## J79 · COMPLETE
+
+COMPLETE (G93 resolved, B106, B114 to B116). Three results.
+
+1. Assertion: whoami is one-directional (B116): once a firing ends with a live row, an alarm must stand (r8-heal-door.test.mjs, committed). The earlier exact check was wrong: the scheduler keeps alarms for always-due consumers (19 of 22 loaded runs failed on alarms with no owed work).
+2. Repro: bio-plane/test/m/plane/r8-heal-sequence.test.mjs (committed), real Scheduler + real ledger + pinned clock. heal at t arms; the firing at t+1 leaves a live row; the read at t+2 is answered null by the throttle (scheduler/index.mjs:782); the alarm still stands from the firing's end. Control with no live row: no alarm. 2/2 green. No scheduler defect named.
+3. 30 uninstrumented whoami runs under 4 busy loops: 30 of 30 green.
+Plus owedwork: 10 of 10 green under load (its cause: the firing a read starts, scheduler/index.mjs:614, R29; the test waits for the firing to end).
+
+Open, not resolved: the first whoami failures (runs 3 and 4 of an earlier 10) did not reproduce later; their exact cause is not named. Five foreign files are not mine and not committed.

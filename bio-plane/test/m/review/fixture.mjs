@@ -11,6 +11,8 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { reviewOf } from "../../../src/review/index.mjs";
+import { localFactsOf } from "../../../src/local-facts/index.mjs";
+import { reviewCommentsRegistrar } from "../case-account/fixtures.mjs";
 import { approvalSubjectSha, reviewCommentsOf } from "../../../src/case-grammar/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -36,8 +38,11 @@ function cursor(rows) {
   };
 }
 
+/* the plane binds about 100 variables a statement (D-36; retrieval's and query-language's fixtures cap the same way) */
+export const PLANE_VARIABLE_CEILING = 100;
+
 export function storage() {
-  const db = new DatabaseSync(":memory:");
+  const db = new DatabaseSync(":memory:", { limits: { variableNumber: PLANE_VARIABLE_CEILING } });
   let n = 0;
   const sql = {
     exec(q, ...args) {
@@ -60,7 +65,9 @@ export function storage() {
 /* publication's read contract (R3, R5): only the columns this module reads, and a table the dry run writes. */
 const PUBLICATION_DDL = `
 CREATE TABLE cases (case_id TEXT PRIMARY KEY, project_id TEXT);
-CREATE TABLE published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, PRIMARY KEY (case_id, edition));
+CREATE TABLE published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, scope TEXT, ratified_at TEXT, PRIMARY KEY (case_id, edition));
+CREATE TABLE published_case_members (case_id TEXT NOT NULL, edition INTEGER NOT NULL, ord INTEGER NOT NULL, bundle_id TEXT NOT NULL,
+                                     version_sha TEXT, role TEXT, PRIMARY KEY (case_id, edition, bundle_id));
 CREATE TABLE case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, text TEXT, doc_sha TEXT, draft_id TEXT,
                              sig_armored TEXT, PRIMARY KEY (case_id, edition));
 `;
@@ -80,13 +87,16 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
   /* case-authoring's side: `publishCase` answers what `gate` returns for the arguments, and writes a case document
      first (so a dry run that did not roll back would leave a row). */
   const calls = { publish: [], acks: [], acksViaCaseAuthoring: [], reach: [], attribution: [],
-                  attributionViaPublication: [] };
-  const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null };
+                  attributionViaPublication: [], editions: [] };
+  /* `editions`: a scripted double of case-authoring's `draftEditions` (its R83, K4363) until that module merges. */
+  const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null,
+               editions: () => ({ prepared: null, published: null }) };
   const caseAuthoring = {
     /* its pass-through to case-account until T43 (N850): R33 registers with case-account, never here, so this list
        stays empty (the negative control) */
     reviewComments: [],
     registerReviewComments(fn) { this.reviewComments.push(fn); return { ok: true }; },
+    draftEditions(args) { calls.editions.push(args); return ca.editions(args); },
     publishCase(args) {
       calls.publish.push(args);
       st.sql.exec(`INSERT INTO case_documents (case_id, edition, text) VALUES (?, ?, ?)`,
@@ -117,15 +127,16 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
                                           reason: r.reason ?? null })) };
     },
   };
-  /* case-account's side: the one review-comments reader (its R7), taken once; a second registration is
-     REVIEW_COMMENTS_DECLARED and one that is not a function MALFORMED, each changing nothing. */
+  /* case-account's side: the one review-comments reader (its R7), taken once; the three answers are case-account's own
+     published fixture (`reviewCommentsRegistrar`, made by its real code), never written here. */
+  const registrar = reviewCommentsRegistrar();
   const caseAccount = {
     reviewComments: [],
     registerReviewComments(fn) {
-      if (typeof fn !== "function") return { ok: false, reason: "MALFORMED" };
-      if (this.reviewComments.length) return { ok: false, reason: "REVIEW_COMMENTS_DECLARED" };
+      if (typeof fn !== "function") return registrar.malformed;
+      if (this.reviewComments.length) return registrar.declared;
       this.reviewComments.push(fn);
-      return { ok: true };
+      return registrar.register(fn);
     },
   };
   /* case-tensions' side: the attribution level in force (its R6). */
@@ -173,6 +184,9 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
                              caseInputs, caseAccount, ratification, caseGrammar, localFacts, combine, ...(injectClock ? { now: () => clock.now } : {}) });
+  /* the plane migrates every module before a read (R35's zone reads local-facts, even with no profile); the host's
+     local-facts is this world's own, so its table exists before any read does, as it does on the plane */
+  if (localFacts === undefined) localFactsOf(host, { record, membership }).migrate();
   let bundles = 0;
   const w = {
     st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, concluded, providers, ratification, caseAuthoring,
@@ -228,10 +242,13 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
       return approvalSubjectSha(text);
     },
     /** A case owned by `project`, published at editions 1..`editions` (publication's rows). */
-    publishedCase(caseId, project, editions = 1) {
+    publishedCase(caseId, project, editions = 1, { scope = null, members = [] } = {}) {
       st.sql.exec(`INSERT OR IGNORE INTO cases (case_id, project_id) VALUES (?, ?)`, caseId, project);
-      for (let e = 1; e <= editions; e++)
-        st.sql.exec(`INSERT OR IGNORE INTO published_cases (case_id, edition) VALUES (?, ?)`, caseId, e);
+      for (let e = 1; e <= editions; e++) {
+        st.sql.exec(`INSERT OR IGNORE INTO published_cases (case_id, edition, scope, ratified_at) VALUES (?, ?, ?, ?)`, caseId, e, scope, clock.now);
+        members.forEach(([id, role], i) => st.sql.exec(`INSERT OR IGNORE INTO published_case_members
+          (case_id, edition, ord, bundle_id, role) VALUES (?, ?, ?, ?, ?)`, caseId, e, i + 1, id, role ?? null));
+      }
     },
   };
   return w;

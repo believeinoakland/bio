@@ -88,6 +88,8 @@ test("case-tensions R3 (was R6) the door's caseflags forwards only case, target,
 });
 
 test("R1 the door relays the store's refusal with its status and sentence, and a reply that is no answer as STORE_DID_NOT_ANSWER, with its correlation id", async () => {
+  /* the store's own replies as its dispatcher gives them (STORE_INTERNAL_ERROR with its correlation id) */
+  // fixtures-contract: store-door store-replies
   const refused = () => Response.json({ ok: false, reason: "BAD_JSON", detail: "no" }, { status: 400 });
   const corr = "0f0e0d0c-0b0a-4908-8706-050403020100";
   const internal = () => Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: corr }, { status: 500 });

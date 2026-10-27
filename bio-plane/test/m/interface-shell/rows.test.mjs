@@ -9,6 +9,8 @@ import { word } from "../../../src/setup-words/index.mjs";
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }, { id: "h2", title: "Budget", at: "2026-10-02" }] });
 const PLANE = { image: IMAGE, heldcaptures: HELDA, projectdirectory: ok({ projects: [{ id: "P1", title: "Pothole", questions: 2, due: "2026-10-20" }] }) };
+/* the dates of HELDA, as the date keys draw them (R6): never a literal in either order */
+const DAYS = ["1", "2"].map((day) => word("date.daymonthyear", { day, month: word("date.month.october"), year: "2026" }));
 const rowsOf = (p) => p.root().querySelectorAll("tr.cs-r");
 
 test("R19 each row's acts are in a panel opened beneath it, by its name or the keyboard, never elsewhere on the screen", async () => {
@@ -70,7 +72,7 @@ test("R19 R62 sorting keeps each open panel with its row; at the phone width eac
   assert.equal(b2.nextElementSibling.hidden, false);
   const q = await boot({ screens: ALL, path: "/app/held", plane: PLANE, phone: true });
   for (const r of rowsOf(q)) {
-    assert.ok(r.querySelector(".mk-rowname").textContent.includes("1 October") || r.querySelector(".mk-rowname").textContent.includes("2 October"), "the first value on the name's line");
+    assert.ok(DAYS.some((d) => r.querySelector(".mk-rowname").textContent.includes(d)), "the first value on the name's line");
     for (const td of r.querySelectorAll("td").slice(2)) assert.ok(td.getAttribute("data-label"), td.outerHTML);
   }
 });

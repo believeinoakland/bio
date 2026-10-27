@@ -7,12 +7,11 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import * as T42 from "../../../src/op-grades/t42.mjs";
+import { declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
-const R31_REASON = "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, "
-  + "on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no "
-  + "bundle";
+const R31_REASON = declaredSentence("extraction", "pagetranscribe");
 
 /* ---- R31 ----------------------------------------------------------------------------------------------------------- */
 test("R31: pagetranscribe stated absent, ground `undetermined` as captureupload, with no rung; its NON_ACTS sentence "

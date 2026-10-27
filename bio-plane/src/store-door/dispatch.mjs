@@ -1,4 +1,4 @@
-/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11, R13–R15). `dispatch(req, store)` is the one frame every Durable Object
+/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11, R13–R15, R17). `dispatch(req, store)` is the one frame every Durable Object
    request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
    `store.routes(url, body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable
    project (R2), a purge's hold check (R4), the `{ok: true, result}` envelope, and the one catch (R6). Moved from
@@ -12,6 +12,7 @@ import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { doorbellOf } from "../doorbell/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { extractionOf } from "../extraction/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { sourcesOf, sourcesOps } from "../sources/index.mjs";
 import { queueOf, queueOps } from "../queue/index.mjs";
@@ -23,8 +24,10 @@ import { answersOf, ownerOf } from "../answers/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { membershipOf, notAnAdmin } from "../membership/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
+import { translationsOf } from "../translations/index.mjs";
 import { DISPATCH_CHECKS } from "../answer-envelope/checks.mjs";
 import { pullAndFile } from "./pull.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
  * 7.14, RULED 2026-09-23 by BOB #32, (a)).
@@ -50,11 +53,11 @@ import { pullAndFile } from "./pull.mjs";
  * an id that row calls discoverable. A viewer never sent (an internal call) is not asked. */
 export const PROJECT_NAMING_READS = Object.freeze({
   image: ["id"], file: ["id"], projection: ["id"], excludedby: ["id"], backlinks: ["target"],
-  reevaluations: ["target"], inquirystrength: ["id"], earnedbasis: ["id"], partitionindependence: ["id"],
+  reevaluations: ["target"], inquirystrength: ["id", "ids"], earnedbasis: ["id"], partitionindependence: ["id"],
   narrowcandidates: ["target"], versionnotice: ["target"], basisversions: ["id", "project"],
   versionstrength: ["id", "project"], strengthbarof: ["project", "target"], extractproposals: ["bundle"],
   capturerequests: ["target"], tasks: ["refers"], biasmanifest: ["scopeId"], airuns: ["contextId"],
-  casedrafts: ["project"], gatefacts: ["id"], affordancefacts: ["target"],
+  casedrafts: ["project", "projects"], gatefacts: ["id"], affordancefacts: ["target"],
   projectownerarith: ["projectId"], projectvisibility: ["projectId"], projectparticipants: ["projectId"],
   /* REC-196 x REC-150: REC-150's requests read names the project by its own id, so the door answers
      C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
@@ -90,6 +93,19 @@ export const PROJECT_NAMING_READS = Object.freeze({
   /* K2900: case-account's checks of a member's own text name her project (the query's, else the body's; plane's route). */
   advocacychecks: ["project"],
 });
+/* R2 (fix round 6, G12c; K4571): the batch reads. Each key below is a LIST of bundle ids, named in the table above beside the
+   single read's key (`casedrafts` `projects`, review R19; `inquirystrength` `ids`, strength R6), and every id in it is fenced
+   exactly as the single read fences its one. A list is an array (the body), or a string holding a JSON array, a comma list
+   or the same key repeated (the query): `listedIds` reads all of them, splitting on anything that cannot be in an id, so no
+   spelling a route accepts leaves an id unasked. `reviewcopy`'s `drafts` are DRAFT ids, so the read stays among those naming
+   no project (below), as its single key does. */
+export const PROJECT_NAMING_LISTS = Object.freeze({ casedrafts: ["projects"], inquirystrength: ["ids"] });
+const ID_SEPARATORS = /[\s,;|[\]"']+/;
+function listedIds(value, out = []) {
+  if (Array.isArray(value)) for (const v of value) listedIds(v, out);
+  else if (typeof value === "string") for (const t of value.split(ID_SEPARATORS)) if (t !== "") out.push(t);
+  return out;
+}
 export const PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
   concerns: "`id` is an ENTITY id", connections: "`id` is an ENTITY id", instance: "`id` is an ENTITY id",
@@ -101,7 +117,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   airunspawn: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   /* `biasdebt` (REC-207) reached REC-196's sweep only when the two met. */
   biasdebt: "`run` is a RUN id — a thing inside a project, whose existence is contents",
-  reviewcopy: "`draft` is a DRAFT id — a thing inside a project, whose existence is contents",
+  reviewcopy: "`draft` and, in the batch read, `drafts` are DRAFT ids — things inside a project, whose existence is contents",
   casedocument: "`case` is a CASE id, answered by the case door's own fence",
   reading: "`sha256` is a CAPTURE's digest", resolutions: "`sha256` is a CAPTURE's digest",
   textattest: "`sha256` is a CAPTURE's digest", readingname: "`entity` is an ENTITY id",
@@ -152,7 +168,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
      active member as if no import exists, byte-identically. */
   importedcases: "names nothing: it lists the imports, each a read-only project held apart from the record's bundles, "
     + "and case-import answers a non-member as if none exists (its R4)",
-  importedcase: "`import` is an IMPORT's id (the SHA-256 of its source group, case and lens), never a bundle id, and "
+  importedcase: "`import` is an IMPORT's id (the SHA-256 of its source team, case and lens), never a bundle id, and "
     + "case-import answers a non-member with the same bytes as an absent import (its R4)",
   /* T36-48 (K2063): file-safety's reads that take a parameter: a capture's digest, a cursor over its own rows or a
      scanner's finding name, never a bundle id. */
@@ -169,7 +185,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   successread: "`id` is a SUCCESS RECORD's id — a row inside a project, whose existence is contents (consequences R20)",
   casecheck: "`case` is a CASE id, `edition` one of its editions and `check` a CHECK id, answered by the case's own fence "
     + "(case-check R2)",
-  ruleoffer: "`rule` is a GROUP RULE's id, never a bundle id (local-facts R13)",
+  ruleoffer: "`rule` is a TEAM RULE's id, never a bundle id (local-facts R13)",
   grouprules: "`section` is a profile's SECTION name, never a bundle id (local-facts R12)",
   /* R14 (T47; N970): a project's questions answer a project the viewer does not see at FULL as an empty page, never
      refused, as `projectholds` is (R3); the project list names no project. */
@@ -185,13 +201,31 @@ export function existenceRead(membershipOf, op, url, body) {
   const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
   const viewer = url.searchParams.get("viewer");
   if (!params || viewer === null) return null;
+  const lists = Object.hasOwn(PROJECT_NAMING_LISTS, op) ? PROJECT_NAMING_LISTS[op] : [];
   const membership = membershipOf();
+  /* one lookup per distinct id; the answer is the single read's for that id */
+  const asked = new Map();
+  const existenceOf = (id) => {
+    if (!asked.has(id)) asked.set(id, membership.visibilityOf(id) === "discoverable" ? membership.existenceAct(id, viewer) : null);
+    return asked.get(id);
+  };
   for (const p of params) {
-    const fromBody = body && typeof body === "object" && typeof body[p] === "string" ? body[p] : null;
-    for (const id of [url.searchParams.get(p), fromBody]) {
+    const fromBody = body && typeof body === "object" ? body[p] : undefined;
+    if (lists.includes(p)) {
+      /* a list: every id asked, and where several are at EXISTENCE the lowest id answers, so the answer does not depend on
+         the order the caller listed them in */
+      const ids = listedIds([...url.searchParams.getAll(p), fromBody]);
+      let found = null;
+      for (const id of [...new Set(ids)].sort()) {
+        const existence = existenceOf(id);
+        if (existence && found === null) found = existence;
+      }
+      if (found) return found;
+      continue;
+    }
+    for (const id of [url.searchParams.get(p), typeof fromBody === "string" ? fromBody : null]) {
       if (typeof id !== "string" || id === "") continue;
-      if (membership.visibilityOf(id) !== "discoverable") continue;
-      const existence = membership.existenceAct(id, viewer);
+      const existence = existenceOf(id);
       if (existence) return existence;
     }
   }
@@ -243,8 +277,8 @@ function purgeHoldRefusal(store, url) {
   return { ok: false, error: "purge refused: a litigation hold is in place", reason: "PURGE_HOLD_IN_PLACE",
            code: "PURGE_HOLD_IN_PLACE", check: row.check, translation: row.translation, bundleId,
            detail: bundleId === null
-             ? "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed."
-             : "this bundle is, or may be, material a litigation hold preserves. Nothing was removed." };
+             ? localize("store-door.dispatch.a_litigation_hold_is_in", "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.")
+             : localize("store-door.dispatch.this_bundle_is_or_may", "this bundle is, or may be, material a litigation hold preserves. Nothing was removed.") };
   /* END DEC-49 REGION is-purge-hold-in-place */
 }
 
@@ -304,7 +338,7 @@ function underGrant(store, grant, asked, op, body, answer) {
    at the door. So `assistantFor` answers `{refusal}` (keep-away), `{declined, on}` (askAccount's refusal) or
    `{assistant}`. */
 const ACCOUNT_UNREAD = Object.freeze({ ok: false, reason: "ACCOUNT_UNREADABLE",
-  detail: "the account that would serve this draft could not be read; nothing was used" });
+  detail: localize("store-door.dispatch.the_account_that_would_serve", "the account that would serve this draft could not be read; nothing was used") });
 async function assistantFor(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
   const away = aiAccountsOf(ctx).aiKeptAway({ use: "draft" });
@@ -329,14 +363,14 @@ async function usageOwner(ctx, member, mode) {
 function adminRefusal(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
   if (membershipOf(ctx).isAdministrator(member && member.startsWith("member:") ? member.slice(7) : member)) return null;
-  return notAnAdmin(member, "asking the assistant to draft the group's description");
+  return notAnAdmin(member, localize("store-door.dispatch.asking_the_assistant_to_draft", "asking the assistant to draft the team's description"));
 }
 
 /* R1: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R2;
    `store.namespace()` (the object's own name, plane R2) and `store.purgeHeld({bundleId})` (`actions`' R60 reader, plane
    R14), each a function asked at a purge and never before, for R4. The headers' credentials (R9) are set on the URL the
    map receives, and the grant is also handed as its third argument, which this module's `askcheck` (R11) reads. */
-export const STREAMED_BODY_OPS = Object.freeze(["captureupload"]);
+export const STREAMED_BODY_OPS = Object.freeze(["captureupload", "captureuploadpart"]);
 export async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
@@ -344,8 +378,9 @@ export async function dispatch(req, store) {
      exception (error 1101) rather than a BIO refusal. An absent body is null, which is what a GET already passes; a
      body that is present but not JSON is refused by name. */
   let body = null;
-  /* R11 (K2585; control-plane R72): an upload's body is the request's own stream, handed on unread (never parsed, never
-     BAD_JSON), so `captureupload`'s arm streams it to capture as its `bytes`. */
+  /* R11, R19 (K2585, K4928; control-plane R72; capture R113): an upload's body, or a parted upload's part, is the
+     request's own stream, handed on unread (never parsed, never BAD_JSON), so the arm streams it to capture as its
+     `bytes`. */
   if (req.method === "POST" && STREAMED_BODY_OPS.includes(op)) body = req.body;
   else if (req.method === "POST") {
     const raw = await req.text();
@@ -385,6 +420,17 @@ export async function dispatch(req, store) {
     return Response.json(storeInternalError(e, op), { status: 500 });
   }
 }
+
+/* R17 (T51 fix round; K4206; op-declarations R80, op-grades R49): the op this door's map serves that a screen sends and no
+   full declaration holds, declared beside the map. `groupdescriptiondraft` writes nothing: its handler drafts from `answers`
+   in the body, with `by` and `viewer` stamped from the query (R10). `assistant` is resolved by the door and never read from
+   the body, so it is declared nowhere. An absent or malformed `answers` is refused by name (GROUP_DRAFT_ANSWERS_MALFORMED,
+   instance-setup R65), so `answers` is both accepted and required. */
+export const DECLARED_OPS = Object.freeze({
+  groupdescriptiondraft: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer", "by"], weight: "read",
+    description: localize("store-door.declared.groupdescriptiondraft", "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it"),
+    fields: { accepts: ["answers"], requires: ["answers"] } },
+});
 
 /* N364, N13: the routes this module adds to plane's one map (plane R5), each passing R1's frame: queue's, tasks' and
    affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
@@ -462,12 +508,12 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
     /* R10 (N669; K2200, K2201): both directions; instance-setup's own first refusal (the direction, the language, a
        machine, `TRANSLATION_NOT_GRANTED` or, for `to_english`, `NOT_AN_ADMIN`, the word) before keep-away. */
     translationdraft: async () => {
-      const setup = instanceSetupOf(ctx);
+      const translations = translationsOf(ctx);
       const args = { language: b.language, direction: b.direction, keys: b.keys, key: b.key, by: q("by") };
-      const first = setup.translationDraftRefusal(args);
+      const first = translations.translationDraftRefusal(args);
       if (first) return first;
       const a = await assistantFor(ctx, q("by"));
-      return a.refusal ?? a.declined ?? setup.translationDraft({ ...args, assistant: a.assistant });
+      return a.refusal ?? a.declined ?? translations.translationDraft({ ...args, assistant: a.assistant });
     },
     /* (K2574; wizard-scripts R27) keep-away first, here; the account's or limit's refusal handed on as `assistant.refusal` */
     writinghelp: async () => {
@@ -479,7 +525,7 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
     },
     /* R7 (T42; N826; K2656): the pull is the doorbell's (its R13, R3), handed `doorbellOf(ctx)`, never capture's copy */
     inboxpullfile: () => pullAndFile({ doorbell: doorbellOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
-                                       provenance: provenanceOf(ctx) },
+                                       provenance: provenanceOf(ctx), extraction: extractionOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
                                        by: q("by"), identity: q("identity"), viewer: q("viewer"),
                                        /* R7 (doorbell R3; DEC-88 (2)): the `pulled` resolve, marked by the Worker's

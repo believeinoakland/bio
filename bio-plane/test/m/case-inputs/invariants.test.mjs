@@ -36,7 +36,9 @@ function setup() {
 }
 
 test("R11: the four tables are declared whole to record-core's purge as working material, under case-inputs: a whole-store purge clears them, a bundle's purge does not", () => {
-  assert.deepEqual(CASE_INPUTS_TABLES, TABLES.map((name) => ({ name, keys: [] })));
+  /* R26 (T51) adds a fifth, case_details; R11's are the first four */
+  assert.deepEqual(CASE_INPUTS_TABLES.slice(0, 4), TABLES.map((name) => ({ name, keys: [] })));
+  assert.deepEqual(CASE_INPUTS_TABLES.slice(4), [{ name: "case_details", keys: [] }]);
   assert.ok(Object.isFrozen(CASE_INPUTS_TABLES));
   const { w, P } = setup();
   const declared = w.record.declaredTables().filter((d) => TABLES.includes(d.name));
@@ -68,17 +70,17 @@ test("R11, R16 (K2675's form): a declaration record-core refuses is thrown at cr
   const ok = bareHost();
   const c = caseInputsOf(ok.host, { record: ok.record, membership: ok.membership });
   assert.ok(c);
-  assert.deepEqual(ok.record.declaredTables().filter((d) => d.module === "case-inputs").map((d) => d.name), TABLES);
+  assert.deepEqual(ok.record.declaredTables().filter((d) => d.module === "case-inputs").map((d) => d.name), [...TABLES, "case_details"]);
 });
 
-test("R16: caseInputsOf answers the one instance for a host — every caller for the same host gets the same instance, later deps ignored — and creates its four tables at creation, declared once; another host gets its own", () => {
+test("R16: caseInputsOf answers the one instance for a host — every caller for the same host gets the same instance, later deps ignored — and creates its five tables (R26's with R11's four) at creation, declared once and registering nothing with public-read; another host gets its own", () => {
   const { host, record, membership } = bareHost();
   assert.equal(TABLES.some((t) => tablesOf(host).includes(t)), false, "none before");
   const c = caseInputsOf(host, { record, membership });
   for (const t of TABLES) assert.ok(tablesOf(host).includes(t), t);
   assert.equal(caseInputsOf(host), c, "the same instance");
   assert.equal(caseInputsOf(host, { record: null, membership: null }), c, "later deps are not a second creation");
-  assert.equal(record.declaredTables().filter((d) => d.module === "case-inputs").length, 4, "declared once");
+  assert.equal(record.declaredTables().filter((d) => d.module === "case-inputs").length, 5, "declared once");
   const other = bareHost();
   assert.notEqual(caseInputsOf(other.host, { record: other.record, membership: other.membership }), c);
   /* with no deps at all, record-core and membership are reached on the host */
@@ -124,14 +126,14 @@ test("R16: the tables are created with the DDL case-authoring created them by, C
   /* the DDL is case-authoring's: the same four CREATE TABLE IF NOT EXISTS and their two indexes */
   assert.deepEqual([...CASE_INPUTS_SCHEMA.matchAll(/CREATE (TABLE|INDEX) IF NOT EXISTS (\w+)/g)].map((m) => m[2]),
     ["statement_acknowledgements", "statement_acknowledgements_statement", "what_changed_drafts", "what_changed_drafts_case",
-     "carried_outcomes", "carried_outcomes_case", "carried_outcome_withdrawals"]);
+     "carried_outcomes", "carried_outcomes_case", "carried_outcome_withdrawals", "case_details", "case_details_case"]);
 });
 
-test("R16 (K3): caseInputsOps publishes exactly the three ops, statementack, whatchangedpropose and whatchangeddrafts, one arm each, each answering exactly what its service answers; viewer and author are the query's stamps", () => {
+test("R16 (K3): caseInputsOps publishes exactly the five ops, statementack, whatchangedpropose, whatchangeddrafts and (T51, R20, R23) casedetailsset and casedetails, one arm each, each answering exactly what its service answers; viewer and author are the query's stamps", () => {
   const { w, P } = setup();
   const pub = w.prepare(P, "alice");
   const url = (q) => new URL(`http://do/x?${q}`);
-  assert.deepEqual(Object.keys(caseInputsOps(w.ci, url(""), null)).sort(), ["statementack", "whatchangeddrafts", "whatchangedpropose"]);
+  assert.deepEqual(Object.keys(caseInputsOps(w.ci, url(""), null)).sort(), ["casedetails", "casedetailsset", "statementack", "whatchangeddrafts", "whatchangedpropose"]);
   /* statementack: draft, case, edition, bySecret and reason from the query, the viewer its stamp */
   const viaOp = caseInputsOps(w.ci, url(`case=${pub.caseId}&edition=1&viewer=${encodeURIComponent(V("bo"))}&reason=${encodeURIComponent(WORDS)}`),
                               { case: "CASE-2026-0404", reason: "a body's words", viewer: V("cy") }).statementack();

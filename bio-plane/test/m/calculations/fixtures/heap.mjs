@@ -41,7 +41,7 @@ async function main() {
   }
   const e = await w.c.evaluate({ recipe: RECIPES.sum, inputs: [{ name: "t", table: t.sha }], viewer: V("carol") });
   out.acts.evaluate = { ok: e.ok, output: e.ok ? e.results.output : null, growth_mb: (heap() - held) / MB };
-  process.stdout.write(JSON.stringify(out));
+  process.stdout.write(`${JSON.stringify(out)}\n`);   /* the result is the last line: the module logs lines of its own (R-LOG) */
 }
 
 /* run only as the measuring child the test starts, never when a test runner loads this file */

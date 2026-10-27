@@ -1,0 +1,125 @@
+<title>T51 Rebuilt Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the five steps as a numbered spine, each step's work below it as plain lists and two compact tables. */
+:root{
+  --bg:#f7f8f6; --surface:#ffffff; --fg:#1d2321; --muted:#5b6662; --line:#d9dfdb; --accent:#2f6b57; --accent-soft:#e3efe9; --warn:#8a5a12;
+  --display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141816;--surface:#1b201e;--fg:#e4e9e6;--muted:#9aa6a1;--line:#2e3633;--accent:#7cc1a6;--accent-soft:#1f3029;--warn:#e0b064;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141816;--surface:#1b201e;--fg:#e4e9e6;--muted:#9aa6a1;--line:#2e3633;--accent:#7cc1a6;--accent-soft:#1f3029;--warn:#e0b064;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:760px;margin:0 auto;display:grid;gap:36px}
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:2rem}
+h2{font-size:1.35rem}
+h3{font-size:1.05rem;font-family:var(--body)}
+p{margin:0}
+.lede{color:var(--muted);max-width:65ch}
+.facts{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:.92rem}
+.facts b{font-variant-numeric:tabular-nums;font-weight:600}
+section{display:grid;gap:14px}
+.eyebrow{font:500 .72rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+ol.steps{list-style:none;margin:0;padding:0;display:grid;gap:18px;counter-reset:s}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:2.2rem 1fr;gap:4px 12px}
+ol.steps>li::before{content:counter(s);grid-row:span 2;width:2rem;height:2rem;border-radius:50%;background:var(--accent-soft);color:var(--accent);font:600 .95rem/2rem var(--body);text-align:center}
+ol.steps>li>div{min-width:0;display:grid;gap:6px}
+ul{margin:0;padding-left:1.15rem;display:grid;gap:4px}
+code{font:.86em var(--mono);background:var(--accent-soft);padding:0 .3em;border-radius:3px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:grid;gap:10px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+td.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.note{font-size:.88rem;color:var(--muted)}
+.wait{color:var(--warn);font-weight:500}
+</style>
+
+<main>
+<header style="display:grid;gap:12px">
+  <span class="eyebrow">Civicsmith · tranche T51 · rebuilt 18 October 2026</span>
+  <h1>T51, rebuilt to include everything agreed</h1>
+  <p class="lede">You asked for the plan to be rebuilt so it carries every single thing T51 was promised, even if that means running some layers again (K3921). Every one of the 138 commitments is now in T51, or waits for one of the three allowed reasons. No job has started; this is what will run, in this order.</p>
+  <div class="facts"><span><b>138</b> commitments traced</span><span><b>112</b> jobs in all</span><span><b>48</b> already merged</span><span><b>18</b> left for later, each with an allowed reason</span></div>
+</header>
+
+<section>
+  <span class="eyebrow">The order of work</span>
+  <ol class="steps">
+    <li><h3>The words, as you chose (B on four conditions)</h3><div>
+      <ul>
+        <li>First, one job for the word-list module adds the new way to write a sentence once in code, the build step that gathers every sentence into the table, the design stream's review list, and the "pseudo-language" version used to spot missed sentences.</li>
+        <li>I update the words check to the new rule and tell the design stream how its role changes (done today: drawn screens stay design-first; everything else it reviews before each release).</li>
+        <li>Then one conversion over the whole codebase, with no job running, proven three ways: every test passes unchanged, every converted sentence is compared character by character with the original, and a walk of every screen in the pseudo-language shows nothing escaped.</li>
+        <li>Sentences that need a person's judgment (about 2,800 glued-together pieces, partial copies in tests, tests that hand-list other modules) go to their module's job in step 2 or in its later layer.</li>
+      </ul></div></li>
+    <li><h3>Re-run the layers that already closed (1 to 8)</h3><div>
+      <p>Each runs again as a layer, lowest first, for every module that still has work. 21 jobs, including:</p>
+      <ul>
+        <li>Three modules split because they have grown past one reading: membership, publication and basis-versions. These had been sent to T52; now they are done here.</li>
+        <li>Finishing the standard leg, so a member can conclude a question that rests on a standard without the assistant.</li>
+        <li>The administrator-removal reading the member screen needs, moved earlier so that screen isn't blocked.</li>
+        <li>A test that the container image named in the install files and in the deploy file always match.</li>
+        <li>The remaining date, reason and word fixes in time, lines, events, people, case-checker and case-account.</li>
+      </ul>
+      <p class="note">When step 2 finishes, the words check must read zero, or layer 9 does not start.</p></div></li>
+    <li><h3>Layers 9, 10 and 11, as planned</h3><div>
+      <ul>
+        <li>Layer 9: 7 jobs (filings added). Layer 10: 2 jobs (scheduler and following added). Layer 11: 31 jobs, with every entry brought up to date with the design's latest decisions (DEC-334 to DEC-339).</li>
+        <li>The old interface is deleted and every one of its features is served by the new design (the census's 100 rows).</li>
+      </ul></div></li>
+    <li><h3>A short completion round</h3><div>
+      <ul>
+        <li>Only two jobs, both needing layer 11 first: instance-setup drops its leftover pass-throughs, then promotion clears its hand-lists, removes the old interface's census patterns and stamps the row census last.</li>
+      </ul></div></li>
+    <li><h3>Release, deploy, walk, fix</h3><div>
+      <ul>
+        <li>The release is cut with the Docker Hub images recorded, and signed.</li>
+        <li>You approve each deploy in its session.</li>
+        <li>I walk the running release live: a real investigation from install to publication without the assistant, every screen at desktop and phone widths, every control pressed, a real photograph captured and read.</li>
+        <li>Every defect the walk finds is fixed in T51. Then T51 merges to main.</li>
+      </ul></div></li>
+  </ol>
+</section>
+
+<section>
+  <span class="eyebrow">Jobs by step</span>
+  <div class="tbl"><table>
+    <thead><tr><th>Step</th><th>Jobs</th><th>State</th></tr></thead>
+    <tbody>
+      <tr><td>Layers 1–6 and 8 (first run)</td><td class="n">48</td><td>merged</td></tr>
+      <tr><td>Word-list module (step 1)</td><td class="n">1</td><td>next</td></tr>
+      <tr><td>Re-run of layers 1–8 (step 2)</td><td class="n">21</td><td>after the conversion</td></tr>
+      <tr><td>Layers 9, 10, 11 (step 3)</td><td class="n">40</td><td>after step 2</td></tr>
+      <tr><td>Completion round (step 4)</td><td class="n">2</td><td>last</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Models: 51 on Haiku, 61 on Sonnet, none on Opus. Jobs needing a judgment after the conversion are added to step 2 or 3 by name.</p>
+</section>
+
+<section>
+  <span class="eyebrow">What waits for a later tranche, and why</span>
+  <div class="box">
+    <p>Only three reasons are allowed now: your decision isn't made yet, a deployment or measurement can't happen inside the tranche, or something outside the product doesn't exist yet. The check now refuses any other reason.</p>
+    <ul>
+      <li><b>Your decisions:</b> the multi-AI assistant and everything tied to it (N1220); API keys (never asked again); email capture; the dashboard Home; translation; the stewards' contact address; the stewards' listing rule.</li>
+      <li><b>Measurements:</b> the document-type measure that needs new issuer policies; OCR on members' photos (measured live in my walk).</li>
+      <li><b>Outside the product:</b> the assistant test set's real cases with human-written answers.</li>
+      <li><b>Designs owed by the design stream</b> (your decisions, made there): page titles and small layout items, remaining dates, the records-request template, filing templates, the request-for-comment rule, the preparation prompt, the photo date. <span class="wait">Each joins T51 the moment its decision returns.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Already done today</span>
+  <ul>
+    <li>Your approved process edits are tested on a practice run and now enforced by the checks (K3928).</li>
+    <li>Your words decision is designed in detail and written into the word-list module's requirements (K3930, K3931).</li>
+    <li>The design stream has been told (B332).</li>
+  </ul>
+</section>
+</main>

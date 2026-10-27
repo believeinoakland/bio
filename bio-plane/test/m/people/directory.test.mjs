@@ -51,7 +51,7 @@ test("R37 peopleDirectory answers the people and organisations the record follow
   assert.ok(!ids.includes(director), "an office is a post, never a row");
   assert.ok(!ids.includes(source), "only the person and organisation kinds are rows");
   assert.ok(r.rows.every((x) => x.kind === "person" || ["institution", "body", "movement"].includes(x.kind)));
-  assert.ok(!r.rows.some((x) => /^(member:)?(ann|out|boss|admin)$/.test(x.entity)), "the group's members are never rows");
+  assert.ok(!r.rows.some((x) => /^(member:)?(ann|out|boss|admin)$/.test(x.entity)), "the team's members are never rows");
   const c = rowOf(r, chen);
   assert.deepEqual(Object.keys(c).sort(), ["documents", "entity", "kind", "mine", "name", "newest_added", "projects", "questions", "today"]);
   assert.equal(c.name, "Lee Chen");
@@ -88,7 +88,7 @@ test("R37 each filter: q (a name, a name they are also known by, an office held)
   const { w, chen, works, bayline, ferris, project } = record();
   const ids = (args) => all(w, { viewer: ANN, ...args }).rows.map((x) => x.entity).sort();
   assert.deepEqual(ids({ q: "lee chen" }), [chen]);
-  assert.deepEqual(ids({ q: "L. Chen" }), [chen], "a name they are also known by");
+  assert.deepEqual(ids({ q: "L. Chen" }), [chen], "the alias match (R37 q)");
   assert.deepEqual(ids({ q: "director of public" }), [chen], "an office held");
   assert.deepEqual(ids({ q: "Public Works" }), [chen, works].sort(), "the body's name and the office it holds");
   assert.deepEqual(ids({ q: "Alvarez" }), []);
@@ -121,7 +121,7 @@ test("R37 a malformed argument is refused naming it, and nothing is read", () =>
   };
   refused({ q: "x".repeat(201) }, "q");
   refused({ q: 7 }, "q");
-  refused({ show: "offices" }, "show");
+  refused({ show: "parcels" }, "show");
   refused({ office: "ENT-2026-9999" }, "office");
   refused({ office: director }, "office");
   refused({ namedIn: "   " }, "namedIn");

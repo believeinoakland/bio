@@ -200,3 +200,20 @@ test("R73 R58 (T35): captureOf builds acquisition's instance for the storage and
   assert.throws(() => captureOf(ctx, { ownHosts: ["other.example"] }), /ownHosts/);
   assert.throws(() => captureOf(ctx, { acquisition: {} }), /acquisition/);
 });
+
+test("R77 (fix round 10, R33's capture half): 60 held documents read with `limit` 50 answer the first 50 with `truncated: true`, and `next` returns exactly the other 10 in order, with `truncated: false` and no `next`; the two pages together are the whole list, none twice (control: `limit` 60 answers all, not truncated)", async () => {
+  const w = world();
+  const names = Array.from({ length: 60 }, (_, i) => `INFO-${String(i).padStart(2, "0")}`);
+  names.forEach((id, i) => plain(w, id, { created: `2026-03-${String(1 + Math.floor(i / 24)).padStart(2, "0")}T${String(i % 24).padStart(2, "0")}:00:00Z` }));
+  const whole = ids(await w.c.heldCaptures({ viewer: ADMIN, limit: 60 }));
+  assert.equal(whole.length, 60);
+  const one = await w.c.heldCaptures({ viewer: ADMIN, limit: 50 });
+  assert.deepEqual([one.held.length, one.truncated, typeof one.next, one.limit], [50, true, "string", 50]);
+  assert.deepEqual(ids(one), whole.slice(0, 50));
+  const two = await w.c.heldCaptures({ viewer: ADMIN, limit: 50, after: one.next });
+  assert.deepEqual([two.held.length, two.truncated, two.next], [10, false, null]);
+  assert.deepEqual(ids(two), whole.slice(50), "exactly the rest, in order");
+  assert.deepEqual([...ids(one), ...ids(two)].sort(), [...names].sort(), "every document once");
+  const all = await w.c.heldCaptures({ viewer: ADMIN, limit: 60 });
+  assert.deepEqual([all.truncated, all.next], [false, null]);
+});

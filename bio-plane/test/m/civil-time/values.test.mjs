@@ -3,7 +3,8 @@
  * midnight or by half an hour, so no answer can rest on a zone's habits. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { localDay, bounds, parseEdtf, compare, isCalendarDate, dayRange, joinLocal, validAt } from "../../../src/civil-time/index.mjs";
+import { localDay, localClock, bounds, parseEdtf, compare, isCalendarDate, dayRange, joinLocal, validAt, reasonText } from "../../../src/civil-time/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { firstView, testView, day, minute } from "./helpers.mjs";
 
 const LA = firstView().time_zone.value, HFX = testView().time_zone.value;
@@ -168,11 +169,12 @@ test("R5 compare: before or after only when the spans do not overlap; otherwise 
   assert.equal(compare(day("2026-10-06", LA), a), "after");
   const same = compare(a, day("2026-10-05", LA));
   assert.equal(same.undetermined, true);
-  assert.match(same.why, /both are 2026-10-05 at day precision/);
+  assert.deepEqual(same.why, { key: "civil-time.precision_precision_held", vars: { value: "2026-10-05", precision: "day" } });
   /* a minute inside the day: neither before nor after */
   const inside = compare(a, minute("2026-10-05T00:00", LA));
   assert.equal(inside.undetermined, true);
-  assert.match(inside.why, /overlap/);
+  assert.equal(inside.why.key, "civil-time.values.overlap");
+  assert.deepEqual(inside.why.vars, { value: "2026-10-05", precision: "day", zone: LA, value_2: "2026-10-05T00:00", precision_2: "minute", zone_2: LA });
   assert.equal(compare(minute("2026-10-04T23:59", LA), a), "before");
   /* zones: the same named day in two zones overlaps; 18:00 in LA is after the UTC day 2026-10-05 */
   assert.equal(compare(day("2026-10-05", "UTC"), day("2026-10-05", LA)).undetermined, true);
@@ -189,8 +191,14 @@ test("R5 compare: an open or unknown end makes undetermined any comparison it co
   const e = (value) => ({ value, precision: "edtf", zone: "UTC" });
   const openEnd = compare(e("2004/.."), e("2010"));
   assert.equal(openEnd.undetermined, true);
-  assert.match(openEnd.why, /open end/);
-  assert.equal(compare(e("2004/"), e("2010")).undetermined, true);
+  assert.deepEqual(openEnd.why, { key: "civil-time.values.end_open", vars: { value: "2004/.." } });
+  assert.deepEqual(compare(e("2004/"), e("2010")).why, { key: "civil-time.values.end_unknown", vars: { value: "2004/" } });
+  assert.deepEqual(compare(e("../2012"), e("2010")).why, { key: "civil-time.values.start_open", vars: { value: "../2012" } });
+  assert.deepEqual(compare(e("/2012"), e("2010")).why, { key: "civil-time.values.start_unknown", vars: { value: "/2012" } });
+  /* both open: the first is the reason, the second rides in `also` */
+  const both = compare(e("2004/.."), e("../2010"));
+  assert.equal(both.why.key, "civil-time.values.end_open");
+  assert.deepEqual(both.also, [{ key: "civil-time.values.start_open", vars: { value: "../2010" } }]);
   assert.equal(compare(e("2012/.."), e("2010")), "after");
   assert.equal(compare(e("../2004"), e("2010")), "before");
   assert.equal(compare(e("../2012"), e("2010")).undetermined, true);
@@ -255,7 +263,8 @@ test("R8 joinLocal: a wall time met twice is undetermined with both instants; on
   assert.deepEqual(twice.candidates, ["2026-11-01T08:30:00Z", "2026-11-01T09:30:00Z"]);
   const gap = joinLocal("2026-03-08", "2:30 AM", LA);
   assert.equal(gap.undetermined, true);
-  assert.match(gap.why, /does not occur/);
+  assert.deepEqual(gap.why, { key: "civil-time.occur_clocks_move", vars: { value: "2026-03-08T02:30", zone: LA } });
+  assert.deepEqual(twice.why, { key: "civil-time.occurs_twice_clocks", vars: { value: "2026-11-01T01:30", zone: LA } });
   for (const t of ["18:00", "6 PM", "13:00 PM", "0:30 AM", "6:60 PM", "six PM", ""]) assert.equal(joinLocal("2026-10-05", t, LA).refused, "DATE_INVALID", t);
   for (const d of ["2026-10-05T18:00:00", "10/05/2026", "2026-02-30"]) assert.equal(joinLocal(d, "6:00 PM", LA).refused, "DATE_INVALID", d);
   assert.equal(joinLocal("2026-10-05", "6:00 PM", "Not/AZone").refused, "ZONE_INVALID");
@@ -277,10 +286,11 @@ test("R22 validAt: out wholly before from or wholly after to; in wholly within b
   /* null bounds */
   const noEnd = validAt(valid("2026-01-01", null), day("2026-06-01", LA));
   assert.equal(noEnd.undetermined, true);
-  assert.match(noEnd.why, /no end is stated/);
+  assert.deepEqual(noEnd.why, { key: "civil-time.end_stated", vars: {} });
+  assert.equal(word(noEnd.why.key, noEnd.why.vars), reasonText(noEnd.why));
   assert.equal(validAt(valid("2026-01-01", null), day("2025-06-01", LA)), "out");
   const noStart = validAt(valid(null, "2026-12-31"), day("2026-06-01", LA));
-  assert.match(noStart.why, /no start is stated/);
+  assert.deepEqual(noStart.why, { key: "civil-time.start_stated", vars: {} });
   assert.equal(validAt(valid(null, "2026-12-31"), day("2027-06-01", LA)), "out");
   assert.equal(validAt(valid(null, null), day("2027-06-01", LA)).undetermined, true);
   /* bounds compared as R5 compares: the day 2026-01-01 in LA against a UTC instant just before its start */
@@ -296,7 +306,7 @@ test("R23 validAt: an event bound resolves through its `at`; without it the boun
   assert.equal(validAt(valid(ev("2026-03-01T17:00:00Z"), "2026-12-31"), day("2026-02-01", LA)), "out");
   const un = validAt(valid(ev(), "2026-12-31"), day("2026-06-01", LA));
   assert.equal(un.undetermined, true);
-  assert.match(un.why, /bounding event is not resolved/);
+  assert.deepEqual(un.why, { key: "civil-time.values.event_unresolved", vars: { event: "EVT-0000000000000001", edge: "start" } });
   assert.equal(validAt(valid(ev(), "2026-12-31"), day("2027-06-01", LA)), "out", "the stated bound still decides");
   assert.equal(validAt(valid({ value: "2026-01-01", event: "EVT-0000000000000001", edge: "start" }, null), day("2026-06-01", LA)).refused, "BOUND_BOTH");
   /* the zone defaults to the view's time_zone */
@@ -305,4 +315,77 @@ test("R23 validAt: an event bound resolves through its `at`; without it the boun
   assert.equal(validAt(noZone, "2026-01-01T07:59:59Z", { view: testView() }), "in", "Halifax's day had begun");
   assert.equal(validAt(noZone, day("2026-06-01", LA)).undetermined, true, "no zone stated and no view");
   assert.throws(() => validAt(null, day("2026-06-01", LA)), TypeError);
+});
+
+test("R30 localClock: the wall clock of an instant in a zone, hour 0–23 and minute 0–59, across daylight-saving changes, beside localDay", () => {
+  assert.deepEqual(localClock("2026-10-12T23:30:00Z", LA), { hour: 16, minute: 30 });
+  /* the autumn change in Los Angeles: 08:30Z and 09:30Z both read 01:30 */
+  assert.deepEqual(localClock("2026-11-01T08:30:00Z", LA), { hour: 1, minute: 30 });
+  assert.deepEqual(localClock("2026-11-01T09:30:00Z", LA), { hour: 1, minute: 30 });
+  assert.deepEqual(localClock("2026-11-01T10:30:00Z", LA), { hour: 2, minute: 30 });
+  /* the spring change: 09:59:59Z is 01:59, 10:00Z is 03:00 */
+  assert.deepEqual(localClock("2026-03-08T09:59:59Z", LA), { hour: 1, minute: 59 });
+  assert.deepEqual(localClock("2026-03-08T10:00:00Z", LA), { hour: 3, minute: 0 });
+  /* a half-hour and a quarter-hour zone */
+  assert.deepEqual(localClock("2026-10-05T00:00:00Z", "Asia/Kolkata"), { hour: 5, minute: 30 });
+  assert.deepEqual(localClock("2026-10-05T00:00:00Z", "Pacific/Chatham"), { hour: 13, minute: 45 });
+  /* every half hour of 2026 in eight zones agrees with the runtime's own wall clock and with localDay's day */
+  const t0 = Date.UTC(2026, 0, 1), t1 = Date.UTC(2027, 0, 1);
+  for (const z of ZONES) {
+    for (let t = t0; t < t1; t += 1800e3) {
+      const w = oracleWall(t, z), c = localClock(iso(t), z);
+      assert.deepEqual(c, { hour: +w.slice(11, 13), minute: +w.slice(14, 16) }, `${iso(t)} in ${z}`);
+      assert.equal(localDay(iso(t), z), w.slice(0, 10), `${iso(t)} in ${z}: the day beside the clock`);
+    }
+  }
+});
+
+test("R30 localClock: an unknown zone is refused ZONE_INVALID, a malformed instant DATE_INVALID (as localDay refuses them); a wrong type throws TypeError", () => {
+  for (const z of ["Mars/Olympus", "", "+05:00", "PST8PDT/x", "America/"]) assert.equal(localClock("2026-10-05T12:00:00Z", z).refused, "ZONE_INVALID", z);
+  for (const s of ["2026-10-05", "2026-10-05T12:00:00", "2026-10-05T12:00:00.000Z", "2026-13-05T12:00:00Z", "2026-10-05T24:00:00Z"])
+    assert.equal(localClock(s, LA).refused, "DATE_INVALID", s);
+  assert.equal(localClock("x", "Mars/Olympus").refused, localDay("x", "Mars/Olympus").refused, "an instant is judged before the zone, as localDay judges it");
+  assert.throws(() => localClock(1, LA), TypeError);
+  assert.throws(() => localClock("2026-10-05T12:00:00Z"), TypeError);
+});
+
+test("R30 reasons are keys: every undetermined answer of values.mjs carries why as {key, vars}, never a string, and a key the list holds reads as non-empty English", () => {
+  const e = (value) => ({ value, precision: "edtf", zone: "UTC" });
+  const answers = [
+    compare(day("2026-10-05", LA), day("2026-10-05", LA)), compare(day("2026-10-05", LA), minute("2026-10-05T00:00", LA)),
+    compare("2026-10-05T00:00:00Z", "2026-10-05T00:00:00Z"), compare(e("2004/.."), e("2010")), compare(e("2004/"), e("2010")),
+    compare(e("../2012"), e("2010")), compare(e("/2012"), e("2010")), compare(e("2004/.."), e("../2010")),
+    joinLocal("2026-03-08", "2:30 AM", LA), joinLocal("2026-11-01", "1:30 AM", LA),
+    validAt(valid("2026-01-01", null), day("2026-06-01", LA)), validAt(valid(null, "2026-12-31"), day("2026-06-01", LA)),
+    validAt(valid(null, null), day("2026-06-01", LA)), validAt(valid("2026-01-01", "2026-12-31"), { value: "2025-12/2026-01", precision: "edtf", zone: LA }),
+    validAt(valid("2026-01-01", "2026-12-31"), { value: "2026-12/2027-01", precision: "edtf", zone: LA }),
+    validAt(valid({ event: "EVT-0000000000000001", edge: "start" }, "2026-12-31"), day("2026-06-01", LA)),
+    validAt(valid({ event: "EVT-0000000000000001" }, "2026-12-31"), day("2026-06-01", LA)),
+    validAt({ valid: { from: "2026-01-01", to: "2026-12-31", precision: "day" } }, day("2026-06-01", LA)),
+  ];
+  const keys = new Set();
+  for (const a of answers) {
+    assert.equal(a.undetermined, true, JSON.stringify(a));
+    for (const why of [a.why, ...(a.also || [])]) {
+      assert.equal(typeof why, "object", JSON.stringify(a));
+      assert.equal(typeof why.key, "string");
+      assert.ok(why.vars && typeof why.vars === "object" && !Array.isArray(why.vars));
+      for (const v of Object.values(why.vars)) assert.equal(typeof v, "string", `${why.key}: a fill is a value, not a sentence made here`);
+      assert.ok(reasonText(why).length > 5, why.key);
+      if (hasWord(why.key)) assert.equal(word(why.key, why.vars), reasonText(why), `${why.key}: the list is read as the module reads it`);
+      keys.add(why.key);
+    }
+  }
+  /* each reason of R30's list is reached: no end, no start, the overlap, the unresolved event, the zone */
+  for (const k of ["civil-time.end_stated", "civil-time.start_stated", "civil-time.values.overlap", "civil-time.precision_precision_held",
+    "civil-time.values.event_unresolved", "civil-time.values.event_unresolved_edgeless", "civil-time.validity_states_zone",
+    "civil-time.occur_clocks_move", "civil-time.occurs_twice_clocks", "civil-time.values.end_open", "civil-time.values.end_unknown",
+    "civil-time.values.start_open", "civil-time.values.start_unknown", "civil-time.values.overlaps_start", "civil-time.values.overlaps_end"])
+    assert.ok(keys.has(k), `${k} is reached`);
+  /* a validity that fails two ways gives the first as why and the other as `also` */
+  const two = validAt(valid(null, null), day("2026-06-01", LA));
+  assert.deepEqual([two.why.key, ...two.also.map((w) => w.key)], ["civil-time.start_stated", "civil-time.end_stated"]);
+  /* the date refusals stay refusals: a code and the detail */
+  assert.equal(validAt(valid("2026-01-01", "2026-12-31"), day("2026-02-30", LA)).refused, "DATE_INVALID");
+  assert.equal(validAt(valid("2026-01-01", "2026-12-31", { zone: "Nowhere/Town" }), day("2026-06-01", LA)).refused, "ZONE_INVALID");
 });

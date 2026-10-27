@@ -1,0 +1,312 @@
+# doctypes (T51)
+
+**Status** · session_01GqWuZtosurKW3WXEWPZzn5 · depth 2 · COMPLETE · handled B14
+
+## J1 · REPORT
+
+Other-module finding from T51-8 (doctypes). Not changed by this job; for the module owners or the T51-126 sweep.
+
+Comments that still name `civicos-ui/app.html` or `civicos-ui/` as a live file, found while reading `build/requirements` and code for the stale-comment check. Several are historical ("deleted in T20") and need no change; the rest describe the old UI as if it were still there:
+
+- bio-plane/src/affordances.mjs:336, :469, :509, :527, :605
+- bio-plane/src/provenance-routes/index.mjs:256
+- bio-plane/src/review/checks.mjs:25
+- bio-plane/src/retrieval/checks.mjs:73
+- bio-plane/src/queue/index.mjs:1210, :1443, :1518
+- bio-plane/src/public-read/index.mjs:1159
+- bio-plane/src/publication/worker.mjs:322
+- bio-plane/src/queuestate.mjs:408
+- bio-plane/src/gate.mjs:342
+- bio-plane/src/bias/checks.mjs:473
+- bio-plane/src/content/extent-core.mjs:38, :606
+- agent-worker/src/index.mjs:287
+
+Reported only; these are other modules' code. T51-126 deletes `civicos-ui/`, so BOB may want these swept in the same act.
+
+Also observed in a full `checks/run.mjs` run on the tranche's job branch (not doctypes): coverage 3 failures, agent-harness R17, agent-runner R36 R38 R37 R40, journey-check R19. Outside this job; noted for BOB.
+
+## J2 · COMPLETE
+
+**Entries applied**
+- B1 (START, depth 2) read and acted on. Cursor moved to B1.
+- T51-8: the stale comment at `doctypes/meeting-minutes.mjs` lines 80–82 named `civicos-ui/app.html`, deleted in T51-126. It now names the plane's bundle, `bio-plane/dist/bio-plane.bundled.mjs`, which still puts every doctype in one scope (checked: `minutesFileLines` and `agendaFileLines` are top-level in that bundle). Comment only, no code changed. Commit e436fc2caa on job/T51/doctypes.
+
+**Deferred:** none.
+
+**Other modules:** a list of comments in other modules that still name `civicos-ui` is in a REPORT posted with this COMPLETE. Also seen, not mine: coverage red in agent-harness (R17), agent-runner (R36 R37 R38 R40), journey-check (R19).
+
+**Reading:** the requirements (both parts), T51-8's plan entry, the module's code (all 11 source files, read whole), and the test suite run.
+
+**Tests and checks**
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0, skipped 0.
+- `checks/format.mjs /home/user/bio`: 174 modules, 170 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 34 product files, 64 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 1 file changed by doctypes; 0 failures.
+- `checks/run.mjs /home/user/bio` (BOB's note): format, architecture and channels 0 failures; coverage 3 failures, all in other modules (see above). None in doctypes.
+
+**Note on the pull request:** JOB.md step 1 says to open no pull request, so none is open for this branch. The harness default asks for a draft PR after a push; I followed the process file, which is more specific to this role. BOB merges at the tranche boundary.
+
+**M-T51-1:** module raw source lines = 3493 (`wc -l doctypes/*.mjs`, the module's own code; excludes `doctypes/test/` and its fixtures).
+
+Size (session_01JKKYXh9GYPEvo5f4RVmsfZ): test runs 1, module lines 3493
+
+## J3 · REPORT
+
+Plain (unformatted) member-facing sentences remain in doctypes and the words check does not flag them, so they are not among the 50 findings of build/plan/words-pass/doctypes.md. Examples: meeting-calendar.mjs:52 ("no active jurisdiction profile states how long minutes usually take"), meeting-calendar.mjs:223, policy.mjs:371, regulation.mjs:349. R13 says a module "holds no sentence otherwise". I have not converted them, since the check does not ask for it. BOB to say whether they are in scope before the layer closes; if they are, I can convert them in this job or in a re-run of layer 1.
+
+## J4 · COMPLETE
+
+**Entries applied**
+- B2 (START, the re-run of layer 1, T51-168, words pass) read and acted on. Cursor moved to B2. Notes 1 to 3 done: the findings are fixed by the words rule; ids are `doctypes.<file stem>.<slug>`; setup-words added to the import allowance of R21's test.
+- T51-168: the 50 findings `checks/words.mjs` listed for doctypes are fixed. Each templated or stitched member-facing sentence in meeting-agenda, meeting-calendar, meeting-minutes, policy-header, policy, regulation, sections, staff-directory and staff-report reads through `localize("doctypes.<file>.<slug>", en, vars)`: 52 call sites, one id each, the wording unchanged. The words check on doctypes reads inline 0, testcopy 0, missingkey 0.
+- Test changes: the R21 import list (doctypes/test/doctypes.test.mjs) now allows `bio-plane/src/setup-words`. The Administrative Instruction series label in test/policies.mjs moved to test/fixtures/policy-series.json, since it equalled a words.json `en`. regulation-sections.test.mjs:269 names its assertion "source URL" in place of a sentence the word list holds.
+- Commit b90444a9bf on job/T51/doctypes.
+
+**Deferred:** none.
+
+**Other modules:** none found in this job. The full `checks/run.mjs` run shows reds in other modules only (coverage 33 failures across the tree; words findings in court-doctypes, budget-doctypes, wizard-scripts and others). The plain-sentence question for BOB is in a REPORT posted before this COMPLETE.
+
+**Tests and checks** (run from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0, skipped 0.
+- `checks/words.mjs /home/user/bio doctypes`: 0 failures (inline 0, testcopy 0, missingkey 0).
+- `checks/format.mjs /home/user/bio`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 73 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 14 files changed by doctypes; 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding names doctypes. Its reds are in other modules (coverage 33 failures of 6048 ids; words findings in other modules).
+
+**M-T51-1:** module raw source lines = 3507 (`wc -l doctypes/*.mjs`, the module's own code; excludes doctypes/test/).
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 1, module lines 3507
+
+## J5 · REPORT
+
+Two strings in doctypes/index.mjs stay plain. They are the `why` of registerDoctypes' return value (index.mjs:48, "the types are already registered here", and :58, "every type was already held by this registry"). The composition root reads them at wiring time, and no member sees them. The R2 test matches /already/ on them. Please put them on the design's unkeyed list (K3944), or say if they should be keyed instead.
+
+## J6 · COMPLETE
+
+**Entries applied**
+- B3 (CHANGE, K3957, K3959) read and acted on. Merged tranche/T51 (fast-forward to 3bc25c6685) and pulled civicos-process (27aa50e) first.
+- The 79 plain findings in build/plan/words-pass/doctypes.md are judged. Every sentence a member reads now goes through localize('doctypes.<file stem>.<slug>', en, vars): labels, reasons, signals, and the whole sentence of each two-line concatenation (commit 247c693374 on job/T51/doctypes). Test assertions match the same text, so no test changed.
+- Two strings remain plain and are REPORTed to BOB (index.mjs:48 and :58), as wiring text.
+
+**Deferred:** none.
+
+**Other modules:** none.
+
+**Tests and checks** (from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 2 findings, both REPORTed above (index.mjs:48, :58); inline 0 other, testcopy 0, missingkey 0.
+- `checks/format.mjs /home/user/bio`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 74 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 10 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/).
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 2, module lines 3498
+
+## J7 · COMPLETE
+
+**Entries applied**
+- B4 (CHANGE, K3962, K3965) read and acted on. Merged tranche/T51 and pulled civicos-process (ea6cd83) first.
+- The one test copy in section "Test copies of code sentences (K3962)", doctypes/test/doctypes.test.mjs (the "this meeting has taken place..." assertion), now compares with localize("doctypes.meeting-calendar.taken_place", en).
+- Regex copies of localize ens, converted as B4 asks: each now compares with localize(id, en[, vars]) by equality. These were doctypes.test.mjs (form_why and the references/body whys), policy.test.mjs (the detect why, header_why, sections_why), regulation-sections.test.mjs (form_why, the code-forms and neither-form sections_why, the added-section why, sections_none_read). Each test imports localize from bio-plane/src/setup-words/index.mjs. Fragments under 25 characters, and assertions on rendered values, stay as regex; none copies a localize en.
+- Commit 56bdcc8415 on job/T51/doctypes.
+
+**Deferred:** none.
+
+**Other modules:** `node bio-plane/src/setup-words/build.mjs --check` (read-only) fails on a jurisdictions key, not doctypes: jurisdictions.index.amount_is_amount_and_units holds a formatted argument ({name, …}), which word and localize do not render yet (R18). For jurisdictions to fix; I have not touched it.
+
+**Tests and checks** (from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 2 findings, both REPORTed (index.mjs:48, :58); testcopy 0, inline 0 other.
+- `checks/format.mjs`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 77 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 3 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/). No product code changed in this round.
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 3, module lines 3498
+
+## J8 · COMPLETE
+
+**Entries applied**
+- B5 (START, round RW) read and acted on. Cursor moved to B5. Merged `tranche/T51` (939aacda0f) into the job branch; no rebase.
+- The words check's two findings in this module, both `why:` reasons joined by `+` and so read as plain sentences, are now read by key:
+  - `doctypes/regulation.mjs` (was :374): `localize("doctypes.regulation.unread_either", …)`, the sentence unchanged.
+  - `doctypes/staff-report.mjs` (was :327): `localize("doctypes.staff-report.unread_either", …)`, the sentence unchanged.
+  - Stale rows: `setup-words` `rows.mjs` does not yet hold the two new ids; `localize` answers its `en` until BOB regenerates it at the layer close, as B5 says.
+- Own-module flaw found while running the suite (P8): test `R3 R8 the minutes-due date is the profile's practice counted by civil-time` failed on the base too (1 of 45). `doctypes/meeting-calendar.mjs` (:67) wrote civil-time's refusal reason object into the sentence as `[object Object]`. Fixed by importing `reasonText` from `bio-plane/src/civil-time/index.mjs` (already imported from that path for `evaluateRule`, and already in this module's uses) and passing `reasonText(r.why)`. No change to civil-time. The test now passes unchanged.
+
+**Deferred:** none.
+
+**Other modules (not changed):**
+- `node checks/run.mjs /home/user/bio` (whole repository) reports failures outside doctypes: `testcopy` in `wizard-scripts` (`bio-plane/test/m/wizard-scripts/t47.test.mjs`, `t48.test.mjs`, `writing-help.test.mjs`), and its summary counts 1628 words failures across modules. None is in `doctypes`; none was touched by this job.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note for `doctypes.regulation.unread_either` is expected (BOB regenerates `rows.mjs` at the layer close).
+
+**Tests and checks** (from civicos-process, main @ e8ac153)
+- `node --test doctypes/test/*.test.mjs`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 0 failures (inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 0).
+- `checks/format.mjs /home/user/bio`: 176 modules, 175 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 77 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 4 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3496 (`wc -l doctypes/*.mjs`; excludes `doctypes/test/`).
+
+Commit `31e0334725` (the three module files), merge `7c950f73fc`, pushed to `job/T51/doctypes`.
+
+Size (session_01KR42421Ri9anbvRDhf8oEd): test runs 8, module lines 3496
+
+## J9 · COMPLETE
+
+COMPLETE · doctypes R37 (fix round 4, K4467) · DOCTYPES #8
+
+**What changed.** New `doctypes/windows.mjs`: line walks (`eachLine`, `lineTable`, `countLines`) and windows of the flattened text (`flatWindows`, `scanFlatMany`, `flatHas/Count/First/Prefix`, `mergedHits`; 256K-character pieces cut at whitespace-run ends, 4096 padding, matches counted by first character). I read windows of `ctx.text` (offsets stay `ctx.locate`'s); `ctx.pages` is not needed.
+- `meeting-minutes.mjs` detect (five phrases in one windowed pass, masthead and roster by line count) and parse (`lineTable`, no `split`, no `flatten(raw)`, recurrence counted on demand).
+- `meeting-agenda.mjs` detect (line walks) and parse (`lineTable`).
+- `staff-report.mjs` detect and parse: `memoHeader` reads the first 4096 flattened characters plus one question about the rest; `reportSections`, title lines and recommendation by line; openers by `flatFirst`; sign-off tested on the text as it stands.
+- `regulation.mjs` detect and parse: `ownCaption` and caption/code counts via `mergedHits`, `countIn` for RECITAL/CODIFYING; `sections.mjs` `codeHeadingsIn` walks lines.
+- `policy.mjs` / `policy-header.mjs`: detect refuses without an anchor before any line list (`headerAnchored`); `readAt` reads the lines around an anchor, widened until the reading stays inside them.
+- `meeting-calendar.mjs` detect tests the text as it stands (the pattern holds no entity character); `staff-directory.mjs` detect: windowed date count, phone set, first five lines.
+
+**Failing-first.** `bounded.test.mjs` "R37 ... over 14 million characters add under 16 MB": RED on the tip's types (V8 out-of-memory under base+16 MB), GREEN now. "readText over BUDGET-2024-APP ... adds under 16 MB" (docprofile R38 merged, tranche @ 262f9ae408): runs and GREEN; answers equal the tip's.
+
+**Measurements** (BUDGET-2024-APP, 13,598,363 characters, MB above what the caller holds, heap capped at base+N): detect before -> after: minutes 135 -> <=4, staff_report 109 -> <=4, regulation 109 -> <=6, policy 18 -> <=4, agenda 9 -> <=4, calendar and directory <=4. parse before -> after: minutes 172 -> 6, staff_report 109 -> 6, agenda 13 -> <=4, regulation 109 -> 18, policy 107 -> 107. Whole `readText` before R38 merged: 135 -> <=24. Court and budget types (courtlistener_docket, cpuc_proceeding, ecourt_roa, financial_report, budget_book, budget_table): each <=4 MB; nothing to place (no QUESTION).
+
+**Answers unchanged.** `fixtures/r37-answers.json` (taken on the tip before the change by `make-r37-answers.mjs`): every type's detect and the registry's verdict with the winner's parse equal on all 164 fixture readings; `readText` on BUDGET-2025-BUD, -PER and -APP equal the tip's; padding tests (leading/trailing/within, cuts at 1, 251, 262,100, 262,143, ...) equal; primitives checked against whole-text passes with windows of 1-64 characters.
+
+**Deferred, with the smallest thing needed.** Parse of a *recognised* policy or regulation still splits its whole text into line lists (`sections.mjs` `linesOf`, `policy.mjs` `linesOf`, `readOutline`, `readResponsibilities`): policy parse 107 MB, regulation parse 18 MB on the APP text. The APP reads as `generic`, so neither runs. Needed: BOB's call that a recognised policy/instrument of that size is in scope; then a job that holds lines as offsets (as `lineTable` does).
+
+**Users.** `impact.mjs tranche/T51 HEAD`: 42 modules, 647 files; the 643 outside doctypes: tests 5690, pass 5676, fail 12. The same files fail on the tranche tip (re-run there: 11 fail plus agent-worker/requirements.test.mjs): R29/R24/R17/R61 in affordances, journey-check, plane, screens-daily, store-door and agent-worker, none touching doctypes. Generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` (carries the doctypes) is stale; BOB regenerates it.
+
+**Checks** (process repo): doctypes suite 51 pass, 0 fail, 0 skip; `checks/words.mjs ... doctypes` 0 (unkeyed 0, same as before); format 0 failures; architecture doctypes 41 files, 0 failures; coverage 37 of 37 ids named; ownership 0 failures; `checks/run.mjs` whole-repo failures are other modules' (case-authoring imports, 9 coverage ids elsewhere); `setup-words build.mjs --check`: stale rows only.
+
+Commits `0a64a728be` (the change), merge of the tranche `cc30fc2263`, pushed to `job/T51/doctypes`.
+
+Size (session_0148uDjHuj3piiQwEKdKFmzX): test runs 9, module lines 3788
+
+## J10 · COMPLETE
+
+COMPLETE · doctypes R38 (fix round 4, K4476) · DOCTYPES #9
+
+**What changed.** `windows.mjs`: new `lineIndex(text)` (the "\n" lines held as start offsets: `length`, `start`, `end`, `at`, `lineOf`). `sections.mjs`: `linesOf` removed; `readSections` (`codeHeadings`, `instrumentHeadings`, `subsections`) read through `lineIndex`, `subsections` walking only the lines inside its section; `passageEnd` reads the text a line at a time (it split the whole text once per definition before); `sha256Hex` is now an incremental `Sha256`, and new `textDigest(raw, start, end)` digests a section's normalised text a 64K piece at a time (it was a whole-section copy, normalisation and encoding). `policy.mjs`: `linesOf` removed; `readOutline` and `readResponsibilities` read through `lineIndex` (the tables are found first; only the lines a table holds are counted for the "printed three times" furniture rule, in one pass; no body array). `regulation.mjs` and `policy.mjs` digests use `textDigest`.
+
+**Failing-first.** `bounded.test.mjs` "R38 the parse of a policy | regulation | code text of 13.6 million characters ... adds under 16 MB, and its answer is unchanged". RED on the unchanged source: the child (`r38-child.mjs parse`) dies of V8 out-of-memory under base+16 MB for all three (policy, regulation, code); the test file itself cannot load on the old source (it imports the new helpers). GREEN now, digests equal to those taken on the old source (`fixtures/r38-answers.json`, `make-r38-answers.mjs`). The texts (`r38-texts.mjs`): a recognised fixture document (ai-594 / the fw18 ordinance / six codifier sections) with 13.6 M characters of prose put inside it before a later section, so a section runs over the prose and the answer stays small.
+
+**Measurements** (MB above what the caller holds; smallest cap that passes): policy <= 4, regulation <= 12, code <= 12 (under 16 on each). Answers unchanged: policy and regulation parse digests equal on all 164 fixture readings (whether or not the type recognises them), the three large texts equal, `fixtures/r37-answers.json` and the three govinfo answers still equal (R37 tests green), `lineIndex` equals `split` and `textDigest` equals the whole-slice digest (pieces of 1-17 characters, surrogates, 36,000 cases).
+
+**Entries applied:** R38 only. **Deferred:** none. **Observed, not changed:** a `Responsible Party / Action` table whose section runs to the end of a very large text makes its last action row that size by definition (the row's text is the answer); `policy-header.mjs` still splits a whole text when it has no anchor, which a recognised policy never has. Neither is reachable within R38's bound. `build/requirements/doctypes.md` R38 still reads "not yet met": BOB's to update.
+
+**Users.** `impact.mjs origin/tranche/T51 HEAD`: 41 modules, 666 files; the 662 outside doctypes: tests 5816, pass 5804, fail 10. The failures are the families that fail on the tranche tip (R29/R24 words and pseudo in screens/plane, R17 `groupdescriptiondraft` in store-door/op-grades, agent-worker/requirements.test.mjs), none touching doctypes. Generated artifact `bio-plane/dist/bio-plane.bundled.mjs` (carries the doctypes) is stale; BOB regenerates it.
+
+**Checks** (process repo): doctypes suite 56 pass, 0 fail, 0 skip; format 0 failures; architecture doctypes 41 files, 0 failures; coverage doctypes 38 of 38 ids named; words doctypes 0 (unkeyed 0); `checks/run.mjs`: no finding in doctypes (coverage failures in agent-harness, agent-runner, installer-steps, journey-check; one testcopy in screens-publish; unkeyed total not raised by this job); ownership 11 files, 0 failures.
+
+Commit `0c3d287f80` on job/T51/doctypes.
+
+Size (session_01R1JrGsT5LqDnscK29WqKJU): test runs 12, module lines 3881
+
+## J11 · COMPLETE
+
+**Entry B9 (START, DOCTYPES #10): G23 (S13), the staff-report recommendation read whole.**
+
+**Cause (file:line).** `doctypes/staff-report.mjs` (was :268-275) stopped collecting lines at 600 characters and cut the field with `.slice(0, 600)`; nothing said so. **Why the tests missed it:** no requirement said a bound must reach the member; the only test (`doctypes.test.mjs` R20) used a one-line recommendation. **Gap fixed:** `doctypes/test/g23-recommendation.test.mjs` drives a recommendation past the old bound through `staff_report.parse`.
+
+**What changed.** `doctypes/staff-report.mjs`: the recommendation is read from its heading to the next heading, whole. One bound stays, `RECOMMENDATION_MAX` = 50,000 characters, for a recommendation with no heading after it (it would swallow the report; the module's R37 memory bound also rests on it): then the parse answer carries `recommendation_cut: true` and `recommendation_length` (full length to the next heading or end, raw characters). Both fields are absent when nothing is cut, so every golden answer (R18, R37, R38) is unchanged. No census op, no new sentence.
+
+**Failing-first.** Red (before the change): "a 1,500-character recommendation" → 600 characters; "many lines" → cut; "no heading after" → `recommendation_cut` undefined. Green after: 4/4.
+
+**Suites.** `node --test --test-force-exit doctypes/test/`: 60 pass, 0 fail. docprofile 42/42; roster-reader + contradiction 166 pass, 0 fail (the other 8 were skips/todo, none failed). `impact.mjs` names 41 modules through the shared word table; the callers of the changed service (docprofile, roster-reader, contradiction) were run. Checks: format 0, architecture 0, coverage 0 (6623 of 6623), words 0 (no finding in my files; count not risen), ownership 0 failures.
+
+**Requirement line proposed (BOB writes `build/requirements/`):** **R39** (fix round 6, G23; K4571) *The staff report's recommendation is read whole, from its heading to the next heading. The one bound that stays is 50,000 characters, for a recommendation no heading follows; a cut answer carries `recommendation_cut: true` and `recommendation_length`, and an uncut one carries neither. Test: `g23-recommendation.test.mjs`.*
+
+**Deferred:** none. **Other modules:** none. **Row owed to the design:** none (no new sentence).
+
+Size (session_01Gno8ZS6JAy2orDZ8uFsPJF): test runs 9, module lines 3896
+
+## J12 · COMPLETE
+
+DOCTYPES #11 · START B10 (fix round 9: G140, G133 piece c) · R40 and R41 met.
+
+**Changed (all under doctypes/)**
+- `staff-directory.mjs`: addresses found from their `@` (`sdEmailAt`, `sdAddresses`), linear; the 400 KB `a-a-a-` case no longer scans per start. Bounds ENTRIES_MAX 10,000 distinct addresses and LINE_MAX 600 characters per entry `line` (both *proposed; BOB records*): past them the answer says so (`entries_cut`, `entries_limit`, `read_to`, `chars`, `entries_why`; `line_cut`, `line_length`), and detect reads the text to that point.
+- `sections.mjs`: `readDefinitions` (dedupe against the last kept, line-by-line gated matching, line cache; holder by nesting `holderOf`), `readExceptions` (`sentenceReader`: stops met once by a cursor, ends cached, no slice of the line per passage).
+- `windows.mjs`: `counted`/`spend` (the ctx.work count), `rawMergedHits` (raw-text windows), `referenceBook` (REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000, proposed; BOB records; past them `references_cut`, `references_skipped`, `references_why`).
+- `staff-report.mjs`, `regulation.mjs`: citations read through `rawMergedHits` and `referenceBook`; counted.
+- `meeting-calendar.mjs`: window from/to by a loop, never `Math.min(...dates)` (R41); `insideMain` and `rowsOf` replace two unbounded regexes (a page of unclosed `<tr>` took 4.4 s at 200 KB, now ms).
+- `meeting-minutes.mjs`, `meeting-agenda.mjs`, `policy.mjs`: counted only.
+
+**Failing-first** (`doctypes/test/g140.test.mjs`, 18 tests; `g140-child.mjs`, `r40-texts.mjs`, `make-r40-answers.mjs`, `fixtures/r40-answers.json` taken from the tranche tip): on the tip, 12 of 18 fail (a-a-a- 101 s; one line of 16,000 addresses and the 17 MB CSV die at base+16 MB; 80,000 definitions 25 s; exceptions 7 s; quoted words with no verb 13 s; 400,000 citations die at base+16 MB, both types; the ctx.work count absent; 150,000 dates throws). Now 18 of 18 pass. The 6 that pass on the tip are controls (small cases, answers equal the tip's, the real-entry-path definitions read).
+
+**Measurements** (mine, this container): a-a-a- 400 KB 3 s at 100 KB before, 0 ms after; 16,000 addresses on one line out of memory before, 86 ms; 17 MB CSV +240 MB before, 32 ms and under 16 MB; 40,000 definitions 1790 ms to 65 ms; 40,000 exceptions 8683 ms to 157 ms; 400,000 citations +370 MB to under 16 MB retained; 150,000 dates RangeError to 64 ms. A seeded differential of the old and the new sections code over 12,000 text/form pairs was equal (not kept: the old code is the tip).
+
+**Suites and checks**
+- `node --test --test-force-exit doctypes/test/`: 78 tests (60 + 18 new), 0 fail.
+- impact users (reading-pipeline, extraction, reading-guides, roster-reader, pdf-worker, agent-worker, content, calculations, retrieval-browse; 75 files): tests 571, pass 571, fail 0.
+- format 0 failures (176 modules); architecture 0 (52 files, 142 imports); coverage 41 of 41 ids, 0 failures; ownership 0 failures (15 files); words: 0 findings in doctypes. `setup-words/build.mjs --check`: stale rows only (expected).
+
+**Words owed (stand-ins, K3930):** `doctypes.staff-directory.addresses_cut`, `doctypes.staff-directory.entries_cut`, `doctypes.windows.references_cut`.
+
+**Proposed requirement lines (BOB writes them):** R40: add that a detect or parse over a text past ENTRIES_MAX distinct addresses, REFERENCES_MAX references or SIGHTINGS_MAX repeat sightings states what it did not keep; the three figures and LINE_MAX are Bob's to confirm (K1881). R37's "not yet met" notes can be removed.
+
+**Deferred, with the smallest thing needed:** the *policy* type's parse is still quadratic on shapes no policy has (200 KB: `readOutline` on one long line 6-16 s from `TOC_LINE`'s second alternative; `readHeader` on 200,000 empty lines 29 s). Not in G140 or G133c. Needed: BOB's word to add it to an entry (policy-header.mjs and policy.mjs); the g140 work-count test skips policy parse on those shapes for that reason. Also: `DEFINES` on a line that holds a verb and a very long chain of quoted words is still quadratic within that one line (lines without a verb are skipped).
+
+**Other modules:** none found. Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` (it bundles the doctypes); BOB regenerates at the round end.
+
+Size (session_01TmVLRbU29kGrf79yMGm5rX): test runs 14, module lines 4193
+
+## J13 · REPORT
+
+Finding in other modules, from B11's work (docprofile's work budget, R40, with doctypes' detects charging it).
+
+docprofile's budget lets the types be asked only until the detects together have examined 4 times the view. Every doctypes detect reads the window it is handed at least once, so the budget is spent after the fifth type: `calendar, minutes, agenda, staff_report, regulation` are asked, and `policy` and `staff_directory` are asked on NO text, whatever its size (BUDGET-2024-APP: "the types examined 7206990 characters, over the 5765592 allowed, so the policy content type and those after it were not asked"). I charge a detect the window once however many passes it makes (the lowest honest charge; a pass-by-pass charge stops the pass after the third type, and a 290 KB ordinance then reads as `generic`).
+
+Consequences seen with the real types (not doctypes' tests; they are other modules'):
+- `roster-reader/test/seam.test.mjs:14` ("R1 R3 through docprofile's seam: ... readText recognises and reads the measured documents") fails: staff directories are not asked.
+- `bio-plane/test/m/reading-pipeline/r7-classify-yield.test.mjs` (five R42 tests: "6 detects: every registered type is asked") fail for the same reason.
+Both pass on the tranche tip. Six other tests in the impact set (agent-worker/requirements, extraction g41 R97 ods, reading-pipeline convert-chain/pieces/staffdirectory/transcribe) fail on the tip too and are not from this job.
+
+The smallest thing that settles it is docprofile's: `CLASSIFY_WORK_FACTOR` at 8 or more (one window per type asked), or a budget per type; nothing doctypes can change makes seven honest detects fit in four windows. I have not changed my charge to hide it.
+
+Also: `node checks/format.mjs` has one failure not in doctypes (`build/modules.json`: office-readers `paths` entry bio-plane/src/office-xml.mjs names no file).
+
+## J14 · COMPLETE
+
+DOCTYPES #11 · B11, B12, B13 handled (a second COMPLETE; J12 is the first).
+
+**B13 (1) the policy parse and header, red first then green.** Shapes at 200 KB measured on the tip: `readOutline` on one long line 5.6-15.5 s (`TOC_LINE`'s second alternative backtracks; now `isTocLine` in policy.mjs, equal to the regex on 200,000 seeded strings, 54,649 of them true); `readHeader` on 200,000 empty lines 29 s (a label pattern `^\s*...` read on through every blank line from each; now the first label is looked for in the first HEADER_SCAN = 16 KiB when no series anchors one, and a header block runs no further than HEADER_BLOCK = 64 KiB past its anchor, `block_cut: true` when cut; a longer text with no label in the window says so in its `why`); `DEFINES` on a line of quoted words with a verb at its end (quadratic): a line over 3,000 characters is now read around the places its verb stands (1,500 characters before it), the line stated in a comment as the one bound; lines under 3,000 are read as before. g140.test.mjs's work-count test no longer skips policy parse and now runs the shapes `outline`, `capsEndingInNumbers`, `chain` and `header` besides the old ones, 5 s per call at 60 KB; the answers on the r40 texts and every fixture are unchanged (78 of 78 module tests).
+**(2)** The four caps now cite K4868 in their comments (ENTRIES_MAX 10,000, LINE_MAX 600, REFERENCES_MAX 20,000, SIGHTINGS_MAX 50,000); HEADER_SCAN and HEADER_BLOCK are two more of the same kind, protective, mine; BOB to confirm.
+**(3)** tranche/T51 merged; suite and users rerun; checks below.
+
+**B11.** Detects are charged: `counted()` (windows.mjs) charges a detect the window once (`min(passes, ctx.text.length)`) into the shared `ctx.work`, a parse every pass it makes into the `ctx.work` it is given; nothing without one. Re-recorded in bounded.test.mjs: BUDGET-2025-BUD chars 3800 to 3235, BUDGET-2025-PER 21326 to 17408 (glyph counts), BUDGET-2024-APP chars 12319700 and now `regulation`, certain, over the view (signals digest 314659c0..., parsed digest af29de98...), memory under base+16 MB (that test no longer skips). Regulation's floors over a view: `regulation.detect` holds no rate floor, only counts (`recitals >= 2`, `heads.count >= 2`) that a view of 1.4 MB of a 13.6 MB text meets or does not as a whole text would not guarantee, and the verdict on APP is certain by the instrument caption and two code headings; I judge no scaling by `window.of` is needed and made none. The full REPORT on the budget (policy and staff_directory never asked) is J13.
+
+**Suites and checks:** doctypes 78 of 78. Impact users (75 files): 571 tests, 559 pass, 12 fail; on the tranche tip, the same files fail 6 (inherited); the other 6 are the budget finding in J13 (roster-reader seam, five R42 tests in reading-pipeline), none a doctypes test. Process checks: architecture 0 failures; coverage 41 of 41; ownership 0 (17 files); words 0 in doctypes; format 1 failure outside doctypes (office-readers path, in J13). setup-words build --check: stale rows only.
+
+**Words owed, unchanged:** `doctypes.staff-directory.addresses_cut`, `doctypes.staff-directory.entries_cut`, `doctypes.windows.references_cut`; new: `doctypes.policy-header.no_block_window`.
+
+**Deferred:** none in doctypes. Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs`.
+
+Size (session_01TmVLRbU29kGrf79yMGm5rX): test runs 22, module lines 4262
+
+## J15 · COMPLETE
+
+DOCTYPES #12 · B14 handled (fix round 9, batch C: the types' garbage over the classification view, K4892).
+
+**(1) Root cause, confirmed and one deeper than B14 says.** Measured in a worker with a 2 MB young generation, a 3 MiB CSV sheet's classification view (1,441,458 characters, docprofile's `classificationView`) and every registered type's `detect` with `ctx.work` and `ctx.window` as docprofile hands them, one collection before each `detect` and none after it. Left uncollected on the tip: `regulation` 37.0 MB, `meeting_minutes` 12.6 MB, `meeting_agenda` 1.1 MB, `staff_report` 1.0 MB, `policy` 0.13, `meeting_calendar` 0.03, `staff_directory` 0.01 (B14's figures to within 1 MB). Two causes: (a) each pass re-flattened the view (`regulation` six passes); (b) the flatten itself: `text.replace(/\s+/g, " ")` over 147,000 white-space runs leaves 12.7 MB by itself, whatever the piece size (V8 holds every match while it builds the result), so one pass of `minutes` cost 12.6 MB and six passes of `regulation` 37 MB. Fixing (a) alone left `minutes` at 13.8 MB.
+**(2) Fix, in `windows.mjs` only; no type changed, `ctx` gains no field.** (a) While a `detect` or `parse` runs (`counted()`), a text no longer than `CLASSIFY_WHOLE_MAX_CHARS` (the most docprofile hands a `detect`) is flattened ONCE and every pass is one window over that string (`flatOnce`, dropped when the call ends); a longer text (a `parse` of a whole reading) is read a window at a time as before. (b) The flatten is `flatSlice`: the characters copied by hand through a 8,192-unit scratch array, a run of the characters `\s` matches as one space (lone surrogates kept; `flatPieces` uses it too). Left uncollected after: `regulation` 3.8 MB, `meeting_minutes` 3.4 MB, `meeting_agenda` 1.0, `staff_report` 0.9, others under 0.2. Every answer unchanged (module suite below; `flatSlice` equals `replace(/\s+/g, " ")` on 40 seeded texts of every `\s` character, non-`\s` look-alikes U+0085, U+180E, U+200B, lone and paired surrogates, and runs of 1 to 4).
+**(3) Red first.** `doctypes/test/r37-view.test.mjs` (child `r37-view-child.mjs`; copied from docprofile's `memory-child.mjs` mode `sheet`, not imported), named R37: red on the tip (`meeting_minutes left 12.6 MB`), green after. The bar is proposed: **under 6 MB per `detect`** (worst measured 3.8 MB; the tip 37.0), "proposed; BOB records". It also asserts every registered type is measured and each charged `0 < ctx.work.chars <= 4 x the view` (R40). Plane's `shape-harness.test.mjs` (R84 G123b control, not edited) from `bio-plane/` alone: 12 runs, 12 of 12 green (7 of 7 each); I did not reproduce the 1-in-12 red on the tip, so the 12 green runs are the evidence with the child's numbers.
+**(4) L (the capped child) done.**
+**Proposed wording for R37, one sentence to add (BOB writes it):** "A `detect` flattens the text it is handed once, whatever the number of passes it makes, and over the 1.5 M-character classification view of a 3 MiB sheet leaves under 6 MB of garbage uncollected in an isolate with a 2 MB young generation and no collection after it (was 37.0 MB for `regulation`, 12.6 MB for `meeting_minutes`); the white-space flatten is a hand copy, not a global replace."
+**Tests and checks.** doctypes 80 of 80 (78 + 2 new). Impact set (`impact.mjs origin/tranche/T51 HEAD`: 43 modules, 790 files, 783 run; the 7 doctypes files are in the module run): 6,628 tests in 779 plane files, 6,599 pass, 27 fail at concurrency 4; of those 2 (`screens-intake/capture.test.mjs`) pass alone and the other 25 are the same 25 that fail with the tip's `windows.mjs` in the tree (16 files: control-plane t51-visitor-copy, extraction g40 and g41, journey-check pseudo, machinery-producers whole-rows, plane g41-shape, r8-lag, r8-wave and release, reading-pipeline convert-chain, pieces, read and transcribe, screens-inquiry fr6-seam, tasks seam-r25): inherited, none a doctypes or docprofile-seam test. Outside bio-plane (4 files) 3 pass, `agent-worker/test/requirements.test.mjs` fails on the tip alike (302 passed, 2 failed). Process checks from civicos-process: format 0 failures; architecture 0; coverage 41 of 41; ownership 0 (4 files); words: 19 failures, none in doctypes (inline test-support, missingkey installer-steps). `tranche/T51` not merged in: its 67 newer commits touch none of my paths, docprofile or my requirements.
+**Found in another module:** none. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (carries `windows.mjs`); not written by me.
+**Deferred:** none. **Words owed:** none new.
+
+M-T51-1 (P6): module raw source lines (doctypes/*.mjs, never tests): 4,291.
+Size (session_01GqWuZtosurKW3WXEWPZzn5): test runs 26, module lines 4291
+
+## J16 · COMPLETE · re B14
+
+COMPLETE (K4892). Record J15. Each type's detect now flattens the text it is handed once, and the flatten is a hand copy (V8's global replace over 147,000 white-space runs left 12.7 MB by itself). Left uncollected per detect over a 3 MiB sheet's view, 2 MB young generation, no collection after: regulation 37.0 -> 3.8 MB, meeting_minutes 12.6 -> 3.4 MB, others under 1.1. Red first: doctypes/test/r37-view.test.mjs (names R37). Proposed bar 6 MB per detect (BOB records); proposed R37 wording is in J15. Plane shape-harness control: 12 of 12 green alone. doctypes 80 of 80; impact set: the 25 failures left are the same 25 on the tip (inherited). Checks: format, architecture, coverage 41 of 41, ownership 0; words none in doctypes. Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs. Size (session_01GqWuZtosurKW3WXEWPZzn5): test runs 26, module lines 4291.

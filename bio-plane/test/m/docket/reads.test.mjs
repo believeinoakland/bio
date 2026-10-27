@@ -11,6 +11,7 @@ import { renderFeed } from "../../../src/docket/feed.mjs";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice");
 
@@ -47,7 +48,8 @@ test("R3 docketOf: every entry on all three shelves, oldest first, each record e
     assert.ok(RECORD_STATES.includes(e.state));
     for (const k of ["proposed", "reason", "found_by", "contests", "pressure"]) assert.ok(k in e, `${k} answered`);
   }
-  assert.deepEqual(rec(contesting.entry).pressure, { kind: "legal", note: "A letter.", at: "2026-10-01T12:00:04Z" });
+  assert.deepEqual(rec(contesting.entry).pressure, { kind: "legal", note: "A letter.", at: "2026-10-01T12:00:04Z",
+    by: { member: "bob", handle: "h_bob" } });
   assert.deepEqual(rec(contesting.entry).prompts, {
     reevaluation: { cause: "contested", case: CASE, edition: 1, entry: contesting.entry, since: "2026-10-01T12:00:04Z",
                     findings: [{ bundle_id: w.F1, sha: sha(w.F1) }, { bundle_id: w.F2, sha: sha(w.F2) }] },
@@ -235,7 +237,7 @@ test("R15 docketFeed: an Atom 1.0 feed of the same entries, newest first, update
   for (const e of pub.entries) assert.ok(feed.includes(e.json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&apos;")), "each entry carries its signed JSON");
   assert.equal(ATOM_MEDIA_TYPE, "application/atom+xml");
-  assert.equal(DOCKET_UNREADABLE, "Could not read the publisher's docket");
+  assert.equal(DOCKET_UNREADABLE, word("docket.read_publisher_docket"));
   /* pure: the same entries render the same bytes */
   assert.equal(renderFeed({ case: CASE, group: "test-group", entries: pub.entries }, null), feed);
 });
@@ -454,5 +456,41 @@ test("R6 R1 R2 R4 the vocabularies and the ops map pass a call's fields through,
   assert.equal(ops({ author: "member:bob", viewer: "member:bob" }, { entry: fromQuery.entry, pressure: { kind: "other" } }).docketpressure().ok, true);
   assert.equal(ops({ by: A, viewer: A }, { entry: fromQuery.entry, reason: "redactions" }).docketdecline().ok, true);
   assert.equal(ops({ viewer: A, entry: fromQuery.entry }).docketinvitation().reason, "NO_SUCH_DOCKET_ENTRY");
-  assert.deepEqual(Object.keys(ops({})).sort(), ["docket", "docketdecline", "docketfile", "docketinvitation", "docketpost", "docketprepare", "docketpressure"]);
+  /* the ops map is the module's own declaration (K3268): the seven ops the exercise above drove, each a handler */
+  const declared = ops({});
+  assert.equal(Object.keys(declared).length, 7);
+  for (const [name, handler] of Object.entries(declared)) assert.equal(typeof handler, "function", `${name} is a handler`);
+});
+
+test("R30 (T51; DEC-340) docketOf answers each pressure mark with who made it; the plane-level reads still name no member", () => {
+  const w = seeded();
+  const marked = file(w).entry, plain = file(w).entry;
+  w.docket.docketPressure({ entry: marked, pressure: { kind: "legal", note: "Counsel wrote." }, author: V("bob"), viewer: V("bob") });
+  for (const viewer of [A, V("bob")]) {
+    const d = w.docket.docketOf({ case: CASE, viewer });
+    const rec = (id) => d.entries.find((e) => e.shelf === "record" && e.entry === id);
+    assert.deepEqual(rec(marked).pressure, { kind: "legal", note: "Counsel wrote.", at: "2026-10-01T12:00:00Z",
+                                            by: { member: "bob", handle: "h_bob" } }, "a participant is told who marked it");
+    assert.equal(rec(plain).pressure, null, "control: an unmarked entry has no mark");
+  }
+  /* control: a viewer who does not see the project in full is told nothing */
+  assert.equal(w.docket.docketOf({ case: CASE, viewer: V("dave") }).reason, "NO_SUCH_CASE");
+  /* control: R27's reads still name no member */
+  const flat = JSON.stringify([w.docket.docketPressureMarks({}), w.docket.docketPressureOf({ entry: marked, viewer: A })]);
+  assert.doesNotMatch(flat, /bob|"by"/);
+  assert.ok(w.docket.docketPressureMarks({}).marks.every((m) => !("by" in m)));
+});
+
+test("R30 (T51; DEC-340) a mark whose author is no longer a member answers by null; the mark itself is kept", () => {
+  const w = seeded();
+  w.member("erin", { role: "admin" });
+  const marked = file(w).entry;
+  w.docket.docketPressure({ entry: marked, pressure: { kind: "legal", note: "Counsel wrote." }, author: V("bob"), viewer: V("bob") });
+  const markOf = () => w.docket.docketOf({ case: CASE, viewer: A }).entries.find((e) => e.shelf === "record" && e.entry === marked).pressure;
+  /* control: while bob is a member, the mark names her */
+  assert.deepEqual(markOf().by, { member: "bob", handle: "h_bob" }, "a member's mark names her");
+  /* bob is revoked by membership's own act; the mark stays, its author no longer a member */
+  assert.equal(w.membership.memberSet({ memberId: "bob", status: "revoked", by: "erin" }).ok, true);
+  assert.equal(markOf().by, null, "by is null for a mark whose author is not a member");
+  assert.equal(markOf().kind, "legal", "the mark itself is kept");
 });

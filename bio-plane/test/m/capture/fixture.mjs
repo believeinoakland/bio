@@ -12,6 +12,7 @@ import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
+import { holdsRegister } from "../provenance/fixtures.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 
@@ -32,7 +33,7 @@ export function storage() {
   for (const t of bare.split(";")) if (t.trim()) db.exec(t);
   /* provenance R48's contract columns capture reads: `registered` orders a document's captures (R77). */
   db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT,
-             registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z')`);
+             registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z', bytes INTEGER)`);
   db.exec(`CREATE TABLE captured_locators (address_norm TEXT NOT NULL, address TEXT NOT NULL, capture_sha TEXT NOT NULL,
              via TEXT NOT NULL DEFAULT 'direct', first_retrieved TEXT NOT NULL, last_retrieved TEXT NOT NULL,
              observations INTEGER NOT NULL DEFAULT 1, retrieval_locator TEXT, PRIMARY KEY (address_norm, capture_sha, via))`);
@@ -42,12 +43,13 @@ export function storage() {
 /* An evidence bucket stand-in (the R2 binding's shape), recording every call. */
 export function bucket() {
   const held = new Map(), calls = [];
-  const obj = (k) => { const b = held.get(k); return { key: k, size: b.length, body: b,
-    arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
+  /* a ranged read (`{range: {offset, length}}`, R2's option) answers those bytes alone, with the object's own size; none, the whole object */
+  const obj = (k, range = null) => { const all = held.get(k), b = range ? all.subarray(range.offset, range.offset + range.length) : all;
+    return { key: k, size: all.length, body: b, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
   return {
     calls, held, failPut: false,
     async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k) : null; },
+    async get(k, o) { const range = o && o.range ? o.range : null; calls.push(["get", k, range]); return held.has(k) ? obj(k, range) : null; },
     async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes)); return { key: k }; },
     async delete(k) { calls.push(["delete", k]); held.delete(k); },
   };
@@ -71,6 +73,16 @@ export function governor({ refuse = [], held = [] } = {}) {
    register holds; `acquired` those an acquisition receipt names (a capture held in parts). */
 export function provenance(s, { registered = [], acquired = [] } = {}) {
   const receipts = [];
+  /* provenance's own answer to "what does the record hold" (K5044): its published fixture. The receipts this stand-in wrote are read from this store, so a
+     rolled-back filing leaves none; a digest one names is asked of a provenance that holds a receipt for it. */
+  const worlds = new Map();
+  const heldFor = (digest) => {
+    const named = [...s.sql.exec(`SELECT 1 AS x FROM captured_locators WHERE capture_sha = ? LIMIT 1`, digest)].length > 0;
+    if (!worlds.has(named)) worlds.set(named, new Map());
+    const byDigest = worlds.get(named);
+    if (!byDigest.has(named ? digest : "")) byDigest.set(named ? digest : "", holdsRegister({ registered, acquired: named ? [...acquired, digest] : acquired }));
+    return byDigest.get(named ? digest : "");
+  };
   return {
     receipts,
     recordReceipt(r) {
@@ -88,11 +100,8 @@ export function provenance(s, { registered = [], acquired = [] } = {}) {
                                     FROM captured_locators WHERE capture_sha = ? ORDER BY address_norm, via`, captureSha)].map((r) => ({ ...r }));
       return { capture_sha: captureSha, rows, observations: rows.reduce((n, r) => n + r.observations, 0) };
     },
-    /* R5: `acquired` also when a receipt this stand-in wrote names the digest, as provenance's own answers */
-    registerHolds({ sha }) {
-      const named = [...s.sql.exec(`SELECT 1 AS x FROM captured_locators WHERE capture_sha = ? LIMIT 1`, sha)].length > 0;
-      return { ok: true, sha, asked: true, registered: registered.includes(sha), acquired: acquired.includes(sha) || named };
-    },
+    /* R5: provenance's own `registerHolds`, over the digests registered and those a receipt names, as provenance answers */
+    registerHolds: (a) => heldFor(a.sha).registerHolds(a),
   };
 }
 

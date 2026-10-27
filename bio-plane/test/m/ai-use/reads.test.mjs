@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, WORDS } from "./fixture.mjs";
 import { AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, WHOSE_WORD, aiUseOps } from "../../../src/ai-use/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
 
@@ -155,8 +156,8 @@ test("R13 each refusal's member-facing sentence is read by key from words.json, 
   w.count("member:ann", "ann", "ask", { cost: 0.5 });
   const r = w.u.useCheck({ owner: "member:ann", member: "ann", use: "ask", at: AT });
   assert.equal(r.word, "ai.refused.limit");
-  assert.equal(r.translation, "The assistant stopped here: your own daily limit for asking is reached. It works again tomorrow. "
-    + "Everything else works as usual.");
+  assert.equal(r.translation, word("ai.refused.limit", { whose: word("ai.whose.own"), period: word("ai.period.day"),
+    use: word("ai.use.ask.inline"), when: word("ai.when.day") }));
   assert.doesNotMatch(r.translation, /0\.5|\$|cent|dollar/i, "never a cost");
   /* negative control: a different scope reads a different key */
   assert.equal(w.u.useCheck({ owner: "member:ann", member: "ann", use: "draft", at: AT }).word, "ai.refused.limit.overall");
@@ -168,7 +169,7 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
   /* negative control: the words file's own sentences carry placeholders, so the test can see one left */
   for (const key of ["ai.refused.limit", "ai.refused.limit.overall", "ai.refused.limit.member", "ai.refused.limitinvalid"])
     assert.match(WORDS[key], PLACEHOLDER, key);
-  const USE_WORD = { ask: "asking", draft: "drafting", run: "working through checks and plans", standing: "standing questions", explore: "exploring" };
+  const USE_WORD = { ask: "asking", draft: "drafting", run: word("ai.use.run.inline"), standing: word("ai.use.standing.inline"), explore: "exploring" };
   const PERIOD_WORD = { day: "daily", month: "monthly" };
   const expected = (scope, whose, use, period, when) => WORDS[scope === "overall" ? "ai.refused.limit.overall"
     : scope === "per_member" ? "ai.refused.limit.member" : "ai.refused.limit"]
@@ -179,9 +180,9 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
   for (const [owner, by, member] of owners)
     assert.equal(w.a.accountUsesSet({ owner, switch: "explore", on: "yes", by }).ok, true, owner);
   let seen = 0;
-  /* the month's {when} read from ai.when.month with the next month's date.month.* (T44, DEC-192 (4): "on 1 {month}") */
+  /* the month's {when} read from ai.when.month with the next month's date.month.* (T44, DEC-192 (4); DEC-333: "on {month} 1") */
   const onThe1st = (month) => WORDS["ai.when.month"].replace("{month}", WORDS[`date.month.${month}`]);
-  assert.equal(onThe1st("november"), "on 1 November", "words.json's own order, read verbatim");
+  assert.equal(onThe1st("november"), "on November 1", "words.json's own order, read verbatim");
   for (const [at, monthWhen] of [["2026-10-09T12:00:00Z", onThe1st("november")], ["2026-12-15T12:00:00Z", onThe1st("january")]]) {
     for (const [owner, by, member, whose] of owners) {
       for (const use of Object.keys(USE_WORD)) w.count(owner, member, use, { at });
@@ -216,7 +217,8 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
   assert.deepEqual(invalid.map((r) => r.field), ["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"]);
   for (const r of invalid) {
     assert.equal(r.code, "AI_LIMIT_INVALID");
-    assert.ok(r.translation.startsWith("That limit can't be set: ") && !PLACEHOLDER.test(r.translation), r.translation);
+    assert.equal(r.translation, word("ai.refused.limitinvalid", { field: word(`ai.limitfield.${r.field}`) }), r.translation);
+    assert.ok(!PLACEHOLDER.test(r.translation), r.translation);
   }
   assert.equal(new Set(invalid.map((r) => r.translation)).size, invalid.length, "each field fills its own words");
 });

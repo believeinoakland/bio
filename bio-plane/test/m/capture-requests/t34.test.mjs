@@ -6,11 +6,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, filed, sha } from "./fixture.mjs";
 import { CAPTURE_REQUEST_CHECKS, MEMBER_ROUTE, CAPTURE_REQUESTS_MODULE } from "../../../src/capture-requests/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 /** The reader as `capture` holds it: the one registered in the `captured-for` slot, by this module. */
 const readerOf = (w) => {
   const regs = w.capture.readers.filter((r) => r.slot === "captured-for");
-  assert.equal(regs.length, 1, "registered once, at start");
+  assert.equal(regs.length, 1, "exactly one registration in the captured-for slot");
   assert.equal(regs[0].module, CAPTURE_REQUESTS_MODULE);
   return regs[0].fn;
 };
@@ -128,28 +129,29 @@ test("R48 many digests: a document with more captures than one read binds is ans
 test("DEC-149 each changed member-facing string says your group's Civicsmith, or needs no name: C-28.1, C-28.4, C-28.6, C-28.8, C-28.16, C-28.17, C-28.20, C-28.21, MEMBER_ROUTE, the unconfigured drain, the platform mark's failures", async () => {
   const OLD = /\bthis (instance|copy|plane)\b/i;
   const tr = (code) => CAPTURE_REQUEST_CHECKS[code].translation;
+  /* Each named refusal's translation is its words row (setup-words R13): compared by key, never by its sentence. */
   const named = {
-    "C-28.1": ["CAPTURE_REQUEST_NO_RUN", "Every fetch your group's Civicsmith makes on its own"],
-    "C-28.4": ["CAPTURE_REQUEST_CARRIES_A_CAPTURE", "The fetch is performed by your group's Civicsmith itself"],
-    "C-28.6": ["CAPTURE_CONDUCT_UA_ILLEGIBLE", "Your group's Civicsmith will not fetch without saying who is asking"],
-    "C-28.8": ["CAPTURE_CONDUCT_NO_PURPOSE", "Every request your group's Civicsmith makes says what it is for"],
-    "C-28.16": ["CAPTURE_REQUEST_RENDER_MALFORMED", "in a form your group's Civicsmith does not recognise"],
-    "C-28.17": ["CAPTURE_FETCH_FAILED", "Your group's Civicsmith tried to fetch the document"],
-    "C-28.20": ["MEMBER_CAPTURE_ONLY", "Your group's Civicsmith does not fetch it unattended or sign in to it"],
-    "C-28.21": ["CAPTURE_REQUEST_SITE_KIND_UNKNOWN", "in a way your group's Civicsmith does not recognise"],
+    "C-28.1": "CAPTURE_REQUEST_NO_RUN",
+    "C-28.4": "CAPTURE_REQUEST_CARRIES_A_CAPTURE",
+    "C-28.6": "CAPTURE_CONDUCT_UA_ILLEGIBLE",
+    "C-28.8": "CAPTURE_CONDUCT_NO_PURPOSE",
+    "C-28.16": "CAPTURE_REQUEST_RENDER_MALFORMED",
+    "C-28.17": "CAPTURE_FETCH_FAILED",
+    "C-28.20": "MEMBER_CAPTURE_ONLY",
+    "C-28.21": "CAPTURE_REQUEST_SITE_KIND_UNKNOWN",
   };
-  for (const [check, [code, says]] of Object.entries(named)) {
+  for (const [check, code] of Object.entries(named)) {
     assert.equal(CAPTURE_REQUEST_CHECKS[code].check, check);
-    assert.ok(tr(code).includes(says), `${check}: ${tr(code)}`);
+    assert.equal(tr(code), word(`refusal.${code}`), check);
   }
   /* no translation of the family calls it "this instance", "this copy" or "this plane" */
   for (const [code, row] of Object.entries(CAPTURE_REQUEST_CHECKS)) assert.doesNotMatch(row.translation, OLD, code);
-  assert.match(MEMBER_ROUTE, /your group's Civicsmith uses no login for it\.$/);
+  assert.match(MEMBER_ROUTE, /your team's Civicsmith uses no login for it\.$/);
   assert.doesNotMatch(MEMBER_ROUTE, OLD);
   /* the unconfigured drain, as its answer says it */
   const off = world({ configured: () => false });
   const d = await off.cr.drain({});
-  assert.equal(d.detail, "no daemon credential is bound: your group's Civicsmith drains nothing and holds no alarm for it");
+  assert.equal(d.detail, localize("capture-requests.index.no_daemon_credential_bound", "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm for it"));
   /* the platform mark's two failures need no name */
   const w = world().scene();
   w.st.sql.exec(`DROP TABLE capture_request_platforms`);

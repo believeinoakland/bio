@@ -30,7 +30,7 @@ test("R16 a unit cost is a ratio of a money fact's amount over its buys quantity
     [["FY2025-26", "150", "120", "30", "-", "lower"], ["FY2026-27", "200", "190", "10", "-", "lower"]]);
   assert.deepEqual(bva.results.bases, { adopted: ["budgetary"], actual: ["modified accrual"] }, "the bases stated beside the result");
   assert.match(bva.results.bases_says, /budgetary.*modified accrual/);
-  assert.equal(code(await w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: actual }, { name: "actual", money: actual }], by: V("bob") })), "BUDGET_INPUTS", "each total within one phase");
+  assert.equal(code(await w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: actual }, { name: "actual", money: actual }], by: V("bob") })), "BUDGET_INPUTS");
   const mixed = [...adopted, w.fact({ amount: "1", kind: "expenditure", phase: "adopted", stage: undefined, basis: "cash", period: FY["2025"] })];
   const m = await w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: mixed }, { name: "actual", money: actual }], by: V("bob") });
   assert.equal(code(m), "SUM_MIXED_BASIS", "each total within one basis (R12)");
@@ -58,7 +58,7 @@ test("R17 a ranking orders by one stated, measured quantity and names its quanti
   assert.equal(code(await w.c.create({ ...g, terms, recipe: R([{ op: "count", from: "t", as: "n" }], "n") })), "NOT_A_RANKING");
   const mixed = await w.table("vendor,amount,kind\nAcme,1,award\nAcme,1,board seat\nBeta,1,award\n", fields);
   const count = R([{ op: "group", from: "t", by: ["vendor"], measure: { op: "count" }, as: "g" }, { op: "sort", from: "g", by: "count", order: "desc", as: "ranked" }], "ranked");
-  assert.equal(code(await w.c.create({ ...g, terms: { ...terms, quantity: "links" }, inputs: [{ name: "t", table: mixed.sha }], recipe: count })), "SCORE_NOT_A_FACT", "a measure across mixed kinds of link");
+  assert.equal(code(await w.c.create({ ...g, terms: { ...terms, quantity: "links" }, inputs: [{ name: "t", table: mixed.sha }], recipe: count })), "SCORE_NOT_A_FACT");
   const one = R([{ op: "select", from: "t", where: [{ field: "kind", test: "eq", value: "award" }], as: "awards" },
     { op: "group", from: "awards", by: ["vendor"], measure: { op: "count" }, as: "g" }, { op: "sort", from: "g", by: "count", order: "desc", as: "ranked" }], "ranked");
   const ok = await w.c.create({ ...g, terms: { ...terms, quantity: "awards held" }, inputs: [{ name: "t", table: mixed.sha }], recipe: one });

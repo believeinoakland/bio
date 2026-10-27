@@ -1,7 +1,7 @@
 /* scheduler: the producers' notices it registers with (R9, R17) and the reconcile at the instance's start (R11). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, writes, NOW } from "./fixture.mjs";
+import { world, writes, NOW, pinNow } from "./fixture.mjs";
 
 /** The earlier producers' registration services, as their owners state them: each keeps its listeners by module and
  *  lets the test fire them. */
@@ -110,7 +110,7 @@ test("R9: a producer later than this module arms by calling arm itself (R4), its
   assert.equal(st.alarm, NOW + 86400000);
 });
 
-test("R9: a resolution that marks an entity arms the connection sweep through entities' notice, after the resolving transaction, once", async () => {
+test("R9: a resolution that marks an entity arms the connection sweep through entities' notice, after the resolving transaction, once", async (t) => { pinNow(t);
   const { s, st } = world({ "connection-derive": { wake: NOW + 60000 } });
   const { p, heard } = producers();
   s.listenTo(p);
@@ -129,7 +129,7 @@ test("R9: a resolution that marks an entity arms the connection sweep through en
   assert.equal(st.log.filter(([m]) => m === "getAlarm").length, 2, "a second, separate arm ran");
 });
 
-test("R17: every notice it registers only schedules: no tick runs and nothing but the alarm is written", async () => {
+test("R17: every notice it registers only schedules: no tick runs and nothing but the alarm is written", async (t) => { pinNow(t);
   const { s, st, calls } = world({ "bias-debt": { due: NOW, wake: NOW + 10 }, "selection-sweep": { wake: NOW + 20 },
                                    "overdue-scan": { wake: NOW + 30 } });
   const { p, fire } = producers({ debtDue: NOW });

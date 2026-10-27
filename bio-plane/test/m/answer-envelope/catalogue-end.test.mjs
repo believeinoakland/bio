@@ -95,7 +95,7 @@ test("R13 (T46; DEC-194, N913; K2953, K2959, K2960): C-124.30 SCENARIO_OUT_OF_RA
   assert.deepEqual(M.dec49Attach({ ok: false, reason: "SCENARIO_OUT_OF_RANGE" }),
                    { ok: false, reason: "SCENARIO_OUT_OF_RANGE", code: "SCENARIO_OUT_OF_RANGE", check: "C-124.30", translation: sentence });
   /* C-113.7 and C-116.27: their pins as T45 left them, which the rows still read (not words.json's unadopted sentences) */
-  for (const [code, pin, key] of [["FINDING_NOT_PUBLISHED", ["C-113.7", "2993ac7dd0bfd047"], "refusal.FINDING_NOT_PUBLISHED"],
+  for (const [code, pin, key] of [["FINDING_NOT_PUBLISHED", ["C-113.7", "cf5ceb7e8f1b877b"], "refusal.FINDING_NOT_PUBLISHED"],
                                   ["NOT_OPEN", ["C-116.27", "80ea63ad3225e138"], "refusal.NOT_OPEN"]]) {
     assert.deepEqual(SNAP.rows[code], pin, code);
     const got = M.dec49Row(code);

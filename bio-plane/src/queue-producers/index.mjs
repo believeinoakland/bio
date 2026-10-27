@@ -1,10 +1,12 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R42).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R51).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
  *   feedItems      queue's one read of this module (R8): every item R1, R2, R4–R7, R9, R14, R23, R30–R35, R37–R39, R41, R42 derive
- *                  for a member and viewer, every item `machinery-producers.conditionItems` answers (its R1: the
+ *                  for a member and viewer, each producer read as a feed of its own (R45: one that cannot be read is named in
+ *                  `facts.failed`, one with no provider composed in `facts.absent`, and the others' items stand), every sentence
+ *                  of an item read by key through `./words.mjs` (R43: `summary_key`, `detail_key`), every item `machinery-producers.conditionItems` answers (its R1: the
  *                  CONDITIONs about our own machinery, split out by K1850) and every item `action-producers.actionItems`
  *                  answers (its R13: the Action layer's to-dos, was this module's R15–R21, R29, moved by T45, K2781 (1)),
  *                  each homed through queue's walk and carrying queue's options (both passed in),
@@ -15,6 +17,11 @@
  *
  *   registerPlaceArrivals   R38's one door: `instance-setup` registers its `placeArrivals` read here once at start (K31's
  *                  pattern), since it comes later in layer 11.
+ *
+ *   R46–R48     the `members` feed (T51's fix round, K4169, UC-046): an endorsement owed on a proposed administrator, an owner vote
+ *                  owed on a project's owner change, an expertise awaiting confirmation, each carrying its door (`door`, K4210).
+ *   R49–R51     one read asks for each kind of fact once (no read per item or per project), a failed feed names its read and
+ *                  code, and `facts.ms` says what each feed cost.
  *
  * REACHED as `queueProducersOf(ctx, deps)`: one instance per Durable Object storage. It registers nothing with an earlier
  * module and holds no check row: it refuses nothing a member does (draft §3.3); a second registration at R38's door is a
@@ -36,6 +43,7 @@
 import { normalizeType } from "../record-grammar/types.mjs";
 import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
+import { canonicalJson } from "../record-grammar/json.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, hiddenBundles, GATE_MARK } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
@@ -53,17 +61,32 @@ import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
-import { isCalendarDate } from "../civil-time/index.mjs";
 import { docketOf, DOCKET_UNREADABLE } from "../docket/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { machineryProducersOf, MachineryProducers } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { ROOT_ADMIN } from "../member-roster/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
+import { say, holds, joined, fillWord, reasonWord, dayText, localDayOf, instantText, setText } from "./words.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
+
+/** R45: why a feed's provider answered no list: `refused` (it refused), `undetermined` (it said it could not tell). A read that
+ *  throws is `threw`. Codes, never English. */
+class FeedFail extends Error {
+  constructor(reason, read = null, code = null) { super(`feed unread: ${reason}`); this.reason = reason; this.read = read; this.code = code; }
+}
+
+/** R50: a refusal `contradiction.conflictNotices` answers for a project it tells this viewer nothing about (R7): not a failure. */
+const TOLD_NOTHING = Object.freeze(["NOT_A_PARTICIPANT", "NO_SUCH_PROJECT", "PROJECT_SEEN_NOT_A_PARTICIPANT"]);
+/** R50: a provider's own code as a code, never a sentence. */
+const codeOf = (r) => {
+  const c = r && typeof r === "object" ? (typeof r.code === "string" && r.code ? r.code : typeof r.reason === "string" ? r.reason : "") : "";
+  return /^[A-Za-z0-9_.:-]{1,80}$/.test(c) ? c : null;
+};
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -119,8 +142,26 @@ export class QueueProducers {
   get #publishSchedule() { return this.#dep("publishSchedule", () => publishScheduleOf(this.#host)); }
   /* T50 (R41, R42; N1091): a project's participants and requests to join are project-roster's (its R1, R14, R26, R34). */
   get #projectRoster() { return this.#dep("projectRoster", () => projectRosterOf(this.#host, { record: this.#record, membership: this.#membership })); }
+  /* T51's fix round (R46, R48): who owes an endorsement and which expertise awaits confirmation are member-roster's (its R77, R78),
+     read through the one membership instance, which delegates both: it is the roster credentials told the copy is claimed, so the
+     founder is among the administrators (a second `membersOf` instance is never told, and drops her). */
+  get #memberRoster() { return this.#dep("memberRoster", () => this.#membership); }
   /* R38: the read instance-setup registers at start (its R62), or null while none is. */
   #placeArrivals = null;
+  /* R43: this read's clock, the group's zone and the current local day in it, held for the length of one `feedItems` call, so a
+     date inside a sentence is read in the zone the group keeps (civil-time) and names its year only when it is not this one. */
+  #nowMs = Date.now(); #zoneMemo = undefined; #todayMemo = undefined;
+  /* R49: what this one read has already asked, cleared with it, so a kind of fact is asked once for all the items that name it. */
+  #memo = null;
+  #fresh() {
+    return { titles: new Map(), cases: new Map(), owners: new Map(), seen: new Map(), names: new Map(), caseProject: new Map(), scopes: new Map(),
+             authors: new Map(), captured: new Map(), lead: { homes: new Map(), facts: new Map() }, homes: new Map(), options: new Map(), shared: null };
+  }
+  /** The ids of `ids` that are strings, once each, that `held` has not answered yet. */
+  static #missing(held, ids) { return [...new Set((ids || []).filter((x) => typeof x === "string" && x))].filter((x) => !held.has(x)); }
+  /** The group's zone, asked of publish-schedule once per read and only when a sentence needs a date or a time. */
+  #zoneNow() { if (this.#zoneMemo === undefined) this.#zoneMemo = this.#groupZone(); return this.#zoneMemo; }
+  #todayNow() { if (this.#todayMemo === undefined) this.#todayMemo = this.#todayIn(this.#zoneNow()); return this.#todayMemo; }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -143,17 +184,27 @@ export class QueueProducers {
     };
   }
 
-  /** The same question of ONE id, memoised per read: the id when the viewer sees it (membership R80), else null. */
+  /** The same question of ONE id, memoised per read: the id when the viewer sees it (membership R80), else null. `seen.prefetch(ids)`
+   *  (R49) asks it of every id the feed is about to name, by one statement over `membership.viewerGate` (what `inSight` asks of
+   *  one id), so a loop over items reads no row for each. */
   #bundleRedactor(viewer) {
     const gate = viewerPredicate(viewer);
-    if (gate.scope === "member") return (id) => id ?? null;
-    if (gate.scope === "DENY") return (id) => (id ? null : id ?? null);
-    const memo = new Map();
-    return (id) => {
-      if (!id) return id ?? null;
-      if (!memo.has(id)) memo.set(id, this.#membership.inSight(id, viewer));
-      return memo.get(id) ? id : null;
+    if (gate.scope === "member") return Object.assign((id) => id ?? null, { prefetch: () => {} });
+    if (gate.scope === "DENY") return Object.assign((id) => (id ? null : id ?? null), { prefetch: () => {} });
+    const memo = this.#memo.seen;
+    const prefetch = (ids) => {
+      const todo = QueueProducers.#missing(memo, ids);
+      if (!todo.length) return;
+      const g = this.#membership.viewerGate(viewer);
+      const sees = new Set(this.#rows(`SELECT b.bundle_id AS id FROM bundles b WHERE b.bundle_id IN (SELECT value FROM json_each(?)) AND (${g.sql})`,
+                                      JSON.stringify(todo), ...g.args).map((r) => r.id));
+      for (const id of todo) memo.set(id, sees.has(id));
     };
+    return Object.assign((id) => {
+      if (!id) return id ?? null;
+      if (!memo.has(id)) prefetch([id]);
+      return memo.get(id) ? id : null;
+    }, { prefetch });
   }
 
   /* ------------------------------------------------------------------ the providers' services, by the names the moved
@@ -164,9 +215,133 @@ export class QueueProducers {
   #isAdminMember(...a) { return this.#membership.isAdministrator(...a); }
   #activeAdmins(...a) { return this.#membership.activeAdmins(...a); }
 
-  /* queue's R7 walk and R12 options, as this read was handed them (R8). */
-  #homesOf(subjectIds) { return this.#homesFn ? this.#homesFn(subjectIds || []) : { ...UNGROUPED }; }
-  #optionsOf(subjectIds) { return this.#optionsFn ? this.#optionsFn(subjectIds || []) || [] : []; }
+  /* ------------------------------------------------------------------ the words' facts (R43) */
+  /** R49: the titles of `ids`, every one not yet held read by one statement (`bundles` is record-core's stated read contract). */
+  #titlesOf(ids) {
+    const held = this.#memo.titles;
+    const todo = QueueProducers.#missing(held, ids);
+    if (!todo.length) return held;
+    const found = new Map(this.#rows(`SELECT bundle_id, title FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
+                                      JSON.stringify(todo)).map((r) => [r.bundle_id, r.title]));
+    for (const id of todo) held.set(id, typeof found.get(id) === "string" && found.get(id) ? found.get(id) : null);
+    return held;
+  }
+  /** An id's title, or null when it names no titled bundle. */
+  #titleOf(id) {
+    if (typeof id !== "string" || !id) return null;
+    return this.#titlesOf([id]).get(id) ?? null;
+  }
+  /** R43: the scope of each of `ids` that is a published case, from publication's `published_cases` (its R40, a stated read
+   *  contract): the newest edition that states one; null for an id that is no case or states none. One statement for all not yet held. */
+  #scopesOf(ids) {
+    const held = this.#memo.scopes;
+    const todo = QueueProducers.#missing(held, ids);
+    if (todo.length) {
+      const found = this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='published_cases'`)
+        ? new Map(this.#rows(`SELECT p.case_id, p.scope FROM published_cases p WHERE p.case_id IN (SELECT value FROM json_each(?))
+                              AND p.scope IS NOT NULL AND p.scope <> ''
+                              AND p.edition = (SELECT MAX(q.edition) FROM published_cases q WHERE q.case_id = p.case_id AND q.scope IS NOT NULL AND q.scope <> '')`,
+                              JSON.stringify(todo)).map((r) => [r.case_id, r.scope]))
+        : new Map();
+      for (const id of todo) held.set(id, found.get(id) ?? null);
+    }
+    return held;
+  }
+  /** What a sentence calls a holder: a bundle by its title, a published case by its scope (its reading name), else its id (R43). */
+  #nameOf(id) {
+    const title = this.#titleOf(id);
+    if (title) return title;
+    if (typeof id === "string" && id) { const scope = this.#scopesOf([id]).get(id); if (scope) return scope; }
+    return id === undefined || id === null ? "" : String(id);
+  }
+  /** What a sentence calls a member (C94): her handle; the founder by the handle she holds, else `member.founder.unnamed`'s word
+   *  (DEC-230), never `admin`; any other member with no handle by her id, as R46 states (the word list holds no key for a member
+   *  who has none: named in the job's QUESTION). */
+  #memberName(id) {
+    if (typeof id !== "string" || !id) return "";
+    if (!this.#memo.names.has(id)) {
+      let facts = null, founder = null;
+      try { facts = this.#membership.memberFacts(id); } catch { facts = null; }
+      if (id === ROOT_ADMIN) { try { founder = this.#membership.founderHandle(); } catch { founder = null; } }
+      const handle = facts && typeof facts.handle === "string" && facts.handle ? facts.handle : typeof founder === "string" && founder ? founder : null;
+      this.#memo.names.set(id, handle ?? (id === ROOT_ADMIN ? word("member.founder.unnamed") : id));
+    }
+    return this.#memo.names.get(id);
+  }
+  /** B7 (K4245): a name the roster answers as a member's handle, or null when it is an id (the member holds no handle): held
+   *  by a member's row or by the founder. The fill `fills.who` carries it; the sentence keeps the name either way. */
+  #heldHandle(name) {
+    if (typeof name !== "string" || !name) return null;
+    try {
+      const held = this.#membership.memberByHandle(name) !== null || this.#membership.founderHandle() === name;
+      return held ? name : null;
+    } catch { return null; }
+  }
+  /** The group's time zone as publish-schedule R1 carries it (its `groupZone`), or null when none is held. */
+  #groupZone() {
+    try {
+      const ps = this.#publishSchedule;
+      const z = ps && typeof ps.groupZone === "function" ? ps.groupZone() : null;
+      return typeof z === "string" && z ? z : null;
+    } catch { return null; }
+  }
+  /** The current local day in `zone` (the UTC day when none is held; a sentence's, never an age's or a comparison's, R36). */
+  #todayIn(zone) { return localDayOf(new Date(this.#nowMs).toISOString().replace(/\.\d{3}Z$/, "Z"), zone); }
+  /** A date a provider states (a day, or an instant) as the sentence names it, in the group's zone; empty when it is neither. */
+  #dayWord(value) {
+    const day = localDayOf(value, this.#zoneNow());
+    return day ? dayText(day, this.#todayNow()) : "";
+  }
+  /** `queue.source.untitled`'s `{date}`: the local day of the earliest retrieval of the captures registered under a bundle,
+   *  from provenance's register and receipts (R11's stated read contract, its R48); empty when none can be read. */
+  #capturedDay(bundleId) {
+    const held = this.#memo.captured;
+    if (!held.has(bundleId)) this.#prefetchCaptured([bundleId]);
+    return held.get(bundleId) ?? "";
+  }
+  /** R49: the capture days of `ids` at once, one statement; none readable (a store without the tables) leaves each empty. */
+  #prefetchCaptured(ids) {
+    const held = this.#memo.captured;
+    const todo = QueueProducers.#missing(held, ids);
+    if (!todo.length) return;
+    try {
+      const found = new Map(this.#rows(`SELECT r.bundle_id AS bundle_id, MIN(cl.first_retrieved) AS first FROM register r
+                                          JOIN captured_locators cl ON cl.capture_sha = r.capture_sha
+                                         WHERE r.bundle_id IN (SELECT value FROM json_each(?)) GROUP BY r.bundle_id`,
+                                       JSON.stringify(todo)).map((r) => [r.bundle_id, r.first]));
+      for (const id of todo) held.set(id, found.get(id) ? this.#dayWord(String(found.get(id))) : "");
+    } catch { for (const id of todo) held.set(id, ""); }
+  }
+
+  /** R45: the list a provider's answer states under `key`, or a `FeedFail` naming why it gave none, with `read` the provider read
+   *  (`<module>.<read>`) and the provider's own code when it gave one (R50). */
+  static #answered(r, key, read = null) {
+    if (r && typeof r === "object" && !Array.isArray(r) && r.ok !== false && r.state !== "undetermined" && Array.isArray(r[key])) return r[key];
+    throw new FeedFail(r && typeof r === "object" && (r.state === "undetermined" || r.undetermined === true) ? "undetermined" : "refused", read, codeOf(r));
+  }
+  /** R50: a provider read that threw is named by its read. */
+  static #via(read, fn) {
+    try { return fn(); } catch (e) { throw e instanceof FeedFail ? e : new FeedFail("threw", read); }
+  }
+
+  /* queue's R7 walk and R12 options, as this read was handed them (R8), asked once for each distinct set of subjects (R49): the
+     same set is answered again from what was answered, a copy of it, so an item never shares an object with another. */
+  #homesOf(subjectIds) {
+    if (!this.#homesFn) return { ...UNGROUPED };
+    const ids = subjectIds || [], key = JSON.stringify(ids);
+    if (this.#memo.homes.has(key)) return structuredClone(this.#memo.homes.get(key));
+    const answer = this.#homesFn(ids);
+    try { this.#memo.homes.set(key, structuredClone(answer)); } catch { /* an answer that cannot be copied is asked again */ }
+    return answer;
+  }
+  #optionsOf(subjectIds) {
+    if (!this.#optionsFn) return [];
+    const ids = subjectIds || [], key = JSON.stringify(ids);
+    if (this.#memo.options.has(key)) return structuredClone(this.#memo.options.get(key));
+    const answer = this.#optionsFn(ids) || [];
+    try { this.#memo.options.set(key, structuredClone(answer)); } catch { /* an answer that cannot be copied is asked again */ }
+    return answer;
+  }
 
   /* ------------------------------------------------------------------ the bounds */
   /** Which object types can BE a case (queue's R7 vocabulary, through normalizeType): an inquiry or a project. */
@@ -175,21 +350,20 @@ export class QueueProducers {
   static QUEUE_OPTION_SUBJECTS_MAX = 8;
   /** R9: the lead's inquiry-grain act, take it up (cite into that inquiry); queue decorates it (its R17) and adds the
    *  set-aside at its mint, where the disposition is known (its R18). */
-  static LEAD_TAKE_UP = Object.freeze({ id: "cite", label: "Take it up under this question", weight: "report" });
+  static LEAD_TAKE_UP = Object.freeze({ id: "cite", label: word("queue-producers.label.take_up_under"), weight: "report" });
   /** K1850: the five sweep kinds, now machinery-producers' (its R4), kept here as an alias for this module's readers. */
   static SWEEP_CONDITION_KINDS = MachineryProducers.SWEEP_CONDITION_KINDS;
   /** How many pages of one provider's cursor-paged read (each at most 500 entries) one read follows. */
   static QUEUE_PAGES = 20;
 
   /** A provider's paged read followed by its cursor, at most QUEUE_PAGES pages; `truncated` when it was cut. */
-  #pages(read) {
+  #pages(read, name = null) {
     const items = [];
     let after = null, cut = false;
     for (let page = 0; ; page += 1) {
       if (page === QueueProducers.QUEUE_PAGES) { cut = true; break; }
       const r = read(after);
-      if (!r || r.ok === false || !Array.isArray(r.items)) break;
-      items.push(...r.items);
+      items.push(...QueueProducers.#answered(r, "items", name));
       if (!r.truncated || !r.cursor) break;
       after = r.cursor;
     }
@@ -212,88 +386,197 @@ export class QueueProducers {
     const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : Date.now();
     this.#homesFn = typeof homesOf === "function" ? homesOf : null;
     this.#optionsFn = typeof optionsOf === "function" ? optionsOf : null;
+    this.#nowMs = at;
+    this.#zoneMemo = undefined;
+    this.#todayMemo = undefined;
+    this.#memo = this.#fresh();
     try {
       const items = [];
+      /* R45: every producer is a feed read on its own. One whose read throws, or whose provider answers a refusal or
+         `undetermined` instead of its list, contributes no item and is named in `facts.failed`; the others stand. A feed with
+         no provider composed at this host is neither failed nor answered: it is named in `facts.absent`. */
+      const failed = [], absent = [], ms = {};
+      /* R50: a feed that could not be read names, beside its reason, the provider read and its code when they are known; R51: and
+         every feed read, a feed that threw included, says in `facts.ms` what it cost. */
+      const feed = (id, read) => {
+        const t0 = performance.now();
+        try { return read(); }
+        catch (e) {
+          const fail = e instanceof FeedFail ? e : null;
+          failed.push({ feed: id, reason: fail ? fail.reason : "threw", ...(fail && fail.read ? { read: fail.read } : {}), ...(fail && fail.code ? { code: fail.code } : {}) });
+          return null;
+        } finally { ms[id] = Math.max(0, Math.round(performance.now() - t0)); }
+      };
+      const add = (list) => { if (Array.isArray(list)) items.push(...list); };
       /* OBLIGATION · R1: the bias debts. */
-      items.push(...this.#obligationsBiasDebt(viewer, me, at));
+      add(feed("bias-debts", () => this.#obligationsBiasDebt(viewer, me, at)));
       /* FINDING · R2: the proposals feed, read ONCE (its dispositions are published from this same read). */
-      const feed = this.#progressions.proposalsFeed(at) || {};
-      const findingSeen = this.#bundleGate("pi.bundle_id", viewer);
-      items.push(...proposalFindingItems(feed, {
-        subjectsOf: (pk, eid) => this.#rows(`SELECT DISTINCT pi.bundle_id FROM progression_instances pi
-            WHERE pi.progression_key=? AND pi.entity_id=? AND (${findingSeen.sql}) ORDER BY pi.bundle_id`,
-          pk, eid, ...findingSeen.args).map((r) => r.bundle_id),
-        homesOf: (subjects) => this.#homesOf(subjects),
-        optionsOf: (subjects) => this.#optionsOf(subjects),
-        subjectsMax: QueueProducers.QUEUE_OPTION_SUBJECTS_MAX }));
-      /* FINDING · R2 and R9: the lead, the three shared-inquiry kinds, the export, the notices, the gaps, the flags. */
-      items.push(...this.#findingsOutOfInquiryLead(viewer, at));
-      items.push(...this.#findingsStanceDiverged(viewer, at));
-      const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, at);
-      items.push(...fromAnotherTeam);
-      items.push(...this.#findingsConcludedElsewhere(viewer, at));
-      items.push(...this.#findingsExportPerformed(me, viewer, at));
-      items.push(...this.#findingsNewerCapture(viewer, at));
-      const gaps = this.#findingsObjectiveGap(me, viewer, at);
-      items.push(...gaps);
-      items.push(...this.#findingsSourceFlagged(viewer, at));
+      let dispositions = [];
+      add(feed("proposals", () => {
+        const read = this.#progressions.proposalsFeed(at);
+        if (!read || typeof read !== "object" || read.ok === false || read.state === "undetermined") throw new FeedFail(read && read.state === "undetermined" ? "undetermined" : "refused", "progressions.proposalsFeed", codeOf(read));
+        const findingSeen = this.#bundleGate("pi.bundle_id", viewer);
+        /* R49: the bundles behind every instance the feed names, read at once by one statement (the keys and entities named, then
+           the pairs asked), not by one for each instance each time it is asked */
+        const named = [...(Array.isArray(read.proposals) ? read.proposals.flatMap((x) => (x && Array.isArray(x.instances) ? x.instances : [])) : []),
+                       ...(Array.isArray(read.instances) ? read.instances : [])].filter((x) => x && typeof x.progression_key === "string" && typeof x.entity_id === "string");
+        const behind = new Map();
+        if (named.length) {
+          const wanted = new Set(named.map((x) => `${x.progression_key}\u0000${x.entity_id}`));
+          for (const r of this.#rows(`SELECT DISTINCT pi.progression_key, pi.entity_id, pi.bundle_id FROM progression_instances pi
+              WHERE pi.progression_key IN (SELECT value FROM json_each(?)) AND pi.entity_id IN (SELECT value FROM json_each(?))
+                AND (${findingSeen.sql}) ORDER BY pi.bundle_id`,
+            JSON.stringify([...new Set(named.map((x) => x.progression_key))]), JSON.stringify([...new Set(named.map((x) => x.entity_id))]), ...findingSeen.args)) {
+            const k = `${r.progression_key}\u0000${r.entity_id}`;
+            if (!wanted.has(k)) continue;
+            if (!behind.has(k)) behind.set(k, []);
+            behind.get(k).push(r.bundle_id);
+          }
+        }
+        const found = proposalFindingItems(read, {
+          subjectsOf: (pk, eid) => [...(behind.get(`${pk}\u0000${eid}`) ?? [])],
+          homesOf: (subjects) => this.#homesOf(subjects),
+          optionsOf: (subjects) => this.#optionsOf(subjects),
+          subjectsMax: QueueProducers.QUEUE_OPTION_SUBJECTS_MAX });
+        dispositions = Array.isArray(read.dispositions) ? read.dispositions : [];
+        return found;
+      }));
+      /* FINDING · R2: the three shared-inquiry kinds (stance, new reading, concluded elsewhere). */
+      let unattributed = { count: 0, inquiries: [] };
+      add(feed("shared-inquiries", () => {
+        const stance = this.#findingsStanceDiverged(viewer, at);
+        const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, at);
+        const concluded = this.#findingsConcludedElsewhere(viewer, at);
+        unattributed = { count: Number(fromAnotherTeam.unattributed) || 0,
+                         inquiries: Array.isArray(fromAnotherTeam.unattributed_inquiries) ? fromAnotherTeam.unattributed_inquiries : [] };
+        return [...stance, ...fromAnotherTeam, ...concluded];
+      }));
+      /* FINDING · R2 and R9: the lead, the export, the notices, the gaps, the flags. */
+      add(feed("leads", () => this.#findingsOutOfInquiryLead(viewer, at)));
+      add(feed("exports", () => this.#findingsExportPerformed(me, viewer, at)));
+      add(feed("references", () => this.#findingsNewerCapture(viewer, at)));
+      let gapFacts = { bound: QueueProducers.QUEUE_OBJECTIVE_GAP_PROJECTS, truncated: false };
+      add(feed("objectives", () => {
+        const gaps = this.#findingsObjectiveGap(me, viewer, at);
+        gapFacts = { bound: gaps.bound, truncated: gaps.truncated === true };
+        return gaps;
+      }));
+      add(feed("sources", () => this.#findingsSourceFlagged(viewer, at)));
       /* CONDITION (K1850): our own machinery's, machinery-producers' (its R1–R5), homed and offered through the same
-         walk and options this read was handed. */
-      const machinery = this.#machinery.conditionItems({ member: me, viewer, now: at, homesOf: this.#homesFn || undefined,
-                                                         optionsOf: this.#optionsFn || undefined });
-      items.push(...(machinery && Array.isArray(machinery.items) ? machinery.items : []));
+         walk and options this read was handed. A provider it names in its own `facts.failed` is carried as `partial`. */
+      add(feed("machinery", () => {
+        const machinery = this.#machinery.conditionItems({ member: me, viewer, now: at, homesOf: this.#homesFn ? (x) => this.#homesOf(x) : undefined,
+                                                           optionsOf: this.#optionsFn ? (x) => this.#optionsOf(x) : undefined });
+        if (!machinery || !Array.isArray(machinery.items)) throw new FeedFail("refused", "machinery-producers.conditionItems");
+        if (machinery.facts && Array.isArray(machinery.facts.failed) && machinery.facts.failed.length) failed.push({ feed: "machinery", reason: "partial" });
+        return machinery.items;
+      }));
       /* N345 · R4–R7: the contradictions. */
-      const scope = this.#contradictionProjects(me, viewer);
-      items.push(...this.#contradictionItems(scope, viewer, at));
-      items.push(...this.#findingsSideCorrected(viewer, at));
-      items.push(...this.#findingsTensionAfterPublication(me, viewer, at));
-      items.push(...this.#contradictionUnseenItems(me, scope, viewer));
+      let contradictionFacts = { bound: QueueProducers.QUEUE_CONTRADICTION_PROJECTS, truncated: false };
+      add(feed("contradictions", () => {
+        const scope = this.#contradictionProjects(me, viewer);
+        const found = [...this.#contradictionItems(scope, viewer, at),
+                       ...this.#findingsSideCorrected(viewer, at),
+                       ...this.#findingsTensionAfterPublication(me, viewer, at),
+                       ...this.#contradictionUnseenItems(me, scope, viewer)];
+        contradictionFacts = { bound: scope.bound, truncated: scope.truncated === true };
+        return found;
+      }));
       /* OBLIGATION · R14: a member's own signing key, to the administrators. */
-      items.push(...this.#obligationsSignerSelfRegistered(me, viewer, at));
+      add(feed("signing-keys", () => this.#obligationsSignerSelfRegistered(me, viewer, at)));
       /* The Action layer (T45; K2781 (1)): its to-dos are action-producers' (its R1–R12, was this module's R15–R21, R29),
          answered as machinery-producers' are, through the same walk and options this read was handed. */
-      const action = this.#actionProducers.actionItems({ member: me, viewer, now: at, homesOf: this.#homesFn || undefined,
-                                                         optionsOf: this.#optionsFn || undefined });
-      items.push(...(action && Array.isArray(action.items) ? action.items : []));
-      /* R23 (DEC-102 item 3): an observation of the member's own a prepared case uses, its credit level unchosen. */
-      items.push(...this.#obligationsAttributionUnchosen(me, viewer, at));
+      let actionFacts = {};
+      add(feed("action", () => {
+        const action = this.#actionProducers.actionItems({ member: me, viewer, now: at, homesOf: this.#homesFn ? (x) => this.#homesOf(x) : undefined,
+                                                           optionsOf: this.#optionsFn ? (x) => this.#optionsOf(x) : undefined });
+        if (!action || !Array.isArray(action.items)) throw new FeedFail("refused", "action-producers.actionItems");
+        actionFacts = action.facts && typeof action.facts === "object" ? action.facts : {};
+        if (Array.isArray(actionFacts.failed) && actionFacts.failed.length) failed.push({ feed: "action", reason: "partial" });
+        return action.items;
+      }));
+      /* R23 (DEC-102 item 3): an observation of the member's own a prepared case uses, its credit level unchosen. A store
+         publication has not migrated holds no case document: that feed is absent here. */
+      if (this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='case_documents'`))
+        add(feed("attribution", () => this.#obligationsAttributionUnchosen(me, viewer, at)));
+      else absent.push("attribution");
       /* R30, R31 (N520; DEC-116): a case's required core still due, to its manager; a finding resting on an edition
          withdrawn or contested on its docket. */
-      items.push(...this.#obligationsDocketCoreDue(me, viewer, at));
-      items.push(...this.#findingsDocketDependents(viewer, at));
+      add(feed("docket", () => [...this.#obligationsDocketCoreDue(me, viewer, at), ...this.#findingsDocketDependents(viewer, at)]));
       /* R34, R35 (N534; DEC-101 (3)): a finding resting on another group's edition its publisher replaced or withdrew; and
          what a watch saw at the publisher's docket, to the member who set it. */
-      items.push(...this.#findingsCitedCaseMoved(viewer, at));
-      items.push(...this.#watchItems(me, viewer, at));
-      /* R32, R33 (N528; DEC-121 (1), (5)): a group's wizard script withdrawn or restored, told its owners and author; a
-         version submitted, to each owner who may approve it. */
-      items.push(...this.#findingsWizardBroken(me, viewer, at));
-      items.push(...this.#obligationsWizardApproval(me, viewer, at));
+      add(feed("cited-cases", () => [...this.#findingsCitedCaseMoved(viewer, at), ...this.#watchItems(me, viewer, at)]));
+      /* R32, R33, R39 (N528; DEC-121 (1), (5); DEC-158 (4)): a group's wizard script withdrawn or restored, told its owners
+         and author; a version submitted, to each owner who may approve it; a copy whose base has a newer approved version. */
+      add(feed("wizards", () => [...this.#findingsWizardBroken(me, viewer, at), ...this.#obligationsWizardApproval(me, viewer, at),
+                                 ...this.#findingsWizardBaseUpdated(me, viewer, at)]));
       /* R37 (DEC-147; N662): a case edition signed to publish at a set time, while it waits, once published, once stopped. */
-      items.push(...this.#scheduledEditionItems(me, viewer, at));
+      add(feed("schedule", () => this.#scheduledEditionItems(me, viewer, at)));
       /* R38 (DEC-150 (3); N665): a held profile for the place the group named, arrived with an update, to the administrators. */
-      items.push(...this.#conditionsPlaceArrived(me, viewer, at));
-      /* R39 (DEC-158 (4); K1818): a copied wizard whose base has a newer approved version, to the copy's editors. */
-      items.push(...this.#findingsWizardBaseUpdated(me, viewer, at));
-      /* R41, R42 (T50; N1091; DEC-248, DEC-286): a project's invitation, to the member invited; a request to join it, to its owners. */
-      items.push(...this.#obligationsProjectInvitation(me, viewer, at));
-      items.push(...this.#obligationsProjectRequest(me, viewer, at));
+      if (this.#placeArrivals) add(feed("places", () => this.#conditionsPlaceArrived(me, viewer, at)));
+      else absent.push("places");
+      /* R41, R42, R54 (T50; N1091; DEC-248, DEC-286; K5157): a project's invitation, to the member invited; a request to join it, and a
+         participant's request to leave it, to its owners. */
+      add(feed("projects", () => [...this.#obligationsProjectInvitation(me, viewer, at), ...this.#obligationsProjectRequest(me, viewer, at),
+                                  ...this.#obligationsProjectLeave(me, viewer, at)]));
+      /* R46–R48 (T51's fix round; K4169, UC-046): an endorsement owed on a proposed administrator, an owner vote owed on a project's
+         owner change, an expertise awaiting confirmation. */
+      add(feed("members", () => [...this.#obligationsEndorsementOwed(me, at), ...this.#obligationsOwnerVoteOwed(me, viewer, at),
+                                 ...this.#obligationsExpertiseOwed(me, at)]));
       return {
-        items,
+        items: QueueProducers.#onePerMatter(items),
         facts: {
-          objective_gap: { bound: gaps.bound, truncated: gaps.truncated === true },
-          unattributed: { count: Number(fromAnotherTeam.unattributed) || 0,
-                          inquiries: Array.isArray(fromAnotherTeam.unattributed_inquiries)
-                            ? fromAnotherTeam.unattributed_inquiries : [] },
-          contradiction: { bound: scope.bound, truncated: scope.truncated === true },
-          dispositions: Array.isArray(feed.dispositions) ? feed.dispositions : [],
-          action: action && action.facts && typeof action.facts === "object" ? action.facts : {},
+          objective_gap: gapFacts,
+          unattributed,
+          contradiction: contradictionFacts,
+          dispositions,
+          action: actionFacts,
+          failed,
+          absent,
+          ms,
         },
       };
     } finally {
+      this.#memo = null;
       this.#homesFn = null;
       this.#optionsFn = null;
-      }
+      this.#zoneMemo = undefined;
+      this.#todayMemo = undefined;
+    }
+  }
+
+  /** R8 (C69; walk CA60): one item per matter. Items that are the same thing to the member who reads them are one, standing where the first
+   *  stood: a fact of an action's deadline, in whatever status and however many of its facts are due, is one to do for that action
+   *  (`local-fact-due`, action-producers R7 raises one for each fact and status; the survivor is the item with the least id, so the same
+   *  one stands at every read, and its basis names every status and fact it stands for); any other item equal to an earlier one in
+   *  everything but its id (class, kind, subject, summary, detail and basis) is that item again. Two matters, however alike their words,
+   *  are two items: a different subject, or a different basis, is a different matter. */
+  static #onePerMatter(items) {
+    const matterOf = (it) => {
+      if (it && it.kind === "local-fact-due" && it.subject && typeof it.subject.id === "string" && it.subject.id) return `fact::${it.subject.id}`;
+      try { const { id, ...rest } = it; void id; return `same::${canonicalJson([rest.class, rest.kind, rest.subject ?? null, rest.summary ?? null, rest.detail ?? null, rest.basis ?? null])}`; }
+      catch { return `id::${it && it.id}`; }
+    };
+    const groups = new Map(), order = [];
+    for (const it of items) {
+      if (!it || typeof it !== "object") continue;
+      const key = matterOf(it);
+      if (!groups.has(key)) { groups.set(key, []); order.push(key); }
+      groups.get(key).push(it);
+    }
+    const out = [];
+    for (const key of order) {
+      const g = groups.get(key);
+      const seenId = new Set(), unique = g.filter((x) => (seenId.has(x.id) ? false : (seenId.add(x.id), true)));
+      const chosen = unique.reduce((a, b) => (String(b.id) < String(a.id) ? b : a));
+      if (key.startsWith("fact::")) {
+        const basis = chosen.basis && typeof chosen.basis === "object" ? chosen.basis : {};
+        const uniq = (xs) => [...new Set(xs.filter((x) => typeof x === "string" && x))].sort();
+        out.push({ ...chosen, basis: { ...basis, statuses: uniq(unique.map((x) => x.basis && x.basis.status)),
+                                       paths: uniq(unique.map((x) => x.basis && x.basis.path)) } });
+      } else out.push(chosen);
+    }
+    return out;
   }
 
   /** PL-15 / D-213 — WHAT THE RECORD CAN SAY ABOUT A CAPTURED DOCUMENT'S PLACE
@@ -331,23 +614,17 @@ export class QueueProducers {
     if (!sha)
       return { state: "undetermined", reason: "no_capture_sha", bundle_id: null, bundle_state: null,
                basis_legs: null, version_legs: null,
-               detail: "the request records no capture digest, so there is no document to ask about. "
-                     + "That this producer could not look is a different fact from the document being "
-                     + "part of nothing, and it is reported as the first rather than the second." };
-    const home = this.#provenance.homeOf(sha);
+               detail: localize("queue-producers.index.the_request_records_no_capture", "the request records no capture digest, so there is no document to ask about. That this producer could not look is a different fact from the document being part of nothing, and it is reported as the first rather than the second.") };
+    const home = this.#memo.lead.homes.has(sha) ? this.#memo.lead.homes.get(sha) : this.#provenance.homeOf(sha);
     const reg = home ? { bundle_id: home.bundleId } : null;
     if (!reg)
       return { state: "undetermined", reason: "unregistered_capture", bundle_id: null, bundle_state: null,
                basis_legs: null, version_legs: null,
-               detail: "no register entry answers to this capture, so the bytes are not attached to a "
-                     + "document this store can name and there is nothing whose place in a case could "
-                     + "be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape)." };
-    const head = this.#record.head(reg.bundle_id);
-    const b = head ? { current_state: head.currentState } : null;
-    const legs = this.#one(
-      `SELECT COUNT(*) AS n FROM inquiry_basis WHERE target_id=?`, reg.bundle_id).n;
-    const vlegs = this.#one(
-      `SELECT COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id=?`, reg.bundle_id).n;
+               detail: localize("queue-producers.index.no_register_entry_answers_to", "no register entry answers to this capture, so the bytes are not attached to a document this store can name and there is nothing whose place in a case could be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape).") };
+    const held = this.#leadFacts([reg.bundle_id]).get(reg.bundle_id);
+    const b = held.state === undefined ? null : { current_state: held.state };
+    const legs = held.legs;
+    const vlegs = held.vlegs;
     const none = legs === 0 && vlegs === 0;
     return {
       state: none ? "absent" : "present",
@@ -356,15 +633,27 @@ export class QueueProducers {
       bundle_state: b ? b.current_state : null,
       basis_legs: legs, version_legs: vlegs,
       detail: none
-        ? "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The "
-        + "document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no "
-        + "leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the "
-        + "case, which is a different sentence from nobody having read it, and this producer counted "
-        + "both basis projections to be able to say which."
-        : "this document IS carried by a reading of some question, so the lead has already been acted "
-        + "on or the document was evidence before the lead was raised. Reported rather than "
-        + "suppressed: the item is still the record of an observation somebody made.",
+        ? localize("queue-producers.index.looked_for_and_not_there", "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the case, which is a different sentence from nobody having read it, and this producer counted both basis projections to be able to say which.")
+        : localize("queue-producers.index.this_document_is_carried_by", "this document IS carried by a reading of some question, so the lead has already been acted on or the document was evidence before the lead was raised. Reported rather than suppressed: the item is still the record of an observation somebody made."),
     };
+  }
+
+  /** R49: what the leads' basis absence asks of each bundle the captures are registered under (its state, and how many legs of the
+   *  inquiries' bases and of the proposed readings point at it), every bundle not yet held read at once by three statements. */
+  #leadFacts(bundleIds) {
+    const held = this.#memo.lead.facts;
+    const todo = QueueProducers.#missing(held, bundleIds);
+    if (todo.length) {
+      const json = JSON.stringify(todo);
+      const states = new Map(this.#rows(`SELECT bundle_id, current_state FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`, json)
+        .map((r) => [r.bundle_id, r.current_state]));
+      const legs = new Map(this.#rows(`SELECT target_id, COUNT(*) AS n FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?)) GROUP BY target_id`, json)
+        .map((r) => [r.target_id, r.n]));
+      const vlegs = new Map(this.#rows(`SELECT target_id, COUNT(*) AS n FROM inquiry_basis_version_legs WHERE target_id IN (SELECT value FROM json_each(?)) GROUP BY target_id`, json)
+        .map((r) => [r.target_id, r.n]));
+      for (const id of todo) held.set(id, { state: states.has(id) ? states.get(id) : undefined, legs: legs.get(id) ?? 0, vlegs: vlegs.get(id) ?? 0 });
+    }
+    return held;
   }
 
   /** `out-of-inquiry-lead` (D-213, ANSWERED 2026-08-06 by Bob under DEC-60) —
@@ -417,7 +706,21 @@ export class QueueProducers {
    *  member acts over something that may still be refused at the drain. */
   #findingsOutOfInquiryLead(viewer, now) {
     const out = [];
-    for (const r of this.#captureRequests.leads({ viewer }).requests) {
+    const seen = this.#bundleRedactor(viewer);
+    const requests = QueueProducers.#answered(this.#captureRequests.leads({ viewer }), "requests", "capture-requests.leads");
+    /* R49: the sight and titles of the questions the leads name, read at once */
+    seen.prefetch(requests.map((r) => r && r.target)); this.#titlesOf(requests.flatMap((r) => (r ? [r.target, r.lead_inquiry] : [])));
+    /* and where each capture is registered, and what points at those bundles (R49): the register read for each capture, the legs at once */
+    const registered = [];
+    for (const r of requests) {
+      const sha = r && r.attribution && r.attribution.ok && typeof r.capture_sha === "string" ? r.capture_sha.trim() : "";
+      if (!sha || this.#memo.lead.homes.has(sha)) continue;
+      const home = this.#provenance.homeOf(sha);
+      this.#memo.lead.homes.set(sha, home);
+      if (home) registered.push(home.bundleId);
+    }
+    this.#leadFacts(registered);
+    for (const r of requests) {
       const attribution = r.attribution;
       /* THE SAME DEFENCE `#conditionsCaptureRequested` STATES, for the same
          reason and with the same honesty about what it is. The drain refuses to
@@ -431,7 +734,6 @@ export class QueueProducers {
       if (!attribution.ok) continue;
       const basisEntry = this.#leadBasisAbsence(r.capture_sha);
       const capturedMs = Date.parse(r.captured_at);
-      const leadTitle = this.#record.bundleInfo(r.lead_inquiry);
       out.push({
         id: `FINDING::out-of-inquiry-lead::${r.request}`,
         class: "FINDING",
@@ -442,14 +744,12 @@ export class QueueProducers {
                    inquiry: r.lead_inquiry, address: r.address,
                    capture_sha: r.capture_sha ?? null,
                    bundle_id: basisEntry.bundle_id },
-        summary: `evidence bearing on ${leadTitle && leadTitle.title ? leadTitle.title : r.lead_inquiry} `
-               + `was met while another question was being worked, and captured`,
-        detail: `${r.address} was captured at an investigative session's request while it was working `
-              + `${r.target}, because it bears on ${r.lead_inquiry}. ${attribution.statement}. `
-              + "The document is IN THE STORE and is part of NO claim: it was captured, which is an "
-              + "entry to the cache, and it was deliberately not made part of any question's basis. "
-              + "Nothing about any conclusion has moved, and nothing here is evidence until somebody "
-              + "decides it is.",
+        summary: say("queue.out-of-inquiry-lead.summary", { question: this.#nameOf(r.lead_inquiry) }),
+        summary_key: "queue.out-of-inquiry-lead.summary",
+        /* the run's own question is named by its title only where this viewer may see it (R11); else by its id, as before */
+        detail: say("queue.out-of-inquiry-lead.detail", { address: r.address, target: seen(r.target) === null ? r.target : this.#nameOf(r.target),
+                                                          question: this.#nameOf(r.lead_inquiry), statement: attribution.statement }),
+        detail_key: "queue.out-of-inquiry-lead.detail",
         basis: {
           source: "capture_requests", request: r.request, run: r.run,
           /* NAMED APART, deliberately. `found_while_working` is inquiry A and
@@ -463,17 +763,12 @@ export class QueueProducers {
           capture_sha: r.capture_sha ?? null, captured_at: r.captured_at,
           attribution,
           basis_entry: basisEntry,
-          detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4) and BOTH QUESTIONS ARE NAMED "
-                + "(D-213): the act is the daemon's, performed at the session's request, and the "
-                + "session was working one question when it met evidence for another. The absence of "
-                + "a basis entry is MEASURED and reported on `basis_entry` rather than left to be "
-                + "inferred from an empty field — absence at one level is not evidence of absence at "
-                + "the next, and which one is true is the answer, not a footnote (CLAUDE.md).",
+          detail: localize("queue-producers.index.both_principals_are_named_dec", "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4) and BOTH QUESTIONS ARE NAMED (D-213): the act is the daemon's, performed at the session's request, and the session was working one question when it met evidence for another. The absence of a basis entry is MEASURED and reported on `basis_entry` rather than left to be inferred from an empty field — absence at one level is not evidence of absence at the next, and which one is true is the answer, not a footnote (CLAUDE.md)."),
         },
         age: Number.isFinite(capturedMs)
           ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) }
           : { state: "undetermined", reason: "unparseable_captured_at",
-              detail: "the request row carries a completion stamp this producer cannot read as an instant" },
+              detail: localize("queue-producers.index.the_request_row_carries_a", "the request row carries a completion stamp this producer cannot read as an instant") },
         assignee: null,
         assignee_role: null,
         /* R9 (REC-202; queue R18): THE INQUIRY-GRAIN ACTS ON INQUIRY B, which D-213 named and D-222's grain problem held back:
@@ -638,6 +933,21 @@ export class QueueProducers {
         WHERE bx.bundle_id=? AND (${gate.sql})`, inquiryId, ...gate.args) || null;
   }
 
+  /** R49: the shared questions, and each one's row and the projects drawing on it, asked ONCE for the three shared-inquiry kinds
+   *  of one read (they walk the same questions), not once for each. */
+  #shared(viewer) {
+    if (!this.#memo.shared) this.#memo.shared = { list: this.#queueSharedInquiryCandidates(viewer), byInq: new Map() };
+    return this.#memo.shared;
+  }
+  #sharedQuestion(inq, viewer) {
+    const byInq = this.#shared(viewer).byInq;
+    if (!byInq.has(inq)) {
+      const q = this.#queueSharedInquiry(inq, viewer);
+      byInq.set(inq, q ? { q, drawing: this.#projectsDrawingOn(inq, viewer) } : { q: null, drawing: null });
+    }
+    return byInq.get(inq);
+  }
+
   /** `stance-changed-here-not-elsewhere` (PL-13 / IS-3) — ONE ITEM PER
    *  (QUESTION, PROJECT THAT HOLDS A DATED STANCE) THAT STANDS APART.
    *
@@ -673,11 +983,10 @@ export class QueueProducers {
    *  disagreement when it may be one project that simply has not caught up. */
   #findingsStanceDiverged(viewer, now) {
     const out = [];
-    const shared = this.#queueSharedInquiryCandidates(viewer);
+    const shared = this.#shared(viewer).list;
     for (const inq of shared) {
-      const q = this.#queueSharedInquiry(inq, viewer);
+      const { q, drawing } = this.#sharedQuestion(inq, viewer);
       if (!q) continue;
-      const drawing = this.#projectsDrawingOn(inq, viewer);
       if (drawing.length < 2) continue;
       const qname = q.title || inq;
       for (const p of drawing) {
@@ -699,15 +1008,13 @@ export class QueueProducers {
           case: this.#homesOf([inq]),
           subject: { kind: "project_stance", id: p.id, inquiry: inq,
                      version: p.current.version },
-          summary: `${p.title || p.id} stands on reading '${p.current.version}' of ${qname}, `
-                 + `and ${elsewhere.length === 1 ? "the other project drawing on it does" : "the other projects drawing on it do"} not`,
-          detail: `${qname} is drawn on by ${drawing.length} projects and holds NO stance of its own: `
-                + `what a project stands on is that project's own dated, authored property (§7), so `
-                + `this difference is a legal state and nothing in this record refuses it. `
-                + `${p.id} named '${p.current.version}'${p.current.at ? ` on ${p.current.at}` : ""}`
-                + `${p.current.by ? ` (${p.current.by})` : ""}. `
-                + `Nothing here has moved anybody else's stance and nothing here will: this is a `
-                + `report, and moving another project's pointer is that project's own act.`,
+          summary: say(`queue.stance-changed-here-not-elsewhere.summary.${elsewhere.length === 1 ? "one" : "other"}`,
+                       { project: p.title || p.id, version: p.current.version }),
+          summary_key: `queue.stance-changed-here-not-elsewhere.summary.${elsewhere.length === 1 ? "one" : "other"}`,
+          detail: joined(say("queue.stance-changed-here-not-elsewhere.detail", { question: qname, n: drawing.length, project: p.title || p.id, version: p.current.version }),
+                         this.#dayWord(p.current.at) ? say("queue.stance-changed-here-not-elsewhere.detail.at", { date: this.#dayWord(p.current.at) }) : "",
+                         p.current.by ? say("queue.stance-changed-here-not-elsewhere.detail.by", { who: p.current.by }) : ""),
+          detail_key: "queue.stance-changed-here-not-elsewhere.detail",
           basis: {
             source: "project frontmatter (current_versions[]) + refs",
             inquiry: inq,
@@ -726,12 +1033,7 @@ export class QueueProducers {
               inquiries_truncated: shared.truncated === true,
               projects_named: drawing.length, projects_bound: drawing.bound,
               projects_truncated: drawing.truncated === true,
-              detail: "this feed examines a bounded number of shared questions per read and a "
-                    + "bounded number of projects per question. Where either is truncated the "
-                    + "divergence reported is a FLOOR: the projects named do stand where this says, "
-                    + "and the read did not reach every one that might. A divergence over a "
-                    + "truncated set is still true; an ABSENCE of one over a truncated set is not, "
-                    + "which is why the flags are published rather than the counts alone.",
+              detail: localize("queue-producers.index.this_feed_examines_a_bounded", "this feed examines a bounded number of shared questions per read and a bounded number of projects per question. Where either is truncated the divergence reported is a FLOOR: the projects named do stand where this says, and the read did not reach every one that might. A divergence over a truncated set is still true; an ABSENCE of one over a truncated set is not, which is why the flags are published rather than the counts alone."),
             },
             /* THE SHAPE OF THE POINTER, PUBLISHED ON THE ITEM. §7's field is a
                project-authored DATED frontmatter row and NEVER a settings row,
@@ -739,16 +1041,9 @@ export class QueueProducers {
                see from the notification itself where the fact came from,
                instead of taking the sentence's word for it. */
             pointer: { kind: "dated_frontmatter_field", field: "current_versions",
-                       held_by: "the project's own bundle.md", settings_row: false,
-                       detail: "DEC-17's reasoning: a settings row would be a way to change the "
-                             + "standard with nothing to read afterwards. Every stance named here "
-                             + "was read out of a project's own promoted bytes, where the act that "
-                             + "wrote it is in the append-only history beside it." },
-            detail: "D-216 measured this model rather than assuming it (2026-08-08): two projects "
-                  + "were driven onto two different readings of one shared question SIMULTANEOUSLY, "
-                  + "the plane refused neither, and after divergence each still saw every version "
-                  + "and every leg of the other's. The sharing is real and the stance is not shared "
-                  + "— which is why this item exists at all.",
+                       held_by: word("queue-producers.held_by"), settings_row: false,
+                       detail: localize("queue-producers.index.dec_17s_reasoning_a_settings", "DEC-17's reasoning: a settings row would be a way to change the standard with nothing to read afterwards. Every stance named here was read out of a project's own promoted bytes, where the act that wrote it is in the append-only history beside it.") },
+            detail: localize("queue-producers.index.d_216_measured_this_model", "D-216 measured this model rather than assuming it (2026-08-08): two projects were driven onto two different readings of one shared question SIMULTANEOUSLY, the plane refused neither, and after divergence each still saw every version and every leg of the other's. The sharing is real and the stance is not shared — which is why this item exists at all."),
           },
           /* THE DATE IS THE PROJECT'S OWN AUTHORED `at`, never this read's
              clock. A pointer whose date cannot be parsed reports UNDETERMINED
@@ -757,21 +1052,14 @@ export class QueueProducers {
           age: Number.isFinite(movedMs)
             ? { state: "determined", since: p.current.at, ms: Math.max(0, now - movedMs) }
             : { state: "undetermined", reason: "unparseable_stance_date",
-                detail: "this project's pointer carries no date this producer can read as an "
-                      + "instant, so how long the two teams have stood apart is undetermined and "
-                      + "is reported as such rather than measured from this read" },
+                detail: localize("queue-producers.index.this_projects_pointer_carries_no", "this project's pointer carries no date this producer can read as an instant, so how long the two teams have stood apart is undetermined and is reported as such rather than measured from this read") },
           assignee: null,
           assignee_role: null,
           options: this.#optionsOf([inq]),
           options_grain: {
             offered: "document",
             missing: "stance",
-            detail: "the natural acts here are at STANCE grain — move to the reading the others are "
-                  + "on, or record why we are staying — and the first of those is op=versioncurrent "
-                  + "on THIS project and nobody else's. It is deliberately not offered as an option "
-                  + "on an item another project's members can also see: an act one team performs "
-                  + "from a notification another team is reading is the single shared stance §7 "
-                  + "rejected, arriving through a button (D-222's grain problem).",
+            detail: localize("queue-producers.index.the_natural_acts_here_are", "the natural acts here are at STANCE grain — move to the reading the others are on, or record why we are staying — and the first of those is op=versioncurrent on THIS project and nobody else's. It is deliberately not offered as an option on an item another project's members can also see: an act one team performs from a notification another team is reading is the single shared stance §7 rejected, arriving through a button (D-222's grain problem)."),
           },
         });
       }
@@ -846,11 +1134,10 @@ export class QueueProducers {
      * so the two are counted together and the answer says they are. */
     let unattributed = 0;
     const unattributedIn = [];
-    const shared = this.#queueSharedInquiryCandidates(viewer);
+    const shared = this.#shared(viewer).list;
     for (const inq of shared) {
-      const q = this.#queueSharedInquiry(inq, viewer);
+      const { q, drawing } = this.#sharedQuestion(inq, viewer);
       if (!q) continue;
-      const drawing = this.#projectsDrawingOn(inq, viewer);
       if (drawing.length < 2) continue;
       const ids = new Set(drawing.map((p) => p.id));
       const qname = q.title || inq;
@@ -860,7 +1147,7 @@ export class QueueProducers {
          row, so nothing here reaches a member except the number itself. */
       /* basis-versions R8–R9: the question's versions as the viewer may read them, at its largest page. */
       const held = this.#basisVersions.basisVersions({ id: inq, limit: QueueProducers.QUEUE_SHARED_VERSIONS_READ, viewer });
-      const heldVersions = held && held.ok !== false && Array.isArray(held.versions) ? held.versions : [];
+      const heldVersions = QueueProducers.#answered(held, "versions", "basis-versions.basisVersions");
       {
         const n = heldVersions.filter((v) => !(typeof v.run === "string" && v.run)).length;
         if (n > 0) { unattributed += n; if (!unattributedIn.includes(inq)) unattributedIn.push(inq); }
@@ -921,22 +1208,18 @@ export class QueueProducers {
             /* DECLARED, NEVER QUIET. The one home this producer removed and the
                reason, so a reader can tell a filtered set from a short one. */
             excluded: [{ id: src, reason: "authored_here",
-                         detail: "the project this reading was proposed under is not a team it "
-                               + "arrived FROM, so this item is not filed under it. Stated rather "
-                               + "than performed silently: a home set that is quietly shorter is "
-                               + "indistinguishable from nobody caring (DEC-16)." }],
+                         detail: localize("queue-producers.index.the_project_this_reading_was", "the project this reading was proposed under is not a team it arrived FROM, so this item is not filed under it. Stated rather than performed silently: a home set that is quietly shorter is indistinguishable from nobody caring (DEC-16).") }],
           },
           subject: { kind: "basis_version", id: `${inq}::${v.name}`,
                      inquiry: inq, version: v.name },
-          summary: `a new reading of ${qname} — '${v.name}' — was proposed under `
-                 + `${srcRow && srcRow.title ? srcRow.title : src}'s work`,
-          detail: `${qname} is drawn on by ${drawing.length} projects. '${v.name}' was proposed by a `
-                + `run working under ${src}${v.author ? `, authored ${v.author}` : ""}`
-                + `${v.at ? ` on ${v.at}` : ""}, and it is currently ${v.state}`
-                + `${v.hidden === 1 ? " and hidden from that project's display" : ""}. `
-                + `Nothing about what this project stands on has moved: a reading arriving is not a `
-                + `reading being adopted, and the stance is a per-project act somebody here would `
-                + `have to take (§7).`,
+          summary: say("queue.new-version-arrived-from-another-team.summary", { version: v.name, question: qname, project: srcRow && srcRow.title ? srcRow.title : src }),
+          summary_key: "queue.new-version-arrived-from-another-team.summary",
+          detail: joined(say("queue.new-version-arrived-from-another-team.detail", { question: qname, n: drawing.length, project: srcRow && srcRow.title ? srcRow.title : src, version: v.name }),
+                         fillWord("state", v.state) ? say("queue.new-version-arrived-from-another-team.detail.state", { state: fillWord("state", v.state) }) : "",
+                         v.hidden === 1 ? say("queue.new-version-arrived-from-another-team.detail.hidden") : "",
+                         v.author ? say("queue.new-version-arrived-from-another-team.detail.by", { who: v.author }) : "",
+                         this.#dayWord(v.at) ? say("queue.new-version-arrived-from-another-team.detail.at", { date: this.#dayWord(v.at) }) : ""),
+          detail_key: "queue.new-version-arrived-from-another-team.detail",
           basis: {
             source: "inquiry_basis_versions + ai_runs",
             inquiry: inq, version: v.name, description: v.description,
@@ -953,44 +1236,25 @@ export class QueueProducers {
               projects_named: drawing.length, projects_bound: drawing.bound,
               projects_truncated: drawing.truncated === true,
               versions_bound: vcap, versions_truncated: vtrunc,
-              detail: "this feed examines a bounded number of shared questions per read, a bounded "
-                    + "number of projects per question and a bounded number of run-proposed readings "
-                    + "per question. A truncation here means READINGS THIS READ DID NOT REACH, never "
-                    + "readings that do not exist — the arrival of this one is unaffected by it, and "
-                    + "the flag is published so the silence about any other cannot be read as "
-                    + "evidence there is none.",
+              detail: localize("queue-producers.index.this_feed_examines_a_bounded_2", "this feed examines a bounded number of shared questions per read, a bounded number of projects per question and a bounded number of run-proposed readings per question. A truncation here means READINGS THIS READ DID NOT REACH, never readings that do not exist — the arrival of this one is unaffected by it, and the flag is published so the silence about any other cannot be read as evidence there is none."),
             },
             team_attribution: {
               state: "determined", via: "ai_runs.context",
-              detail: "the source team is the RUN's own context project, a fact stored when the run "
-                    + "was opened. It is never inferred from who authored the version: a member "
-                    + "does not name a team in this record, and a producer that guessed one would "
-                    + "be manufacturing the connection the notification is claiming attention for. "
-                    + "A version with no run, or a run whose context is not a project, mints NO "
-                    + "item — the silence is a declared gap (D-266), not a filtered one.",
+              detail: localize("queue-producers.index.the_source_team_is_the", "the source team is the RUN's own context project, a fact stored when the run was opened. It is never inferred from who authored the version: a member does not name a team in this record, and a producer that guessed one would be manufacturing the connection the notification is claiming attention for. A version with no run, or a run whose context is not a project, mints NO item — the silence is a declared gap (D-266), not a filtered one."),
             },
-            detail: "D-216 measured that one question sits beneath several projects and that each "
-                  + "reads the whole version set (2026-08-08): after two projects diverged, each "
-                  + "still saw every version and every leg of the other's. So this item announces "
-                  + "an arrival, not a disclosure — the reading was already readable here, and what "
-                  + "was missing was anybody being told it had appeared.",
+            detail: localize("queue-producers.index.d_216_measured_that_one", "D-216 measured that one question sits beneath several projects and that each reads the whole version set (2026-08-08): after two projects diverged, each still saw every version and every leg of the other's. So this item announces an arrival, not a disclosure — the reading was already readable here, and what was missing was anybody being told it had appeared."),
           },
           age: Number.isFinite(arrivedMs)
             ? { state: "determined", since: v.at, ms: Math.max(0, now - arrivedMs) }
             : { state: "undetermined", reason: "unparseable_version_date",
-                detail: "the version row carries no authored instant this producer can read, so how "
-                      + "long this reading has been standing unanswered is undetermined" },
+                detail: localize("queue-producers.index.the_version_row_carries_no", "the version row carries no authored instant this producer can read, so how long this reading has been standing unanswered is undetermined") },
           assignee: null,
           assignee_role: null,
           options: this.#optionsOf([inq]),
           options_grain: {
             offered: "document",
             missing: "version",
-            detail: "the natural acts here are at VERSION grain — consider this reading, accept it, "
-                  + "turn it down — and they exist (op=versionconsider / accept / reject), but they "
-                  + "move the SHARED question's row and are therefore not this project's to take "
-                  + "from a notification about somebody else's proposal. What IS this project's own "
-                  + "act is op=versioncurrent, which moves only this project's stance (§7).",
+            detail: localize("queue-producers.index.the_natural_acts_here_are_2", "the natural acts here are at VERSION grain — consider this reading, accept it, turn it down — and they exist (op=versionconsider / accept / reject), but they move the SHARED question's row and are therefore not this project's to take from a notification about somebody else's proposal. What IS this project's own act is op=versioncurrent, which moves only this project's stance (§7)."),
           },
         });
       }
@@ -1022,11 +1286,10 @@ export class QueueProducers {
    *  member's inbox hygiene must not make it vanish for the team. */
   #findingsConcludedElsewhere(viewer, now) {
     const out = [];
-    const shared = this.#queueSharedInquiryCandidates(viewer);
+    const shared = this.#shared(viewer).list;
     for (const inq of shared) {
-      const q = this.#queueSharedInquiry(inq, viewer);
+      const { q, drawing } = this.#sharedQuestion(inq, viewer);
       if (!q) continue;
-      const drawing = this.#projectsDrawingOn(inq, viewer);
       if (drawing.length < 2) continue;
       const qname = q.title || inq;
       for (const p of drawing) {
@@ -1046,17 +1309,15 @@ export class QueueProducers {
             ancestors: kept,
             ungrouped: homes.state === "determined" && kept.length === 0,
             excluded: [{ id: p.id, reason: "concluded_here",
-                         detail: "the project that concluded is not a team this was concluded ELSEWHERE "
-                               + "for, so this item is not filed under it. Stated rather than performed "
-                               + "silently (DEC-16)." }],
+                         detail: localize("queue-producers.index.the_project_that_concluded_is", "the project that concluded is not a team this was concluded ELSEWHERE for, so this item is not filed under it. Stated rather than performed silently (DEC-16).") }],
           },
           subject: { kind: "project_conclusion", id: p.id, inquiry: inq, version: c.version },
-          summary: `${p.title || p.id} concluded ${qname} on reading '${c.version}'`,
-          detail: `${qname} is drawn on by ${drawing.length} projects. ${p.id} concluded it on reading `
-                + `'${c.version}'${c.by ? ` (${c.by})` : ""}${c.at ? ` on ${c.at}` : ""}, adopting that `
-                + `reading's claim. A conclusion belongs to the project that drew it (§7.1): NOTHING `
-                + `about what any other project stands on or has concluded has moved, and nothing here `
-                + `will move it — this is a report, and concluding is each project's own act.`,
+          summary: say("queue.shared-inquiry-concluded-by-another-project.summary", { project: p.title || p.id, question: qname, version: c.version }),
+          summary_key: "queue.shared-inquiry-concluded-by-another-project.summary",
+          detail: joined(say("queue.shared-inquiry-concluded-by-another-project.detail", { question: qname, n: drawing.length, project: p.title || p.id, version: c.version }),
+                         c.by ? say("queue.shared-inquiry-concluded-by-another-project.detail.by", { who: c.by }) : "",
+                         this.#dayWord(c.at) ? say("queue.shared-inquiry-concluded-by-another-project.detail.at", { date: this.#dayWord(c.at) }) : ""),
+          detail_key: "queue.shared-inquiry-concluded-by-another-project.detail",
           basis: {
             source: "project frontmatter (conclusions[]) + refs",
             inquiry: inq,
@@ -1082,19 +1343,15 @@ export class QueueProducers {
               inquiries_truncated: shared.truncated === true,
               projects_named: drawing.length, projects_bound: drawing.bound,
               projects_truncated: drawing.truncated === true,
-              detail: "a bounded number of shared questions and of projects per question are read. A "
-                    + "conclusion reported over a truncated set is still true; an ABSENCE over one is "
-                    + "not, which is why the flags are published.",
+              detail: localize("queue-producers.index.a_bounded_number_of_shared", "a bounded number of shared questions and of projects per question are read. A conclusion reported over a truncated set is still true; an ABSENCE over one is not, which is why the flags are published."),
             },
             /* R10 (D-82): the derivation, which this producer's basis alone did not state until the split. */
-            detail: "a conclusion is the concluding project's own dated row (§7.1), read through basis-versions' one "
-                  + "reader (its R22) for each project drawing on this shared question, and the others' own "
-                  + "conclusions beside it. Derived on read: nothing is stored, and nobody else's stance moved.",
+            detail: localize("queue-producers.index.a_conclusion_is_the_concluding", "a conclusion is the concluding project's own dated row (§7.1), read through basis-versions' one reader (its R22) for each project drawing on this shared question, and the others' own conclusions beside it. Derived on read: nothing is stored, and nobody else's stance moved."),
           },
           age: Number.isFinite(atMs)
             ? { state: "determined", since: c.at, ms: Math.max(0, now - atMs) }
             : { state: "undetermined", reason: "unparseable_conclusion_date",
-                detail: "the conclusion row carries no authored instant this producer can read" },
+                detail: localize("queue-producers.index.the_conclusion_row_carries_no", "the conclusion row carries no authored instant this producer can read") },
           assignee: null,
           assignee_role: null,
           options: this.#optionsOf([inq]),
@@ -1133,7 +1390,7 @@ export class QueueProducers {
     const cap = EXPORT_LOG_LIMIT_DEFAULT;
     /* The export log is `corpus-export`'s (its R1, R2; K1043), read from its own instance since N483 (K1122). */
     const log = this.#corpusExport.exportLog({ limit: cap });
-    const page = log && Array.isArray(log.exports) ? log.exports : [];
+    const page = QueueProducers.#answered(log, "exports", "corpus-export.exportLog");
     if (page.length === 0) return [];
     const truncated = log.truncated === true;
     const raisedTo = this.#activeAdmins();
@@ -1146,34 +1403,38 @@ export class QueueProducers {
         kind: "export-performed",
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
-        summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} records, ${r.files} files`,
-        detail: `An export of the ${r.scope} left your group's Civicsmith with the root-of-trust credential `
-              + `(Membership v2 §8.1). It is row ${r.seq} of the append-only export log`
-              + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; `
-              + `nobody else is. The log is the record of it and nothing here changes the log.`,
+        /* DEC-359 (B2): a full export (scope working-corpus) and a rendering (scope rendering, named by its format) each have their
+           own words; the format is read through `queue.fill.format.<code>`. */
+        ...(r.scope === "rendering"
+          ? { summary: say("queue.export-performed.rendering.summary", { format: fillWord("format", r.format), date: this.#dayWord(r.at) }),
+              summary_key: "queue.export-performed.rendering.summary",
+              detail: say("queue.export-performed.rendering.detail", { format: fillWord("format", r.format) }),
+              detail_key: "queue.export-performed.rendering.detail" }
+          : { summary: say("queue.export-performed.summary", { date: this.#dayWord(r.at),
+                                                               records: say(`queue.export-performed.records.${r.bundles === 1 ? "one" : "other"}`, { n: r.bundles }),
+                                                               files: say(`queue.export-performed.files.${r.files === 1 ? "one" : "other"}`, { n: r.files }) }),
+              summary_key: "queue.export-performed.summary",
+              detail: joined(say("queue.export-performed.detail"),
+                             r.note ? say("queue.export-performed.detail.note", { note: r.note }) : say("queue.export-performed.detail.nonote")),
+              detail_key: "queue.export-performed.detail" }),
         basis: {
           source: "export_log",
           seq: r.seq, at: r.at, scope: r.scope, bundles: r.bundles, files: r.files, note: r.note ?? null,
           raised_to: raisedTo,
           bounds: { limit: cap, truncated,
-                    detail: "the newest exports are read up to this bound. An export past it is still "
-                          + "in the log (op=exportlog, with a larger limit) and is not told here." },
-          detail: "an export of the working corpus is recorded in the append-only export log and every "
-                + "administrator is notified (Membership v2 §8.1). This notice is derived from that log "
-                + "row and reaches every administrator named in raised_to and no one else. No act "
-                + "clears it yet: a disposition is scoped to a project and an export has none, and a "
-                + "member's own mute of a finding (D-125) is ruled but not built.",
+                    detail: localize("queue-producers.index.the_newest_exports_are_read", "the newest exports are read up to this bound. An export past it is still in the log (op=exportlog, with a larger limit) and is not told here.") },
+          detail: localize("queue-producers.index.an_export_of_the_working", "an export of the working corpus is recorded in the append-only export log and every administrator is notified (Membership v2 §8.1). This notice is derived from that log row and reaches every administrator named in raised_to and no one else. No act clears it yet: a disposition is scoped to a project and an export has none, and a member's own mute of a finding (D-125) is ruled but not built."),
         },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: r.at, ms: Math.max(0, now - atMs) }
           : { state: "undetermined", reason: "unparseable_export_instant",
-              detail: "the export log row carries an instant this producer cannot read" },
+              detail: localize("queue-producers.index.the_export_log_row_carries", "the export log row carries an instant this producer cannot read") },
         assignee: null,
         assignee_role: null,
         /* The producer's own option (NOTIFICATIONS.md item contract, rule 1): the act that shows the
            administrator the record behind the notice. Not REC-19's object derivation, because an
            export is not a bundle and has no affordances to derive. */
-        options: [{ id: "exportlog", label: "Read the export log", weight: "single" }],
+        options: [{ id: "exportlog", label: word("queue-producers.label.read_export_log"), weight: "single" }],
       };
     });
   }
@@ -1187,16 +1448,30 @@ export class QueueProducers {
    * is bounded, the bound stated where a member could otherwise read a short list as a complete one.
    * ====================================================================== */
 
+  /** R49: the rows of `ids` this viewer sees (`null` for one it does not), every one not yet held read by one statement. */
+  #caseRows(ids, viewer) {
+    const held = this.#memo.cases;
+    const todo = QueueProducers.#missing(held, ids);
+    if (todo.length) {
+      const gate = viewerPredicate(viewer);
+      const found = new Map(this.#rows(
+        `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
+          WHERE b.bundle_id IN (SELECT value FROM json_each(?)) AND (${gate.sql})`, JSON.stringify(todo), ...gate.args)
+        .map((r) => [r.bundle_id, r]));
+      for (const id of todo) held.set(id, found.get(id) ?? null);
+    }
+    return held;
+  }
+
   /** A home set made of the named cases themselves (each at depth 0, when this viewer sees it and it is a case) and
    *  every ancestor above them (queue R7): for an item that is ABOUT a case rather than about a document under one. */
   #homesAt(caseIds, viewer) {
     const up = this.#homesOf(caseIds);
-    const gate = viewerPredicate(viewer);
     const own = [];
-    for (const id of [...new Set((caseIds || []).filter((x) => typeof x === "string" && x))]) {
-      const row = this.#one(
-        `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
-          WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+    const ids = [...new Set((caseIds || []).filter((x) => typeof x === "string" && x))];
+    const rows = this.#caseRows(ids, viewer);
+    for (const id of ids) {
+      const row = rows.get(id);
       if (!row) continue;
       const ty = normalizeType(row.object_type);
       if (!QueueProducers.QUEUE_CASE_TYPES.includes(ty)) continue;
@@ -1217,11 +1492,28 @@ export class QueueProducers {
    *  (`versionadopt`, `versionkeep`), published on its disposition (queue R12). At most one page of notices is read. */
   #findingsNewerCapture(viewer, now) {
     const page = this.#reevaluation.notices({ state: "open", viewer, limit: QueueProducers.QUEUE_NOTICES_MAX });
-    const list = page && page.ok !== false && Array.isArray(page.notices) ? page.notices : [];
+    const list = QueueProducers.#answered(page, "notices", "reevaluation.notices");
     const out = [];
+    const seen = this.#bundleRedactor(viewer);
+    /* R49: the sight, titles and homes of the targets and holders the notices name, read at once */
+    seen.prefetch(list.map((n) => n && n.target));
+    this.#titlesOf(list.flatMap((n) => (n ? [n.target, n.holder] : []))); this.#caseRows(list.map((n) => n && n.holder), viewer);
+    /* R52 (C69): one item per (holder, target, newer version), standing where the first stood, the least notice id surviving (so the
+       same one stands at every read) and its basis naming every notice it stands for. A notice whose newer version the viewer cannot
+       see has no version to key on and stays its own matter. */
+    const matterOf = (n) => (n.newer_capture ?? n.newer_bundle)
+      ? `${n.holder}\u0000${n.target ?? ""}\u0000${n.newer_capture ?? n.newer_bundle}` : `notice\u0000${n.notice}`;
+    const standing = new Map();
     for (const n of list) {
       if (!n || typeof n.notice !== "string" || !n.notice) continue;
+      const k = matterOf(n), g = standing.get(k);
+      if (!g) standing.set(k, { first: n, notices: [n.notice] });
+      else { g.notices.push(n.notice); if (n.notice < g.first.notice) g.first = n; }
+    }
+    for (const { first: n, notices } of standing.values()) {
       const raisedMs = Date.parse(n.raised_at ?? "");
+      /* the pinned document's title only where this viewer may see it (R11); else the sentence for a target with no title */
+      const titleOfTarget = seen(n.target) === null ? null : this.#titleOf(n.target);
       out.push({
         id: `FINDING::newer-capture-affects-reference::${n.notice}`,
         class: "FINDING",
@@ -1230,20 +1522,30 @@ export class QueueProducers {
         subject: { kind: "notice", id: n.notice, holder: n.holder, target: n.target ?? null, ord: n.ord ?? null,
                    content_id: n.content_id ?? null, capture_sha: n.capture_sha ?? null,
                    newer_capture: n.newer_capture ?? null, newer_bundle: n.newer_bundle ?? null },
-        summary: `a newer version of ${n.target || "a document"} may change the passage ${n.holder} relies on`,
-        detail: `a newer capture of what this reference is pinned to was read as ${n.grade ?? "undetermined"}`
-              + `${n.affects ? ` (${n.affects})` : ""}. Nothing about the reference has moved: it stays on the version `
-              + "it names until the member who holds it adopts the newer one or keeps the earlier one.",
-        basis: { source: "reevaluation.notices", notice: n.notice, holder: n.holder, target: n.target ?? null,
+        /* DEC-359 (B2): the grade through `queue.fill.grade.<letter>`, what it affects through `queue.fill.affects.<code>`; a capture
+           the viewer cannot see (reevaluation blanks both) reads `.detail.unseen`. */
+        ...(titleOfTarget
+          ? { summary: say("queue.newer-capture-affects-reference.summary", { target: titleOfTarget, holder: this.#nameOf(n.holder) }),
+              summary_key: "queue.newer-capture-affects-reference.summary" }
+          : { summary: say("queue.newer-capture-affects-reference.summary.untitled", { holder: this.#nameOf(n.holder) }),
+              summary_key: "queue.newer-capture-affects-reference.summary.untitled" }),
+        ...(() => {
+          if (!n.grade && !n.affects)
+            return { detail: say("queue.newer-capture-affects-reference.detail.unseen"), detail_key: "queue.newer-capture-affects-reference.detail.unseen" };
+          const affects = fillWord("affects", n.affects);
+          /* C69: a capture read after its first carries no grade (reevaluation's grade-not-carried); it reads as undetermined, as reevaluation's own text does */
+          return { detail: joined(say("queue.newer-capture-affects-reference.detail", { grade: fillWord("grade", n.grade ?? "undetermined") }),
+                                  affects ? say("queue.newer-capture-affects-reference.detail.affects", { affects }) : ""),
+                   detail_key: "queue.newer-capture-affects-reference.detail" };
+        })(),
+        basis: { source: "reevaluation.notices", notice: n.notice, notices: [...new Set(notices)].sort(), holder: n.holder, target: n.target ?? null,
                  grade: n.grade ?? null, affects: n.affects ?? null, raised_at: n.raised_at ?? null,
                  bound: { limit: page.limit ?? QueueProducers.QUEUE_NOTICES_MAX, truncated: page.truncated === true },
-                 detail: "a notice is reevaluation's (its R14): raised when a newer capture of what a reference is "
-                       + "pinned to is graded affected or undetermined, never for A or B. It is read here, never "
-                       + "raised, and it closes only by the holder's adoption or keeping (its R15)." },
+                 detail: localize("queue-producers.index.a_notice_is_reevaluations_its", "a notice is reevaluation's (its R14): raised when a newer capture of what a reference is pinned to is graded affected or undetermined, never for A or B. It is read here, never raised, and it closes only by the holder's adoption or keeping (its R15).") },
         age: Number.isFinite(raisedMs)
           ? { state: "determined", since: n.raised_at, ms: Math.max(0, now - raisedMs) }
           : { state: "undetermined", reason: "unparseable_raised_at",
-              detail: "the notice carries no raised instant this producer can read" },
+              detail: localize("queue-producers.index.the_notice_carries_no_raised", "the notice carries no raised instant this producer can read") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf([n.holder]),
@@ -1262,23 +1564,17 @@ export class QueueProducers {
   /** The projects this viewer sees in which the member participates (joined or leaving; membership R74), or every
    *  visible project when there is no member, in id order, at most `cap`; `truncated` when a further one qualifies. */
   #participatingProjects(me, viewer, cap) {
+    /* R49: ONE statement, the member's participations joined to the projects this viewer sees (`project_participants` is
+       membership's stated read contract, its R120: what `participation` answers of one project, `joined` or `leaving`), never
+       a read of her participation in each project. One past the bound is read, so a further qualifying project is observed. */
     const gate = viewerPredicate(viewer);
-    const out = [];
-    let after = "", truncated = false;
-    for (;;) {
-      const rows = this.#rows(
-        `SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id > ? AND (${gate.sql})
-          ORDER BY b.bundle_id LIMIT ?`, after, ...gate.args, QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE);
-      for (const r of rows) {
-        const p = me ? this.#membership.participation(r.bundle_id, me) : null;
-        if (me && !(p && (p.state === "joined" || p.state === "leaving"))) continue;
-        if (out.length === cap) { truncated = true; break; }
-        out.push(r.bundle_id);
-      }
-      if (truncated || rows.length < QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
-      after = rows[rows.length - 1].bundle_id;
-    }
-    return { projects: out, bound: cap, truncated };
+    const rows = me
+      ? this.#rows(`SELECT b.bundle_id FROM bundles b JOIN project_participants mine ON mine.project_id = b.bundle_id
+                     AND mine.member_id = ? AND mine.state IN ('joined', 'leaving')
+                     WHERE b.object_type='project' AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`, me, ...gate.args, cap + 1)
+      : this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+                   ...gate.args, cap + 1);
+    return { projects: rows.slice(0, cap).map((r) => r.bundle_id), bound: cap, truncated: rows.length > cap };
   }
 
   /** `objective-gap` (N172; intent R6): one FINDING per gap intent answers for each project `#objectiveGapProjects`
@@ -1286,10 +1582,10 @@ export class QueueProducers {
   #findingsObjectiveGap(me, viewer, now) {
     const scope = this.#objectiveGapProjects(me, viewer);
     const items = [];
+    this.#titlesOf(scope.projects); this.#caseRows(scope.projects, viewer);
     for (const project of scope.projects) {
       const g = this.#intent.gaps({ project, viewer });
-      if (!g || g.ok !== true || !Array.isArray(g.gaps)) continue;
-      for (const gap of g.gaps) {
+      for (const gap of QueueProducers.#answered(g, "gaps", "intent.gaps")) {
         const b = gap.basis || {};
         items.push({
           id: `FINDING::objective-gap::${gap.key}`,
@@ -1298,18 +1594,18 @@ export class QueueProducers {
           case: this.#homesAt([project], viewer),
           subject: { kind: "objective", id: project, project, progression: b.progression ?? null,
                      entity: b.entity ?? null },
-          summary: b.says ? `${project}'s objective: ${b.says}` : `${project}'s objective has a gap`,
-          detail: Array.isArray(b.stages_missing)
-            ? `an instance this project's objective counts is short of the stages ${b.stages_missing.join(", ")}.`
-            : `an instance this project's objective counts reaches ${b.grade_reached ?? "an undetermined grade"} `
-              + `where ${b.grade_required ?? "a grade"} is required.`,
+          ...(b.says
+            ? { summary: say("queue.objective-gap.summary", { project: this.#nameOf(project), says: b.says }), summary_key: "queue.objective-gap.summary" }
+            : { summary: say("queue.objective-gap.summary.gap", { project: this.#nameOf(project) }), summary_key: "queue.objective-gap.summary.gap" }),
+          ...(Array.isArray(b.stages_missing)
+            ? { detail: say("queue.objective-gap.detail.stages", { stages: b.stages_missing.join(", ") }), detail_key: "queue.objective-gap.detail.stages" }
+            : { detail: say("queue.objective-gap.detail.grade", { reached: b.grade_reached, required: b.grade_required }), detail_key: "queue.objective-gap.detail.grade" }),
           basis: { source: "intent.gaps", key: gap.key, project, progression: b.progression ?? null,
                    entity: b.entity ?? null, grade: gap.grade ?? null, instances: gap.instances ?? [],
                    gap: b, surfaced_by: gap.surfaced_by ?? "machine",
-                   detail: "a gap is DERIVED (intent R6): the objective's satisfaction test read against the "
-                         + "record, recomputed at every read. It leaves this project's list by a recorded decision." },
+                   detail: localize("queue-producers.index.a_gap_is_derived_intent", "a gap is DERIVED (intent R6): the objective's satisfaction test read against the record, recomputed at every read. It leaves this project's list by a recorded decision.") },
           age: { state: "undetermined", reason: "derived_on_read",
-                 detail: "a gap is recomputed at read time and has no creation instant" },
+                 detail: localize("queue-producers.index.a_gap_is_recomputed_at", "a gap is recomputed at read time and has no creation instant") },
           assignee: null,
           assignee_role: null,
           options: this.#optionsOf([project]),
@@ -1326,39 +1622,41 @@ export class QueueProducers {
    *  which gates by sight inside its read (a hidden document is neither listed nor counted) and bounds it, the bound
    *  and whether it cut published on each item. Homed under the document's ancestors. */
   #findingsSourceFlagged(viewer, now) {
-    const page = this.#monitoring.flagged({ viewer }) || {};
-    const list = page.ok !== false && Array.isArray(page.items) ? page.items : [];
+    const page = this.#monitoring.flagged({ viewer });
+    const list = QueueProducers.#answered(page, "items", "monitoring.flagged");
     const out = [];
+    /* R49: the flagged documents' titles are read at once, and the capture days of the untitled ones */
+    const flagged = list.map((r) => (r && typeof r.bundleId === "string" && r.bundleId ? r.bundleId : null)).filter(Boolean);
+    this.#titlesOf(flagged); this.#prefetchCaptured(flagged.filter((id) => this.#titleOf(id) === null));
     for (const r of list) {
       const id = r && typeof r.bundleId === "string" && r.bundleId ? r.bundleId : null;
       if (!id) continue;
       const removed = r.source_status === "removed";
       const kind = removed ? "source-removed" : "source-modified";
       const sinceMs = Date.parse(r.since ?? "");
-      const info = this.#record.bundleInfo(id);
-      const title = info && typeof info.title === "string" && info.title ? info.title : null;
-            out.push({
+      const title = this.#titleOf(id);
+      out.push({
         id: `FINDING::${kind}::${id}`,
         class: "FINDING",
         kind,
         case: this.#homesOf([id]),
         subject: { kind: "bundle", id },
         title,
-        summary: title
-          ? (removed ? `${title} is gone from its source` : `${title} has changed at its source`)
-          : (removed ? "A document is gone from its source" : "A document has changed at its source"),
-        detail: `Your group's Civicsmith noticed that the address this document was captured from ${removed
-                ? "no longer has it" : "now shows something other than what was captured"}, `
-              + "and flagged it for a second look. What the change means is not decided here.",
+        /* R43: the document's title, else `queue.source.untitled` with the local day of its earliest capture's retrieval (monitoring
+           answers only the flag, so the day is read from provenance's register and receipts, R11); with none readable the fill
+           is left empty and the gap is named in the job's REPORT. */
+        summary: say(`queue.${kind}.summary`, { title: title ?? say("queue.source.untitled", { date: this.#capturedDay(id) }) }),
+        summary_key: `queue.${kind}.summary`,
+        detail: say("queue.source.detail"),
+        detail_key: "queue.source.detail",
         basis: { source: "monitoring.flagged", bundle_id: id, source_status: r.source_status ?? null,
                  since: r.since ?? null,
                  bound: { limit: page.limit ?? null, truncated: page.truncated === true },
-                 detail: "monitoring's tick records what it saw and never decides what a change means (its R8): "
-                       + "this item is that flag, as monitoring reads it (its R48)." },
+                 detail: localize("queue-producers.index.monitorings_tick_records_what_it", "monitoring's tick records what it saw and never decides what a change means (its R8): this item is that flag, as monitoring reads it (its R48).") },
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: r.since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "unparseable_since",
-              detail: "the flag carries no instant this producer can read" },
+              detail: localize("queue-producers.index.the_flag_carries_no_instant", "the flag carries no instant this producer can read") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf([id]),
@@ -1371,7 +1669,6 @@ export class QueueProducers {
    *  documents and the archive addresses are bounded by monitoring's reads (its R47, R48), which publish their bounds. */
   static QUEUE_NOTICES_MAX = 1000;
   static QUEUE_OBJECTIVE_GAP_PROJECTS = 50;
-  static QUEUE_OBJECTIVE_GAP_PAGE = 200;
   /** D-86: the OBLIGATION items the sweep raised, for `queueFeed`. Synchronous, like every producer there. The
    *  row is gated by `#bundleGate` over the run's `context_id` — the predicate `aiRunRead` compiles for the run
    *  itself, so an item about a run is shown exactly to the readers of that run. A member who is not a recipient
@@ -1380,7 +1677,7 @@ export class QueueProducers {
     /* N171: bias's `uncleared` (its R43), gated by membership's predicate over the context, newest raised first. */
     const debts = this.#bias.uncleared({ gate: viewerPredicate(viewer), limit: QueueProducers.BIAS_DEBT_QUEUE_MAX });
     const items = [];
-    for (const row of (debts && Array.isArray(debts.debts) ? debts.debts : [])) {
+    for (const row of QueueProducers.#answered(debts, "debts", "bias.uncleared")) {
       const named = Array.isArray(row.recipients) ? row.recipients.filter((x) => typeof x === "string") : [];
       if (me && named.length && !named.includes(me)) continue;
       const raisedMs = Date.parse(row.raised);
@@ -1390,27 +1687,23 @@ export class QueueProducers {
         kind: "bias-debt",
         case: this.#homesOf([row.context_id]),
         subject: { kind: "run", id: row.run, context: { type: row.context_type, id: row.context_id } },
-        summary: "The lens this assistant's run was formed under has changed since it opened; a re-run under "
-               + "the lens now in force is owed. This is disclosed and blocks nothing.",
-        detail: null,
+        summary: say("queue.bias-debt.summary"),
+        summary_key: "queue.bias-debt.summary",
+        detail: say("queue.bias-debt.detail"),
+        detail_key: "queue.bias-debt.detail",
         basis: { source: "bias.uncleared", computed_by: "aiRunRead", run: row.run, moved: true,
                  moved_basis: row.moved_basis, lens_then: row.lens_then, lens_now: row.lens_now,
                  observed: row.observed,
-                 stated: `the run's lens was ${row.lens_then ?? "none in force"} `
-                       + `(${row.moved_basis === "at_open" ? "the lens in force when it opened" : "the lens it was handed"}) `
-                       + `and is ${row.lens_now ?? "none in force"} now`,
-                 detail: "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses "
-                       + "publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the "
-                       + "sweep and never recomputed." },
+                 stated: word("queue-producers.stated.run_lens_now", { force: String(row.lens_then ?? localize("queue-producers.index.none_in_force", "none in force")), handed: String(row.moved_basis === "at_open" ? localize("queue-producers.index.the_lens_in_force_when", "the lens in force when it opened") : localize("queue-producers.index.the_lens_it_was_handed", "the lens it was handed")), force3: String(row.lens_now ?? localize("queue-producers.index.none_in_force", "none in force")) }),
+                 detail: localize("queue-producers.index.bias_debt_is_disclosed_and", "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the sweep and never recomputed.") },
         age: Number.isFinite(raisedMs)
           ? { state: "determined", since: row.raised, ms: Math.max(0, now - raisedMs) }
           : { state: "undetermined", reason: "unparseable_raised",
-              detail: "the debt row carries a raised stamp this producer cannot read as an instant" },
+              detail: localize("queue-producers.index.the_debt_row_carries_a", "the debt row carries a raised stamp this producer cannot read as an instant") },
         assignee: null,
         assignee_role: null,
         recipients: named,
-        ...(named.length ? {} : { recipients_stated: "no member could be named inside this run's read gate, so "
-                                  + "it is offered to every member who can read the run" }),
+        ...(named.length ? {} : { recipients_stated: localize("queue-producers.index.no_member_could_be_named", "no member could be named inside this run's read gate, so it is offered to every member who can read the run") }),
         options: this.#optionsOf([row.context_id]),
       });
     }
@@ -1477,9 +1770,8 @@ export class QueueProducers {
       let after = null;
       for (let page = 0; ; page += 1) {
         if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
-        const r = this.#contradiction.candidatesFor({ on: { project }, after, viewer });
-        if (!r || r.ok !== true || !Array.isArray(r.candidates)) break;
-        for (const c of r.candidates) {
+        const r = QueueProducers.#via("contradiction.candidatesFor", () => this.#contradiction.candidatesFor({ on: { project }, after, viewer }));
+        for (const c of QueueProducers.#answered(r, "candidates", "contradiction.candidatesFor")) {
           if (!c || typeof c.candidate !== "string" || !QueueProducers.#contradictionKind(c.weight, c.state)) continue;
           const e = found.get(c.candidate) || { c, projects: [] };
           if (!e.projects.includes(project)) e.projects.push(project);
@@ -1490,7 +1782,10 @@ export class QueueProducers {
       }
     }
     const out = [];
-    for (const { c, projects } of [...found.values()].sort((x, y) => (x.c.candidate < y.c.candidate ? -1 : 1))) {
+    const ordered = [...found.values()].sort((x, y) => (x.c.candidate < y.c.candidate ? -1 : 1));
+    /* R49: the rows every item's sides are homed from, read for all the candidates at once */
+    this.#caseRows(ordered.flatMap(({ c }) => [...QueueProducers.#sideSubjects(c.a), ...QueueProducers.#sideSubjects(c.b)]), viewer);
+    for (const { c, projects } of ordered) {
       const { cls, kind } = QueueProducers.#contradictionKind(c.weight, c.state);
       const subjects = [...new Set([...QueueProducers.#sideSubjects(c.a), ...QueueProducers.#sideSubjects(c.b)])];
       const atMs = Date.parse((c.machine && c.machine.at) ?? "");
@@ -1506,32 +1801,21 @@ export class QueueProducers {
                    between_projects: Array.isArray(c.between_projects) ? c.between_projects : [],
                    parties: (Array.isArray(c.between_projects) ? c.between_projects : [])
                      .map((b) => ({ project: b.project, opted_in: b.opted_in ?? null })) },
-        summary: kind === "contradiction-duty"
-          ? "two things the record holds conflict, and a member of this project must resolve it"
-          : kind === "contradiction-plurality"
-            ? "two projects' conclusions on one question may not both hold"
-            : "the record noticed two things that may conflict",
-        detail: kind === "contradiction-duty"
-          ? `the record holds a conflict here (${c.state === "taken_up" ? "taken up as a question"
-              : c.state === "explained_not_shown" ? "explained, not yet shown" : "open"}). It leaves only when it is `
-            + "resolved; it is never muted, dismissed or set aside."
-          : kind === "contradiction-plurality"
-            ? "two projects concluded one question on claims whose text differs. Naming the respect in which they "
-              + "differ clears it; neither project is made to adopt the other's answer."
-            : "a machine judged these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
+        summary: say(`queue.${kind}.summary`),
+        summary_key: `queue.${kind}.summary`,
+        detail: say(kind === "contradiction-duty" ? `queue.contradiction-duty.detail.${c.state}` : `queue.${kind}.detail`),
+        detail_key: kind === "contradiction-duty" ? `queue.contradiction-duty.detail.${c.state}` : `queue.${kind}.detail`,
         basis: { source: "contradiction.candidatesFor", candidate: c.candidate, key: c.key ?? null, why: c.why ?? null,
                  weight: c.weight, state: c.state, a: c.a ?? null, b: c.b ?? null, machine: c.machine ?? null,
                  resolution: c.resolution ?? null, inquiry: c.inquiry ?? null, reach: c.reach ?? null,
                  projects, between_projects: Array.isArray(c.between_projects) ? c.between_projects : [],
                  bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
                           pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES, pages_truncated: cut },
-                 detail: "a candidate is contradiction's (its R24–R26): its weight comes from the machine's label and "
-                       + "its key, and its state from the members' acts, both read here and never restated. The "
-                       + "machine's label and reason stay the machine's." },
+                 detail: localize("queue-producers.index.a_candidate_is_contradictions_its", "a candidate is contradiction's (its R24–R26): its weight comes from the machine's label and its key, and its state from the members' acts, both read here and never restated. The machine's label and reason stay the machine's.") },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: c.machine.at, ms: Math.max(0, now - atMs) }
           : { state: "undetermined", reason: "no_candidate_instant",
-              detail: "the candidate carries no instant this producer can read" },
+              detail: localize("queue-producers.index.the_candidate_carries_no_instant", "the candidate carries no instant this producer can read") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf(subjects),
@@ -1546,70 +1830,94 @@ export class QueueProducers {
   #findingsSideCorrected(viewer, now) {
     const out = [];
     let after = null, cut = false, read = true;
+    /* R49: the pages are followed first, then every dependent's title and home are read at once, and the items made */
+    const held = [];
     for (let page = 0; ; page += 1) {
       if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
-      const r = this.#reevaluation.correctedDependents({ after, limit: QueueProducers.QUEUE_CORRECTED_PAGE, viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.entries)) break;
+      const r = QueueProducers.#via("reevaluation.correctedDependents", () => this.#reevaluation.correctedDependents({ after, limit: QueueProducers.QUEUE_CORRECTED_PAGE, viewer }));
+      const entries = QueueProducers.#answered(r, "entries", "reevaluation.correctedDependents");
       if (r.corrections_read === false) read = false;
-      for (const e of r.entries) {
+      for (const e of entries) {
         if (!e || typeof e.dependent !== "string" || !e.dependent || typeof e.candidate !== "string" || !e.candidate)
           continue;
-        const title = this.#record.bundleInfo(e.dependent);
-        const name = title && title.title ? title.title : e.dependent;
-        const sinceMs = Date.parse(e.since ?? "");
-        out.push({
-          id: `FINDING::side-corrected::${e.dependent}::${e.candidate}`,
-          class: "FINDING",
-          kind: "side-corrected",
-          case: this.#homesAt([e.dependent], viewer),
-          subject: { kind: "bundle", id: e.dependent, candidate: e.candidate },
-          summary: `something ${name} rests on was marked wrong`,
-          detail: "a member's resolution of a contradiction named a side this rests on wrong"
-                + (e.reason ? ` (${e.reason})` : "") + ". That side still resolves and says it was corrected; nothing "
-                + "resting on it has moved. A recorded re-evaluation closes this.",
-          basis: { source: "reevaluation.correctedDependents", dependent: e.dependent, candidate: e.candidate,
-                   cause: e.kind ?? "corrected", reason: e.reason ?? null, member: e.member ?? null,
-                   since: e.since ?? null, inquiry: e.inquiry ?? null, act: e.act ?? null,
-                   legs: Array.isArray(e.legs) ? e.legs : [],
-                   bound: { limit: QueueProducers.QUEUE_CORRECTED_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
-                            truncated: cut, corrections_read: read },
-                   detail: "the cause is reevaluation's (its R27): a live leg of this finding rests on a side "
-                         + "contradiction marks stale. It is read here, never raised, and no strength, conclusion or "
-                         + "case moved." },
-          age: Number.isFinite(sinceMs)
-            ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
-            : { state: "undetermined", reason: "no_marking_instant",
-                detail: "the marking act carries no instant this producer can read" },
-          assignee: null,
-          assignee_role: null,
-          options: this.#optionsOf([e.dependent]),
-        });
+        held.push({ e, read, cut });
       }
       if (!r.truncated || !r.cursor) break;
       after = r.cursor;
+    }
+    this.#titlesOf(held.map((x) => x.e.dependent)); this.#caseRows(held.map((x) => x.e.dependent), viewer);
+    for (const { e, read, cut } of held) {
+      const name = this.#nameOf(e.dependent);
+      const sinceMs = Date.parse(e.since ?? "");
+      out.push({
+        id: `FINDING::side-corrected::${e.dependent}::${e.candidate}`,
+        class: "FINDING",
+        kind: "side-corrected",
+        case: this.#homesAt([e.dependent], viewer),
+        subject: { kind: "bundle", id: e.dependent, candidate: e.candidate },
+        summary: say("queue.side-corrected.summary", { name }),
+        summary_key: "queue.side-corrected.summary",
+        detail: e.reason ? say("queue.side-corrected.detail.reason", { reason: e.reason }) : say("queue.side-corrected.detail"),
+        detail_key: e.reason ? "queue.side-corrected.detail.reason" : "queue.side-corrected.detail",
+        basis: { source: "reevaluation.correctedDependents", dependent: e.dependent, candidate: e.candidate,
+                 cause: e.kind ?? "corrected", reason: e.reason ?? null, member: e.member ?? null,
+                 since: e.since ?? null, inquiry: e.inquiry ?? null, act: e.act ?? null,
+                 legs: Array.isArray(e.legs) ? e.legs : [],
+                 bound: { limit: QueueProducers.QUEUE_CORRECTED_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
+                          truncated: cut, corrections_read: read },
+                 detail: localize("queue-producers.index.the_cause_is_reevaluations_its_3", "the cause is reevaluation's (its R27): a live leg of this finding rests on a side contradiction marks stale. It is read here, never raised, and no strength, conclusion or case moved.") },
+        age: Number.isFinite(sinceMs)
+          ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
+          : { state: "undetermined", reason: "no_marking_instant",
+              detail: localize("queue-producers.index.the_marking_act_carries_no", "the marking act carries no instant this producer can read") },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([e.dependent]),
+      });
     }
     return out;
   }
 
   /** The projects this viewer sees that the member OWNS (membership R65), in id order, at most `cap`. */
   #ownedProjects(me, viewer, cap) {
+    /* R49: ONE statement, as `#participatingProjects`: the projects she owns (`owner` in membership's R120 contract, what
+       `projectOwners` lists), that this viewer sees. */
     const gate = viewerPredicate(viewer);
-    const out = [];
-    let after = "", truncated = false;
-    for (;;) {
-      const rows = this.#rows(
-        `SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id > ? AND (${gate.sql})
-          ORDER BY b.bundle_id LIMIT ?`, after, ...gate.args, QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE);
-      for (const r of rows) {
-        const owners = this.#membership.projectOwners(r.bundle_id) || [];
-        if (!owners.includes(me)) continue;
-        if (out.length === cap) { truncated = true; break; }
-        out.push(r.bundle_id);
-      }
-      if (truncated || rows.length < QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
-      after = rows[rows.length - 1].bundle_id;
+    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b JOIN project_participants mine ON mine.project_id = b.bundle_id
+                              AND mine.member_id = ? AND mine.owner = 1
+                              WHERE b.object_type='project' AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`, me, ...gate.args, cap + 1);
+    return { projects: rows.slice(0, cap).map((r) => r.bundle_id), bound: cap, truncated: rows.length > cap };
+  }
+
+  /** R49: the member who authored each observation of `ids` (`register`'s `authored` rows, provenance R48), every one not yet held
+   *  read at once by one statement; null for one with no authored row. */
+  #authorsOf(ids) {
+    const held = this.#memo.authors;
+    const todo = QueueProducers.#missing(held, ids);
+    if (todo.length) {
+      const found = new Map();
+      for (const r of this.#rows(`SELECT r.bundle_id, r.author FROM register r WHERE r.authored=1
+                                    AND r.bundle_id IN (SELECT value FROM json_each(?)) ORDER BY r.rowid`, JSON.stringify(todo)))
+        if (!found.has(r.bundle_id)) found.set(r.bundle_id, r.author ?? null);
+      for (const id of todo) held.set(id, found.get(id) ?? null);
     }
-    return { projects: out, bound: cap, truncated };
+    return held;
+  }
+
+  /** R49: the owners of `projects` (membership R65: `owner` in R120's `project_participants`, in the order they became owners), each
+   *  project not yet held read at once by one statement. */
+  #ownersOf(projects) {
+    const held = this.#memo.owners;
+    const todo = QueueProducers.#missing(held, projects);
+    if (todo.length) {
+      const by = new Map(todo.map((id) => [id, []]));
+      for (const r of this.#rows(`SELECT project_id, member_id FROM project_participants WHERE owner=1
+                                    AND project_id IN (SELECT value FROM json_each(?))
+                                   ORDER BY project_id, COALESCE(owner_order, 0), created, member_id`, JSON.stringify(todo)))
+        by.get(r.project_id).push(r.member_id);
+      for (const [id, owners] of by) held.set(id, owners);
+    }
+    return held;
   }
 
   /** `tension-after-publication` (R6; N345, DEC-84 item 13): one FINDING per (case, candidate) `case-tensions`
@@ -1627,15 +1935,13 @@ export class QueueProducers {
       let after = null;
       for (let page = 0; ; page += 1) {
         if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
-        const r = this.#caseTensions.caseTensions({ project, after });
-        if (!r || r.ok !== true || !Array.isArray(r.cases)) break;
-        for (const c of r.cases) {
+        const r = QueueProducers.#via("case-tensions.caseTensions", () => this.#caseTensions.caseTensions({ project, after }));
+        for (const c of QueueProducers.#answered(r, "cases", "case-tensions.caseTensions")) {
           for (const t of (c && Array.isArray(c.tensions) ? c.tensions : [])) {
             if (!t || typeof t.candidate !== "string" || !t.candidate) continue;
             const key = `${c.case}::${t.candidate}`;
-            const e = found.get(key) || { c, t, project, members: [] };
-            if (visible(t.member) !== null && typeof t.member === "string" && !e.members.includes(t.member))
-              e.members.push(t.member);
+            const e = found.get(key) || { c, t, project, members: [], named: [] };
+            if (typeof t.member === "string") e.named.push(t.member);
             found.set(key, e);
           }
         }
@@ -1643,6 +1949,12 @@ export class QueueProducers {
         after = r.cursor;
       }
     }
+    /* R49: the sight of every member the tensions name is read at once; the members she may see are then kept, in order */
+    visible.prefetch([...found.values()].flatMap((e) => e.named));
+    for (const e of found.values())
+      for (const m of e.named) if (visible(m) !== null && !e.members.includes(m)) e.members.push(m);
+    this.#caseRows([...found.values()].map((e) => e.project), viewer);
+    this.#caseRows([...found.values()].flatMap((e) => e.members), viewer);
     const out = [];
     for (const [key, { c, t, project, members }] of [...found.entries()].sort()) {
       if (members.length === 0) continue;           // R11: a case whose members this viewer cannot see names nothing
@@ -1653,10 +1965,11 @@ export class QueueProducers {
         case: this.#homesAt([project], viewer),
         subject: { kind: "case", id: c.case, edition: c.edition ?? null, project, candidate: t.candidate,
                    bundles: members.slice(0, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: `a finding case ${c.case} published rests on a conflict found since its edition ${c.edition ?? ""}`.trim(),
-        detail: "a contradiction on what this published case's findings rest on, one level deep, was found after its "
-              + "latest edition and is not disclosed there. The signed edition does not change: a later edition "
-              + "discloses or resolves it.",
+        ...(c.edition !== undefined && c.edition !== null && c.edition !== ""
+          ? { summary: say("queue.tension-after-publication.summary", { case: c.case, edition: c.edition }), summary_key: "queue.tension-after-publication.summary" }
+          : { summary: say("queue.tension-after-publication.summary.unnumbered", { case: c.case }), summary_key: "queue.tension-after-publication.summary.unnumbered" }),
+        detail: say("queue.tension-after-publication.detail"),
+        detail_key: "queue.tension-after-publication.detail",
         basis: { source: "case-tensions.caseTensions", case: c.case, edition: c.edition ?? null, project,
                  candidate: t.candidate, state: t.state ?? null, members, depth: t.depth ?? 1,
                  ...(t.unseen_other_side ? { unseen_other_side: true, side: t.side ?? null }
@@ -1664,11 +1977,9 @@ export class QueueProducers {
                  ...(Array.isArray(c.unread) && c.unread.length ? { unread: c.unread } : {}),
                  bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
                           pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES, pages_truncated: cut },
-                 detail: "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's "
-                       + "owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is "
-                       + "told to the project's owners and to nobody else, and it composes no strength." },
+                 detail: localize("queue-producers.index.a_tension_after_publication_is", "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength.") },
         age: { state: "undetermined", reason: "derived_on_read",
-               detail: "a tension is derived at read time from the edition and the candidates; it has no creation instant" },
+               detail: localize("queue-producers.index.a_tension_is_derived_at", "a tension is derived at read time from the edition and the candidates; it has no creation instant") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf(members),
@@ -1690,9 +2001,10 @@ export class QueueProducers {
     for (const project of scope.projects) {
       let after = null;
       for (let page = 0; page < QueueProducers.QUEUE_CONTRADICTION_PAGES; page += 1) {
-        const r = this.#contradiction.conflictNotices({ project, after, viewer });
-        if (!r || r.ok !== true || !Array.isArray(r.notices)) break;
-        for (const n of r.notices) {
+        const r = QueueProducers.#via("contradiction.conflictNotices", () => this.#contradiction.conflictNotices({ project, after, viewer }));
+        /* R50: a project this viewer is told nothing about (not a participant, or the project not hers to see) has no notice for her */
+        if (r && r.ok === false && TOLD_NOTHING.includes(codeOf(r))) break;
+        for (const n of QueueProducers.#answered(r, "notices", "contradiction.conflictNotices")) {
           if (!n || typeof n.candidate !== "string" || (n.weight !== "duty" && n.weight !== "plurality")) continue;
           const e = found.get(n.candidate) || { n, parties: [] };
           if (!e.parties.some((p) => p.project === n.project))
@@ -1707,6 +2019,7 @@ export class QueueProducers {
       }
     }
     const out = [];
+    this.#caseRows([...found.values()].flatMap(({ n }) => QueueProducers.#sideSubjects(n.side)), viewer);
     for (const [candidate, { n, parties }] of [...found.entries()].sort()) {
       const duty = n.weight === "duty";
       const cls = duty ? "OBLIGATION" : "FINDING";
@@ -1723,19 +2036,17 @@ export class QueueProducers {
         /* R8 (K558): the member's projects that hold R50's notice, each with its opt-in. */
         subject: { kind: "contradiction_notice", id: candidate,
                    parties: parties.map((p) => ({ project: p.project, opted_in: p.opted_in ?? null })) },
-        summary: duty ? "something this project rests on is in conflict with a record you cannot see"
-                      : "this project's conclusion may not hold together with a conclusion you cannot see",
-        detail: n.says ?? null,
+        summary: say(`queue.${duty ? "contradiction-duty-unseen" : "contradiction-plurality-unseen"}.summary`),
+        summary_key: `queue.${duty ? "contradiction-duty-unseen" : "contradiction-plurality-unseen"}.summary`,
+        detail: say(`queue.${duty ? "contradiction-duty-unseen" : "contradiction-plurality-unseen"}.detail`),
+        detail_key: `queue.${duty ? "contradiction-duty-unseen" : "contradiction-plurality-unseen"}.detail`,
         basis: { source: "contradiction.conflictNotices", candidate, weight: n.weight, state: n.state ?? null,
                  side: n.side ?? null, says: n.says ?? null,
                  asked_by_another: parties.some((p) => p.asked_by_another),
                  projects: parties, responses,
-                 detail: "a notice is contradiction's (its R50): it names the side this project rests on and nothing "
-                       + "of the other, nor who holds it, nor how many do. Your project can ask to resolve it; when "
-                       + "every project holding a side has asked, the projects are named to each other and each can "
-                       + "respond, sharing only what its responder chose." },
+                 detail: localize("queue-producers.index.a_notice_is_contradictions_its", "a notice is contradiction's (its R50): it names the side this project rests on and nothing of the other, nor who holds it, nor how many do. Your project can ask to resolve it; when every project holding a side has asked, the projects are named to each other and each can respond, sharing only what its responder chose.") },
         age: { state: "undetermined", reason: "derived_on_read",
-               detail: "a notice is derived at read time and carries no instant of its own" },
+               detail: localize("queue-producers.index.a_notice_is_derived_at", "a notice is derived at read time and carries no instant of its own") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf(subjects),
@@ -1749,25 +2060,28 @@ export class QueueProducers {
    * ====================================================================== */
 
   /** R14: the act an administrator takes on a self-registered key, credentials R7's revoke (`op=signerset`). */
-  static SIGNER_REVOKE = Object.freeze({ id: "signerset", label: "Revoke this signing key", weight: "single" });
+  static SIGNER_REVOKE = Object.freeze({ id: "signerset", label: word("queue-producers.label.revoke_signing_key"), weight: "single" });
 
   /** `signer-self-registered` (R14; credentials R8, R9; N375): for an administrator member (membership R64), or the
    *  `admin` machine credential as export-performed's reader is, one OBLIGATION per key `credentials.signerList`
    *  answers `active` with `origin: "self"`, naming the key's comment and its member, aged from its `added` instant, and
    *  offering credentials R7's revoke. Every other reader gets none, and not a count. It leaves when the key is no longer
-   *  `active`: the list is read at every read, so nothing is stored to clear. */
+   *  `active`, or when its row carries `known_by` (R55; credentials R83's `signerKnown`): the list is read at every read, so nothing is stored to clear. */
   #obligationsSignerSelfRegistered(me, viewer, now) {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!admin) return [];
     const list = this.#credentials.signerList();
-    const keys = (list && Array.isArray(list.signers) ? list.signers : [])
-      .filter((k) => k && k.status === "active" && k.origin === "self" && typeof k.key_b64 === "string" && k.key_b64);
+    const keys = QueueProducers.#answered(list, "signers", "credentials.signerList")
+      .filter((k) => k && k.status === "active" && k.origin === "self" && typeof k.key_b64 === "string" && k.key_b64
+        && !k.known_by);                                       // R55: an administrator said they know of it (credentials R83)
     if (keys.length === 0) return [];
     const raisedTo = this.#activeAdmins();
     const homes = this.#homesOf([]);
-    return keys.map((k) => {
+    const registrant = (k) => (k.registered_by && k.registered_by !== "not recorded" ? k.registered_by : k.member_id);
+    /* A-03 (K5257): the member who registered a key is told nothing of it: she did it, and has nothing to decide. */
+    return keys.filter((k) => !me || registrant(k) !== me).map((k) => {
       const addedMs = Date.parse(k.added ?? "");
-      const member = k.registered_by && k.registered_by !== "not recorded" ? k.registered_by : k.member_id;
+      const member = registrant(k);
       return {
         id: `OBLIGATION::signer-self-registered::${k.key_b64}`,
         class: "OBLIGATION",
@@ -1775,19 +2089,21 @@ export class QueueProducers {
         case: homes,
         subject: { kind: "signer_key", id: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
                    registered_by: member ?? null },
-        summary: `${member || "a member"} registered a signing key for themselves${k.comment ? `: ${k.comment}` : ""}`,
-        detail: "a member registered their own browser-held signing key from a signed-in session, and it is active. "
-              + "Every administrator is told; an administrator may revoke it. Nothing here changes the key.",
+        ...(() => {
+          const name = member ? this.#memberName(member) : "";
+          const key = `queue.signer-self-registered.summary${member ? "" : ".unnamed"}${k.comment ? ".comment" : ""}`;
+          return { summary: say(key, { member: name, comment: k.comment }), summary_key: key };
+        })(),
+        detail: say("queue.signer-self-registered.detail"),
+        detail_key: "queue.signer-self-registered.detail",
         basis: { source: "credentials.signerList", key: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
                  registered_by: member ?? null, origin: "self", status: k.status, added: k.added ?? null,
-                 attests: k.attests === true, raised_to: raisedTo,
-                 detail: "the key is credentials' own row (its R8), registered by its member (its R9) and read here at "
-                       + "every read: it is told to every administrator and to nobody else, and it leaves when the key is "
-                       + "no longer active, by an administrator's revoke (its R7) or otherwise." },
+                 attests: k.attests === true, raised_to: Array.isArray(raisedTo) ? raisedTo.filter((a) => a !== member) : raisedTo,
+                 detail: localize("queue-producers.index.the_key_is_credentials_own", "the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator but the one who registered the key, and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.") },
         age: Number.isFinite(addedMs)
           ? { state: "determined", since: k.added, ms: Math.max(0, now - addedMs) }
           : { state: "undetermined", reason: "unparseable_added",
-              detail: "the key's row carries an added stamp this producer cannot read as an instant" },
+              detail: localize("queue-producers.index.the_keys_row_carries_an", "the key's row carries an added stamp this producer cannot read as an instant") },
         assignee: null,
         assignee_role: null,
         options: [QueueProducers.SIGNER_REVOKE],
@@ -1802,7 +2118,7 @@ export class QueueProducers {
   /** R23: how many prepared, unsigned case editions one read asks about, and the act that answers the item (publication
    *  R17, `op=attribute`: the observation's author chooses the level, with a reason). */
   static QUEUE_PREPARED_EDITIONS_MAX = 200;
-  static ATTRIBUTE_CHOOSE = Object.freeze({ id: "attribute", label: "Choose how this case credits your observation", weight: "single" });
+  static ATTRIBUTE_CHOOSE = Object.freeze({ id: "attribute", label: word("queue-producers.label.choose_how_case"), weight: "single" });
 
   /** `attribution-unchosen` (R23; DEC-102 item 3): one OBLIGATION per (case edition, observation) where a prepared,
    *  unsigned case edition reaches an observation the member authored and no credit level is in force for it, to that
@@ -1827,23 +2143,23 @@ export class QueueProducers {
           AND NOT EXISTS (SELECT 1 FROM case_documents later WHERE later.case_id = cd.case_id AND later.edition > cd.edition)
         ORDER BY cd.case_id, cd.edition LIMIT ?`, cap + 1);
     const truncated = rows.length > cap;
-    const authorOf = new Map();
-    const authored = (obs) => {
-      if (!authorOf.has(obs))
-        authorOf.set(obs, (this.#one(`SELECT r.author FROM register r WHERE r.bundle_id=? AND r.authored=1 LIMIT 1`, obs) || {}).author ?? null);
-      return authorOf.get(obs);
-    };
-    const out = [];
+    const prepared = [];
     for (const e of rows.slice(0, cap)) {
       const facts = this.#publication.caseDocumentFacts(e.case_id, Number(e.edition), viewer);
       if (!facts || facts.ok !== true || !facts.doc || facts.doc.sig_armored) continue;
-      const current = facts.attribution && Array.isArray(facts.attribution.current) ? facts.attribution.current : [];
+      prepared.push({ e, current: facts.attribution && Array.isArray(facts.attribution.current) ? facts.attribution.current : [] });
+    }
+    /* R49: the authors and titles of every observation the editions reach are read at once */
+    const reached = prepared.flatMap(({ current }) => current.map((row) => (row && typeof row.observation === "string" ? row.observation : "")).filter(Boolean));
+    const authors = this.#authorsOf(reached); this.#titlesOf(reached);
+    const authored = (obs) => authors.get(obs) ?? null;
+    const out = [];
+    for (const { e, current } of prepared) {
       for (const row of current) {
         const obs = row && typeof row.observation === "string" ? row.observation : "";
         if (!obs || row.level || authored(obs) !== me) continue;
         const preparedMs = Date.parse(e.authored_at ?? "");
-        const title = this.#record.bundleInfo(obs);
-        const name = title && title.title ? title.title : obs;
+        const name = this.#nameOf(obs);
         out.push({
           id: `OBLIGATION::attribution-unchosen::${e.case_id}@${e.edition}::${obs}`,
           class: "OBLIGATION",
@@ -1851,22 +2167,19 @@ export class QueueProducers {
           case: this.#homesOf([obs]),
           subject: { kind: "case_edition", id: `${e.case_id}@${e.edition}`, case: e.case_id, edition: Number(e.edition),
                      observation: obs },
-          summary: `case ${e.case_id}, being prepared, uses your observation ${name}: choose how it credits you`,
-          detail: `edition ${e.edition} of this case reaches what you observed, and you have chosen no level for how it `
-                + "shows who said it: the group, the project, your cover or your name. Nothing is published until it is "
-                + "signed, and nobody else is told you are its author. This is told once; it leaves when you choose, "
-                + "or the edition no longer uses it, or it is signed or replaced.",
+          summary: say("queue.attribution-unchosen.summary", { case: e.case_id, observation: name }),
+          summary_key: "queue.attribution-unchosen.summary",
+          detail: say("queue.attribution-unchosen.detail", { edition: Number(e.edition) }),
+          detail_key: "queue.attribution-unchosen.detail",
           basis: { source: "publication.caseDocumentFacts + case_documents + register", case: e.case_id,
                    edition: Number(e.edition), observation: obs, prepared_at: e.authored_at ?? null,
                    level: null, why: row.why ?? null, recipients_rule: "author",
                    bound: { editions_limit: cap, truncated },
-                   detail: "the edition is publication's prepared, unsigned case document (its R56), its attribution "
-                         + "facts its own (its R2, R17); the observation's author is the register's (provenance R48). "
-                         + "Only the author chooses the level (DEC-102 item 3), so only the author is told." },
+                   detail: localize("queue-producers.index.the_edition_is_publications_prepared", "the edition is publication's prepared, unsigned case document (its R56), its attribution facts its own (its R2, R17); the observation's author is the register's (provenance R48). Only the author chooses the level (DEC-102 item 3), so only the author is told.") },
           age: Number.isFinite(preparedMs)
             ? { state: "determined", since: e.authored_at, ms: Math.max(0, now - preparedMs) }
             : { state: "undetermined", reason: "no_preparation_instant",
-                detail: "the case document carries no instant this producer can read" },
+                detail: localize("queue-producers.index.the_case_document_carries_no", "the case document carries no instant this producer can read") },
           assignee: null,
           assignee_role: null,
           recipients: [me],
@@ -1884,21 +2197,28 @@ export class QueueProducers {
    * ====================================================================== */
 
   /** R30: the acts that answer a core item (docket R4, R7): placing it, and, for a submission, declining it. */
-  static DOCKET_PREPARE = Object.freeze({ id: "docketprepare", label: "Place this on the case's docket", weight: "single" });
-  static DOCKET_DECLINE = Object.freeze({ id: "docketdecline", label: "Decline it for containing redactions, with a reason", weight: "single" });
-  /** R30: how each core item is named to the manager (docket R9 (a)–(c)). */
-  static DOCKET_CORE_WORDS = Object.freeze({ response: "a response", statement: "a statement",
-                                              edition: "a newer edition", tension: "an undisclosed tension" });
+  static DOCKET_PREPARE = Object.freeze({ id: "docketprepare", label: word("queue-producers.label.place_case_docket"), weight: "single" });
+  static DOCKET_DECLINE = Object.freeze({ id: "docketdecline", label: word("queue-producers.label.decline_containing_redactions"), weight: "single" });
+  /** R30: the core items docket R9 (a)–(c) names, each read as `queue.docket-core-due.what.<kind>`. */
+  static DOCKET_CORE_KINDS = Object.freeze(["response", "statement", "edition", "tension"]);
   /** R31: the item kind of each docket cause (reevaluation R30 (a), (b)). */
   static DOCKET_CAUSE_KINDS = Object.freeze({ withdrawal: "edition-withdrawn", contested: "edition-contested" });
   /** R31: the page `reevaluation.docketDependents` is read in (its R30's largest). */
   static QUEUE_DOCKET_PAGE = 200;
 
-  /** The project a case belongs to, from publication's `cases` (its R40, a stated read contract); null when none. */
-  #caseProject(caseId) {
-    if (!this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='cases'`)) return null;
-    const r = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
-    return r && typeof r.project_id === "string" && r.project_id ? r.project_id : null;
+  /** R49: the project of each of `caseIds`, from publication's `cases` (its R40, a stated read contract); null when none. Every case
+   *  not yet held is read at once by one statement. */
+  #caseProjects(caseIds) {
+    const held = this.#memo.caseProject;
+    const todo = QueueProducers.#missing(held, caseIds);
+    if (todo.length) {
+      const found = this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='cases'`)
+        ? new Map(this.#rows(`SELECT case_id, project_id FROM cases WHERE case_id IN (SELECT value FROM json_each(?))`, JSON.stringify(todo))
+                    .map((r) => [r.case_id, r.project_id]))
+        : new Map();
+      for (const id of todo) held.set(id, typeof found.get(id) === "string" && found.get(id) ? found.get(id) : null);
+    }
+    return held;
   }
 
   /** `docket-core-due` (R30; docket R9; DEC-116 item 2): one OBLIGATION per core item `docket.coreDue` answers the viewer,
@@ -1909,19 +2229,23 @@ export class QueueProducers {
   #obligationsDocketCoreDue(me, viewer, now) {
     if (!me) return [];
     const r = this.#docket.coreDue({ viewer });
-    const list = r && r.ok !== false && Array.isArray(r.items) ? r.items : [];
+    const list = QueueProducers.#answered(r, "items", "docket.coreDue");
     const visible = this.#bundleRedactor(viewer);
-    const owners = new Map();
     const out = [];
+    /* R49: the cases' projects, the projects' sight and owners and their homes, each read for every item at once */
+    const projects = this.#caseProjects(list.map((x) => (x && typeof x.case === "string" ? x.case : null)));
+    const named = [...new Set([...projects.values()].filter(Boolean))];
+    visible.prefetch(named); this.#ownersOf(named); this.#caseRows(named, viewer);
     for (const x of list) {
       if (!x || typeof x.case !== "string" || !x.case || typeof x.kind !== "string" || !x.kind
           || x.ref === undefined || x.ref === null || x.ref === "") continue;
-      const project = this.#caseProject(x.case);
+      const project = projects.get(x.case) ?? null;
       if (!project || visible(project) === null) continue;
-      if (!owners.has(project)) owners.set(project, this.#membership.projectOwners(project) || []);
-      const managers = owners.get(project);
+      const managers = this.#ownersOf([project]).get(project);
       if (!managers.includes(me)) continue;
-      const what = QueueProducers.DOCKET_CORE_WORDS[x.kind] || `an item (${x.kind})`;
+      /* a kind docket names that the word list holds no `what` for is left empty (R43; named in the job's REPORT) */
+      const known = QueueProducers.DOCKET_CORE_KINDS.includes(x.kind);
+      const what = known ? say(`queue.docket-core-due.what.${x.kind}`) : "";
       const submission = x.kind === "response" || x.kind === "statement";
       const edition = Number.isInteger(Number(x.edition)) && x.edition !== null ? Number(x.edition) : null;
       const sinceMs = Date.parse(x.since ?? "");
@@ -1931,27 +2255,19 @@ export class QueueProducers {
         kind: "docket-core-due",
         case: this.#homesAt([project], viewer),
         subject: { kind: "case", id: x.case, project, item: x.kind, ref: String(x.ref), edition },
-        summary: `case ${x.case}'s docket is missing ${what}${edition !== null ? ` on edition ${edition}` : ""}`,
-        detail: (submission
-          ? `${what[0].toUpperCase()}${what.slice(1)} filed on this case is not yet listed. List it whole, or decline it `
-            + "for containing redactions, with a reason."
-          : x.kind === "edition"
-            ? `edition ${edition ?? ""} of this case was ratified with no entry on its docket quoting what changed. `
-              + "Place that entry."
-            : "a conflict found on a load-bearing finding of this case's latest edition is not disclosed on its docket. "
-              + "Place the disclosure.")
-          + " This is a to do for the case's managers; it is told once, and it leaves when the item is placed, declined, "
-          + "receipted or disclosed.",
+        ...(edition !== null
+          ? { summary: say("queue.docket-core-due.summary.edition", { case: x.case, what, edition }), summary_key: "queue.docket-core-due.summary.edition" }
+          : { summary: say("queue.docket-core-due.summary", { case: x.case, what }), summary_key: "queue.docket-core-due.summary" }),
+        detail: joined(known ? say(`queue.docket-core-due.detail.${x.kind}`, { edition }) : "", say("queue.docket-core-due.detail.tail")),
+        detail_key: known ? `queue.docket-core-due.detail.${x.kind}` : "queue.docket-core-due.detail.tail",
         basis: { source: "docket.coreDue", case: x.case, project, item: x.kind, ref: String(x.ref), edition,
                  since: x.since ?? null, ...(x.what_changed !== undefined ? { what_changed: x.what_changed } : {}),
                  ...(x.state !== undefined ? { state: x.state } : {}), recipients_rule: "case_managers",
-                 detail: "a core item still due is docket's fact (its R9), read here and never stored; the case's project "
-                       + "is publication's (its R40). It goes to the case's managers, its project's owners, and to nobody "
-                       + "else (DEC-116 item 2), and is raised once (DEC-69, DEC-94)." },
+                 detail: localize("queue-producers.index.a_core_item_still_due", "a core item still due is docket's fact (its R9), read here and never stored; the case's project is publication's (its R40). It goes to the case's managers, its project's owners, and to nobody else (DEC-116 item 2), and is raised once (DEC-69, DEC-94).") },
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: x.since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "no_due_instant",
-              detail: "the item carries no instant this producer can read for when it fell due" },
+              detail: localize("queue-producers.index.the_item_carries_no_instant", "the item carries no instant this producer can read for when it fell due") },
         assignee: null,
         assignee_role: null,
         recipients: [...managers],
@@ -1972,47 +2288,45 @@ export class QueueProducers {
     for (let page = 0; ; page += 1) {
       if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
       const r = this.#reevaluation.docketDependents({ after, limit: QueueProducers.QUEUE_DOCKET_PAGE, viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.entries)) break;
+      const entries = QueueProducers.#answered(r, "entries", "reevaluation.docketDependents");
       if (r.docket_absent) flags = { ...flags, docket_absent: true };
       if (r.docket_read === false) flags = { ...flags, docket_read: false };
-      for (const e of r.entries) {
+      /* R49: the page's dependents' titles and homes are read at once */
+      this.#titlesOf(entries.map((e) => e && e.dependent)); this.#caseRows(entries.map((e) => e && e.dependent), viewer);
+      for (const e of entries) {
         const kind = e ? QueueProducers.DOCKET_CAUSE_KINDS[e.kind] : null;
         if (!kind || typeof e.dependent !== "string" || !e.dependent || typeof e.entry !== "string" || !e.entry) continue;
-        const title = this.#record.bundleInfo(e.dependent);
-        const name = title && title.title ? title.title : e.dependent;
+        const name = this.#nameOf(e.dependent);
         const withdrawn = kind === "edition-withdrawn";
         const editions = withdrawn
           ? (Array.isArray(e.withdrawn_editions) ? e.withdrawn_editions : [])
           : (e.edition !== undefined && e.edition !== null ? [e.edition] : []);
-        const cs = typeof e.case === "string" && e.case ? `case ${e.case}` : "a case";
+        const cs = typeof e.case === "string" && e.case ? say("queue.docket-case.named", { case: e.case }) : say("queue.docket-case.unnamed");
         const sinceMs = Date.parse(e.since ?? "");
+        const summaryKey = withdrawn ? "queue.edition-withdrawn.summary" : "queue.edition-contested.summary";
+        const detailKey = withdrawn
+          ? (editions.length ? `queue.edition-withdrawn.detail.${editions.length === 1 ? "one" : "other"}` : "queue.edition-withdrawn.detail")
+          : (editions.length ? "queue.edition-contested.detail.numbered" : "queue.edition-contested.detail");
         out.push({
           id: `FINDING::${kind}::${e.dependent}::${e.entry}`,
           class: "FINDING",
           kind,
           case: this.#homesAt([e.dependent], viewer),
           subject: { kind: "bundle", id: e.dependent, case: e.case ?? null, entry: e.entry, editions },
-          summary: withdrawn
-            ? `something ${name} rests on is in a case edition its authors withdrew`
-            : `a response on the docket of ${cs} contests an edition ${name} is part of`,
-          detail: (withdrawn
-            ? `${cs}${editions.length ? ` (${editions.length === 1 ? "edition" : "editions"} ${editions.join(", ")})` : ""} `
-              + "was withdrawn on its docket. The edition keeps answering as it was signed, and nothing resting on it moved."
-            : `a response filed on the docket of ${cs} contests ${editions.length ? `edition ${editions[0]}` : "an edition"}, `
-              + "of which this is a finding. Nothing moved, and no docket entry is evidence.")
-            + " Whether this still stands is the members' to decide; a recorded re-evaluation closes this.",
+          summary: say(summaryKey, { case: cs, name }),
+          summary_key: summaryKey,
+          detail: say(detailKey, { case: cs, editions: editions.join(", "), edition: editions[0] }),
+          detail_key: detailKey,
           basis: { source: "reevaluation.docketDependents", dependent: e.dependent, entry: e.entry, cause: e.kind,
                    case: e.case ?? null, editions, since: e.since ?? null, legs: Array.isArray(e.legs) ? e.legs : [],
                    cause_detail: e.detail ?? null, ...flags,
                    bound: { limit: QueueProducers.QUEUE_DOCKET_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
                             truncated: cut },
-                   detail: "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding "
-                         + "of a withdrawn case edition, or this finding is a member of an edition a filed response "
-                         + "contests. It is read here, never raised, and nothing was regraded." },
+                   detail: localize("queue-producers.index.the_cause_is_reevaluations_its", "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding of a withdrawn case edition, or this finding is a member of an edition a filed response contests. It is read here, never raised, and nothing was regraded.") },
           age: Number.isFinite(sinceMs)
             ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
             : { state: "undetermined", reason: "no_cause_instant",
-                detail: "the cause carries no instant this producer can read" },
+                detail: localize("queue-producers.index.the_cause_carries_no_instant", "the cause carries no instant this producer can read") },
           assignee: null,
           assignee_role: null,
           options: this.#optionsOf([e.dependent]),
@@ -2039,29 +2353,33 @@ export class QueueProducers {
   static QUEUE_CITED_PAGE = 200;
   /** R35: the acts a watch's item offers (case-import R4, R17): reading the imported case with its docket entries, and,
    *  for an unreadable docket, setting the watch's address again or ending the watch. */
-  static IMPORT_READ = Object.freeze({ id: "importedcase", label: "Read the imported case and what its publisher's docket said", weight: "single" });
-  static IMPORT_REWATCH = Object.freeze({ id: "importwatch", label: "Set the publisher's address again", weight: "single" });
-  static IMPORT_UNWATCH = Object.freeze({ id: "importunwatch", label: "Stop following this case", weight: "single" });
+  static IMPORT_READ = Object.freeze({ id: "importedcase", label: word("queue-producers.label.read_imported_case"), weight: "single" });
+  static IMPORT_REWATCH = Object.freeze({ id: "importwatch", label: word("queue-producers.label.set_publisher_address"), weight: "single" });
+  static IMPORT_UNWATCH = Object.freeze({ id: "importunwatch", label: word("queue-producers.label.stop_following_case"), weight: "single" });
 
-  /** The sentence naming another group's case, as far as the viewer is told it (reevaluation R33 states the group and
-   *  case only where the viewer sees the imported reference). */
-  static #citedCaseWords(group, cs) {
-    return `${cs ? `case ${cs}` : "a case"}${group ? ` of the group ${group}` : " of another group"}`;
+  /** The words naming another group's case, as far as the viewer is told it (reevaluation R33 states the group and case
+   *  only where the viewer sees the imported reference): `queue.cited-case.both|case|group|none`. */
+  #citedCaseWords(group, cs) {
+    const g = typeof group === "string" && group ? group : null, c = typeof cs === "string" && cs ? cs : null;
+    return say(`queue.cited-case.${c && g ? "both" : c ? "case" : g ? "group" : "none"}`, { case: c, group: g });
   }
 
-  /** What one entry seen at a publisher's docket says, quoted: a move's `what_changed` or `reason`, and its signing key
-   *  and take-back as R34 and R35 state them. */
-  static #entryWords(e) {
-    const quoted = e.kind === "edition" && typeof e.what_changed === "string" && e.what_changed
-      ? ` What changed, in its publisher's words: "${e.what_changed}".`
+  /** What one entry seen at a publisher's docket says, quoted, as sentences: a move's `what_changed` or `reason`, its
+   *  signing key where it is not among those the imported case file lists, and its take-back (R34, R35). */
+  #entryWords(e, { key = true } = {}) {
+    const said = e.kind === "edition" && typeof e.what_changed === "string" && e.what_changed
+      ? say("queue.docket-entry.said.edition", { said: e.what_changed })
       : e.kind === "withdrawal" && typeof e.reason === "string" && e.reason
-        ? ` The reason, in its publisher's words: "${e.reason}".` : "";
-    const key = e.key_listed === false
-      ? " The entry's signing key is not among the keys the imported case file lists." : "";
+        ? say("queue.docket-entry.said.withdrawal", { said: e.reason }) : "";
+    const unlisted = key && e.key_listed === false ? say("queue.docket-entry.key-unlisted") : "";
     const back = e.taken_back && typeof e.taken_back === "object"
-      ? ` The publisher has since taken this entry back (entry ${e.taken_back.seq ?? "unnumbered"}`
-        + `${e.taken_back.date ? `, dated ${e.taken_back.date}` : ""}).` : "";
-    return `${quoted}${key}${back}`;
+      ? (() => {
+          const numbered = e.taken_back.seq !== undefined && e.taken_back.seq !== null && e.taken_back.seq !== "";
+          const date = e.taken_back.date ? this.#dayWord(String(e.taken_back.date)) : "";
+          const k = `queue.docket-entry.taken-back${numbered ? "" : ".unnumbered"}${date ? ".dated" : ""}`;
+          return say(k, { seq: e.taken_back.seq, date });
+        })() : "";
+    return [said, unlisted, back];
   }
 
   /** `cited-newer-edition` and `cited-edition-withdrawn` (R34; reevaluation R33; DEC-101 (3)): one FINDING per
@@ -2078,25 +2396,32 @@ export class QueueProducers {
     for (let page = 0; ; page += 1) {
       if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
       const r = this.#reevaluation.citedCaseDependents({ after, limit: QueueProducers.QUEUE_CITED_PAGE, viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.entries)) break;
+      const entries = QueueProducers.#answered(r, "entries", "reevaluation.citedCaseDependents");
       if (r.accepted_work_absent) flags = { ...flags, accepted_work_absent: true };
       if (r.accepted_work_unreadable) flags = { ...flags, accepted_work_unreadable: true };
-      for (const e of r.entries) {
+      this.#titlesOf(entries.map((e) => e && e.dependent)); this.#caseRows(entries.map((e) => e && e.dependent), viewer);
+      for (const e of entries) {
         const kind = e ? QueueProducers.CITED_MOVE_KINDS[e.kind] : null;
         if (!kind || typeof e.dependent !== "string" || !e.dependent || typeof e.import !== "string" || !e.import
             || !Number.isInteger(Number(e.seq)) || e.seq === null || e.seq === "") continue;
         const id = `FINDING::${kind}::${e.dependent}::${e.import}#${Number(e.seq)}`;
         if (seen.has(id)) continue;
         seen.add(id);
-        const title = this.#record.bundleInfo(e.dependent);
-        const name = title && title.title ? title.title : e.dependent;
+        const name = this.#nameOf(e.dependent);
         const legs = Array.isArray(e.legs) ? e.legs : [];
         const cited = [...new Set(legs.map((l) => l && l.cited_edition).filter((x) => x !== undefined && x !== null))]
           .sort((a, b) => Number(a) - Number(b));
         const edition = e.edition === "all" ? "all" : e.edition === undefined || e.edition === null ? null : Number(e.edition);
         const withdrawn = kind === "cited-edition-withdrawn";
-        const whose = QueueProducers.#citedCaseWords(e.group ?? null, e.case ?? null);
-        const citedWords = cited.length ? `${cited.length === 1 ? "edition" : "editions"} ${cited.join(", ")}` : "an edition";
+        const whose = this.#citedCaseWords(e.group ?? null, e.case ?? null);
+        const citedWords = cited.length ? say(`queue.cited-editions.${cited.length === 1 ? "one" : "other"}`, { list: cited.join(", ") }) : say("queue.cited-editions.none");
+        const numbered = Number.isInteger(edition);
+        const detailKey = withdrawn
+          ? `queue.cited-edition-withdrawn.detail.${edition === "all" ? "all" : numbered ? "numbered" : "unnumbered"}`
+          : `queue.cited-newer-edition.detail.${numbered ? "numbered" : "unnumbered"}`;
+        const summaryKey = withdrawn ? "queue.cited-edition-withdrawn.summary"
+          : numbered ? "queue.cited-newer-edition.summary" : "queue.cited-newer-edition.summary.unnumbered";
+        const entryDay = e.date ? this.#dayWord(String(e.date)) : "";
         const sinceMs = Date.parse(e.since ?? "");
         out.push({
           id,
@@ -2105,17 +2430,12 @@ export class QueueProducers {
           case: this.#homesAt([e.dependent], viewer),
           subject: { kind: "bundle", id: e.dependent, import: e.import, group: e.group ?? null, case: e.case ?? null,
                      move: e.move ?? null, seq: Number(e.seq), cited_editions: cited, edition },
-          summary: withdrawn
-            ? `${name} cites ${citedWords} of ${whose}, which its publisher has withdrawn`
-            : `${name} cites ${citedWords} of ${whose}, and its publisher has published edition ${edition ?? "a later one"}`,
-          detail: (withdrawn
-            ? `The publisher's docket for ${whose} withdrew ${edition === "all" ? "every edition" : `edition ${edition ?? ""}`.trim()}`
-              + `${e.date ? ` on ${e.date}` : ""}; what this rests on cites ${citedWords}.`
-            : `The publisher's docket for ${whose} lists edition ${edition ?? "(unnumbered)"}${e.date ? `, dated ${e.date}` : ""}; `
-              + `what this rests on cites ${citedWords}.`)
-            + QueueProducers.#entryWords(e)
-            + " The cited edition keeps answering as it was signed, and nothing here moved or was regraded. Whether this "
-            + "still stands is the members' to decide; a recorded re-evaluation closes this.",
+          summary: say(summaryKey, { name, cited: citedWords, whose, edition }),
+          summary_key: summaryKey,
+          detail: joined(say(detailKey, { whose, edition, cited: citedWords }),
+                         entryDay ? say("queue.cited-docket.detail.dated", { date: entryDay }) : "",
+                         ...this.#entryWords(e), say("queue.cited-docket.detail.tail")),
+          detail_key: detailKey,
           basis: { source: "reevaluation.citedCaseDependents", dependent: e.dependent, move: e.move ?? null, import: e.import,
                    group: e.group ?? null, case: e.case ?? null, move_kind: e.kind, edition, seq: Number(e.seq),
                    date: e.date ?? null, since: e.since ?? null,
@@ -2124,13 +2444,11 @@ export class QueueProducers {
                    cited_editions: cited, legs, cause_detail: e.detail ?? null, ...flags,
                    bound: { limit: QueueProducers.QUEUE_CITED_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
                             truncated: cut },
-                   detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another group's "
-                         + "finding at an edition whose publisher has since listed a later edition or withdrawn it on its "
-                         + "docket, a verified entry your group's Civicsmith read. It is read here, never raised, and nothing was regraded." },
+                   detail: localize("queue-producers.index.the_cause_is_reevaluations_its_2", "the cause is reevaluation's (its R33): a live leg of this finding rests on another team's finding at an edition whose publisher has since listed a later edition or withdrawn it on its docket, a verified entry your team's Civicsmith read. It is read here, never raised, and nothing was regraded.") },
           age: Number.isFinite(sinceMs)
             ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
             : { state: "undetermined", reason: "no_cause_instant",
-                detail: "the cause carries no instant this producer can read" },
+                detail: localize("queue-producers.index.the_cause_carries_no_instant_2", "the cause carries no instant this producer can read") },
           assignee: null,
           assignee_role: null,
           options: this.#optionsOf([e.dependent]),
@@ -2170,7 +2488,7 @@ export class QueueProducers {
   #watchItems(me, viewer, now) {
     if (!me) return [];
     const r = this.#caseImport.watchItems({ viewer });
-    if (!r || typeof r !== "object") return [];
+    if (!r || typeof r !== "object" || r.ok === false || r.state === "undetermined") throw new FeedFail(r && r.state === "undetermined" ? "undetermined" : "refused", "case-import.watchItems", codeOf(r));
     const recipients = new Map();
     const to = (setBy) => {
       const k = typeof setBy === "string" ? setBy : "";
@@ -2179,7 +2497,7 @@ export class QueueProducers {
     };
     const complete = r.complete === false ? { complete: false } : {};
     const subjectOf = (x) => ({ kind: "import", id: x.import, group: x.group ?? null, case: x.case ?? null });
-    const whose = (x) => QueueProducers.#citedCaseWords(x.group ?? null, x.case ?? null);
+    const whose = (x) => this.#citedCaseWords(x.group ?? null, x.case ?? null);
     const out = [];
     const findings = new Map();
     for (const e of Array.isArray(r.entries) ? r.entries : []) {
@@ -2189,22 +2507,25 @@ export class QueueProducers {
       const id = `FINDING::followed-case-entry::${e.import}#${e.seq}`;
       if (findings.has(id)) continue;
       const edition = e.edition === "all" ? "all" : e.edition === undefined || e.edition === null ? null : Number(e.edition);
-      const kindWords = e.kind === "edition" ? `edition ${edition ?? "(unnumbered)"}`
-        : e.kind === "withdrawal" ? `a withdrawal of ${edition === "all" ? "every edition" : `edition ${edition ?? "(unnumbered)"}`}`
-          : `an entry of kind ${e.kind || "(unstated)"}${edition !== null ? ` on edition ${edition}` : ""}`;
+      const numbered = Number.isInteger(edition);
+      const summaryKey = e.kind === "edition" ? `queue.followed-case-entry.summary.edition${numbered ? "" : ".unnumbered"}`
+        : e.kind === "withdrawal" ? `queue.followed-case-entry.summary.withdrawal.${edition === "all" ? "all" : numbered ? "numbered" : "unnumbered"}`
+          : "queue.followed-case-entry.summary.other";
+      const entryDay = e.date ? this.#dayWord(String(e.date)) : "";
       const it = {
         id,
         class: "FINDING",
         kind: "followed-case-entry",
         case: this.#homesOf([]),
         subject: subjectOf(e),
-        summary: `the publisher's docket for ${whose(e)}, which you follow, lists ${kindWords}`,
-        detail: `Entry ${e.seq} of the docket, ${kindWords}${e.date ? `, dated ${e.date}` : ""}, was read and verified by your group's Civicsmith. `
-              + `Its signing key ${e.key_listed === false ? "is not" : "is"} among the keys the imported case file lists.`
-              + QueueProducers.#entryWords({ ...e, key_listed: null })
-              + (e.move ? " Anything here resting on an edition it moves is told to its own members as well."
-                        : " It is not a new edition or a withdrawal, so nothing resting on the case is re-evaluated for it.")
-              + " This is told once.",
+        summary: say(summaryKey, { whose: whose(e), edition }),
+        summary_key: summaryKey,
+        detail: joined(say("queue.followed-case-entry.detail", { seq: e.seq }),
+                       entryDay ? say("queue.followed-case-entry.detail.date", { date: entryDay }) : "",
+                       say(e.key_listed === false ? "queue.followed-case-entry.detail.unkeyed" : "queue.followed-case-entry.detail.keyed"),
+                       ...this.#entryWords(e, { key: false }),
+                       say(e.move ? "queue.followed-case-entry.detail.moves" : "queue.followed-case-entry.detail.nomoves")),
+        detail_key: "queue.followed-case-entry.detail",
         basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null,
                  seq: e.seq, entry_kind: e.kind ?? null, edition, date: e.date ?? null,
                  key_listed: typeof e.key_listed === "boolean" ? e.key_listed : null, move: e.move === true,
@@ -2212,9 +2533,7 @@ export class QueueProducers {
                  ...(e.kind === "withdrawal" ? { reason: e.reason ?? null } : {}),
                  taken_back: e.taken_back ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
                  recipients_rule: rec.rule, ...complete,
-                 detail: "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and "
-                       + "never stored. It goes to the member who set the watch, else the administrators, and to nobody "
-                       + "else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366)." },
+                 detail: localize("queue-producers.index.a_verified_entry_of_a", "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and never stored. It goes to the member who set the watch, else the administrators, and to nobody else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366).") },
         age: QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
@@ -2230,12 +2549,13 @@ export class QueueProducers {
       if (!rec.members.includes(me)) continue;
       const seq = Number.isInteger(e.seq) ? e.seq : null;
       const id = `FINDING::cited-docket-entry-refused::${e.import}#${seq === null ? "unnumbered" : seq}`;
-      const failed = typeof e.failed === "string" && e.failed ? e.failed : "an undetermined check";
+      /* a refused entry whose check is named by no code leaves `{checks}` empty (R43; named in the job's REPORT) */
+      const failed = typeof e.failed === "string" && e.failed ? e.failed : null;
       const held = findings.get(id);
       if (held) {
-        if (!held.basis.failed.includes(failed)) {
+        if (failed !== null && !held.basis.failed.includes(failed)) {
           held.basis.failed.push(failed);
-          held.detail = QueueProducers.#refusedWords(e, seq, held.basis.failed);
+          Object.assign(held, QueueProducers.#refusedWords(seq, held.basis.failed));
         }
         /* one item for every refused copy of this entry: it ages from the first of them this copy read */
         const age = QueueProducers.#seenAge(e.seen_at, now);
@@ -2251,15 +2571,14 @@ export class QueueProducers {
         kind: "cited-docket-entry-refused",
         case: this.#homesOf([]),
         subject: subjectOf(e),
-        summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed the checks your group's Civicsmith makes`,
-        detail: QueueProducers.#refusedWords(e, seq, [failed]),
+        summary: say("queue.cited-docket-entry-refused.summary", { whose: whose(e) }),
+        summary_key: "queue.cited-docket-entry-refused.summary",
+        ...QueueProducers.#refusedWords(seq, failed === null ? [] : [failed]),
         basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null, seq,
-                 failed: [failed], entry_detail: e.detail ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
+                 failed: failed === null ? [] : [failed], entry_detail: e.detail ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
                  recipients_rule: rec.rule,
                  ...complete,
-                 detail: "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that "
-                       + "failed a check, recorded and never a move. It goes to the member who set the watch, else the "
-                       + "administrators, and to nobody else." },
+                 detail: localize("queue-producers.index.a_refused_entry_is_case", "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that failed a check, recorded and never a move. It goes to the member who set the watch, else the administrators, and to nobody else.") },
         age: QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
@@ -2282,20 +2601,22 @@ export class QueueProducers {
         kind: "cited-docket-unreadable",
         case: this.#homesOf([]),
         subject: subjectOf(u),
-        summary: `${DOCKET_UNREADABLE} for ${whose(u)}, which you follow`,
-        detail: `${DOCKET_UNREADABLE}${u.reason ? ` (${u.reason})` : ""}${u.at ? ` at ${u.at}` : ""}. This says the read failed, `
-              + "never that nothing changed. It leaves when a read succeeds or the watch ends.",
+        summary: say("queue.cited-docket-unreadable.summary", { whose: whose(u) }),
+        summary_key: "queue.cited-docket-unreadable.summary",
+        /* DEC-359 (B2): the reason through `queue.fill.reason.<code>` (`.http` with `{status}` for http_<n>); one the list does not
+           hold leaves the sentence out */
+        detail: joined(say("queue.cited-docket-unreadable.detail"),
+                       reasonWord(u.reason) ? say("queue.cited-docket-unreadable.detail.reason", { reason: reasonWord(u.reason) }) : "",
+                       this.#dayWord(u.at) ? say("queue.cited-docket-unreadable.detail.at", { date: this.#dayWord(u.at) }) : ""),
+        detail_key: "queue.cited-docket-unreadable.detail",
         basis: { source: "case-import.watchItems", import: u.import, group: u.group ?? null, case: u.case ?? null,
                  docket: u.docket ?? null, reason: u.reason ?? null, at: u.at ?? null, sentence: DOCKET_UNREADABLE,
                  set_by: u.set_by ?? null, recipients_rule: rec.rule, ...complete,
-                 detail: "an unreadable docket is case-import's fact about this copy's latest read (its R18, R20), read "
-                       + "here and never stored: a signal about our own reading, not about the publisher. It goes to the "
-                       + "member who set the watch, else the administrators, and leaves on the first read after it stops "
-                       + "holding." },
+                 detail: localize("queue-producers.index.an_unreadable_docket_is_case", "an unreadable docket is case-import's fact about this copy's latest read (its R18, R20), read here and never stored: a signal about our own reading, not about the publisher. It goes to the member who set the watch, else the administrators, and leaves on the first read after it stops holding.") },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: u.at, ms: Math.max(0, now - atMs) }
           : { state: "undetermined", reason: "no_read_instant",
-              detail: "the read carries no instant this producer can read" },
+              detail: localize("queue-producers.index.the_read_carries_no_instant", "the read carries no instant this producer can read") },
         assignee: null,
         assignee_role: null,
         recipients: [...rec.members],
@@ -2314,14 +2635,14 @@ export class QueueProducers {
     return Number.isFinite(ms)
       ? { state: "determined", since: seenAt, ms: Math.max(0, now - ms) }
       : { state: "undetermined", reason: "no_seen_instant",
-          detail: "the entry carries no instant this copy read it at that this producer can read" };
+          detail: localize("queue-producers.index.the_entry_carries_no_instant", "the entry carries no instant this copy read it at that this producer can read") };
   }
 
-  /** R35: the refused entry's sentence, naming every check its copies failed. */
-  static #refusedWords(e, seq, failed) {
-    return `${seq === null ? "An entry with no readable number" : `Entry ${seq}`} of the docket was read and refused: it failed `
-      + `${failed.length === 1 ? "the check" : "the checks"} ${failed.join(", ")}. A refused entry is never taken as a new `
-      + "edition or a withdrawal, and nothing resting on the case moved. This is told once.";
+  /** R35: the refused entry's sentence and its key, naming every check its copies failed by the code case-import gives it. */
+  static #refusedWords(seq, failed) {
+    const words = failed.map((c) => fillWord("check", c)).filter(Boolean);
+    const key = `queue.cited-docket-entry-refused.detail.${seq === null ? "unnumbered." : ""}${failed.length <= 1 ? "one" : "other"}`;
+    return { detail: say(key, { seq, checks: words.length ? words.join(", ") : fillWord("check", "undetermined") }), detail_key: key };
   }
 
   /* ======================================================================
@@ -2331,8 +2652,8 @@ export class QueueProducers {
 
   /** R32: the item kinds of a break and a return (wizard-scripts R13); R33: the act that answers a submission (its R7). */
   static WIZARD_BREAK_KINDS = Object.freeze({ withdrawn: "wizard-withdrawn", restored: "wizard-restored" });
-  static WIZARD_APPROVE = Object.freeze({ id: "wizardapprove", label: "Read this wizard script and approve it", weight: "single" });
-  static WIZARD_READ = Object.freeze({ id: "wizardread", label: "Read this wizard script", weight: "single" });
+  static WIZARD_APPROVE = Object.freeze({ id: "wizardapprove", label: word("queue-producers.label.read_wizard_script"), weight: "single" });
+  static WIZARD_READ = Object.freeze({ id: "wizardread", label: word("queue-producers.label.read_wizard_script_2"), weight: "single" });
 
   /** `wizard-withdrawn` and `wizard-restored` (R32; wizard-scripts R13; DEC-121 (5): "its owner is told why"): one FINDING
    *  per entry `wizard-scripts.brokenScripts` answers the viewer, keyed `FINDING::wizard-<kind>::<script>@<version>::<at>`,
@@ -2345,10 +2666,14 @@ export class QueueProducers {
     const page = this.#pages((after) => {
       const r = this.#wizardScripts.brokenScripts({ after, viewer });
       return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
-    });
+    }, "wizard-scripts.brokenScripts");
     const visible = this.#bundleRedactor(viewer);
     const owners = new Map();
     const out = [];
+    /* R49: the projects the items name are read for sight, owners and home at once */
+    const named = [...new Set(page.items.map((x) => (x && typeof x.project === "string" && x.project ? x.project : null)).filter(Boolean))];
+    visible.prefetch(named); this.#ownersOf(named); this.#caseRows(named, viewer);
+
     for (const x of page.items) {
       const kind = x ? QueueProducers.WIZARD_BREAK_KINDS[x.kind] : null;
       if (!kind || typeof x.script !== "string" || !x.script || x.version === undefined || x.version === null
@@ -2356,7 +2681,7 @@ export class QueueProducers {
       const project = typeof x.project === "string" && x.project ? x.project : null;
       if (project && visible(project) === null) continue;       // R11: a script of a project the viewer may not see
       const key = project || "";
-      if (!owners.has(key)) owners.set(key, project ? (this.#membership.projectOwners(project) || []) : this.#activeAdmins());
+      if (!owners.has(key)) owners.set(key, project ? this.#ownersOf([project]).get(project) : this.#activeAdmins());
       const author = typeof x.author === "string" && x.author && !x.author.startsWith(MACHINE_AUTHOR_PREFIX)
         && !x.author.startsWith(MACHINE_CLASS_PREFIX) ? x.author : null;
       const recipients = [...new Set([...owners.get(key), ...(author ? [author] : [])])];
@@ -2365,7 +2690,7 @@ export class QueueProducers {
       const withdrawn = kind === "wizard-withdrawn";
       const refusal = withdrawn && x.refusal && typeof x.refusal === "object" ? x.refusal : null;
       const words = refusal && typeof refusal.translation === "string" && refusal.translation ? refusal.translation : null;
-      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : version;
+      const name = typeof x.name === "string" && x.name ? x.name : version;
       const atMs = Date.parse(x.at);
       out.push({
         id: `FINDING::${kind}::${version}::${x.at}`,
@@ -2374,22 +2699,17 @@ export class QueueProducers {
         case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
         subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null, project,
                    ...(withdrawn ? { refusal: refusal ? { code: refusal.code ?? null, check: refusal.check ?? null, translation: words } : null } : {}) },
-        summary: withdrawn
-          ? `the wizard script ${name} no longer matches the screens and is withdrawn until it is fixed`
-          : `the wizard script ${name} matches the screens again and is offered again`,
-        detail: withdrawn
-          ? `It is not offered to members while it fails its checks${words ? `. The first thing it failed: ${words}` : ""}. `
-            + "A new version that passes them, approved as before, returns it. This is told once."
-          : "It passed its checks again when your group's Civicsmith started, and members are offered it as before. This is told once.",
+        summary: say(`queue.${kind}.summary`, { name }),
+        summary_key: `queue.${kind}.summary`,
+        detail: joined(say(`queue.${kind}.detail`), withdrawn && words ? say("queue.wizard-withdrawn.detail.reason", { reason: words }) : ""),
+        detail_key: `queue.${kind}.detail`,
         basis: { source: "wizard-scripts.brokenScripts", script: x.script, version: x.version, name: x.name ?? null, project,
                  author, at: x.at, break_kind: x.kind, refusal, recipients_rule: project ? "project_owners_and_author" : "administrators_and_author",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a script's break or return is wizard-scripts' record (its R13), made when its checks are run "
-                       + "again at start, read here and never stored. It goes to the script's project owners (for a group "
-                       + "script, the administrators) and its version's author, once (DEC-69, DEC-70)." },
+                 detail: localize("queue-producers.index.a_scripts_break_or_return", "a script's break or return is wizard-scripts' record (its R13), made when its checks are run again at start, read here and never stored. It goes to the script's project owners (for a team script, the administrators) and its version's author, once (DEC-69, DEC-70).") },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: x.at, ms: Math.max(0, now - atMs) }
-          : { state: "undetermined", reason: "no_break_instant", detail: "the record carries no instant this producer can read" },
+          : { state: "undetermined", reason: "no_break_instant", detail: localize("queue-producers.index.the_record_carries_no_instant", "the record carries no instant this producer can read") },
         assignee: null,
         assignee_role: null,
         recipients,
@@ -2409,15 +2729,20 @@ export class QueueProducers {
     const page = this.#pages((after) => {
       const r = this.#wizardScripts.submittedFor({ after, viewer });
       return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
-    });
+    }, "wizard-scripts.submittedFor");
     const visible = this.#bundleRedactor(viewer);
     const out = [];
+    /* R49: the projects the items name are read for sight, owners and home at once */
+    const named = [...new Set(page.items.map((x) => (x && typeof x.project === "string" && x.project ? x.project : null)).filter(Boolean))];
+    visible.prefetch(named); this.#ownersOf(named); this.#caseRows(named, viewer);
+
     for (const x of page.items) {
       if (!x || typeof x.script !== "string" || !x.script || x.version === undefined || x.version === null
           || x.owner !== me) continue;
       const project = typeof x.project === "string" && x.project ? visible(x.project) : null;    // R11
       const version = `${x.script}@${x.version}`;
-      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : version;
+      const name = typeof x.name === "string" && x.name ? x.name : version;
+      const author = x.author ? this.#memberName(x.author) : "";
       const atMs = Date.parse(x.submitted_at ?? "");
       out.push({
         id: `OBLIGATION::wizard-approval-requested::${version}::${x.owner}`,
@@ -2426,18 +2751,19 @@ export class QueueProducers {
         case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
         subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null,
                    author: x.author ?? null, project },
-        summary: `${x.author || "a member"} submitted the wizard script ${name} for your approval`,
-        detail: "A version of this wizard script was submitted, and you may approve it. Read its steps and approve it; "
-              + "this is told once, and it leaves when the version is approved or withdrawn, or the script retired.",
+        ...(author
+          ? { summary: say("queue.wizard-approval-requested.summary", { author, name }), summary_key: "queue.wizard-approval-requested.summary" }
+          : { summary: say("queue.wizard-approval-requested.summary.unnamed", { name }), summary_key: "queue.wizard-approval-requested.summary.unnamed" }),
+        detail: say("queue.wizard-approval-requested.detail"),
+        detail_key: "queue.wizard-approval-requested.detail",
         basis: { source: "wizard-scripts.submittedFor", script: x.script, version: x.version, name: x.name ?? null,
                  author: x.author ?? null, owner: x.owner, project, submitted_at: x.submitted_at ?? null,
                  recipients_rule: "approver",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is "
-                       + "listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94)." },
+                 detail: localize("queue-producers.index.a_submitted_version_is_wizard", "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94).") },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: x.submitted_at, ms: Math.max(0, now - atMs) }
-          : { state: "undetermined", reason: "no_submission_instant", detail: "the submission carries no instant this producer can read" },
+          : { state: "undetermined", reason: "no_submission_instant", detail: localize("queue-producers.index.the_submission_carries_no_instant", "the submission carries no instant this producer can read") },
         assignee: null,
         assignee_role: null,
         recipients: [me],
@@ -2457,30 +2783,23 @@ export class QueueProducers {
    * ====================================================================== */
 
   /** R37: the acts that answer a waiting edition (publish-schedule R3): moving its time, or cancelling it. */
-  static PUBLISH_AT_MOVE = Object.freeze({ id: "publishatmove", label: "Move the time it publishes", weight: "single" });
-  static PUBLISH_AT_CANCEL = Object.freeze({ id: "publishatcancel", label: "Cancel publishing it at that time", weight: "single" });
+  static PUBLISH_AT_MOVE = Object.freeze({ id: "publishatmove", label: word("queue-producers.label.move_time_publishes"), weight: "single" });
+  static PUBLISH_AT_CANCEL = Object.freeze({ id: "publishatcancel", label: word("queue-producers.label.cancel_publishing_time"), weight: "single" });
   /** R37: each state's class and kind (publish-schedule R2, R4); a cancelled edition earns no item. */
   static SCHEDULED_KINDS = Object.freeze({
     waiting: Object.freeze(["CONDITION", "edition-scheduled"]),
     published: Object.freeze(["FINDING", "edition-published-as-scheduled"]),
     stopped: Object.freeze(["FINDING", "scheduled-edition-stopped"]) });
   /** R38: the act that answers an arrival (instance-setup R14, `op=profilesset`): choosing the profile under Places. */
-  static PLACE_CHOOSE = Object.freeze({ id: "profilesset", label: "Choose this profile under Places", weight: "single" });
+  static PLACE_CHOOSE = Object.freeze({ id: "profilesset", label: word("queue-producers.label.choose_profile_under"), weight: "single" });
   /** R39: the acts a copy's editors are offered (wizard-scripts R4, R26): seeing what changed (both versions, read), and
    *  bringing it across by their own revision (`adopt: {base}`). */
-  static WIZARD_BASE_READ = Object.freeze({ id: "wizardread", label: "See what changed in the wizard it was copied from", weight: "single" });
-  static WIZARD_BASE_ADOPT = Object.freeze({ id: "wizardrevise", label: "Bring the change across to your copy", weight: "single" });
+  static WIZARD_BASE_READ = Object.freeze({ id: "wizardread", label: word("queue-producers.label.see_changed_wizard"), weight: "single" });
+  static WIZARD_BASE_ADOPT = Object.freeze({ id: "wizardrevise", label: word("queue-producers.label.bring_change_copy"), weight: "single" });
 
   /** A person's id, never a machine credential's. */
   static #person(x) {
     return typeof x === "string" && x.trim() !== "" && !x.startsWith(MACHINE_AUTHOR_PREFIX) && !x.startsWith(MACHINE_CLASS_PREFIX);
-  }
-
-  /** R37: "<date>, <time>" as set, in the group's zone as publish-schedule R4 carries it, never converted (R36); null when
-   *  unreadable. */
-  static #setTime(at) {
-    const a = at && typeof at === "object" ? at : {};
-    return isCalendarDate(a.date) && typeof a.time === "string" && /^\d{2}:\d{2}$/.test(a.time) ? `${a.date}, ${a.time}` : null;
   }
 
   /** An instant's age, or undetermined for `reason`. */
@@ -2510,8 +2829,11 @@ export class QueueProducers {
     const page = this.#pages((after) => {
       const r = this.#publishSchedule.scheduledEditions({ after });
       return r && Array.isArray(r.editions) ? { ...r, items: r.editions, truncated: !!r.cursor } : r;
-    });
+    }, "publish-schedule.scheduledEditions");
     const visible = this.#bundleRedactor(viewer);
+    /* R49: the projects the items name are read for sight, owners and home at once */
+    const named = [...new Set(page.items.map((x) => (x && typeof x.project === "string" && x.project ? x.project : null)).filter(Boolean))];
+    visible.prefetch(named); this.#ownersOf(named); this.#caseRows(named, viewer);
     const owners = new Map();
     const seen = new Set();
     const out = [];
@@ -2521,7 +2843,7 @@ export class QueueProducers {
       const project = typeof e.project === "string" && e.project ? e.project : null;
       if (project && visible(project) === null) continue;        // R11: a case of a project this viewer may not see
       const key = project || "";
-      if (!owners.has(key)) owners.set(key, project ? (this.#membership.projectOwners(project) || []) : []);
+      if (!owners.has(key)) owners.set(key, project ? this.#ownersOf([project]).get(project) : []);
       const setter = QueueProducers.#person(e.set_by) ? e.set_by : null;
       const recipients = [...new Set([...(setter ? [setter] : []), ...owners.get(key)])];
       if (!recipients.includes(me)) continue;
@@ -2531,34 +2853,38 @@ export class QueueProducers {
       if (seen.has(id)) continue;
       seen.add(id);
       const at = e.at && typeof e.at === "object" ? e.at : {};
-      const when = QueueProducers.#setTime(at) || "a time that cannot be read";
       const zone = typeof at.zone === "string" && at.zone ? at.zone : null;
-      const which = `case ${e.case}, edition ${edition}`;
+      /* R37, R43: the set time as set, in the group's zone as publish-schedule R4 carries it, never converted (R36); with
+         none readable `{when}` is left empty. An instant published is read in that zone too (`civil-time`). */
+      const today = this.#todayIn(zone || this.#zoneNow());
+      const when = setText(at.date, at.time, today);
+      const caseName = e.case;
       const moves = Array.isArray(e.moves) ? e.moves : [];
       const reasons = (Array.isArray(e.reasons) ? e.reasons : []).filter((x) => x && typeof x === "object")
         .map((x) => ({ code: x.code ?? null, translation: typeof x.translation === "string" ? x.translation : null }));
-      let summary, detail, age, options;
+      let summary, detail, age, options, detailKey;
+      const summaryKey = `queue.${kind}.summary`;
       if (kind === "edition-scheduled") {
-        summary = `Signed · publishes ${when} · ${which}`;
-        detail = `This edition is signed and waits to publish on ${when}${zone ? ` (${zone})` : ""}, the group's own time. `
-          + "Nothing of it is public until then. At that time every check it passed at signing is run again, and it is "
-          + "published only if nothing has changed. An owner of the case's project may move the time or cancel it"
-          + (moves.length ? `; its time has been moved ${moves.length === 1 ? "once" : `${moves.length} times`}` : "") + ".";
-        age = QueueProducers.#instantAge(e.signed_at, now, "no_signing_instant", "the edition carries no signing instant this producer can read");
+        summary = say(summaryKey, { when, case: caseName, edition });
+        detailKey = "queue.edition-scheduled.detail";
+        detail = joined(say(detailKey, { when }),
+                        zone ? say("queue.edition-scheduled.detail.zone", { zone }) : "",
+                        moves.length ? say(`queue.edition-scheduled.detail.moved.${moves.length === 1 ? "one" : "other"}`, { n: moves.length }) : "");
+        age = QueueProducers.#instantAge(e.signed_at, now, "no_signing_instant", localize("queue-producers.index.the_edition_carries_no_signing", "the edition carries no signing instant this producer can read"));
         options = [QueueProducers.PUBLISH_AT_MOVE, QueueProducers.PUBLISH_AT_CANCEL];
       } else if (kind === "edition-published-as-scheduled") {
-        summary = `${which} was published at its set time, ${when}`;
-        detail = `It was signed to publish on ${when}${zone ? ` (${zone})` : ""} and was published `
-          + `${typeof e.outcome_at === "string" && e.outcome_at ? `at ${e.outcome_at}` : "at an instant that cannot be read"}, `
-          + "after every check it passed at signing ran again and passed. This is told once.";
-        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", "the edition carries no publishing instant this producer can read");
+        const published = instantText(e.outcome_at, zone || this.#zoneNow(), today);
+        summary = say(summaryKey, { when, case: caseName, edition });
+        detailKey = published ? "queue.edition-published-as-scheduled.detail" : "queue.edition-published-as-scheduled.detail.nopublished";
+        detail = say(detailKey, { when, published });
+        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", localize("queue-producers.index.the_edition_carries_no_publishing", "the edition carries no publishing instant this producer can read"));
         options = [];
       } else {
-        const said = reasons.map((x) => x.translation || `a reason with no recorded words (${x.code || "no code"})`);
-        summary = `${which} was not published at its set time, ${when}`;
-        detail = `When its time came, the check stopped it: ${said.length ? said.join(" ") : "no reason was recorded."} `
-          + "Nothing was published. Publishing this edition needs a new signing. This is told once.";
-        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", "the edition carries no stopping instant this producer can read");
+        const said = reasons.map((x) => x.translation || say("queue.scheduled-edition-stopped.reason.unrecorded"));
+        summary = say(summaryKey, { when, case: caseName, edition });
+        detailKey = said.length ? "queue.scheduled-edition-stopped.detail" : "queue.scheduled-edition-stopped.detail.noreason";
+        detail = say(detailKey, { reasons: said.join(" ") });
+        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", localize("queue-producers.index.the_edition_carries_no_stopping", "the edition carries no stopping instant this producer can read"));
         options = [];
       }
       out.push({
@@ -2568,16 +2894,16 @@ export class QueueProducers {
         case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
         subject: { kind: "case_edition", id: `${e.case}@${edition}`, case: e.case, edition, project },
         summary,
+        summary_key: summaryKey,
         detail,
+        detail_key: detailKey,
         basis: { source: "publish-schedule.scheduledEditions", case: e.case, edition, project, state: e.state,
                  at: { date: at.date ?? null, time: at.time ?? null, zone }, publish_at: e.publish_at ?? null,
                  signed_at: e.signed_at ?? null, signer: e.signer ?? null, set_by: e.set_by ?? null, moves,
                  outcome_at: e.outcome_at ?? null, ...(kind === "scheduled-edition-stopped" ? { reasons } : {}),
                  recipients_rule: "setter_and_project_owners",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the group's zone, and "
-                       + "its outcome, read here as the plane and never stored. It goes to the member who set the time and "
-                       + "to the case's project's owners, and to nobody else (DEC-147)." },
+                 detail: localize("queue-producers.index.a_scheduled_edition_is_publish", "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the team's zone, and its outcome, read here as the plane and never stored. It goes to the member who set the time and to the case's project's owners, and to nobody else (DEC-147).") },
         age,
         assignee: null,
         assignee_role: null,
@@ -2596,9 +2922,9 @@ export class QueueProducers {
     const fn = typeof read === "function" ? read
       : read && typeof read === "object" && typeof read.placeArrivals === "function" ? (a) => read.placeArrivals(a) : null;
     if (!fn)
-      return { ok: false, reason: "PLACE_ARRIVALS_MALFORMED", detail: "the registered read is placeArrivals, a function" };
+      return { ok: false, reason: "PLACE_ARRIVALS_MALFORMED", detail: localize("queue-producers.index.the_registered_read_is_placearrivals", "the registered read is placeArrivals, a function") };
     if (this.#placeArrivals)
-      return { ok: false, reason: "PLACE_ARRIVALS_REGISTERED", detail: "the read of a named place's arrivals is registered once at start, and it was" };
+      return { ok: false, reason: "PLACE_ARRIVALS_REGISTERED", detail: localize("queue-producers.index.the_read_of_a_named", "the read of a named place's arrivals is registered once at start, and it was") };
     this.#placeArrivals = fn;
     return { ok: true };
   }
@@ -2610,9 +2936,8 @@ export class QueueProducers {
    *  per arrival; it leaves when the arrival leaves (the profile made active, or the name cleared or changed). */
   #conditionsPlaceArrived(me, viewer, now) {
     if (!this.#placeArrivals || !me || !this.#isAdminMember(me)) return [];
-    let r;
-    try { r = this.#placeArrivals({ viewer: null }); } catch { return []; }
-    const list = Array.isArray(r) ? r : r && r.ok !== false && Array.isArray(r.arrivals) ? r.arrivals : [];
+    const r = this.#placeArrivals({ viewer: null });
+    const list = Array.isArray(r) ? r : QueueProducers.#answered(r, "arrivals", "instance-setup.placeArrivals");
     const seen = new Set();
     const out = [];
     let admins = null;
@@ -2636,17 +2961,16 @@ export class QueueProducers {
         kind: "place-profile-arrived",
         case: this.#homesOf([]),
         subject: { kind: "place_profile", id: profile, name: pname ?? null, covers: coverage, place },
-        summary: `a profile for ${place ? `"${place}"` : "the place your group named"} is now held: ${named}`,
-        detail: `An installed update brought a profile that matches the place your group named${place ? `, "${place}"` : ""}: `
-              + `${named}${coverage.length ? `, which covers ${coverage.join(", ")}` : ""}. An administrator may choose it under `
-              + "Places; the offices your group added stay. This status is told once, and it leaves when the profile is "
-              + "chosen or the place's name is cleared or changed.",
+        ...(place
+          ? { summary: say("queue.place-profile-arrived.summary", { place, profile: named }), summary_key: "queue.place-profile-arrived.summary" }
+          : { summary: say("queue.place-profile-arrived.summary.unnamed", { profile: named }), summary_key: "queue.place-profile-arrived.summary.unnamed" }),
+        detail: joined(place ? say("queue.place-profile-arrived.detail", { place, profile: named }) : say("queue.place-profile-arrived.detail.unnamed", { profile: named }),
+                       coverage.length ? say("queue.place-profile-arrived.detail.covers", { covers: coverage.join(", ") }) : ""),
+        detail_key: place ? "queue.place-profile-arrived.detail" : "queue.place-profile-arrived.detail.unnamed",
         basis: { source: "instance-setup.placeArrivals", profile, profile_name: pname ?? null, covers: coverage, place,
                  found_at: a.found_at ?? null, recipients_rule: "administrators", raised_to: admins,
-                 detail: "an arrival is instance-setup's fact (its R62): a held profile matching the place the group named, "
-                       + "first found at a start, read here through the read it registered and never stored. It goes to "
-                       + "every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves." },
-        age: QueueProducers.#instantAge(a.found_at, now, "no_found_instant", "the arrival carries no instant this producer can read"),
+                 detail: localize("queue-producers.index.an_arrival_is_instance_setups", "an arrival is instance-setup's fact (its R62): a held profile matching the place the team named, first found at a start, read here through the read it registered and never stored. It goes to every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves.") },
+        age: QueueProducers.#instantAge(a.found_at, now, "no_found_instant", localize("queue-producers.index.the_arrival_carries_no_instant", "the arrival carries no instant this producer can read")),
         assignee: null,
         assignee_role: null,
         recipients: [...admins],
@@ -2668,8 +2992,11 @@ export class QueueProducers {
     const page = this.#pages((after) => {
       const r = this.#wizardScripts.baseUpdates({ after, viewer });
       return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
-    });
+    }, "wizard-scripts.baseUpdates");
     const visible = this.#bundleRedactor(viewer);
+    /* R49: the projects the items name are read for sight, owners and home at once */
+    const named = [...new Set(page.items.map((x) => (x && typeof x.project === "string" && x.project ? x.project : null)).filter(Boolean))];
+    visible.prefetch(named); this.#ownersOf(named); this.#caseRows(named, viewer);
     const seen = new Set();
     const out = [];
     for (const x of page.items) {
@@ -2683,8 +3010,8 @@ export class QueueProducers {
       const id = `FINDING::wizard-base-updated::${x.copy}::${baseVersion}::${me}`;
       if (seen.has(id)) continue;
       seen.add(id);
-      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : x.copy;
-      const baseName = typeof x.base_name === "string" && x.base_name ? `"${x.base_name}"` : "the wizard it was copied from";
+      const name = typeof x.name === "string" && x.name ? x.name : x.copy;
+      const baseName = typeof x.base_name === "string" && x.base_name ? x.base_name : say("queue.wizard-base-updated.base.unnamed");
       out.push({
         id,
         class: "FINDING",
@@ -2693,21 +3020,19 @@ export class QueueProducers {
         subject: { kind: "wizard", id: x.copy, name: x.name ?? null, copy_version: x.copy_version ?? null,
                    base: x.base ?? null, base_name: x.base_name ?? null, based_on: x.based_on ?? null,
                    base_version: baseVersion, project },
-        summary: `${baseName} has a newer approved version, ${baseVersion}, than your group's copy ${name} was made from`,
-        detail: `Your group's copy ${name} was made from ${x.based_on ? `version ${x.based_on} of ` : ""}${baseName}, and `
-              + `version ${baseVersion} of it has since been approved. See what changed between the two; you may bring the `
-              + "change across to your copy by your own revision, and nothing is changed in your copy unless you do. "
-              + "This is told once.",
+        summary: say("queue.wizard-base-updated.summary", { base: baseName, version: baseVersion, name }),
+        summary_key: "queue.wizard-base-updated.summary",
+        detail: say(x.based_on ? "queue.wizard-base-updated.detail.versioned" : "queue.wizard-base-updated.detail",
+                    { name, base: baseName, version: baseVersion, based_on: x.based_on }),
+        detail_key: x.based_on ? "queue.wizard-base-updated.detail.versioned" : "queue.wizard-base-updated.detail",
         basis: { source: "wizard-scripts.baseUpdates", copy: x.copy, copy_version: x.copy_version ?? null, name: x.name ?? null,
                  project, base: x.base ?? null, base_name: x.base_name ?? null, based_on: x.based_on ?? null,
                  base_version: baseVersion, found_at: x.found_at ?? null,
                  ...(x.steps && typeof x.steps === "object" ? { steps: x.steps } : {}),
                  recipients_rule: "copy_editors", raised_to: recipients,
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and "
-                       + "version and read here, never stored. It goes to each of the copy's wizard editors it names, once "
-                       + "(DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4)." },
-        age: QueueProducers.#instantAge(x.found_at, now, "no_found_instant", "the entry carries no instant this producer can read"),
+                 detail: localize("queue-producers.index.a_newer_approved_version_of", "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and version and read here, never stored. It goes to each of the copy's wizard editors it names, once (DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4).") },
+        age: QueueProducers.#instantAge(x.found_at, now, "no_found_instant", localize("queue-producers.index.the_entry_carries_no_instant_2", "the entry carries no instant this producer can read")),
         assignee: null,
         assignee_role: null,
         recipients: [me],
@@ -2726,41 +3051,70 @@ export class QueueProducers {
   /** R41, R42: how many projects each producer asks about (R4's bound). */
   static QUEUE_PROJECT_ITEMS_MAX = 50;
 
-  /** `project-invitation` (R41; DEC-248): one OBLIGATION for each project in which the member's `participation` is
+  /** The member's invitations as `project-roster.projectInvitations` answers them (R44; its R35), keyed by project, following
+   *  `next` while it says the page was cut and at most `cap` of them. A read that throws or answers a refusal reads as no
+   *  invitation listed: the items are still raised from `projectList` (R41), their inviter then unnamed. */
+  #invitationsOf(viewer, cap) {
+    const found = new Map();
+    try {
+      let after = null;
+      for (let page = 0; page < QueueProducers.QUEUE_PAGES && found.size < cap; page += 1) {
+        const r = this.#projectRoster.projectInvitations({ viewer, ...(after ? { after } : {}) });
+        if (!r || r.ok !== true || !Array.isArray(r.invitations)) break;
+        for (const x of r.invitations) if (x && typeof x.projectId === "string" && x.projectId && !found.has(x.projectId)) found.set(x.projectId, x);
+        if (r.truncated !== true || !r.next) break;
+        after = r.next;
+      }
+    } catch { /* below: no invitation listed */ }
+    return found;
+  }
+
+  /** `project-invitation` (R41, R44; DEC-248): one OBLIGATION for each project in which the member's `participation` is
    *  `invited` (project-roster R34, read through `projectList`), at most 50 in id order, keyed
    *  `OBLIGATION::project-invitation::<project>::<member>`, to her and to nobody else, with no project home; it names the
-   *  project and offers `projectjoin`. Its `age` is from her own row's `created` in `projectParticipants` (R1: for an
-   *  `invited` row, the invitation's instant). No read gives the inviter to the invited member, so the summary is the
-   *  unnamed one (DEC-309 (1)) until project-roster answers it (`projectInvitations`, T51). It leaves when her state changes. */
+   *  project and offers `projectjoin`. The inviter and the instant come from `projectInvitations` (R44: the handle, the
+   *  founder with no handle as `member.founder.unnamed`, never `admin`); an invitation that read does not list is still
+   *  raised, unnamed, aged from her own row's `created` in `projectParticipants` (R1: for an `invited` row, the
+   *  invitation's instant). It leaves when her state changes. */
   #obligationsProjectInvitation(me, viewer, now) {
     if (!me) return [];
     const list = this.#projectRoster.projectList({ viewer });
-    if (!list || list.ok !== true || !Array.isArray(list.projects)) return [];
+    if (!list || list.ok !== true || !Array.isArray(list.projects)) throw new FeedFail(list && list.state === "undetermined" ? "undetermined" : "refused", "project-roster.projectList", codeOf(list));
     const cap = QueueProducers.QUEUE_PROJECT_ITEMS_MAX;
     const invited = list.projects.filter((p) => p && typeof p.id === "string" && p.id && p.participation === "invited");
+    const listed = this.#invitationsOf(viewer, cap);
     const handle = this.#membership.memberFacts(me)?.handle ?? me;
     const out = [];
     for (const p of invited.slice(0, cap)) {
-      const roster = this.#projectRoster.projectParticipants({ projectId: p.id, by: me });
-      const own = roster && roster.ok === true && Array.isArray(roster.participants)
-        ? roster.participants.find((x) => x && x.handle === handle && x.state === "invited") : null;
+      const inv = listed.get(p.id) ?? null;
+      const by = inv && inv.invited_by && typeof inv.invited_by === "object" ? inv.invited_by : null;
+      const who = !by ? null : by.founder === true && !by.handle ? word("member.founder.unnamed") : (by.handle ?? (by.member ? this.#memberName(by.member) : null));
+      let own = null;
+      if (!(inv && inv.invited_at)) {
+        const roster = this.#projectRoster.projectParticipants({ projectId: p.id, by: me });
+        own = roster && roster.ok === true && Array.isArray(roster.participants)
+          ? roster.participants.find((x) => x && x.handle === handle && x.state === "invited") : null;
+      }
+      const invitedAt = inv && inv.invited_at ? inv.invited_at : own ? own.created ?? null : null;
       const name = typeof p.name === "string" && p.name ? p.name : p.id;
+      const summaryKey = who ? "queue.project-invitation.summary" : "queue.project-invitation.summary.unnamed";
       out.push({
         id: `OBLIGATION::project-invitation::${p.id}::${me}`,
         class: "OBLIGATION",
         kind: "project-invitation",
         case: this.#homesOf([]),
         subject: { kind: "project", id: p.id, name: p.name ?? null },
-        summary: word("queue.project-invitation.summary.unnamed", { project: name }),
-        detail: word("queue.project-invitation.detail"),
-        basis: { source: "project-roster.projectList", project: p.id, participation: "invited",
-                 invited_at: own ? own.created ?? null : null, inviter: null, recipients_rule: "invited_member",
+        summary: say(summaryKey, { who, project: name }),
+        summary_key: summaryKey,
+        detail: say("queue.project-invitation.detail"),
+        detail_key: "queue.project-invitation.detail",
+        basis: { source: inv ? "project-roster.projectInvitations" : "project-roster.projectList", project: p.id, participation: "invited",
+                 invited_at: invitedAt, inviter: by ? { member: by.member ?? null, handle: by.handle ?? null, founder: by.founder === true } : null,
+                 recipients_rule: "invited_member",
                  bound: { limit: cap, truncated: invited.length > cap, list_truncated: list.truncated === true },
-                 detail: "an invitation is membership's row for the member (project-roster R34, membership R118), read here "
-                       + "at every read and never stored. It goes to the member invited and to nobody else, and leaves "
-                       + "when her state changes: she joins, is removed, or the invitation is withdrawn." },
-        age: QueueProducers.#instantAge(own ? own.created : null, now, "no_invitation_instant",
-                                        "the member's row carries no instant this producer can read"),
+                 detail: localize("queue-producers.index.an_invitation_is_memberships_row", "an invitation is membership's row for the member (project-roster R34, membership R118), read here at every read and never stored. It goes to the member invited and to nobody else, and leaves when her state changes: she joins, is removed, or the invitation is withdrawn.") },
+        age: QueueProducers.#instantAge(invitedAt, now, "no_invitation_instant",
+                                        localize("queue-producers.index.the_members_row_carries_no", "the member's row carries no instant this producer can read")),
         assignee: null,
         assignee_role: null,
         recipients: [me],
@@ -2785,13 +3139,13 @@ export class QueueProducers {
     const cap = QueueProducers.QUEUE_PROJECT_ITEMS_MAX;
     const scope = this.#ownedProjects(me, viewer, cap);
     const out = [];
+    this.#titlesOf(scope.projects); this.#ownersOf(scope.projects);
     for (const project of scope.projects) {
       const r = this.#projectRoster.projectRequests({ projectId: project, by: me, viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.requests)) continue;
-      const owners = this.#membership.projectOwners(project) || [];
-      const info = this.#record.bundleInfo(project);
-      const name = info && typeof info.title === "string" && info.title ? info.title : project;
-      for (const q of r.requests) {
+      const requests = QueueProducers.#answered(r, "requests", "project-roster.projectRequests");
+      const owners = this.#ownersOf([project]).get(project);
+      const name = this.#nameOf(project);
+      for (const q of requests) {
         if (!q || q.state !== "open" || typeof q.handle !== "string" || !q.handle) continue;
         const text = typeof q.comment === "string" && q.comment.trim() ? q.comment : null;
         out.push({
@@ -2799,18 +3153,18 @@ export class QueueProducers {
           class: "OBLIGATION",
           kind: "project-request",
           case: this.#homesOf([]),
-          subject: { kind: "project", id: project, name: info?.title ?? null, requester: q.handle },
+          subject: { kind: "project", id: project, name: this.#titleOf(project), requester: q.handle },
           summary: word("queue.project-request.summary", { who: q.handle, project: name }),
+          summary_key: "queue.project-request.summary",
           detail: word("queue.project-request.detail"),
+          detail_key: "queue.project-request.detail",
           quote: text === null ? null : { by: q.handle, text },
           basis: { source: "project-roster.projectRequests", project, requester: q.handle, comment: text, asked: q.asked ?? null,
                    recipients_rule: "project_owners",
                    bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
                             requests_limit: r.limit ?? null, requests_truncated: r.truncated === true },
-                   detail: "an open request to join is project-roster's row (its R12, R14), read here at every read and "
-                         + "never stored. It goes to each owner of the project and to nobody else, and leaves for all of "
-                         + "them when one owner answers it or the requester withdraws." },
-          age: QueueProducers.#instantAge(q.asked, now, "no_request_instant", "the request carries no instant this producer can read"),
+                   detail: localize("queue-producers.index.an_open_request_to_join", "an open request to join is project-roster's row (its R12, R14), read here at every read and never stored. It goes to each owner of the project and to nobody else, and leaves for all of them when one owner answers it or the requester withdraws.") },
+          age: QueueProducers.#instantAge(q.asked, now, "no_request_instant", localize("queue-producers.index.the_request_carries_no_instant", "the request carries no instant this producer can read")),
           assignee: null,
           assignee_role: null,
           recipients: [...owners],
@@ -2819,6 +3173,229 @@ export class QueueProducers {
                                 { answer: "decline", label: word("screen.home.request.decline") }] }],
         });
       }
+    }
+    return out;
+  }
+
+  /** `project-leave` (R54; K5157; membership R35): for each project the member owns, at most 50 in id order, one OBLIGATION per
+   *  participant whose row `projectParticipants` (project-roster R1) answers as `leaving`, keyed
+   *  `OBLIGATION::project-leave::<project>::<handle>`, to each owner of the project (membership R65) and to nobody else, with no
+   *  project home. The participant is named by handle, her note carried apart as `quote` (null when she left none). It offers
+   *  `projectremove`, the owners' act: only an owner removes a participant (membership v2 §7.7). It leaves when an owner removes
+   *  her or she withdraws the request (her row is no longer `leaving`). An owner who asks to leave is removed by the owners' vote
+   *  (R47), not by this act, so she makes no item here. The project is read only for its owners, who are participants, so a
+   *  hidden project names nothing to anyone else. */
+  #obligationsProjectLeave(me, viewer, now) {
+    if (!me) return [];
+    const cap = QueueProducers.QUEUE_PROJECT_ITEMS_MAX;
+    const scope = this.#ownedProjects(me, viewer, cap);
+    const out = [];
+    this.#titlesOf(scope.projects); this.#ownersOf(scope.projects);
+    for (const project of scope.projects) {
+      const r = this.#projectRoster.projectParticipants({ projectId: project, by: me });
+      const rows = QueueProducers.#answered(r, "participants", "project-roster.projectParticipants");
+      const owners = this.#ownersOf([project]).get(project);
+      const name = this.#nameOf(project);
+      for (const q of rows) {
+        if (!q || q.state !== "leaving" || q.owner || typeof q.handle !== "string" || !q.handle) continue;
+        const text = typeof q.comment === "string" && q.comment.trim() ? q.comment : null;
+        const fills = { who: q.handle, project: name };
+        out.push({
+          id: `OBLIGATION::project-leave::${project}::${q.handle}`,
+          class: "OBLIGATION",
+          kind: "project-leave",
+          case: this.#homesOf([]),
+          subject: { kind: "project", id: project, name: this.#titleOf(project), participant: q.handle },
+          fills,
+          summary: localize("queue-producers.index.project_leave_summary", "{who} asks to leave {project}", fills),
+          detail: localize("queue-producers.index.project_leave_detail", "A participant has asked to leave this project. Nothing changes until an owner removes them; they can also withdraw the request."),
+          quote: text === null ? null : { by: q.handle, text },
+          basis: { source: "project-roster.projectParticipants", project, participant: q.handle, comment: text,
+                   recipients_rule: "project_owners",
+                   bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
+                   detail: localize("queue-producers.index.a_request_to_leave_is_the", "a request to leave is the participant's row in state leaving (membership R35, project-roster R1), read here at every read and never stored. It goes to each owner of the project and to nobody else, and leaves for all of them when an owner removes the participant or she withdraws the request.") },
+          age: QueueProducers.#instantAge(null, now, "no_leave_instant", localize("queue-producers.index.the_row_carries_no_leave_instant", "the participant's row carries no instant for the request that this producer can read")),
+          assignee: null,
+          assignee_role: null,
+          recipients: [...owners],
+          options: [{ id: "projectremove", label: word("act.projectremove.label.project"), weight: "single" }],
+        });
+      }
+    }
+    return out;
+  }
+
+  /* ======================================================================
+   * T51's fix round · R46–R48 — THE DECISIONS THE RECORD ROUTES TO A MEMBER (K4169, UC-046; member-roster R77, R78;
+   * project-roster R30). `queue` R1 names the kinds `endorsement-owed` and `expertise-confirmation-owed`; these are the
+   * producers. Each reads the one fact its owner offers, derived on read and writing nothing, so an item leaves on the first
+   * read after the fact stops holding; each item names its door (`door`, K4210: an optional field `queue` reads).
+   * ====================================================================== */
+
+  /** R46–R48: the act each item opens (`act.<door>.label.queue`; a removal's has no row of the list's yet, so it is written here). */
+  static ENDORSE = Object.freeze({ id: "adminendorse", label: word("act.adminendorse.label.queue"), weight: "single" });
+  static OWNER_ADD = Object.freeze({ id: "projectowneradd", label: word("act.projectowneradd.label.queue"), weight: "single" });
+  static OWNER_REMOVE = Object.freeze({ id: "projectownerremove", label: localize("queue-producers.index.agree_to_remove_an_owner", "Agree to remove an owner"), weight: "single" });
+  static EXPERTISE_CONFIRM = Object.freeze({ id: "expertiseconfirm", label: word("act.expertiseconfirm.label.queue"), weight: "single" });
+
+  /** The names a member goes by in the reads that name members by handle: her id, her handle, and the founder's held handle. */
+  #namesOf(me) {
+    const names = new Set([me]);
+    let facts = null;
+    try { facts = this.#membership.memberFacts(me); } catch { facts = null; }
+    if (facts && typeof facts.handle === "string" && facts.handle) names.add(facts.handle);
+    if (me === ROOT_ADMIN) {
+      try { const h = this.#membership.founderHandle(); if (typeof h === "string" && h) names.add(h); } catch { /* none held */ }
+    }
+    return names;
+  }
+
+  /** `endorsement-owed` on a proposed administrator (R46; member-roster R77): one OBLIGATION for each member `endorsementsOwed({by: member})`
+   *  answers, keyed `OBLIGATION::endorsement-owed::admin::<proposed member>::<member>`, to that administrator alone, with no project
+   *  home, aged from `proposed_at`, offering `adminendorse` and naming it as its `door`. It leaves when she endorses, the member is no
+   *  longer `proposed`, or the proposal is withdrawn (the read no longer lists it). */
+  #obligationsEndorsementOwed(me, now) {
+    if (!me) return [];
+    const rows = QueueProducers.#via("member-roster.endorsementsOwed", () => this.#memberRoster.endorsementsOwed({ by: me }));
+    if (!Array.isArray(rows)) throw new FeedFail("refused", "member-roster.endorsementsOwed", codeOf(rows));
+    const out = [];
+    for (const row of rows.slice(0, QueueProducers.QUEUE_PROJECT_ITEMS_MAX)) {
+      if (!row || typeof row.memberId !== "string" || !row.memberId) continue;
+      const have = Array.isArray(row.have) ? row.have : [], awaiting = Array.isArray(row.awaiting) ? row.awaiting : [];
+      const handle = typeof row.handle === "string" && row.handle ? row.handle : null;
+      const fills = { who: handle ?? this.#memberName(row.memberId), have: have.length, awaiting: awaiting.length };
+      const summary = holds("queue.endorsement-owed.summary") ? say("queue.endorsement-owed.summary", fills)
+        : localize("queue-producers.index.endorsement_owed_summary", "Endorse {who} as an administrator ({have} endorsed so far, {awaiting} still to endorse)", fills);
+      const detail = holds("queue.endorsement-owed.detail") ? say("queue.endorsement-owed.detail")
+        : localize("queue-producers.index.endorsement_owed_detail", "A member has been proposed as an administrator, and your endorsement is still to give. Nothing is decided until enough administrators have endorsed.");
+      out.push({
+        id: `OBLIGATION::endorsement-owed::admin::${row.memberId}::${me}`,
+        class: "OBLIGATION",
+        kind: "endorsement-owed",
+        case: this.#homesOf([]),
+        subject: { kind: "member", id: row.memberId },
+        fills: handle ? { who: handle } : {},
+        summary,
+        ...(holds("queue.endorsement-owed.summary") ? { summary_key: "queue.endorsement-owed.summary" } : {}),
+        detail,
+        ...(holds("queue.endorsement-owed.detail") ? { detail_key: "queue.endorsement-owed.detail" } : {}),
+        basis: { source: "member-roster.endorsementsOwed", member: row.memberId, proposed_by: row.proposed_by ?? null,
+                 proposed_at: row.proposed_at ?? null, have, awaiting, recipients_rule: "administrators_not_yet_endorsed",
+                 detail: localize("queue-producers.index.an_endorsement_owed_is_member_roster", "an endorsement owed is member-roster's fact (its R77), read here at every read and never stored. It goes to each active administrator who has not endorsed the proposal and may (not the one who proposed it), and to nobody else, and leaves when she endorses, the member is no longer proposed, or the proposal is withdrawn.") },
+        age: QueueProducers.#instantAge(row.proposed_at, now, "no_proposal_instant",
+                                        localize("queue-producers.index.the_proposal_carries_no_instant", "the proposal carries no instant this producer can read")),
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [QueueProducers.ENDORSE],
+        door: "adminendorse",
+      });
+    }
+    return out;
+  }
+
+  /** `endorsement-owed` on an owner change (R47; project-roster R30): for each project the member owns, at most 50 in id order, one
+   *  OBLIGATION for each change `projectOwnerVotes({projectId, viewer})` lists with her among its `awaiting`, keyed
+   *  `OBLIGATION::endorsement-owed::owner::<project>::<change>:<target>::<member>`, to her only, with no project home, offering the
+   *  change's own act (`projectowneradd` or `projectownerremove`), which is also its `door`. It leaves when she votes or the change
+   *  is carried or withdrawn (the read no longer lists it for her). A project whose votes the read answers as absent to this viewer
+   *  has none for her. */
+  #obligationsOwnerVoteOwed(me, viewer, now) {
+    if (!me) return [];
+    const scope = this.#ownedProjects(me, viewer, QueueProducers.QUEUE_PROJECT_ITEMS_MAX);
+    if (!scope.projects.length) return [];
+    const mine = this.#namesOf(me);
+    this.#titlesOf(scope.projects);
+    const out = [];
+    for (const project of scope.projects) {
+      const r = QueueProducers.#via("project-roster.projectOwnerVotes", () => this.#projectRoster.projectOwnerVotes({ projectId: project, viewer }));
+      if (r && r.ok === false && codeOf(r) === "NO_SUCH_PROJECT") continue;
+      const name = this.#nameOf(project);
+      for (const c of QueueProducers.#answered(r, "changes", "project-roster.projectOwnerVotes")) {
+        const awaiting = c && Array.isArray(c.awaiting) ? c.awaiting : [];
+        if (!c || (c.change !== "add" && c.change !== "remove") || typeof c.target !== "string" || !c.target
+            || !awaiting.some((x) => mine.has(x))) continue;
+        const agreed = Array.isArray(c.agreed) ? c.agreed : [];
+        const fills = { who: c.target, project: name, agreed: agreed.length, awaiting: awaiting.length };
+        const who = this.#heldHandle(c.target);
+        const add = c.change === "add";
+        const summary = add
+          ? (holds("queue.endorsement-owed.owner.summary.add") ? say("queue.endorsement-owed.owner.summary.add", fills)
+            : localize("queue-producers.index.owner_vote_owed_add", "Agree to make {who} an owner of {project} ({agreed} agree, {awaiting} still to)", fills))
+          : (holds("queue.endorsement-owed.owner.summary.remove") ? say("queue.endorsement-owed.owner.summary.remove", fills)
+            : localize("queue-producers.index.owner_vote_owed_remove", "Agree to remove {who} as an owner of {project} ({agreed} agree, {awaiting} still to)", fills));
+        const detail = holds("queue.endorsement-owed.owner.detail") ? say("queue.endorsement-owed.owner.detail")
+          : localize("queue-producers.index.owner_vote_owed_detail", "The owners of a project decide who its owners are together, and your vote on this change is still to give.");
+        const summaryKey = `queue.endorsement-owed.owner.summary.${c.change}`;
+        out.push({
+          id: `OBLIGATION::endorsement-owed::owner::${project}::${c.change}:${c.target}::${me}`,
+          class: "OBLIGATION",
+          kind: "endorsement-owed",
+          case: this.#homesOf([]),
+          subject: { kind: "project", id: project, name: this.#titleOf(project), change: c.change, target: c.target },
+          fills: who ? { who } : {},
+          summary,
+          ...(holds(summaryKey) ? { summary_key: summaryKey } : {}),
+          detail,
+          ...(holds("queue.endorsement-owed.owner.detail") ? { detail_key: "queue.endorsement-owed.owner.detail" } : {}),
+          basis: { source: "project-roster.projectOwnerVotes", project, change: c.change, target: c.target,
+                   proposed_by: c.proposed_by ?? null, proposed_at: c.proposed_at ?? null, agreed, awaiting,
+                   recipients_rule: "owners_not_yet_voted",
+                   bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
+                   detail: localize("queue-producers.index.an_owner_vote_owed_is_project", "an owner vote owed is project-roster's fact (its R30), read here at every read and never stored. It goes to each owner whose vote would still count and is not in, and to nobody else, and leaves when she votes or the change is carried or withdrawn.") },
+          age: QueueProducers.#instantAge(c.proposed_at, now, "no_proposal_instant",
+                                          localize("queue-producers.index.the_proposal_carries_no_instant", "the proposal carries no instant this producer can read")),
+          assignee: null,
+          assignee_role: null,
+          recipients: [me],
+          options: [add ? QueueProducers.OWNER_ADD : QueueProducers.OWNER_REMOVE],
+          door: add ? "projectowneradd" : "projectownerremove",
+        });
+      }
+    }
+    return out;
+  }
+
+  /** `expertise-confirmation-owed` (R48; member-roster R78): one OBLIGATION for each (member, label) `expertiseAwaitingConfirmation({by: member})`
+   *  answers, keyed `OBLIGATION::expertise-confirmation-owed::<member declared>::<label>` (the same for every administrator it
+   *  reaches, so one confirmation clears it for all), to each active administrator and to nobody else, with no project home, aged from
+   *  `declared_at`, offering `expertiseconfirm` as its `door`. It leaves when any administrator confirms, the label is withdrawn or the
+   *  member is no longer active (the read no longer lists it). */
+  #obligationsExpertiseOwed(me, now) {
+    if (!me) return [];
+    const rows = QueueProducers.#via("member-roster.expertiseAwaitingConfirmation", () => this.#memberRoster.expertiseAwaitingConfirmation({ by: me }));
+    if (!Array.isArray(rows)) throw new FeedFail("refused", "member-roster.expertiseAwaitingConfirmation", codeOf(rows));
+    const out = [];
+    for (const row of rows.slice(0, QueueProducers.QUEUE_PROJECT_ITEMS_MAX)) {
+      if (!row || typeof row.memberId !== "string" || !row.memberId || typeof row.label !== "string" || !row.label) continue;
+      const handle = typeof row.handle === "string" && row.handle ? row.handle : null;
+      const fills = { who: handle ?? this.#memberName(row.memberId), label: row.label };
+      const summary = holds("queue.expertise-confirmation-owed.summary") ? say("queue.expertise-confirmation-owed.summary", fills)
+        : localize("queue-producers.index.expertise_confirmation_owed_summary", "Confirm {who}'s expertise in {label}", fills);
+      const detail = holds("queue.expertise-confirmation-owed.detail") ? say("queue.expertise-confirmation-owed.detail")
+        : localize("queue-producers.index.expertise_confirmation_owed_detail", "A member declared this expertise about themselves. Confirming it lets it be asked for when a check needs it; nothing else depends on it.");
+      out.push({
+        id: `OBLIGATION::expertise-confirmation-owed::${row.memberId}::${row.label}`,
+        class: "OBLIGATION",
+        kind: "expertise-confirmation-owed",
+        case: this.#homesOf([]),
+        subject: { kind: "member", id: row.memberId, label: row.label },
+        fills: handle ? { who: handle } : {},
+        summary,
+        ...(holds("queue.expertise-confirmation-owed.summary") ? { summary_key: "queue.expertise-confirmation-owed.summary" } : {}),
+        detail,
+        ...(holds("queue.expertise-confirmation-owed.detail") ? { detail_key: "queue.expertise-confirmation-owed.detail" } : {}),
+        basis: { source: "member-roster.expertiseAwaitingConfirmation", member: row.memberId, label: row.label,
+                 declared_at: row.declared_at ?? null, recipients_rule: "administrators",
+                 detail: localize("queue-producers.index.an_expertise_awaiting_confirmation_is_member", "an expertise awaiting confirmation is member-roster's fact (its R78), read here at every read and never stored. It goes to each active administrator and to nobody else, and leaves for all of them when any confirms, the label is withdrawn or the member is no longer active.") },
+        age: QueueProducers.#instantAge(row.declared_at, now, "no_declaration_instant",
+                                        localize("queue-producers.index.the_declaration_carries_no_instant", "the declaration carries no instant this producer can read")),
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [QueueProducers.EXPERTISE_CONFIRM],
+        door: "expertiseconfirm",
+      });
     }
     return out;
   }

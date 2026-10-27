@@ -21,6 +21,8 @@ const PROFILE_RE = /^[a-z0-9][a-z0-9-]*$/;
 const YEAR_RE = /^\d{4}$/;
 const LIST_RE = /^[a-z][a-z0-9_]*$/;   // a closure list's name (jurisdictions R47)
 const PATH_MAX = 1000;
+/** R21: the path of the team's own time zone, a fact the team states whether or not a place profile is installed. */
+export const TEAM_ZONE_PATH = "@team/time_zone";
 const enc = (s) => encodeURIComponent(s);
 const name = (s) => typeof s === "string" && s.trim() !== "" && s === s.trim();
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -74,6 +76,8 @@ function parseOfficeSegment(seg) {
 /** R6: the path of one fact, or null when the parts name none. */
 export function factPath(parts) {
   try {
+    if (isObj(parts) && parts.team === true)
+      return parts.fact === "time_zone" && parts.profile === undefined && parts.office === undefined ? TEAM_ZONE_PATH : null;
     if (!isObj(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
     const { profile, fact } = parts;
     let p = null;
@@ -102,11 +106,12 @@ export function factPath(parts) {
 
 const dec = (s) => { try { return decodeURIComponent(s); } catch { return null; } };
 
-/** R6: the parts of a path, or null when `factPath` would not give it. Offices come back as the profile writes them:
+/** R6, R21: the parts of a path, or null when `factPath` would not give it (the team's zone: `{team: true, fact}`). Offices come back as the profile writes them:
  *  a role as its string, a venue as `{venue}`; a closure list as its name. */
 export function parseFactPath(path) {
   try {
     if (typeof path !== "string" || !path || path.length > PATH_MAX) return null;
+    if (path === TEAM_ZONE_PATH) return { team: true, fact: "time_zone" };
     const seg = path.split("/");
     const [profile, fact] = seg;
     let parts = null;

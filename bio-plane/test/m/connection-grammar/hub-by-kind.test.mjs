@@ -13,7 +13,7 @@ const KINDS = [
 const MEMBER = "ENT-2026-0001";
 // Undated, so undetermined at every date and marked so (R6); the battery runs with the owner declaring it (R9).
 const conn = (kind, i) => ({ ...tie(`${kind}-${String(i).padStart(5, "0")}`, MEMBER, `ENT-2026-${10000 + i}`, { ...UNDATED }), kind, owner: "votes",
-  undetermined: { why: "no dates are stated" } });
+  undetermined: { why: { key: "civil-time.start_stated", vars: {} } } });
 
 /**
  * An owner holding `votes` votes and `held` meetings at MEMBER, judging a hub per kind as R6 says, paged at the

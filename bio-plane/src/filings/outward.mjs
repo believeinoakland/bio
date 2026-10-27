@@ -7,6 +7,7 @@
  * `words.json` holds it since T46, R52). */
 
 import { word } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** A keyed sentence with its `{name}`s filled: the words `words.json` holds for `key`, read through setup-words' `word`
  *  (layer 1), never a copy (R52; T50, N1116, DEC-259). Every sentence this module writes into what it prepares, or
@@ -113,9 +114,9 @@ export function matterWords(m, { source = false } = {}) {
 function identityWords(d) {
   const id = d.identity && typeof d.identity === "object" ? d.identity : null;
   const name = id ? [id.name ?? id.display_name, id.domain].filter(Boolean).join(", ") : "";
-  const stake = d.stake == null ? "none declared" : String(d.stake);
+  const stake = d.stake == null ? localize("filings.outward.none_declared", "none declared") : String(d.stake);
   const matter = matterWords(d.matter_stake);
-  const head = word("filings.public_identity_declared", { name: name || "undetermined", stake });
+  const head = word("filings.public_identity_declared", { name: name || localize("filings.outward.undetermined", "undetermined"), stake });
   return matter ? `${head} ${matter}.` : head;
 }
 

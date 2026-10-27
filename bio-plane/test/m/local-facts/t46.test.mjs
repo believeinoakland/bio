@@ -8,14 +8,14 @@ import { world, V, sha } from "./fixture.mjs";
 import { LOCAL_FACTS_CHECKS, LOCAL_FACTS_WORDS, localFactsOps } from "../../../src/local-facts/index.mjs";
 import { WORD, HAS } from "./words.mjs";
 
-const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9" };
-const LF = { key: "group_recording", trigger: "recording", statement: "Recording a sitting needs the chair's leave.", citation: "Test Bylaw § 12" };
+const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9", effective_from: "2026-09-01" };
+const LF = { key: "group_recording", trigger: "recording", statement: "Recording a sitting needs the chair's leave.", citation: "Test Bylaw § 12", effective_from: "2026-09-01" };
 const url = (q) => new URL(`https://plane.example/?${q}`);
 
 test("R15 localFactsOps publishes one arm per act and read, grouprules among them, so the plane spreads the map and names no entry", () => {
   const w = world();
   assert.deepEqual(Object.keys(localFactsOps(w.lf, url(""), null)).sort(),
-                   ["factconfirm", "factsdue", "factstatus", "grouprules", "ruleconfirm", "ruledraft", "ruleoffer", "rulewithdraw"]);
+                   ["factconfirm", "factsdue", "factstatus", "grouprules", "ruleconfirm", "ruledraft", "rulefields", "ruleoffer", "rulewithdraw"]);
   for (const arm of Object.values(localFactsOps(w.lf, url(""), null))) assert.equal(typeof arm, "function");
 });
 
@@ -87,8 +87,8 @@ test("R16 every C-126 row takes its translation from words.json's refusal.<CODE>
   /* RULE_ENTRY_INVALID's {errors} is left for the screen */
   assert.match(LOCAL_FACTS_CHECKS.RULE_ENTRY_INVALID.translation, /\{errors\}/);
   /* the negative control: a key the list does not hold is not held, and reading one throws, so no row can carry a copy */
-  assert.equal(HAS("refusal.NO_SUCH_ROW"), false);
-  assert.throws(() => WORD("refusal.NO_SUCH_ROW"), /words\.json holds no word refusal\.NO_SUCH_ROW/);
+  assert.equal(HAS("refusal.NOT_A_ROW_OF_THIS_MODULE"), false);
+  assert.throws(() => WORD("refusal.NOT_A_ROW_OF_THIS_MODULE"), /words\.json holds no word refusal\.NOT_A_ROW_OF_THIS_MODULE/);
   for (const [code, [check, where]] of Object.entries(ROWS))
     assert.deepEqual([LOCAL_FACTS_CHECKS[code].check, LOCAL_FACTS_CHECKS[code].where], [check, where], code);
   assert.deepEqual(Object.keys(LOCAL_FACTS_CHECKS), Object.keys(ROWS));

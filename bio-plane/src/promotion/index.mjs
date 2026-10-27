@@ -26,7 +26,7 @@ import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHE
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { MECHANICAL_FIELD_SETS } from "./history.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { projectNameKey } from "./names.mjs";
 import { INFO2_GRAMMAR } from "./info2.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences, quotedScalar,
@@ -62,6 +62,8 @@ export const RETIRE_CITED_DETAIL = "these are still cited by live edges. Retirin
   + "sever the edge with a reason. Sever first, then retire.";
 /** The edge-reason bound a reopening's reason is held to (R22). */
 export const EDGE_REASON_MAX = 160;
+/* R58: the most revisions, and the most state entries, `bundleHistory` answers (the newest kept). */
+const HISTORY_MAX = 200;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const has = (o, k) => isObj(o) && Object.prototype.hasOwnProperty.call(o, k);
@@ -189,8 +191,7 @@ function stepDeclared(held, detail) {
 }
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
-  detail: "a project by that name already exists in your group's Civicsmith, compared without regard to case or spacing. This "
-        + "holds for deactivated projects too, because their names are still cited." });
+  detail: localize("promotion.index.project_name_taken", "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited.") });
 
 class Promotion {
   #record; #membership; #now; #order; #rosterOf; #roster = null;
@@ -209,6 +210,62 @@ class Promotion {
     this.#rosterOf = typeof rosterOf === "function" ? rosterOf : null;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
     this.#order = Array.isArray(order) ? order : MODULE_ORDER;
+  }
+
+  /* ---------------------------------------------------------------- R58: the record of this copy */
+
+  /** R58 (T51; K3826; DEC-330 A27, B7): how a bundle came to be what it is, as facts only: its manifest entries newest
+   *  first in write order (R30), each file with its digest and size, and the document's own `state_history` as stored.
+   *  Sight first (R20, R23): a viewer not admitted, an unknown id and a missing viewer answer one `NO_SUCH_BUNDLE`.
+   *  Reads; writes nothing; never throws. */
+  bundleHistory(args = {}) {
+    try { const { bundle, viewer = null } = args || {}; return this.#history(bundle, viewer); }
+    catch { return { ok: false, reason: "HISTORY_FAILED" }; }
+  }
+
+  #history(bundle, viewer) {
+    if (typeof bundle !== "string" || !bundle) return { ok: false, reason: "NO_BUNDLE" };
+    const record = this.#record;
+    if (!viewer || !record.head(bundle) || !this.#membership.inSight(bundle, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE" };
+    const image = record.readImage(bundle) || {};
+    const read = (path) => {
+      try { return JSON.parse(String(image[path])); } catch { return null; }
+    };
+    const man = read("_history/manifest.json");
+    const entries = man && Array.isArray(man.entries) ? man.entries.filter(isObj) : [];
+    /* A stored file's size is known from the bytes held under any path that carries its digest. */
+    const sizes = new Map(), texts = new Map();
+    for (const v of Object.values(image)) {
+      const sha = typeof v === "string" ? fileDigestOf({ text: v }) : isObj(v) ? v.sha256 : null;
+      const bytes = typeof v === "string" ? inlineBytesOf({ text: v }) : isObj(v) ? v.bytes : null;
+      if (typeof sha === "string" && Number.isSafeInteger(bytes) && !sizes.has(sha)) sizes.set(sha, bytes);
+      if (typeof sha === "string" && typeof v === "string" && !texts.has(sha)) texts.set(sha, v);
+    }
+    /* R59: the capture a revision's own `data/provenance.json` names for the document, read from the bytes that
+       revision held (the live file or the copy under the next snap key); absent when it names none. */
+    const captureOf = (files) => {
+      const f = files.find((x) => x.path === "data/provenance.json");
+      const sha = f && texts.has(f.sha256) ? (() => {
+        try { return JSON.parse(texts.get(f.sha256))?.documents?.[0]?.capture?.sha256; } catch { return null; }
+      })() : null;
+      return typeof sha === "string" && sha ? { capture_sha: sha } : {};
+    };
+    const all = entries.map((e) => {
+      const rec = read(`_history/promotion_${e.key}.json`);
+      const written = rec && Array.isArray(rec.files) ? rec.files.filter(isObj) : [];
+      const files = written.map((f) => ({ path: f.name, sha256: f.sha256 ?? null, bytes: sizes.get(f.sha256) ?? null }));
+      const md = files.find((f) => f.path === "bundle.md");
+      return { seq: e.seq, snapKey: e.key, kind: e.kind, author: e.author ?? null, at: e.created ?? null,
+               sha256: md ? md.sha256 : null, ...captureOf(files), files };
+    }).sort((a, b) => b.seq - a.seq);
+    const live = record.readFile(bundle, "bundle.md");
+    const fm = live && typeof live.text === "string" ? parseFrontmatter(live.text).data : null;
+    const stored = fm && Array.isArray(fm.state_history) ? fm.state_history.filter(isObj) : [];
+    const states = stored.map((x) => ({ at: x.timestamp ?? null, from: x.from_state ?? null, to: x.to_state ?? null,
+                                        author: x.author ?? null, blurb: x.blurb ?? null }));
+    return { ok: true, bundle, revisions: all.slice(0, HISTORY_MAX), states: states.slice(-HISTORY_MAX),
+             truncated: all.length > HISTORY_MAX || states.length > HISTORY_MAX };
   }
 
   /* ---------------------------------------------------------------- R39, R40: the registry */
@@ -465,8 +522,7 @@ class Promotion {
     const empty = files.filter((f) => typeof f.text !== "string" && !blobHeld(f)).map((f) => f.path);
     if (empty.length)
       return refusal("PROMOTED_FILE_CONTENT_UNSTATED",
-        `${empty.join(", ")}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. `
-        + "Nothing was written.", { paths: empty });
+        localize("promotion.index.empty_neither_text_a_string", "{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.", { empty: String(empty.join(", ")) }), { paths: empty });
     const sizeless = files.filter((f) => blobHeld(f) && !(Number.isInteger(f.bytes) && f.bytes >= 0)).map((f) => f.path);
     if (sizeless.length)
       return refusal("PROMOTED_FILE_BYTES_UNSTATED",
@@ -517,9 +573,7 @@ class Promotion {
     /* DEC-49 REGION is-promote-digest */
     if (digested.disagree.length)
       return refusal("FILE_DIGEST_MISMATCH",
-        "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ")
-        + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). "
-        + "The record stores a digest only of what it holds. Nothing was written.",
+        localize("promotion.index.the_sha256_sent_for_map", "the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.", { map: String(digested.disagree.map((d) => d.path).join(", ")) }),
         { paths: digested.disagree.map((d) => d.path), files: digested.disagree });
     /* END DEC-49 REGION is-promote-digest */
     files = digested.files.map((f) => {
@@ -541,8 +595,7 @@ class Promotion {
         /* DEC-49 REGION is-group-undetermined */
         if (!createdGroup)
           return refusal("GROUP_UNDETERMINED",
-            "this store records no producing group, and this creation names none — neither a group: line in its "
-            + "bundle.md nor a group in its meta. The record does not supply one. Nothing was created.",
+            localize("promotion.index.this_store_records_no_producing", "this store records no producing team, and this creation names none — neither a group: line in its bundle.md nor a team in its meta. The record does not supply one. Nothing was created."),
             { act: "promote" });
         /* END DEC-49 REGION is-group-undetermined */
       }
@@ -638,6 +691,23 @@ class Promotion {
         /* END DEC-49 REGION is-promoted-field-unstated */
       }
 
+      /* R53 (G74; BOB's decision, P17, from K4557): a member files a document into a project only when she is its member
+         or invited to it (gathering stays open to an invited member who has not joined). Only a session's member is
+         asked (`actorMemberId`, the control plane's stamp: a machine credential holds none) and never a replay. A project
+         that is absent answers as one she is not in, so the refusal tells a stranger nothing of which projects exist.
+         Membership's one answer (its R87); its served sentence carries the remedy. Nothing is written. */
+      const filedInto = projectOf(sentFm, promotedType);
+      const filer = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
+      if (!replay && filer && filedInto && !membership.participation(filedInto, filer)) {
+        /* The sentence names the project by its name where she may see that it exists, else as she sent it; never an id
+           the record gives. Keyed `refusal.PROMOTE_NOT_A_PARTICIPANT` (UX-DESIGN's row, U463); `en` is its stand-in. */
+        const named = String(membership.sight(filedInto, pkg.actorViewer ?? "")).toUpperCase() !== "NONE"
+          ? record.bundleInfo(filedInto)?.title : null;
+        return { ok: false, reason: "PROMOTE_NOT_A_PARTICIPANT", code: "PROMOTE_NOT_A_PARTICIPANT", act: "promote",
+                 project: filedInto,
+                 detail: localize("refusal.PROMOTE_NOT_A_PARTICIPANT", "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.", { project: String(named || filedInto) }) };
+      }
+
       /* R56 (N456, form (b)): a project's stage is computed, never written; a creation is written at `forming` or
          `closed` only. A revision's move is R15's, below, over the declared table. */
       /* DEC-49 REGION is-project-stage-computed */
@@ -652,7 +722,7 @@ class Promotion {
       if (promotedType === "project") {
         const key = projectNameKey(promotedTitle);
         if (!key)
-          return { ok: false, reason: "NO_TITLE", detail: "a project needs a name, and it must be unique across your group's Civicsmith" };
+          return { ok: false, reason: "NO_TITLE", detail: localize("promotion.index.project_needs_name", "a project needs a name, and it must be unique across your team's Civicsmith") };
         if (this.#nameTaken(key, bundleId)) return NAME_TAKEN();
       }
 
@@ -679,8 +749,7 @@ class Promotion {
       /* DEC-49 REGION is-promote-cas */
       if (head && head.bundleSha !== base)
         return refusal("CAS_STALE",
-          "the base this revision names is not the record's current version: someone else changed it since it was read. "
-          + "Nothing was written.", { expected: head.bundleSha, got: base });
+          localize("promotion.index.the_base_this_revision_names", "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written."), { expected: head.bundleSha, got: base });
       /* END DEC-49 REGION is-promote-cas */
 
       /* R10: a revision never retypes its bundle. */
@@ -706,9 +775,7 @@ class Promotion {
         && String(sentFm.group).trim() !== "" ? String(sentFm.group).trim() : null;
       if (head && revisionGroup !== null && revisionGroup !== String(head.groupId).trim() && !replay)
         return refusal("REVISION_REGROUPS_BUNDLE",
-          `${cut(bundleId, 80)} was produced by '${cut(head.groupId, 40)}' and this revision says `
-          + `'${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again `
-          + `with the group the record holds, or with none. Nothing was written.`,
+          localize("promotion.index.cut_was_produced_by_cut", "{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.", { cut: String(cut(bundleId, 80)), cut_2: String(cut(head.groupId, 40)), cut_3: String(cut(revisionGroup, 40)) }),
           { head_group: cut(head.groupId, 80), revision_group: cut(revisionGroup, 80) });
       /* END DEC-49 REGION is-revision-regroups-bundle */
       /* R14: a document's id is the bundle it is filed under. */
@@ -1107,9 +1174,7 @@ class Promotion {
     /* DEC-49 REGION is-machine-reopen */
     if (!who || isMachineIdentity(who))
       return refusal("MACHINE_CANNOT_REOPEN",
-        "reopening is a named member's judgement that a question the group set down has to be worked again. A "
-        + "machine credential may surface a question and pursue one, and may not overturn the group's own "
-        + "disposition. Sign in as a member.");
+        localize("promotion.index.machine_cannot_reopen", "reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member."));
     /* END DEC-49 REGION is-machine-reopen */
     /* R22 */
     const why = String(reason ?? "").trim();
@@ -1140,9 +1205,7 @@ class Promotion {
       if (!m.ok) return { ...m, target };
       if (!m.value)
         return { ok: false, reason: "NOT_SET_DOWN", target, from: head.currentState, reopenable: REOPENABLE_FROM,
-                 detail: "reopening picks up something the group SET DOWN (deferred or dismissed) or a finding that is "
-                       + "a member of a published or prepared case. A concluded inquiry in no case moves forward by "
-                       + "publishing a new edition rather than quietly reverting to open still wearing its conclusion." };
+                 detail: localize("promotion.index.not_set_down", "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is a member of a published or prepared case. A concluded inquiry in no case moves forward by publishing a new edition rather than quietly reverting to open still wearing its conclusion.") };
     }
     const declared = fm.object_type ?? head.type;
     const spec = vocabFor(STATES, declared);
@@ -1214,8 +1277,25 @@ export function promotionOps(promotion, url, body) {
     /* REC-138, REC-197: an absent visibility is null, which is hidden. */
     projectfork: () => promotion.forkProject({ projectId: q("projectId"), newId: q("newId"), title: q("title"),
                                                visibility: q("visibility"), by: q("by"), viewer: q("viewer") }),
+    /* R58 (K3826): a read of the bundle's own record, sight-gated by the viewer stamp. */
+    bundlehistory: () => promotion.bundleHistory({ bundle: q("bundle"), viewer: q("viewer") }),
   };
 }
+
+/* R60 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  reopen: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.reopen.label.question",
+    fields: { accepts: ["target","reason"], requires: ["target","reason"] } },
+  projectfork: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("promotion.declared.projectfork", "creates a NEW project; gated on the create_projects shape, not on the source object's state"),
+    fields: { accepts: ["projectId","title","visibility"], requires: ["projectId","title"] } },
+  /* R61 (T51, K4206; op-grades' substrate ground, RUNG_ABSENT and NON_ACTS): the write path every act rides. Its fields are the
+     ones the arm reads from the package: files, meta and snapKey are refused by name when absent (R7, R11), and bundleId is
+     not required of a project's creation, which mints it (R19). refs and basis are refused by name when sent (R7), so they
+     are not accepted. */
+  promote: { classes: ["admin","member","probe"], mutating: true, weight: "substrate", description: localize("promotion.declared.promote", "substrate: the one write path every act rides"),
+    fields: { accepts: ["bundleId","base","files","meta","snapKey","author","replay","writer","operation","visibility","ownerMemberId","actorIdentity","actorViewer","actorMemberId","drop","register"], requires: ["files","meta","snapKey"] } },
+});
 
 const instances = new WeakMap();
 

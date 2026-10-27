@@ -6,6 +6,7 @@ import { world, inquiryMd, infoMd, V, MACHINE, U } from "./fixture.mjs";
 import { checkReevalPending, REEVAL_SOURCES, REEVAL_POLICY_AGE_DAYS, VERSION_NOTICE_SUBJECT_CHECKS,
          REEVALUATION_ACT_CHECKS } from "../../../src/reevaluation/index.mjs";
 import { checkBundle } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { VERSION_NOTICE_CHECKS } from "../../../src/content/index.mjs";
 
 const NOW = Date.parse("2026-09-28T00:00:00Z");
@@ -106,8 +107,7 @@ test("R15 (DEC-88): C-110.29, VERSION_ADOPT_NO_REASON, is a new row after C-110.
 test("R15 R24 (DEC-149, T35-52): C-110.1's translation says \"the record's own machine credentials\", never \"the plane\"; the row's code, number and region stay", () => {
   const row = REEVALUATION_ACT_CHECKS.MACHINE_CANNOT_ADOPT_VERSION;
   assert.deepEqual([row.check, row.where], ["C-110.1", "src/reevaluation/index.mjs #choiceSubject > is-version-choice"]);
-  assert.equal(row.translation, "Only a named member can move a reference to a newer version of a document. The assistant and "
-    + "the record's own machine credentials may say a newer version exists; they never choose which one a finding rests on.");
+  assert.equal(row.translation, word("refusal.MACHINE_CANNOT_ADOPT_VERSION"));
   for (const r of [...Object.values(VERSION_NOTICE_SUBJECT_CHECKS), ...Object.values(REEVALUATION_ACT_CHECKS)])
     assert.doesNotMatch(r.translation, /\bthe plane\b|\bthe instance\b/i, r.check);
   /* the refusal an adoption by a machine answers carries it */

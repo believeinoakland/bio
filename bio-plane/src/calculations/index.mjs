@@ -31,11 +31,11 @@
 import { canonicalJson, sha256HexSync, isHypothesisId, isMachineIdentity, idPattern } from "../record-grammar/index.mjs";
 import { checkRecipe, evaluate as evaluateRecipe, resultKey, METHOD, parseFigure, draw as drawFrame, interval, divide,
   multiply, RATIO_DEFAULT } from "../calc-grammar/index.mjs";
-import { validAt, fiscalPeriod, isCalendarDate, localDay } from "../civil-time/index.mjs";
+import { validAt, fiscalPeriod, isCalendarDate, localDay, reasonText } from "../civil-time/index.mjs";
 import { recognise } from "../idspaces.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, notAnAdmin, MODULE_ORDER, viewerPredicate, Membership } from "../membership/index.mjs";
-import { contentOf, canonicalExtent } from "../content/index.mjs";
+import { contentOf, canonicalExtent, checkContentExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { combine as combineProfiles, SPACES } from "../../../jurisdictions/index.mjs";
 import { CALCULATIONS_TABLES, migrateCalculations } from "./schema.mjs";
@@ -43,8 +43,12 @@ import { TABLE_MAX_BYTES, TABLE_MAX_CELLS, MONEY_ROLES, scanCsv, shaOf, schemaFa
   vintageFault, tableBuilder, textTable } from "./tables.mjs";
 import { PATTERNS, GATE_MAX_RATE, runPattern } from "./patterns.mjs";
 import { defaultRegistry } from "../connection-grammar/index.mjs";
+import { delimiterSignature, encodingSignature } from "../csv-reader/index.mjs";
+import { statement } from "../read-bounds.mjs";
 import { USES_FIELDS, USES_HEADER, NONE_HELD, tieOf, foldReason, APPLICATION_RECIPES, APPLICATION_KINDS, composeApplication,
   answerApplication } from "./application.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+import { readAmount, fiscalKeyOf } from "./money-cells.mjs";
 
 export { CALCULATIONS_SCHEMA, CALCULATIONS_TABLES } from "./schema.mjs";
 export { ROLES, MONEY_ROLES, KEY_ROLES, ROSTER_ROLES, CROSSWALK_ROLES, TABLE_MAX_BYTES, TABLE_MAX_CELLS, parseCsv,
@@ -63,8 +67,11 @@ export const INGEST_STAMP = "class:daemon";
 export const INGEST_METHOD = "table_binding";
 /** R9 (N676, K1799): the engine named for a value a spreadsheet file computed, when the file records none (office-readers
  *  reads no application), and the engines whose agreement is recorded as measured: none yet. */
-export const FILE_ENGINE = "the file's spreadsheet program";
+export const FILE_ENGINE = word("calculations.file_spreadsheet_program");
 export const MEASURED_ENGINES = Object.freeze([]);
+/** R9: the mark of an input whose cells could not be read to say whether an engine computed them (a failed or truncated
+ *  `content.cellsAt`): an explicit undetermined engine, never null. */
+const UNDETERMINED_ENGINE = Object.freeze({ name: "undetermined", version: null });
 /** R9: the derivation step a third-party engine's value takes (K1447 (ii); strength R36). */
 export const ENGINE_STEP = "third-party engine";
 /** R32: the most uses one frozen table holds (R1's cell bound over its sixteen columns). */
@@ -78,7 +85,7 @@ export const VISIT_FINDINGS = Object.freeze(["yes", "no", "could_not_tell"]);
 /** R39: a drawn item's standing over its visits. */
 export const STANDINGS = Object.freeze(["yes", "no", "disagree", "could_not_tell", "not_visited"]);
 /** R40: what the interval over visits assumes, stated with every estimate over a draw that carries a question. */
-export const VISIT_ASSUMPTION = "The interval treats the judged items as a simple random draw from the set: it assumes that the drawn items not judged are like those judged, and it says nothing else of them.";
+export const VISIT_ASSUMPTION = word("calculations.interval_treats_judged");
 /** R40: the canonical table an estimate over visits is computed over, one row per drawn item (R9: its bytes). */
 const STANDING_FIELDS = Object.freeze([{ name: "item", type: "string" }, { name: "standing", type: "string" }, { name: "visits", type: "number" }]);
 
@@ -89,10 +96,36 @@ const LINK_KIND_FIELDS = Object.freeze(["kind", "link_kind", "relation", "relati
 const GRADES = Object.freeze(["A", "B", "C", "D"]);
 const TESTIMONY = "D";
 const SHA = /^[0-9a-f]{64}$/;
+const BARE_HANDLE = /^[A-Za-z0-9._-]{1,128}$/;   /* a member id spelled bare, as `testify` stamps an author (K5131) */
 const CALC_RE = idPattern("CALC");
 const MONEY_RE = idPattern("MNY");
 const READ_LIMIT_MAX = 1000;
+const BUILT_IN_KINDS = Object.freeze(["count", "total", "share", "ratio", "difference"]);   /* R4 (K5131): kinds that compose a default recipe */
 const TABLE_CACHE_CHARS = 24 * 1024 * 1024;   /* the held tables' text kept at hand, at most (R1: one 20 MiB table fits) */
+/** R14 (G45): a value of an ingest's record (`rows`, `written`, `not_written`) stays in `calc_ingests` while its UTF-8 length is at most
+ *  this; above it the column holds the marker `{parts, bytes, count}` and the text is in `calc_ingest_parts`, in chunks of at most
+ *  `INGEST_CHUNK` characters (768 KiB of UTF-8), so no bound value passes the platform's single-value limit. */
+export const INGEST_INLINE_MAX = 524288;
+export const INGEST_CHUNK = 256 * 1024;
+/** R14: the most characters of an ingest's stated reason (a protective bound; the statement's sum stays under the platform's). */
+export const INGEST_REASON_MAX = 2000;
+/** R14 (G45): the most rows one act reads, set by measure (the largest count whose act survives the object's memory at the real shape:
+ *  100,000 rows survive, 150,000 do not; a protective bound, K1881). Above it the act is refused INGEST_TOO_LARGE before any fact is written. */
+export const INGEST_ROWS_MAX = 100000;
+/** R14 (G55): the most party resolutions one ingest act keeps (the cache dies with the act; a protective bound on its memory, the act's
+ *  heap being the platform's: a payer past it is looked up each time, as before). */
+export const INGEST_CACHE_MAX = 10000;
+/** R14 (G55, K4562): an act over this many rows is ingested in the background, in slices; at or under it the act runs whole and answers whole. */
+export const INGEST_INLINE_ROWS = 10000;
+/** R14 (G55): one slice judges at most this many rows, or writes at most INGEST_SLICE_FACTS facts, whichever comes first (counts, never time:
+ *  the object's clock is frozen). A slice is one transaction. */
+export const INGEST_SLICE_ROWS = 20000;
+export const INGEST_SLICE_FACTS = 2000;
+/** R14 (G55): consecutive failed slices after which the ingest is stopped. */
+export const INGEST_MAX_ATTEMPTS = 3;
+const INGEST_PART_ITEMS = 1000;   /* items in one stored piece of a background ingest's lists */
+const DELIMITER_WINDOW_CHARS = 1 << 20;   /* G64: the head of a CSV source its delimiter is judged from, as the document's own reader judges (csv-reader's window) */
+const READ_ON_MAX = 10000;   /* R1 (G123f): the most windows one range is read in (every one advances `next_row`, so a range ends long before it) */
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -100,6 +133,25 @@ const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const json = (v) => (v === undefined ? null : JSON.stringify(v));
 const parse = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const sha = (v) => sha256HexSync(canonicalJson(v));
+/* G45: chunks of at most `size` characters that never split a surrogate pair (a lone surrogate bound as text is stored as U+FFFD) */
+function chunksOf(text, size = INGEST_CHUNK) {
+  const out = [];
+  for (let i = 0; i < text.length;) {
+    let end = Math.min(i + size, text.length);
+    if (end < text.length) { const c = text.charCodeAt(end); if (c >= 0xdc00 && c <= 0xdfff) end--; }
+    out.push(text.slice(i, end));
+    i = end;
+  }
+  return out;
+}
+/* G45: what one value of an ingest's record binds: its JSON in the column while at most INGEST_INLINE_MAX bytes (as before), else a marker and chunks */
+function ingestStored(kind, value) {
+  const text = JSON.stringify(value);
+  const bytes = new TextEncoder().encode(text).byteLength;
+  if (bytes <= INGEST_INLINE_MAX) return { kind, column: text, chunks: [] };
+  const chunks = chunksOf(text);
+  return { kind, column: JSON.stringify({ parts: chunks.length, bytes, count: Array.isArray(value) ? value.length : 1 }), chunks };
+}
 const no = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
 const weaker = (a, b) => (GRADES.indexOf(a) >= GRADES.indexOf(b) ? a : b);
 const isGrade = (g) => GRADES.includes(g);
@@ -114,8 +166,11 @@ export function memberOf(stamp) {
   if (p.member) return p.member;
   return stamp === Membership.ROOT_ADMIN ? Membership.ROOT_ADMIN : null;
 }
+/* K5131: the member a stamp names in a comparison of authors: `testify` stamps a testimony's author as the bare handle (`bob`), which names member
+   `bob` as `member:bob` does; a machine identity (it carries a colon) is no handle. Sight (`memberOf`) stays closed to a bare handle. */
+const stampMember = (stamp) => memberOf(stamp) ?? (typeof stamp === "string" && BARE_HANDLE.test(stamp) && !isMachineIdentity(stamp) ? stamp : null);
 /** R41: whether two stamps name the one same member (a machine, or no member, matches nothing). */
-const sameMember = (a, b) => { const m = memberOf(a); return m !== null && m === memberOf(b); };
+const sameMember = (a, b) => { const m = stampMember(a); return m !== null && m === stampMember(b); };
 const isMachine = (by) => typeof by === "string" && isMachineIdentity(by);
 const stamped = (by) => typeof by === "string" && by.trim() !== "";
 
@@ -168,7 +223,8 @@ function moneyPeriod(v) {
   const t = typeof v === "string" ? v.trim() : "";
   const m = /^(\d{4}-\d{2}-\d{2})\s*\/\s*(\d{4}-\d{2}-\d{2})?$/.exec(t);
   if (m) return { from: m[1], to: m[2] ?? null, precision: "day" };
-  return t ? { fiscal: t } : null;
+  const fy = fiscalKeyOf(t);   /* R49: a fiscal-year label names its year */
+  return fy ? { fiscal: fy.key } : t ? { fiscal: t } : null;
 }
 
 const partyEntity = (p) => (plain(p) ? (p.entity ?? null) : null);
@@ -259,10 +315,45 @@ function visitRecipe(name) {
     { op: "share", part: "yes_items", whole: "judged_items", as: "share_judged" }, ...apart], output: "share_judged" };
 }
 
+/* R1, R45: where a typed cell sits: its row and column (1-based), from its address (`source.cell`, or `source`), else its own `row` and `col`. */
+function cellPosition(c) {
+  const m = /^([A-Z]+)(\d+)$/.exec(String((plain(c) ? (plain(c.source) ? c.source.cell : c.source) : null) ?? "").replace(/\$/g, "").toUpperCase());
+  return { r: m ? Number(m[2]) : (plain(c) ? c.row ?? 0 : 0), col: m ? [...m[1]].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) : (plain(c) ? c.col ?? 0 : 0) };
+}
+
+/* R45: the box a range or cell extent names, `{r0, r1, c0, c1}` (1-based, inclusive, corners in either order), or null when it names none. */
+function extentBox(row) {
+  let e = row && row.extent;
+  if (typeof e === "string") { try { e = JSON.parse(e); } catch { e = null; } }
+  const ref = plain(e) ? (typeof e.range === "string" ? e.range : typeof e.cell === "string" ? e.cell : null) : null;
+  const m = ref && /^\$?([A-Za-z]{1,3})\$?(\d+)(?::\$?([A-Za-z]{1,3})\$?(\d+))?$/.exec(ref.trim());
+  if (!m) return null;
+  const col = (l) => [...l.toUpperCase()].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+  const [ca, ra, cb, rb] = [col(m[1]), Number(m[2]), m[3] ? col(m[3]) : col(m[1]), m[4] ? Number(m[4]) : Number(m[2])];
+  return { r0: Math.min(ra, rb), r1: Math.max(ra, rb), c0: Math.min(ca, cb), c1: Math.max(ca, cb) };
+}
+
+/* G64: the head of a CSV source's text the delimiter is judged from: the BOM dropped, a source that ends without a line end given one (the
+   signature counts complete lines only), a longer one cut at the window. */
+function delimiterWindow(text) {
+  const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  return s.length > DELIMITER_WINDOW_CHARS ? s.slice(0, DELIMITER_WINDOW_CHARS) : s.endsWith("\n") ? s : `${s}\n`;
+}
+
+/* R45 (fix round 10, cause 19): a reading's own text of a spreadsheet or an ODS is its cells joined by a tab (`odf.mjs`, `formats-xlsx.mjs`), so
+   the tab is its delimiter whatever commas its cells hold ($69,268.31): a tab on the majority of the window's lines. */
+function tabJoined(window) {
+  let lines = 0, tabbed = 0;
+  for (const l of window.split("\n")) { if (l.trim() === "") continue; lines++; if (l.includes("\t")) tabbed++; }
+  return tabbed > 0 && tabbed * 2 > lines;
+}
+
 export class Calculations {
   #inputListeners = [];     // R11: {module, fn}
   #patternListeners = [];   // R23: {module, fn}
   #tableCache = new Map();  // sha → held table (`textTable`), the last few read, within TABLE_CACHE_CHARS
+  #ingestListeners = [];    // R14 (G55): {module, fn}, told when an ingest starts
+  #engines = new Map();     // content id → the engine mark `#engineFor` last made (R9); the synchronous reads (R19, R30) read it
 
   constructor({ storage, record, membership, content, provenance, combine = combineProfiles, now = null,
                 clock = null, host = null, registry = defaultRegistry, ...upstream } = {}) {
@@ -323,22 +414,100 @@ export class Calculations {
 
   /* R9 (N676, K1799): the third-party engine that computed a content row's value: a sheet range or cell any of whose
      cells is a formula, its value the file's cached result (content R52). `{name, version}` or null. */
+  async #engineFor(row) {
+    if (!row || (row.extent_kind !== "sheet-range" && row.extent_kind !== "sheet-cell")) return null;
+    let formula = false;
+    const read = await this.#readCells(row.content_id, (cells) => {
+      if (!formula && cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "")) formula = true;
+    });
+    /* R9: a read that failed, or stopped at `cells_truncated` that it could not follow to the range's end by `next_row` (R1), is undetermined;
+       an answer that holds no cells states no engine */
+    const engine = !read.ok && read.kind !== "answer" ? UNDETERMINED_ENGINE : !read.ok || !formula ? null : { name: FILE_ENGINE, version: null };
+    this.#engines.set(row.content_id, engine);
+    return engine;
+  }
+
+  /* R1 (G123f): the cells of a held sheet's range as `content.cellsAt` answers them, window after window: each window's cells are handed to
+     `onCells`; an answer `cells_truncated` with a `next_row` is followed by asking again from that row (`cellsAt(id, {fromRow})`), until the
+     provider answers the range whole. `{ok: true}`, or `{ok: false, kind, got}`: `kind` "answer" for a first answer that holds no cells (`got` its
+     reason), "thrown" for a call that failed, "truncated" for a range the provider could not finish (no `next_row`, a `next_row` that does
+     not advance, a window that starts before it, a later window that holds no answer). Never loops: every continuation advances `next_row`. */
+  async #readCells(contentId, onCells) {
+    let from = null, last = null;
+    for (let calls = 0; calls < READ_ON_MAX; calls++) {
+      let got = null;
+      try { got = from === null ? await this.content.cellsAt(contentId) : await this.content.cellsAt(contentId, { fromRow: from }); }
+      catch { return { ok: false, kind: "thrown", got: "unread" }; }
+      const truncated = !!got && (got.cells_truncated === true || got.reason === "cells_truncated");
+      const next = got && Number.isInteger(got.next_row) ? got.next_row : null;
+      const cells = got && Array.isArray(got.cells) ? got.cells : null;
+      if (!truncated && !cells) return { ok: false, kind: from === null ? "answer" : "truncated", got: got && typeof got.reason === "string" ? got.reason : "unread" };
+      if (truncated && (!cells || next === null || (last !== null && next <= last) || (from !== null && next <= from))) return { ok: false, kind: "truncated", got: "cells_truncated" };
+      if (cells) {
+        /* a window that starts before the row it was asked from is the provider ignoring the argument, not a continuation */
+        if (from !== null && cells.some((c) => cellPosition(c).r < from)) return { ok: false, kind: "truncated", got: "cells_truncated" };
+        onCells(cells);
+      }
+      if (!truncated) return { ok: true };
+      last = next; from = next;
+    }
+    return { ok: false, kind: "truncated", got: "cells_truncated" };
+  }
+
+  /* The same mark for the synchronous reads (R19, R30), which cannot wait on `content.cellsAt`: what the last
+     asynchronous entry that graded this row made; a sheet row not yet made is undetermined, never null. */
   #engineOf(row) {
     if (!row || (row.extent_kind !== "sheet-range" && row.extent_kind !== "sheet-cell")) return null;
-    let got = null;
-    try { got = this.content.cellsAt(row.content_id); } catch { got = null; }
-    const cells = got && Array.isArray(got.cells) ? got.cells : [];
-    return cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
+    return this.#engines.has(row.content_id) ? this.#engines.get(row.content_id) : UNDETERMINED_ENGINE;
+  }
+
+  /* R9: a figure input's mark as the create stored it (the synchronous reads, R19 and R30, read it; an object restart
+     loses nothing): the explicit undetermined engine for a row stored before, until a read makes it. */
+  #figureEngine(calcId, inp) {
+    const r = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, calcId, inp.name, inp.figure);
+    if (!r || r.engine_json == null) return UNDETERMINED_ENGINE;
+    const m = parse(r.engine_json);
+    return m && m.name === UNDETERMINED_ENGINE.name ? UNDETERMINED_ENGINE : m && typeof m.name === "string" ? { name: m.name, version: m.version ?? null } : null;
+  }
+
+  /* Make the marks of a calculation's inputs (a figure's row; a table whose source records none) before a grade is read. */
+  async #warmEngines(c) {
+    for (const inp of parse(c.inputs_json) || []) {
+      if (!plain(inp)) continue;
+      if (inp.figure !== undefined) {
+        const row = this.content.contentRow(inp.figure);
+        const mark = await this.#engineFor(row);
+        /* R-OLD: a row stored before holds no mark, or an undetermined one a failed cellsAt made: written now */
+        const have = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, c.calc_id, inp.name, inp.figure);
+        const stored = have && have.engine_json != null ? parse(have.engine_json) : undefined;
+        const mine = row ? json(mark ?? null) : null;
+        if (have && mine !== null && (stored === undefined || (stored && stored.name === UNDETERMINED_ENGINE.name && mark !== UNDETERMINED_ENGINE)))
+          this.sql.exec(`UPDATE calc_inputs SET engine_json=? WHERE calc_id=? AND input_name=? AND ref=?`, mine, c.calc_id, inp.name, inp.figure);
+      }
+      else if (inp.table !== undefined) await this.#warmTable(this.#one(`SELECT sha, source_json FROM calc_tables WHERE sha=?`, inp.table));
+      else if (inp.calculation !== undefined) {
+        const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
+        if (o) await this.#warmEngines(o);
+      }
+    }
+  }
+
+  async #warmTable(r) {
+    const src = r ? parse(r.source_json) || {} : {};
+    if (src.kind !== "uses" && src.engine === undefined && src.content_id) await this.#engineFor(this.content.contentRow(src.content_id));
   }
 
   /* R9: a grade with its engine marks: a value a third-party engine computed is undetermined until that engine's
      agreement is recorded as measured, the derivation step "third-party engine"; every other input `engine: null`. */
   #withEngine(g, engine) {
     if (!engine) return { ...g, engine: null, engine_measured: null };
+    if (engine === UNDETERMINED_ENGINE)
+      return { grade: null, why: localize("calculations.index.its_cells_could_not_be", "its cells could not be read to say whether a third-party engine computed them, so its grade is undetermined"),
+        engine: UNDETERMINED_ENGINE.name, engine_measured: false, derivation_step: ENGINE_STEP };
     const name = engine.version ? `${engine.name} ${engine.version}` : engine.name;
     const measured = MEASURED_ENGINES.includes(name);
     if (measured) return { ...g, engine: name, engine_measured: true, derivation_step: ENGINE_STEP };
-    return { grade: null, why: `its values were computed by a third-party engine (${name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii))${g.grade ? `; its capture alone reads ${g.grade}` : ""}`,
+    return { grade: null, why: localize("calculations.index.its_values_were_computed_by", "its values were computed by a third-party engine ({name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii)){v1}", { name: String(name), v1: g.grade ? word("calculations.why.capture_alone_reads", { grade: String(g.grade) }) : "" }),
       engine: name, engine_measured: false, derivation_step: ENGINE_STEP };
   }
 
@@ -346,17 +515,17 @@ export class Calculations {
   #usesGrade(tableSha) {
     const u = this.#one(`SELECT ids_json FROM calc_uses WHERE sha=?`, tableSha);
     const events = this.dep("events");
-    if (!u || !events) return { grade: null, why: "the frozen uses are not readable here" };
+    if (!u || !events) return { grade: null, why: word("calculations.why.frozen_uses_readable") };
     let weakest = null;
     for (const id of parse(u.ids_json) || []) {
       let e = null;
       try { e = events.readEvent({ eventId: id, viewer: INGEST_STAMP }); } catch { e = null; }
       const ev = e && e.found !== false && e.ok !== false && typeof e.then !== "function" ? e.event || e : null;
       const gov = ev && ev.governing != null ? (ev.attestations || []).find((a) => Number(a.attestation_id) === Number(ev.governing)) : null;
-      if (!gov || !isGrade(gov.grade)) return { grade: null, why: `undetermined: the event ${id} has no governing attestation with a grade${ev ? "" : " readable here"}` };
+      if (!gov || !isGrade(gov.grade)) return { grade: null, why: word("calculations.why.undetermined_event_governing", { id: String(id), ev: String(ev ? "" : " readable here") }) };
       weakest = weakest ? weaker(weakest, gov.grade) : gov.grade;
     }
-    return weakest ? { grade: weakest, why: `the weakest of its events' governing attestations, ${weakest}` } : { grade: null, why: "it holds no event" };
+    return weakest ? { grade: weakest, why: word("calculations.why.weakest_events_governing", { weakest: String(weakest) }) } : { grade: null, why: word("calculations.why.holds_event") };
   }
 
   /* R9: a held table's grade facts: its source extent's capture grade capped by its derivation, with its engine marks;
@@ -365,7 +534,7 @@ export class Calculations {
     const src = parse(r && r.source_json) || {};
     if (src.kind === "uses") return this.#withEngine(this.#usesGrade(r.sha), null);
     const crow = src.content_id ? this.content.contentRow(src.content_id) : null;
-    const g = crow ? this.#contentGrade(crow) : { grade: null, why: "the table's source is not held" };
+    const g = crow ? this.#contentGrade(crow) : { grade: null, why: word("calculations.why.table_source_held") };
     return this.#withEngine(g, src.engine !== undefined ? src.engine : this.#engineOf(crow));
   }
 
@@ -373,50 +542,155 @@ export class Calculations {
    * TABLES (R1–R3)
    * ===================================================================== */
 
-  /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
-  async #sourceRows(row) {
-    if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
-      const got = this.content.cellsAt(row.content_id);
-      if (!got || !Array.isArray(got.cells)) return { fault: `the range's cells are not held (${got && got.reason ? got.reason : "unread"})` };
-      const byRow = new Map();
-      for (const c of got.cells) {
-        const m = /^([A-Z]+)(\d+)$/.exec(String((plain(c.source) ? c.source.cell : c.source) ?? "").replace(/\$/g, "").toUpperCase());
-        const r = m ? Number(m[2]) : (c.row ?? 0);
-        const col = m ? [...m[1]].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) : (c.col ?? 0);
-        if (!byRow.has(r)) byRow.set(r, new Map());
-        byRow.get(r).set(col, c.value === null || c.value === undefined ? "" : String(c.value));
-      }
-      const cols = [...new Set([...byRow.values()].flatMap((m) => [...m.keys()]))].sort((a, b) => a - b);
-      const rows = [...byRow.keys()].sort((a, b) => a - b).map((r) => cols.map((c) => byRow.get(r).get(c) ?? ""));
-      /* R9: a range any of whose cells is a formula holds values a third-party engine computed */
-      const engine = got.cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
-      return { rows, bytes: null, engine };
-    }
-    let text = null;
-    try { text = this.content.passageText(row.content_id); } catch { text = null; }
-    if (typeof text !== "string" && row.extent_kind === "document") {
-      const ev = this.record.evidenceStore();
-      try {
-        const obj = ev ? await ev.get(row.capture_sha) : null;
-        if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
-      } catch { text = null; }
-    }
-    if (typeof text !== "string") return { fault: "the source's text is not held: the passage was not read, or its capture's bytes are not in the evidence store" };
-    if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: true };
-    return { text };
+  /* R44: whether a capture is a CSV file, as its provenance profile or its reading records (content's container format). */
+  #isCsv(captureSha) {
+    try {
+      const c = this.content.contentContextFor(captureSha);
+      return !!c && !!c.container && c.container.format === "csv";
+    } catch { return false; }
   }
 
-  /** R1–R3: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
-   *  capture's document, a passage, a workbook range or a portal export). Async: the bytes go to the evidence store. */
+  /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
+  async #sourceRows(row, names = null) {
+    if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
+      /* R1 (G123f): the range is read window after window to its end (`#readCells`); a range that cannot be finished is refused, never a short table.
+         R45 (G131d): the cells are folded as they arrive into rows by their address, then the rows are made over the whole box the range names
+         (its first row and column to the last cell held), so a column or a row that holds no cell keeps its place and nothing closes up. */
+      const byRow = new Map();
+      let formula = false, held = 0, minRow = Infinity, maxRow = 0, minCol = Infinity, maxCol = 0, tooMany = false;
+      const read = await this.#readCells(row.content_id, (cells) => {
+        for (const c of cells) {
+          const { r, col } = cellPosition(c);
+          if (!byRow.has(r)) byRow.set(r, new Map());
+          byRow.get(r).set(col, c.value === null || c.value === undefined ? "" : String(c.value));
+          if (r < minRow) minRow = r;
+          if (r > maxRow) maxRow = r;
+          if (col < minCol) minCol = col;
+          if (col > maxCol) maxCol = col;
+          if (plain(c) && typeof c.formula === "string" && c.formula !== "") formula = true;
+        }
+        held += cells.length;
+        if (held > TABLE_MAX_CELLS) tooMany = true;
+      });
+      if (tooMany) return { tooLarge: { bound: "cells", max: TABLE_MAX_CELLS, got: held } };
+      if (!read.ok) return { fault: read.kind === "truncated" && held > 0
+        ? localize("calculations.index.the_range_could_not_be_read_whole", "the range's cells were read to row {row} and the rest could not be read, and a table is never made from part of a range", { row: String(maxRow) })
+        : word("calculations.range_cells_held", { got: String(read.got) }) };
+      const box = extentBox(row);
+      const r0 = Math.min(box ? box.r0 : Infinity, minRow), c0 = Math.min(box ? box.c0 : Infinity, minCol);
+      const cellAt = (r, c) => { const m = byRow.get(r); return m ? m.get(c) ?? "" : ""; };
+      /* R47 (G182): the header row is found by the declared names: the first row of the range that holds some cell and holds every declared name
+         once; the columns are then the named ones, so an empty leading column or an unnamed one shifts nothing, and a value in an unnamed
+         column is handed on past the header's width (the builder refuses it). With no such row the range is read over its whole box, as R45. */
+      let top = null, cols = null;
+      const hit = (r, name) => { const h = []; for (let c = c0; c <= maxCol; c++) if (cellAt(r, c).trim() === name) h.push(c); return h; };
+      for (let r = r0; r <= maxRow && cols === null; r++) {
+        if (!byRow.has(r)) continue;
+        if (top === null && [...byRow.get(r).values()].some((v) => v.trim() !== "")) top = r;
+        if (!names) continue;
+        const found = names.map((n) => hit(r, n));
+        if (found.every((h) => h.length === 1) && new Set(found.flat()).size === names.length) { cols = found.map((h) => h[0]); top = r; }
+      }
+      const named = cols ? new Set(cols) : null;
+      let dataFrom = r0, headerRow = null;
+      if (cols) { dataFrom = top + 1; headerRow = top; }
+      else if (top !== null && names && names.length === maxCol - c0 + 1 && names.every((h, k) => cellAt(top, c0 + k).trim() === h)) { dataFrom = top + 1; headerRow = top; }
+      function* rows() {
+        for (let r = dataFrom; r <= maxRow; r++) {
+          const out = cols ? cols.map((c) => cellAt(r, c)) : new Array(maxCol - c0 + 1);
+          if (!cols) for (let k = 0; k < out.length; k++) out[k] = cellAt(r, c0 + k);
+          else for (let c = c0; c <= maxCol; c++) if (!named.has(c) && cellAt(r, c).trim() !== "") out.push(cellAt(r, c));
+          yield out;
+        }
+      }
+      /* R9: a range any of whose cells is a formula holds values a third-party engine computed */
+      return { rows: held ? rows() : [], bytes: null, engine: formula ? { name: FILE_ENGINE, version: null } : null, sheet: { header_row: headerRow, first_row: dataFrom }, headerSeen: headerRow !== null };
+    }
+    /* G101 (R44): a CSV document is the file's own stored bytes, never the reading's index (blocks that repeat the header, caps), so the
+       table's sha is the file's: a CSV whose bytes are not held is refused, stated, never made from the index. */
+    const csv = row.extent_kind === "document" && this.#isCsv(row.capture_sha);
+    let text = null;
+    if (!csv) { try { text = this.content.passageText(row.content_id); } catch { text = null; } }
+    const own = typeof text === "string";   /* the reading's own text, not the file's bytes (R45, cause 19) */
+    if (typeof text !== "string" && row.extent_kind === "document") {
+      const stored = await this.#storedText(row.capture_sha);
+      if (stored.tooLarge) return { tooLarge: stored.tooLarge };
+      if (stored.transient)
+        return { transient: true, fault: localize("calculations.index.the_files_own_bytes_could", "the file's own bytes could not be read just now, and the file is held; ask again in a moment") };
+      text = stored.text;
+    }
+    if (typeof text !== "string")
+      return { fault: csv ? localize("calculations.index.the_csv_files_own_bytes", "the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading") : word("calculations.source_text_held") };
+    if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: { bound: "bytes", max: TABLE_MAX_BYTES, got: text.length } };
+    return { text, own };
+  }
+
+  /* R1 (R44; fix round 9, G131d follow-up, K4850): a document's stored bytes as text. `{text}`; `{text: null}` for a file that is not held (the store
+     answers none and its head names none); `{transient: true}` for a read that threw, or answered none for a file whose head says it is held: a
+     transient failure is never stated as absence. R-LOG: a line before the read and one after, carrying the sha, which of the two it was
+     and the error's name, never the bytes. */
+  async #storedText(captureSha) {
+    const ev = this.record.evidenceStore();
+    if (!ev) return { text: null };
+    const log = (line) => { try { console.log(JSON.stringify({ event: "table_source_read", module: "calculations", sha: captureSha, ...line })); } catch { /* a log changes nothing */ } };
+    log({ phase: "start" });
+    /* R48 (G182; S-29): the size is judged before the bytes are loaded: the store's head (R2's, with its size), then the object's own size; a file
+       over twice the table's bytes bound is refused with its size and the bound, its body never read */
+    const over = (size) => (Number.isFinite(size) && size > TABLE_MAX_BYTES * 2 ? { text: null, tooLarge: { bound: "bytes", max: TABLE_MAX_BYTES, got: size } } : null);
+    try { const h = typeof ev.head === "function" ? await ev.head(captureSha) : null; const o = over(h && h.size); if (o) { log({ phase: "end", outcome: "too_large", bytes: h.size }); return o; } } catch { /* the head is asked again below when the read finds nothing */ }
+    let obj = null;
+    try { obj = await ev.get(captureSha); }
+    catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
+    if (!obj) {
+      let head = null, headFailed = false;
+      try { head = typeof ev.head === "function" ? await ev.head(captureSha) : null; } catch { headFailed = true; }
+      const held = !!head || headFailed;
+      log({ phase: "end", outcome: held ? "null_but_held" : "null_not_held" });
+      return held ? { text: null, transient: true } : { text: null };
+    }
+    const big = over(obj.size);
+    if (big) { log({ phase: "end", outcome: "too_large", bytes: obj.size }); return big; }
+    try {
+      /* R48: decoded by the document's own encoding: the charset its stored type states, else the one its bytes show (csv-reader's signature),
+         never UTF-8 alone */
+      let text;
+      if (typeof obj.arrayBuffer === "function") {
+        const bytes = new Uint8Array(await obj.arrayBuffer());
+        const stated = /charset\s*=\s*"?([A-Za-z0-9._:-]+)/i.exec(String((obj.httpMetadata && obj.httpMetadata.contentType) || ""));
+        const label = stated ? stated[1] : (encodingSignature(bytes).encoding || "utf-8");
+        let dec;
+        try { dec = new TextDecoder(/^us-ascii$/i.test(label) ? "utf-8" : label); } catch { dec = new TextDecoder("utf-8"); }
+        text = dec.decode(bytes);
+      } else text = await obj.text();
+      log({ phase: "end", outcome: "read", chars: text.length });
+      return { text };
+    } catch (e) { log({ phase: "end", outcome: "thrown", error: String((e && e.name) || "Error").slice(0, 80) }); return { text: null, transient: true }; }
+  }
+
+  /** R1–R3, R51: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
+   *  capture's document, a passage, a workbook range or a portal export), or a found passage `{capture_sha, extent}`
+   *  nobody has cited yet, whose content row is minted as money's source is. Async: the bytes go to the evidence store. */
   async declareTable({ source = null, schema = null, header = null, roles = null, vintage = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by))
-      return no("MEMBER_ACT_ONLY", "a table is declared by a member; a machine may not declare one (K1468). Nothing was written.");
-    const contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
-    if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
-    const row = this.content.contentRow(contentId);
-    if (!row || !this.#sees(row.bundle_id, by))
+      return no("MEMBER_ACT_ONLY", localize("calculations.index.a_table_is_declared_by", "a table is declared by a member; a machine may not declare one (K1468). Nothing was written."));
+    let contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
+    /* R51: a found passage, the shape every other recording act takes (money R2). Its content row is minted once the rest of the act is
+       judged (below), so an act refused before the bytes are read mints nothing; here only its capture and extent are checked. */
+    let found = null;
+    if (!contentId && plain(source) && source.capture_sha !== undefined) {
+      const sha = str(source.capture_sha).toLowerCase();
+      const home = /^[0-9a-f]{64}$/.test(sha) && this.provenance ? this.provenance.homeOf(sha) : null;
+      if (!home || !this.#sees(home.bundleId, by))
+        return no("NO_SUCH_CONTENT", localize("calculations.declare.no_capture_is_held_here", "no capture is addressed by this sha in this record, or it is not one you may see. Nothing was written."), { capture_sha: sha });
+      const extent = source.extent === undefined || source.extent === null ? { kind: "document" } : source.extent;
+      const bad = plain(extent) ? checkContentExtent(extent, this.content.contentContextFor(sha, { searched: false })) : { code: "CONTENT_EXTENT_UNREADABLE" };
+      if (bad) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: sha, extent_code: bad.code ?? null });
+      found = { bundleId: home.bundleId, captureSha: sha, extent };
+    } else if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
+    const row0 = found ? null : this.content.contentRow(contentId);
+    if (!found && (!row0 || !this.#sees(row0.bundle_id, by)))
       return no("NO_SUCH_CONTENT", "no content row is addressed by this id in this record, or it is not one you may see. Nothing was written.", { content_id: contentId });
-    if (row.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
+    if (row0 && row0.stale) return no("CONTENT_STALE", "the passage was cited under an earlier reading of its document; cite it again under the current one. Nothing was written.", { content_id: contentId });
     const names = readHeader(header);
     if (!names) return no("NO_HEADER", "a table declares its header: a list of distinct, non-empty column names. Nothing was written.");
     const sf = schemaFault(schema, names);
@@ -435,27 +709,68 @@ export class Calculations {
       if (!has("crosswalk_from", r.crosswalk.from) || !has("crosswalk_to", r.crosswalk.to))
         return no("BAD_SCHEMA", `the crosswalk "${col}" names is not a declared crosswalk with those two ends. Nothing was written.`, { field: col });
     }
-    const src = await this.#sourceRows(row);
-    if (src.tooLarge) return no("TABLE_TOO_LARGE", `the source is over the bound of ${TABLE_MAX_BYTES} bytes (20 MiB). Nothing was written.`, { bound: "bytes", max: TABLE_MAX_BYTES });
-    if (src.fault) return no("SOURCE_NOT_READ", `${src.fault}. Nothing was written.`, { content_id: contentId });
-    const tb = tableBuilder(names, schema.fields);
+    let row = row0;
+    if (found) {
+      const m = this.record.transact(() => this.content.mint({ ...found, mintedBy: by }));
+      if (!m || m.ok === false || !m.content_id) return no("NO_SUCH_CONTENT", localize("calculations.declare.the_found_passage_names_no", "the found passage names no part of that capture. Nothing was written."), { capture_sha: found.captureSha });
+      contentId = m.content_id;
+      row = this.content.contentRow(contentId);
+    }
+    const src = await this.#sourceRows(row, names);
+    if (src.tooLarge) return this.#tooLarge(src.tooLarge);
+    if (src.fault) return no("SOURCE_NOT_READ", `${src.fault}. Nothing was written.`, { content_id: contentId, ...(src.transient ? { transient: true } : {}) });
+    const tb = tableBuilder(names, schema.fields, { headerSeen: !!src.headerSeen });
     if (src.rows) for (const r of src.rows) tb.push(r);
     else {
-      const sc = scanCsv(src.text, (r) => tb.push(r));
+      /* G64 (R1): the delimiter is the document's own reader's (csv-reader's signature over the head of the text): a comma, semicolon, tab
+         or pipe; none found reads as a comma, as before. The canonical bytes stay comma RFC 4180, so one table has one sha. */
+      const win = delimiterWindow(src.text);
+      const sig = delimiterSignature(win);
+      /* R45 (cause 19): a reading's own tab-joined text is cut at tabs; any other text whose delimiter is tied is refused, never read as a comma */
+      const tab = src.own && tabJoined(win);
+      if (!tab && !sig.delimiter && sig.undetermined === "delimiter_undetermined_tied" && names.length > 1)
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_delimiter_is_tied", "the source's delimiter could not be told ({tied} fit its lines equally), so it is not read as a table. Nothing was written.", { tied: sig.tied.join(", ") }),
+          { content_id: contentId, delimiter: null, tied: sig.tied, columns_expected: names.length });
+      const delimiter = tab ? "\t" : sig.delimiter || ",";
+      let widest = 0;
+      const sc = scanCsv(src.text, (r) => { if (r.length > widest) widest = r.length; tb.push(r); }, delimiter);
       src.text = null;
       if (sc.error) return no("SOURCE_NOT_READ", `the source does not read as CSV: ${sc.error}. Nothing was written.`, { content_id: contentId });
+      /* a source no line of which splits into the declared columns under any delimiter found (one cell per line, or every line short) would be
+         held as a table of undetermined cells, accepted silently; it is refused instead. A short row among full ones is R45's, padded. */
+      const delimiterName = tab ? "tab" : sig.name ?? null;
+      if (names.length > 1 && widest === 1)
+        return no("SOURCE_NOT_READ", localize("calculations.index.the_source_reads_as_one", "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", { delimiter: String(delimiterName || "none"), columns: String(names.length) }),
+          { content_id: contentId, delimiter: delimiterName, columns_expected: names.length });
+      if (names.length > 1 && widest < names.length)
+        return no("SOURCE_NOT_READ", localize("calculations.index.no_line_splits_into", "no line of the source splits into the {columns} declared columns (delimiter found: {delimiter}; the widest line has {widest}); check the file's separator or the header you declared. Nothing was written.", { delimiter: String(delimiterName || "none"), columns: String(names.length), widest: String(widest) }),
+          { content_id: contentId, delimiter: delimiterName, columns_expected: names.length });
     }
     const built = tb.finish();
     if (built.fault) return no("BAD_SCHEMA", `the source does not fit the declared header: ${built.fault.why}. Nothing was written.`, { field: built.fault.field });
-    if (built.tooLarge) return no("TABLE_TOO_LARGE", built.tooLarge.bound === "cells"
-      ? `the table holds over ${TABLE_MAX_CELLS} cells, the bound. Nothing was written.`
-      : `the canonical table is over ${TABLE_MAX_BYTES} bytes (20 MiB), the bound. Nothing was written.`, { bound: built.tooLarge.bound, max: built.tooLarge.max });
+    if (built.tooLarge) return this.#tooLarge(built.tooLarge);
     const bytes = built.bytes;
     const tableSha = built.sha;
-    const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
-    if (held) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+    const held = this.#one(`SELECT sha, roles_json, schema_json FROM calc_tables WHERE sha=?`, tableSha);
+    if (held) {
+      /* R1 (K5148): the key is the bytes; a declaration of held bytes with other roles or schema replaces the held ones and says so, facts
+         already written staying. Roles left out ask for no change. */
+      const replaced = [];
+      if (roles && canonicalJson(parse(held.roles_json)) !== canonicalJson(roles)) replaced.push("roles");
+      if (canonicalJson(parse(held.schema_json)) !== canonicalJson(schema)) replaced.push("schema");
+      if (!replaced.length) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+      const out = this.record.transact(() => {
+        this.sql.exec(`UPDATE calc_tables SET roles_json=?, schema_json=?, undetermined_json=?, undetermined_count=? WHERE sha=?`,
+          roles ? json(roles) : held.roles_json, json(schema), json(built.undetermined), built.count, tableSha);
+        if (replaced.includes("schema")) this.#stale(tableSha, "table_replaced");
+        return { ok: true };
+      });
+      if (!out.ok) return out;
+      this.#tableCache.delete(tableSha);   /* its typed rows were read under the schema just replaced */
+      return { ok: true, replaced, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
+    }
     const ev = this.record.evidenceStore();
-    if (!ev) return no("NO_EVIDENCE_STORE", "your group's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no("NO_EVIDENCE_STORE", localize("calculations.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written."));
     try { await ev.put(tableSha, bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
     const at = this.now();
     const superseded = vintage && vintage.supersedes ? vintage.supersedes : null;
@@ -463,12 +778,10 @@ export class Calculations {
       this.sql.exec(`INSERT INTO calc_tables (sha, bundle_id, source_json, schema_json, header_json, roles_json, vintage_key,
                        vintage_json, superseded_by, rows, bytes, undetermined_json, undetermined_count, declared_by, declared_at)
                      VALUES (?,?,?,?,?,?,?,?,NULL,?,?,?,?,?,?)`,
-        tableSha, row.bundle_id ?? null, json({ content_id: contentId, capture_sha: row.capture_sha, extent_kind: row.extent_kind, engine: src.engine ?? null }),
+        tableSha, row.bundle_id ?? null, json({ content_id: contentId, capture_sha: row.capture_sha, extent_kind: row.extent_kind, engine: src.engine ?? null, ...(src.sheet ? src.sheet : {}) }),
         json(schema), json(names), roles ? json(roles) : null, vintage ? vintage.key.trim() : null, vintage ? json(vintage) : null,
         built.rows, bytes.byteLength, json(built.undetermined), built.count, by, at);
-      const text = new TextDecoder().decode(bytes);
-      for (let k = 0, i = 0; i < text.length; k++, i += TEXT_CHUNK)
-        this.sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?,?,?,?)`, tableSha, k, row.bundle_id ?? null, text.slice(i, i + TEXT_CHUNK));
+      this.#putChunks(tableSha, row.bundle_id ?? null, bytes);
       if (superseded) {
         this.sql.exec(`UPDATE calc_tables SET superseded_by=? WHERE sha=? AND superseded_by IS NULL`, tableSha, superseded);
         this.#stale(superseded, "table_superseded");
@@ -479,11 +792,33 @@ export class Calculations {
     return { ok: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
   }
 
+  /* R1, R46: `TABLE_TOO_LARGE` stating the size and the bound as `READ_BOUNDS` quotes them (`statement`): the cells bound names the cells, the bytes
+     bound the bytes. `{bound, max, got}`: which bound the table broke, its figure and the size measured. */
+  #tooLarge({ bound, got }) {
+    const st = statement("table", bound === "cells" ? "cells" : "bytes", got);
+    const text = bound === "cells"
+      ? localize("calculations.index.table_over_cells_bound", "the table holds {size} cells, over the bound of {bound} cells. Nothing was written.", { size: String(st.size), bound: String(st.bound) })
+      : localize("calculations.index.table_over_bytes_bound", "the table is {size} bytes, over the bound of {bound} bytes. Nothing was written.", { size: String(st.size), bound: String(st.bound) });
+    return no("TABLE_TOO_LARGE", text, { bound: bound === "cells" ? "cells" : "bytes", max: st.bound, size: st.size, bound_key: st.key });
+  }
+
+  /* R48: the record's chunked copy of a table's canonical bytes, decoded a piece at a time (a piece at most TEXT_CHUNK bytes, so at most that many
+     characters), never the whole text at once; `#heldTableSync` joins the pieces in order. */
+  #putChunks(tableSha, bundleId, bytes) {
+    const dec = new TextDecoder();
+    for (let i = 0, k = 0; i < bytes.byteLength; i += TEXT_CHUNK) {
+      const end = Math.min(bytes.byteLength, i + TEXT_CHUNK);
+      const piece = dec.decode(bytes.subarray(i, end), { stream: end < bytes.byteLength });
+      if (piece === "") continue;
+      this.sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?,?,?,?)`, tableSha, k++, bundleId, piece);
+    }
+  }
+
   #tableAnswer(r) {
     return { sha: r.sha, source: parse(r.source_json), schema: parse(r.schema_json), header: parse(r.header_json),
       roles: parse(r.roles_json), vintage: parse(r.vintage_json), superseded_by: r.superseded_by ?? null, rows: r.rows,
       bytes: r.bytes, undetermined: { count: r.undetermined_count, cells: parse(r.undetermined_json) || [],
-        why: "a cell that does not read as its column's declared type is held as written and counted undetermined, never coerced" },
+        why: word("calculations.why.cell_read_column") },
       declared_by: r.declared_by, declared_at: r.declared_at };
   }
 
@@ -525,9 +860,10 @@ export class Calculations {
     return this.#fromText(tableSha, text);
   }
 
-  /** R1: `readTable({sha, viewer, limit?, after?})`: the table's declaration and a page of its rows. A table whose
-   *  source the viewer may not see answers as an absent one. */
-  async readTable({ sha: tableSha = null, viewer = null, limit = 100, after = 0 } = {}) {
+  /** R1, R48: `readTable({sha, viewer, limit?, after?, rows?})`: the table's declaration and a page of its rows, only that page read (the rest of its
+   *  text is scanned past, never built into rows). `table.rows` holds the page's rows as objects; `rows: "all"` asks for every row there, as a caller
+   *  that binds the whole table (`workbooks`) does. A table whose source the viewer may not see answers as an absent one. */
+  async readTable({ sha: tableSha = null, viewer = null, limit = 100, after = 0, rows: want = null } = {}) {
     if (!str(tableSha)) return no("NO_TABLE", "a table is read by its sha256.");
     const r = this.#one(`SELECT * FROM calc_tables WHERE sha=?`, str(tableSha));
     if (!r || !this.#seesTable(r, viewer)) return { ok: true, found: false, sha: str(tableSha) };
@@ -535,18 +871,20 @@ export class Calculations {
     const from = Math.max(0, Number.isInteger(Number(after)) ? Number(after) : 0);
     const t = await this.#heldTable(r.sha);
     const header = parse(r.header_json);
-    const rows = t ? [...t.objects()].map((x) => Object.fromEntries(header.map((h) => [h, String(x[h] ?? "")]))) : null;
+    const all = want === "all";
+    const asked = t ? (all ? t.page(0, Number.MAX_SAFE_INTEGER) : t.page(from, lim)) : null;
+    const rows = asked ? (all ? asked : asked).map((row) => Object.fromEntries(header.map((h, k) => [h, row[k]]))) : null;
     const src = parse(r.source_json);
     const crow = src ? this.content.contentRow(src.content_id) : null;
     let cg = null;
     try { cg = crow ? this.provenance.captureGrade(crow.capture_sha) : null; } catch { cg = null; }
+    await this.#warmTable(r);
     const g = this.#tableGrade(r);
     return { ok: true, found: true, ...this.#tableAnswer(r),
       table: { sha: r.sha, fields: parse(r.schema_json).fields, rows,
         grade_facts: { capture_grade: cg && isGrade(cg.grade) ? cg.grade : null, derivation: crow && isGrade(crow.derivation_cap) ? crow.derivation_cap : null,
           grade: g.grade, why: g.why, engine: g.engine, engine_measured: g.engine_measured, ...(g.derivation_step ? { derivation_step: g.derivation_step } : {}) } },
-      page: t ? { after: from, limit: lim, rows: rows.slice(from, from + lim).map((x) => header.map((h) => x[h])),
-        truncated: from + lim < rows.length } : { rows: null, why: "the table's bytes are not held in the evidence store" } };
+      page: t ? { after: from, limit: lim, rows: all ? asked.slice(from, from + lim) : asked, truncated: from + lim < r.rows } : { rows: null, why: word("calculations.why.table_bytes_held") } };
   }
 
   /** R3: `tablesAt({key, at, viewer})`: the vintage under `key` valid at `at` (`civil-time.validAt`), or undetermined
@@ -556,7 +894,7 @@ export class Calculations {
     if (!(typeof at === "string" && isCalendarDate(at))) return no("NO_DATE", "name the date, YYYY-MM-DD.");
     const view = this.#view();
     const rows = this.#rows(`SELECT * FROM calc_tables WHERE vintage_key=? ORDER BY sha`, str(key)).filter((r) => this.#seesTable(r, viewer));
-    if (!rows.length) return { ok: true, key: str(key), at, state: "undetermined", table: null, why: `no table is held under the key "${str(key)}"` };
+    if (!rows.length) return { ok: true, key: str(key), at, state: "undetermined", table: null, why: word("calculations.why.table_held_key", { key: String(str(key)) }) };
     const judged = rows.map((r) => {
       const v = parse(r.vintage_json);
       let a;
@@ -568,9 +906,9 @@ export class Calculations {
     const open = judged.filter((j) => j.answer !== "in" && j.answer !== "out");
     const listed = judged.map((j) => ({ sha: j.sha, valid: j.valid, superseded_by: j.superseded_by, at: typeof j.answer === "string" ? j.answer : "undetermined", ...(typeof j.answer === "string" ? {} : { why: j.answer.why }) }));
     if (inside.length === 1 && !open.length) return { ok: true, key: str(key), at, state: "determined", table: inside[0].sha, vintages: listed };
-    const why = inside.length > 1 ? `${inside.length} vintages are each valid on ${at}, and none is chosen between them`
-      : open.length ? `whether ${open.map((j) => j.sha.slice(0, 12)).join(", ")} ${open.length > 1 ? "were" : "was"} valid on ${at} is undetermined: ${open.map((j) => j.answer.why).join("; ")}`
-      : `no vintage under "${str(key)}" is valid on ${at}`;
+    const why = inside.length > 1 ? word("calculations.vintages_valid_none", { inside: String(inside.length), at: String(at) })
+      : open.length ? word("calculations.whether_valid_undetermined", { open: String(open.map((j) => j.sha.slice(0, 12)).join(", ")), open_2: String(open.length > 1 ? "were" : "was"), at: String(at), open_3: String(open.map((j) => reasonText(j.answer.why ?? "")).join("; ")) })
+      : word("calculations.vintage_valid", { key: String(str(key)), at: String(at) });
     return { ok: true, key: str(key), at, state: "undetermined", table: null, why, vintages: listed };
   }
 
@@ -633,16 +971,16 @@ export class Calculations {
     try { g = this.provenance.captureGrade(row.capture_sha); } catch { g = null; }
     const capture = g && isGrade(g.grade) ? g.grade : null;
     const cap = isGrade(row.derivation_cap) ? row.derivation_cap : null;
-    if (!capture) return { grade: null, why: `the capture grade is undetermined${g && g.why ? `: ${g.why}` : ""}` };
+    if (!capture) return { grade: null, why: word("calculations.why.capture_grade_undetermined", { grade: String(g && g.why ? `: ${g.why}` : "") }) };
     const grade = cap ? weaker(capture, cap) : capture;
-    why = cap && grade !== capture ? `capture ${capture}, capped by its derivation at ${cap}` : `capture ${capture}${cap ? `, its derivation capped at ${cap}` : ""}`;
+    why = cap && grade !== capture ? word("calculations.capture_capped_derivation", { capture: String(capture), cap: String(cap) }) : `capture ${capture}${cap ? `, its derivation capped at ${cap}` : ""}`;
     return { grade, why };
   }
 
   /* R4, R9: each input bound for `viewer`. `{ok: false}` with NO_SUCH_INPUT or HYPOTHESIS_NOT_A_FACT, or
      `{bound, hashes, canon, refs, inputs, apart}`: `hashes` each input's SHA-256 of its canonical bytes as it was
      computed over (a table's canonical CSV; else the canonical JSON `canon` holds, null where it cannot be rebuilt). */
-  async #bind(inputs, viewer, { threshold = null } = {}) {
+  async #bind(inputs, viewer, { threshold = null, pending = null } = {}) {
     const KINDS = ["table", "money", "figure", "value", "calculation", "set", "draw"];
     const hyps = [];
     for (const inp of inputs) for (const s of stringsIn(inp)) if (isHypothesisId(s)) hyps.push(s);
@@ -665,6 +1003,7 @@ export class Calculations {
         if (!r || !this.#seesTable(r, viewer)) { missing(inp.name, String(ref)); break; }
         const t = await this.#heldTable(r.sha);
         if (!t) { missing(inp.name, r.sha); break; }
+        await this.#warmTable(r);
         const g = this.#tableGrade(r);
         /* R1, R4: bound as calc-grammar's streamed table (its R22), its bytes the table's own canonical CSV */
         bound[inp.name] = t.streamed(); hashes[inp.name] = r.sha; refs.push({ name: inp.name, kind, ref: r.sha });
@@ -679,26 +1018,27 @@ export class Calculations {
         for (const id of ids) refs.push({ name: inp.name, kind, ref: id });
         apart.withdrawn.push(...m.withdrawn.map((w) => ({ input: inp.name, ...w })));
         described.push({ name: inp.name, kind, ref: ids, facts: m.facts.map((f) => f.fact_id), grade: m.grade,
-          why: m.grade ? `the weakest reading grade of its money facts is ${m.grade}` : "no money fact states its reading grade" });
+          why: m.grade ? word("calculations.why.weakest_reading_grade", { grade: String(m.grade) }) : word("calculations.why.money_fact_states") });
       } else if (kind === "figure") {
         const row = typeof ref === "string" ? this.content.contentRow(ref) : null;
         if (!row || !this.#sees(row.bundle_id, viewer)) { missing(inp.name, String(ref)); break; }
         let text = null;
-        if (row.extent_kind === "sheet-cell") { const c = this.content.cellsAt(ref); text = c && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
+        if (row.extent_kind === "sheet-cell") { let c = null; try { c = await this.content.cellsAt(ref); } catch { c = null; } text = c && !c.cells_truncated && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
         else { try { text = this.content.passageText(ref); } catch { text = null; } }
-        const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: "the passage's text is not held" };
+        const mark = await this.#engineFor(row);
+        const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: word("calculations.why.passage_text_held") };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" cites a passage that does not read as one figure: ${f.why}. Nothing was written.`, { input: inp.name, ref }); break; }
         const fig = { ...f }; delete fig.as_read;
         const g = this.#contentGrade(row);
-        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref });
+        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref, engine: mark });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: g.grade, why: g.why });
       } else if (kind === "value") {
-        const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: "a typed figure is text" };
+        const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: word("calculations.why.typed_figure_text") };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" is not a figure: ${f.why}. Nothing was written.`, { input: inp.name }); break; }
         const fig = { ...f }; delete fig.as_read;
         bound[inp.name] = fig; held(inp.name, { value: fig });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: TESTIMONY, unbound: true,
-          why: "a figure typed with no cited source is unbound, and an unbound input is testimony (D)" });
+          why: word("calculations.why.figure_typed_cited") });
       } else if (kind === "calculation") {
         const c = typeof ref === "string" && CALC_RE.test(ref) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, ref) : null;
         if (!c || !this.#visible(c, viewer)) { missing(inp.name, String(ref)); break; }
@@ -709,25 +1049,26 @@ export class Calculations {
         else if (plain(v) && plain(v.value) && v.numerator !== undefined) b = v.value;
         else if (plain(v) && (typeof v.value === "string" || typeof v.low === "string" || v.undetermined)) b = v;
         if (!b) { refused = no("FIGURE_NOT_READ", `the calculation "${ref}" answers no figure or table an input can take. Nothing was written.`, { input: inp.name, ref }); break; }
+        await this.#warmEngines(c);
         const axis = this.#gradeFacts(c);
         /* its bytes: the canonical JSON its result key is the SHA-256 of (calc-grammar R15), from its own inputs' hashes */
         const pre = parse(c.input_shas_json);
         const text = pre ? canonicalJson({ recipe: parse(c.recipe_json), inputs: pre, method_version: c.method_version }) : null;
         bound[inp.name] = b; hashes[inp.name] = c.result_key; canon[inp.name] = text && sha256HexSync(text) === c.result_key ? text : null;
         refs.push({ name: inp.name, kind, ref });
-        described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: `its own capture axis: ${axis.capture.why}` });
+        described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: word("calculations.why.capture_axis", { why: String(axis.capture.why) }) });
       } else if (kind === "set") {
-        const s = typeof ref === "string" ? this.#one(`SELECT * FROM calc_sets WHERE set_sha=?`, ref) : null;
+        const s = typeof ref === "string" ? this.#one(`SELECT * FROM calc_sets WHERE set_sha=?`, ref) || (pending && pending.get(ref)) || null : null;
         if (!s || !this.#sees(s.project, viewer)) { missing(inp.name, String(ref)); break; }
         const ids = parse(s.ids_json) || [];
         const seen = ids.filter((id) => this.#sees(id, viewer));
-        if (seen.length !== ids.length) apart.out_of_view.push({ input: inp.name, count: ids.length - seen.length, why: "members of the frozen set out of your view at evaluation, counted apart and never as zero" });
+        if (seen.length !== ids.length) apart.out_of_view.push({ input: inp.name, count: ids.length - seen.length, why: word("calculations.why.members_frozen_set") });
         bound[inp.name] = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
         held(inp.name, ids);
         if (hashes[inp.name] !== s.set_sha) { hashes[inp.name] = s.set_sha; canon[inp.name] = null; }
         refs.push({ name: inp.name, kind, ref: s.set_sha });
         described.push({ name: inp.name, kind, ref: s.set_sha, n: ids.length, grade: null, not_graded: true,
-          why: "a frozen set of the record's own ids carries no capture grade; the method that froze it is disclosed" });
+          why: word("calculations.why.frozen_set_record") });
       } else {
         const d = typeof ref === "string" ? this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, ref) : null;
         if (!d || !this.#sees(d.project, viewer)) { missing(inp.name, String(ref)); break; }
@@ -754,18 +1095,18 @@ export class Calculations {
           table = { fields: t.fields, rows: sample.map((k) => at.get(Number(k))).filter(Boolean) };
         } else {
           const seen = sample.filter((id) => this.#sees(id, viewer));
-          if (seen.length !== sample.length) apart.out_of_view.push({ input: inp.name, count: sample.length - seen.length, why: "drawn members out of your view at evaluation, counted apart" });
+          if (seen.length !== sample.length) apart.out_of_view.push({ input: inp.name, count: sample.length - seen.length, why: word("calculations.why.drawn_members_view") });
           table = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
         }
         bound[inp.name] = table; held(inp.name, { set: d.set_sha, kind: d.set_kind, seed: d.seed, n: d.n, method: d.method });
         if (hashes[inp.name] !== d.draw_key) { hashes[inp.name] = d.draw_key; canon[inp.name] = null; }
         refs.push({ name: inp.name, kind, ref: d.draw_key });
         described.push({ name: inp.name, kind, ref: d.draw_key, draw: { frame_size: d.frame_size, n: d.n, seed: d.seed, method: d.method, set: d.set_sha, question: null },
-          grade: null, not_graded: true, why: "a recorded draw is graded as the set it was drawn from; the draw itself is a mechanical, reproducible step" });
+          grade: null, not_graded: true, why: word("calculations.why.recorded_draw_graded") });
       }
     }
     if (refused) return refused;
-    if (hyps.length) return no("HYPOTHESIS_NOT_A_FACT", `"${hyps[0]}" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.`, { hypothesis: hyps[0] });
+    if (hyps.length) return no("HYPOTHESIS_NOT_A_FACT", localize("calculations.index.v1_is_a_hypothesis_hunches", "\"{v1}\" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.", { v1: String(hyps[0]) }), { hypothesis: hyps[0] });
     return { ok: true, bound, hashes, canon, refs, inputs: described, apart };
   }
 
@@ -784,7 +1125,7 @@ export class Calculations {
       if (!row || !this.#sees(row.bundle_id, viewer)) return no("BAD_THRESHOLD", "the threshold's cited figure is not held, or is not one you may see. Nothing was written.");
       let text = null;
       try { text = this.content.passageText(threshold.figure); } catch { text = null; }
-      const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: "its text is not held" };
+      const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: word("calculations.why.text_held") };
       if (f.refused) return no("BAD_THRESHOLD", `the threshold's cited passage is not one figure: ${f.why}. Nothing was written.`);
       fig = { ...f }; delete fig.as_read; as_read = f.as_read; contentRef = threshold.figure; grade = this.#contentGrade(row).grade;
     }
@@ -793,7 +1134,7 @@ export class Calculations {
       const standards = this.dep("standards");
       const dates = period.key ? [] : [period.from, period.to].filter(Boolean);
       if (!standards || typeof standards.inForceAt !== "function" || !dates.length)
-        standing = { state: "undetermined", why: !dates.length ? "the calculation's period is a key with no stated dates, so whether the standard was in force for it is undetermined" : "the standards module is not reachable here, so whether the standard was in force is undetermined" };
+        standing = { state: "undetermined", why: !dates.length ? word("calculations.why.calculation_period_key") : word("calculations.why.standards_module_reachable_whether") };
       else {
         const answers = dates.map((date) => { try { return standards.inForceAt({ standard: threshold.standard, ...(threshold.portion ? { portion: threshold.portion } : {}), date, viewer }); } catch (e) { return { state: "undetermined", why: String(e && e.message || e) }; } });
         const refused = answers.find((a) => a && a.ok === false);
@@ -801,7 +1142,7 @@ export class Calculations {
         const notIn = answers.find((a) => a && a.state === "not_in_force");
         if (notIn) return no("THRESHOLD_NOT_IN_FORCE", `the standard cited as the threshold was not in force for the calculation's period: ${notIn.why}. Nothing was written.`, { standard: threshold.standard });
         const open = answers.find((a) => !a || a.state !== "in_force");
-        standing = open ? { state: "undetermined", why: open && open.why ? open.why : "the standards module gave no answer" }
+        standing = open ? { state: "undetermined", why: open && open.why ? open.why : word("calculations.why.standards_module_gave") }
           : { state: "in_force", why: answers.map((a) => a.why).filter(Boolean).join("; ") };
       }
     }
@@ -821,19 +1162,19 @@ export class Calculations {
         const end = (role, col) => roles.some(([c, r]) => c === col && r.role === role);
         if (d && end("crosswalk_from", st.crosswalk.left) && end("crosswalk_to", st.crosswalk.right)) continue;
       }
-      return no("JOIN_NOT_BY_IDENTIFIER", `the join "${st.as}" is not keyed through an id space (${SPACES.join(", ")}) or a captured crosswalk declared as one (its crosswalk_from and crosswalk_to columns); a join on a name alone is refused (K1452). Nothing was written.`, { step: st.as ?? null });
+      return no("JOIN_NOT_BY_IDENTIFIER", localize("calculations.index.the_join_as_is_not", "the join \"{as}\" is not keyed through an id space ({SPACES}) or a captured crosswalk declared as one (its crosswalk_from and crosswalk_to columns); a join on a name alone is refused (K1452). Nothing was written.", { as: String(st.as), SPACES: String(SPACES.join(", ")) }), { step: st.as ?? null });
     }
     return null;
   }
 
   /* R16–R18: a kind's own conditions over the recipe and its inputs, and the recipe it composes when none is given. */
-  #kindPlan(kind, recipe, terms, described, bound) {
+  #kindPlan(kind, recipe, terms, described, bound, { column = null, part = null } = {}) {
     if (!CALCULATION_KINDS.includes(kind)) return no("UNKNOWN_KIND", `a calculation's kind is one of ${CALCULATION_KINDS.join(", ")}. Nothing was written.`);
     const money = described.filter((d) => d.kind === "money");
     if (kind === "estimate") {
       const draws = described.filter((d) => d.kind === "draw");
       if (!draws.length)
-        return no("ESTIMATE_WITHOUT_DRAW", "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written.");
+        return no("ESTIMATE_WITHOUT_DRAW", localize("calculations.index.a_population_estimate_is_answered", "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written."));
       const asked = draws.find((d) => d.draw.question !== null);
       if (asked) {
         /* R40: an estimate over visits runs its own recipe over the one draw whose items members visited */
@@ -863,7 +1204,7 @@ export class Calculations {
       for (const [d, phase] of [[a, "adopted"], [b, "actual"]]) {
         const phases = [...new Set(bound[d.name].rows.map((r) => r.phase))];
         if (phases.length !== 1 || phases[0] !== phase)
-          return no("BUDGET_INPUTS", `the input "${d.name}" holds facts of phase ${phases.join(", ") || "none"}; it holds only ${phase} facts (each total within one phase, R12). Nothing was written.`);
+          return no("BUDGET_INPUTS", localize("calculations.index.the_input_name_holds_facts", "the input \"{name}\" holds facts of phase {v1}; it holds only {phase} facts (each total within one phase, R12). Nothing was written.", { name: String(d.name), v1: String(phases.join(", ") || "none"), phase: String(phase) }));
       }
       const periods = [...new Set([...bound.adopted.rows, ...bound.actual.rows].map((r) => r.fiscal_period).filter(Boolean))].sort();
       if (!periods.length) return no("BUDGET_INPUTS", "no fiscal period could be read for these facts from the profile's fiscal year. Nothing was written.");
@@ -886,18 +1227,44 @@ export class Calculations {
     if (kind === "ranking") {
       const q = terms ? terms.quantity : undefined;
       if (Array.isArray(q) && q.length > 1)
-        return no("SCORE_NOT_A_FACT", "a ranking orders by one stated, measured quantity; several measures composed into one figure are refused (K1471, K1473). Nothing was written.");
+        return no("SCORE_NOT_A_FACT", localize("calculations.index.a_ranking_orders_by_one", "a ranking orders by one stated, measured quantity; several measures composed into one figure are refused (K1471, K1473). Nothing was written."));
       const quantity = Array.isArray(q) ? q[0] : q;
       if (!str(quantity) || !str(terms.scope) || !terms.period)
         return no("RANKING_TERMS", "a ranking names its quantity, its scope and its period in its terms. Nothing was written.");
       if (JUDGMENT_WORDS.test(String(quantity)))
-        return no("SCORE_NOT_A_FACT", "the quantity named stands for a judgment, not a measured quantity; a figure standing for importance, suspicion, significance or severity never orders a ranking (K1471, K1473). Nothing was written.");
+        return no("SCORE_NOT_A_FACT", localize("calculations.index.the_quantity_named_stands_for", "the quantity named stands for a judgment, not a measured quantity; a figure standing for importance, suspicion, significance or severity never orders a ranking (K1471, K1473). Nothing was written."));
       if (!recipe || !Array.isArray(recipe.steps)) return null;
       const last = recipe.steps.find((s) => plain(s) && s.as === recipe.output);
       if (!last || last.op !== "sort") return no("NOT_A_RANKING", "a ranking's answer is a sort by its one stated quantity. Nothing was written.");
       return { ok: true, recipe, ranking: { quantity: str(quantity), scope: str(terms.scope), period: terms.period } };
     }
+    if (BUILT_IN_KINDS.includes(kind) && (recipe === null || recipe === undefined)) return this.#defaultRecipe(kind, described, bound, column, part);
     return recipe ? { ok: true, recipe } : null;
+  }
+
+  /* R4 (K5131): the recipe a built-in kind composes when none is given, in the closed grammar, over its one input table: `count` over its rows;
+     `total` the sum of the stated `column`; `share`, `ratio` and `difference` over the rows whose `column` equals the stated `part` and the rows that
+     do not (a share of the rows, a ratio of the first to the second, their difference). A column (or a part) not stated is refused naming it. */
+  #defaultRecipe(kind, described, bound, column, part) {
+    const t = described.length === 1 ? bound[described[0].name] : null;
+    if (!plain(t) || !Array.isArray(t.fields))
+      return no("KIND_INPUTS", localize("calculations.index.a_kind_without_a_recipe", "a {kind} calculation without a recipe is worked out over one table; the input given is not one. Nothing was written.", { kind: String(kind) }));
+    const name = described[0].name;
+    const input = { name, kind: "table" };
+    if (kind === "count") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [{ op: "count", from: name, as: "count" }], output: "count" } };
+    const col = str(column);
+    if (!col) return no("NO_COLUMN", localize("calculations.index.the_column_is_not_stated", "a {kind} is worked out over a column of the table, and none is stated; name the column. Nothing was written.", { kind: String(kind) }), { field: "column" });
+    if (!t.fields.some((f) => f.name === col))
+      return no("NO_SUCH_COLUMN", localize("calculations.index.the_table_has_no_such_column", "the table has no column \"{column}\". Nothing was written.", { column: col }), { field: "column" });
+    if (kind === "total") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [{ op: "sum", from: name, field: col, as: "total" }], output: "total" } };
+    const value = typeof part === "string" ? part.trim() : Number.isSafeInteger(part) ? part : "";
+    if (value === "") return no("NO_PART", localize("calculations.index.the_part_is_not_stated", "a {kind} is of the rows whose {column} is one value, and none is stated; name the part. Nothing was written.", { kind: String(kind), column: col }), { field: "part" });
+    const rows = (test, as) => ({ op: "select", from: name, where: [{ field: col, test, value }], as });
+    if (kind === "share") return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [rows("eq", "part_rows"), { op: "share", part: "part_rows", whole: name, as: "share" }], output: "share" } };
+    return { ok: true, recipe: { method: METHOD, inputs: [input], steps: [rows("eq", "part_rows"), rows("ne", "other_rows"),
+      { op: "count", from: "part_rows", as: "part_count" }, { op: "count", from: "other_rows", as: "other_count" },
+      kind === "ratio" ? { op: "ratio", numerator: "part_count", denominator: "other_count", as: "ratio" }
+        : { op: "difference", a: "part_count", b: "other_count", as: "difference" }], output: kind } };
   }
 
   /* R33–R36: what a recipe of application reads beside its inputs (a change's date, a target, a provision), then its
@@ -920,15 +1287,15 @@ export class Calculations {
         const from = plain(r.period) ? r.period.from : null;
         const day = typeof from === "string" ? from.slice(0, 10) : null;
         if (!isCalendarDate(day ?? "")) return no("CHANGE_DATE_UNDETERMINED", "the standard's version states no date its period starts from, so before and after cannot be told apart. Nothing was written.", { standard: ch.standard });
-        ctx.change = { date: day, rests_on: { standard: str(ch.standard), period: r.period, says: `the version's period starts ${day}, as the standard is held` } };
-      } else if (isCalendarDate(ch.date ?? "")) ctx.change = { date: ch.date, rests_on: { says: `the date ${ch.date}, as the member named it` } };
-      else return no("NO_CHANGE", "the change is {standard} or {date: YYYY-MM-DD}. Nothing was written.");
+        ctx.change = { date: day, rests_on: { standard: str(ch.standard), period: r.period, says: word("calculations.says.version_period_starts", { day: String(day) }) } };
+      } else if (isCalendarDate(ch.date ?? "")) ctx.change = { date: ch.date, rests_on: { says: word("calculations.says.date_member_named", { date: String(ch.date) }) } };
+      else return no("NO_CHANGE", localize("calculations.index.the_change_is_a_held", "the change is a held standard's version or a date (YYYY-MM-DD). Nothing was written."));
     }
     if (kind === "target_met") {
       const r = read(t.target);
       if (!r) return noStandard(t.target, "the target");
       const tg = plain(r.target) ? r.target : null;
-      if (!tg || !plain(tg.threshold)) return no("NO_TARGET", "the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written.", { standard: t.target });
+      if (!tg || !plain(tg.threshold)) return no("NO_TARGET", localize("calculations.index.the_standard_holds_no_target", "the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written."), { standard: t.target });
       const f = parseFigure(String(tg.threshold.value ?? ""));
       if (f.refused) return no("NO_TARGET", `the target's threshold is not a figure: ${f.why}. Nothing was written.`, { standard: t.target });
       if (!str(t.body)) return no("BAD_TERMS", "target_met names the body measured. Nothing was written.", { field: "body" });
@@ -942,9 +1309,9 @@ export class Calculations {
       if (!r) return noStandard(pv.standard, "the provision");
       let measure = false;
       try { measure = standards && typeof standards.isMeasure === "function" ? standards.isMeasure(str(pv.standard), viewer) === true : false; } catch { measure = false; }
-      if (!measure) return no("PROVISION_NOT_A_MEASURE", `the provision's standard is held ${r.held ?? "without its text"}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.`, { standard: str(pv.standard), held: r.held ?? null });
+      if (!measure) return no("PROVISION_NOT_A_MEASURE", localize("calculations.index.the_provisions_standard_is_held", "the provision's standard is held {v1}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.", { v1: String(r.held ?? "without its text") }), { standard: str(pv.standard), held: r.held ?? null });
       const date = period && !period.key ? period.to || period.from : null;
-      let standing = { state: "undetermined", why: "the calculation's period states no date, so the version in force is undetermined" };
+      let standing = { state: "undetermined", why: word("calculations.why.calculation_period_states") };
       if (date) {
         try { standing = standards.inForceAt({ standard: str(pv.standard), ...(pv.portion ? { portion: pv.portion } : {}), date, viewer }) || standing; } catch (e) { standing = { state: "undetermined", why: String(e && e.message || e) }; }
         if (standing.state === "not_in_force") return no("THRESHOLD_NOT_IN_FORCE", `the provision was not in force for the calculation's period: ${standing.why}. Nothing was written.`, { standard: str(pv.standard) });
@@ -953,7 +1320,7 @@ export class Calculations {
       try { const fs = typeof standards.forcesOf === "function" ? standards.forcesOf({ standard: str(pv.standard), viewer }) : null; force = fs && Array.isArray(fs.forces) ? fs.forces.find((x) => plain(x) && x.portion === (pv.portion ?? null)) || null : null; } catch { force = null; }
       ctx.provision = { standard: str(pv.standard), portion: pv.portion ?? null, version: standing.version ?? str(pv.standard),
         standing: { state: standing.state, why: standing.why ?? null }, force, held: r.held ?? "text",
-        says: "the provision at its version in force for the period, beside the measured practice" };
+        says: word("calculations.says.provision_version_force") };
     }
     const c = composeApplication(kind, t, b.bound, ctx);
     if (!c.ok) return c;
@@ -965,7 +1332,7 @@ export class Calculations {
         let st = null;
         try { st = standards.inForceAt({ standard: ctx.target.standard, date: p.to, viewer }); } catch { st = null; }
         if (st && st.state === "not_in_force") return no("THRESHOLD_NOT_IN_FORCE", `the target was not in force for the period ending ${p.to}: ${st.why}. Nothing was written.`, { standard: ctx.target.standard });
-        p.standing = st ? { state: st.state, why: st.why ?? null } : { state: "undetermined", why: "the standards module gave no answer" };
+        p.standing = st ? { state: st.state, why: st.why ?? null } : { state: "undetermined", why: word("calculations.why.standards_module_gave") };
       }
     }
     return { ok: true, recipe: c.recipe, application: { plan: c.plan, ctx, terms: t }, extra: c.extra || null };
@@ -973,13 +1340,13 @@ export class Calculations {
 
   /* R35: `standards.bindsAt` for the body measured on a day, as `{state, why, body}`: binds, benchmark or undetermined. */
   #bindsAt(standard, body, date, viewer) {
-    if (!isCalendarDate(date ?? "")) return { state: "undetermined", why: "the period states no last day, so whether the target binds the body is undetermined", body };
+    if (!isCalendarDate(date ?? "")) return { state: "undetermined", why: word("calculations.why.period_states_last"), body };
     const standards = this.dep("standards");
     let r = null;
     try { r = standards && typeof standards.bindsAt === "function" ? standards.bindsAt({ standard, body, date, viewer }) : null; } catch (e) { r = { state: "undetermined", why: String(e && e.message || e) }; }
     const state = r ? (r.state ?? r.answer ?? r.bindingness) : null;
     if (state === "binds" || state === "benchmark") return { state, why: r.why ?? null, rests_on: r.rests_on ?? null, body };
-    return { state: "undetermined", why: (r && r.why) || "the standards module gave no answer on whether the target binds the body", body };
+    return { state: "undetermined", why: (r && r.why) || word("calculations.why.standards_module_gave_answer"), body };
   }
 
   /* R17: a measure across mixed kinds of link: the table a ranking's grouped measure counts holds rows of more than
@@ -1002,21 +1369,21 @@ export class Calculations {
       }
       const kinds = [...seen];
       if (kinds.length > 1)
-        return no("SCORE_NOT_A_FACT", `the ranking counts rows of ${kinds.length} kinds (${kinds.slice(0, 5).join(", ")}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.`, { field: f });
+        return no("SCORE_NOT_A_FACT", localize("calculations.index.the_ranking_counts_rows_of", "the ranking counts rows of {length} kinds ({kinds}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.", { length: String(kinds.length), kinds: String(kinds.slice(0, 5).join(", ")) }), { field: f });
     }
     return null;
   }
 
   /* The whole computation of R4–R7, R12, R15–R18, for `create` and `evaluate`: refusals in R4's order, else what
      `create` stores. */
-  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, viewer, requireKind = true }) {
+  async #compute({ kind = null, recipe = null, inputs = null, threshold = null, period = null, terms = null, column = null, part = null, viewer, requireKind = true, pending = null }) {
     if (!Array.isArray(inputs) || !inputs.length) return no("NO_INPUTS", "a calculation names its inputs: declared tables, money facts, cited figures, other calculations or frozen sets. Nothing was written.");
-    const b = await this.#bind(inputs, viewer, { threshold });
+    const b = await this.#bind(inputs, viewer, { threshold, pending });
     if (!b.ok) return b;
     const th = this.#threshold(threshold, period || {}, viewer);
     if (!th.ok) return th;
     const plan = kind === null && !requireKind ? null : APPLICATION_KINDS.includes(kind)
-      ? this.#applicationPlan(kind, recipe, terms, b, viewer, period || {}) : this.#kindPlan(kind, recipe, terms, b.inputs, b.bound);
+      ? this.#applicationPlan(kind, recipe, terms, b, viewer, period || {}) : this.#kindPlan(kind, recipe, terms, b.inputs, b.bound, { column, part });
     if (plan && !plan.ok) return plan;
     const r = plan && plan.recipe ? plan.recipe : recipe;
     if (plain(r)) {
@@ -1053,7 +1420,7 @@ export class Calculations {
       if (s && s.ok === false && sums.some((x) => x.from === d.name))
         return no(s.reason || s.refused || s.code, `${s.detail || s.why || "the money facts cannot be summed"} (money's summation rule). Nothing was written.`, { input: d.name, ...(s.facts ? { facts: s.facts } : {}) });
       if (s && s.ok && Array.isArray(s.interfund) && s.interfund.length) interfund.push({ input: d.name, transfers: s.interfund,
-        says: "the total includes transfers between funds, flagged so a total across funds can net them" });
+        says: word("calculations.says.total_includes_transfers") });
     }
     const e = evaluateRecipe(r, bound, opts);
     /* R4 (K1734): a table result answered streamed is stored and answered as the same table of row objects */
@@ -1066,8 +1433,8 @@ export class Calculations {
       ...(b.apart.out_of_view.length && { out_of_view: b.apart.out_of_view }),
       ...(interfund.length && { interfund }),
       says: e.undetermined_rows || b.apart.out_of_view.length || b.apart.withdrawn.length
-        ? "values that could not be counted are counted apart and stated here, never as zero"
-        : "every value was counted" };
+        ? word("calculations.says.values_counted_counted")
+        : word("calculations.says.value_counted") };
     if (plain(e.result) && e.result.relation !== undefined) results.label = "computed fact";
     if (plan && plan.unit) results.unit = plan.unit;
     if (plan && plan.ranking) results.ranking = { ...plan.ranking, could_not_count: e.undetermined_rows };
@@ -1077,7 +1444,7 @@ export class Calculations {
         return { fiscal_period: p, adopted: at(`adopted_total_${i}`), actual: at(`actual_total_${i}`), difference: at(`difference_${i}`), comparison: at(`comparison_${i}`) };
       });
       results.bases = plan.bases;
-      results.bases_says = `adopted on ${plan.bases.adopted.join(", ")} basis; actual on ${plan.bases.actual.join(", ")} basis`;
+      results.bases_says = word("calculations.adopted_basis_actual", { adopted: String(plan.bases.adopted.join(", ")), actual: String(plan.bases.actual.join(", ")) });
     }
     if (kind === "estimate" && plan && plan.visits) {
       /* R40: share_judged, the interval over the judged items, estimate_count, what was counted apart, the assumption */
@@ -1095,27 +1462,27 @@ export class Calculations {
       results.share_judged = share;
       results.interval = { low: iv.low, high: iv.high, low_share: divide(fig(iv.low), fig(N), RATIO_DEFAULT), high_share: divide(fig(iv.high), fig(N), RATIO_DEFAULT),
         confidence, frame_size: N, sample_size: judged, successes: yes, method: iv.method, seed: plan.visits.draw.seed,
-        says: `low and high are counts of the set's ${N} items, and beside them shares of it, over the ${judged} drawn items judged` };
+        says: word("calculations.says.low_high_counts", { n: String(N), judged: String(judged) }) };
       results.estimate_count = multiply(share.value, fig(N));
       results.counted_apart = { could_not_tell: at("could_not_tell"), disagree: at("disagree"), not_visited: at("not_visited"), steps: counted,
-        says: "drawn items that could not be judged, counted apart by their reason, never as no and never as zero" };
+        says: word("calculations.says.drawn_items_judged") };
       results.assumption = VISIT_ASSUMPTION;
     } else if (kind === "estimate") {
       const dr = b.inputs.find((d) => d.kind === "draw").draw;
       const succ = e.result;
       const x = plain(succ) && succ.precision === "exact" && succ.sign === "+" && /^\d+$/.test(succ.value || "") ? Number(succ.value) : null;
       const confidence = terms && terms.confidence !== undefined ? String(terms.confidence) : "0.95";
-      const iv = x === null ? { refused: "INTERVAL_INVALID", why: "the recipe's answer is not a whole count of successes" }
+      const iv = x === null ? { refused: "INTERVAL_INVALID", why: word("calculations.why.recipe_answer_whole") }
         : interval({ frame_size: dr.frame_size, sample_size: dr.n, successes: x, confidence });
       if (iv.refused) return no(iv.refused, `the estimate's interval cannot be computed: ${iv.why}. Nothing was written.`);
       results.interval = { ...iv, confidence, frame_size: dr.frame_size, sample_size: dr.n, successes: x, seed: dr.seed,
-        says: "an estimate over a recorded random draw, read as a mechanical draw, not the machine choosing what to look into" };
+        says: word("calculations.says.estimate_recorded_random") };
     }
     if (plan && plan.application) {
       const a = plan.application;
       const at = (n) => rowObjects(n === r.output ? e.result : (e.trace.find((x) => x.step === n) || {}).output ?? null);
       const population = b.inputs.filter((d) => d.kind === "table" || d.kind === "calculation").map((d) => (plain(d.source) && d.source.kind === "uses"
-        ? { input: d.name, table: d.ref, filter: d.source.filter, frozen_by: d.source.frozen_by, frozen_at: d.source.frozen_at, says: "the held uses the member could see when frozen: a population, not a census" }
+        ? { input: d.name, table: d.ref, filter: d.source.filter, frozen_by: d.source.frozen_by, frozen_at: d.source.frozen_at, says: word("calculations.says.held_uses_member") }
         : { input: d.name, [d.kind]: d.ref }));
       const body = str(a.terms.body);
       let bodyLabel = null;
@@ -1137,12 +1504,15 @@ export class Calculations {
   /** R4: `create({question, terms, period, inputs, recipe, kind, threshold?, methodNote?, evidences?, project, by})`.
    *  Async (inputs may be read from the evidence store). */
   async create({ question = null, terms = null, period = null, inputs = null, recipe = null, kind = null, threshold = null,
-                 methodNote = null, evidences = null, project = null, by = null } = {}) {
+                 methodNote = null, evidences = null, project = null, column = null, part = null, by = null } = {}) {
     if (!stamped(by)) return no("NO_AUTHOR", "a calculation is recorded under the control plane's stamp. Nothing was written.");
     if (!str(question)) return no("NO_QUESTION", "a calculation states the question it answers. Nothing was written.");
     const p = periodOf(period);
     if (!p) return no("NO_PERIOD", "a calculation states its period: {from, to}, each a date YYYY-MM-DD or null (not both), or a period key. Nothing was written.");
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer: by });
+    const sel = this.#freezeSelections(inputs, by);
+    if (!sel.ok) return sel;
+    inputs = sel.inputs;
+    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, column, part, viewer: by, pending: sel.pending });
     if (!c.ok) return c;
     /* after R4's ordered refusals, the fields it adds: */
     if (project !== null && project !== undefined && (!str(project) || !this.#sees(project, by)))
@@ -1166,6 +1536,10 @@ export class Calculations {
       const id = this.record.allocId("CALC", year);
       if (!id || !id.id) return id && id.ok === false ? id : no("MINT_FAILED", "no calculation id could be drawn. Nothing was written.");
       calcId = id.id;
+      /* R52: a held selection's ids, frozen with the calculation that counts them */
+      for (const f of sel.pending.values())
+        this.sql.exec(`INSERT OR IGNORE INTO calc_sets (set_sha, project, query_json, ids_json, n, frozen_by, frozen_at) VALUES (?,?,?,?,?,?,?)`,
+          f.set_sha, null, f.query_json, f.ids_json, f.n, by, at);
       this.sql.exec(`INSERT INTO calculations (calc_id, project, question, terms_json, period_json, kind, recipe_json, inputs_json,
                        threshold_json, method_version, method_note, evidences_json, result_key, results_json, computed_at,
                        recompute_status, recompute_json, accepted_by, accepted_at, created_by, created_at, input_shas_json)
@@ -1174,8 +1548,8 @@ export class Calculations {
         c.threshold ? json(c.threshold) : null, METHOD, str(methodNote) || null, evidences ? json(evidences) : null,
         c.result_key, json(c.results), at, by, at, json(c.hashes));
       for (const ref of c.refs)
-        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
-          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref);
+        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref, engine_json) VALUES (?,?,?,?,?,?)`,
+          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref, ref.kind === "figure" ? json(ref.engine ?? null) : null);
       if (c.threshold && c.threshold.content)
         this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
           calcId, project ? str(project) : null, "threshold", "figure", c.threshold.content);
@@ -1189,10 +1563,12 @@ export class Calculations {
 
   /** R7: `evaluate({recipe, inputs, viewer, kind?, threshold?, period?, terms?})`: what `create` would store, writing
    *  nothing. */
-  async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null } = {}) {
+  async evaluate({ recipe = null, inputs = null, viewer = null, kind = null, threshold = null, period = null, terms = null, column = null, part = null } = {}) {
     if (!stamped(viewer)) return no("NO_VIEWER", "an evaluation is asked under the control plane's stamp.");
     const p = period === null || period === undefined ? {} : periodOf(period) || {};
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer, requireKind: false });
+    const sel = this.#freezeSelections(inputs, viewer);
+    if (!sel.ok) return { ...sel, detail: String(sel.detail || "").replace(/ Nothing was written\.$/, "") };
+    const c = await this.#compute({ kind, recipe, inputs: sel.inputs, threshold, period: p, terms, column, part, viewer, requireKind: false, pending: sel.pending });
     if (!c.ok) return { ...c, detail: String(c.detail || "").replace(/ Nothing was written\.$/, "") };
     return { ok: true, writes: "nothing", result_key: c.result_key, results: c.results, method_version: METHOD, recipe: c.recipe };
   }
@@ -1327,15 +1703,15 @@ export class Calculations {
     const money = this.dep("money");
     for (const inp of inputs) {
       if (!plain(inp)) continue;
-      if (inp.value !== undefined) { per.push({ name: inp.name, kind: "value", ref: inp.value, grade: TESTIMONY, unbound: true, why: "an unbound input is testimony (D)", engine: null, engine_measured: null }); continue; }
+      if (inp.value !== undefined) { per.push({ name: inp.name, kind: "value", ref: inp.value, grade: TESTIMONY, unbound: true, why: word("calculations.why.unbound_input_testimony"), engine: null, engine_measured: null }); continue; }
       if (inp.table !== undefined) {
         const t = this.#one(`SELECT sha, source_json FROM calc_tables WHERE sha=?`, inp.table);
-        const g = t ? this.#tableGrade(t) : { grade: null, why: "the table's source is not held", engine: null, engine_measured: null };
+        const g = t ? this.#tableGrade(t) : { grade: null, why: word("calculations.why.table_source_held"), engine: null, engine_measured: null };
         per.push({ name: inp.name, kind: "table", ref: inp.table, ...g }); continue;
       }
       if (inp.figure !== undefined) {
         const row = this.content.contentRow(inp.figure);
-        const g = row ? this.#withEngine(this.#contentGrade(row), this.#engineOf(row)) : { grade: null, why: "the cited passage is not held", engine: null, engine_measured: null };
+        const g = row ? this.#withEngine(this.#contentGrade(row), this.#figureEngine(c.calc_id, inp)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
         per.push({ name: inp.name, kind: "figure", ref: inp.figure, ...g }); continue;
       }
       if (inp.money !== undefined) {
@@ -1348,12 +1724,12 @@ export class Calculations {
           const r = fact && plain(fact.grade) ? fact.grade.reading : fact ? fact.grade : null;
           grade = isGrade(r) ? (grade ? weaker(grade, r) : r) : grade;
         }
-        per.push({ name: inp.name, kind: "money", ref: inp.money, grade, why: grade ? `the weakest reading grade of its money facts is ${grade}` : "no reading grade is stated", engine: null, engine_measured: null }); continue;
+        per.push({ name: inp.name, kind: "money", ref: inp.money, grade, why: grade ? word("calculations.why.weakest_reading_grade", { grade: String(grade) }) : word("calculations.why.reading_grade_stated"), engine: null, engine_measured: null }); continue;
       }
       if (inp.calculation !== undefined) {
         const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
         const g = o ? this.#gradeFacts(o).capture : { grade: null, why: "not held" };
-        per.push({ name: inp.name, kind: "calculation", ref: inp.calculation, grade: g.grade, why: `its own capture axis: ${g.why}`, engine: null, engine_measured: null }); continue;
+        per.push({ name: inp.name, kind: "calculation", ref: inp.calculation, grade: g.grade, why: word("calculations.why.capture_axis", { why: String(g.why) }), engine: null, engine_measured: null }); continue;
       }
       if (inp.draw !== undefined) {
         const d = this.#one(`SELECT question FROM calc_draws WHERE draw_key=?`, inp.draw);
@@ -1363,19 +1739,19 @@ export class Calculations {
         }
       }
       per.push({ name: inp.name, kind: inp.set !== undefined ? "set" : "draw", ref: inp.set ?? inp.draw, grade: null, not_graded: true,
-        why: "the record's own ids carry no capture grade; the method that froze or drew them is disclosed", engine: null, engine_measured: null });
+        why: word("calculations.why.record_ids_carry"), engine: null, engine_measured: null });
     }
     const t = parse(c.threshold_json);
     if (t) per.push({ name: "threshold", kind: "threshold", grade: t.grade ?? (t.content ? null : TESTIMONY), ...(t.content ? {} : { unbound: true }),
-      why: t.content ? "the threshold's cited figure" : "a threshold typed with no cited source is testimony (D)", engine: null, engine_measured: null });
+      why: t.content ? word("calculations.why.threshold_cited_figure") : word("calculations.why.threshold_typed_cited"), engine: null, engine_measured: null });
     const graded = per.filter((p) => !p.not_graded);
     const open = graded.filter((p) => !isGrade(p.grade));
     const weakest = graded.filter((p) => isGrade(p.grade)).reduce((g, p) => (g ? weaker(g, p.grade) : p.grade), null);
     const capture = open.length ? { grade: null, why: `undetermined: ${open.map((p) => `${p.name}, ${p.why}`).join("; ")}` }
-      : weakest ? { grade: weakest, why: `the weakest input capture, ${weakest}; recipe arithmetic is not a weakening step` }
-      : { grade: null, why: "no input carries a capture grade" };
+      : weakest ? { grade: weakest, why: word("calculations.why.weakest_input_capture", { weakest: String(weakest) }) }
+      : { grade: null, why: word("strength.stopped.input_carries_capture") };
     return { inputs: per, capture, method: { version: c.method_version, note: c.method_note ?? null, recipe: parse(c.recipe_json),
-      disclosed: true, graded: false, says: "the method is disclosed, not graded" } };
+      disclosed: true, graded: false, says: word("calculations.says.method_disclosed_graded") } };
   }
 
   /** R8–R10: `read({calcId, viewer})`: the stored results, with `computed_at` and the method version, never a
@@ -1384,6 +1760,7 @@ export class Calculations {
     if (!str(calcId)) return no("NO_CALC", "a calculation is read by its id.");
     const c = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId));
     if (!c || !this.#visible(c, viewer)) return { ok: true, found: false, calc_id: str(calcId) };
+    await this.#warmEngines(c);
     const results = parse(c.results_json);
     /* R9: each input's SHA-256 of its canonical bytes as the calculation was computed over them (a table's is its sha;
        a calculation created before T34 recorded no other, so it answers null) */
@@ -1407,7 +1784,7 @@ export class Calculations {
       method_version: c.method_version, method_note: c.method_note ?? null, recompute_status: c.recompute_status,
       recompute: parse(c.recompute_json), accepted_by: c.accepted_by ?? null, accepted_at: c.accepted_at ?? null,
       created_by: c.created_by, created_at: c.created_at, grade: this.#gradeFacts(c),
-      says: "results are recomputed at acceptance, at publication and in the checker, never on a read" };
+      says: word("calculations.says.results_recomputed_acceptance") };
   }
 
   /** R30 (N576): `gradeFactsOf({calcId, viewer})`, synchronously: R9's grade facts as `read` answers them, with whether
@@ -1491,7 +1868,7 @@ export class Calculations {
    *  column of the table carrying that role, or to `{value}`, one value for every row (kind, phase, stage, basis,
    *  currency, period). The payer and payee are columns declared with a way to resolve (an entity scheme or crosswalk). */
   adoptBinding({ table = null, roles = null, by = null } = {}) {
-    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", "a binding is adopted by a member (K1468). Nothing was written.");
+    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", localize("calculations.index.a_binding_is_adopted_by", "a binding is adopted by a member (K1468). Nothing was written."));
     const t = typeof table === "string" ? this.#one(`SELECT * FROM calc_tables WHERE sha=?`, table) : null;
     if (!t || !this.#sees(t.bundle_id, by)) return no("NO_SUCH_TABLE", "no table answers to that sha here, or it is not one you may see. Nothing was written.");
     if (!plain(roles)) return no("BINDING_ROLES", "a binding maps each money role to a column or to one value. Nothing was written.");
@@ -1501,7 +1878,7 @@ export class Calculations {
       if (!MONEY_ROLES.includes(role)) return no("BINDING_ROLES", `"${role}" is not a money role (${MONEY_ROLES.join(", ")}). Nothing was written.`, { role });
       if (typeof v === "string") {
         if (!header.includes(v)) return no("BINDING_ROLES", `the role ${role} names "${v}", not a column of the table. Nothing was written.`, { role });
-        if (!declared[v] || declared[v].role !== role) return no("BINDING_ROLES", `the column "${v}" is not declared with the role ${role}; the table's declaration is the member's (R2). Nothing was written.`, { role });
+        if (!declared[v] || declared[v].role !== role) return no("BINDING_ROLES", localize("calculations.index.the_column_v_is_not", "the column \"{v}\" is not declared with the role {role}; the table's declaration is the member's (R2). Nothing was written.", { v: String(v), role: String(role) }), { role });
       } else if (!(plain(v) && typeof v.value === "string" && v.value.trim() && ["kind", "phase", "stage", "basis", "currency", "period"].includes(role)))
         return no("BINDING_ROLES", `the role ${role} maps to a column, or (for kind, phase, stage, basis, currency, period) to one value. Nothing was written.`, { role });
     }
@@ -1509,6 +1886,18 @@ export class Calculations {
       if (roles[role] === undefined) return no("BINDING_ROLES", `a binding names the role ${role}. Nothing was written.`, { role });
     for (const role of ["amount", "payer", "payee"])
       if (typeof roles[role] !== "string") return no("BINDING_ROLES", `the role ${role} maps to a column. Nothing was written.`, { role });
+    /* R14 (K5148): each constant is asked of money, which reads it when a fact is recorded, so an unreadable one is stated here and not once per row.
+       `money_code` is money's own code for it (`reason` is this refusal's). */
+    const money = this.dep("money");
+    if (money && typeof money.checkConstant === "function")
+      for (const [role, v] of Object.entries(roles)) {
+        if (typeof v === "string") continue;
+        let c = null;
+        try { c = money.checkConstant({ role, value: role === "period" ? moneyPeriod(v.value) : v.value.trim() }); } catch { c = null; }
+        if (c && c.ok === false)
+          return no("BINDING_UNREADABLE", localize("calculations.index.money_cannot_read_the_value", "money cannot read the value given for the role {role} ({why}). Nothing was written.", { role: String(role), why: String(c.detail || c.reason) }),
+            { role, money_code: c.reason ?? c.code ?? null });
+      }
     const key = sha({ table: t.sha, roles });
     if (this.#one(`SELECT 1 AS x FROM calc_bindings WHERE binding_key=?`, key)) return { ok: true, already: true, binding: key, table: t.sha, roles };
     const at = this.now();
@@ -1530,49 +1919,142 @@ export class Calculations {
       adopted_by: b.adopted_by, adopted_at: b.adopted_at };
   }
 
-  /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk. */
-  #resolveParty(spec, value) {
-    if (!value || !String(value).trim()) return { why: "the cell is empty" };
+  /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk.
+     G55: `cache` is the one act's (a Map `ingestMoney` makes at its start and drops at its end): an answer is kept under its column's
+     way to resolve and the trimmed value, so a payer repeated down a table is looked up once. A lookup that threw, or answered a
+     promise, is not an answer and is never kept (a kept null would read as "not registered" for every later row of that payer).
+     At most INGEST_CACHE_MAX answers are kept; a value past it is looked up each time, as before. */
+  #resolveParty(spec, value, cache = null) {
+    if (!value || !String(value).trim()) return { why: word("calculations.why.cell_empty") };
     const entities = this.dep("entities");
+    const at = String(value).trim();
     if (spec.scheme) {
-      let e = null;
-      try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
-      if (e && typeof e.then === "function") e = null;
-      if (plain(e) && e.undetermined) return { why: `"${String(value).slice(0, 64)}" through the scheme ${spec.scheme} is undetermined: ${e.why || "more than one entity"}` };
-      const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
-      return id ? { entity: id } : { why: `"${String(value).slice(0, 64)}" resolves to no registered entity through the scheme ${spec.scheme}` };
+      const key = cache ? `s\u0000${spec.scheme}\u0000${at}` : null;
+      if (key !== null && cache.has(key)) return cache.get(key);
+      let e = null, answered = true;
+      try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: at }) : null; } catch { e = null; answered = false; }
+      if (e && typeof e.then === "function") { e = null; answered = false; }
+      let out;
+      if (plain(e) && e.undetermined) out = { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || word("calculations.why.entity")) }) };
+      else {
+        const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
+        out = id ? { entity: id } : { why: word("calculations.why.resolves_registered_entity", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme) }) };
+      }
+      if (key !== null && answered && cache.size < INGEST_CACHE_MAX) cache.set(key, out);
+      return out;
     }
     if (spec.crosswalk) {
+      const key = cache ? `c\u0000${spec.crosswalk.table}\u0000${spec.crosswalk.from}\u0000${spec.crosswalk.to}\u0000${at}` : null;
+      if (key !== null && cache.has(key)) return cache.get(key);
       const t = this.#heldTableSync(spec.crosswalk.table);
       const hit = [];
-      if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === String(value).trim()) hit.push(String(r[spec.crosswalk.to]).trim());
+      if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === at) hit.push(String(r[spec.crosswalk.to]).trim());
       const ids = [...new Set(hit)];
-      if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
-      return { why: ids.length > 1 ? `"${String(value).slice(0, 64)}" maps to ${ids.length} entities in the crosswalk` : `"${String(value).slice(0, 64)}" is not in the crosswalk, or maps to no entity id` };
+      const out = ids.length === 1 && idPattern("ENT").test(ids[0]) ? { entity: ids[0] }
+        : { why: ids.length > 1 ? word("calculations.why.maps_entities_crosswalk", { value: String(String(value).slice(0, 64)), ids: String(ids.length) }) : word("calculations.why.crosswalk_maps_entity", { value: String(String(value).slice(0, 64)) }) };
+      /* a crosswalk table not held is not an answer about the value */
+      if (key !== null && t && cache.size < INGEST_CACHE_MAX) cache.set(key, out);
+      return out;
     }
-    return { why: "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk" };
+    return { why: localize("calculations.index.an_id_space_normalises", "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk") };
+  }
+
+  /* R14 (K5148): a row whose live fact money already holds (`factBySource`, an indexed read) is not written again: `{notWritten}` naming the held
+     fact, or null. A withdrawn fact is none, so it never blocks its row. */
+  #alreadyWritten(money, ctx, i) {
+    if (typeof money.factBySource !== "function") return null;
+    const held = money.factBySource({ table: ctx.b.table_sha, row: ctx.firstRow === null ? i : ctx.firstRow + i, binding: ctx.b.binding_key });
+    if (!held || held.found !== true || !held.fact_id) return null;
+    return { notWritten: { row: i, reason: "ROW_ALREADY_WRITTEN", fact_id: held.fact_id,
+      detail: localize("calculations.ingest.row_already_written", "this row's money fact {fact} is already held, so a repeat does not write it again", { fact: String(held.fact_id) }) } };
+  }
+
+  /* R14: what one row asks of money, or why it is not written: `{notWritten}` or `{fact}` (a fact money has not yet recorded). */
+  #judgeRow(ctx, i, row, ingest = null) {
+    const { b, roles, declared, resolved } = ctx;   /* ctx.firstRow: R47 */
+    const val = (r, role) => (typeof roles[role] === "string" ? String(r[roles[role]] ?? "").trim() : roles[role] ? roles[role].value : null);
+    const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer], resolved);
+    if (!payer.entity) return { notWritten: { row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why } };
+    const payee = this.#resolveParty(declared[roles.payee] || {}, row[roles.payee], resolved);
+    if (!payee.entity) return { notWritten: { row: i, reason: "PAYEE_NOT_IDENTIFIED", detail: payee.why } };
+    let fund = null;
+    if (typeof roles.fund === "string" && String(row[roles.fund] ?? "").trim()) {
+      const spec = declared[roles.fund] || {};
+      const raw = String(row[roles.fund]).trim();
+      const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw, resolved)
+        : idPattern("ENT").test(raw) ? { entity: raw } : { why: word("calculations.why.names_registered_fund", { raw: String(raw.slice(0, 64)) }) };
+      if (!r.entity) return { notWritten: { row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why } };
+      fund = r.entity;
+    }
+    const asRead = String(row[roles.amount] ?? "");
+    const read = readAmount(asRead, { locale: ctx.locale });
+    if (read.refused) return { notWritten: { row: i, reason: read.refused, detail: read.detail } };
+    const f = read.figure;
+    const currency = f.currency || val(row, "currency") || null;   /* R49: a currency mark in the cell wins over its column's */
+    const unsigned = (d) => String(d).replace(/^-/, "");
+    const range = f.precision === "range" ? (f.sign === "-" ? { low: unsigned(f.high), high: unsigned(f.low) } : { low: f.low, high: f.high }) : null;
+    return { fact: { amount: range || f.value, as_read: asRead, currency, sign: f.sign, precision: f.precision,
+      kind: val(row, "kind"), phase: val(row, "phase"), ...(val(row, "stage") ? { stage: val(row, "stage") } : {}),
+      basis: val(row, "basis"), period: moneyPeriod(val(row, "period")),
+      from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(fund ? { fund } : {}),
+        ...(roles.account ? { account: val(row, "account") } : {}) },
+      to: { entity: payee.entity, as_written: String(row[roles.payee]) },
+      source: { table: b.table_sha, row: ctx.firstRow === null ? i : ctx.firstRow + i, binding: b.binding_key, ...(ingest ? { ingest } : {}) }, method: INGEST_METHOD, by: INGEST_STAMP } };
+  }
+
+  #ingestCtx(b) {
+    const t = this.#one(`SELECT roles_json, source_json, schema_json FROM calc_tables WHERE sha=?`, b.table_sha);
+    /* R47: a table made from a sheet range cites the sheet's own row: the row its first data row stood in, plus the table row */
+    const src = parse(t && t.source_json) || {};
+    const firstRow = (src.extent_kind === "sheet-range" || src.extent_kind === "sheet-cell") && Number.isInteger(src.first_row) ? src.first_row : null;
+    /* R49: the amount column's stated locale (the member's, on its Table Schema field), else the team's (the active profile's) */
+    const field = (parse(t && t.schema_json) || { fields: [] }).fields.find((f) => f.name === parse(b.roles_json).amount);
+    const view = this.#view();
+    const locale = field && typeof field.locale === "string" ? field.locale : view && view.locale && typeof view.locale.value === "string" ? view.locale.value : null;
+    return { b, roles: parse(b.roles_json), declared: parse(t && t.roles_json) || {}, resolved: new Map(), firstRow, locale };   /* resolved: this act's (or slice's) cache */
   }
 
   /** R14: `ingestMoney({binding, rows, reason?, by})`: money facts written through `money.recordFact`, machine-attributed,
    *  only at a member's request, only from an adopted binding, and only for rows whose payer and payee each resolve
-   *  through an identifier. `rows` lists row numbers (0-based); every row only with `rows: "all"` and a reason. */
+   *  through an identifier. `rows` lists row numbers (0-based); every row only with `rows: "all"` and a reason.
+   *  (G55) Over INGEST_INLINE_ROWS rows the act stores its record, answers started, and `ingestTick` writes the facts in slices. */
   async ingestMoney({ binding = null, rows = null, reason = null, by = null } = {}) {
-    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", "money facts are read from a table only at a member's request (K1468). Nothing was written.");
+    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", localize("calculations.index.money_facts_are_read_from", "money facts are read from a table only at a member's request (K1468). Nothing was written."));
+    if (typeof reason === "string" && [...reason].length > INGEST_REASON_MAX)
+      return no("BAD_REASON", localize("calculations.index.a_reason_is_at_most", "a reason is at most {max} characters; shorten it. Nothing was written.", { max: String(INGEST_REASON_MAX) }), { max: INGEST_REASON_MAX });
     const b = typeof binding === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, binding) : null;
     if (!b || !this.#sees(b.bundle_id, by)) return no("NO_SUCH_BINDING", "no adopted binding answers to that key here, or it is not one you may see. Nothing was written.");
-    const t = await this.#heldTable(b.table_sha);
-    if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
-    let picked;
+    /* money is not idempotent by source: one running ingest to a binding */
+    const running = this.#one(`SELECT ingest_key FROM calc_ingests WHERE binding_key=? AND state='ingesting'`, b.binding_key);
+    if (running)
+      return no("ALREADY_INGESTING", localize("calculations.ingest.already", "this table is already being ingested in the background; wait for it to finish (you will be told), then ask again. Nothing was written."), { ingest: running.ingest_key });
+    /* G63: the act that only starts a background ingest reads and hashes none of the table's bytes: the count of "all" is the table's record's
+       (`calc_tables.rows`, what `textTable` calls its size), and the slices on the alarm leg read the table. Bytes at hand: in the cache or in
+       the record's chunked copy; any other table is fetched from the evidence store here, as before. */
+    const tableRow = this.#one(`SELECT rows FROM calc_tables WHERE sha=?`, b.table_sha);
+    const atHand = !!tableRow && (this.#tableCache.has(b.table_sha) || !!this.#one(`SELECT 1 AS x FROM calc_table_bytes WHERE sha=? LIMIT 1`, b.table_sha));
+    let t = null;
+    if (!atHand) {
+      t = await this.#heldTable(b.table_sha);
+      if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
+    }
+    let picked = null, total;
     if (rows === "all") {
-      if (!str(reason)) return no("NO_REASON", "taking every row of a table is the rare case; state the reason (K1468). Nothing was written.");
-      picked = Array.from({ length: t.size }, (_, i) => i);
-    } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) picked = [...new Set(rows)].sort((x, y) => x - y);
+      if (!str(reason)) return no("NO_REASON", localize("calculations.index.taking_every_row_of_a", "taking every row of a table is the rare case; state the reason (K1468). Nothing was written."));
+      total = t ? t.size : tableRow.rows;
+    } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) { picked = [...new Set(rows)].sort((x, y) => x - y); total = picked.length; }
     else return no("NO_ROWS", "name the rows to read into money facts, by number, or every row with rows: \"all\" and a reason. Nothing was written.");
+    if (total > INGEST_ROWS_MAX)
+      return no("INGEST_TOO_LARGE", localize("calculations.index.one_act_reads_at_most", "one act reads at most {bound_rows} rows and this asks for {rows}; list the rows in windows of at most {bound_rows} (rows: [..]). Nothing was written.", { rows: String(total), bound_rows: String(INGEST_ROWS_MAX) }), { rows: total, bound_rows: INGEST_ROWS_MAX });
     const money = this.dep("money");
     if (!money || typeof money.recordFact !== "function") return no("MONEY_NOT_REACHABLE", "the money module is not reachable here. Nothing was written.");
-    const roles = parse(b.roles_json);
-    const declared = parse(this.#one(`SELECT roles_json FROM calc_tables WHERE sha=?`, b.table_sha).roles_json) || {};
-    const val = (row, role) => (typeof roles[role] === "string" ? String(row[roles[role]] ?? "").trim() : roles[role] ? roles[role].value : null);
+    if (total > INGEST_INLINE_ROWS) return this.#startIngest({ b, picked, total, rows, reason, by, money });
+    if (!t) {
+      t = await this.#heldTable(b.table_sha);
+      if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
+    }
+    if (!picked) picked = Array.from({ length: total }, (_, i) => i);
+    const ctx = this.#ingestCtx(b);
     const written = [], notWritten = [];
     /* the picked rows, read in one pass over the held table (ascending, as picked is) */
     const want = new Set(picked);
@@ -1582,46 +2064,243 @@ export class Calculations {
     for (const i of picked) {
       const row = rowAt.get(i);
       if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-      const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer]);
-      if (!payer.entity) { notWritten.push({ row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why }); continue; }
-      const payee = this.#resolveParty(declared[roles.payee] || {}, row[roles.payee]);
-      if (!payee.entity) { notWritten.push({ row: i, reason: "PAYEE_NOT_IDENTIFIED", detail: payee.why }); continue; }
-      let fund = null;
-      if (typeof roles.fund === "string" && String(row[roles.fund] ?? "").trim()) {
-        const spec = declared[roles.fund] || {};
-        const raw = String(row[roles.fund]).trim();
-        const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw)
-          : idPattern("ENT").test(raw) ? { entity: raw } : { why: `"${raw.slice(0, 64)}" names no registered fund; declare the fund column's scheme or crosswalk` };
-        if (!r.entity) { notWritten.push({ row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why }); continue; }
-        fund = r.entity;
-      }
-      const asRead = String(row[roles.amount] ?? "");
-      const f = parseFigure(asRead);
-      if (f.refused) { notWritten.push({ row: i, reason: "AMOUNT_NOT_READ", detail: f.why }); continue; }
-      const currency = val(row, "currency") || f.currency || null;
-      const unsigned = (d) => String(d).replace(/^-/, "");
-      const range = f.precision === "range" ? (f.sign === "-" ? { low: unsigned(f.high), high: unsigned(f.low) } : { low: f.low, high: f.high }) : null;
-      const fact = { amount: range || f.value, as_read: asRead, currency, sign: f.sign, precision: f.precision,
-        kind: val(row, "kind"), phase: val(row, "phase"), ...(val(row, "stage") ? { stage: val(row, "stage") } : {}),
-        basis: val(row, "basis"), period: moneyPeriod(val(row, "period")),
-        from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(fund ? { fund } : {}),
-          ...(roles.account ? { account: val(row, "account") } : {}) },
-        to: { entity: payee.entity, as_written: String(row[roles.payee]) },
-        source: { table: b.table_sha, row: i, binding: b.binding_key }, method: INGEST_METHOD, by: INGEST_STAMP };
+      const j = this.#alreadyWritten(money, ctx, i) || this.#judgeRow(ctx, i, row);
+      if (j.notWritten) { notWritten.push(j.notWritten); continue; }
       let r;
-      try { r = await money.recordFact(fact); } catch (e) { r = { ok: false, reason: "MONEY_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
+      try { r = await money.recordFact(j.fact); } catch (e) { r = { ok: false, reason: "MONEY_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
       if (r && r.ok !== false && (r.fact_id || r.factId)) written.push({ row: i, fact_id: r.fact_id ?? r.factId });
       else notWritten.push({ row: i, reason: r && r.reason ? r.reason : "NOT_RECORDED", detail: r && r.detail ? r.detail : "money did not record the fact" });
     }
     const at = this.now();
     const key = sha({ binding: b.binding_key, rows: picked, by, at });
+    /* G45: each of the three values is stored whole in the row while it is at most INGEST_INLINE_MAX bytes, else in pieces,
+       the row and its pieces in the one transaction */
+    const values = [["rows", rows === "all" ? "all" : picked], ["written", written], ["not_written", notWritten]]
+      .map(([kind, v]) => ingestStored(kind, v));
     this.record.transact(() => {
       this.sql.exec(`INSERT OR IGNORE INTO calc_ingests (ingest_key, binding_key, bundle_id, rows_json, reason, written_json, not_written_json, asked_by, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, key, b.binding_key, b.bundle_id ?? null, json(rows === "all" ? "all" : picked),
-        str(reason) || null, json(written), json(notWritten), by, at);
+                     VALUES (?,?,?,?,?,?,?,?,?)`, key, b.binding_key, b.bundle_id ?? null, values[0].column,
+        str(reason) || null, values[1].column, values[2].column, by, at);
+      for (const v of values)
+        v.chunks.forEach((chunk, seq) => this.sql.exec(`INSERT OR IGNORE INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+          key, v.kind, seq, b.bundle_id ?? null, chunk));
       return { ok: true };
     });
     return { ok: true, ingest: key, binding: b.binding_key, written, not_written: notWritten, by: INGEST_STAMP, asked_by: by };
+  }
+
+  /* R14 (G55): store the record of an ingest over INGEST_INLINE_ROWS rows, open money's marker for it, and answer started; no fact is written here. */
+  #startIngest({ b, picked, total, rows, reason, by, money }) {
+    const at = this.now();
+    const key = sha({ binding: b.binding_key, rows: picked ?? "all", by, at });
+    const stored = ingestStored("rows", picked ?? "all");
+    const out = this.record.transact(() => {
+      this.sql.exec(`INSERT OR IGNORE INTO calc_ingests (ingest_key, binding_key, bundle_id, rows_json, reason, written_json, not_written_json, asked_by, at,
+                       state, next_row, attempts, rows_total, written_count, not_written_count, table_sha)
+                     VALUES (?,?,?,?,?,'[]','[]',?,?,'ingesting',0,0,?,0,0,?)`, key, b.binding_key, b.bundle_id ?? null, stored.column,
+        str(reason) || null, by, at, total, b.table_sha);
+      stored.chunks.forEach((chunk, seq) => this.sql.exec(`INSERT OR IGNORE INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+        key, "rows", seq, b.bundle_id ?? null, chunk));
+      if (typeof money.markIngest === "function") money.markIngest(key, true);
+      this.record.afterCommit(() => {
+        for (const l of this.#ingestListeners) { try { const r = l.fn({ at: this.now() }); if (r && typeof r.catch === "function") r.catch(() => {}); } catch { /* the act's, not the listener's */ } }
+      });
+      return { ok: true };
+    });
+    if (!out.ok) return out;
+    return { ok: true, ingest: key, binding: b.binding_key, state: "ingesting", complete: false, rows_total: total, rows_done: 0,
+      written_count: 0, not_written_count: 0, by: INGEST_STAMP, asked_by: by,
+      says: localize("calculations.ingest.started", "{rows} rows are being ingested in the background; you will be told when it is done, and the facts it writes are marked as not yet complete until then.", { rows: String(total) }) };
+  }
+
+  /** R14 (G55): `onIngestWork(module, fn)`, one registration per module (membership's `listenerRefusal`): told `{at}` after the commit of an act that
+   *  starts a background ingest, as `file-safety` tells its consumers (`onFileWork`). */
+  onIngestWork(module, fn) {
+    const r = listenerRefusal(this.#ingestListeners, module, fn);
+    if (r) return r;
+    this.#ingestListeners.push({ module, fn });
+    return { ok: true, module };
+  }
+
+  /* the oldest ingest with a slice to run */
+  #nextIngest() {
+    return this.#one(`SELECT * FROM calc_ingests WHERE state='ingesting' AND COALESCE(attempts,0) < ? ORDER BY at, rowid LIMIT 1`, INGEST_MAX_ATTEMPTS);
+  }
+  /** R14 (G55): whether an ingest has a slice to run. Synchronous; never throws. */
+  ingestDue() { try { return !!this.#nextIngest(); } catch { return false; } }
+  /** R14 (G55): the instant (ms) the next slice is due: `now` while one is, else null. Never throws. */
+  ingestWake(now) {
+    try {
+      const n = typeof now === "number" ? now : Date.parse(now);
+      return Number.isFinite(n) && this.#nextIngest() ? n : null;
+    } catch { return null; }
+  }
+
+  /* stop an ingest for good: its facts stay marked partial in money (the marker is not closed) */
+  #stopIngest(key, why) {
+    this.record.transact(() => {
+      this.sql.exec(`UPDATE calc_ingests SET state='stopped', stop_reason=?, finished_at=? WHERE ingest_key=? AND state='ingesting'`, why, this.now(), key);
+      return { ok: true };
+    });
+  }
+
+  /* the rows an ingest asked for, as it recorded them: "all" or the sorted list */
+  #ingestRows(r) {
+    const v = parse(r.rows_json);
+    if (!plain(v) || typeof v.parts !== "number") return v;
+    return parse(this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind='rows' ORDER BY seq`, r.ingest_key).map((c) => c.chunk).join(""));
+  }
+
+  /** R14 (G55): `ingestTick(now)`: one slice of the oldest running ingest: it judges at most INGEST_SLICE_ROWS rows and writes at most
+   *  INGEST_SLICE_FACTS facts, all in one transaction with the pieces of its lists and the advanced cursor, so a throw writes none of it and a
+   *  re-run from the stored cursor writes no fact twice. A slice that throws counts one failed attempt (its own transaction); after
+   *  INGEST_MAX_ATTEMPTS in a row the ingest is stopped. Answers `{ok, ran, ingest?, state?, judged?, written?, failed?}`; never throws. */
+  async ingestTick() {
+    let r = null;
+    try {
+      r = this.#nextIngest();
+      if (!r) return { ok: true, ran: false };
+      const b = this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, r.binding_key);
+      const t = b && b.table_sha === r.table_sha ? await this.#heldTable(r.table_sha) : null;
+      if (!t) { this.#stopIngest(r.ingest_key, "TABLE_CHANGED"); return { ok: true, ran: true, ingest: r.ingest_key, state: "stopped" }; }
+      const money = this.dep("money");
+      if (!money || typeof money.recordFact !== "function") throw new Error("the money module is not reachable");
+      const spec = this.#ingestRows(r);
+      const total = r.rows_total, start = r.next_row ?? 0, end = Math.min(start + INGEST_SLICE_ROWS, total);
+      const at = (p) => (spec === "all" ? p : spec[p]);
+      const need = new Set();
+      for (let p = start; p < end; p++) need.add(at(p));
+      const last = need.size ? Math.max(...need) : -1;
+      const rowAt = new Map();
+      let n = 0;
+      for (const o of t.objects()) { if (n > last) break; if (need.has(n)) rowAt.set(n, o); n++; }
+      const tagged = typeof money.markIngest === "function" ? r.ingest_key : null;
+      const out = this.record.transact(() => {
+        const ctx = this.#ingestCtx(b);
+        const written = [], notWritten = [];
+        let p = start;
+        for (; p < end; p++) {
+          if (written.length >= INGEST_SLICE_FACTS) break;
+          const i = at(p), row = rowAt.get(i);
+          if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
+          const j = this.#alreadyWritten(money, ctx, i) || this.#judgeRow(ctx, i, row, tagged);
+          if (j.notWritten) { notWritten.push(j.notWritten); continue; }
+          const m = money.recordFact(j.fact);   /* a throw leaves the slice: it is not a property of the row */
+          if (m && typeof m.then === "function") throw new Error("money answered a fact asynchronously");
+          if (m && m.ok !== false && (m.fact_id || m.factId)) written.push({ row: i, fact_id: m.fact_id ?? m.factId });
+          else notWritten.push({ row: i, reason: m && m.reason ? m.reason : "NOT_RECORDED", detail: m && m.detail ? m.detail : "money did not record the fact" });
+        }
+        for (const [kind, list] of [["written", written], ["not_written", notWritten]]) {
+          let seq = this.#one(`SELECT COALESCE(MAX(seq), -1) + 1 AS n FROM calc_ingest_parts WHERE ingest_key=? AND kind=?`, r.ingest_key, kind).n;
+          for (let k = 0; k < list.length; k += INGEST_PART_ITEMS)
+            this.sql.exec(`INSERT INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+              r.ingest_key, kind, seq++, r.bundle_id ?? null, JSON.stringify(list.slice(k, k + INGEST_PART_ITEMS)));
+        }
+        const done = p >= total;
+        this.sql.exec(`UPDATE calc_ingests SET next_row=?, attempts=0, written_count=COALESCE(written_count,0)+?, not_written_count=COALESCE(not_written_count,0)+?,
+                         state=?, finished_at=? WHERE ingest_key=?`, p, written.length, notWritten.length, done ? "done" : "ingesting", done ? this.now() : null, r.ingest_key);
+        if (done && typeof money.markIngest === "function") money.markIngest(r.ingest_key, false);
+        return { ok: true, judged: p - start, written: written.length, state: done ? "done" : "ingesting" };
+      });
+      if (!out.ok) throw new Error(String(out.detail || out.reason || "the slice was refused"));
+      return { ok: true, ran: true, ingest: r.ingest_key, ...out };
+    } catch (e) {
+      if (!r) return { ok: false, ran: false };
+      /* the slice rolled back whole: one failed attempt, counted on its own */
+      try {
+        this.record.transact(() => {
+          const attempts = (this.#one(`SELECT COALESCE(attempts, 0) AS a FROM calc_ingests WHERE ingest_key=?`, r.ingest_key).a) + 1;
+          if (attempts >= INGEST_MAX_ATTEMPTS)
+            this.sql.exec(`UPDATE calc_ingests SET attempts=?, state='stopped', stop_reason='ATTEMPTS', finished_at=? WHERE ingest_key=?`, attempts, this.now(), r.ingest_key);
+          else this.sql.exec(`UPDATE calc_ingests SET attempts=? WHERE ingest_key=?`, attempts, r.ingest_key);
+          return { ok: true };
+        });
+      } catch { /* the attempt could not be counted: the next tick tries again */ }
+      return { ok: false, ran: true, ingest: r.ingest_key, failed: String(e && e.message || e).slice(0, 200) };
+    }
+  }
+
+  /** R14 (G55, G45): `ingestOf(key)`, synchronously: an ingest as it was recorded, `{ingest, binding, bundle_id, rows, reason, written,
+   *  not_written, asked_by, at, state}`, each value joined from its pieces exactly as `json` made it (a background ingest's lists from its
+   *  pieces, in row order); null when none is held. Cut nowhere. A row stored before reads as `done`. */
+  ingestOf(key) {
+    const r = typeof key === "string" ? this.#one(`SELECT * FROM calc_ingests WHERE ingest_key=?`, key) : null;
+    if (!r) return null;
+    const value = (kind, column) => {
+      if (r.state != null && kind !== "rows") return this.#ingestItems(r, kind, 0, Infinity);
+      const v = parse(column);
+      if (!plain(v) || typeof v.parts !== "number") return v;
+      const text = this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind=? ORDER BY seq`, key, kind).map((c) => c.chunk).join("");
+      return parse(text);
+    };
+    return { ingest: r.ingest_key, binding: r.binding_key, bundle_id: r.bundle_id ?? null, rows: value("rows", r.rows_json), reason: r.reason ?? null,
+      written: value("written", r.written_json), not_written: value("not_written", r.not_written_json), asked_by: r.asked_by, at: r.at,
+      state: r.state ?? "done" };
+  }
+
+  /* a background ingest's list items from `from`, at most `count`, joined from its pieces in order */
+  #ingestItems(r, kind, from, count) {
+    const out = [];
+    let seen = 0;
+    for (const c of this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind=? ORDER BY seq`, r.ingest_key, kind)) {
+      const items = parse(c.chunk) || [];
+      if (seen + items.length > from) out.push(...items.slice(Math.max(0, from - seen), Math.max(0, from - seen) + (count - out.length)));
+      seen += items.length;
+      if (out.length >= count) break;
+    }
+    return out;
+  }
+
+  /** R14 (G55): `ingestRead({ingest, kind, after, limit, viewer})` (`op=moneyingestread`): the state of an ingest (`kind: "state"`), or a page of its
+   *  `written` or `not_written` rows in row order from `after` (an item count), at most 1,000 an answer, with the true counts and an explicit
+   *  `complete` (false while running or stopped). An ingest the viewer may not see, as the act's `#sees`, answers as an absent one. */
+  ingestRead({ ingest = null, kind = "state", after = 0, limit = 100, viewer = null } = {}) {
+    const absent = { ok: true, found: false };
+    if (!str(ingest)) return no("NO_INGEST", localize("calculations.ingest.no_ingest", "an ingest is read by its key."));
+    try {
+      const r = typeof ingest === "string" && stamped(viewer) ? this.#one(`SELECT * FROM calc_ingests WHERE ingest_key=?`, ingest) : null;
+      if (!r || !this.#sees(r.bundle_id, viewer)) return absent;
+      if (!["state", "written", "not_written"].includes(kind)) return no("BAD_KIND", localize("calculations.ingest.bad_kind", "read an ingest's state, its written rows or its not-written rows."));
+      const state = r.state ?? "done";
+      const old = r.state == null ? this.ingestOf(ingest) : null;
+      const written = old ? old.written.length : r.written_count ?? 0, notWritten = old ? old.not_written.length : r.not_written_count ?? 0;
+      const head = { ok: true, found: true, ingest, binding: r.binding_key, state, complete: state === "done", rows_total: r.rows_total ?? written + notWritten,
+        rows_done: state === "done" ? (r.rows_total ?? written + notWritten) : r.next_row ?? 0, written_count: written, not_written_count: notWritten,
+        asked_by: r.asked_by, at: r.at, finished_at: r.finished_at ?? null, ...(state === "stopped" ? { stopped: this.#stopSays(r.stop_reason) } : {}) };
+      if (kind === "state") return head;
+      const lim = Math.max(1, Math.min(READ_LIMIT_MAX, Number.isInteger(Number(limit)) ? Number(limit) : 100));
+      const from = Math.max(0, Number.isInteger(Number(after)) ? Number(after) : 0);
+      const total = kind === "written" ? written : notWritten;
+      const items = old ? old[kind].slice(from, from + lim) : this.#ingestItems(r, kind, from, lim);
+      return { ...head, kind, after: from, limit: lim, items, next: from + items.length < total ? from + items.length : null };
+    } catch { return absent; }
+  }
+
+  #stopSays(code) {
+    return code === "TABLE_CHANGED"
+      ? { reason: "TABLE_CHANGED", says: localize("calculations.ingest.stopped_table", "the table this ingest reads is no longer the one it was asked for, so it was stopped; the facts already written stay, marked as not complete.") }
+      : { reason: "ATTEMPTS", says: localize("calculations.ingest.stopped_attempts", "this ingest failed three times in a row and was stopped; the facts already written stay, marked as not complete.") };
+  }
+
+  /** R14 (G55): `ingestNotices({after, limit, viewer})`: the ingests the viewer asked for that are `done` or `stopped`, in the order they were started
+   *  (by row, not by when they finished), for the notice path to tell once each by key (`notice-producers` reads from the start each cycle). `next` is
+   *  null on the last page, else the cursor to pass as `after`. Never throws. */
+  ingestNotices({ after = 0, limit = 100, viewer = null } = {}) {
+    try {
+      if (!stamped(viewer)) return { ok: true, items: [], next: null };
+      const lim = Math.max(1, Math.min(READ_LIMIT_MAX, Number.isInteger(Number(limit)) ? Number(limit) : 100));
+      const from = Number.isInteger(Number(after)) ? Number(after) : 0;
+      const items = [];
+      let next = null, more = false;
+      for (const r of this.#rows(`SELECT rowid AS rid, * FROM calc_ingests WHERE state IN ('done','stopped') AND rowid > ? ORDER BY rowid`, from)) {
+        if (!this.#sees(r.bundle_id, viewer) || !sameMember(r.asked_by, viewer)) continue;
+        if (items.length >= lim) { more = true; break; }
+        items.push({ ingest: r.ingest_key, binding: r.binding_key, state: r.state, rows_total: r.rows_total, written_count: r.written_count ?? 0,
+          not_written_count: r.not_written_count ?? 0, finished_at: r.finished_at ?? null, ...(r.state === "stopped" ? { stopped: this.#stopSays(r.stop_reason) } : {}) });
+        next = r.rid;
+      }
+      return { ok: true, items, next: more ? next : null };
+    } catch { return { ok: true, items: [], next: null }; }
   }
 
   /* ===================================================================== *
@@ -1655,7 +2334,7 @@ export class Calculations {
     const held = this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key);
     const answer = (r) => ({ ok: true, draw: r.draw_key, set: r.set_sha, set_kind: r.set_kind, seed: r.seed, n: r.n, frame_size: r.frame_size,
       frame_hash: r.frame_hash, method: r.method, sample: parse(r.sample_json), question: r.question ?? null, drawn_by: r.drawn_by, drawn_at: r.drawn_at,
-      says: "a seeded, recorded random draw over a frozen set: anyone with the set, the seed and SHA-256 reproduces it" });
+      says: word("calculations.says.seeded_recorded_random") });
     if (held) return { ...answer(held), already: true };
     const at = this.now();
     this.record.transact(() => {
@@ -1733,7 +2412,7 @@ export class Calculations {
     const v = this.#one(`SELECT * FROM calc_visits WHERE draw_key=? AND seq=?`, d.draw_key, seq);
     const standing = standingOf(this.#rows(`SELECT finding FROM calc_visits WHERE draw_key=? AND item=?`, d.draw_key, item).map((r) => r.finding));
     return { ok: true, draw: d.draw_key, ...visitAnswer(v), standing,
-      says: "a visit is the visitor's testimony tied to one drawn item: kept as recorded, never changed, and graded as testimony (D)" };
+      says: word("calculations.says.visit_visitor_testimony") };
   }
 
   /** R39: `spotCheck({draw, viewer})` (`op=spotcheck`): a spot-check's data: the draw (its set and the set's size, n,
@@ -1758,8 +2437,37 @@ export class Calculations {
         draw: { draw: d.draw_key, set: d.set_sha, set_kind: d.set_kind, set_size: d.frame_size, n: d.n, seed: d.seed, method: d.method,
           frame_hash: d.frame_hash, reproduced: this.#reproduce(d).reproduced, drawn_by: d.drawn_by, drawn_at: d.drawn_at },
         question: d.question ?? null, items, counts, estimates,
-        says: "each drawn item stands as its visits find it; visits that find both yes and no are kept in tension and never picked between, and an item not judged is counted apart by its reason, never as no or as zero. No estimate is computed here." };
+        says: word("calculations.says.drawn_item_stands") };
     } catch { return absent; }
+  }
+
+  /* R52: each input `{name, set}` whose `set` is a selection handle (`sel-…`, `retrieval`) is resolved under the asking
+     member and its ids frozen as a record set with its sha (as `freezeSet` freezes a query's), the input rewritten to
+     name that set. Answers `{ok, inputs, pending}`: `pending` holds the sets not yet held, which `create` writes in its
+     own transaction (`evaluate` writes none, R7). A handle retrieval refuses is refused as it answers, naming the input. */
+  #freezeSelections(inputs, viewer) {
+    const pending = new Map();
+    if (!Array.isArray(inputs)) return { ok: true, inputs, pending };
+    const out = [];
+    for (const inp of inputs) {
+      if (!plain(inp) || typeof inp.set !== "string" || !inp.set.startsWith("sel-")) { out.push(inp); continue; }
+      const retrieval = this.dep("retrieval");
+      if (!retrieval || typeof retrieval.selectionResolve !== "function")
+        return no("RETRIEVAL_NOT_REACHABLE", localize("calculations.index.the_held_selection_cannot_be", "the held selection cannot be read here. Nothing was written."), { input: inp.name });
+      let r;
+      try { r = retrieval.selectionResolve({ handle: inp.set, viewer, owner: viewer, weight: "report" }); } catch (e) { r = { ok: false, reason: "RETRIEVAL_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
+      if (!r || r.ok === false) {
+        const why = r && r.detail ? String(r.detail) : localize("calculations.index.the_selection_could_not_be_read", "it could not be read");
+        return { ...(r || no("RETRIEVAL_FAILED", why)), input: inp.name,
+          detail: localize("calculations.index.the_input_names_a_selection_refused", "the input \"{name}\" names a selection that was refused: {why}. Nothing was written.", { name: String(inp.name), why }) };
+      }
+      const ids = [...new Set((r.members || []).filter((x) => typeof x === "string"))].sort();
+      const setSha = sha(ids);
+      if (!this.#one(`SELECT set_sha FROM calc_sets WHERE set_sha=?`, setSha))
+        pending.set(setSha, { set_sha: setSha, project: null, query_json: json({ selection: inp.set, kind: r.kind ?? null, q: r.q ?? null }), ids_json: json(ids), n: ids.length });
+      out.push({ ...inp, set: setSha });
+    }
+    return { ok: true, inputs: out, pending };
   }
 
   /** R21: `freezeSet({query, by, project?})`: the ids a saved query answers for the asking member (`retrieval`'s
@@ -1785,7 +2493,7 @@ export class Calculations {
       return { ok: true };
     });
     return { ok: true, set: setSha, n: ids.length, ids, frozen_by: by, frozen_at: at, digest: r.digest ?? null,
-      says: "a count over this set is reproducible from the set: its ids are frozen with their sha" };
+      says: word("calculations.says.count_set_reproducible") };
   }
 
   /* ===================================================================== *
@@ -1831,7 +2539,7 @@ export class Calculations {
             const ended = (tie === "employment" || tie === "donation") && it.valid.to != null
               && (() => { try { return validAt({ valid: { ...it.valid, from: null }, basis: null }, at) === "out"; } catch { return false; } })();
             if (ended) found.add(tie === "employment" ? "former_employment" : "donation");
-          } else found.add(`${tie} (validity at the act's date undetermined)`);
+          } else found.add(word("calculations.validity_act_date", { tie: String(tie) }));
         }
         if (!r.next) break;
         page = r.next;
@@ -1907,10 +2615,10 @@ export class Calculations {
     const at = this.now();
     const answer = () => ({ ok: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, built.sha)), filter,
       frozen_by: by, frozen_at: this.#one(`SELECT frozen_at FROM calc_uses WHERE sha=?`, built.sha).frozen_at, n: ids.length,
-      says: `the held uses of powers you may see, ${ids.length} acts: a population, not a census of every use made` });
+      says: word("calculations.says.held_uses_powers", { ids: String(ids.length) }) });
     if (this.#one(`SELECT 1 AS x FROM calc_uses WHERE sha=?`, built.sha)) return { ...answer(), already: true };
     const ev = this.record.evidenceStore();
-    if (!ev) return no("NO_EVIDENCE_STORE", "your group's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no("NO_EVIDENCE_STORE", localize("calculations.index.your_teams_civicsmith_has_no_2", "your team's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written."));
     try { await ev.put(built.sha, built.bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
     const bundle = project ? str(project) : null;
     this.record.transact(() => {
@@ -1919,9 +2627,7 @@ export class Calculations {
                      VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,?,?,?,?,?,?)`,
         built.sha, bundle, json({ kind: "uses", filter, frozen_by: by, frozen_at: at }), json({ fields: USES_FIELDS }), json(USES_HEADER),
         built.rows, built.bytes.byteLength, json(built.undetermined), built.count, by, at);
-      const text = new TextDecoder().decode(built.bytes);
-      for (let k = 0, i = 0; i < text.length; k++, i += TEXT_CHUNK)
-        this.sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?,?,?,?)`, built.sha, k, bundle, text.slice(i, i + TEXT_CHUNK));
+      this.#putChunks(built.sha, bundle, built.bytes);
       this.sql.exec(`INSERT INTO calc_uses (sha, project, filter_json, ids_json, n, frozen_by, frozen_at) VALUES (?,?,?,?,?,?,?)`,
         built.sha, bundle, json(filter), json(ids), ids.length, by, at);
       return { ok: true };
@@ -1931,7 +2637,7 @@ export class Calculations {
 
   /** R33: `applicationRecipes()`: the recipes of application, as data, each with its inputs and parameters. */
   applicationRecipes() {
-    return { ok: true, recipes: APPLICATION_RECIPES, says: "each is instantiated through create, kind its name and terms its parameters: a calculation the member makes, never a pattern the machine raised" };
+    return { ok: true, recipes: APPLICATION_RECIPES, says: word("calculations.says.instantiated_through_create") };
   }
 
   /* ===================================================================== *
@@ -1948,11 +2654,11 @@ export class Calculations {
     for (const c of this.#rows(`SELECT * FROM calculations WHERE accepted_by IS NOT NULL AND evidences_json IS NOT NULL ORDER BY created_at, rowid`)) {
       const ev = parse(c.evidences_json) || [];
       if (!ev.some((e) => e.duty === dutyId && e.occurrence === key)) continue;
-      if (viewer !== null && !this.#visible(c, viewer)) { out.push({ withheld: true, evidence: null, says: "a calculation measuring this occurrence rests on an input you may not see, and is withheld whole" }); continue; }
+      if (viewer !== null && !this.#visible(c, viewer)) { out.push({ withheld: true, evidence: null, says: word("calculations.says.calculation_measuring_occurrence") }); continue; }
       const g = this.#gradeFacts(c);
       const terms = parse(c.terms_json) || {};
       const item = { calc_id: c.calc_id, kind: c.kind, results: parse(c.results_json), grade: g.capture, state: c.recompute_status === "stale" ? "stale" : "current",
-        cited_as: "measured evidence (a calculation output)", accepted_by: c.accepted_by, accepted_at: c.accepted_at };
+        cited_as: word("calculations.measured_evidence_calculation"), accepted_by: c.accepted_by, accepted_at: c.accepted_at };
       /* duties R12 reads an item's `when` as the match's date: only a date the calculation's terms state it measures */
       const when = typeof terms.met_on === "string" && isCalendarDate(terms.met_on) ? { value: terms.met_on, precision: "day", zone: "UTC" } : null;
       out.push({ ...item, evidence: { ...item }, ...(when ? { when } : {}) });
@@ -1964,7 +2670,7 @@ export class Calculations {
    *  whose vintage is valid at that date, by person key, with the table's sha. No row is read into a line. Synchronous,
    *  as people asks it (its R18). */
   rosterRows({ organisation = null, at = null, viewer = null } = {}) {
-    if (!str(organisation) || !(typeof at === "string" && isCalendarDate(at.slice(0, 10)))) return { rows: [], tables: [], not_read: [], why: "an organisation and a date are needed" };
+    if (!str(organisation) || !(typeof at === "string" && isCalendarDate(at.slice(0, 10)))) return { rows: [], tables: [], not_read: [], why: localize("calculations.index.an_organisation_and_a_date", "an organisation and a date are needed") };
     const day = at.slice(0, 10);
     const view = this.#view();
     const rows = [], tables = [], notRead = [];
@@ -1978,9 +2684,9 @@ export class Calculations {
       let a = "undetermined";
       if (v) { try { a = validAt({ valid: { from: v.valid.from ?? null, to: v.valid.to ?? null, precision: "day", zone: "UTC" }, basis: v.basis ?? null }, { value: day, precision: "day", zone: "UTC" }, { view }); } catch { a = "undetermined"; } }
       if (a === "out") continue;
-      if (a !== "in") { notRead.push({ table: t.sha, why: v ? `whether its vintage was valid on ${day} is undetermined${a && a.why ? `: ${a.why}` : ""}` : "the table states no vintage, so its validity is not stated" }); continue; }
+      if (a !== "in") { notRead.push({ table: t.sha, why: v ? word("calculations.why.whether_vintage_valid", { day: String(day), first: String(a && a.why ? `: ${reasonText(a.why)}` : "") }) : word("calculations.why.table_states_vintage") }); continue; }
       const g = this.#heldTableSync(t.sha);
-      if (!g) { notRead.push({ table: t.sha, why: "the table's bytes are not held" }); continue; }
+      if (!g) { notRead.push({ table: t.sha, why: word("calculations.why.the_table_s_bytes_are") }); continue; }
       tables.push(t.sha);
       const post = col("roster_post"), period = col("roster_period");
       let i = -1;
@@ -1993,7 +2699,7 @@ export class Calculations {
           table: t.sha, row: i });
       }
     }
-    return { rows, tables, not_read: notRead, level: "held as a table", says: "roster rows are answered from their tables and never copied into lines" };
+    return { rows, tables, not_read: notRead, level: word("calculations.held_table"), says: word("calculations.says.roster_rows_answered") };
   }
 
   /* ===================================================================== *
@@ -2014,7 +2720,7 @@ export class Calculations {
       if (evaluated > 0 && this.clock() - start >= budget) break;
       const p = PATTERNS[i];
       let out;
-      try { out = await runPattern(p, deps); } catch (e) { out = { results: [], denominator: { n: null, why: `the pattern could not be evaluated: ${String(e && e.message || e).slice(0, 200)}` }, evaluated: 0 }; }
+      try { out = await runPattern(p, deps); } catch (e) { out = { results: [], denominator: { n: null, why: word("calculations.why.pattern_evaluated", { entry: String(String(e && e.message || e).slice(0, 200)) }) }, evaluated: 0 }; }
       const at = this.now();
       this.record.transact(() => {
         const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM calc_pattern_runs WHERE pattern=? AND version=?`, p.pattern, p.version).n + 1;
@@ -2042,7 +2748,7 @@ export class Calculations {
     const g = this.#one(`SELECT * FROM calc_pattern_gates WHERE pattern=? AND version=? ORDER BY seq DESC LIMIT 1`, pattern, version);
     if (!g) return { open: false, reason: "this pattern's false-alarm rate has not been measured on a gold set, so its results are not shown (K1504, M-C8)" };
     const rate = Number(g.false_alarm_rate);
-    if (!(rate <= GATE_MAX_RATE)) return { open: false, reason: `this pattern's measured false-alarm rate, ${g.false_alarm_rate}, is above ${GATE_MAX_RATE}, so its results are not shown`, gate: g };
+    if (!(rate <= GATE_MAX_RATE)) return { open: false, reason: word("calculations.pattern_measured_false", { false_alarm_rate: String(g.false_alarm_rate), gate_max_rate: String(GATE_MAX_RATE) }), gate: g };
     return { open: true, gate: g };
   }
 
@@ -2110,7 +2816,7 @@ export class Calculations {
     return { result: r.result_key, pattern: r.pattern, version: r.version, subject: r.subject ?? null, value: parse(r.value_json),
       denominator: parse(r.denominator_json), derivation: parse(r.derivation_json), rests_on: parse(r.rests_on_json),
       layer: "hypothesis", label: "Noticed", by: "the machine", at: r.at,
-      says: "noticed by the machine: worth a look, never a fact, never a finding, and never stored on a person or entity" };
+      says: word("calculations.says.noticed_machine_worth") };
   }
 
   /** R23: `patternResults({pattern?, project?, viewer})`: a pattern's results only once its gate is recorded at a
@@ -2123,7 +2829,7 @@ export class Calculations {
     const out = [];
     for (const p of list) {
       const head = { pattern: p.pattern, version: p.version, label: p.label, denominator: p.denominator, method: p.method };
-      if (this.#switchedOff(p.pattern, str(project) || null)) { out.push({ ...head, switched_off: true, says: "switched off for this project by a member" }); continue; }
+      if (this.#switchedOff(p.pattern, str(project) || null)) { out.push({ ...head, switched_off: true, says: word("calculations.says.switched_off_project") }); continue; }
       const g = this.#gate(p.pattern, p.version);
       if (!g.open) { out.push({ ...head, gated: true, reason: g.reason }); continue; }
       const results = [];
@@ -2224,6 +2930,7 @@ export function calculationsOps(c, url, body) {
     tablesat: () => c.tablesAt({ key: q(url, "key") ?? b.key, at: q(url, "at") ?? b.at, viewer }),
     bindingadopt: () => c.adoptBinding({ ...strip(b), by }),
     moneyingest: () => c.ingestMoney({ ...strip(b), by }),
+    moneyingestread: () => c.ingestRead({ ingest: q(url, "ingest") ?? b.ingest, kind: q(url, "kind") ?? b.kind ?? "state", after: q(url, "after") ?? b.after ?? 0, limit: q(url, "limit") ?? b.limit ?? 100, viewer }),
     calculationcreate: () => c.create({ ...strip(b), by }),
     calculationevaluate: () => c.evaluate({ ...strip(b), viewer }),
     calculationaccept: () => c.accept({ calcId: q(url, "id") ?? b.calcId, by }),
@@ -2239,3 +2946,20 @@ export function calculationsOps(c, url, body) {
     patternswitch: () => c.switchPattern({ ...strip(b), by }),
   };
 }
+
+/* R42 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  tabledeclare: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.tabledeclare", "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle"),
+    fields: { accepts: ["source","schema","header","roles","vintage"], requires: ["source","schema","header"] } },
+  calculationcreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationcreate", "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle"),
+    fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project","column","part"], requires: ["question","period","inputs","kind"] } },
+  moneyingestread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing"),
+    fields: { accepts: ["ingest","kind","after","limit"], requires: ["ingest"] } },
+  calculationaccept: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationaccept", "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute"),
+    fields: { accepts: ["id","calcId"], requires: [["id","calcId"]] } },
+  calculationdraw: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationdraw", "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle"),
+    fields: { accepts: ["set","n","seed","question","project"], requires: ["set","n"] } },
+  spotcheckvisit: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("calculations.declared.spotcheckvisit", "draw-directed: keyed by a draw and one drawn item, reached from the spot-check; ties the visitor's own testimony to the item; moves no bundle"),
+    fields: { accepts: ["draw","item","testimony","finding","exhibits"], requires: ["draw","item","testimony","finding"] } },
+});

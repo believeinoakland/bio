@@ -76,12 +76,12 @@ test("R6 the exportpage arm answers R8's page with q(\"table\"), q(\"index\") an
   assert.equal(corpusExportOps(w.ce, query({ table: "nothing", index: "0" }).q).exportpage().reason, "EXPORT_TABLE_UNKNOWN");
 });
 
-test("R6 the exportrender arm answers R10 with q(\"format\") and q(\"viewer\") passed through", () => {
+test("R6 the exportrender arm answers R10 with q(\"format\"), q(\"viewer\") and q(\"part\") passed through", () => {
   const w = world();
-  for (const [format, viewer] of [["ftm", "admin"], ["popolo", "member:olive"], ["csv", "admin"], [null, null]]) {
-    const { q, asked } = query({ format, viewer });
+  for (const [format, viewer, part] of [["ftm", "admin", null], ["popolo", "member:olive", "1"], ["csv", "admin", null], [null, null, null], ["fdp", "admin", "2"], ["fdp", "admin", "0"]]) {
+    const { q, asked } = query({ format, viewer, part });
     const viaOps = corpusExportOps(w.ce, q).exportrender();
-    assert.deepEqual(asked.sort(), ["format", "viewer"]);
-    assert.deepEqual(viaOps, w.ce.exportRendering({ format, viewer }), `${format} ${viewer}`);
+    assert.deepEqual(asked.sort(), ["format", "part", "viewer"]);
+    assert.deepEqual(viaOps, w.ce.exportRendering({ format, viewer, part }), `${format} ${viewer} ${part}`);
   }
 });

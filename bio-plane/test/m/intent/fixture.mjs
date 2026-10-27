@@ -2,10 +2,10 @@
    membership, credentials, promotion, entities, progressions, provenance and money, whose facts R31 totals; and, under
    them, events, whose dated facts give a stage document its own date (progressions R16, R37), with extraction and
    content), and the fictional test profile through jurisdictions (its time zone governs the stage dates), on a real SQLite database (node:sqlite) standing in for a Durable
-   Object's storage. Four are stand-ins in the shape of their Provides, which the test controls and records: inquiry's
-   `dispose` (R20–R22: the selection resolved, each member moved to the disposition with its reason and author) and
-   `personFacts` (R59, over `persons`, which a test fills),
-   retrieval's `selectionCreate` (R18), ai-runs' `open` (R9–R10) and capture-requests' reads (`captureRequests`, R23;
+   Object's storage. Retrieval's selections and inquiry's `dispose` (R20–R22: the selection resolved, each member moved to
+   the disposition with its reason and author) are the real ones over the same storage, each call recorded. Three are
+   stand-ins in the shape of their Provides, which the test controls and records: inquiry's `personFacts` (R59, over
+   `persons`, which a test fills), ai-runs' `open` (R9–R10) and capture-requests' reads (`captureRequests`, R23;
    `requestById`, R43).
    Every test drives `intent` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -16,9 +16,11 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
-import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { registeredHomes } from "../provenance/fixtures.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
+import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { Money } from "../../../src/money/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -95,12 +97,15 @@ export function world({ now = NOW, plane = null } = {}) {
   credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  /* publication's two facts, which inquiry's dispose asks (CASE-4): no question here belongs to a published case */
+  promotion.registerFact("caseMember", "publication", () => false);
+  promotion.registerFact("publishedRegistry", "publication", () => null);
   const entities = entitiesOf(host, { record, membership, provenance: {}, now: () => clock.now });
   entities.migrate();
   /* the fictional test profile: its time zone is the one local-facts governs, which progressions reads (its R16) */
   record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
-  const provenance = provenanceOf(host, { record, membership, promotion });
-  provenance.migrate();
+  /* provenance's own published fixture: the real one over this record, membership and promotion, with nothing registered */
+  const provenance = registeredHomes({ host, record, membership, promotion }).provenance;
   /* events (its R1, R27): a stage document's own date is the dated fact it holds for the capture (progressions R37);
      it reads extents through content and readings through extraction, whose tables the plane's migration makes */
   const extraction = extractionOf(host, { record, membership, promotion });
@@ -110,35 +115,35 @@ export function world({ now = NOW, plane = null } = {}) {
   const events = eventsOf(host, { record, membership, provenance, extraction, entities, now: () => clock.now });
   events.migrate();
   const buildProgressions = () => {
-    const p = progressionsOf(host, { record, entities, provenance: { homeOf: () => null }, now: () => clock.now,
+    const p = progressionsOf(host, { record, entities, provenance, now: () => clock.now,
       extraction: { readingOf: () => null }, events,
       ...(plane ? { env: plane.env } : {}) });
     p.migrate();
     return p;
   };
   let progressions = plane ? null : buildProgressions();
-  const calls = { selections: [], dispose: [], open: [], requests: [], requestById: [], personFacts: [] };
-  const selections = new Map();
+  const calls = { selections: [], handles: [], dispose: [], open: [], requests: [], requestById: [], personFacts: [] };
+  /* retrieval's selections (its R18–R20) are the real ones, over the same storage, with an empty observation reader (selections read none); each call is recorded */
+  const realRetrieval = retrievalOf(host, { record, membership, promotion, extraction, observation: {}, now: () => Date.parse(clock.now) });
+  realRetrieval.migrate();
   const retrieval = {
     async selectionCreate(a) {
       calls.selections.push(a);
-      if (!a.owner) return { ok: false, reason: "NO_OWNER" };
-      const handle = `sel-${calls.selections.length}`;
-      selections.set(handle, { owner: a.owner, members: [...a.ids] });
-      return { ok: true, handle, kind: "enumerated", n: a.ids.length };
+      const r = await realRetrieval.selectionCreate(a);
+      if (r.ok) calls.handles.push(r.handle);
+      return r;
     },
-    selectionResolve({ handle, owner }) {
-      const s = selections.get(handle);
-      if (!s) return { ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" };
-      if (owner !== s.owner) return { ok: false, reason: "NOT_YOURS" };
-      return { ok: true, members: s.members, drift: null };
-    },
+    selectionResolve: (a) => realRetrieval.selectionResolve(a),
   };
   /* inquiry's dispose (its R20–R22), over the selection: each member moves to the disposition, its reason and author
      recorded as inquiry records them (state_history, prior_state, disposition_reason), through promotion */
   /* inquiry's `personFacts` (its R59, read by intent R32): the record's facts for the persons a text or a subject names,
      over `persons` (entity id → {label, public_role}), which a test fills; each call recorded */
   const persons = new Map();
+  const realInquiry = inquiryOf(host, { record, membership, promotion, content, entities, retrieval: realRetrieval, provenance,
+                                       now: () => clock.now });
+  realInquiry.migrate();
+  realInquiry.connections.migrate();   /* inquiry's own connections, reached through it: promotion projects references into them */
   const inquiry = {
     personFacts({ text = "", subject = null, viewer = null } = {}) {
       calls.personFacts.push({ text, subject, viewer });
@@ -148,22 +153,7 @@ export function world({ now = NOW, plane = null } = {}) {
           out.push({ entity_id: id, kind: "person", label: p.label, public_role: p.public_role === true, named: true });
       return out;
     },
-    dispose({ handle, to, reason, viewer, owner, author }) {
-      calls.dispose.push({ handle, to, reason, viewer, owner, author });
-      const sel = retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
-      if (!sel.ok) return sel;
-      for (const id of sel.members) {
-        const head = record.head(id);
-        const text = record.readFile(id, "bundle.md").text
-          .replace(/^state_history: \[\]$/m, `state_history:\n  - timestamp: "${clock.now}"\n    from_state: ${head.currentState}\n    to_state: ${to}\n    blurb: "${reason}"\n    author: ${author}`)
-          .replace(/^prior_state: .*$/m, `prior_state: ${head.currentState}`).replace(/^current_state: .*$/m, `current_state: ${to}`)
-          .replace(/^disposition_reason: .*$/m, `disposition_reason: "${reason}"`);
-        const r = promotion.promote({ bundleId: id, base: head.bundleSha, snapKey: `d${calls.dispose.length}-${id}`, author,
-                                      files: [{ path: "bundle.md", text }], meta: {} });
-        if (!r.ok) return r;
-      }
-      return { ok: true, to, reason, handle, disposed: sel.members, weight: "refuse" };
-    },
+    dispose(a) { calls.dispose.push(a); return realInquiry.dispose(a); },
   };
   const aiRuns = { open: async (a) => { calls.open.push(a); return { run: a.run ?? null, started: true, status: "running" }; } };
   /* capture-requests' read (its R23): the rows the viewer may see, oldest first, bounded; and its one read by key (its

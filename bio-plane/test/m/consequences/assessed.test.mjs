@@ -58,7 +58,7 @@ test("R5 R12: with no inquiry, or one not concluded, the causation is unproven, 
   assert.match(none.part.causation.why, /sequence alone/);
   w.inquiryAt(INQ, "open", { target: DOC });
   const open = w.c.consequenceRecord({ ...w.base, causation: INQ });
-  assert.equal(open.ok, true);
+  assert.equal(open.ok, true, JSON.stringify(open));
   assert.deepEqual([open.part.causation.state, open.part.causation.inquiry], ["unproven", INQ]);
   assert.match(open.part.causation.why, /not concluded/);
   assert.equal(w.c.consequenceRecord({ ...w.base, causation: DOC }).part.causation.state, "unproven", "a document is not an inquiry");
@@ -173,4 +173,63 @@ test("R6 (D54): a part is never edited; a revision records a successor with R1's
                    determinationSuperseded(w.D, "CONF-2026-0009-new"));
   /* Its parts stay readable, not carried forward. */
   assert.equal(w.c.consequencesOf({ determination: w.D, viewer: V("alice") }).parts.length, 1);
+});
+
+/* R27: a project concludes a question through basis-versions (its R18) and the question's own state stays open, so the
+   determination's project is asked too (basis-versions R22). The conclusion is made by basis-versions' real act. */
+function concluding() {
+  const w = world();
+  w.cid = w.figure(DOC, "Cut 100");
+  w.inquiryAt(INQ, "open", { target: DOC });
+  w.P1 = w.project("Cuts watch", "alice", [INQ]);
+  w.P2 = w.project("Other cuts watch", "alice", [INQ]);
+  w.base = { standard: S, affected: { kind: "service", description: "library hours" },
+             measure: { unit: "time", range: { low: 10, high: 20 } }, period: { from: "2026-01-01", to: "2026-03-31" },
+             basis: { rationale: "the schedule shows fewer hours", rests_on: [] }, author: V("alice"), causation: INQ };
+  w.conclude = (project) => {
+    const r = w.bv.conclude({ target: INQ, project, reading: "The cut follows from the council's budget vote.",
+      falsifier: "a budget line restoring the fund", author: V("alice"), viewer: V("alice"), identity: V("alice") });
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.equal(r.inquiry_moved, false);
+    return r;
+  };
+  return w;
+}
+
+test("R27 R5: a question the determination's project has concluded establishes the causation though the question's own state is open; one concluded in another project does not", () => {
+  const w = concluding();
+  w.D = w.determination("CONF-2026-0001-act", w.P1, { [S]: "noncompliant" });
+  const before = w.c.consequenceRecord({ ...w.base, determination: w.D });
+  assert.equal(before.part.causation.state, "unproven", "control: no one has concluded it");
+  w.conclude(w.P1);
+  assert.equal(w.record.head(INQ).currentState, "open", "the question's own state does not move (basis-versions R18)");
+  const r = w.c.consequenceRecord({ ...w.base, determination: w.D });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(r.part.causation.state, "established");
+  assert.equal(r.part.causation.inquiry, INQ);
+  const direct = w.strength.inquiryStrength({ id: INQ, viewer: V("alice") });
+  assert.deepEqual([r.part.causation.strength.capture, r.part.causation.strength.connection, r.part.causation.strength.testimony],
+    [direct.capture, direct.connection, direct.testimony]);
+  /* a revision after the conclusion reads it likewise (R6) */
+  const rev = w.c.consequenceRevise({ id: before.id, measure: { unit: "time", value: 12 }, reason: "recounted", author: V("alice") });
+  assert.equal(rev.part.causation.state, "established");
+  /* R9: the established part no longer holds the overall reading at undetermined. */
+  assert.equal(w.c.consequencesOf({ determination: w.D, viewer: V("alice") }).unproven.length, 0);
+  /* control: concluded in another project, the determination's project not having concluded it, stays unproven */
+  const o = concluding();
+  o.D = o.determination("CONF-2026-0001-act", o.P1, { [S]: "noncompliant" });
+  o.conclude(o.P2);
+  assert.equal(o.c.consequenceRecord({ ...o.base, determination: o.D }).part.causation.state, "unproven");
+});
+
+test("R27 R8: a part established by the project's conclusion is flagged reopened once the project withdraws it, and not before", () => {
+  const w = concluding();
+  w.D = w.determination("CONF-2026-0001-act", w.P1, { [S]: "noncompliant" });
+  w.conclude(w.P1);
+  const r = w.c.consequenceRecord({ ...w.base, determination: w.D });
+  assert.equal(r.part.causation.state, "established");
+  assert.equal(w.c.consequenceRead({ id: r.id, viewer: V("alice") }).part.basis_changed, undefined, "concluded in the project: not reopened");
+  const wd = w.bv.conclude({ withdraw: true, target: INQ, project: w.P1, reason: "new evidence", author: V("alice"), viewer: V("alice"), identity: V("alice") });
+  assert.equal(wd && wd.ok, true, JSON.stringify(wd));
+  assert.deepEqual(w.c.consequenceRead({ id: r.id, viewer: V("alice") }).part.basis_changed.map((x) => x.cause), ["causation_reopened"]);
 });

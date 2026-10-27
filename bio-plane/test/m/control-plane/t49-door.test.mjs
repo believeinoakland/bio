@@ -6,6 +6,7 @@
    store door does (its route map, `aiAccountsOps`). R97's and R98's ops are declared by `op-declarations` (R71, R72), whose
    merge in layer 11 comes before this module's. */
 import { test } from "node:test";
+import { T48_FAMILIES } from "../../../src/op-declarations/t48.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
@@ -88,30 +89,28 @@ test("R96 (T49; D1 B, N1095; K3320, K3321 (A); amends R17, R29, R92): through th
   }
 });
 
-test("R96 (controls): a body `member` naming another member is refused NOT_YOUR_ACCOUNT by `ai-accounts`, writing nothing, for `accountreferenceset` and `accountreferenceremove` alike, a session's own and the founder's; a forged `member` in the address is replaced by the session's", async () => {
+test("R96 (controls; ai-accounts R38): a body `member` naming another member is dropped by `ai-accounts`: the act lands on the caller's own reference (the stamped `by`), for `accountreferenceset` and `accountreferenceremove` alike, a session's own and the founder's, and no other member's reference is written; a forged `member` in the address is replaced by the session's", async () => {
   const x = accountsWorld();
   await x.setup();
-  const own = await call(x.env, { op: "accountreferenceset", token: x.S.ann, method: "POST", body: { member: "ann", kind: "apikey", secret: SENTINEL } });
-  assert.equal(own.json.result.ok, true);
-  const before = x.snapshot();
-  for (const [who, token] of [["ann", x.S.ann], ["the founder", x.S.founder]]) {
-    for (const [op, body] of [["accountreferenceset", { kind: "apikey", secret: SENTINEL }], ["accountreferenceremove", {}]]) {
+  for (const [who, token, own, viewer] of [["ann", x.S.ann, "ann", "member:ann"], ["the founder", x.S.founder, "admin", "admin"]]) {
+    for (const named of ["bea", "member:bea", ...(who === "ann" ? ["admin"] : ["ann"])]) {
       x.env.calls.length = 0;
-      for (const named of ["bea", "member:bea", ...(who === "ann" ? ["admin"] : ["ann"])]) {
-        const r = await call(x.env, { op, token, method: "POST", params: { member: "bea" }, body: { ...body, member: named } });
-        assert.equal(r.status, 200, `${who}/${op}/${named}: ${r.text.slice(0, 200)}`);
-        assert.equal(r.json.result.ok, false, `${who}/${op}/${named}`);
-        assert.equal(r.json.result.reason, "NOT_YOUR_ACCOUNT", `${who}/${op}/${named}`);
-        assert.equal(r.text.includes(SENTINEL), false);
-      }
-      const sent = opCalls(x.env).filter((c) => c.route === op);
-      assert.ok(sent.length >= 3, "each reached ai-accounts, which refused it");
-      for (const c of sent) assert.equal(c.params.member, who === "ann" ? "member:ann" : "admin", `${who}/${op}: the address's member is the session's, not the caller's`);
+      const bystander = who === "ann" ? "bea" : "ann";
+      const before = x.snapshot();
+      const set = await call(x.env, { op: "accountreferenceset", token, method: "POST", params: { member: "bea" }, body: { member: named, kind: "apikey", secret: SENTINEL } });
+      assert.equal(set.status, 200, `${who}/set/${named}: ${set.text.slice(0, 200)}`);
+      assert.equal(set.json.result.ok, true, `${who}/set/${named}: the act is the caller's own`);
+      assert.equal(set.text.includes(SENTINEL), false);
+      const [inner] = opCalls(x.env).filter((c) => c.route === "accountreferenceset");
+      assert.equal(inner.params.member, viewer, `${who}/${named}: the address's member is the session's, not the caller's`);
+      assert.equal((await x.a.accountReferenceState({ member: own, viewer })).kind, "apikey", `${who}/${named}: the caller's own reference is held`);
+      if (named !== own) assert.notEqual(x.snapshot(), before, `${who}/${named}: control: the act wrote the caller's own reference`);
+      assert.equal((await x.a.accountReferenceState({ member: bystander, viewer: bystander === "bea" ? "member:bea" : "member:ann" }))?.kind ?? null, null, `${who}/${named}: no other member holds one`);
+      const off = await call(x.env, { op: "accountreferenceremove", token, method: "POST", params: { member: "bea" }, body: { member: named } });
+      assert.equal(off.json.result.ok, true, `${who}/remove/${named}`);
+      assert.notEqual((await x.a.accountReferenceState({ member: own, viewer }))?.kind, "apikey", `${who}/${named}: the caller's own reference is gone`);
     }
   }
-  assert.equal(x.snapshot(), before, "nothing was written by any refused act");
-  assert.equal((await x.a.accountReferenceState({ member: "ann", viewer: "member:ann" })).kind, "apikey", "her own reference is untouched");
-  assert.equal((await x.a.accountReferenceState({ member: "bea", viewer: "member:bea" }))?.kind ?? null, null, "bea holds none");
   /* a machine credential is no member behind the op: refused at the door, nothing sent */
   x.env.calls.length = 0;
   const m = await call(x.env, { op: "accountreferenceset", token: x.env.MEMBER_TOKEN, method: "POST", body: { member: "ann", kind: "apikey", secret: SENTINEL } });
@@ -138,7 +137,11 @@ test("R96 (control): `stepsource` and `stepsourcewithdraw` still take no `member
 
 test("R96 (R29): an op that declares `member` in the address has the caller's copy there deleted and the session's set, whether or not its body `member` is kept: `accountreference`, `accountreferenceset`, `accountreferenceremove`, `stepsource`, `stepsourcewithdraw`", async () => {
   const declared = Object.keys(O.OP_STAMPS).filter((op) => O.OP_STAMPS[op].includes("member"));
-  for (const op of ["accountreference", "accountreferenceset", "accountreferenceremove", "stepsource", "stepsourcewithdraw"])
+  /* the ops t48.mjs declares with the `member` stamp: ai-accounts' three account-reference ops (`extra`) and connections' two acts (its actor) */
+  const MEMBER_ADDRESSED = [...Object.keys(T48_FAMILIES.find((f) => f.owner === "ai-accounts").extra),
+                            ...Object.keys(T48_FAMILIES.find((f) => f.owner === "connections").ops)];
+  assert.equal(MEMBER_ADDRESSED.length, 5);
+  for (const op of MEMBER_ADDRESSED)
     assert.ok(declared.includes(op), `${op} declares the member stamp`);
   const w = world({ answer: (c) => ok({ ok: true, route: c.route }) });
   for (const op of declared.filter((o) => OPS[o] && OPS[o].machineClasses?.length === 0 && OPS[o].classes?.includes("member"))) {
@@ -176,7 +179,7 @@ test("R97 (T49; N1072, K3265; amends R15; `credentials` R74, R75): `claim`, chec
 });
 
 test("R97 (T49): `founderhandleset` is a route of membership's map and is declared for the founder's own session alone; under it the door stamps `by` from the session and passes `handle` from the body, a stamp the caller sends being deleted", async () => {
-  assert.ok(Object.keys(membershipOps(null, U, null, {})).includes("founderhandleset"), "a route of membership's map");
+  assert.ok(Object.keys(membershipOps({}, U, null, {})).includes("founderhandleset"), "a route of membership's map");
   assert.ok(OPS.founderhandleset, "op-declarations R71 declares it");
   assert.deepEqual([OPS.founderhandleset.classes, OPS.founderhandleset.machineClasses, OPS.founderhandleset.mutating], [["admin"], [], true]);
   const w = world({ answer: (c) => (c.route === "founderhandleset" ? ok({ ok: true, handle: c.body.handle }) : null) });

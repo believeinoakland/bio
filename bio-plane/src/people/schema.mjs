@@ -118,6 +118,15 @@ CREATE TABLE IF NOT EXISTS source_person_link_history (
   replaced_at   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS source_person_link_history_pair ON source_person_link_history(source, person);
+-- THE REMOVAL MARKER'S LINK (R12; K5148): which person a removed fact was recorded on, written in the transaction of the
+-- expunge, since the tombstone (record-core R79) keeps the fact id and not the person. It holds no value; the ground, the
+-- instant and the administrator are the tombstone's, read from record-core when the person is read.
+CREATE TABLE IF NOT EXISTS person_removals (
+  fact_id TEXT PRIMARY KEY,
+  person  TEXT NOT NULL,
+  tbl     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS person_removals_person ON person_removals(person);
 -- INTEREST CHECKS (R22): data-defined, each change a new version, every version kept. machine 1 for the shipped checks
 -- (K1491), whose results are shown only past their gate (R24).
 CREATE TABLE IF NOT EXISTS interest_checks (
@@ -200,6 +209,7 @@ export const PEOPLE_TABLES = Object.freeze([
   { name: "member_ties", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
   { name: "source_person_links", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
   { name: "source_person_link_history", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
+  { name: "person_removals", keys: [], ...base, expunge: "none", export: "never", sight: "owner" },
   { name: "interest_checks", keys: ["project"], ...base, expunge: "none", export: "admin-only", sight: "group", version_chain: true },
   { name: "interest_check_switches", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group", version_chain: true },
   { name: "interest_check_gates", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group" },

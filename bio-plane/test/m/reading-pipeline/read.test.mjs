@@ -3,10 +3,12 @@
    members and format entries standing in for the tiers. Moved from `extraction`'s read.test.mjs (N513), its
    assertions unchanged; `extraction` keeps the arms that are its own (R1's store binding, R18's view, the acquire
    wire). Each test names the requirement ids it checks in its title. */
+import { readingDialect as readingDialectOf } from "../../../src/formats.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, hold, doc, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, sha, EVIDENCE_PREFIX } from "./fixture.mjs";
 import { identify, doctypeFor, registerDoctype } from "../../../../docprofile/registry.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP, tier2Escalate, tier3Extend } from "../../../src/reading-pipeline/index.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
@@ -86,7 +88,7 @@ test("R1: a type with no reader answers read_from_text false and says so; a read
     t.parse = undefined;
     const n = (await w.read(doc({ digest: d, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
     assert.deepEqual([n.read_from_text, n.found, n.entities], [false, false, []]);
-    assert.match(n.basis, new RegExp(`the ${t.key} content type declares no reader, so this document has no reading`));
+    assert.equal(n.basis, word("reading-pipeline.why.content_type_declares", { key: String(t.key) }));
     t.parse = () => { throw new Error("boom in the reader"); };
     const f = (await w.read(doc({ digest: d, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
     assert.deepEqual([f.found, f.read_from_text, f.entities], [false, true, []]);
@@ -126,7 +128,10 @@ test("R2: a multi-part capture within the bound is assembled from its parts for 
   assert.match(missing.reading.basis, /part 2 of 2 is not held/);
   const over = await withEntry({ format: "t3multi", text: async () => ({ ok: true }) },
     () => w.read(doc({ digest: "f".repeat(64), format: "t3multi", parts: [{ sha256: p1, bytes: 30 * 1024 * 1024 }] })));
-  assert.match(over.reading.basis, /over the \d+ B a format entry is handed/);
+  /* R54 (fix round 9): a size over the bound states the size and the limit (TOO_LARGE), not "parts" */
+  assert.equal(over.reading.reason, "TOO_LARGE");
+  assert.equal(over.reading.size, 30 * 1024 * 1024);
+  assert.ok(over.reading.basis.includes(String(over.reading.bound)) && over.reading.basis.includes(String(over.reading.size)), over.reading.basis);
 });
 
 test("R3 R10: tier 2 is asked only when undetermined markers outnumber glyphs (not for scan markers alone), merged page by page; two tiers give two page-scoped parts; tier 2 only when a page moved; the producer marker carried", async () => {
@@ -153,12 +158,12 @@ test("R3 R11: a tier-2 member that fails, refuses or is unbound leaves tier 1 st
   const w = fresh();
   const bad = { page: 0, reason: "no_tounicode", count: 1 };
   const t1 = i2([{ page: 0, text: "x", undetermined: [bad, bad, bad] }]);
-  for (const [env, says] of [[{}, /no pdf-worker member is set up in your group's Civicsmith/],
-                             [{ PDF_WORKER: member(() => ({ status: 500, body: { ok: false } })) }, /answered without improving/],
-                             [{ PDF_WORKER: member(() => new Error("down")) }, /could not be reached/]]) {
+  for (const [env, key] of [[{}, "reading-pipeline.tier_read_essentially"],
+                            [{ PDF_WORKER: member(() => ({ status: 500, body: { ok: false } })) }, "reading-pipeline.tier_read_essentially_nothing"],
+                            [{ PDF_WORKER: member(() => new Error("down")) }, "reading-pipeline.tier_read_essentially_nothing_document"]]) {
     const r = (await readPdf(w, t1, { env })).reading;
     assert.equal(r.text_tier, 1);
-    assert.match(r.basis, says);
+    assert.equal(r.basis.includes(word(key)), true, `the basis carries the word ${key}`);
   }
 });
 
@@ -186,6 +191,7 @@ test("R4 R16: tier 3 selects pages with a routing marker and no encryption; each
 test("R4: a page after a call that throws, a declined page, one under another engine build and one not asked for are not merged, and the note names them", async () => {
   const w = fresh();
   const pages = [0, 1, 2, 3, 4].map((i) => ({ page: i, text: "", undetermined: [noText(i)] }));
+  // fixtures-generic: busy
   const ocr = member((body, n) => {
     if (n === 1) return { ...ocrAnswer([0]), deferred: [1, 2, 3, 4] };
     if (n === 2) return { ok: false, reason: "busy" };                          // page 1 declined
@@ -337,7 +343,7 @@ test("R11: a determined reading carries text_source, text_tier, text_container a
   const u = (await readPdf(w, i2([{ page: 0, text: "", undetermined: [bad, bad] }]))).reading;
   assert.equal(u.found, false);
   assert.equal(u.read_from_text, false);
-  assert.match(u.basis, /no pdf-worker member is set up in your group's Civicsmith/);
+  assert.equal(u.basis.includes(word("reading-pipeline.tier_read_essentially")), true);
 });
 
 test("R12 R21: page_count is the structure's count when positive, else null, never zero; container_extent itemises by the keys the entry emitted, absent when no entry answered", async () => {
@@ -353,7 +359,7 @@ test("R12 R21: page_count is the structure's count when positive, else null, nev
     async () => { const d = await hold(w.evidence, "t13 bytes"); return (await w.read(doc({ digest: d, format: "t13" }))).reading; });
   assert.equal(noneAnswered.container_extent, null, "present and null: an entry answered and itemised nothing");
   const html = (await readHtml(w, "<html><body>x</body></html>", { headers: [] })).reading;
-  assert.equal("container_extent" in html, false, "absent when no entry answered");
+  assert.deepEqual(html.container_extent, { container: "html", levels: ["paragraphs"], sheets: null, paragraphs: 1, slides: null }, "no entry answered: only the paragraph count (R63)");
   const deck = await withEntry({ format: "pptx", text: async () => ({ ok: true, document: "s1", slides: [{ slide: 1, text: "s1", shapes: 3 }, { slide: 3, text: "s3", shapes: "x" }],
       deckLength: 4, tables: [], counts: { chars: 2, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "pptx bytes"); return w.read(doc({ digest: d, format: "pptx", ct: "application/x" })); });
@@ -373,7 +379,9 @@ test("R13: dialect absent when no entry answered a decoding choice, null when it
   const mk = (dialect) => withEntry({ format: "t14", text: async () => ({ ok: true, document: "a", paragraphs: [{ para: 0, text: "a" }], counts: { chars: 1, undetermined: 0 }, undetermined: [], dialect }) },
     async () => { const d = await hold(w.evidence, "t14 " + Math.random()); return (await w.read(doc({ digest: d, format: "t14" }))).reading; });
   assert.equal((await mk(null)).dialect, null);
-  assert.deepEqual(Object.keys((await mk({ delimiter: ",", encoding: "utf-8" })).dialect).sort(), ["confidence", "delimiter", "encoding", "signals", "undetermined"]);
+  /* K4877: the shape is format-registry's own projection (its R15 as amended), asked of it, never a hand copy of its keys (K3268) */
+  const emittedDialect = { delimiter: ",", encoding: "utf-8" };
+  assert.deepEqual((await mk(emittedDialect)).dialect, readingDialectOf(emittedDialect));
   /* text read at intake: the entry's dialect signature over the same bytes; a throwing one leaves the key absent */
   const txt = "a;b\n1;2\n";
   const d = await hold(w.evidence, txt);
@@ -400,7 +408,7 @@ test("R14: the reading's provenance is composed at one site over exactly the tex
   assert.equal(failed.provenance.text_sha256, null);
 });
 
-test("R15 R21: text units one per page, paragraph or slide holding a glyph, the producer's numbering; the wire's budget with each unit charged its bytes plus the envelope; a unit that does not fit carried as its capped prefix marked truncated; every unit left out named; absent and empty differ", async () => {
+test("R15 R21 R47: text units one per page, paragraph or slide holding a glyph, the producer's numbering; the wire's budget with each unit charged its bytes plus the envelope; a unit over the cap carried as its chunks, never cut; every unit left out named; absent and empty differ", async () => {
   const w = fresh();
   const out = await readPdf(w, i2([{ page: 3, text: "three" }, { page: 4, text: "   " }, { page: 5, text: "five" }]));
   assert.deepEqual(out.text_units.map((u) => [u.extent.kind, u.extent.page, u.seq]), [["pdf-page", 3, 0], ["pdf-page", 5, 2]]);
@@ -409,13 +417,12 @@ test("R15 R21: text units one per page, paragraph or slide holding a glyph, the 
   const para = (n) => ({ para: n, text: big });
   const many = await withEntry({ format: "t16", text: async () => ({ ok: true, document: "d", paragraphs: [0, 1, 2, 3, 4].map(para), counts: { chars: 1, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "t16"); return w.read(doc({ digest: d, format: "t16" })); });
-  const per = CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE;
-  const fit = Math.floor(ACQUIRE_TEXT_UNITS_BUDGET / per);
-  assert.equal(many.text_units.length, fit);
-  assert.ok(many.text_units.every((u) => u.truncated === true && u.text.length === CAPTURE_TEXT_UNIT_CAP));
-  assert.equal(many.text_units_over_bound, 5 - fit);
-  assert.deepEqual(many.text_units_skipped, [{ first: { kind: "doc-para", para: fit, run: null }, first_seq: fit,
-    last: { kind: "doc-para", para: 4, run: null }, last_seq: 4, units: 5 - fit }]);
+  /* fix round 9 (R15 amended, R47; G128d): a unit over the cap is carried as its chunks, never cut; a chunk past the budget is
+     left out and named */
+  assert.ok(many.text_units.every((u) => !u.truncated && u.text.length <= CAPTURE_TEXT_UNIT_CAP && Number.isInteger(u.extent.run)));
+  assert.equal(many.text_units.length + many.text_units_over_bound, 10, "five paragraphs, two chunks each");
+  assert.ok(many.text_units_over_bound > 0);
+  assert.equal(many.text_units_skipped.reduce((n, r) => n + r.units, 0), many.text_units_over_bound);
   const noUnits = await readPdf(w, i2([{ page: 0, text: " " }]));
   assert.equal("text_units" in noUnits, false, "no unit list is absent, never an empty list");
   const slides = await withEntry({ format: "t16s", text: async () => ({ ok: true, document: "s", slides: [{ slide: 1, text: "one" }], counts: { chars: 3, undetermined: 0 }, undetermined: [] }) },
@@ -434,8 +441,8 @@ test("R15 R21: a workbook's unit is its sheet, a sheet-range at the used range i
       counts: { chars: 3, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "t16x bytes"); return w.read(doc({ digest: d, format: "t16x", ct: "application/x" })); });
   assert.deepEqual(out.text_units, [
-    { extent: { kind: "sheet-range", sheet: "Budget", range: "A1:B3" }, seq: 0, text: "a\tb" },
-    { extent: { kind: "sheet-range", sheet: "Notes", range: "A1:A9" }, seq: 3, text: "c" }]);
+    { extent: { kind: "sheet-range", sheet: "Budget", range: "A1:B3" }, seq: 0, text: "a\tb", kind: "body" },
+    { extent: { kind: "sheet-range", sheet: "Notes", range: "A1:A9" }, seq: 3, text: "c", kind: "body" }]);   /* R47: kind */
   /* a sheet list whose reader named no range at all: no unit, and the list is absent */
   const unnamed = await withEntry({ format: "t16y", text: async () => ({ ok: true, document: "x", sheets: [{ name: "S", text: "x", range: null }],
       counts: { chars: 1, undetermined: 0 }, undetermined: [] }) },

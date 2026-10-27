@@ -4,11 +4,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { world, NOW, iso } from "./world.mjs";
+import { world, NOW, iso, projectOf } from "./world.mjs";
 import { CHECK_REQUEST_CHECKS, TASK_ACTOR_CHECKS, TASKS_TABLES, tasksOps } from "../../../src/tasks/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
-const PRJ = "PROJ-2026-0001-team", FIND = "INFO-2026-0001-finding", PRJ2 = "PROJ-2026-0002-other", OTHER = "INFO-2026-0002-hidden",
+const PRJ = projectOf("Team").projectId, FIND = "INFO-2026-0001-finding", PRJ2 = projectOf("Other").projectId, OTHER = "INFO-2026-0002-hidden",
       LOOSE = "INFO-2026-0003-loose";
 const MACHINE = `${MACHINE_CLASS_PREFIX}daemon`;
 

@@ -130,8 +130,8 @@ test("R43 noSuchAction answers the one refusal for an action the caller may not 
   assert.equal(actions.noSuchAction("ACTN-2026-9999-q").detail, r.detail, "one sentence for every id and every caller");
   assert.equal(actions.noSuchAction().action, null);
   assert.equal(actions.noSuchAction(null).action, null);
-  const x = actions.noSuchAction("A1", { note: "no module answers an action's read here", reason: "OTHER", detail: "mine", check: "C-0", action: "B" });
-  assert.deepEqual([x.note, x.reason, x.detail, x.check, x.action], ["no module answers an action's read here", "NO_SUCH_ACTION", r.detail, "C-117.2", "A1"]);
+  const x = actions.noSuchAction("A1", { note: "extra-field", reason: "OTHER", detail: "mine", check: "C-0", action: "B" });
+  assert.deepEqual([x.note, x.reason, x.detail, x.check, x.action], ["extra-field", "NO_SUCH_ACTION", r.detail, "C-117.2", "A1"]);
   const hostile = new Proxy({}, { ownKeys() { throw new Error("no"); } });
   assert.doesNotThrow(() => actions.noSuchAction({ toString() { throw new Error("no"); } }, hostile));
   assert.equal(actions.noSuchAction({ toString() { throw new Error("no"); } }).action, null);

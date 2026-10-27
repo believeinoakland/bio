@@ -4,6 +4,7 @@
    below is each row as it now reads, `T45_ROWS` the record of T45's drafts. Since T47 (R28; N961) the `where`s of C-117.39 and
    C-117.48–.52 name `src/action-records/index.mjs`, whose acts raise them now. */
 import { readFileSync } from "node:fs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 export const T45_ROWS = {
   DETERMINATION_NOT_NONCOMPLIANT: {
@@ -19,7 +20,7 @@ export const T45_ROWS = {
   OVERRIDE_GROUND_REFUSED: {
     check: "C-117.32",
     where: "src/actions/index.mjs #overrideAndAddressee > is-override-ground",
-    translation: "The ground stated for acting without a determination was incomplete or not in the form the record keeps: a legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters and when, as a date or a date and time. Nothing was written.",
+    translation: localize("action-grammar.checks.the_ground_stated_for_acting", "The ground stated for acting without a determination was incomplete or not in the form the record keeps: a legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters and when, as a date or a date and time. Nothing was written."),
   },
   COPIED_IS_ADDRESSEE: {
     check: "C-117.33",
@@ -59,22 +60,22 @@ export const T45_ROWS = {
   OFFICE_STATUS_UNKNOWN: {
     check: "C-117.40",
     where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
-    translation: "The office's own status was named with a status the group's jurisdiction profile does not hold for this kind of action. Quote the office's words alone, or name a status the profile lists. Nothing was written.",
+    translation: "The office's own status was named with a status the team's jurisdiction profile does not hold for this kind of action. Quote the office's words alone, or name a status the profile lists. Nothing was written.",
   },
   OFFICE_STATUS_WITHOUT_OUTCOME: {
     check: "C-117.41",
     where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
-    translation: "The office's own wording of its status is quoted beside the outcome of what it sent back, never in its place, in up to 500 characters on one line. This entry carried the wording without an outcome, or the wording was not of that form, so nothing was written. Record the outcome first.",
+    translation: localize("action-grammar.checks.the_offices_own_wording_of", "The office's own wording of its status is quoted beside the outcome of what it sent back, never in its place, in up to 500 characters on one line. This entry carried the wording without an outcome, or the wording was not of that form, so nothing was written. Record the outcome first."),
   },
   MACHINE_CANNOT_SET_REPLY_OWED: {
     check: "C-117.42",
     where: "src/actions/index.mjs #t45Fields > is-machine-set-reply-owed",
-    translation: "Whether a body owes the group a reply is a member's statement, made with a reason. The credential that asked here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it yourself.",
+    translation: "Whether a body owes the team a reply is a member's statement, made with a reason. The credential that asked here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it yourself.",
   },
   NO_REPLY_OWED: {
     check: "C-117.43",
     where: "src/actions/index.mjs actionCorrespond > is-no-reply-owed",
-    translation: "This action is to a body that owes the group no reply, so silence is not recorded as a non-response. Nothing was written. If a reply is owed after all, a member states so first, with a reason.",
+    translation: "This action is to a body that owes the team no reply, so silence is not recorded as a non-response. Nothing was written. If a reply is owed after all, a member states so first, with a reason.",
   },
   FOUND_ELSEWHERE_NEEDS_CAPTURE: {
     check: "C-117.44",
@@ -114,7 +115,7 @@ export const T45_ROWS = {
   MACHINE_CANNOT_RECORD_PROMISE: {
     check: "C-117.51",
     where: "src/action-records/index.mjs actionPromise > is-promise",
-    translation: "A promise the group made to a person, an embargo or a source's anonymity, is recorded by a member who answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was written. Sign in to record it yourself.",
+    translation: "A promise the team made to a person, an embargo or a source's anonymity, is recorded by a member who answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was written. Sign in to record it yourself.",
   },
   PROMISE_REFUSED: {
     check: "C-117.52",
@@ -134,7 +135,7 @@ export const T45_ROWS = {
   REPLY_OWED_REFUSED: {
     check: "C-117.55",
     where: "src/action-grammar/checks.mjs actionFieldFindings > is-action-fields",
-    translation: "Whether a reply is owed is stated as yes or no, or left out, which reads as owed. Something else was stated, so nothing was written.",
+    translation: localize("action-grammar.checks.whether_a_reply_is_owed", "Whether a reply is owed is stated as yes or no, or left out, which reads as owed. Something else was stated, so nothing was written."),
   },
   FOLLOWS_ACTION_REFUSED: {
     check: "C-117.56",
@@ -144,12 +145,21 @@ export const T45_ROWS = {
   LAW_STAGE_UNKNOWN: {
     check: "C-117.57",
     where: "src/action-grammar/checks.mjs lawStagesFindings > is-law-stages",
-    translation: "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has.",
+    translation: localize("action-grammar.checks.a_records_law_in_the", "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has."),
   },
   MACHINE_CANNOT_SET_COPIED: {
     check: "C-117.58",
     where: "src/actions/index.mjs #t45Fields > is-machine-set-copied",
-    translation: "Which other offices are copied on an action is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot state or change them. Nothing was written. Sign in to state them yourself.",
+    translation: word("refusal.MACHINE_CANNOT_SET_COPIED"),
+  },  MINUTES_NOT_PUBLIC_COMMENT: {
+    check: "C-117.59",
+    where: "src/actions/index.mjs actionCorrespond > is-minutes",
+    translation: localize("action-grammar.checks.minutes_are_kept_only_on", 'Minutes can be kept only on a received reply to a public comment. This entry is not one, so remove the minutes, or record the reply on the public comment it answers. Nothing was written.'),
+  },
+  BAD_MINUTES: {
+    check: "C-117.60",
+    where: "src/actions/index.mjs actionCorrespond > is-minutes",
+    translation: localize("action-grammar.checks.the_minutes_are_malformed_the", 'The minutes are malformed: the meeting is not one line of 1 to 200 characters, or the passage is not an extent of a capture. Correct each part to that form, then record the minutes again. Nothing was written.'),
   },
 };
 

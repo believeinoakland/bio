@@ -2,6 +2,7 @@
    record laid down in the fixture. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, k4World, MACHINE, MEMBER, OUTSIDER } from "./fixture.mjs";
 import { CONTRADICTION_KEYS, CONTRADICTION_ABSENCE, CONTRADICTION_PAIRS_MAX, CONTRADICTION_LABELS,
          CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS } from "../../../src/contradiction/index.mjs";
@@ -449,8 +450,7 @@ test("R12: the answer states wrote false, pairs_formed, the flat pairs, judgemen
   assert.equal(r.judgement.state, "HELD_APART");
   assert.equal(r.judgement.read, "candidatesFor");
   for (const f of ["by", "why"]) assert.equal(typeof r.judgement[f], "string");
-  assert.match(r.says, /^2 candidate pair\(s\) over K1, K2, K3, K4, K5, K6/);
-  assert.match(r.says, /The pairing answers pairs; a run's judgements over them are read through candidatesFor/);
+  assert.equal(r.says, word("contradiction.says.candidate_pair_over", { formed: 2, keys: "K1, K2, K3, K4, K5, K6", undetermined_clause: "" }));
   /* no label vocabulary: no list of labels and no field naming one, anywhere in the answer */
   const walk = (v, path = []) => {
     if (Array.isArray(v)) {

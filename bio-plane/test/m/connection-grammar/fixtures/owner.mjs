@@ -96,7 +96,7 @@ export function makeNeighbours(broken, mode = {}) {
       const v = validAt({ valid: c.valid }, at);
       if (v === "out" && broken !== "out") continue;
       const item = strip(c);
-      set.push(v === "in" || broken === "unmarked" ? item : { ...item, undetermined: { why: v.why ?? "undetermined" } });
+      set.push(v === "in" || broken === "unmarked" ? item : { ...item, undetermined: { why: v.why } });
     }
     if (broken === "label") set = set.map((c) => (c.kind === "sample_said" ? { ...c, label: undefined } : c));
     if (broken === "derived") set = set.map((c) => (c.kind === "sample_mention" ? { ...c, id: "not-the-derived-id" } : c));

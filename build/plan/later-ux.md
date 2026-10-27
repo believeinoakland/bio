@@ -1,0 +1,165 @@
+# Wording and rendering defects, recorded for T52 (K4269, K4270)
+
+**Status** · Bob's: misused words and improper renderings are recorded here and fixed in T52; they never hold T51's deployment or release debugging, unless one stops a member completing an operation. One line each: screen · what is wrong · where seen (walk, job, design) · date.
+
+## Entries
+
+- every screen · "group" where "team" is meant in text people read (K3472; K3803 item 3, moved by K4269) · archive/census-team-words.md, group-words-T51.md · 2026-10-21
+- every module · the words check's two new arms (pattern/prefix copies in tests; "group" in member-read code), K4208 (2), on the process repository's branch `prep/words-arms-K4208` · moved by K4269 · 2026-10-21
+- objective, contradiction, document, question, project · DEC-391's minted label keys not yet adopted (`GAP_WORDS`/`PENDING_WORDS` still in code) · screens-inquiry, K4258/K4260 · 2026-10-21
+- project page · `rerunread` finding titles not drawn (case-import R31 serves them) · K4259 · 2026-10-21
+- strength displays · `ungraded` not drawn (strength R6 serves it) · K4259 · 2026-10-21
+- objective, about-knocker, leads, watching · `screen.<id>.purpose` rows missing (plane R24 red, accepted by name until T52) · K4276 diagnosis · 2026-10-21
+- question · the cite-imported finding choice and its section heading share one label (`act.owed_citeimported.label.question`) · screens-inquiry J13 · 2026-10-21
+- contradiction · `GAP_WORDS` emptied; its keys could be re-pointed to DEC-391's names · screens-inquiry J13 · 2026-10-21
+- objective · `PENDING_WORDS` all held, the list can go; aspirations' parties and flows are still typed lists, pickers could serve them · screens-inquiry J13 · 2026-10-21
+- bias (settings) · `screen.bias.adoptfor.label` read by `bias.mjs:141` has no row (screens-settings R39 red, accepted by name until T52) · CAUSE-TESTS-T51 J1 · 2026-10-21
+- every screen · the mark and the asking agree (K4199): an act marked "Asks for a reason" asks before it runs, on-press acts' marks lowered; the reason box per press, `triage`'s and `contradictionoptin`'s optional reasons (K4254, K4259) · moved from T51's second pass by K4281 · 2026-10-21
+
+- Vouch rows · say "photo" for web pages and name a knock by raw id · setup-team S-04 · 2026-10-21
+- Status row · "archive fallback may fetch a replay" · S-05 · 2026-10-21
+- Stage needs · internal words ("held question", "leg in its basis", "ratified case edition"); Forming has none · S-08 · 2026-10-21
+- Home · "Yours: sparky" does not say administrator · S-11 · 2026-10-21
+- Join page · promises a guided start · S-14 · 2026-10-21
+- Home, Queue · "held captures", "Inbox items" for a new member · S-16 · 2026-10-21
+- Add an administrator · warning says a vote takes it back (impossible at two); long confirm route · S-22 · 2026-10-21
+- Settings · "Read what is due" prints a prompt for an AI · S-28 · 2026-10-21
+- Queue · raw word keys `screen.action.kind.records_petition` etc. in the kind list · S-31 · 2026-10-21
+- Queue · "Mute a kind" mutes "this item only" · S-35 · 2026-10-21
+- Security · ICAP, RFC 5424, Splunk HEC… on "Add another checker" · S-42 · 2026-10-21
+- Capture, document · "upload:<hash>" source line; "Added by The team's founder" · FC-10 · 2026-10-21
+- Find · "What this search covered" uses level words and code names · FC-16 · 2026-10-21
+- Doorbell · small points · FC-21 · 2026-10-21
+- Refusals · missing rows: C-2.8 grouping sentence; "no explanation… CITED" (C33's job writes against the key; the sentence is the design's) · FC-25, E49 · 2026-10-21
+- Action, Plan · raw ids, "dependency", role said twice, "(from read)", "opt-1" · CA9, CA23, CA44, CA45, CA50, CA57, CA67, CA69 · 2026-10-21
+- Sign step · raw strings ("bio-ratify-case…") and a "device window" that does not exist · CA35 · 2026-10-21
+- Question · strength says "rests on nothing established" without what would make it count · E12 · 2026-10-21
+- Question, Document · "The team's founder" for the acting member; "What would change it" twice · E14, E23 · 2026-10-21
+- Timeline · "Undetermined, because its owner does not settle its validity" · E34 · 2026-10-21 · **moved to a job (K5148): events `grade_why` keyed (fix-round-10 item 70), not words**
+- Plan · checks print "p1", "not_met" · E57 (C63 maps the codes; the sentences are the design's) · 2026-10-21
+- Assistant · "a reason this panel has no words for yet": add the row for the 503 UNAVAILABLE refusal · E59 (C92 makes the panel reachable) · 2026-10-21
+- Reader's copy · heading in capitals (internal words) · CA21 · 2026-10-21
+- Capture · the 504 sentence "kept nothing" is untrue when the bytes were kept (`control-plane` draws what was kept, C12; the sentence is the design's) · FC-04 · 2026-10-21
+- Timeline, Standard, Money · events without description/date/participants at creation; progressions typed as bar-separated lines (C55, DESIGN, the operation completes through "Add who took part" and "Record a dated fact") · E34, E35 · 2026-10-21
+- Welcome wizard · six side-trip steps point at nothing · S-15; Close form · first large block on a new project · S-09; inactive member told "password does not match" (oracle or help: Bob's policy) · S-18 · 2026-10-21
+- queue · "What you answered" lists only queue's own receipts (R59): an expertise confirm or other derived to-do answered elsewhere is not shown back · S-34, C72 (K4307) · 2026-10-21
+- queue, every list · a member with no handle is named by her id (queue-producers R46's fallback); a word such as "A member" would serve · QUEUE-PRODUCERS #21 J8 · 2026-10-21
+- money (investigate) · a figure a member proposed is labelled "proposed by the machine; not included" (`screen.money.proposed`); a member-proposal row is owed · SCREENS-INVESTIGATE #11 J15 · 2026-10-21
+- Matter pickers and the action kinds · adopt DEC-396's minted `screen.matter.pick.choose`, `.pick.none`, `screen.matter.routes.none` in screens-action (wording; merged modules) · DEC-396, K4325 · 2026-10-21
+- Document page · `heldsetaside` drawn on document as well as Held (SCREENS-INQUIRY J17, C33) · K4328 · 2026-10-21
+- Document pickers · adopt DEC-397's `form.choose.search` and `.none` in screens-investigate (stand-ins `shell.search`, `state.empty` today; wording, merged module) · K4330 · 2026-10-21
+- Inbox · a safe view of a knock's bytes before the pull (DOORBELL #5's record: member read through file-safety's scan; needs a drawing first) · K4332 · 2026-10-21
+- Drafts · adopt DEC-398's `screen.review-copy.links.shared`, `.comments.one/.other`, `links.live.one` in screens-publish (wording, merged module) · K4333 · 2026-10-21
+- Held, Inbox · adopt DEC-399's `screen.held.vouch.partsonly` and `screen.inbox.knock.name`/`.type` in screens-intake (wording; merged module) · K4336 · 2026-10-21
+- Contradiction, Project, Document · adopt DEC-400's `screen.contradiction.flagged.by`, `act.heldcaptures.here.project`, `screen.document.testify.how` in screens-inquiry (wording; merged module) · K4338 · 2026-10-21
+- Held, Doorbell and observation rows · "Refused / Open it to vouch for it by itself" on rows never refused (re-walk A FC-20, I-09) · K4357 · 2026-10-21
+- Find, Held · two words for one state ("Awaiting review", "held until you vouch") (re-walk A FC-18) · K4357 · 2026-10-21
+- Document · "Read N of M words" counts words returned, not words right; no warning when many are misread (needs the reader's confidence and a drawing) (re-walk A FC-13) · K4357 · 2026-10-21
+- Document · the cited-copy refusal names the question but offers no door to remove its citations (re-walk B FC-24, C33) · K4357 · 2026-10-21
+- Money · the period sentence says "A follow names the days it covers" (re-walk B E36) · K4357 · 2026-10-21
+- Vouch for this copy · marked "Asks for a reason" and asks nothing: joins the K4199 line (re-walk B C76, CA31, E09) · K4357 · 2026-10-21
+- screens-publish · published page · inline links ("Finding n", "Edition n", "its docket") 18–22 px high at 390 px; running text in the drawing · SCREENS-PUBLISH #15 J19 · 2026-10-21
+- acquisition · `CAPTURE_NOT_KEPT` still reads its stand-in sentence, not DEC-412's `refusal.CAPTURE_NOT_KEPT` row (`checks.mjs:362`); N1261 · K4459 · 2026-10-21
+- file-safety · `SIGNATURES_RUN_RECENT` still reads its stand-in sentence, not DEC-412's row (`checks.mjs:96`); N1261 · K4459 · 2026-10-21
+- Find, frontier · a reference named by its kind token and key ("legislation 26-0788"), an entity by "person": rows wanted (`screen.finder.nobody.reference`, a name for an entity place) · SCREENS-DAILY J19 (C22) · 2026-10-22
+- Document · rows owed by screens-inquiry (stood in by the nearest held row): `act.readheld.label.document` "Read it now", `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`, `screen.document.cite.repair.says`, `screen.document.a34.para_same` / `.para_differs` (paragraph legs not drawn until they exist) · SCREENS-INQUIRY J22 · 2026-10-22
+- Document · "Read it now" asks the member a reason first (op-grades marks `readheld` Reasoned; extraction does not accept `reason`): whether a reason is wanted · SCREENS-INQUIRY J22 (a) · 2026-10-22
+- Security · `act.scanmirror.does` says "the group's file scanner" · JOURNEY-CHECK J8 · 2026-10-22
+- Money · `refusal.MONEY_BAD_PERIOD` has no design row (money's stand-in "That period is not one this team's money records can read."); the screen draws the nearest held refusal and the plane's reason · SCREENS-INVESTIGATE J24 · 2026-10-22
+- Capture result · the reading follows (row `screen.capture.reading.pending`; stand-in `screen.document.text.unread.next`) · fix round 4b R57 · 2026-10-22
+- Attestation · `attestation.register_row_names` still says a capture held in parts is named by its parts' digests, not the whole's; since provenance R72 the whole is registered (stale wording) · F3 verification (K4508) · 2026-10-22
+- Settings > Security · "Check it now" says nothing of what it checks · A S-01 · fix round 4 §6 · 2026-10-21
+- Queue and doorbell · the generic reason "An item that needs you to read, check or decide..." is the same for every item · A S-33 (C71) · fix round 4 §6 · 2026-10-21
+- Document · "Pages 1 are pictures of text" for a page that also has typed words · A FC-14 · fix round 4 §6 · 2026-10-21
+- Document · "Cite in which question" holds every team question with no empty choice · B C95 · fix round 4 §6 · 2026-10-21
+- Request, send, reply · "the city" for a federal office · B C64 · fix round 4 §6 · 2026-10-21
+- Case ceremony · rows not yet written drawn as keys (rows since written; re-check at the re-walk) · B CA28, CA34 · fix round 4 §6 · 2026-10-21
+- Settings > Security · after "Check for new signatures now" the screen shows no date and no result, though it promises one · A C84 · fix round 5 §5 · 2026-10-22
+- Document · a copy the reading found nothing in, or refused as over the ceiling, says only "Nothing here"; it should say waiting / could not be read (the reason and the size) / refused; no "Read it" is drawn after a final reading · A 40 MB row, B C47 · fix round 5 §5 · 2026-10-22
+- Held, Add, Find · old titles ("index.htm", "A PDF from www.oaklandca.gov", "A document" x13, ids like `legislation 26-0788`: old records, new data only); two furniture passages remain on nps.gov pages with a Cite ("Last updated: ...", "Search") · A C9, C22, C25, C19 · fix round 5 §5 · 2026-10-22
+- Add · "Civicsmith is holding off asking that website for now so it is not overloaded" is not why a refusing site refused; "Ask for a capture later" floats to the right of the banner at 1280 · A N-slow-refuse · fix round 5 §5 · 2026-10-22
+- 390 px · controls under 30 px (Home 87, Queue 84, Find 50, Members 5 ...; B: Home 144, Projects 41, Queue 110 ...), the design stylesheet ask 2; Held at 390: the row's checkbox (44 px) overlaps the bordered "Open the file" box · A C81, B C81 · fix round 5 §5 · 2026-10-22
+- Case ceremony · "One confirmation signs all 1: the edition and its 0 findings" (goes with E4), "in your team's time zone ()" with empty brackets; the document is named by 12 hex letters (C40); after "Ask for the confirmation again" the row still shows the first time stamp · B ceremony, C40 · fix round 5 §5 · 2026-10-22
+- Case editor, review copy, ceremony · choosing a draft in the box alone does nothing, a second press of "Which draft" is needed while the box says "Choosing one shows that draft"; the choice is not kept on reload · B C49 · fix round 5 §5 · 2026-10-22
+- Money · a bare "Nothing here" under the contract block; the raw project id in the breadcrumb; a raw capture fingerprint in SOURCE; "did not move: a adopted figure"; "FY2025-26" refused with "the active profiles hold no fiscal year for *" after a sentence about dates the member did not give · B C59, C8 · fix round 5 §5 · 2026-10-22 · **the SOURCE cell moved to a job (K5148): screens-investigate R33 (item 70)**
+- Request, help · "20 days" against "20 business days"; "portal" in lower case · B C64-law · fix round 5 §5 · 2026-10-22
+- Queue · old "newer version" items: two identical pairs and "was read as." with the grade missing (old data; the new-item check is in section 7) · B C69 · fix round 5 §5 · 2026-10-22
+- Capture · "Finish it" and the held-copy repair draw stand-in rows; owed: `screen.capture.finish.pending`, `.finish.files`, `.finish.done`, `screen.capture.address.reading.pending`, `.address.reading.done` (texts in `build/jobs/T51/screens-intake.md`, B27) · SCREENS-INTAKE #17 · fix round 5 E7, E8 · 2026-10-22
+- Case ceremony · the fail-closed refusal draws stand-in `screen.ceremony.sign.nodoc`; owed: a sentence of its own, "this page could not read what the edition pins; reload and try again" · SCREENS-PUBLISH #17 · fix round 5 E4 · 2026-10-22
+- Document · "Read it" and the OCR press answer "being read" (`READING_PENDING`, `ocr_pending`) with no sentence drawn; row `document.readnow.pending` owed · CONTROL-PLANE #47 J26 · 2026-10-22
+- Document · an owed reading the object stopped three times is stated with no member sentence (`plane.pending.interrupted`: "the reading did not finish; the object stopped" as the plane's reason); row owed · PLANE #50 J29 · 2026-10-22
+- Action, request, start-send · an invited member is pointed to the project's page to join; the design registry lists `projectjoin` ("Join") on `projects` and `project` only: draw the join door in place beside the refusal on `action`, `request` and `start-send` · SCREENS-ACTION #14 J22, K4557 · 2026-10-22
+- Held, Add · a page captured again that is already held shows its title as the address instead of the page's title · A NEW MINOR · fix round 6 §5 · 2026-10-22
+- Case ceremony · the key dialog says "Making your signing key ... This can take a moment." before "Make my key file" is pressed; say it after the dialog is confirmed (`ceremony.mjs:604`) · B STILL MINOR · fix round 6 §5 · 2026-10-22
+- Timeline · the event-kind box mixes plain words ("A meeting", "A vote") with raw vocabulary words ("adoption", "enactment", "issuance", "discretion", "waiver") · B E14 words · fix round 6 §5 · 2026-10-22
+- Action · "Show the routes" changes nothing on screen when the team holds no route for that kind (`procedureguides` answers an empty list; the press only re-reads `heldcaptures`): say so in the press's own result and drop the needless re-read · B C66 · fix round 6 §5 · 2026-10-22
+- Capture · large files "being fetched": the what and why line, the polled working line, the finished line draw stand-ins; owed: `screen.capture.fetch.pending`, `.fetch.why`, `.fetch.done` (with N MB and the project named), and the Queue notice `notice.fetch.done` (title, door to the document) · G2, K4562 · fix round 6 §5 · 2026-10-22 (HANDOFF and NOTICE to UX-DESIGN by BOB, K3082)
+- Case ceremony · rows owed for the four refusals `refusal.DOCUMENT_COPY_PENDING`, `.DOCUMENT_NOT_CLEANABLE`, `.PHOTO_UNCHECKED`, `.PHOTO_NOT_COVERABLE` (the placeholder fill, G10, serves them until then); the fail-closed and no-zone refusals · G10, G11 · fix round 6 §5 · 2026-10-22
+- Document · a reading stated final with its size is drawn with that statement and the repair door ("Read it") for a repairable one; rows owed: `screen.document.reading.stated`, `.reading.repairable` · G6, G8 · fix round 6 §5 · 2026-10-22
+- Document, Add · "being read" with progress for a large text, and the sentence that search covers only what is read so far (stand-ins) · G13, K4571 · fix round 6 §5 · 2026-10-22
+- Settings (team), Document (sheet) · DEC-422 (U458) names its rows `screen.settings.storage.*` and `screen.document.sheet.read`, `.rows`, `.none`; T51 reads the code-origin stand-ins `screen.group.storage.*` (control-plane, K4640) and `screen.document.cells_held`, `screen.document.reading.too_large` (extraction, K4661). After the close merges DEC-422, T52 re-keys screens-settings and screens-inquiry to the design keys (with the `.rows` range line from `cellsOf`'s `interpreted`) and drops the stand-ins; the too-large statement has no DEC row yet · G41, G42, U458 · K4663 · 2026-10-23
+- Document · DEC-423 (U459): `screen.document.reading.too_large` keeps its key and fills; `{key}` reaches the member as a plain name by `screen.document.reading.part.text`, `.part.pages`, `.part.cells`, `.part.entities`, `.part.other` (extraction maps the largest key to the part key). T51 shows the stand-in, which works; after the close merges DEC-423, T52 adds the mapping (extraction) and the second sentence the design adds for what is lost · G41, K4645, K4675 · U459 · 2026-10-23
+- Case ceremony · the heading over the problems a signing refusal lists (`GATE_REFUSED` findings, G60) and each finding's check named in plain words; stand-in in code · B vouched upload · fix round 7 §5 · 2026-10-23
+- Case ceremony · "signs all 3: the edition, its 1 findings, and the 1 pieces of evidence": grammar of the singular · B G10/G11 MINOR · fix round 7 §5 · 2026-10-23
+- Case ceremony · the three reasons the Sign step offers only "Sign and publish now" (no zone held; not reached, with its stated reason; an offer without a zone) replace "isn't set ... under Settings" (G62); stand-ins in code · B G11 · fix round 7 §5 · 2026-10-23
+- Queue · one-line meanings for the kinds `ingest-done`, `ingest-stopped`, `fetch-done` (G61); stand-ins in code · B G55 · fix round 7 §5 · 2026-10-23
+- Add · the sentence for a capture closed while "Finish it" is pressed (`refusal.NO_SUCH_SESSION`, G72): "this capture was closed; start it again"; a stand-in word row in code · A G3/G27 acadia · fix round 7 §5 · 2026-10-23
+- Add, Held · "A page from www.govinfo.gov, captured ..." names a PDF a page; the held list's fallback word "Untitled capture" for a row with no stored title (the data is G75) · A G2/G32, B C69 · fix round 7 §5 · 2026-10-23
+- Add · the refusal row for filing into a project the member is not in (G74: DEC-83's sentence, then the remedy: only the project's members can add to it, ask to join; stand-in in code); the other project's name under "Filed here as well" is unchanged (G73) · A G15/G41, G7 · fix round 7 §5 · 2026-10-23
+- Timeline · the event-kind box still mixes plain words with raw vocabulary words ("adoption", "enactment", "issuance", "discretion", "waiver") · B E14 STILL MINOR (carried from round 6 §5) · fix round 7 §5 · 2026-10-23
+- Action · "Show the routes" changes nothing on screen when the team holds no route for that kind: say so in the press's own result and drop the needless re-read · B C66 STILL MINOR (carried from round 6 §5) · fix round 7 §5 · 2026-10-23
+- Case ceremony · G60's refusal draws each finding with the bare check id `C-12.2`, in developer words (file paths, "manifest entry"), three findings under one heading: a plain name for each check and a grouping · B G60 MINOR (carried from round 7 §5) · fix round 8 §5 · 2026-10-23
+- Add · the no-project variant of `screen.capture.fetch.done` (G108): stand-in "Fetched. {document} waits in Held captures" · A G85 MINOR · fix round 8 §5 · 2026-10-23
+- Add · the sentence for "some of the page's files could not be kept" that replaces the renderer's words (G110): a key by reason code, stand-in in code · A G72 MINOR · fix round 8 §5 · 2026-10-23
+- Add · the sentence for a project the member cannot name (D4): how to ask to join a project she cannot see, replacing "this project" · A G74 MINOR · fix round 8 §5 · 2026-10-23
+- Add · the held-elsewhere result of a large capture (G105): the existing refusal's words stand; a gentler sentence if UX wants one · A G73 member · fix round 8 §5 · 2026-10-23
+- Add · "the capture is 41502904 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read": raw bytes in a sentence a member reads (the behaviour is the PDF envelope's) · A G73 MINOR · fix round 8 §5 · 2026-10-23
+- Add, Held · the profile label "an unrecognised document" for a CSV and a text file · A G76 MINOR (carried from round 7 §2b) · fix round 8 §5 · 2026-10-23
+- Document · "Partial: pages 25-30 have no text" for a scan whose remaining pages are being read in the background (G96): say they are being read and when to look · A G67/G68 scan · fix round 8 §5 · 2026-10-23
+- Add · the line for an upload read in the background because its unpacked size is large (G122): "being read; searching covers what is read so far", stand-in in code · A plan 2b ODS · fix round 8 §5 · 2026-10-23
+- Add · the stated refusal when a reading's registration could not be written (G98, held; stand-in in code) · review N12 · fix round 8 §5 · 2026-10-23
+- Document · two controls both read "Next page" on a paged document (`document-read-more-0` reads more passages of the answer, `document-read-page-1` is the page radio, `screens-inquiry/document.mjs:403, 507`; the first changes nothing a member sees when the pages are numbered): one control or two words · B G77 MINOR · fix round 8 §5 · 2026-10-23
+- Document / Add · the alpha-limit sentence naming the file's size and the limit and never saying "read" (G124a, G135d) · K4831 (3) · fix round 9 §5 · 2026-10-24
+- Document · the states: queued, being fetched, being read N of M, read in part and why, refused with its limit, finished; an "about" estimate once measurable; "searched so far"; a notice at finish or stop (G135f) · K4831 (5) · fix round 9 §5 · 2026-10-24
+- Document · "RTF is not read yet", "email is not read yet", "legacy Word is not read yet", "(type) is not read yet" with no "Read it now" (G135a, G135e) · fix round 9 §5 · 2026-10-24
+- Document · the reason a picture was refused, in the member's words (G135b); "read as English" (SCAN C6, with the language rows) · fix round 9 §5 · 2026-10-24
+- Document · "needs a password" for an encrypted document (G129a, G136a); "the file is damaged; N of M pages could be read" (G132f); a page over the bound listed unread (G124d) · fix round 9 §5 · 2026-10-24
+- Document · "every part is read: footnotes, headers, comments, notes shown with their kind" and a citation naming the kind (G134a); dates typed in a workbook (G134c) · fix round 9 §5 · 2026-10-24
+- Document · the assumed encoding shown, and a disagreeing window stated (G131g) · fix round 9 §5 · 2026-10-24
+- Document / Add · "reading does not wait for the scan; a found threat's text leaves search once the scanner has signatures" (G136e) · fix round 9 §5 · 2026-10-24
+- Safe view · "the first 500 pages" (G137a); a spreadsheet preview's "show more" (G137b: a UX-DESIGN screen, first) · fix round 9 §5 · 2026-10-24
+- Visitor copy · "as a first-time visitor saw it: first load, not scrolled, banners not dismissed, no frames"; "the page did not render"; the day's render account (G137c) · fix round 9 §5 · 2026-10-24
+- Illegible page · "this page is sideways or too faint to read" and "only partly legible" (G137d); DEC-417's "three interruptions" sentence retired (G129c) · fix round 9 §5 · 2026-10-24
+- Add · the stated refusal when a reading's registration could not be written (G126c, carried from round 8) · fix round 9 §5 · 2026-10-24
+- Archive · "archive of 3 members, read separately" (G126f) · fix round 9 §5 · 2026-10-24
+- Add / Document · "N pictures kept, not read" with the count and the size (G138); "this picture could not be read: the pixels are not decoded reliably" with the reason (G132l) · fix round 9 §5 · 2026-10-24
+- Add / Document · the refusals with their figures: "too large" with size and limit, the picture over the bound (`IMAGE_TOO_LARGE`), "too many objects" with the count (`TOO_MANY_OBJECTS {n}`), a cell over the bound (`over_cell_bound`), a column count over the bound, an archive over either limit with the reason (G124a, G124c, G124e, G124g, G125a-h, G135d) · fix round 9 §5 · 2026-10-24
+- Document · "a quote was never closed at row N (size)"; "the dialect differs between windows" (G131b, G131c); "this file's characters could not all be read: N replaced" and `ENCODING_UNSUPPORTED {name}` (G131g) · fix round 9 §5 · 2026-10-24
+- Document · a deterministic failure on the file's own bytes, final with its reason, not "try again" (G133c); "omitted with a statement": a reading over 1 MiB keeps its units and states the omitted part (G128e) · fix round 9 §5 · 2026-10-24
+- Document · "encrypted" and "could not be scanned" as their own states, "the scanner stopped at its limit" with the limit (G136a, G136b) · fix round 9 §5 · 2026-10-24
+- Add · a workbook refused with the count of its cells (G137e); a light-kind file refused over 50 MB or 1,048,576 rows with the figure (G131i) · fix round 9 §5 · 2026-10-24
+- Add · an upload whose job could not be registered (`capture.index.job_not_registered`); a body over the request ceiling, with size and limit (`capture.index.body_over_request_ceiling`, `capture.ops.body_over_request_ceiling`); a body over the capture ceiling (`capture.ops.body_over_capture_ceiling`) · fix round 9, CAPTURE #52 (K4891) · 2026-10-24
+- Add · a knock whose reading could not be registered (`doorbell.index.job_not_registered`) · fix round 9, DOORBELL #8 (K4893) · 2026-10-24
+- Add · a CSV being read in pieces (`reading-pipeline.index.csv_in_pieces`) · fix round 9, READING-PIPELINE #32 (K4896) · 2026-10-24
+- Document · file safety: reading is not gated by the scan (`file-safety.index.reading_is_not_gated`); the safe view shows the first pages (`.safe_view_first_pages`) and is a view (`.safe_view_is_a_view`); an encrypted file has no safe view (`.the_file_is_encrypted_so_no_safe_view`); the scanner could not read the file (`file-safety.checks.the_file_scanner_could_not_read`) · fix round 9, FILE-SAFETY #20 (K4899) · 2026-10-24
+- Add · a large file sent in parts: its refusals (`capture.index.upload_unknown`, `upload_expired`, `upload_not_open`, `part_conflict`, `part_out_of_order`, `upload_lost`, `part_in_progress`, `part_size`, `part_not_read`, `part_digest_mismatch`, `part_not_stored`, `parts_missing`, `parts_out_of_order`, `whole_digest_mismatch`, `parted_not_completed`, `parted_unavailable`, `parted_not_begun`, `parted_not_aborted`) and its four ops' descriptions (`capture.declared.captureuploadbegin`, `captureuploadpart`, `captureuploadcomplete`, `captureuploadabort`) · fix round 9, CAPTURE #53 (K4899) · 2026-10-24
+- Add · what each step of a file sent in parts does (`act.captureuploadbegin.does`, `act.captureuploadpart.does`, `act.captureuploadcomplete.does`, `act.captureuploadabort.does`) · fix round 9, AFFORDANCES #45 (K4902) · 2026-10-24
+- Add · OCR pages read in the background (`extraction.why.press_owed`); a file larger than a request reads whole, read in the background, with size and limit (`extraction.why.request_too_large`); a stored reading changed while an act was made, not written over (`extraction.why.basis_changed`) · fix round 9, EXTRACTION #41 (K4909) · 2026-10-24
+- Add · a file stated with its size and bound (`reading-pipeline.index.too_large`, `.too_large_in_parts`), a structure over its bound (`.structure_over_bound`), each kind not read yet named (`.unsupported_rtf`, `_email`, `_legacy_word`, `_legacy_excel`, `_legacy_powerpoint`, `_legacy_office`, `_tiff`, `_gif`, `_webp`, `_heic`, `_avif`, `_bmp`, `_jp2`, `_ico`, `_kind`), a text read in pieces (`.text_in_pieces`), a window that stopped its reader stepped past (`.unit_killed_reader`) · fix round 9, READING-PIPELINE #33 (K4909) · 2026-10-24
+- Add · the argument shapes of a file sent in parts (`capture.index.shape_bytes`, `shape_upload_name`, `shape_part_index`, `shape_part_index_last`, `shape_sha256_whole`, `shape_sha256_part`, `shape_parts_digests`, `shape_string_max`) · fix round 9, CAPTURE #54 (K4912) · 2026-10-24
+- Add · pages text recognition answered with no text, said as not read (`reading-pipeline.index.pages_not_read_text_recognition`) · fix round 9, READING-PIPELINE #33 (K4912) · 2026-10-24
+- Retire · DEC-417's "three interruptions" sentence (`plane.pending.interrupted`), retired by PLANE #57 (K4912) · 2026-10-24
+- Add · a passage's part kind named beside its place (`content.part_kind.body`, `.footnote`, `.endnote`, `.header`, `.footer`, `.comment`, `.tracked_deletion`, `.text_box`, `.speaker_note`, `.master_text`, `.cell_note`; `content.ref.with_part_kind`), a part's place and its refusals (`content.extent.part_human`, `part_ref`, `a_part_extent_names_the`, `a_part_extent_names_neither`, `this_record_holds_no_extraction_2`, `part_list_not_held`), a passage cited under an earlier capture, not read, or an image cited as its bytes (`content.index.passage_cited_under_earlier`, `passage_could_not_be_read`, `image_cited_as_bytes`) · fix round 9, CONTENT #20 (K4917) · 2026-10-24
+- Add · a document part named by its reference (`text-chain.textchain.part_ref`) · fix round 9, TEXT-CHAIN #12 (K4917) · 2026-10-24
+- Add · a spreadsheet preview's "show more" from the row it was cut at (G137b; screens-intake R5's cut preview, `next_row`): a new open-file act to draw, owed by SCREENS-INTAKE #23's J46 (K4922) · 2026-10-24
+- Add · a row asked outside the passage's range (`content.index.from_row_outside_extent`) · fix round 9, CONTENT #20 (K4926) · 2026-10-24
+- Add · a document part not kept with its reading for its size, its text kept whole and searchable (`extraction.index.part_omitted`) · fix round 9, EXTRACTION #42 (K4927) · 2026-10-24
+- Add · a Cancel act for a file being sent in parts (screens-intake's parted upload page; `captureuploadabort`): a new act to draw, owed by SCREENS-INTAKE #23's J47 (K4930) · 2026-10-24
+- Add · a reading finished (`notice-producers.reading.finished`, `.finished.counted`) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · a reading ended in part, with its reason (`notice-producers.reading.partial`, `.partial.counted`; `{why}` is a code today: the member's words for each reason are the design's) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · a document not taken in, with its reason (`notice-producers.reading.refused`) · fix round 9, NOTICE-PRODUCERS #17 (K4933) · 2026-10-24
+- Add · the plain name of a reading that ended (`queue.kind.reading-ended`) · fix round 9, QUEUE #35 (K4944) · 2026-10-24
+- Add · cells a workbook's add dropped, with their count (`workbooks.dropped_cells`) · fix round 9, WORKBOOKS #6 (K4945) · 2026-10-24
+- Add · the states of a read and the parted upload's sentences (screens-intake, fix round 9; keys and stand-ins in `build/jobs/T51/screens-intake.md`, section "B45 · START applied", **Words**): `screen.capture.read.queued`, `screen.capture.address.working.head`, `screen.document.reading.progress`, `screen.capture.file.parts.hashing` · SCREENS-INTAKE #23 (K4954) · 2026-10-24
+- Add · a page whose supporting files were not looked for (`screen.document.supporting.notwalked.pending`, `.toolarge`, `.unavailable`; stood in as the key) · fix round 9, SCREENS-INQUIRY #25 (K4969) · 2026-10-24
+- Add · a reading the plane holds no job row for (`control-plane.reading.not_registered`) · fix round 9, CONTROL-PLANE #56 (K4978) · 2026-10-24

@@ -12,10 +12,11 @@ import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
 import { checkContentExtent, canonicalExtent, CONTENT_EXTENT_DOCUMENT_ONLY } from "../content/index.mjs";
 import { BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 /** R69: the kind, its class and its members' word (provisional until the design stream gives one; K1486, K1469). */
 export const STEP_SOURCE_KIND = "step_source";
-export const STEP_SOURCE_KINDS = Object.freeze([Object.freeze({ kind: STEP_SOURCE_KIND, word: "stated in a source",
+export const STEP_SOURCE_KINDS = Object.freeze([Object.freeze({ kind: STEP_SOURCE_KIND, word: localize("connections.stepsources.kind_word", "stated in a source"),
                                                                 class: "evidentiary" })]);
 /** R69: what this kind declares to its conformance battery: undated (a source states the step, not when it held),
  *  and not group-wide (a source whose capture the viewer may not see is fenced, R33). */
@@ -26,8 +27,10 @@ export const STEP_SOURCE_BASIS_MAX = 4000;
 export const STEP_SOURCE_ID_PREFIX = "STEPSOURCE-";
 
 const VALID = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
-const UNDATED = "a source attached to a declared step states the step, not when it held, so whether it holds at the "
-  + "date asked is undetermined, never out";
+/** R69: the reason an attached source is undetermined at a date, a key with its fills (the words rule, R14); its
+ *  sentence is written here, at its id, so the list holds it. */
+export const STEP_SOURCE_UNDATED = Object.freeze({ key: "connections.stepsources.undated_source", vars: Object.freeze({}) });
+export const STEP_SOURCE_UNDATED_SAYS = localize("connections.stepsources.undated_source", "a source attached to a declared step states the step, not when it held, so whether it holds at the date asked is undetermined, never out");
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : v == null ? "" : String(v).trim());
 const idOf = (n) => `${STEP_SOURCE_ID_PREFIX}${n}`;
@@ -61,36 +64,36 @@ export class StepSources {
     const who = str(member);
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "STEP_SOURCE_NOT_A_MEMBER",
-               detail: who ? `'${who.slice(0, 60)}' is a machine credential; backing a declared step with a source is a member's act, in their name`
-                           : "this act names no member; the plane stamps the member from the credential that asked" };
+               detail: who ? localize("connections.stepsources.backing_machine_credential", "'{who}' is a machine credential; backing a declared step with a source is a member's act, in their name", { who: String(who.slice(0, 60)) })
+                           : localize("connections.stepsources.act_names_no_member", "this act names no member; the plane stamps the member from the credential that asked") };
     const relId = str(relation);
     const rel = this.#relation(relId);
     if (!rel)
       return { ok: false, reason: "NO_SUCH_RELATION", relation: relId || null,
-               detail: "no declared relation is held by that id (or it was withdrawn); a source is attached to a step someone declared" };
+               detail: localize("connections.stepsources.no_declared_relation", "no declared relation is held by that id (or it was withdrawn); a source is attached to a step someone declared") };
     const sha = str(captureSha).toLowerCase();
     const home = /^[0-9a-f]{64}$/.test(sha) ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, sha) : null;
     if (!home || !this.k.sees(home.bundle_id, viewer))
       return { ok: false, reason: "CAPTURE_NOT_HELD", capture_sha: sha || null,
-               detail: "this record holds no capture by that digest that you can see" };
+               detail: localize("connections.stepsources.no_capture_by_digest", "this record holds no capture by that digest that you can see") };
     let ext = extent;
     if (typeof ext === "string") { try { ext = JSON.parse(ext); } catch { ext = null; } }
     const bad = checkContentExtent(ext, CONTENT_EXTENT_DOCUMENT_ONLY);
     if (bad)
       return { ok: false, reason: "EXTENT_MALFORMED", extent_refusal: bad.code ?? null,
-               detail: `the passage is not named by an extent the record can read: ${bad.detail || bad.code}` };
+               detail: localize("connections.stepsources.extent_not_readable", "the passage is not named by an extent the record can read: {why}", { why: String(bad.detail || bad.code) }) };
     const words = typeof basis === "string" ? basis.trim() : "";
     if (!words)
       return { ok: false, reason: "STEP_SOURCE_NO_BASIS",
-               detail: "an attached source carries its basis: what the passage states about this step, in your words" };
+               detail: localize("connections.stepsources.carries_basis", "an attached source carries its basis: what the passage states about this step, in your words") };
     if (words.length > STEP_SOURCE_BASIS_MAX)
       return { ok: false, reason: "STEP_SOURCE_BASIS_TOO_LONG", limit: STEP_SOURCE_BASIS_MAX,
-               detail: `${words.length} characters of basis, over ${STEP_SOURCE_BASIS_MAX}; refused rather than cut` };
+               detail: localize("connections.stepsources.basis_over_limit", "{count} characters of basis, over {limit}; refused rather than cut", { count: String(words.length), limit: String(STEP_SOURCE_BASIS_MAX) }) };
     const key = canonicalExtent(ext);
     const held = this.#one(`SELECT * FROM step_sources WHERE relation_id=? AND capture_sha=? AND extent=? AND withdrawn_at IS NULL
                              ORDER BY source_id LIMIT 1`, rel.relation_id, sha, key);
     if (held) return { ok: true, wrote: false, step_source: this.view(held),
-                       says: "this passage already backs this step; nothing was written" };
+                       says: word("connections.says.passage_already_backs") };
     const at = this.k.now();
     this.sql.exec(`INSERT INTO step_sources (relation_id, from_entity, to_entity, capture_sha, bundle_id, extent, basis, member, at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -98,9 +101,7 @@ export class StepSources {
     const row = this.#one(`SELECT * FROM step_sources WHERE relation_id=? AND capture_sha=? AND extent=? AND withdrawn_at IS NULL
                             ORDER BY source_id DESC LIMIT 1`, rel.relation_id, sha, key);
     return { ok: true, wrote: true, step_source: this.view(row),
-             says: `recorded: ${who} backs the declared step ${rel.relation_id} (${rel.relation}) with a passage of a held `
-                 + `capture. The step itself stays declared; this source is its own evidenced fact, graded no higher than `
-                 + `the capture it cites` };
+             says: word("connections.says.recorded_backs_declared", { who: String(who), relation_id: String(rel.relation_id), relation: String(rel.relation) }) };
   }
 
   /** R68 (`op=stepsourcewithdraw`): the member who attached a source withdraws it, saying why; it stays recorded. */
@@ -108,24 +109,23 @@ export class StepSources {
     const who = str(member);
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "STEP_SOURCE_NOT_A_MEMBER",
-               detail: who ? `'${who.slice(0, 60)}' is a machine credential; withdrawing an attached source is a member's act`
-                           : "this act names no member; the plane stamps the member from the credential that asked" };
+               detail: who ? localize("connections.stepsources.withdrawing_machine_credential", "'{who}' is a machine credential; withdrawing an attached source is a member's act", { who: String(who.slice(0, 60)) })
+                           : localize("connections.stepsources.act_names_no_member", "this act names no member; the plane stamps the member from the credential that asked") };
     const why = typeof reason === "string" ? reason.trim() : "";
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "a withdrawn source keeps its reason beside it; none was given" };
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("connections.stepsources.keeps_reason", "a withdrawn source keeps its reason beside it; none was given") };
     const n = numOf(id);
     const row = n == null ? null : this.#one(`SELECT * FROM step_sources WHERE source_id=?`, n);
     if (!row || row.withdrawn_at != null || !this.k.sees(row.bundle_id, viewer))
       return { ok: false, reason: "NO_SUCH_STEP_SOURCE", id: id ?? null,
-               detail: "no standing attached source by that id that you can see" };
+               detail: localize("connections.stepsources.no_standing_source", "no standing attached source by that id that you can see") };
     if (row.member !== who)
       return { ok: false, reason: "STEP_SOURCE_NOT_THE_ATTACHER", id: idOf(row.source_id),
-               detail: "an attached source is withdrawn by the member who attached it" };
+               detail: localize("connections.stepsources.withdrawn_by_attacher", "an attached source is withdrawn by the member who attached it") };
     const at = this.k.now();
     this.sql.exec(`UPDATE step_sources SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE source_id=? AND withdrawn_at IS NULL`,
                   who, at, why.slice(0, STEP_SOURCE_BASIS_MAX), row.source_id);
     return { ok: true, step_source: this.view(this.#one(`SELECT * FROM step_sources WHERE source_id=?`, row.source_id)),
-             says: `${who} withdrew this source, saying why; it stays recorded, and the step reads as declared, not evidenced, `
-                 + `unless another source backs it` };
+             says: word("connections.says.withdrew_source_saying", { who: String(who) }) };
   }
 
   /** R69: `neighbours` for an entity node: each standing source of a standing relation the node is an end of, whose
@@ -134,7 +134,7 @@ export class StepSources {
     const a = isObj(args) ? args : {};
     const { node, kinds, page, viewer } = a;
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: word("duties.why.read_names_member") };
     if (Array.isArray(kinds) && !kinds.includes(STEP_SOURCE_KIND)) return { items: [] };
     if (typeof node !== "string" || !node) return { items: [] };
     const keep = this.k.redactor(viewer);
@@ -147,7 +147,7 @@ export class StepSources {
       .sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
     if (items.length > BOUNDS.hub)
       return { items: [], hub: { set_size: items.length,
-               why: `${items.length} sources back the declared steps at this entity, more than ${BOUNDS.hub}; it is named, never expanded` } };
+               why: word("connections.why.sources_back_declared", { items: String(items.length), hub: String(BOUNDS.hub) }) } };
     const after = isObj(page) && typeof page.after === "string" ? page.after : null;
     const rest = after ? items.filter((i) => i.id > after) : items;
     const shown = rest.slice(0, BOUNDS.fanout);
@@ -163,9 +163,8 @@ export class StepSources {
     try { g = p && typeof p.captureGrade === "function" ? p.captureGrade(sha) : null; } catch { g = null; }
     const letter = g && BASIS_GRADES.includes(g.grade) ? g.grade : null;
     const out = letter
-      ? { grade: letter, says: `the cited capture's grade, ${letter}` }
-      : { grade: LOWEST_GRADE, says: `the cited capture's grade is not determined`
-          + (g && g.why ? ` (${String(g.why).slice(0, 200)})` : ``) + `, so this source is read at the lowest grade, ${LOWEST_GRADE}` };
+      ? { grade: letter, says: word("connections.says.cited_capture_grade", { letter: String(letter) }) }
+      : { grade: LOWEST_GRADE, says: word("connections.says.cited_capture_grade_determined", { why: String(g && g.why ? ` (${String(g.why).slice(0, 200)})` : ``), lowest_grade: String(LOWEST_GRADE) }) };
     memo.set(sha, out);
     return out;
   }
@@ -179,7 +178,7 @@ export class StepSources {
                    relation: r.relation_id }],
       grade: { assertion: g.grade, ends: [LOWEST_GRADE, LOWEST_GRADE] }, grade_says: g.says,
       derived: null, attached_by: r.member, at: r.at,
-      undetermined: { why: UNDATED },
+      undetermined: { why: { ...STEP_SOURCE_UNDATED } },
     };
   }
 }

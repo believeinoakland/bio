@@ -3,6 +3,8 @@
  * family, C-126 (K933), every row stamped by 1.52.0 (T22's L2, K989). No translation names a place (R8, `layers.md`
  * rule 1). */
 
+import { word } from "../setup-words/index.mjs";
+
 const at = (fn, region) => `src/local-facts/index.mjs ${fn} > ${region}`;
 const atRule = (fn, region) => `src/local-facts/rules.mjs ${fn} > ${region}`;
 
@@ -11,40 +13,22 @@ const atRule = (fn, region) => `src/local-facts/rules.mjs ${fn} > ${region}`;
    left for the screen, the refusal's `errors` beside it. `words.json` holds a key for every C-126 row (DEC-260, K3374), so
    every row takes its translation from these keys, and a word the list changes (N1160's "team") changes here with it. */
 export const LOCAL_FACTS_WORDS = Object.freeze({
-  'refusal.MACHINE_CANNOT_CONFIRM': "Confirming, correcting or disputing a local fact (a holiday calendar, an office's "
-    + "hours, the time zone), and confirming a rule your team drafted, is a member's act. An assistant may re-check a "
-    + "source and report what it found; it may not record a confirmation. Sign in as a member. Nothing was written.",
-  'refusal.NO_SUCH_FACT': "No local fact of the active jurisdiction profiles answers to that path. A path names one "
-    + "profile's holiday year (of its office calendar or of a named closure list), an office's hours or the time zone. "
-    + "Nothing was written.",
-  'refusal.FACT_ACT_REFUSED': "A member confirms, corrects or disputes a local fact; this act is none of the three. "
-    + "Nothing was written.",
-  'refusal.FACT_HOW_REFUSED': "Say how you checked, in at most 500 characters: the official page and its address, a call "
-    + "to the office, a visit. None was given, or it is too long. Nothing was written.",
-  'refusal.FACT_VALUE_REFUSED': "A correction gives the corrected value, in the form the profile holds that fact in, and "
-    + "its source in at most 500 characters. The value is missing or not of that form, or the source is missing or too "
-    + "long. Nothing was written.",
-  'refusal.MACHINE_CANNOT_DRAFT_RULE': "Only a member drafts or withdraws your team's own rule. The assistant may draft "
-    + "one for you to read, but it enters only when you draft it yourself. Nothing was written.",
-  'refusal.RULE_SECTION_UNKNOWN': "A team's rule is either a deadline or a legal fact, and this is neither. Nothing was "
-    + "written.",
-  'refusal.RULE_ENTRY_INVALID': "This rule isn't in the form a deadline or a legal fact takes: {errors}. Nothing was "
-    + "written.",
-  'refusal.RULE_NO_SOURCE': "A rule is drafted from its source: name the captured document and the part of it that "
-    + "states the rule. Either no such capture is held where you can see it, or that part isn't in it. Nothing was "
-    + "written.",
-  'refusal.RULE_IN_PROFILE': "Your places' rules, or a rule your team already applies, hold this already. Dispute that "
-    + "fact, or offer your correction to whoever keeps those rules, instead. Nothing was written.",
-  'refusal.RULE_NO_REASON': "Say why, in at most 500 characters. None was given, or it is too long. Nothing was written.",
-  'refusal.NO_SUCH_GROUP_RULE': "Your team has no rule of its own by that name, or none you can see. Nothing was written.",
-  'refusal.RULE_SELF_CONFIRM': "A rule is confirmed by a member other than the one who drafted it. Ask another member to "
-    + "check it against its source. Nothing was written.",
-  'refusal.RULE_NOT_DRAFTED': "Only a drafted rule can be confirmed, and this one is already confirmed or was withdrawn. "
-    + "Nothing was written.",
-  'refusal.RULE_NEEDS_QUALIFICATION': "A rule for a Tier 2 or Tier 3 matter, or one whose tier isn't known, is confirmed "
-    + "by a professional. State your qualification in your own words, in at most 500 characters. Nothing was written.",
-  'refusal.RULE_NOT_CONFIRMED': "Only a rule your team confirmed and still applies can be offered to the shared profile. "
-    + "Nothing was written.",
+  'refusal.MACHINE_CANNOT_CONFIRM': word("refusal.MACHINE_CANNOT_CONFIRM"),
+  'refusal.NO_SUCH_FACT': word("refusal.NO_SUCH_FACT"),
+  'refusal.FACT_ACT_REFUSED': word("refusal.FACT_ACT_REFUSED"),
+  'refusal.FACT_HOW_REFUSED': word("refusal.FACT_HOW_REFUSED"),
+  'refusal.FACT_VALUE_REFUSED': word("refusal.FACT_VALUE_REFUSED"),
+  'refusal.MACHINE_CANNOT_DRAFT_RULE': word("refusal.MACHINE_CANNOT_DRAFT_RULE"),
+  'refusal.RULE_SECTION_UNKNOWN': word("refusal.RULE_SECTION_UNKNOWN"),
+  'refusal.RULE_ENTRY_INVALID': word("refusal.RULE_ENTRY_INVALID", { errors: "{errors}" }),
+  'refusal.RULE_NO_SOURCE': word("refusal.RULE_NO_SOURCE"),
+  'refusal.RULE_IN_PROFILE': word("refusal.RULE_IN_PROFILE"),
+  'refusal.RULE_NO_REASON': word("refusal.RULE_NO_REASON"),
+  'refusal.NO_SUCH_GROUP_RULE': word("refusal.NO_SUCH_GROUP_RULE"),
+  'refusal.RULE_SELF_CONFIRM': word("refusal.RULE_SELF_CONFIRM"),
+  'refusal.RULE_NOT_DRAFTED': word("refusal.RULE_NOT_DRAFTED"),
+  'refusal.RULE_NEEDS_QUALIFICATION': word("refusal.RULE_NEEDS_QUALIFICATION"),
+  'refusal.RULE_NOT_CONFIRMED': word("refusal.RULE_NOT_CONFIRMED"),
 });
 
 export const LOCAL_FACTS_CHECKS = Object.freeze({

@@ -6,8 +6,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, M, world, call, opCalls, aik, cred, hex64, refused, FORGED } from "./harness.mjs";
+import { TRANSLATION_ACTS } from "./door-routes.mjs";
 const D = await import("../../../src/store-door/dispatch.mjs");
 const { record } = await import("./record.mjs");
+const { MACHINE_AUTHOR_PREFIX } = await import("../../../src/record-grammar/index.mjs");
 const { AI_GRANT_OPS, ACCOUNT_CHECKS } = await import("../../../src/credentials/index.mjs");
 const { ASK_PLANE_OPS } = await import("../../../../agent-worker/src/ops.mjs");
 
@@ -18,10 +20,13 @@ const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session
 /* who is calling, as the door knows them on a public op (admission R21): the window's fingerprint, no country unstated */
 const DOOR = { source: "src-test", country: null };
 /* (T41; R70, R72) `handlechange` and `captureupload` too: membership and capture compare the bare member id */
-const MEMBER_ID_BY = ["handlechange", "captureupload", "invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-                      "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset",
-                      /* (T46; R54) the administrator's read of the two doors, asked of `isAdministrator` as the acts are */
-                      "joindoors"];
+/* membership's roster acts (its family's kind `roster`), plus its own-handle change and the administrator's read of the two doors
+   (R54), and capture's own acts; membership's other `by` ops (`lookedsince`, `lookedat`) take the expression */
+const MEMBER_ID_BY = [
+  ...Object.entries(O.OP_FAMILIES.membership.kinds).filter(([, kind]) => kind === "roster").map(([op]) => op),
+  "handlechange", "joindoors", ...O.OP_FAMILIES.capture.acts,
+  /* store-request R7 (K5193): member-roster's isAdministrator reads the bare id, so these two reads take it too */
+  "adminremovalsopen", "expertisewithdraw"];
 const URL0 = new URL("http://do/");
 
 /* The maps R53 names, and the T33 arms of the existing modules the findings route (K1544, K1550, K1570, K1601, K1604,
@@ -34,12 +39,12 @@ const MAPS = {
   workbooks: ["workbooks/ops.mjs", "workbooksOps"], answers: ["answers/ops.mjs", "answersOps"],
   following: ["following/index.mjs", "followingOps"],
 };
-const ARMS = ["accountreferenceset", "accountreferenceremove", "accountreference", "accountusesset", "aigrantmint",
-              "keyedserviceset", "keyedserviceswitch", "keyedservices", "sourcekeyed", "aiusage", "ailimitset",
-              "airunverify", "waitlook", "exportpage", "exportrender", "addresseesuggest", "clockadopt",
-              "clocksics", "clocklateness", "clockpropose"];
+/* the arms' owners (op-declarations' families): every op each declares, the whole of its row set */
+const ARM_OWNERS = ["ai-accounts", "credentials", "sources", "ai-use", "ai-runs", "inquiry", "corpus-export", "actions", "action-clocks"];
+const ARMS = Object.values(O.OP_FAMILIES).filter((f) => ARM_OWNERS.includes(f.owner)).flatMap((f) => Object.keys(f.kinds));
 async function t33Ops() {
-  const out = new Set(ARMS);
+  /* `exportpage` is declared apart from its family (op-declarations: stamped nothing) */
+  const out = new Set([...ARMS, "exportpage"]);
   for (const [file, fn] of Object.values(MAPS))
     for (const op of Object.keys((await import(`../../../src/${file}`))[fn](null, URL0, null, {}))) out.add(op);
   return [...out].sort();
@@ -115,8 +120,15 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
           : (inner.params[k] ?? null);
         if (k === "session") assert.equal(inner.params.session, undefined, `${where}: ?session`);
         /* R54 (K1863 (7)): membership's administrator acts take `by` as a member id, the custodial acts' expression */
-        const want = k === "by" && MEMBER_ID_BY.includes(op)
+        const want = (k === "by" && (MEMBER_ID_BY.includes(op) || TRANSLATION_ACTS.includes(op))) || (k === "viewer" && op === "translations")
           ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`)
+          /* R49 (K4219): case-import's acts, the re-run acts among them, stamp `by` as the positional identity for a session */
+          : k === "by" && M.CASE_IMPORT_ACTIONS.includes(op) && c.session ? c.want.author
+          /* R17 (T51; op-declarations' declaration acts, the door's own `DECLARATION_ACTIONS`): a session's `author` is its member
+             id, and a caller holding no session is stamped as a machine, `token:<class>` by `MACHINE_AUTHOR_PREFIX`, not
+             `class:<class>` as the other acts are */
+          : k === "author" && (O.DECLARATION_ACTIONS.includes(op) || op === "publishcheck")   /* store-request R25: graded as publish, stamped as publish */
+            ? (c.session ? c.want.proposer : `${MACHINE_AUTHOR_PREFIX}${c.name === "agent" ? "ai" : c.name}`)
           /* R68 (T37; admission R21): an admitted op's `source` is admission's `sourceOf` over the request, which states
              no connecting address here; a public op's is the window's fingerprint (`DOOR`) */
           : k === "source" && OPS[op].classes !== null ? "unstated" : c.want[k];
@@ -239,7 +251,9 @@ test("R53, R29 (K1687): standards' five T33 acts read their author from the body
   const { w, list } = callers();
   const who = { admin: "class:admin", probe: "class:probe", founder: "member:admin", ann: "member:ann", agent: "class:ai/agent-ann" };
   let checked = 0;
-  for (const op of ["lawrelate", "lawwithdraw", "lawpropose", "courtlink", "courttreat"]) for (const c of list) {
+  /* the T33 acts standards' family declares as author- or proposer-stamped in the body's place: its member and proposal acts */
+  const LAW = Object.entries(O.OP_FAMILIES.standards.kinds).filter(([op, kind]) => ["member", "proposal"].includes(kind) && /^(law|court)/.test(op)).map(([op]) => op);
+  for (const op of LAW) for (const c of list) {
     w.env.calls.length = 0;
     const r = await call(w.env, { op, token: c.token, params: c.params, method: "POST", body: { author: FORGED, proposer: FORGED, note: "kept" } });
     if (r.status !== 200) continue;

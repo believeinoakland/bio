@@ -8,6 +8,7 @@ import { queueAnswer, QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS, QUEUE_CLASS_LABELS } 
 import { QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, MUTE_REFUSAL_DETAIL } from "../../../src/queuestate.mjs";
 import { deriveActs, decorate } from "../../../src/affordances.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R6: limit clamped to 1–500 (default 200); among equals (here every item, none homed) R6's order, OBLIGATION, FINDING, CONDITION then id, in R49's default and cut at the limit; the answer's fields", () => {
   const w = world({ governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5000, refusals: 1, granted: 0, refused_total: 1 }] },
@@ -175,7 +176,7 @@ test("R12: options are affordances' acts on the first 8 subjects, once each; dis
   const fin = f["FINDING::p::s"];
   assert.deepEqual(fin.options, acts, "the union over eight subjects, each act once");
   assert.equal(seen.filter((t) => /^INF-[89]$/.test(t)).length, 0, "no subject past the eighth is asked");
-  assert.deepEqual(f["TASK-2026-0001-a"].disposition.instead, "taskresolve");
+  assert.deepEqual(f["TASK-2026-0001-a"].disposition.instead, ["taskdecide", "taskforward", "taskresolve"], "an authority task declares its door (tasks R24, queue R12)");
   assert.equal(f["TASK-2026-0001-a"].disposition.available, false);
   assert.equal(f["OBLIGATION::bias-debt::r1"].disposition.instead, "biasdebtresolve");
   const c = f["CONDITION::governor-holding-host::h.example"].disposition;
@@ -219,8 +220,8 @@ test("R14, R31: mutes apply to every item, item mutes first, never to an obligat
   w.member("alice"); w.bundle("INQ-1", "inquiry"); w.bundle("INF-1"); w.leg("INQ-1", "INF-1");
   w.task("TASK-2026-0001-a", "INF-1");
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','INQ-1','authority-undetermined,render-deferred')`);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice','CONDITION::governor-holding-host::h.example','CONDITION',?)`, iso(NOW));
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice','TASK-2026-0001-a','OBLIGATION',?)`, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','CONDITION::governor-holding-host::h.example','CONDITION',?)`, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','TASK-2026-0001-a','OBLIGATION',?)`, iso(NOW));
   const f = w.feed("alice");
   assert.deepEqual(f.items.map((i) => i.id), ["TASK-2026-0001-a"], "an obligation is never suppressed, even with rows naming it");
   assert.deepEqual(f.mute.suppressed.map((s) => [s.id, s.scope, s.case]),
@@ -360,9 +361,9 @@ test("R39: resolved carries the obligations resolved lately on visible subjects,
   assert.ok(b.debts.every((d) => d.resolved_by === null || d.resolved_by === "bob"), "no stand-in name for an absent member");
   // bias's bound and its failure are published, never read as none
   const w2 = world({ bias: { settled: ({ limit }) => ({ debts: [], limit, truncated: false, undetermined: true,
-                                                        stated: "the settled bias debts could not be read, so none is listed" }) } });
+                                                        stated: word("bias.settled_bias_debts") }) } });
   const u = w2.feed(null, "class:admin").resolved.bias_debts;
-  assert.equal(u.read, false); assert.equal(u.stated, "the settled bias debts could not be read, so none is listed");
+  assert.equal(u.read, false); assert.equal(u.stated, word("bias.settled_bias_debts"));
   const w3 = world({ bias: { settled: ({ limit }) => ({ debts: settled.slice(0, 1), limit, truncated: true }) } });
   assert.equal(w3.feed(null, "class:admin").resolved.bias_debts.truncated, true);
 });

@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, FM, S, WHY } from "./world.mjs";
 import { BIAS_MANIFEST_LIMIT_MAX } from "../../../src/bias/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "BIAS-2026-0001-a", I = "BIAS-2026-0003-inst", J = "BIAS-2026-0000-proj", P = "PROJ-2026-0001-p";
 const ADMIN = { reason: WHY, author: "admin", identity: "member:admin", viewer: "admin" };
@@ -36,7 +37,7 @@ test("R49: in force for a project scope — each statement of the effective set 
     const r = w.sif(s.statement_id);
     assert.deepEqual(r, { ok: true, statement: s.statement_id, scope: PROJ, in_force: true, kind: s.kind, text: s.text,
       bundle_id: s.bundle_id, level: s.scope === "project" ? "project" : "group", locked: s.locked,
-      statements_sha: m.statements_sha, stated: "this statement is in the lens in force for this scope" }, s.statement_id);
+      statements_sha: m.statements_sha, stated: word("bias.statement_lens_force") }, s.statement_id);
   }
   assert.deepEqual([w.sif("p1").kind, w.sif("p1").level, w.sif("s3").kind, w.sif("s3").locked, w.sif("s3").level],
     ["inference", "project", "inference", true, "group"], "the locked group statement a project nullified stands");
@@ -59,7 +60,7 @@ test("R49: the group scope reads the group's lens alone; \"instance\" and {type:
       [true, "scrutiny", S("s2").text, I, "group", { type: "instance", id: "" }, m.statements_sha], String(scope));
   }
   assert.equal(w.bias.statementInForce({ statement: "s4", viewer: "admin" }).in_force, true, "replaced only in the project's lens");
-  assert.equal(w.bias.statementInForce({ statement: "p1", viewer: "admin" }).in_force, false, "a project statement is not the group's");
+  assert.equal(w.bias.statementInForce({ statement: "p1", viewer: "admin" }).in_force, false, "a project statement is not the team's");
 });
 
 test("R49: the whole effective set, never a page — a statement past the manifest's default page is in force", async () => {
@@ -103,7 +104,7 @@ test("R49: at R13's sight — a project scope the viewer may not see answers exa
   assert.equal(none.in_force, false);
   for (const viewer of ["member:mo", "nobody", null, "admin", "member:second"])
     assert.deepEqual(w.sif("s1", PROJ, viewer), none, String(viewer));
-  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "owner", reason: "open to the group" });
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "owner", reason: "open to the team" });
   for (const viewer of ["admin", "member:second"])
     assert.deepEqual([w.sif("p1", PROJ, viewer).in_force, w.sif("s3", PROJ, viewer).in_force], [true, true], viewer);
   assert.equal(w.sif("p1", PROJ, "member:mo").in_force, false, "a member outside a discoverable project is at EXISTENCE only");

@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 import { eventsOps } from "../../../src/events/index.mjs";
 import { linesOps } from "../../../src/lines/index.mjs";
 import { moneyOps } from "../../../src/money/index.mjs";
@@ -95,12 +96,11 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
                        /* membership's own hop, called inside `projectCreated` (R6's store-internal list, K1864) */
                        "projectclaimowner"],
                      /* publication's internal hops (its R15; D-734) and its reads served by public-read */
-                     publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
+                     publication: ["recordcasemanifest", "recordcasefile", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
 /* The family ops whose arm another L11 job serves (R6's other half holds at the layer's close): the control plane
    routes these to their owner's in-process services (K1601; action-clocks R2's `clockpropose`, capture-requests R46,
    answers' `ask`), instance-setup builds its two (T33-87). */
-const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturerequestplatformmark: "control-plane (T33-89)",
-  capturerequestplatformunmark: "control-plane (T33-89)", capturerequestplatformhosts: "control-plane (T33-89)",
+const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)",
   ask: "control-plane (T33-89)", officesseed: "instance-setup (T33-87)", seatsseed: "instance-setup (T33-87)",
   assistantstate: "instance-setup (T33-87)",
   disclosureshown: "instance-setup (T33-87)", disclosureof: "instance-setup (T33-87)",
@@ -151,7 +151,7 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "calculations", "capture", "capture-requests", "case-account", "case-carriage", "connections", "corpus-export", "credentials", "duties",
     "entities", "events", "explore", "extraction", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
     "leg-earning", "lines", "membership", "money", "money-checks", "people", "public-read", "publish-schedule",
-    "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "tasks",
+    "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "strength", "tasks",
     "wizard-scripts", "workbooks",
     /* T45 (R49): the owners T45 gives a family */
     "action-holds", "action-plans", "action-replies", "agent-worker", "case-check", "conformance", "consequences", "filings", "local-facts",
@@ -159,7 +159,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     /* T47 (R55, R59): the owners T47 gives a family */
     "basis-versions", "signin-door",
     /* T50 (R73): the owners T50 gives a family */
-    "action-records", "progressions"].sort());
+    "action-records", "progressions",
+    /* T51 (R77, R78): the owners T51 gives a family */
+    "filing-templates", "promotion"].sort());
   /* T48 (R67, R68): `ai-accounts` holds the 24 ops that moved from credentials, `connections` the step-source acts */
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
     "plainread", "proposal", "public", "publicread", "publishact", "read", "roster", "runact", "sessionact", "sessionend",
@@ -170,7 +172,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     /* T46 (R51): the member-run door's act, a member's session or her own agent credential */
     "memberrun",
     /* T49 (R71): the founder's own act, the founder's session alone */
-    "founder"].sort());
+    "founder",
+    /* T51 (R77; K4098): a read whose machine classes are named, so an `ai` credential is refused at admission */
+    "readfenced"].sort());
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -218,6 +222,7 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     publishact: [{ classes: MP, machineClasses: [], mutating: true }, "publish"],
     sessionact: [{ classes: MP, machineClasses: [], mutating: true }, null],
     sessionread: [{ classes: MP, machineClasses: [], mutating: false }, null],
+    readfenced: [{ classes: MP, machineClasses: ["admin", "probe"], mutating: false }, null],
     door: [{ classes: null, mutating: true }, undefined],
     public: [{ classes: null, mutating: false }, undefined],
     plainread: [{ classes: MP, mutating: false }, undefined],
@@ -297,7 +302,9 @@ test("R19, R6: each new module's ops map and each family's share of an earlier m
       /* a new module's whole map is its family, but for the ops another job serves */
       const unserved = Object.keys(fam.kinds).filter((op) => !served.includes(op));
       assert.deepEqual(unserved, unserved.filter((op) => Object.hasOwn(SERVED_ELSEWHERE, op)), owner);
-      assert.deepEqual(served.filter((op) => !Object.hasOwn(fam.kinds, op)).sort(),
+      /* an op the owner declares itself (R80) is served by its own row, not by the family, so it is no family op */
+      const declared = REGISTERED[owner] ?? {};
+      assert.deepEqual(served.filter((op) => !Object.hasOwn(fam.kinds, op) && !Object.hasOwn(declared, op)).sort(),
                        owner === "money-checks" ? ["moneydetectorsrun"] : [], owner);
     }
     if (fam) for (const op of Object.keys(fam.kinds))
@@ -370,7 +377,9 @@ test("R19, R4: every family read is stamped with the viewer, and the owner reads
     "joindoors",
     /* T50 (R73): the instant a member last looked at Home and her open captures answer `by`, the session's member,
        never a request field (membership R148, acquisition R46) */
-    "lookedat", "opencaptures"];
+    "lookedat", "opencaptures",
+    /* T51 (R77; CR-4): the administrator removals under way answer `by`, an administrator's own (member-roster R75) */
+    "adminremovalsopen"];
   let checked = 0;
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     if (!MAPS[owner]) continue;
@@ -394,8 +403,11 @@ test("R19, R4, R5, R30 (K1674, K1683): OP_STAMPS maps every op this module decla
   assert.ok(Object.isFrozen(OP_STAMPS));
   /* T34 (R21): an alias of a stamped op carries its op's stamps */
   const aliased = Object.keys(OP_ALIASES).filter((al) => FAMILY_OPS.includes(OP_ALIASES[al]));
-  assert.deepEqual(Object.keys(OP_STAMPS).sort(), [...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased,
-    "claim", "login", "agentpack"].sort());
+  /* R80: an op an owner declares is stamped by its declaration, registered beside the hand rows (`register-owners.mjs`), so
+     the stamped ops outside the declarations are exactly the hand list; a declared op may be stamped by either */
+  const DECLARED = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));
+  const HAND = [...new Set([...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased, "claim", "login", "agentpack"])];
+  assert.deepEqual(Object.keys(OP_STAMPS).filter((op) => !DECLARED.has(op)).sort(), HAND.filter((op) => !DECLARED.has(op)).sort());
   for (const al of aliased) assert.deepEqual([...OP_STAMPS[al]], [...OP_STAMPS[OP_ALIASES[al]]], al);
   for (const [op, keys] of Object.entries(OP_STAMPS)) {
     assert.ok(Object.isFrozen(keys) && Array.isArray(keys), op);

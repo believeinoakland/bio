@@ -166,3 +166,105 @@ export function limitsReadBack(settings, want) {
   }
   return { verdict: "MATCH", why: `limits.subrequests ${got} read back` };
 }
+
+/* ---- G1 (K4565, K4566): the plane's cron schedule is DECLARED, carried and read back ----
+ *
+ * The upload metadata of a script PUT has no field for a cron schedule, and whether a plain PUT keeps the schedules the
+ * script holds is unconfirmed, so deploy.mjs sets them with the schedules endpoint after every upload, from the one copy
+ * here: `triggers.crons` of wrangler.jsonc. A list the platform would refuse is refused by name before any request. */
+const CRON_FIELDS = 5;       /* minute hour day-of-month month day-of-week */
+const MAX_CRONS = 3;         /* the platform's limit per Worker */
+
+/** The cron strings deploy.mjs sets, as the config states them; none declared is the empty list (the script is set to none). */
+export function deriveCrons(cfg) {
+  const t = cfg && cfg.triggers;
+  if (t === undefined || t === null) return [];
+  const bad = (why) => new Error(`REFUSED [INVALID_CRONS]: wrangler.jsonc's triggers.crons ${why}.`);
+  if (typeof t !== "object" || Array.isArray(t)) throw bad("is not under a `triggers` object");
+  if (t.crons === undefined) return [];
+  if (!Array.isArray(t.crons)) throw bad("is not a list of cron strings");
+  for (const c of t.crons)
+    if (typeof c !== "string" || c.trim().split(/\s+/).length !== CRON_FIELDS || c !== c.trim())
+      throw bad(`holds ${JSON.stringify(c)}, which is not a cron of ${CRON_FIELDS} fields`);
+  if (new Set(t.crons).size !== t.crons.length) throw bad("names the same cron twice");
+  if (t.crons.length > MAX_CRONS) throw bad(`holds ${t.crons.length}; a Worker can have ${MAX_CRONS}`);
+  return [...t.crons];
+}
+
+/** The schedules read back against the crons sent. MATCH only when the script holds exactly those, as a set; anything
+ *  else is a MISMATCH saying what it holds. `held` is the list of cron strings read, or null when it could not be. */
+export function schedulesReadBack(held, want) {
+  if (!Array.isArray(held)) return { verdict: "UNREADABLE", why: "the script's schedules could not be read" };
+  const show = (l) => (l.length ? l.join(" | ") : "none");
+  const same = held.length === want.length && want.every((c) => held.includes(c));
+  return same
+    ? { verdict: "MATCH", why: `schedules ${show(held)} read back` }
+    : { verdict: "MISMATCH", why: `the script holds ${held.length ? held.join(" | ") : "none"}, the config declares ${show(want)}` };
+}
+
+/* ---- G54 (K4426): Workers Logs are DECLARED, carried and read back ----
+ *
+ * `observability: { enabled: true }` lives in wrangler.jsonc, and a raw script upload that does not send it turns Workers
+ * Logs OFF on the script (measured on biosmoke8: the 2026-10-20 03:35Z upload reset them, so no line named why two case
+ * files were never built). The release path does not run wrangler, so a setting written only in the config never reaches a
+ * deployed plane: deriveObservability is the one copy, as deriveLimits is for the ceiling.
+ *
+ * THE REFUSAL: a config that does not turn Workers Logs on is REFUSED BY NAME, because sending no `observability` is not
+ * "unchanged", it is off. A key this derivation does not carry (a sampling rate, a sub-setting) is refused too, never
+ * dropped, and never defaulted: nothing is sent that the config does not state. */
+const KNOWN_OBSERVABILITY_KEYS = new Set(["enabled"]);
+
+/** The `observability` object deploy.mjs sends in the upload metadata: `{ enabled: true }`. */
+export function deriveObservability(cfg) {
+  const o = cfg && cfg.observability;
+  if (!o || typeof o !== "object" || Array.isArray(o) || o.enabled !== true) {
+    throw new Error(
+      "REFUSED [NO_OBSERVABILITY]: wrangler.jsonc does not state `observability: { enabled: true }`, and a script upload that "
+      + "sends none turns the script's Workers Logs off (G54). Turn them on in the config; the deploy sends what it states.");
+  }
+  const unknown = Object.keys(o).filter((k) => !KNOWN_OBSERVABILITY_KEYS.has(k));
+  if (unknown.length) {
+    throw new Error(
+      `REFUSED [UNKNOWN_OBSERVABILITY_KEY]: wrangler.jsonc's observability declares ${unknown.join(", ")}, `
+      + "which this derivation does not carry. Teach deriveObservability the key in the same change.");
+  }
+  return { enabled: true };
+}
+
+/** Read the deployed script's settings back against what was sent. Three honest answers: MATCH (the settings report Workers
+ *  Logs enabled), MISMATCH (they report it off, or state none: the platform reports an off script without the key), or
+ *  UNREADABLE (the settings could not be read: never read as a match). Only `enabled` was sent, so only it is compared. */
+export function observabilityReadBack(settings, want) {
+  if (!settings || typeof settings !== "object") return { verdict: "UNREADABLE", why: "the script settings could not be read" };
+  const got = settings.observability;
+  if (!got || typeof got !== "object") return { verdict: "MISMATCH", why: "the script settings state no observability, which is how the platform reports Workers Logs off" };
+  if (got.enabled !== want.enabled) return { verdict: "MISMATCH", why: `settings say observability.enabled ${JSON.stringify(got.enabled ?? null)}, the config sent ${want.enabled}` };
+  return { verdict: "MATCH", why: `observability.enabled ${got.enabled} read back` };
+}
+
+/* ---- G83 (K4752): WHERE THE TEAM'S ROOM RUNS is chosen at a deploy ----
+ *
+ * `--store-location <hint>` and `--store-generation <n>` become the plane's `plain_text` bindings STORE_LOCATION and
+ * STORE_GENERATION (runtime-limits R27/R28 read them). A room never moves, so a new generation is how a copy gets a new
+ * room; `1` is the first room, so it sends no STORE_GENERATION and removes a held one (the rollback). The hint list is
+ * runtime-limits' own (`STORE_HINTS`), passed in, so this file keeps no second copy. Nothing is defaulted: a flag that is
+ * not given sends nothing and a held binding is kept by deploy.mjs's rule (R34). */
+export const STORE_GENERATION_PATTERN = /^[1-9][0-9]*$/;
+
+/** `{ bindings, remove }` for the flags: `bindings` the plain_text bindings to send, `remove` the names a held binding of
+ *  which must NOT be kept. A value that is not valid is refused by name before anything is uploaded. */
+export function deriveStorePlace({ location, generation } = {}, hints = []) {
+  const bindings = [], remove = [];
+  if (location !== undefined) {
+    if (typeof location !== "string" || !hints.includes(location))
+      throw new Error(`REFUSED [BAD_STORE_LOCATION]: ${JSON.stringify(location ?? null)} is not one of Cloudflare's location hints (${hints.join(", ")}).`);
+    bindings.push({ type: "plain_text", name: "STORE_LOCATION", text: location });
+  }
+  if (generation !== undefined) {
+    if (typeof generation !== "string" || !STORE_GENERATION_PATTERN.test(generation))
+      throw new Error(`REFUSED [BAD_STORE_GENERATION]: ${JSON.stringify(generation ?? null)} is not a whole number of 1 or more written without a sign, a leading zero or a space.`);
+    if (generation === "1") remove.push("STORE_GENERATION");
+    else bindings.push({ type: "plain_text", name: "STORE_GENERATION", text: generation });
+  }
+  return { bindings, remove };
+}

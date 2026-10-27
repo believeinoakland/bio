@@ -81,8 +81,7 @@ test("R1 (DEC-88) createEntity refuses ENTITY_NO_NOTE with its own row (C-91.8) 
 test("R1 C-91.8 ENTITY_NO_NOTE is this module's own row, with R1's translation word for word, naming no place (R31); its number is its own", () => {
   const row = ENTITY_CHECKS.ENTITY_NO_NOTE;
   assert.deepEqual([row.check, row.where], ["C-91.8", "src/entities/index.mjs createEntity > is-entity-noted"]);
-  assert.equal(row.translation, "A subject is registered with a note in your own words saying who or what it is and why it belongs "
-    + "in the registry, and this one has none. Nothing was written.");
+  assert.equal(row.translation, word("refusal.ENTITY_NO_NOTE"));
   assert.ok(Object.isFrozen(row));
   assert.ok(!/oakland|alameda|legistar/i.test(row.translation), "R31");
   const checks = Object.values(ENTITY_CHECKS).map((r) => r.check);
@@ -96,7 +95,7 @@ test("R2 addAlias refuses NO_ENTITY, NO_ALIAS, NO_SUCH_ENTITY, then ALREADY_ALIA
   const b = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat Doe" }).entity_id;
   assert.equal(e.addAlias({ alias: "x" }).reason, "NO_ENTITY");
   const nr = ENTITY_CHECKS.NO_ALIAS;
-  assert.deepEqual([nr.check, nr.where], ["C-33.25", "src/entities/index.mjs addAlias > is-alias-named"], "this module's own row (copied, T18)");
+  assert.deepEqual([nr.check, nr.where], ["C-33.25", "src/entities/index.mjs noAlias > is-alias-named"], "this module's own row (copied, T18)");
   for (const alias of [undefined, null, "", " \t ", "\n\n"]) {
     const na = e.addAlias({ entityId: a, alias });
     assert.deepEqual([na.ok, na.reason, na.code, na.check, na.translation], [false, "NO_ALIAS", "NO_ALIAS", nr.check, nr.translation],
@@ -174,8 +173,8 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   const got = e.readEntity({ entityId: a });
   assert.equal(got.found, true);
   const ent = got.entity;
-  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "declared_by", "defect_count", "defects",
-    "defects_truncated", "entity_id", "forum_kind", "identifiers", "identifiers_truncated", "kind", "label", "limit", "note", "proceeding",
+  assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "confirmed_at", "confirmed_by", "contact", "declared_by", "defect_count", "defects",
+    "defects_truncated", "entity_id", "forum_kind", "identifiers", "identifiers_truncated", "kind", "label", "law", "limit", "named_by_member", "note", "proceeding",
     "relations", "relations_limit", "relations_truncated", "sector", "sector_history", "sector_history_truncated"]);
   assert.deepEqual([ent.sector, ent.sector_history, ent.identifiers, ent.proceeding, ent.forum_kind], [null, [], [], null, null], "an office: no sector, no identifier, no facet, no forum kind");
   assert.deepEqual(ent.aliases.map((x) => [x.alias, x.canonical]), [["Zed", true], ["alpha", false]]);

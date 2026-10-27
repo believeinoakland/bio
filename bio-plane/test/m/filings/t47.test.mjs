@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, WORDS, LAW } from "./fixture.mjs";
 import { FILINGS_CHECKS, FILINGS_FOR_MAX, FILING_BLANKS, unfilledMarker } from "../../../src/filings/index.mjs";
 import { blankUnknownRefusal, FILING_TEMPLATE_CHECKS } from "../../../src/filing-templates/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OUTSIDER = V("quinn");
 const DRAFT_TABLES = ["filing_drafts", "communication_drafts", "filing_approvals", "filing_sendings", "filing_second_approvals"];
@@ -100,7 +101,7 @@ test("R55 filingPrepare takes fills, the member's own values for blanks the temp
   assert.deepEqual(d.unfilled, []);
   const law = d.blanks.find((b) => b.name === "law");
   assert.deepEqual([law.value, law.source, law.label.kind, law.label.by, law.label.machine_work], [LAW, `fills:${V("bo")}`, "member_fill", V("bo"), false]);
-  assert.match(law.label.says, /not read from the record/);
+  assert.equal(law.label.says, word("filings.says.preparer_value_blank"));
   for (const b of d.blanks.filter((y) => y.name !== "law")) assert.equal("label" in b, false, `${b.name}: the record's, unlabelled`);
   assert.deepEqual(JSON.parse(x.row(`SELECT blanks FROM filing_drafts WHERE filing_id=?`, d.id).blanks), d.blanks, "stored with the draft");
   assert.equal((await approve(x, d.id)).ok, true, "no blank left: approved as it stands");
@@ -132,7 +133,7 @@ test("R55 FILL_UNKNOWN_BLANK (C-115.58): a fill naming a blank the text does not
     const r = prep(x, A, { text: WORDS, fills });
     assert.deepEqual([r.reason, r.blank, r.check, r.translation], ["FILL_UNKNOWN_BLANK", blank, "C-115.58", FILINGS_CHECKS.FILL_UNKNOWN_BLANK.translation],
                      JSON.stringify(fills));
-    assert.deepEqual(r.blanks, ["counterparty_role", "act", "standards", "law"], "the blanks the text names");
+    assert.deepEqual(r.blanks, ["counterparty_role", "act", "standards", "law"], "names in the text's order");
   }
   for (const fills of ["law", ["law"], 7]) {
     const r = prep(x, A, { text: WORDS, fills });
@@ -248,7 +249,7 @@ test("R55 with a member-filled blank (filing-templates R31: records, period, for
   const bare = prep(x, A, { text });
   assert.equal(bare.ok, true, JSON.stringify(bare).slice(0, 300));
   assert.deepEqual(bare.unfilled.filter((u) => u.name !== "advisory").map((u) => u.name), ["records", "period", "form", "cost_limit"]);
-  for (const u of bare.unfilled.filter((y) => y.name !== "advisory")) assert.match(u.why, /the member fills it in/, u.name);
+  for (const u of bare.unfilled.filter((y) => y.name !== "advisory")) assert.equal(u.why, word("filings.why.record_holds_value"), u.name);
   assert.ok(bare.text.includes(unfilledMarker("period")));
   const fills = { records: "the inspection logs", period: "FY2025", form: "electronic", cost_limit: "50 dollars" };
   const d = prep(x, A, { text, fills });

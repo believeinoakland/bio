@@ -53,7 +53,7 @@ test("R33: the sweep compares the lens each work product was made under with the
      the same: the lens in force is the scope's, not a viewer's (negative control: made discoverable, the founder
      reads the very lens the sweep compared against) */
   assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).in_force, false);
-  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the group" });
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the team" });
   assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).statements_sha, now1);
   w.membership.projectVisibilitySet({ projectId: P, setting: "hidden", by: "ruth", reason: "closed again" });
   assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).in_force, false);
@@ -377,7 +377,7 @@ test("R43: uncleared answers the open debts the gate admits, newest raised first
   /* D54: the founder's gate and an administrator's admit none of the hidden project's debts (nor the inquiry's, no held
      bundle); made discoverable, both admit the project's (negative control) */
   for (const v of ["admin", "member:second"]) assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate(v) }).debts, [], v);
-  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the group" });
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the team" });
   for (const v of ["admin", "member:second"])
     assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate(v) }).debts.map((d) => d.run), ["RUN-2", "RUN-1"], v);
   w.membership.projectVisibilitySet({ projectId: P, setting: "hidden", by: "ruth", reason: "closed again" });
@@ -443,7 +443,7 @@ test("R44: settled answers the debts settled at or after since that the gate adm
   assert.deepEqual(runs({ gate: viewerPredicate("nobody"), since: "2026-07-01T00:00:00Z" }), []);
   /* D54: the founder's gate admits none of the hidden project's settled debts; made discoverable, it admits them */
   assert.deepEqual(runs({ gate: viewerPredicate("admin"), since: "2026-07-01T00:00:00Z" }), []);
-  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the group" });
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the team" });
   assert.deepEqual(runs({ gate: viewerPredicate("admin"), since: "2026-07-01T00:00:00Z" }), ["RUN-2", "RUN-1", "RUN-3"]);
   w.membership.projectVisibilitySet({ projectId: P, setting: "hidden", by: "ruth", reason: "closed again" });
   for (const gate of [null, {}, { sql: 1, args: [] }, "admin"]) assert.deepEqual(runs({ gate, since: "2026-07-01T00:00:00Z" }), [], String(gate));
