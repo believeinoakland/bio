@@ -9,6 +9,8 @@ import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { EXPECT } from "./expect.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -83,7 +85,7 @@ test("R10 R19: knock is a POST; the refusals are tried in order and a refused kn
   assert.equal((await send(knock(null, { method: "GET" }))).status, 405);
   assert.deepEqual([st.calls.length, tallied(rows)], [0, 0], "a method other than POST is not a knock and is not counted");
   /* envelope before JSON: an oversize body that is also not JSON */
-  const env1 = await send(knock(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) }));
+  const env1 = await send(knock(null, { raw: "x".repeat(KNOCK.maxEnvelope + 1) }));
   assert.equal(env1.body.reason, "KNOCK_ENVELOPE_TOO_LARGE");
   /* not JSON / no content string */
   assert.equal((await send(knock(null, { raw: "not json" }))).body.reason, "REQUIRED_ARGUMENT_MISSING");
@@ -149,7 +151,7 @@ test("R5: the instance limit of 10, RATE_GLOBAL 429 with its row and stated boun
   const r = await c.knock({ content: "g10", sourceAddress: "10.9.9.9", now: t0 });
   assert.deepEqual([r.reason, r.code, r.check, r.translation], ["RATE_GLOBAL", "RATE_GLOBAL", row("RATE_GLOBAL").check, row("RATE_GLOBAL").translation]);
   assert.deepEqual([rateRows(rows), inboxRows(rows), tallied(rows)], [...before, 1]);
-  assert.equal(KNOCK.statedGlobal, "at most 10 knocks to this group's inbox in any 10 minutes, estimated by a sliding window");
+  assert.equal(KNOCK.statedGlobal, word("doorbell.stated_global", { global: "10", window_ms: "10" }));
   /* a source over its own limit and the instance's is RATE_IP */
   const both = setup();
   for (let i = 0; i < 5; i++) await both.c.knock({ content: `h${i}`, sourceAddress: "10.1.0.1", now: t0 });
@@ -161,9 +163,9 @@ test("R5: the instance limit of 10, RATE_GLOBAL 429 with its row and stated boun
   assert.equal(resp.status, 429); assert.equal((await resp.json()).stated, KNOCK.statedGlobal);
 });
 
-test("R6: an envelope over 8 MiB + 4 KiB is refused 413 before it is parsed, with its row and maxBytes, and the store is asked only to count it (R19)", async () => {
+test("R6: an envelope over the base64 length of 8 MiB + 4 KiB is refused 413 before it is parsed, with its row and maxBytes, and the store is asked only to count it (R19)", async () => {
   const { send, st } = setup();
-  const r = await send(knock(null, { raw: "{" + "x".repeat(KNOCK.maxBytes + 4096) }));
+  const r = await send(knock(null, { raw: "{" + "x".repeat(KNOCK.maxEnvelope) }));
   assert.equal(r.status, 413);
   assert.deepEqual([r.body.reason, r.body.code, r.body.check, r.body.translation, r.body.maxBytes],
                    ["KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_ENVELOPE_TOO_LARGE", row("KNOCK_ENVELOPE_TOO_LARGE").check,
@@ -171,6 +173,30 @@ test("R6: an envelope over 8 MiB + 4 KiB is refused 413 before it is parsed, wit
   assert.deepEqual(st.calls, ["/doorbellrefused"], "only the tally's count");
   assert.equal((await send(knock(null, { raw: JSON.stringify({ contentText: "x".repeat(KNOCK.maxBytes + 4000) }) }))).body.reason,
                "KNOCK_PAYLOAD_TOO_LARGE", "just under the envelope is read");
+});
+
+test("R1 R6 R7 (K5129): a file sent as contentB64 reaches the payload check: 7 MiB and exactly 8 MiB are kept; 8 MiB + 1 B is KNOCK_PAYLOAD_TOO_LARGE, not the envelope; a body of 11,188,909 bytes is the envelope", async () => {
+  const MiB = 1024 * 1024;
+  const envelopeBound = 11_188_908;   // base64 length of 8 MiB (11,184,812) + 4 KiB, as R6 states it
+  const b64 = (n) => Buffer.alloc(n, 0x61).toString("base64");
+  assert.equal(b64(8 * MiB).length, 11_184_812);
+  const t = setup();
+  for (const n of [7 * MiB, 8 * MiB]) {
+    const r = await t.send(knock({ contentB64: b64(n) }, { ip: `198.51.100.${n % 200}` }));
+    assert.deepEqual([r.status, r.body.ok, r.body.bytes], [200, true, n], `${n} bytes as contentB64 are kept`);
+  }
+  assert.equal(inboxRows(t.rows), 2);
+  const over = setup();
+  const p = await over.send(knock({ contentB64: b64(8 * MiB + 1) }));
+  assert.deepEqual([p.status, p.body.reason, p.body.maxBytes], [413, "KNOCK_PAYLOAD_TOO_LARGE", 8 * MiB], "over the cap: the payload refusal, not the envelope");
+  /* the envelope's own edge: exactly the bound is read (and refused as payload, being no JSON content), one over is the envelope */
+  const edge = (n) => '{"contentB64":"' + "A".repeat(n - '{"contentB64":""}'.length) + '"}';
+  assert.equal(edge(envelopeBound).length, envelopeBound);
+  const atBound = await over.send(knock(null, { raw: edge(envelopeBound) }));
+  assert.equal(atBound.body.reason, "KNOCK_PAYLOAD_TOO_LARGE", "a body of exactly the bound is read, not refused as envelope");
+  const tooBig = await over.send(knock(null, { raw: edge(envelopeBound + 1) }));
+  assert.deepEqual([tooBig.status, tooBig.body.reason, tooBig.body.maxBytes], [413, "KNOCK_ENVELOPE_TOO_LARGE", 8 * MiB]);
+  assert.equal(KNOCK.maxEnvelope, envelopeBound);
 });
 
 test("R7: decoded content over the cap this instance applies is refused 413 with maxBytes, the detail only without an evidence store", async () => {
@@ -219,20 +245,20 @@ test("R21 R4 R5 R6 R7 R8 (K649, K2627, N851): C-85's five rows are in this modul
 });
 
 test("R9: a C-85 translation is the row's sentence, names no figure, says the group can see how often its doorbell turns people away, and a code with no row fails as an internal error", async () => {
-  const SEEN = "The group can see how often its doorbell turns people away.";
   for (const code of ["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY"]) {
     assert.equal(typeof row(code).translation, "string");
     assert.ok(!/\d/.test(row(code).translation), `${code}'s translation names no figure`);
-    assert.ok(row(code).translation.includes(SEEN), `${code} says the group can see how often it turns people away`);
+    assert.equal(row(code).translation, EXPECT[code], `${code} is its row's sentence`);
   }
-  assert.ok(DOORBELL_CHECKS.KNOCKER_SECRET_WEAK.translation.includes(SEEN), "C-118.3 too");
+  assert.equal(DOORBELL_CHECKS.KNOCKER_SECRET_WEAK.translation, EXPECT.KNOCKER_SECRET_WEAK, "C-118.3 too");
   for (const code of ["RATE_IP", "RATE_GLOBAL"])
-    assert.ok(row(code).translation.startsWith("Your material was not received."), `${code} begins with what happened`);
+    assert.equal(row(code).translation, EXPECT[code], `${code} is its row's sentence`);
   assert.ok(!/saturated/.test(row("RATE_GLOBAL").translation), "the saturation sentence is replaced");
   /* the knocker receives these words through the op */
   const w = setup();
   for (let i = 0; i < 5; i++) await w.send(knock({ contentText: `s${i}` }));
-  assert.ok((await w.send(knock({ contentText: "s5" }))).body.translation.includes(SEEN));
+  const refused = (await w.send(knock({ contentText: "s5" }))).body;
+  assert.equal(refused.translation, EXPECT[refused.reason]);
   const { c } = setup();
   const saved = KNOCK_CHECKS.RATE_IP;
   try {
@@ -274,7 +300,7 @@ test("R3 (K383): a knock id no knock answers to, read or resolved, is NO_SUCH_KN
   const { c, rows } = setup();
   const k = await c.knock({ content: "hello", sourceAddress: "6.6.6.6" });
   const row = DOORBELL_CHECKS.NO_SUCH_KNOCK;
-  assert.deepEqual([row.check, row.translation], ["C-118.2", "No knock in the inbox answers to this id. Nothing was changed."]);
+  assert.deepEqual([row.check, row.translation], ["C-118.2", word("refusal.NO_SUCH_KNOCK")]);
   assert.notEqual(row.check, CAPTURE_CHECKS.EVIDENCE_NOT_HELD.check, "not capture R63's row");
   const snapshot = () => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
     .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);

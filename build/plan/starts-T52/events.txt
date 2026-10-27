@@ -1,0 +1,6 @@
+Round R1, layer 5, module events, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module events`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-16 · W7 · E-K4 · MAJOR · every `IN (...)` in events (`#datedLane`, `#eventsCiting`, `#governingMany`, `:656`, `:674`, `:734`, `events/owner.mjs:65`) binds under 100 parameters (a Durable Object's SQLite allows 100; the standard's page asks for 200 captures and today throws `STORE_DID_NOT_ANSWER` on every load). First: settle at the real shape (K4428 (4)): `op=timeline&captures=` with 90, 120, 200 shas on the shipped store. C-K10: each timeline item carries its event's relations (kind, other end, withdrawn); W30 draws them. events R56, R57 (K5387). PL1 W7.

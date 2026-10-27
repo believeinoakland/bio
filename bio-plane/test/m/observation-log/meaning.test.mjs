@@ -8,6 +8,7 @@ import { OBSERVATION_LOG_MODULE, derivationStatement, derivationDocumentsFrom, d
   from "../../../src/observation-log/index.mjs";
 import { Connections } from "../../../src/connections/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const reading = (over = {}) => ({ content_type: "agenda", reader_version: 2, read_from_text: true, found: true,
   entities: [{ ref: "k:1" }, { ref: "k:2" }], ...over });
@@ -56,7 +57,7 @@ test("R8 the reader run: PRESENT with its count names the reading; a reader that
 test("R8 the resolution attempt: the subject the reference and the authority the capture; no match LOOKED_ABSENT naming what was tried; a match PRESENT naming the first entity, its grades in detail (a C match is still PRESENT), an ambiguous name said and not chosen; no reference writes nothing", () => {
   const w = world();
   const last = () => w.log().at(-1);
-  w.obs.observeResolutionAttempt({ captureSha: "c1", bundleId: "B", ref: "person:Jane Doe", matches: [], considered: "the composite key" });
+  w.obs.observeResolutionAttempt({ captureSha: "c1", bundleId: "B", ref: "person:Jane Doe", matches: [], considered: word("entities.considered.composite_key") });
   assert.deepEqual(fields(last()), ["meaning", "reference", "person:Jane Doe", "derive", "c1", "LOOKED_ABSENT", null, null, null, "plane", null]);
   assert.match(last().detail, /tried 'person:Jane Doe' against the subject registry and matched no entity; it tried the composite key/);
   w.obs.observeResolutionAttempt({ captureSha: "c1", ref: { ref: "k:2" }, matches: [{ entity_id: "ENT-1", grade: "C" }], resolvedBy: "member:bob" });

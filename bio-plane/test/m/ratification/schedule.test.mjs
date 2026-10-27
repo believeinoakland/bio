@@ -13,6 +13,8 @@ import { caseRatifyOp, publishAtOp, ratificationOp, obscuredCopyKey } from "../.
 import { caseConclusionRowLines, keyFingerprint, CHECKED_PARTS, rowOf } from "../../../src/ratification/index.mjs";
 import { peopleLines, memberTieLines } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { scheduleRefusals } from "../publish-schedule/fixtures.mjs";
 
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -57,6 +59,9 @@ async function setup({ raw = [], reader = true, mutate = (d) => d, worker = null
                                 state: "waiting", checked });
   return { w, P, key, other, docSha, sig, text, body, scheduled, registered, holdAsked, op, entry };
 }
+
+/* R58 adds `source` and `why` to `publish_at`, which r7-publish-at.test.mjs asks; R44's tests ask the offer alone */
+const offerOf = ({ source, why, ...kept }) => kept;
 
 const nothingCommitted = (w) => {
   assert.equal(w.row(`SELECT sig_armored FROM case_documents WHERE case_id=?`, CASE).sig_armored, null, "the document is unsigned");
@@ -119,10 +124,12 @@ test("R40, R32: past every refusal op=publishat hands publish-schedule R1 the si
   assert.deepEqual(Object.keys(a.checked), CHECKED_PARTS);
   nothingCommitted(s.w);
   assert.deepEqual([s.w.sealCalls, s.w.levelMoves, s.w.pub.committed.length], [[], [], 1], "only the rolled-back probe reached the commit");
+  /* publish-schedule's own refusals (its `fixtures.mjs`, the real answers of its real call) */
+  const refusals = scheduleRefusals();
   for (const reason of ["PUBLISH_AT_MALFORMED", "PUBLISH_AT_NO_ZONE", "PUBLISH_AT_PAST", "PUBLISH_AT_ALREADY_SET"]) {
-    s.w.scheduleAnswer = { ok: false, reason, detail: `publish-schedule's ${reason}` };
+    s.w.scheduleAnswer = refusals[reason];
     const r = await s.op(publishAtOp, { caseId: CASE, edition: 1, expectedSha: s.docSha, sig: s.sig, at: AT });
-    assert.deepEqual([r.status, r.body.reason, r.body.detail], [409, reason, `publish-schedule's ${reason}`]);
+    assert.deepEqual([r.status, r.body.reason, r.body.detail], [409, reason, refusals[reason].detail]);
   }
   s.w.scheduleAnswer = null;
   const viaOps = s.w.op("publishat", {}, s.body);
@@ -187,7 +194,7 @@ test("R40, R41: a read R41 makes that fails or answers nothing (a hold read answ
   s.w.hold = null;
   const r = s.w.op("publishat", {}, s.body);
   assert.equal(r.reason, "SCHEDULE_UNCHECKABLE");
-  assert.deepEqual(r.unreadable.map((u) => u.what).sort(), ["money fact MNY-2026-0001", "the litigation holds"]);
+  assert.deepEqual(r.unreadable.map((u) => u.what).sort(), ["money fact MNY-2026-0001", word("ratification.ask.litigation_holds")]);
   assert.deepEqual(s.scheduled, []);
 });
 
@@ -306,7 +313,7 @@ test("R42, R45: what cannot be read at the time stops it (UNREADABLE naming what
   s.w.hold = null;
   let out = await s.w.r.publishScheduled(s.entry(checked), LATER);
   assert.deepEqual(out.stopped.map((x) => [x.code, x.cause.code]), [["SCHEDULED_CHECK_REFUSED", "UNREADABLE"]]);
-  assert.deepEqual(out.stopped[0].cause.what, ["the litigation holds"]);
+  assert.deepEqual(out.stopped[0].cause.what, [word("ratification.ask.litigation_holds")]);
   s.w.hold = () => { throw new Error("boom"); };
   out = await s.w.r.publishScheduled(s.entry(checked), LATER);
   assert.equal(out.stopped[0].cause.code, "UNREADABLE");
@@ -357,17 +364,17 @@ test("R3: an edition publish-schedule holds waiting is refused PUBLISH_AT_ALREAD
 test("R44: the pre-flight answers publish_at — offered with the group's zone when the active profiles hold one, else not offered, PUBLISH_AT_NO_ZONE — and its other answers are unchanged", async () => {
   const s = await setup();
   const before = s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") });
-  assert.deepEqual(before.publish_at, { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" });
+  assert.deepEqual(offerOf(before.publish_at), { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" });
   s.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], V("alice"));
   const after = s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") });
-  assert.deepEqual(after.publish_at, { offered: true, zone: "America/Halifax" });
+  assert.deepEqual(offerOf(after.publish_at), { offered: true, zone: "America/Halifax" });
   const { publish_at: a, ...restA } = before, { publish_at: b, ...restB } = after;
   assert.deepEqual(restA, restB);
   assert.deepEqual(restA, { ok: true, ready: true, refusals: [] });
 });
 
 test("R44 (T50, N1203): the offered zone is the one retrieval R69 reads — a local correction governs; no zone there offers nothing, even with a profile zone; a retrieval that cannot be read falls back to the profiles", async () => {
-  const offer = (s) => s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") }).publish_at;
+  const offer = (s) => offerOf(s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") }).publish_at);
   const corrected = await setup({ retrieval: { zone: () => "America/Chicago" } });
   corrected.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], V("alice"));
   assert.deepEqual(offer(corrected), { offered: true, zone: "America/Chicago" }, "the governing (local) zone is offered");

@@ -26,6 +26,7 @@ async function doAnswer(res) {
 const storeRefusal = (out, extra = {}) => json({ ...out.reply.body, ...extra }, out.reply.status);
 const storeSilent = (op, correlation = undefined) =>
   json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, detail: "the store did not answer", correlation }, 502);
+// fixtures-contract: answer-envelope door-helpers
 const requiredArgument = (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
 const HELPERS = { json, requiredArgument, storeSilent, storeRefusal, doAnswer };
 bindPublishedPlane({ ...HELPERS, STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER", STORE_SILENT_DETAIL: "silent",
@@ -100,7 +101,8 @@ function routes(hashes) {
              [worker, "publishedcase", { id }], [door, "docketpublic", { case: id }], [door, "docketfeed", { case: id }]);
   }
   out.push([store, "publishedlist", {}], [store, "publishedmanifest", {}], [store, "publicread", { name: "anything" }],
-           [door, "publishedmanifest", {}], [door, "publicread", { name: "anything" }], [door, "credit", {}]);
+           [door, "publishedmanifest", {}], [door, "publishedlist", {}], [door, "publicread", { name: "anything" }],
+           [door, "credit", {}]);
   return out;
 }
 

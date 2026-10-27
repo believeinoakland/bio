@@ -3,6 +3,9 @@
    move (`golden.json`; how it was recorded is in `corpus.mjs`' header). No network, no record; the time is `NOW`. */
 import { readFileSync } from "node:fs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
+import { leadLegFindings } from "../../../src/inquiry-grammar/grammar.mjs";
+import { themeLegFindings } from "../../../src/connections/checks.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 /* R7 (K1444 (iii); T33-72): the audit reads a clock entry's past date on the office's local day, `ctx.zone`. The golden
    file was recorded when it read the UTC day, so the suite hands it `UTC` (a zone, not a place), on which the local day is
@@ -10,30 +13,27 @@ import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
 export const ZONE = "UTC";
 
 /* K899 (1) (T20 layer 9): text a member reads says "record" where the code before the move said "bundle"; T34-87
-   (DEC-149) re-words three more. Each old phrase with its new one; the golden file stays as recorded and is compared with
-   these applied, so no other byte of it moves. */
+   (DEC-149) re-words three more. T51 (K3949, the words pass) wrote those re-wordings into golden.json once, so the golden
+   holds the words the product holds; each old phrase is kept here only to assert that none of them remains. */
 export const REWORDED = [
-  ["' is not a canonical bundle id", "' is not a canonical record id"],
-  ["point the edge at the ACTN- bundle whose correspondence this answers", "point the edge at the ACTN- record whose correspondence this answers"],
-  /* T34-87 (DEC-149, K1811): a member reads "your group's Civicsmith" where three sentences said "the plane" or "this
-     instance": `requestLifecycleOf`'s `says` (R8), C-2.10's kind finding (R7) and C-101.1's translation (R9). */
-  ["The plane derives only the days", "Your group's Civicsmith derives only the days"],
-  ["' is not a kind this instance offers", "' is not a kind your group's Civicsmith offers"],
-  ["An action is one of the kinds this instance offers:", "An action is one of the kinds your group's Civicsmith offers:"],
-];
-/* R13 (T41-46a): the outcome vocabulary gained `none_exists`, so C-94.5's finding, which names the vocabulary from the
-   array itself, names it too (`lifecycleFindings`, and through it C-2.10's ledger arm and the audit). Each recorded
-   sentence with the one it reads now; applied as REWORDED is. Not a re-wording, so not REWORDED's (its test asks that no
-   old phrase remains, and this one is the start of its successor). */
-export const GROWN = [
-  ["is not one of: granted, denied, partial, reversed, affirmed, none_stated\"", "is not one of: granted, denied, partial, reversed, affirmed, none_stated, none_exists\""],
-];
-const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
-export const GOLDEN = JSON.parse([...REWORDED, ...GROWN].reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
-/** How many times each grown sentence occurs in the golden file as recorded. */
-export const GROWN_COUNTS = GROWN.map(([was]) => RECORDED.split(was).length - 1);
-/** How many times each old phrase occurs in the golden file as recorded (so a test can say every one was re-worded). */
-export const REWORDED_COUNTS = REWORDED.map(([was]) => RECORDED.split(was).length - 1);
+  "' is not a canonical bundle id",
+  "point the edge at the ACTN- bundle whose correspondence this answers",
+  "The plane derives only the days",
+  "' is not a kind this instance offers",
+  "An action is one of the kinds this instance offers:",
+  /* T51 fix round 10 (N7): the zero-question refusal named plane terms; its words are now plain (golden.json holds them). */
+  "a request_for_comment names ZERO inquiries",
+  "add an action_basis leg with kind: advances",
+  /* T51 fix round 10 (B5): the leg repairs named fields; the point-the-leg repair is now plain (golden.json holds it). */
+  "point the leg at the finding this rests on (kind: rests_on)",
+  /* T51 fix round 10 (B6): the finding messages named fields and codes; each is now plain (golden.json holds it). */
+  "correspondence[", "clock[]", "is an ACTION:", "is not one of: rests_on, advances",
+  "carries NEITHER", "carries BOTH", "carries an account with no author", "(D-148)", "(DEC-13)", "(YYYY-MM-DD)", 
+  "record a non-response as direction", "is not a leg block", "not a stage of a",
+  /* T51 fix round 10 (R30): the leg label named the list index; the outcome and decision translations named their codes. */
+  "action_basis[", ];
+export const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
+export const GOLDEN = JSON.parse(RECORDED);
 
 /** JSON's view of a value, so a comparison with the golden file sees exactly what it holds. */
 export const plain = (v) => (v === undefined ? { undefined: true } : JSON.parse(JSON.stringify(v)));
@@ -100,4 +100,17 @@ export function suite(api) {
       clockMoves: S.clockMoves.map(([a, b, t]) => plain(api.clockMovesNotMechanical(clone(a), clone(b), t))),
     },
   };
+}
+
+/** R6, R7, R30 (T51 fix round 10): the lead and theme legs are judged by inquiry-grammar and connections, so what a document
+ *  whose leg is one of them answers is read from those providers for the same input and the label this module hands them,
+ *  never copied (K3810): the recorded golden holds their wording from before they took the caller's label. */
+export const PROVIDER_LEG_DOCS = Object.keys(DOCS).filter((id) => /^leg-(lead|theme)$/.test(id));
+export function providerLegFindings(id) {
+  const findings = [];
+  DOCS[id].action_basis.forEach((leg, i) => {
+    const label = localize("action-grammar.grammar.basis_leg_label", "basis leg {i}", { i: String(i) });
+    leadLegFindings(label, leg, findings) || themeLegFindings(label, leg, findings);
+  });
+  return plain(findings);
 }

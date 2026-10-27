@@ -78,6 +78,30 @@ test("R28: every registered capture must be present: missing, wrong size, parts 
   await assert.rejects(runGate(base(image, { registers: reg, hasCapture: async () => { throw new Error("probe failed"); } })));
 });
 
+test("R28 (K5130): a register row whose path in the image holds bytes hashing to its capture_sha, of its registered size, is present though the bucket answers absent", async () => {
+  const text = "an observation the member testified, with é";
+  const path = `snapshots/observation-${hex(text).slice(0, 16)}.txt`;
+  const bytes = Buffer.byteLength(text, "utf8");
+  const run = (held, over = {}) => runGate(base({ "bundle.md": md(), [path]: held },
+    { registers: [{ path, capture_sha: hex(text), bytes, ...over }], hasCapture: async () => ({ present: false }) }));
+  const codes = async (p) => (await p).findings.map((f) => f.check).filter((c) => c.startsWith("PLANE_"));
+  assert.deepEqual(await codes(run(text)), []);
+  assert.equal((await run(text)).ok, (await runGate(base({ "bundle.md": md(), [path]: text }))).ok);
+  /* one byte changed, same length: the hash differs, so the bucket's absence stands */
+  assert.deepEqual(await codes(run(text.replace("an", "AN"))), ["PLANE_MISSING_BYTES"]);
+  /* bytes that hash right but are not of the registered size are refused by size */
+  assert.deepEqual(await codes(run(text, { bytes: bytes + 1 })), ["PLANE_SIZE"]);
+  /* a blob reference in the image is never read: absent stays absent */
+  assert.deepEqual(await codes(runGate(base({ "bundle.md": md(), [path]: { blobSha: hex(text), bytes } },
+    { registers: [{ path, capture_sha: hex(text), bytes }], hasCapture: async () => ({ present: false }) }))), ["PLANE_MISSING_BYTES"]);
+  /* a row naming a path the image does not hold is the bucket's alone */
+  assert.deepEqual(await codes(runGate(base({ "bundle.md": md() },
+    { registers: [{ path, capture_sha: hex(text), bytes }], hasCapture: async () => ({ present: false }) }))), ["PLANE_MISSING_BYTES"]);
+  /* an unanswered probe still rejects, whatever the image holds */
+  await assert.rejects(runGate(base({ "bundle.md": md(), [path]: text },
+    { registers: [{ path, capture_sha: hex(text), bytes }], hasCapture: async () => { throw new Error("probe failed"); } })));
+});
+
 test("R29: ok is false exactly when an error finding exists; findings hold only errors, shaped {check, detail, repairs?, where?}; warnings counts the rest", async () => {
   for (const image of [{ "bundle.md": md() }, { "bundle.md": md({ id: "INFO-2026-0009-other" }) }]) {
     const all = await catalogue(image);

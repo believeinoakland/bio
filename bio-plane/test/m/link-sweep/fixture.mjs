@@ -3,8 +3,7 @@
    database (node:sqlite) standing in for a Durable Object's storage, under the real `monitoring` (its R65 `sweepHost`, R66
    `registerSweep`). What stands in, and why: monitoring's own later readers it is handed (intent, publication) are
    absent, since no sweep reads them; project-stage's R1 (`stages` maps a
-   project to its stage, for R4's closed test); capture-requests' R45 registration slot, recording what registers
-   (R12), unless a test passes the real one; the host governor, which records every call; the evidence bucket, an
+   project to its stage, for R4's closed test); the host governor, which records every call; the evidence bucket, an
    in-memory R2 stand-in. A test scripts capture's `acquire` on the instance where it says so. Every test drives
    `link-sweep` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -14,7 +13,9 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
-import { linkSweepOf } from "../../../src/link-sweep/index.mjs";
+import { acquireRefusals } from "../acquisition/fixtures.mjs";
+import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
+import { linkSweepOf, DECLARED_OPS } from "../../../src/link-sweep/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { monitoringOf, MONITOR_PAUSE_SETTING as PAUSE_SETTING } from "../../../src/monitoring/index.mjs";
 
@@ -70,11 +71,14 @@ export function governor() {
            governorReport(r) { calls.push(["report", r.host, r.status]); return { recorded: true }; } };
 }
 
-/** capture-requests' R45 slot: `registerSweepScope(module, fn)`, one registration whoever makes it. */
-export function stubCaptureRequests() {
-  return { registered: [], registerSweepScope(module, fn) {
-    if (this.registered.length) return { ok: false, reason: "LISTENER_DECLARED", module: this.registered[0].module };
-    this.registered.push({ module, fn }); return { ok: true, module }; } };
+/** The real capture-requests (its R45 slot answers `registerSweepScope(module, fn)`: one registration whoever makes it),
+ *  wrapped only to record what it accepted, so a test reaches the registered check. */
+export function recordingCaptureRequests(real) {
+  const registered = [];
+  return { registered, registerSweepScope(module, fn) {
+    const r = real.registerSweepScope(module, fn);
+    if (r && r.ok) registered.push({ module, fn });
+    return r; } };
 }
 
 /** An information bundle; `lines` are extra front-matter lines. */
@@ -122,7 +126,12 @@ export function world({ evidence = true, captureRequests = undefined } = {}) {
   obs.migrate();
   const stages = {};
   const projectStage = { calls: [], projectStage(a) { this.calls.push(a); return { project: a.project, stage: stages[a.project] ?? "forming" }; } };
-  const cr = captureRequests === undefined ? stubCaptureRequests() : captureRequests;
+  let cr = captureRequests;
+  if (cr === undefined) {
+    const real = captureRequestsOf(host, { record, capture, governor: gov, promotion, observations: obs });
+    real.migrate();
+    cr = recordingCaptureRequests(real);
+  }
   const mon = monitoringOf(host, { record, membership, promotion, capture, observationLog: obs, governor: gov, env: {},
     now: () => clock.ms, intent: null, publication: null, projectStage });
   const s = linkSweepOf(host, { record, membership, promotion, capture, observationLog: obs, projectStage, monitoring: mon,
@@ -198,7 +207,7 @@ export function site(w, map) {
     const cr = opts.captureRequest;
     calls.push({ locator: cr.locator, opts });
     const s = map[cr.locator];
-    if (!s || s.fail) return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: s ? s.fail : 404 } };
+    if (!s || s.fail) return acquireRefusals({ kind: "source_refused" });
     if (s.redirect) return { status: 422, body: { ok: false, reason: "SWEEP_REDIRECT_OUT_OF_SCOPE", code: "SWEEP_REDIRECT_OUT_OF_SCOPE", target: s.redirect } };
     if (s.governed) return { status: 429, body: { ok: false, reason: "HOST_COOLING_OFF" } };
     const bytes = Buffer.from(s.body);
@@ -215,6 +224,10 @@ export function site(w, map) {
 }
 
 export const SEED = "https://records.example.org/council/index.html";
+/** The query the door hands an op: the caller's own params, then each stamp the op's row declares (`viewer` when it declares
+ *  none, op-declarations' default), set to the caller's id. The arm reads a member only from these, never from a copy the
+ *  caller wrote, so a test builds its stamps here and not by hand. */
+export const doorQuery = (op, who) => new URLSearchParams({ op, ...Object.fromEntries((DECLARED_OPS[op].stamps ?? ["viewer"]).map((s) => [s, who])) });
 export const U = (p) => `https://records.example.org/council/${p}`;
 export const page = (links) => `<html><body>${links.map(([href, text]) => `<a href="${href}">${text}</a>`).join("\n")}</body></html>`;
 export const runsOf = (w) => w.rows(`SELECT * FROM sweep_runs ORDER BY sweep, seq`).map((r) => ({ ...r, detail: JSON.parse(r.detail) }));

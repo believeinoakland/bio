@@ -1,0 +1,55 @@
+{
+ "a": {
+  "status": "complete",
+  "steps": 50,
+  "allRunOnce": true,
+  "totalMs": 204,
+  "perStepMs": 4.08,
+  "firstToLastMs": 155,
+  "gaps": [
+   3,
+   3,
+   3,
+   3,
+   2,
+   3,
+   4,
+   3,
+   4,
+   3
+  ]
+ },
+ "b": {
+  "status": "complete",
+  "output": {
+   "ok": 3
+  },
+  "dump": [
+   {
+    "step": "flaky",
+    "n": 3,
+    "t": 1792794310018
+   },
+   {
+    "step": "after",
+    "n": 1,
+    "t": 1792794310028
+   }
+  ],
+  "totalMs": 3126
+ },
+ "d1048576": {
+  "status": "complete",
+  "__LOCAL_DEV_STEP_OUTPUTS": [
+   "[Uint8Array(1048576 bytes)]"
+  ],
+  "output": 1048576
+ },
+ "d1048577": {
+  "status": "complete",
+  "__LOCAL_DEV_STEP_OUTPUTS": [
+   "[Uint8Array(1048577 bytes)]"
+  ],
+  "output": 1048577
+ }
+}

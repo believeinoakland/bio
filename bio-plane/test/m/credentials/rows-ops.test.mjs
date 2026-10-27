@@ -29,7 +29,9 @@ test("R6 R9 R12 R14 R15 R53 the rows: ids and words as copied, each where naming
       /^This key is registered to another member, so it cannot be yours\. Make a new key in this browser\. Nothing was changed\.$/],
     SIGNER_KEY_REVOKED: ["C-96.16", W("signerRegisterOwn", "is-signer-key-revoked"),
       /^This key was revoked, so it cannot be registered again\. Make a new key in this browser, or ask an administrator\. Nothing was changed\.$/],
-    MACHINE_CANNOT_REGISTER_KEY: ["C-96.17", W("signerRegisterOwn", "is-machine-register-key"), /from their own signed-in session/],
+    MACHINE_CANNOT_REGISTER_KEY: ["C-96.17", W("#machineCannotRegister", "is-machine-register-key"), /from their own signed-in session/],
+    /* (T51; R83) "I know about this key" said of a key not self-registered or not active; its words are the row's own, read by id (K3810) */
+    SIGNER_NOT_SELF_ACTIVE: ["C-96.55", W("signerKnown", "is-signer-self-active"), /\S/],
   };
   const families = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS];
   assert.deepEqual(families.flatMap((f) => Object.keys(f)).sort(), Object.keys(want).sort());
@@ -89,14 +91,12 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
   assert.deepEqual(w.ops("limit=1").aicredentials().limit, 1);
   assert.equal(w.ops("tokenId=t1&who=class:ai", { who: "ann" }).aicredentialrevoke().reason, "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER");
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
-  /* (T49; N1073, K3268) this module's own routes, hand-listed; the ops that moved to ai-accounts (R72) are read from its
-     own declaration, never listed here */
-  const own = ["aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint", "bootstrap",
-    "claim", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "passwordreset", "passwordresetlink",
-    "passwordresetlook", "reauth", "recover", "recoverycodesissue", "recoverycodesstate", "securitycount", "securitymap",
-    "session", "setpassword", "signeradd", "signerlist", "signerset", "signout", "signouteverywhere", "unlock"];
+  /* (T49; N1073, K3268) never hand-listed: the ops that moved to ai-accounts (R72) are read from its own declaration, and
+     every route this module answers is one name, answered once */
   const moved = Object.keys(aiAccountsOps(w.c.accounts, new URL("http://x/"), null, {}));
-  assert.deepEqual(Object.keys(w.ops()).sort(), [...own, ...moved].sort());
+  const routes = Object.keys(w.ops());
+  assert.deepEqual(routes.sort(), Object.keys(credentialsOpsNoVersion(w)).sort(), "the routes are this module's own map");
+  assert.ok(moved.every((op) => routes.includes(op)), "the moved routes are answered here, through their delegates");
 });
 
 test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
@@ -148,8 +148,9 @@ test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `sessi
   assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, false);
   const set = await w.ops("by=ann", { member: "ann", kind: "apikey", secret: "sk-route", by: "admin" }).accountreferenceset();
   assert.equal(set.ok, true);
-  assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).reason,
-    "NOT_YOUR_ACCOUNT", "the stamp wins over the body's `by`");
+  assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).ok, true,
+    "the stamp wins over the body's `by` and `member` (ai-accounts R38): the caller sets its own reference");
+  assert.equal(w.ops("member=second&viewer=member:second").accountreference().held, true, "R38: second's own reference, not ann's");
   assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, true);
   assert.equal(w.ops("member=ann&viewer=member:second").accountreference().reason, "NOT_YOUR_ACCOUNT");
   assert.equal(w.ops("by=ann", { owner: "member:ann", switch: "standing", on: true }).accountusesset().on, true, "T41: accountswitchset retired");

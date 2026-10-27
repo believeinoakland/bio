@@ -283,6 +283,7 @@ test("R15 a row passing conduct is set draining in the tick that fires, counts o
 
 test("R16 nothing outside the drain makes the instance fetch for a request: the drain fires capture's in-process arm, and op=acquire refuses via capture-request from any caller (C-28.13)", async () => {
   const { acquire } = await import("../../../src/acquisition/index.mjs");
+  // fixtures-own: platform the evidence store (R2 bucket) double handed to the real acquire, whose only content is head/get/put
   const fakeCap = { core: { evidenceStore: () => ({ head: async () => null, get: async () => null, put: async () => ({}) }) } };
   for (const cls of ["admin", "member", "probe", "daemon", "ai", null]) {
     const res = await acquire(fakeCap, { via: "capture-request", request: "CR-x", locator: "https://example.org/a" }, { cls });

@@ -1,4 +1,4 @@
-/* screens-wizards R2–R7, R9, R15–R17: the runner, the wizard guide docked beside any screen (interface-shell R31; DEC-120 (2),
+/* screens-wizards R2–R7, R9, R15–R22: the runner, the wizard guide docked beside any screen (interface-shell R31; DEC-120 (2),
    DEC-139 (4), DEC-140, DEC-148). It says each step's what and why, opens the step's screen, rings the control the step
    names and never presses it, sends no act on the member's behalf and fills a field only with a labelled draft (R4).
    It reports use only through `wizardprogress`'s unattributed tally (start, each step reached, finish; stopping sends
@@ -23,7 +23,7 @@ export const WELCOME_AT = 3;
 /* The ops the guide reads and counts through `cs.call` (J2 (1)): the marks, a script's steps, the tally, and each op a
    `{machine: <op>}` draft names (wizard-scripts R13's `machineDrafts`, as `plane`'s `MACHINE_DRAFTS` registers them). */
 export const GUIDE_OPS = Object.freeze(["wizardsat", "wizardread", "startfrom", "wizardprogress", "wizarddraft",
-  "writinghelp", "whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "projectlist", "list"]);
+  "writinghelp", "whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "projectlist", "list", "templatebyhandle"]);
 
 export const PARTS = {
   ids() { return { welcome: "WIZ-7db08189cc0e58c3", first: "WIZ-86b7f4007e3b0e3c", welcomeAt: 3 }; },
@@ -71,6 +71,8 @@ export const PARTS = {
     ui.absent = false;
     ui.draft = null;
     ui.ask = null;
+    ui.none = null;
+    ui.pendingRing = null;
     if (count && !run.reached[i]) { run.reached[i] = true; P.count(cs, view, run, "step", i + 1); }
     const step = run.steps[i];
     if (step.via && !run.tripped[i]) {
@@ -96,34 +98,62 @@ export const PARTS = {
       cs.set("run", run);
       const subjects = ui.subjects || {};
       const kind = P.kinds()[step.screen] || null;
-      const held = Object.hasOwn(subjects, step.screen) ? subjects[step.screen] : null;
+      // R18: `plan`'s own subject may be a plan's id (screens-action R25), so a plan the member opened is never the run's
+      // project, neither as the subject last held there nor as the one she is on
+      const held = step.screen !== "plan" && Object.hasOwn(subjects, step.screen) ? subjects[step.screen] : null;
       const chosen = kind && ui.chosen && Object.hasOwn(ui.chosen, kind) ? ui.chosen[kind] : null;
-      const here = kind && P.kinds()[view.screen] === kind && view.subject !== null && view.subject !== undefined ? view.subject : null;
-      if (kind && (held === null || held === undefined) && chosen === null && here === null) return P.ask(cs, view, kind);
+      const here = kind && view.screen !== "plan" && P.kinds()[view.screen] === kind && view.subject !== null && view.subject !== undefined ? view.subject : null;
+      if (kind && (held === null || held === undefined) && chosen === null && here === null) {
+        if (kind === "project") return P.ask(cs, view, kind, false);
+        if (kind === "question" || kind === "document") return P.recent(cs, view, kind);
+        // R22: an action, a matter or a due date is found through a plan, so with none held the step stays on its card
+        ui.none = { kind, i: run.i };
+        cs.set("run", run);
+        return;
+      }
       cs.go(step.screen, held !== null && held !== undefined ? held : chosen !== null ? chosen : here);
       return;
     }
     view.parts.ringStep(cs, view);
   },
 
-  kinds() { return { project: "project", projectai: "project", timeline: "project", money: "project",
-    question: "question", document: "document" }; },
+  kinds() { return { project: "project", projectai: "project", timeline: "project", money: "project", plan: "project",
+    question: "question", document: "document", action: "action", matter: "matter", "due-date": "due-date" }; },
 
-  /* R17: ask in the dock which project, question or document, as record data the member may see; none to choose for a
-     project says so in its fold and offers Next; for a question or a document with none, the screen opens as it always did */
-  async ask(cs, view, kind) {
+  /* R17: ask in the dock which project, as record data the member may see; none to choose says so in its fold and offers
+     Next. `door` (R20): `true` is the welcome's "Open a question" door, which opens `project` on the one chosen; `"plan"`
+     (R22) is "Open a plan", which opens `plan` on the one chosen */
+  async ask(cs, view, kind, door) {
     const ui = view.ui, run = ui.run, i = run.i;
-    const read = kind === "project" ? ["projectlist", {}] : ["list", { query: { type: kind === "question" ? "inquiry" : "information", limit: "500" } }];
-    ui.ask = { kind, i, options: null };
+    ui.ask = { kind, i, options: null, door: door || false };
     cs.set("run", run);
-    const a = await cs.call(read[0], read[1]);
+    const a = await cs.call("projectlist", {});
     if (ui.run !== run || run.i !== i) return;
     const r = a && a.ok !== false ? (a.result !== undefined ? a.result : a) : null;
-    const rows = kind === "project" ? (r && Array.isArray(r.projects) ? r.projects.map((p) => ({ value: p.id, text: p.name || p.id })) : [])
-      : (r && Array.isArray(r.bundles) ? r.bundles.map((b) => ({ value: b.bundle_id, text: b.title || b.bundle_id })) : []);
-    if (!rows.length && kind !== "project") { ui.ask = null; cs.set("run", run); return cs.go(run.steps[i].screen, null); }
-    ui.ask = { kind, i, options: rows };
+    const rows = r && Array.isArray(r.projects) ? r.projects.map((p) => ({ value: p.id, text: p.name || p.id })) : [];
+    ui.ask = { kind, i, options: rows, door: door || false };
     cs.set("run", run);
+  },
+
+  /* R20: a question or a document step with none held for the run reads the ones the member may see and opens the most
+     recently updated (the list's order for equals), asking no choice and keeping it for the run; with none the step stays
+     on the card (`ui.none`) and the screen is not opened */
+  async recent(cs, view, kind) {
+    const ui = view.ui, run = ui.run, i = run.i;
+    ui.ask = { kind, i, options: null };
+    cs.set("run", run);
+    const a = await cs.call("list", { query: { type: kind === "question" ? "inquiry" : "information", limit: "500" } });
+    if (ui.run !== run || run.i !== i) return;
+    const r = a && a.ok !== false ? (a.result !== undefined ? a.result : a) : null;
+    const rows = r && Array.isArray(r.bundles) ? r.bundles.filter((b) => b && typeof b.bundle_id === "string" && b.bundle_id) : [];
+    ui.ask = null;
+    if (!rows.length) { ui.none = { kind, i }; cs.set("run", run); return; }
+    let pick = rows[0];
+    for (const b of rows) if (String(b.last_updated || "") > String(pick.last_updated || "")) pick = b;
+    ui.chosen = ui.chosen || {};
+    ui.chosen[kind] = pick.bundle_id;
+    cs.set("run", run);
+    cs.go(run.steps[i].screen, pick.bundle_id);
   },
 
   /* R2: ring the step's control once (`cs.ring`); a step whose act is not drawn says so and offers Next; R4: a text or
@@ -138,8 +168,21 @@ export const PARTS = {
     const d = step.draft && typeof step.draft === "object" ? step.draft : null;
     if (found && d && !run.placed[run.i]) {
       if (typeof d.text === "string") { run.placed[run.i] = true; P.place(cs, view, d.text, "screen.guide.draft.text", {}, false); }
-      else if (d.template !== undefined) { run.placed[run.i] = true; ui.draft = { i: run.i, template: true }; }
+      else if (typeof d.template === "string") { run.placed[run.i] = true; ui.draft = { i: run.i, template: true }; P.template(cs, view, d.template); }
     }
+    cs.set("run", run);
+  },
+
+  /* R19: the text of the team's template the step names (`templatebyhandle`, a read), placed in the act's field by `cs.fill`,
+     the blanks as the template names them; a template not offered answers its refusal: nothing is placed, no act is sent,
+     and the step keeps its words and the label */
+  async template(cs, view, handle) {
+    const ui = view.ui, run = ui.run, i = run.i;
+    const a = await cs.call("templatebyhandle", { query: { name: handle } });
+    if (ui.run !== run || run.i !== i) return;
+    const r = a && a.ok !== false ? (a.result !== undefined ? a.result : a) : null;
+    if (!r || r.ok === false || typeof r.text !== "string" || !r.text) return;
+    view.parts.place(cs, view, r.text, "screen.guide.draft.template", {}, false);
     cs.set("run", run);
   },
 
@@ -162,6 +205,7 @@ export const PARTS = {
     if (run.parent) { ui.run = run.parent; ui.notice = null; return P.arrive(cs, view, ui.run.i, false); }
     ui.run = null;
     ui.ask = null;
+    ui.none = null;
     ui.chosen = {};
     ui.notice = { finished: run.id, name: run.name };
     cs.set("run", null);
@@ -175,6 +219,7 @@ export const PARTS = {
     ui.notice = null;
     ui.draft = null;
     ui.ask = null;
+    ui.none = null;
     ui.chosen = {};
     cs.set("run", null);
   },
@@ -185,6 +230,7 @@ export const PARTS = {
     ui.rec = null;
     ui.notice = null;
     ui.ask = null;
+    ui.none = null;
     ui.chosen = {};
     ui.run = { loading: true, steps: [] };
     cs.set("run", ui.run);
@@ -288,6 +334,10 @@ export const guide = {
     if (ui.marks && ui.marks.screen !== r.screen) ui.marksOpen = false;
     if (r.screen) ui.subjects[r.screen] = r.subject === undefined ? null : r.subject;
     P.marksFor(cs, view, r.screen);
+    // R20: the door's "Open a question" is rung on the project it opened, once
+    // R22: the member reached the step's own screen on a subject, so its none card gives way to the step
+    if (ui.none && ui.run && ui.run.steps && ui.run.steps[ui.run.i] && ui.run.steps[ui.run.i].screen === r.screen && r.subject !== null && r.subject !== undefined) ui.none = null;
+    if (ui.pendingRing && ui.pendingRing.screen === r.screen) { const p = ui.pendingRing; ui.pendingRing = null; if (typeof cs.ring === "function") cs.ring(p.act); }
     const run = ui.run;
     const step = run && run.steps && run.steps[run.i];
     if (step && step.screen === r.screen) P.ringStep(cs, view);
@@ -315,9 +365,21 @@ export const guide = {
     if (what === "chip") { ui.marksOpen = !ui.marksOpen; return cs.set("marksOpen", ui.marksOpen); }
     if (what === "where" && run && !run.loading) return P.ringStep(cs, view);
     if (what === "draftit") return P.machine(cs, view);
+    if (what === "door" && run && !run.loading && ui.none && ui.none.i === run.i) return P.ask(cs, view, "project", ui.none.kind === "question" ? true : "plan");
     if (what === "subjectgo" && run && !run.loading && ui.ask && ui.ask.i === run.i) {
       const value = cs.value("wz-subject");
       if (value === null || value === undefined || value === "") return null;
+      if (ui.ask.door === "plan") {
+        ui.ask = null;
+        cs.set("run", run);
+        return cs.go("plan", value);
+      }
+      if (ui.ask.door) {
+        ui.ask = null;
+        ui.pendingRing = { screen: "project", act: "promote" };
+        cs.set("run", run);
+        return cs.go("project", value);
+      }
       ui.chosen = ui.chosen || {};
       ui.chosen[ui.ask.kind] = value;
       ui.ask = null;
@@ -340,10 +402,10 @@ export const guide = {
     const btn = (what, label, tone, extra) => `<button type="button" class="cs-btn"${tone ? ` data-tone="${tone}"` : ""} data-guide="${what}"${extra || ""}>${label}</button>`;
     const stopLine = `<p class="mk-note">${W("guide.stopping")}</p>`;
     if (ui.rec) {
-      const pairs = ui.rec.pairs.map((p, i) => `<li>${W(G + "recording.pair", { i: String(i + 1), screen: { html: P.said(cs, "screen." + p.screen + ".name") || E(p.screen) }, act: { html: P.said(cs, "act." + p.act + ".label." + p.screen) || E(p.act) } })} `
-        + btn("unrecord", W(G + "recording.remove", { i: String(i + 1) }), "quiet", ` data-i="${i}"`) + "</li>").join("");
+      const pairs = ui.rec.pairs.map((p, i) => `<div role="listitem">${W(G + "recording.pair", { i: String(i + 1), screen: { html: P.said(cs, "screen." + p.screen + ".name") || E(p.screen) }, act: { html: P.said(cs, "act." + p.act + ".label." + p.screen) || E(p.act) } })} `
+        + btn("unrecord", W(G + "recording.remove", { i: String(i + 1) }), "quiet", ` data-i="${i}"`) + "</div>").join("");
       return `<div class="cs-wizard" data-guide-state="recording"><span class="step">${W(G + "recording")}</span><p>${W(G + "recording.intro")}</p>`
-        + (pairs ? `<ul class="mk-list">${pairs}</ul>` : `<p class="cs-state" data-state="empty">${W(G + "recording.empty")}</p>`)
+        + (pairs ? `<div class="mk-list" role="list">${pairs}</div>` : `<p class="cs-state" data-state="empty">${W(G + "recording.empty")}</p>`)
         + cs.field("wz-rec-name", G + "recording.name")
         + `<span class="nav">${cs.act("wizarddraft", { label: G + "recording.save" })}${btn("recstop", W(G + "recording.stop"), "quiet")}</span></div>`;
     }
@@ -351,6 +413,11 @@ export const guide = {
     if (run) {
       const n = run.steps.length, i = run.i, step = run.steps[i] || {};
       const words = P.stepWords(cs, view, run, i);
+      // R20: a question or a document step with none to open stays on the card, with its own none words where it has them
+      const none = ui.none && ui.none.i === i ? ui.none : null;
+      const nk = "wizard." + run.id + ".step" + (i + 1) + ".none.";
+      const noneWords = none ? { what: P.said(cs, nk + "what"), why: P.said(cs, nk + "why"), door: P.said(cs, nk + "door") } : null;
+      if (noneWords && noneWords.what) { words.what = noneWords.what; words.why = noneWords.why || ""; }
       const d = step.draft && typeof step.draft === "object" ? step.draft : null;
       const draft = ui.draft && ui.draft.i === i ? ui.draft : null;
       const out = [`<div class="cs-wizard" data-guide-state="running">`,
@@ -362,9 +429,10 @@ export const guide = {
       if (ui.absent && step.act) out.push(`<p class="mk-note" data-guide-absent role="status">${W(G + "absent")}</p>`);
       const ask = ui.ask && ui.ask.i === i && ui.ask.options ? ui.ask : null;
       if (ui.ask && ui.ask.i === i && !ui.ask.options) out.push(`<p class="cs-state" data-state="loading" role="status">${W("state.loading")}</p>`);
-      if (ask && ask.options.length) out.push(cs.choice("wz-subject", "wizard.subject." + ask.kind, ask.options)
+      if (ask && ask.options.length) out.push(cs.choice("wz-subject", "wizard.subject.project", ask.options)
         + `<span class="nav">${btn("subjectgo", W(G + "next"))}</span>`);
-      if (ask && !ask.options.length) out.push(`<details class="mk-details" open data-guide-nosubject><summary>${W("wizard.subject.none.summary")}</summary><p class="mk-note">${W("wizard.subject.none." + ask.kind)}</p></details>`);
+      if (ask && !ask.options.length) out.push(`<details class="mk-details" open data-guide-nosubject><summary>${W("wizard.subject.none.summary")}</summary><p class="mk-note">${W("wizard.subject.none.project")}</p></details>`);
+      if (noneWords && noneWords.door && !ask) out.push(`<span class="nav">${btn("door", noneWords.door, "primary")}</span>`);
       if (d && typeof d.machine === "string" && view.reachable && step.act && !(draft && draft.text !== undefined))
         out.push(`<span class="nav">${btn("draftit", W(G + "draftit"), "", "")}</span>`);
       if (draft && draft.asking) out.push(`<p class="cs-state" data-state="loading" role="status">${W(G + "draft.asking")}</p>`);

@@ -75,7 +75,7 @@ test("R65 the draft path (T35's turn handed in): each of focus and purpose label
   assert.deepEqual(r.focus, { text: "We watch the port's budget and its 12 harbour contracts.", label: { kind: "machine", asked_by: "admin" } });
   assert.deepEqual(r.purpose, { text: "Because nobody else reads them.", label: { kind: "machine", asked_by: "admin" } });
   assert.deepEqual(r.withheld.map((x) => [x.field, x.code]), [["focus", "WRITING_HELP_FACT_ADDED"]]);
-  assert.match(r.note, /nothing is saved until you edit it and keep it/);
+  assert.equal(r.note, word("setup.note.draft_saved_until"));
   assert.equal(writes(w), mark, "it writes nothing; keeping it is op=groupdescriptionset's (membership R109)");
   /* the turn is handed the answers and whether it may read the group's holdings: only with the switch on */
   assert.deepEqual(seen[0].answers, ANSWERS);

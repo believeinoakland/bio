@@ -9,6 +9,7 @@ import { word } from "../../../src/setup-words/index.mjs";
 import { entitiesOf, SECTORS, ORGANISATION_KINDS, CONNECTION_KINDS, CONNECTION_DECLARES, OWNER_REGISTRATION,
          TABLE_DECLARATIONS, ENTITIES_TABLES } from "../../../src/entities/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { reasonText } from "../../../src/civil-time/index.mjs";
 import { kindOf, neighbours as registryNeighbours, ownerConformance, checkConnection, BOUNDS, DECLARED_LABEL,
          LOWEST_GRADE, isRecordId } from "../../../src/connection-grammar/index.mjs";
 
@@ -209,8 +210,8 @@ test("R44 entityByIdentifier answers the one entity holding the scheme identifie
   const in21 = at("2021-05-05");
   assert.deepEqual([in21.entity_id, in21.kind, in21.label, in21.normal, in21.undetermined], [w.pat, "person", "Pat Quill", "P010", undefined]);
   const in25 = at("2025-05-05");
-  assert.deepEqual([in25.entity_id, in25.undetermined, typeof in25.why], [w.lee, true, "string"], "no end is stated: undetermined, answered as such");
-  assert.match(in25.why, /no end is stated/);
+  assert.deepEqual([in25.entity_id, in25.undetermined, typeof in25.why.key], [w.lee, true, "string"], "no end is stated: undetermined, answered as such");
+  assert.match(reasonText(in25.why), /no end is stated/);
   assert.equal(at("2019-05-05"), null, "out for both");
   const none = w.e.entityByIdentifier({ scheme: "ellery_person", id: "P010" });
   assert.deepEqual([none.undetermined, none.candidates], [true, [w.pat, w.lee].sort()], "two holders and no date: not settled here");
@@ -352,7 +353,7 @@ test("R46 registerProceeding registers from a captured passage, attributed to wh
   assert.deepEqual(r.basis, { capture_sha: cap, extent: { kind: "pdf-page", page: 2, rect: null } });
   const ent = w.e.readEntity({ entityId: r.entity_id }).entity;
   assert.equal(ent.declared_by, "class:daemon", "attributed to the machine, named as one (DEC-52)");
-  assert.match(ent.note, new RegExp(`Registered from the captured document ${cap}, page 3, the passage stating the number MC-26-0042; shown for review\\.`));
+  assert.equal(ent.note, word("entities.clean_label.registered_captured_document", { sha: cap, extent: "page 3", number: "MC-26-0042" }));
   assert.deepEqual(ent.proceeding.basis, { capture_sha: cap, extent: { kind: "pdf-page", page: 2, rect: null } });
   assert.deepEqual(ent.identifiers[0].basis, { capture_sha: cap, extent: { kind: "pdf-page", page: 2, rect: null } });
   assert.ok(ent.aliases.some((a) => a.alias === "Ellery v. Quill" && a.declared_by === "class:daemon"), "the caption is an alias");
@@ -402,7 +403,7 @@ test("R47 neighbours answers the relations, not withdrawn, with the node at one 
     assert.equal(i.label, DECLARED_LABEL);
     assert.deepEqual(i.grade, { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] });
     assert.deepEqual([i.valid.from, i.valid.to], [null, null], "a relation holds no dates");
-    assert.equal(typeof i.undetermined.why, "string");
+    assert.ok(typeof i.undetermined.why === "string" || typeof i.undetermined.why.key === "string", "a string, or a keyed reason");
     assert.equal(i.derived, null);
   }
   const m = all.items.find((i) => i.id === w.r1);
@@ -479,7 +480,8 @@ test("R47 R9 (N560, T34-16) connection-grammar's owner-conformance battery runs 
   for (const at of [AT, "1900-01-01T00:00:00Z", null]) {
     const got = w.e.neighbours({ node: w.a, at, viewer: "member:ann" }).items;
     assert.deepEqual(got.map((i) => i.id), [w.r1, w.r2], String(at));
-    assert.ok(got.every((i) => i.valid.from === null && i.valid.to === null && typeof i.undetermined.why === "string"), String(at));
+    assert.ok(got.every((i) => i.valid.from === null && i.valid.to === null
+      && (typeof i.undetermined.why === "string" || typeof i.undetermined.why.key === "string")), String(at));
   }
   for (const viewer of ["member:ann", "member:bo", "member:outsider"])
     assert.deepEqual(w.e.neighbours({ node: w.a, at: AT, viewer }).items.map((i) => i.id), [w.r1, w.r2], viewer);

@@ -1,0 +1,145 @@
+{
+ "key": "bb23",
+ "url": "https://www.oaklandca.gov/files/assets/city/v/1/finance/documents/fiscal-years/2023-2025-budget/fy23-25-adopted-budget-book-final-reduced-size.pdf",
+ "sha256": "3f21377d8b8e190a01daf6428ab52eb1fb2d5d37c0edda32e3fa30c9ff177dd8",
+ "fetched": "2026-10-05",
+ "producer": "tier 2 (pdf-worker R9, unpdf)",
+ "pages_in_document": 653,
+ "pages": [
+  {
+   "page": 0,
+   "text": "FY 2023-25\nADOPTED\nPOLICY\nBUDGET\nOAKANDCA.GOV/BUDGET",
+   "undetermined": []
+  },
+  {
+   "page": 1,
+   "text": "Table Of Contents\nFY 2023-25 ADOPTED POLICY BUDGET",
+   "undetermined": []
+  },
+  {
+   "page": 10,
+   "text": "",
+   "undetermined": [
+    {
+     "page": 10,
+     "reason": "no_text_layer",
+     "font": null,
+     "codes": "",
+     "count": 0
+    }
+   ]
+  },
+  {
+   "page": 16,
+   "text": "Table 1: Revenues, Expenditures & Full-Time Equivalent Positions\nOne Oakland Budget Process\nThe process for creating the Adopted City of Oakland Budget for Fiscal Year 2023 - 2025 began\nwith a statistically valid community survey developed in conjunction with the City’s Budget\nAdvisory Commission. This was followed by Mayoral and Council policy priority discussions and\nthe release of the Five-Year forecast. The Mayor presented a balanced budget for FY 2023 – 2024\nusing thoughtful and collaborative approach to identify solutions to our \u0000scal challenges. The\nCity Council used those same approaches when assessing, deliberating on, and adopting\namendments. Those approaches were:\nSmart \u0000scal planning.\nTwo years prior the City assessed that one of the biggest challenges facing Oakland was a\nstructural budget de\u0000cit. This was the motivation for the City Council to spearhead Measure T,\nwhich Oakland’s residents voted into law last year. This new progressive business tax ensures\ncompanies that earn more pay more, while supporting Oakland’s small business. Staff\nprojects $20 million in new revenue from this tax in Fiscal Year 2024-25, as well as additional\nrevenue in the years to come.\nAdditionally, the City has maintained healthy balances in dedicated Special Funds that\nsupport the Departments of Planning & Building, Public Works, Housing & Community\nDevelopment, and Oakland Public Library. The budget put these funds to use over the next\ntwo years support improvement that residents can see, and provide family-supporting, stable\njobs. As a result of this smart planning, the balancing measures int the Adopted Budget were\nfocused on the General Purpose Fund.6",
+   "undetermined": []
+  },
+  {
+   "page": 136,
+   "text": "Adopted Biennial Significant Changes\nDept\nBudget\nPhase Fund Short Description Job Title and Class\nFY 2023-24\nFTE Change\nFY 2023-24\nChange\nFY 2024-25\nFTE Change\nFY 2024-25\nChange\nOPD Proposed FD_1010\nContinue to freeze 1.0 FTE Sergeant in the Special Victims\nSection Sergeant of Police (PERS) (80 Hr).PS179 (1.00) (349,792) (1.00) (359,940)\nOPD Proposed FD_1010\nContinue to freeze 1.0 FTE Sergeant in the Violent Crime\nOperations Center Sergeant of Police (PERS) (80 Hr).PS179 (1.00) (341,882) (1.00) (351,811)\nOPD Proposed FD_1010 Continue to freeze 3.0 FTE Police Officers in Homicide Police Officer (PERS) (80 Hr).PS168 (3.00) (831,399) (3.00) (855,606)\nOPD Proposed FD_1010 Continue to freeze 4.0 FTE Police Officers in Special Operations Police Officer (PERS) (80 Hr).PS168 (4.00) (1,177,038) (4.00) (1,211,279)\nOPD Proposed FD_1010\nContinue to freeze 7.0 FTE Police Officers in Misdemeanor\nCrimes and Task Forces Police Officer (PERS) (80 Hr).PS168 (7.00) (1,990,700) (7.00) (2,049,339)\nOPD Proposed FD_1010\nFreeze 1.0 FTE Administrative Assistant in Misdemeanor\nCrimes and Task Forces Administrative Assistant I.SS102 (1.00) (120,512) (1.00) (130,715)\nOPD Proposed FD_1010 Freeze 1.0 FTE Crime Analyst in the Crime Analysis Section Crime Analyst.AP446 (1.00) (179,675) (1.00) (194,887)\nOPD Proposed FD_1010\nFreeze 1.0 FTE Police Communications Dispatcher, Senior in\nCommunications\nPolice Communications Dispatcher,\nSenior.PS203 (1.00) (219,267) (1.00) (227,925)\nOPD Proposed FD_1010 Freeze 1.0 FTE Police Officer in the Intelligence Unit Police Officer (PERS) (84 Hr).PS190 (1.00) (309,391) (1.00) (318,328)\nOPD Proposed FD_1010 Freeze 1.0 FTE Police Officers in Special Operations Police Officer (PERS) (80 Hr).PS168 (1.00) (291,430) (1.00) (299,974)\nOPD Proposed FD_1010\nFreeze 1.0 FTE Police Officers in the Violent Crime Operations\nCenter Police Officer (PERS) (80 Hr).PS168 (1.00) (313,371) (1.00) (322,454)\nOPD Proposed FD_1010 Freeze 1.0 FTE Sergeant in District Area 1 Sergeant of Police (PERS) (80 Hr).PS179 (1.00) (329,175) (1.00) (338,994)\nOPD Proposed FD_1010 Freeze 1.0 FTE Sergeant in District Area 5 Sergeant of Police (PERS) (80 Hr).PS179 (1.00) (329,175) (1.00) (338,994)\nOPD Proposed FD_1010\nFreeze 2.0 FTE Police Officers in the Robbery and Burglary\nSection Police Officer (PERS) (80 Hr).PS168 (2.00) (550,971) (2.00) (567,110)\nOPD Proposed FD_1010 Freeze 3.0 FTE Police Officers in District Area 2 Police Officer (PERS) (80 Hr).PS168 (3.00) (822,449) (3.00) (846,707)\nOPD Proposed FD_1010 Freeze 5.0 FTE Police Officers in District Area 1 Police Officer (PERS) (80 Hr).PS168 (4.00) (1,132,684) (4.00) (1,166,450)\nOPD Proposed FD_1010 Freeze 5.0 FTE Police Officers in District Area 3 Police Officer (PERS) (80 Hr).PS168 (2.00) (587,978) (2.00) (605,511)\nOPD Proposed FD_1010 Freeze 5.0 FTE Police Officers in District Area 3 Police Officer (PERS) (84 Hr).PS190 (1.00) (314,013) (1.00) (323,348)\nOPD Proposed FD_1010 Freeze 6.0 FTE Police Officers in District Area 4 Police Officer (PERS) (80 Hr).PS168 (5.00) (1,393,993) (5.00) (1,435,308)\nOPD Proposed FD_1010 Freeze 7.0 FTE Police Officers in Traffic Operations Police Officer (PERS) (80 Hr).PS168 (7.00) (2,006,498) (7.00) (2,065,751)\nOPD Proposed FD_1010 Fund Change: Change funding from 1010 to 2252 Captain of Police (PERS).PS107 (0.65) (308,893) (0.94) (459,749)\nOPD Proposed FD_1010 Fund Change: Change funding from 2252 to 1010 Police Officer (PERS) (80 Hr).PS168 0.20 54,155 0.72 200,764\nOPD Proposed FD_1010 Fund Change: Change funding in FY25 from 2252 to 1010 Police Officer (PERS) (80 Hr).PS168 1.00 313,984\nOPD Proposed FD_1010 Reduction of Overtime in GPF (1010) (928,176) (1,059,362)\nOPD Proposed FD_1010\nTransfer 1.0 FTE from False Alarm Reduction Program (2411)\nto GPF (1010) Police Communications Dispatcher.PS162 1.00 218,903 1.00 227,531\nOPD Proposed FD_1010\nTransfer 1.0 FTE from False Alarm Reduction Program (2411)\nto GPF (1010) Police Communications Supervisor.PS164 1.00 254,262 1.00 264,285\nOPD Proposed FD_1010\nTransfer 1.0 FTE from GPF (1010) to False Alarm Reduction\nProgram (2411) Police Communications Dispatcher.PS162 (0.77) (169,940) (0.59) (135,306)\nOPD Proposed FD_1010\nTransfer 1.59 FTE from Alameda County: Vehicle Abatement\nAuthority (2172) to GPF (1010) Police Services Technician II.PS173 1.59 220,598 1.59 241,774\nOPD Proposed FD_1010\nTransfer 5.0 FTE in FY25 from Measure Z - Violence Prevention\nand Public Safety Act of 2014 (2252) to GPF (1010) Police Officer (PERS) (80 Hr).PS168 4.00 1,149,531\nOPD Proposed FD_1010\nTransfer 5.0 FTE in FY25 from Measure Z - Violence Prevention\nand Public Safety Act of 2014 (2252) to GPF (1010) Volunteer Program Specialist II.AP353 1.00 194,887\nOPD Proposed FD_1010\nContinue to freeze 1.0 FTE Police Evidence Technician in\nCriminal Investigation Police Evidence Technician.PS165 (1.00) (167,285) (1.00) (181,079)\nOPD Proposed FD_1010 Continue to freeze 1.0 FTE Sergeant in Homicide Sergeant of Police (PERS) (80 Hr).PS179 (1.00) (338,606) (1.00) (348,425)\nOPD Proposed FD_1010\nContinue to freeze 1.0 FTE Sergeant in the Robbery and\nBurglary Section Sergeant of Police (PERS) (80 Hr).PS179 (1.00) (303,115) (1.00) (312,154)\nOPD Proposed FD_1010\nContinue to freeze 11.0 FTE Police Officers in the Violent\nCrime Operations Center Police Officer (PERS) (80 Hr).PS168 (11.00) (3,171,510) (11.00) (3,264,325)\nOPD Proposed FD_1010\nContinue to freeze 2.0 FTE Payroll Personnel Clerk IIIs in Police\nPersonnel Payroll Personnel Clerk III.SS163 (2.00) (277,266) (2.00) (300,464)\nOPD Proposed FD_1010\nContinue to freeze 2.0 FTE Police Officers in Criminal\nInvestigations Police Officer (PERS) (80 Hr).PS168 (2.00) (600,006) (2.00) (617,495)\nOPD Proposed FD_1010 Continue to freeze 2.0 FTE Sergeant in Special Operations Sergeant of Police (PERS) (80 Hr).PS179 (2.00) (640,902) (2.00) (659,383)\nOPD Proposed FD_1010\nContinue to freeze 5.0 FTE Account Clerks in Budget\nAccounting (Fiscal) Account Clerk I.AF001 (1.00) (95,099) (1.00) (103,151)\nOPD Proposed FD_1010\nContinue to freeze 5.0 FTE Account Clerks in Budget\nAccounting (Fiscal) Account Clerk II.AF020 (2.50) (278,937) (2.50) (302,553)\nOPD Proposed FD_1010\nContinue to freeze 5.0 FTE Police Officers in the Special\nVictims Section Police Officer (PERS) (80 Hr).PS168 (2.00) (608,584) (2.00) (626,381)\nOPD Proposed FD_1010\nContinue to freeze 5.0 FTE Police Officers in the Special\nVictims Section Police Officer (PERS) (84 Hr).PS190 (1.00) (318,663) (1.00) (327,931)\nOPD Proposed FD_1010\nContinue to freeze 6.0 FTE Police Officers in the Robbery and\nBurglary Section Police Officer (PERS) (80 Hr).PS168 (6.00) (1,770,608) (6.00) (1,822,095)\nOPD Proposed FD_1010 Continue to freeze 7.0 FTE Police Officers in Traffic Operations Police Officer (PERS) (80 Hr).PS168 (6.00) (1,713,276) (6.00) (1,764,354)\nOPD Proposed FD_1010\nContinue to temporarily freeze 5.0 FTE Complaint\nInvestigators pending the civilization of the Internal Affairs\nDivision. Complaint Investigator II.AP146 (4.00) (831,848) (4.00) (902,280)\nOPD Proposed FD_1010\nContinue to temporarily freeze 5.0 FTE Complaint\nInvestigators pending the civilization of the Internal Affairs\nDivision. Complaint Investigator III.AP144 (1.00) (240,758) (1.00) (261,140)\nOPD Proposed FD_1010\nFreeze 1 FTE Police Services Technician II.PS173 in District\nArea 2 Police Services Technician II.PS173 (1.00) (148,394) (1.00) (154,115)\nOPD Proposed FD_1010 Freeze 8.0 FTE Police Officers in District Area 5 Police Officer (PERS) (80 Hr).PS168 (7.00) (1,969,951) (7.00) (2,028,557)\nOPD Proposed FD_2172\nTransfer O&M from Alameda County: Vehicle Abatement\nAuthority (2172) to GPF (1010) (64,242) (64,559)\nOPD Proposed FD_2172\nTransfer 1.59 FTE from Alameda County: Vehicle Abatement\nAuthority (2172) to GPF (1010) Police Services Technician II.PS173 (1.59) (246,434) (1.59) (262,902)126",
+   "undetermined": []
+  },
+  {
+   "page": 147,
+   "text": "GENERAL PURPOSE FUND REVENUE\nUpdated On 11 Sep, 2023\nReset\nBroken down by\nRevenues General Fund: General Purpose\nHistory  \n\nVisualization\nProperty Tax\n$308,925,155 (36.5%)\nSales Tax\n$69,652,297 (8.2%)\nBusiness License Tax\n$128,138,817 (15.1%)\nUtility Consumption Tax\n$61,865,265 (7.3%)\nReal Estate Transfer Tax\n$124,257,777 (14.7%)\nService Charges\n$53,689,153 (6.3%)\nInterfund Transfers\n$3,192,661 (0.4%)\nTransfers from Fund Balance\n$33,836,422 (4.0%)\nMore (9 grouped)\n$62,967,065 (7.4%)\nBack\nFY24-25-BiennialFY24-25-Biennial\n \nProperty Tax\nSales Tax\nBusiness License Tax\nUtility Consumption Tax\nReal Estate Transfer Tax\nService Charges\nInterfund Transfers\nTransfers from Fund Balance\nMore (9 grouped)\nSort By Chart of Accounts \n    \nHelp  Share \nType FY21-22-Actuals FY22-23-Midcycle FY23-24-Biennial FY24-25-Biennial\nProperty Tax $258,968,959 $265,493,946 $294,168,232 $308,925,155\nSales Tax $64,165,885 $62,600,000 $67,689,746 $69,652,297\nVehicle License Fee $503,129 $0 $0 $0\nBusiness License Tax $101,289,621 $111,880,000 $125,248,004 $128,138,817\nUtility Consumption Tax $57,929,742 $54,400,000 $61,898,792 $61,865,265\nReal Estate Transfer Tax $138,395,514 $112,200,000 $110,412,094 $124,257,777\nTransient Occupancy Tax $16,661,833 $23,986,951 $22,482,510 $23,380,350\nParking Tax $9,538,678 $12,390,000 $11,262,935 $11,555,456\nLicenses & Permits $1,412,792 $6,081,473 $1,388,483 $1,388,483\nFines & Penalties $20,366,962 $18,999,999 $23,071,854 $24,932,679\nInterest Income $911,740 $484,097 $484,097 $484,097\nService Charges $51,806,789 $55,548,458 $51,602,846 $53,689,153\nInternal Service Funds $1,800 $0 $0 $0\nGrants & Subsidies $1,839,562 $0 $0 $0\nMiscellaneous Revenue -$3,423,010 $800,000 $21,216,000 $1,226,000\nInterfund Transfers $3,256,618 $70,907,407 $13,075,123 $3,192,661137",
+   "undetermined": []
+  },
+  {
+   "page": 195,
+   "text": "Service changes, including changes in position count by job class, are noted in the departmental\nexpenditure pages, with a Citywide summary of position changes listed by department and fund\non the Signi\u0000cant Budgetary Changes page.\n2022-23 Midcycle Authorized\nFTE 2023-24 Adopted Budget FTE 2024-25 Adopted Budget FTE\nAccount Clerk II 12.00 10.00 10.00\nAccount Clerk III 17.00 18.00 18.00\nAccountant I 1.00 0.00 0.00\nAccountant II 19.00 21.00 21.00\nAccountant III 18.00 21.00 21.00\nAccounting Analyst, Principal 1.00 1.00 1.00\nAccounting Supervisor 3.00 3.00 3.00\nAccounting Technician 5.00 6.00 6.00\nAdministrative Assistant I, PT 0.50 0.00 0.00\nAdministrative Analyst I 17.00 18.00 17.00\nAdministrative Analyst II 60.00 64.00 64.00\nAdministrative Assistant I 28.00 29.00 29.00\nAdministrative Assistant I, PPT 1.80 1.80 1.80\nAdministrative Assistant II 31.00 32.00 31.00\nAdministrative Assistant II (CONF) 3.00 2.00 2.00\nAdministrative Services Manager I 9.00 14.00 14.00\nAdministrative Services Manager II 8.00 10.00 10.00\nAnimal Care Attendant 6.00 6.00 6.00\nAnimal Care Attendant, PT 3.00 3.00 3.00\nAnimal Care Services Supervisor 1.00 1.00 1.00\nAnimal Control Officer 8.00 8.00 8.00\nAnimal Control Officer, PPT 0.50 0.50 0.50\nAnimal Control Supervisor 1.00 0.00 0.00\nApplication Developer II 1.00 1.00 1.00\nApplication Developer III 9.00 9.00 9.00\nAquatics Program Coordinator 1.00 1.00 1.00\nArboricultural Inspector 3.00 3.00 3.00\nArchitectural Associate (Field) 1.00 1.00 1.00\nArchivist 1.00 1.00 1.00\nAssist Director, Parks & Rec 1.00 1.00 1.00\nAssist Director, Pub Works Agency 6.00 6.00 6.00\nAssist to the City Administrator 6.00 8.00 8.00\nAssistant Chief of Fire Department 2.00 2.00 2.00\nAssistant City Administrator 2.00 2.00 2.00\nAssistant Director, Plan & Bldg 1.00 1.00 1.00\nAssistant Fire Marshal-Non Sworn 1.00 1.00 1.00\nAssistant to the Director 13.00 13.00 13.00\nAssociate Director, Library Services 1.00 1.00 1.00\nAsst Human Resources Director 1.00 0.00 0.00\nAuto Equipment Mechanic 12.00 12.00 12.00\nCitywide Classi\u0000cation Summary\nFY 2023-25 ADOPTED POLICY BUDGET185",
+   "undetermined": []
+  },
+  {
+   "page": 240,
+   "text": "Fund Group Fund Department FY23-24 Biennial FY24-25 Biennial\nGeneral Funds FD_1010 Non Departmental and Port $55,596,333 $42,846,805\nGeneral Funds FD_1010 Capital Improvement Projects $554,704 $563,785\nGeneral Funds FD_1010 City Council $7,124,687 $7,475,525\nGeneral Funds FD_1020 Non Departmental and Port $10,485,706 $0\nGeneral Funds FD_1030 City Administrator $688,013 $743,267\nGeneral Funds FD_1030 Finance Department $331,112 $334,119\nGeneral Funds FD_1030 Oakland Parks and Recreation\nDepartment $3,957,409 $3,922,701\nGeneral Funds FD_1030 Human Services Department $1,623,772 $1,598,821\nGeneral Funds FD_1030 Economic and Workforce\nDevelopment Department $576,148 $591,061\nGeneral Funds FD_1100 City Attorney $2,860,000 $2,860,000\nGeneral Funds FD_1100 Police Department $7,020,466 $7,020,466\nGeneral Funds FD_1100 Fire Department $2,623,476 $2,623,476\nGeneral Funds FD_1100 Oakland Public Works\nDepartment $3,771,095 $3,771,095\nGeneral Funds FD_1100 Oakland Parks and Recreation\nDepartment $596,528 $596,528\nGeneral Funds FD_1100 Non Departmental and Port $43,127,996 $43,127,996\nGeneral Funds FD_1150 City Attorney $967,379 $1,004,014\nGeneral Funds FD_1150 Human Resources\nManagement Department $7,781,797 $7,937,033\nGeneral Funds FD_1150 Finance Department $58,887 $61,161\nGeneral Funds FD_1150 Police Department $552,613 $597,268\nGeneral Funds FD_1150 Fire Department $49,104 $50,940\nGeneral Funds FD_1150 Oakland Public Works\nDepartment $384,687 $415,663\nGeneral Funds FD_1150 Non Departmental and Port -$9,794,467 -$10,066,079\nGeneral Funds FD_1200 Non Departmental and Port $93,094,389 $94,263,973\nGeneral Funds FD_1610 Finance Department $532,930 $532,930\nGeneral Funds FD_1610 Economic and Workforce\nDevelopment Department $680,296 $680,296\nGeneral Funds FD_1700 Finance Department $2,686,500 $2,435,633\nGeneral Funds FD_1700 Information Technology\nDepartment $75,839 $78,669\nGeneral Funds FD_1710 City Administrator $349,542 $374,517\nGeneral Funds FD_1710 Fire Department $48,870 $48,870\nGeneral Funds FD_1710 Oakland Public Works\nDepartment $6,046,606 $6,021,631\nGeneral Funds FD_1720 City Administrator $100,000 $100,000\nGeneral Funds FD_1720 Fire Department $48,970 $48,970\nGeneral Funds FD_1720 Oakland Public Works\nDepartment $24,122,034 $24,135,480\nGeneral Funds FD_1750 City Administrator $7,109 $7,156\nGeneral Funds FD_1750 Finance Department $17,825 $18,385\nGeneral Funds FD_1750 Department of Transportation $5,557,851 $5,589,491\nGeneral Funds FD_1750 Economic and Workforce\nDevelopment Department $10,100 $10,100\nGeneral Funds FD_1750 Non Departmental and Port $2,589,417 $3,192,661\nGeneral Funds FD_1760 City Clerk $1,273,113 $1,307,167\nGeneral Funds FD_1770 Economic and Workforce\nDevelopment Department $792,986 $792,986\nGeneral Funds FD_1780 Human Services Department $24,766,580 $23,493,722\nGeneral Funds FD_1820 Oakland Parks and Recreation\nDepartment $9,893,677 $10,377,173\nGeneral Funds FD_1870 City Administrator $534,978 $579,159\nGeneral Funds FD_1870 City Attorney $198,134 $205,673\nGeneral Funds FD_1870 Human Resources\nManagement Department $131,451 $139,026\nGeneral Funds FD_1870 City Auditor $35,426 $36,825\nGeneral Funds FD_1870 Finance Department $271,768 $281,595\nGeneral Funds FD_1870 Human Services Department $494,495 $514,017\nGeneral Funds FD_1870 Economic and Workforce\nDevelopment Department $566,717 $614,507\nGeneral Funds FD_1870 Housing and Community\nDevelopment Department $14,512,738 $13,462,593230",
+   "undetermined": []
+  },
+  {
+   "page": 282,
+   "text": "FINANCIAL INFORMATION\nExpenditures By Fund\nUpdated On 11 Sep, 2023\nReset\nBroken down by\nFunds City Council Expenses\nHistory  \n \nVisualization\nFY21-22-Actuals FY22-23-Midcycle FY23-24-Biennial FY24-25-Biennial\nFiscal Year\n0.0\n1.0M\n2.0M\n3.0M\n4.0M\n5.0M\n6.0M\n7.0M\nDollars\nBack\nGeneral Funds\nSort By Chart of Accounts \n    \nHelp  Share \nType FY21-22-Actuals FY22-23-Midcycle FY23-24-Biennial FY24-25-Biennial\nGeneral Funds\nGeneral Fund: General Purpose $6,305,867 $7,316,568 $7,124,687 $7,475,525\nGENERAL FUNDS TOTAL $6,305,867 $7,316,568 $7,124,687 $7,475,525\nTOTAL $6,305,867 $7,316,568 $7,124,687 $7,475,525272",
+   "undetermined": []
+  }
+ ],
+ "images": [
+  {
+   "kind": "image",
+   "ref": "an image on page 1",
+   "page": 0,
+   "rect": [
+    0,
+    391.45,
+    612.75,
+    792
+   ],
+   "mime": "image/jp2",
+   "name": "Im0",
+   "inline": false,
+   "width": 1871,
+   "height": 1224,
+   "filters": [
+    "JPXDecode"
+   ],
+   "axis_aligned": true
+  },
+  {
+   "kind": "image",
+   "ref": "an image on page 1",
+   "page": 0,
+   "rect": [
+    7.7,
+    187.156,
+    277.7,
+    284.656
+   ],
+   "mime": null,
+   "name": "Im1",
+   "inline": false,
+   "width": 360,
+   "height": 130,
+   "filters": [
+    "FlateDecode"
+   ],
+   "axis_aligned": true
+  },
+  {
+   "kind": "image",
+   "ref": "an image on page 17",
+   "page": 16,
+   "rect": [
+    122.85,
+    612.48,
+    488.67,
+    714.27
+   ],
+   "mime": "image/jp2",
+   "name": "Im0",
+   "inline": false,
+   "width": 938,
+   "height": 261,
+   "filters": [
+    "JPXDecode"
+   ],
+   "axis_aligned": true
+  },
+  {
+   "kind": "image",
+   "ref": "an image on page 196",
+   "page": 195,
+   "rect": [
+    102.57,
+    570.36,
+    108.03,
+    575.82
+   ],
+   "mime": null,
+   "name": "Im0",
+   "inline": false,
+   "width": 12,
+   "height": 12,
+   "filters": [
+    "FlateDecode"
+   ],
+   "axis_aligned": true
+  }
+ ]
+}

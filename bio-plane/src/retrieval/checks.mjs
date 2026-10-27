@@ -5,6 +5,7 @@
  * from what the plane refuses (DEC-49). */
 
 import { say } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* ===========================================================================
  * PL-9 / D-222 OPTION C — THE MEANING-GRAIN READ'S REFUSALS.
@@ -69,8 +70,8 @@ export const SELECTION_CHECKS = {
      graded refusals by the literal `ok: false`, so a region `where` around it
      would have judged zero and failed as a drifted marker — and REC-64 therefore
      could not give this code a region, and so could not give it a row, and so
-     could not give it a translation. The surface has keyed on `SET_MOVED` in
-     `app.html` since long before that.
+     could not give it a translation. The member surfaces have keyed on
+     `SET_MOVED` since long before that.
 
      THE TRANSLATION SAYS WHAT THE MEMBER MUST DO, because this refusal is one of
      the few in the plane with a remedy the member can actually take: look again
@@ -80,5 +81,14 @@ export const SELECTION_CHECKS = {
     check: 'C-33.32',
     where: 'src/retrieval/index.mjs selectionResolve > is-selection-moved, reached from every act that takes a selection',
     translation: say('refusal.SET_MOVED'),
+  },
+
+  /* R99: another credential's selection. Retrieval's own code, apart from intent's `NOT_YOURS` (C-111.15, whose
+     sentence is about a member's aspiration), so the door, which keys rows by code, finds this row (as tasks'
+     `TASK_NOT_YOURS`). */
+  SELECTION_NOT_YOURS: {
+    check: 'C-33.59',
+    where: 'src/retrieval/index.mjs selectionResolve > is-selection-yours, reached from every act that takes a selection',
+    translation: localize('retrieval.checks.selection_not_yours', 'That set of things was made by another member; only that member can use it.'),
   },
 };

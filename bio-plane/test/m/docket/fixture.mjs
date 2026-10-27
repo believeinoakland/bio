@@ -15,9 +15,10 @@
    is the fact `producingGroup` (promotion R40), registered as instance-setup does. Every test drives `docket` at its
    interface. */
 import { DatabaseSync } from "node:sqlite";
+import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
-import { membershipOf } from "../../../src/membership/index.mjs";
+import { membershipOf, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
@@ -57,6 +58,17 @@ export function storage() {
 }
 
 export const V = (id) => `member:${id}`;
+/** K4557, K231: the one refusal for a member not yet joined (invited, or no part in the project), `membership`'s own row,
+ *  answered by every docket act that needs a joined member; `act` is the op's door name. */
+export const NOT_JOINED = "PROJECT_ACT_NOT_A_PARTICIPANT";
+export function notJoinedOk(r, act) {
+  assert.equal(r.ok, false, JSON.stringify(r).slice(0, 200));
+  assert.equal(r.reason, NOT_JOINED);
+  assert.equal(r.code, NOT_JOINED);
+  assert.equal(r.check, PROJECT_AUTHORITY_CHECKS[NOT_JOINED].check);
+  assert.equal(r.translation, PROJECT_AUTHORITY_CHECKS[NOT_JOINED].translation);
+  assert.equal(r.act, act);
+}
 export const MACHINE = "class:ai";
 export const SLUG = "test-group";
 export const DAY = 86400000, HOUR = 3600000;
@@ -110,7 +122,7 @@ export function world({ slug = SLUG, before = null } = {}) {
   /* case-tensions first, with the stand-in contradiction, so publication's factory registers its provider on it */
   const caseTensions = caseTensionsOf(host, { record, membership, promotion, contradiction, now: () => iso(clock.now) });
   const realPublication = publicationOf(host, { record, membership, promotion, now: () => iso(clock.now) });
-  /* publication R62, the real module's; `stamps.refuse` or `stamps.throws` makes the pass-through refuse or throw */
+  /* publication R62, the real module's; `stamps.refuse` (publication's own refusal, from its published `stampEditionRefusal`) or `stamps.throws` makes the pass-through refuse or throw */
   const stamps = { calls: [], refuse: null, throws: false,
     get list() {
       return [...st.sql.exec(`SELECT case_id, edition FROM edition_stamps GROUP BY case_id, edition ORDER BY MIN(rowid)`)]
@@ -122,7 +134,7 @@ export function world({ slug = SLUG, before = null } = {}) {
     stampEdition(q) {
       stamps.calls.push(q);
       if (stamps.throws) throw new Error("stamp store down");
-      if (stamps.refuse) return { ok: false, reason: stamps.refuse, detail: "refused by the test" };
+      if (stamps.refuse) return stamps.refuse;
       return realPublication.stampEdition(q);
     } };
   const subjects = new Map();

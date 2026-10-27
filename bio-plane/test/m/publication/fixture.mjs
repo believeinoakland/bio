@@ -22,8 +22,18 @@ import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/inde
 import { materialsLines, materialAttestationLines, acceptedWorkBlockLines, calculationsLines,
          timelineLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { noSelection } from "../retrieval/fixtures.mjs";
+import { standardReadWorld } from "../standards/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
+/** standards' own answer for an id it does not hold, or one `viewer` may not read (its fixture `standardReadWorld`), made
+ *  when first asked: the one answer (`NO_SUCH_STANDARD`) a stand-in for `standardRead` gives beside the ones it holds. */
+/* retrieval's own refusal of a selection it holds none of (its fixture `noSelection`), made when first asked */
+let heldNone = null;
+let heldStandards = null;
+export const absentStandard = (id, viewer = "nobody") =>
+  (heldStandards ||= standardReadWorld()).standardRead({ id: String(id), viewer });
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
 /* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
@@ -133,7 +143,7 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   connections.entities.migrate();
   connections.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities: connections.entities,
-                              retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) },
+                              retrieval: { selectionResolve: (a) => (heldNone ||= noSelection()).selectionResolve(a) },
                               provenance: prov, now: () => clock.now });
   k.migrate();
   const basisVersions = basisVersionsOf(host, { record, membership, promotion, content,
@@ -206,17 +216,18 @@ export function world({ group = "test-group", workerd = false, contradiction = n
     },
     /** A document (information bundle) with one capture of its own, fetched by this copy: a `direct` receipt names it
      *  (provenance R62), so case-carriage carries it whole as captured (its R13, R16; T39). `fetched: false` leaves it
-     *  with no receipt, a member document. */
-    doc(id, { fetched = true } = {}) {
-      const text = `the text of ${id}`, path = `snapshots/${id}.txt`;
+     *  with no receipt, a member document. `digest` names the capture's sha (a test that must state which captures a
+     *  finding rests on); by default the sha of the document's own text. */
+    doc(id, { fetched = true, digest = null } = {}) {
+      const text = `the text of ${id}`, path = `snapshots/${id}.txt`, capSha = digest || sha(text);
       const res = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path, text },
-                { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(path, text)] }, null, 2) }],
+                { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(path, text, capSha)] }, null, 2) }],
         meta: { object_type: "information" },
-        register: [{ sha256: sha(text), path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
+        register: [{ sha256: capSha, path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
       if (!res.ok) throw new Error(`fixture doc refused: ${JSON.stringify(res).slice(0, 400)}`);
       if (fetched) {
-        const rc = prov.recordReceipt({ addressNorm: `example.org/${id}`, captureSha: sha(text), retrieved: NOW, via: "direct" });
+        const rc = prov.recordReceipt({ addressNorm: `example.org/${id}`, captureSha: capSha, retrieved: NOW, via: "direct" });
         if (!rc.recorded) throw new Error(`fixture doc receipt refused: ${JSON.stringify(rc).slice(0, 400)}`);
       }
       return res;
@@ -367,8 +378,8 @@ export function inquiryMd(id, { question = `Is ${id} answered?`, legs = [], refs
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role || "supports"}`,
                                                          ...(l.date ? [`    date: "${l.date}"`] : [])])] : []),
     ...extra,
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 
 export function infoMd(id) {
@@ -384,11 +395,11 @@ export function projMd(title) {
           "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
 }
 
-function provDoc(path, text) {
+function provDoc(path, text, capSha = sha(text)) {
   return {
     file: path, locator: `https://example.org/${path}`, retrieved: "2026-09-27T00:00:00Z",
     authority: "the publisher", authority_state: "determined", authority_basis: "named on the document",
-    capture: { method: "acquire", grade: "B", actor_class: "session", sha256: sha(text), encoding: "utf8",
+    capture: { method: "acquire", grade: "B", actor_class: "session", sha256: capSha, encoding: "utf8",
                bytes: Buffer.byteLength(text) },
     origin: { kind: "named_request" },
   };

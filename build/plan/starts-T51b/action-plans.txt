@@ -1,0 +1,6 @@
+Round R1, layer 9, module action-plans, tranche T51b. Your depth: 2. BOB: BOB #317 (session_01224iDvCaoPmHYZNq2oLxtm).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T51b --module action-plans`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T51b-2 · As T51b-1, for the plan's dates and checks: a "no zone held" world now finds the team's zone (R46 (b), R48, R54 red after the pass's edits); each brought to the rewritten requirement. Its walker case: money's figures refused `MONEY_BAD_PERIOD` for want of the team's zone (re-walk 11 C new 1, `money/index.mjs:276`), and the plan's date checks; both re-walked live after the redeploy. Tested by its suite and its users' suites.

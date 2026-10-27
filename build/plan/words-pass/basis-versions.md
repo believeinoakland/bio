@@ -1,0 +1,81 @@
+# basis-versions: the words check after the conversion (K3949)
+
+Layer 6. 28 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- handlist `bio-plane/test/m/basis-versions/acts.test.mjs:166` [?] ops: basisversions, narrow, narrowcandidates, ... (8 of 13 not the module's own) — handlist
+- inline `bio-plane/src/basis-versions/conclude.mjs:174` "(INVESTIGATIVE-SESSION.md §7.1). Drawn with no project there is no ..."
+- inline `bio-plane/src/basis-versions/conclude.mjs:299` "Falsifier: NO FALSIFIER STATED — recorded by {} at {}"
+- inline `bio-plane/src/basis-versions/conclude.mjs:454` "Changes: this project now stands on reading '{}' of {}, written by {}."
+- inline `bio-plane/src/basis-versions/conclude.mjs:454` "Commentary ({}, not evidence): {}"
+- inline `bio-plane/src/basis-versions/conclude.mjs:454` "Falsifier: NO FALSIFIER STATED — recorded by {} at {}"
+- inline `bio-plane/src/basis-versions/grammar.mjs:408` "version '{}' has {} leg{} with no ground while {} ground{} named: a..."
+- inline `bio-plane/src/basis-versions/index.mjs:1015` "and there is no default project."
+- inline `bio-plane/src/basis-versions/index.mjs:1107` "'{}' rests on {} separately sufficient parts and this"
+- inline `bio-plane/src/basis-versions/index.mjs:1109` "carry the finding on its own. {}{} Pass"
+- inline `bio-plane/src/basis-versions/index.mjs:1113` "default, because that is exactly how a finding gets strengthened by..."
+- inline `bio-plane/src/basis-versions/index.mjs:1270` "It holds no readings at all: the live basis is not a reading, and"
+- inline `bio-plane/src/basis-versions/index.mjs:1271` "a citation on it is made more specific by a reading taken from it."
+- inline `bio-plane/src/basis-versions/index.mjs:1422` "of a proposed passage."
+- inline `bio-plane/src/basis-versions/index.mjs:1448` "in a DIFFERENT copy of it ({}…)"
+- inline `bio-plane/src/basis-versions/index.mjs:1449` "in a different document ({})"
+- inline `bio-plane/src/basis-versions/index.mjs:1481` "— it is the reading being narrowed, and reusing its name would chan..."
+- inline `bio-plane/src/basis-versions/index.mjs:1487` "why that part is the one on point."
+- inline `bio-plane/src/basis-versions/index.mjs:1527` "Chosen from a machine proposal ({})."
+- inline `bio-plane/src/basis-versions/index.mjs:1527` "Named by the member."
+- inline `bio-plane/src/basis-versions/index.mjs:1527` "The old grade was not carried: a part earns only from what is in it."
+- inline `bio-plane/src/basis-versions/index.mjs:481` "question's basis, and there is no default question."
+- inline `bio-plane/src/basis-versions/index.mjs:696` [copy] "the inquiry carries no such reading"
+- inline `bio-plane/src/basis-versions/index.mjs:697` [copy] "that reading does not state the claim recorded"
+- inline `bio-plane/src/basis-versions/index.mjs:897` "there must not be one."
+- inline `bio-plane/src/basis-versions/index.mjs:905` "wrong one is worse than being asked which was meant."
+- testcopy `bio-plane/test/m/basis-versions/grammar.test.mjs:14` [part] "a reading of the evidence" — part test copy
+- testcopy `bio-plane/test/m/basis-versions/imported-legs.test.mjs:21` [part] "not accepted at that edition" — part test copy
+
+## Plain findings (K3957)
+
+35 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('basis-versions.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/basis-versions/checks.mjs:498` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:503` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:508` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:513` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:522` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:527` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:532` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:565` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:576` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:581` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:588` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:593` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:598` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:612` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:631` "src/basis-versions/index.mjs #moveVersionState, reached from the four acts that move a ..."
+- plain `bio-plane/src/basis-versions/checks.mjs:658` "composition with its legs, its branches and its description (section 6)"
+- plain `bio-plane/src/basis-versions/checks.mjs:660` "separated (section 8). The separation is carried as the version's claim"
+- plain `bio-plane/src/basis-versions/checks.mjs:662` "(section 8, under section 3's basis ruling)"
+- plain `bio-plane/src/basis-versions/checks.mjs:668` "only act available is a new edition, and it is the member's"
+- plain `bio-plane/src/basis-versions/conclude.mjs:130` "this inquiry has no readable bundle.md, so its state cannot be moved"
+- plain `bio-plane/src/basis-versions/conclude.mjs:156` "this project has no readable bundle.md, so its conclusion cannot be recorded"
+- plain `bio-plane/src/basis-versions/conclude.mjs:372` "this project has no readable bundle.md, so its conclusion cannot be recorded"
+- plain `bio-plane/src/basis-versions/grammar.mjs:166` "describe what this reading of the evidence is and why it differs from the others"
+- plain `bio-plane/src/basis-versions/grammar.mjs:194` "or leave the version suggested — a state nobody has moved it into needs no reason"
+- plain `bio-plane/src/basis-versions/grammar.mjs:314` "name the member asserting that this ground is independently sufficient"
+- plain `bio-plane/src/basis-versions/grammar.mjs:320` "name the member asserting that this ground is independently sufficient"
+- plain `bio-plane/src/basis-versions/grammar.mjs:409` "give every leg of this version a ground — a leg needed whatever else holds belongs in e..."
+- plain `bio-plane/src/basis-versions/grammar.mjs:410` "or put every leg in one ground and say relationship: and"
+- plain `bio-plane/src/basis-versions/grammar.mjs:416` "relationship: and — every ground is necessary and the finding is no stronger than its w..."
+- plain `bio-plane/src/basis-versions/grammar.mjs:417` "relationship: or — the grounds are alternatives, each claimed sufficient on its own by ..."
+- plain `bio-plane/src/basis-versions/grammar.mjs:423` "or split the legs into the grounds you meant to be alternatives"
+- plain `bio-plane/src/basis-versions/grammar.mjs:424` "or merge the grounds into one — legs in one ground are all necessary"
+- plain `bio-plane/src/basis-versions/grammar.mjs:445` "or leave the partition as it was inherited — an edit that only changes the evidence is ..."
+- plain `bio-plane/src/basis-versions/index.mjs:1473` "a different place, not a part of it"
+- plain `bio-plane/src/basis-versions/index.mjs:1474` "not one this record can compare with it"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:35` "\"this entry names an act your team's Civicsmith does not know, so wh...\""
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:36` "\"stood on after it is undetermined rather than guessed.\""
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:56` "\"is one your team's Civicsmith cannot read, so what it stands\""
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:57` "\"on is undetermined and a withdrawal would be withdrawing a guess.\""

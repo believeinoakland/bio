@@ -201,7 +201,7 @@ export const opCalls = (env) => env.calls.filter((c) => c.route !== "session" &&
    R12). Its `env` is the storage's (`env` here), handed in as the stand-in `capture` doorbell R25 reads `env` from, so
    admission's tests reach nothing of `capture`. */
 export const W = await import("../../../src/admission/window.mjs");
-export function storeWorld({ env = {} } = {}) {
+export function storeWorld({ env = {}, flushMs } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...a) { const st = db.prepare(q); return st.columns().length ? st.all(...a).map((r) => ({ ...r })) : (st.run(...a), []); } };
   const storage = { sql, transactionSync(fn) {
@@ -212,9 +212,9 @@ export function storeWorld({ env = {} } = {}) {
   const doorbell = doorbellOf(ctx, { capture: { env } });
   const declared = [];
   const record = { declareTable(module, entries) { declared.push({ module, entries }); return { ok: true }; } };
-  const a = W.admissionOf(ctx, { record });
+  const a = W.admissionOf(ctx, { record, flushMs });
   const ops = (body) => W.admissionOps(a, new URL("http://do/doorwindow"), body);
-  const rows = () => sql.exec(`SELECT * FROM ${W.DOOR_WINDOW_TABLE} ORDER BY source, bucket`);
+  const rows = () => { a.flush(); return sql.exec(`SELECT * FROM ${W.DOOR_WINDOW_TABLE} ORDER BY source, bucket`); };
   return { db, sql, ctx, doorbell, declared, record, a, ops, rows };
 }
 

@@ -4,11 +4,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, NOW } from "./world.mjs";
 import { QUEUE_ACT_CHECKS } from "../../../src/queue/index.mjs";
+import { disposeProposalOk } from "../progressions/fixtures.mjs";
 import { notADisposition } from "../../../src/progressions/index.mjs";
 
 function setup() {
   const calls = [];
-  const w = world({ progressions: { disposeProposal: (a) => { calls.push(a); return { ok: true, scope: "instance", key: `${a.progressionKey}::${a.stageKey}` }; } } });
+  const w = world({ progressions: { disposeProposal: (a) => { calls.push(a); return disposeProposalOk(a); } } });
   w.member("alice"); w.member("bob");
   w.bundle("PRJ-1", "project"); w.join("PRJ-1", "alice"); w.join("PRJ-1", "bob", { state: "invited" });
   w.bundle("PRJ-H", "project"); w.bundle("INQ-1", "inquiry");
@@ -20,10 +21,10 @@ const F = "FINDING::stance-changed-here-not-elsewhere::INQ-1::PRJ-1";
 
 test("R27: a call naming neither project nor finding goes to progressions.disposeProposal, by key or by the pair", () => {
   const w = setup();
-  assert.equal(pd(w, { key: "proc::award", to: "deferred", reason: "r", definitionVersion: 2 }).ok, true);
-  assert.equal(pd(w, { progressionKey: "proc", stageKey: "need", to: "dismissed", reason: "r", definitionVersion: 2 }).ok, true);
+  assert.equal(pd(w, { key: "proc::award", to: "deferred", reason: "r", definitionVersion: 1 }).ok, true);
+  assert.equal(pd(w, { progressionKey: "proc", stageKey: "need", to: "dismissed", reason: "r", definitionVersion: 1 }).ok, true);
   assert.deepEqual(w.calls.map((c) => [c.progressionKey, c.stageKey, c.to, c.definitionVersion, c.decidedBy]),
-    [["proc", "award", "deferred", 2, "alice"], ["proc", "need", "dismissed", 2, "alice"]]);
+    [["proc", "award", "deferred", 1, "alice"], ["proc", "need", "dismissed", 1, "alice"]]);
 });
 
 test("R27: the project arm's refusals in order, as progressions R21 words the shared four", () => {

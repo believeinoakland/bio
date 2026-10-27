@@ -10,7 +10,6 @@
    ---- FL-10's ARMS (D-298: the plane's own bundle gets the guard), RUN 2026-09-10 IN WORKTREE bio-worktrees/FLEET, APPENDED — no FL-9 arm edited. **BASELINE 56 pass / 0 fail, exit 0** before each arm.
    (6) **FL-10's OWN ARM, AND THE TREE-SHAKE PAIR IN ONE** — append one export to `bio-plane/src/pdfstructure.mjs` (NON-entry) and rebuild nothing -> **54 pass, 2 FAIL, exit 1**: bio-plane's input-hash arm naming `src/pdfstructure.mjs` AND pdf-worker's cross-tree arm naming `../bio-plane/src/pdfstructure.mjs` — the SAME plane edit stales BOTH committed artifacts by name. **The plane's BYTE arm stayed GREEN, as declared: esbuild tree-shakes the unused export, so byte-identity alone would have passed this real source change** — FL-9's measurement holding on the plane, which is FL-10's NC (2) satisfied by measurement rather than assertion. agent-worker held.
    (6b) **THE SAME CHANGE ON THE PLANE'S ENTRY** (`src/index.mjs`, exports not tree-shaken) -> **52 pass, 4 FAIL, exit 1**: input-hash, byte-identity, the manifest-sha arm, AND the comment-only sensitivity assertion — the fourth is the same change seen by the sensitivity probe, not a second cause. Both members held.
-   (7) **THE GENERATED-INPUT LOOP** — append one HTML comment to `bio-plane/src/sign-release.html`, re-render nothing -> **55 pass, 1 FAIL, exit 1**, EXACTLY the render assertion naming the stale render; every input-hash and byte arm held, because no hashed input moved. This is the staleness class the manifest cannot see and the arm exists for.
    (8) **OVER-STRICTNESS, PLANE HALF** — a legitimate `npm run build` of the unchanged plane must leave the tree byte-identical (`git status --porcelain` empty; run after the commit, like (5a)) and the suite green at the baseline figure.
    (5) **OVER-STRICTNESS, and these must all PASS.** [(b) and (c) RETIRED in T20 with `tools/` and `scripts/coverage.mjs`, which they read; the driver runs (a) alone — see its header.] (a) Rebuild BOTH members from unchanged sources — a legitimately rebuilt, byte-identical bundle must still pass and the tree must be UNCHANGED afterwards (`git status --porcelain` empty). **RUN AFTER THE COMMIT, deliberately: the tree-unchanged half is only a statement about a clean tree.** (b) A docs-only change must not fail the build — this suite must be OUTSIDE the doc-facing set `tools/gates.mjs` derives, READ OFF `gates.mjs --explain` since M0-152 (see M0-152's line below; the restatement this sentence described is superseded). (c) `node scripts/coverage.mjs --strict` exits 0, read from the process's own status.
    ---- M0-188's ARMS (the remedy a finding hands its reader), RUN 2026-09-24 IN THIS WORKTREE, APPENDED — no earlier arm edited. **BASELINE 96 pass / 0 fail, exit 0** before each arm; every restore verified by CONTENT and by sha256 at 31888 B.
@@ -79,9 +78,8 @@ import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
   planeMember, assetsOf, optionsFor, isContainer, isGuarded,
-  BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport,
+  BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport, releaseBindingFindings, ASCII_RECIPE,
 } from "../../scripts/fleet-bundle.mjs";
-import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../scripts/embed-signpage.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -116,18 +114,16 @@ console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them 
 /* T36-2 (BUNDLER #10; rev. 2 §2 R10): `file-scanner`, the fleet's second container member and its first with two
    classes (T36-5), is listed with each class's image: a two-class member answers its classes' repositories, in its
    marker's order; a one-class member its one image, as before.
-   RE-POINTED 2026-10-08 (BUNDLER #11, T37-3 B2; K2176, N773): file-scanner's images moved from `ghcr.io`, which
-   Containers cannot pull, to Docker Hub (file-scanner R10).
-   RE-PINNED 2026-10-12 (BUNDLER #16, T46-2; K2266, K2912): the 0.82.0 cut (`dist/cut-0.82.0` @ 985fbefc88) names all
-   three images under `ghcr.io/believeinoakland/`, where it published them and wrote their digests; red until the cut is
-   merged into the tranche (T46 rule 5 (5)). */
+   RE-POINTED T51 (N1242, K3805, bundler R35): the real fleet's markers name the three images on Docker Hub,
+   `docker.io/civicsmith/…@sha256`, which an installer pulls with no credential; red until file-scanner's (T51-9) and
+   agent-runner's (T51-64) own jobs merge their markers. */
 t("members discovered by their own marker file, never a list kept here",
   members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
 t("agent-runner and file-scanner are listed as container members, each with its images (R24)",
   members.filter(isContainer).map((m) => [m.name, m.kind,
     ...(m.containers ? m.containers.map((c) => c.image.repository) : [m.image.repository])]),
-  [["agent-runner", "container", "ghcr.io/believeinoakland/agent-runner"],
-   ["file-scanner", "container", "ghcr.io/believeinoakland/file-scanner-scanner", "ghcr.io/believeinoakland/file-scanner-renderer"]]);
+  [["agent-runner", "container", "docker.io/civicsmith/agent-runner"],
+   ["file-scanner", "container", "docker.io/civicsmith/file-scanner-scanner", "docker.io/civicsmith/file-scanner-renderer"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
@@ -178,7 +174,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   const pdf = manifests.get("pdf-worker");
   const cross = (pdf?.inputs || []).filter((i) => i.path.startsWith("../bio-plane/")).map((i) => i.path).sort();
   t("pdf-worker's build reaches into the PLANE's source, and the manifest hashes those files too",
-    cross, ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs"]);
+    cross, ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/read-bounds.mjs", "../bio-plane/src/setup-words/index.mjs", "../bio-plane/src/setup-words/rows.mjs", "../bio-plane/src/subresources.mjs"]); // setup-words since the words pass (K3949): pdfstructure and subresources read their sentences by key; read-bounds since PDF-WORKER #6 quotes READ_BOUNDS (G124a, K4875)
   const agent = manifests.get("agent-worker");
   /* CORRECTED 2026-09-12 BY FL-6, never exempted: the roster was three modules
      when FL-9 pinned it. FL-6 added `src/cascade.mjs` AND the member's first
@@ -613,20 +609,11 @@ console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because
     planeInputs.filter((p) => p.startsWith("../site-profiles/")).sort(),
     ["../site-profiles/events.mjs", "../site-profiles/handlers/aspnet-webforms.mjs", "../site-profiles/handlers/client-rendered.mjs",
      "../site-profiles/handlers/conservative.mjs", "../site-profiles/handlers/wordpress.mjs", "../site-profiles/index.mjs",
-     "../site-profiles/recogniser.mjs", "../site-profiles/region.mjs"]);
+     "../site-profiles/recogniser.mjs", "../site-profiles/region.mjs", "../site-profiles/scan.mjs"]); // scan.mjs since SITE-PROFILES #4 (G140, K4875)
   t("bio-plane: and no input names a docprofile file that moved to site-profiles",
     planeInputs.filter((p) => /^\.\.\/docprofile\/(index|recogniser|events)\.mjs$|^\.\.\/docprofile\/handlers\//.test(p)), []);
   t("bio-plane: and vendors NOTHING — the byte arm is runnable on any checkout, so it can never skip",
     (planeManifest?.vendoredInputs || []).length, 0);
-
-  /* THE GENERATED-INPUT LOOP the input hashes cannot see: `src/signpage.mjs` is
-     committed and hashed like any source, but it is GENERATED from
-     `bio-plane/src/sign-release.html` — so a changed page whose render was never re-run
-     leaves every input hash true and the next build different. The gate closes
-     it by rendering IN MEMORY (one expression, imported from the script that
-     writes it) and comparing. Nothing writes. */
-  t("bio-plane: committed src/signpage.mjs IS the render of bio-plane/src/sign-release.html — a changed page with a stale render fails HERE, not at the next build",
-    renderSignpage(readFileSync(SIGNPAGE_SRC, "utf8")), readFileSync(SIGNPAGE_OUT, "utf8"));
 
   if (planeCommitted) {
     const { runnable, reason } = freshBuildRunnable(plane, planeManifest || {});
@@ -760,6 +747,29 @@ console.log("\n--- 9a · R31's NEGATIVE CONTROL: synthetic artifacts that a budg
   } finally {
     rmSync(root, { recursive: true, force: true });
     delete globalThis.__r31Probe; delete globalThis.__r31Seen;
+  }
+}
+
+console.log("\n--- 9 · the release is coherent: every binding names a class or service the release exports (R39; K4176) ---");
+{
+  /* A member bound to a class another member's bundle does not export is refused by Cloudflare at deploy (10061), so the
+     release is checked here, against the bundles that would ship (built, not read from source). Red by name until
+     agent-runner exports `RemoteSession` (agent-worker's REMOTE). */
+  const { findings, unchecked } = await releaseBindingFindings([planeMember(), ...members.filter((m) => m.bundle)]);
+  show(findings.map((f) => f.text));
+  t("R39: every service and Durable Object binding, container class and migration class of the plane and each member is exported by the release's bundles", findings.map((f) => f.text), []);
+  t("R39: every bundle was built here to read its exports", unchecked.map((u) => `${u.name}: ${u.reason}`), []);
+}
+
+console.log("\n--- 10 · every committed fleet bundle is pure ASCII (R2; G39), and its manifest records the recipe ---");
+{
+  /* One character above U+007F anywhere makes V8 hold the whole script two bytes a character (36 MB of the plane's 86 MB idle). */
+  for (const m of [planeMember(), ...members.filter((x) => x.bundle)]) {
+    const bytes = readFileSync(join(m.abs, m.bundle.outfile));
+    let at = -1;
+    for (let i = 0; i < bytes.length; i++) if (bytes[i] > 0x7f) { at = i; break; }
+    t(`R2: ${m.name}'s committed bundle holds no byte over 0x7F`, at, -1);
+    t(`R2: ${m.name}'s manifest records the ASCII recipe`, JSON.parse(readFileSync(join(m.abs, m.bundle.manifest), "utf8")).recipe.ascii, { ...ASCII_RECIPE });
   }
 }
 

@@ -40,6 +40,9 @@ export const QUEUE_SCHEMA = `-- REC-21: the PERSONAL half of the queue, and it i
 -- muted since it was kept; a kind muted before it was has no entry and answers no instant (never back-filled). It is
 -- the muted list's "at", and it is added to a table made without it by migrate().
 --
+-- snoozed_at (R59, T51) is the instant the snooze was made, kept beside snoozed_until from then on; a snooze made before
+-- it was has none and answers no instant (never back-filled). It is added to a table made without it by migrate().
+--
 -- case_id IS a bundle id (an inquiry or a project), so this table clears in
 -- BOTH purge arms via a DELETE keyed on it (D-113); test/m/queue/invariants.test.mjs'
 -- R36 test holds that.
@@ -50,6 +53,7 @@ CREATE TABLE IF NOT EXISTS queue_state (
   snoozed_until TEXT,
   last_seen     TEXT,
   muted_at      TEXT,
+  snoozed_at    TEXT,
   PRIMARY KEY (member_id, case_id)
 );
 CREATE INDEX IF NOT EXISTS queue_state_member ON queue_state(member_id);
@@ -65,11 +69,19 @@ CREATE INDEX IF NOT EXISTS queue_state_case ON queue_state(case_id);
 -- the ONE write (queue/index.mjs queueMute) for queue_state's reason. It is personal
 -- state, not corpus-derived, and it is keyed on no bundle id, so it clears in
 -- the whole-store purge arm only (D-113).
+--
+-- item_kind, item_title and item_subject (R58, T51) are what the member's feed held of the item when she muted it: its kind,
+-- the title of its subject bundle (R56) and that bundle's id (so a bundle she may no longer see answers no title, R33). They
+-- are null for an item that was not live then, and for a mute made before they were kept (never back-filled); migrate() adds
+-- them to a table made without them.
 CREATE TABLE IF NOT EXISTS queue_item_mutes (
   member_id   TEXT NOT NULL,
   item_id     TEXT NOT NULL,
   item_class  TEXT NOT NULL,
   muted_at    TEXT NOT NULL,
+  item_kind   TEXT,
+  item_title  TEXT,
+  item_subject TEXT,
   PRIMARY KEY (member_id, item_id)
 );
 

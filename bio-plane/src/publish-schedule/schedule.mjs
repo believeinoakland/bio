@@ -22,8 +22,9 @@
 import { bounds, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
-import { factPath } from "../local-facts/paths.mjs";
+import { factPath, TEAM_ZONE_PATH } from "../local-facts/paths.mjs";
 import { rowOf } from "./checks.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R4: the page of `scheduledEditions`, its default and its ceiling. */
 export const SCHEDULED_EDITIONS_MAX = 500;
@@ -32,6 +33,9 @@ export const SCHEDULE_STATES = Object.freeze(["waiting", "published", "stopped",
 /** R2, R9: the reason a waiting edition is stopped when no publisher could check it, never published unchecked: its
  *  code, its row (C-122.5; N687) and the row's translation. */
 export const SCHEDULED_CHECK_UNAVAILABLE = Object.freeze(rowOf("SCHEDULED_CHECK_UNAVAILABLE"));
+
+/** R2 (G54): the most entries of a settled row's case file, and the longest code. */
+export const CASE_FILE_MAX = 50, CASE_FILE_CODE_MAX = 64;
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
@@ -46,6 +50,14 @@ const clock = (p) => { const w = p.now(); return typeof w === "string" && w ? w 
  *  active profiles' own `time_zone` (`jurisdictions` R41, through `jurisdictions.combine` over record-core's
  *  `jurisdiction_profiles` setting); else null, never UTC. Two profiles governing different zones govern none. */
 export function groupZone(p) {
+  /* local-facts R21 (D-B1; K5257, K5258): the team's own zone, stated with or without a place profile, governs; its
+     governing value already folds in the profiles' agreed zone when nothing is stated. */
+  try {
+    const lf = p.localFacts();
+    const r = lf && typeof lf.factStatus === "function" ? lf.factStatus({ path: TEAM_ZONE_PATH }) : null;
+    const z = r && r.ok !== false && r.governs ? str(r.governs.value) : "";
+    if (z) return z;
+  } catch { /* the profiles answer */ }
   let list = null;
   try { list = typeof p.record.getSetting === "function" ? p.record.getSetting("jurisdiction_profiles") : null; }
   catch { list = null; }
@@ -77,20 +89,41 @@ function resolveAt(p, at) {
   const date = at && typeof at === "object" ? at.date : null, time = at && typeof at === "object" ? at.time : null;
   if (typeof date !== "string" || !isCalendarDate(date) || typeof time !== "string" || !HHMM.test(time))
     return { ok: false, reason: "PUBLISH_AT_MALFORMED",
-             detail: "a publishing time is a date (YYYY-MM-DD, a real day) and a 24-hour time (HH:MM, 00:00 to 23:59)" };
+             detail: localize("publish-schedule.schedule.a_publishing_time_is_a", "a publishing time is a date (YYYY-MM-DD, a real day) and a 24-hour time (HH:MM, 00:00 to 23:59)") };
   const zone = groupZone(p);
   if (!zone)
     return { ok: false, reason: "PUBLISH_AT_NO_ZONE",
-             detail: "the group holds no time zone, so a local time cannot be read; it is never read as UTC" };
+             detail: localize("publish-schedule.schedule.the_team_holds_no_time", "the team holds no time zone, so a local time cannot be read; it is never read as UTC") };
   let b = null;
   try { b = bounds({ value: `${date}T${time}`, precision: "minute", zone }); } catch { b = null; }
   if (!b || !b.earliest)
-    return { ok: false, reason: "PUBLISH_AT_NO_ZONE", detail: `the group's time zone (${zone}) cannot be read` };
+    return { ok: false, reason: "PUBLISH_AT_NO_ZONE", detail: localize("publish-schedule.schedule.the_teams_time_zone_zone", "the team's time zone ({zone}) cannot be read", { zone: String(zone) }) };
   if (!(ms(b.earliest) > ms(clock(p))))
     return { ok: false, reason: "PUBLISH_AT_PAST", at: { date, time, zone }, publish_at: b.earliest,
-             detail: "that time is not after now; publishing now is the ceremony's own commit" };
+             detail: localize("publish-schedule.schedule.that_time_is_not_after", "that time is not after now; publishing now is the ceremony's own commit") };
   return { ok: true, at: { date, time, zone }, publish_at: b.earliest };
 }
+
+/* R2 (G54): what a publisher said of the case files it assembled, `answer.after.containers`, reduced to the list stored
+   at settle: `[{case, edition, built, code?}]`, each failed one kept before any built one when the list is cut, or
+   `"unknown"` when the publisher gave no list (it threw after its commit, or answered none, or none of it is valid), never
+   null. A publisher's own detail, step or error text never reaches the row. */
+function caseFileOf(answer) {
+  const list = answer && answer.after && Array.isArray(answer.after.containers) ? answer.after.containers : null;
+  if (!list) return "unknown";
+  const valid = [];
+  for (const c of list) {
+    if (!c || typeof c !== "object" || !str(c.case) || !Number.isInteger(c.edition) || typeof c.built !== "boolean") continue;
+    const code = str(c.code).slice(0, CASE_FILE_CODE_MAX);
+    valid.push({ case: str(c.case), edition: c.edition, built: c.built, ...(code ? { code } : {}) });
+  }
+  if (list.length && !valid.length) return "unknown";
+  return [...valid.filter((c) => !c.built), ...valid.filter((c) => c.built)].slice(0, CASE_FILE_MAX);
+}
+
+/* R2 (G54): a published row's stored case file as the entries state it: the list or "unknown" as settled, or
+   "not_recorded" on a row settled before the column held one. */
+const caseFileAtSettle = (r) => (r.case_file == null ? "not_recorded" : safeJson(r.case_file, "unknown"));
 
 /* R4's entry for one row. */
 function entryOf(p, r) {
@@ -98,7 +131,8 @@ function entryOf(p, r) {
   return { case: r.case_id, edition: Number(r.edition), project, state: r.state, signer: r.signer ?? null,
            set_by: r.set_by ?? null, signed_at: r.signed_at, at: { date: r.at_date, time: r.at_time, zone: r.zone },
            publish_at: r.publish_at, moves: safeJson(r.moves, []), outcome_at: r.outcome_at ?? null,
-           reasons: r.state === "stopped" ? safeJson(r.reasons, []) : null };
+           reasons: r.state === "stopped" ? safeJson(r.reasons, []) : null,
+           ...(r.state === "published" ? { case_file_at_settle: caseFileAtSettle(r) } : {}) };
 }
 
 /* The case's owning project: the `cases` row, else the document's own `case_project`. */
@@ -142,16 +176,16 @@ export function scheduleEdition(p, { case: caseArg = null, caseId = null, editio
   const id = str(caseArg ?? caseId), ed = Number(edition);
   if (!id || !Number.isInteger(ed) || ed < 1 || !str(docSha) || !str(signature))
     return { ok: false, reason: "MALFORMED",
-             detail: "a waiting edition names its case, a positive edition, the document's sha and the signature" };
+             detail: localize("publish-schedule.schedule.a_waiting_edition_names_its", "a waiting edition names its case, a positive edition, the document's sha and the signature") };
   const when = resolveAt(p, at);
   if (!when.ok) return when;
   const doc = one(p, `SELECT doc_sha, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
   if (!doc || (!doc.sig_armored && doc.doc_sha !== str(docSha)))
     return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed,
-             detail: `no unsigned case document of ${id} edition ${ed} is held at that sha` };
+             detail: localize("publish-schedule.schedule.no_unsigned_case_document_of", "no unsigned case document of {id} edition {ed} is held at that sha", { id: String(id), ed: String(ed) }) };
   if (doc.sig_armored)
     return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
-             detail: `case ${id} edition ${ed} is already signed and published, and a signed edition answers forever` };
+             detail: localize("publish-schedule.schedule.case_id_edition_ed_is", "case {id} edition {ed} is already signed and published, and a signed edition answers forever", { id: String(id), ed: String(ed) }) };
   const held = waitingRow(p, id, ed);
   if (held) {
     if (held.doc_sha === str(docSha) && held.sig_armored === str(signature) && held.at_date === when.at.date
@@ -159,7 +193,7 @@ export function scheduleEdition(p, { case: caseArg = null, caseId = null, editio
       return { ok: true, existed: true, case: id, edition: ed, state: "waiting", at: entryOf(p, held).at,
                publish_at: held.publish_at };
     return { ok: false, reason: "PUBLISH_AT_ALREADY_SET", caseId: id, edition: ed, waiting: entryOf(p, held),
-             detail: `case ${id} edition ${ed} already waits to be published; move or cancel that time` };
+             detail: localize("publish-schedule.schedule.case_id_edition_ed_already", "case {id} edition {ed} already waits to be published; move or cancel that time", { id: String(id), ed: String(ed) }) };
   }
   const now = clock(p);
   p.sql.exec(
@@ -219,12 +253,16 @@ async function takeOne(p, r, at) {
                                    ...(s && s.cause ? { cause: s.cause } : {}) }))
     : unchecked();
   const state = signed ? "published" : "stopped";
+  /* G54: a signed edition states what its publisher said of the case files at this settle ("unknown" when it said none,
+     or threw after committing); a stopped one committed nothing and has none. The row settles published either way. */
+  const caseFile = signed ? caseFileOf(answer) : null;
   p.record.transact(() => p.sql.exec(
-    `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=? WHERE seq=? AND state='waiting'`,
-    state, signed ? signed.ratified_at : at, signed ? null : JSON.stringify(stops), r.seq));
+    `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=?, case_file=? WHERE seq=? AND state='waiting'`,
+    state, signed ? signed.ratified_at : at, signed ? null : JSON.stringify(stops),
+    caseFile === null ? null : JSON.stringify(caseFile), r.seq));
   tell(p);
   return { case: r.case_id, edition: Number(r.edition), state,
-           ...(signed ? { published_at: signed.ratified_at } : { reasons: stops }) };
+           ...(signed ? { published_at: signed.ratified_at, case_file_at_settle: caseFile } : { reasons: stops }) };
 }
 
 /* R2, R9 (C-122.5): the stop of an edition no publisher could check. */
@@ -240,20 +278,20 @@ function ownersRow(p, caseId, edition, by) {
   const g = viewerPredicate(by);
   if (g.scope === "DENY" || (g.scope === "member" && g.member === null && by !== "admin"))
     return { ok: false, reason: "MACHINE_CANNOT_SCHEDULE_PUBLISH",
-             detail: "a publishing time is moved or cancelled by a member who owns the case's project, never a machine" };
-  const notWaiting = { ok: false, reason: "NOT_WAITING", detail: "no edition of that case waits to be published" };
+             detail: localize("publish-schedule.schedule.a_publishing_time_is_moved", "a publishing time is moved or cancelled by a member who owns the case's project, never a machine") };
+  const notWaiting = { ok: false, reason: "NOT_WAITING", detail: localize("publish-schedule.schedule.no_edition_of_that_case", "no edition of that case waits to be published") };
   const doc = one(p, `SELECT case_id, edition, text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
   if (!doc || !p.publication.hasCaseStanding(doc, by)) return notWaiting;
   const last = one(p, `SELECT * FROM scheduled_editions WHERE case_id=? AND edition=? ORDER BY seq DESC LIMIT 1`,
                    caseId, Number(edition));
   if (!last) return notWaiting;
   if (last.state !== "waiting")
-    return { ...notWaiting, state: last.state, detail: `that edition no longer waits: it is ${last.state}` };
+    return { ...notWaiting, state: last.state, detail: localize("publish-schedule.schedule.that_edition_no_longer_waits", "that edition no longer waits: it is {state}", { state: String(last.state) }) };
   if (ms(last.publish_at) <= ms(clock(p)))
-    return { ...notWaiting, state: "waiting", detail: "that edition's time has come, so it is being published or stopped" };
+    return { ...notWaiting, state: "waiting", detail: localize("publish-schedule.schedule.that_editions_time_has_come", "that edition's time has come, so it is being published or stopped") };
   const project = projectOf(p, caseId, edition);
   if (!project || g.scope !== "participant" || !p.membership.isProjectOwner(project, g.member))
-    return { ok: false, reason: "NOT_A_CASE_OWNER", detail: "only an owner of the case's project moves or cancels its time" };
+    return { ok: false, reason: "NOT_A_CASE_OWNER", detail: localize("publish-schedule.schedule.only_an_owner_of_the", "only an owner of the case's project moves or cancels its time") };
   return { ok: true, row: last, member: g.member };
 }
 
@@ -297,7 +335,7 @@ export function scheduledEditions(p, { case: caseArg = null, caseId = null, stat
   const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || SCHEDULED_EDITIONS_MAX, SCHEDULED_EDITIONS_MAX));
   const id = str(caseArg ?? caseId), st = str(state);
   if (st && !SCHEDULE_STATES.includes(st))
-    return { ok: false, reason: "MALFORMED", detail: `a state is one of ${SCHEDULE_STATES.join(", ")}` };
+    return { ok: false, reason: "MALFORMED", detail: localize("publish-schedule.schedule.a_state_is_one_of", "a state is one of {SCHEDULE_STATES}", { SCHEDULE_STATES: String(SCHEDULE_STATES.join(", ")) }) };
   const [aAt, aSeq] = typeof after === "string" && after.includes("#")
     ? [after.slice(0, after.lastIndexOf("#")), Number(after.slice(after.lastIndexOf("#") + 1)) || 0] : ["", 0];
   const where = [`(publish_at > ? OR (publish_at = ? AND seq > ?))`], args = [aAt, aAt, aSeq];

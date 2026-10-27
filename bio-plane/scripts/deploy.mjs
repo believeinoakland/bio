@@ -24,18 +24,62 @@
  * process's tooling in T19 (K648, K749): who cuts a release is the process's
  * question, not this script's.
  *
- * usage (bundler R17, R18, R34), from bio-plane/:
- *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset>
+ * A TEST DEPLOY (bundler R40; K4180, K4186): `--test-instance` deploys a named branch's BUILT plane bundle, unsigned, to a
+ * trial copy. It is for a copy the environment marks as a test instance (CIVICSMITH_TEST_INSTANCE names it) in the
+ * test account only; any other copy and any other account is refused before a request is made. It reads no signed
+ * release: the bytes deployed are the file given, verified by reading them back as ever. Each step logs what it
+ * deploys and the target it can return to. `--dry-run` runs every check and read and deploys nothing.
+ *
+ * WORKERS LOGS (G54; K4426): the upload sends wrangler.jsonc's `observability` ({ enabled: true }), because a script PUT that
+ * sends none turns them off (biosmoke8, 2026-10-20: no line named why two case files were not built). The script's settings
+ * are read back after the bytes and the limits, and a difference, an absent key or an unreadable answer refuses success.
+ *
+ * THE CRON SCHEDULE (G1; K4565, K4566, K4570): after the upload the script's schedules are PUT from wrangler.jsonc's
+ * `triggers.crons` and read back, and a failure or a difference refuses success (a raw script PUT sets none, and whether it
+ * keeps the ones held is unconfirmed). Needs the token scope the upload already uses (Workers Scripts Write). The first add
+ * can take up to 15 minutes to propagate to the cron runner; the smoke waits.
+ *
+ * usage (bundler R17, R18, R34, R40, R41), from bio-plane/:
+ *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run]
+ *     [--store-location <hint>] [--store-generation <n>]
  */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { resolveVersion } from "./resolve-version.mjs";
 
-const [slug, version, assetPath] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+/* G83 (R41): two flags take a value. A value is the next argument unless that is another flag or there is none, which is
+   then no value at all (refused below, by name), so a flag's value is never taken for a positional argument. */
+const ARGS = process.argv.slice(2), FLAG_VALUES = {}, VALUE_AT = new Set();
+for (const flag of ["--store-location", "--store-generation"]) {
+  const i = ARGS.indexOf(flag);
+  if (i < 0) continue;
+  const v = ARGS[i + 1];
+  FLAG_VALUES[flag] = v === undefined || v.startsWith("--") ? null : v;
+  if (FLAG_VALUES[flag] !== null) VALUE_AT.add(i + 1);
+}
+const [slug, version, assetPath] = ARGS.filter((a, i) => !a.startsWith("--") && !VALUE_AT.has(i));
+const TEST = process.argv.includes("--test-instance"), DRY = process.argv.includes("--dry-run");
 const TOKEN = process.env.CF_TOKEN, ACCT = process.env.CF_ACCT;
 if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
-  console.error("usage: CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset>");
+  console.error("usage: CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run] [--store-location <hint>] [--store-generation <n>]");
   process.exit(2);
+}
+
+/* R40: A TEST DEPLOY NAMES ITS COPY AND ITS ACCOUNT, and both are checked before the first request. The mark is the
+   environment's (the `deploy-test` environment sets CIVICSMITH_TEST_INSTANCE to the copy it may touch), so a copy
+   nobody marked, or a different one, is not reachable by typing a slug. */
+const TEST_ACCOUNT = "20b533579290b9b93168345edd3b7f72";
+if (TEST) {
+  if (process.env.CIVICSMITH_TEST_INSTANCE !== slug) {
+    console.error(`REFUSED [NOT_A_TEST_INSTANCE]: \`${slug}\` is not marked as a test instance: CIVICSMITH_TEST_INSTANCE is ${process.env.CIVICSMITH_TEST_INSTANCE ? `\`${process.env.CIVICSMITH_TEST_INSTANCE}\`` : "not set"}.`);
+    console.error("A test deploy goes only to the copy the environment marks. Nothing was requested or deployed.");
+    process.exit(1);
+  }
+  if (ACCT !== TEST_ACCOUNT) {
+    console.error(`REFUSED [WRONG_ACCOUNT]: a test deploy goes to account ${TEST_ACCOUNT} only; CF_ACCT is ${ACCT}.`);
+    console.error("Nothing was requested or deployed.");
+    process.exit(1);
+  }
 }
 
 /* DS-2 / D-116: THE VERSION AUTHORITY SPANS THE FLEET, CHECKED BEFORE ANYTHING
@@ -99,20 +143,12 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
  * merely deploy the wrong code: it binds the plane's vars, buckets and services
  * into that worker and DROPS every binding of a class it neither sends nor keeps.
  *
- * `civicos`, the UI worker, is what makes /api reach the plane at all; through
- * this script it would be overwritten with the plane's code and the plane's
- * bindings. Until now the only thing standing between that and a live outage
- * was that nobody had tried it.
- *
  * A slug ALLOWLIST is not available: plane instances are named by the groups
  * that install them, so their slugs are arbitrary by design and cannot be
  * enumerated here. What CAN be enumerated is the workers in this project that
  * are known NOT to be planes, each with its own deploy path.
  */
 const NOT_A_PLANE = {
-  civicos: "the UI worker. Its only binding is `service PLANE -> biosmoke7`, which this " +
-           "script's keep_bindings would delete. Deploy it with civicos-ui/deploy-ui.mjs, " +
-           "which carries the UI's own metadata and the same read-back-and-hash discipline.",
   "pdf-worker": "a fleet member, not a plane. It reads R2 CAPTURES, holds no PUBLISHED " +
                 "binding and no Durable Object, and writes nothing — this script's metadata " +
                 "would bind it all three. Deploy it with scripts/deploy-fleet.mjs.",
@@ -192,6 +228,16 @@ async function confirmServing(want) {
   console.log("");
 }
 
+/* R42 (G84; K4753, K4755): the script's start-up time, as Cloudflare's upload answer states it. Source: Cloudflare API
+   reference, Workers > Scripts > "Upload Worker Module" (PUT /accounts/{account_id}/workers/scripts/{script_name},
+   https://developers.cloudflare.com/api/resources/workers/subresources/scripts/methods/update/): the answer is
+   `{ success, result: { ..., startup_time_ms: number } }`; wrangler reads `result.startup_time_ms` from the same upload
+   and prints "Worker Startup Time". An answer without a finite number there is "unreported". */
+function startupOf(answer) {
+  const ms = answer && answer.result && typeof answer.result === "object" ? answer.result.startup_time_ms : undefined;
+  return typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? `${ms} ms` : "unreported";
+}
+
 const source = readFileSync(assetPath, "utf8");
 const want = createHash("sha256").update(readFileSync(assetPath)).digest("hex");
 const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${slug}`;
@@ -214,10 +260,15 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    monitor cadence and CAP-3's archive fallback on the deployed instance, and
    the fleet bindings arm the plane's Tier-3 paths. The targets are
    pre-flighted below so a missing worker is OUR refusal, not code 10143. */
-import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "./derive-bindings.mjs";
+import { deriveStorePlace, deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons, schedulesReadBack, deriveObservability, observabilityReadBack } from "./derive-bindings.mjs";
 import { parseJsonc } from "./jsonc.mjs";   /* R11: the module's one reader */
 const wranglerCfg = parseJsonc(
   readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"), "bio-plane/wrangler.jsonc");
+/* G83 (R41): where the team's room runs, from the flags, validated before anything is requested. The hint list is
+   runtime-limits' (`STORE_HINTS`), read only when a hint is given. */
+const storePlace = deriveStorePlace(
+  { location: FLAG_VALUES["--store-location"], generation: FLAG_VALUES["--store-generation"] },
+  "--store-location" in FLAG_VALUES ? (await import("../src/store-place.mjs")).STORE_HINTS : []);
 const meta = {
   main_module: "index.mjs",
   compatibility_date: wranglerCfg.compatibility_date,
@@ -233,7 +284,16 @@ const meta = {
      platform's default of the month. deriveLimits REFUSES a config without it,
      before anything is uploaded. */
   limits: deriveLimits(wranglerCfg),
+  /* G54 (K4426): Workers Logs. An upload that sends none turns them off on the script (biosmoke8, 2026-10-20), so the config's
+     setting is sent every time and read back below. deriveObservability REFUSES a config that does not state it, before
+     anything is uploaded. */
+  observability: deriveObservability(wranglerCfg),
 };
+meta.bindings.push(...storePlace.bindings);
+/* G1: the cron schedule rides no metadata field, so it is set by its own call after the upload (below). An invalid list
+   is refused here, before any request, as a config without a subrequest ceiling is. */
+const crons = deriveCrons(wranglerCfg);
+const cronText = (l) => (l.length ? l.join(" | ") : "none");
 
 /* D-54's read-back: the deployed script's settings, asked of the account. */
 async function settingsNow() {
@@ -243,6 +303,53 @@ async function settingsNow() {
     const j = await r.json();
     return j && j.success ? j.result : null;
   } catch { return null; }
+}
+
+/* G1 (K4565, K4566, K4570): THE PLANE'S CRON SCHEDULE IS SET BY THIS DEPLOY, AND READ BACK.
+   The upload above is a raw script PUT whose metadata has no schedule field, and whether such a PUT keeps or clears the
+   schedules the script holds is unconfirmed (Cloudflare's text says wrangler replaces them). So after every upload the
+   schedules endpoint is PUT with the crons of wrangler.jsonc and read back, and success is refused on a failure or any
+   difference, never a note: the cron is the one clock outside the Durable Object that notices it has stalled. */
+async function schedulesNow() {
+  let r;
+  try { r = await fetch(`${api}/schedules`, { headers: { authorization: `Bearer ${TOKEN}` } }); }
+  catch (e) { return { unreadable: (e && e.message) || String(e) }; }
+  if (r.status === 404) return { absent: true };
+  if (!r.ok) return { unreadable: `HTTP ${r.status}` };
+  let j = null;
+  try { j = await r.json(); } catch { /* said below */ }
+  const list = j && j.success && j.result && Array.isArray(j.result.schedules) ? j.result.schedules : null;
+  if (!list || list.some((x) => !x || typeof x.cron !== "string")) return { unreadable: "an answer that is not the script's schedules" };
+  return { held: list.map((x) => x.cron) };
+}
+
+function refuseSchedules(code, why) {
+  console.error(`REFUSING TO REPORT SUCCESS [${code}]: ${why}`);
+  console.error("The bytes are deployed; the script's cron schedule is not the config's, so nothing outside the Durable Object");
+  console.error("would notice a stalled alarm (K4565). Nothing is verified past this line.");
+  process.exit(1);
+}
+
+async function setSchedules() {
+  console.log(crons.length ? `schedules: setting ${cronText(crons)} …` : "schedules: wrangler.jsonc declares no cron; setting the script's schedules to none …");
+  let r;
+  try {
+    r = await fetch(`${api}/schedules`, { method: "PUT", body: JSON.stringify(crons.map((cron) => ({ cron }))),
+      headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" } });
+  } catch (e) { return refuseSchedules("SCHEDULES_NOT_SET", `the schedules request failed (${(e && e.message) || e}).`); }
+  let said = null;
+  try { said = await r.json(); } catch { /* the status decides */ }
+  if (!r.ok || (said && said.success === false))
+    return refuseSchedules("SCHEDULES_NOT_SET", `HTTP ${r.status}${said && said.errors ? " " + JSON.stringify(said.errors).slice(0, 200) : ""}.`);
+  /* The answer is not evidence either way (the lesson of this file's header): the schedules are asked of the account. */
+  let last = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const now = await schedulesNow();
+    last = now.held ? schedulesReadBack(now.held, crons) : { verdict: "UNREADABLE", why: now.absent ? "the script was not found" : `the script's schedules could not be read (${now.unreadable})` };
+    if (last.verdict === "MATCH") { console.log(`verified: ${last.why}`); return; }
+    if (attempt < 3) await new Promise((s) => setTimeout(s, 3000));
+  }
+  refuseSchedules(last.verdict === "MISMATCH" ? "SCHEDULES_MISMATCH" : "SCHEDULES_UNREADABLE", `${last.why}.`);
 }
 
 /* R34: the same read, told apart: a script that does not exist yet (404) has no bindings to keep or compare, and one
@@ -257,6 +364,26 @@ async function bindingsNow() {
   try { j = await r.json(); } catch { /* said below */ }
   if (!j || !j.success || !j.result || typeof j.result !== "object") return { unreadable: "an answer that is not the script's settings" };
   return { settings: j.result, bindings: Array.isArray(j.result.bindings) ? j.result.bindings : [] };
+}
+
+/* G54: Workers Logs are asked of the account, never believed from the PUT's answer (the lesson of this file's header). The
+   settings are read up to three times, because an answer can precede what it describes; success is refused when they do not
+   report `observability.enabled` as sent, or cannot be read. */
+async function confirmObservability() {
+  let last = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const now = await bindingsNow();
+    last = now.unreadable !== undefined
+      ? { verdict: "UNREADABLE", why: `the script's settings could not be read (${now.unreadable})` }
+      : now.settings === null ? { verdict: "UNREADABLE", why: "the script was not found" }
+      : observabilityReadBack(now.settings, meta.observability);
+    if (last.verdict === "MATCH") { console.log(`verified: ${last.why}`); return; }
+    if (attempt < 3) await new Promise((s) => setTimeout(s, 3000));
+  }
+  console.error(`REFUSING TO REPORT SUCCESS [${last.verdict === "MISMATCH" ? "OBSERVABILITY_MISMATCH" : "OBSERVABILITY_UNREADABLE"}]: ${last.why}.`);
+  console.error("The bytes are deployed; the script's Workers Logs are not what the config sent, so a failure on it would leave no line to name it (G54).");
+  console.error("Nothing is verified past this line.");
+  process.exit(1);
 }
 
 /* R34: where a derived binding is not on the deployed script as derived. A secret's value is never readable back, so
@@ -331,15 +458,32 @@ if (onScript.unreadable !== undefined) {
   process.exit(1);
 }
 const derivedNames = new Set(meta.bindings.map((b) => b.name));
-const kept = onScript.bindings.filter((b) => b && b.type === "plain_text" && !derivedNames.has(b.name))
+const kept = onScript.bindings.filter((b) => b && b.type === "plain_text" && !derivedNames.has(b.name) && !storePlace.remove.includes(b.name))
   .map((b) => ({ type: "plain_text", name: b.name, text: b.text }));
 meta.bindings.push(...kept);
 if (kept.length) console.log(`kept: ${kept.length} plain_text binding(s) on the script that this deploy does not derive, sent unchanged — ${kept.map((b) => b.name).join(", ")}`);
 const differences = bindingDifferences(meta.bindings, onScript.bindings);
+/* R41: a held binding the flags remove (`--store-generation 1`, the rollback) is a difference until it is gone. */
+for (const name of storePlace.remove)
+  if (onScript.bindings.some((b) => b && b.type === "plain_text" && b.name === name)) differences.push(`plain_text ${name} is held and is removed`);
+if (storePlace.bindings.length || storePlace.remove.length)
+  console.log(`store place: ${[...storePlace.bindings.map((b) => `${b.name}=${b.text}`), ...storePlace.remove.map((n) => `${n} removed`)].join(", ")}`);
 
 const before = await deployed();
 console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}`);
 console.log(`signed: ${want.slice(0, 16)}\u2026  ${version}  ${source.length} bytes`);
+const schedNow = await schedulesNow();
+const schedMatch = !!schedNow.held && schedulesReadBack(schedNow.held, crons).verdict === "MATCH";
+/* G54: what the script reports of Workers Logs now (its settings were read above, before the upload). */
+const obsNow = onScript.settings ? observabilityReadBack(onScript.settings, meta.observability) : null;
+const obsMatch = !!obsNow && obsNow.verdict === "MATCH";
+if (TEST) {
+  /* R40: what this step deploys, and where it can return to: the bytes now deployed under the copy's name. */
+  console.log(`test deploy: ${slug} from ${assetPath} sha256 ${want} (a branch's built artifact: no release/ signature is read)`);
+  console.log(before
+    ? `rollback : ${slug} was ${before.slice(0, 16)}\u2026 \u2014 deploy those bytes again to return to it`
+    : `rollback : ${slug} has no readable deployed bytes now (a first deploy, or unreadable); delete the script to return to none`);
+}
 if (before === want) {
   /* Bytes matching is HALF the question — found live on the 0.58.0 cut,
      2026-09-14, the first release whose plane bytes were identical to the
@@ -357,22 +501,46 @@ if (before === want) {
   /* D-54: and the limits must already read back, or the metadata is not ours. */
   const lim = limitsReadBack(await settingsNow(), meta.limits);
   /* R34: and so must the bindings this deploy derives, each with the same target or value. */
-  if (serving === version && lim.verdict === "MATCH" && differences.length === 0) {
-    console.log(`already byte-identical AND serving ${version} AND ${lim.why} AND every derived binding present; nothing to do`);
+  /* G1: and so must the script's schedules, or a config that gains a cron is never set on a plane whose bytes did not change. */
+  if (serving === version && lim.verdict === "MATCH" && differences.length === 0 && schedMatch && obsMatch) {
+    console.log(`already byte-identical AND serving ${version} AND ${lim.why} AND every derived binding present AND schedules ${cronText(crons)} held AND Workers Logs on; nothing to do`);
     process.exit(0);
   }
-  if (serving === version && lim.verdict === "MATCH")
+  /* G54: and Workers Logs must already be on, or a config that gains them is never applied to a plane whose bytes did not change. */
+  if (serving === version && lim.verdict === "MATCH" && schedMatch && !obsMatch)
+    console.log(`bytes identical, serving ${version} and limits match, but Workers Logs are not on for the script — a METADATA deploy proceeds (the same script, observability sent again): ${obsNow ? obsNow.why : "the script's settings could not be found"}.`);
+  if (serving === version && lim.verdict === "MATCH" && !schedMatch)
+    console.log(`bytes identical, serving ${version} and limits match, but the schedules differ on the script — a METADATA deploy proceeds (the same script, the schedules set again): `
+      + (schedNow.held ? schedulesReadBack(schedNow.held, crons).why : `they ${schedNow.absent ? "could not be found" : `could not be read (${schedNow.unreadable})`}`) + ".");
+  if (serving === version && lim.verdict === "MATCH" && differences.length > 0)
     console.log(`bytes identical, serving ${version} and limits match, but the derived bindings differ on the script — a METADATA deploy proceeds (the same script, the new bindings): ${differences.join("; ")}.`);
   if (serving === version && lim.verdict !== "MATCH") console.log(`bytes identical and serving ${version}, but limits: ${lim.verdict} (${lim.why}) — a METADATA deploy proceeds.`);
   if (serving !== version)
     console.log(`bytes are identical but the instance serves ${serving ?? "(unreadable)"} — a METADATA deploy proceeds (VERSION var, derived bindings).`);
 }
 
+if (DRY) {
+  /* G1: the step is shown, and refused as the real run refuses what it can already see: an invalid list is refused above,
+     before any request, and schedules of a script that exists and cannot be read are refused here. */
+  console.log(crons.length
+    ? `schedules: after the upload PUT .../schedules sets ${cronText(crons)} and reads it back; a failure or a difference refuses success`
+    : "schedules: wrangler.jsonc declares no cron; after the upload PUT .../schedules sets none and reads it back; a failure or a difference refuses success");
+  console.log(`observability: the upload carries ${JSON.stringify(meta.observability)} and reads it back; a difference or an unreadable answer refuses success`);
+  console.log(`observability now: ${!onScript.settings ? "the script is not deployed, so Workers Logs are off" : obsMatch ? "on" : "off (" + obsNow.why + ")"}`);
+  if (schedNow.unreadable !== undefined) {
+    console.error(`REFUSED [SCHEDULES_UNREADABLE]: could not read the schedules now on "${slug}" (${schedNow.unreadable}); a deploy that cannot read them back cannot verify them.`);
+    process.exit(1);
+  }
+  console.log(schedNow.absent ? "schedules now: the script is not deployed, so it holds none"
+    : `schedules now: ${cronText(schedNow.held)} (${schedMatch ? "the config's" : "not the config's"})`);
+  console.log("\n--dry-run: nothing was deployed."); process.exit(0);
+}
+
 for (let attempt = 1; attempt <= 4; attempt++) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
   fd.append("index.mjs", new Blob([source], { type: "application/javascript+module" }), "index.mjs");
-  let r = null, text = "";
+  let r = null, text = "", answer = null;
   try { r = await fetch(api, { method: "PUT", headers: { authorization: `Bearer ${TOKEN}` }, body: fd }); text = await r.text(); }
   catch (e) { console.log(`attempt ${attempt}: the upload request failed (${(e && e.message) || e})`); }
   const ct = r ? r.headers.get("content-type") || "" : "";
@@ -380,6 +548,7 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   if (!r) { /* said above */ }
   else if (ct.includes("json")) {
     let j = null; try { j = JSON.parse(text); } catch { /* claimed JSON, was not */ }
+    answer = j;
     console.log(`attempt ${attempt}: http ${r.status}, api says ${j ? j.success : "unparseable"}`
       + (j && !j.success ? " " + JSON.stringify(j.errors).slice(0, 200) : ""));
   } else {
@@ -390,6 +559,10 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   const now = await deployed();
   if (now === want) {
     console.log(`verified: deployed bytes are hash-identical to the signed asset`);
+    /* R42: Cloudflare's start-up figure, printed from the upload's answer. It is only printed, never believed for state
+       (this file's header), and never fails a deploy. Like R40's other lines it belongs to a test deploy: without
+       --test-instance a deploy prints no `test deploy:` line (R40's control). */
+    if (TEST) console.log(`test deploy: startup ${startupOf(answer)}`);
     /* D-54: the limit is read back, never believed from the PUT. A value that is
        not ours refuses success; a settings answer that does not state it is
        UNDETERMINED and said so, never counted as a match. */
@@ -401,6 +574,10 @@ for (let attempt = 1; attempt <= 4; attempt++) {
     console.log(lim.verdict === "MATCH"
       ? `verified: ${lim.why}`
       : `limits: UNDETERMINED — ${lim.why}. The ceiling sent (${meta.limits.subrequests}) is NOT confirmed; establish it before stating it.`);
+    /* G54: and Workers Logs, which the upload turns off unless it sends them. */
+    await confirmObservability();
+    /* G1: after the upload, whatever it did to the schedules. */
+    await setSchedules();
     await confirmServing(version);
     process.exit(0);
   }

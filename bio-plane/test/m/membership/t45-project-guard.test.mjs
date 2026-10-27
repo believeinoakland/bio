@@ -95,7 +95,7 @@ test("R128 the guard is asked after each act's own refusals: an act its own rule
   assert.equal(w.m.projectInvite({ projectId: P, handle: "cal", by: "bob" }).reason, "NOT_THE_OWNER");
   assert.equal(invite(w, "nobody-here").reason, "NO_SUCH_HANDLE");
   assert.equal(invite(w, "dee").reason, "NOT_ACTIVE");
-  assert.equal(invite(w, "ann").reason, "ALREADY_A_PARTICIPANT");
+  assert.equal(invite(w, "ann").reason, "THAT_IS_YOU");   /* R157: the owner's own handle */
   /* R45's own refusals: sight, not a project, not the owner, an unknown setting */
   assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-2026-0009-absent", setting: "hidden", by: "ann", viewer: V("ann") })
     .reason, "NO_SUCH_PROJECT");
@@ -121,8 +121,8 @@ test("R128 a guard that throws, answers a promise or anything but null or a refu
     ["a string", () => "no"],
     ["an acceptance", () => ({ ok: true })],
     ["a refusal without a reason", () => ({ ok: false })],
-    ["a refusal with an empty reason", () => ({ ok: false, reason: "" })],
-    ["an array", () => [{ ok: false, reason: "X" }]],
+    ["a refusal with an empty reason", () => ({ ok: false, reason: "" })], // fixtures-generic: EMPTY_REASON
+    ["an array", () => [{ ok: false, reason: "X" }]], // fixtures-generic: X
   ];
   const row = MEMBERSHIP_CHECKS.PROJECT_GUARD_UNCHECKED;
   for (const [what, fn] of answers) {

@@ -1,0 +1,37 @@
+{
+ "b": {
+  "status": "complete",
+  "attempts": [
+   "flaky",
+   "flaky",
+   "flaky",
+   "after"
+  ],
+  "gapsMs": [
+   1011,
+   2005,
+   4
+  ]
+ },
+ "d2097152": {
+  "status": "complete",
+  "output": 2097152
+ },
+ "d10485760": {
+  "status": "errored",
+  "error": {
+   "message": "Step big-1 output is too large. Maximum allowed size is 1MiB.",
+   "name": "Error"
+  },
+  "output": null
+ },
+ "c": {
+  "stepsBeforeDispose": 20,
+  "statusAfterRestart": "running",
+  "finalStatus": "running",
+  "distinctSteps": 20,
+  "stepsRunMoreThanOnce": [],
+  "secondsToFinishAfterRestart": 90.127,
+  "totalAttempts": 20
+ }
+}

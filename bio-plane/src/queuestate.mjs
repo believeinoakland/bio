@@ -65,6 +65,7 @@
  * the action's own record is where the overdue entry is met or waived. It is queue's to add and not observation-log's,
  * because no look ever carries it (C-22.4 checks a look's condition against observation-log's list alone). */
 import { CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 export const QUEUE_CONDITION_KINDS = Object.freeze({
   ...CONDITION_KINDS,
   "action-clock-overdue":       "a deadline on one of the team's actions passed while its entry is still pending "
@@ -73,6 +74,13 @@ export const QUEUE_CONDITION_KINDS = Object.freeze({
      A fact about our own reading, never about the publisher, so a CONDITION a member quiets for themselves; queue's to add
      for action-clock-overdue's reason (no look carries it). Its producer is `queue-producers`' (its R35). */
   "cited-docket-unreadable":    "a docket you follow could not be read (DEC-101, DEC-116) — LIVE: queue-producers R35",
+  /* R1 (T51 fix round 7, G61): three more producers' CONDITIONs the catalogue did not name, so the mint (R11) refused the
+     whole feed for a member they were raised to. Each is a fact about our own machinery or a step left undone, quieted by
+     its recipient. Code-origin stand-ins; the words members see are the design stream's (rows owed, T52). */
+  "edition-scheduled":          "a case edition is signed to publish at a set time and is waiting; move the time or "
+                              + "cancel it — LIVE: queue-producers R37",
+  "place-profile-arrived":      "a place profile arrived on this copy; choose it under Places — LIVE: queue-producers R38",
+  "request-unsent":             "a request was approved and has not been recorded sent — LIVE: action-producers R25",
 });
 
 /* Every OTHER kind the catalogue names, with the class it belongs to — so a
@@ -99,10 +107,10 @@ export const QUEUE_OBLIGATION_KINDS = {
      `moved`, read from aiRunRead and never compared again; queue-producers #obligationsBiasDebt serves it on op=queue. */
   "bias-debt":                   "a re-run is owed after a lens change (D-86) — DISCLOSED, never blocking (DEC-20) "
                               + "— LIVE: bias's debt sweep, served by queue-producers #obligationsBiasDebt",
-  "endorsement-owed":            "an endorsement is owed on a pending administrator or owner vote",
-  "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
-  "membership-request":          "a membership request is at the doorbell",
-  "project-owners-inactive":     "every owner of a project is inactive; rescue is available (D-47)",
+  "endorsement-owed":            word("queuestate.endorsement_owed"),
+  "expertise-confirmation-owed": word("queuestate.expertise_confirmation_owed"),
+  "membership-request":          word("queuestate.membership_request"),
+  "project-owners-inactive":     localize("queue.queuestate.every_owner_of_a_project", "every owner of a project is inactive; rescue is available (D-47)"),
   /* N345 (R1; DEC-84 item 2, DEC-85): a duty is never muted, dismissed or set aside, and it leaves only by resolution
      (contradiction R24), so both are OBLIGATIONs. Their producers are `queue-producers`' (its R4, R7). */
   "contradiction-duty":          "a conflict the record holds that a member of this project must resolve (N345)",
@@ -196,6 +204,9 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "— LIVE: queue-producers R41",
   "project-request":             "a member asks to join a project you own; grant or decline (op=projectrequestanswer) "
                               + "— LIVE: queue-producers R42",
+  /* Fix round 10 (R57; queue-producers R54; K5157): a participant asks to leave a project; only an owner removes her. */
+  "project-leave":               "a participant asks to leave a project you own; remove them from it (op=projectremove) "
+                              + "— LIVE: queue-producers R54",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -212,19 +223,19 @@ export const QUEUE_FINDING_KINDS = {
                               + "shows it met; a question, never a violation (K1466) — LIVE: notice-producers R5",
   "source-modified":            "a monitor tick found the source modified — LIVE: queue-producers #findingsSourceFlagged",
   "source-removed":             "a monitor tick found the source removed (404/410) — LIVE: queue-producers #findingsSourceFlagged",
-  "duplicate-document":         "a duplicate document was detected (D-60)",
-  "link-verdict-changed":       "a link verdict was established or changed when a target landed (LINK-FIDELITY 8)",
+  "duplicate-document":         localize("queue.queuestate.a_duplicate_document_was_detected", "a duplicate document was detected (D-60)"),
+  "link-verdict-changed":       word("queuestate.link_verdict_changed"),
   "reused-asset-changed":       "a reused asset was later found changed, post-hoc (CAP-4)",
   "assistant-surfaced-focus":   "an assistant surfaced a question (D-78, D-82 — must LOOK derived)",
-  "grade-improvable":           "a connection's grade is improvable (D-72)",
+  "grade-improvable":           localize("queue.queuestate.a_connections_grade_is_improvable", "a connection's grade is improvable (D-72)"),
   "objective-gap":              "a gap derived from an objective's satisfaction condition (D-76) — LIVE: queue-producers #findingsObjectiveGap",
-  "measure-decay":              "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)",
+  "measure-decay":              localize("queue.queuestate.a_bias_statements_measure_has", "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)"),
   /* D-52, LIVE 2026-09-23: queue-producers #findingsExportPerformed, derived on read from `export_log`
      and raised to every administrator and to nobody else (Membership v2 §8.1). */
   "export-performed":           "an export was performed; every administrator is notified (D-52 8.1) "
                               + "— LIVE: queue-producers #findingsExportPerformed",
   "audit-finding":              "op=audit found something about the record",
-  "register-unbacked":          "a register entry's bytes are unbacked (D-9, D-45)",
+  "register-unbacked":          localize("queue.queuestate.a_register_entrys_bytes_are", "a register entry's bytes are unbacked (D-9, D-45)"),
   /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
      queue-producers #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
      while a run was working inquiry A, is CAPTURED — an entry to the store, and
@@ -387,6 +398,30 @@ export const QUEUE_FINDING_KINDS = {
      (as `standing-answer` is), so no project decides it and its recipient quiets it for themselves. */
   "watched-changed":            "something you watch changed; open it to see what changed (DEC-304) "
                               + "— LIVE: notice-producers R24",
+  /* T51 fix round 7 (R1; G61; B.md:22; K4562; notice-producers R27, R28): a large capture's background fetch was delivered,
+     and a money ingest run in the background finished or was stopped, each told once to the member who started it and
+     disposed of by its recipient. They were minted by their producers and named nowhere here, so the opener's whole Queue
+     was refused `NO_SUCH_KIND`. Code-origin stand-ins; the words members see are the design stream's (rows owed, T52). */
+  "fetch-done":                 "a large capture you opened was fetched in the background and is filed "
+                              + "— LIVE: notice-producers R27",
+  "ingest-done":                "a money ingest you started in the background finished; open it to see the rows taken in "
+                              + "— LIVE: notice-producers R28",
+  "ingest-stopped":             "a money ingest you started in the background was stopped before it finished "
+                              + "— LIVE: notice-producers R28",
+  /* T51 fix round 7 (R1; G61; queue-producers R37, R39): what the scheduled edition did, and a wizard script's base that
+     moved under a copy; each told once and disposed of by its recipient. */
+  "edition-published-as-scheduled":
+                                "a case edition signed to publish at a set time was published as scheduled "
+                              + "— LIVE: queue-producers R37",
+  "scheduled-edition-stopped":  "a case edition signed to publish at a set time was stopped and nothing was published; "
+                              + "publishing needs a new signing — LIVE: queue-producers R37",
+  "wizard-base-updated":        "the wizard script your copy is based on has a new version; read what changed, or bring it "
+                              + "across — LIVE: queue-producers R39",
+  /* T51 fix round 9 (R1; G135f; K4933; notice-producers R29): a reading of a document the member supplied finished, ended in
+     part or was refused, told once to its opener and disposed of by its recipient. Named nowhere here, it left the
+     opener's whole Queue refused `NO_SUCH_KIND` as soon as one reading ended (as G61 did for the fetch and ingest notices). */
+  "reading-ended":              "a reading of a document you supplied finished, ended in part or was refused "
+                              + "— LIVE: notice-producers R29",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
@@ -405,9 +440,8 @@ export const QUEUE_FINDING_KINDS = {
  * EXPORTED plain object of this module whose values are all strings is a MEMBER-FACING vocabulary —
  * the texts a surface renders in place of a machine word (R1: every kind has one sentence). This table
  * is not one: its value is a machine id published as `catalogue_id`, the item contract's "stable
- * catalogue id" (NOTIFICATIONS.md §The item contract), which no surface renders (`civicos-ui/` reads no
- * `catalogue_id`; a member reads `summary` and `detail`). Found by the old DEC-49 guard's arm E
- * (`civicos-ui/check-refusal-codes.mjs`, deleted in T20), which read it exported as a 23rd vocabulary
+ * catalogue id" (NOTIFICATIONS.md §The item contract), which no surface renders (a member reads `summary` and
+ * `detail`). A check that reads every exported all-string object as a vocabulary would have counted it as one,
  * whose one term was the token "N-1". So the TABLE stays here, unexported, and what leaves the module is
  * the LOOKUP below, R2's `catalogueIdOf`, which `test/m/queue/catalogue.test.mjs`' R2 test drives. */
 const QUEUE_KIND_IDS = {
@@ -444,11 +478,7 @@ export function classOfKind(kind) {
  * cannot do: the finding stays on every other feed and in op=proposals, and it
  * leaves the team's list only by op=proposedispose. OBLIGATION alone is refused. */
 export const MUTE_REFUSAL_DETAIL = {
-  OBLIGATION: "a to-do is something a named person must do for the record to proceed, and it leaves "
-            + "every list only when it is DONE (op=taskresolve, or the act its item names as "
-            + "`disposition.instead`): record state, not a preference. "
-            + "Quieting it would remove it from the only list that routes it while `tasks` keeps no "
-            + "per-member quiet, so the record would go on believing the question reached a person.",
+  OBLIGATION: localize("queue.queuestate.a_to_do_is_something", "a to-do is something a named person must do for the record to proceed, and it leaves every list only when it is DONE (op=taskresolve, or the act its item names as `disposition.instead`): record state, not a preference. Quieting it would remove it from the only list that routes it while `tasks` keeps no per-member quiet, so the record would go on believing the question reached a person."),
 };
 
 /* The classes a PERSONAL mute may reach, in either form (D-125). A CONDITION and

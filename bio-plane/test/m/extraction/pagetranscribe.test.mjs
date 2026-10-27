@@ -10,12 +10,17 @@
    written reading, and Civicsmith's empty set to C-51.7. Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, payingAccount } from "./fixture.mjs";
 import { REEXTRACT_CHECKS, extractionOps } from "../../../src/extraction/index.mjs";
 import { pageTranscribeOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { WORD } from "./words.mjs";
+import { notAPdf } from "../pdf-reader/fixtures.mjs";
+import { keptAwayProject } from "../ai-accounts/fixtures.mjs";
+
+/* ai-accounts' real refusal for a project keeping its material away from the AI (its published fixture, K5044) */
+const KEPT_PROJECT = (await keptAwayProject({ project: "PROJ-1", use: "transcribe" })).aiKeptAway;
 
 const SENTINEL = "sk-ant-SENTINEL-KEY-0000";
 const ONE_MATTER = { id: "t-set", version: 2, matters: [{ id: "m1" }] };
@@ -36,7 +41,7 @@ function transcriber({ set = ONE_MATTER, records = [PASSED], away = () => null, 
     transcription({ member: m, project, at }) {
       calls.transcription.push({ member: m, project, at });
       return { member: m, project, at, act: `transcribe:abc:${at}`,
-        accounts: { accountFor: async (q) => { calls.accountFor.push(q); return account ?? { ok: true, kind: "apikey", level: "member", key: SENTINEL }; } },
+        accounts: { accountFor: payingAccount({ key: SENTINEL, record: calls.accountFor, answer: account }) },
         useCheck: async (q) => { calls.useCheck.push(q); return limit; },
         transcribe: async (q) => { calls.transcribe.push(q); return answer(q.pages, q); } };
     },
@@ -49,21 +54,23 @@ const pdf = (text, pages) => ({ format: "pdf",
   detect: (b) => (b && new TextDecoder().decode(b.slice(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
   structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
-  : { ok: false, reason: "NOT_A_PDF" }) });
+  : await notAPdf()) });
 
 /* A three-page scan: page 0 has a text layer, pages 1 and 2 are pictures. */
 const SCAN = i2([{ page: 0, text: "Minutes of the meeting" }, { page: 1, text: "", undetermined: [noText(1)] },
                  { page: 2, text: "", undetermined: [noText(2)] }]);
 
 /* A store holding the scan in bundle `bundleId` (filed in `project`), read once. */
-async function held({ bundleId = "B-1", project = null, type = "information" } = {}) {
+async function held({ bundleId = "B-1", project = null, type = "information", text = SCAN } = {}) {
   const w = fresh();
   bundle(w.s, bundleId, { project, type });
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
   const reading = { content_type: "generic", reader_version: 1, read_from_text: false, found: false, entities: [], facts: {},
-                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 3,
+                    at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: text.pages.length,
                     container_extent: { container: "pdf", levels: ["images"], images: [] } };
-  w.x.writeReading({ bundleId, captureSha: d, reading });
+  /* (fix round 9, G126e; R103) the scan as its reading stored it: page 0's text layer is its unit, pages 1 and 2 hold none; the act reads the
+     stored units, never the file */
+  w.x.writeReading({ bundleId, captureSha: d, reading, textUnits: pageUnits(text) });
   return { w, d };
 }
 const gets = (w) => w.evidence.calls.filter(([op]) => op === "get").length;
@@ -93,7 +100,7 @@ test("R71 R47 R72: the refusals in order, each by its row, before any byte is re
   const hidden = await hold(w.evidence, "%PDF hidden");
   w.x.writeReading({ bundleId: "PROJ-H", captureSha: hidden, reading: { entities: [], at: "a" } });
   const off = transcriber({ set: EMPTY_SET });
-  const KEPT = { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38", translation: "kept" };
+  const KEPT = KEPT_PROJECT;
   const keptFor = (p) => ({ project }) => (project === p ? KEPT : null);
   const on = transcriber({ away: keptFor("PROJ-1") });
   const ocr = member(() => { throw new Error("never"); });
@@ -225,18 +232,19 @@ test("R71 R72 R34 R19 R23 R24 R44 (the whole chain, the bar held on a one-matter
   assert.equal(JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading).reextracted.via, "op=pagetranscribe");
 });
 
-test("R71 (tier 3 when bound): with the OCR member bound, OCR is asked first and the AI only for what OCR left unread; with none bound every picture page goes to the AI and no refusal is made", async () => {
+test("R71 R103 (fix round 9, G126b, K4901 (1)): with the OCR member bound, no OCR call is made inside the request: the AI is asked for every page still unread, and a page it leaves is owed to OCR", async () => {
   const { w, d } = await held();
-  const tr = transcriber();
+  const tr = transcriber({ answer: () => ({ ok: true, engine: "claude-test", version: "2026-01", pages: [{ page: 1, text: "AI text of page 1" }] }) });
   w.x.registerTranscriber("plane", tr.t);
-  const ocr = member(() => ocrAnswer([2]));
+  const owed = [];
+  w.x.registerOwe((e) => { owed.push(e); return { ok: true, existed: false, state: "queued" }; });
+  const ocr = member(() => { throw new Error("never asked in the request"); });
   const r = await withEntry(pdf(SCAN, 3), () => w.x.pageTranscribe({ captureSha: d, ...member1, env: { OCR_WORKER: ocr } }));
-  assert.ok(ocr.calls.length >= 1);
-  assert.deepEqual(tr.calls.transcribe.map((q) => q.pages), [[1]], "the AI is asked only for page 1");
-  assert.deepEqual([r.body.transcription.pages, r.body.transcription.ocr.pages], [[1], [2]]);
-  const stored = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
-  assert.deepEqual([stored.reextracted.pages, stored.reextracted.engine, stored.reextracted.ai.pages], [[2], "tess", [1]]);
-  assert.ok(stored.text_source.some((s) => s.step === "ocr") && stored.text_source.some((s) => s.step === "ai_transcription"));
+  assert.equal(ocr.calls.length, 0);
+  assert.deepEqual(tr.calls.transcribe.map((q) => q.pages), [[1, 2]]);
+  assert.deepEqual([r.body.transcription.written, r.body.transcription.pages, r.body.transcription.ocr], [true, [1], null]);
+  assert.deepEqual(owed, [{ kind: "ocr", sha: d, cursor: 2, pages_left: 1 }], "page 2, which the AI left, is owed to OCR");
+  assert.deepEqual(r.body.owed, { kind: "ocr", pages_left: 1, registered: true, existed: false });
 });
 
 test("R71: with no page filled the answer's transcription is performed false, written false, why tier4Extend's note, and nothing is written: no page left unread, the AI declined", async () => {
@@ -246,7 +254,7 @@ test("R71: with no page filled the answer's transcription is performed false, wr
     [SCAN, { answer: () => ({ ok: false, reason: "AGENT_WORKER_UNBOUND" }) }, /declined \(AGENT_WORKER_UNBOUND\)/],
   ];
   for (const [text, opts, why] of runs) {
-    const { w, d } = await held();
+    const { w, d } = await held({ text });
     const tr = transcriber(opts);
     w.x.registerTranscriber("plane", tr.t);
     const before = writes(w);
@@ -328,16 +336,19 @@ test("R71: the control plane's half refuses no evidence storage and a malformed 
   assert.equal((await nope.pagetranscribe()).body.reason, "REEXTRACT_NOT_CAPABLE");
 });
 
-test("R71 R35 (reading-pipeline R30, K2635): a second transcription asks the AI only for pages still unread and keeps every page already read, the AI's and OCR's, with or without the OCR member bound; with nothing left it asks no one and writes nothing", async () => {
-  const { w, d } = await held();
-  /* first: OCR (bound) reads page 2, the AI page 1 */
-  const first = transcriber({ answer: () => ({ ok: true, engine: "claude-test", version: "2026-01", pages: [{ page: 1, text: "AI text of page 1" }] }) });
-  w.x.registerTranscriber("plane", first.t);
+test("R71 R35 (reading-pipeline R30, K2635): a second transcription asks the AI only for pages still unread and keeps every page already read, the AI's and OCR's (read by the ledger's pass between them); with nothing left it asks no one and writes nothing", async () => {
   const four = i2([{ page: 0, text: "Minutes" }, { page: 1, text: "", undetermined: [noText(1)] },
                    { page: 2, text: "", undetermined: [noText(2)] }, { page: 3, text: "", undetermined: [noText(3)] }]);
-  const a = await withEntry(pdf(four, 4), () => w.x.pageTranscribe({ captureSha: d, ...member1, env: { OCR_WORKER: member((b) => ocrAnswer(b.pages.filter((p) => p === 2))) } }));
-  assert.deepEqual([a.body.transcription.written, a.body.transcription.pages, first.calls.transcribe.map((q) => q.pages)], [true, [1], [[1, 3]]]);
-  /* second, on a store whose OCR member is gone: the AI is asked for page 3 alone; pages 1 (AI) and 2 (OCR) are kept */
+  const { w, d } = await held({ text: four });
+  /* first: the AI reads page 1 of the three it is asked for */
+  const first = transcriber({ answer: () => ({ ok: true, engine: "claude-test", version: "2026-01", pages: [{ page: 1, text: "AI text of page 1" }] }) });
+  w.x.registerTranscriber("plane", first.t);
+  const a = await withEntry(pdf(four, 4), () => w.x.pageTranscribe({ captureSha: d, ...member1, env: {} }));
+  assert.deepEqual([a.body.transcription.written, a.body.transcription.pages, first.calls.transcribe.map((q) => q.pages)], [true, [1], [[1, 2, 3]]]);
+  /* the ledger's OCR pass reads page 2 */
+  const pass = await w.x.readHeld({ sha: d, kind: "ocr", env: { OCR_WORKER: member((b) => ocrAnswer(b.pages.filter((p) => p === 2))) } });
+  assert.deepEqual(pass.reextraction && pass.reextraction.pages, [2], JSON.stringify(pass));
+  /* second: the AI is asked for page 3 alone; pages 1 (AI) and 2 (OCR) are kept */
   const fresh2 = transcriber({ answer: (pages) => ({ ok: true, engine: "claude-test", version: "2026-02", pages: pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) }) });
   /* the store keeps its first registration (one per storage); the second act runs through it with a new answer */
   first.t.transcription = fresh2.t.transcription;

@@ -3,7 +3,9 @@
    queue-conditions, queue-state, queue, severedhomes. The old suites are not deleted here (K619 (3)). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, untimed } from "./world.mjs";
+import { Queue } from "../../../src/queue/index.mjs";
+import { disposeProposalOk } from "../progressions/fixtures.mjs";
 
 const FACTS = { objective_gap: { bound: 50, truncated: false }, unattributed: { count: 0, inquiries: [] },
                 contradiction: { bound: 50, truncated: false }, dispositions: [] };
@@ -78,6 +80,7 @@ test("R4, R14 (d125-findingmute): a FINDING is suppressed by item (scope item) a
   assert.deepEqual(f.mute.suppressed.map((s) => [s.id, s.kind, s.scope, s.case]),
     [["FINDING::p::kick", "missing_predecessor", "case", "INQ-1"], ["FINDING::p::contract", "missing_predecessor", "case", "INQ-1"]]);
   kind = "overdue_successor";
+  w.now += Queue.QUEUE_COUNT_BUCKET_MS;   // the producer's answer changed with no write: the next bucket of the clock sees it (R94)
   f = w.feed("alice");
   assert.deepEqual(ids(f), ["FINDING::p::contract"]);
   assert.equal(byId(f)["FINDING::p::contract"].kind, "overdue_successor");
@@ -138,8 +141,7 @@ test("R15 (d266scope): an instance-scope decision is published with no project, 
 
 test("R27 (peritem): a set mixing {project, finding}, {key} and a CONDITION: each item by its own identity group; a shared project and version reach only the shape they belong to", () => {
   const calls = [];
-  const w = world({ progressions: { disposeProposal: (a) => { calls.push(a);
-    return { ok: true, key: `${a.progressionKey}::${a.stageKey}`, progression_key: a.progressionKey, definition_version: a.definitionVersion }; } } });
+  const w = world({ progressions: { disposeProposal: (a) => { calls.push(a); return disposeProposalOk(a); } } });
   w.member("iris"); for (const p of ["PRJ-A", "PRJ-B"]) { w.bundle(p, "project"); w.join(p, "iris"); }
   const SA = "FINDING::stance-changed-here-not-elsewhere::INQ::PRJ-A", SB = "FINDING::stance-changed-here-not-elsewhere::INQ::PRJ-B";
   const pd = (a) => w.q.proposeDispose({ decidedBy: "iris", viewer: "member:iris", identity: "member:iris", ...a });
@@ -207,9 +209,10 @@ test("R6, R14, R31 (queue-conditions): a CONDITION ranks last; a member's case m
   assert.deepEqual(ids(w.feed("carol")), ["TASK-2026-0001-a"]);
   assert.deepEqual(ids(w.feed("dave")), ["TASK-2026-0001-a", "CONDITION::governor-holding-host::h"]);
   kinds = ["governor-holding-host", "partial-capture-outstanding"];
+  w.now += Queue.QUEUE_COUNT_BUCKET_MS;   // the producer's answer changed with no write: the next bucket of the clock sees it (R94)
   assert.deepEqual(ids(w.feed("carol")), ["TASK-2026-0001-a", "CONDITION::partial-capture-outstanding::h"], "a kind not named still surfaces");
   // the feed reports and never mutates: two reads, one answer
-  assert.deepEqual(w.feed("dave"), w.feed("dave"));
+  assert.deepEqual(untimed(w.feed("dave")), untimed(w.feed("dave")));
 });
 
 test("R5, R19 (queue-conditions): a member may mute a condition kind no producer emits yet; the mint refuses an uncatalogued kind in every class", () => {

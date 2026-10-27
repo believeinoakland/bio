@@ -58,7 +58,7 @@ test("R3 a refusal keeps it its author's, with the reason; it may be reviewed ag
   const read = w.g.guideRead({ guide: id });
   assert.equal(read.guide.state, "usable_by_author");
   assert.deepEqual(read.history.at(-1), { act: "refuse", state: "usable_by_author", by: "bob", reason: "the second item is too vague", at: read.history.at(-1).at });
-  assert.equal(w.g.guideFor({ kind: "staff_report", viewer: CY }).guide, null, "not the group's");
+  assert.equal(w.g.guideFor({ kind: "staff_report", viewer: CY }).guide, null, "not the team's");
   assert.equal(w.g.guideFor({ kind: "staff_report", viewer: ANN }).guide.id, id, "still its author's");
   assert.equal(w.g.guideReview({ guide: id, verdict: "approve", by: CY }).state, "group");
 });

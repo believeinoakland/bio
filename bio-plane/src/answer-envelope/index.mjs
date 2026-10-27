@@ -7,6 +7,7 @@
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
 /* R8: the doors' own rows. */
 import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R6 (was control-plane R51; DEC-122 (3); N528; F17, K1881): the policy every `text/html` response the plane serves
    carries, so a browser loads no script, style, font, image or connection from another origin and sends nothing
@@ -21,6 +22,10 @@ import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHE
 const PAGE_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; "
   + "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
 const pagePolicy = (nonce) => `${PAGE_POLICY}; script-src 'nonce-${nonce}'`;
+/* R6 (fix round 3, C15, P2.4; K4359): the interface page carries no inline script, so its policy names the shell's versioned script by
+   its hash (`interface-shell` exports it) with this origin, and no nonce */
+const SCRIPT_HASH = /^sha256-[A-Za-z0-9+/]{43}=$/;
+const hashPolicy = (hashes) => PAGE_POLICY + "; script-src " + ["'self'", ...hashes.map((h) => "'" + h + "'")].join(" ");
 
 /* `interfacePage`'s slot (`interface-shell` R1, R2; was `setup-page` R28, K2038): the literal the page holds in each
    script element's `nonce` attribute, which every HTML body served gets the response's nonce in place of, wherever it
@@ -80,14 +85,23 @@ function stampScripts(html, nonce) {
 
 /* An HTML answer leaves with a fresh nonce, its policy naming it and its script elements carrying it; any other answer
    leaves as it came. A body that cannot be read is the door's fault, answered as R5's. */
-async function withPagePolicy(res) {
+/* whether an HTML text holds a script element with text of its own (no `src`), whatever its spelling */
+const hasInlineScript = (html) => (html.replace(/<!--[\s\S]*?-->/g, "").match(/<script\b[^>]*>/gi) || []).some((tag) => !/\ssrc\s*=/i.test(tag)) || html.includes(NONCE_SLOT);
+async function withPagePolicy(res, opts = {}) {
   const type = res && res.headers ? res.headers.get("content-type") || "" : "";
   if (!/^\s*text\/html\b/i.test(type)) return res;
   let text;
   try { text = await res.text(); } catch (e) { return planeInternalError(e, null); }
-  const nonce = pageNonce();
   const headers = new Headers(res.headers);
   headers.delete("content-length");
+  /* R6: hashes handed in by the page's owner, every one well formed, and a page with no inline script: the hash policy, no nonce, the
+     page's bytes as shipped. Any other HTML keeps the nonce rule. */
+  const hashes = Array.isArray(opts && opts.scriptHashes) ? opts.scriptHashes : [];
+  if (hashes.length && hashes.every((h) => typeof h === "string" && SCRIPT_HASH.test(h)) && !hasInlineScript(text)) {
+    headers.set("content-security-policy", hashPolicy(hashes));
+    return new Response(text, { status: res.status, statusText: res.statusText, headers });
+  }
+  const nonce = pageNonce();
   headers.set("content-security-policy", pagePolicy(nonce));
   return new Response(stampScripts(text.replaceAll(NONCE_SLOT, nonce), nonce), { status: res.status, statusText: res.statusText, headers });
 }
@@ -248,9 +262,7 @@ function dec49Attach(o) {
    diagnostic a stranger cannot act on is not worth one. */
 const STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
 const STORE_SILENT_DETAIL =
-  "this group's Civicsmith could not consult its own record, so nothing here is a statement about the record. "
-  + "It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are "
-  + "answers, and this is the absence of one. The question stands unanswered; ask again.";
+  localize("answer-envelope.index.this_teams_civicsmith_could_not", "this team's Civicsmith could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are answers, and this is the absence of one. The question stands unanswered; ask again.");
 
 /* Takes the Response (or a promise of one) from a Durable Object stub fetch and
    returns `{ answered, result }`. A body that is not JSON at all is not an
@@ -365,8 +377,7 @@ function requiredArgument(op, argument, shape, error) {
   return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING",
            ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
            error, op, argument, shape,
-           detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
-                 + `none the operation could use. Nothing was changed.` };
+           detail: localize("answer-envelope.index.op_op_needs_argument_in", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was changed.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   /* END DEC-49 REGION is-required-argument */
 }
 
@@ -402,7 +413,7 @@ const dispatchRow = (code) => {
    refusal. A sentinel class and not a bare string, so a genuine crash on the
    same path is re-thrown instead of being reported as a polite silence. */
 class StoreSilent extends Error {
-  constructor(op) { super(`the store did not answer ${op}`); this.op = op; }
+  constructor(op) { super(word("publication.super.store_did_answer", { op: String(op) })); this.op = op; }
 }
 
 export { PAGE_POLICY, pagePolicy, withPagePolicy, NONCE_SLOT, json, dec49Attach, dec49Row, CHECK_FAMILIES, CHECK_FAMILY_FILES,

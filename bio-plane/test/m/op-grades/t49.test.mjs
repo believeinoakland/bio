@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, LARGER_SCREEN_ACTS,
          OP_ALIASES, phoneOf, MARKS } from "../../../src/op-grades/index.mjs";
 import * as T49 from "../../../src/op-grades/t49.mjs";
+import { declaredSentence } from "./declared.mjs";
 
 const ground = (g) => Object.entries(RUNG_ABSENT).filter(([, v]) => v.ground === g).map(([k]) => k);
 
@@ -24,8 +25,7 @@ test("R43: founderhandleset is stated absent on the `caller-owned` ground, as ha
 });
 
 test("R43: founderhandleset's NON_ACTS sentence is the member-directed one R43 gives, naming HANDLE_FIXED and no record or bundle", () => {
-  assert.equal(NON_ACTS.founderhandleset, "member-directed: the founder's own handle, the one she signs in and is known by, "
-    + "chosen once and never changed (`HANDLE_FIXED`); writes no record and moves no bundle");
+  assert.equal(NON_ACTS.founderhandleset, declaredSentence("member-roster", "founderhandleset"));
   assert.equal(T49.T49_NON_ACTS.founderhandleset, NON_ACTS.founderhandleset);
   /* control: it is not handlechange's sentence, and it does not say a handle can be changed or shown as formerly */
   assert.notEqual(NON_ACTS.founderhandleset, NON_ACTS.handlechange);
@@ -59,17 +59,17 @@ test("R43: projectownervotes is a read: its NON_ACTS sentence is R43's, and it h
 });
 
 test("R43 R3 (START measure): the `undetermined` tally is 109 after T50 (R45 adds actioninquiry, R47 takes planopen and "
-   + "wizarddraft out) and T49 left it unchanged; the `caller-owned` set is 37, "
-   + "founderhandleset its newest; T49's tables hold exactly these two ops", () => {
+   + "wizarddraft out) and T49 left it unchanged; the `caller-owned` set is 35 (37 less securitymap, a read since K4210, and "
+   + "groupdescriptiondraft, a read since K4247), founderhandleset its newest; T49's tables hold exactly these two ops", () => {
   assert.equal(ground("undetermined").length, 109);
   assert.ok(!ground("undetermined").includes("founderhandleset"));
   const caller = ground("caller-owned");
-  assert.equal(caller.length, 37);
+  assert.equal(caller.length, 35);
   assert.ok(caller.includes("founderhandleset") && caller.includes("handlechange") && caller.includes("setpassword"));
   assert.deepEqual(Object.keys(T49.T49_RUNG_ABSENT), ["founderhandleset"]);
   assert.deepEqual(Object.keys(T49.T49_NON_ACTS).sort(), ["founderhandleset", "projectownervotes"]);
-  /* control: the set without it is 36, the count the module held before T49 */
-  assert.equal(caller.filter((op) => op !== "founderhandleset").length, 36);
+  /* control: the set without it is 34, the count the module held before T49 less securitymap and groupdescriptiondraft */
+  assert.equal(caller.filter((op) => op !== "founderhandleset").length, 34);
 });
 
 test("R43 R42: founderhandleset, a rungless act the registry lists as owed, is marked Reasoned by the kit's owed_ weight; "

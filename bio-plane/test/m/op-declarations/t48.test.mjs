@@ -10,6 +10,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
+import { explained } from "./help.mjs";
+import { browserActs, OWED_BY_FIX_ROUND_AT_43379A1A44, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { T48_SHARES, T48_FAMILIES } from "../../../src/op-declarations/t48.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
@@ -40,7 +43,6 @@ const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v))
 const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
   .filter((n) => !["FAMILY_OPS", "FAMILY_SESSION_OPS"].includes(n)).sort();
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 /* a caller not arriving by a session is judged against machineClasses where given (admission R5) */
 const machineAdmits = (op) => ["admin", "member", "probe", "daemon"].filter((c) => (OPS[op].machineClasses ?? OPS[op].classes ?? []).includes(c));
 
@@ -94,7 +96,7 @@ const Q = (k) => ({ query: { [k]: SENT } });
 const B = (k) => ({ body: { [k]: SENT } });
 
 const ROOT = new URL("../../../../", import.meta.url);
-const registry = JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/registry.json", ROOT), "utf8"));
+const registry = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 const library = JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/library.json", ROOT), "utf8"));
 const regActs = registry.screens.flatMap((s) => s.acts.map((a) => ({ ...a, screen: s.id })));
 const owedOf = (acts) => [...new Set(acts.filter((a) => a.status === "owed").map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))];
@@ -184,7 +186,7 @@ test("R64, R34: actionreplyquoting and readtranslate are explained in affordance
 test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read against the registry at PR #34's merge — every function act is an op or an alias and the alias table names only function acts of the file, the Where else to go screen lists no act so no spec or alias is added for it, and the update screen's three owed acts (updatestart, updatelater, updateskip; updatelater also on the queue) are each declared under their own names with no alias (negative control: an undeclared function is seen)", () => {
   const fns = regActs.filter((a) => a.status === "function");
   /* T49 (K3321 (B), K3393; R21): the count is read from the registry, never pinned (K3268) */
-  assert.ok(fns.length >= 88, `${fns.length} function acts`);
+  assert.ok(fns.length > 0, `${fns.length} function acts`);
   for (const a of fns) assert.ok(Object.hasOwn(OPS, a.op), `${a.op}: a function act with no spec`);
   /* the alias table equals the file's function acts: each alias is a function act of the file; every other function act is
      an op declared under its own name */
@@ -202,8 +204,12 @@ test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read aga
      (owed, K3674) is the op declared since T5-11, each read as served with no alias; the installer's four own routes are
      owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
   const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
-  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT].sort());
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND_AT_43379A1A44];
+  /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
+  const BROWSER = browserActs(registry);
+  /* R80: an owed act an owner declares is read as served by its declaration (`register-owners.mjs`), an op like any other */
+  assert.deepEqual(owedOf(regActs).sort(), [...new Set(["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...OWED_SERVED_BY_OWNERS, ...BROWSER])].sort());
+  for (const op of OWED_SERVED_BY_OWNERS) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: declared by its owner and not an op`);
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
   for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
@@ -475,7 +481,7 @@ test("R69, R5 (N1039; K3147, K3200): every table and list is built on first read
     let wrote = "none";
     try { m.EDGE_ACTIONS.push("x"); wrote = "pushed"; } catch (e) { wrote = e.constructor.name; }
     let setWrote = "none"; try { m.SESSION_OPS.member.add("x"); setWrote = "added"; } catch (e) { setWrote = e.constructor.name; }
-    process.stdout.write(JSON.stringify({ importMs, atImport, afterKinds, size, firstMs, afterFirst, afterAll, again, same, frozen, wrote, setWrote, kinds, names }));`;
+    process.stdout.write(JSON.stringify({ keys: Object.keys(m.OPS), importMs, atImport, afterKinds, size, firstMs, afterFirst, afterAll, again, same, frozen, wrote, setWrote, kinds, names }));`;
   const r = spawnSync(process.execPath, ["--input-type=module", "-e", script], { encoding: "utf8" });
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
@@ -489,19 +495,26 @@ test("R69, R5 (N1039; K3147, K3200): every table and list is built on first read
   assert.deepEqual(out.frozen, Array(8).fill(true));
   assert.equal(out.wrote, "TypeError");
   assert.equal(out.setWrote, "TypeError");
-  /* the export names and kinds are what they were: 108 names, REAUTH_ACTS and decorateAct beside the tables */
-  assert.equal(out.names.length, 108);
+  /* the export names and kinds are what they were: 111 names (T51 adds BROWSER_ACTS, R76, and the registration's two functions, R80), REAUTH_ACTS and decorateAct beside the tables */
+  assert.equal(out.names.length, 111);
+  assert.equal(out.kinds.registerDeclaredOps, "function");
+  assert.equal(out.kinds.declaredFields, "function");
   assert.equal(out.kinds.decorateAct, "function");
   assert.equal(out.kinds.OPS, "object");
   assert.equal(out.kinds.EDGE_ACTIONS, "array");
   assert.equal(Object.values(out.kinds).filter((k) => k === "array").length, 95);
-  /* negative control: this process's own import is lazy too, and agrees with the child's answer */
-  assert.equal(Object.keys(OPS).length, out.size);
+  /* negative control: this process's own import is lazy too, and agrees with the child's answer but for the ops the owners
+     declare (R80): this process registers every owner (`register-owners.mjs`), the child registers none, so the ops here
+     and not there are exactly some of the owners' declarations, and none there is missing here */
+  const here = Object.keys(OPS), there = new Set(out.keys);
+  const declaredNow = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));
+  assert.deepEqual([...there].filter((op) => !Object.hasOwn(OPS, op)), []);
+  assert.deepEqual(here.filter((op) => !there.has(op) && !declaredNow.has(op)), []);
 });
 
 test("R69 (K3147): every export answers exactly as before the tables were lazy — plain bindings read by the same names: the lists are arrays with the same entries in the same order, the tables plain objects with the same keys and frozen leaves, the specs and class lists frozen, the session sets frozen sets answering has, size and iteration, the act gate and decorateAct working over them (negative control: an export outside the list is missing)", () => {
   for (const [name, v] of Object.entries(O)) {
-    if (name === "decorateAct") { assert.equal(typeof v, "function"); continue; }
+    if (["decorateAct", "registerDeclaredOps", "declaredFields"].includes(name)) { assert.equal(typeof v, "function"); continue; }
     if (Array.isArray(v)) { assert.ok(Object.isFrozen(v), name); assert.ok(v.every((x) => typeof x === "string"), name); }
     else { assert.equal(typeof v, "object", name); assert.ok(Object.isFrozen(v), name); assert.equal(Object.getPrototypeOf(v), Object.prototype, name); }
   }

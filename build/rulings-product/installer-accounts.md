@@ -1,0 +1,9 @@
+# Bob's product rulings: the installer, accounts and sign-in
+
+**Status** · Bob's product rulings on the installer, accounts and sign-in, by subject (Bob, K5323), read whole by the work that plans or changes the installer, accounts, sign-in or membership. Each line keeps its source ids; `build/rulings.md` is the full log. Moved from `rulings-active.md` when the process redesign was adopted; a ruling of Bob's on this subject is added here in the commit that records it.
+
+- Bob's answers (K3445 and earlier; in the requirements): the designed screens are the interface; Workers Paid required; images in the public GitHub registry each release; sessions 15 min idle (unkept), 30 min lock, 12 h (kept); Bob's test group may use the test-instance exception to D14's AI bar and his subscription.
+- An invited, not yet joined member is told at a weighty act's start (a filing, conclusion, case edition, the password-again acts) that only joined members may; gathering stays open (K4557).
+- The alpha's new-team experience (Bob, K4935): an up-to-date civicsmith.org, installer and release; Bob installs the signed alpha into another Cloudflare account and walks it, after BOB's rehearsal on a fresh test copy passes (nothing told ready before). The installer checks the founder's account first and handles every unready condition in the interface, never asking a token or account id (K4937, K4951). The rehearsal's throwaway account is reached only by `CS_TEST_CF_TOKEN` and `CS_TEST_CF_ACCOUNT_ID` (K4942).
+- The installer alone installs every part of a group's Civicsmith, "without fail" (Bob, K3447); an account already holding a Civicsmith is a supported situation, not a question for Bob (K3471); every install situation is recorded the day it is seen in `build/plan/install-situations.md` (K3496).
+- No credential travels in a URL; DEC-2, the root of trust, is not reopened (K1874). The cursor changes only over a control, never to a question mark (DEC-224, K3166).

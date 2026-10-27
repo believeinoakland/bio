@@ -145,6 +145,18 @@ console.log("\n--- R39: every crop refusal is declared, in its own words ---");
   t("R39 (every declared crop reason was driven)", [...new Set(refusals.map((r) => r.reason))].sort(), Object.keys(CROP_REFUSALS).sort());
   t("R39 every reason is a key of CROP_REFUSALS", refusals.filter((r) => !(r.reason in CROP_REFUSALS)).map((r) => r.reason), []);
   t("R39 every why is exactly that key's text", refusals.filter((r) => r.why !== CROP_REFUSALS[r.reason]).map((r) => r.reason), []);
+  /* words (setup-words R14, K874): every crop refusal sentence is read through a word id. */
+  const WORD_IDS = [
+    "pdf-pixels.imagecrop.the_extent_names_a_page",
+    "pdf-pixels.imagecrop.the_document_is_encrypted_streams",
+    "pdf-pixels.imagecrop.the_page_index_is_outside",
+    "pdf-pixels.imagecrop.the_page_s_content_could",
+    "pdf-pixels.imagecrop.the_page_paints_no_image",
+    "pdf-pixels.imagecrop.the_page_paints_more_than",
+    "pdf-pixels.imagecrop.the_image_at_that_rectangle",
+    "pdf-pixels.imagecrop.the_image_was_found_and",
+  ];
+  t("words R14 every id is a dotted pdf-pixels.imagecrop word id, named once", WORD_IDS.filter((id) => !/^pdf-pixels\.imagecrop\.[a-z0-9_]+$/.test(id)).concat(WORD_IDS.length - new Set(WORD_IDS).size ? ["duplicate"] : []), []);
   t("R39 every refusal says it is derived, and carries no bytes", refusals.filter((r) => r.derived !== true || "bytes" in r).length, 0);
 }
 

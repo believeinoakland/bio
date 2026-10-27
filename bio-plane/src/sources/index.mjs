@@ -41,6 +41,8 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { SOURCES_CHECKS, noSuchSource, badDisclosure, noEvidence, noSightList, consentNotStanding,
          SECRET_NOT_RECOGNISED_ANSWER, machineCannotMark, notYourCapture, noSuchCapture, noService } from "./checks.mjs";
 import { SOURCES_TABLE_CLASSES, migrateSources } from "./schema.mjs";
+import { word } from "../setup-words/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER } from "./checks.mjs";
 export { SOURCES_SCHEMA, SOURCES_TABLES, SOURCES_TABLE_CLASSES } from "./schema.mjs";
@@ -62,15 +64,13 @@ export const VALUE_MAX = 400, CLAIMED_BY_MAX = 200, EVIDENCE_MAX = 2000;
 export const SERVICE_MAX = 200, TERMS_MAX = 2000;
 
 /** R7: the sentences a consent and a withdrawal answer with (DEC-78 item 5(d)). */
-export const CONSENT_STATEMENT = "This consent is permanent for anything published under it: what is published under "
-  + "it stays published, even if the consent is later withdrawn.";
-export const WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the "
-  + "consent stays published.";
+export const CONSENT_STATEMENT = word("sources.consent_permanent_anything");
+export const WITHDRAWAL_STATEMENT = word("sources.withdrawal_binds_later");
 /** R4: what an entry recorded without its value reads as (DEC-78 item 5(c)). */
-export const NOT_RECORDED = "known to the group, not recorded";
+export const NOT_RECORDED = word("sources.known_group_recorded");
 /** R3: the sentence a hostile disclosure reads as (DEC-78 item 5(b)). */
 export const claimSentence = (claimedBy, at) =>
-  `named by ${claimedBy} on ${String(at).slice(0, 10)}; not confirmed by the group`;
+  word("sources.named_confirmed_group", { claimed_by: String(claimedBy), at: String(String(at).slice(0, 10)) });
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -343,7 +343,7 @@ export class Sources {
     }));
     return { ok: true, source, rung: r.rung, ladder: RUNGS,
              ...(r.rung === "same_knocker" && r.pseudonym
-               ? { knocker: { pseudonym: r.pseudonym, how: "the same knocker secret was presented" } } : {}),
+               ? { knocker: { pseudonym: r.pseudonym, how: word("doorbell.continuity") } } : {}),
              basis: views.basis, claims: views.claims };
   }
 
@@ -802,6 +802,9 @@ export function sourcesOf(ctx, deps = {}) {
 /* The Durable Object routes this module answers (the control plane routes and stamps them, layer 11). `url` carries
    the stamps (`by`, `viewer`, and for `knockerconsent` the connecting `source` and `now`), read after the body is
    spread so a caller's own copy never wins (D-136). */
+export const SOURCES_OP_NAMES = Object.freeze(["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose",
+  "sourcekeyed", "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+
 export function sourcesOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = isObj(body) ? body : {};
@@ -819,3 +822,20 @@ export function sourcesOps(s, url, body) {
     sourcepublishable: () => s.publishableAt({ source: q("source_id") ?? b.source, audience: q("audience") ?? b.audience }),
   };
 }
+
+/* R21 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  sourcedisclose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("sources.declared.sourcedisclose", "source-directed: a member appends one disclosure to a source's history — what was revealed, how, to whom it is known, with its evidence — keyed by source id; never edited, a later entry superseding it on read"),
+    fields: { accepts: ["source","revealed","how","knownTo","recorded","claimedBy","claimedAt","confirms","evidence","sight"], requires: ["source","revealed","how","knownTo","evidence"] } },
+  sourcelink: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("sources.declared.sourcelink", "source-directed: a member claims that two sources are one person, with evidence, keyed by the source pair; recorded as a disclosure and merging nothing"),
+    fields: { accepts: ["source","to","evidence","knockerSecret"], requires: ["source","to","evidence"] } },
+  sourceconsent: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.sourceconsent.label.about-knocker",
+    fields: { accepts: ["source","entry","audience","evidence"], requires: ["source","entry","audience","evidence"] } },
+  sourceconsentwithdraw: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("sources.declared.sourceconsentwithdraw", "source-directed: a member records the withdrawal of a source's consent for one disclosure and one audience, keyed by (source, entry); binds only later publications, and what is published stays published"),
+    fields: { accepts: ["source","entry","audience"], requires: ["source","entry","audience"] } },
+  /* R22 (T51; K4206): `requires` is empty by design: every failure answers SECRET_NOT_RECOGNISED, naming no field (R11). The
+     weight and description are op-grades' hand row for this op (its ground and sentence), which the declaration must agree with. */
+  knockerconsent: { classes: null, mutating: true, weight: "credential", description: localize("sources.declared.knockerconsent", "a source, proving who they are by their knocker secret and holding no account, consents to or withdraws from one disclosure for one audience (sources R11)"),
+    fields: { accepts: ["knockerSecret","entry","audience","withdraw"], requires: [] } },
+});

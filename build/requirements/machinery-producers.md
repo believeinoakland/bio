@@ -1,6 +1,6 @@
 # machinery-producers — requirements
 
-**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863). Last changed T48 (T48-58: Purpose widened; R11 new, the administrators' update to-do, and R12 new, the read it is derived from, passed in by the plane's composition; N1047; DEC-226 (1); K3158, K3189, K3195); marked not yet met (T48). Last changed T50 (L11 fold, BOB #201: R15 a completed capture request told by key; N1143; DEC-274); marked not yet met (T50).
+**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863). Last changed T48 (T48-58: Purpose widened; R11 new, the administrators' update to-do, and R12 new, the read it is derived from, passed in by the plane's composition; N1047; DEC-226 (1); K3158, K3189, K3195); marked not yet met (T48). Last changed T50 (L11 fold, BOB #201: R15 a completed capture request told by key; N1143; DEC-274); marked not yet met (T50). Fix round 6 (T51): R2 amended, a parked fetch raises no partial-capture condition (G25).
 
 **Size (P6).** About 1,050 lines. It takes about 840 lines from `queue-producers/index.mjs` (353–802, 1842–1939, 1943–2027, 3031–3237) and copies about 200 lines of helpers. That leaves `queue-producers` at about 3,155.
 
@@ -24,7 +24,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 **The producers**
 - **R2** (was `queue-producers` R3) CONDITIONs, derived on read and writing nothing:
   - **governor-holding-host**, per held host. Its documents are gathered at most 16; past that, the home set states `subject_bound` and is undetermined.
-  - **partial-capture-outstanding**, per live capture session.
+  - **partial-capture-outstanding**, per live capture session that holds a capture's primary. (T51 fix round 6, G25; K4577; `acquisition` R105) A session a capture parks as owed work (`state.fetch_pending`) has captured nothing and raises none, a failed parked fetch included. Test: a parked and a failed fetch raise none; control: a real partial capture still does.
   - **capture-completed-unattended**, per bundle a machine credential wrote and per completed capture request.
   - **render-deferred**, per render request held under a code or expired. Its reason is the code's own translation.
   - **archive-fallback-eligible**, per address `monitoring.archiveEligible` answers (its R47: what the next tick would find; K406 Q2).
@@ -59,7 +59,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
   - The item leaves every administrator's queue when the read answers any administrator's decision on that release (`updatestart`, `updateskip`, or `updatelater` until its date), or when the running version is that release or newer.
   - A member who is not an administrator is answered no such item. It writes nothing.
   - Tests: a ready release gives each of two administrators one item; a second, newer release replaces it; control: after one administrator's `updatelater` neither has the item until its date; a member gets none.
-- **R12** (T48; K3189; K31's pattern) The read R11 derives from is handed to this module in process by the plane's composition (`plane` R52), never imported: `deps.updateNotice()`, answering `instance-setup`'s notice read (its R89). With none handed, or one that throws or answers malformed, R11 answers no item and the answer's facts name `update-ready` in `failed`, never a guess. Control: with no read handed, the other producers answer as before.
+- **R12** (T48; K3189; K31's pattern) The read R11 derives from is handed to this module in process by the plane's composition (`store-assembly` R39), never imported: `deps.updateNotice()`, answering `instance-setup`'s notice read (its R89). With none handed, or one that throws or answers malformed, R11 answers no item and the answer's facts name `update-ready` in `failed`, never a guess. Control: with no read handed, the other producers answer as before.
 - **R13** (T49; N1138; K3407; DEC-272; K3366) `capture-completed-unattended`'s `summary` and `detail` are read by key through `setup-words`' `word`: `queue.capture-completed-unattended.summary` and `.detail`, `{member}` the starter's handle (the founder's through `membership.founderHandle()`, R144), or `.who` when a credential that is no member started it, `{title}` the document's title; never a record or credential id, and none held draws no name.
 - **R14** (R085-19; K3501 (b); amends R2's `capture-completed-unattended`) The item is raised only for a bundle that holds a capture (a `register` row, `provenance` R48) or a completed capture request; a machine's entry on a record holding no capture (an AI run's proposal on a question) raises none. Test: a question carrying a run's proposal raises no such item; control: a machine-written capture still does.
 
@@ -73,6 +73,8 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
   - The internal codes, kinds and item ids are unchanged (`CONDITION`, `CONDITION::…`).
 
  
+
+- **R16** (fix round 4b, F3 verification; K4509; provenance R73) **One note for a capture held in parts.** `#gradeNotes` lists one note for a capture held in parts (its whole), never one per register row (skip `part_of` rows). Test: the three-part fixture yields one note. Uses provenance `registeredFor` (R11, R73); R3's bound of 8 counts after the parts are left out.
 
 ## Private
 

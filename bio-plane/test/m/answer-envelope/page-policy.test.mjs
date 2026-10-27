@@ -1,6 +1,6 @@
 /* answer-envelope R6 (was control-plane R51; DEC-122 (3); N528; F17, K1881), R16 (T47; N1002, N1001): every `text/html`
-   response the plane serves (the signer page, and since T47 `interface-shell`'s `interfacePage` at `/` and `/app/*`, the
-   setup page no longer served) leaves `withPagePolicy` with a policy under which a browser loads no
+   response the plane serves (since T47 `interface-shell`'s `interfacePage` at `/` and `/app/*`, the setup page no longer
+   served) leaves `withPagePolicy` with a policy under which a browser loads no
    script, style, font, image or connection from another origin and sends nothing elsewhere, and a `script-src` of the
    response's own fresh nonce alone; every script element of the page served carries that nonce. The policy is parsed
    and judged directive by directive, never matched as text. Driven at this module's interface over the pages' real
@@ -11,7 +11,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M } from "./load.mjs";
-import { SIGN_HTML } from "../../../src/signpage.mjs";
 
 /* A policy's directives, `{name: [sources]}`. */
 const parse = (header) => Object.fromEntries(String(header || "").split(";").map((d) => d.trim()).filter(Boolean)
@@ -74,10 +73,10 @@ const interfaceShaped = (screen) => `<!doctype html>
 </body>
 </html>
 `;
-const pages = () => [["the signer page", SIGN_HTML], ["interfacePage at /", interfaceShaped("front")],
+const pages = () => [["interfacePage at /", interfaceShaped("front")],
                      ["interfacePage at /app/home", interfaceShaped("home")], ["interfacePage at /app/settings", interfaceShaped("settings")]];
 
-test("R6, R16: the signer page and `interfacePage` (at `/` and at `/app/*`; the setup page no longer served), each served twice, carry a policy naming no other origin, a script-src of a fresh nonce alone (no 'unsafe-inline', no 'self', no host), two different nonces, and every script element of each body carrying its response's nonce; the pages are otherwise byte for byte as shipped (negative controls: the judge refuses another origin, an inline allowance, a second source and a script without the nonce)", async () => {
+test("R6, R16: `interfacePage` (at `/` and at `/app/*`; the setup page no longer served), each served twice, carry a policy naming no other origin, a script-src of a fresh nonce alone (no 'unsafe-inline', no 'self', no host), two different nonces, and every script element of each body carrying its response's nonce; the pages are otherwise byte for byte as shipped (negative controls: the judge refuses another origin, an inline allowance, a second source and a script without the nonce)", async () => {
   for (const [where, page] of pages()) {
     const before = scriptTags(page).length;
     assert.ok(before >= 1, `${where} ships a script`);
@@ -212,4 +211,41 @@ test("R6, R5: an HTML body that cannot be read is answered PLANE_INTERNAL_ERROR 
   assert.equal(text.includes("SECRET") || text.includes("/srv/"), false);
   assert.equal(logged.length, 1);
   assert.equal(JSON.parse(logged[0]).correlation, j.correlation);
+});
+
+/* R6 (fix round 3, C15, P2.4; K4359): the interface page carries no inline script, so its policy names the shell's versioned script by its
+   hash and carries no nonce; other HTML keeps its nonce. */
+import { createHash } from "node:crypto";
+const SHELL_JS = "(function(){ window.cs = 1; })();";
+const HASH = "sha256-" + createHash("sha256").update(SHELL_JS).digest("base64");
+const hashPage = `<!doctype html><html lang="en"><head><link rel="stylesheet" href="/app/assets/civicsmith.css"><style>.cs{margin:0}</style></head><body class="cs"><div id="cs-root"></div><script src="/app/shell-1.js" integrity="${HASH}"></script></body></html>`;
+const HASH_SOURCE = /^'(sha256-[A-Za-z0-9+/]{43}=)'$/;
+
+test("R6 (K4359) a page with no inline script and the script's hash handed in is answered `script-src 'self'` with that hash and no nonce, the bytes of the page unchanged; the script's bytes hash to the policy's hash; no other origin, 'unsafe-inline' or 'unsafe-eval'", async () => {
+  for (let i = 0; i < 2; i++) {
+    const r = await M.withPagePolicy(html(hashPage, { headers: { "cache-control": "no-store" } }), { scriptHashes: [HASH] });
+    assert.equal(r.headers.get("cache-control"), "no-store");
+    const header = r.headers.get("content-security-policy");
+    const p = parse(header);
+    assert.deepEqual(p["script-src"].slice(0, 1), ["'self'"]);
+    const named = p["script-src"].slice(1).map((s) => HASH_SOURCE.exec(s)[1]);
+    assert.deepEqual(named, [HASH]);
+    assert.equal(/nonce/.test(header), false, "no nonce");
+    assert.equal(createHash("sha256").update(SHELL_JS).digest("base64"), named[0].slice(7), "the script's bytes hash to it");
+    assert.equal(await r.text(), hashPage, "the page is byte for byte as shipped");
+    for (const [name, sources] of Object.entries(p)) if (name !== "img-src") assert.equal(sources.some((s) => /unsafe-eval|\*|https?:/.test(s)), false, name);
+    assert.equal(p["script-src"].includes("'unsafe-inline'"), false);
+    for (const d of ["style-src", "font-src", "connect-src", "object-src"]) assert.ok(ownOnly(sourcesFor(p, d)), d);
+  }
+});
+
+test("R6 (K4359) control: another HTML route keeps its nonce; a page that still carries an inline script keeps it even when a hash is handed in; no hashes, or a malformed one, keep it", async () => {
+  const inline = '<!doctype html><script>x()</script>';
+  for (const [page, opts] of [[inline, { scriptHashes: [HASH] }], [hashPage, {}], [hashPage, { scriptHashes: [] }], [hashPage, { scriptHashes: ["sha256-short"] }],
+                              [hashPage, { scriptHashes: [HASH, "nope"] }], [`<!doctype html><script nonce="${M.NONCE_SLOT}" src="/a.js"></script>`, { scriptHashes: [HASH] }]]) {
+    const r = await M.withPagePolicy(html(page), opts);
+    const body = await r.text();
+    const { nonce } = judge(r.headers.get("content-security-policy"), body, "control");
+    assert.ok(nonce);
+  }
 });

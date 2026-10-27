@@ -32,8 +32,8 @@ export const NEVER_SAID = Object.freeze(["violation", "violated", "breach", "una
 /** The members' words of the connection kinds this module owns (R18; K1486). */
 export const CONNECTION_KINDS = Object.freeze([
   Object.freeze({ kind: "owes", word: "owes", class: "evidentiary" }),
-  Object.freeze({ kind: "owed_to", word: "is owed to", class: "evidentiary" }),
-  Object.freeze({ kind: "holds_power", word: "holds the power", class: "evidentiary" }),
+  Object.freeze({ kind: "owed_to", wordKey: "duties.word.owed", class: "evidentiary" }),
+  Object.freeze({ kind: "holds_power", wordKey: "duties.word.holds_power", class: "evidentiary" }),
   Object.freeze({ kind: "met_by", word: "met by", class: "derived" }),
   Object.freeze({ kind: "used_in", word: "used in", class: "derived" }),
 ]);

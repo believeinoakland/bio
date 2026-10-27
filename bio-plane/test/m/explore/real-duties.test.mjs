@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { exploreOf } from "../../../src/explore/index.mjs";
 import { world, E, BOB, ZONE } from "../duties/fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R10 chain reads duties' real power kind and walks an office's power through the real duties owner", () => {
   const w = world();
@@ -14,7 +15,7 @@ test("R10 chain reads duties' real power kind and walks an office's power throug
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   const office = w.fields().obligor;
   const x = exploreOf(w.host, { registry: w.registry });
-  const powerKind = w.registry.owners().find((o) => o.owner === "duties").kinds.find((k) => k.word === "holds the power").kind;
+  const powerKind = w.registry.owners().find((o) => o.owner === "duties").kinds.find((k) => k.word === word("duties.word.holds_power")).kind;
   assert.equal(powerKind, "holds_power");
   const chainKinds = x.presets().find((s) => s.name === "chain").kinds;
   assert.ok(chainKinds.includes(powerKind), `chain names duties' registered ${powerKind}`);

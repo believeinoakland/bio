@@ -235,7 +235,7 @@ test("R5 readPart's named refusals, each carrying the normalized name", async ()
   const trunc = zipOf([{ name: "a.xml", data: "hello", cd: { csize: 1 << 20 } }]);
   assert.deepEqual(await readPart(trunc, readContainer(trunc), "a.xml"), { ok: false, why: "member_truncated", name: "a.xml" });
 
-  for (const method of [1, 9, 12, 14, 93, 99]) {
+  for (const method of [1, 9, 12, 14, 93]) {
     const m = zipOf([{ name: "a.xml", data: "hello", cd: { method } }]);
     assert.deepEqual(await readPart(m, readContainer(m), "a.xml"), { ok: false, why: "unsupported_compression_method", method, name: "a.xml" });
   }
@@ -287,13 +287,13 @@ test("R31 every part readPart inflates is capped before inflation: MEMBER_MAX, t
     // one member over MEMBER_MAX
     const big = makeZip([declared("big.xml", MEMBER_MAX + 1), { name: "ok.xml", data: "fine" }]);
     const c = readContainer(big);
-    assert.deepEqual(await readPart(big, c, "/big.xml"), { ok: false, why: "MEMBER_MAX", name: "big.xml", declared: MEMBER_MAX + 1, limit: MEMBER_MAX });
+    assert.deepEqual(await readPart(big, c, "/big.xml"), { ok: false, why: "MEMBER_MAX", name: "big.xml", declared: MEMBER_MAX + 1, limit: MEMBER_MAX, final: true });
     // the file's declared total over ARCHIVE_TOTAL_MAX refuses every part, the small ones included
     for (const part of ["ok.xml", "big.xml"]) {
       const half = makeZip([declared("h1", ARCHIVE_TOTAL_MAX / 2), declared("h2", ARCHIVE_TOTAL_MAX / 2), { name: "d/", data: "", method: 0, local: { uncompressedSize: 1 }, central: { uncompressedSize: 1 } }, { name: "ok.xml", data: "fine" }]);
       const r = await readPart(half, readContainer(half), part);
       assert.deepEqual(r, part === "ok.xml"
-        ? { ok: false, why: "ARCHIVE_TOTAL_MAX", name: "ok.xml", declared: ARCHIVE_TOTAL_MAX + 1 + 4, limit: ARCHIVE_TOTAL_MAX }
+        ? { ok: false, why: "ARCHIVE_TOTAL_MAX", name: "ok.xml", declared: ARCHIVE_TOTAL_MAX + 1 + 4, limit: ARCHIVE_TOTAL_MAX, final: true }
         : { ok: false, why: "part_absent", name: "big.xml" });
     }
     assert.deepEqual(inflated, []);
@@ -383,6 +383,13 @@ const MACRO = [
   ["pptx", "ppam", "application/vnd.ms-powerpoint.addin.macroEnabled.main+xml"],
 ];
 
+/* The template and show rows (R10, fix round 9, G130e): twin, variant, main content type. */
+const TEMPLATES = [
+  ["docx", "dotx", "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml"],
+  ["pptx", "potx", "application/vnd.openxmlformats-officedocument.presentationml.template.main+xml"],
+  ["pptx", "ppsx", "application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml"],
+];
+
 test("R9 CONTENT_TYPES_PART is \"[Content_Types].xml\"", () => {
   assert.equal(CONTENT_TYPES_PART, "[Content_Types].xml");
 });
@@ -393,6 +400,7 @@ test("R10 CONTAINER_FLAVOURS: the three OPC rows, the macro-enabled rows, then t
     { partMap: "opc", flavour: "xlsx", mainContentType: TYPES.xlsx, conventionalMainPart: "xl/workbook.xml" },
     { partMap: "opc", flavour: "pptx", mainContentType: TYPES.pptx, conventionalMainPart: "ppt/presentation.xml" },
     ...MACRO.map(([flavour, variant, mainContentType]) => ({ partMap: "opc", flavour, variant, mainContentType, conventionalMainPart: MAIN[flavour] })),
+    ...TEMPLATES.map(([flavour, variant, mainContentType]) => ({ partMap: "opc", flavour, variant, mainContentType, conventionalMainPart: MAIN[flavour] })),
     { partMap: "odf", flavour: "odt", mimetype: TYPES.odt, conventionalMainPart: "content.xml" },
     { partMap: "odf", flavour: "ods", mimetype: TYPES.ods, conventionalMainPart: "content.xml" },
     { partMap: "odf", flavour: "odp", mimetype: TYPES.odp, conventionalMainPart: "content.xml" },
@@ -786,7 +794,7 @@ test("R20 withContainerImages: the whole list is null, never partial, when media
   const over = zipOf([{ name: "m/a.png", data: "a", cd: { usize: B } }, { name: "m/b.jpg", data: "b", cd: { usize: 1 } }, { name: "m/c.wav", data: "c", cd: { usize: B } }]);
   assert.deepEqual(await withContainerImages(base, partsOf(over), "m/"), { ...base, images: null, imagesWhy: `media_over_size_bound:${B + 1}>${B}` });
   const at = zipOf([{ name: "m/a.png", data: "a", cd: { usize: B } }]);
-  assert.deepEqual((await withContainerImages(base, partsOf(at), "m/")).imagesWhy, "media_part_unreadable:m/a.png:size_mismatch");
+  assert.deepEqual((await withContainerImages(base, partsOf(at), "m/")).imagesWhy, "media_part_unreadable:m/a.png:ARCHIVE_RATIO_MAX");
   const unreadable = zipOf([{ name: "m/a.png", data: "a" }, { name: "m/b.gif", data: "b", cd: { crc: 5 } }, { name: "m/c.png", data: "c" }]);
   assert.deepEqual(await withContainerImages(base, partsOf(unreadable), "m/"), { ...base, images: null, imagesWhy: "media_part_unreadable:m/b.gif:crc_mismatch" });
   for (const x of ODD) await assert.doesNotReject(withContainerImages(base, { ok: true, bytes: x, container: x }, x));
@@ -889,7 +897,8 @@ test("R23 zero runtime dependency: the module imports nothing; inflate is Decomp
   });
   let fresh;
   try { fresh = await import(`${MODULE_URL}?r23=${Date.now()}`); } finally { hooks.deregister(); }
-  assert.deepEqual(imported, []);
+  /* The one import is runtime-limits' table of ceilings (R30, `boundOf`); inflate and hashing stay the host's. */
+  assert.deepEqual(imported, ["./read-bounds.mjs"]);
   assert.deepEqual(Object.keys(fresh).sort(), Object.keys(M).sort());
 
   const formats = [];

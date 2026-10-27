@@ -61,7 +61,7 @@ test("R2 an administrator neither invited nor joined may name a hidden project i
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_holds WHERE ord = 1`)[0].n, 0, "no refusal writes a statement");
   /* naming reaches the id and hold state, never its contents: the action inside the hidden project stays unseen */
   assert.equal(hold(A, 0, FOUNDER).reason, "NO_SUCH_BUNDLE");
-  assert.equal(w.a.actionRead({ id: A, viewer: FOUNDER }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(w.a.actionRead({ id: A, viewer: FOUNDER }).reason, "NO_SUCH_ACTION", "actions R106: absent, invisible or not an action, one answer");
   /* (T45) the same at a project place: an administrator places a hold on a hidden project she may name */
   const at = w.h.actionHold({ project: P3, hold: "in_place", reason: "a letter came", viewer: FOUNDER, author: FOUNDER });
   assert.deepEqual([at.ok, at.project, at.projects], [true, P3, [P3]]);

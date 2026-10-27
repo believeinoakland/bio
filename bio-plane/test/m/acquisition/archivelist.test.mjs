@@ -7,11 +7,12 @@
    participant; a project `project_sight` does not hold reads hidden. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, run, sha } from "./fixture.mjs";
+import { world, run, sha, promoteFiled } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { unpack, archiveList, memberOf, ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
 import { ARCHIVE_DEPTH_MAX, ARCHIVE_LIMITS } from "../../../src/ooxml.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const URL1 = "https://files.example/set.zip";
 const capture = (w, bytes, url = URL1) => run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/zip" } }) }, { locator: url });
@@ -129,6 +130,7 @@ test("R41: a waiting entry names the limit or budget it waits on with its figure
   let l = await w.acq.archiveList({ archiveSha: sha(z), viewer: ADMIN, state: "waiting" });
   assert.deepEqual(l.entries.map((e) => [e.index, e.waiting_on, e.limit]), [[100, null, undefined], [101, null, undefined], [102, null, undefined]]);
   w.rows("INSERT INTO unpack_days (day, entries, bytes) VALUES (?, 40000, 0) ON CONFLICT(day) DO UPDATE SET entries=40000", new Date().toISOString().slice(0, 10));
+  promoteFiled(w);
   await unpack(w.store, { archiveSha: sha(z), cls: "daemon" });
   l = await w.acq.archiveList({ archiveSha: sha(z), viewer: ADMIN, state: "waiting" });
   assert.deepEqual(l.entries.map((e) => [e.waiting_on, e.limit]), Array(3).fill(["UNPACK_DAILY_ENTRIES", 40000]));
@@ -222,7 +224,7 @@ test("R41: NOT_AN_ARCHIVE, with its row, for a capture held and visible that R17
   const holdInParts = async (bytes) => {
     const url = `https://files.example/big-${++n}`;
     const c = await run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/octet-stream" } }) }, { locator: url });
-    assert.equal(c.body.document.parts.length, 2, "held in parts");
+    assert.equal(c.body.document.parts.length, 2, word("acquisition.basis.multipart"));
     s.bundle(`INFO-BIG-${n}`);
     w.prov.homes[sha(bytes)] = `INFO-BIG-${n}`;
     w.prov.named[sha(bytes)] = c.body.document.parts.map((x) => ({ sha256: x.sha256, bytes: x.bytes }));

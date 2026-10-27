@@ -13,7 +13,7 @@ test("R1: one row per capture, with the module's clock, and a revision updates i
   const row = w.row(`SELECT * FROM register WHERE capture_sha=?`, a.sha);
   assert.deepEqual({ ...row }, { capture_sha: a.sha, bundle_id: "INFO-2026-0001-a", path: a.path, encoding: "utf8",
     bytes: Buffer.byteLength(a.text), registered: "2026-09-27T03:00:00.000Z", last_registered: "2026-09-27T03:00:00.000Z",
-    authored: 0, author: null, observed_at: null });
+    authored: 0, author: null, observed_at: null, whole: 0 });
   /* The clock is the module's, never a caller's: a caller's `registered` in the entry is not read. */
   w.clock.now = "2026-09-27T04:00:00.000Z";
   const head = w.head("INFO-2026-0001-a");
@@ -186,8 +186,8 @@ test("R3: authored is the testimony path's alone; every refusal named, asked bef
   const prov = JSON.parse(live("data/provenance.json"));
   const revise = (provText) => w.promotion.promote({ bundleId: t.bundle_id, base: head.bundleSha, snapKey: `r${Math.random()}`,
     author: V("sam"), meta: { object_type: "information" },
-    files: [{ path: "bundle.md", text: live("bundle.md") }, { path: t.file, text: live(t.file) },
-            { path: "data/provenance.json", text: provText }] });
+    files: [{ path: "bundle.md", text: live("bundle.md") }, { path: "data/dataset.json", text: live("data/dataset.json") },
+            { path: t.file, text: live(t.file) }, { path: "data/provenance.json", text: provText }] });
   const dropped = revise(JSON.stringify({ documents: [{ ...prov.documents[0], authored: false }] }));
   assert.equal(dropped.reason, "TESTIMONY_AUTHORED_DROPPED");
   assert.equal(dropped.check, "C-53.9");
@@ -244,7 +244,7 @@ test("R11: registeredFor lists the bundle's register rows in capture_sha order",
   w.promoteInfo("INFO-2026-0001-x", { captures: caps });
   const got = w.prov.registeredFor("INFO-2026-0001-x");
   assert.deepEqual(got.map((r) => r.capture_sha), caps.map((c) => c.sha).sort());
-  assert.deepEqual(Object.keys(got[0]).sort(), ["authored", "bytes", "capture_sha", "encoding", "path", "registered"]);
+  assert.deepEqual(Object.keys(got[0]).sort(), ["authored", "bytes", "capture_sha", "encoding", "path", "registered", "whole"]);   /* R73's mark; `parts` only on a whole held in parts */
   assert.deepEqual(w.prov.registeredFor("INFO-2026-0404-none"), []);
 });
 
@@ -315,7 +315,7 @@ test("R38: an authored observation stays one: its flag is never cleared and its 
 
 test("R41: the module owns its tables, declared to purge once; another declaration of one is refused; the route marks and the instance key's tables are not its", () => {
   const w = world();
-  assert.deepEqual(PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations"]);
+  assert.deepEqual(PROVENANCE_TABLES, ["register", "register_parts", "captured_locators", "origin_declarations", "authority_decisions"]);   /* R41, R74 */
   /* N512: provenance_route_marks is provenance-routes' (its R12), receipt_keys and signed_receipts attestation's (its
      R10): this module neither creates nor declares them, so each owner declares its own. */
   const tables = w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name);

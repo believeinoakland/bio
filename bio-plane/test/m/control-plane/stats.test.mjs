@@ -16,14 +16,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, call, opCalls, hex64, member } from "./harness.mjs";
 
-test("R40, R17 (N399): op=stats is stamped `capacity=1` exactly for the admin class — the admin binding and the founder's session — and `capacity=0` for every other caller, an administering member's session included, beside the caller's viewer; no `capacity` a caller sends reaches the store, in either direction", async () => {
+test("R40, R17 (N399): op=stats is stamped `capacity=1` for the admin class — the admin binding and the founder's session — and for an administering member's session (G42, K4638), and `capacity=0` for every other caller, beside the caller's viewer; no `capacity` a caller sends reaches the store, in either direction", async () => {
   const dee = hex64();
   const { env, S } = world({ sessions: { [dee]: member("dee", ["contribute"], { administer: true }) } });
   const list = [
     ["the admin binding", env.ADMIN_TOKEN, {}, "1", "class:admin"], ["the founder's session", S.founder, {}, "1", "admin"],
     /* admission R5 (K2166): the shared member binding is retired, so it is no longer one of the callers */
     ["the probe binding", env.PROBE_TOKEN, { store: "scratch" }, "0", "class:probe"],
-    ["ann's member session", S.ann, {}, "0", "member:ann"], ["dee's administering member session", dee, {}, "0", "member:dee"],
+    ["ann's member session", S.ann, {}, "0", "member:ann"], ["dee's administering member session", dee, {}, "1", "member:dee"],
   ];
   for (const [name, token, params, capacity, viewer] of list) {
     for (const sent of [{}, { capacity: "1" }, { capacity: "0" }, { capacity: "1", operator: "1", proof: "1", whole: "1" }]) {
@@ -40,4 +40,28 @@ test("R40, R17 (N399): op=stats is stamped `capacity=1` exactly for the admin cl
   env.calls.length = 0;
   assert.equal((await call(env, { op: "stats", token: env.DAEMON_TOKEN })).status, 403);
   assert.equal(opCalls(env).length, 0);
+});
+
+/* G42 (K4635, K4638): the capacity figure an administering member sees is floored to a whole 100,000,000 B; the founder and
+   the ADMIN_TOKEN keep the exact figure; a member none. The store is the fake of record-core's `stats` rule: `dbBytes` only
+   when the stamp reaches it as `capacity=1`. */
+test("R40, G42: `op=stats` answers `dbBytes` floored to 100,000,000 B to an administering member, exact to the admin binding and the founder, absent to a member and the probe; null stays null; control: no stamp, no figure", async () => {
+  const dee = hex64();
+  const SIZES = [[10_573_212_345, 10_500_000_000], [99_999_999, 0], [100_000_000, 100_000_000], [0, 0], [null, null]];
+  for (const [size, floored] of SIZES) {
+    const { env, S } = world({ sessions: { [dee]: member("dee", ["contribute"], { administer: true }) },
+      answer: (c) => c.route === "stats"
+        ? new Response(JSON.stringify({ ok: true, result: { observationsNonLead: 2, ...(c.params.capacity === "1" ? { dbBytes: size } : {}) } }), { status: 200 })
+        : undefined });
+    const dbBytes = async (token, params = {}) => JSON.parse((await call(env, { op: "stats", token, params })).text).result;
+    assert.equal((await dbBytes(dee)).dbBytes, floored, `dee, ${size}`);
+    assert.equal((await dbBytes(dee, { capacity: "0" })).dbBytes, floored, `dee sending capacity=0, ${size}`);
+    assert.equal((await dbBytes(S.founder)).dbBytes, size, `founder, ${size}`);
+    assert.equal((await dbBytes(env.ADMIN_TOKEN)).dbBytes, size, `admin binding, ${size}`);
+    for (const [who, token, params] of [["ann", S.ann, {}], ["probe", env.PROBE_TOKEN, { store: "scratch" }]]) {
+      const r = await dbBytes(token, { ...params, capacity: "1" });
+      assert.equal("dbBytes" in r, false, `${who} gets none, ${size}`);
+      assert.equal(r.observationsNonLead, 2, `${who} still gets the counts`);
+    }
+  }
 });

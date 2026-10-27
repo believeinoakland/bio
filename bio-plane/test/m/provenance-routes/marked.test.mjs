@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, V, provDoc } from "./fixture.mjs";
 import { routeFinding, ROUTE_MARK_NOTE, ROUTE_MARKED_LIMIT_DEFAULT, ROUTE_MARKED_LIMIT_MAX, ROUTE_MARKED_CAUSES,
          FINDING_MEANS, OBSERVATION_MEANS } from "../../../src/provenance-routes/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 function twoDocs(w, id, { secondRouted = false } = {}) {
   const a = w.cap(`${id}-a`), b = w.cap(`${id}-b`);
@@ -18,13 +19,12 @@ test("R5: routeFinding states never-looked as the question never asked, not appl
   for (const t of ["inquiry", "project", "action", undefined, null]) {
     const na = routeFinding(t, { finding: "LOOKED_INDETERMINATE" });
     assert.deepEqual([na.applies, na.assessed, na.marked, na.finding, na.means], [false, false, false, null, null], String(t));
-    assert.equal(na.note, "a route is a fact about a captured document, and this record is not one");
+    assert.equal(na.note, word("provenance-routes.note.route_fact_captured"));
   }
   const never = routeFinding("information", null);
   assert.deepEqual([never.applies, never.assessed, never.marked, never.finding, never.means],
                    [true, false, false, "NEVER_LOOKED", OBSERVATION_MEANS.NEVER_LOOKED]);
-  assert.equal(never.note, "no assessment of this document's route has ever been recorded. This is NOT a finding "
-    + "that the route cannot be shown; it is the absence of the question having been asked.");
+  assert.equal(never.note, word("provenance-routes.note.assessment_document_route"));
   const mark = { finding: "LOOKED_INDETERMINATE", at: "t", by: V("r"), state_at: "verified", seq: 3, register_state: "readable",
                  undetermined: 1, documents_n: 2 };
   assert.deepEqual(routeFinding("information", mark), {
@@ -32,7 +32,7 @@ test("R5: routeFinding states never-looked as the question never asked, not appl
     at: "t", by: V("r"), stateAt: "verified", seq: 3, register: "readable", undetermined: 1, documents: 2, note: ROUTE_MARK_NOTE });
   const present = routeFinding("information", { ...mark, finding: "PRESENT" });
   assert.deepEqual([present.marked, present.means], [false, OBSERVATION_MEANS.PRESENT]);
-  assert.match(ROUTE_MARK_NOTE, /this document stays where the group put it/);
+  assert.match(ROUTE_MARK_NOTE, /this document stays where the team put it/);
   assert.match(ROUTE_MARK_NOTE, /corrects FORWARD rather than un-saying one \(DEC-19\)/);
   assert.match(ROUTE_MARK_NOTE, /The state and this finding disagree deliberately, and neither is a defect in the other/);
   assert.deepEqual(FINDING_MEANS, { NEVER_LOOKED: OBSERVATION_MEANS.NEVER_LOOKED,

@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, frame, providers } from "./fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLE_DECLARATIONS, PLACE_NAME_MAX } from "../../../src/setup.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
@@ -45,7 +46,7 @@ test("R60 placeWantedSet is an administrator's act only (NOT_AN_ADMIN, membershi
   assert.equal(w.m.placeWantedSet({ name: "é".repeat(200), by: "admin" }).ok, true);           // characters, not bytes
   const set = w.m.placeWantedSet({ name: "  Lake Shore  ", by: "member:ada" });
   assert.deepEqual([set.ok, set.name, set.set_by, set.set_at], [true, "Lake Shore", "member:ada", "2026-10-06T08:00:00.000Z"]);
-  assert.match(set.note, /kept only in your group's Civicsmith and sent nowhere/);
+  assert.equal(set.note, word("setup.note.name_kept_group"));
   w.tick();
   const clear = w.m.placeWantedSet({ name: null, by: "admin" });
   assert.deepEqual([clear.ok, clear.name], [true, null]);
@@ -127,16 +128,16 @@ test("R62 a profile already active is not an arrival; an arrival leaves when an 
   /* chosen under Places: it leaves, and stays left */
   assert.equal(w.m.profilesSet({ profiles: ["p-lake"], by: "admin" }).ok, true);
   assert.deepEqual(w.m.placeArrivals({ viewer: "admin" }).arrivals, []);
-  assert.deepEqual(w.st.db.prepare(`SELECT left_why FROM place_arrivals`).all().map((r) => r.left_why), ["the profile was made active"]);
+  assert.deepEqual(w.st.db.prepare(`SELECT left_why FROM place_arrivals`).all().map((r) => r.left_why), [word("setup.leave_arrivals.profile_made_active")]);
   /* changed, then cleared */
-  for (const [next, why] of [["Lake  shore ", null], [null, "the name was cleared"]]) {
+  for (const [next, why] of [["Lake  shore ", null], [null, word("setup.leave_arrivals.name_cleared")]]) {
     const c = await world();
     c.m.placeWantedSet({ name: "Lake Shore", by: "admin" });
     c.setHeld([...HELD, LAKE]);
     await c.restart();
     c.m.placeWantedSet({ name: next ?? null, by: "admin" });
     assert.deepEqual(c.m.placeArrivals({ viewer: "admin" }).arrivals, [], String(next));
-    assert.equal(c.st.db.prepare(`SELECT left_why FROM place_arrivals`).get().left_why, why ?? "the name was changed");
+    assert.equal(c.st.db.prepare(`SELECT left_why FROM place_arrivals`).get().left_why, why ?? word("setup.leave_arrivals.name_changed"));
   }
   /* active before it arrives: not an arrival */
   const a = await world({ held: HELD });

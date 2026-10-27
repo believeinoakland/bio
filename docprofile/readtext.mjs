@@ -69,6 +69,14 @@
  */
 import { identify } from "../site-profiles/index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
+import { segmentsOver, classifiedWhy } from "./classify-view.mjs";
+
+/* The classification view moved to `classify-view.mjs` so the registry's walk bounds every caller (R40); the names stay here. */
+export {
+  CLASSIFY_WHOLE_MAX_CHARS, CLASSIFY_VIEW_MAX_CHARS, CLASSIFY_HEAD_CHARS, CLASSIFY_LINE_SLACK_CHARS, CLASSIFY_WINDOWS,
+  CLASSIFY_WINDOW_CHARS, CLASSIFY_SHEET_HEADS_MAX_CHARS, CLASSIFY_SHEET_HEAD_CHARS, classificationView, classifiedWhy,
+} from "./classify-view.mjs";
 
 /* FW-17 / IC-86 — THE SEGMENT MAP: where in the CONTAINER each stretch of the
    flat string came from.
@@ -129,6 +137,41 @@ function joinItemised(items, textOf, sourceOf) {
   return { text, segments };
 }
 
+
+/* R18 (fix round 9, G141; X27): a decoded character is a GLYPH, counted as `text-chain` R73 counts one. A code point that is
+   white space (`\s`, Unicode), U+FFFD or NUL is not (a decode's failures and a page's blank are not text). One linear pass
+   that builds no copy; a surrogate pair counts once. */
+const isSpace = (c) => c === 0x20 || (c >= 0x9 && c <= 0xd) || c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a)
+  || c === 0x2028 || c === 0x2029 || c === 0x202f || c === 0x205f || c === 0x3000 || c === 0xfeff;
+export function glyphs(text) {
+  const len = text.length;
+  let n = 0;
+  for (let i = 0; i < len; i++) {
+    const c = text.charCodeAt(i);
+    if (c === 0x20 || (c >= 0x9 && c <= 0xd)) continue;
+    if (c >= 0xa0 && isSpace(c)) continue;
+    if (c === 0xfffd || c === 0) continue;
+    n++;
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < len) { const d = text.charCodeAt(i + 1); if (d >= 0xdc00 && d <= 0xdfff) i++; }
+  }
+  return n;
+}
+
+/* The size refusals among a producer's markers (G141; PLANE #56 J53): a marker saying `why: "over_size_bound"` (ooxml's
+   `sizeGuard`, as the marker itself or inside its `guard`) states the file's size and the limit, and it is a size refusal,
+   never an undecodable region. */
+function sizeRefusal(markers) {
+  for (const m of markers) {
+    if (!m || typeof m !== "object" || m.why !== "over_size_bound") continue;
+    const g = m.guard && typeof m.guard === "object" ? m.guard : m;
+    const size = Number(g.size ?? m.size), bound = Number(g.bound ?? m.bound);
+    if (Number.isFinite(size) && Number.isFinite(bound)) return { size, bound };
+  }
+  return null;
+}
+const MIB = 1024 * 1024;
+const mib = (b) => (b / MIB).toFixed(2);
+
 /** Flatten a producer's text field to the one string the recognisers read.
  *  Exported for the suite; callers use readText().
  *
@@ -138,12 +181,11 @@ function joinItemised(items, textOf, sourceOf) {
  *  exactly what it saw before. */
 export function flattenText(supplied) {
   if (typeof supplied === "string")
-    return { text: supplied, source: "string", chars: supplied.trim().length, undetermined: 0, reasons: [],
+    return { text: supplied, source: "string", chars: glyphs(supplied), undetermined: 0, reasons: [], size_refusal: null,
              segments: [],
-             position_why: "the text arrived as a bare string, which carries no container structure, so "
-                         + "where in the document a reference was read cannot be said" };
+             position_why: localize("docprofile.readtext.the_text_arrived_as_a", "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said") };
   if (!supplied || typeof supplied !== "object")
-    return { text: "", source: null, chars: 0, undetermined: 0, reasons: [], segments: [],
+    return { text: "", source: null, chars: 0, undetermined: 0, reasons: [], size_refusal: null, segments: [],
              position_why: "no text was supplied" };
   let text = "", source = null, segments = [], position_why = null;
   if (typeof supplied.document === "string" && supplied.document.length) {
@@ -164,21 +206,18 @@ export function flattenText(supplied) {
     const pages = Array.isArray(supplied.pages) ? supplied.pages : null;
     const paras = Array.isArray(supplied.paragraphs) ? supplied.paragraphs : null;
     if (pages && pages.length) {
-      const j = joinItemised(pages, (p) => (p && typeof p.text === "string" ? p.text : ""),
-                             (p) => (p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null));
-      if (j.text === text) segments = j.segments;
-      else position_why = "this producer's document text is not its pages joined, so the page a reference "
-                        + "was read on cannot be established from it and is not guessed";
+      const found = segmentsOver(text, pages, (p) => (p && typeof p.text === "string" ? p.text : ""),
+                                 (p) => (p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null));
+      if (found) segments = found;
+      else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed");
     } else if (paras && paras.length) {
-      const j = joinItemised(paras, (p) => (p && typeof p.text === "string" ? p.text : ""),
-                             (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i,
-                                                     p && p.ref));
-      if (j.text === text) segments = j.segments;
-      else position_why = "this producer's document text is not its paragraphs joined, so the paragraph a "
-                        + "reference was read in cannot be established from it and is not guessed";
+      const found = segmentsOver(text, paras, (p) => (p && typeof p.text === "string" ? p.text : ""),
+                                 (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i,
+                                                         p && p.ref));
+      if (found) segments = found;
+      else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_paragraphs", "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed");
     } else {
-      position_why = "this producer emitted document text with no itemised pages or paragraphs beside it, "
-                   + "so where in the document a reference was read cannot be said";
+      position_why = localize("docprofile.readtext.this_producer_emitted_document_text", "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said");
     }
   } else if (Array.isArray(supplied.pages) && supplied.pages.length) {
     const j = joinItemised(supplied.pages, (p) => (p && typeof p.text === "string" ? p.text : ""),
@@ -193,8 +232,7 @@ export function flattenText(supplied) {
      `page` integer) produced text and no map, and the reason is different from
      the reasons above: the producer HAD the structure and did not name it. */
   if (!segments.length && !position_why && source)
-    position_why = `this producer's ${source} carry no part index, so where in the document a reference `
-                 + "was read cannot be said";
+    position_why = localize("docprofile.readtext.this_producers_source_carry_no", "this producer's {source} carry no part index, so where in the document a reference was read cannot be said", { source: String(source) });
   /* The producer's own count when it stated one; otherwise summed from the
      markers (a Marker carries `count` per region; a marker without one is one
      region). Never invented: no markers and no count is zero. */
@@ -203,8 +241,9 @@ export function flattenText(supplied) {
   const undetermined = c && typeof c.undetermined === "number"
     ? c.undetermined
     : markers.reduce((n, m) => n + (m && typeof m.count === "number" ? m.count : 1), 0);
-  const reasons = [...new Set(markers.map((m) => m && m.reason).filter(Boolean))];
-  return { text, source, chars: text.trim().length, undetermined, reasons,
+  /* A marker names its cause as `reason` (the PDF tiers) or as `why` (ooxml's, office-readers'): both are read. */
+  const reasons = [...new Set(markers.map((m) => m && (m.reason || m.why)).filter((r) => typeof r === "string" && r))];
+  return { text, source, chars: glyphs(text), undetermined, reasons, size_refusal: sizeRefusal(markers),
            segments, position_why: segments.length ? null : position_why };
 }
 
@@ -237,6 +276,7 @@ export function makeLocator(segments) {
   };
 }
 
+
 /** Run identify()/doctypeFor()/parse() over text from anywhere.
  *
  *  `supplied` — a bare string or I2's text field (see above).
@@ -254,30 +294,42 @@ export function makeLocator(segments) {
 export function readText(supplied, ctx = {}) {
   const flat = flattenText(supplied);
   const named = flat.reasons.length ? `: ${flat.reasons.join(", ")}` : "";
+  /* A size refusal is worded as one (G141): the file's size and the limit, never "undecodable". */
+  const sized = flat.size_refusal && localize("docprofile.readtext.the_text_of_this_document_was_not_read_over_the_size_limit",
+    "the text of this document was not read: it is {size} MiB of text against the {bound} MiB that is read",
+    { size: mib(flat.size_refusal.size), bound: mib(flat.size_refusal.bound) });
   if (!flat.chars) {
     return {
       determined: false, partial: false,
       chars: 0, undetermined: flat.undetermined, reasons: flat.reasons,
-      why: flat.undetermined > 0
-        ? `the text of this document is undetermined (${flat.undetermined} undecodable region(s)${named}); a reading over text nobody decoded would be an invented one`
-        : "no text was supplied, so no reading was attempted",
+      why: sized || (flat.undetermined > 0
+        ? localize("docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", { undetermined: String(flat.undetermined), named: String(named) })
+        : localize("docprofile.readtext.no_text_was_supplied_so_no", "no text was supplied, so no reading was attempted")),
     };
   }
   /* The plane's measured essentially-nothing line (needsTier2's predicate, the
      CPDF-5 buckets): more undetermined than decoded chars. Below it a document
      with a stated residue still reads (a budget book at ~88% is usable and the
      residue is stated); above it a reading would be built on a fragment and
-     silently misrepresent the document. */
+     silently misrepresent the document. A decoded character is a glyph (R18). */
   if (flat.undetermined > flat.chars) {
     return {
       determined: false, partial: true,
       chars: flat.chars, undetermined: flat.undetermined, reasons: flat.reasons,
-      why: `the tier that produced this text could not decode most of it (${flat.undetermined} undetermined against ${flat.chars} decoded${named}); a reading over the fragment would silently misrepresent the document`,
+      why: sized || localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: String(flat.undetermined), chars: String(flat.chars), named: String(named) }),
     };
   }
-  const dctx = { ...ctx, text: flat.text };
+  /* R38: `pages` is the supplied pages, the very array the caller gave (as `ctx.supplied`
+     hands the reader), beside `text`, so a type can scan a very large text a page at a
+     time; `[]` where the supplied text carries none (a bare string, a paragraph shape). */
+  const pages = supplied && typeof supplied === "object" && Array.isArray(supplied.pages) ? supplied.pages : [];
+  const dctx = { ...ctx, text: flat.text, pages };
   const stack = identify(dctx);
-  const doctype = doctypeFor({ ...dctx, handler: stack.handler, kind: stack.kind });
+  /* R40 (G133f): `doctypeFor` bounds the classification of a text of any kind over `CLASSIFY_WHOLE_MAX_CHARS` to a stated view
+     (the sheets' heads where the supplied text is a sheet container); the stack above and `parse` below keep the whole text. */
+  const sheets = supplied && typeof supplied === "object" && Array.isArray(supplied.sheets) ? supplied.sheets : null;
+  const doctype = doctypeFor({ ...dctx, ...(sheets ? { sheets } : {}), handler: stack.handler, kind: stack.kind });
+  const sampled = doctype.classified_over || null;
   let parsed = null, parse_error = null;
   /* FW-17 / IC-86 (2): the reader is GIVEN the locator, on the SAME ctx it
      already reads `text` off. It is on the doctype ctx only — `identify()` and
@@ -311,9 +363,15 @@ export function readText(supplied, ctx = {}) {
       parse_error = String((e && e.message) || e);
     }
   } else {
-    parse_error = `the ${doctype.type.key} content type declares no reader`;
+    parse_error = localize("docprofile.readtext.the_key_content_type_declares", "the {key} content type declares no reader", { key: String(doctype.type.key) });
   }
   const partial = flat.undetermined > 0;
+  const classified_over = sampled && { chars: sampled.chars, of: sampled.of, head_chars: sampled.head_chars,
+    windows: sampled.windows, sheet_heads: sampled.sheet_heads, heads_used: sampled.heads_used };
+  const why = (partial
+    ? localize("docprofile.readtext.read_over_a_partial_decode", "read over a PARTIAL decode, stated: {undetermined} undetermined region(s)/code point(s){named} beside {chars} decoded characters", { undetermined: String(flat.undetermined), named: String(named), chars: String(flat.chars) })
+    : localize("docprofile.readtext.read_over_a_full_decode", "read over a full decode ({chars} characters)", { chars: String(flat.chars) }))
+    + (sized ? `; ${sized}` : "");
   return {
     determined: true, partial,
     chars: flat.chars, undetermined: flat.undetermined, reasons: flat.reasons,
@@ -325,8 +383,7 @@ export function readText(supplied, ctx = {}) {
        producer-side reason when there is none. */
     position_parts: flat.segments.length, position_why: flat.position_why || null,
     stack, doctype, parsed, parse_error,
-    why: partial
-      ? `read over a PARTIAL decode, stated: ${flat.undetermined} undetermined region(s)/code point(s)${named} beside ${flat.chars} decoded characters`
-      : `read over a full decode (${flat.chars} characters)`,
+    ...(classified_over ? { classified_over } : {}),
+    why: classified_over ? `${why}; ${classifiedWhy(classified_over)}` : why,
   };
 }

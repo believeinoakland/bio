@@ -1,0 +1,21 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+const R = "/home/user/bio/bio-plane/test/m/case-authoring";
+const { world, V, infoMd, AUTHORED } = await import(`${R}/fixture.mjs`);
+const { multipart, mpFiles } = await import("./mp.mjs");
+const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", BIG = "INFO-2026-0006-big", Q = "INQ-2026-0001-q";
+test("case-authoring whole", () => {
+  const w = world();
+  for (const m of ["alice", "bo"]) w.member(m);
+  w.doc(DOC); w.doc(DOC2);
+  const m = multipart("b");
+  const { files, register } = mpFiles(m, { md: infoMd(BIG) });
+  const r0 = w.promotion.promote({ bundleId: BIG, base: null, snapKey: "mpbig", author: V("alice"), files, meta: { object_type: "information" }, register });
+  console.log("promote big", r0.ok, r0.reason ?? "");
+  console.log("register rows of BIG", w.rows(`SELECT whole, substr(capture_sha,1,8) s FROM register WHERE bundle_id=?`, BIG).length);
+  w.finding(Q, [{ target: DOC }]);
+  const P = w.project("Team", "alice", [Q, DOC2, BIG]);
+  const r = w.publish(P, "alice", [Q]);
+  console.log("publish", r.ok, r.reason ?? "");
+  console.log("case_citations", JSON.stringify((r.case_citations || []).map((c) => [c.target, c.version, c.capture === m.whole ? "WHOLE" : c.capture ? "other" : null])));
+});

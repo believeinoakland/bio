@@ -8,8 +8,10 @@
  */
 import worker, { CFG, ARMED_SIGNERS, planeLimits } from "../src/index.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
+import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
+import { instanceGroupAnswer } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { fleetStatement, NS_FLEET, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import { readFileSync } from "node:fs";
@@ -24,9 +26,37 @@ function builtInAssets() {
 export const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
 export const ORIGIN = "https://newgroup.believeinoakland.workers.dev";
 export const realFetch = globalThis.fetch;
+/* The text of a key before its first fill the caller does not give: every placeholder not in `vars` answers a NUL, and the head is what
+   comes before the first one (K3810: a test reads a sentence from the word table, never copies it). */
+export const headOf = (key, vars = {}) => word(key, new Proxy(vars, {
+  get: (t, k) => (k in t ? t[k] : "\u0000"), getOwnPropertyDescriptor: (t, k) => ({ value: k in t ? t[k] : "\u0000", enumerable: true, configurable: true }),
+})).split("\u0000")[0];
+/* A pattern for a key's sentence: each fill in `vars` is itself (a string, matched literally, or a RegExp), every other placeholder
+   matches anything. A test reads its expectation from the word table through this, never from a copy of the English. */
+export const like = (key, vars = {}) => {
+  const P = (n) => `\u0001${String(n)}\u0001`;
+  const text = word(key, new Proxy({}, { get: (_, n) => P(n), getOwnPropertyDescriptor: (_, n) => ({ value: P(n), enumerable: true, configurable: true }) }));
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(esc(text).replace(/\u0001(\w+)\u0001/g, (_, n) => (n in vars ? (vars[n] instanceof RegExp ? vars[n].source : esc(String(vars[n]))) : "[\\s\\S]*?")), "s");
+};
 export const jres = (o, status = 200) => new Response(JSON.stringify(o), { status });
 export const cfok = (result) => jres({ success: true, result });
 export const cferr = (message, status = 400, code = 0) => jres({ success: false, errors: [{ message, code }] }, status);
+
+/* The Worker schedules endpoint of the fake account (installer-steps R39, R84 (3)): GET answers what `schedules` holds (by script name) plus `crons`, PUT stores
+   the crons it is given, or is refused. One definition, used by `pageWorld` and by the suites that script their own account. */
+export const scheduleRules = ({ schedules = new Map(), crons = {}, refuse = false } = {}) => [
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "GET", f: (u) => {
+    const name = u.split("/workers/scripts/")[1].split("/")[0];
+    return cfok({ schedules: [...(schedules.get(name) || []), ...(crons[name] || [])].map((cron) => ({ cron })) });
+  } },
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: (u, init) => {
+    const name = u.split("/workers/scripts/")[1].split("/")[0];
+    if (refuse === true || (Array.isArray(refuse) && refuse.includes(name))) return cferr("schedules refused <i>by the fake</i>", 403);
+    schedules.set(name, JSON.parse(init.body).map((x) => x.cron));
+    return cfok({ schedules: JSON.parse(init.body) });
+  } },
+];
 
 export const req = (path, init) => worker.fetch(new Request(ORIGIN + path, init));
 export const b64url = (s) => Buffer.from(s).toString("base64url");
@@ -60,20 +90,23 @@ export function script(rules, pre = null) {
    are run here against recorders, so a label is read exactly as the page's script receives it. */
 export function parsePage(raw) {
   const events = [];
-  let failed = null, done = null, says = null;
+  let failed = null, done = null, says = null, retry = null;
   const waits = [];
   const scripts = [...raw.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   const rec = {
     step: (id, label) => events.push({ k: "step", id, label }),
     ok: (id, label) => events.push({ k: "ok", id, label: label ?? null }),
     no: (id, label) => { if (id !== undefined) events.push({ k: "no", id, label: label ?? null }); },
-    /* R51 (T47): a stop names the step in progress, its fourth argument. */
-    fail: (h, p, d, s) => { failed = { h, p, d, s }; },
+    /* R51, R75: a stop is one sentence by key (`said`), the line to act on beside it (`d`, when its key has one), and the
+       step in progress, named by `installer.stopped.at` (`s`). */
+    fail: (said, d, s) => { failed = { said, d: d || "", s: s || "" }; },
     done: (html) => { done = html; },
     /* R55: the progress page's one line saying from which release to which, and where. */
     says: (t) => { says = t; },
     /* R66: the line drawn while a wait goes on. */
     waiting: (t) => { waits.push(t); },
+    /* R70: the one act offered after a stop that waits for something to be turned on: its label and the body it begins again with. */
+    again: (label, body) => { retry = { label, body }; },
   };
   for (const s of scripts.slice(1)) new Function(...Object.keys(rec), s)(...Object.values(rec));
   const status = (id) => { let st = null; for (const e of events) if (e.id === id) st = e.k; return st; };
@@ -81,8 +114,8 @@ export function parsePage(raw) {
   const steps = [...new Set(events.filter((e) => e.k === "step").map((e) => e.id))];
   /* All the page's words: the shell, every label, the refusal and the panel. */
   const words = [raw.replace(/<script>[\s\S]*?<\/script>/g, ""), ...events.map((e) => e.label || ""),
-    failed ? `${failed.h} ${failed.p} ${failed.d}` : "", says || "", done || ""].join("\n");
-  return { raw, events, steps, status, label, failed, done, words, says, waits };
+    failed ? `${failed.said} ${failed.d} ${failed.s}` : "", says || "", done || ""].join("\n");
+  return { raw, events, steps, status, label, failed, done, words, says, waits, retry };
 }
 
 export async function callback(qs, cookie) {
@@ -132,10 +165,12 @@ export const DEFAULT_VERSION = bump(RELEASE_VERSION);
 /* Each states its limits as the plane does (R20): one string `bio-plane-limits/1 key=n …`, which survives bundling. */
 export const LIMITS = Object.freeze({ subrequests: 10000 });
 export const LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
-export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = \"" + LIMITS_STATEMENT + "\";";
-export const PRE116_SRC = "export default { fetch(){ return new Response('pre-D-116 plane'); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = '" + LIMITS_STATEMENT + "';";
+/* The plane's watchdog schedule, as control-plane states it (installer-steps R39, K4570). */
+export const CRONS_STATEMENT = "bio-plane-crons/1 */5 * * * *";
+export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = \"" + LIMITS_STATEMENT + "\";" + " export const PLANE_CRONS_STATEMENT = \"" + CRONS_STATEMENT + "\";";
+export const PRE116_SRC = "export default { fetch(){ return new Response('pre-D-116 plane'); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = '" + LIMITS_STATEMENT + "';" + " export const PLANE_CRONS_STATEMENT = \"" + CRONS_STATEMENT + "\";";
 /* A plane from before R20: verified, and stating no limits. */
-export const UNSTATED_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};";
+export const UNSTATED_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};" + " export const PLANE_CRONS_STATEMENT = \"" + CRONS_STATEMENT + "\";";
 /* Whether this tree's built-in release states its limits (R20). Until a release cut after control-plane's statement is
    embedded it does not, and an act that falls back to it is refused; the arms that read the built-in assert whichever
    holds, so they survive the cut. */
@@ -159,6 +194,10 @@ export const SCANNER_CLASSES = Object.freeze([
   Object.freeze({ class_name: "SafeViewRenderer", image: RENDER_IMAGE, scheduling_policy: "default", max_instances: 3, bind: [{ member: SCANNER, binding: "RENDERER" }] }),
 ]);
 export const SCANNER_WORKER = Object.freeze({ r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: ["17 4 * * *"] });
+/* agent-worker's own Durable Objects as its configuration states them (as installer-steps' world does), and its `Worker` part carrying them. */
+export const AGENT_OBJECTS = Object.freeze({ bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }],
+  migrations: [{ tag: "v1", classes: ["SegmentDriver"] }, { tag: "v2", classes: ["CheckRecord"] }] });
+export const AGENT_WORKER = Object.freeze({ r2_buckets: [], crons: [], durable_objects: AGENT_OBJECTS });
 export const VPC_ID = "0123456789abcdef0123456789abcdef";
 
 /* `members`: the fleet's member names (default: the three the plane binds). Options drop the fleet signature, sign it
@@ -171,6 +210,8 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
   /* `scanner`: adds file-scanner; `scannerParts` replaces its parts' texts by path (a value null drops that part);
      `scannerWorker` its `Worker` part (an object, raw text, or null for none). */
   scanner = false, scannerParts = {}, scannerWorker = SCANNER_WORKER,
+  /* `agentWorker`: agent-worker's `Worker` part (an object, raw text, or null for none); its default states its own Durable Objects. */
+  agentWorker = AGENT_WORKER,
   /* R43: the key that signs the release and its fleet statement (default SIGNER). */
   signWith = SIGNER } = {}) {
   const planeSha = await sha(src);
@@ -181,6 +222,11 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
   if (scannerWorker !== null) scannerTexts["worker.json"] = text(scannerWorker);
   for (const [path, t] of Object.entries(scannerParts)) { if (t === null) delete scannerTexts[path]; else scannerTexts[path] = text(t); }
   const partTexts = {};
+  const workerPart = async (member, worker) => {
+    const t = text(worker);
+    partTexts[`${member}/worker.json`] = t;
+    return [{ path: "worker.json", type: "Worker", sha256: await sha(t), bytes: t.length }];
+  };
   const srcOf = (member) => memberSrc[member] ?? MEMBER_SRC;
   const entry = async (member) => ({ member, asset: `${member}.bundled.mjs`, sha256: await sha(srcOf(member)),
     bytes: srcOf(member).length, compat: { date: "2026-07-01", flags: [] },
@@ -191,6 +237,7 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
       : member === SCANNER && scanner ? await Promise.all(Object.entries(scannerTexts).map(async ([path, t]) => {
         partTexts[`${member}/${path}`] = t;
         return { path, type: path === "worker.json" ? "Worker" : "Container", sha256: await sha(t), bytes: t.length }; }))
+      : member === "agent-worker" && agentWorker !== null ? await workerPart(member, agentWorker)
       : [] });
   if (container && !members.includes(RUNNER)) members = [...members, RUNNER];
   if (scanner && !members.includes(SCANNER)) members = [...members, SCANNER];
@@ -213,18 +260,20 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
 
 /* ---- the world: one install or update, end to end ---- */
 export async function run({ slug, mode = "install", ai, cookie: givenCookie, state: givenState,
-  accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, accountsFail = false, settingsFail = false,
+  accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, tokenFlaky = 0, accountsFail = false, settingsFail = false,
   plan = "paid", probeDelete = "ok", r2 = "ok", pre = {}, subdomain = "grp", taken = [], subdomainPut = "ok",
   enableFail = false, refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseUpdate = false,
   lookupFail = [], readBack = "raw", preBuckets = [], rel, copy = {},
   /* R38: the scopes the token response states (null: it states none), and the Containers API. `containers`: "ok", or
      "read" (every Containers call refused), "create" or "rollout" (that call refused); `preApps` the applications held;
      `preClasses` the Durable Object classes each pre-existing script holds. `settingsBlind`: settings answer no bindings.
-     `refuseSecretDelete`: a secret's removal refused. */
+     `refuseSecretDelete`: a secret's removal refused; `refuseMark`: the install's last mark (INSTALL_COMPLETE) refused. */
   grantedScope = CFG.SCOPES.join(" "), containers = "ok", preApps = [], preClasses = {}, settingsBlind = false,
-  refuseSecretDelete = false,
+  refuseSecretDelete = false, refuseMark = false,
+  /* G54: the account states each script's `observability` as the last upload sent it; `observabilityDropped` makes it state none (an upload that lost it). */
+  observabilityDropped = false, observabilityUnreadable = false,
   /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
-     account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
+     account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44): `true` for every script's, or the names of the scripts whose schedule is refused (the plane's own refusal stops the act, R39). */
   vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
   /* R55 (T48): the release an update is of; by default the one the world serves (the built-in, when the repository does not answer). */
   version,
@@ -235,9 +284,17 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      `silentAddress` an address that never answers; `wakeAfter` an address that answers only after that many tries (R66);
      `cfFlaky` Cloudflare answering that status that many times first (R66); `typed` the short name typed to confirm a removal;
      `choice` the mode a /begin carries (R62). */
-  alongside = false, containersOff = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
+  alongside = false, containersOff = false, containersOdd = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
   rolloutKeepsImage = false, silentAddress = false, wakeAfter = 0, cfFlaky = null, typed, objects = {}, refuseDelete = [], lockedBy = null,
-  builtInFleet = false } = {}) {
+  builtInFleet = false, crons = {},
+  /* R84 (1): the answer to the storage entitlement read (`GET /r2/buckets`): "off" (R2's not-entitled answer, code 10042: documented
+     shape), "permission", "error" (a 500, waited out and then a lasting failure), "other" (a refusal of another kind); `choose` the founder's choices a /begin carries: `account` and `subdomain`. */
+  storage = "ok", choose = {},
+  /* R78 (K3868): what the copy records as its producing team when the run asks: a short name (the default, the slug: a copy that
+     recorded it at its first boot), `null` (records none: `group: null`), or "silent" (does not answer `op=instancegroup`);
+     `seedRefused` the code `op=instancegroupseed` refuses with; `groupFlat` answers `op=instancegroup` with the group at the top level
+     (the shape a plane does not answer: the control that the group is read inside `result`). */
+  group = undefined, seedRefused = null, groupFlat = false } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -260,6 +317,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   const rollouts = [], deleted = [], schedules = new Map();
   const refused = [], planePuts = [], enabled = new Set(), secretPuts = [];
   const tagged_world = builtInFleet ? builtInAssets() : {};
+  let recordedGroup = group === undefined ? slug : group === "silent" ? null : group;
+  const seeds = [];
+  const observed = new Map();
   let prefix = subdomain;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
   const membersOf = () => {
@@ -318,6 +378,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     const kept = (acct.get(name) || []).filter((b) => (meta.keep_bindings || []).includes(b.type)
       && !explicit.some((x) => x.name === b.name));
     acct.set(name, [...explicit, ...kept]);
+    observed.set(name, meta.observability);
     sources.set(name, await init.body.get("index.mjs").text());
     if (name === slug) planePuts.push({ meta, bindings: acct.get(slug), source: await init.body.get("index.mjs").text(), form: init.body });
     return cfok({ id: name });
@@ -335,11 +396,12 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (!rel || tagged) return new Response("not found", { status: 404 });
       return p in rel.assets ? new Response(rel.assets[p]) : new Response("gone", { status: 404 });
     } },
-    { m: (u) => u === CFG.TOKEN, f: () => tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
+    { m: (u) => u === CFG.TOKEN, f: () => tokenFlaky-- > 0 ? new Response("unavailable", { status: 503 }) : tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
       : jres({ access_token: TOK, ...(grantedScope === null ? {} : { scope: grantedScope }) }) },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets$/.test(u) && mth === "PUT", f: (u, init) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];
       const { name: secret } = JSON.parse(init.body);
+      if (refuseMark && secret === "INSTALL_COMPLETE") return cferr("mark refused <i>by the fake</i>", 400);
       secretPuts.push(`${name}/${secret}`);
       acct.set(name, [...(acct.get(name) || []).filter((b) => b.name !== secret), { type: "secret_text", name: secret }]);
       return cfok({ name: secret });
@@ -352,17 +414,18 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       return cfok({});
     } },
     { m: (u) => u.endsWith("/logpush/jobs"), f: () => logpush === "refused" ? cferr("Authentication error", 403, 10000) : cfok(logpush) },
-    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: (u, init) => {
-      if (refuseSchedules) return cferr("schedules refused <i>by the fake</i>", 403);
-      schedules.set(u.split("/workers/scripts/")[1].split("/")[0], JSON.parse(init.body).map((x) => x.cron));
-      return cfok({ schedules: JSON.parse(init.body) });
-    } },
+    /* R84 (3): the scheduled jobs a Worker holds (`crons`: more, for a script of the account's, by name). */
+    ...scheduleRules({ schedules, crons, refuse: refuseSchedules }),
     { m: (u, mth) => u.includes("/workers/durable_objects/namespaces") && mth === "GET", f: () =>
       cfok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
     { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
       const mth = (init.method || "GET").toUpperCase();
-      if (containersOff) return cferr("Containers are not enabled on this account. Enable Containers in the dashboard.", 403, 10000);
+      if (containersOdd) return cferr("Something unexpected happened with the request", 400, 10001);
+      /* R84 (2): the plan refusal as measured on the Free rehearsal account (HTTP 401, code 1000, K4970; build/plan/measure-R9-account-shapes.md), then the permission one below (documented shape). */
+      if (containersOff) return cferr(JSON.stringify({ error: "Unauthorized: You do not have access to Cloudflare Containers. Deploying containers requires the Workers Paid plan. Upgrade your plan at https://dash.cloudflare.com/?to=/:account/workers/plans" }), 401, 1000);
       if (containers === "read") return cferr("Authentication error", 403, 10000);
+      if (containers === "bare1000") return cferr("Something else answered code 1000", 400, 1000);
+      if (containers === "expired") return cferr("Authentication error", 401, 10000);
       const one = /\/containers\/applications\/([^/]+)(\/rollouts)?$/.exec(u);
       if (mth === "GET" && one && !one[2]) { const a = apps.find((x) => x.id === one[1]); return a ? cfok(a) : cferr("not found", 404); }
       if (mth === "GET") return cfok(apps);
@@ -398,7 +461,8 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       acct.delete(name); classes.delete(name); sources.delete(name); removed.push(name);
       return cfok({});
     } },
-    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: (r2 === "late" ? [] : [...buckets]).map((name) => ({ name })) }) },
+    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => storage === "off" ? cferr("Please enable R2 through the Cloudflare Dashboard.", 403, 10042)
+      : storage === "permission" ? cferr("Authentication error", 403, 10000) : storage === "error" ? cferr("Internal error", 500, 7003) : storage === "other" ? cferr("The request could not be understood by R2", 400, 10001) : cfok({ buckets: (r2 === "late" ? [] : [...buckets]).map((name) => ({ name })) }) },
     { m: (u, mth) => /\/r2\/buckets\/[^/]+\/usage$/.test(u) && mth === "GET", f: (u) => {
       const b = u.split("/r2/buckets/")[1].split("/")[0];
       return buckets.has(b) ? cfok({ objectCount: (bucketObjects.get(b) || []).length }) : cferr("The specified bucket does not exist.", 404, 10006);
@@ -431,9 +495,10 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET", f: (u) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];
+      if (observabilityUnreadable && name === slug && planePuts.length > 0) return cfok({});
       if (settingsFail || lookupFail.includes(name)) return cferr("upstream trouble", 500);
       /* Settings name each binding, a secret by its name and type only. */
-      return acct.has(name) ? cfok(settingsBlind ? {} : { bindings: (acct.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)) })
+      return acct.has(name) ? cfok(settingsBlind ? {} : { ...(observed.get(name) === undefined || observabilityDropped ? {} : { observability: observed.get(name) }), bindings: (acct.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)) })
         : cferr("not found", 404);
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
@@ -457,24 +522,25 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     } },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: async (u, init) => {
       const { name } = JSON.parse(init.body);
-      if (r2 === "refused") return cferr("Please enable R2 by adding a payment method", 403);
-      if (buckets.has(name)) return cferr(`The bucket you tried to create already exists`, 409);
+      if (r2 === "refused") return cferr("Account not entitled to this feature.", 403, 10042);
+      /* R2's BucketConflict, code 10073 (documented shape; BOB measures on the rehearsal account, K4942): the install matches the code, never the words. */
+      if (buckets.has(name)) return cferr(`The bucket you tried to create already exists`, 409, 10073);
       buckets.add(name); return cfok({ name });
     } },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => prefix ? cfok({ subdomain: prefix })
-      : cferr("no subdomain", 404) },
+      : cferr("You do not have a workers.dev subdomain. Please go to https://dash.cloudflare.com/?to=/:account/workers/workers-and-pages. Opening the Workers & Pages landing page for the first time will create a workers.dev subdomain automatically.", 404, 10007) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "PUT", f: (u, init) => {
       const want = JSON.parse(init.body).subdomain;
       if (subdomainPut === "fail") return cferr("not permitted", 403);
       if (subdomainPut === "down") return cferr("upstream trouble", 500);
-      if (taken.includes(want)) return cferr("That subdomain is taken", 409);
+      if (taken.includes(want)) return cferr(`Subdomain '${want}' is unavailable. Please try a different one.`, 403, 10031);
       prefix = want; return cfok({ subdomain: want });
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/subdomain$/.test(u) && mth === "POST", f: (u) => {
       if (enableFail) return cferr("could not enable", 500);
       enabled.add(u.split("/workers/scripts/")[1].split("/")[0]); return cfok({ enabled: true });
     } },
-    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: (u) => {
+    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: async (u, init = {}) => {
       const host = new URL(u).host;
       const [name, pre2] = host.split(".");
       /* R63: a copy already held answers what its facts say (`copy.held[slug]`), or nothing. */
@@ -485,6 +551,20 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (wakeAfter > 0 && (wakeTries++) < wakeAfter) throw new Error("ENOTFOUND " + host);
       const q = new URL(u).searchParams;
       const v = verOf(acct.get(slug)) || "0.0.0";
+      if (q.get("op") === "instancegroup") {
+        if (group === "silent") throw new Error("ENOTFOUND " + host);
+        if (groupFlat) return jres({ ok: true, group: recordedGroup });
+        /* instance-setup's published `instancegroup` answers (R3), made by its real code. */
+        const answers = await instanceGroupAnswer({ group: recordedGroup || "none" });
+        return jres({ ok: true, result: recordedGroup ? answers.recorded : answers.none, store: "STORE" });
+      }
+      if (q.get("op") === "instancegroupseed") {
+        seeds.push({ u, init });
+        if (seedRefused) return jres({ ok: false, result: { ok: false, code: seedRefused } });
+        if (recordedGroup) return jres({ ok: false, result: { ok: false, code: "GROUP_ALREADY_RECORDED", group: recordedGroup } });
+        recordedGroup = JSON.parse(init.body).slug;
+        return jres({ ok: true, result: { ok: true, group: recordedGroup }, store: "STORE" });
+      }
       if (q.get("op") === "selftest") return copy.selftest ? copy.selftest(q) : jres({ ok: true, bindings: { STORE: true } });
       if (q.get("op") === "bootstrap") {
         if (copy.bootstrap) return copy.bootstrap(q, { v, members: membersOf() });
@@ -509,12 +589,12 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   if (!ck) ({ cookie: ck, state: st } = await begin(slug, mode, { ...(ai === undefined ? {} : { instanceAi: ai }),
     ...(alongside ? { alongside: true } : {}), ...(typed === undefined ? {} : { typed }),
     ...(mode === "update" ? { version: version ?? (rel ? rel.version : RELEASE_VERSION) } : {}),
-    ...(vpc === undefined ? {} : { securityVpc: vpc }) }));
+    ...(vpc === undefined ? {} : { securityVpc: vpc }), ...choose }));
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
   finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }
   return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf, reads, apps, rollouts,
-    classes, deleted, schedules, removed, secretPuts, sources, tags, rolledBack, bucketObjects };
+    classes, deleted, schedules, removed, secretPuts, sources, tags, rolledBack, bucketObjects, seeds, recorded: () => recordedGroup };
 }
 
 /* The binding a plane PUT carried, by name. */

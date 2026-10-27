@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "../inquiry/fixture.mjs";
-import { producers, reader, ofKind, sentences, snapshot, notHintFailures } from "./fixture.mjs";
+import { producers, fresh, reader, ofKind, sentences, snapshot, notHintFailures, dayOn } from "./fixture.mjs";
 import { WAIT_LOOK, HINT_MARK } from "../../../src/notice-producers/index.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
 
@@ -54,7 +54,7 @@ test("R6 R20: it names what is awaited, from whom and by when (DEC-98), in queue
   assert.deepEqual(it.fills, fills);
   assert.equal(it.summary, say("queue.inquiry-recheck-due.summary", fills));
   assert.equal(it.detail, say("queue.inquiry-recheck-due.detail", fills));
-  assert.match(it.detail, /: records reply, from the city clerk, by 10 October\./);
+  assert.ok(it.detail.includes(`: records reply, from the city clerk, by ${dayOn(10, "october")}.`));
   assert.doesNotMatch(it.detail, /from from/, "control: the description's own \"from\" is not said twice");
   assert.ok(!/\{/.test(it.summary + it.detail), "every placeholder filled");
   assert.deepEqual(it.subject.waits.map((x) => [x.index, x.text, x.description]), [[0, "records reply", "from the city clerk"]]);
@@ -129,6 +129,15 @@ test("R20 R6: a wait due on a day of last year names its year (date.daymonthyear
   assert.equal(got[Q].fills.what, "records reply; the vote count");
   assert.equal(got[Q].fills.who, "the city clerk; the council's secretary");
   assert.equal(got[Q].detail, say("queue.inquiry-recheck-due.detail", got[Q].fills));
-  assert.equal(got[R].fills.date, "10 October", "control: this year's day names no year");
+  assert.equal(got[R].fills.date, dayOn(10, "october"), "control: this year's day names no year");
   assert.equal(got[R].fills.who, "agenda out");
+});
+
+test("R26 (T51; N889; DEC-340) R6 writes no day as ISO text: a wait's day names its month and day and its year when it is last year's", () => {
+  const { w } = setup();
+  const waits = [{ inquiry: Q, index: 0, text: "records reply", description: "from the city clerk", date: "2025-12-30", set_by: "alice", state: "due" }];
+  const n = fresh(w.host, { membership: w.membership, inquiry: { datedWaits: ({ member }) => ({ ok: true, member, zone: "America/Los_Angeles", waits }) } });
+  const [it] = ofKind(reader(n).read("alice", { now: "2026-10-11T00:00:00Z" }), KIND);
+  assert.doesNotMatch(it.summary + it.detail, /\d{4}-\d{2}-\d{2}/, "no ISO day");
+  assert.ok(it.detail.includes(dayOn(30, "december", 2025)), "last year's day names its year");
 });

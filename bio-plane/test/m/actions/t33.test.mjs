@@ -11,6 +11,7 @@ import * as actions from "../../../src/actions/index.mjs";
 import { noSuchStandard } from "../../../src/standards/index.mjs";
 import { notAProceeding } from "../../../src/entities/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
@@ -19,11 +20,11 @@ const doc = (lines) => actionMd("", lines).replace("id: \n", "");
 const reasons = (list) => list.map((r) => r.reason);
 
 /* A registered entity (entities R1); a proceeding with its facet (entities R45). */
-function ent(w, kind, label) {
+function ent(w, kind, label, declaredBy = M) {
   const proceeding = kind === "proceeding"
     ? { forum: ent(w, "institution", `${label}, its forum`), kind: "commitment_suit", number: `MC-26-${String(1000 + (ent.n = (ent.n || 0) + 1)).slice(-4)}` }
     : undefined;
-  const r = w.a.entities.createEntity({ kind, label, note: `${label}, registered by the test`, declaredBy: M, proceeding });
+  const r = w.a.entities.createEntity({ kind, label, note: `${label}, registered by the test`, declaredBy, proceeding });
   assert.equal(r.ok, true, JSON.stringify(r));
   return r.entity_id;
 }
@@ -75,8 +76,9 @@ test("R9 R47 actionCreate fills an office arm's entity id from the one office en
   /* a stated entity id is the member's, and never replaced */
   const stated = w.a.actionCreate({ document: doc([...CP, `  entity_id: ${office}`, "action_kind: other"]), viewer: M, author: M });
   assert.deepEqual([stated.ok, "addressee" in stated], [true, false]);
-  /* two office entities held for the role and body: none is chosen */
-  const twin = ent(w, "office", "Town Clerk");
+  /* two office entities held for the role and body: none is chosen (the twin a machine's, since a member naming a held
+     office again is answered the held one, entities R65) */
+  const twin = ent(w, "office", "Town Clerk", MACHINE);
   line(w, "post_in", twin, w.a.entities.entitiesByAlias({ alias: "Town of Port Ellery" }).entities[0].entity_id);
   const amb = w.a.actionCreate({ document: doc([...CP, "action_kind: other"]), viewer: M, author: M });
   assert.deepEqual([amb.addressee.entity_id, amb.addressee.filled], [null, "ambiguous"]);
@@ -100,8 +102,9 @@ test("R9 R25 the read shows who held the office on the action's date, labelled s
   /* a sent entry outside the holder's line: the date moves, and no line covers it */
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2027-02-01", account: "asked", viewer: M, author: M });
   r = w.a.actionRead({ id: A, viewer: M });
-  assert.deepEqual([r.as_of_date.date, r.addressee.holder_on_date.holder, r.addressee.holder_on_date.undetermined],
-    ["2027-02-01", null, "no line covers the date"]);
+  assert.deepEqual([r.as_of_date.date, r.addressee.holder_on_date.holder, r.addressee.holder_on_date.undetermined,
+    r.addressee.holder_on_date.why], ["2027-02-01", null, true, { key: "lines.why.no_line_covers", vars: {} }],
+    "lines' reason is passed on by key (lines R11, R24), never as text");
   /* another addressee has none; an earlier name-only one reads as written */
   w.promote(B, actionMd(B, ["counterparty:", "  state: audience", '  description: "readers"', "action_kind: other"]));
   assert.equal(w.a.actionRead({ id: B, viewer: M }).addressee, null);
@@ -131,7 +134,7 @@ test("R63 (C-8's plane half) a new bare-name counterparty is refused COUNTERPART
     "counterparty:\n  state: named\n  name: City Clerk")).reason, "COUNTERPARTY_REFUSED");
   const old = "ACTN-2026-0005-o";
   assert.equal(w.promote(old, actionMd(old, bare), { extra: { replay: true } }).ok, true);
-  assert.equal(w.promote(old, w.text(old).replace("An action.", "Revised.")).ok, true, "carried forward unchanged");
+  assert.equal(w.promote(old, w.text(old).replace("An action.", "Revised.")).ok, true, "a revision of a held bare-name action lands");
   /* negative control: role and body land */
   assert.equal(w.a.actionCreate({ document: doc([...CP, "action_kind: other"]), viewer: M, author: M }).ok, true);
 });
@@ -262,7 +265,7 @@ test("R62 addresseeSuggest answers the offices held as custodian_of or responsib
     [{ state: "named", kind: "office", role: "Town Clerk", body: "Town of Port Ellery", entity_id: office }]);
   assert.deepEqual([s.offices[0].line.line_id, s.offices[0].line.kind, "assertion" in s.offices[0].line.grades, "ends" in s.offices[0].line.grades],
     [lid, "custodian_of", true, true]);
-  assert.deepEqual(s.undetermined.map((u) => [u.office, u.why]), [[loose, "no line on that date places the office in a body"]]);
+  assert.deepEqual(s.undetermined.map((u) => [u.office, u.why]), [[loose, word("actions.why.line_date_places")]]);
   assert.match(s.says, /nothing was set/);
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM manifest`)[0].n, before, "writes nothing");
   /* on an action's date: a line ending before it is not held */
@@ -288,6 +291,20 @@ test("R62 addresseeSuggest answers the offices held as custodian_of or responsib
   const op = actions.actionsOps(w.a, new URL(`https://x/?subject=${contract}&viewer=${M}`), null).addresseesuggest();
   assert.equal(op.offices[0].addressee.entity_id, office);
   void body;
+});
+
+test("R111 R62 addresseeSuggest given an office entity as the subject answers that office as named, with its body; an office placed in no body is undetermined, never absent", () => {
+  const w = world();
+  const { office } = seeded(w);
+  const named = w.a.addresseeSuggest({ subject: office, viewer: M });
+  assert.equal(named.ok, true, JSON.stringify(named));
+  assert.deepEqual(named.offices.map((o) => o.addressee),
+    [{ state: "named", kind: "office", role: "Town Clerk", body: "Town of Port Ellery", entity_id: office }]);
+  assert.deepEqual(named.undetermined, []);
+  const loose = ent(w, "office", "Harbour Master");
+  const u = w.a.addresseeSuggest({ subject: loose, viewer: M });
+  assert.deepEqual([u.offices.length, u.undetermined.map((x) => [x.office, x.why])], [0, [[loose, word("actions.why.line_date_places")]]]);
+  assert.equal(actions.actionsOps(w.a, new URL(`https://x/?subject=${office}&viewer=${M}`), null).addresseesuggest().offices[0].addressee.entity_id, office);
 });
 
 test("R66 the 'what we did' source: the group's correspondence and moves on visible actions touching the set, at their own dates, windowed and bounded; registered once with events", () => {

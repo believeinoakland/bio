@@ -27,6 +27,7 @@
 import { caseDocumentRequiresMaterials } from "./formats.mjs";
 import { exact, unexact, exactRowsBlock } from "./facts.mjs";
 import { sha256HexSync } from "../record-grammar/index.mjs";
+import { SENTENCES } from "./sentences.mjs";
 
 /** R23: the fields of an `account:` row, in the order they are written. */
 export const ACCOUNT_FIELDS = Object.freeze(["ord", "text", "cites", "kind", "bias_statement", "began_as", "draft"]);
@@ -117,7 +118,7 @@ export function accountSectionLines(rows) {
   const sentences = byOrd(each(rows, accountRow)).filter((r) => r.kind === "account");
   return [ACCOUNT_HEAD, "",
     ...(sentences.length ? sentences.map((r) => `${String(r.text ?? "").replace(/[\r\n]+/g, " ")}`
-      + `${r.bias_statement ? ` ${accountBiasMark(r.bias_statement)}` : ""}`) : ["This case states no account."]),
+      + `${r.bias_statement ? ` ${accountBiasMark(r.bias_statement)}` : ""}`) : [SENTENCES.noAccount]),
     ""];
 }
 

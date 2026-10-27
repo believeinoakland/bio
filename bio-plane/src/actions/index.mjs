@@ -46,7 +46,7 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { contentOf } from "../content/index.mjs";
+import { contentOf, citationExtent, canonicalExtent, checkContentExtent } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded, determinationVoided } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
@@ -60,7 +60,7 @@ import { dutiesOf } from "../duties/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { localDay, overdueOn, isCalendarDate, bounds } from "../civil-time/index.mjs";
-import { combine, get as profileOf } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone, get as profileOf } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
          createSha256, idPattern } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
@@ -76,6 +76,7 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          entryFieldFindings, actionFieldFindings, stageInLaw } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 import { actionRecordsOf, noSuchAction } from "../action-records/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 /* R107 (T50; N1178): `noSuchAction` is `action-records`' function (its R18), re-exported: one function, one answer, one
@@ -108,6 +109,14 @@ export const NONE_EXISTS_MAX = 50;
 export const QUICK_ROUTE = Object.freeze({ kind: "one_finding_case" });
 /** R92 (T45): the most open items one read answers. */
 export const OPEN_ITEMS_MAX = 200;
+/** R108 (T51): the longest meeting name of the minutes a reply on a public comment carries. */
+export const MINUTES_MEETING_MAX = 200;
+/** R108: the kind a reply carries minutes on (the vocabulary's id for a public comment, action-grammar's `ACTION_KINDS`). */
+const PUBLIC_COMMENT = "public_comment";
+/* R108: the scalar fields of a passage's extent the entry holds flat (K2849), read back by content's `citationExtent`. */
+const MINUTES_EXTENT_FIELDS = Object.freeze(["ref", "page", "sheet", "cell", "slide", "shape", "para", "run", "range", "table",
+  "part", "space", "cited_as"]);
+const isMinutesKey = (k) => typeof k === "string" && k.startsWith("minutes_");
 /* R74: the flat keys a premise override's ground is held under (K2849). */
 /* R81, R83, R94: the flat keys an entry's T45 fields are held under (K2849). */
 const ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
@@ -117,11 +126,10 @@ const OVERRIDE_KEYS = Object.freeze(["ground_kind", "ground_citation", "ground_d
    `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key, never a copy.
    `{reason}` is left for the screen, with the member's reason as recorded answered beside it (R82). */
 export const ACTIONS_WORDS = Object.freeze({
-  "actions.override.ground_not_stated": "No ground was recorded for acting before a determination (this was done before "
-    + "a ground was asked for).",
-  "actions.reply.not_owed": "No reply is owed: {reason}",
-  "actions.openitems.not_office": "Open items are listed only when the action is addressed to an office.",
-  "actions.recognition.promise_only": "This thanks the office for a promise. Nothing yet shows the promise kept.",
+  "actions.override.ground_not_stated": word("actions.override.ground_not_stated"),
+  "actions.reply.not_owed": word("actions.reply.not_owed", { reason: "{reason}" }),
+  "actions.openitems.not_office": word("actions.openitems.not_office"),
+  "actions.recognition.promise_only": word("actions.recognition.promise_only"),
 });
 /* The member-facing sentences T45 added (R74, R82, R92, R93; R87's `actions.scope.published_stays` is `action-records`'
    since T47, its R14), each answered as its key and the words `words.json`
@@ -164,8 +172,7 @@ const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detai
    write answers it through here, and so does every later module asking it (`action-plans` R18), so
    `CONTACT_NOT_A_MEMBER` is minted at one site with its one row (C-117.11). The detail is this write's own fixed
    sentence; `extra` adds a caller's fields beside these and never replaces one. Writes nothing and never throws. */
-const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of your group by member id, and this one names none. "
-  + "Nothing was written.";
+const CONTACT_NOT_A_MEMBER_DETAIL = localize("actions.index.contact_names_a_member_of", "contact names a member of your team by member id, and this one names none. Nothing was written.");
 const CONTACT_NOT_A_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail"]);
 export function contactNotAMember(extra = null) {
   let own = [];
@@ -275,6 +282,9 @@ function closeOf(fm, day, place) {
  *  view R10 reads (its `counterparties`, `action_kinds` and `time_zone`), read in R100's `actionZone`, or a zone. True,
  *  false, or null when no zone is held or the comparison is undetermined. */
 export function actionOverdue(fm, nowMs, place = null) {
+  /* R110: an entry stored `overdue` (R33's mechanical recheck; neither met nor waived) makes the clock overdue whatever
+     `clock_next` is, and needs no zone to say so. */
+  if ((Array.isArray(fm?.clock) ? fm.clock : []).some((e) => e && typeof e === "object" && e.status === "overdue")) return true;
   const next = actionClockNext(fm);
   if (!next) return false;
   const zone = typeof place === "string" ? zoneOf(place) : actionZone(fm, place);
@@ -450,7 +460,20 @@ export class Actions {
    *  the read for a module with no office (its `time_zone` the group's zone, `zoneOf(place())`), or null when none can
    *  be read. An action's clock is never read in it: it is read in R100's `actionZone`. Writes nothing; never throws. */
   place() {
-    try { return this.#view(); } catch { return null; }
+    try { return this.#teamZoned(this.#view()); } catch { return null; }
+  }
+  /* R68, K5292 (jurisdictions R98): `view` with its `time_zone` the team's governing zone: `governingZone` over the active
+     profiles and record-core's `team_time_zone` (local-facts R22), so the team's stated zone governs when no profile gives
+     one (a view of nothing but that zone then) and a profile's zone stands when no team zone is set. Never throws. */
+  #teamZoned(view) {
+    let z = null;
+    try {
+      let ids = this.record.getSetting("jurisdiction_profiles");
+      if (typeof ids === "string") { try { ids = JSON.parse(ids); } catch { ids = null; } }
+      z = governingZone(ids, this.record.getSetting("team_time_zone"));
+    } catch { z = null; }
+    if (!z || (view && view.time_zone && view.time_zone.value === z)) return view;
+    return { ...(view || {}), time_zone: { ...(view && typeof view.time_zone === "object" ? view.time_zone : {}), value: z } };
   }
   /** R10 (T45; N858; reconciliation R7): the view this module reads for kinds, counterparties, venues, records laws and
    *  response statuses: `local-facts.governingView` (its R12), so a group's confirmed rule governs here as in
@@ -465,7 +488,7 @@ export class Actions {
   }
   /** R10, R100: the view this module reads (`#governing`), for R100's `actionZone`; null with none. Never throws. */
   governingView() {
-    try { return this.#governing(); } catch { return null; }
+    try { return this.#teamZoned(this.#governing()); } catch { return null; }
   }
   /* R81 (T45): the response statuses the governing view holds for `kind` (jurisdictions R58, R77: an entry with no
      `applies_to` applies to every kind), as tokens; null when the view holds none. */
@@ -575,7 +598,7 @@ export class Actions {
     const end = lines.indexOf("---", 1);
     if (end === -1) return null;
     const block = additions.map((a) =>
-      `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`);
+      localize("actions.index.rel_rel_target_target_status", "  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: \"{v1}\"", { rel: String(a.rel), target: String(a.target), status: String(a.status), v1: String(a.note ?? "") }));
     let ref = -1;
     for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
     if (ref === -1) return [...lines.slice(0, end), "references:", ...block, ...lines.slice(end)].join("\n");
@@ -597,7 +620,7 @@ export class Actions {
   /* One Session Log appender for this module's writers. */
   static #appendSessionLog(text, entry) {
     const at = text.indexOf("## Session Log");
-    if (at < 0) return text + "\n## Session Log\n\n" + entry;
+    if (at < 0) return localize("actions.index.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", { text: String(text), entry: String(entry) });
     const nxt = text.indexOf("\n## ", at + 1);
     const cut = nxt === -1 ? text.length : nxt + 1;
     return text.slice(0, cut) + entry + "\n" + text.slice(cut);
@@ -654,13 +677,9 @@ export class Actions {
     if ((!who || isMachineIdentity(who))
         && (act || (((nextTier === 1 || nextTier === 2 || nextTier === 3) || heldSet) && nextTier !== heldTier)))
       return refuse("MACHINE_CANNOT_SET_RISK_TIER",
-        (act ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).`
+        localize("actions.index.v1_a_risk_tier_is", "{v1} A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.", { v1: String(act ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).`
              : cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.`
-                   : `this creation states risk_tier ${nextTier}.`)
-        + " A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's "
-        + "authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may "
-        + "leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's "
-        + "tier. Nothing was written.", { risk_tier: nextTier, held: cur ? heldTier : null });
+                   : `this creation states risk_tier ${nextTier}.`) }), { risk_tier: nextTier, held: cur ? heldTier : null });
     /* END DEC-49 REGION is-machine-set-risk-tier */
     return null;
   }
@@ -716,8 +735,7 @@ export class Actions {
     if (kindMoved) {
       const kinds = this.kinds();
       if (!kinds.includes(nextFm.action_kind))
-        return refuse("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your `
-          + `group's Civicsmith offers: one of ${kinds.join(", ")}. Nothing was written.`, { legal: kinds });
+        return refuse("ACTION_KIND_UNKNOWN", localize("actions.index.action_kind_string_is_not", "action_kind '{String}' is not a kind your team's Civicsmith offers: one of {kinds}. Nothing was written.", { String: String(String(nextFm.action_kind).slice(0, 40)), kinds: String(kinds.join(", ")) }), { legal: kinds });
     }
     /* END DEC-49 REGION is-promote-action-kind */
     /* DEC-49 REGION is-promote-tier-vocabulary */
@@ -739,24 +757,19 @@ export class Actions {
       const eid = cp && typeof cp === "object" && !Array.isArray(cp) && typeof cp.entity_id === "string" ? cp.entity_id.trim() : "";
       const eidKind = !cf.length && eid ? this.#entityKind(eid) : null;
       if (!cf.length && eid && eidKind === "person")
-        cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names a person `
-          + "in the subject registry: an action is addressed to an office, an organisation or an audience, never a private "
-          + "individual (R9, arm: person)" });
+        cf.push({ check: "C-2.10", severity: "error", message: localize("actions.index.counterparty_entity_id_eid_names", "counterparty.entity_id '{eid}' names a person in the subject registry: an action is addressed to an office, an organisation or an audience, never a private individual (R9, arm: person)", { eid: String(eid.slice(0, 40)) }) });
       /* R9 (K1484 row 5; B1a.14): an office arm's entity id names an office entity the registry holds. */
       else if (!cf.length && eid && addresseeIsOffice(cp) && eidKind !== "office")
-        cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names `
-          + `${eidKind ? `an entity of kind ${eidKind}` : "no entity the subject registry holds"}: an office addressee's entity `
-          + "is an office entity (R9, arm: office)" });
+        cf.push({ check: "C-2.10", severity: "error", message: localize("actions.index.counterparty_entity_id_eid_names_2", "counterparty.entity_id '{eid}' names {v1}: an office addressee's entity is an office entity (R9, arm: office)", { eid: String(eid.slice(0, 40)), v1: String(eidKind ? `an entity of kind ${eidKind}` : "no entity the subject registry holds") }) });
       if (cf.length || office)
         return refuse("COUNTERPARTY_REFUSED", cf.length ? cf[0].message
-          : "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
+          : localize("actions.index.a_named_counterparty_is_an", "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written."),
           { findings: findingsOf(cf.length ? cf : [{ check: "C-2.10", severity: "error", message: "counterparty names no office (role and body)" }]) });
     }
     /* END DEC-49 REGION is-promote-counterparty */
     /* DEC-49 REGION is-promote-action-resolution */
     if (nextFm.current_state === "resolved" && !RESOLUTIONS.includes(nextFm.resolution))
-      return refuse("ACTION_RESOLUTION_REFUSED", `a resolved action names how it ended: one of ${RESOLUTIONS.join(", ")}. `
-        + "Nothing was written.", { legal: RESOLUTIONS });
+      return refuse("ACTION_RESOLUTION_REFUSED", localize("actions.index.a_resolved_action_names_how", "a resolved action names how it ended: one of {RESOLUTIONS}. Nothing was written.", { RESOLUTIONS: String(RESOLUTIONS.join(", ")) }), { legal: RESOLUTIONS });
     /* END DEC-49 REGION is-promote-action-resolution */
     /* DEC-49 REGION is-promote-clock */
     const clock = nextFm.clock;
@@ -766,7 +779,7 @@ export class Actions {
       else clock.forEach((e, i) => {
         if (!e || typeof e !== "object" || !e.text || !e.description) bad.push({ check: "C-11.1", detail: `clock[${i}] lacks the {text, description} shape` });
         else {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date || "")) bad.push({ check: "C-11.1", detail: `clock[${i}].date '${e.date}' is not YYYY-MM-DD` });
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date || "")) bad.push({ check: "C-11.1", detail: localize("actions.index.clock_i_date_date_is", "clock[{i}].date '{date}' is not YYYY-MM-DD", { i: String(i), date: String(e.date) }) });
           if (typeof e.basis !== "string" || !e.basis.trim()) bad.push({ check: "C-11.1", detail: `clock[${i}] has no basis (the statute, order, or commitment the date derives from)` });
           if (!["pending", "met", "overdue", "waived"].includes(e.status)) bad.push({ check: "C-11.1", detail: `clock[${i}].status '${e.status}' is not one of: pending, met, overdue, waived` });
         }
@@ -788,10 +801,7 @@ export class Actions {
       const reshaped = heldClock.length !== nextClock.length
         || heldClock.some((e, i) => Actions.#clockShape(e) !== Actions.#clockShape(nextClock[i]));
       if (moved.length || reshaped || (!recheck && JSON.stringify(heldClock) !== JSON.stringify(nextClock)))
-        return refuse("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date, or "
-          + "stated time of day, has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or "
-          + "sets another status. "
-          + "Nothing was written.", { moves: moved });
+        return refuse("CLOCK_STATUS_NOT_MECHANICAL", localize("actions.index.a_machine_write_may_move", "a machine write may move a pending clock entry whose date, or stated time of day, has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written."), { moves: moved });
     }
     /* END DEC-49 REGION is-promote-clock-mechanical */
     return null;
@@ -822,9 +832,7 @@ export class Actions {
     if (held !== next) {
       /* DEC-49 REGION is-machine-override */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on "
-          + "a breach it has not determined, on a stated ground and with the reason why. A machine credential may not "
-          + "state or change one. Nothing was written.");
+        return refuse("MACHINE_CANNOT_OVERRIDE", localize("actions.index.a_premise_override_is_a", "a premise override is a member's open statement that the team acts on a breach it has not determined, on a stated ground and with the reason why. A machine credential may not state or change one. Nothing was written."));
       /* END DEC-49 REGION is-machine-override */
       const o = nextFm.premise_override;
       /* DEC-49 REGION is-premise-override */
@@ -850,17 +858,14 @@ export class Actions {
       const errors = found.filter((x) => x.severity === "error");
       /* DEC-49 REGION is-override-ground */
       if (errors.length)
-        return refuse(errors[0].code, errors[0].message + ". Nothing was written.", { findings: findingsOf(errors),
+        return refuse(errors[0].code, localize("actions.index.message_nothing_was_written", "{message}. Nothing was written.", { message: String(errors[0].message) }), { findings: findingsOf(errors),
           ...(errors[0].code === "OVERRIDE_NO_GROUND" ? { grounds: [...OVERRIDE_GROUNDS], quick_route: { ...QUICK_ROUTE } } : {}) });
       /* END DEC-49 REGION is-override-ground */
     }
     const cp = nextFm.counterparty;
     /* DEC-49 REGION is-breach-addressee */
     if (nextFm.breach === true && cp !== undefined && cp !== null && !addresseeIsOffice(cp))
-      return refuse("ADDRESSEE_NOT_AN_OFFICE", "an action recorded for a breach is addressed to the office responsible, "
-        + "by its official role and body; this one is addressed to "
-        + `${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. `
-        + "Nothing was written.", { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
+      return refuse("ADDRESSEE_NOT_AN_OFFICE", localize("actions.index.an_action_recorded_for_a", "an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to {v1}. Nothing was written.", { v1: String(cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`) }), { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
     /* END DEC-49 REGION is-breach-addressee */
     return null;
   }
@@ -873,8 +878,7 @@ export class Actions {
     if (!same("contact")) {
       /* DEC-49 REGION is-machine-contact */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine "
-          + "credential may not set or change it. Nothing was written.");
+        return refuse("MACHINE_CANNOT_SET_CONTACT", localize("actions.index.the_teams_contact_for_an", "the team's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written."));
       /* END DEC-49 REGION is-machine-contact */
       const id = contactId(nextFm.contact);
       let facts = null;
@@ -994,9 +998,8 @@ export class Actions {
           .find(({ e }) => e && typeof e.entity_id === "string" && e.entity_id.trim()
             && (this.#entityKind(e.entity_id.trim()) === "person"
                 || (addresseeIsOffice(e) && this.#entityKind(e.entity_id.trim()) !== "office")));
-        if (bad) return refuse("COUNTERPARTY_REFUSED", `copied[${bad.i}].entity_id names a person or no office the subject `
-          + "registry holds: a copied office is an office, never a private individual (R77, R9). Nothing was written.",
-          { findings: [{ check: "C-2.10", detail: `copied[${bad.i}].entity_id: not an office entity (R9, arm: office)` }] });
+        if (bad) return refuse("COUNTERPARTY_REFUSED", localize("actions.index.copied_i_entity_id_names", "copied[{i}].entity_id names a person or no office the subject registry holds: a copied office is an office, never a private individual (R77, R9). Nothing was written.", { i: String(bad.i) }),
+          { findings: [{ check: "C-2.10", detail: localize("actions.index.copied_i_entity_id_not", "copied[{i}].entity_id: not an office entity (R9, arm: office)", { i: String(bad.i) }) }] });
       }
     }
     /* R78: partners, organisations by role, stated by a member. */
@@ -1036,8 +1039,7 @@ export class Actions {
     /* R82: whether the body owes the group a reply, with the member's reason (`reply_owed_reason`). */
     if (moved("reply_owed") || moved("reply_owed_reason")) {
       /* DEC-49 REGION is-machine-set-reply-owed */
-      if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the group a reply is a member's "
-        + "statement; a machine credential may not set or change it. Nothing was written.");
+      if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", localize("actions.index.whether_a_body_owes_the", "whether a body owes the team a reply is a member's statement; a machine credential may not set or change it. Nothing was written."));
       /* END DEC-49 REGION is-machine-set-reply-owed */
       /* the value and its reason are judged together by action-grammar R23 (K2861): one site for REPLY_OWED_REFUSED */
       const r = Actions.#fromFindings(Actions.#pushed(actionFieldFindings,
@@ -1066,7 +1068,7 @@ export class Actions {
     for (let i = 0; i < ledger.length; i++) {
       const e = ledger[i];
       if (!e || typeof e !== "object" || JSON.stringify(e) === JSON.stringify(heldLedger[i] ?? null)) continue;
-      if (!ENTRY_FIELD_KEYS.some((k) => e[k] !== undefined)) continue;
+      if (!ENTRY_FIELD_KEYS.some((k) => e[k] !== undefined) && !Object.keys(e).some(isMinutesKey)) continue;
       const r = this.#entryFieldRefusal(ledger, i, nextFm.action_kind, who,
         JSON.stringify(e.speaker ?? null) !== JSON.stringify(heldLedger[i] ? heldLedger[i].speaker ?? null : null));
       if (r) return r;
@@ -1082,9 +1084,17 @@ export class Actions {
     if (speakerMoved && e.speaker !== undefined && e.speaker !== null) {
       /* DEC-49 REGION is-machine-contact-speaker */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_SET_CONTACT", "who spoke for the group in a sending is a member's statement; a "
-          + "machine credential may not set it. Nothing was written.");
+        return refuse("MACHINE_CANNOT_SET_CONTACT", localize("actions.index.who_spoke_for_the_team", "who spoke for the team in a sending is a member's statement; a machine credential may not set it. Nothing was written."));
       /* END DEC-49 REGION is-machine-contact-speaker */
+    }
+    /* R108: minutes only on a received entry of a public comment, the date a real day (the write's half; the act judges
+       the passage). */
+    if (Object.keys(e).some(isMinutesKey)) {
+      if (e.direction !== "received" || kind !== PUBLIC_COMMENT || !this.kinds().includes(PUBLIC_COMMENT))
+        return refuse("MINUTES_NOT_PUBLIC_COMMENT", word("screen.action.minutes.notpublic"), { field: `correspondence[${i}]` });
+      if (!isCalendarDate(String(e.minutes_date ?? "")))
+        return this.records.correspondEntryRefusal({ at: String(e.minutes_date ?? ""), artifactSha: "", account: "x" },
+          { target: null, detail: CORRESPOND_DETAIL });
     }
     const r = Actions.#fromFindings(Actions.#errors(entryFieldFindings(ledger, i,
       { responseStatuses: this.#responseStatuses(kind) || [] })), "CORRESPONDENCE_REFUSED");
@@ -1098,13 +1108,90 @@ export class Actions {
     return null;
   }
 
+  /** R108 (T51): the minutes an entry holds, `{meeting, date, passage: {captureSha, extent}}`, from the flat keys the bytes
+   *  carry (`minutes_meeting`, `minutes_date`, `minutes_capture`, `minutes_extent_*`; K2849), the extent read by content's
+   *  one reader of a flat extent (`citationExtent`); null for an entry holding none. Pure; never throws. */
+  static minutesOf(e) {
+    try {
+      if (!e || typeof e !== "object" || !Object.keys(e).some(isMinutesKey)) return null;
+      const leg = { extent_kind: e.minutes_extent_kind };
+      for (const f of [...MINUTES_EXTENT_FIELDS, "rect"])
+        if (e[`minutes_extent_${f}`] !== undefined) leg[`extent_${f}`] = e[`minutes_extent_${f}`];
+      return { meeting: e.minutes_meeting ?? null, date: e.minutes_date ?? null,
+               passage: { captureSha: e.minutes_capture ?? null, extent: citationExtent(leg),
+                          content_id: e.minutes_content_id ?? null } };
+    } catch { return null; }
+  }
+
+  /* R108: the minutes as the act is given them, an object or its JSON: `{meeting, date, passage: {captureSha, extent}}`.
+     Only the shape is judged here (`{ok: false}`, which `actionCorrespond` answers as `BAD_MINUTES`). */
+  static #minutesGiven(v) {
+    if (v === null || v === undefined || v === "") return { ok: true, minutes: null };
+    let m = v;
+    if (typeof m === "string") { try { m = JSON.parse(m); } catch { m = null; } }
+    const line = (x) => typeof x === "string" && x.trim() !== "" && x.trim().length <= MINUTES_MEETING_MAX && !/["\\\r\n]/.test(x);
+    const sha = m && typeof m === "object" && m.passage && typeof m.passage.captureSha === "string"
+      ? m.passage.captureSha.trim().replace(/^sha256:/, "").toLowerCase() : "";
+    const ext = m && typeof m === "object" && m.passage ? m.passage.extent : null;
+    if (!m || typeof m !== "object" || Array.isArray(m) || !line(m.meeting) || typeof m.date !== "string"
+        || !/^[0-9a-f]{64}$/.test(sha) || !ext || typeof ext !== "object" || Array.isArray(ext))
+      return { ok: false };
+    return { ok: true, minutes: { meeting: m.meeting.trim(), date: m.date.trim(), passage: { captureSha: sha, extent: ext } } };
+  }
+
+  /* R108: null when `minutes` may be kept on this entry; else the refusal. Only a received entry of a public comment carries
+     them (`MINUTES_NOT_PUBLIC_COMMENT`); the passage cites a capture the author sees, an unseen one answered as an absent one
+     (`NO_SUCH_BUNDLE`), at an extent content's grammar admits (its refusals, as content answers them), and one the entry can
+     hold flat. */
+  #minutesRefusal(minutes, viewer) {
+    const { captureSha, extent } = minutes.passage;
+    const gate = viewerPredicate(viewer);
+    const home = this.#one(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.capture_sha=? AND (${gate.sql}) LIMIT 1`, captureSha, ...gate.args);
+    if (!home) return { foreign: { ok: false, reason: "NO_SUCH_BUNDLE", target: captureSha } };
+    const context = this.content.contentContextFor(captureSha);
+    const bad = checkContentExtent(extent, context);
+    if (bad) return { foreign: bad };
+    const kept = Actions.#minutesKept(minutes);
+    const back = Actions.minutesOf(kept);
+    let same = false;
+    try { same = !!back && canonicalExtent(back.passage.extent) === canonicalExtent(extent); } catch { same = false; }
+    if (!same) return { bad: "passage" };
+    /* R108 (K4041): the passage is recorded as content by the author's act (mint or find, content R12, R13), and the row's
+       id is kept beside the capture and the extent, so a reader of the minutes (filings R64) reads its text by that id. */
+    const m = this.content.mint({ bundleId: home.bundle_id, captureSha, extent, mintedBy: viewer, context });
+    if (!m || m.ok === false) return m ? { foreign: m } : { bad: "passage" };
+    minutes.passage.content_id = m.content_id;
+    return null;
+  }
+
+  /* R108: the flat keys an entry holds `minutes` under; an extent field that is not a plain token, a number or four numbers
+     is left out, so `#minutesRefusal`'s read-back finds the extent changed and refuses. */
+  static #minutesKept(minutes) {
+    const x = minutes.passage.extent;
+    const out = { minutes_meeting: minutes.meeting, minutes_date: minutes.date, minutes_capture: minutes.passage.captureSha,
+                  minutes_extent_kind: String(x.kind),
+                  ...(minutes.passage.content_id ? { minutes_content_id: minutes.passage.content_id } : {}) };
+    for (const f of [...MINUTES_EXTENT_FIELDS, "rect"]) {
+      const v = x[f];
+      if (v === undefined || v === null || v === "") continue;
+      const text = typeof v === "string" && v.length <= MINUTES_MEETING_MAX && !/["\\\r\n]/.test(v);
+      if (typeof v === "number" || text || (f === "rect" && Array.isArray(v) && v.length === 4 && v.every((n) => typeof n === "number")))
+        out[`minutes_extent_${f}`] = v;
+    }
+    return out;
+  }
+
   /** R81, R83, R94 (T45): an entry with its T45 fields as R22 names them: `office_status: {words, status?}` and
    *  `found_elsewhere: {kind, note?}` from the flat keys the bytes hold (`office_words`, `office_status`,
    *  `found_elsewhere`, `found_elsewhere_note`; J2's reading), `speaker` as written. Other keys as they are. */
   static entryFields(e) {
     if (!e || typeof e !== "object") return e;
-    const { office_words, office_status, found_elsewhere, found_elsewhere_note, pressure_kind, pressure_note, ...rest } = e;
+    const { office_words, office_status, found_elsewhere, found_elsewhere_note, pressure_kind, pressure_note, ...held } = e;
+    const rest = Object.fromEntries(Object.entries(held).filter(([k]) => !isMinutesKey(k)));
     const out = { ...rest };
+    const minutes = Actions.minutesOf(e);
+    if (minutes) out.minutes = minutes;
     if (pressure_kind !== undefined || pressure_note !== undefined)
       out.pressure = { ...(pressure_kind !== undefined ? { kind: pressure_kind } : {}),
                        ...(pressure_note !== undefined ? { note: pressure_note } : {}) };
@@ -1127,8 +1214,7 @@ export class Actions {
     const count = part === "action_basis" ? legs : ledger;
     const limit = part === "action_basis" ? ACTION_LEGS_MAX : ACTION_LEDGER_MAX;
     /* DEC-49 REGION is-action-too-large */
-    return refuse("ACTION_TOO_LARGE", `this action's ${part} holds ${count} entries; an action holds at most ${limit}. `
-      + "Nothing was written.", { part, count, limit });
+    return refuse("ACTION_TOO_LARGE", localize("actions.index.this_actions_part_holds_count", "this action's {part} holds {count} entries; an action holds at most {limit}. Nothing was written.", { part: String(part), count: String(count), limit: String(limit) }), { part, count, limit });
     /* END DEC-49 REGION is-action-too-large */
   }
 
@@ -1184,9 +1270,7 @@ export class Actions {
         const sha = e.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
         if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
           return refuse("CORRESPONDENCE_REFUSED", undefined, { artifact_sha: sha, findings: [{ check: "C-2.10",
-            detail: `correspondence artifact_sha '${sha.slice(0, 16)}...' does not resolve in the register: an entry `
-                  + "claiming captured bytes names bytes this store holds, or it is testimony and says so with an "
-                  + "account and an author (DEC-13)",
+            detail: localize("actions.index.correspondence_artifact_sha_sha_does", "correspondence artifact_sha '{sha}...' does not resolve in the register: an entry claiming captured bytes names bytes this store holds, or it is testimony and says so with an account and an author (DEC-13)", { sha: String(sha.slice(0, 16)) }),
             repairs: ["capture the artifact first (op=capture), then record its sha", "or record a named account instead"] }] });
       }
       /* R8 (K256, N271): the determination is read as the act's viewer sees it: the session's viewer the control plane
@@ -1211,13 +1295,15 @@ export class Actions {
   }
 
   /* R8 (e), R93 (T45): the live success record `id` names, as the viewer reads it (`consequences.successRecordRead`, its
-     R20), or null when it names none the viewer may see, none is live, or no success record can be read here. */
+     R20), or null when it names none the viewer may see, none is live, or no success record can be read here. Its answer
+     nests the record under `success`, where `live` and `superseded_by` stand (a superseded record reads ok with live false). */
   #successRecord(id, viewer) {
     const cons = this.consequences;
     if (!cons || typeof cons.successRecordRead !== "function" || typeof id !== "string" || !SUCCESS_RECORD_ID_RE.test(id)) return null;
     let r = null;
     try { r = cons.successRecordRead({ id, viewer }); } catch { r = null; }
-    return r && r.ok !== false && !r.superseded_by ? r : null;
+    const s = r && r.ok !== false && r.success && typeof r.success === "object" ? r.success : null;
+    return s && s.live === true && !s.superseded_by ? s : null;
   }
 
   /* R8: an action recorded for a breach (`breach: true`) rests on a live conformance determination the author may see,
@@ -1258,8 +1344,7 @@ export class Actions {
     return refuse("ACTION_NO_DETERMINATION", readable
       ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. "
         + "None of its legs names one. Nothing was written."
-      : "an action recorded for a breach rests on a conformance determination, and no determination can be read on "
-        + "your group's Civicsmith yet, so none could be found. Nothing was written.",
+      : localize("actions.index.an_action_recorded_for_a_2", "an action recorded for a breach rests on a conformance determination, and no determination can be read on your team's Civicsmith yet, so none could be found. Nothing was written."),
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" });
     /* END DEC-49 REGION is-breach-determination */
   }
@@ -1604,7 +1689,7 @@ export class Actions {
                      artifactSha = "", account = "", quoteAmount = "", quoteCurrency = "",
                      quoteBasis = "", quoteAnswers = "", quoteRevises = "",
                      stage = "", follows = "", outcome = "", exemptions = "", dueBy = "", dueCite = "",
-                     speaker = "", officeStatus = null, foundElsewhere = null,
+                     speaker = "", officeStatus = null, foundElsewhere = null, minutes = null,
                      pressure = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* R101 (T48; N1024, K231): C-32.4 is `action-records.correspondFence`'s, the one site, its `detail` this act's own. */
@@ -1615,8 +1700,7 @@ export class Actions {
     /* DEC-49 REGION is-correspond-direction — C-33.5 stays this act's own, its region drawn around the direction alone. */
     if (!CORRESPONDENCE_DIRECTIONS.includes(direction))
       return { ok: false, reason: "BAD_DIRECTION", legal: CORRESPONDENCE_DIRECTIONS, direction,
-               detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came `
-                     + "is recorded as no_response with the date it was due, not omitted (DEC-13)." };
+               detail: localize("actions.index.direction_is_one_of_correspondence", "direction is one of {CORRESPONDENCE_DIRECTIONS}. A reply that never came is recorded as no_response with the date it was due, not omitted (DEC-13).", { CORRESPONDENCE_DIRECTIONS: String(CORRESPONDENCE_DIRECTIONS.join(", ")) }) };
     /* END DEC-49 REGION is-correspond-direction */
     const day = String(at ?? "").trim();
     const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
@@ -1629,13 +1713,16 @@ export class Actions {
       return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
     if (sha && direction === "no_response")
       return { ok: false, reason: "NO_RESPONSE_HAS_NO_BYTES", target,
-               detail: "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named "
-                     + "account with its date (DEC-13)." };
+               detail: localize("actions.index.nothing_arrived_so_there_are", "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13).") };
     for (const [name, v] of [["account", acct], ["medium", String(medium ?? "")], ["party", String(party ?? "")]])
       if (v.length > NOTE_MAX || /["\\\r\n]/.test(v))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
                  detail: `${name} is at most ${NOTE_MAX} characters and cannot contain a quote, `
                        + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    /* R108 (T51; N880 (U4); DEC-340): the minutes' account of a public comment, kept on a received entry. Its shape and its
+       date are judged here with the entry's other values; what needs the action (its kind) and the record (the capture
+       the passage cites) is judged once the action is found. */
+    const minutesGiven = Actions.#minutesGiven(minutes);
     /* D-148: the quote, as the entry will carry it. Only keys a caller SENT are
        written, so an entry with no quote parameter is byte-identical to before. */
     const quote = {};
@@ -1701,6 +1788,27 @@ export class Actions {
       return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
                detail: "a correspondence ledger belongs to an action: it records what that ask sent and what "
                      + "came back." };
+    /* R108: a reply carries minutes only on a received entry of a public comment, and the passage is of a capture the
+       author sees, an extent the content grammar admits. */
+    let minutesFields = {};
+    /* DEC-49 REGION is-minutes */
+    if (minutes !== null && minutes !== undefined && minutes !== "") {
+      const badMinutes = (detail) => refuse("BAD_MINUTES", detail, { target, max: MINUTES_MEETING_MAX });
+      if (!minutesGiven.ok)
+        return badMinutes(localize("actions.index.minutes_are_the_meeting_one", "minutes are a meeting, a date and a passage: the meeting named on one line of 1 to 200 characters with no quote or backslash, the day it was held, and the passage of the minutes as a capture and the part of it. Nothing was written."));
+      const held = this.#heldFm(target);
+      if (direction !== "received" || !held || held.action_kind !== PUBLIC_COMMENT || !this.kinds().includes(PUBLIC_COMMENT))
+        return refuse("MINUTES_NOT_PUBLIC_COMMENT", word("screen.action.minutes.notpublic"), { target, direction });
+      const dateRefusal = this.records.correspondEntryRefusal({ at: minutesGiven.minutes.date, artifactSha: "", account: "x" },
+        { target, detail: CORRESPOND_DETAIL });
+      if (dateRefusal) return dateRefusal;
+      const r = this.#minutesRefusal(minutesGiven.minutes, viewer ?? who);
+      if (r && r.foreign) return { target, ...r.foreign };
+      if (r)
+        return badMinutes(localize("actions.index.the_passage_has_a_part", "the passage has a part that cannot be kept on the reply's entry: name it by its kind and the fields that kind has. Nothing was written."));
+      minutesFields = Actions.#minutesKept(minutesGiven.minutes);
+    }
+    /* END DEC-49 REGION is-minutes */
     /* Resolved here as well as at promote, so the member is told which half of
        the capture-or-testify choice failed rather than being handed a write
        refusal after the lease was taken. */
@@ -1727,8 +1835,7 @@ export class Actions {
     /* DEC-49 REGION is-no-reply-owed */
     if (direction === "no_response" && fm.reply_owed === false) {
       this.#releaseLease(target, who);
-      return refuse("NO_REPLY_OWED", "this action states that the body owes the group no reply, so silence is never "
-        + "recorded as a non-response. Nothing was written.", { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed,
+      return refuse("NO_REPLY_OWED", localize("actions.index.this_action_states_that_the", "this action states that the body owes the team no reply, so silence is never recorded as a non-response. Nothing was written."), { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed,
           reply_owed_reason: replyOwedReason(fm) });
     }
     /* END DEC-49 REGION is-no-reply-owed */
@@ -1744,6 +1851,7 @@ export class Actions {
       ...quote,
       ...life,
       ...t45.fields,
+      ...minutesFields,
       /* R48 (moved to `action-holds` R1, T45; K2781 (1)): a pressure mark stated with the entry stays on the entry, flat
          (K2849), and `action-holds` reads it through `actionRead`; its act and table are that module's. */
       ...(mark ? { pressure_kind: mark.kind, pressure_note: mark.note } : {}),
@@ -1828,8 +1936,7 @@ export class Actions {
       /* DEC-49 REGION is-stage-in-law */
       if (inLaw === "not_in_law") {
         this.#releaseLease(target, who);
-        return refuse("STAGE_NOT_IN_LAW", `stage '${life.stage}' is not one the law this request is made under lists, as `
-          + "your group's jurisdiction states it. Nothing was written.", { target, stage: life.stage,
+        return refuse("STAGE_NOT_IN_LAW", localize("actions.index.stage_stage_is_not_one", "stage '{stage}' is not one the law this request is made under lists, as your team's jurisdiction states it. Nothing was written.", { stage: String(life.stage) }), { target, stage: life.stage,
             stages: (this.#lawStages(fm.law) || []).map((x) => x && x.stage) });
       }
       /* END DEC-49 REGION is-stage-in-law */
@@ -1886,6 +1993,7 @@ export class Actions {
              ...(marked ? { pressure: marked } : {}),
              ...(t45.fields.speaker !== undefined ? { speaker: t45.fields.speaker } : {}),
              ...Actions.#presentedT45(t45.fields),
+             ...(minutesGiven.minutes ? { minutes: Actions.minutesOf(minutesFields) } : {}),
              weight: "single" };
     if (direction === "received") this.#tellResponse({ action: target, ord, recorder: who, at: day });
     return answer;
@@ -1909,8 +2017,7 @@ export class Actions {
     const os = obj(officeStatus), fe = obj(foundElsewhere);
     /* DEC-49 REGION is-entry-writable */
     if (sp && !tok(sp))
-      return refuse("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the group in this sending. "
-        + "Nothing was written.");
+      return refuse("SPEAKER_REFUSED", localize("actions.index.speaker_is_the_member_id", "speaker is the member id of the member who spoke for the team in this sending. Nothing was written."));
     if (os && (os.bad || !text(os.words) || !tok(os.status)))
       return refuse("OFFICE_STATUS_WITHOUT_OUTCOME", "office_status is {words, status?}: the office's own wording, with no "
         + "quote, backslash or line break, and a status the profile holds. Nothing was written.");
@@ -1945,15 +2052,13 @@ export class Actions {
   #pressureRefusal({ who, mark, direction }) {
     /* DEC-49 REGION is-pressure */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a "
-        + "machine credential may not mark it. Nothing was written.");
+      return refuse("MACHINE_CANNOT_MARK_PRESSURE", localize("actions.index.marking_pressure_directed_at_the", "marking pressure directed at the team is a member's judgement; a machine credential may not mark it. Nothing was written."));
     if (!mark || !PRESSURE_KINDS.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX || /["\\\r\n]/.test(mark.raw))
       return refuse("PRESSURE_REFUSED", `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS.join(", ")}, the note `
         + `1 to ${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`,
         { legal: PRESSURE_KINDS, max: NOTE_MAX });
     if (direction !== "received")
-      return refuse("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. `
-        + "Nothing was written.");
+      return refuse("PRESSURE_NOT_RECEIVED", localize("actions.index.pressure_is_marked_on_a", "pressure is marked on a received entry; this one is {v1}. Nothing was written.", { v1: String(direction || "not one") }));
     /* END DEC-49 REGION is-pressure */
     return null;
   }
@@ -1983,14 +2088,17 @@ export class Actions {
         const filled = Actions.#fillEntityId(withId, addressee.entity_id);
         if (filled) withId = filled;
         else addressee = { entity_id: null, filled: "unspliceable",
-                           says: "the office entity was found, and this document's counterparty block cannot be extended in "
-                               + "place, so it was written without one" };
+                           says: word("actions.says.office_entity_found") };
       }
     }
     const bytes = new TextEncoder().encode(withId);
     const r = this.promotion.promote({
       bundleId: id, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
       author: who || null, viewer: viewer ?? (who || null),
+      /* R47 (promotion R53, G74): the member who files is stamped, so promotion asks whether she is in the project the
+         document names or invited to it; a machine credential is no member and is not asked. */
+      actorIdentity: who || null, actorViewer: viewer ?? (who || null),
+      actorMemberId: who ? this.membership.positionalMember(viewer ?? who, who) : null,
       files: [{ path: "bundle.md", text: withId, bytes: bytes.length, sha256: createSha256().update(bytes).hex() }],
       meta: { object_type: fm.object_type, title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created ?? when, last_updated: fm.last_updated ?? when, criticality: fm.criticality ?? null },
@@ -2022,12 +2130,12 @@ export class Actions {
    *  Answers `{entity_id, filled, says}`, `filled` `bridge`, `none` or `ambiguous` (never a guess between several). */
   #bridge(role, body, viewer) {
     const none = (filled, says) => ({ entity_id: null, filled, says });
-    if (!role || !body) return none("none", "an office is found by its role and body, and this one does not state both");
+    if (!role || !body) return none("none", word("actions.office_found_role"));
     let offices = [], bodies = new Set();
     try {
       offices = (this.entities.entitiesByAlias({ alias: role }).entities || []).filter((e) => e.kind === "office").map((e) => e.entity_id);
       bodies = new Set((this.entities.entitiesByAlias({ alias: body }).entities || []).map((e) => e.entity_id));
-    } catch { return none("none", "the subject registry could not be read, so no office entity was looked for"); }
+    } catch { return none("none", word("actions.subject_registry_read")); }
     const lines = this.lines;
     const found = [];
     for (const o of offices) {
@@ -2037,10 +2145,10 @@ export class Actions {
       if (r && r.ok && (r.lines || []).some((l) => !l.withdrawn && bodies.has(l.to))) found.push(o);
     }
     if (found.length === 1)
-      return { entity_id: found[0], filled: "bridge", says: "the office entity the record holds for this role and body" };
+      return { entity_id: found[0], filled: "bridge", says: word("actions.says.office_entity_record") };
     return found.length
-      ? none("ambiguous", `${found.length} office entities are held for this role and body, so none was chosen`)
-      : none("none", "no office entity is held for this role and body; the action is addressed to it by role and body alone");
+      ? none("ambiguous", word("actions.office_entities_held", { found: String(found.length) }))
+      : none("none", word("actions.office_entity_held"));
   }
 
   /* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
@@ -2389,9 +2497,9 @@ export class Actions {
         const sent = n("sent"), received = n("received");
         absence = { level: sent === 0 ? "no_request" : received === 0 ? "no_reply" : "no_quote",
                     sent, received,
-                    says: sent === 0 ? "this action's ledger records no sent entry, so nothing here could be quoted"
-                      : received === 0 ? "this action's ledger records no reply, so no quote has been received"
-                      : "this action's ledger records replies and none of them carries a quote" };
+                    says: sent === 0 ? word("actions.says.action_ledger_records")
+                      : received === 0 ? word("actions.says.action_ledger_records_reply")
+                      : word("actions.says.action_ledger_records_replies") };
       }
     } else {
       rows = this.#rows(
@@ -2400,9 +2508,7 @@ export class Actions {
         cp, ...gate.args, max + 1);
       if (!rows.length)
         absence = { level: "no_quote_by_name",
-                    says: "no action you may read names this counterparty and carries a quote. The name is "
-                        + "matched exactly as written, and an action whose counterparty is stated undetermined "
-                        + "is reachable only by its request" };
+                    says: word("actions.says.action_read_names") };
     }
     const truncated = rows.length > max;
     const quotes = rows.slice(0, max).map((q) => {
@@ -2430,8 +2536,7 @@ export class Actions {
              ...(ans ? { answers: Number(ans) } : {}),
              quotes, count: quotes.length, truncated, max,
              ...(absence ? { absence } : {}),
-             says: "the record asserts only what was quoted, by whom, when, and for which request. It sets "
-                 + "quotes side by side and judges none of them (DEC-24)." };
+             says: localize("actions.index.the_record_asserts_only_what", "the record asserts only what was quoted, by whom, when, and for which request. It sets quotes side by side and judges none of them (DEC-24).") };
   }
 
   /* REC-24 (d): APPEND one entry to the `correspondence` block, touching nothing
@@ -2479,6 +2584,16 @@ export class Actions {
       ...(e.office_status !== undefined ? [`    office_status: ${e.office_status}`] : []),
       ...(e.found_elsewhere !== undefined ? [`    found_elsewhere: ${e.found_elsewhere}`] : []),
       ...(e.found_elsewhere_note !== undefined ? [`    found_elsewhere_note: "${e.found_elsewhere_note}"`] : []),
+      /* R108 (T51): the minutes' account flat (K2849): text quoted, the date, capture and numbers bare, a rectangle inline. */
+      ...(e.minutes_meeting !== undefined ? [`    minutes_meeting: "${e.minutes_meeting}"`] : []),
+      ...(e.minutes_date !== undefined ? [`    minutes_date: ${e.minutes_date}`] : []),
+      ...(e.minutes_capture !== undefined ? [`    minutes_capture: ${e.minutes_capture}`] : []),
+      ...(e.minutes_content_id !== undefined ? [`    minutes_content_id: ${e.minutes_content_id}`] : []),
+      ...(e.minutes_extent_kind !== undefined ? [`    minutes_extent_kind: ${e.minutes_extent_kind}`] : []),
+      ...[...MINUTES_EXTENT_FIELDS, "rect"].filter((f) => e[`minutes_extent_${f}`] !== undefined).map((f) => {
+        const v = e[`minutes_extent_${f}`];
+        return `    minutes_extent_${f}: ${Array.isArray(v) ? `[${v.join(", ")}]` : typeof v === "number" ? String(v) : `"${v}"`}`;
+      }),
       ...(e.pressure_kind !== undefined ? [`    pressure_kind: ${e.pressure_kind}`] : []),
       ...(e.pressure_note !== undefined ? [`    pressure_note: "${e.pressure_note}"`] : []),
       `    author: ${e.author}`,
@@ -2513,9 +2628,18 @@ export class Actions {
     const now = this.#nowMs(nowMs);
     /* R25, R100: the clock and the lifecycle day are read in the action's zone. */
     const view = this.governingView();
+    /* R111: each row also carries, from the entry as the record holds it (the table keeps none of these), its stage,
+       outcome, exemptions, due date and citation and quote, each null when the entry states none. */
+    const held = Array.isArray(fm.correspondence) ? fm.correspondence : [];
     const ledger = this.#rows(
       `SELECT ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at
-         FROM correspondence WHERE bundle_id=? ORDER BY ord`, row.bundle_id);
+         FROM correspondence WHERE bundle_id=? ORDER BY ord`, row.bundle_id).map((r) => {
+      const e = held[r.ord] && typeof held[r.ord] === "object" && !Array.isArray(held[r.ord]) ? held[r.ord] : {};
+      const of = (k) => (e[k] === undefined || e[k] === null || String(e[k]).trim() === "" ? null : String(e[k]).trim());
+      return { ...r, stage: of("stage"), outcome: of("outcome"), exemptions: of("exemptions"),
+               due_by: of("due_by"), due_cite: of("due_cite"), quote_amount: of("quote_amount"),
+               quote_currency: of("quote_currency"), quote_basis: of("quote_basis") };
+    });
     const legs = this.#rows(
       `SELECT ord, target_id, target_type, kind, note, at, extent_capture FROM action_basis WHERE bundle_id=? ORDER BY ord`,
       row.bundle_id).map((l) => ({ ...l, extent_capture: l.extent_capture ?? null,
@@ -2600,6 +2724,7 @@ export class Actions {
                  ...(p.office_status ? { office_status: p.office_status } : {}),
                  ...(p.found_elsewhere ? { found_elsewhere: p.found_elsewhere } : {}),
                  ...(p.pressure ? { pressure: p.pressure } : {}),
+                 ...(p.minutes ? { minutes: p.minutes } : {}),
                  ...(fm.action_kind === "records_request" && typeof p.stage === "string"
                    ? { stage_in_law: stageInLaw(p.stage, stages) } : {}) };
       }).filter((x) => Object.keys(x).length > 1),
@@ -2615,7 +2740,7 @@ export class Actions {
     const dp = facts.find((f) => f && f.fact === "delivery_point");
     if (dp && counterpartyOffice(cp))
       out.delivery_point = { value: dp.value, citation: dp.citation ?? null,
-                             says: "where it is delivered, as the venue states it; never the addressee" };
+                             says: word("actions.says.delivered_venue_states") };
     /* R93: a kind the view marks `shape: recognition`: what the recognition rests on. Nothing is refused for it. */
     if (kindEntry && kindEntry.shape === "recognition") {
       const compliant = live.some(({ d }) => !d.void && (Array.isArray(d.outcomes) ? d.outcomes : []).some((o) => o && o.outcome === "compliant"));
@@ -2677,10 +2802,10 @@ export class Actions {
   static actionDate(fm) {
     const sent = (Array.isArray(fm && fm.correspondence) ? fm.correspondence : [])
       .find((e) => e && typeof e === "object" && e.direction === "sent" && isCalendarDate(String(e.at ?? "").slice(0, 10)));
-    if (sent) return { date: String(sent.at).slice(0, 10), basis: "the first sent correspondence entry" };
+    if (sent) return { date: String(sent.at).slice(0, 10), basis: word("actions.why.first_sent_correspondence") };
     const c = typeof (fm && fm.created) === "string" ? fm.created.slice(0, 10) : "";
-    return isCalendarDate(c) ? { date: c, basis: "the day the action was created; nothing has been sent" }
-      : { date: null, basis: "the action states no date it was sent or created" };
+    return isCalendarDate(c) ? { date: c, basis: word("actions.why.day_action_created") }
+      : { date: null, basis: word("actions.why.action_states_date") };
   }
 
   #t33Read(fm, viewer) {
@@ -2691,22 +2816,20 @@ export class Actions {
     let addressee = null;
     if (office) {
       const stated = office.entity_id ? { entity_id: office.entity_id, filled: "stated" }
-        : office.legacy ? { entity_id: null, filled: "none", says: "an earlier addressee named by a name alone, read as written" }
+        : office.legacy ? { entity_id: null, filled: "none", says: word("actions.says.earlier_addressee_named") }
         : this.#bridge(office.role, office.body, viewer);
-      let holder;
-      if (!stated.entity_id) holder = { holder: null, undetermined: "no office entity is held for this addressee" };
-      else if (!date) holder = { holder: null, undetermined: asOf.basis };
+      let holder;      if (!stated.entity_id) holder = { holder: null, undetermined: true, why: { key: "actions.office_entity_held_addressee", vars: {} } };
+      else if (!date) holder = { holder: null, undetermined: true, why: { key: "actions.why.action_states_date", vars: {} } };
       else {
         let h = null;
-        try { h = this.lines ? this.lines.holderAt({ office: stated.entity_id, at: date, viewer }) : null; } catch { h = null; }
-        holder = !h ? { holder: null, undetermined: "the dated lines could not be read" }
-          : h.ok === false ? { holder: null, undetermined: h.detail || h.reason }
+        try { h = this.lines ? this.lines.holderAt({ office: stated.entity_id, at: date, viewer }) : null; } catch { h = null; }        holder = !h ? { holder: null, undetermined: true, why: { key: "actions.dated_lines_read", vars: {} } }
+          : h.ok === false ? { holder: null, undetermined: true, why: { key: "actions.dated_lines_read", vars: {} }, refused: h.reason }
           : h.holder ? { holder: h.holder, line: h.line ? h.line.line_id : null, capacity: h.capacity ?? null }
-          : { holder: null, undetermined: h.undetermined, ...(h.lines ? { lines: h.lines } : {}) };
+          : { holder: null, undetermined: true, why: h.why, ...(h.lines ? { lines: h.lines } : {}) };
       }
       addressee = { role: office.role, body: office.body, ...stated,
                     holder_on_date: { ...holder, on: date,
-                      says: "who held this office on the action's date. The action is addressed to the office, never to them." } };
+                      says: word("actions.says.held_office_action") } };
     }
     /* R64: each law naming a held standard, with that standard's in-force state on the action's date. */
     const named = [];
@@ -2717,11 +2840,11 @@ export class Actions {
       named.push({ law: "records", citation: typeof fm.law === "string" ? fm.law : null, standard: fm.law_standard.trim() });
     const law_standards = named.map((n) => {
       if (this.records.standardSeen(n.standard, viewer))
-        return { ...n, in_force: null, says: "no standard you may read answers to this id" };
+        return { ...n, in_force: null, says: word("actions.says.standard_read_answers") };
       let f = null;
       try { f = date ? this.standards.inForceAt({ standard: n.standard, date, viewer }) : null; } catch { f = null; }
       return { ...n, in_force: f ? { state: f.state ?? "undetermined", why: f.why ?? null, on: date }
-                                 : { state: "undetermined", why: date ? "the standard's period could not be read" : asOf.basis, on: date } };
+                                 : { state: "undetermined", why: date ? word("actions.why.standard_period_read") : asOf.basis, on: date } };
     });
     /* R65: the proceeding, with its status on the action's date. */
     let proceeding = null;
@@ -2730,7 +2853,7 @@ export class Actions {
       let st = null;
       try { st = date && this.events ? this.events.proceedingStatusAt({ proceeding: pid, at: date, viewer }) : null; } catch { st = null; }
       proceeding = { entity_id: pid, on: date,
-                     status: !st ? { stage: "undetermined", why: date ? "the events could not be read" : asOf.basis }
+                     status: !st ? { stage: "undetermined", why: date ? word("actions.why.events_read") : asOf.basis }
                        : st.ok === false ? { stage: "undetermined", why: st.detail || st.reason }
                        : { stage: st.stage, ...(st.why ? { why: st.why } : {}), ...(st.label ? { label: st.label } : {}) } };
     }
@@ -2777,8 +2900,7 @@ export class Actions {
     return { ground: o.ground, reason: o.reason, by: r ? r.stated_by : null, at: r ? r.at : null,
              /* R74: an override written before T45 reads as written, its ground not stated, never re-asked. */
              ...(o.ground ? {} : { ground_not_stated: T45_SENTENCES.ground_not_stated }),
-             says: "Rests on an unestablished premise: a member chose to act on this breach without a determination, "
-                 + "on the ground and for the reason stated." };
+             says: word("actions.says.rests_unestablished_premise") };
   }
 
   /* R5: the recorded author class of the action's creation (record-core R15–R16's manifest, first by `seq`): a law
@@ -2862,7 +2984,7 @@ export class Actions {
     const cursor = out.length ? out[out.length - 1].id : null;
     return { ok: true, items: out, limit: max, truncated, cursor,
              ...(determination && !this.conformance ? { determination_read: "undetermined",
-                 says: "the legs are matched by the determination named; whether it is live is conformance's to say, and it is not provided on this instance" } : {}) };
+                 says: word("actions.says.legs_matched_determination") } : {}) };
   }
 
   /** R62 (A ORG): the offices the record holds as `custodian_of` or `responsible_for` a subject (an entity, or a record
@@ -2886,7 +3008,18 @@ export class Actions {
     if (!at) at = localToday(this.#nowMs(null), zoneOf(this.place())) ?? instantOf(this.#nowMs(null));
     let entities;
     if (ENTITY_ID_RE.test(subj)) {
-      if (!this.#entityKind(subj)) return noSuchEntity(subj, { end: "subject" });
+      const kind = this.#entityKind(subj);
+      if (!kind) return noSuchEntity(subj, { end: "subject" });
+      /* R111 (amends R62): a subject that is itself an office is the office, answered as named. */
+      if (kind === "office") {
+        const r = this.entities.readEntity({ entityId: subj });
+        const role = r && r.found && r.entity ? r.entity.label : null;
+        const { body, why } = this.#officeBody(subj, at, viewer);
+        const named = body ? [{ addressee: { state: "named", kind: "office", role, body, entity_id: subj }, concerns: subj, line: null }] : [];
+        return { ok: true, subject: subj, at, at_basis: basis, offices: named,
+                 undetermined: body ? [] : [{ office: subj, concerns: subj, line: null, why }], suggestion: true,
+                 says: word("actions.says.offices_record_holds") };
+      }
       entities = [subj];
     } else {
       const b = this.#visibleAction(subj, viewer);
@@ -2901,17 +3034,11 @@ export class Actions {
     const seen = new Set();
     const label = (id) => { let r = null; try { r = this.entities.readEntity({ entityId: id }); } catch { r = null; }
                             return r && r.found && r.entity ? r.entity.label : null; };
-    const bodyOf = (office) => {
-      let r = null;
-      try { r = lines.structureAt({ entity: office, at, kinds: ["post_in"], viewer }); } catch { r = null; }
-      const held = r && r.ok ? (r.held || []).filter((l) => l.from === office) : [];
-      return held.length === 1 ? { body: label(held[0].to) } : { why: held.length ? "the office is held in more than one body on that date"
-        : "no line on that date places the office in a body" };
-    };
+    const bodyOf = (office) => this.#officeBody(office, at, viewer);
     for (const e of entities.slice(0, 50)) {
       let r = null;
       try { r = lines ? lines.structureAt({ entity: e, at, kinds: ["custodian_of", "responsible_for"], viewer }) : null; } catch { r = null; }
-      if (!r || r.ok === false) { undetermined.push({ subject: e, why: "the dated lines could not be read" }); continue; }
+      if (!r || r.ok === false) { undetermined.push({ subject: e, why: word("actions.dated_lines_read") }); continue; }
       for (const l of r.held || []) {
         if (l.to !== e || this.#entityKind(l.from) !== "office" || seen.has(`${l.from}|${l.line_id}`)) continue;
         seen.add(`${l.from}|${l.line_id}`);
@@ -2927,10 +3054,22 @@ export class Actions {
     }
     return { ok: true, subject: subj, at, at_basis: basis, offices, undetermined, suggestion: true,
              says: offices.length || undetermined.length
-               ? "offices the record holds as custodian of or responsible for this subject on that date. A suggestion: "
-                 + "nothing was set, and a member chooses the addressee."
-               : "the record holds no custodian_of or responsible_for line to this subject on that date. That is a "
-                 + "statement about the lines held and about nothing else." };
+               ? word("actions.says.offices_record_holds")
+               : word("actions.says.record_holds_custodian") };
+  }
+
+  /* R62, R111: the body an office is a post in on a day (`lines.structureAt`, `post_in`), or why none is read. */
+  #officeBody(office, at, viewer) {
+    let r = null;
+    try { r = this.lines.structureAt({ entity: office, at, kinds: ["post_in"], viewer }); } catch { r = null; }
+    const held = r && r.ok ? (r.held || []).filter((l) => l.from === office) : [];
+    return held.length === 1 ? { body: this.#entityLabel(held[0].to) } : { why: held.length ? word("actions.why.office_held_body")
+      : word("actions.why.line_date_places") };
+  }
+  #entityLabel(id) {
+    let r = null;
+    try { r = this.entities.readEntity({ entityId: id }); } catch { r = null; }
+    return r && r.found && r.entity ? r.entity.label : null;
   }
 
   /* R66, R67: the visible actions, each with its document, in id order (the sources read the group's own acts). */
@@ -2983,7 +3122,7 @@ export class Actions {
         if (!h || typeof h !== "object" || !Actions.#inWindow(h.timestamp, from, to)) return;
         if (String(h.timestamp).slice(0, 10) < firstSent) return;
         items.push({ at: String(h.timestamp), kind: "move", ref: `${id}#move/${i}`,
-                     label: `we moved the action from ${h.from_state} to ${h.to_state}`, ...(pub ? { public: true } : {}) });
+                     label: word("actions.label.moved_action", { from_state: String(h.from_state), to_state: String(h.to_state) }), ...(pub ? { public: true } : {}) });
       });
     }
     items.sort((p, q) => (String(p.at) < String(q.at) ? -1 : String(p.at) > String(q.at) ? 1 : p.ref < q.ref ? -1 : 1));
@@ -3017,7 +3156,7 @@ export class Actions {
       (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e, ord) => {
         if (!e || e.direction !== "sent" || !Actions.#inWindow(e.at, from, to)) return;
         out.push({ ref: `${id}#correspondence/${ord}`, date: String(e.at).slice(0, 10),
-                   label: `the group's ${fm.action_kind} sent to ${counterpartyName(fm.counterparty)}` });
+                   label: word("actions.label.group_sent", { action_kind: String(fm.action_kind), counterparty: String(counterpartyName(fm.counterparty)) }) });
       });
     }
     return out;
@@ -3085,7 +3224,7 @@ export class Actions {
     }
     return { ok: true, office: { role: office.role, body: office.body, entity_id: office.entity_id ?? null }, items,
              overdue_replies: items.filter((x) => x.clock_overdue === true).length, truncated, limit: OPEN_ITEMS_MAX,
-             says: "the group's open actions with this office, shown as facts. Nothing is refused because of them." };
+             says: word("actions.says.group_open_actions") };
   }
   /* R92: R9's office equality: equal entity ids where both state one, else equal role and body. */
   static #sameOffice(a, b) {
@@ -3192,9 +3331,7 @@ const CORRESPOND_DETAIL = Object.freeze({
     + "and may not testify to an exchange. Sign in as a member.",
   BAD_DATE: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a "
     + "non-response, which is dated by when the reply was due",
-  CAPTURE_AND_TESTIMONY: "an entry carries the captured bytes OR a named account, never both: what comes back "
-    + "is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader "
-    + "would quote instead of the thing the group can defend.",
+  CAPTURE_AND_TESTIMONY: localize("actions.index.an_entry_carries_the_captured", "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader would quote instead of the thing the team can defend."),
   NEITHER_CAPTURE_NOR_TESTIMONY: "an entry carries either an artifact_sha that resolves in the register or an account "
     + "with an author. Neither is an entry that asserts an exchange and offers no way "
     + "to check that it happened.",
@@ -3222,7 +3359,7 @@ export function actionsOps(a, url, body) {
       stage: q("stage"), follows: q("follows"), outcome: q("outcome"), exemptions: q("exemptions"),
       dueBy: q("due_by"), dueCite: q("due_cite"),
       speaker: q("speaker") ?? b.speaker ?? "", officeStatus: b.office_status ?? q("office_status"),
-      foundElsewhere: b.found_elsewhere ?? q("found_elsewhere"),
+      foundElsewhere: b.found_elsewhere ?? q("found_elsewhere"), minutes: b.minutes ?? q("minutes"),
       pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null
         ? { kind: q("pressure_kind") ?? "", note: q("pressure_note") ?? "" } : null),
       viewer: q("viewer"), author: q("author") }),
@@ -3247,3 +3384,20 @@ export function actionsOps(a, url, body) {
       viewer: q("viewer") }),
   };
 }
+
+/* R109 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  actionmove: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actionmove.does",
+    fields: { accepts: ["target","to","reason","resolution"], requires: ["target","to","reason"] } },
+  actionlaws: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: "act.actionlaws.does",
+    fields: { accepts: ["target","laws"], requires: ["target","laws"] } },
+  actionrisktier: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actionrisktier.does",
+    fields: { accepts: ["target","tier","reason"], requires: ["target","tier","reason"] } },
+  actioncorrespond: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actioncorrespond.does",
+    fields: { accepts: ["target","direction","at","medium","party","artifact_sha","account","quote_amount","quote_currency","quote_basis","quote_answers","quote_revises","stage","follows","outcome","exemptions","due_by","due_cite","speaker","office_status","found_elsewhere","minutes","pressure","pressure_kind","pressure_note"], requires: ["target","direction","at",["account","artifact_sha"]] } },
+  actioncreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("actions.declared.actioncreate", "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle"),
+    fields: { accepts: ["document"], requires: ["document"] } },
+  addresseesuggest: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("actions.declared.addresseesuggest", "read: the offices the record holds as responsible for an action's subject on its date, as a suggestion; writes nothing"),
+    fields: { accepts: ["action","subject"], requires: ["subject"] } },
+});

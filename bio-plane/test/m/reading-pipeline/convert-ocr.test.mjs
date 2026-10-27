@@ -13,6 +13,7 @@ import { deflateSync } from "node:zlib";
 import { Miniflare } from "miniflare";
 import { fresh, hold, doc, member } from "./fixture.mjs";
 import { ocrWorkerDef } from "../../../../ocr-worker/test/memberworker.mjs";
+import { pageNotRenderable } from "../../../../ocr-worker/test/fixtures.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 
@@ -109,6 +110,8 @@ const steps = (rd) => (Array.isArray(rd.text_source) ? rd.text_source : []).map(
 const ENV0 = { ok: true, engine: "tesseract-wasm", version: "0.11.0", cap: "C", measured_by: "CPDF-15", confidence_floor: null };
 const region = (p) => ({ text: "SCANNED PAGE " + p, confidence: { value: 0.97, basis: "engine" },
                          source: { kind: "pdf-page", ref: "p" + p, page: p, rect: [72, 700, 540, 712] } });
+/* ocr-worker's published fixture: the real member's PAGE_NOT_RENDERABLE answer, made by its real code (K4995) */
+const NOT_RENDERABLE = await pageNotRenderable();
 const chunked = (deviate = () => null) => member((body) => {
   const clean = [...new Set(body.pages)].sort((a, b) => a - b);
   const take = clean[0], deferred = clean.slice(1);
@@ -190,7 +193,7 @@ test("R4 (d606 §3): a call that throws stops the loop: the pages before it kept
 
 test("R4 (d606 §3): a refused FIRST page does not end the document: its deferred pages are still asked, each refused page keeps its marker, the others are read, the note counts the declined", async () => {
   const ocr = chunked((take, deferred) => (take === 0 || take === 2
-    ? { ok: false, reason: "PAGE_NOT_RENDERABLE", detail: "x", page: take, deferred, notes: [] } : null));
+    ? { ...NOT_RENDERABLE, page: take, deferred } : null));
   const rd = await readReal(viewed(), scanPdf(6), { OCR_WORKER: ocr });
   assert.equal(ocr.calls.length, 6);
   assert.deepEqual(counts(rd), [4, 2]);
@@ -250,7 +253,7 @@ test("R4 R5 (textchain): an answer refused whole leaves the scan unread with its
   const good = { ok: true, engine: "tesseract", version: "5.3.4-fast", cap: "C", measured_by: "CPDF-9", confidence_floor: 0.6,
                  pages: [{ page: 0, regions: [region(0)] }, { page: 1, regions: [region(1)] }] };
   for (const [answer, says] of [
-    [{ ok: false, reason: "PAGE_TOO_LARGE" }, /the OCR member declined to transcribe this document \(PAGE_TOO_LARGE\)/],
+    [NOT_RENDERABLE, new RegExp(`the OCR member declined to transcribe this document \\(${NOT_RENDERABLE.refusal.render.reason}\\)`)],
     [{ status: 500, body: "boom" }, /the OCR member answered 500, so this document stays unread/],
     [{ ...good, engine: "" }, /did not name its engine and version/],
     [{ ...good, version: "" }, /did not name its engine and version/],

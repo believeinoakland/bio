@@ -1,0 +1,239 @@
+# connections (T51)
+
+**Status** · session_017xL1y3wxLz7cviDg48w6Pm · depth 2 · COMPLETE · handled B13
+
+## J1 · REPORT
+
+B2 handled: both reasons are keyed on the job branch already (mentioned.mjs MENTIONED_UNDATED, stepsources.mjs STEP_SOURCE_UNDATED, commits d3d66eed13 and e34b6eb307). explore test/m/explore/real-connections.test.mjs: 1 pass, 0 fail on this branch. Connections: 129 tests pass; words check 0 failures on the committed tree. Still open on my side: the sentence fragments held in test regular expressions (a sub-agent is converting them), then the final checks, the Size line and COMPLETE.
+
+## Completion record (T51-193, the words pass for connections)
+
+**Applied.** T51-193: the 14 findings of `build/plan/words-pass/connections.md` (the inline and test copies) and its 11 plain findings, each read through `localize` (ids `connections.<file>.<slug>`, fixed once) or `word` (existing words.json keys, for sentences equal to a row: `connections.target_bytes_seen`, `connections.version_target_source`, `connections.says.longer_member`, `connections.says.longer_proposed`, `duties.why.read_names_member` for the viewer refusal, which also sits under the same sentence in hypotheses). The undetermined reasons of `mentioned_together` and `step_source` answer `{key, vars}` (`MENTIONED_UNDATED`, `STEP_SOURCE_UNDATED`), so the owner-conformance battery passes and explore's real-connections test is green (BOB's CHANGE B2).
+
+**Beyond the checker (R13, K3964, K3974).** Refusal details, composed `why` and `says` sentences, the kind words, the `choose` label fragments ("recorded: ", "already the choice, so nothing was written: ") and the NEED_CAPTURE detail in `ops.mjs` are keyed too, each rendering the same text. Test regular expressions and substring checks on those sentences are now equality or `includes` against the same `localize`/`word` call; a test never repeats a sentence it did not get from a key.
+
+**Deferred.** None. Two judgements for BOB: (1) the viewer refusal reuses `duties.why.read_names_member`, because connections cannot add a row to `words.json`; (2) a few test checks take a reference (`ref`) or a count out of the output they check, to build the expected `localize` call (read, converts-reads, read's R10/R11 test). Those tests fix the template and the other vars, but the reference itself is read from the answer, not from the fixture. The checks are weaker than full equality there; a fixture-level expected value would close it.
+
+**Tests and checks run** (on the pushed tree, job branch at `984a22b6b1` plus the record):
+- `node --test test/m/connections/*.test.mjs`: 129 tests, 129 pass, 0 fail.
+- `node test/m/explore/real-connections.test.mjs`: 1 pass, 0 fail.
+- `checks/words.mjs /home/user/bio connections`: 0 failures; inline 0, plain 0, testcopy 0, missingkey 0, marker 0.
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio connections`: 25 product files, 112 relative imports, 0 failures.
+- `checks/coverage.mjs /home/user/bio connections`: 69 of 69 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio connections tranche/T51 job/T51/connections`: 20 files, 0 failures.
+- `bio-plane/src/setup-words/build.mjs --check`: the stale-rows note for `rows.mjs` (expected), no refusal naming connections.
+- `checks/run.mjs /home/user/bio`: format and architecture 0 failures; the words check reports the other 173 modules' findings, none in connections; coverage shows 30 failures across the tree, none in connections (the accepted reds of rule 5, not this module's).
+
+**Size (session_01B18LY8jj8WugArr9aZjMRC): test runs 20, module lines 2347.** The module-lines count is the non-blank, non-comment lines of `bio-plane/src/connections/*.mjs`; the test-run count is approximate, from the runs of this session.
+
+## J2 · COMPLETE
+
+T51-193 done on job/T51/connections (head b2b0bd99cf). 129 connections tests pass; explore real-connections passes; words check 0 failures for connections; format, architecture, coverage (69 of 69) and ownership pass; setup-words check shows only the expected stale-rows note. Refusal details, composed sentences and test sentence checks are keyed (R13). Two judgements for BOB: the viewer refusal reuses duties.why.read_names_member; some test checks take a reference from the output they check, weaker than full equality. Full record and Size line in build/jobs/T51/connections.md.
+
+## Completion record (FR-13, the fix round: C28, C29, the census)
+
+**Entries applied.**
+1. **C28 (R70).** A connection row read by capture (`op=connections&sha256=`) now carries `mentions`, the mentions of the row's entity in that document, each `{ref, occurrence, position, grade}` (occurrence the key `connectionchoose` takes, null where the reading kept none; position null where unplaced), ordered by reference and then the reading's order, cut at 256 (R14's bound on listed occurrences) with `mentions_truncated`. The entity arm and the content arm are unchanged; a row whose document the viewer may not see carries neither field (R33). `connectionchoose` is unchanged: it already takes any listed `ref` and `occurrence` and treats the chosen one as a no-op (R14, R16). The mention read is one private method now shared with the part-grade read (`#mentionsRead`), memoised per entity in a capture-arm read. `converts-position.test.mjs` line 99 now expects the capture arm's keys plus these two (R4 as amended by R70).
+2. **C29 and the census (R71).** `DECLARED_OPS` exported beside `connectionsOps`, ten ops: `connect`, `connectionassert`, `connectionchoose`, `stepsource`, `stepsourcewithdraw`, `themedeclare`, `themeplace`, `themepropose`, `themeread`, `themewithdraw`. Classes, `mutating`, weight and description copied from the op's existing rows (`op-declarations` OPS and t48 family, `op-grades` RUNGS / RUNG_ABSENT / NON_ACTS; `connect`'s description is its NON_ACTS reason, its weight its RUNG_ABSENT ground `substrate`); `stepsource` and `stepsourcewithdraw` carry `machineClasses: []` as their t48 family row says. Fields read from the arms: `connect` accepts `id`, `entityId`, `limit`, requires one of `entityId` / `id`; `connectionassert` accepts and requires `a`, `b`, `basis`; `connectionchoose` accepts `capture`, `other`, `entity`, `ref`, `occurrence` and requires all but `occurrence`; `stepsource` accepts and requires `relation`, `captureSha`, `extent`, `basis`; `stepsourcewithdraw` accepts and requires `id`, `reason` (the arm reads its own `reason`); `themedeclare` accepts and requires `name`, `test`; `themeplace` and `themepropose` accept `theme`, `target`, `note` and require `theme`, `target`; `themeread` accepts `id`, `q`, `limit` and requires none; `themewithdraw` accepts and requires `theme`, `target`, `reason`. Judgement for BOB: `connect`'s `assertedBy` is read from the body by the arm but the control plane overwrites it with `system` (control-plane index.mjs:3028, R38), so I treat it as the door's stamp and leave it out of `accepts`.
+
+**Requirement lines for BOB to fold (the ownership check refuses my writing `build/requirements/connections.md`; I wrote them there, saw the refusal, and took them back out; the tests name R70 and R71).**
+- **R70** (T51; C28; K4165; amends R4, R14) *(not yet met: T51)* A member can choose a mention other than the one the record chose. A connection row read by capture (`op=connections&sha256=`) carries `mentions`, the mentions of the connection's entity in that document, each `{ref, occurrence, position, grade}`: `occurrence` the key `connectionchoose` takes (null where the reading kept none), `position` where it was read (null where unplaced), ordered by reference and then in the order the reading kept them. A name mentioned in three places lists the three. The list is cut at 256 (R14's bound on listed occurrences) and `mentions_truncated` says so. A row read by entity or by content id carries neither field, and a row whose document the viewer may not see carries none (R33). `connectionchoose` accepts any listed mention by its `ref` (and `occurrence`) and writes it; the mention already chosen writes nothing (R16).
+- **R71** (T51; K4168, K4190, K4202; `op-declarations` R80, `op-grades` R49) *(not yet met: T51)* The module states, as `DECLARED_OPS` beside its ops map, each op it serves that a screen sends or that this tranche adds: `connect`, `connectionassert`, `connectionchoose`, `stepsource`, `stepsourcewithdraw`, `themedeclare`, `themeplace`, `themepropose`, `themeread` and `themewithdraw`. Each row carries the op's classes, `mutating`, weight and description as `op-declarations` and `op-grades` already give them, and `fields: {accepts, requires}` read from the op's arm (the door's stamps, among them `viewer`, `author`, `member`, `declarer`, `placer`, `proposer`, `actor`, `administer`, and `connect`'s `assertedBy`, are not fields). A test holds each declaration true by calling the op as the door does (`test-support` R15). Item 3's census line is this same R71: the ten ops are one declaration.
+
+**Needs BOB (not mine to write).**
+1. `build/modules.json`: `connections` does not list `test-support` in `uses`, so `checks/architecture.mjs` reports the one finding "declared-ops.test.mjs imports bio-plane/test/declared-ops.mjs of test-support, which connections does not declare in uses". Adding `test-support` to its `uses` (as `lines`, `bias`, `money` have) clears it; nothing else in the architecture check fails.
+2. R70 and R71 above into `build/requirements/connections.md`. Until they are there, the coverage check shows 69 of 69 live ids (R70, R71 not yet live); with them it shows 71 of 71, every id named by a test.
+
+**Hand rows that can now go** (each agrees with my row; `op-grades.registerDeclaredOps` over every module's rows answers all ten as `agreed`, `op-declarations.registerDeclaredOps` accepts them; those rows are another module's, so I did not touch them):
+- `op-declarations`: OPS rows `connect`, `connectionassert`, `connectionchoose`, `themedeclare`, `themeplace`, `themepropose`, `themeread`, `themewithdraw`; the t48 family row for `stepsource` and `stepsourcewithdraw`.
+- `op-grades`: RUNGS rows `connectionassert`, `connectionchoose`, `themedeclare`, `themeplace`, `themepropose`, `themewithdraw`, and t48's `stepsource`, `stepsourcewithdraw`; RUNG_ABSENT `connect`; NON_ACTS rows for all ten (t48's two for the step sources).
+
+**Found in other modules.** `screens-inquiry/document.mjs:726` sends `connectionchoose` with `ref` only when the element carries one; `ref` is required (an empty one is `CONNECTION_CHOICE_NOT_A_MENTION`), so interface-shell's guard will name it for that screen's job, and its mention control should take its `ref` and `occurrence` from this entry's `mentions`. No other flaw found; nothing deferred.
+
+**Tests and checks run** (job branch, after the commit):
+- `node --test bio-plane/test/m/connections/*.test.mjs`: 145 tests (5 new in `mentions.test.mjs`, 12 in `declared-ops.test.mjs` with the existing), 145 pass, 0 fail. The declaration test was shown to fail on a wrong `requires` and on an undeclared read field, then restored.
+- Users of the capture-arm read: `node --test bio-plane/test/m/question-explorer/` 46 pass; `bio-plane/test/m/explore/` 57 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures. `checks/words.mjs /home/user/bio connections`: 0 failures. `checks/ownership.mjs /home/user/bio connections tranche/T51 job/T51/connections`: see the last line of this record. `checks/architecture.mjs`: 1 finding, item 1 above. `checks/coverage.mjs`: see item 2.
+- `checks/run.mjs /home/user/bio`: the findings in other modules are not mine (coverage in agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring; words testcopy in `op-grades/t48.test.mjs:34`, which copies the very sentence my `stepsource` row now also holds).
+
+**Size (session_01Ftd8r8DmURcdkXQn83Gtzb): test runs 16, module lines 2379.**
+
+## J3 · COMPLETE
+
+FR-13 done on job/T51/connections (head a0b8a2d2b3).
+C28 (R70): a connection row read by capture lists the entity's mentions in that document ({ref, occurrence, position, grade}, cut at 256 with mentions_truncated); connectionchoose takes any listed one, and the chosen one is a no-op.
+C29 and the census (R71): DECLARED_OPS for the ten ops (connect, connectionassert, connectionchoose, stepsource, stepsourcewithdraw, themedeclare, themeplace, themepropose, themeread, themewithdraw), each held true by test-support's declaredOpHolds; op-grades.registerDeclaredOps answers all ten as agreed.
+145 connections tests pass; question-explorer 46 and explore 57 pass; format, words and ownership 0 failures.
+NEEDS BOB, two things in build/ that are not mine:
+(1) add test-support to connections' uses in build/modules.json (architecture shows its one finding: declared-ops.test.mjs imports test-support);
+(2) fold requirement lines R70 and R71, whose text is in my record (the ownership check refuses my writing the requirements file; with them, coverage is 71 of 71).
+Also in the record: the hand rows that can go; assertedBy left out of connect's accepts (the door overwrites it with system); screens-inquiry's connectionchoose sends ref only when present while ref is required.
+
+## Fix round 10, Wave B batch 6 (CONNECTIONS #18, session_01KkQy33QFAKvdUAn9HUSQ1C)
+
+**Causes and lines done (6 of 6; `fixtures.mjs . connections --list`: 0 failures, 5 accepted).**
+- FIX-L answer-envelope/door-helpers: `converts-links.test.mjs:47` (now :48): marker `fixtures-contract: answer-envelope door-helpers` above `storeSilent`.
+- FIX-L store-door/store-replies: `:69` (now :71), `:132` (now :135), `:142` (now :146): marker `fixtures-contract: store-door store-replies` above each value.
+- CODE: `:146` (now :150): `OVERLOADED` 503 replaced by `STORE_INTERNAL_ERROR` 500 (no correlation, so the silence has none); the product has no overload refusal. No 503 asked for; nothing to REPORT.
+- FIX-E extraction/unheldStructure: `fixture.mjs:95`: the stub's 404 for an unseeded digest is `await unheldStructure({ sha })` from `extraction/fixtures.mjs` (the real EVIDENCE_NOT_HELD answer); no connections test read the old NOT_FOUND body.
+
+**Markers added.** `fixtures-own`: none. `fixtures-generic`: none. `fixtures-contract` (4, each waiting on nothing: the providers' `fixtures-run: connections ...` lines already exist, so `orphan-run` clears on this merge): converts-links.test.mjs:47, :70, :134, :145 (before shifting; they sit one line above each value).
+
+**Found in other modules.** None.
+
+**Run.** connections tests 146 pass, 0 fail; users named by impact (explore real-connections, affordances t48-backing, corpus-export) 39 pass, 0 fail; format 178 modules 0 failures; words (connections) 0 failures; architecture 0; coverage 71 of 71; ownership 0.
+
+**Size (session_01KkQy33QFAKvdUAn9HUSQ1C): test runs 4, module lines 2379.**
+
+## J4 · COMPLETE
+
+Batch 6 done on job/T51/connections: 6 of 6 own fixture lines (4 contract markers: answer-envelope door-helpers, store-door store-replies x3; OVERLOADED 503 -> STORE_INTERNAL_ERROR 500; unheldStructure replaces the 404 hand-build). fixtures --list 0 failures. No fixtures-own/generic markers. 146 connections tests, users 39 pass; format, words, architecture, coverage, ownership 0. Requirement lines: none new. Record has Size line.
+
+## Fix round 10, the final pass's causes (CONNECTIONS #19, session_01KxwDp4ty9H6XwcoGUpKoBx)
+
+**Cause 1 · a document's citers read with an inquiry's refusal sentence (diag2-06 §12; R72).**
+- (1) Test, red first on the missing export then on the old code: `test/m/connections/no-such-document.test.mjs` (3 tests, named R72, R20): `backlinks` of a target the viewer cannot see and of one not held, `asserted` of a hidden document and `assert` naming an absent one, each answer `reason`/`code` `NO_SUCH_DOCUMENT` with the row's `check` and `translation` (equal to `NO_SUCH_DOCUMENT_CHECKS`, and found by `dec49Row`), the translation never saying "inquiry"; control: a visible target answers as before.
+- (2) Fix: new family `NO_SUCH_DOCUMENT_CHECKS` in `connections/checks.mjs` (code `NO_SUCH_DOCUMENT`, check `C-155.1`, `where` `src/connections/index.mjs noSuchDocument > is-no-such-document`, sentence `localize('connections.checks.no_such_document', 'There is no document or record here by that id that you can see.')`). The code sits at one literal site, the helper `noSuchDocument(target, detail)` in `index.mjs`, used by all four former `NO_SUCH_BUNDLE` sites (`backlinks`, `projectLinks`, `assert`, `asserted`). Existing tests that asserted `NO_SUCH_BUNDLE` for these four answers now assert `NO_SUCH_DOCUMENT` (asserted, converts-links, declared-ops, edges tests).
+- (3) Why the tests missed it: connections tests assert `reason`, never the door's decoration by code, and the old code was shared with hypotheses, so the wrong sentence came from another module's row.
+- **Code to name in R20 and R72 (BOB words them):** `NO_SUCH_DOCUMENT` (C-155.1). R20's line still reads `NO_SUCH_BUNDLE`. Check id C-155 was unused in the product at this commit; BOB confirms it is not minted elsewhere this round.
+- **Met:** R72 (and R20 as amended).
+
+**Found in other modules.** (a) `screens-inquiry/document.mjs:95` lists `NO_SUCH_BUNDLE` among its held states; `backlinks` and `connectionsasserted` now answer `NO_SUCH_DOCUMENT`, which that screen draws through the answer's own `translation` (the door sets it), so the screen still shows a sentence, but its held list should name `NO_SUCH_DOCUMENT` too. (b) `strength/index.mjs:697`, `actions/index.mjs:1531`, `action-holds/index.mjs:214` still answer bare `NO_SUCH_BUNDLE` (diagnosed in §12, not mine). (c) answer-envelope's tests fail 16 of 52 on this tranche with and without my change (`op-declarations: adminendorse: a second registration (R81)`): not mine.
+
+**Tests and checks run** (job branch after commit):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 149 tests, 149 pass, 0 fail.
+- Users: screens-inquiry, affordances plane, screens-investigate explore, basis-versions d216-sharing, op-grades t48, store-request inner-request, explore real-connections: 640 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `architecture connections`: 0 failures. `coverage connections`: 72 of 72, 0 failures. `words connections`: 0 failures. `ownership connections tranche/T51 job/T51/connections`: 0 failures. `fixtures connections --list`: 0 failures, 5 accepted, no marker added.
+
+**Size (session_01KxwDp4ty9H6XwcoGUpKoBx): test runs 6, module lines 2394.**
+
+## J5 · COMPLETE
+
+B8 done on job/T51/connections. Cause 1 (R72, R20): connections' own code NO_SUCH_DOCUMENT (C-155.1, family NO_SUCH_DOCUMENT_CHECKS, one literal site noSuchDocument) replaces NO_SUCH_BUNDLE at backlinks, projectLinks, assert and asserted; sentence is a localize stand-in about a document or record. Met: R72, R20 as amended (name NO_SUCH_DOCUMENT in R20 and R72; R20 still reads NO_SUCH_BUNDLE). 149 connections tests pass; users 640 pass; format, architecture, coverage 72/72, words, ownership 0; no fixtures marker added. Other modules: screens-inquiry/document.mjs:95 held list should name NO_SUCH_DOCUMENT; strength, actions, action-holds still answer bare NO_SUCH_BUNDLE; answer-envelope tests are 16 red with or without my change (op-declarations adminendorse registered twice). Check id C-155 was unused at my commit: confirm. Size line in record.
+
+## J6 · B9 handled (CONNECTIONS #19)
+
+Merged `origin/tranche/T51`. `no-such-document.test.mjs` no longer imports answer-envelope: it reads connections' own `NO_SUCH_DOCUMENT_CHECKS` row (the door's decoration is answer-envelope's to test). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0 failures.
+
+Size (session_01KxwDp4ty9H6XwcoGUpKoBx): test runs 8, module lines 2394.
+
+## J7 · COMPLETE
+
+B9 done: tranche merged; no-such-document.test.mjs no longer imports answer-envelope (reads connections' own NO_SUCH_DOCUMENT_CHECKS row). connections 149 pass; architecture, coverage 72/72, words, format, ownership 0.
+
+## Completion record (B10, the R44 clause: a passage placement's extent and page; CONNECTIONS #20, session_01Cj68FRJaNM9wJqTDmVe669)
+
+**Applied.** R44 as amended (K5203): a placement whose `target_kind` is `content` carries `extent` (the content row's stored `extent`, which is `canonicalExtent` of the content id, parsed as `readThemes` already parses stored extents) and `page` (that extent's page from 0) when the extent has one; a whole-document placement carries neither. Taken-back placements carry the same view, since R43 defines them as `{…placement's view, …}`.
+- `bio-plane/src/connections/themes.mjs:250-278`: one private helper `#passage(r)` (content only; one read of `content.extent` by `content_id`; `page` only when `Number.isInteger(extent.page)`), spread into `view` and `endedView`.
+- `bio-plane/test/m/connections/themes.test.mjs` (new test, R44): a pdf-page passage on page 1 answers `page: 1` and `extent.kind`/`extent.page`; a whole-document placement carries no `page` and no `extent`; a taken-back passage keeps `page`.
+- `bio-plane/test/m/connections/fixtures.mjs` (new, the published fixture): `themeReadWithPassage()` runs connections' real `declareTheme`, `placeInTheme` and `readThemes` over `fixture.mjs`'s world and returns the answer `themeread` gives (one theme, one passage on page 1 of a paged document, one whole document).
+- `bio-plane/test/m/connections/fixtures.test.mjs` (new): checks that answer against the real code (the passage's `page` is 1; the document has neither key).
+
+**Failing first.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/themes.test.mjs`: red before the change (`AssertionError: the extent's page, counted from 0 — actual: undefined, expected: 1`); green after it (12 of 12).
+
+**Met.** R44 (T51 clause: the content placement's `extent` and `page`; whole-document placements carry neither). Stays met on a fresh read of the fixture and the test. BOB strikes the mark.
+
+**Fixture markers added.** None (`fixtures-own` / `fixtures-generic`: none).
+
+**Tests and checks run** (on the job branch at 84f65666ab):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 151 tests, 151 pass, 0 fail (149 before, plus the R44 test and the fixture test).
+- Users, impact-named (`node build/plan/impact.mjs origin/tranche/T51 HEAD`: 92 modules, which is the shared-table case): `bio-plane/test/m/screens-daily/*.test.mjs` and `bio-plane/test/m/screens-inquiry/*.test.mjs`: 114 tests, 22 pass, 92 fail. Every failure is `DECLARED_OP_DISAGREES: readtranslate description` (182 mentions; the start of this round named it as OP-GRADES #30's, pending) or 4 `MiniflareCoreError` runtime start failures. None names connections; the themes and stepsources paths were not reached. Re-run after the OP-GRADES CHANGE.
+- `checks/format.mjs /home/user/bio`: 178 modules, 178 requirements files, 0 failures.
+- `checks/architecture.mjs /home/user/bio connections`: 28 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio connections`: 72 of 72 live requirement ids named by a test, 0 failures.
+- `checks/words.mjs /home/user/bio connections`: 0 failures; no new sentence added (the change adds keys and data only).
+- `checks/fixtures.mjs /home/user/bio connections --list`: 0 failures, 5 accepted (the existing converts-links contract markers).
+- `checks/run.mjs /home/user/bio`: no finding in connections' files; the words count is the same as before (no new sentence).
+- `checks/ownership.mjs /home/user/bio connections $(git merge-base origin/tranche/T51 HEAD) HEAD`: 5 files, 0 failures (the 4 code and test files, plus the job record).
+
+**Found in other modules (REPORT to BOB, the day found).**
+1. `bio-plane/test/m/screens-inquiry/fixtures.mjs:117` hand-builds `themeread: ok({ ok: true, themes: [] })` and `bio-plane/test/m/screens-inquiry/fr4-question.test.mjs:119` and `t51-document.test.mjs:449` hand-build `themeread` members as `{document}` only. `checks/fixtures.mjs` names them as `[op-table themeread] ... -> connections (earlier)`: connections is earlier in the order, so those tests should take connections' published `themeReadWithPassage()` (fixtures.mjs) instead. screens-inquiry is the one to take it; it draws the page (its R56, R78) once it does. Not written here (not my paths).
+2. `checks/fixtures.mjs` also names `screens-inquiry/document.test.mjs:168` and `fr28-document.test.mjs:105,115,120` as hand-built `connectionchoose` answers, `-> connections (earlier)`. connections publishes no `connectionchoose` answer yet; a published one from this module is the fix for those tests, for BOB to place as a next job (not in this round's R44 scope, so not built here).
+
+**Deferred.** None.
+
+**Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 5, module lines 2398.** The module-lines count is the non-blank, non-comment lines of `bio-plane/src/connections/*.mjs` (same method as the round's earlier records, counted at this commit).
+
+## J8 · COMPLETE
+
+COMPLETE: B10 done on job/T51/connections (head a53a3df16a; code 84f65666ab).
+
+What changed:
+- bio-plane/src/connections/themes.mjs:250-278: a content placement's view (and a taken-back one's) carries `extent` (the stored canonical extent of the content id) and, where the extent has one, `page` from 0 (helper #passage). A whole-document placement carries neither.
+- bio-plane/test/m/connections/themes.test.mjs: new R44 test (red first: "the extent's page, counted from 0 — actual undefined, expected 1"; green after).
+- bio-plane/test/m/connections/fixtures.mjs (new, published): themeReadWithPassage(), the real themeread answer for a passage on page 1 and a whole document. fixtures.test.mjs (new) checks it against the real code.
+
+Met: R44 (T51 clause). Markers added: none.
+
+Tests and checks: connections 151 pass, 0 fail. screens-daily + screens-inquiry: 22 pass, 92 fail, all DECLARED_OP_DISAGREES readtranslate description (OP-GRADES #30 pending) or 4 MiniflareCoreError; none names connections; re-run after the CHANGE. format 178 modules 0 failures; architecture 0; coverage 72 of 72; words 0 (no new sentence); fixtures list 0 failures; run.mjs no finding in connections; ownership 0.
+
+REPORT (other modules):
+1. screens-inquiry/fixtures.mjs:117 and fr4-question.test.mjs:119, t51-document.test.mjs:449 hand-build themeread; connections is earlier, so they should take connections' published themeReadWithPassage() (fixtures.mjs). screens-inquiry draws the page (R56, R78) once it does.
+2. checks/fixtures.mjs names screens-inquiry document.test.mjs:168 and fr28-document.test.mjs:105,115,120 as hand-built connectionchoose answers (-> connections, earlier). connections publishes no connectionchoose answer yet; a published one is the fix, for BOB to place as a next job (not built here).
+
+Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 5, module lines 2398.
+
+## Completion record (B11 and B12: the tranche merged; the connectionchoose fixtures; CONNECTIONS #20, session_01Cj68FRJaNM9wJqTDmVe669)
+
+**B11 (CHANGE K5209, OP-GRADES #30 merged).** `origin/tranche/T51` merged into the job branch (merge commit 6a5bbcd080, not a rebase). Stores start again: `DECLARED_OP_DISAGREES` is gone.
+
+**B12 (CHANGE K5210, J8 REPORT 2).** `bio-plane/test/m/connections/fixtures.mjs` publishes two `connectionchoose` answers, each made by connections' real `choose` through the ops map over `fixture.mjs`'s world on each call:
+- `connectionChooseMention()`: a member chooses the second of two mentions of one subject in a document (the one with an occurrence key). Answer: `ok`, `wrote: true`, `chosen.ref` and `chosen.occurrence` set. The screen tests at `document.test.mjs:168` and `fr28-document.test.mjs:105,115` need this state.
+- `connectionChooseUnplaced()`: a member chooses a mention the document reads at no recorded place, sent with no occurrence. Answer: `ok`, `wrote: true`, `chosen.ref` set. `fr28-document.test.mjs:120` needs this state.
+
+The screen tests need no other state: each expects a success, not a refusal. No refusal answer is published, because none of those three lines asks for one. `fixtures.test.mjs` checks each answer against the real code (R70 named in both titles).
+
+**Met.** R70 (its choose clause; unchanged text). R44 stays met.
+
+**Fixture markers added.** None.
+
+**Tests and checks** (on the job branch at a644b72ae8):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 153 tests, 153 pass, 0 fail.
+- Users now that the stores start: `screens-inquiry/document.test.mjs`, `screens-inquiry/fr28-document.test.mjs`, `screens-daily/*.test.mjs`: 353 tests, 353 pass, 0 fail. The screen tests still hand-build their `connectionchoose` answers (`{ok: true}`) and `themeread` (`{ok: true, themes: []}`), which is screens-inquiry's to change, so the published fixtures are not yet used there.
+- `checks/format.mjs /home/user/bio`: 178 modules, 0 failures. `architecture connections`: 0 failures. `coverage connections`: 72 of 72. `words connections`: 0 failures. `fixtures connections`: 0 failures, 5 accepted. `checks/run.mjs /home/user/bio`: no finding in connections' files.
+- `checks/ownership.mjs /home/user/bio connections $(git merge-base origin/tranche/T51 HEAD) HEAD`: 5 files, 0 failures.
+
+**REPORT for screens-inquiry (not mine).** To take the published answers, `fixtures.mjs:117` (`themeread`) and the three `connectionchoose` lines (`document.test.mjs:168`, `fr28-document.test.mjs:105,115,120`) should use `themeReadWithPassage()`, `connectionChooseMention()` and `connectionChooseUnplaced()` from `bio-plane/test/m/connections/fixtures.mjs`, instead of their hand-built `ok({...})` answers.
+
+**Deferred.** None.
+
+**Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.** Same counting method as the earlier records.
+
+## J9 · COMPLETE
+
+COMPLETE: B11 and B12 done on job/T51/connections (head 8726105de1).
+B11: tranche merged (6a5bbcd080); OP-GRADES #30 in: stores start. B12: fixtures.mjs publishes connectionChooseMention() (chosen mention with its occurrence) and connectionChooseUnplaced() (chosen with no occurrence), each the real choose answer; fixtures.test.mjs checks both (R70).
+Tests: connections 153 pass; screens-inquiry document + fr28-document + screens-daily 353 pass. Checks: format, architecture, coverage 72/72, words, fixtures, run.mjs (no connections finding), ownership 0.
+Met: R70 (choose clause). Markers added: none.
+REPORT: screens-inquiry should take themeReadWithPassage() (themeread, fixtures.mjs:117) and the three connectionchoose answers (document.test.mjs:168; fr28-document.test.mjs:105,115,120) from connections' fixtures.mjs.
+Size (session_01Cj68FRJaNM9wJqTDmVe669): test runs 4, module lines 2398.
+
+## J10 · COMPLETE
+
+COMPLETE for START B13 (fix round 10; R73; plan item 144; K5297). Commit 59ea9e84a0 on job/T51/connections.
+
+**Applied (R73).** `themeLegFindings` (`bio-plane/src/connections/checks.mjs`) now words both THEME_NOT_EVIDENCE findings in plain words:
+- Target or content-id leg (checks.mjs ~305–311): "{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it". `subject` is "a THEME" for a bare theme id, "membership in a THEME" for a membership. The old text named the field (`{label}.{field}`), echoed the stored value, and cited a document file and section (BIO_Content_Framework_v0_10.md §8.4). All three are gone; the caller's label leads.
+- Theme-key leg (checks.mjs ~316–320): "{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing". The old text named the key (`{label}.{key}`).
+- The two localize ids are renamed `connections.checks.leg_names_theme` and `connections.checks.leg_claims_through_theme`, since `localize` returns stored text for an existing id (as action-grammar found). The repairs are unchanged (their text was already plain).
+- Reading I took: R73's "words a person reads" are the finding's `message` and `repairs`. The finding's machine `check` (C-81.1) and `code` stay, as DEC-49 requires for every refusal row.
+- No other finding is worded by this module: `themeLegFindings` is its only finding producer (checked: no other `findings.push`).
+
+**Red, then green.** New `bio-plane/test/m/connections/r73-plain-words.test.mjs` (R73 named in both titles). Red on the old wording: "The basis leg.target 'THEME-…' names a THEME, … (BIO_Content_Framework_v0_10.md §8.4, …)" matched the field-name pattern. Green after the change. The sweep covers every theme leg in its corpus: a bare theme id, a membership (`#`, `/`, `:`, `?`), by target and by content id, and the `theme` and `themes` keys. It asserts that no message or repair names a field, a snake_case stored name, a DEC-/C-/D- id, a `kind:` value, or a document file or section mark, and that the rule is said ("never the basis of a claim" / "never a reason a leg counts"). `figures.test.mjs` pinned the old id and text; updated to the new id and text.
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/connections/*.test.mjs`: 155 tests, 155 pass, 0 fail, exit 0 (no force-exit; the run exits by itself).
+
+**Checks** (`/home/user/civicos-process/checks/…`, product `/home/user/bio`): format 178 modules, 0 failures; architecture connections 0 failures; coverage connections 73 of 73 (R73 named once the new file was `git add`ed); ownership `bac035067f`..HEAD: 4 files, 0 failures (the job record and my three files); `checks/run.mjs`: no finding in connections' files.
+
+**REPORT, other modules (not edited).**
+1. Callers pass field-style labels into `themeLegFindings`, so their findings still name fields (R73 puts the label on the caller): `bio-plane/src/inquiry-grammar/grammar.mjs:617` (`basis[${i}]`), `bio-plane/src/basis-version-grammar/grammar.mjs:343` (`basis_version_legs[${li}] (version '${name}')`), `bio-plane/src/action-grammar/grammar.mjs:158` (`action_basis[${i}]`). Each owner hands a plain label.
+2. Tests of other modules pin the old wording, so they are red after this commit (nine tests), each owner re-pins: action-grammar `test/m/action-grammar/grammar.test.mjs:138` and `:202`; basis-version-grammar `test/m/basis-version-grammar/registration.test.mjs:58`; inquiry-grammar `test/m/inquiry-grammar/grammar.test.mjs:28` and `:119`, `registration.test.mjs:38`, `t33.test.mjs:288`, `t34.test.mjs:192`, `t41.test.mjs:213`. Inquiry-grammar's `test/m/inquiry-grammar/golden.json` also pins the old THEME messages (lines 153–226 and 7955–8175). Action-grammar's J8 says it re-pinned its own two literal messages on its branch; this list is from the tranche merge as it stands.
+3. setup-words: `bio-plane/src/setup-words/rows.mjs` (generated, not mine) still holds the stale rows `connections.checks.names_a_theme` (line 21719) and `connections.checks.claims_leg_through_theme` (line 21718). Regenerate at layer close; the new ids fall back to their English until then.
+4. Checks run on the tranche (`checks/run.mjs`, not connections): 89 fixture failures (stub 73, contract 12, answer 4) and six coverage failures in other modules: action-grammar R30, conformance R44, inquiry-grammar R69, money R33, screens-action R58, screens-investigate R64. None is in connections.
+
+**R73 is met** in code and test; the "(not yet met: T51)" marker in `build/requirements/connections.md` is Bob's to clear.
+
+**Deferred.** None in this module. The REPORT items above sit with their owners.
+
+**Size (session_017xL1y3wxLz7cviDg48w6Pm): test runs 5, module lines 3081.**

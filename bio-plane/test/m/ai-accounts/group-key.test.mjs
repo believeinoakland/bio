@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { AI_ACCOUNT_CHECKS, AiAccounts, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const KEY = "sk-ant-api03-GROUP-SENTINEL-9b1e";
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -27,9 +28,9 @@ test("R5 (was credentials R33) groupKeySet, groupKeyRemove, groupKeySwitch: acti
   const w = await groupWorld();
   const before = w.snapshot();
   for (const by of ["ann", "dee", "cal", "nobody", "class:admin", "class:ai", "token:ai", null, ""]) {
-    assert.deepEqual(await w.c.groupKeySet({ key: KEY, by }), notAnAdmin(by ?? null, "setting the group's Anthropic API key"), String(by));
-    assert.deepEqual(w.c.groupKeyRemove({ by }), notAnAdmin(by ?? null, "removing the group's Anthropic API key"), String(by));
-    assert.deepEqual(w.c.groupKeySwitch({ on: true, by }), notAnAdmin(by ?? null, "switching the group's Anthropic API key"), String(by));
+    assert.deepEqual(await w.c.groupKeySet({ key: KEY, by }), notAnAdmin(by ?? null, "setting the team's Anthropic API key"), String(by));
+    assert.deepEqual(w.c.groupKeyRemove({ by }), notAnAdmin(by ?? null, "removing the team's Anthropic API key"), String(by));
+    assert.deepEqual(w.c.groupKeySwitch({ on: true, by }), notAnAdmin(by ?? null, "switching the team's Anthropic API key"), String(by));
   }
   for (const key of [null, undefined, "", "   ", 7])
     assert.deepEqual(shape(await w.c.groupKeySet({ key, by: "second" })), refusal("NO_SECRET"), String(key));
@@ -146,7 +147,7 @@ test("R6 R9 (were credentials R34 R37) groupKeyState: an active administrator (t
   }
   for (const viewer of ["ann", "member:bob"]) assert.deepEqual(w.c.groupKeyState({ viewer }), { ok: true, on: true }, viewer);
   for (const viewer of ["dee", "cal", "ghost", "class:admin", "class:member", "token:ai", null, undefined, ""])
-    assert.deepEqual(w.c.groupKeyState({ viewer }), notAnAdmin(viewer ?? null, "reading the group's Anthropic API key"), String(viewer));
+    assert.deepEqual(w.c.groupKeyState({ viewer }), notAnAdmin(viewer ?? null, "reading the team's Anthropic API key"), String(viewer));
   assert.equal(w.snapshot(), before);
   w.c.groupKeySwitch({ on: false, by: "second" });
   assert.deepEqual(w.c.groupKeyState({ viewer: "ann" }), { ok: true, on: false });
@@ -178,8 +179,12 @@ test("R7 (was credentials R35) accountFor: the member's own reference when held 
   w.c.groupKeySwitch({ on: true, by: "second" });
   /* the group key serves only an active member, after their notice */
   assert.deepEqual(shape(await w.c.accountFor({ member: "bob", act: ask("bob") })), refusal("GROUP_KEY_NOTICE_DUE"));
-  for (const m of ["cal", "ghost", "admin"])
+  for (const m of ["cal", "ghost"])
     assert.deepEqual(shape(await w.c.accountFor({ member: m, act: ask(m) })), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"), m);
+  /* the founder, once claimed, is an active member (member-roster R76): her notice first, then the group key */
+  assert.deepEqual(shape(await w.c.accountFor({ member: "admin", act: ask("admin") })), refusal("GROUP_KEY_NOTICE_DUE"));
+  w.c.groupKeyNoticeSeen({ member: "admin", by: "admin" });
+  assert.deepEqual(await w.c.accountFor({ member: "admin", act: ask("admin") }), { ok: true, kind: "apikey", level: "group", key: KEY });
   w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" });
   const served = w.snapshot();
   for (const kind of ["ask", "run", "standing"])
@@ -233,7 +238,7 @@ test("R9 R14 (were credentials R37 R55) (T41: groupSwitchSet retired into accoun
   const before = w.snapshot();
   for (const by of ["ann", "dee", "class:admin", null])
     assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by }),
-      notAnAdmin(by, "switching the group key's assistant settings"), String(by));
+      notAnAdmin(by, localize("ai-accounts.index.switching_the_team_keys", "switching the team key's assistant settings")), String(by));
   for (const name of [null, "", "Standing", "budget", "standing; DROP TABLE x"])
     assert.deepEqual(shape(w.c.accountUsesSet({ owner: "group", switch: name, on: true, by: "admin" })), refusal("UNKNOWN_SWITCH"), String(name));
   assert.equal(w.snapshot(), before, "no refusal writes");

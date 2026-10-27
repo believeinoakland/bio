@@ -6,8 +6,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-inquiry/index.mjs";
-import { ok } from "../interface-shell/harness.mjs";
-import { open, main, section, says, word, SCREENS, P, Q, D } from "./fixtures.mjs";
+import { boot } from "../interface-shell/harness.mjs";
+import { open, main, section, says, word, day, storeWorld, SCREENS, P, Q, D } from "./fixtures.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
   .modules["screens-inquiry"];
@@ -27,19 +27,33 @@ test("R44 the keys words-reads.json lists for the module are each a words.json w
   /* the list was taken from the module's code before T49; the keys it reads since (R23–R43, the dock's withheld reasons)
      are each asserted with hasWord above */
   for (const k of READS.reads) assert.ok(hasWord(k), k);
-  assert.equal(READS.unkeyed.length, 2, "the two strings the list marks unkeyed (record-grammar's headings) stay in source");
+  assert.equal(READS.unkeyed.length, 0, "DEC-366 keyed record-grammar's two headings: the list marks no string unkeyed");
 });
 
 test("R44 over fixtures, what the screens draw for a sample of their keys equals word(key, vars)", async () => {
-  const p = await open("/app/project/" + P);
-  assert.ok(section(p, "screen.project.stage.head") && says(main(p), "screen.project.stage.read", { count: "2" }));
+  /* the project page over a real world: an owner's project holding two questions, the count of held questions read from project-stage's own answer */
+  const w = await storeWorld();
+  const own = await w.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const proj = await w.recipes.project(own, "Pothole repairs");
+  await w.recipes.questions(own, proj, 2);
+  const held = (await own.read("projectstage", { query: { project: proj } })).questions.read;
+  assert.equal(held, 2);
+  const { door: pd, session: ps } = w.boot(own);
+  const p = await boot({ screens: SCREENS, door: pd, session: ps, path: "/app/project/" + proj });
+  await p.settle();
+  assert.ok(section(p, "screen.project.stage.head") && says(main(p), "screen.project.stage.read", { count: String(held) }));
   assert.equal(main(p).querySelector('button[data-act="promote"]').childNodes[0].data || main(p).querySelector('button[data-act="promote"]').textContent.split(word("weight.reversible.name"))[0],
     word("act.promote.label.project"));
   const q = await open("/app/question/" + Q);
   assert.ok(says(main(q), "question.ask.first.title") && says(main(q), "question.ask.first.says"));
   const d = await open("/app/document/" + D);
-  assert.ok(says(main(d), "screen.document.captured", { date: "2 October 2026", source: "https://example.org/ai-4-12.pdf" }));
-  const a = await open("/app/projectai/" + P, { plane: { projectparticipants: ok({ ok: true, participants: [{ handle: "mai", state: "joined", owner: true }] }),
-    projectaccountstate: ok({ ok: true, held: false }), projectaikeepawaystate: ok({ ok: true, on: false }) } });
+  assert.ok(says(main(d), "screen.document.captured", { date: day("2026-10-02T09:00:00Z", { year: true }), source: "https://example.org/ai-4-12.pdf" }));
+  /* the project's AI page over the real world: a team's owner on a project she started, no account held and no keep-away set */
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", { capabilities: ["contribute", "create_projects"] });
+  const project = await world.recipes.project(ann, "Stormwater");
+  const { door, session } = world.boot(ann);
+  const a = await boot({ screens: SCREENS, door, session, path: "/app/projectai/" + project });
+  await a.settle();
   assert.ok(says(main(a), "screen.projectai.account.none") && says(main(a), "screen.projectai.keepaway.off"));
 });

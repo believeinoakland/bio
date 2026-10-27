@@ -7,7 +7,7 @@ import { fresh, bundle, sha } from "./fixture.mjs";
 import { compareProvenance, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { canonicalExtent } from "../../../src/textchain.mjs";
 import { CAPTURE_TEXT_UNIT_CAP, CAPTURE_TEXT_CAPTURE_UNIT_BOUND, CAPTURE_TEXT_CAPTURE_BOUND, OCCURRENCES_PER_REF,
-         TEXT_SOURCE_LIMIT_MAX, labelTerms, extractionOps, noSha } from "../../../src/extraction/index.mjs";
+         TEXT_SOURCE_LIMIT_MAX, labelTerms, extractionOps, noSha, LAND_BATCH_BYTES } from "../../../src/extraction/index.mjs";
 
 const S1 = "1".repeat(64), S2 = "2".repeat(64), S3 = "3".repeat(64);
 const layer = (tier = 1, extra = {}) => [{ step: "layer", tier, container: "pdf", cap: null, measured_by: "unmeasured", ...extra }];
@@ -146,16 +146,16 @@ test("R21: a reading this instance did not compose is recorded as the caller's a
   assert.equal(w.one(`SELECT asserted_by FROM readings WHERE capture_sha=?`, S3).asserted_by, null);
 });
 
-test("R22 R45 R48: the text index deletes the capture's rows first even with no unit; blank units dropped; ordered by seq; capped per unit; bounded per capture; unaddressable counted; skipped units named; the answer states each", async () => {
+test("R22 R45 R48 R99 (fix round 9, G128d, G128f): the text index deletes the capture's rows first even with no unit; blank units dropped; ordered by seq; every unit stored whole (none cut, none dropped by a bound of units or bytes), in batches of at most LAND_BATCH_BYTES; unaddressable counted; the wire's skipped units named; the answer states each", async () => {
   const w = fresh();
   bundle(w.s, "B-1");
   const u = (p, text, seq = p, extra = {}) => ({ extent: { kind: "pdf-page", page: p, rect: null }, text, seq, ...extra });
   const x = w.x.indexUnits("B-1", S1, [u(2, "two", 2), u(0, "zero", 0), u(1, "   ", 1), u(0, "dup", 5), { text: "no extent", seq: 6 },
                                        u(3, "c".repeat(CAPTURE_TEXT_UNIT_CAP + 5), 3), u(4, "wire cut", 4, { truncated: true })], layer(1));
   assert.deepEqual(w.rows(`SELECT seq FROM capture_text WHERE capture_sha=? ORDER BY seq`, S1).map((r) => r.seq), [0, 2, 3, 4]);
-  assert.deepEqual([x.offered, x.written, x.truncated, x.over_bound, x.unaddressable], [6, 4, 2, 0, 2]);
+  assert.deepEqual([x.offered, x.written, x.truncated, x.over_bound, x.unaddressable], [6, 4, 1, 0, 2]);
   assert.equal(x.unaddressed.length, 2);
-  assert.equal(w.one(`SELECT length(text) n, truncated FROM capture_text WHERE seq=3`).n, CAPTURE_TEXT_UNIT_CAP);
+  assert.deepEqual({ ...w.one(`SELECT length(text) n, truncated FROM capture_text WHERE seq=3`) }, { n: CAPTURE_TEXT_UNIT_CAP + 5, truncated: 0 }, "a unit over the cap is stored whole, never cut here");
   assert.equal(w.one(`SELECT truncated FROM capture_text WHERE seq=4`).truncated, 1, "the wire's cut is kept");
   assert.equal(w.one(`SELECT extent FROM capture_text WHERE seq=0`).extent, canonicalExtent({ kind: "pdf-page", page: 0, rect: null }));
   assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'zero'`).length, 1);
@@ -164,20 +164,23 @@ test("R22 R45 R48: the text index deletes the capture's rows first even with no 
   assert.equal(w.rows(`SELECT * FROM capture_text WHERE capture_sha=?`, S1).length, 0);
   assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'zero'`).length, 0, "the index follows the delete");
   assert.equal(none.state, "none");
-  /* the unit bound, with the over-bound units named as a run, and the wire's own count and runs folded in */
+  /* no unit bound: every unit past the old 4,096 is written; only the wire's own count and runs are over bound */
   const many = Array.from({ length: CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 3 }, (_, i) => u(i, `t${i}`));
   const wireRun = { first: { kind: "pdf-page", page: 9000, rect: null }, first_seq: 9000, last: { kind: "pdf-page", page: 9001, rect: null }, last_seq: 9001, units: 2 };
   const b = w.x.indexUnits("B-1", S1, many, layer(1), { wireOverBound: 2, wireSkipped: [wireRun, { first: null }] });
-  assert.deepEqual([b.written, b.over_bound, b.wire_over_bound, b.offered], [CAPTURE_TEXT_CAPTURE_UNIT_BOUND, 5, 2, CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 5]);
-  assert.deepEqual(b.skipped.map((s) => [s.side, s.units, s.first.seq, s.last.seq]),
-                   [["store", 3, CAPTURE_TEXT_CAPTURE_UNIT_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 2], ["wire", 2, 9000, 9001]]);
-  assert.equal(b.skipped_named, 5);
-  assert.equal(b.state, "partial");
-  /* the byte bound */
+  assert.deepEqual([b.written, b.over_bound, b.wire_over_bound, b.offered], [CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 3, 2, 2, CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 5]);
+  assert.deepEqual(b.skipped.map((s) => [s.side, s.units, s.first.seq, s.last.seq]), [["wire", 2, 9000, 9001]]);
+  assert.equal(b.skipped_named, 2);
+  assert.equal(b.state, "partial", "the wire's own skipped units leave the index partial");
+  assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH ?`, `t${CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 2}`).length, 1, "the last unit is found");
+  /* no byte bound: 2.5 MiB of units, all written, in batches of at most LAND_BATCH_BYTES (8 units of 128 KiB each), one job_batches row a batch */
   const fat = Array.from({ length: 20 }, (_, i) => u(i, "y".repeat(CAPTURE_TEXT_UNIT_CAP)));
   const f = w.x.indexUnits("B-1", S1, fat, layer(1));
-  assert.equal(f.written, Math.floor(CAPTURE_TEXT_CAPTURE_BOUND / CAPTURE_TEXT_UNIT_CAP));
-  assert.equal(f.over_bound, 20 - f.written);
+  assert.deepEqual([f.written, f.over_bound, f.state], [20, 0, "whole"]);
+  assert.equal(LAND_BATCH_BYTES, 1048576);
+  assert.deepEqual([f.batches.landed, f.batches.already], [Math.ceil(20 * CAPTURE_TEXT_UNIT_CAP / LAND_BATCH_BYTES), 0]);
+  assert.equal(w.rows(`SELECT batch FROM job_batches WHERE sha=? AND kind='reading'`, S1).length, 3);
+  void CAPTURE_TEXT_CAPTURE_BOUND;
 });
 
 test("R22: the chain kind is text-chain's chainKindFor per page, the document's last step for a unit with no page grain, never a `layer` default", async () => {
@@ -403,9 +406,11 @@ test("R76 R27 R36 (T49; K3387): op=reading answers text_units, the capture's uni
   w.x.writeReading({ bundleId: "PROJ-1", captureSha: S1, reading: await reading([]), textUnits: units });
   const mine = w.x.readingFor(S1, "class:admin");
   const stored = w.x.unitsOf(S1).units;
-  assert.deepEqual(mine.text_units, stored.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated })));
+  assert.deepEqual(mine.text_units, stored.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated, kind: u.kind })));
   assert.deepEqual(mine.text_units.map((u) => [u.text, u.truncated, u.extent.para]), [["first", false, 0], ["second", true, 1]], "seq order");
-  assert.deepEqual(Object.keys(mine.text_units[0]).sort(), ["extent", "reference", "text", "truncated"]);
+  /* (fix round 9, G134d; R107) each unit answers its kind, null for one whose producer named none */
+  assert.deepEqual(Object.keys(mine.text_units[0]).sort(), ["extent", "kind", "reference", "text", "truncated"]);
+  assert.equal(mine.text_units[0].kind, null);
   /* control: the viewer refused the bundle receives none, and the bundle is withheld as before */
   const hidden = w.x.readingFor(S1, "member:outsider");
   assert.equal(hidden.bundle_id, null);

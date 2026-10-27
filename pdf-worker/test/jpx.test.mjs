@@ -20,7 +20,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { deflateSync } from "node:zlib";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { JPX_REFUSES, JpxRefusal, decodeJpx } from "../src/jpxdecode.mjs";
+import { JPX_REFUSES, JpxRefusal, decodeJpx, MEMORY_FEATURE } from "../src/jpxdecode.mjs";
 import { cropImage } from "../src/imagecrop.mjs";
 import { onePage, readPng, turn, hex, runner } from "./make-pdf.mjs";
 
@@ -79,7 +79,7 @@ console.log("\n--- R20, R25, R26, R40: the scanned page ---");
 {
   const r = await render(SCAN, 0);
   t("R20 the success shape", Object.keys(r).sort(), ["bytes", "height", "jpx", "mediaType", "ok", "page", "page_geometry",
-    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "upright", "width"]);
+    "page_marks", "pixels_sha256", "rotate_deg", "route", "source", "turned_deg", "upright", "width"]);
   t("R20 R25 route, media type, size", fields(r, "ok", "route", "mediaType", "width", "height", "upright"),
     [true, "decoded-jpx", "image/png", 1280, 1680, true]);
   t("R25 R40 the pixels are OpenJPEG's", r.pixels_sha256, SCAN_SHA);
@@ -180,12 +180,12 @@ console.log("\n--- R25, R39: what the decoder refuses, by name, and what is cut 
     t(`R25 (a ${label} codestream with ${comps} component${comps > 1 ? "s" : ""} to patch)`, found, [true, comps]);
     const e = codecRefusal(d);
     t(`R25 (the codec refuses the ${size}x${size} ${label} image for memory, its working set past its bound)`,
-      [e?.code, e?.detail.feature, e?.detail.working_set_bytes > e?.detail.bound_bytes], ["UNSUPPORTED", "an image past the memory bound", true]);
+      [e?.code, e?.detail.working_set_bytes > e?.detail.bound_bytes], ["IMAGE_TOO_LARGE", true]);
     const r = await render(jpxPage(d, size, size), 0);
     if (r.feature) named.add(r.feature);
     t(`R25 a ${size}x${size} ${label} image past the memory bound: IMAGE_TOO_LARGE with the codec's figures, no bytes`,
-      fields(r, "ok", "reason", "filter", "feature", "working_set_bytes", "bound_bytes", "width", "height", "components", "bytes"),
-      [false, "IMAGE_TOO_LARGE", "JPXDecode", "an image past the memory bound", e?.detail.working_set_bytes, e?.detail.bound_bytes, size, size, comps, undefined]);
+      fields(r, "ok", "reason", "filter", "working_set_bytes", "bound_bytes", "width", "height", "components", "bytes"),
+      [false, "IMAGE_TOO_LARGE", "JPXDecode", e?.detail.working_set_bytes, e?.detail.bound_bytes, size, size, comps, undefined]);
   }
   {
     const { d, found } = patched(1, 5000);

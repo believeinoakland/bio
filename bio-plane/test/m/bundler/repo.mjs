@@ -53,11 +53,12 @@ export const DIGEST = "sha256:" + "ab".repeat(32);
 
 /** A member's files: source, marker, configs, and a build script that is the member's own `npm run build`. */
 export function addMember(root, name, { version = VERSION, services = [{ binding: "PLANE", service: "bio-plane" }],
-  assets = null, compat = "2026-07-01", flags = ["nodejs_compat"], account = ACCOUNT, vendored = false } = {}) {
+  assets = null, compat = "2026-07-01", flags = ["nodejs_compat"], account = ACCOUNT, vendored = false, exports = [] } = {}) {
   const dir = join(root, name);
   put(root, `${name}/src/index.mjs`, `import { word } from "./word.mjs";\n`
     + (vendored ? `import { V } from "fakedep";\n` : "const V = 0;\n")
-    + `export default { fetch() { return new Response(word + V); } };\n`);
+    + `export default { fetch() { return new Response(word + V); } };\n`
+    + exports.map((c) => `export class ${c} {}\n`).join(""));   /* R39: the classes the bundle exports, for bindings to name */
   put(root, `${name}/src/word.mjs`, `export const word = ${JSON.stringify(name)};\n`);
   if (vendored) {
     put(root, `${name}/node_modules/fakedep/package.json`, JSON.stringify({ name: "fakedep", type: "module", exports: "./index.mjs" }));
@@ -100,16 +101,30 @@ export const CONTAINER_PACKAGES = [
   { name: "real-name", version: "5.0.0" }, { name: "zeta", version: "2.0.0" },
 ];
 
+/** R36, R37: what a container image is built from, by hand and independently of the library: a Dockerfile that COPYs
+ *  `package.json` and the `container/` directory, and the hash of those files as R36 defines it (each member-relative
+ *  path, a NUL, the file's SHA-256 and a newline, in path order). Writes the Dockerfile and one file under `container/`;
+ *  returns the hash. `content` changes the copied file's bytes. */
+export function writeImageSources(root, name, dockerfile, content = "export const app = 1;\n") {
+  put(root, `${name}/${dockerfile}`, `FROM docker.io/library/node@${BASE_A}\nCOPY package.json ./\nCOPY container ./container/\n`);
+  put(root, `${name}/container/app.mjs`, content);
+  return imageSourceHash(root, name, dockerfile);
+}
+export function imageSourceHash(root, name, dockerfile) {
+  const files = [dockerfile, "package.json", "container/app.mjs"].sort();
+  return hex(files.map((f) => `${f}\0${hex(readFileSync(join(root, name, f)))}\n`).join(""));
+}
+
 /** A container member (R24): `kind: "container"` and an `image` block, with R25's descriptor fields, and, unless
  *  `bundle: false`, the Worker that hosts its class (a guarded bundle) and a config declaring its container. Any
  *  `marker` key overrides the marker's (`undefined` removes one). Its `package-lock.json` is `lock` (R27), none when
  *  null. */
-export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK, instanceType } = {}) {
+export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK, instanceType, sealed = true } = {}) {
   const dir = join(root, name);
   if (bundle) {
-    addMember(root, name, { services: [] });
+    addMember(root, name, { services: [], exports: ["Runner"] });
     const cfg = parseCfg(join(dir, "wrangler.jsonc"));
-    if (containers) cfg.containers = [{ class_name: "Runner", image: "./Dockerfile", max_instances: 3,
+    if (containers) cfg.containers = [{ class_name: "Runner", image: `docker.io/civicos/runner@${DIGEST}`, max_instances: 3,
       ...(instanceType !== undefined ? { instance_type: instanceType } : {}) }];
     put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
   } else {
@@ -121,6 +136,10 @@ export function addContainerMember(root, name, { bundle = true, marker = {}, con
     image: { repository: "docker.io/civicos/runner", digest: DIGEST, platform: "linux/amd64", port: 8080, schedulingPolicy: "default" },
     class_name: "Runner", max_instances: 3, bind: [{ member: "alpha-worker", binding: "RUNNER" }], ...marker };
   for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
+  /* R36: the image's recorded source, unless the test is about a member that records none. */
+  m.build = { dockerfile: "Dockerfile", context: "." };
+  const src = writeImageSources(root, name, "Dockerfile");
+  if (sealed && m.image && typeof m.image === "object") m.image = { ...m.image, source_sha256: src };
   put(root, `${name}/fleet-member.json`, JSON.stringify(m, null, 2));
   if (lock) put(root, `${name}/package-lock.json`, JSON.stringify(lock, null, 2) + "\n");
   return dir;
@@ -154,15 +173,21 @@ export function scannerClasses() {
         base: { repository: "docker.io/library/debian", digest: BASE_B }, packages: "images/render.packages.json" } },
   ];
 }
-export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {}, instanceTypes = {} } = {}) {
+export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {}, instanceTypes = {}, sealed = true } = {}) {
   const dir = join(root, name);
-  addMember(root, name, { services: [] });
+  addMember(root, name, { services: [], exports: classes.map((c) => c.class_name) });
   const cfg = parseCfg(join(dir, "wrangler.jsonc"));
-  cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: "./Dockerfile", max_instances: c.max_instances ?? 1,
+  cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: `${c.image.repository}@${c.image.digest}`, max_instances: c.max_instances ?? 1,
     ...(instanceTypes[c.class_name] !== undefined ? { instance_type: instanceTypes[c.class_name] } : {}) }));
   put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
   const prev = JSON.parse(readFileSync(join(dir, "fleet-member.json"), "utf8"));
-  const m = { ...prev, kind: "container", containers: classes, bind: [{ member: "alpha-worker", binding: "FILE_SCANNER" }], ...marker };
+  /* R36: each class built from its own Dockerfile, its image's source recorded unless the test is about one that records none. */
+  const sealedClasses = classes.map((c) => {
+    const dockerfile = `Dockerfile.${String(c.class_name).toLowerCase()}`;
+    const src = writeImageSources(root, name, dockerfile);
+    return { ...c, build: { dockerfile, context: "." }, ...(sealed && c.image && typeof c.image === "object" ? { image: { ...c.image, source_sha256: src } } : {}) };
+  });
+  const m = { ...prev, kind: "container", containers: sealedClasses, bind: [{ member: "alpha-worker", binding: "FILE_SCANNER" }], ...marker };
   for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
   put(root, `${name}/fleet-member.json`, JSON.stringify(m, null, 2));
   for (const [p, o] of Object.entries(statements || {})) if (o) put(root, `${name}/${p}`, JSON.stringify(o, null, 2) + "\n");
@@ -172,7 +197,8 @@ export function addScannerMember(root, name, { classes = scannerClasses(), state
 const parseCfg = (p) => JSON.parse(readFileSync(p, "utf8").split("\n").slice(1).join("\n"));
 
 /** The plane's configuration, as a parsed object, for a fixture or a function test. */
-export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }] } = {}) {
+export const PLANE_CRON = "*/5 * * * *";
+export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }], triggers = { crons: [PLANE_CRON] }, observability = { enabled: true } } = {}) {
   return {
     name: "bio-plane", account_id: ACCOUNT, main: "src/plane/index.mjs",
     compatibility_date: "2026-07-01", compatibility_flags: ["nodejs_compat"],
@@ -180,6 +206,8 @@ export function planeConfig({ version = VERSION, services = [{ binding: "SELF", 
     durable_objects: { bindings: [{ name: "STORE", class_name: "Store" }] },
     r2_buckets: [{ binding: "CAPTURES", bucket_name: "c" }, { binding: "PUBLISHED", bucket_name: "p" }],
     services, browser: { binding: "BROWSER" }, limits: { subrequests: 500, cpu_ms: 30000 },
+    ...(triggers ? { triggers } : {}),
+    ...(observability !== null ? { observability } : {}),   /* G54: Workers Logs on, as the real wrangler.jsonc states it; null declares none */
   };
 }
 
@@ -204,12 +232,14 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   plane = {}, build = true, realPackageJson = false, notes = NOTES } = {}) {
   const root = mkdtempSync(join(tmpdir(), "bundler-repo-"));
   for (const f of OWN) put(root, `bio-plane/scripts/${f}`, readFileSync(join(PLANE, "scripts", f)));
-  put(root, "bio-plane/scripts/embed-signpage.mjs", readFileSync(join(PLANE, "scripts/embed-signpage.mjs")));
   /* sshsig.mjs is signatures', and it imports other modules (record-grammar since T33-7): copy its whole relative
      import closure, so a new import there never strands the fixture. */
   for (const rel of localClosure("src/sshsig.mjs")) put(root, `bio-plane/${rel}`, readFileSync(join(PLANE, rel)));
-  put(root, "bio-plane/src/sign-release.html", readFileSync(join(PLANE, "src/sign-release.html")));
+  /* runtime-limits' hint list, which `deploy.mjs --store-location` reads (R41) */
+  if (existsSync(join(PLANE, "src/store-place.mjs"))) put(root, "bio-plane/src/store-place.mjs", readFileSync(join(PLANE, "src/store-place.mjs")));
   put(root, "bio-plane/scripts/sign-sshsig.mjs", readFileSync(join(PLANE, "scripts/sign-sshsig.mjs")));
+  /* fleet-bundle.mjs reads the calls of a member's inputs with the parser setup-words vendors (R38). */
+  put(root, "bio-plane/src/setup-words/vendor/acorn.mjs", readFileSync(join(PLANE, "src/setup-words/vendor/acorn.mjs")));
   mkdirSync(join(root, "bio-plane/node_modules/.bin"), { recursive: true });
   symlinkSync(join(PLANE, "node_modules/esbuild"), join(root, "bio-plane/node_modules/esbuild"), "dir");
   put(root, "bio-plane/node_modules/.bin/wrangler", WRANGLER);
@@ -218,7 +248,7 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   chmodSync(join(root, ".fakebin/docker"), 0o755);
 
   const version = plane.version ?? VERSION;
-  put(root, "bio-plane/src/plane/index.mjs", `import { tag } from "../tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n`);
+  put(root, "bio-plane/src/plane/index.mjs", `import { tag } from "../tag.mjs";\nexport class Store {}\nexport default { fetch() { return new Response(tag); } };\n`);
   put(root, "bio-plane/src/tag.mjs", `export const tag = "plane";\n`);
   put(root, "bio-plane/wrangler.jsonc", jsonc(planeConfig({ version, ...plane.config })));
   if (realPackageJson) {
@@ -245,6 +275,7 @@ export async function buildAll(root) {
 /** Runs a command; `stub` is a scenario object for stubfetch, `env` extra environment. */
 export function run(root, cwdRel, args, { env = {}, stub = null, timeout = 120_000 } = {}) {
   const work = mkdtempSync(join(tmpdir(), "bundler-run-"));
+  // fixtures-own: platform the Cloudflare API's own answers, handed to the deploy script's wrangler and HTTP calls through a scripted-network double; no module answers for them
   const stubFile = join(work, "stub.json"), stubLog = join(work, "stub.log"), wLog = join(work, "wrangler.log");
   const dLog = join(work, "docker.log");
   writeFileSync(stubFile, JSON.stringify(stub || {}));

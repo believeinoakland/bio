@@ -75,7 +75,7 @@ import { VERSION_NAME_RE, isBoilerplate } from "../../bio-plane/src/basis-versio
 import { SUGGEST_KINDS, SUGGEST_LEVELS } from "../../bio-plane/src/run-productions/checks.mjs";
 import { reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS } from "../../bio-plane/src/run-rules/index.mjs";
-import { WIRE_KINDS, WIRE_LEVELS, DESCRIPTION_MIN } from "./plane-suggest.mjs";
+import { WIRE_KINDS, WIRE_LEVELS, DESCRIPTION_MIN } from "../../agent-steps/test/plane-suggest.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

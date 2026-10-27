@@ -170,6 +170,7 @@ export function world({ caseMembers = new Set(), group = "test-group", caseFact 
 }
 
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 const parseFm = (t) => (t ? parseFrontmatter(t).data : null);
 
 /** An inquiry document. `legs`: [{target, role?, grade?, grade_axis?, grade_source?, ground?, author?, date?, note?,
@@ -192,12 +193,13 @@ export function inquiryMd(id, { question = `Is ${id} answered?`, legs = [], refs
       ...(l.grade ? [`    grade: ${l.grade}`] : []), ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
       ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []), ...(l.ground ? [`    ground: ${l.ground}`] : []),
       ...(l.author ? [`    author: ${l.author}`] : []), ...(l.date ? [`    date: ${l.date}`] : []),
-      ...(l.content_id ? [`    content_id: ${l.content_id}`] : []), ...(l.note ? [`    note: "${l.note}"`] : [])])] : []),
+      ...(l.content_id ? [`    content_id: ${l.content_id}`] : []), ...(l.note ? [`    note: "${l.note}"`] : []),
+      ...(l.status ? [`    status: ${l.status}`] : [])])] : []),
     ...(grounds ? ["grounds:", ...grounds.flatMap((g) => [`  - ground: ${g.ground}`, `    asserted_by: ${g.asserted_by}`,
       `    at: "${g.at}"`])] : []),
     ...extra,
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", ...body, "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", ...body, "## Review Notes", ""].join("\n");
 }
 
 export function infoMd(id) {

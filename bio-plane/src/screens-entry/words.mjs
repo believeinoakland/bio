@@ -4,8 +4,7 @@
    lists are `words-reads.json`'s `reads` for this module with every key a requirement here names (R16–R20); a sentence
    no key holds is a REPORT to BOB, never English here. DEC-256 retired `screen.forgot.handle.help` and
    `screen.setup.taken`, and DEC-230 withdrew `signin.founderhint`: none is read. R24: the lists below are this module's
-   own declared keys, every one held by `hasWord`, and every key a screen draws is one of them; `words-reads.json`,
-   generated from T49's code, lists neither the act labels these screens read nor T50's setup keys (DEC-279). */
+   own declared keys, every one held by `hasWord`, and every key a screen draws is one of them. */
 
 export const STATES = Object.freeze(["state.loading", "state.empty", "state.failed"]);
 
@@ -21,6 +20,11 @@ export const HANDLE_REFUSALS = Object.freeze(["refusal.NO_HANDLE", "refusal.BAD_
 export const HOSTING_KEYS = Object.freeze(["screen.hosting.heading", "screen.hosting.s1", "screen.hosting.s2", "screen.hosting.s3",
   "screen.hosting.s4", "screen.hosting.s5", "screen.hosting.guide"]);
 export const HELP_KEYS = Object.freeze(["screen.forgot.help.heading", "screen.forgot.help.s1", "screen.forgot.help.s2"]);
+
+/* R26: the team's website file (DEC-374, C11), as the design's `domainFile` draws it; `shell.copy` is the copy act's label */
+export const DOMAINFILE = Object.freeze(["summary", "what", "download", "steps", "step1", "step2", "step3", "step4", "step5", "daily",
+  "refused.summary", "refused.malformed", "refused.absent", "refused.mismatched", "refused.undetermined", "refused.notadmin"]
+  .map((k) => "screen.domainfile." + k));
 
 const labels = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, `act.${op}.does`]);
 
@@ -44,7 +48,7 @@ export const READS = Object.freeze({
     ...PASSWORDS, "screen.entry.signin", "screen.entry.backtofront", "refusal.PASSWORD_TOO_SHORT", ...labels("reset", ["passwordreset"])]),
   setup: Object.freeze([...STATES, "screen.setup.name", "screen.setup.purpose", "shell.mark",
     /* R22: the parts as the design draws them, each its name, what it is for and its state */
-    ...["lede", "coming", "after", "state.needed", "state.done", "state.optional", "state.off",
+    ...["lede", "coming", "after", "state.needed", "state.done", "state.optional", "state.off", "state.skipped", "state.skipped.help",
       "claim", "part.claim.why", "claim.intro", "claim.button", "otp", "otp.help", "otp.tip", "handle", "handle.help", "handle.tip", "own",
       "own.help", "again.help", "nootp", "claimed", "claimed.nosignin", "unarmed", "codes.intro",
       "part.group", "part.group.why", "name.field", "name.help", "name.tip", "name.now", "name.empty", "site.q", "site.no", "site.yes",
@@ -70,15 +74,26 @@ export const READS = Object.freeze({
     ...HANDLE_REFUSALS, "founder.handle.title", "founder.handle.says", "founder.handle.choose", "founder.handle.later",
     "founder.handle.later.help", "founder.handle.done",
     "setup.member.heading", "setup.member.sub", "setup.member.home",
-    "setup.codes.once", "setup.codes.copy", "setup.codes.save", "setup.claimed.heading", "setup.claimed.sub", "refusal.ALREADY_CLAIMED",
+    "setup.codes.once", "setup.codes.copy", "setup.codes.save", "setup.claimed.heading", "setup.claimed.sub", "refusal.ALREADY_CLAIMED", "refusal.ENTITY_NO_NOTE",
     "setup.skip", "setup.skip_does", "setup.admin.invite", "setup.admin.invite_does",
+    /* R34: the team's time zone, in the words Settings draws it by (screens-settings R45) */
+    "screen.setup.zone", "screen.setup.zone.help", "screen.group.timezone", "screen.group.timezone.how",
+    "screen.group.timezone.source", "screen.group.timezone.source.help", "screen.group.timezone.governs.local", "act.factconfirm.label.group",
+    "act.factconfirm.does",
+    ...["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"]
+      .map((z) => "label.timezones." + z),
+    /* R26: the website file; R30: who recorded the hosting account, when it was the setup or the system */
+    ...DOMAINFILE, "shell.copy", "screen.group.hosting.now.setup", "screen.group.hosting.now.system",
+    /* R33: the scanner holding no signatures, in the words file-safety's `scanstatus` carries by key (its R46) */
+    "file-safety.index.no_signatures", "file-safety.index.no_signatures_since", "file-safety.index.signatures_refused",
+    "file-safety.index.signatures_failed", "file-safety.index.signatures_not_fetched",
     ...labels("setup", ["recoverycodesissue", "groupnameset", "groupdomainset", "profilesset", "placewanted", "officesseed", "entitycreate",
       "aikeepaway", "groupkeyset", "ailimitset", "courtnoticeset", "hostingaccessset"]),
     ...["claim", "groupkeyswitch", "memberadd", "securitytooladd"].map((op) => `act.${op}.does`)]),
   join: Object.freeze([...STATES, "screen.join.name", "screen.join.purpose",
     ...["invited", "invited.as", "link", "link.what", "cover", "cover.help", "cover.empty", "dead", "dead.what", "language",
       "language.help", "handle", "handle.help", "handle.taken", "handle.empty", "codes.after", "joined", "joined.nosignin", "home",
-      "member", "member.go"].map((k) => "screen.join." + k),
+      "member", "member.go", "invite.reread"].map((k) => "screen.join." + k),
     ...PASSWORDS, ...CODES, "screen.entry.group", "screen.entry.signin",
     "handle.free", "handle.taken", "handle.characters", "handle.fixed", "handle.refused.paused", "refusal.JOIN_LINK_DAILY_CAP", "join.cap.says",
     "refusal.PASSWORD_TOO_SHORT", ...labels("join", ["invitelook", "memberlanguageset", "handlecheck", "enroll", "joinlinkinvite"])]),

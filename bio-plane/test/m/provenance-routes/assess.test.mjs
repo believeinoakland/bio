@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, provDoc, infoMd } from "./fixture.mjs";
 import { ROUTE_MARK_NOTE, ROUTE_MARK_CHECKS } from "../../../src/provenance-routes/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 function twoDocs(w, id, { secondRouted = false } = {}) {
   const a = w.cap(`${id}-a`), b = w.cap(`${id}-b`);
@@ -54,14 +55,14 @@ test("R4: a member's route assessment, marked only when it changes, never moving
   twoDocs(w3, "INFO-2026-0003-y", { secondRouted: true });
   const p = w3.routes.provenanceRouteAssess({ bundleId: "INFO-2026-0003-y", author: V("r"), viewer: V("r") });
   assert.deepEqual([p.route.finding, p.route.marked, p.route.note],
-                   ["PRESENT", false, "this document's route was assessed and every document in its register can be shown"]);
+                   ["PRESENT", false, word("provenance-routes.note.document_route_assessed")]);
   assert.match(p.detail, /every document in this register can show its route/);
 });
 
 test("R4: a document whose chain is already recorded is outcome `recorded`, and its route shows", () => {
   const w = world();
   const cap = w.cap("a");
-  const witnessed = [{ who: "Internet Archive Wayback Machine", asserts: "served the replay", evidence: "CDX record",
+  const witnessed = [{ who: word("capture-sources.name.internet_archive_wayback"), asserts: "served the replay", evidence: "CDX record",
                        bound: false, via: "archive.org" }];
   const doc = { file: cap.path, locator: "", authority_state: "undetermined", authority_basis: "nothing was established",
                 capture: { grade: "C" }, provenance_chain: witnessed };

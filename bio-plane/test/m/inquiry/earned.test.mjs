@@ -32,7 +32,7 @@ test("R6 capture: bytes received through the doorbell, never fetched, keep the a
   assert.match(cap[B].why, /doorbell/);
   for (const id of [A, D]) { assert.equal(cap[id].grade, EARNED_CAPTURE_CEILING); assert.equal(cap[id].stated_as, undefined, id); }
   /* the measured route is worded as a fetch, so the negative arm above can fail */
-  assert.match(cap[A].why, /as your group's Civicsmith fetched them/);
+  assert.match(cap[A].why, /as your team's Civicsmith fetched them/);
   /* the grammar reads it so: the author's letter at or under the ceiling stands, above it is refused (R6, R14) */
   const leg = (grade) => w.promote("INQ-2026-0001-q", [
     "---", "id: INQ-2026-0001-q", "object_type: inquiry", "schema: inquiry@1", 'title: "q?"', "current_state: open", "prior_state: null",

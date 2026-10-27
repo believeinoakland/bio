@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { world, E, BOB, CAROL, MACHINE, ZONE, SHA } from "./fixture.mjs";
 import * as index from "../../../src/duties/index.mjs";
 import * as vocab from "../../../src/duties/vocab.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const { DUTIES_CHECKS, NEVER_SAID, NOTICED } = index;
 const VOCAB = fileURLToPath(new URL("../../../src/duties/vocab.mjs", import.meta.url));
@@ -92,7 +93,7 @@ test("R28 a review is a proposal of one duty of the owner: performance, the poli
   assert.equal(a.ok, true);
   const d = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty;
   assert.deepEqual([d.modality, d.obligor, d.performance, d.source, d.trigger, d.time],
-    ["duty", E.clerk, { act: "review the policy" }, { kind: "standard", standard: p.id }, { kind: "date", date: "2026-02-15" },
+    ["duty", E.clerk, { act: localize("duties.act.review_policy", "review the policy") }, { kind: "standard", standard: p.id }, { kind: "date", date: "2026-02-15" },
      { basis: "commitment", citation: p.passages[1] }]);
   assert.deepEqual(d.review, { standard: p.id, review_due: { capture_sha: p.cites[1].captureSha, extent: p.cites[1].extent, content_id: p.passages[1] }, cycle: null });
   /* a found match (retrieval R73's shape) passes as it is */
@@ -116,7 +117,7 @@ test("R28 once adopted, a review date passed with no review matched is answered 
   const late = occ(AS_OF)[0];
   assert.equal(late.label, NOTICED);
   assert.equal(late.label, "Noticed");
-  assert.equal(late.why, "the body's own review date, a commitment it stated, has passed and no review is recorded");
+  assert.equal(late.why, localize("duties.why.body_review_date", "the body's own review date, a commitment it stated, has passed and no review is recorded"));
   assert.deepEqual(late.due.date, day("2026-02-15"));
   assert.deepEqual([late.due.basis_kind, late.due.law_set, late.derivation.law_set], ["commitment", false, false]);
   assert.match(late.question, /not a deadline the law sets/);
@@ -202,10 +203,14 @@ test("R29 an organisation's own policy becomes a duty only where its obligor act
   row(g({}), "NO_ENFORCER");
   assert.equal(g({ enforcer: E.auditor }).ok, true);
   /* a government obligor rests on a company's policy only where standards answers that an adoption binds it */
-  let sw = null;
-  sw = world({ deps: { standards: () => new Proxy(sw.standards, { get: (o, k) => (k === "bindsAt"
-    ? ({ standard, body }) => ({ ok: true, standard, body, binds: body === E.council }) : typeof o[k] === "function" ? o[k].bind(o) : o[k]) }) } });
+  const sw = world();
+  const at = sw.passage().contentId;
+  const ordinance = sw.sw.declare({ kind: "ordinance", cite: "Test Code § 40", issuer: E.council, text: [at], period: { from: "2020-01-01", to: null } });
+  assert.equal(ordinance.ok, true, JSON.stringify(ordinance));
   const adopted = sw.policy({ issuer: E.private, cite: "Industry Code" });
+  const adoption = sw.standards.adoptionRecord({ standard: adopted.id, act: ordinance.id, edition: "2020", from: "2021-07-01", mode: "by_reference",
+    citation: at, reason: "The council adopted the industry code by ordinance.", author: BOB, viewer: BOB });
+  assert.equal(adoption.ok, true, JSON.stringify(adoption));
   const asked = (obligor) => sw.declare({ obligor, source: { kind: "standard", standard: adopted.id }, time: { basis: "commitment", date: "2026-04-01" } });
   assert.equal(asked(E.council).ok, true, "the council adopted it");
   row(asked(E.clerk), "NOT_ACTING_FOR_PUBLIC");

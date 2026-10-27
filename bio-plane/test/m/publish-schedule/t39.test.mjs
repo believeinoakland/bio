@@ -9,7 +9,7 @@ import { rowOf } from "../../../src/publication/checks.mjs";
 
 const CASE = "CASE-2026-0001";
 const S1 = "ab".repeat(32), S3 = "ef".repeat(32);
-const DOC = (ref, sha, why = "a copy that is no longer the document's current copy") => ({ ref, sha, kind: "document", why });
+const DOC = (ref, sha, why = "stale-document-copy") => ({ ref, sha, kind: "document", why });
 const PHOTO = (ref, sha, why = "a mark was withdrawn since the case was prepared") => ({ ref, sha, kind: "photo", why });
 
 function base() {

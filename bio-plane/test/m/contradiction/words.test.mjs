@@ -13,7 +13,7 @@ test("R1: the labels are exactly world, record, precision, unrelated, undetermin
 
 test("R2: the prompt's SHA-256 is the pinned digest measured on the over-strictness gate (M-162)", () => {
   assert.equal(createHash("sha256").update(JUDGEMENT_PROMPT, "utf8").digest("hex"), JUDGEMENT_PROMPT_SHA256);
-  assert.equal(JUDGEMENT_PROMPT_SHA256, "79ea662afed716df7db276bac07c4c85db7b9adf12a573bfc36459c3e721a061");
+  assert.equal(JUDGEMENT_PROMPT_SHA256, "aad3ac9e557fba904331c788a946d42e7b5c59b3d13e17972f4b45422716d08c");
 });
 
 test("R3: judgementSide keeps only text, doctype, date and role, omits null or absent, never fills", () => {

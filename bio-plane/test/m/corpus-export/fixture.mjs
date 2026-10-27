@@ -4,6 +4,7 @@
    will create it, with the world's clock. Every test drives `corpus-export` at its interface. */
 import { world as connectionsWorld } from "../connections/fixture.mjs";
 import { corpusExportOf } from "../../../src/corpus-export/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const NOW = "2026-09-28T01:00:00Z";
 export { sha } from "../connections/fixture.mjs";
@@ -53,6 +54,6 @@ export function inquiryMd(id, question, cites = []) {
     ...(cites.length ? ["references:", ...cites.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"])]
                      : ["references: []"]),
     "state_history: []", "surfaced_by: human", 'disposition_reason: ""',
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }

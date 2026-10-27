@@ -4,6 +4,7 @@
  * A figure is held exactly, as digits: `$4.2 million` is `4200000`, never a float of it. */
 
 import { dec, decStr, cmpD, negD, refusal } from "./decimal.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const SCALES = Object.freeze({ thousand: 3, thousands: 3, k: 3, million: 6, millions: 6, m: 6, mm: 6, mn: 6,
   billion: 9, billions: 9, bn: 9, b: 9, trillion: 12, trillions: 12, tn: 12 });
@@ -18,23 +19,22 @@ const invalid = (why) => refusal("FIGURE_INVALID", why);
 /* One figure, no qualifier, no range: `{neg, digits, word, exp, currency, percent}` or a refusal. */
 function single(t) {
   const m = FIGURE.exec(t);
-  if (!m) return invalid(`"${t.slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, `
-                         + "a decimal point, a currency sign or code, a minus sign or parentheses, % or a scale word)");
+  if (!m) return invalid(localize("calc-grammar.figure_module_reads", "\"{text}\" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or code, a minus sign or parentheses, % or a scale word)", { text: String(t.slice(0, 80)) }));
   const [, lead, signBefore, codeBefore, minus, digits, word0, pct, signAfter, codeAfter0, close] = m;
   if ((lead === "(" || minus === "(") !== (close === ")"))
-    return invalid("an opening parenthesis is not closed, or the reverse");
-  if (lead && minus) return invalid("the figure carries two signs");
+    return invalid(localize("calc-grammar.opening_parenthesis_closed", "an opening parenthesis is not closed, or the reverse"));
+  if (lead && minus) return invalid(localize("calc-grammar.figure_carries_two", "the figure carries two signs"));
   let word = word0;
   let codeAfter = codeAfter0;
   if (word && CODE.test(word) && !(word.toLowerCase() in SCALES) && !codeAfter && !pct) { codeAfter = word; word = undefined; }
   let exp = 0;
   if (word) {
-    if (!(word.toLowerCase() in SCALES)) return invalid(`"${word}" is not a scale word this module reads`);
+    if (!(word.toLowerCase() in SCALES)) return invalid(localize("calc-grammar.scale_word_module", "\"{word}\" is not a scale word this module reads", { word: String(word) }));
     exp = SCALES[word.toLowerCase()];
   }
   const marks = [signBefore && SIGNS[signBefore], codeBefore, signAfter && SIGNS[signAfter], codeAfter].filter(Boolean);
-  if (marks.length > 1) return invalid("the figure carries two currency marks");
-  if (marks.length && pct) return invalid("a figure cannot be both a currency amount and a percentage");
+  if (marks.length > 1) return invalid(localize("calc-grammar.figure_carries_two_currency", "the figure carries two currency marks"));
+  if (marks.length && pct) return invalid(localize("calc-grammar.figure_cannot_currency", "a figure cannot be both a currency amount and a percentage"));
   return { neg: Boolean(lead || minus), digits: digits.replace(/,/g, ""), word, exp, currency: marks[0],
     percent: Boolean(pct) };
 }
@@ -65,13 +65,13 @@ function rangeOf(left, right, as_read) {
   const l = { ...left }; const r = { ...right };
   if (!l.word && r.word) { l.word = r.word; l.exp = r.exp; }
   if (!r.word && l.word) { r.word = l.word; r.exp = l.exp; }
-  if (l.currency && r.currency && l.currency !== r.currency) return invalid("a range's two figures name different currencies");
+  if (l.currency && r.currency && l.currency !== r.currency) return invalid(localize("calc-grammar.range_two_figures", "a range's two figures name different currencies"));
   l.currency = r.currency = l.currency || r.currency;
-  if (l.percent !== r.percent && (l.currency || r.currency)) return invalid("a range mixes a percentage and an amount");
+  if (l.percent !== r.percent && (l.currency || r.currency)) return invalid(localize("calc-grammar.range_mixes_percentage", "a range mixes a percentage and an amount"));
   l.percent = r.percent = l.percent || r.percent;
   const signed = (p) => { const d = dec(scaled(p.digits, p.exp).value); return p.neg ? negD(d) : d; };
   const lo = signed(l); const hi = signed(r);
-  if (cmpD(lo, hi) > 0) return invalid("a range's first figure is above its second");
+  if (cmpD(lo, hi) > 0) return invalid(localize("calc-grammar.range_first_figure", "a range's first figure is above its second"));
   const f = { low: decStr(lo), high: decStr(hi), sign: lo.n < 0n ? "-" : "+", precision: "range" };
   if (l.percent) f.unit = "percent";
   if (l.currency) f.currency = l.currency;
@@ -95,7 +95,7 @@ function splitRange(t) {
 export function parseFigure(text) {
   if (typeof text !== "string") throw new TypeError("parseFigure takes the figure's text as a string");
   let t = fold(text);
-  if (!t) return invalid("no figure was stated");
+  if (!t) return invalid(localize("calc-grammar.figure_stated", "no figure was stated"));
   const q = QUALIFIER.exec(t);
   if (q) t = t.slice(q[0].length).trim();
   const one = single(t);

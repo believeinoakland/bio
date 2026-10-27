@@ -209,3 +209,80 @@ test("R68 R41 at the phone width a statement the key signs, a long unbroken line
   assert.ok(dlg.querySelector("li b").querySelector("wbr"), "its label too");
   await p.click('[data-shell="dialog-no"]');
 });
+
+/* R116: a key file's text handed to `cs.signer.sign(statements, {keyFile})`; the screen holds the text in a field of its own */
+const KEYED = {
+  id: "account", reads: () => ({}),
+  acts: [
+    { op: "signerregisterown", async send(view, el, cs) { const r = await cs.signer.register({ keep: cs.value("keep"), passphrase: cs.value("pp"), defer: true }); cs.set("reg", JSON.stringify(r)); return null; } },
+    { op: "signerrevokeown", async send(view, el, cs) {
+      const kf = cs.value("kf");
+      const r = await cs.signer.sign([{ label: "The case", bytes: "bio-ratify case-1 aaa\n", namespace: "bio-ratify" }], kf ? { keyFile: kf } : {});
+      cs.set("sig", JSON.stringify(r)); return null; } },
+  ],
+  render(cs, view) {
+    return '<label><input type="checkbox" id="keep"> ' + cs.w("signing.ceremony.keepkey") + '</label><input id="pp"><textarea id="kf"></textarea>' + cs.act("signerregisterown") + cs.act("signerrevokeown")
+      + '<pre id="reg">' + cs.esc(view.ui.reg || "") + '</pre><pre id="sig">' + cs.esc(view.ui.sig || "") + "</pre>";
+  },
+};
+
+test("R116 a screen signs with a key file's text and no key held: the dialog asks only the passphrase (no file box), a wrong passphrase is refused and the text is kept for the next try, the right one signs with that key", async () => {
+  const PASS = "SENTINEL-keyfile-pass";
+  const p = await boot({ screens: [KEYED], path: "/app/account", idb: new Map() });
+  p.doc.getElementById("pp").value = PASS;
+  await press(p, "signerregisterown");
+  await until(p, () => out(p, "reg"));
+  const reg = out(p, "reg");
+  assert.ok(reg.file.startsWith("BIOKEY1."));
+  const q = await boot({ screens: [KEYED], path: "/app/account", idb: new Map() });
+  q.doc.getElementById("kf").value = reg.file;
+  await press(q, "signerrevokeown");
+  const dlg = overlay(q, "sign");
+  assert.ok(dlg, "the sign dialog is drawn");
+  assert.equal(dlg.querySelector("#cs-key-file"), null, "no file box: the screen handed the text over");
+  assert.ok(dlg.querySelector("#cs-key-filepass"), "the passphrase is asked");
+  q.doc.getElementById("cs-key-filepass").value = "wrong one";
+  await q.click('[data-shell="dialog-yes"]');
+  await until(q, () => overlay(q, "sign") && overlay(q, "sign").querySelector('[data-gap="refused"]'));
+  assert.ok(overlay(q, "sign").querySelector('[data-gap="refused"]'), "a wrong passphrase signs nothing");
+  assert.equal(overlay(q, "sign").querySelector("#cs-key-file"), null, "still no file box; the text is kept for the retry");
+  q.doc.getElementById("cs-key-filepass").value = PASS;
+  await q.click('[data-shell="dialog-yes"]');
+  await until(q, () => out(q, "sig"));
+  const sig = out(q, "sig");
+  assert.equal(sig.ok, true);
+  assert.equal(sig.keyB64, reg.keyB64, "the key the file holds");
+  assert.equal((await verifySshsig(sig.signatures[0], new TextEncoder().encode("bio-ratify case-1 aaa\n"), "bio-ratify", [reg.line])).ok, true);
+  for (const v of [...q.local.values(), ...q.store.values()]) assert.ok(!String(v).includes("BIOKEY") && !String(v).includes(PASS));
+  for (const r of q.requests) assert.ok(!JSON.stringify(r).includes("BIOKEY") && !JSON.stringify(r).includes(PASS));
+});
+
+test("R116 control: with a key held, a keyFile is not needed and not used: the held key signs and the dialog asks neither a file nor a passphrase; an unprotected BIOKEY-RAW1 file asks the dialog's passphrase field blank and signs", async () => {
+  const idb = new Map();
+  const p = await boot({ screens: [KEYED], path: "/app/account", idb });
+  p.doc.getElementById("keep").checked = true;
+  await press(p, "signerregisterown");
+  await until(p, () => out(p, "reg"));
+  const reg = out(p, "reg");
+  p.doc.getElementById("kf").value = "BIOKEY-RAW1.bio-ratify." + "A".repeat(43) + "=";
+  await press(p, "signerrevokeown");
+  const dlg = overlay(p, "sign");
+  assert.equal(dlg.querySelector("#cs-key-file"), null);
+  assert.equal(dlg.querySelector("#cs-key-filepass"), null, "a held key needs no passphrase");
+  await p.click('[data-shell="dialog-yes"]');
+  await until(p, () => out(p, "sig"));
+  assert.equal(out(p, "sig").keyB64, reg.keyB64, "the held key signed, not the file's");
+  /* the unprotected file, no key held */
+  const q = await boot({ screens: [KEYED], path: "/app/account", idb: new Map() });
+  q.doc.getElementById("pp").value = "";
+  await press(q, "signerregisterown");
+  await until(q, () => out(q, "reg"));
+  const raw = out(q, "reg");
+  assert.ok(raw.file.startsWith("BIOKEY-RAW1."));
+  const r = await boot({ screens: [KEYED], path: "/app/account", idb: new Map() });
+  r.doc.getElementById("kf").value = raw.file;
+  await press(r, "signerrevokeown");
+  await r.click('[data-shell="dialog-yes"]');
+  await until(r, () => out(r, "sig"));
+  assert.equal(out(r, "sig").keyB64, raw.keyB64);
+});

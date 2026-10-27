@@ -1,13 +1,13 @@
 {
-  "version": "0.85.0",
-  "date": "2026-10-15",
-  "manifest": "f94e6b6247d9c8d81e934480314c64a43991ad53360ce01167a989b06601cbce",
+  "version": "0.87.0",
+  "date": "2026-10-27",
+  "manifest": "b3fa82ead88789e7820a12fbfa4c25f4ea2545f266dd05a9280a55adba3fed72",
   "security": false,
   "notes": {
-    "members": "This release joins up the whole path a member takes: sign in, open a project, connect your own Claude subscription, capture a document, ask a question, work with the assistant, and conclude it. Inviting someone and joining a project now follow the same steps and words as the rest of Civicsmith.",
-    "administrators": "Installing, signing in and inviting members now follow one path from start to finish. The screens use the wording of the latest interface design. This is the first release that carries signed release notes.",
+    "members": "Publishing a case now works: you can prepare it, sign it with your key and publish it, and anyone can then read it without signing in. A records request can be started, an office named with its body and dates, the sending recorded and the reply, with its fee, shown back. Find no longer fails on common words and now understands OR, quoted phrases and NOT. A standard's page now lets you record whom it binds and from when, so a determination that an act did or did not comply can be recorded. Once an administrator has set your team's time zone, it is used for every date: sharing a case for review, figures read for a period, the timeline's events and a plan's date checks. Not working yet: the assistant is not part of this release. Old Word files and files inside archives are not read. This is still a test release, and this version was not walked through screen by screen before it was released.",
+    "administrators": "Set your team's time zone under Settings, Your team: it now governs every date your team records or reads, and a place profile's zone is used only when none is set. Your team page opens faster, and a member's request to forward an item to an administrator now works. Known gaps: a notice that a member registered a signing key cannot yet be marked done. The safe view of some Word files may not show yet. Old Word files are not read. The assistant is not included in this release. This version was not walked through screen by screen before it was released; problems found afterwards are fixed in the next release. Nothing you run today needs to change.",
     "must_do": ""
   },
-  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAASYmlvLXJlbGVhc2Utbm90aWNlAAAAAAAAAAZzaGE1MTIAAABT\nAAAAC3NzaC1lZDI1NTE5AAAAQFRnr4cUh8Bd8VZEoHhILWF4m/0hY1IbwkICjanw3yXzDL\nlDnq1L7lieoY52yqdOvzI1k+DAm2D0PzZmm+UaqAE=\n-----END SSH SIGNATURE-----\n",
+  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAASYmlvLXJlbGVhc2Utbm90aWNlAAAAAAAAAAZzaGE1MTIAAABT\nAAAAC3NzaC1lZDI1NTE5AAAAQBSaE51TaR8FTlPjyXeJp7NOZBfTLztvqLvkftLNpKUn1D\n4tcyhEGCBy8X25ufwSuLsybbtpJ+4dQnp+UUix3A4=\n-----END SSH SIGNATURE-----\n",
   "signer": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiA6JRm52rE3agZAKqb/4ATA34c8jEp3Yef0KZyCe18 bio-release"
 }

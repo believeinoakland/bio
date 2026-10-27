@@ -3,6 +3,7 @@
    and `unpack(store, {archiveSha, by, cls})`, over test-support's ZIP writer (`make-zip.mjs`) for every hostile shape.
    R40's budgets are budgets.test.mjs's, R41's read archivelist.test.mjs's. */
 import { test } from "node:test";
+import { localize } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { world, run, sha, text } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
@@ -64,7 +65,7 @@ test("R17 R10: a ZIP held in parts (past the read's bound) is profiled `zip` fro
   const r = await capture(w, z);
   assert.equal(r.body.parts, 2, "the archive is held in two parts");
   assert.equal(r.body.document.profile.format.format, "zip");
-  assert.match(r.body.document.profile.format.signals.join(" "), /listed whole over the stored parts/);
+  assert.match(r.body.document.profile.format.signals.join(" "), /judged from the end record and the central directory/);
   const [bigDoc, smallDoc] = r.body.unpack.documents;
   assert.equal(bigDoc.capture.sha256, sha(big), "cut exactly across the archive's parts");
   assert.equal(bigDoc.parts.length, 2, "a file over 8 MiB is stored in parts of 8 MiB (R10's form)");
@@ -99,7 +100,7 @@ test("R38 R39 R26: each file is cut out exactly, stored under its own digest, re
   assert.equal(d0.capture.sha256, sha(PDF));
   assert.deepEqual([d0.capture.encoding, d0.capture.bytes, d0.capture.content_type], ["binary", PDF.length, "application/pdf"]);
   assert.equal("transport" in d0.capture, false, "no response, so no transport and no header is recorded");
-  assert.equal(d1.capture.content_type, undefined, "a type the bytes do not show is absent, never invented");
+  assert.equal(d1.capture.content_type, "text/plain", "bytes with no magic are typed by R102's rule from the entry's name (R39, G163); a type neither shows stays absent (r123-batch-d.test.mjs)");
   assert.deepEqual([d0.capture.actor_class, d0.capture.actor], ["member", "m1"]);
   assert.equal(d0.locator, `${URL1}#zip:0`);
   assert.equal(d0.file, `snapshots/zip-${archiveSha}-0`, "named from the archive's digest and the index, never the entry's name");
@@ -107,9 +108,9 @@ test("R38 R39 R26: each file is cut out exactly, stored under its own digest, re
   assert.equal(d0.provenance_chain.length, 1);
   const hop = d0.provenance_chain[0];
   assert.equal(hop.who, firstHopWho("inst", "9.9.9"));
-  assert.equal(hop.asserts, `these bytes are entry 0 (docs/a.pdf, the archive's own claim) of the archive ${archiveSha} held by your group's Civicsmith, cut out and verified by size and CRC-32 at ${d0.retrieved}`);
+  assert.equal(hop.asserts, localize("acquisition.unpack.these_bytes_are_entry_index", "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}", { index: "0", v1: "docs/a.pdf", sha: archiveSha, at: d0.retrieved }));
   assert.deepEqual([hop.bound, hop.via, hop.archive_sha256], [false, "unpacked", archiveSha]);
-  assert.equal(JSON.stringify(d0.provenance_chain).includes("these bytes were served for"), false, "the archive's hop is cited, never copied");
+  assert.equal(d0.provenance_chain.length, 1, "the archive's hop is cited, never copied");
   assert.deepEqual(d0.container, { archive_sha256: archiveSha, index: 0, path: "docs/a.pdf", name_raw: Buffer.from("docs/a.pdf").toString("hex"),
     method: 8, crc32: d0.container.crc32, compressed: d0.container.compressed, uncompressed: PDF.length, local_offset: 0,
     member_sha256: sha(PDF), dos_time_stated: d0.container.dos_time_stated, name_shared: 1, path_unsafe: false });

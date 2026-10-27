@@ -13,6 +13,7 @@ import { unnamedSourceStatement } from "../../../src/publication/index.mjs";
 import { GRADING_METHOD_VERSION, recomputePair } from "../../../src/strength/index.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -27,12 +28,12 @@ const textSha = (bundle) => sha(canonicalJson([{ extent: { kind: "doc-para", par
 const account = (w, capture, text = "I saved it myself.") => w.st.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq,
   by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, 'SIG-of-alice-7f3', 'AAAA', ?)`, capture, text, "2026-09-27T12:00:00Z");
 
-test("R14, R55 (case-disclosures R5): the document is bio-case-document/7, which requires the materials blocks as /6 does, and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
+test("R14, R55 (case-disclosures R5): the document is bio-case-document/8, which requires the materials blocks as /6 does, and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
   const w = world(); w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   const r = w.publish(w.project("Team", "alice", [Q]), "alice", [Q]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const fm = w.fm(docOf(w, r));
-  assert.deepEqual([fm.format, CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials(fm)], ["bio-case-document/7", "bio-case-document/7", true]);
+  assert.deepEqual([fm.format, CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials(fm)], ["bio-case-document/8", "bio-case-document/8", true]);
   assert.deepEqual(methodOf(fm), { grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION });
   assert.ok(bodyOf(docOf(w, r)).includes(`by the grading method ${GRADING_METHOD_VERSION}`));
 });
@@ -46,13 +47,15 @@ test("R55 (case-disclosures R7, R6): materials: lists every document a member's 
   const r = w.publish(P, "alice", [Q, Q2], { roles: { [Q]: "load_bearing", [Q2]: "supporting" } });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const m = materialsOf(w.fm(docOf(w, r)));
-  assert.deepEqual(m.materials, [
+  /* each row carries the document's `title` (case-grammar R12, case-disclosures R7): a sentence or null, checked by those modules */
+  for (const row of m.materials) assert.ok(row.title === null || typeof row.title === "string", JSON.stringify(row));
+  assert.deepEqual(m.materials.map(({ title, ...row }) => row), [
     { ref: DOC, kind: "document", sha: a, text_sha: textSha(DOC), origin: `https://example.org/${DOC}`,
       archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", obscured: null },
     { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false,
       rests_under: "supporting", obscured: null }]);
   const body = bodyOf(docOf(w, r));
-  assert.ok(body.includes("## What This Case Carries"));
+  assert.ok(body.includes(word("case-disclosures.case_carries")));
   assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
 });
 
@@ -67,11 +70,11 @@ test("R55 (case-disclosures R7): material_attestations: states, per material, th
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const reg = w.row(`SELECT bundle_id, registered FROM register WHERE capture_sha=?`, a);
   assert.deepEqual(materialsOf(w.fm(docOf(w, r))).attestations, [
-    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null },
+    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null, sha: null },
     { ref: DOC, by_kind: "co_attestation", by: "https://archive.example/web/x", level: null, at: null, signature: null,
-      recorded_in: null },
-    { ref: DOC, by_kind: "project", by: P, level: null, at: reg.registered, signature: null, recorded_in: reg.bundle_id },
-    { ref: DOC, by_kind: "group", by: "test-group", level: null, at: w.clock.now, signature: "case", recorded_in: null }]);
+      recorded_in: null, sha: null },
+    { ref: DOC, by_kind: "project", by: P, level: null, at: reg.registered, signature: null, recorded_in: reg.bundle_id, sha: null },
+    { ref: DOC, by_kind: "group", by: "test-group", level: null, at: w.clock.now, signature: "case", recorded_in: null, sha: null }]);
   assert.equal(w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).length, tables, "no new table");
   assert.ok(bodyOf(docOf(w, r)).includes("test-group vouches for it by signing this case"));
 });
@@ -91,7 +94,7 @@ test("R55 (case-disclosures R4, R8, R9, R10): a load-bearing document from a kno
   const m = materialsOf(fm);
   assert.deepEqual([m.materials[0].included, m.materials[0].origin], [true, null], "travels whole; no knock address");
   assert.deepEqual(m.attestations.filter((x) => x.by_kind === "member"),
-    [{ ref: DOC, by_kind: "member", by: null, level: null, at: "2026-09-27T12:00:00Z", signature: null, recorded_in: null }]);
+    [{ ref: DOC, by_kind: "member", by: null, level: null, at: "2026-09-27T12:00:00Z", signature: null, recorded_in: null, sha: null }]);
   const row = blocks.captures.find((c) => c.capture === k);
   assert.deepEqual(row.accounts, [{ by: null, at: "2026-09-27T12:00:00Z", text: "Handed to me at the door.", signature: null }],
     "the account's text travels; the member's handle and signature do not");
@@ -120,7 +123,7 @@ test("R55 (case-disclosures R11): a named member's capture, a load-bearing self-
   const row = caseDocumentBlocks(text).captures.find((c) => c.capture === b);
   assert.deepEqual([row.self_attested_only, row.accounts[0].by, row.accounts[0].signature], [true, "alice", "SIG-of-alice-7f3"]);
   assert.deepEqual(materialsOf(w.fm(text)).attestations.find((x) => x.by_kind === "member"),
-    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null });
+    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null, sha: null });
   void DOC3;
 });
 
@@ -151,7 +154,7 @@ test("R55 (case-disclosures R15): grading_facts: and passages: are written at th
   }
   const p = passagesOf(fm);
   assert.deepEqual(p[Q], [{ finding: Q, ord: 0, content_id: cid, capture_sha: a,
-    extent: canonicalJson({ kind: "doc-para", para: 1 }), chain: null, quoted: `the text of ${DOC}` }]);
+    extent: { kind: "doc-para", para: 1 }, chain: null, quoted: `the text of ${DOC}` }]);
   assert.ok(extractedTextOf(w.extraction.unitsOf(a).units).includes(JSON.stringify(p[Q][0].quoted)),
     "the passage is found in the extracted text");
 });

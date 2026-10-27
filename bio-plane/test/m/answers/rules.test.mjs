@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, V, R } from "./fixture.mjs";
-import { RULE_SERVICE_NAMES, ANSWERS_CHECKS } from "../../../src/answers/index.mjs";
+import { RULE_SERVICE_NAMES, ANSWERS_CHECKS, answersOps } from "../../../src/answers/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
 const BOB = V("bob");
@@ -160,4 +160,20 @@ test("R12 registerRuleService takes a later module's service once per name; a na
   assert.ok(w.a.readLog("g").rule(r.rule_id));
   assert.deepEqual(RULE_SERVICE_NAMES, ["standard", "standardinforce", "profiles", "deadlinecompute", "entities", "lines", "holderAt",
                                         "careerOf", "duties", "occurrences", "evaluate"]);
+});
+
+test("R7 ruleservicesstate answers {ok: true, on} to any signed-in member: off on a fresh record (K1505 (14)), on after the administrator's switch, off again when switched off; writes nothing", () => {
+  const w = answersWorld({ rules: false });
+  const url = (viewer) => new URL(`https://plane.test/?${new URLSearchParams({ viewer })}`);
+  const before = w.snapshot();
+  assert.deepEqual(answersOps(w.a, url(BOB), {}).ruleservicesstate(), { ok: true, on: false });
+  assert.deepEqual(answersOps(w.a, url(V("alice")), {}).ruleservicesstate(), { ok: true, on: false });
+  assert.deepEqual(w.snapshot(), before, "the state read writes nothing");
+  /* a member's switch is refused and the state stays off; the administrator's turns it on */
+  assert.equal(answersOps(w.a, url(BOB), { on: true }).ruleservicesswitch().reason, "NOT_AN_ADMIN");
+  assert.deepEqual(answersOps(w.a, url(BOB), {}).ruleservicesstate(), { ok: true, on: false });
+  assert.equal(answersOps(w.a, url(V("alice")), { on: true }).ruleservicesswitch().ok, true);
+  assert.deepEqual(answersOps(w.a, url(BOB), {}).ruleservicesstate(), { ok: true, on: true });
+  assert.equal(answersOps(w.a, url(V("alice")), { on: false }).ruleservicesswitch().ok, true);
+  assert.deepEqual(answersOps(w.a, url(BOB), {}).ruleservicesstate(), { ok: true, on: false });
 });

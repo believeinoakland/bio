@@ -1,11 +1,13 @@
 /* The seam with membership (K637): R16's revocation listener, R17's claim fact, R18's purge exemption; and the start
    that registers them, at the interface. */
+import { tableDeclarationRefusals } from "../record-core/fixtures.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
 import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "../../../src/credentials/index.mjs";
 import { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { listenerRefusals } from "../member-roster/fixtures.mjs";
 
 const sessionsOf = (w, id) => w.rows(`SELECT token_sha FROM sessions WHERE role=?`, `member:${id}`).length;
 const keysOf = (w, id) => w.rows(`SELECT key_b64, status, status_by FROM signers WHERE member_id=? ORDER BY key_b64`, id);
@@ -150,10 +152,11 @@ test("R18 R30 the declaration: (T48) its own fourteen tables declared once by cr
   /* a refusal is a fault: thrown, never silently left purgeable or exportable */
   const sqlStub = { exec() { return []; } };
   const membership = { onRevoked() { return { ok: true }; }, registerClaimed() { return { ok: true }; } };
-  const held = { declareTable() { return { ok: false, reason: "TABLE_DECLARED", table: "signers", declaredBy: "membership" }; } };
+  const refusals = tableDeclarationRefusals("signers", { by: "membership" });
+  const held = { declareTable() { return refusals.declaredAgainByTable; } };
   assert.throws(() => credentialsOf({ storage: { sql: sqlStub } }, { record: held, membership }).declareTables(),
     /refused its table declaration: TABLE_DECLARED \(signers\)/);
-  const bad = { declareTable() { return { ok: false, reason: "TABLE_CLASS_UNKNOWN", table: "x" }; } };
+  const bad = { declareTable() { return refusals.unknownClass; } };
   assert.throws(() => credentialsOf({ storage: { sql: sqlStub } }, { record: bad, membership }).declareTables(), /TABLE_CLASS_UNKNOWN/);
 });
 
@@ -168,19 +171,21 @@ test("R20 start registers setPassword as membership's password setter (its R95):
   /* membership's R95 as worded: one registration, held; a second refused by R81 */
   const held = [];
   const m = world().m;
+  /* member-roster's published R81 answers: the real registered, declared and malformed refusals of the setter's slot */
+  const refusals = listenerRefusals();
   const membership = {
     onRevoked: (mod, fn) => m.onRevoked(mod, fn), registerClaimed: (mod, fn) => ({ ok: true, module: mod }),
     memberFacts: (id) => m.memberFacts(id),
     registerPasswordSetter(fn) {
-      if (typeof fn !== "function") return { ok: false, reason: "LISTENER_MALFORMED" };
-      if (held.length) return { ok: false, reason: "LISTENER_DECLARED" };
-      held.push(fn); return { ok: true };
+      if (typeof fn !== "function") return refusals.malformed;
+      if (held.length) return refusals.declared;
+      held.push(fn); return refusals.registered;
     },
   };
   const w = world();
   const c = credentialsOf({ storage: { sql: w.sql } }, { record: { declarePurge() { return { ok: true }; } }, membership });
-  assert.equal(held.length, 1, "registered once, at start");
-  assert.deepEqual(c.start().password, { ok: false, reason: "LISTENER_DECLARED" }, "a second start is membership's refusal");
+  assert.equal(held.length, 1, "held once, from the first start");
+  assert.equal(c.start().password, refusals.declared, "a second start is membership's refusal");
   /* the setter is R3's: a salted derived hash for the role, the password never stored, the answer {ok, role} */
   const r = await held[0]({ role: "member:ann", password: "ann-passphrase-x" });
   assert.deepEqual(r, { ok: true, role: "member:ann" });

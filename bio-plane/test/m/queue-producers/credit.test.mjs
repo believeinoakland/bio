@@ -1,13 +1,17 @@
 /* The credit level a member has not chosen (R23; DEC-102 item 3; K1019, K1105) at feedItems' interface. The prepared,
    unsigned case editions are `case_documents`' rows (publication R56's read contract), the observations' authors
-   `register`'s (provenance R48); `publication.caseDocumentFacts` is a fake answering in its R2 shape (its R17's
+   `register`'s (provenance R48); `publication.caseDocumentFacts` answers in its R2 shape (the refusal is publication's own, from its published fixture; the rest a fake) (its R17's
    attribution facts, `current` one row per reached observation with the level in force or null), fenced by standing as
    its R1 is: a viewer without standing in the case gets NO_CASE_DOCUMENT. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { caseDocumentFacts } from "../publication/fixtures.mjs";
 
 const DAY = 86400000;
+/* publication's own answer for an edition with no document, or none the viewer has standing in (its published fixture) */
+const ABSENT = caseDocumentFacts().absent;
 const ofKind = (r) => r.items.filter((i) => i.kind === "attribution-unchosen");
 const ids = (r) => ofKind(r).map((i) => i.id).sort();
 
@@ -24,11 +28,11 @@ function cases() {
   const w = world({ publication: { caseDocumentFacts: (c, e, viewer) => {
     asked.push([c, e, viewer]);
     const doc = w.db.prepare(`SELECT case_id, edition, authored_at, sig_armored FROM case_documents WHERE case_id=? AND edition=?`).get(c, e);
-    if (!doc || (!doc.sig_armored && !standing[viewer])) return { ok: false, reason: "NO_CASE_DOCUMENT" };
+    if (!doc || (!doc.sig_armored && !standing[viewer])) return { ...ABSENT, caseId: c, edition: e };
     const r = reach[`${c}@${e}`] || {};
     return { ok: true, doc: { ...doc }, attribution: { reached: Object.keys(r), legacy: [], stated: [],
       current: Object.entries(r).map(([observation, level]) => ({ observation, level, shown: level ? "x" : null,
-        chosen_at_edition: level ? e : null, why: level ? null : "its author has chosen no level for this edition or any earlier one" })) } };
+        chosen_at_edition: level ? e : null, why: level ? null : word("case-tensions.why.author_chosen_level") })) } };
   } } });
   for (const m of ["alice", "bob", "carol"]) w.member(m);
   for (const [obs, author] of [["OBS-A", "alice"], ["OBS-A2", "alice"], ["OBS-B", "bob"]]) {
@@ -56,7 +60,7 @@ test("R23: one OBLIGATION per (case edition, observation) a prepared, unsigned e
   assert.deepEqual([it.class, it.kind], ["OBLIGATION", "attribution-unchosen"]);
   assert.deepEqual(it.subject, { kind: "case_edition", id: "CASE-1@1", case: "CASE-1", edition: 1, observation: "OBS-A" },
     "its subject the case edition, naming the observation");
-  assert.deepEqual(it.options, [{ id: "attribute", label: "Choose how this case credits your observation", weight: "single" }],
+  assert.deepEqual(it.options, [{ id: "attribute", label: word("queue-producers.label.choose_how_case"), weight: "single" }],
     "offering the choice of level (publication R17, op=attribute)");
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the edition's preparation");
   assert.equal(byId(alice)["OBLIGATION::attribution-unchosen::CASE-3@2::OBS-A"].age.state, "undetermined");

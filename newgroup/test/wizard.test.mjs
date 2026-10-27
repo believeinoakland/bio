@@ -113,12 +113,14 @@ import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
    by name rather than refusing to link the whole suite. */
 import * as NG from "../src/index.mjs";
 /* R30 (N234): the member binding names are instance-setup's; the installer holds no table of its own. */
+import { instanceGroupAnswer } from "../../bio-plane/test/m/instance-setup/fixtures.mjs";
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
-import { signer } from "./fixture.mjs";
+import { signer, like, scheduleRules, CRONS_STATEMENT } from "./fixture.mjs";
+const unesc = (t) => t.replace(/&#39;/g, "'");
 import { word } from "../src/words.mjs";
 
 let pass = 0, fail = 0;
@@ -170,6 +172,8 @@ const cferr = (message, status = 400, code = 0) =>
    those the arm itself scripts) and hands each script back exactly as it was last uploaded (R33's read-back). An arm's
    own rule always wins. */
 const FALLBACK = (calls) => [
+  /* installer-steps R39: the plane's schedules, read and set, as the fake account of fixture.mjs answers them. */
+  ...scheduleRules(),
   /* T50 (R62, R69, R70): the reads an install now makes before it creates anything, answered as an empty account answers them. */
   { m: (u, mth) => /\/workers\/scripts$/.test(u) && mth === "GET", f: () => cfok([]) },
   { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: [] }) },
@@ -215,16 +219,21 @@ async function begin(slug, mode = "install", extra = {}) {
    them. The assertions below read the page as its own script sees those strings, so a negative such as "no
    <b>Updated" still means what it says rather than passing on the escaped bytes. */
 const unescapeScripts = (s) => s.replace(/\\u00(3c|3e|26)/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+/* A key's sentence as a page draws it as text (the plain pages and the panels escape it), and the part of it before its `{said}`. */
+const h = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const headOf = (key, vars = {}) => word(key, { said: "\u0000", ...vars }).split("\u0000")[0];
 const callback = async (qs, cookie) => {
   const r = await req("/callback?" + qs, { headers: cookie ? { cookie } : {} });
   return new Response(unescapeScripts(await r.text()), { status: r.status, headers: r.headers });
 };
 
 async function metadataOf(call) {
+  if (!call) return { bindings: [], keep_bindings: [] };  /* no upload happened: every assertion about it fails by value, not by a crash that hides the arms after it */
   const blob = call.init.body.get("metadata");
   return JSON.parse(await blob.text());
 }
 async function sourceOf(call) {
+  if (!call) return "";
   return call.init.body.get("index.mjs").text();
 }
 const shaHex = async (text) => {
@@ -243,11 +252,13 @@ const REL = (rules) => [
    (`BUILTIN_OK` false: every release before control-plane's statement) they would be refused, so they now serve `NEWER()`,
    the built-in's own bytes plus the statement, signed by a key the arm arms, one version on. The arms ABOUT the
    built-in fallback assert whichever holds, so they survive the cut that embeds a release stating its limits. */
-const LIM = "bio-plane-limits/1 subrequests=10000";
+/* From 0.87.0 the built-in states its own limits (cpu_ms beside subrequests): \`NEWER()\` then repeats that statement, never a
+   second, different one, which the installer rightly refuses as unreadable (statements.mjs: exactly one distinct statement). */
+const LIM = (RELEASE_SOURCE.match(/"(bio-plane-limits\/1 [^"]+)"/) || [])[1] ?? "bio-plane-limits/1 subrequests=10000";
 const BUILTIN_OK = NG.planeLimits(RELEASE_SOURCE).ok;
 const CUR = await signer("current-release");
 const CUR_VER = bump(RELEASE_VERSION);
-const curSrc = RELEASE_SOURCE + `\nexport const PLANE_LIMITS_STATEMENT = "${LIM}";\n`;
+const curSrc = RELEASE_SOURCE + `\nexport const PLANE_LIMITS_STATEMENT = "${LIM}";\nexport const PLANE_CRONS_STATEMENT = "${CRONS_STATEMENT}";\n`;
 const curMan = { version: CUR_VER, sha256: await shaHex(curSrc), bytes: curSrc.length, asset: "bio-plane.bundled.mjs",
   sig: await CUR.sign(curSrc) };
 const NEWER = () => { armWith(CUR.line); return REL({ manifest: () => jres(curMan), asset: () => new Response(curSrc) }); };
@@ -275,7 +286,7 @@ console.log("\n--- front page and begin ---");
   t("PKCE method is S256", a.searchParams.get("code_challenge_method"), "S256");
   t("challenge present", (a.searchParams.get("code_challenge") || "").length >= 40, true);
   t("redirect is the registered string, character-exact", a.searchParams.get("redirect_uri"), CFG.REDIRECT);
-  t("scopes are exactly the registered five (T36: connectivity-directory.bind, R45)", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
+  t("scopes are exactly the registered six (T36: connectivity-directory.bind, R45; K3819: account-logs.read, R46)", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
   t("state travels", (state || "").length >= 20, true);
   t("cookie is HttpOnly", /HttpOnly/i.test(r.headers.get("set-cookie")), true);
   t("cookie is Secure and Lax", /Secure/.test(r.headers.get("set-cookie")) && /SameSite=Lax/.test(r.headers.get("set-cookie")), true);
@@ -293,11 +304,11 @@ console.log("\n--- callback refuses what it cannot verify ---");
   const calls = script([]);
   const { cookie } = await begin("oak-watch");
   const body = await (await callback("code=abc&state=WRONG", cookie)).text();
-  t("state mismatch stops with a plain sentence", body.includes("could not be verified"), true);
+  t("state mismatch stops with a plain sentence", body.includes(h(word("installer.callback.unverified.title"))), true);
   t("nothing upstream was called", calls.length, 0);
 
   const body2 = await (await callback("code=abc&state=whatever")).text();
-  t("missing cookie stops the same way", body2.includes("could not be verified"), true);
+  t("missing cookie stops the same way", body2.includes(h(word("installer.callback.unverified.title"))), true);
 
   const body3 = await (await callback("error=access_denied&error_description=User+refused", cookie)).text();
   t("user refusal is reported as Cloudflare's decision", body3.includes("Permission was not granted"), true);
@@ -338,8 +349,8 @@ console.log("\n--- install: the whole conversation ---");
   t("install carries the SQLite migration", meta.migrations,
     { new_tag: "v1", new_sqlite_classes: ["Store"] });
   t("Durable Object bound", meta.bindings.some((b) => b.type === "durable_object_namespace" && b.class_name === "Store"), true);
-  t("VERSION is the release chosen", meta.bindings.find((b) => b.name === "VERSION").text, CUR_VER);
-  t("R20: limits are the release's own statement", meta.limits, { subrequests: 10000 });
+  t("VERSION is the release chosen", meta.bindings.find((b) => b.name === "VERSION")?.text, CUR_VER);
+  t("R20: limits are the release's own statement", meta.limits, { ...NG.planeLimits(curSrc).limits });
   /* D-102: the instance name IS the worker name, so the slug the group already
      chose is what the agent advertises. Bound here rather than asked for
      separately; a second name would be a second source of truth that drifts.
@@ -425,7 +436,7 @@ console.log("\n--- install: address asleep, credentials still handed over ---");
   t("the check was actually retried", calls.filter((c) => c.u.includes("slow-town.slowtown.workers.dev")).length >= 10, true);
   t("the page still shows the address", body.includes("https://slow-town.slowtown.workers.dev"), true);
   t("THE CREDENTIALS ARE STILL HANDED OVER", body.includes("out-boot") && body.includes("out-probe"), true);
-  t("the headline says asleep, not failed", body.includes("has not woken up yet"), true);
+  t("the headline says asleep, not failed", body.includes(h(word("installer.success.asleep"))), true);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -441,6 +452,7 @@ console.log("\n--- install: no card means a friendly stop, and nothing installed
     { m: (u) => u.includes("/scripts/small-group/settings"), f: () => cferr("not found", 404) },
     { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "sg" }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST",
       f: () => cferr("Please enable R2 by adding a payment method", 403) },
   ]);
@@ -451,9 +463,9 @@ console.log("\n--- install: no card means a friendly stop, and nothing installed
      own script rather than being exempted. */
   t("the instance itself was never uploaded",
     calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/small-group")), false);
-  t("the stop explains itself as a setting, not a failure", body.includes("One Cloudflare setting is needed first"), true);
-  t("it names the exact next step", body.includes("add a card or PayPal"), true);
-  t("it says nothing needs cleaning up", body.includes("nothing to clean up"), true);
+  /* R75: the stop is one sentence by key: one Cloudflare setting is needed first, what to do next, and that nothing needs cleaning up. */
+  t("the stop explains itself as a setting, not a failure, names the next step and says nothing needs cleaning up",
+    body.includes(headOf("installer.install.stopped.storage")) && body.includes(word("installer.install.stopped.storage", { said: "" }).split("(Cloudflare said:")[0].slice(-60)), true);
   t("no credentials were minted into the page", body.includes(String.raw`id="out-boot"`), false);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
@@ -512,7 +524,7 @@ console.log("\n--- install: an existing name stops everything ---");
   const calls = script([
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A3", name: "X" }]) },
-    { m: (u) => u.includes("/scripts/taken-name/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/taken-name/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("stops naming the name as taken, with a free one offered (R70, F7)", body.includes(word("screen.install.stopped.nametaken", { name: "taken-name" })) && body.includes("taken-name-2"), true);
@@ -523,7 +535,7 @@ console.log("\n--- install: an existing name stops everything ---");
 /* ---- the repository is preferred when newer and verified ---- */
 console.log("\n--- release: a newer verified repository copy installs ---");
 {
-  const repoSrc = "export default { fetch(){ return new Response('repo release'); } }; export class Store {}; export const S = \"" + LIM + "\";";
+  const repoSrc = "export default { fetch(){ return new Response('repo release'); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
   const repoVer = bump(RELEASE_VERSION);
   const repoSha = await shaHex(repoSrc);
   disarm();  /* an unarmed installer has only the hash to go on */
@@ -546,8 +558,8 @@ console.log("\n--- release: a newer verified repository copy installs ---");
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/fresh-town"));
   t("the repository's source is what installed", await sourceOf(put), repoSrc);
-  t("VERSION carries the repository's version", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, repoVer);
-  t("the page says which copy was used and why", body.includes("newer than the built-in"), true);
+  t("VERSION carries the repository's version", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION")?.text, repoVer);
+  t("the page says which copy was used and why", body.includes(word("installer.release.newer.checked", { version: repoVer, builtin: RELEASE_VERSION })), true);
   globalThis.fetch = realFetch;
 }
 
@@ -573,13 +585,14 @@ console.log("\n--- release: a copy that fails verification is never installed --
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/wary-town"));
   if (BUILTIN_OK) {
+    t("the built-in was uploaded (an upload happened)", !!put, true);
     t("the built-in source installed instead", (await sourceOf(put)).includes("tampered bytes"), false);
-    t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
+    t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION")?.text, RELEASE_VERSION);
   } else {
     t("R20: the built-in states no limits, so nothing installs, and the page says why",
-      [put === undefined, body.includes("states no limits for your team's Civicsmith")], [true, true]);
+      [put === undefined, body.includes(word("installer.release.refused.none", { builtin: RELEASE_VERSION }))], [true, true]);
   }
-  t("the page says the check failed and was not used", body.includes("did not pass its integrity check"), true);
+  t("the page says the check failed and was not used", body.includes(word("installer.release.fallback.integrity")), true);
   globalThis.fetch = realFetch;
 }
 
@@ -627,9 +640,9 @@ console.log("\n--- install: Workers Free is refused by name, nothing created ---
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("the refusal names the Workers Paid plan", body.includes(word("screen.install.stopped.plan")), true);
-  t("it names the cost", body.includes("$5/month"), true);
+  t("it names the cost and why", body.includes(word("installer.install.stopped.plan.why")), true);
   t("it names what to do", body.includes(word("screen.install.stopped.plan.do")), true);
-  t("it says nothing was created", body.includes("Nothing was created"), true);
+  t("it says nothing was created", body.includes(word("installer.install.stopped.plan.why").slice(-70)), true);
   t("REFUSED BEFORE ANYTHING WAS CREATED — free-town would otherwise be the half-installed instance: no bucket, no script",
     [calls.filter((c) => c.u.endsWith("/r2/buckets") && c.method === "POST").length,
      calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/free-town")).length], [0, 0]);
@@ -653,7 +666,7 @@ console.log("\n--- install: unverifiable plan is an honest refusal, nothing crea
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("the refusal says the plan could not be VERIFIED, not that it is Free",
-    body.includes("Could not verify") && !body.includes("Workers Paid plan is needed"), true);
+    body.includes(headOf("installer.install.stopped.planunknown")) && !body.includes(word("screen.install.stopped.plan")), true);
   t("it carries Cloudflare's own words", body.includes("internal error"), true);
   t("nothing was created here either",
     [calls.filter((c) => c.u.endsWith("/r2/buckets") && c.method === "POST").length,
@@ -669,7 +682,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A1", name: "Oak Watch" }]) },
-    { m: (u) => u.includes("/scripts/oak-watch/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/oak-watch/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [{ type: "secret_text", name: "ACCOUNT_SEAL_SECRET" }] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/oak-watch") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "oakwatch" }) },
@@ -689,7 +702,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
   t("storage is bound explicitly, healing older copies",
     meta.bindings.filter((b) => b.type === "r2_bucket").map((b) => b.name).sort(), ["CAPTURES", "PUBLISHED"]);
   t("no migrations on update", "migrations" in meta, false);
-  t("VERSION supplied fresh", meta.bindings.find((b) => b.name === "VERSION").text, CUR_VER);
+  t("VERSION supplied fresh", meta.bindings.find((b) => b.name === "VERSION")?.text, CUR_VER);
   /* D-102: the update retro-names copies installed before INSTANCE_NAME
      existed, which are advertising "instance unnamed" right now. Same shape as
      the storage healing above: an update quietly completes what an older
@@ -739,7 +752,7 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A5", name: "Old" }]) },
-    { m: (u) => u.includes("/scripts/old-copy/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/old-copy/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cferr("payment required", 402) },
     { m: (u, mth) => u.endsWith("/scripts/old-copy") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "old" }) },
@@ -772,7 +785,7 @@ console.log("\n--- update: unconfirmed version is named, patiently, and not repo
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A6", name: "Slow" }]) },
-    { m: (u) => u.includes("/scripts/slow-update/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/slow-update/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/slow-update") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "slow" }) },
@@ -859,7 +872,7 @@ async function installWith(slug, sub, manifestExtra, src) {
   return { body, source: put ? await sourceOf(put) : "", meta: put ? await metadataOf(put) : null };
 }
 
-const repoSrc2 = "export default { fetch(){ return new Response('signed repo release'); } }; export class Store {}; export const S = \"" + LIM + "\";";
+const repoSrc2 = "export default { fetch(){ return new Response('signed repo release'); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
 const repoSha2 = await shaHex(repoSrc2);
 const goodSig = await signAsset(new TextEncoder().encode(repoSrc2));
 
@@ -885,7 +898,7 @@ console.log("\n--- release signing: armed, an unsigned copy is refused ---");
   const r = await installWith("bare-town", "bt", { sha256: repoSha2 }, repoSrc2);
   t("the built-in installed instead", r.source.includes("signed repo release"), false);
   t("VERSION stays the built-in (or, R20, nothing installs while the built-in states no limits)",
-    r.meta ? r.meta.bindings.find((b) => b.name === "VERSION").text : BUILTIN_OK, BUILTIN_OK ? RELEASE_VERSION : false);
+    r.meta ? r.meta.bindings.find((b) => b.name === "VERSION")?.text : BUILTIN_OK, BUILTIN_OK ? RELEASE_VERSION : false);
   t("the page says why in plain words", r.body.includes("carries no signature"), true);
 }
 
@@ -986,7 +999,7 @@ const fleetRoutes = (slug, sub) => [
   t("the wasm part is uploaded under its manifest path with its STATED module type",
     (mput.init.body.get("assets/x.wasm"))?.type, "application/wasm");
   t("the page says all members installed, by name",
-    body.includes("capability workers installed") && body.includes("probe-member"), true);
+    [like("installer.fleet.done.one", { names: /[\s\S]*probe-member[\s\S]*/ }), like("installer.fleet.done.other", { n: /\d+/, names: /[\s\S]*probe-member[\s\S]*/ })].some((re) => re.test(unesc(body))), true);
 }
 
 console.log("\n--- fleet: a manifest without the /2 upload facts refuses by name ---");
@@ -1004,7 +1017,7 @@ console.log("\n--- fleet: a manifest without the /2 upload facts refuses by name
   t("no member reached the account",
     calls.some((c) => c.method === "PUT" && /\/scripts\/probe-member-[a-z0-9-]+$/.test(c.u)), false);
   t("the page says the manifest does not state how members are uploaded",
-    body.includes("does not state how they are uploaded"), true);
+    like("installer.fleet.skip.manifest.reason").test(unesc(body)), true);
   t("the plane itself installed normally",
     calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/bare-fleet")), true);
 }
@@ -1024,7 +1037,7 @@ console.log("\n--- fleet: a DROPPED member invalidates the set signature ---");
   t("dropping a member kills the whole fleet's signature — nothing installs",
     calls.some((c) => c.method === "PUT" && /\/scripts\/probe-member-[a-z0-9-]+$/.test(c.u)), false);
   t("and the page says the signature did not verify",
-    body.includes("fleet signature did not verify"), true);
+    like("installer.fleet.skip.signature").test(unesc(body)), true);
 }
 
 console.log("\n--- fleet: one failing member degrades ALONE, and is named ---");
@@ -1059,7 +1072,7 @@ console.log("\n--- fleet: the update path installs members too — the healing h
     { m: (u) => u.endsWith("/release/probe-member/assets/x.wasm"), f: () => new Response(wasmBytes) },
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "H", name: "Heal" }]) },
-    { m: (u) => u.includes("/scripts/heal-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/heal-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/heal-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => /\/scripts\/probe-member-[a-z0-9-]+$/.test(u) && mth === "PUT", f: () => cfok({}) },
@@ -1080,7 +1093,7 @@ console.log("\n--- update: replacing a version with itself is not a success ---"
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "N1", name: "Same" }]) },
     { m: (u) => u.includes("/scripts/same-town/settings"),
-      f: () => cfok({ bindings: [{ type: "plain_text", name: "VERSION", text: CUR_VER }] }) },
+      f: () => cfok({ observability: { enabled: true }, bindings: [{ type: "plain_text", name: "VERSION", text: CUR_VER }] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/same-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "sm" }) },
@@ -1093,19 +1106,23 @@ console.log("\n--- update: replacing a version with itself is not a success ---"
   t("the outcome says nothing changed", body.includes("Nothing changed"), true);
   t("and does not claim an update happened", /<b>Updated (from|to)/.test(body), false);
   t("and says what to check instead", body.includes("newer release has actually been published"), true);
-  t("D-436: a no-op update tells nothing about the producing group", body.includes("op=instancegroupseed"), false);
+  t("D-436: a no-op update tells nothing about how to record the producing team", body.includes("op=instancegroupseed"), false);
   globalThis.fetch = realFetch;
 }
 
-/* ---- D-436 (IC-172), item 3 of the DELEGATION to DIST: an update TELLS the one act it leaves, and never
-   does it. Added by DIST #4, 2026-09-22 (the 0.71.0 cut). A copy that ran a release before FIRST_GROUP_RELEASE
-   records no producing group after the update (decision (b)), and only its root of trust may record one; the
-   installer holds no instance credential, so it neither seeds nor even asks op=instancegroup — it tells from
-   the version it read before the upload. Each arm asserts that no call touched op=instancegroup at all. ---- */
+/* ---- D-436 (IC-172), R18, R78 (K3868): an update TELLS the operator when the copy records no producing team, and
+   never records it. Added by DIST #4, 2026-09-22 (the 0.71.0 cut); since K3868 the installer records the short name itself in a
+   run that holds the ADMIN_TOKEN it generated (the install, the requirements suite's R78), and an update holds none: it
+   reads what the copy records (`op=instancegroup`, which answers the public projection with no credential) and tells from
+   that read, with the version it read before the upload saying which paragraph explains it. Each arm asserts that no call
+   seeded, and that the read carried no credential. ---- */
 console.log("\n--- update: D-436 — the one act an update leaves to the operator is told, never done ---");
 const semverCmp = (a, b) => { const A = a.split(".").map(Number), B = b.split(".").map(Number);
   for (let i = 0; i < 3; i++) if (A[i] !== B[i]) return A[i] - B[i]; return 0; };
-const groupCalls = (calls) => calls.filter((c) => /op=instancegroup/.test(c.u)).map((c) => `${c.method} ${c.u}`);
+const groupCalls = (calls) => calls.filter((c) => /op=instancegroupseed/.test(c.u)).map((c) => `${c.method} ${c.u}`);
+/* What the copy answers when asked what it records: a group, or none (`group: null`, instance-setup R3). */
+const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: async () => { const answers = await instanceGroupAnswer({ group: group || "none" }); return jres({ ok: true, result: group ? answers.recorded : answers.none, store: "STORE" }); } });
+const unauthenticated = (calls) => calls.filter((c) => /op=instancegroup\b/.test(c.u)).every((c) => !c.init?.headers?.authorization);
 t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES the line the arms are about",
   semverCmp(RELEASE_VERSION, "0.71.0") >= 0, true);
 {
@@ -1115,27 +1132,25 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G1", name: "Cross" }]) },
-    { m: (u) => u.includes("/scripts/cross-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/cross-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [{ type: "secret_text", name: "INSTALL_COMPLETE" }] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/cross-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "cx" }) },
     { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdateBuilt("0.70.0", CUR_VER) },
+    recordsGroup("cross-town.cx.workers.dev", null),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`It runs release ${CUR_VER}; it ran 0.70.0.`), true);
-  t("and it TELLS the one act left to the operator, saying why from the version it read",
-    [body.includes("One thing this update does not do for you"), body.includes("Your team&#39;s Civicsmith ran 0.70.0 before this update")],
+  t("and it TELLS the operator the copy records no team, saying why from the version it read",
+    [body.includes(h(word("installer.team.unrecorded.head"))), body.includes(h(word("installer.team.unrecorded.certain", { before: "0.70.0", first: "0.71.0" })))],
     [true, true]);
-  t("naming what is refused until it is done, and by which code", body.includes("GROUP_UNDETERMINED"), true);
-  t("naming the act that settles it — the root of trust's seed, for the record AND for scratch",
-    [body.includes("op=instancegroupseed"), body.includes("store=scratch"), body.includes("ADMIN_TOKEN")], [true, true, true]);
-  /* R22 (N5): the example of this project's own copy (biosmoke7, believe-in-oakland) is gone; the notice says the two
-     names may differ without naming any copy but the operator's. */
-  t("the installed name is offered as a SUGGESTION, saying a copy's name and its team's may differ, naming no other copy",
-    [body.includes("A suggestion, not a default"), body.includes("cross-town"), body.includes("team producing its record need not be"),
-     /biosmoke7|believe-in-oakland/.test(body)],
-    [true, true, true, false]);
-  t("and it NEVER seeds, nor asks op=instancegroup (it holds no credential that could)", groupCalls(calls), []);
+  t("naming what the copy refuses until it is recorded", body.includes(h(word("installer.team.unrecorded.effect"))), true);
+  t("not naming 'run the installer again' for a copy whose state the update could not read as unfinished (it lands on a page that records nothing); no request or credential is told to the operator",
+    [body.includes(h(word("installer.team.unrecorded.how"))), body.includes("op=instancegroupseed"), body.includes("ADMIN_TOKEN")], [false, false, false]);
+  /* R22 (N5): no copy but the operator's is named; the installed name is only offered as the one the installer records unless another is given. */
+  t("the installed name is offered as a SUGGESTION, naming no other copy",
+    [body.includes(h(word("installer.team.unrecorded.suggest", { slug: "cross-town" }))), /biosmoke7|believe-in-oakland/.test(body)], [true, false]);
+  t("and it NEVER seeds (it holds no credential that could), and its read carries none", [groupCalls(calls), unauthenticated(calls)], [[], true]);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -1150,18 +1165,19 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u) => u.endsWith("/release/probe-member/assets/x.wasm"), f: () => new Response(wasmBytes) },
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G2", name: "Past" }]) },
-    { m: (u) => u.includes("/scripts/past-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/past-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/past-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => /\/scripts\/probe-member-[a-z0-9-]+$/.test(u) && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "pt" }) },
     { m: (u) => u.includes("past-town.pt.workers.dev/api/?op=bootstrap"), f: midUpdate(RELEASE_VERSION, FLEET_VER) },
+    recordsGroup("past-town.pt.workers.dev", "past-town"),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t(`PAST THE LINE (${RELEASE_VERSION} -> ${FLEET_VER}): the update lands`, body.includes(`It runs release ${FLEET_VER}; it ran ${RELEASE_VERSION}.`), true);
-  t("and tells NOTHING about the producing group: the update that crossed the line told it, or the copy recorded it at first boot",
-    [body.includes("One thing this update does not do for you"), body.includes("op=instancegroupseed")], [false, false]);
-  t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
+  t("and tells NOTHING about the producing team: the copy records it",
+    [body.includes(h(word("installer.team.unrecorded.head"))), body.includes("op=instancegroupseed")], [false, false]);
+  t("and never seeds", groupCalls(calls), []);
   globalThis.fetch = realFetch;
   disarm();
 }
@@ -1173,7 +1189,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G3", name: "Fog" }]) },
-    { m: (u) => u.includes("/scripts/fog-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/fog-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/fog-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "fg" }) },
@@ -1181,12 +1197,13 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u) => u.includes("fog-town.fg.workers.dev/api/?op=bootstrap"),
       f: () => n++ === 0 ? new Response("unavailable", { status: 503 })
         : jres({ ok: true, version: CUR_VER, storeVersion: CUR_VER, memberVersions: {} }) },
+    recordsGroup("fog-town.fg.workers.dev", null),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`It runs release ${CUR_VER}; it ran (not read).`), true);
+  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(h(word("installer.update.done.says", { to: CUR_VER, from: word("installer.update.unread") }))), true);
   t("and the telling is CONDITIONAL, saying the installer could not read what ran before — undetermined, stated",
-    [body.includes("could not read which version your team&#39;s Civicsmith ran"), body.includes("op=instancegroupseed")], [true, true]);
-  t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
+    [body.includes(h(word("installer.team.unrecorded.unknown", { first: "0.71.0" }))), body.includes("op=instancegroupseed")], [true, false]);
+  t("and never seeds", groupCalls(calls), []);
   globalThis.fetch = realFetch;
 }
 
@@ -1206,7 +1223,7 @@ console.log("\n--- D-116: the installer reads the store's and each member's OWN 
   t("PIN: a plane without the fields is read as unable to report them (the pre-D-116 releases)",
     reportsBuilds(repoSrc2), false);
 }
-const repoSrc3 = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\";";
+const repoSrc3 = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
 const repoSha3 = await shaHex(repoSrc3);
 const sig3 = await signAsset(new TextEncoder().encode(repoSrc3));
 const agentEntry = { ...memberEntry, member: "agent-worker", asset: "agent-worker.bundled.mjs", parts: [] };
@@ -1230,7 +1247,7 @@ async function d116Update(slug, after) {
     { m: (u) => u.endsWith("/release/agent-worker.bundled.mjs"), f: () => new Response(memberSrc) },
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "D1", name: "D116" }]) },
-    { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith(`/scripts/${slug}`) && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => /\/scripts\/agent-worker-[a-z0-9-]+$/.test(u) && mth === "PUT", f: () => cfok({}) },
@@ -1251,38 +1268,38 @@ async function d116Update(slug, after) {
   t("ARMED: the capable release was the one installed, with its member", [r.memberPut, r.askedMembers], [true, true]);
   t("ALL ON THE RELEASE: the update is reported done", r.body.includes(`It runs release ${FLEET_VER}; it ran 0.1.0.`), true);
   t("and says what was confirmed — every part, not only the address",
-    r.body.includes(`Every part of your team's Civicsmith answers ${FLEET_VER}`), true);
+    r.body.includes(h(word("installer.update.done.allanswer", { version: FLEET_VER }))), true);
   t("and names no lag", r.body.includes("not yet confirmed"), false);
 }
 {
   const r = await d116Update("stale-store", { storeVersion: "0.1.0",
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("A STALE DURABLE OBJECT under a current address is NAMED, with the build it runs",
-    r.body.includes("the record store of your team&#39;s Civicsmith still runs 0.1.0"), true);
+    like("installer.lag.store.version", { version: "0.1.0" }).test(unesc(r.body)), true);
   t("and the update is NOT reported done", [/<b>Updated (from|to)/.test(r.body), r.body.includes("not yet confirmed")], [false, true]);
 }
 {
   const r = await d116Update("old-store", { memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("A DO STILL ON PRE-D-116 CODE (no storeVersion at all, after a release that has it) is named, not taken as absent",
-    [r.body.includes("record store of your team&#39;s Civicsmith has not reported its version"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
+    [like("installer.lag.store.unreported").test(unesc(r.body)), /<b>Updated (from|to)/.test(r.body)], [true, false]);
 }
 {
   const r = await d116Update("stale-member", { storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": SERVING("0.1.0"), ...OTHERS } });
   t("A STALE MEMBER, read back through the plane's binding, is NAMED with the build it runs",
-    [r.body.includes("the capability worker agent-worker still runs 0.1.0"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
+    [like("installer.lag.member.version", { name: "agent-worker", version: "0.1.0" }).test(unesc(r.body)), /<b>Updated (from|to)/.test(r.body)], [true, false]);
 }
 {
   const r = await d116Update("loose-member", { storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
   t("A MEMBER THIS STEP INSTALLED but the plane cannot reach is NAMED — uploaded is not usable",
-    [r.body.includes("agent-worker was installed, but your team&#39;s Civicsmith holds no connection to it"), /<b>Updated (from|to)/.test(r.body)],
+    [like("installer.lag.member.unbound", { name: "agent-worker" }).test(unesc(r.body)), /<b>Updated (from|to)/.test(r.body)],
     [true, false]);
 }
 {
   const r = await d116Update("members-mute", { storeVersion: FLEET_VER });
   t("a capable plane that does not report its members is named, never read as none",
-    r.body.includes("did not report its capability workers"), true);
+    like("installer.lag.members.unreported").test(unesc(r.body)), true);
 }
 {
   /* The built-in release predates D-116 in this tree: its store's and members' builds are UNDETERMINED, and said. */
@@ -1292,7 +1309,7 @@ async function d116Update(slug, after) {
     ...NEWER(),
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "D2", name: "Pre" }]) },
-    { m: (u) => u.includes("/scripts/pre-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u) => u.includes("/scripts/pre-town/settings"), f: () => cfok({ existing: true, observability: { enabled: true }, bindings: [] }) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/pre-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "pr" }) },
@@ -1308,7 +1325,7 @@ async function d116Update(slug, after) {
     /* Once DIST cuts a release carrying D-116 and embeds it, the built-in release CAN report, and this fixture (which
        serves no storeVersion) is a stale DO — which is named. Both branches are asserted so the arm survives the cut. */
     t("THE BUILT-IN RELEASE CAN REPORT BUILDS: a copy answering no storeVersion after it is a stale DO, named",
-      body.includes("record store of your team&#39;s Civicsmith has not reported its version"), true);
+      like("installer.lag.store.unreported").test(unesc(body)), true);
   }
 }
 console.log("\n--- D-116: an INSTALL names a part not on the release, and still hands over the credentials ---");
@@ -1334,7 +1351,7 @@ async function d116Install(slug, reply) {
 {
   const ok = await d116Install("fresh-all", { version: FLEET_VER, storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
-  t("INSTALL, every part on the release: \"Your team's Civicsmith is running\"", ok.includes("Your team's Civicsmith is running."), true);
+  t("INSTALL, every part on the release: \"Your team's Civicsmith is running\"", ok.includes(h(word("installer.success.running"))), true);
   const lag = await d116Install("fresh-loose", { version: FLEET_VER, storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
   t("INSTALL with an installed member the plane cannot reach: NOT \"running\", and the member NAMED",
@@ -1362,7 +1379,7 @@ t("PIN: instance-setup's FLEET_BINDINGS names at least the three members (else t
   ["agent-worker", "pdf-worker", "ocr-worker"].every((m) => PLANE_FLEET.some(([x]) => x === m)), true);
 t("PIN: the installer exports no member binding table of its own (R30: imported, never copied)",
   "MEMBER_BINDINGS" in NG, false);
-const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\";";
+const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\"; export const C = \"" + CRONS_STATEMENT + "\";";
 const repoSha6 = await shaHex(repoSrc6);
 const sig6 = await signAsset(new TextEncoder().encode(repoSrc6));
 const fleet6 = PLANE_FLEET.map(([member]) => ({ ...memberEntry, member, asset: `${member}.bundled.mjs`,
@@ -1417,7 +1434,9 @@ async function dist6(slug, { mode = "install", pre = {}, manifest = manifest6, b
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => /\/workers\/scripts$/.test(u) && mth === "GET", f: () => cfok([...acct.keys()].map((id) => ({ id }))) },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET",
-      f: (u) => acct.has(u.split("/workers/scripts/")[1].split("/")[0]) ? cfok({}) : cferr("not found", 404) },
+      f: (u) => { const held = acct.get(u.split("/workers/scripts/")[1].split("/")[0]);
+        /* the copy's own answer: what it holds (R39's held place, G54's logs), as the last upload left it */
+        return held ? cfok({ observability: { enabled: true }, bindings: held.map((b) => ({ type: b.type, name: b.name, ...(b.type === "plain_text" ? { text: b.text } : {}) })) }) : cferr("not found", 404); } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
     { m: (u, mth) => u.endsWith(`/scripts/${slug}/subdomain`) && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "b6" }) },
@@ -1461,7 +1480,7 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     r.planePuts[0]?.find((b) => b.name === "DAEMON_TOKEN")?.text === r.planePuts.at(-1)?.find((b) => b.name === "DAEMON_TOKEN")?.text,
     true);
   t("INSTALL: the page reports the copy running, and says it was connected",
-    [r.body.includes("Your team's Civicsmith is running."), r.body.includes("Your team's Civicsmith is connected to")], [true, true]);
+    [r.body.includes(h(word("installer.success.running"))), r.body.includes("Your team's Civicsmith is connected to")], [true, true]);
 }
 {
   const r = await dist6("unbound-town", { mode: "update", pre: { "unbound-town": planeBase("unbound-town") } });
@@ -1494,14 +1513,14 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     r.targets, { ...RIGHT_OF("broken-ocr"), OCR_WORKER: null });
   t("and nothing was refused: no binding to a worker that is not there", r.refused, []);
   t("and the page NAMES the missing binding and does NOT report the copy running",
-    [r.body.includes("ocr-worker could not be installed, so your team&#39;s Civicsmith has no OCR_WORKER connection"),
+    [like("installer.lag.member.failed", { name: "ocr-worker" }).test(unesc(r.body)),
      r.body.includes("Your team's Civicsmith is running.")], [true, false]);
 }
 {
   const r = await dist6("broken-agent-up", { mode: "update", broken: "agent-worker",
     pre: { "broken-agent-up": planeBase("broken-agent-up") } });
   t("UPDATE, agent-worker's upload FAILED: AGENT_WORKER unbound, the missing binding NAMED, the update NOT reported done",
-    [r.svc("AGENT_WORKER"), r.body.includes("agent-worker could not be installed, so your team&#39;s Civicsmith has no AGENT_WORKER connection"),
+    [r.svc("AGENT_WORKER"), like("installer.lag.member.failed", { name: "agent-worker" }).test(unesc(r.body)),
      /<b>Updated (from|to)/.test(r.body)], [null, true, false]);
 }
 
@@ -1534,14 +1553,14 @@ console.log("\n--- DIST-9: the organisation ai credential is carried when suppli
   t("DIST-9 INSTALL, supplied: INSTANCE_AI_TOKEN is bound as a secret carrying EXACTLY the operator's value",
     aiOf(i1.planePuts.at(-1)).map((b) => [b.type, b.text]), [["secret_text", AI]]);
   t("DIST-9 INSTALL, supplied: the value is on NO page the installer renders", i1.body.includes(AI), false);
-  t("DIST-9 INSTALL, supplied: the page says it was stored", i1.body.includes("The organisation AI credential you gave was stored"), true);
+  t("DIST-9 INSTALL, supplied: the page says it was stored", i1.body.includes(word("installer.ai.given")), true);
 
   const i0 = await dist6("ai-none-install");
   t("DIST-9 NO-INVENTION (install): with none supplied, NO plane PUT carries INSTANCE_AI_TOKEN",
     (await sentIn(i0.calls, "ai-none-install")).length, 0);
   t("DIST-9 NO-INVENTION (install): and the copy holds none after the whole act", aiOf(i0.planePuts.at(-1)).length, 0);
   t("DIST-9 (install): the absence is STATED on the page, not left silent",
-    i0.body.includes("No organisation AI credential was given, so your team's Civicsmith has none"), true);
+    i0.body.includes(word("installer.ai.none.install")), true);
 
   const u1 = await dist6("ai-update", { mode: "update", ai: AI, pre: { "ai-update": planeBase("ai-update") } });
   t("DIST-9 UPDATE, supplied: a copy that held none now holds EXACTLY the operator's value",
@@ -1556,7 +1575,7 @@ console.log("\n--- DIST-9: the organisation ai credential is carried when suppli
   t("DIST-9 (update, none supplied): the value the copy already held is KEPT, unchanged (keep_bindings: secret_text)",
     aiOf(u0.planePuts.at(-1)).map((b) => b.text), [OLD]);
   t("DIST-9 (update): the page says none was sent and that the installer never creates one",
-    u0.body.includes("No organisation AI credential was given, so none was sent"), true);
+    u0.body.includes(word("installer.ai.none.update")), true);
 
   const upPage = await (await req("/update?version=" + CUR_VER)).text();
   const homePage = await (await req("/")).text();

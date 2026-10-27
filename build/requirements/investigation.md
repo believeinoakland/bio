@@ -1,6 +1,6 @@
 # investigation — requirements
 
-**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.3 (N820; D1, D15, D16, D19, D20, D27, D30, D48, H27, H28). Every requirement not yet met (T41). Last changed T42 (T42-21: R12 amended and R23 new, its own codes for C-146.26 and C-146.21, re-coded in place; R18 amended, `watchArrival` records then marks failed reads unread, `watchedProjects()` carries every source; N843, N846; K2566, K2572, K2608), not yet met.
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.3 (N820; D1, D15, D16, D19, D20, D27, D30, D48, H27, H28). Every requirement not yet met (T41). Last changed T42 (T42-21: R12 amended and R23 new, its own codes for C-146.26 and C-146.21, re-coded in place; R18 amended, `watchArrival` records then marks failed reads unread, `watchedProjects()` carries every source; N843, N846; K2566, K2572, K2608), not yet met. Last changed T51 (FR-15: R24, R25 new, amending R18; C65, K4168); met (K4214).
 
 **Size (P6).** About 1,900 lines.
 
@@ -51,7 +51,11 @@ A project's own working material over its steps and objective: milestones (D27),
   - `watchArrival` never throws for an arrival it has recorded. Once the arrival is written it answers `ok: true` with each of its reads (`quiet`, `standing`, `milestones`) as read after the write. A read that fails is answered `{unread: <why>}` in its place.
   - A refusal, or a failure before the write, records nothing.
   - `watchedProjects()` answers each watched project with every source `intent` R7 names for it, following R7's `cursor` to its end, never its first page alone. A project whose sources cannot be read whole is answered `watch: null` with `watch_unread` naming why, never a partial set as whole.
+- **R24** (amends R18; C65; DEC-381; `project-stage` R2; State Rules v1.5, 'How a project's stage is shown', K356, K362) `projectClose({project, reason, note?, by})` closes a project at its owner's choice, whether or not its work has gone quiet: `closed_reason` one of `resolved`, `superseded`, `abandoned` (`intent` R29), the gaps read at the act kept beside it as R18's close keeps them, the close made through the same revision of the project's document (`promotion`). The close is the owner's recorded act, never a stage the record grows into, so `project-stage` R2 then reads the project `closed` with that reason. Refusals as R18's, none of them `QUIET_NOT_QUIET`: a machine (`INVESTIGATION_MEMBER_ONLY`), a project not seen or not joined (`membership` R44, R55), a reason outside the three (`CLOSE_BAD_REASON`), a note empty or too long (`INVESTIGATION_NO_REASON`), and a joined participant who does not own the project (`PROJECT_ACT_NOT_THE_OWNER`, `membership` R122's one answer for the owner-only condition); each writes nothing. `projectCloseWithGaps` (R18) is the quiet path and stays as it is.
 - **R19** `projectStanding({project, viewer})` answers the project page: the objective and its condition, `intent.progress` (or "cannot be computed" with no condition), each question the project draws on with its legs grouped as supporting or cutting against and this project's conclusion beside the bar, and `intent.gaps`. It composes no score and names no member's share.
+
+#### Its declared ops (T51; K4168)
+- **R25** (K4168; `op-declarations` R80, `op-grades` R49) The module states, as `DECLARED_OPS`, each op it serves that a screen sends or that this tranche adds, with the fields it accepts and requires: `projectclose` (R24). `investigationOps` serves it, answering as `projectClose` does; a test holds the declaration true by calling the op as the door does.
 
 ## Private
 

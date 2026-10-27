@@ -2,7 +2,7 @@
    over the scripted scanner binding (fixture.mjs), which records each request. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, T0, DAY } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, T0, DAY } from "./fixture.mjs";
 import { RESCAN_INTERVAL_MS, SCAN_BATCH_MAX, FILE_SAFETY_CHECKS, findingKind } from "../../../src/file-safety/index.mjs";
 
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });

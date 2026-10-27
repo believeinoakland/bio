@@ -1,0 +1,210 @@
+/* screens-inquiry fix round 3 (T51), the question screen: C36 (R23, R24, R34: a leg whose extent states a paragraph draws it), C44 (R2: no opener, the head draws
+ * the date), C38 (R2: a removed citation is counted nowhere), C94 (members named by handle). On interface-shell's served page over a scripted
+ * plane (C36 paragraph, C38 over the real world: the state made by real acts, K5054); every expectation is a word read by key (R44), never copied (K3810). */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { boot, ok } from "../interface-shell/harness.mjs";
+import { open, storeWorld, main, press, inquiryMd, INQUIRY_REFS, LEGS, BASIS, says, word, day, lead, section, SCREENS, P, Q, D, SHA, POLICY, waitsSetAside, ASIDE_TITLE, HUNCHES, HUNCH } from "./fixtures.mjs";
+
+const at = "/app/question/" + Q;
+
+const OWN = { capabilities: ["contribute", "create_projects"] };
+/** A project of `ann`'s with a held page for each of `docs` (`{title, paragraphs?}`) and a question of hers resting on them (`legs[i]` overrides leg i's keys), drawn into the project, by real acts.
+ *  Answers `{world, ann, project, targets, id, page(opts)}`; `page` boots the question's page over the world's door. */
+const worldOf = async (docs, legs = []) => {
+  const world = await storeWorld();
+  const ann = await world.signIn("ann", OWN);
+  const project = await world.recipes.project(ann, "Pothole repairs");
+  const targets = [];
+  for (const d of docs) targets.push((await (d.plain ? world.recipes.hold(ann, d.title, d.plain, project, { read: !!d.read }) : world.recipes.page(ann, d.title, { paragraphs: d.paragraphs || ["The Director shall repair each reported pothole within seven calendar days of the report."], project }))).bundle);
+  const id = (await world.recipes.question(ann, project, { title: "Seven days", text: "Is the city repairing reported potholes within seven days?",
+    legs: targets.map((target, i) => ({ target, role: "supports", ...(legs[i] || {}) })), draw: true })).id;
+  const page = async (o = {}) => {
+    const { door, session } = world.boot(ann);
+    const p = await boot({ screens: SCREENS, door, session, path: "/app/question/" + id, ...o });
+    await p.settle();
+    return p;
+  };
+  return { world, ann, project, targets, id, page };
+};
+/** the question's citation of `target` taken out, by the acts the page makes (a selection, then `sever` with the question as the citing object) */
+const severLeg = async (w, target, reason = "the wrong year's orders") => {
+  const sel = await w.ann.act("select", { body: { ids: [target] } });
+  await w.ann.act("sever", { query: { project: w.id, handle: sel.handle, reason }, body: {} });
+};
+/** the partition held, by the act the page's "Save the answers" makes */
+const ground = (w, grounds, reason = "my reading") => w.ann.act("inquiryground", { body: { target: w.id, grounds, reason } });
+const CAPTURE = (grade) => ({ grade, grade_axis: "capture", grade_source: "capture" });
+
+/* ------------------------------------------------------------------------------------------------------------------ C36 */
+
+const D2 = "INFO-2026-0005";
+const SHA2 = "7c1d" + "0".repeat(56) + "e002";
+const SITE = "A web page from www.oaklandca.gov";
+const webImage = (id, sha) => ({ "bundle.md": ["---", `id: ${id}`, "object_type: information", `title: "${SITE}"`, `project: ${P}`, "source:", "  locator: https://www.oaklandca.gov/x", "---", ""].join("\n"),
+  "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: sha } }] }) });
+const legsMd = (legs) => ["---", `id: ${Q}`, "object_type: inquiry", 'title: "Seven days"', "created: 2026-10-03T10:00:00Z", `project: ${P}`, "references:",
+  ...legs.flatMap((l) => [`  - target: ${l.target}`, "    rel: cites", "    status: confirmed"]), "basis:",
+  ...legs.flatMap((l) => [`  - target: ${l.target}`, "    role: supports", "    grade: B", ...(l.ext || [])]), "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "", "## Session Log", ""].join("\n");
+const para = (n, text) => ({ seq: n + 1, extent: { kind: "doc-para", para: n }, reference: "p" + n, truncated: false, text });
+const readingOf = (r) => ok({ ok: true, found: true, capture_sha: r.query.sha256, reading: { content_type: "text/html", found: true },
+  text_units: r.query.sha256 === SHA2 ? [para(0, "Intro."), para(2, "Potholes reported through 311 are repaired within seven days.")] : [], unread_pages: [] });
+const supportsRows = (p) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.question.supports.head")).querySelectorAll(".cs-row");
+
+test("R23 R24 R34 C36 a web-page leg whose extent states a paragraph draws `screen.question.leg.paragraph` (counted from zero in the record, drawn from one) and its words; control: a leg with no paragraph and no page draws neither", async () => {
+  const WORDS = "Potholes reported through 311 are repaired within seven days.";
+  const w = await worldOf([{ title: SITE, paragraphs: ["Intro.", WORDS] }, { title: POLICY }], [{ extent_kind: "doc-para", extent_para: 2 }, {}]);
+  const p = await w.page();
+  const rows = supportsRows(p);
+  assert.equal(rows.length, 2);
+  assert.ok(says(rows[0], "screen.question.leg.paragraph", { n: "3" }), "Paragraph 3 for paragraph 2 counted from zero");
+  assert.ok(rows[0].textContent.includes(WORDS), "and its words");
+  assert.ok(!rows[0].textContent.includes(word("screen.document.passage.where", { page: "3" })), "not as a page");
+  assert.ok(!rows[1].textContent.includes(word("screen.question.leg.paragraph", { n: "1" }).split("1")[0]) && !rows[1].textContent.includes(word("screen.document.passage.where", { page: "1" }).split("1")[0]),
+    "control: no paragraph and no page, neither");
+});
+
+test("R78 C36 the paragraph of a leg the reading shown states (`extent: {para}`) is drawn the same; a page extent still draws its page", async () => {
+  const basis = ok(BASIS({ versions: [{ name: "main", state: "accepted", author: "member:dev", moved: { by: "dev", at: "2026-10-06T09:00:00Z", reason: null }, grounds: [], legs: [
+    { ord: 1, target: D, role: "supports", grade: "B", target_title: POLICY, extent: { kind: "doc-para", para: 0 } },
+    { ord: 2, target: D2, role: "supports", grade: "B", target_title: "Work orders", extent: { kind: "pdf-page", page: 4 } }] }] }));
+  const p = await open(at, { images: { [Q]: { "bundle.md": legsMd([{ target: D }, { target: D2 }]) } }, plane: { basisversions: basis } });
+  const rows = supportsRows(p);
+  assert.ok(says(rows[0], "screen.question.leg.paragraph", { n: "1" }), "paragraph 0 is Paragraph 1");
+  assert.ok(says(rows[1], "screen.document.passage.where", { page: "5" }) && !rows[1].textContent.includes(word("screen.question.leg.paragraph", { n: "5" })), "a page is a page");
+});
+
+/* ------------------------------------------------------------------------------------------------------------------ C44 */
+
+test("R2 C44 a question whose record names no opener draws `screen.project.opened.date` with the project beside it, and no 'Opened by' with an undetermined name; control: with an author, the existing sentence", async () => {
+  const none = await open(at);
+  const sub = main(none).querySelector(".mk-sub");
+  assert.ok(says(sub, "screen.project.opened.date", { date: day("2026-10-03") }), "Opened <date>");
+  assert.ok(!sub.textContent.includes(lead("screen.question.opened")), "no 'Opened by'");
+  assert.ok(!sub.textContent.includes(word("state.undetermined", { reason: "" }).trim()), "no undetermined name");
+  assert.ok(sub.querySelector('a.cs-ref[href="/app/project/' + P + '"]'), "the project beside it");
+  /* the same when the question has no project to name */
+  const loose = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(null) } }, inquiryProject: null });
+  const sub2 = main(loose).querySelector(".mk-sub");
+  assert.ok(says(sub2, "screen.project.opened.date", { date: day("2026-10-03") }) && !sub2.textContent.includes(lead("screen.question.opened")), "no project, no opener");
+  /* control: an author in the first promotion keeps the existing sentence */
+  const hist = JSON.stringify({ target: Q, base: null, created: "2026-10-03T10:00:00Z", author: "member:dev" });
+  const named = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(), "_history/promotion_a.json": hist } } });
+  const sub3 = main(named).querySelector(".mk-sub");
+  assert.ok(sub3.textContent.includes(word("screen.question.opened", { name: "dev", date: day("2026-10-03"), project: "" }).trim()), "the existing sentence");
+  assert.ok(!sub3.textContent.includes(word("screen.project.opened.date", { date: day("2026-10-03") })), "and not the date-only head");
+});
+
+/* ------------------------------------------------------------------------------------------------------------------ C38 */
+
+const SEVERED = "Severed 2026-10-07T09:00:00Z: the wrong year's orders";
+const refsWith = (status2) => [[D, "cites", "confirmed", null], [D2, "cites", status2, status2 === "severed" ? JSON.stringify(SEVERED) : null]];
+const twoLegs = (o = {}) => [{ target: D, role: "supports", grade: "B", ...(o.g1 ? { ground: "part 1" } : {}) }, { target: D2, role: "supports", grade: "B", ...(o.g2 ? { ground: "part 1" } : {}) }];
+const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
+
+test("R2 R23 C38 state b: a severed citation is not asked about and not sent in the partition; saving sends the live passage alone; control: the same leg live is both asked about and sent", async () => {
+  const run = async (severed) => {
+    const w = await worldOf([{ title: POLICY }, { title: "Work orders" }]);
+    if (severed) await severLeg(w, w.targets[1]);
+    const p = await w.page();
+    const asked = section(p, "question.ask.title").querySelectorAll("[data-ask]").length;
+    /* each live passage answered "Yes" with no other named: a ground of its own (R23; a "No" is necessary and in no ground, DEC-32 clause 2) */
+    p.doc.getElementById("ask-0-1").checked = true;
+    if (!severed) p.doc.getElementById("ask-1-1").checked = true;
+    await press(p, "inquiryground", { reason: "my first reading" });
+    return { asked, grounds: p.byOp("inquiryground")[0].body.grounds };
+  };
+  const sev = await run(true);
+  assert.equal(sev.asked, 1, "only the live passage is asked about");
+  assert.deepEqual(sev.grounds, [{ ground: "part 1", legs: [0] }], "the partition holds the live passage alone");
+  const live = await run(false);
+  assert.equal(live.asked, 2, "control: the live leg is asked about");
+  assert.deepEqual(live.grounds, [{ ground: "part 1", legs: [0] }, { ground: "part 2", legs: [1] }], "control: and sent");
+});
+
+test("R2 R116 C38 the strength sentence names the legs it leaves out by title, never a removed citation: a severed leg is not named; control: the same leg live is named", async () => {
+  /* the owner's strength lists no removed citation among the legs it leaves out (it counts it nowhere), so the screen has none to hide; the live leg is named as before */
+  const draw = async (severed) => {
+    const w = await worldOf([{ title: POLICY }, { title: "Work orders" }]);
+    await ground(w, [{ ground: "part 1", legs: [0, 1] }]);
+    if (severed) await severLeg(w, w.targets[1]);
+    const p = await w.page();
+    return { box: main(p).querySelector(".mk-strengthbox"), doc: w.targets[1] };
+  };
+  const sev = await draw(true);
+  const axis = word("mark.scale.connection.name");
+  assert.ok(says(sev.box, "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: POLICY }) || says(sev.box, "strength.arithmetic.unrated_no_leg_on_any_set", { axis, count: "1", legs: POLICY }), "the live leg alone, by its title");
+  assert.ok(!sev.box.textContent.includes("Work orders") && !sev.box.textContent.includes(sev.doc), "the removed citation is not named");
+  const live = await draw(false);
+  assert.ok(says(live.box, "strength.arithmetic.unrated_no_leg_on_this_axis", { axis, legs: POLICY + ", Work orders" }) || says(live.box, "strength.arithmetic.unrated_no_leg_on_any_set", { axis, count: "2", legs: POLICY + ", Work orders" }), "control: the same leg live is named");
+});
+
+test("R2 R24 C38 'What your answer rests on' and the weakest part leave out a removed citation; control: the same leg live is read back", async () => {
+  const WORDS = "Within seven calendar days of the report.";
+  const draw = async (severed) => {
+    /* the weakest part of the answer is the work orders, the one leg graded (capture C) while both are cited; the policy is cited at its paragraph (a leg that points into a read page carries no grade the world accepts) */
+    const w = await worldOf([{ title: POLICY, paragraphs: [WORDS] }, { title: "Work orders", plain: "The work orders of 2026." }], [{ extent_kind: "doc-para", extent_para: 1 }, CAPTURE("C")]);
+    await ground(w, [{ ground: "part 1", legs: [0, 1] }]);
+    if (severed) await severLeg(w, w.targets[1]);
+    const p = await w.page();
+    return { rests: section(p, "question.rests.title"), box: main(p).querySelector(".mk-strengthbox") };
+  };
+  const sev = await draw(true);
+  assert.ok(sev.rests.textContent.includes(POLICY) && !sev.rests.textContent.includes("Work orders"), "the read-back holds the live passage alone");
+  assert.ok(!sev.box.textContent.includes("Work orders"), "and the weakest part is not a removed citation");
+  const live = await draw(false);
+  /* fix round 4 (C36 aside; R24): each passage in the read-back is named with the words it cites where the record states them */
+  assert.ok(says(live.rests, "question.rests.all", { passages: POLICY + " \u00b7 Paragraph 2 \u00b7 \u201c" + WORDS + "\u201d, Work orders" }), "control: live, both are read back, the first by its words");
+  assert.ok(says(live.box, "screen.question.strength.weakest", { weakest: "Work orders" }), "control: and the weakest part is named");
+});
+
+test("R2 C38 the page reads the strength and the partition again after a sever", async () => {
+  const w = await worldOf([{ title: POLICY }, { title: "Work orders" }]);
+  await ground(w, [{ ground: "part 1", legs: [0, 1] }]);
+  const p = await w.page();
+  const before = [p.byOp("inquirystrength").length, p.byOp("inquirypartition").length, p.byOp("partitionindependence").length];
+  await press(p, "sever", { reason: "it is the 2023 policy", within: section(p, "screen.question.supports.head") });
+  assert.ok(p.byOp("sever").length === 1 && p.byOp("select").length === 1, "the page's own selection and sever were sent");
+  assert.ok(p.byOp("inquirystrength").length > before[0], "the strength is read again");
+  assert.ok(p.byOp("inquirypartition").length > before[1], "and the partition");
+  assert.ok(p.byOp("partitionindependence").length > before[2], "and its shared origins");
+});
+
+/* ------------------------------------------------------------------------------------------------------------------ C94 */
+
+const ROSTER = ok({ ok: true, members: [{ member_id: "admin", handle: "sparky", founder: true }, { member_id: "u-7", handle: "rosa" }, { member_id: "u-9", handle: null }] });
+const hist = (author) => JSON.stringify({ target: Q, base: null, created: "2026-10-03T10:00:00Z", author });
+const CONCLUDED_BY = (by) => (r) => ok(BASIS(r.query.project ? { conclusion: { claim: { text: "Yes." }, by, at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" } : {}));
+const waitsBy = (setter) => ok(waitsSetAside({ setter: "member:" + setter }).answer);
+/* hypotheses' real list, the live hunch held by each author in turn (fixtures-own: synthetic the author, an input that exercises the handle lookup) */
+const hunchBy = (held_by) => ok({ ...HUNCHES, hypotheses: [{ ...HUNCH, held_by: "member:" + held_by }] });
+
+test("R2 R40 R46 C94 the members the question names from the record are drawn by handle, never by id: the founder's id `admin`, another member's id; an unknown id by the plain word; control: with the roster silent, the fallback words", async () => {
+  const draw = async (author, roster) => open(at, { images: { [Q]: { "bundle.md": inquiryMd(), "_history/promotion_a.json": hist("member:" + author) } },
+    plane: { memberlist: roster, basisversions: CONCLUDED_BY("member:" + author), questionwaits: waitsBy(author), hypotheses: hunchBy(author) } });
+  const surfaces = (p) => ({ head: main(p).querySelector(".mk-sub"), concluded: section(p, "question.concluded.heading"), waits: section(p, "screen.question.waits.head"), hunches: section(p, "screen.question.hunches.head") });
+  for (const [author, handle] of [["admin", "sparky"], ["u-7", "rosa"]]) {
+    const p = await draw(author, ROSTER);
+    await p.settle();
+    const s = surfaces(p);
+    assert.ok(s.head.textContent.includes(word("screen.question.opened", { name: handle, date: day("2026-10-03"), project: "" }).trim()), author + ": opened by " + handle);
+    assert.ok(says(s.concluded, "question.concluded.by", { who: handle, date: day("2026-10-13") }), author + ": concluded by " + handle);
+    assert.ok(says(s.waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: handle, reason: "wrong year" }), author + ": set aside by " + handle);
+    assert.ok(says(s.hunches, "screen.question.hunch.by", { who: handle }), author + ": a hunch of " + handle);
+    assert.doesNotMatch(main(p).textContent, /\badmin\b|\bu-7\b/, author + ": never the id");
+  }
+  /* an id the roster holds no handle for (or does not hold) is the plain word, never the id */
+  const unk = await draw("u-99", ROSTER);
+  await unk.settle();
+  assert.ok(surfaces(unk).head.textContent.includes(word("screen.question.opened", { name: word("shell.card.member"), date: day("2026-10-03"), project: "" }).trim()), "unknown id: the plain word");
+  assert.ok(says(surfaces(unk).waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: word("shell.card.member"), reason: "wrong year" }));
+  assert.doesNotMatch(main(unk).textContent, /\bu-99\b/);
+  /* control: no handle known (the roster silent): the founder unnamed by key, any other member by the plain word */
+  const quiet = ok({ ok: true, members: [] });
+  const f = await draw("admin", quiet);
+  await f.settle();
+  assert.ok(says(surfaces(f).waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: word("member.founder.unnamed"), reason: "wrong year" }), "the founder unnamed");
+  const m = await draw("u-7", quiet);
+  await m.settle();
+  assert.ok(says(surfaces(m).waits, "screen.question.waits.setaside", { document: ASIDE_TITLE, who: word("shell.card.member"), reason: "wrong year" }), "a member with no handle known: the fallback word");
+});

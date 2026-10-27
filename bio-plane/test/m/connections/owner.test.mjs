@@ -12,6 +12,8 @@ import { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_DECLARES, M
          WARN_BAND, PAIR_RULE,
          CONNECTIONS_TABLES, THEME_ID_RE, THEME_REF_RE, themeLegFindings, mentionedMethod, registeredNeighbours }
   from "../../../src/connections/index.mjs";
+import { MENTIONED_UNDATED } from "../../../src/connections/mentioned.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const E = "ENT-2026-0001", F = "ENT-2026-0002";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", H = "INFO-2026-0050-h";
@@ -36,10 +38,12 @@ const ids = (r) => r.items.map((i) => i.id).sort();
 test("R62, R69: registered once at load through connection-grammar.registerOwner, owner connections, the derived kind mentioned_together and (R69) the evidentiary kind step_source, each with its members' word, and its neighbours read", () => {
   assert.deepEqual(MENTIONED_REGISTRATION, { ok: true, owner: "connections" });
   const held = defaultRegistry.owners().find((o) => o.owner === MENTIONED_OWNER);
-  assert.deepEqual(held, { owner: "connections", kinds: [{ kind: "mentioned_together", word: "mentioned together", class: "derived" },
-                                                         { kind: "step_source", word: "stated in a source", class: "evidentiary" }] });
-  assert.deepEqual(defaultRegistry.kindOf("step_source"), { owner: "connections", word: "stated in a source", class: "evidentiary" });
-  assert.deepEqual(defaultRegistry.kindOf(MENTIONED_KIND), { owner: "connections", word: "mentioned together", class: "derived" });
+  const mentionedWord = localize("connections.mentioned.kind_word", "mentioned together");
+  const stepWord = localize("connections.stepsources.kind_word", "stated in a source");
+  assert.deepEqual(held, { owner: "connections", kinds: [{ kind: "mentioned_together", word: mentionedWord, class: "derived" },
+                                                         { kind: "step_source", word: stepWord, class: "evidentiary" }] });
+  assert.deepEqual(defaultRegistry.kindOf("step_source"), { owner: "connections", word: stepWord, class: "evidentiary" });
+  assert.deepEqual(defaultRegistry.kindOf(MENTIONED_KIND), { owner: "connections", word: mentionedWord, class: "derived" });
   assert.equal(defaultRegistry.registerOwner({ owner: "connections", kinds: [...MENTIONED_KINDS], neighbours: registeredNeighbours }).refused,
                "OWNER_DUPLICATE", "once");
   /* Through the registry: the read reaches this module by the caller's host (R19 passes it through), conforming. */
@@ -87,7 +91,7 @@ test("R62 (N560; K1563 (2)): its owner-conformance battery (connection-grammar R
      never dropped as out, so the set is the same whatever the date asked. */
   for (const i of all.items) {
     assert.deepEqual(i.valid, { from: null, to: null, precision: "day", zone: "UTC" }, "no valid bound stated");
-    assert.equal(i.undetermined.why.includes("states no dates"), true, "marked undetermined, never out");
+    assert.deepEqual(i.undetermined.why, MENTIONED_UNDATED, "marked undetermined, never out");
   }
   for (const at of ["1900-01-01", "2026-10-01", "2999-12-31", undefined])
     assert.deepEqual(ids(ask(w, { node: A, viewer: MACHINE, at })), ids(all), `the same set at ${at}`);
@@ -119,8 +123,8 @@ test("R63: each item is one derived connection in connection-grammar's shape: fr
   assert.deepEqual(it.evidence.map((e) => [e.source, e.capture, e.ref]), [[A, a, "Ord. 13,579"], [B, b, "Ordinance 13579"]]);
   assert.equal(it.evidence[0].position.ref, "page 3", "where the reference was read, when recorded");
   assert.equal(it.evidence[1].position, null);
-  assert.deepEqual(it.valid, { from: null, to: null, precision: "day", zone: "UTC" }, "co-mention states no dates");
-  assert.match(it.undetermined.why, /undetermined, never out/);
+  assert.deepEqual(it.valid, { from: null, to: null, precision: "day", zone: "UTC" }, "R63: the kind is undated");
+  assert.deepEqual(it.undetermined.why, MENTIONED_UNDATED);
   for (const i of r.items) assert.deepEqual(reg.checkConnection(i), { ok: true });
   /* Through either end, the same connection is the same id; two identical reads are identical. */
   const fromB = ask(w, { node: B, viewer: V("alice") });
@@ -183,7 +187,7 @@ test("R64: a capped derivation answers so — every item through an entity last 
   assert.equal(r.items[0].truncated, true);
   assert.equal(r.truncated, true);
   assert.deepEqual(r.bounds.map(({ why, ...x }) => x), [{ entity: E, documents: 2, document_limit: 2, resolution_rows: 3, pair_limit: 1 }]);
-  assert.match(r.bounds[0].why, /stopped at its bound.*not the whole/);
+  assert.equal(r.bounds[0].why, word("connections.last_derivation_stopped", { entry: E, documents: "2", document_limit: "2", pair_limit: "1", resolution_rows: "3" }));
   w.k.derive({ entityId: E });
   const whole = ask(w, { node, viewer: V("alice") });
   assert.equal(whole.items.length, 3);
@@ -221,7 +225,7 @@ test("R65: an entity concerned by more than 32 documents is a hub — its co-men
   w.k.derive({ entityId: G, limit: 5000 }); w.k.derive({ entityId: E });
   const m = ask(w, { node: docs[0], viewer: MACHINE });
   assert.deepEqual(m.hubs.map(({ why, ...h }) => h), [{ entity: G, set_size: 33 }]);
-  assert.match(m.hubs[0].why, /more than 32.*step around/);
+  assert.equal(m.hubs[0].why, word("connections.why.documents_see_concern", { size: "33", entry: G, co_mention_hub: String(CO_MENTION_HUB) }));
   assert.deepEqual(m.items.map((i) => i.derived.inputs[0].entity), [E], "only the co-mention through E is an item");
   assert.equal(m.hub, undefined, "`hub` keeps connection-grammar's meaning: the node's own set over 1,000");
   /* For a member the hidden document is not counted: 32 is no hub, and its co-mentions are answered. */
@@ -237,7 +241,7 @@ test("R65: a node whose own set exceeds connection-grammar's BOUNDS.hub is answe
   const r = ask(w, { node: big, viewer: MACHINE });
   assert.deepEqual(r.items, []);
   assert.equal(r.hub.set_size, BOUNDS.hub + 1);
-  assert.match(r.hub.why, /named, never expanded/);
+  assert.equal(r.hub.why, word("connections.why.document_mentioned_together", { items: String(r.hub.set_size), hub: String(BOUNDS.hub) }));
   const reg = createRegistry();
   reg.registerOwner({ owner: "connections", kinds: MENTIONED_KINDS.map((x) => ({ ...x })), neighbours: (x) => w.k.neighbours(x) });
   assert.deepEqual(reg.neighbours({ owner: "connections", node: big, kinds: [MENTIONED_KIND], at: "2026-10-01", viewer: MACHINE, scope: null }), r,
@@ -245,7 +249,7 @@ test("R65: a node whose own set exceeds connection-grammar's BOUNDS.hub is answe
   const warn = hubWorld(w, "INFO-2026-0901-y", WARN_BAND, "ENT-2026-8");
   const ww = ask(w, { node: warn, viewer: MACHINE });
   assert.equal(ww.items.length, WARN_BAND); assert.equal(ww.set_size, WARN_BAND);
-  assert.match(ww.says, /answered whole/);
+  assert.equal(ww.says, word("connections.says.document_mentioned_together", { items: String(ww.set_size) }));
   assert.equal(ww.next, undefined);
   const under = hubWorld(w, "INFO-2026-0902-v", WARN_BAND - 1, "ENT-2026-9");
   assert.equal(ask(w, { node: under, viewer: MACHINE }).set_size, undefined);

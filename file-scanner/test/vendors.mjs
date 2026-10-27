@@ -177,7 +177,7 @@ export function vendorNet(state = {}) {
         const type = url.searchParams.get('threatType');
         const prefixes = type === 'MALWARE' ? listed : [];
         const sum = st.badChecksum ? 'AAAA' : checksum(prefixes);
-        return j({ responseType: 'RESET', additions: { rawHashes: prefixes.length ? [{ prefixSize: 4, rawHashes: Buffer.concat(prefixes).toString('base64') }] : [] },
+        return j({ responseType: 'RESET', additions: { rawHashes: prefixes.length ? [{ prefixSize: 4, rawHashes: (st.unreadable ? Buffer.concat([...prefixes, Buffer.from([1])]) : Buffer.concat(prefixes)).toString('base64') }] : [] },
           newVersionToken: Buffer.from(`${type}-v1`).toString('base64'), checksum: { sha256: sum } });
       }
       if (rec.path === '/v1/hashes:search') {

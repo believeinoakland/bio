@@ -8,6 +8,8 @@
    helper. The row change was stamped by 1.49.0 (PROMOTION #20, T19 layer 2). C-33.40's `where` names all five of its
    sites since T43 (N857), stamped with that tranche's census. */
 
+import { word } from '../setup-words/index.mjs';
+
 export const SHARED_ACT_CHECKS = Object.freeze({
   /* ---------------------------------------------------------------------------
      D-484, 2026-09-24 — THE FIRST TWO ROWS THIS FAMILY'S OWN HEADER SAID IT
@@ -52,23 +54,14 @@ export const SHARED_ACT_CHECKS = Object.freeze({
       + 'src/progressions/index.mjs), src/entities/index.mjs actShapeRefusal (entities\' held identifier and '
       + 'grade-D testimony), src/money/index.mjs refusal (money\'s fund type, `setFundType`), and '
       + 'src/lines/index.mjs noBasis (lines\' basis forms, `recordLine`)',
-    translation: 'This asks the record to stand behind something without saying what it rests on. '
-      + 'Say what that is first — what the question is grounded in, what you personally observed, or '
-      + 'why a settled thing is being changed — and the record carries it beside the claim, in your '
-      + 'name, so a later reader can go and disagree with it. If the honest answer is that nothing '
-      + 'supports it yet, write that down rather than inventing something: a stated absence is a real '
-      + 'answer here, and an empty basis reads as one nobody checked.',
+    translation: word('refusal.NO_BASIS'),
   },
   NO_CITATION: {
     check: 'C-33.41',
     where: 'src/entities/index.mjs actShapeRefusal (entities\' declared relation, `declareRelation`), and '
       + 'src/progressions/checks.mjs refusal (progressions\' revision of a declared flow and exception document, '
       + 'src/progressions/index.mjs)',
-    translation: 'A citation is the address of something somebody who was not here can go and read. '
-      + 'Without one, what you have written can only be checked by you, and the record would be '
-      + 'claiming more than it can show. Name where the source is published or held — if it is not '
-      + 'public, say who holds it and how it was seen, which is still an address and is still '
-      + 'checkable.',
+    translation: word('refusal.NO_CITATION'),
   },
   /* R52 (T41-1, N820; D3; K231, K2426): ONE CODE, ONE CONDITION, ONE ROW. Accepting a proposal as proposed, where that
      would make a member vouch for a legal or authored statement (an action's reason, a case statement, a testimony), is
@@ -81,7 +74,6 @@ export const SHARED_ACT_CHECKS = Object.freeze({
     where: 'raised by the owner of each accepting act that would make a member vouch for a legal or authored statement '
       + '(steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-account '
       + 'R4), from this shared row (record-grammar R52)',
-    translation: 'Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your '
-      + 'own words instead, by editing it or writing your own, and the record keeps that the words are yours.',
+    translation: word('refusal.ACCEPT_MUST_REAUTHOR'),
   },
 });

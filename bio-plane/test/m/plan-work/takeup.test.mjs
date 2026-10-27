@@ -5,13 +5,19 @@ import { world, code, by, V, MACHINE, ms } from "./fixture.mjs";
 import { noSuchPlan, ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
 import { PLAN_WORK_CHECKS } from "../../../src/plan-work/index.mjs";
 import { INTERNAL as DUTIES_INTERNAL } from "../../../src/duties/index.mjs";
+import { escalationRead } from "../escalation/fixtures.mjs";
+import { transitionsUnknownDuty } from "../duties/fixtures.mjs";
+
+/* duties R14 answers a read for a duty it does not hold as no transitions, never a refusal */
+const unknownDuty = transitionsUnknownDuty().read;
 
 function setup() {
   const w = world();
   const s = w.started({ subjects: [w.S1], dates: [{ date: "2026-11-01", basis: "statute" }] });
   w.ap.scenarioSet({ plan: w.PL, scenario: 1, name: "Main",
     phases: [{ id: "ask", name: "Ask", options: [s.option], starts: "plan_start", checkpoint: { after_days: 10 } }], ...by("bob") });
-  w.stand.escalation.escalationRead = ({ id, viewer }) => (viewer === V("dave") || id !== "ESC-2026-0001-e" ? { ok: false, reason: "NO_SUCH_ESCALATION" }
+  const refused = escalationRead().unknownAnswer;
+  w.stand.escalation.escalationRead = ({ id, viewer }) => (viewer === V("dave") || id !== "ESC-2026-0001-e" ? refused
     : { ok: true, id, stage: 3, history: [], proposed: [{ from: 3, to: 4, ids: [], instant: "2026-10-20T00:00:00Z" }] });
   /* on the project: an action started from a plan carries no project, so a hold on it is seen by every member (J2 (a)) */
   const h = w.holds.actionHold({ project: w.P, hold: "in_place", reason: "a letter from their lawyer", ...by("bob") });
@@ -172,7 +178,7 @@ test("R15: control: with one duty unmet, met_at is null; a met reading not yet r
   w.transitionsAnswer = () => { throw new Error("down"); };
   const f = read();
   assert.deepEqual([f.ok, f.all_met, f.met_at], [true, true, null]); assert.ok(f.met_at_why);
-  w.transitionsAnswer = () => ({ ok: false, reason: "NO_SUCH_DUTY" });
+  w.transitionsAnswer = () => unknownDuty;
   assert.equal(read().met_at, null);
   /* a matter with no promise answers met_at null */
   const { w: w2, s: s2 } = setup();
@@ -218,7 +224,7 @@ test("R17: when all_met holds but met_at cannot be stated, met_at is null with m
   assert.deepEqual([r.ok, r.all_met, r.met_at], [true, true, null]);
   assert.equal(typeof r.met_at_why, "string"); assert.match(r.met_at_why, /DUT-2/);
   /* readings that cannot be read: null with why */
-  w.transitionsAnswer = () => ({ ok: false, reason: "NO_SUCH_DUTY" });
+  w.transitionsAnswer = () => unknownDuty;
   const u = read();
   assert.deepEqual([u.met_at, typeof u.met_at_why], [null, "string"]);
   w.transitionsAnswer = null;

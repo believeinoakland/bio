@@ -3,27 +3,28 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, projectMd, ANN, BOB, DAN, OUT, AI, P1, P2, PH, Q1, Q2 } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R17: quietState is quiet when every step of the project and its questions is ended or set aside and nothing is awaited; a display, never a stage", () => {
   const w = world();
   const q = () => w.inv.quietState({ project: P1, viewer: ANN });
-  assert.deepEqual([q().quiet, q().why], [false, "no step has been taken"]);
+  assert.deepEqual([q().quiet, q().why], [false, word("investigation.why.step_taken")]);
   const a = w.step();                                                    /* on Q1 */
   const b = w.step({ place: { project: P1 }, work: "Project work" });
   const c = w.step({ place: { questions: [Q2] }, work: "On Q2", by: BOB });
   assert.equal(q().quiet, false);
   w.end(a); w.end(b, "set_aside");
-  assert.deepEqual([q().quiet, q().why], [false, "a step is still open"]);
+  assert.deepEqual([q().quiet, q().why], [false, word("investigation.why.step_open")]);
   w.end(c, "ended", BOB);
   assert.deepEqual([q().quiet, q().display, q().stage], [true, "quiet", null]);
   /* a dated wait on a question awaited: not quiet; ended: quiet */
   w.dated.set(Q1, [{ index: 0, text: "the reply", date: "2026-11-01", state: "waiting" }]);
-  assert.deepEqual([q().quiet, q().why], [false, "a dated wait is still awaited"]);
+  assert.deepEqual([q().quiet, q().why], [false, word("investigation.why.dated_wait_awaited")]);
   w.dated.set(Q1, [{ index: 0, text: "the reply", date: "2026-11-01", state: "ended" }]);
   assert.equal(q().quiet, true);
   /* an open capture request: not quiet */
   w.requests.set(`${Q2}|requested`, [{ request: "r1" }]);
-  assert.deepEqual([q().quiet, q().why], [false, "a capture request is still open"]);
+  assert.deepEqual([q().quiet, q().why], [false, word("investigation.why.capture_request_open")]);
   w.requests.clear();
   /* a step another project placed on a question this project draws on counts too, whoever can see it */
   const d = w.step({ place: { questions: [Q2] }, work: "Another project's step", project: P2, by: BOB });
@@ -168,7 +169,7 @@ test("R18: watchArrival (K2524), for monitoring: something new from a watched pr
   assert.equal(w.inv.quietState({ project: P1, viewer: ANN }).quiet, true);
   const r = w.inv.watchArrival({ project: P1, source: "https://example.org/agenda", at });
   assert.deepEqual([r.ok, r.reopened, r.arrival.source], [true, true, "https://example.org/agenda"]);
-  assert.deepEqual([r.reads.quiet.quiet, r.reads.quiet.why], [false, "something arrived from a watched source"], "the work reads reopened");
+  assert.deepEqual([r.reads.quiet.quiet, r.reads.quiet.why], [false, word("investigation.why.something_arrived_watched")], "the work reads reopened");
   assert.equal(r.reads.standing.ok, true);
   assert.equal(r.reads.milestones.ok, true);
   assert.equal(w.inv.quietState({ project: P1, viewer: ANN }).quiet, false);
@@ -196,7 +197,7 @@ test("R18 (T42, N846): watchArrival never throws once the arrival is written: ea
   assert.doesNotThrow(() => { r = w.inv.watchArrival({ project: P1, source: "https://example.org/agenda", at }); });
   assert.deepEqual([r.ok, r.reopened, arrivals()], [true, true, 1], "the arrival is recorded and answered ok");
   assert.deepEqual(r.reads.standing, { unread: "intent is down" }, "the failed read is marked unread in its place");
-  assert.deepEqual([r.reads.quiet.ok, r.reads.quiet.quiet, r.reads.quiet.why], [true, false, "something arrived from a watched source"], "read after the write");
+  assert.deepEqual([r.reads.quiet.ok, r.reads.quiet.quiet, r.reads.quiet.why], [true, false, word("investigation.why.something_arrived_watched")], "read after the write");
   assert.equal(r.reads.milestones.ok, true);
   assert.equal(r.reads.quiet.unread, undefined, "the negative control: a read that did not fail is never marked unread");
   w.intent.progress = progress;

@@ -38,7 +38,7 @@ test("R21 R25 (DEC-149) C-91.2 IDSPACE_VALUE_NOT_IN_SPACE's translation names yo
   assert.equal(r.translation, IDSPACE_CHECKS.IDSPACE_VALUE_NOT_IN_SPACE.translation);
   assert.equal(r.detail, "a has the shape of no form of the works order number", "with forms held, the detail names none");
   const none = world().e.idMatch({ space: "enactment", a: "12345" });
-  assert.match(none.detail, /; your group's active jurisdiction profiles give this space no form$/);
+  assert.match(none.detail, /; your team's active jurisdiction profiles give this space no form$/);
 });
 
 test("R43 (DEC-149) UNKNOWN_SCHEME's detail says an identifier is held in a scheme your group's active jurisdiction profiles name, listing them, or that they name none", () => {
@@ -46,11 +46,11 @@ test("R43 (DEC-149) UNKNOWN_SCHEME's detail says an identifier is held in a sche
   const pat = w.e.createEntity({ note: NOTE, kind: "person", label: "Pat Quill" }).entity_id;
   const r = w.e.addIdentifier({ entityId: pat, scheme: "nope", id: "1", basis: "b", by: "member:ann" });
   assert.equal(r.reason, "UNKNOWN_SCHEME");
-  assert.equal(r.detail, `an identifier is held in a scheme your group's active jurisdiction profiles name: one of ${r.schemes.join(", ")}. Nothing was written.`);
+  assert.equal(r.detail, `an identifier is held in a scheme your team's active jurisdiction profiles name: one of ${r.schemes.join(", ")}. Nothing was written.`);
   const bare = world();
   const lee = bare.e.createEntity({ note: NOTE, kind: "person", label: "Lee Quill" }).entity_id;
   assert.equal(bare.e.addIdentifier({ entityId: lee, scheme: "nope", id: "1", basis: "b" }).detail,
-               "an identifier is held in a scheme your group's active jurisdiction profiles name; they name none. Nothing was written.");
+               "an identifier is held in a scheme your team's active jurisdiction profiles name; they name none. Nothing was written.");
 });
 
 test("R45 (DEC-149) PROCEEDING_KIND_UNKNOWN's detail says a proceeding's kind is one your group's active jurisdiction profiles name; IDENTIFIER_NOT_IN_SPACE's, with no form held, that they give the space none", () => {
@@ -58,17 +58,17 @@ test("R45 (DEC-149) PROCEEDING_KIND_UNKNOWN's detail says a proceeding's kind is
   const court = w.e.createEntity({ note: NOTE, kind: "institution", label: "Marlow County Court" }).entity_id;
   const k = w.e.createEntity({ note: NOTE, kind: "proceeding", proceeding: { forum: court, kind: "nope", number: "MC-26-0001" } });
   assert.equal(k.reason, "PROCEEDING_KIND_UNKNOWN");
-  assert.equal(k.detail, `a proceeding's kind is one your group's active jurisdiction profiles name: one of ${k.kinds.join(", ")}. Nothing was written.`);
+  assert.equal(k.detail, `a proceeding's kind is one your team's active jurisdiction profiles name: one of ${k.kinds.join(", ")}. Nothing was written.`);
   const bare = world();
   const forum = bare.e.createEntity({ note: NOTE, kind: "institution", label: "A Court" }).entity_id;
   assert.equal(bare.e.createEntity({ note: NOTE, kind: "proceeding", proceeding: { forum, kind: "suit", number: "1" } }).detail,
-               "a proceeding's kind is one your group's active jurisdiction profiles name; they name none. Nothing was written.");
+               "a proceeding's kind is one your team's active jurisdiction profiles name; they name none. Nothing was written.");
   const nf = noForms();
   const f2 = nf.createEntity({ note: NOTE, kind: "institution", label: "A Court" }).entity_id;
   const n = nf.createEntity({ note: NOTE, kind: "proceeding", proceeding: { forum: f2, kind: "suit", number: "1" } });
   assert.deepEqual([n.reason, n.field, n.forms], ["IDENTIFIER_NOT_IN_SPACE", "number", []]);
   /* the space's label is id-spaces' (its R1); the rest of the sentence is this module's */
-  assert.match(n.detail, /^the number has the shape of no form of the .+ space; your group's active jurisdiction profiles give it no form\. Nothing was written\.$/);
+  assert.match(n.detail, /^the number has the shape of no form of the .+ space; your team's active jurisdiction profiles give it no form\. Nothing was written\.$/);
 });
 
 test("R19 (DEC-149) namingPlan with no terms and none held answers why: your group's active jurisdiction profiles hold no search terms", () => {
@@ -108,5 +108,5 @@ test("R25 R31 (DEC-149) no member-facing string this module answers calls the gr
   }
   assert.ok(texts.length > 60, String(texts.length));
   for (const t of texts) assert.ok(!NAMED.test(t), t);
-  assert.ok(texts.some((t) => /your group's/.test(t)), "the group is named where a sentence needs a name");
+  assert.ok(texts.some((t) => /your team's/.test(t)), "the group is named where a sentence needs a name");
 });

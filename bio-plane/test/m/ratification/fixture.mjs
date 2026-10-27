@@ -24,6 +24,8 @@ import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../../../src/ss
 import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/index.mjs";
 import { GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { holdsRegister } from "../provenance/fixtures.mjs";
 
 /* K1321: every case document these fixtures sign is `/6` (publication R58 refuses committing any other), with its
    `method:` block and its `materials:` and `material_attestations:` blocks (empty), written by case-grammar's own
@@ -138,9 +140,16 @@ export function world({ steer = {}, worker = null, carriage = null, schedule = n
   /* provenance R5's `registerHolds`, as the test sets it by hash: what the register's receipts and the bundle's record
      name for a whole hash the evidence store does not hold (nothing, by default) */
   const holds = new Map();
+  /* provenance R66's standing decision on a capture's authority, as the test sets it by capture hash (nothing, by default) */
+  const standing = new Map();
+  /* what provenance's own `registerHolds` answers for a hash nothing registered or received, from its real code (its `fixtures.mjs`) */
+  const nothingHeld = holdsRegister();
   const provenance = { registeredFor: (id) => registers.get(id) ?? [],
-                       registerHolds: ({ sha }) => holds.get(sha) ?? { ok: true, sha, asked: true, parts: null,
-                                                                       registered: false, acquired: false } };
+                       registerHolds: ({ sha }) => holds.get(sha) ?? nothingHeld.registerHolds({ sha }),
+                       containerResolver: () => ({ holds: (a) => { const h = holds.get(a); return !!h && (h.registered === true || h.acquired === true); },
+                                                   gradeVia: () => null, archiveOrigin: () => ({ found: false }),
+                                                   authority: (a) => standing.get(a) ?? null }),
+                       standing };
   const inquiry = { subjectEntityOf: (id) => `ENT-of-${id}`,
                     earned: (subject, targets) => ({ subject, earned: { capture: Object.fromEntries(targets.map((t) => [t, null])) } }) };
 
@@ -233,7 +242,7 @@ export function world({ steer = {}, worker = null, carriage = null, schedule = n
                                      publication, now: () => NOW }) });
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, r, schedule: r.publishSchedule, bv, key, registers, holds, evidence, pub, publication,
+    st, host, record, membership, credentials, promotion, provenance, r, schedule: r.publishSchedule, bv, key, registers, holds, evidence, pub, publication,
     caseTensions, calls, readers, corroboration, corroborationAsked, levelMoves, sealCalls, realPub, ties, moneyFacts, tiesAsked,
     openSeals: async (a) => ({ ok: true, case: a.case, edition: a.edition, project: null, opened: [], attestation: null }),
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
@@ -368,7 +377,7 @@ export function cleanCase({ caseId, edition, project, members }) {
     completeness_acknowledgements: [], completeness_excluded: [],
     searched: { subject_source: "case_basis", subjects: 1 }, searched_levels: [],
     required_strength: { declared: false },
-    bias_manifest: { in_force: false, stated: "no manifest was in force", pins_proposed: 0,
+    bias_manifest: { in_force: false, stated: word("bias.manifest_force"), pins_proposed: 0,
                      pins_proposed_stated: "no adoption pinned a proposed revision" },
     bias_manifest_bundles: [], bias_manifest_pins_proposed: [], case_citations: [],
     case_strength: members.flatMap((m) => [{ target: m.id, axis: "capture", state: "unrated", grade: null },
@@ -412,7 +421,7 @@ export function plane(w, { session = { role: "member:alice" }, viaSession = true
   const bucket = bucketOver;
   const json = (body, status = 200) => ({ status, body });
   const ctx = {
-    env: { CAPTURES: bucket(captures), PUBLISHED: bucket(published) }, json, storeName: "s",
+    env: { CAPTURES: bucket(captures), PUBLISHED: bucket(published) }, json, storeName: "s", // fixtures-contract: answer-envelope door-helpers
     doAnswer: async (p) => { const v = await p; return v === SILENT ? { answered: false } : { answered: true, result: v }; },
     storeSilent: (op) => json({ ok: false, reason: "STORE_SILENT", op }, 502),
     assembleCaseContainer: async (a) => { assembled.push(a); return { manifest_sha: "m".repeat(64), zip: "z" }; },

@@ -15,9 +15,10 @@
  * document link is listed with its label as written, a fee-bearing one ("Buy on PACER") marked `fee`. */
 import { CONTRACT, TAG, feeBearing, written, element, elements, linksIn, sourceAt,
   proceedingNumber, row, reading, pageOf, assessRegister, detectAnswer } from "./common.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 const KEY = "courtlistener_docket";
-const LABEL = "a CourtListener docket";
+const LABEL = localize("court-doctypes.courtlistener.label", "a CourtListener docket");
 
 const HEADER = /<h1\b[^>]*\bdata-type\s*=\s*["']search\.Docket["']/i;
 const ROW_START = new RegExp(`<div\\b(?=${TAG}\\bid\\s*=\\s*["'](?:minute-)?entry-[0-9]+["'])${TAG}>`, "gi");
@@ -84,7 +85,7 @@ function readRow(ctx, html, e) {
     entry_id: numbered ? number : null,
     date, text, links, documents, source: sourceAt(ctx, e.start),
   });
-  if (!numbered && date == null && text == null && !documents.length) return { unkeyed: { at: e.start, why: "an unnumbered entry with neither a date nor a text, so it has no key" } };
+  if (!numbered && date == null && text == null && !documents.length) return { unkeyed: { at: e.start, why: localize("court-doctypes.courtlistener.an_unnumbered_entry_with", "an unnumbered entry with neither a date nor a text, so it has no key") } };
   return { row: r };
 }
 
@@ -118,7 +119,7 @@ function parse(ctx) {
   };
   const why = {};
   if (n.why) why.number = n.why;
-  if (!terminated) why.status_as_written = "the docket page states no status; a terminated case shows a Date Terminated field, and this page has none";
+  if (!terminated) why.status_as_written = localize("court-doctypes.courtlistener.the_docket_page_states_no", "the docket page states no status; a terminated case shows a Date Terminated field, and this page has none");
   why.docket_number_core = "the docket page does not state CourtListener's docket_number_core (its API does), so it is not given";
   proceeding.why = why;
 
@@ -140,10 +141,8 @@ function parse(ctx) {
   const pagination = pm ? pageOf(Number(pm[1]), Number(pm[2])) : pageOf(null, null);
   return reading({
     type: KEY, proceeding, parties, rows, pagination, provisional: false, at: (ctx && ctx.at) || null,
-    failed: h1 ? null : "the page holds no CourtListener docket header",
-    key_basis: "courtlistener_docket: a numbered entry is keyed by the entry number CourtListener gives it "
-      + "(entry_id); an unnumbered (minute) entry by its date and its text as written (or, with no text, its documents' descriptions), and twins on one "
-      + "reading by their order among themselves",
+    failed: h1 ? null : localize("court-doctypes.courtlistener.the_page_holds_no_courtlistener", "the page holds no CourtListener docket header"),
+    key_basis: localize("court-doctypes.courtlistener.key_basis", "courtlistener_docket: a numbered entry is keyed by the entry number CourtListener gives it (entry_id); an unnumbered (minute) entry by its date and its text as written (or, with no text, its documents' descriptions), and twins on one reading by their order among themselves"),
     notes: unkeyed.length ? { unkeyed } : null,
   });
 }

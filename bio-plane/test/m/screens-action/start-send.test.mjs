@@ -2,9 +2,11 @@
    and nothing run before the member's confirm; Step 2, prepare, approve, the second approval, and record the sending.
    Every sentence is asserted by its key through `setup-words` (R19). */
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
+import * as actionsFixture from "../actions/fixture.mjs";
+import { actionWorld, filingIn, openIn } from "./world-C.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS, open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, STAKE, draft } from "./page.mjs";
+import { SCREENS, open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, STAKE, draft, QUESTION_TITLE } from "./page.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const STEP1 = `/app/start-send/${PLAN_ID}~opt-1`;
@@ -15,18 +17,21 @@ test("R2: Step 1 reads optionstartpreview first and draws the kind, the office b
   assert.deepEqual(p.byOp("optionstartpreview")[0].body, { plan: PLAN_ID, option: "opt-1", kind: "records_request", breach: false });
   const t = text(p);
   for (const s of [W("screen.start-send.title", { option: "Records request: inspection logs" }), W("screen.start-send.nothingruns"), W("screen.start-send.kind.records_request"),
-    `City Clerk, Office of the City Clerk · ${W("screen.start-send.byrole")}`, `INQ-2026-ffffffffffffffff · ${W("screen.plan.support.hypothetical")}`,
+    `City Clerk, Office of the City Clerk · ${W("screen.start-send.byrole")}`, `${QUESTION_TITLE} · ${W("screen.plan.support.hypothetical")}`,
     `${D("2026-10-24")} · the records law's ten days`, W("screen.start-send.breach") + W("screen.start-send.breach.no")]) assert.ok(t.includes(s), s);
   assert.deepEqual(ops(p), ["optionstartpreview", "optionstart"]);
 });
 
 test("R2 (v0.2 rules 1–3): a refusal starting would meet is drawn first; the member resolves it in place: the breach unticked, or a reason to proceed anyway, which the preview then states", async () => {
-  const refusal = { ok: false, reason: "BREACH_ON_HYPOTHESIS", code: "BREACH_ON_HYPOTHESIS", translation: "A breach claim rests on an established matter." };
+  const actionsWorld = actionsFixture.world(), ACTN = "ACTN-2026-0001-a";
+  /* the refusal actions gives for a breach action naming no determination (the real `promote`, so the shape is the owner's) */
+  const refusal = actionsWorld.promote(ACTN, actionsFixture.actionMd(ACTN, [...actionsFixture.CP, "action_kind: other", "breach: true"]));
+  assert.equal(refusal.code, "ACTION_NO_DETERMINATION");
   const p = await open(STEP1, { ...DATA_PLANE, optionstartpreview: (req) => ok(req.body.premise_override
     ? { ...PREVIEW, action: { ...PREVIEW.action, breach: true, premise_override: req.body.premise_override } }
     : { ...PREVIEW, would_start: false, refusal, action: { ...PREVIEW.action, breach: req.body.breach } }) });
   const first = main(p).querySelector(".cs-gap");
-  assert.ok(first && first.textContent.includes(W("screen.start-send.wouldrefuse")) && first.textContent.includes("A breach claim rests on an established matter"));
+  assert.ok(first && first.textContent.includes(W("screen.start-send.wouldrefuse")) && first.textContent.includes(W("refusal.ACTION_NO_DETERMINATION")));
   assert.ok(first.textContent.includes(W("screen.start-send.resolve")));
   assert.ok(main(p).innerHTML.indexOf("cs-gap") < main(p).innerHTML.indexOf("mk-dl"), "the refusal comes first");
   await press(p, "optionstartpreview", { values: { "start-breach-0": true, "start-override": "the logs are public already" } });
@@ -62,7 +67,7 @@ test("R3: Step 2 prepares what is sent (her own words, labelled; each filled bla
   assert.ok(beside(p, b).includes(W("screen.start-send.text.needed")));
   assert.equal(p.byOp("communicationprepare").length, 0);
   await press(p, "communicationprepare", { values: { "send-text-0": "We request the inspection logs." }, reason: "ready" });
-  assert.deepEqual({ ...last(p, "communicationprepare").body, reason: undefined }, { action: ACTION_ID, purpose: "request", text: "We request the inspection logs.", reason: undefined });
+  assert.deepEqual({ ...last(p, "communicationprepare").body, reason: undefined }, { action: ACTION_ID, purpose: "request", text: "We request the inspection logs.", language: "en", reason: undefined });
   assert.equal(p.doc.getElementById("send-text-1").value, "We request the logs for {{period}}.");
   said(p, "screen.start-send.draft.own");
   said(p, "screen.start-send.blank.own", { name: "period", value: "2025" }); // a member's fill is labelled hers, not given a source
@@ -87,7 +92,7 @@ test("R3: 'Approve this text' is terminal: its dialog says approving fixes it an
   assert.ok(text(p, p.root().querySelector('[role="dialog"]')).includes(W("act.filingapprove.does")), "the dialog states what approving does");
   await press(p, b, { confirm: true });
   assert.deepEqual(last(p, "filingapprove").body, { filing: FILING });
-  assert.deepEqual(ops(p), ["filingrecordsent"], "approved: the send step");
+  assert.deepEqual(ops(p), ["filingrecordsent", "templatesave"], "approved: the send step"); // R48: the template offer follows approval
 });
 
 test("R3: where the project asks a second approval, the screen says it waits and offers filingsecondapprove, never the send; control: once given, the send", async () => {
@@ -95,10 +100,10 @@ test("R3: where the project asks a second approval, the screen says it waits and
   let drafts = [waiting];
   const p = await open(STEP2, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)), filingsecondapprove: () => { drafts = [{ ...waiting, second_approval: { approved_by: "member:mai" } }]; return ok({}); } });
   said(p, "screen.start-send.waitsecond");
-  assert.deepEqual(ops(p), ["filingsecondapprove"]);
+  assert.deepEqual(ops(p), ["filingsecondapprove", "templatesave"]);
   await press(p, "filingsecondapprove", { confirm: true });
   assert.deepEqual(last(p, "filingsecondapprove").body, { filing: FILING });
-  assert.deepEqual(ops(p), ["filingrecordsent"]);
+  assert.deepEqual(ops(p), ["filingrecordsent", "templatesave"]);
 });
 
 test("R3: 'I have sent it · record the sending' is outward and records the day, how and the office's reference; the screen then says it was sent", async () => {
@@ -114,7 +119,7 @@ test("R3: 'I have sent it · record the sending' is outward and records the day,
   await press(p, "filingrecordsent", { values: { "send-at": "2026-10-10", "send-account": "by the office's web form", "send-reference": "R-12" }, reason: "sent" });
   assert.deepEqual({ ...last(p, "filingrecordsent").body, reason: undefined }, { filing: FILING, at: "2026-10-10", account: "by the office's web form", reference: "R-12", reason: undefined });
   assert.ok(text(p).includes(`${W("screen.start-send.sent", { date: D("2026-10-10") })} · ${W("screen.start-send.reference", { reference: "R-12" })}`));
-  assert.deepEqual(ops(p), []);
+  assert.deepEqual(ops(p), ["templatesave"]);
 });
 
 test("R3 (op-grades R18; interface-shell R50): at the phone width, 'I have sent it' is read, not done: what it does is drawn and nothing is sent", async () => {
@@ -146,7 +151,7 @@ test("R11: prepare, reload, and the same text, blanks with their sources, unfill
   assert.equal(after.text, before.text);
   assert.equal(after.text, "We request the logs for 2025.");
   for (const s of [W("screen.start-send.blank.own", { name: "period", value: "2025" }), W("screen.start-send.blank", { name: "office", value: "City Clerk", source: ACTION_ID }),
-    W("screen.start-send.unfilled", { names: "cost_limit" }), W("screen.start-send.unfilled.why", { name: "cost_limit", why: "the record holds no value for this blank: the member fills it in" }),
+    W("screen.start-send.unfilled", { names: "cost_limit" }), W("screen.start-send.unfilled.why", { name: "cost_limit", why: W("filings.why.record_holds_value") }),
     W("screen.start-send.advisory", { advisory: "A demand is a Tier 2 act: a lawyer's view helps." }), W("screen.start-send.offer.counsel_packet"),
     W("screen.start-send.draft.own")]) assert.ok(after.page.includes(s), s);
   assert.deepEqual(ops(again), ["filingapprove"]);
@@ -211,18 +216,23 @@ test("R21: a Tier 2 action asks the question above the approval, with its says a
 
 test("R21: saving a stake sends actionstake with the action and the stake, and the lines are read again; an empty save clears the action's own and sends nothing where it has none", async () => {
   if (!DECLARED) return assert.ok(!SCREENS_ACTS().includes("actionstake"), "not declared: the act is not registered");
-  let stake = TIER2();
-  const p = await open(STEP2, { ...ASK(), stakeatpreparation: () => stake, actionstake: () => { stake = ok(STAKE({ higher_stakes: true, governing_tier: 2,
-    matter_stake: { stake: "A member is a party.", set_by: "member:mai", set_at: "2026-10-12T09:00:00Z", source: "action" } })); return ok({ ok: true }); } });
+  const { world, me, action } = await actionWorld();
+  await me.act("actionrisktier", { body: { target: action, tier: 2, reason: "the office has fought requests before" } });
+  await filingIn(me, action);
+  const p = await openIn(world, me, `/app/start-send/${action}`);
+  assert.equal((await me.read("stakeatpreparation", { query: { action } })).matter_stake, null, "the action holds none yet");
   const none = await press(p, "actionstake", { reason: "x" });
   assert.equal(p.byOp("actionstake").length, 0, "nothing to save: nothing sent");
   assert.ok(none);
   await press(p, "actionstake", { values: { "action-stake": "  A member is a party.  " }, reason: "she is" });
-  assert.deepEqual({ ...last(p, "actionstake").body, reason: undefined }, { target: ACTION_ID, stake: "A member is a party.", reason: undefined });
+  assert.deepEqual({ ...last(p, "actionstake").body, reason: undefined }, { target: action, stake: "A member is a party.", reason: undefined });
+  const held = (await me.read("stakeatpreparation", { query: { action } })).matter_stake;
+  assert.equal(held.stake, "A member is a party.", "the store holds it");
   assert.ok(text(p).includes("A member is a party."), "read again and drawn");
-  said(p, "stake.source.action", { who: "mai", date: D("2026-10-12") });
+  said(p, "stake.source.action", { who: me.handle, date: D(held.set_at) });
   await press(p, "actionstake", { values: { "action-stake": "" }, reason: "clear it" });
   assert.equal(last(p, "actionstake").body.stake, null, "empty clears it");
+  assert.equal((await me.read("stakeatpreparation", { query: { action } })).matter_stake, null, "the store holds none");
 });
 
 test("R21: nothing waits on the question: approving, preparing and recording the sending are drawn and work unanswered; no stake is recorded unless she saves one", async () => {
@@ -233,7 +243,7 @@ test("R21: nothing waits on the question: approving, preparing and recording the
   await press(p, "filingapprove", { confirm: true });
   assert.equal(p.byOp("filingapprove").length, 1, "approved with the question unanswered");
   assert.equal(p.byOp("actionstake").length, 0, "no answer is recorded");
-  assert.deepEqual(ops(p), ["filingrecordsent"]);
+  assert.deepEqual(ops(p), ["filingrecordsent", "templatesave"]);
   const fresh = await open(STEP2, { ...DATA_PLANE, stakeatpreparation: TIER2() });
   assert.ok(ops(fresh).includes("communicationprepare") && ops(fresh).includes("filingprepare"));
   // the stake read failing or being undetermined stops nothing either

@@ -24,7 +24,7 @@ const isHit = (r, format, confidence) => {
 };
 
 test("R23: at module load the registry holds exactly the twelve built-in entries, in order, the readers' own objects unmodified", () => {
-  assert.deepEqual(listFormats(), ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "jpeg", "png", "zip"]);
+  assert.deepEqual(listFormats(), ["jpeg", "png", "html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"]);
   for (const [f, e] of [["docx", docxEntry], ["xlsx", xlsxEntry], ["pptx", pptxEntry], ["odt", odtEntry],
     ["ods", odsEntry], ["odp", odpEntry], ["csv", csvEntry]]) {
     assert.equal(getFormat(f), e, `${f} is the reader's own entry object`);
@@ -37,20 +37,29 @@ test("R23: at module load the registry holds exactly the twelve built-in entries
   assert.equal(getFormat("zip").format, "zip");
 });
 
-test("R17: html detect with bytes — a doctype or <html> tag, any case, within the first 1024 bytes is certain; else null; content type unconsulted", () => {
-  for (const s of ["<!doctype html>", "<!DOCTYPE HTML PUBLIC>", "<!DocType Html>", "<html>", "<HTML lang=en>", "<html", "x<Html>y"]) {
+test("R17: html detect with bytes — a doctype or <html> root, any case, that BEGINS the decoded first 1024 bytes is certain; a text that mentions it is not; content type unconsulted", () => {
+  for (const s of ["<!doctype html>", "<!DOCTYPE HTML PUBLIC>", "<!DocType Html>", "<html>", "<HTML lang=en>", "<html",
+    "  \n\t<html>", "<?xml version=\"1.0\"?>\n<!DOCTYPE html>", "<!-- generated -->\n<!doctype html>",
+    "<!-- a --><!-- b -->  <html>", "<?xml version=\"1.0\"?><!-- c --><html xmlns=\"http://www.w3.org/1999/xhtml\">"]) {
     isHit(html.detect(latin1(s), null), "html", "certain");
     isHit(html.detect(latin1(s), "application/pdf"), "html", "certain");
   }
-  // the 1024-byte window: a marker ending at byte 1024 counts, one byte later does not
+  // the 1024-byte window: a root ending at byte 1024 counts, one byte later does not
   isHit(html.detect(pad(1019, "<html"), null), "html", "certain");
   assert.equal(html.detect(pad(1020, "<html"), null), null);
   isHit(html.detect(pad(1010, "<!doctype html"), null), "html", "certain");
   assert.equal(html.detect(pad(1011, "<!doctype html"), null), null);
-  // bytes decoded as latin1: high bytes around a marker do not hide it
-  isHit(html.detect(Uint8Array.from([0xff, 0xfe, 0xc3, ...latin1("<html>")]), null), "html", "certain");
-  for (const s of ["<!doctype xml>", "<htm>", "< html>", "<head><body>", "%PDF-1.7", "plain text", "<!doctypehtml"]) {
-    assert.equal(html.detect(latin1(s), null), null);
+  // UTF-8 with a BOM, and UTF-16 by its BOM, are decoded before the root is looked for
+  isHit(html.detect(Uint8Array.from([0xef, 0xbb, 0xbf, ...latin1("<!doctype html>")]), null), "html", "certain");
+  const u16 = (s, le) => Uint8Array.from([...(le ? [0xff, 0xfe] : [0xfe, 0xff]), ...[...s].flatMap((c) => (le ? [c.charCodeAt(0), 0] : [0, c.charCodeAt(0)]))]);
+  isHit(html.detect(u16("<html><body>x", true), null), "html", "certain");
+  isHit(html.detect(u16("<!DOCTYPE html>", false), null), "html", "certain");
+  // G141 (X27): a text that merely MENTIONS the root, anywhere in the first KiB, is text
+  for (const s of ["x<Html>y", "Note: the page begins <html> and then", "a mail about <!doctype html> pages", "see <!doctype html>",
+    "<!doctype xml>", "<htm>", "< html>", "<head><body>", "%PDF-1.7", "plain text", "<!doctypehtml", "<htmlx>", "<html5>",
+    "<!-- never closed <html>", "<?xml never closed <html>", "// <html>\nint main(){}", "<p>a <html> mention</p>"]) {
+    assert.equal(html.detect(latin1(s), null), null, s);
+    assert.equal(detectFormat(latin1(s), null).format !== "html", true, s);
   }
   // content type is not consulted while bytes are truthy — even an empty Uint8Array
   assert.equal(html.detect(latin1("plain"), "text/html"), null);

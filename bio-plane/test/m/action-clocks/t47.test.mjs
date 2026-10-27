@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
@@ -96,7 +97,7 @@ test("R23 each overdueClocks item carries venue: an office addressee answers its
   assert.deepEqual(by[`${B}:0`], [{ kind: "venue", action_kind: "records_request", name: "the Town Clerk's office" }, undefined]);
   assert.deepEqual(by[`${C}:0`], [{ kind: "venue", action_kind: "bylaw_complaint", name: "the Selectboard" }, undefined]);
   assert.equal(by[`${D}:0`][0], null);
-  assert.match(by[`${D}:0`][1], /no office/);
+  assert.equal(by[`${D}:0`][1], word("action-clocks.action_addressed_office"));
   /* answered as the record states it: no sentence composed here. */
   for (const x of r.items) if (x.venue) assert.ok(!Object.values(x.venue).some((v) => typeof v === "string" && /owed|due at|is the/.test(v)));
   /* R3 unchanged: order, paging and the other fields. */

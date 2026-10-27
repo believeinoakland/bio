@@ -82,7 +82,7 @@ import { PLANE_OPS } from "../src/ops.mjs";
    registry and refusal catalog. This suite stages ROWS through `CFG.meaningRows`
    and still can — what it may no longer do is stage a SUCCESS for an arm the
    record does not hold. */
-import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+import { MEANING_ARMS, meaningRowsBranch } from "../../agent-steps/test/plane-meaning.mjs";
 /* D-323/D-324: the mock's `op=suggest` branch, DERIVED from the plane's own name
    grammar, kind set, level set and placeholder predicate — the same treatment
    `plane-meaning.mjs` gave `op=meaningrows` and for the same measured reason.
@@ -90,14 +90,14 @@ import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
    ANY level, so B6's `level-empty:<level>` assertion and B4/B5/B8/B9's
    `new-version` fixtures were all green over submissions a deployed plane
    refuses (VF-4, live at 0.57.0, MEASUREMENTS M-8). */
-import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
+import { suggestBranch, WIRE_CHECKS, NOT_PRINCIPAL } from "../../agent-steps/test/plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
-import { captureRequestBranch } from "./plane-capturerequest.mjs";
+import { captureRequestBranch } from "../../agent-steps/test/plane-capturerequest.mjs";
 import { REPORTING_LEVEL } from "../../agent-harness/src/harness.mjs";
 /* agent-harness R18 (T50): an absence is written only for a level the shell shows was read over a document, so these
    direct calls state it the way the shell does: one read of each level, three documents in scope. */
 const SCOPE = Object.fromEntries(LEVELS.map((l) => [l, { reads: 1, documents: 3 }]));
-import { MEANING_ARM } from "../src/ops.mjs";
+import { MEANING_ARM } from "../../agent-steps/src/index.mjs";
 /* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
    REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
    The mock's `airunclose` branch computed the run's status by hand as
@@ -119,6 +119,7 @@ import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { driveMember, SUBSESSION_LIMIT } from "./inprocess.mjs";
 import { planeEntry } from "./plane-world.mjs";
 import { PLANE_OPS_PINNED } from "./owners.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -1219,13 +1220,13 @@ console.log("\n--- B7 · SK-4's gate through the op: an investigate run stops be
   /* CORRECTED 2026-08-10 BY FL-7 (IC-62). THE OLD EXPECTATION WAS `cancelled`
      AND IT WAS RIGHT WHEN WRITTEN — it recorded what the gate then produced
      through the op, which is what this arm is for. It was never right about what
-     the record then SAID: the plane defines `cancelled` as "a member stopped it",
+     the record then SAID: the plane defines `cancelled` as the member-stopped word (`run-rules.member_stopped`),
      and this run was refused by a deployment gate with no member anywhere near
      it. FL-7 gave the machine's act its own word. This is the THROUGH-THE-OP
      half of the acceptance — the ending is read off what the op actually
      returned, not asserted at a store or off `nextStep`'s return value. */
   t("the run was closed at the gate, carrying an ending that NAMES WHAT HAPPENED — a machine refused the "
-    + "launch, and the record no longer says a member stopped it",
+    + "launch, and the record no longer names a member as the one who stopped it",
     out.ended?.bound ?? null, "mode-not-deployed");
   /* THE MISATTRIBUTION ARM, stated as its own assertion so a regression NAMES
      the defect instead of failing an equality: whatever else changes, the word
@@ -1458,8 +1459,9 @@ console.log("\n--- FT0 · FL-11/FL-12: the mock itself REFUSES by name what the 
   ];
   t("FT0 (FL-11): the suggest mock refuses no target, a project id, a question outside the run's context, "
     + "another principal and no run — each by the PLANE's code",
-    codes, ["SUGGEST_NO_TARGET", "SUGGEST_NOT_AN_INQUIRY", "SUGGEST_OUTSIDE_RUN_CONTEXT",
-            "AI_RUN_NOT_PRINCIPAL", "SUGGEST_NO_RUN"]);
+    codes, [WIRE_CHECKS.SUGGEST_NO_TARGET, WIRE_CHECKS.SUGGEST_NOT_AN_INQUIRY, WIRE_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT]
+      .map((row) => Object.keys(WIRE_CHECKS).find((k) => WIRE_CHECKS[k] === row))
+      .concat([NOT_PRINCIPAL.code, Object.keys(WIRE_CHECKS).find((k) => WIRE_CHECKS[k] === WIRE_CHECKS.SUGGEST_NO_RUN)]));
   const outside = await ask("suggest", { ...good, target: "INQ-ELSEWHERE" });
   t("FT0b (FL-11): …and SUGGEST_OUTSIDE_RUN_CONTEXT carries the catalog's C-number and translation, not a lookalike",
     [outside.check, outside.translation, outside.wrote], [WIRE_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT.check,
@@ -1511,7 +1513,7 @@ console.log("\n--- FT1 · FL-11: a run over a QUESTION seeds its target, and its
   })).json();
   const stOut = await mockState(mfOut);
   t("FT1 (FL-11): the run publishes its target as the context question, and says why",
-    [out.target?.id ?? null, out.target?.basis ?? null], ["INQ-FL11", "the run's context question"]);
+    [out.target?.id ?? null, out.target?.basis ?? null], ["INQ-FL11", localize("agent-harness.harness.the_runs_context_question", "the run's context question")]);
   t("FT1b (FL-11): dedup read `op=basisversions` under the RUN's target, never under an empty id",
     st.bvIds, ["INQ-FL11"]);
   t("FT1c (FL-11): the table-made level-empty candidate AND the untargeted reading LANDED on the run's question",
@@ -1560,7 +1562,7 @@ const projectRun = async (cfg, candidates) => {
   t("FT2 (D-451): a project run citing ONE question seeds THAT question as its target, and says why — never "
     + "the project id",
     [out.target?.id ?? null, out.target?.basis ?? null],
-    ["INQ-CITED", "the one question the run's project confirmed-cites"]);
+    ["INQ-CITED", localize("agent-harness.harness.the_one_question_the_runs", "the one question the run's project confirmed-cites")]);
   t("FT2b (FL-11): no call this run made named the project as a suggestion's target",
     st.log.filter((l) => l.op === "suggest" && l.body?.target === "PROJ-FL11").length, 0);
   t("FT2c (FL-11): a reading aimed at a question the project confirmed-cites LANDS",

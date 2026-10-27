@@ -13,6 +13,7 @@ import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { strengthOf, STRENGTH_AXES, STRENGTH_CACHE_FIELDS } from "../../../src/strength/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const NOW = "2026-09-28T00:00:00.000Z";
 const statements = (ddl) => ddl.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n")
@@ -53,12 +54,14 @@ test("R6, R1, R2 (N218): strengthOf(host) with no inquiry given reads inquiry's 
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   for (const axis of STRENGTH_AXES) {
     assert.equal(r[axis].state, "undetermined", "the cycle in inquiry's own table is walked to the depth bound");
-    assert.match(r[axis].detail, /depth bound of 6/);
+    assert.ok(r[axis].detail.includes(word("strength.text.basis_walk_reached", { depth_bound: 6, bound: "" })));
   }
   h.bundle("INQ-2026-0003-a", "inquiry");
   const empty = s.strengthOf("INQ-2026-0003-a");
   assert.equal(empty.ok, true);
-  for (const axis of STRENGTH_AXES) assert.match(empty[axis].detail, /rests on nothing/);
+  for (const axis of STRENGTH_AXES)
+    assert.equal(empty[axis].detail, localize("strength.arithmetic.unrated_this_inquiry_rests_on_nothing",
+      "UNRATED on {axis}: this inquiry rests on nothing on this axis.", { axis }));
 });
 
 test("R8 (N218): with no versions given, a project's CURRENT is basis-versions' own, read on the same host", () => {
@@ -72,7 +75,10 @@ test("R8 (N218): with no versions given, a project's CURRENT is basis-versions' 
   const r = s.versionStrength({ id: "INQ-2026-0001-a", project: "PROJ-2026-0001-abc", viewer: "class:member" });
   assert.equal(r.reason, "VERSION_STRENGTH_NO_SUCH_VERSION", JSON.stringify(r).slice(0, 300));
   assert.equal(r.version, "main", "the reading the project stands on, from basis-versions' currentOf");
-  assert.match(r.detail, /pointer has outlived the reading/);
+  assert.equal(r.detail, [localize("strength.index.no_reading_named_belongs_to", "no reading named '{name}' belongs to {inq}.",
+    { name: "main", inq: "INQ-2026-0001-a" }),
+    localize("strength.index.points_at_it_so_the_pointer_has_outlived",
+      "{project} points at it, so the pointer has outlived the reading it names.", { project: "PROJ-2026-0001-abc" })].join(" "));
 });
 
 test("R17 (N152): strength registers its pair with inquiry's grouping act itself, once, when its factory first builds", () => {
@@ -144,7 +150,7 @@ test("R33 (K1307): with no acceptedWork given, a ref is read through accepted-wo
   const s = strengthOf(h.host);
   const before = s.strengthOf("INQ-2026-0001-a");
   assert.equal(before.connection.state, "undetermined");
-  assert.match(before.connection.undetermined_at[0].why, /holds no accepted work/);
+  assert.equal(before.connection.undetermined_at[0].why, word("strength.stopped.leg_rests_group_finding"));
   const asked = [];
   const reg = acceptedWorkOf(h.host).registerAcceptedWork("case-import", {
     finding: (a) => { asked.push(a); return { ref: a.ref, group: "g2", case: "C-1", edition: a.edition, finding: "INQ-2026-0500-a",

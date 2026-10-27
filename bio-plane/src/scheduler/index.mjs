@@ -1,10 +1,12 @@
 /* ===========================================================================
  *  scheduler (layer 10; build/requirements/scheduler.md): THE PLANE'S ONE RECONCILING DURABLE OBJECT ALARM.
  *
- *  DECISION (REC-1, recorded in full in docs/development/SCHEDULER.md): the plane's periodic work runs on ONE
- *  reconciling Durable Object alarm, never on a Worker cron trigger (R14). A cron's floor is a minute where the task
- *  drain coalesces at a second (granularity); a cron fires forever where the alarm is deleted when nothing waits
- *  (self-termination, R15); and every consumer reconciles against the Durable Object's own storage (locality).
+ *  DECISION (REC-1, recorded in full in docs/development/SCHEDULER.md; amended by Bob, K4566): the plane's periodic work
+ *  runs on ONE reconciling Durable Object alarm, and never on a Worker cron trigger (R14). A cron's floor is a minute
+ *  where the task drain coalesces at a second (granularity); a cron fires forever where the alarm is deleted when nothing
+ *  waits (self-termination, R15); and every consumer reconciles against the Durable Object's own storage (locality).
+ *  The one cron the plane declares is the watchdog over this alarm: it calls `watch` (R29), which checks the alarm and
+ *  the heartbeat and re-arms, and never runs owed work.
  *
  *  MECHANISM. A registry of consumers `{name, key, due(now), wake(now), tick(now)}` (R5): `onAlarm` runs the tick of
  *  every consumer due at the firing instant (within the grace), in registry order, then reconciles the one alarm to
@@ -46,6 +48,19 @@
  *  `exploreDue` counts any question due, its wake `exploreWake`, its tick `exploreTick`; every cadence, including an
  *  Ask's re-check, is question-explorer's (R7). `investigation`'s quiet check (its R18) is read by `notice-producers`
  *  when it asks; it offers this module no due, wake or tick, so no consumer of investigation's is registered here.
+ *
+ *  G55 (R7, R24; K4562): `ingest` closes the registry, calling `calculations` (its R14): a money ingest over the
+ *  inline threshold runs in the background, one slice for each firing. Due while `ingestDue(now)` says a record is
+ *  `ingesting`, its wake `ingestWake(now)`, its tick `ingestTick(now)`; the slice sizes, the attempts and the stop are
+ *  calculations' (R7). This module builds `calculations` itself (`schedulerOf`'s default owners) and registers once
+ *  with `calculations.onIngestWork`, whose call arms the alarm (R9) when a record starts.
+ *
+ *  G91, G92, G94, G95, G123g (R28-R33; fix round 9): a firing has a budget (about 10 s) shared by its consumers' ticks, each
+ *  awaited for what is left of it; when it is spent the firing starts no further consumer, reconciles and ends, and the
+ *  next begins at the consumer after the last one that ran (`rotate_from` in the heartbeat), so none holds the rest. A call
+ *  that outlasts the budget goes on in an in-flight set: not abandoned, not asked or started again, its result taken at a
+ *  later firing; it is told the instant its own work began (third argument of `tick`) and is logged as one line, before it
+ *  ends when it runs past the threshold and when it ends. The heartbeat is read from storage at the start of every run.
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -70,12 +85,22 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { followingOf } from "../following/index.mjs";
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { governingZone } from "../../../jurisdictions/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** An alarm may fire a hair early: a consumer due within this window of the firing instant runs (R1). */
 export const SCHED_GRACE_MS = 250;
+/** An alarm this far past is spent, not armed (R4, R11): the platform stops retrying after repeated killed runs. */
+const SPENT_ALARM_MS = 60_000;
+/** R30: the consumers of one firing share this budget; when it is spent the firing starts no further consumer. */
+const FIRING_BUDGET_MS = 10_000;
+/** R30: a consumer call that runs past this is logged before it ends as well as after (R-LOG). */
+const SLOW_CONSUMER_MS = 1_000;
+/** R28 (G95): `stale` once work has been owed this long with no firing completed in it, or one firing has run this long. */
+const STALE_AFTER_MS = 5 * 60e3;
 
 /** R5: the registry's order. `capture-request-drain` before `ai-run-wake` is load-bearing: a request that completes
  *  on an alarm wakes its run on the same alarm. `gathering-sweep` (T23) stands after `monitor-cadence`, where R5
@@ -88,6 +113,7 @@ export const SCHEDULER_ORDER = Object.freeze([
   "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "scheduled-publish", "working-on-seal",
   "working-on-attest", "follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions",
   "dated-waits", "file-scan", "file-render", "file-deeper", "file-forward", "file-reputation", "document-copy", "question-explore",
+  "ingest",
 ]);
 
 /** R2: each consumer's key in `onAlarm`'s answer. The task drain's counts are spread into the answer's own fields. */
@@ -101,7 +127,7 @@ export const SCHEDULER_KEYS = Object.freeze({
   "duty-transitions": "dutytransitions", "interest-checks": "interestchecks", "money-detectors": "moneydetectors",
   "standing-questions": "standingquestions", "dated-waits": "datedwaits",
   "file-scan": "filescan", "file-render": "filerender", "file-deeper": "filedeeper", "file-forward": "fileforward",
-  "file-reputation": "filereputation", "document-copy": "doccopy", "question-explore": "explore",
+  "file-reputation": "filereputation", "document-copy": "doccopy", "question-explore": "explore", "ingest": "ingest",
 });
 
 /** R6: due at every firing. Every other consumer is due only when its owner says so. */
@@ -128,6 +154,13 @@ const ANSWER_FIELDS = new Set(["swept", "drained", "created", "folded", "refused
 const DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 const PROBE_KEY = "sched_probe";
 const DAILY_KEY = "sched_daily";
+const BEAT_KEY = "sched_beat";   /* the heartbeat: {last_run, running_since, watchdog_seen, watchdog_ran, rotate_from, inflight, slowest, ...} (R28-R30, R33) */
+/** A `running_since` older than this is a killed run's leftover, not a run in progress (R29): one cycle. */
+const RUNNING_BOUND_MS = 5 * 60e3;
+/** One cycle of the alarm, for `health()` (R28): the monitor's own five minutes (`monitoring` R19); a stall is two of them. */
+const HEALTH_CYCLE_MS = 5 * 60e3;
+/** `heal()` looks at the alarm at most this often per instance, so a request path may call it on every request (R28). */
+const HEAL_EVERY_MS = 5e3;
 const DAY_MS = 86_400_000;
 const message = (e) => String((e && e.message) || e).slice(0, 500);
 /* An instant in ms as civil-time's instant text, at the second (ISO_TS_RE). */
@@ -159,8 +192,7 @@ export function localDayOf(ms, zone) {
 export function viewZone(record) {
   try {
     const ids = record && typeof record.getSetting === "function" ? record.getSetting("jurisdiction_profiles") : null;
-    const c = Array.isArray(ids) && ids.length ? combine(ids) : null;
-    const z = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+    const z = governingZone(ids, record.getSetting("team_time_zone")); /* K5292 (jurisdictions R98) */
     return typeof z === "string" && z ? z : null;
   } catch { return null; }
 }
@@ -213,8 +245,20 @@ export class Scheduler {
   #faults = [];
   /* true while onAlarm runs: an `onFileWork` call made inside a batch leaves the arming to its reconcile (R1, R24). */
   #firing = false;
+  #healedAt = -Infinity;
+  #beat = null;
   /* R27: the registered consumers held, by name, at the wake that did not advance (see `#holding`). */
   #held = new Map();
+  /* G70: the instant this instance last set the alarm for (null once deleted, undefined before any), so the next firing can say what it was scheduled for;
+     the heartbeat's `next_set_for` answers it after a restart, when the alarm is no longer readable (the platform clears it while the handler runs). */
+  #alarmFor;
+  /* R30: the firing's budget and the threshold past which a consumer's call is logged before it ends (injected by tests). */
+  #budgetMs; #slowMs;
+  /* R30: the instant the running firing can no longer outlast (its start, its budget and the grace). */
+  #firingEnds = 0;
+  /* R31: the consumers whose call outlasted a firing's budget, by name: `{started, settled, result, error, ended}`. A call
+     is a promise of this isolate, so a restart empties the set (the call died with the isolate; R33). */
+  #inflight = new Map();
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
@@ -222,7 +266,9 @@ export class Scheduler {
    *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publishSchedule`, `fileSafety`, `caseCarriage`,
    *  `questionExplorer`), each a function returning the owner, so an
    *  owner is reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
-  constructor({ storage, env = null, owners = {}, zone = null } = {}) {
+  constructor({ storage, env = null, owners = {}, zone = null, budgetMs = FIRING_BUDGET_MS, slowMs = SLOW_CONSUMER_MS } = {}) {
+    this.#budgetMs = Number.isFinite(budgetMs) && budgetMs > 0 ? budgetMs : FIRING_BUDGET_MS;
+    this.#slowMs = Number.isFinite(slowMs) && slowMs > 0 ? slowMs : SLOW_CONSUMER_MS;
     this.#storage = storage;
     this.#env = env || {};
     this.#owners = { ...owners };
@@ -433,6 +479,17 @@ export class Scheduler {
       due: async (now) => counted(await o("questionExplorer").exploreDue(now), now),
       wake: async (now) => msOf(await o("questionExplorer").exploreWake(now)),
       tick: async (now) => ({ explore: await o("questionExplorer").exploreTick(now) }) };
+    /* G55 (R7, R24): calculations R14's background ingest. Due while a record is `ingesting` (`ingestDue`), its wake
+       `ingestWake`, both asked afresh every time from calculations' own tables, so a restarted instance re-derives them
+       (R11) and nothing is kept here (R7, R18). A tick that fails is calculations' to count: after its third failed
+       attempt the record is stopped and neither due nor wake is any more, so the consumer never spins (R3). An owner
+       that does not offer the services wants nothing. */
+    if (this.#owners.calculations) {
+      const ask = (m, now) => { const k = o("calculations"); return k && typeof k[m] === "function" ? k[m](now) : null; };
+      c["ingest"] = {
+        due: (now) => dueOf(ask("ingestDue", now), now), wake: (now) => msOf(ask("ingestWake", now)),
+        tick: async (now) => ({ ingest: await o("calculations").ingestTick(now) }) };
+    }
     return c;
   }
 
@@ -452,7 +509,7 @@ export class Scheduler {
       return { ok: false, reason: "CONSUMER_DECLARED", module, name: c.name };
     if (ANSWER_FIELDS.has(key) || this.registry(null).some((r) => r.key === key))
       return { ok: false, reason: "CONSUMER_MALFORMED", module, name: c.name,
-               detail: `the key '${key}' is one of the answer's own fields or another consumer's` };
+               detail: localize("scheduler.index.the_key_key_is_one", "the key '{key}' is one of the answer's own fields or another consumer's", { key: String(key) }) };
     this.#registered.set(c.name, this.#holding({ name: c.name, key, module, due: c.due, wake: c.wake, tick: c.tick }));
     this.#registeredOrder.push(c.name);
     return { ok: true, module, name: c.name, key, placed: SCHEDULER_ORDER.includes(c.name) ? "R5" : "appended" };
@@ -460,10 +517,16 @@ export class Scheduler {
 
   /* R27: a registered consumer whose `wake`, read after its tick, equals the `wake` read before it and is at or before
      the firing's `now` is held: its due and wake read as none, so it cannot keep the alarm firing at once, again and
-     again. It is released when its own `wake` changes, at an `arm` made outside a firing and at a start. The due, wake
+     again. It is not held by a tick that answers rows ended (G35). It is released when its own `wake` changes, at an `arm` made outside a firing and at a start. The due, wake
      and tick of a consumer may answer a promise; each is awaited before its answer is read. Nothing is written, and no
      interval of this module's is added (R7). */
   #holding(c) {
+    /* G35: a tick that answers rows ended (`finished` or `final` above zero, under the consumer's key or at the top) made progress: the wake it
+       leaves is another row's own, equal to the one before when several rows share an instant, and holding it would strand those rows. */
+    const endedWork = (r, key) => {
+      const a = r && typeof r === "object" ? (r[key] && typeof r[key] === "object" ? r[key] : r) : null;
+      return !!a && [a.finished, a.final].some((n) => typeof n === "number" && n > 0);
+    };
     const held = this.#held, name = c.name;
     const wakeOf = async (now) => { try { return await c.wake(now); } catch { return null; } };
     /* the consumer's wake while it is held at that wake; none then, and released when its wake has changed */
@@ -479,15 +542,15 @@ export class Scheduler {
         return await c.due(now);
       },
       wake: async (now) => heldWake(await c.wake(now)),
-      tick: async (now, rank) => {
+      tick: async (now, rank, started) => {
         const before = await wakeOf(now);
-        const note = async () => {
+        const note = async (ended) => {
           const after = await wakeOf(now);
-          if (Number.isFinite(before) && after === before && after <= now) held.set(name, after); else held.delete(name);
+          if (!ended && Number.isFinite(before) && after === before && after <= now) held.set(name, after); else held.delete(name);
         };
         let r;
-        try { r = await c.tick(now, rank); } catch (e) { await note(); throw e; }
-        await note();
+        try { r = await c.tick(now, rank, started); } catch (e) { await note(false); throw e; }
+        await note(endedWork(r, c.key));
         return r;
       } };
   }
@@ -532,30 +595,73 @@ export class Scheduler {
   async alarm() { return await this.onAlarm(); }
 
   async onAlarm(now = Date.now()) {
-    const probe = await this.#probeState(now, true);
-    await this.#loadDaily();
-    const reg = this.registry(probe);
+    const t0 = Date.now();   /* R30: the budget is the real clock's, whatever instant the runtime hands in */
+    /* R1, R30 (G91, K4912): the firing is marked running first, so an `arm` a request path makes while it runs (where `getAlarm()`
+       answers none) is told apart (`#reconcile`); the reconcile at the end sets the next alarm outright. */
+    this.#firing = true;
+    this.#firingEnds = t0 + this.#budgetMs + SCHED_GRACE_MS;
+    let probe, before, scheduledFor, previousEnd, reg;
     const answers = {};
     const probes = [];
-    const rank = (items, at = now) => this.rank(items, at);
-    this.#firing = true;
+    let stoppedAt = null, slowest = null;
     try {
-    for (const c of reg) {
+    this.#beat = null;   /* R33: the heartbeat is read from storage at the start of every run, never trusted from memory */
+    probe = await this.#probeState(now, true);
+    before = await this.#beatRead();
+    scheduledFor = this.#alarmFor !== undefined ? this.#alarmFor : before.next_set_for ?? null;   /* G70 */
+    previousEnd = Number.isFinite(before.ended) ? before.ended : null;
+    await this.#beatWrite({ running_since: now, inflight: this.#inflightRecord() });   /* R29: getAlarm() is null while this runs; R33: a cut run's in-flight calls died with it */
+    await this.#loadDaily();
+    const full = this.registry(probe);
+    /* R30: the firing begins at the consumer the last budget-limited firing stopped before, wrapping, so none is always last */
+    const from = typeof before.rotate_from === "string" ? full.findIndex((c) => c.name === before.rotate_from) : -1;
+    reg = from > 0 ? [...full.slice(from), ...full.slice(0, from)] : full;
+    const rank = (items, at = now) => this.rank(items, at);
+    const took = (c, v) => { if (v !== null && v !== undefined) answers[c.key] = v; };
+    for (let i = 0; i < reg.length; i++) {
+      const c = reg[i];
+      if (i > 0 && Date.now() - t0 >= this.#budgetMs) { stoppedAt = c.name; break; }   /* R30: the budget is spent */
+      const fl = this.#inflight.get(c.name);   /* R31: a call that outlasted an earlier budget */
+      if (fl) {
+        if (!fl.settled) continue;   /* still running: neither asked nor started again */
+        this.#inflight.delete(c.name);
+        if (fl.error !== undefined) answers[c.key] = { error: message(fl.error) }; else took(c, this.#valueOf(c, fl.result));
+      }
       let d;
       try { d = await c.due(now); } catch (e) { answers[c.key] = { error: message(e) }; continue; }
       if (d === null || d === undefined || d > now + SCHED_GRACE_MS) continue;
-      let r;
-      /* Awaited, so an asynchronous consumer's work completes inside the alarm. */
-      try { r = await c.tick(now, RANKED.includes(c.name) ? rank : undefined); }
-      catch (e) { answers[c.key] = { error: message(e) }; continue; }
+      /* Awaited, so an asynchronous consumer's work completes inside the alarm, for as much of the budget as is left. */
+      const call = this.#call(c, now, RANKED.includes(c.name) ? rank : undefined);
+      const left = Math.max(0, this.#budgetMs - (Date.now() - t0));
+      let timer;
+      const out = await Promise.race([call.done, new Promise((res) => { timer = setTimeout(() => res(null), left); })]);
+      clearTimeout(timer);
+      if (out === null) {   /* R31: not abandoned and not started twice; the firing starts no further consumer */
+        this.#inflight.set(c.name, call.entry);
+        call.entry.late = true;
+        stoppedAt = reg[(i + 1) % reg.length].name;
+        const ms = Math.max(0, Date.now() - call.entry.started);
+        if (!slowest || ms > slowest.ms) slowest = { name: c.name, ms };
+        break;
+      }
+      const ms = Math.max(0, out.ended - out.started);
+      if (!slowest || ms > slowest.ms) slowest = { name: c.name, ms };
+      if (out.error !== undefined) { answers[c.key] = { error: message(out.error) }; continue; }
       if (c.probe) { probes.push(c.name); continue; }
-      const v = r && typeof r === "object" && c.key in r ? r[c.key] : r;
-      if (v !== null && v !== undefined) answers[c.key] = v;
+      took(c, this.#valueOf(c, out.result));
     }
     } finally { this.#firing = false; }
+    try {
     /* Reconciled over the FULL registry, not only the consumers that ticked, and authoritatively: a fired alarm is
        spent, so the fresh earliest wake is set outright (R1, R16). */
     const nextAt = await this.#reconcile(now, reg, true, answers);
+    /* G70 (K4428): what the walker saw as 28-64 s between ticks, said by the platform's own firing: when the alarm was
+       scheduled for, when this firing started and ended, what it set next, and the gap since the previous firing ended.
+       Kept in the heartbeat (one put, as before) and as one structured line. No pace is changed: this only records. */
+    const ended = Math.max(Date.now(), now);
+    const alarm = { scheduled_for: scheduledFor, started: now, ended, next_set_for: nextAt, gap_ms: previousEnd === null ? null : now - previousEnd };
+    await this.#beatWrite({ last_run: now, running_since: null, ...alarm, rotate_from: stoppedAt, inflight: this.#inflightRecord(), slowest });   /* R28, R30 */
+    try { console.log(JSON.stringify({ scheduler_alarm: alarm })); } catch { /* logged where it can be */ }
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     if (this.#daily && DAILY.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
       /* a storage that cannot hold the value keeps it for this instance alone; the firing still answers */
@@ -568,23 +674,88 @@ export class Scheduler {
     return { swept, drained: d.drained, created: count(d.created), folded: count(d.folded), refused: count(d.refused),
              waiting: count(d.waiting), remaining: d.remaining, rearmed: nextAt !== null, nextAt, probes,
              ...(drain && drain.error ? { drain } : {}), ...rest };
+    } finally { await this.#beatWrite({ running_since: null }); }   /* R29: a run that ends, however it ends, is no longer running */
+  }
+
+  /* R30: the value a consumer's answer holds under its key (the answer itself when it names no key). */
+  #valueOf(c, r) { return r && typeof r === "object" && c.key in r ? r[c.key] : r; }
+
+  /* R31: whether the consumer's earlier call is still running. */
+  #running(c) { const f = this.#inflight.get(c.name); return !!f && !f.settled; }
+
+  /* R31: `{name: started}` of the calls still running past an earlier firing's budget. */
+  #inflightRecord() { return Object.fromEntries([...this.#inflight].filter(([, f]) => !f.settled).map(([n, f]) => [n, f.started])); }
+
+  /* R30, R32: one consumer's call. It is told the instant its own work began, and is recorded as one structured line
+     `{"scheduler_consumer": {name, started, ended, outcome}}`: written when the call runs past the slow threshold (outcome
+     "running", before it ends) and when it ends. `done` resolves, never rejects, with the entry; a call that outlasts the
+     firing's budget goes on in the in-flight set (R31), and on settling arms the alarm so its consumer's next wake is weighed. */
+  #call(c, now, rank) {
+    const started = Math.max(Date.now(), now);
+    const entry = { started, settled: false, late: false, ended: null };
+    const line = (ended, outcome) => { try { console.log(JSON.stringify({ scheduler_consumer: { name: c.name, started, ended, outcome } })); } catch { /* logged where it can be */ } };
+    const slow = setTimeout(() => line(null, "running"), this.#slowMs);
+    const end = (patch) => {
+      clearTimeout(slow);
+      Object.assign(entry, patch, { settled: true, ended: Math.max(Date.now(), started) });
+      line(entry.ended, entry.error !== undefined ? "error" : "ok");
+      if (entry.late) this.arm().catch(() => null);
+      return entry;
+    };
+    const done = (async () => c.tick(now, rank, started))().then((result) => end({ result }), (error) => end({ error: error === undefined ? new Error("rejected") : error }));
+    return { entry, done };
+  }
+
+  /* ---- R28, R29: the heartbeat ---- */
+
+  /** The heartbeat as stored: `{last_run, running_since, watchdog_seen}`, each an epoch-millisecond instant or null. */
+  async #beatRead() {
+    if (!this.#beat) {
+      let v; try { v = await this.#storage.get(BEAT_KEY); } catch { v = null; }
+      this.#beat = { last_run: null, running_since: null, watchdog_seen: null, ...(v && typeof v === "object" ? v : {}) };
+    }
+    return this.#beat;
+  }
+  /** Merges `patch` into the heartbeat and stores it (one put); a storage that cannot hold it keeps it in memory. */
+  async #beatWrite(patch) {
+    const b = { ...(await this.#beatRead()), ...patch };
+    this.#beat = b;
+    try { await this.#storage.put(BEAT_KEY, b); } catch { /* kept in memory */ }
   }
 
   /** Sets the one alarm to the earliest wake any consumer wants, or deletes it when none does. `exact` sets it
-   *  outright (after a firing); otherwise it is only ever pulled earlier (R4). A consumer whose wake throws wants
-   *  nothing and, when `errors` is given, is answered under its key (R3). */
-  async #reconcile(now, reg, exact, errors = null) {
+   *  outright (after a firing); otherwise it is only ever pulled earlier (R4), except that an alarm already past by
+   *  more than `SPENT_ALARM_MS` is spent, not armed (the platform stops running one it killed too often), and is set
+   *  afresh to `max(want, now)`. A consumer whose wake throws wants nothing and, when `errors` is given, is answered
+   *  under its key (R3). */
+  async #reconcile(now, reg, exact, errors = null, force = false) {
+    /* R1, R30 (G91, K4912): while the handler runs the platform answers no alarm, so an arm made then (a producer's notice on the
+       request path) would set a due row's own wake, already past, which the administrator reads for as long as the firing lasts.
+       Inside a firing an arm weighs nothing: it leaves the alarm as it stands, or, when there is none, sets the instant the firing
+       can no longer outlast (its budget and the grace), readable and ahead. The reconcile the firing makes at its end weighs every
+       consumer's wake, the work that arm announced included, and sets the next alarm outright. */
+    if (this.#firing && !exact && !force) {
+      const at = await this.#storage.getAlarm();
+      if (at !== null && at !== undefined) return at;
+      const lease = Math.max(this.#firingEnds, Date.now() + SCHED_GRACE_MS);
+      await this.#storage.setAlarm(lease);
+      return lease;
+    }
     const wants = [];
     for (const c of reg) {
+      if (this.#running(c)) continue;   /* R31: a call in flight wants no wake; its settling arms the alarm */
       let w;
       try { w = await c.wake(now); } catch (e) { if (errors) errors[c.key] = { error: message(e) }; continue; }
       if (w !== null && w !== undefined && Number.isFinite(w)) wants.push(w);
     }
-    if (!wants.length) { await this.#storage.deleteAlarm(); return null; }
+    if (!wants.length) { await this.#storage.deleteAlarm(); this.#alarmFor = null; return null; }
     const want = Math.min(...wants);
-    if (exact) { await this.#storage.setAlarm(want); return want; }
+    const set = async (t) => { await this.#storage.setAlarm(t); this.#alarmFor = t; return t; };
+    if (exact) return await set(want);
+    if (force) return await set(Math.max(want, now));   /* R29 */
     const at = await this.#storage.getAlarm();
-    if (at === null || at === undefined || at > want) { await this.#storage.setAlarm(want); return want; }
+    if (at === null || at === undefined || at > want) return await set(want);
+    if (!this.#firing && at < now - SPENT_ALARM_MS) return await set(Math.max(want, now));   /* R4, R11 */
     return at;
   }
 
@@ -592,13 +763,88 @@ export class Scheduler {
 
   /** The producers' door: reconciles without firing, never pushing a set alarm later. Runs no tick and writes no
    *  work; answers the alarm as it stands. */
-  async arm(now = Date.now()) {
+  async arm(now = Date.now(), bringForward = false) {
     if (!this.#firing) this.#held.clear();   /* R27 */
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
-    const at = await this.#reconcile(now, this.registry(probe), false);
+    const at = await this.#reconcile(now, this.registry(probe), false, null, bringForward);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     return at;
+  }
+
+  /** R28, the request paths' door: a cheap check that the alarm is armed. When none is set or the one set is spent
+   *  (R4) it arms as `arm` does. When the one set is still ahead it asks each consumer only its wake: one that has
+   *  already come (G159, K4980; a row registered behind a daily alarm) brings the alarm to now. Otherwise it asks
+   *  nothing of any consumer. At most one look every few seconds per instance. Answers the alarm as it stands, or null.
+   *  Runs no tick and writes no work (R17). */
+  async heal(now = Date.now()) {
+    if (this.#firing || now - this.#healedAt < HEAL_EVERY_MS) return null;
+    this.#healedAt = now;
+    const at = await this.#storage.getAlarm();
+    if (at === null || at === undefined || at < now - SPENT_ALARM_MS) return await this.arm(now);
+    if (at <= now || await this.#oldestOverdue(now) === null) return at;
+    return await this.arm(now, true);
+  }
+
+  /** The earliest wake any consumer has that has already come, or null (read only: each owner answers its own wake). */
+  async #oldestOverdue(now) {
+    const probe = await this.#probeState(now, false);
+    await this.#loadDaily();
+    let owed = null;
+    for (const c of this.registry(probe)) {
+      if (this.#running(c)) continue;   /* R31: work in flight is being done, not owed */
+      let w;
+      try { w = await c.wake(now); } catch { continue; }
+      if (w !== null && w !== undefined && Number.isFinite(w) && w <= now && (owed === null || w < owed)) owed = w;
+    }
+    return owed;
+  }
+
+  /** R28: `{last_run, running_since, watchdog_seen, watchdog_ran, alarm_at, oldest_overdue, stale}`. `last_run` is the
+   *  instant of the last firing that completed (null before any); `oldest_overdue` the earliest wake any consumer has that
+   *  has already come (null when none is owed). `stale` (G95; K4807 (2), K4811 (5)) is true when work is owed and either the
+   *  oldest wake already come is at least `STALE_AFTER_MS` old and no firing has completed in that long (a firing counts as
+   *  completed at its end instant, `ended`; one in progress does not reset the clock), or one firing has run that long
+   *  (`running_since`). It reads the firing's END, `ended`, not `last_run` (the START instant): a firing that ran for minutes
+   *  and ended just now is a firing completed now. Reads only: it re-arms nothing and runs nothing. */
+  async health(now = Date.now()) {
+    const owed = await this.#oldestOverdue(now);
+    const { last_run, running_since, watchdog_seen, watchdog_ran = null, ended = null } = await this.#beatRead();
+    const alarm = await this.#storage.getAlarm();
+    const done = Number.isFinite(ended) ? ended : last_run;
+    const idle = !Number.isFinite(done) || now - done >= STALE_AFTER_MS;
+    const stale = owed !== null && ((now - owed >= STALE_AFTER_MS && idle) || (Number.isFinite(running_since) && now - running_since >= STALE_AFTER_MS));
+    return { last_run, running_since, watchdog_seen, watchdog_ran, alarm_at: alarm ?? null, oldest_overdue: owed, stale };
+  }
+
+  /** R29, the watchdog's one call (the plane's Worker `scheduled`, once a cycle): `watch(at)`, `at` the instant the cron
+   *  was scheduled for. It records `watchdog_seen` (never backwards), reads the alarm and the heartbeat, and re-arms, as
+   *  `arm` does but outright (the later of the earliest wake and now), only when (a) no alarm is set and no firing is in
+   *  progress (`running_since` within a cycle: `getAlarm()` is null while the handler runs), or (b) the alarm is spent
+   *  (R4), or (c) work is owed, no firing is in progress, `last_run` is older than two cycles and the alarm is still ahead (one already due is about to run). It runs no tick, reads
+   *  no consumer's rows, and is idempotent: with a live alarm and a fresh `last_run` it asks no consumer anything and
+   *  sets nothing. Answers what it saw and did: `{alarm_at, last_run, running_since, watchdog_ran, rearmed, why}`. */
+  async watch(at, now = Date.now()) {
+    const seen = Number.isFinite(at) ? at : now;
+    let beat = await this.#beatRead();
+    /* G94: `watchdog_seen` is the cron's slot (never backwards); `watchdog_ran` the instant this call ran, from its own clock */
+    await this.#beatWrite({ watchdog_ran: now, ...(beat.watchdog_seen >= seen ? {} : { watchdog_seen: seen }) });
+    beat = this.#beat;
+    const alarm = await this.#storage.getAlarm();
+    const running = Number.isFinite(beat.running_since) && now - beat.running_since < RUNNING_BOUND_MS;
+    const none = alarm === null || alarm === undefined;
+    const fresh = Number.isFinite(beat.last_run) && now - beat.last_run <= 2 * HEALTH_CYCLE_MS;
+    let why = null;
+    if (none && !running) why = "no_alarm";
+    else if (!none && alarm < now - SPENT_ALARM_MS) why = "spent";
+    else if (!running && !fresh && alarm > now && (await this.#oldestOverdue(now)) !== null) why = "stale";   /* an alarm at or before now is about to run */
+    const out = { alarm_at: none ? null : alarm, last_run: beat.last_run, running_since: beat.running_since, watchdog_ran: now, rearmed: false, why };
+    if (why === null) return out;
+    this.#held.clear();   /* R27 */
+    const probe = await this.#probeState(now, true);
+    await this.#loadDaily();
+    const at2 = await this.#reconcile(now, this.registry(probe), false, null, true);
+    return { ...out, alarm_at: at2, rearmed: at2 !== null };
   }
 
   /** At the instance's start: reconciles as `arm` does, so an alarm lost to a failed firing or a reset is re-derived
@@ -610,6 +856,8 @@ export class Scheduler {
     this.#publishHeld = null;
     this.#held.clear();   /* R27 */
     await this.#loadDaily();
+    /* R33: a `running_since` still set at a start belongs to a run the deploy or restart cut: no firing runs in a new instance */
+    if (!this.#firing && Number.isFinite((await this.#beatRead()).running_since)) await this.#beatWrite({ running_since: null });
     return await this.#reconcile(now, this.registry(probe), false);
   }
 
@@ -632,7 +880,7 @@ export class Scheduler {
         const fs = this.#owner("fileSafety");
         r = fs && typeof fs.onFileWork === "function"
           ? fs.onFileWork("scheduler", () => (this.#firing ? null : this.arm().catch(() => null)))
-          : { ok: false, reason: "NOTICE_ABSENT", detail: "the file-safety owner offers no onFileWork" };
+          : { ok: false, reason: "NOTICE_ABSENT", detail: localize("scheduler.index.the_file_safety_owner_offers_no_onfilework", "the file-safety owner offers no onFileWork") };
       } catch (e) { r = { ok: false, reason: "NOTICE_THREW", detail: message(e) }; }
       this.#fault("fileSafety", r);
     }
@@ -678,7 +926,7 @@ export class Scheduler {
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. Answers each
    *  registration's answer by notice; a refused one is also kept as a start-up fault (`faults()`) and logged. */
   listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry, following,
-             publishSchedule, answers, duties, people, moneyChecks, caseCarriage } = {}) {
+             publishSchedule, answers, duties, people, moneyChecks, caseCarriage, calculations } = {}) {
     const arm = () => this.arm();
     /* A notice its owner tells without awaiting: the arm runs, and a storage that fails it is never an unhandled
        rejection (the act stands, its owner's R27, R71). */
@@ -748,6 +996,10 @@ export class Scheduler {
     /* R25 (case-carriage R17): a member document queued, told after the act commits; arms at once, except inside a
        firing, whose own reconcile stands (R1). */
     if (caseCarriage) out.caseCarriage = caseCarriage.onCopyWork("scheduler", () => (this.#firing ? null : told()));
+    /* G55 (calculations R14): a background ingest started, told after the act commits; arms at once, except inside a firing,
+       whose own reconcile stands (R1). An owner that does not offer the notice is not registered with. */
+    if (calculations && typeof calculations.onIngestWork === "function")
+      out.calculations = calculations.onIngestWork("scheduler", () => (this.#firing ? null : told()));
     for (const [notice, r] of Object.entries(out)) this.#fault(notice, r);
     return out;
   }
@@ -776,7 +1028,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       networkNotices: () => networkNoticesOf(ctx, { env: e }), linkSweep: () => linkSweepOf(ctx),
       duties: () => dutiesOf(ctx), people: () => peopleOf(ctx), moneyChecks: () => moneyChecksOf(ctx),
       answers: () => answersOf(ctx), inquiry: () => inquiryOf(ctx), following: () => followingOf(ctx),
-      publishSchedule: () => publishScheduleOf(ctx), caseCarriage: () => caseCarriageOf(ctx),
+      publishSchedule: () => publishScheduleOf(ctx), caseCarriage: () => caseCarriageOf(ctx), calculations: () => calculationsOf(ctx),
     };
     const zone = deps.zone || (() => viewZone(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners, zone });
@@ -787,7 +1039,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
                    captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx), inquiry: inquiryOf(ctx),
                    following: followingOf(ctx), publishSchedule: publishScheduleOf(ctx), answers: answersOf(ctx),
                    duties: dutiesOf(ctx), people: peopleOf(ctx), moneyChecks: moneyChecksOf(ctx),
-                   caseCarriage: caseCarriageOf(ctx) });
+                   caseCarriage: caseCarriageOf(ctx), calculations: calculationsOf(ctx) });
   }
   if (deps.fileSafety) s.hand({ fileSafety: deps.fileSafety });
   if (deps.questionExplorer) s.hand({ questionExplorer: deps.questionExplorer });

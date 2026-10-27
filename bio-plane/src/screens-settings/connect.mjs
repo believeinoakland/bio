@@ -11,7 +11,9 @@
    Anthropic ("connect again"); a failed state read is said, never drawn as not connected.
    T50 (R49, R50, R54): the page the design draws, in every state: one card saying what serves the member, then parts that open
    and close; a sign-in that has expired is said and offered again; a code being exchanged is not sent twice. R41 and R53 (the
-   connection check) wait for the remote proof (agent-runner R38) and are not drawn. */
+   connection check) wait for the remote proof (agent-runner R38) and are not drawn.
+   T51 FR-25 (R76; K4203): `accountreferenceset` and `accountreferenceremove` send only the fields `ai-accounts` declares (its R35): the door
+   stamps whose reference it is from the session, so the body names no member. */
 
 export const connect = {
   id: "connect",
@@ -53,8 +55,8 @@ export const connect = {
     // bare "you" (R37: every fill filled)
     const names = (by) => {
       const id = String(by || "").replace(/^member:/, "");
-      if (id === me.member) return me.handle || (me.member === "admin" ? T("member.founder.unnamed") : id);
-      return id === "admin" ? T("member.founder.unnamed") : id;
+      if (id === me.member && me.handle) return me.handle;
+      return cs.memberName(id);
     };
     const out = [cs.title(), `<p>${W(S + "optional")}</p>`];
     // a part that opens and closes (R49; the design's `.cs-part`): a number, its title, one line of why; anything needed before the first
@@ -186,7 +188,7 @@ export const connect = {
             if (ui.starting) start = start.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"');
             if (ui.exchanging) code = code.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"') + `<span class="mk-small" role="status" data-state="working">${W("shell.working")}</span>`;
             if (start || code) {
-              const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
+              const open = ui.signinAddress ? `<div class="mk-links" data-shown="signin"><a class="cs-ref" href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></div>` : "";
               h += `<h3>${W(S + "signin.heading")}</h3><ol class="mk-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}${cs.field("mc-code" + (ui.gen || 0), S + "signin.code", { type: "password", help: S + "signin.whole", autocomplete: "off" })}<p class="mk-note">${W(S + "signin.help")}</p>${code}`;
               // the password asked again (DEC-249; the registry's `reauth`): the shell asks it when an act is answered REAUTH_DUE; here it can be
               // given beforehand. The field is cleared by the shell after the act (interface-shell R21)
@@ -263,7 +265,7 @@ export const connect = {
     { op: "reauth", rereads: [],
       send(view, el, cs) { const password = String(cs.value("mc-reauth") || ""); return password ? { body: { password } } : { refuse: "session.reauth.head" }; } },
     { op: "accountreferenceset", rereads: ["reference", "uses", "limits", "usage", "history"], outward: true,
-      send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { member: "member:" + (view.me || {}).member, kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
+      send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
       done(view, answer, cs) { cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); } },
     // R49: the uses as checkboxes in one style, saved by one act: the first changed use is this act's request, the others follow it
     { op: "accountusesset", rereads: ["uses", "history"],
@@ -286,7 +288,7 @@ export const connect = {
       send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "member:" + (view.me || {}).member, el, cs); },
       refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }), LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
     { op: "accountreferenceremove", rereads: ["reference", "uses", "limits", "usage", "history"],
-      send(view) { return { body: { member: "member:" + (view.me || {}).member } }; } },
+      send() { return { body: {} }; } },
     { op: "subscriptiondisconnect", rereads: ["signin", "reference", "uses", "limits", "usage", "history"],
       send() { return { body: {} }; } },
   ],

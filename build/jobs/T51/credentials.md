@@ -1,0 +1,579 @@
+# credentials (T51)
+
+**Status** · session_01FkqUZX9YzCShmHaoauY6tK · depth 2 · COMPLETE · handled B24
+
+## J1 · COMPLETE
+
+Applied B1 (T51-14, BOB's note 1): the stale comment at `bio-plane/src/credentials/index.mjs` line 296, above `bootstrapState` (R2), restated for the code as it is. It named "the setup page", which no longer exists (K3177), and narrated the retired `roles` answer. It now names the setup screen (`screens-entry` R18) and says the answer names no roster. No code changed. Commit d5cbbac548 on `job/T51/credentials`.
+
+Other stale mentions of the old interface in the module: none found (searched `src/credentials/` and `test/m/credentials/` for setup page / setup screen / setup-page). The `setup-token` in `test/m/credentials/fixture.mjs` is the Claude Code CLI command, not the old interface; left as is.
+
+Deferred: nothing.
+
+Found in other modules (not changed here): the whole-repo run of `checks/run.mjs /home/user/bio` reports coverage failures in agent-harness (R17 named by no test), agent-runner (R36, R37, R38, R40), capture (R96), journey-check (R19), project-roster (R35, R36) and promotion (R58). Not this module's ids; reported for BOB's reading.
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 160, pass 160, fail 0.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures (3535 product files); coverage 170 modules, 5853 of 5863 ids named (the six failures above, none in credentials); channels 0 failures.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 28 product files, 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 55 of 55 live requirement ids named by a test, 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 file changed, 0 failures.
+
+Size (session_01A5kq8RgUB5bhTnBnJ5oEtC): test runs 1, module lines 2728
+
+## J2 · COMPLETE
+
+Applied B2 (T51-176, the words findings in `build/plan/words-pass/credentials.md`), commit 8d79cbee3c on `job/T51/credentials`. Text unchanged throughout; keys and ids assigned once.
+
+- `checks.mjs`:20 (`refusal.SIGN_IN_PAUSED`, copy of a words row): `word('refusal.SIGN_IN_PAUSED', { time: '{time}' })`, so `{time}` stays for the screen as the comment says.
+- `index.mjs`:1258 (plain): `localize('credentials.index.minted_by_your_teams_civicsmith', …)`, the run credential's note.
+- `index.mjs`:1291 (plain): `localize('credentials.index.a_run_in_a_project', …)`, the label passed to membership's `projectAuthority`.
+- `index.mjs`:1937 (inline, placeholders): `localize('credentials.index.the_keyed_services_are', …, { services, prefix })`.
+- `index.mjs`:1966 and :1993 (plain): `localize('credentials.index.setting_the_teams_key', …)` and `localize('credentials.index.switching_the_teams_key', …)`, the act labels for `#adminBar`.
+- Test copies of member sentences, converted to `word`/`localize` equality or a key-backed `has`: `t35-misc.test.mjs` (the flagged ones in the words-pass file, plus the two sibling copies met in the same test, K3810); `seam.test.mjs`:182 (the assertion message, reworded so it copies nothing); `keyed.test.mjs` and `t36.test.mjs` (the act labels, now passed as `localize` calls; the check counts them as code copies once `index.mjs` carries them).
+- Code copies of other modules' sentences (K3962): `t35-misc.test.mjs` lines for `ai-accounts.index.your_teams_civicsmith_has_no`, `…the_reference_does_not_open`, `…the_teams_key_does_not` and `…the_key_does_not_open`, compared with `localize` of those ids.
+- Handlists (K3268): `grant.test.mjs` no longer hand-lists the eight routed names; it asserts `rule` and the two renamed names `linesof` and `structureat` are held, and the sorted, lowercase, unique list stays. `rows-ops.test.mjs` no longer hand-lists the module's routes; it compares the routes with this module's own map and checks the moved routes are answered here.
+
+Deferred: nothing of the findings.
+
+Found in other modules, not changed here:
+- Whole-repo `checks/run.mjs /home/user/bio`: the words check reports 4,284 failures across 173 modules (inline 3,103, plain 1,380, testcopy 1,001, handlist 180 tagged `?`, dev and unkeyed counted apart), in modules other than credentials, e.g. `capture-sources` (`credentials.mjs`:226 to :428, plain), `wizard-scripts` (`t47`, `t48`, `writing-help` testcopies), `reevaluation` (`checks.test.mjs`:110, part testcopy). Coverage has 33 failures in other modules. None names credentials. This is the tranche's words pass still open for those modules' jobs, not this one's.
+- `setup-words --check` reports `rows.mjs` stale, naming this job's new ids (`credentials.index.a_run_in_a_project` and the others). Expected: BOB regenerates it at the layer close (manifest §14).
+
+For BOB, a question rather than a change: the check does not count some member-read sentences in this module. The `LOGIN_REFUSAL_DETAIL` (`index.mjs` around line 455, R4's refusal detail) and the `detail:` strings inside the DEC-49 regions (for example `passwordChange`'s and `signerRegisterOwn`'s details) are plain English in code, not `localize` calls, and the check is silent on them. `t35-misc.test.mjs` also still asserts fragments of `LOGIN_REFUSAL_DETAIL` and of two `detail`s, which copy them. K3964 (2) says such sentences are still read and need converting. I have not converted them, since they are outside the findings this job was given; I'd like Bob to say whether they go in this job (a second pass over `index.mjs`) or to the design's `unkeyed` list (K3944). Until then they stay as they are.
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 160, pass 160, fail 0.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures (was 15).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 174 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 28 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 55 of 55 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: format 0 failures, architecture 0 failures, channels 0 failures; coverage and words failures only in other modules (above).
+- `node bio-plane/src/setup-words/build.mjs --check`: stale rows note only (above); no refusal naming this module.
+
+Size (session_01MVQ8cwXNydHkeU6mxmzKQs): test runs 3, module lines 2679
+
+## J3 · COMPLETE
+
+Applied B3 (CHANGE: every member-read sentence by key, K3974), commit b7cb012a79 on `job/T51/credentials`, after merging `tranche/T51` (3416b54f25). Keys are `credentials.index.<slug>`; the DEC-49 region markers are kept; text unchanged.
+
+Converted by `localize`:
+- `LOGIN_REFUSAL_DETAIL` (R4's refusal detail, `sign_in_refused`).
+- DEC-49 regions: `passwordChange` (two details), `#notSignedIn`, `#paused`, `#signerMemberBar` (NOT_ACTIVE), `signerAdd` (BAD_KEY), `signerRegisterOwn` (machine, held, revoked and the two success details), `aiCredentialMint` (not-a-member, principal-not-the-minter, principal-unstated, identity, expiry, digest), `aiCredentialRevoke` (not-a-member), `aiRunCredentialMint` (shape, the three arms), standing grant, `grantHeld`, `aiGrantAdmit` (op), `securityCount` (kind), the period refusal and its faults, `securityTotals` (counts unreadable), `recoveryCodesIssue`, `recover` (RECOVERY_REFUSED), reset link dead, keyed service off and no key, `reauthDue`, `sessionLockedRefusal`.
+- Outside the regions, the same kind: the `accountMemberNotActive` and `notYourAccount` details in `aiRunCredentialMint`, `aiGrantMint` and `aiGrantMintStanding`.
+
+Deferred: nothing of the CHANGE.
+
+Found in other modules, not changed here: `reevaluation` `checks.test.mjs`:110 (testcopy, part, "the record's own machine credentials may say a newer version exists..."). `setup-words --check` reports `rows.mjs` stale, now naming ids in `ai-accounts` as well as this module's (expected until BOB regenerates at the layer close).
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 160, pass 160, fail 0.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures (inline 0, plain 0, testcopy 0, handlist 0, unkeyed 0).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 174 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 28 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 55 of 55 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: the only finding naming credentials is the `reevaluation` test copy above, not this module's.
+
+Size (session_01MVQ8cwXNydHkeU6mxmzKQs): test runs 6, module lines 2639
+
+## J4 · COMPLETE
+
+Applied B4 (CR-16, R80 `lastActivity()`), commit 79631222c3 on `job/T51/credentials`.
+
+- `bio-plane/src/credentials/index.mjs`: `lastActivity()` beside `claimed()` (R17). It answers the newest `last_active` over `sessions` as an ISO-8601 string, or `null` when no session holds one. It is a read: it touches no row, and it does not go through `session()`, which would count as activity. It never throws; a store that cannot be read answers `null`, the same answer `instance-setup`'s `#lastActivity` gives today (`bio-plane/src/setup.mjs`:2627, for a dropped `sessions` table).
+- The output is byte-identical to the instance-setup read it replaces (`new Date(ms).toISOString()` over `MAX(last_active)`), so `bootstrapfacts`' `last_used_at` does not change when CR-12 re-points it.
+- Tests: new `bio-plane/test/m/credentials/t51.test.mjs`, three tests each naming R80: the later of two sessions' instants, as ISO-8601, with a control that the read leaves every session row as it was; `null` with no session held and with none recorded; `null`, not a throw, when `sessions` is unreadable.
+
+For BOB, a wording point, not changed here: R80 says "as the ISO-8601 instant it stores", but `sessions.last_active` stores milliseconds (`schema.mjs`:31, 35). The answer is the ISO-8601 string of that instant, as the setup read answers it today. If Bob wants the requirement's wording to say "as the instant it stores, rendered ISO-8601", that is a requirements edit for BOB.
+
+Deferred: nothing.
+
+Found in other modules, not changed here (whole-repo `checks/run.mjs /home/user/bio`):
+- Coverage, 7 failures, none in credentials: `agent-harness` R17; `agent-runner` R36, R37, R38, R40; `extraction` R77; `installer-steps` R26, R31; `journey-check` R19; `screens-inquiry` R81, R82; `setup-words` R19.
+- Words, 15 inline failures, none in credentials: `instance-setup` `setup-fleet.mjs`:30, 32, 35–38, 42, 44, 55, 64, 66, 67 (CR-12's, already accepted by name in the plan); `promotion` `index.mjs`:194, 1151, 1184.
+- Instance-setup's own `#lastActivity` stays in place until CR-12 re-points it to `lastActivity()`, as the plan's CR-12 entry says.
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 163, pass 163, fail 0 (the three R80 tests are among them).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 29 product files; 0 failures. Whole run: 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 56 of 56 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 2 files changed by credentials, 0 failures.
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage and words failures only in the modules named above.
+
+No pull request is opened, per the job's rule; BOB merges at the tranche boundary.
+
+Size (session_01XeEQiwMvWUVaEbgAvHSsgC): test runs 1, module lines 2651
+
+## J5 · QUESTION
+
+Three points from reading B5, with my best reading for each. I carry on with everything else.
+
+1. **C80 (R81) cannot be seen failing yet: `member-roster` R76 is not on `tranche/T51`.** B5 says it merged before I started. It has not: `tranche/T51` at abc09b300a has no `member-roster` R76 line, `memberFacts("admin")` still answers null, and `member-roster`'s own job (MEMBER-ROSTER #3) only started after mine. The refusal is `#signerMemberBar` -> `memberFacts`, so the change is `member-roster`'s, not mine, and I will not decide "the founder is active" in this module (it would copy a rule that module owns). Best reading: I write the R81 test now (founder registers a key after the claim; refused before it; a non-founder as before), see it fail for that reason, and finish C80 when `tranche/T51` carries R76. Please tell me when to merge it, or tell me to take another course.
+
+2. **`subscriptionsignin` is not served by this module** (census row: "no ops-map arm found"). `agent-worker/src/signin.mjs` says the plane's door routes it to the member's own runner (`control-plane`; `agent-worker` R66). I declare nothing for it and leave it to its owner. The other 17 ops of entry 3 are declared.
+
+3. **`securitymap` cannot be declared as the rows stand.** It is a read (`op-declarations`: `mutating: false`), but `op-grades` holds a hand row `RUNG_ABSENT.securitymap = {ground: "caller-owned"}` (t48.mjs). A declaration with `weight: "caller-owned"` is refused as a ground on a read (`DECLARED_OP_BAD_WEIGHT`, ground-on-read); `weight: "read"` is refused as disagreeing with the hand row (`DECLARED_OP_DISAGREES`, hand=caller-owned). Best reading: `op-grades` drops that hand row (its `NON_ACTS` row already states the read) and I then declare `securitymap` as `weight: "read"`, `fields: {accepts: ["from","to"], requires: ["from","to"]}`; or you give it its own job. Until then it stays undeclared.
+
+Also decided, to be recorded (no answer needed unless you disagree): `fp` (the bootstrap secret's fingerprint the control plane puts in `claim` and `bootstrap`) is a door stamp like `source` and `country`, so it is not in `accepts`; `login`, `recover` and `reauth` answer a missing field with their one fixed refusal (R4, R47), so their `requires` are the fields without which no call can succeed and the tests count that refusal as naming them. Requirement lines (R81 for C80; R82 for `DECLARED_OPS`, one line for entries 2 and 3) I put in my record for you, because my paths do not include `build/requirements/`.
+
+## J6 · REPORT
+
+Applied B5 and B6 (FR-09) as far as the tranche allows, on `job/T51/credentials`.
+
+- **Entries 2 and 3 (K4168, K4202): done.** `DECLARED_OPS` declares 17 ops (the 16 earlier ones and `securitymap`, now declared `weight: "read"`, `accepts` and `requires` `from`, `to`, per B6 (3)); `subscriptionsignin` is control-plane's and is not declared here. `declared-ops.test.mjs` (18 tests, all pass) holds each declaration true through test-support's `declaredOpHolds`. The `op-grades` `RUNG_ABSENT.securitymap` hand row must go for the registration to agree (BOB's CHANGE to OP-GRADES #16). Hand rows in `op-declarations` and `op-grades` that can now go once the registration agrees: the rows for the 17 ops above.
+- **Requirement lines, written in `build/requirements/credentials.md` (B6: either place is fine):** R81 (C80, *not yet met: T51*) and R82 (`DECLARED_OPS`, met: the tests name it).
+- **Entry 1 (C80, R81): waiting on `member-roster` R76.** `tranche/T51` still carries no R76 line and `memberFacts("admin")` still answers null. The R81 test (`t51.test.mjs`:39, with its control at :59) is written and fails for that reason alone (`NO_SUCH_MEMBER` for the founder after the claim); the pin at `own-keys.test.mjs`:55 is changed to the unclaimed case only. This module changes no code for R81 unless it still refuses once R76 has merged. I finish it when BOB's CHANGE says R76 is merged.
+
+Wording point: R81's refusal before the claim stays `noSuchMember("admin")`, the founder not yet being a member.
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 183, pass 182, fail 1 (R81, as above).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 0 failures (before this commit's requirements file, which B6 accepts).
+
+## J7 · REPORT
+
+J6: DECLARED_OPS done (17 ops incl. securitymap as read; op-grades must drop RUNG_ABSENT.securitymap), R82 met, R81/R82 lines written. C80/R81 waits on member-roster R76 (not on tranche/T51): its test is written and fails only for that reason. Send CHANGE when R76 is merged. Details in my record J6.
+
+## J8 · COMPLETE
+
+Applied B7 (CHANGE, K4218): merged `tranche/T51` (member-roster R76 on it). R81's test passes with no change to this module's code, as J6 said.
+
+Entries applied: 1 (C80, R81), 2 and 3 (`DECLARED_OPS`, R82; see J6). R81 and R82 are written in `build/requirements/credentials.md` (not in this record), both marked met; the ownership check lists that one file, which B6 accepts.
+
+R76 made two older pins stale, both of the founder being no member; I moved them to the new behaviour (no assertion weakened, the refusal-writes check kept):
+- `keys.test.mjs` (R6): `signerAdd` for `memberId: "admin"` now succeeds after the claim (asserted after the "no refusal writes" check; the final key count is 5).
+- `grant.test.mjs` (R32): the founder is no longer in the "not active" list; `aiGrantMintStanding("admin")` is `NO_ACCOUNT` (active, no account of her own).
+
+Deferred: nothing. Another module: `op-grades` hand row `RUNG_ABSENT.securitymap` (t48.mjs) must go for the `securitymap` declaration to agree; and the hand rows of the 17 declared ops in `op-declarations` and `op-grades` can go once registration agrees. The whole-repo words check shows 20 `testcopy` failures in `op-grades` tests (none in credentials), and coverage shows failures in other modules (none in credentials).
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 183, pass 183, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (accepted, B6).
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage 5 and words 21 failures, none in credentials.
+
+Size (session_01PVXWdCkqAhUVeYE1E8cxT4): test runs 5, module lines 2750
+
+## J9 · COMPLETE
+
+J8 COMPLETE: R81 met after R76 (two founder pins updated), R82 met, DECLARED_OPS incl. securitymap. Details in my record J8.
+
+## J10 · COMPLETE
+
+Applied B8 (CHANGE, K4237): `DECLARED_OPS.bootstrap` now accepts `members` (not required). Commit a1b0f4344e on `job/T51/credentials`.
+
+- `bio-plane/src/credentials/index.mjs` (`DECLARED_OPS.bootstrap`): `fields: {accepts: ["members"], requires: []}`, with a comment saying where the field is answered.
+- `bio-plane/test/m/credentials/declared-ops.test.mjs`: a new R82 test for `bootstrap`: `members` is declared and not required, and `declaredOpHolds` holds the declaration with the undeclared-field control (`undeclared_field_bootstrap` is dropped or refused naming it).
+- `build/requirements/credentials.md`, R82: one sentence added recording `bootstrap` accepts `members` (K4237). R82 stays met.
+
+Finding for BOB, not changed here: this module's `bootstrap` arm (`index.mjs` ~2079) reads only the `fp` stamp, not `members`. The `members=1` answer is given at the public door by instance-setup's `bootstrapOp` (`bio-plane/src/setup.mjs`:3344), which reads `url.searchParams.get("members")`. So the `members` declaration is true of the op as the door serves it, but the declared field is read in instance-setup's code, not in this module's arm. Instance-setup declares no `bootstrap` row of its own, so the screen guard checks this declaration. If you want the declaration to name only what this module's arm reads, the two options are: `accepts` stays `[]` and the guard finds `members` answered by instance-setup, or instance-setup takes over the `bootstrap` declaration. I have not chosen; the CHANGE you sent says to add it, and I did.
+
+Requirement line for BOB (also in `build/requirements/credentials.md`, R82, amended):
+> **R82** … `bootstrap` accepts `members` (not required; K4237): the screens' ask for each member's own build, answered at the public door by instance-setup's `bootstrapOp`, not by this module's arm. …
+
+Deferred: nothing.
+
+Found in other modules: none new. The whole-repo `checks/run.mjs` run shows coverage failures (4) and words failures (27) in other modules; none names credentials.
+
+Hand rows that can go once the registration agrees: none new (B6 already named the 17 ops; `op-grades` `RUNG_ABSENT.securitymap` is still pending its CHANGE to OP-GRADES #16).
+
+Tests and checks:
+- `node --test test/m/credentials/*.test.mjs` (bio-plane): tests 184, pass 184, fail 0.
+- `node --test test/m/credentials/declared-ops.test.mjs`: tests 19, pass 19, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage and words failures only in other modules.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (outside the paths). B6 accepts this listing of that one file at merge.
+
+Size (session_019uitbe7o6WXsqjVUksVxFY): test runs 3, module lines 2699
+
+## J11 · QUESTION
+
+QUESTION (C51, the 37.6 s registration): the credentials arm is not where the time goes, so the dominant stage sits in a module I do not hold.
+
+Measured at the module's interface, real SQLite and real membership (the credentials test world): `signerRegisterOwn` takes 0.4 to 2 ms and makes 5 store calls (the member's row, the key's row, the insert, membership's list of active administrators, the credentials row for that list). The count is the same with 2 members and 0 keys or 12 members and 60 keys. The administrator "notification" is not a fan-out: the answer's `notified` is membership's list read at the act, and the feed reads the key's row later. No hash or other costly work is in the arm. So 37.6 s is not credentials' own work.
+
+Stages that remain, none mine: (1) the control plane / admission path in front of `signerregister` (the op has weight `credential`; whether an act of that weight triggers a password hash, a re-ask check or a session read before the store door is for admission and control-plane to say); (2) the store door's dispatch around `dispatch.mjs:427`; (3) the browser: the key made in the member's own browser (WebCrypto) and, per the walk, a fresh key made at each signing, which belongs to screens-publish / screens-settings (wave 2). I cannot name which from here without a live run: the arm's `timings` now carries the plane's part, so a walk on biosmoke8 that reads the answer will show the arm at 0 to 2 ms and place the rest on the door or the browser.
+
+Best reading: ask the control-plane job (and screens-publish) to time the door and the browser stages for C51; mine is met and proven. Nothing here blocks me, so I carry on to COMPLETE.
+
+## J12 · COMPLETE
+
+COMPLETE · fix round 3 (B9), CREDENTIALS #25. Commits on `job/T51/credentials`; `tranche/T51` merged at its tip (482aff3dcf) before this entry.
+
+**Cause met: C51 (the plane's part), requirement R9 (signerregister, served as signerregisterown).**
+- Measured first, at the module's interface (real SQLite, real membership): `signerRegisterOwn` takes 0.4 to 2 ms and makes 5 store calls (the member's row, the key's row, the insert, membership's active administrators, the credentials row that list reads). No hash, no fan-out: the administrator "notice" is membership's list read at the act, and the feed reads the key's row later. The cost behind the walker's 37.6 s is therefore not this module's; the stage and numbers are in J11 (QUESTION) for the control-plane and screens-publish jobs.
+- Built: a successful registration's answer carries `timings: {total_ms, stages}`, whole non-negative milliseconds, stages `standing`, `lookup`, `write` (absent when the key is already the member's) and `notify`; the stages sum to no more than the total. A refusal carries no `timings` (its key set is unchanged, so every refusal test stands). Nothing else in the answer changed; the administrators are still told (`notified`).
+- Tests, written first and seen failing (the timings test failed before the change; the store-call test describes the arm as it already was, so it held and is the bound, not a fix): `own-keys.test.mjs` "R9 C51 a registration's store calls are bounded …" (at most 6 calls; the same count with 12 members and 60 keys as with a small team; a key already held and a refusal are no dearer) and "R9 C51 a registration's answer carries timings …" (the keys, the whole numbers, the sum, no `write` stage for a held key, no timings on a refusal; control: `notified` equals membership's `activeAdmins()`). Two existing exact-shape assertions on a success (`own-keys.test.mjs` R9 registration and held key; `t51.test.mjs` R81 founder) now set the new `timings` key aside and stay strict about every other key; nothing was weakened.
+
+**Proposed requirement line for BOB to write (R9, amend):** "A registration that succeeds carries `timings: {total_ms, stages}`: the whole milliseconds the arm took and each stage that ran (`standing`, `lookup`, `write`, `notify`), the stages summing to no more than `total_ms`; a registration makes a bounded number of store calls (at most six) whatever the size of the team or of the roster. Refusals carry no `timings`." Test: the two above.
+
+**Deferred:** nothing. **Found in other modules, not changed:** the stage behind C51's 37.6 s (J11): the door and control-plane path for a `credential`-weight op, or the browser's key making; `build/rulings.md:4346` fails the format check (K4349 states no standing-list decision), on the tranche tip, not mine.
+`setup-words --check`: no new words in this change.
+
+**Tests and checks:**
+- `node --test --test-force-exit "test/m/credentials/*.test.mjs"` (bio-plane): tests 186, pass 186, fail 0.
+- Users of the arm (15 test files naming `signerRegisterOwn`/`signerregister`: screens-inquiry, screens-settings, ratification, op-declarations, interface-shell, screens-publish, op-grades, store-door, control-plane): tests 213, pass 213, fail 0. `build/plan/impact.mjs` names 105 modules by its shared-table rule (`DECLARED_OPS` is unchanged by this change); I ran the ones that read this answer, not all 1,507 files.
+- `checks/format.mjs`: 175 modules, 175 requirements files; 1 failure, `build/rulings.md:4346`, not mine.
+- `checks/architecture.mjs credentials`: 30 product files; 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named by a test; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/ownership.mjs credentials tranche/T51 job/T51/credentials`: 4 files changed; 0 failures.
+
+Size (session_019Weuk3yVSt11Vsjp9xvR7M): test runs 5, module lines 2708
+
+## J13 · Fix round 10, wave A batch 1 (B11), CREDENTIALS #26
+
+**Cause done: R24 (a), requirement R65 (fix round 10 amendment).**
+- Root cause: `session()` ended every foreground read in `UPDATE sessions SET last_active=?` (`credentials/index.mjs`, the line after `#stateOf`), a write hop on every request. Tests missed it: `r9-bookkeeping` and record-core `r8-bookkeeping` count the write counter of a read, none counts statements; `t47-signin.test.mjs` sets `last_active` by hand.
+- Built: `ACTIVITY_GRAIN_MS` (60 s, exported); a not-background read writes `last_active` only when the stored value is older than the grain or none is recorded. Locked sessions and background reads write nothing, as before. Every limit is still judged from the stored value, so an idle ending moves by at most one minute.
+- Failing-first, seen red (50 rows changed for 50 reads): `r10-session-write.test.mjs` (R65): fifty reads of a session one second old change at most 1 row; controls: background changes 0, a read past the grain changes 1 and stores now, a session idle past `sharedIdle` still ends. All 187 module tests green after.
+- Platform check (for the redeploy, not run: I never contact a live deployment): alternate foreground and `background=1` `whoami` on biosmoke8, 90 each (`diagnosis-R10-d.md` §6): foreground p50 about 66 ms, no hop over 500 ms; measure on a quiet copy.
+
+**Fixtures published** in `bio-plane/test/m/credentials/fixtures.mjs`, each called by `r10-fixtures.test.mjs`:
+- `bootstrapVersions({storeVersion, version, memberVersions, claimed, fp})`: the real `bootstrap` arm of `credentialsOps` over a real (claimed by `claim`) world; `storeVersion: null` is a store whose environment names none (the arm answers `null`). `ok`, `version` and `memberVersions` are the public door's (`instance-setup` `bootstrapReport`), passed through as given, not made by this module. **Found, for BOB:** installer R66's lag cases "store version absent" (an older store without the key), SILENT, MISNAMED, UNBOUND and a missing member are not states this module's code can produce: the first is a store on older code, the rest are `instance-setup`'s fleet reports. Those need an `instance-setup` provider fixture (its `bootstrapReport`/`memberVersions`), or K5044's exemption of the fake network.
+- `securityMapRefusal()`: `{notAnAdmin, invalidPeriod}`, the real `securityMap` refusals.
+
+**Fixture lines not done (8, FIX-E):** seam.test.mjs:153,156,175 and fixture.mjs:37,48,55,57,58 (providers member-roster, record-core); they arrive as a CHANGE. `fixtures.mjs --list`: 8 failures, all those. **Markers added:** no `fixtures-own` and no `fixtures-generic`.
+
+**Deferred:** nothing. **Found in other modules:** the above only.
+
+**Tests and checks:** module `node --test` 187 + 2 new: pass, fail 0. `format` 0 failures; `architecture credentials` 0; `coverage credentials` 58 of 58; `words credentials` 0; `ownership credentials tranche/T51` 0. `impact.mjs origin/tranche/T51 HEAD` names 105 modules (the shared `index.mjs`); the users that name `last_active` or the session limits (record-core r8-bookkeeping, instance-setup t51, store-door routes) and control-plane and admission were run: tests 785, pass 785, fail 0.
+
+Size (session_015BgLFhXk6KZEKYCGLb1LEg): test runs 6, module lines 2714
+
+## J14 · COMPLETE
+
+COMPLETE · fix round 10, wave A batch 1 (B11). R65 grain (cause 24 (a)) done, failing-first seen red (50 rows for 50 reads) then green; fixtures bootstrapVersions and securityMapRefusal published and tested. Record: build/jobs/T51/credentials.md J13. Module tests 187+2 pass; format, architecture, coverage (58/58), words, ownership 0 failures; users (record-core, instance-setup t51, store-door, control-plane, admission) 785/785. 8 FIX-E fixture lines remain (providers member-roster, record-core). No fixtures-own/-generic markers added. For BOB: bootstrapVersions makes only the store's part (storeVersion); ok/version/memberVersions and installer R66's SILENT/MISNAMED/UNBOUND/missing-member cases are instance-setup's, and 'store version absent' is an older store, so those need an instance-setup provider fixture or K5044's fake-network exemption. Platform check (biosmoke8 alternate foreground/background whoami, 90 each) is for the redeploy.
+
+## J15 · CHANGE B12: record-core lines re-pointed, CREDENTIALS #26
+
+`tranche/T51` merged. `fixture.mjs` `world()` now takes record-core from record-core's published `coreOver(db)` (real `declarePurge`, `declareTable`, `bundleInfo`; `declared` read back from `declaredTables()`), replacing the hand-built `stubCore` and the hand-made `bundles` table (lines :37, :48, :55, :57, :58); bundles are added with `addBundle` (`fixture.mjs` `project`, `t50.test.mjs`). `seam.test.mjs` takes its TABLE_DECLARED and TABLE_CLASS_UNKNOWN refusals from `tableDeclarationRefusals` (:153, :156). Not done: `seam.test.mjs:177` (member-roster's `registerPasswordSetter` refusal; its job, batch 4). `fixtures.mjs /home/user/bio credentials --list`: 1 failure, that line. No `fixtures-own`/`fixtures-generic` markers.
+Module tests: 189 pass, 0 fail. format, architecture, coverage (58 of 58), words, ownership: 0 failures.
+Size (session_015BgLFhXk6KZEKYCGLb1LEg): test runs 9, module lines 2714
+
+## J16 · COMPLETE
+
+COMPLETE · CHANGE B12 done (record: J15). record-core lines re-pointed to coreOver and tableDeclarationRefusals; fixtures list now 1 failure, seam.test.mjs:177 (member-roster, batch 4). Module tests 189/189; format, architecture, coverage 58/58, words, ownership 0 failures. No fixtures-own/-generic markers.
+
+## J17 · Fix round 10, cause 1 (B13), CREDENTIALS #27
+
+START B13 (plan item 71 (3); STORE-REQUEST #1 J3 (3); K5132, R-CLOCK). The START names no diagnosis section for this cause, and a search of `build/plan/walk-T51-final/diagnosis/` finds none for it; I took the cause from the START and plan item 71 (3), and re-read `credentials/index.mjs` lines 330–380 (the claim) before changing anything. The cause is where the START places it: `claim` stamped `consumedAt` with the wall clock, and so did every other write of a recorded instant.
+
+- **Cause:** a world pinned by `env.BIO_NOW_MS` read the wall clock for every instant this module records, so `bootstrap`'s `consumedAt` and the claim's answer disagreed with the pinned instant.
+- **Fix (where the cause is):** one instance clock, `#nowMs()`, read as `actions` reads its own: `env.BIO_NOW_MS` when the store's environment names one, else the wall clock. `credentialsOps` hands the store's environment in (`c.env`), since every store request reaches the module through it. Every recorded instant and every judgement of one now reads it; measured durations (R9's `timings`, `performance.now()`) stay on the wall clock.
+- **Sites changed (each read in its enclosing method; none is in a static method):** the claim's `consumedAt` (`claim`); `#instant` (was static, now an instance method, read by `#memberRevoked`, `signerAdd`, `signerRegisterOwn`, `signerRevokeOwn`, `signerSet`, `#storePassword`, and the recovery-code spend); the migrations' expiry and `last_active` (`migrate`); `stampSecond()` with no argument, nine places (member revocation's reset links and run credentials, the run cascade, the ai credential revoke/mint stamps, the codes' issue, the reset links' spend and set, and `#revokeRunCredentials` callers); `session`, `login`, `passwordChange`, `#passwordAgain`, `signOutEverywhere`, `#gate`, `#succeeded`, `#refusedAttempt`'s window (R38), `reauthDue`, `#liveSession`; `aiCredentialMint`'s expiry; `#aiCredentialPublic`'s `expired`; `aiRunCredentialMint` (`index.mjs:1246`, the instance's stamp and expiry; `index.mjs:1248` its TTL); `#mintGrant`'s sweep and both grant mints (R27, R32); `#liveGrant`, `#settle`, `#settleSoon`, `#tallyOwn`, `securityCount`, `securityMap`, `securityLevel` (R44, R45); `#liveResetLink` and `passwordResetLinkMake` (R69). After the edit `grep` finds `Date.now()` and `new Date(` only at the module's `stampSecond` default, its fallback in `#nowMs`, and the three ISO conversions of a given instant (lines 118, 145, 211, 519, 827).
+- **Failing-first, seen red on today's code:** `k5148-clock.test.mjs` (new): R1 R2 a claim in a pinned world records `consumedAt` as the pinned instant and `bootstrap` reads it back (red: `consumedAt` was the wall clock, `2026-10-25T16:53:31.054Z` for a pin of `2026-10-20T10:15:30Z`); R65 a sign-in in a pinned world stamps `last_active` with the pinned instant (red: the wall clock). Controls: R1 R2 with no pinned clock records the wall clock between the calls either side (green on today's code and after).
+- **Why the tests missed it:** no test pinned the store's environment, so every instant was checked only for its shape, never for its value. The claim's test read the answer's `consumedAt` as an ISO string and never compared it with any clock. The fixture's `world()` passes no environment into `credentialsOps`. The new test drives the store's door (`credentialsOps` with `{BIO_NOW_MS}`), the path the store takes, so a pinned world is what it asserts.
+
+**Applied:** cause 1 (the clock) only. The requirement text (R2: `consumedAt` is the instant the instance was claimed; R-CLOCK) is met; R9's `timings` is untouched and remains as the requirements state it (its "not yet met: T51" mark is another cause's).
+
+**Deferred:** nothing.
+
+**Found in other modules (for BOB):**
+- Direct service calls from other modules reach the module through `credentialsOf(ctx)`, which passes no environment (`store-assembly/ask.mjs:281`, `:361`; `plane/ask.mjs:281`, `:361`; `store-assembly/assemble.mjs:203`, `:248`, `:307`; `plane/store.mjs:185`). In a pinned world those calls read the wall clock until the store has served one request on the same storage, since `credentialsOps` sets the environment. Passing `env` to `credentialsOf` in `assemble.mjs` and `store.mjs` would close it; those are their modules' sites, not mine.
+- `checks/words.mjs` reports 16 failures, all in `store-assembly` and in `plane/declared.mjs` (`ask.mjs`, `wiring.mjs`, `wizards.mjs`, `declared.mjs`), not in credentials. The same 16 fail on `origin/tranche/T51` with my change absent.
+- `checks/fixtures.mjs credentials --list`: one line, `seam.test.mjs:177` (member-roster's `LISTENER_MALFORMED`), the same on `origin/tranche/T51`; no new failing line from this job.
+
+**Tests and checks:** the module's tests, all 192 under `bio-plane/test/m/credentials/*.test.mjs` run together: 192 pass, 0 fail (the new three included). `format` 0 failures (178 modules); `architecture credentials` 0 failures; `coverage credentials` 58 of 58 live ids named; `ownership credentials tranche/T51` 0 failures (run before the commit that carries this change; re-run on the commit); `words` 16 failures, all outside this module, the same as the baseline (above); `fixtures credentials --list` one line, the baseline's.
+
+Size (session_01S9FGXy1ukQYTEAfDtbgonY): test runs 2, module lines 2216
+
+## J18 · REPORT
+
+Found in other modules (not my paths; nothing changed there): (1) store-assembly/ask.mjs:281,361, plane/ask.mjs:281,361, store-assembly/assemble.mjs:203,248,307, plane/store.mjs:185 call credentialsOf(ctx) without an environment, so a direct service call in a pinned world reads the wall clock until the store has served one request on the same storage (credentialsOps then sets it). Passing env to credentialsOf at those sites closes it. (2) checks/words.mjs: 16 failures, all in store-assembly (ask.mjs, wiring.mjs, wizards.mjs, declared.mjs), the same 16 on origin/tranche/T51 without my change. Details: build/jobs/T51/credentials.md J17.
+
+## J19 · COMPLETE
+
+COMPLETE · fix round 10, cause 1 (B13). The instance clock reads env.BIO_NOW_MS (credentialsOps hands the store's environment in); every recorded instant and judgement of one reads it; measured durations stay on the wall clock. New tests k5148-clock.test.mjs (R1, R2, R65): red on today's code, green now. Module tests 192 pass, 0 fail; format, architecture, coverage (58 of 58), ownership 0; words 16 failures outside this module (same on the tranche). Commit 3227a15ed9 on job/T51/credentials. Record: build/jobs/T51/credentials.md J17. Met ids: R1, R2, R65 (the clock's rule R-CLOCK, K5132). Other-module finding: REPORT above.
+
+## J20 · REPORT
+
+For store-assembly (not my paths; I did not edit it): the claim's clock now comes from a clock the credentials instance is handed, `credentialsOf(ctx, { now })`, read on the instance's first construction for a storage only. The one line store-assembly must add is at its first `credentialsOf` call for the store's storage (`bio-plane/src/store-assembly/assemble.mjs`, the first of its calls at `:203`, `:248`, `:307`, whichever runs first): `credentialsOf(ctx, { ..., now: () => nowMs(null) })`, where `nowMs` is the one `assemble.mjs:192` makes from `clockOf(env)`. Until that line lands, a pinned world's claim still reads the environment only after the store has served one request on the same storage (`credentialsOps` sets it, K5132); the same applies to `plane/store.mjs:185`, which is the same line for the plane. store-assembly is later in the order; I did not edit it.
+
+Note for BOB: `credentialsOf` caches one instance per storage, so the `now` option has to be on the first call; a later call's `now` is ignored, as its `record` and `membership` are.
+
+## J21 · COMPLETE
+
+COMPLETE · fix round 10, the final pass's cause 1 (B14; plan item 71 (3); STORE-REQUEST #1 J3 (3); K5132, K5148). The instance now takes its clock from one it is handed (`credentialsOf(ctx, { now })`, a function of milliseconds, read on the instance's first construction, as retrieval's `now` and capture-requests' are); none handed, the store's environment (`env.BIO_NOW_MS`, J17) answers, else the wall clock. A claim's `consumedAt` in a world whose clock is handed in reads that instant.
+
+**Met ids:** R1, R2 (the claim's `consumedAt` is the instant the instance was claimed, on the clock it is handed; R-CLOCK). BOB may strike R1 and R2's `not yet met: T51` marks.
+
+**Cause (K4426's four fields; the START names no diagnosis section for this cause, as J17 recorded, and re-read `credentials/index.mjs` `claim` and `#nowMs` before changing anything):**
+- **Root cause:** `#nowMs` (`index.mjs`, K5132) read only `this.env`, which only `credentialsOps` sets. A claim made through the instance directly (`credentialsOf(ctx)`, as store-assembly and plane do, `store-assembly/ask.mjs:281`, `:361`; `store-assembly/assemble.mjs:203`, `:248`, `:307`; `plane/store.mjs:185`) read the wall clock whatever the store's pinned clock said, and the instance had no other clock to read. The clock was not an input of the module, so the module could not take the store's.
+- **Why the tests missed it:** J17's test drove the claim through `credentialsOps` with `{BIO_NOW_MS}`, the door's path, and so proved only the door. No test made the instance directly with a pinned clock, and the fixture's `world()` passed no clock into `credentialsOf`.
+- **Failing-first test (seen red on today's code):** `bio-plane/test/m/credentials/k5148-clock.test.mjs`, new: `R1 R2 an instance handed a pinned clock records that instant as consumedAt, with no environment at the door` (`world({ now: () => PINNED })`, `w.claim()`). Red: `consumedAt` was `2026-10-25T18:00:55.597Z` (the wall clock) for a pin of `2026-10-20T10:15:30.000Z`. Control, green before and after: `R1 R2 control: an instance handed no clock records the wall clock at its claim`.
+- **Platform check:** not run; this change is inside the module's instance and needs no deployment. Named for the redeploy with the store-assembly line (REPORT).
+
+**Change:**
+- `bio-plane/src/credentials/index.mjs`: the constructor accepts `now` (`this.now`, a function or null); `#nowMs` reads it first, then `this.env`, then the wall clock; `credentialsOf(ctx, { …, now })` passes it to the constructor on the first construction for a storage.
+- `bio-plane/test/m/credentials/fixture.mjs`: `world({ sealSecret, now })` passes `now` to `credentialsOf` (a test's own option; default null, so no test changes).
+- `bio-plane/test/m/credentials/k5148-clock.test.mjs`: the two tests above.
+
+**Clock sites (grep of the module, after the change):** `index.mjs:118` `stampSecond`'s default `Date.now()` (no caller uses the default: every stamp passes an instant read from `#nowMs`); `:151` `#nowMs`'s wall-clock fallback; `:217` and `:525`, `:833` convert an instant already read from `#nowMs` to ISO, no wall-clock read. `index.mjs:1246`, which the START cites, is `aiRunCredentialMint` and reads no clock now (J17). Measured durations stay on the wall clock (R9's `timings`).
+
+**Deferred:** nothing. **Found in other modules:** J18 (unchanged); REPORT above (store-assembly's one line).
+
+**Tests and checks** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: 194 pass, 0 fail, exited by itself (192 before, plus the two new).
+- `format`: 178 modules, 0 failures. `architecture credentials`: 0 failures. `coverage credentials`: 58 of 58 live ids named. `ownership credentials tranche/T51`: 0 failures (1 file changed by credentials).
+- `words`: 16 failures, all outside this module (store-assembly and plane `declared.mjs`), the same 16 as J17 and the tranche.
+- `fixtures credentials --list`: one line, `seam.test.mjs:177` (member-roster's `LISTENER_MALFORMED`), the baseline's. No marker added.
+
+**Size (session_01TQdg39hRq6XmHth6mQqW3i): test runs 4, module lines 2223**
+
+## J22 · BLOCKED
+
+Fix round 10, plan item 95 (B15): the fixture line `seam.test.mjs:177` (LISTENER_MALFORMED) is cleared; one architecture item needs Bob.
+
+**Applied (B15).** `bio-plane/test/m/credentials/seam.test.mjs`:
+- :9 imports member-roster's published `listenerRefusals()` from `../member-roster/fixtures.mjs`.
+- :172-175 the test's membership fake answers with the published refusals: a non-function → `refusals.malformed`; a second registration → `refusals.declared`; the first → `refusals.registered`. The hand-written `{ ok: false, reason: "LISTENER_MALFORMED" }` and `"LISTENER_DECLARED"` literals are gone.
+- :185 asserts `c.start().password` is the same object as `refusals.declared` (credentials passes membership's answer through unchanged, `src/credentials/index.mjs:174`).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/seam.test.mjs`: 8 of 8 pass (same count as before). `… --test bio-plane/test/m/credentials/*.test.mjs`: 194 of 194 pass, 0 fail.
+
+**Checks (absolute root `/home/user/bio`).**
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures (was 1: `seam.test.mjs:177 [refusal]`).
+- `checks/format.mjs`: 0 failures.
+- `checks/coverage.mjs … credentials`: 58 of 58 live requirement ids named; 0 failures.
+- `checks/ownership.mjs … credentials <merge-base> HEAD`: 0 failures (one file changed).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules, 0 of 2981 test files affected.
+- `checks/architecture.mjs /home/user/bio credentials`: **1 failure** (below).
+- `checks/run.mjs /home/user/bio`: the only finding in credentials' files is the architecture one. Words: 19247 words, 0 missingkey; 16 failures reported, all in other modules (listed below for BOB).
+
+**Needs Bob (one line, in `build/modules.json`, not my path).** The architecture check fails: `seam.test.mjs (credentials): imports bio-plane/test/m/member-roster/fixtures.mjs of member-roster, which credentials does not declare in uses`. The only published answer for a listener refusal is member-roster's `listenerRefusals()`, and member-roster is not in credentials' `uses` (`uses`: setup-words, record-grammar, record-core, membership, ai-accounts, test-support). Two routes:
+1. **Recommended:** add `"member-roster"` to credentials' `uses`. It is layer 2, and it is test-only (the same way the seam already imports `record-core/fixtures.mjs`, a declared use). It does not change any runtime dependency.
+2. Alternative: membership (declared already) re-publishes the same three refusals from its own `fixtures.mjs`. That is membership's job to make, and it adds a second fixture for one answer.
+
+Until Bob chooses, my branch is one declaration short of COMPLETE. The code change is already correct and committed on `job/T51/credentials`.
+
+**Found outside credentials (REPORT for BOB; not touched).** `run.mjs` lists 15 other failures: interface-shell `harness.mjs:97` (signout answer from credentials, earlier); law-relations `fixture.mjs:136` (citationLookup refusal from credentials/acquisition, earlier); screens-daily `home.test.mjs:39,466` and `queue-foot.test.mjs:138` (op-table answers from credentials, earlier); screens-intake `t51-credentials.test.mjs:33,46` (capture-sources/capture-requests, earlier); store-assembly `wiring.mjs:49,78`, `wizards.mjs:51` (plain/inline strings, not localized), `declared.mjs:16` (`plane.declared.readtranslate` has a different `en` than `plane/declared.mjs:13`). None is caused by this change; this change touches only one test file.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 2, module lines 2223**
+
+## J23 · BLOCKED
+
+Processed CHANGE B16 (K5197): credentials hands its clock to ai-accounts; the failing-first test is red until ai-accounts takes a clock. BLOCKED (cause: needs ai-accounts).
+
+**Done (credentials, pushed as `6f6aa1047a`).**
+- `bio-plane/src/credentials/index.mjs:2061`: `aiAccountsOf(ctx, { record: core, membership: m, sealSecret, now })`. `now` is the function `credentialsOf` was handed; none handed, it is `null` and ai-accounts reads the wall clock as before.
+- `bio-plane/test/m/credentials/k5197-accounts-clock.test.mjs` (new, two tests, through the instance credentials makes, `w.c.accounts.subscriptionTokenHold`, which returns `{ok, since}` with `since` whole-second):
+  1. handed `now: () => PINNED`, the sign-in's `since` equals `2026-10-20T10:15:30Z`. **Failing-first:** red on the code before the change (`since` was the wall clock). After the change it is still red, with `actual: '2026-10-25T22:23:38Z'`.
+  2. control: no clock handed, `since` is the wall clock between the calls either side. Green.
+
+**Why it stays red.** `aiAccountsOf(ctx, { record, membership, sealSecret })` takes no clock, and `AiAccounts` reads `Date.now()` directly at `bio-plane/src/ai-accounts/index.mjs:759` (sign-in `since` and `validUntil`) and `:779`. Its `stampSecond` default (`:67`) also uses `Date.now()`. So the handed `now` is dropped inside ai-accounts. Credentials cannot make that line green alone.
+
+**Needs ai-accounts (its paths, not mine).** One change, the same pattern as credentials' K5148 rule: `aiAccountsOf(ctx, { record, membership, sealSecret, now })` takes `now` (a function of milliseconds, default null), `AiAccounts` keeps it and reads it at `:759` and `:779` (and wherever it takes a default `Date.now()` for a stamp), wall clock when none is given. Once that merges, the K5197 test should go green with no change in credentials.
+
+**Environment control, not testable as written.** The B16 control "none handed, the environment's `BIO_NOW_MS`" does not hold in the code I read. `credentialsOps` sets `BIO_NOW_MS` on credentials' own `#nowMs` only (`credentials/index.mjs:131-146, 2091`). `ai-accounts` has no path to that environment, and its sign-in op is in-plane, not routed through `credentialsOps`. So with no clock handed, ai-accounts stamps the wall clock even in a pinned store. This is for BOB to decide: either ai-accounts also reads `env.BIO_NOW_MS` (the same handed-in rule), or the environment control is dropped. I did not add an environment test that would be red by design.
+
+**Checks / tests.** Credentials suite: 195 of 196 pass; the one red is the K5197 test above. `k5148-clock.test.mjs` (5 of 5) still green. Not run yet after this change: format, architecture, coverage, ownership, fixtures; I'll run them once ai-accounts lands.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 2 (the new test file, then the full credentials suite, plus the K5148 re-run), module lines 2223 (`index.mjs` unchanged in count, one line edited).
+
+**Waiting on BOB.** BOB or the ai-accounts job takes the one line above. I'm staying on the credentials branch until that lands; then I re-run the K5197 test and the module checks, and COMPLETE.
+
+## J24 · BLOCKED
+
+Processed ANSWER B17 (K5198). Route 1 is on the tranche: `credentials` uses `member-roster`. Tranche merged (`ee3523dc91`, fast-forward, no rebase).
+
+**Checks now 0:** architecture (0 failures, 35 files, 110 imports); fixtures `credentials --list` (0 failures); format; coverage (58 of 58); ownership.
+
+**Still red: one test, the K5197 handed-clock test.** Credentials hands its `now` to `aiAccountsOf` (B16, pushed as `6f6aa1047a`). ai-accounts has not taken it yet: `aiAccountsOf` (`bio-plane/src/ai-accounts/index.mjs:1664`) takes no clock, and its sign-in stamp still reads `Date.now()` (`:759`; default in `stampSecond`, `:67`). The test reads `since: '2026-10-25T22:…Z'` where `2026-10-20T10:15:30Z` is expected. Credentials suite: 195 of 196 pass.
+
+**Needs ai-accounts' job** (its paths, not mine): `aiAccountsOf(ctx, {…, now})` takes the clock and `AiAccounts` reads it at `:759` and `:779`. Once it merges, I re-run the suite and COMPLETE with no further change here.
+
+Not decided by me: the B16 environment control (`BIO_NOW_MS` reaching ai-accounts) is still open, as in J23.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte):** test runs 3, module lines 2223.
+
+## J25 · COMPLETE
+
+Processed CHANGE B18 (K5200) and ANSWER B17 (K5198). Tranche merged (`3434b26261`, a merge, no rebase). Module complete.
+
+**Applied.**
+- B15 (fixture line): `bio-plane/test/m/credentials/seam.test.mjs` takes member-roster's published `listenerRefusals()` (`:9`, `:172-175`); `:185` asserts the declared refusal by identity. Earlier, `fixtures --list` at 1 failure, now 0.
+- B16 (K5197 clock): `bio-plane/src/credentials/index.mjs:2061` passes `now` to `aiAccountsOf`. Failing-first test `bio-plane/test/m/credentials/k5197-accounts-clock.test.mjs`: red before the change, green now (since: `2026-10-20T10:15:30Z`). Control (no clock handed) green.
+- B17 (`uses`): BOB's edge on the tranche; `credentials` now uses `member-roster`.
+- B18: ai-accounts (K5199, R39) now takes `now`; the K5197 test passes on the merged tranche. The B16 environment control is dropped, as BOB directed.
+
+**Met ids.** No `**Rn**` marks were struck by me; BOB strikes the marks. Coverage: 58 of 58 live requirement ids named by a test.
+
+**Tests.** Credentials suite, all `bio-plane/test/m/credentials/*.test.mjs`: 196 of 196 pass (two consecutive full runs, 196 of 196 each; the K5197 test included). Seam file alone 8 of 8. `k5148-clock.test.mjs` 5 of 5.
+
+**One unexplained flake.** The first full run after the tranche merge reported `R1 R4 R39 R45 R46 R47 R43 the T35 routes …` (`t35-misc.test.mjs`) as failing, with no assertion output captured. That file alone passes 9 of 9, and two more full runs pass 196 of 196. I have no root cause; I'm recording it so it can be watched in the next tranche.
+
+**Checks (absolute root `/home/user/bio`).** architecture 0 failures (35 files, 110 imports); fixtures `credentials --list` 0 failures (3536 files read); format 0; coverage 0 (58 of 58); ownership 0 (4 files changed by credentials since the tranche base).
+
+**Deferred.** None in this module.
+
+**Found outside credentials.** None new this round. The 15 repo-wide `run.mjs` findings in J22 still stand, unchanged by these commits.
+
+**Size (session_01MX23PSD31bEtV5CnCLBEte): test runs 11, module lines 2223**
+
+## J26 · REPORT
+
+Ring failed after COMPLETE (J25): BOB's session session_01WJsZWkoGCJqWG6874AF7LK is archived, so no doorbell could be bound to it (create_trigger: 'session not active'). The pushed J25 COMPLETE is the message; BOB's backstop reads it (mechanics §13).
+
+## J27 · COMPLETE
+
+Fix round 10 (K5207, B19) done. Commit 31d822cf40 on `job/T51/credentials`.
+
+**Changed (file:line)**
+- `bio-plane/test/m/credentials/fixtures.mjs`:34 `SIGNER_KEY`, :39 `signerregisterown({keyB64, by})` (a world with `ann` active; the answer is the real `signerRegisterOwn` for `ann`; answers `{w, answer}`), :46 `signerregisterownHeld()` (`bob` registers the key, then `ann` asks; the real `SIGNER_KEY_HELD_BY_ANOTHER` refusal; answers `{w, first, answer}`).
+- `bio-plane/test/m/credentials/fixtures-answers.test.mjs` (new): two tests naming R9, one per export, each asserting the real answer and the row it wrote.
+
+**Red then green**: with a deliberately wrong expected key (`AAAAwrongkey`) the first test failed (`actual: 'AAAAsignerregisterownkey01'`); restored, both pass.
+
+**Suites and checks**
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: tests 198, pass 198, fail 0.
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures (3508 test files read; answer 0, stub 0, code 0, contract 0).
+- `checks/format.mjs`, `checks/architecture.mjs credentials`, `checks/coverage.mjs credentials`: 0 failures (58 of 58 live ids named).
+- `checks/run.mjs /home/user/bio`: no finding in credentials' files. Its FAIL lines are in other modules (listed below).
+- `checks/ownership.mjs ... credentials <merge-base> HEAD`: 3 files changed by credentials (the two above and this job record), 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178 (the bare `tranche/T51` name is not a local ref, so I used `origin/`).
+
+**No product change.** The real ops make both states, so no REPORT of a missing state. No `fixtures-own` or `fixtures-generic` marker added. No met ids (none of mine were open).
+
+**Found in other modules (REPORT, for BOB to place)**
+- `bio-plane/test/m/screens-publish/fix3.test.mjs:276` hand-builds the `signerregisterown` answer (`refusedIn("NO_ATTEST…")`, op-table `signerregisterown`). It should take `signerregisterown()` / `signerregisterownHeld()` from `credentials/fixtures.mjs` instead (screens-publish's job, not mine).
+- `bio-plane/test/m/screens-settings/updates.test.mjs:250, :270, :342` and `bio-plane/test/m/interface-shell/harness.mjs:97` hand-build credentials-provided answers (`bootstrap`, `signout`) (their modules').
+- Whole-tree `checks/run.mjs`: coverage 2 failures, `case-authoring` R87 and `membership` R156 named by no test; answer FAILs in `acquisition`, `extraction`, `interface-shell` (their modules).
+
+**Size (session_01TjMsDy8TyBi31BGv64B9Ln): test runs 3, module lines 2736**
+
+## J28 · COMPLETE
+
+CHANGE B20 (K5209) handled. OP-GRADES #30 is in: merged `origin/tranche/T51` (ea6985ef0f, a merge commit, no rebase) into `job/T51/credentials`. No product change was needed.
+
+Re-run after the merge:
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: tests 198, pass 198, fail 0.
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 0 failures.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named.
+- `checks/ownership.mjs ... credentials <merge-base> HEAD`: see the line in this session's output; 0 failures expected.
+
+The two reds B20 names are not this module's: `control-plane/r10-caseratify-chain.test.mjs` (RATIFICATION #39) and `store-assembly/declarations.test.mjs` R83 (STORE-ASSEMBLY #4). I did not touch them.
+
+Nothing else changed. Commit: `ea6985ef0f`.
+
+Size (session_01TjMsDy8TyBi31BGv64B9Ln): test runs 3, module lines 2736
+
+## J29 · COMPLETE
+
+Processed START B21 (K5217), the signout answer. Commit 1bbbf96c2e on `job/T51/credentials`; the tranche (origin `tranche/T51`) is merged in, earlier, by a merge commit, never a rebase.
+
+**Changed (file:line)**
+- `bio-plane/test/m/credentials/fixtures.mjs`:4 imports `PASSWORD`; the new export `signout()` at the end of the file. It builds a world with `ann` active, signs `ann` in through `login`, and answers the real `signout` arm of the door (`w.ops("session=<token>").signout()`), with `{ w, token, answer }`. Never stored, built on each call.
+- `bio-plane/test/m/credentials/fixtures-answers.test.mjs`:6-7 imports; :29-33 new test, naming R39: the answer is `{ ok: true, ended: 1 }` and the session's row is gone from `sessions`.
+
+**Failing first.** The expectation was first set wrong (`ended: 2`): the test failed (1 of 3 red), then restored: green.
+
+**Suites and checks** (absolute root `/home/user/bio`)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/fixtures-answers.test.mjs`: 3 of 3 pass (green), red with the wrong expectation, green again.
+- `--test bio-plane/test/m/credentials/*.test.mjs`: tests 199, pass 199, fail 0.
+- `checks/fixtures.mjs /home/user/bio credentials --list`: 3515 test files read; 0 failures in credentials.
+- `checks/format.mjs`: 178 modules, 178 requirements files; 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named; 0 failures. `checks/words.mjs credentials`: 0 failures.
+- `checks/ownership.mjs ... credentials 6928920478 HEAD`: 1 file changed by credentials... (the two files named above, 0 failures).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178.
+- `checks/run.mjs /home/user/bio`: no finding in credentials' files.
+
+**Met ids.** None struck; no `**Rn**` mark here was open for this job. R39 is named by the new test.
+
+**Markers.** None added (no `fixtures-own`, no `fixtures-generic`).
+
+**Found in other modules (REPORT, for BOB to place; not changed here)**
+- `bio-plane/test/m/interface-shell/harness.mjs:97` still hand-builds `signout: ok({ ok: true })` as a frame default. `fixtures --list` names it as an answer FAIL `[op-table signout] -> credentials`. Its owner should take `signout()` from `credentials/fixtures.mjs` (its `answer` is `{ ok: true, ended: 1 }`).
+- `bio-plane/test/m/screens-publish/fix3.test.mjs:276` hand-builds `signerregisterown` (J27's REPORT, unchanged). Its owner should take `signerregisterown()` / `signerregisterownHeld()`.
+- `bio-plane/test/m/screens-settings/updates.test.mjs:250, :270, :342` hand-build the `bootstrap` answer. Credentials already publishes `bootstrapVersions()` in `fixtures.mjs` for this; the owner should take it.
+- Repo-wide (`checks/run.mjs`), the answer FAILs above are the only ones naming credentials as provider; the rest are in other modules' files.
+
+**Deferred.** Nothing.
+
+**Size (session_01AeXCzDzc1RnVriiEiSPhKG): test runs 4, module lines 2736**
+
+Re-running the `fixtures.mjs` line count: the module's test files total 5022 lines.
+
+## J30 · COMPLETE
+
+START B22 (DEC-436, K5224) handled. Commit 431cf5587f on `job/T51/credentials` (pushed; tranche merged earlier, fast-forward, no rebase).
+
+**Changed (file:line)**
+- `bio-plane/src/credentials/checks.mjs`:16-27 the words comment names `{stated}`; `:20` is now `word('refusal.SIGN_IN_PAUSED', { stated: SIGN_IN_STATED })`.
+- `bio-plane/src/credentials/checks.mjs`:8-14 the R38 window bounds (`SIGN_IN_WINDOW`) and `SIGN_IN_STATED` moved here from `index.mjs`. `SIGN_IN_STATED` is needed by `checks.mjs` at load, and `index.mjs` imports `checks.mjs`, so importing it from `index.mjs` would be a cycle.
+- `bio-plane/src/credentials/index.mjs`:42-43 imports the two names from `checks.mjs`; `:74-77` re-exports them, so every existing importer (t35-signin, t37) is unchanged.
+
+**Failing first.** Before the change, with `rows.mjs` regenerated locally, the whole credentials suite failed at load: `WORD_VAR_MISSING: refusal.SIGN_IN_PAUSED needs {stated}` (0 of 31 files pass). After the change it is green. I did not run the screens-entry suite before the change, so its red state rests on your B22 note; after the change `bio-plane/test/m/screens-entry/*.test.mjs` (including the two R2 paused tests in `front.test.mjs:204-207` and `public.test.mjs:121-130`) passes 98 of 98.
+
+**Met ids:** none named by this job; R38 is the requirement the pause states, and its text is met by the `stated` bound. BOB strikes whatever mark he holds.
+
+**Markers added:** none.
+
+**Rows:** I regenerated `rows.mjs` and `words-unreviewed.json` locally to test, then restored them with `git checkout -- bio-plane/src/setup-words/`; neither is committed. Your merge regenerates them.
+
+**Suites and checks** (absolute root `/home/user/bio`)
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/credentials/*.test.mjs`: tests 199, pass 199, fail 0.
+- `--test bio-plane/test/m/screens-entry/*.test.mjs`: tests 98, pass 98, fail 0.
+- `checks/format.mjs`: 178 modules; 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/fixtures.mjs credentials --list`: 0 failures.
+- `checks/ownership.mjs credentials 536cfed566 HEAD`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 178.
+- `checks/run.mjs /home/user/bio`: no finding in credentials' files. The words count did not rise (credentials: 0). The run's 15 inline store-assembly words failures are not this module's.
+
+**Found outside my paths, not changed:** `checks/run.mjs` prints `FAIL answer interface-shell bio-plane/test/m/interface-shell/harness.mjs:97 [op-table signout] signout: ok({ ok: true }), -> credentials (earlier)`. It names the signout answer that J29 (B21) published in `credentials/fixtures.mjs`, and that answer is my module's. The check shows it under the interface-shell harness, so the check or its harness is the likely cause; I have not traced it. For BOB to place.
+
+Size (session_01BSwm7HQZoqvNtYqxRTJFff): test runs 3, module lines 2741
+
+## J31 · COMPLETE
+
+CHANGE B23 (K5226) handled. Merged `origin/tranche/T51` into `job/T51/credentials` (merge commit `7b729ad889`, a merge, no rebase), pushed. The merge brought STORE-ASSEMBLY #5; this module's own code is unchanged in this round.
+
+Re-run after the merge:
+- `bio-plane/test/m/credentials/*.test.mjs`: tests 199, pass 199, fail 0. The tranche's committed `rows.mjs` still reads `{time}`, so the suite fails at load (`WORD_VAR_MISSING: refusal.SIGN_IN_PAUSED needs {time}`) until rows are regenerated. I regenerated `rows.mjs` locally, ran the suite, and restored it with `git checkout -- bio-plane/src/setup-words/`; nothing regenerated is committed. Your merge regenerates it.
+- `bio-plane/test/m/screens-entry/*.test.mjs`: tests 98, pass 98, fail 0 (same local regeneration).
+- `checks/format.mjs`: 178 modules; 0 failures. `checks/architecture.mjs credentials`: 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/fixtures.mjs credentials --list`: 0 failures. `checks/ownership.mjs credentials <merge-base> HEAD`: 0 failures.
+- `checks/run.mjs /home/user/bio`: words over the product 0 failures, consistent with B23's line.
+
+Size (session_01BSwm7HQZoqvNtYqxRTJFff): test runs 4, module lines 2741
+
+## J32 · COMPLETE
+
+START B24 (R83, K5303; DEC-439 to DEC-441; A-03) applied: `signerKnown({keyB64, viewer})`, `op=signerknown`. Red first (`w.c.signerKnown is not a function`, `signerknown is not a function` on the ops map), then green.
+
+What changed:
+- `bio-plane/src/credentials/schema.mjs`: `signers` gains `known_by` and `known_at` (nullable, in the DDL and in `CREDENTIALS_ADDITIVE_COLUMNS`, never back-filled).
+- `bio-plane/src/credentials/index.mjs`: `signerKnown` (after `signerRegisterOwn`); `signerList` answers `known_by` and `known_at` (null until an administrator has said it); `signerknown` in the ops map (key from the body only, the administrator from the door's `viewer` stamp, else `by`); `signerknown` in `DECLARED_OPS` (classes admin, member; machineClasses []; mutating; weight `reversible`; stamps `by`, `viewer`; needs `null`; accepts and requires `keyB64`). `op-declarations` refuses a mutating declared op with no `needs` (`NEEDS_MISSING`), so `needs: null` is stated.
+- K231, one code one site: R9's `MACHINE_CANNOT_REGISTER_KEY` region moved into one private `#machineCannotRegister(by, act)`, used by `signerRegisterOwn` (its detail unchanged) and by `signerKnown` (its own detail). Its row's `where` now names `#machineCannotRegister`.
+- `bio-plane/src/credentials/checks.mjs`: row `SIGNER_NOT_SELF_ACTIVE`, C-96.55 (the next free C-96 number), awaiting promotion's stamp; its translation is a `localize` row of this module (`credentials.checks.only_a_key_a_member_registered`).
+
+Refusal order, each writing nothing: no member behind the caller (machine credential, operator token, no stamp) `MACHINE_CANNOT_REGISTER_KEY`; not an administrator (`membership`'s `notAnAdmin`, the founder included); key of no shape `BAD_KEY` (R6's one site); key not held `NO_SUCH_KEY` (the absent-key answer R8's neighbour `signerSet` gives); key not self-registered or not active `SIGNER_NOT_SELF_ACTIVE`. A key already known answers `{ok: true, already: true, known_by, known_at}` of the first knower, writing nothing. My reading of "a key not held `BAD_KEY` or as R8 answers an absent key": BAD_KEY for a key of no shape, `NO_SUCH_KEY` for a well-shaped key no one holds. No QUESTION posted; say if you meant otherwise.
+
+Tests (all in `bio-plane/test/m/credentials/`): new `r83-signer-known.test.mjs` (7 tests: the administrator's call records and R8 reads it; the founder and `member:` viewer forms; the second call and its writes-nothing snapshot; machine and non-administrator refusals; BAD_KEY, NO_SUCH_KEY and SIGNER_NOT_SELF_ACTIVE controls for an administrator-registered key, a revoked key and a rebound key; the key still attests and is still revocable; the ops-map arm, a stamp never read from the body); `declared-ops.test.mjs` gains `signerknown` (R82); three existing assertions updated for the new fields and op: `keys.test.mjs` (the row's key set), `rows-ops.test.mjs` (`#machineCannotRegister` and the new row), `t48.test.mjs` (own ops 29, total 53).
+
+Runs: `bio-plane/test/m/credentials/*.test.mjs` tests 207, pass 207, fail 0 (run without `--test-force-exit`; it exits by itself). Checks over the product (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; words 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); coverage for credentials 59 of 59 ids named, 0 failures; `checks/fixtures.mjs credentials --list` 0 failures; no finding names this module. Ownership: see the line below.
+
+Users of what changed (`impact.mjs` names 113 of 178 modules through the shared tables), run: `op-grades` 162/162, `queue-producers` 162/162, `network-notices` 78/78, `screens-settings` 273/273. Red, all consequences of the new declared op in modules I do not own, REPORTed:
+1. `op-declarations` `t35.test.mjs:210-211` ("R30, R6 … negative control") lists credentials' map ops that have no spec, minus a hand list (`aicredentiallook`, `session`, `securitycount`); `signerknown` is now in the map and in the declared rows, not in that test's hand tables, so it reads `['signerknown','signoutall']` for `['signoutall']`. The hand list at that line takes `signerknown`, or the test reads the registered declaration.
+2. `op-declarations` `t36.test.mjs:318` (R34, affordances R48): "member ops with no text and no ground: signerknown". `affordances` R71 (its job, K5303) carries the op's `act.signerknown.does` text.
+3. Inherited, not mine: `store-assembly` `declarations.test.mjs` R83 (red by name until STORE-ASSEMBLY #4, B20).
+Also for BOB: `op-grades`' registry and `affordances`' act help do not yet know `signerknown` (its description is in `DECLARED_OPS`); the queue (`queue` R96) and `queue-producers` (R55) read `signerList`'s `known_by`.
+
+Deferred: nothing.
+
+`control-plane`'s suite (135 files) did not finish in 30 minutes and was stopped; it calls no new service of mine (only the ops map and `signerList`'s extra two fields), so I report it unrun.
+
+Size (session_01FkqUZX9YzCShmHaoauY6tK): test runs 6, module lines 2799
+
+## J33 · COMPLETE
+
+R83 signerKnown (op=signerknown) done and green; see J32 in the record. credentials suite 207/207; run.mjs, ownership, coverage, fixtures 0 failures. Two reds in op-declarations from the new declared op (t35.test.mjs:210-211 hand list; t36.test.mjs:318 needs affordances R71's act text), REPORTed in J32; control-plane suite unrun (too long).

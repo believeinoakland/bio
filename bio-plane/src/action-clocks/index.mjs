@@ -18,7 +18,7 @@
  * only the group's own (R15). At start it registers as `steps`' due holder (R16). T46: R1's items carry an entry's
  * time of day and zone (R19, N918), and the standing proposals are read before one is adopted (R20, N925). T47: every
  * day is read in `actions.actionZone` (R21, N960); `dueAtOf` is exported (R22, N965); R3's items name the clock's venue
- * (R23, N968). An
+ * (R23, N968). T51 (N1088, K3189): `clocksRunning` counts the pending entries for Home (R24). An
  * action's clock is written in its own document (`actions`); this module reads it, proposes entries apart, holds the
  * members' reminders in its own table, and writes the document only through R13's adoption, a member's revision.
  *
@@ -73,6 +73,7 @@ import { ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES, migrateActionClocks 
 import { actionOffices, localDayOf, yearEntries, holidayFact, officeHours, readsOfficeCalendar, closureListsRead,
          factReader, computeDeadline, traceLine } from "./count.mjs";
 import { icsCalendar } from "./ics.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 export { ACTION_CLOCKS_SCHEMA, ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES } from "./schema.mjs";
@@ -115,6 +116,8 @@ export const GROUP_OWN_KINDS = Object.freeze(["dependency", "window"]);
 /** R18: `ourDeadlines`' two bounds, as R1's. */
 export const OUR_DEADLINES_MAX = 500;
 export const OUR_DEADLINES_ACTIONS_MAX = 500;
+/** R24: the most actions `clocksRunning` reads. */
+export const CLOCKS_RUNNING_ACTIONS_MAX = 500;
 /** R18, R7: the longest words a stated entry carries in one field. */
 export const CLOCK_TEXT_MAX = 500;
 /** R16: the viewer this module reads a step with in process (steps' own registration hands it no viewer). */
@@ -162,11 +165,50 @@ export function venueOf(fm, view) {
       const name = k && k.venue && typeof k.venue.name === "string" ? k.venue.name : null;
       return { venue: { kind: "venue", action_kind: o.venue, name } };
     }
-    return none("the action is addressed to no office, and the view gives its kind no venue");
-  } catch { return none("the action's office or venue cannot be read"); }
+    return none(word("action-clocks.action_addressed_office"));
+  } catch { return none(word("action-clocks.action_office_venue")); }
+}
+/** The level (`jurisdictions` R31: `federal`, `state`, `county`, `city`) of the office an action is addressed to: the level its addressee
+ *  states, else the level of the office the view lists for that role and body (`counterparties`, R24); null when neither says. */
+export function officeLevel(fm, view) {
+  try {
+    const cp = fm && typeof fm === "object" && fm.counterparty && typeof fm.counterparty === "object" ? fm.counterparty : null;
+    if (!cp || cp.state !== "named" || !(cp.kind === undefined || cp.kind === null || cp.kind === "office")) return null;
+    if (typeof cp.level === "string" && cp.level) return cp.level;
+    const role = typeof cp.role === "string" ? cp.role.trim() : "", body = typeof cp.body === "string" ? cp.body.trim() : null;
+    const c = (view && Array.isArray(view.counterparties) ? view.counterparties : []).find((x) => x && x.role === role && (body === null || x.body === body));
+    return c && typeof c.level === "string" && c.level ? c.level : null;
+  } catch { return null; }
+}
+/* The level a deadline is of: the one it states, else that of the records law (`records_laws`, with its level) whose citation its own
+   citation begins with ("5 U.S.C. § 552" for "5 U.S.C. § 552(a)(6)(A)(i)"); null when the profile ties it to none. */
+const deadlineLevel = (d, view) => {
+  if (typeof d.level === "string" && d.level) return d.level;
+  const cite = typeof d.citation === "string" ? d.citation.trim() : "";
+  const law = (view && Array.isArray(view.records_laws) ? view.records_laws : []).find((l) => l && typeof l.level === "string" && typeof l.citation === "string"
+    && cite !== "" && cite.startsWith(l.citation.replace(/\s+et seq\.?$/, "").trim()));
+  return law ? law.level : null;
+};
+/** R2 (K4227, T51 C68; screens-investigate R59): the deadlines the view states for an action of `kind`, each `{rule, label?, citation?}`
+ *  as the profile gives it: what `clockPropose` accepts as `rule`, in the view's order; `[]` when none applies or no view is held. A
+ *  `label` or `citation` the profile does not state is left out. With the action's document `fm`, those of the level of the office it
+ *  is addressed to come first, those the profile ties to another level last, the rest between, each group in the view's order: a
+ *  request to a federal office offers the federal law's deadline first, a state office's the state's. Pure; never throws. */
+export function deadlinesFor(view, kind, fm = null) {
+  try {
+    const level = officeLevel(fm, view);
+    const out = [];
+    for (const x of view && Array.isArray(view.deadlines) ? view.deadlines : []) {
+      if (!x || typeof x.rule !== "string" || !x.rule || x.applies_to !== kind) continue;
+      const of = level ? deadlineLevel(x, view) : null;
+      out.push({ at: out.length, rank: !of ? 1 : of === level ? 0 : 2,
+        d: { rule: x.rule, ...(typeof x.label === "string" && x.label ? { label: x.label } : {}), ...(typeof x.citation === "string" && x.citation ? { citation: x.citation } : {}) } });
+    }
+    return out.sort((a, b) => a.rank - b.rank || a.at - b.at).map((x) => x.d);
+  } catch { return []; }
 }
 /** R3 (T45; v0.2 rule 6): an overdue item is a question about a date, never a finding. */
-export const OVERDUE_SAYS = "a date on this action's clock has passed: a question about a date, not a finding about anyone";
+export const OVERDUE_SAYS = word("action-clocks.date_action_clock");
 
 /** R3, R5: the lifecycle states in which an action's deadlines no longer call for anything. */
 export const CLOSED_ACTION_STATES = Object.freeze(["resolved", "abandoned"]);
@@ -309,16 +351,16 @@ export class ActionClocks {
     if (kind === "commitment" && e.committed_by) out.committed_by = String(e.committed_by);
     /* T45 (v0.2 rule 6): the other side's stated date, with who stated it and where it is held; its words name no law. */
     if (kind === "stated") Object.assign(out, { stated_by: e.stated_by ?? null, held_in: e.held_in ?? null,
-      says: "a date the other side has stated, held as what they said" });
+      says: word("action-clocks.says.date_side_stated") });
     if (kind === "dependency") Object.assign(out, { precedes: e.precedes ?? null, lead: e.lead ?? null, why: e.why ?? null,
-      says: "a date derived from the event it must precede; missing it is a dated fact about sequence, never a violation" });
+      says: word("action-clocks.says.date_derived_event") });
     if (kind === "rule" && typeof e.standard === "string" && e.standard) {
       const st = this.standards;
       let f = null;
       try { f = st && typeof st.inForceAt === "function" ? st.inForceAt({ standard: e.standard, date: e.date, viewer }) : null; }
       catch { f = null; }
       out.standard = { id: e.standard, state: f && typeof f.state === "string" ? f.state : "undetermined",
-                       why: f && f.why ? String(f.why) : f ? null : "the standards module cannot be read here" };
+                       why: f && f.why ? String(f.why) : f ? null : word("action-clocks.why.standards_module_cannot") };
     }
     return out;
   }
@@ -428,7 +470,7 @@ export class ActionClocks {
     const day = String(before ?? "").slice(0, 10);
     /* DEC-49 REGION is-pending-before */
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
-      return refuse("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
+      return refuse("PENDING_CLOCKS_BAD_BEFORE", localize("action-clocks.index.before_is_a_date", "before= is a date, YYYY-MM-DD"), { before: before ?? null });
     /* END DEC-49 REGION is-pending-before */
     const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
@@ -516,7 +558,7 @@ export class ActionClocks {
     const t0 = to === null || to === undefined || to === "" ? null : String(to);
     if ((f0 !== null && !isDay(f0)) || (t0 !== null && !isDay(t0)) || (f0 !== null && t0 !== null && f0 > t0))
       return { ok: false, reason: "OUR_DEADLINES_REFUSED", code: "OUR_DEADLINES_REFUSED",
-               detail: "from= and to= are calendar days written YYYY-MM-DD, from not after to. Nothing was read." };
+               detail: localize("action-clocks.index.from_and_to_are_calendar_days", "from= and to= are calendar days written YYYY-MM-DD, from not after to. Nothing was read.") };
     const view = this.#view();
     const max = clampLimit(limit, OUR_DEADLINES_MAX, OUR_DEADLINES_MAX);
     const gate = viewerPredicate(viewer);
@@ -543,6 +585,30 @@ export class ActionClocks {
     });
     return { ok: true, from: f0, to: t0, items: page.items, limit: max, actions_limit: OUR_DEADLINES_ACTIONS_MAX,
              truncated: page.truncated, cursor: page.cursor };
+  }
+
+  /** R24 (T51; N1088, K3189, K4059; DEC-218, DEC-219; for `screens-daily` R64): the `pending` clock entries of the visible
+   *  actions not `resolved` or `abandoned`, counted in all and by each entry's `owed_by` (R18), each count with `next`, the
+   *  earliest such entry's date (null when none). Reads at most 500 actions (`truncated` stated). Writes nothing. */
+  clocksRunning({ viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
+    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b
+      WHERE b.object_type='action' AND b.current_state NOT IN (${closed}) AND (${gate.sql})
+      ORDER BY b.bundle_id LIMIT ?`, ...CLOSED_ACTION_STATES, ...gate.args, CLOCKS_RUNNING_ACTIONS_MAX + 1);
+    const by_owed = Object.fromEntries(CLOCK_OWED_BY.map((k) => [k, { count: 0, next: null }]));
+    let total = 0;
+    for (const r of rows.slice(0, CLOCKS_RUNNING_ACTIONS_MAX)) {
+      const fm = this.#heldFm(r.bundle_id) || {};
+      for (const e of Array.isArray(fm.clock) ? fm.clock : []) {
+        if (!e || typeof e !== "object" || e.status !== "pending") continue;
+        const b = by_owed[owedOf(e)];
+        total++;
+        b.count++;
+        if (isDay(e.date) && (b.next === null || e.date < b.next)) b.next = e.date;
+      }
+    }
+    return { ok: true, total, by_owed, actions_limit: CLOCKS_RUNNING_ACTIONS_MAX, truncated: rows.length > CLOCKS_RUNNING_ACTIONS_MAX };
   }
 
   /* ================================================================ one date, one reminder (R16, R17) */
@@ -680,8 +746,8 @@ export class ActionClocks {
    *  which; the entry carries `owed_by` from the deadline's (R18), `undetermined` where the profile does not say. */
   clockPropose({ target, rule, proposer = null, viewer = null } = {}) {
     const who = String(proposer ?? "").trim();
-    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: localize("action-clocks.index.this_call_carries_nobody", "this call carries nobody: the proposer is stamped from the credential that asked.") };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-clocks.index.one_action_at_a_time", "one action at a time: pass target=<action id>") };
     /* R2 (N246): an absent `rule` has no code of its own; it is answered `NO_SUCH_RULE` at that code's place. */
     const b = this.#visibleAction(target, viewer);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
@@ -691,12 +757,12 @@ export class ActionClocks {
     const view = this.#view();
     const d = rule ? (view && Array.isArray(view.deadlines) ? view.deadlines : [])
       .find((x) => x && x.rule === rule && x.applies_to === fm.action_kind) : null;
-    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null,
-      detail: rule ? `no active profile states a deadline '${String(rule).slice(0, 60)}' for an action of kind '${fm.action_kind}'`
-                   : `no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '${fm.action_kind}'` };
+    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null, deadlines: deadlinesFor(view, fm.action_kind, fm),
+      detail: rule ? localize("action-clocks.index.no_active_profile_states", "no active profile states a deadline '{rule}' for an action of kind '{kind}'", { rule: String(rule).slice(0, 60), kind: String(fm.action_kind) })
+                   : localize("action-clocks.index.no_rule_was_named", "no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '{kind}'", { kind: String(fm.action_kind) }) };
     const sourced = typeof d.basis === "string" && d.basis.trim() && d.basis !== "UNMEASURED";
     const computed = sourced ? computeDeadline(d, fm, view, { factOf: this.#factOf(viewer), receipts: this.#receiptsOf(target, viewer) })
-      : { date: null, why: "the rule is not held with a primary source: UNMEASURED is not a basis (K1445; jurisdictions R44)" };
+      : { date: null, why: localize("action-clocks.index.the_rule_is_not_held", "the rule is not held with a primary source: UNMEASURED is not a basis") };
     const basis = `${d.citation}${d.basis ? ` (profile basis: ${d.basis}${d.profile ? `, ${d.profile}` : ""})` : ""}`;
     const amount = d.amount ?? d.days;
     const unit = (d.units ?? "days") === "days" ? `${d.count ?? ""} day${amount === 1 ? "" : "s"}`.trim() : String(d.units).replace(/_/g, " ");
@@ -717,7 +783,7 @@ export class ActionClocks {
       target, who, rule, computed.date, basis, JSON.stringify(entry), computed.why ?? null, at, JSON.stringify(kept));
     return { ok: true, target, weight: "single", evidence: false,
              proposal: { ...proposalLabelFor(who), key: `${rule}@${who}`, rule, entry, at,
-                         ...(computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {}),
+                         ...(computed.start ? { start: computed.start, counted_from: word("action-clocks.day", { start: String(computed.start) }) } : {}),
                          ...(computed.start_from ? { start_from: computed.start_from } : {}),
                          ...(computed.start_note ? { start_note: computed.start_note } : {}),
                          ...(computed.candidates ? { candidates: computed.candidates } : {}),
@@ -727,8 +793,7 @@ export class ActionClocks {
                          ...(computed.trace ? { trace: computed.trace } : {}),
                          ...(computed.calendar ? { calendar: computed.calendar } : {}),
                          ...(computed.date ? {} : { undetermined: computed.why }) },
-             says: "this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) "
-                 + "or states a clock entry by a revision of the action." };
+             says: localize("action-clocks.index.this_clock_entry_is_proposed", "this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) or states a clock entry by a revision of the action.") };
   }
 
   /** R20 (T46; N925; for `affordances` R51; `op=clockproposals`, a read): the standing proposals of R2 on an action the
@@ -748,7 +813,7 @@ export class ActionClocks {
       const kept = parse(r.trace_json) || {};
       const dated = typeof r.date === "string" && r.date !== "";
       return { key: `${r.rule}@${r.proposed_by}`, rule: r.rule, date: dated ? r.date : null,
-               undetermined: dated ? null : (r.why || "the count is undetermined"), basis: r.basis, entry: parse(r.entry_json),
+               undetermined: dated ? null : (r.why || word("action-clocks.count_undetermined")), basis: r.basis, entry: parse(r.entry_json),
                trace: kept.trace ?? null, trace_line: kept.trace_line ?? null,
                ...(Array.isArray(kept.candidates) ? { candidates: kept.candidates } : {}), ...(kept.due ? { due: kept.due } : {}),
                label: proposalLabelFor(r.proposed_by), proposed_by: r.proposed_by, proposed_at: r.proposed_at };
@@ -838,9 +903,7 @@ export class ActionClocks {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-reminder */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_SET_REMINDER", "a reminder is a member's own request to be reminded, set, changed "
-        + "and answered by that member alone. A machine credential never sets one, and a call that carries nobody "
-        + "is not a member. Nothing was changed.");
+      return refuse("MACHINE_CANNOT_SET_REMINDER", localize("action-clocks.index.a_reminder_is_a_member", "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed."));
     /* END DEC-49 REGION is-machine-reminder */
     return null;
   }
@@ -872,29 +935,25 @@ export class ActionClocks {
     const pos = typeof entry === "number" ? entry : /^\d+$/.test(String(entry ?? "").trim()) ? Number(String(entry).trim()) : NaN;
     const e = Number.isInteger(pos) && pos >= 0 ? a.clock[pos] : undefined;
     if (!e || typeof e !== "object" || !isDay(e.date))
-      return reminderRefused("entry", `entry ${String(entry ?? "").slice(0, 20) || "(none)"} names no clock entry of `
-        + "this action with a YYYY-MM-DD date: a reminder is set on a dated deadline. Nothing was changed.",
+      return reminderRefused("entry", localize("action-clocks.index.entry_names_no_clock_entry", "entry {entry} names no clock entry of this action with a YYYY-MM-DD date: a reminder is set on a dated deadline. Nothing was changed.", { entry: String(String(entry ?? "").slice(0, 20) || localize("action-clocks.index.none", "(none)")) }),
         { target: a.id, entry: entry ?? null });
     const day = on === null || on === undefined || on === "" ? null : String(on).trim();
     const was = from === null || from === undefined || from === "" ? null : String(from).trim();
     if (day === null && was === null)
-      return reminderRefused("on", "on= is the day to be reminded, YYYY-MM-DD; with no day, name the reminder "
-        + "to remove as from=. Nothing was changed.", { target: a.id, entry: pos });
+      return reminderRefused("on", localize("action-clocks.index.on_is_the_day_to", "on= is the day to be reminded, YYYY-MM-DD; with no day, name the reminder to remove as from=. Nothing was changed."), { target: a.id, entry: pos });
     if (day !== null && !isDay(day))
-      return reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD. Nothing was changed.`,
+      return reminderRefused("on", localize("action-clocks.index.on_day_is_not_a_date", "on '{day}' is not a date written YYYY-MM-DD. Nothing was changed.", { day: String(day.slice(0, 20)) }),
         { target: a.id, entry: pos, on: day.slice(0, 20) });
     const at = stampInstant("second", this.#nowMs(null));
     return this.record.transact(() => {
       const old = was === null ? null : this.#held(a.id, pos, was, who);
       if (was !== null && !old)
-        return reminderRefused("from", `from ${was.slice(0, 20)} names no reminder of yours on this entry: you `
-          + "change or remove only a reminder you set. Nothing was changed.", { target: a.id, entry: pos, from: was.slice(0, 20) });
+        return reminderRefused("from", localize("action-clocks.index.from_names_no_reminder_of_yours", "from {from} names no reminder of yours on this entry: you change or remove only a reminder you set. Nothing was changed.", { from: String(was.slice(0, 20)) }), { target: a.id, entry: pos, from: was.slice(0, 20) });
       if (day !== null && this.#held(a.id, pos, day, who))
-        return reminderRefused("held", `you already hold a reminder on this entry for ${day}. Nothing was changed.`,
+        return reminderRefused("held", localize("action-clocks.index.you_already_hold_a_reminder", "you already hold a reminder on this entry for {day}. Nothing was changed.", { day: String(day) }),
           { target: a.id, entry: pos, on: day });
       if (day !== null && !old && this.#standing(a.id) >= REMINDERS_PER_ACTION_MAX)
-        return reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it `
-          + "holds. Nothing was changed.", { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
+        return reminderRefused("bound", localize("action-clocks.index.this_action_holds_max_reminders_changed", "this action holds {max} reminders, the most it holds. Nothing was changed.", { max: String(REMINDERS_PER_ACTION_MAX) }), { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
       if (old) this.sql.exec(`UPDATE action_reminders SET removed_at=? WHERE rid=?`, at, old.rid);
       if (day !== null)
         this.sql.exec(`INSERT INTO action_reminders (bundle_id, entry, day, set_by, set_at) VALUES (?,?,?,?,?)`,
@@ -1001,21 +1060,18 @@ export class ActionClocks {
                       AND answered_at IS NULL AND removed_at IS NULL ORDER BY day, rid`, a.id, pos, who, today) : [];
     /* DEC-49 REGION is-no-such-reminder */
     if (!due.length)
-      return refuse("NO_SUCH_REMINDER", "no reminder of yours on this entry has come due and is waiting for an answer. "
-        + "Nothing was answered.", { target: a.id, entry: Number.isInteger(pos) ? pos : (entry ?? null) });
+      return refuse("NO_SUCH_REMINDER", localize("action-clocks.index.no_reminder_of_yours_on", "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered."), { target: a.id, entry: Number.isInteger(pos) ? pos : (entry ?? null) });
     /* END DEC-49 REGION is-no-such-reminder */
     const day = on === null || on === undefined || on === "" ? null : String(on).trim();
     if (day !== null && (!isDay(day) || !(day > today)))
-      return reminderRefused("on", `on '${day.slice(0, 20)}' is not a date written YYYY-MM-DD after today `
-        + `(${today}): a further reminder is for a later day. Nothing was answered.`, { target: a.id, entry: pos, today });
+      return reminderRefused("on", localize("action-clocks.index.on_day_is_not_a_date_after_today", "on '{day}' is not a date written YYYY-MM-DD after today ({today}): a further reminder is for a later day. Nothing was answered.", { day: String(day.slice(0, 20)), today: String(today) }), { target: a.id, entry: pos, today });
     const at = stampInstant("second", this.#nowMs(null));
     return this.record.transact(() => {
       for (const r of due) this.sql.exec(`UPDATE action_reminders SET answered_at=? WHERE rid=?`, at, r.rid);
       /* R4's add, under its own rules: a day already held is held once; the answered ones freed their places. */
       if (day !== null && !this.#held(a.id, pos, day, who)) {
         if (this.#standing(a.id) >= REMINDERS_PER_ACTION_MAX)
-          return reminderRefused("bound", `this action holds ${REMINDERS_PER_ACTION_MAX} reminders, the most it `
-            + "holds. Nothing was answered.", { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
+          return reminderRefused("bound", localize("action-clocks.index.this_action_holds_max_reminders_answered", "this action holds {max} reminders, the most it holds. Nothing was answered.", { max: String(REMINDERS_PER_ACTION_MAX) }), { target: a.id, entry: pos, max: REMINDERS_PER_ACTION_MAX });
         this.sql.exec(`INSERT INTO action_reminders (bundle_id, entry, day, set_by, set_at) VALUES (?,?,?,?,?)`,
           a.id, pos, day, who, at);
       }
@@ -1041,9 +1097,7 @@ export class ActionClocks {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-adopt */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_ADOPT_CLOCK", "a deadline is put on an action's clock by a member, in their own act; "
-        + "a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. "
-        + "Nothing was written.", { target: target ?? null });
+      return refuse("MACHINE_CANNOT_ADOPT_CLOCK", localize("action-clocks.index.a_deadline_is_put_on", "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written."), { target: target ?? null });
     /* END DEC-49 REGION is-machine-adopt */
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
@@ -1053,14 +1107,12 @@ export class ActionClocks {
                                     AND adopted_at IS NULL`, a.id, key.slice(0, at), key.slice(at + 1)) : null;
     /* DEC-49 REGION is-no-such-clock-proposal */
     if (!p)
-      return refuse("NO_SUCH_CLOCK_PROPOSAL", `no standing proposal '${key.slice(0, 120)}' on this action: name the key `
-        + "op=clockpropose answered (<rule>@<proposer>), for a proposal not yet adopted. Nothing was written.",
+      return refuse("NO_SUCH_CLOCK_PROPOSAL", localize("action-clocks.index.no_standing_proposal_key", "no standing proposal '{key}' on this action: name the key op=clockpropose answered (<rule>@<proposer>), for a proposal not yet adopted. Nothing was written.", { key: String(key.slice(0, 120)) }),
         { target: a.id, proposal: key.slice(0, 200) || null });
     /* END DEC-49 REGION is-no-such-clock-proposal */
     /* DEC-49 REGION is-clock-proposal-undetermined */
     if (p.date === null || p.date === undefined)
-      return refuse("CLOCK_PROPOSAL_UNDETERMINED", `the proposed deadline has no date: ${p.why || "it is undetermined"}. `
-        + "A member states such an entry by their own revision of the action, with its basis. Nothing was written.",
+      return refuse("CLOCK_PROPOSAL_UNDETERMINED", localize("action-clocks.index.the_proposed_deadline_has_no_date", "the proposed deadline has no date: {why}. A member states such an entry by their own revision of the action, with its basis. Nothing was written.", { why: String(p.why || localize("action-clocks.index.it_is_undetermined", "it is undetermined")) }),
         { target: a.id, proposal: key, why: p.why ?? null });
     /* END DEC-49 REGION is-clock-proposal-undetermined */
     let entry = {};
@@ -1069,15 +1121,13 @@ export class ActionClocks {
     try { kept = JSON.parse(p.trace_json || "{}") || {}; } catch { kept = {}; }
     const amend = {};
     if (date !== null && date !== undefined && date !== "") {
-      if (!isDay(String(date))) return clockEntryRefused("date", `date '${String(date).slice(0, 20)}' is not a calendar day `
-        + "written YYYY-MM-DD. Nothing was written.", { target: a.id, proposal: key });
+      if (!isDay(String(date))) return clockEntryRefused("date", localize("action-clocks.index.date_is_not_a_calendar_day", "date '{date}' is not a calendar day written YYYY-MM-DD. Nothing was written.", { date: String(String(date).slice(0, 20)) }), { target: a.id, proposal: key });
       amend.date = String(date);
     }
     for (const [k, v] of [["text", text], ["description", description]])
       if (v !== null && v !== undefined && String(v).trim()) amend[k] = String(v);
     if (owedBy !== null && owedBy !== undefined && owedBy !== "") {
-      if (!CLOCK_OWED_BY.includes(String(owedBy))) return clockEntryRefused("owed_by", `owed_by '${String(owedBy).slice(0, 20)}' is `
-        + `one of ${CLOCK_OWED_BY.join(", ")}. Nothing was written.`, { target: a.id, proposal: key });
+      if (!CLOCK_OWED_BY.includes(String(owedBy))) return clockEntryRefused("owed_by", localize("action-clocks.index.owed_by_value_is_one_of", "owed_by '{value}' is one of {CLOCK_OWED_BY}. Nothing was written.", { value: String(String(owedBy).slice(0, 20)), CLOCK_OWED_BY: String(CLOCK_OWED_BY.join(", ")) }), { target: a.id, proposal: key });
       amend.owed_by = String(owedBy);
     }
     const std = standard === null || standard === undefined || standard === "" ? null : String(standard).trim();
@@ -1104,7 +1154,7 @@ export class ActionClocks {
       this.sql.exec(`UPDATE action_clock_proposals SET adopted_by=?, adopted_at=?, adopted_ord=? WHERE bundle_id=? AND
                       proposed_by=? AND rule=?`, who, when, ord, a.id, p.proposed_by, p.rule);
       return { ok: true, target: a.id, proposal: key, ord, entry: written, adopted_by: who, adopted_at: when,
-               says: "the deadline is now on the action's clock, stated by you; it is tracked and told once like any other." };
+               says: word("action-clocks.says.deadline_action_clock") };
     });
   }
 
@@ -1125,28 +1175,23 @@ export class ActionClocks {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-state-clock */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_STATE_CLOCK", "a deadline is put on an action's clock by a member, in their own act; "
-        + "a machine credential may propose one and never states it, and a call that carries nobody is not a member. "
-        + "Nothing was written.", { target: target ?? null });
+      return refuse("MACHINE_CANNOT_STATE_CLOCK", localize("action-clocks.index.a_deadline_is_put_on_2", "a deadline is put on an action's clock by a member, in their own act; a machine credential may propose one and never states it, and a call that carries nobody is not a member. Nothing was written."), { target: target ?? null });
     /* END DEC-49 REGION is-machine-state-clock */
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
     const ext = { target: a.id };
     const words = (k, v, need) => {
       const t = v === null || v === undefined ? "" : String(v).trim();
-      if (!t) return need ? clockEntryRefused(k, `${k} is required: 1 to ${CLOCK_TEXT_MAX} characters. Nothing was written.`, ext) : null;
-      if (t.length > CLOCK_TEXT_MAX) return clockEntryRefused(k, `${k} is at most ${CLOCK_TEXT_MAX} characters. Nothing was written.`, ext);
+      if (!t) return need ? clockEntryRefused(k, localize("action-clocks.index.field_is_required", "{field} is required: 1 to {max} characters. Nothing was written.", { field: String(k), max: String(CLOCK_TEXT_MAX) }), ext) : null;
+      if (t.length > CLOCK_TEXT_MAX) return clockEntryRefused(k, localize("action-clocks.index.field_is_at_most", "{field} is at most {max} characters. Nothing was written.", { field: String(k), max: String(CLOCK_TEXT_MAX) }), ext);
       return null;
     };
     for (const [k, v] of [["text", text], ["description", description], ["basis", basis]]) { const r = words(k, v, true); if (r) return r; }
-    if (!isDay(String(date ?? ""))) return clockEntryRefused("date", `date '${String(date ?? "").slice(0, 20)}' is not a calendar `
-      + "day written YYYY-MM-DD. Nothing was written.", ext);
+    if (!isDay(String(date ?? ""))) return clockEntryRefused("date", localize("action-clocks.index.date_is_not_a_calendar_day", "date '{date}' is not a calendar day written YYYY-MM-DD. Nothing was written.", { date: String(String(date ?? "").slice(0, 20)) }), ext);
     const k = String(kind ?? "");
-    if (!BASIS_KINDS.includes(k)) return clockEntryRefused("basis_kind", `basis_kind is one of ${BASIS_KINDS.join(", ")}: every `
-      + "deadline names its basis. Nothing was written.", ext);
+    if (!BASIS_KINDS.includes(k)) return clockEntryRefused("basis_kind", localize("action-clocks.index.basis_kind_is_one_of", "basis_kind is one of {BASIS_KINDS}: every deadline names its basis. Nothing was written.", { BASIS_KINDS: String(BASIS_KINDS.join(", ")) }), ext);
     const owed = owedBy === null || owedBy === undefined || owedBy === "" ? "undetermined" : String(owedBy);
-    if (!CLOCK_OWED_BY.includes(owed)) return clockEntryRefused("owed_by", `owed_by is one of ${CLOCK_OWED_BY.join(", ")}. `
-      + "Nothing was written.", ext);
+    if (!CLOCK_OWED_BY.includes(owed)) return clockEntryRefused("owed_by", localize("action-clocks.index.owed_by_is_one_of", "owed_by is one of {CLOCK_OWED_BY}. Nothing was written.", { CLOCK_OWED_BY: String(CLOCK_OWED_BY.join(", ")) }), ext);
     const own = {};
     const field = (name, v, need) => {
       const r = words(name, v, need);
@@ -1159,19 +1204,19 @@ export class ActionClocks {
     for (const [name, v, need] of kindFields) { const r = field(name, v, need); if (r) return r; }
     for (const [name, v] of [["committed_by", committedBy], ["precedes", precedes], ["lead", lead], ["why", why], ["stated_by", statedBy], ["held_in", heldIn], ["standard", standard]])
       if (v !== null && v !== undefined && String(v).trim() && !(name in own) && !(name === "standard" && k === "rule"))
-        return clockEntryRefused(name, `${name} belongs to another basis kind than '${k}'. Nothing was written.`, ext);
+        return clockEntryRefused(name, localize("action-clocks.index.field_belongs_to_another_basis_kind", "{field} belongs to another basis kind than '{kind}'. Nothing was written.", { field: String(name), kind: String(k) }), ext);
     if (dueAt !== null && dueAt !== undefined && dueAt !== "") {
       const t = String(dueAt);
       if (!isLocalDateTime(t) || t.slice(0, 10) !== String(date))
-        return clockEntryRefused("due_at", "due_at is a time on the entry's own date, written YYYY-MM-DDTHH:MM. Nothing was written.", ext);
+        return clockEntryRefused("due_at", localize("action-clocks.index.due_at_is_a_time_on", "due_at is a time on the entry's own date, written YYYY-MM-DDTHH:MM. Nothing was written."), ext);
       own.due_at = t;
       if (dueZone !== null && dueZone !== undefined && dueZone !== "") {
         if (localDayOf(this.#nowMs(null), String(dueZone)) === null)
-          return clockEntryRefused("due_zone", "due_zone is a time zone's name (Area/Location). Nothing was written.", ext);
+          return clockEntryRefused("due_zone", localize("action-clocks.index.due_zone_is_a_time_zone", "due_zone is a time zone's name (Area/Location). Nothing was written."), ext);
         own.due_zone = String(dueZone);
       }
     } else if (dueZone !== null && dueZone !== undefined && dueZone !== "")
-      return clockEntryRefused("due_zone", "due_zone is stated with a due_at. Nothing was written.", ext);
+      return clockEntryRefused("due_zone", localize("action-clocks.index.due_zone_is_stated_with_a_due_at", "due_zone is stated with a due_at. Nothing was written."), ext);
     const std = k === "rule" && standard !== null && standard !== undefined && standard !== "" ? String(standard).trim() : null;
     if (std) {
       const st = this.standards;
@@ -1186,7 +1231,7 @@ export class ActionClocks {
       ...Object.fromEntries(Object.entries(own).filter(([n]) => !["due_at", "due_zone"].includes(n))),
       entered_by: who, entered_at: when };
     return this.#reviseClock(a.id, written, who, viewer, when, (ord) =>
-      ({ ok: true, target: a.id, ord, entry: written, says: "the deadline is on the action's clock, stated by you." }));
+      ({ ok: true, target: a.id, ord, entry: written, says: word("action-clocks.says.deadline_action_clock_stated") }));
   }
 
   /* R13: one revision of the action appending `e` to `clock[]`, under a 30-second lease the member holds (released on
@@ -1195,11 +1240,11 @@ export class ActionClocks {
     const lease = this.record.acquireLease(id, who, ADOPT_LEASE_MS);
     if (!lease || !lease.ok)
       return { ok: false, reason: "LEASE_HELD", target: id, heldBy: lease && lease.heldBy, until: lease && lease.until,
-               detail: "another member is writing to this action right now. Nothing was written; try again shortly." };
+               detail: localize("action-clocks.index.another_member_is_writing", "another member is writing to this action right now. Nothing was written; try again shortly.") };
     try {
       const f = this.record.readFile(id, "bundle.md");
       if (!f || typeof f.text !== "string")
-        return { ok: false, reason: "NO_DOCUMENT", target: id, detail: "this action has no readable bundle.md. Nothing was written." };
+        return { ok: false, reason: "NO_DOCUMENT", target: id, detail: localize("action-clocks.index.this_action_has_no_readable_document", "this action has no readable bundle.md. Nothing was written.") };
       let fm = {};
       try { fm = parseFrontmatter(f.text).data || {}; } catch { fm = {}; }
       const ord = Array.isArray(fm.clock) ? fm.clock.length : 0;
@@ -1208,8 +1253,7 @@ export class ActionClocks {
       try { check = text ? parseFrontmatter(text).data : null; } catch { check = null; }
       if (!text || !check || !Array.isArray(check.clock) || check.clock.length !== ord + 1 || check.clock[ord].date !== e.date)
         return { ok: false, reason: "UNSPLICEABLE_CLOCK", target: id,
-                 detail: "this action's clock block is not in a shape this grammar can extend in place; appending never "
-                       + "rewrites the rest of the document, so nothing was written." };
+                 detail: localize("action-clocks.index.this_actions_clock_block_is_not", "this action's clock block is not in a shape this grammar can extend in place; appending never rewrites the rest of the document, so nothing was written.") };
       text = setScalar(text, "last_updated", `"${when}"`);
       const bytes = new TextEncoder().encode(text);
       const carried = [];
@@ -1250,7 +1294,7 @@ export class ActionClocks {
     const unique = [...new Set(ids)];
     if (!unique.length || unique.length > CLOCKS_ICS_ACTIONS_MAX)
       return { ok: false, reason: "CLOCKS_ICS_REFUSED", code: "CLOCKS_ICS_REFUSED", max: CLOCKS_ICS_ACTIONS_MAX,
-               detail: `name one to ${CLOCKS_ICS_ACTIONS_MAX} actions (actions=<id>,<id>). Nothing was read.` };
+               detail: localize("action-clocks.index.name_one_to_max_actions", "name one to {max} actions (actions=<id>,<id>). Nothing was read.", { max: String(CLOCKS_ICS_ACTIONS_MAX) }) };
     const view = this.#view();
     const events = [];
     let undated = 0;
@@ -1263,12 +1307,12 @@ export class ActionClocks {
         if (!e || typeof e !== "object" || e.status !== "pending") return;
         if (!isDay(e.date)) { undated++; return; }
         events.push({ uid: `${a.id}.${i}@civicos`, day: e.date, zone,
-                      summary: String(e.text ?? "Deadline"), description: `${basisWords(this.#basisOf(e, viewer))}\nAction: ${a.id}` });
+                      summary: String(e.text ?? localize("action-clocks.index.deadline", "Deadline")), description: `${basisWords(this.#basisOf(e, viewer))}\n${localize("action-clocks.index.action_id", "Action: {id}", { id: String(a.id) })}` });
       });
     }
     const ics = icsCalendar({ events, stampMs: this.#nowMs(null) });
     return { ok: true, filename: "deadlines.ics", content_type: "text/calendar; charset=utf-8", ics, events: events.length,
-             left_out: { undated }, says: "a file for you to save; nothing is published or sent." };
+             left_out: { undated }, says: word("action-clocks.says.file_save_nothing") };
   }
 
   /* ================================================================ the group's own lateness (R15) */
@@ -1296,7 +1340,7 @@ export class ActionClocks {
         const lu = typeof fm.last_updated === "string" ? fm.last_updated : null;
         const ms = lu ? Date.parse(lu) : NaN;
         const day = Number.isFinite(ms) && /T/.test(lu) ? localDayOf(ms, zone) : lu && isDay(lu.slice(0, 10)) ? lu.slice(0, 10) : null;
-        return day ? { day, from: "the version that first shows it met" } : null;
+        return day ? { day, from: word("action-clocks.version_first_shows") } : null;
       }
     }
     return null;
@@ -1314,7 +1358,7 @@ export class ActionClocks {
     const f0 = String(from ?? ""), t0 = String(to ?? "");
     if (!isDay(f0) || !isDay(t0) || f0 > t0)
       return { ok: false, reason: "LATENESS_REFUSED", code: "LATENESS_REFUSED",
-               detail: "from= and to= are calendar days written YYYY-MM-DD, from not after to. Nothing was read." };
+               detail: localize("action-clocks.index.from_and_to_are_calendar_days", "from= and to= are calendar days written YYYY-MM-DD, from not after to. Nothing was read.") };
     const view = this.#view();
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='action' AND (${gate.sql})
@@ -1331,20 +1375,20 @@ export class ActionClocks {
         const ref = { action: r.bundle_id, ord: i, date: e.date };
         if (!isGroupOwn(e)) {
           if (!kind && owedOf(e) === "undetermined")
-            notCounted.push({ ...ref, why: "the entry names no basis kind and no owed_by, so whether it is the group's own is not stated" });
+            notCounted.push({ ...ref, why: word("action-clocks.why.entry_names_basis") });
           return;
         }
         if (e.status === "met") {
           const m = this.#metDay(r.bundle_id, i, e, zone);
-          if (!m) { notCounted.push({ ...ref, kind, why: "met, and the day it was met is not held" }); return; }
+          if (!m) { notCounted.push({ ...ref, kind, why: word("action-clocks.why.met_day_met") }); return; }
           const sp = span({ value: e.date, precision: "day", zone: zone || "UTC" }, { value: m.day, precision: "day", zone: zone || "UTC" }, { unit: "days" });
           const late = sp && Number.isInteger(sp.min) && sp.min === sp.max ? sp.min : null;
-          if (late === null) { notCounted.push({ ...ref, kind, why: "the span from its date to the day it was met is undetermined" }); return; }
+          if (late === null) { notCounted.push({ ...ref, kind, why: word("action-clocks.why.span_date_day") }); return; }
           table.push({ action: r.bundle_id, ord: i, date: e.date, kind, state: late > 0 ? "late" : "on_time", days_late: late > 0 ? late : 0, met_on: m.day, met_from: m.from });
           return;
         }
         if (e.status === "pending" || e.status === "overdue") {
-          if (today === null) { notCounted.push({ ...ref, kind, why: "the action's zone is not held, so whether its date has passed is undetermined" }); return; }
+          if (today === null) { notCounted.push({ ...ref, kind, why: word("action-clocks.why.action_zone_held") }); return; }
           table.push({ action: r.bundle_id, ord: i, kind, state: e.date < today ? "pending_past" : "not_yet_due", days_late: null });
           return;
         }
@@ -1367,7 +1411,7 @@ export class ActionClocks {
       const st = ev.trace.find((x) => x.step === name);
       return st && st.output ? st.output : zero;
     };
-    const fact = (name) => ({ ...out(name), label: "computed fact" });
+    const fact = (name) => ({ ...out(name), label: localize("action-clocks.index.computed_fact", "computed fact") });
     return { ok: true, from: f0, to: t0, project: project || null, counts: { owed_by: "group", kinds: [...GROUP_OWN_KINDS] },
              on_time: fact("on_time"), late: { ...fact("late"), days_late_total: fact("days_late"),
                each: table.filter((x) => x.state === "late").map((x) => ({ action: x.action, ord: x.ord, date: x.date, days_late: x.days_late, met_on: x.met_on })) },
@@ -1375,20 +1419,16 @@ export class ActionClocks {
              entries: table.map((x) => ({ action: x.action, ord: x.ord, kind: x.kind, state: x.state, ...(x.days_late ? { days_late: x.days_late } : {}) })),
              not_counted: notCounted, actions_limit: LATENESS_ACTIONS_MAX, truncated: rows.length > LATENESS_ACTIONS_MAX,
              method: ev ? { recipe, trace: ev.trace } : { recipe, trace: [] },
-             says: "an index over the group's own deadlines (what the group owes, its dependencies and its own windows): "
-                 + "never a finding about anyone else's conduct." };
+             says: word("action-clocks.says.index_group_deadlines") };
   }
 }
 
 /* R2: the label of a clock entry proposed apart; it says, in each state, what the proposal is not. The governing-laws
    label's states are action-grammar's (REC-195, its R2). */
 const PROPOSAL_SAYS = {
-  machine_proposed: "a machine credential computed this clock entry from the jurisdiction profile. That is machine "
-    + "work, labelled as machine work: it is not on the action's clock, and nothing puts it there until a member "
-    + "revises the action to state it",
-  member_proposed: "a member asked for this clock entry to be computed from the jurisdiction profile. It is a proposal "
-    + "and not a clock entry: a member states one by revising the action",
-  unstated: "the record does not say who asked for this clock entry",
+  machine_proposed: word("action-clocks.machine_credential_computed"),
+  member_proposed: word("action-clocks.member_asked_clock"),
+  unstated: word("action-clocks.record_say_asked"),
 };
 function proposalLabelFor(who) {
   const base = lawProposalLabel(who);
@@ -1444,12 +1484,12 @@ function setScalar(text, key, value) {
 /* R7, R14: the basis of an entry in words, for the calendar file. */
 function basisWords(b) {
   const cite = b.citation ? `: ${b.citation}` : "";
-  if (b.kind === "rule") return `Basis: a law or order${cite}${b.standard ? ` (standard ${b.standard.id}, ${b.standard.state.replace(/_/g, " ")})` : ""}`;
-  if (b.kind === "commitment") return `Basis: a commitment${b.committed_by ? ` by ${b.committed_by}` : ""}${cite}`;
-  if (b.kind === "dependency") return `Basis: it must precede ${b.precedes ?? "a later event"}${b.lead ? ` (lead ${b.lead})` : ""}${b.why ? `, because ${b.why}` : ""}${cite}`;
-  if (b.kind === "window") return `Basis: the group's own window${cite}`;
-  if (b.kind === "stated") return `Basis: a date stated by ${b.stated_by ?? "the other side"}${b.held_in ? `, held in ${b.held_in}` : ""}${cite}`;
-  return `Basis${cite || ": not stated"}`;
+  if (b.kind === "rule") return word("action-clocks.basis_law_order", { cite: String(cite), standard: String(b.standard ? localize("action-clocks.index.standard_id_state", " (standard {id}, {state})", { id: String(b.standard.id), state: String(b.standard.state.replace(/_/g, " ")) }) : "") });
+  if (b.kind === "commitment") return word("action-clocks.basis_commitment", { committed_by: String(b.committed_by ? localize("action-clocks.index.by_who", " by {who}", { who: String(b.committed_by) }) : ""), cite: String(cite) });
+  if (b.kind === "dependency") return word("action-clocks.basis_precede", { precedes: String(b.precedes ?? word("action-clocks.later_event")), lead: String(b.lead ? localize("action-clocks.index.lead_lead", " (lead {lead})", { lead: String(b.lead) }) : ""), why: String(b.why ? localize("action-clocks.index.because_why", ", because {why}", { why: String(b.why) }) : ""), cite: String(cite) });
+  if (b.kind === "window") return word("action-clocks.basis_group_window", { cite: String(cite) });
+  if (b.kind === "stated") return word("action-clocks.basis_date_stated", { stated_by: String(b.stated_by ?? localize("action-clocks.index.the_other_side", "the other side")), held_in: String(b.held_in ? localize("action-clocks.index.held_in_place", ", held in {place}", { place: String(b.held_in) }) : ""), cite: String(cite) });
+  return word("action-clocks.basis", { cite: String(cite || localize("action-clocks.index.not_stated", ": not stated")) });
 }
 
 /* The reads and acts answer their catalogue-backed refusals with code, check and translation. */
@@ -1492,7 +1532,7 @@ export function actionClocksOwns(t) {
 
 /** The module's ops (K3, K671), entries of the route map `plane` composes (its R5) and control-plane's `dispatch` looks
  *  up: `op=reminderset` (R4), `op=reminderanswer` (R6), `op=clockadopt` (R13), `op=clockstate` (R18, T45), and the
- *  reads `op=clocksics` (R14), `op=clocklateness` (R15) and `op=clockproposals` (R20, T46). `viewer` and `author` are
+ *  reads `op=clocksics` (R14), `op=clocklateness` (R15), `op=clockproposals` (R20, T46), `op=clocksrunning` (R24, T51) and `op=remindersfor` (R26, T51). `viewer` and `author` are
  *  the control plane's stamps, read from the query, so a caller's own copy never wins. */
 export function actionClocksOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -1517,5 +1557,21 @@ export function actionClocksOps(m, url, body) {
                                    viewer: q("viewer") }),
     clocklateness: () => m.lateness({ from: pick("from"), to: pick("to"), project: pick("project"), viewer: q("viewer") }),
     clockproposals: () => m.clockProposalsFor({ action: pick("action"), viewer: q("viewer") }),
+    clocksrunning: () => m.clocksRunning({ viewer: q("viewer") }),
+    remindersfor: () => m.remindersFor({ action: pick("action"), viewer: q("viewer") }),
   };
 }
+
+/* R25 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  reminderset: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("action-clocks.declared.reminderset", "a member asks to be reminded of a dated clock entry on a day, or changes or removes their own reminder (action-clocks R4)"),
+    fields: { accepts: ["target","entry","on","from"], requires: ["target","entry",["on","from"]] } },
+  reminderanswer: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("action-clocks.declared.reminderanswer", "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none"),
+    fields: { accepts: ["target","entry","on"], requires: ["target","entry"] } },
+  clockadopt: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("action-clocks.declared.clockadopt", "a member adopts a standing clock proposal, as proposed or amended, as a clock entry with its basis and trace (action-clocks R13)"),
+    fields: { accepts: ["target","proposal","why","date","text","description","standard","owed_by"], requires: ["target","proposal"] } },
+  /* R26 (fix round 3, C53): an action's reminders, read after a reload. */
+  remindersfor: { classes: ["admin","member"], mutating: false, weight: "read", description: localize("action-clocks.declared.remindersfor", "read: an action's reminders, each with its entry, its day, who set it and its state; writes nothing (action-clocks R26)"),
+    fields: { accepts: ["action"], requires: ["action"] } },
+});

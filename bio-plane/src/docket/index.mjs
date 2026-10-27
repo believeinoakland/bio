@@ -62,6 +62,7 @@ import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { DOCKET_CHECKS, rowOf } from "./checks.mjs";
 import { DOCKET_TABLES, migrateDocket } from "./schema.mjs";
 import { renderFeed, docketAddress, feedAddress, ATOM_MEDIA_TYPE } from "./feed.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { DOCKET_CHECKS, DOCKET_WORDS } from "./checks.mjs";
 export { DOCKET_SCHEMA, DOCKET_TABLES } from "./schema.mjs";
@@ -115,20 +116,19 @@ export const PREPARED_TTL_MS = 60 * 60 * 1000;   /* R4: `expires` */
 /** R10: the prefix record entry ids are minted under (record-core R6). */
 export const RECORD_ID_PREFIX = "DKT";
 /** R8: the fixed head of a receipt's published reason; the manager's words follow it. */
-export const RECEIPT_REASON = "names a private person";
+export const RECEIPT_REASON = word("docket.names_private_person");
 /** R15: what a citing copy says when it cannot read a docket (DEC-116 item 8). */
-export const DOCKET_UNREADABLE = "Could not read the publisher's docket";
+export const DOCKET_UNREADABLE = word("docket.read_publisher_docket");
 /** R4: the outward-act warning, as a code and its meaning; its words are the UX design stream's. */
 export const OUTWARD_ACT_WARNING = Object.freeze({
   code: "docket_outward_act",
-  meaning: "The public will see this entry; a later entry can take it back but never unsay it.",
+  meaning: word("docket.public_see_entry"),
 });
 /** R8: the request to resend a reply without the private person's name, as a code and its meaning; its words are the
  *  UX design stream's, and this module sends nothing. */
 export const RESEND_INVITATION = Object.freeze({
   code: "docket_resend_without_name",
-  meaning: "Your reply names a private person, so the group lists it as received without its text. Please send it "
-    + "again without the name, and the group will list it whole.",
+  meaning: word("docket.reply_names_private"),
 });
 /** R3: the plan checkpoint a contesting entry offers; `action-plans`' own act, never performed here. */
 export const CHECKPOINT_OFFER = Object.freeze({ code: "plan_checkpoint", act: "action-plans", performed: false });
@@ -382,11 +382,10 @@ export class Docket {
     /* END DEC-49 REGION is-docket-filer */
     const k = this.#caseFor(caseId, str(viewer) || str(author));
     if (k.refusal) return k;
-    /* DEC-49 REGION is-docket-filer */
-    if (!this.#call(() => this.membership.isJoinedParticipant(k.c.project, member), false))
-      return { refusal: refuse("DOCKET_NOT_A_PARTICIPANT", "only a joined participant of the case's project files to its docket",
-                               { case: k.c.case }) };
-    /* END DEC-49 REGION is-docket-filer */
+    /* K4557, K231: one condition, one code: a member not yet joined (invited, or with no part) is refused with membership's
+       own PROJECT_ACT_NOT_A_PARTICIPANT, whose words say to join, relayed as it answers. */
+    const denied = this.membership.projectAuthority(k.c.project, String(author).trim(), "joined", "docketfile");
+    if (denied) return { refusal: denied };
     const counsel = this.#counselRefusal(k.c);
     if (counsel) return { refusal: counsel };
     return { c: k.c, member };
@@ -455,7 +454,7 @@ export class Docket {
     }
     /* END DEC-49 REGION is-docket-form */
     return { fields: { edition: ed, from: fromRow, capture: cap, kind, proposed, reason, answers: answering, contests: yes(contests),
-                       outcome: outcomeRow, summary: outcomeRow ? summary.trim() : null } };
+                       outcome: outcomeRow, summary: outcomeRow || oneParagraph(summary, SUMMARY_MAX) ? summary.trim() : null } };
   }
 
   /** R1, R11, R13: files a record entry, or, with `takesBack`, takes an earlier record entry back with a reason. */
@@ -485,7 +484,7 @@ export class Docket {
     /* R13: a contesting filing is told to reevaluation after it commits; a throw there never undoes it. */
     if (x.contests) this.#call(() => this.reevaluation.docketActed({ kind: "contested", case: c.case, entry: id }));
     return { ok: true, entry: id, case: c.case, edition: x.edition, kind: x.kind, shelf: "record", found_by: x.capture.found_by,
-             contests: x.contests, filed_at: at, ...(x.outcome ? { outcome: x.outcome, summary: x.summary } : {}) };
+             contests: x.contests, filed_at: at, ...(x.outcome ? { outcome: x.outcome } : {}), ...(x.summary ? { summary: x.summary } : {}) };
   }
 
   /* R11: a record entry taken back by a later record act with a reason; it then reads `taken-back`. */
@@ -534,6 +533,10 @@ export class Docket {
     const c = r ? this.#case(r.case_id) : null;
     if (!r || !c || !c.project || this.#call(() => this.membership.sight(c.project, str(viewer) || str(author))) !== "full")
       return refuse("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
+    /* K4557: a mark is a weighty act of the project, so it is a joined member's: sight first, then this, then the entry's own
+       conditions. Membership's refusal is relayed as it answers (K231). */
+    const denied = this.membership.projectAuthority(c.project, String(author).trim(), "joined", "docketpressure");
+    if (denied) return denied;
     if (this.#marks(id).some((m) => m.kind === "pressure"))
       return refuse("DOCKET_PRESSURE_MARKED", "the entry is already marked", { entry: id });
     const note = p && typeof p === "object" && p.note !== undefined && p.note !== null && p.note !== "" ? p.note : null;
@@ -572,7 +575,8 @@ export class Docket {
     if (counsel) return { refusal: counsel };
     /* DEC-49 REGION is-docket-manager */
     const slug = this.#slug();
-    if (!slug) return { refusal: refuse("DOCKET_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous entries") };
+    if (!slug) return { refusal: refuse("DOCKET_NO_GROUP_SLUG",
+      localize("docket.index.no_team_slug_recorded", "no team slug is recorded, and there are no anonymous entries")) };
     /* END DEC-49 REGION is-docket-manager */
     return { c: k.c, member, slug };
   }
@@ -739,7 +743,12 @@ export class Docket {
       return refuse("DOCKET_KIND_UNKNOWN", `kind is one of ${ENTRY_KINDS.join(", ")}`, { kind: typeof kind === "string" ? kind : null });
       /* END DEC-49 REGION is-docket-form */
     }
-    const kr = this.#kindRefusal(c, kind, { shelf, edition, summary: kind === "outcome" ? null : summary, reason, holder, takesBack,
+    /* R4: the shelf is a function of the kind, so a caller that names none (the screens' prepare names a case, an entry and
+       its kind) is answered the kind's own shelf; one that names another is still refused DOCKET_WRONG_SHELF. */
+    const shelfOf = shelf === null || shelf === undefined || shelf === "" ? (kind === "reaction" ? "reactions" : "listed") : shelf;
+    /* R1, R4 (K5148): the summary filed with the entry is the default when the prepare names none. */
+    if (kind !== "outcome" && !str(summary) && rec && rec.summary) summary = rec.summary;
+    const kr = this.#kindRefusal(c, kind, { shelf: shelfOf, edition, summary: kind === "outcome" ? null : summary, reason, holder, takesBack,
                                             candidate, grant }, rec, recFields);
     if (kr.refusal) return kr.refusal;
     const x = kr.out;
@@ -902,7 +911,7 @@ export class Docket {
              receipt: { seq: Number(s.pub.seq), entry: publicId(r.case_id, s.pub.seq) },
              invitation: { ...RESEND_INVITATION, case: r.case_id, edition: Number(r.edition), received: pub.received ?? null,
                            answers: id, docket: docketAddress(r.case_id) },
-             sends: "nothing: a member sends this by their own means" };
+             sends: word("docket.nothing_member_sends") };
   }
 
   /* ================================================================ R9: the required core */
@@ -977,6 +986,17 @@ export class Docket {
 
   /* ================================================================ R3: the member's read */
 
+  /* R30 (T51; DEC-340): the member who made a mark as `{member, handle}`, or null when its author is not a member: no
+     roster row, or one no longer active (a revoked member keeps her row, so her status is what decides). Only `docketOf`,
+     which answers a viewer who sees the project in full, names her; R27's reads never do. */
+  #markedBy(memberId) {
+    const id = str(memberId);
+    if (!id) return null;
+    const facts = this.#call(() => this.membership.memberFacts(id));
+    if (!facts || facts.status !== "active") return null;
+    return { member: id, handle: str(facts.handle) ? facts.handle : null };
+  }
+
   /* R14's view of one public entry. */
   #publicView(e, backs) {
     const back = backs.get(Number(e.seq));
@@ -1006,7 +1026,8 @@ export class Docket {
         ...(s.state === "placed" || s.state === "receipted" ? { public: { seq: Number(s.pub.seq), entry: publicId(c.case, s.pub.seq) } } : {}),
         ...(s.state === "declined" ? { declined: { reason: s.decline.reason, at: s.decline.at } } : {}),
         ...(s.state === "taken-back" ? { taken_back: { reason: s.back.reason, at: s.back.at } } : {}),
-        pressure: p ? { kind: p.pressure, note: p.note ?? null, at: p.at } : null,
+        /* R30 (T51; DEC-340): who made the mark, for a viewer who sees the project in full */
+        pressure: p ? { kind: p.pressure, note: p.note ?? null, at: p.at, by: this.#markedBy(p.by_member) } : null,
         ...(contests ? { prompts: {
           reevaluation: { cause: "contested", case: c.case, edition: Number(r.edition), entry: r.entry_id, since: r.filed_at,
                           findings: this.#pins(c.case, Number(r.edition)) },
@@ -1166,8 +1187,8 @@ export class Docket {
       for (const e of this.#entries(c.case)) {
         const j = parse(e.json) || {};
         const add = (at, label) => { if (at && (!lo || at >= lo) && (!hi || at <= hi)) items.push({ at, label, ref: publicId(c.case, e.seq), kind: j.kind ?? e.kind, public: true }); };
-        add(day(j.date), `docket: ${j.kind}, edition ${j.edition}`);
-        if (e.record_entry) add(day(j.received), `docket: ${j.kind} received, edition ${j.edition}`);
+        add(day(j.date), localize("docket.index.docket_kind_edition_edition", "docket: {kind}, edition {edition}", { kind: String(j.kind), edition: String(j.edition) }));
+        if (e.record_entry) add(day(j.received), localize("docket.index.docket_kind_received_edition_edition", "docket: {kind} received, edition {edition}", { kind: String(j.kind), edition: String(j.edition) }));
       }
     }
     items.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : a.label < b.label ? -1 : 1));
@@ -1310,3 +1331,16 @@ export function docketOps(m, url, body) {
     docketinvitation: () => m.docketInvitation({ entry: q("entry"), viewer }),
   };
 }
+
+/* R31 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  docketfile: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("docket.declared.docketfile", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
+    fields: { accepts: ["case","edition","kind","from","capture","contests","proposed","reason","answers","takesBack","outcome","summary"], requires: ["case","reason",["edition","takesBack"],["from","takesBack"],["capture","takesBack"],["kind","takesBack"],["proposed","takesBack"]] } },
+  docketpressure: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("docket.declared.docketpressure", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
+    fields: { accepts: ["entry","pressure"], requires: ["entry","pressure"] } },
+  docketprepare: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("docket.declared.docketprepare", "read: a docket entry composed for the case's manager to sign, keyed by case, with its statement and digest; publishes nothing and writes nothing"),
+    fields: { accepts: ["case","kind","shelf","edition","entry","summary","reason","holder","takesBack","candidate","grant","order","capture"], requires: ["case","kind",["edition","entry","order"]] } },
+  docketpost: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "attested", description: localize("docket.declared.docketpost", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
+    fields: { accepts: ["digest","signature","acknowledged"], requires: ["digest","signature","acknowledged"] } },
+});

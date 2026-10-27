@@ -1,8 +1,8 @@
 /* entities' test fixture: a Durable Object storage stand-in over node:sqlite at the plane's shape (`sql.exec` answering
    a cursor under workerd's 50-byte LIKE/GLOB cap, `transactionSync` nesting as savepoints) with the real modules
    entities uses — record-core, membership, extraction (whose writer lays down the readings, references and name terms
-   R9–R19 read) and provenance (the register, the captured locators and the declared origin R22–R23 read) — and a
-   promotion registry standing in for promotion's R39, which provenance and extraction join. Every test drives
+   R9–R19 read) and provenance (the register, the captured locators and the declared origin R22–R23 read) — and
+   promotion's own published fixture (`makePromotion`), which provenance and extraction join. Every test drives
    `entities` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -11,6 +11,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { Entities } from "../../../src/entities/index.mjs";
+import { makePromotion } from "../promotion/fixtures.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -59,13 +60,6 @@ export function storage() {
   };
 }
 
-function promotionStub() {
-  const steps = [], facts = [];
-  return { steps, registerStep(module, s) { steps.push({ module, ...s }); return { ok: true }; },
-           registerFact(name, module, fn) { facts.push({ name, module, fn }); return { ok: true }; },
-           onCommitted() { return { ok: true }; } };
-}
-
 /* A fresh record with the modules above and entities over it. `profiles` sets the instance's active jurisdiction
    profiles (record-core R26); `now` fixes entities' clock. */
 export function world({ profiles = null, now = null } = {}) {
@@ -75,7 +69,7 @@ export function world({ profiles = null, now = null } = {}) {
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const promotion = promotionStub();
+  const promotion = makePromotion().p;
   const x = new Extraction(st, { record, membership, promotion });
   x.migrate();
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });

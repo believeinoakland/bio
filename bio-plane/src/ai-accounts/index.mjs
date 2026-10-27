@@ -29,7 +29,7 @@ import { Membership, membershipOf, notAnAdmin, noSuchProject, notTheOwner, liste
 import { AI_ACCOUNTS_SCHEMA, AI_ACCOUNTS_ADDITIVE_COLUMNS, AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES,
          AI_ACCOUNTS_HISTORY_TABLE } from "./schema.mjs";
 export { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "./schema.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { AI_ACCOUNT_CHECKS, AI_WORDS } from "./checks.mjs";
 export { AI_ACCOUNT_CHECKS, AI_WORDS } from "./checks.mjs";
 
@@ -63,18 +63,22 @@ export const SIGNIN_TOKEN_LENGTH = Object.freeze({ min: 20, max: 2000 });
 const HOUR_MS = 3600 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
-/* A whole-second instant, the record's `…:00Z` spelling. */
-const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+/* A whole-second instant, the record's `…:00Z` spelling; the caller names the instant (R39: the instance clock). */
+const stampSecond = (when) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 
 /* The founder's role and member id (membership's `ROOT_ADMIN`). */
 const ROOT = Membership.ROOT_ADMIN;
 
 export class AiAccounts {
-  constructor({ sql, core = null, membership = null, sealSecret = null } = {}) {
+  /* R39 (fix round 10, STORE-REQUEST #5; K5192): `now` is the instance clock handed in (a function of milliseconds), read
+     before the store's environment; `env` is set by `aiAccountsOps` from the store's environment (`BIO_NOW_MS`). */
+  constructor({ sql, core = null, membership = null, sealSecret = null, now = null } = {}) {
     this.sql = sql;
     this.core = core;
     this.membership = membership;
     this.#sealSecret = typeof sealSecret === "string" && sealSecret !== "" ? sealSecret : null;
+    this.now = typeof now === "function" ? now : null;
+    this.env = null;
   }
   #sealSecret;
 
@@ -82,6 +86,25 @@ export class AiAccounts {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+
+  /* R39 (fix round 10, K5132's rule, as `credentials`' `#nowMs`): the instance clock. A handed `now` answers first, else
+     the store's `env.BIO_NOW_MS`, else the wall clock. Every instant this module records, and every judgement of one,
+     reads it. */
+  #nowMs() {
+    if (this.now) {
+      const handed = Number(this.now());
+      if (Number.isFinite(handed) && handed >= 0) return handed;
+    }
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    if (raw !== undefined && raw !== null && raw !== "") {
+      const v = Number(raw);
+      if (Number.isFinite(v) && v >= 0) return v;
+    }
+    return Date.now();
+  }
+
+  /* The instance clock's instant, as a whole second. */
+  #at() { return stampSecond(this.#nowMs()); }
 
   /* One act as one transaction, through record-core's `transact` (its R32) when the store offers it. */
   #tx(fn) { return typeof this.core?.transact === "function" ? this.core.transact(fn) : fn(); }
@@ -188,15 +211,13 @@ export class AiAccounts {
     const refuse = (code, detail) => AiAccounts.#row(AI_ACCOUNT_CHECKS, code, detail);
     /* DEC-49 REGION is-account-own-act */
     if (by === null || by === undefined || by === "" || isMachineIdentity(by))
-      return refuse("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, "
-        + "from their own signed-in session; this caller has no member behind it. Nothing was written.");
+      return refuse("MACHINE_CANNOT_HOLD_ACCOUNT", localize("ai-accounts.index.a_members_claude_account_is", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written."));
     const id = AiAccounts.#memberOf(member);
     if (id === null || AiAccounts.#memberOf(by) !== id)
       return AiAccounts.#notYours("a member's Claude account is acted on only by that member; another member, an "
         + "administrator or the founder cannot. Nothing was written.");
     if (!this.#holderActive(id))   /* (T47; R19) the claimed founder holds as a member does */
-      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was "
-        + "written.");
+      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_holds", "only an active member holds a Claude account reference. Nothing was written."));
     /* END DEC-49 REGION is-account-own-act */
     return null;
   }
@@ -214,13 +235,10 @@ export class AiAccounts {
   #noAccount(member, scope = "served") {
     /* DEC-49 REGION is-account-held */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "NO_ACCOUNT", scope === true || scope === "own"
-      ? "this member holds no Claude account reference of their own. Nothing was used or written."
-      : scope === "member" ? "this member holds no Claude account of their own: no key and no connected sign-in. Nothing "
-        + "was written."
-      : scope === "project" ? "this project holds no Claude account. Nothing was written."
-      : "no Claude account serves this member: they hold no reference of their own, they are not connected through "
-        + "their subscription, and the group's key is not held or not on, so there is no assistant for them. Nothing was "
-        + "used.", { member });
+      ? localize("ai-accounts.index.this_member_holds_no_claude", "this member holds no Claude account reference of their own. Nothing was used or written.")
+      : scope === "member" ? localize("ai-accounts.index.this_member_holds_no_claude_key", "this member holds no Claude account of their own: no key and no connected sign-in. Nothing was written.")
+      : scope === "project" ? localize("ai-accounts.index.this_project_holds_no_claude", "this project holds no Claude account. Nothing was written.")
+      : localize("ai-accounts.index.no_claude_account_serves_this", "no Claude account serves this member: they hold no reference of their own, they are not connected through their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was used."), { member });
     /* END DEC-49 REGION is-account-held */
   }
 
@@ -228,7 +246,7 @@ export class AiAccounts {
   static #noSecret(secret) {
     /* DEC-49 REGION is-secret-given */
     if (typeof secret !== "string" || secret.trim() === "")
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "NO_SECRET", "no key or token was given. Nothing was written.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "NO_SECRET", localize("ai-accounts.index.no_key_or_token_was", "no key or token was given. Nothing was written."));
     return null;
     /* END DEC-49 REGION is-secret-given */
   }
@@ -236,9 +254,11 @@ export class AiAccounts {
   /* R14: every switch an account holds, for `accountUsesSet` (T41: R4's and R9's own acts retired into it). */
   static #switchName(name, names = USE_SWITCHES) {
     /* DEC-49 REGION is-account-switch */
+    /* (T51; K4206) a request that names no switch is refused naming it, as an unknown name is */
+    if (name === null || name === undefined)
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_SWITCH", localize("ai-accounts.index.the_request_names_no_switch", "the request names no switch; the switches are {names}. Nothing was written.", { names: String(names.join(", ")) }), { switch: null });
     if (typeof name !== "string" || !names.includes(name))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${names.join(", ")}. `
-        + "Nothing was written.", { switch: typeof name === "string" ? name.slice(0, 40) : null });
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_SWITCH", localize("ai-accounts.index.the_switches_are_names_nothing", "the switches are {names}. Nothing was written.", { names: String(names.join(", ")) }), { switch: typeof name === "string" ? name.slice(0, 40) : null });
     return null;
     /* END DEC-49 REGION is-account-switch */
   }
@@ -263,13 +283,17 @@ export class AiAccounts {
   /* R14, R22: SWITCH_VALUE_INVALID, minted here alone: `what` and the values it takes. */
   static #valueInvalid(what, values, extra) {
     /* DEC-49 REGION is-switch-value */
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SWITCH_VALUE_INVALID", `${what} takes ${values.map(String).join(", ")}. `
-      + "Nothing was changed.", { values: [...values], ...(extra || {}) });
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SWITCH_VALUE_INVALID", localize("ai-accounts.index.what_takes_map_nothing_was", "{what} takes {map}. Nothing was changed.", { what: String(what), map: String(values.map(String).join(", ")) }), { values: [...values], ...(extra || {}) });
     /* END DEC-49 REGION is-switch-value */
   }
 
   /* R14: `explore` one of EXPLORE_VALUES; any other switch a boolean. */
   static #switchValueFault(name, on) {
+    /* (T51; K4206) a request that gives no `on` is refused naming it, the values the switch takes given as for any other */
+    if (on === undefined) {
+      const values = name === "explore" ? EXPLORE_VALUES : [true, false];
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SWITCH_VALUE_INVALID", localize("ai-accounts.index.the_request_gives_no_on", "the request gives no on to set; {what} takes {map}. Nothing was changed.", { what: name === "explore" ? "the explore switch" : `the ${name} switch`, map: String(values.map(String).join(", ")) }), { values: [...values], switch: name });
+    }
     if (name === "explore") return EXPLORE_VALUES.includes(on) ? null
       : AiAccounts.#valueInvalid("the explore switch", EXPLORE_VALUES, { switch: name });
     return typeof on === "boolean" ? null : AiAccounts.#valueInvalid(`the ${name} switch`, [true, false], { switch: name });
@@ -281,9 +305,8 @@ export class AiAccounts {
      never moves to the next account (Bob, K2352). `whose` is `project`, `own` or `group`. */
   static #switchedOff(whose, use, project = null) {
     /* DEC-49 REGION is-use-switched-on */
-    const name = whose === "project" ? "this project's" : whose === "group" ? "your group's" : "your own";
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", `the account used for this act is ${name} Claude `
-      + `account, and its switch for ${use} is off; the act does not move to another account. Nothing was used.`,
+    const name = whose === "project" ? "this project's" : whose === "group" ? "your team's" : "your own";
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", localize("ai-accounts.index.the_account_used_for_this", "the account used for this act is {name} Claude account, and its switch for {use} is off; the act does not move to another account. Nothing was used.", { name: String(name), use: String(use) }),
       { whose, use, ...(project !== null ? { project } : {}) });
     /* END DEC-49 REGION is-use-switched-on */
   }
@@ -314,7 +337,7 @@ export class AiAccounts {
   #usesOwner(owner, by) {
     const said = (v) => (typeof v === "boolean" ? (v ? "on" : "off") : String(v));
     if (owner === "group") {
-      const bar = this.#adminBar(by, "switching the group key's assistant settings");
+      const bar = this.#adminBar(by, localize("ai-accounts.index.switching_the_team_keys", "switching the team key's assistant settings"));
       return bar ? { refusal: bar } : { table: "group_key", where: "id=1", args: [],
         ensure: () => this.sql.exec(`INSERT INTO group_key (id) VALUES (1) ON CONFLICT(id) DO NOTHING`),
         act: (n, v) => this.#groupKeyAct(`switch:${n}`, said(v), by) };
@@ -338,8 +361,12 @@ export class AiAccounts {
         return { table: "subscription_connections", where: "member_id=?", args: [id], act: act("signin") };
       return { none: this.#noAccount(id, "member") };
     }
-    /* no owner this module knows: refused as R1 refuses any principal but the actor */
-    return { refusal: this.#accountBar(null, by) };
+    /* no owner this module knows: refused as R1 refuses any principal but the actor; an owner the request does not give
+       is refused naming it (T51; K4206), its machine refusal unchanged */
+    const bar = this.#accountBar(null, by);
+    if (owner === null && bar.code === "NOT_YOUR_ACCOUNT")
+      return { refusal: AiAccounts.#notYours(localize("ai-accounts.index.the_request_names_no_owner", "the request names no owner: the account is group, project:<id> or member:<id>. Nothing was written.")) };
+    return { refusal: bar };
   }
 
   /* R2, `credentials` R29, R6: THE SEAL. AES-256-GCM under a key derived (HKDF-SHA-256) from the Worker's seal secret, the owner as
@@ -365,8 +392,7 @@ export class AiAccounts {
   }
 
   #seal() {
-    return this.#sealSecret === null ? AiAccounts.#sealRefusal("your group's Civicsmith has no seal secret set, so a "
-      + "key cannot be kept sealed or read. Nothing was stored or read.") : null;
+    return this.#sealSecret === null ? AiAccounts.#sealRefusal(localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read.")) : null;
   }
 
   async #encrypt(owner, kind, secret) {
@@ -394,9 +420,7 @@ export class AiAccounts {
     if (bar) return bar;
     /* DEC-49 REGION is-account-kind */
     if (!ACCOUNT_KINDS.includes(kind))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", `the kind your group's Civicsmith holds is `
-        + `${ACCOUNT_KINDS.join(" and ")}; a Claude subscription is connected through Claude Code's own sign-in, never `
-        + `held as a token. Nothing was written.`);
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", localize("ai-accounts.index.the_kind_your_teams_civicsmith", "the kind your team's Civicsmith holds is {ACCOUNT_KINDS}; a Claude subscription is connected through Claude Code's own sign-in, never held as a token. Nothing was written.", { ACCOUNT_KINDS: String(ACCOUNT_KINDS.join(" and ")) }));
     /* END DEC-49 REGION is-account-kind */
     const empty = AiAccounts.#noSecret(secret);
     if (empty) return empty;
@@ -409,7 +433,7 @@ export class AiAccounts {
     if (unsealable) return unsealable;
     const id = AiAccounts.#memberOf(member);
     const { sealed, iv } = await this.#encrypt(`member:${id}`, kind, secret);
-    const setAt = stampSecond();
+    const setAt = this.#at();
     this.#tx(() => {
       this.sql.exec(
         `INSERT INTO account_references (member_id, kind, sealed, iv, set_at) VALUES (?,?,?,?,?)
@@ -452,8 +476,7 @@ export class AiAccounts {
     } catch { shown = false; }
     if (shown) return null;
     /* DEC-49 REGION is-disclosure-shown */
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "DISCLOSURE_DUE", "you have not yet been shown what connecting your own "
-      + "Claude account means, so nothing was connected or sent. Read it, then try again.",
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "DISCLOSURE_DUE", localize("ai-accounts.index.you_have_not_yet_been", "you have not yet been shown what connecting your own Claude account means, so nothing was connected or sent. Read it, then try again."),
       { member: typeof member === "string" ? member : null });
     /* END DEC-49 REGION is-disclosure-shown */
   }
@@ -511,7 +534,7 @@ export class AiAccounts {
   static #ownerOfProject(project) { return `project:${project}`; }
 
   /* One change, in the caller's act. `origin` names the earlier record written beside it, or null. */
-  #change(owner, change, detail, by, origin = null, at = stampSecond()) {
+  #change(owner, change, detail, by, origin = null, at = this.#at()) {
     const project = owner.startsWith("project:") ? owner.slice(8) : null;
     this.sql.exec(`INSERT OR IGNORE INTO account_changes (owner, project_id, at, by, change, detail, origin)
                    VALUES (?,?,?,?,?,?,?)`, owner, project, at, AiAccounts.#memberOf(by), change,
@@ -590,7 +613,7 @@ export class AiAccounts {
   /* R15, R16: the owners of the account `owner` names are those R14 lets set its switches; anyone else is refused as
      R14 refuses them. Null when `viewer` is one of them. */
   #ownerBar(owner, viewer) {
-    if (owner === "group") return this.#adminBar(viewer, "reading the group key's assistant settings");
+    if (owner === "group") return this.#adminBar(viewer, localize("ai-accounts.index.reading_the_team_keys_assistant", "reading the team key's assistant settings"));
     if (typeof owner === "string" && owner.startsWith("project:"))
       return this.#projectOwnerBar(owner.slice(8), viewer, "reading a project's assistant settings");
     if (typeof owner === "string" && owner.startsWith("member:")) return this.#accountBar(owner, viewer);
@@ -715,17 +738,15 @@ export class AiAccounts {
     const carried = args && typeof args === "object" ? Object.keys(args).filter((k) => k !== "member" && args[k] !== undefined) : [];
     /* DEC-49 REGION is-subscription-fact */
     if (carried.length)
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_LOGIN_REFUSED", "only that the member is connected is "
-        + "recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_LOGIN_REFUSED", localize("ai-accounts.index.only_that_the_member_is", "only that the member is connected is recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded."));
     /* END DEC-49 REGION is-subscription-fact */
     const member = args?.member ?? null;
     const id = AiAccounts.#memberOf(member);
     if (id === null || isMachineIdentity(member) || !this.#holderActive(id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member is connected through "
-        + "their subscription. Nothing was recorded.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_is", "only an active member is connected through their subscription. Nothing was recorded."));
     if (!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id))
       this.#tx(() => {
-        const since = stampSecond();
+        const since = this.#at();
         this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, since);
         this.#change(`member:${id}`, "signin_set", { account: "signin" }, id, null, since);   /* R16: by the member's own sign-in */
       });
@@ -750,17 +771,15 @@ export class AiAccounts {
   async subscriptionTokenHold({ member = null, token = null, validFor = null } = {}) {
     const id = AiAccounts.#memberOf(member);
     if (id === null || isMachineIdentity(member) || isMachineIdentity(id) || !this.#holderActive(id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member, or the founder, "
-        + "holds a sign-in. Nothing was recorded.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_or", "only an active member, or the founder, holds a sign-in. Nothing was recorded."));
     /* DEC-49 REGION is-signin-token-shape */
     if (typeof token !== "string" || token.length < SIGNIN_TOKEN_LENGTH.min || token.length > SIGNIN_TOKEN_LENGTH.max)
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_TOKEN_MALFORMED", `a sign-in's token is ${SIGNIN_TOKEN_LENGTH.min} `
-        + `to ${SIGNIN_TOKEN_LENGTH.max} characters, and this was not one. Nothing was recorded.`);
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_TOKEN_MALFORMED", localize("ai-accounts.index.a_sign_ins_token_is", "a sign-in's token is {min} to {max} characters, and this was not one. Nothing was recorded.", { min: String(SIGNIN_TOKEN_LENGTH.min), max: String(SIGNIN_TOKEN_LENGTH.max) }));
     /* END DEC-49 REGION is-signin-token-shape */
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(`member:${id}`, "signin", token);
-    const now = Date.now();
+    const now = this.#nowMs();
     const since = stampSecond(now);
     const validUntil = AiAccounts.#validUntil(validFor, now);
     this.#tx(() => {
@@ -794,7 +813,7 @@ export class AiAccounts {
     try {
       const id = AiAccounts.#memberOf(member);
       if (id === null || !this.#connected(id)) return { ok: true, dropped: false };
-      const at = stampSecond();
+      const at = this.#at();
       this.#tx(() => {
         this.sql.exec(`UPDATE subscription_connections SET sealed=NULL, iv=NULL, valid_until=NULL, refused_at=? WHERE member_id=?`,
           at, id);
@@ -815,16 +834,13 @@ export class AiAccounts {
     const unsealable = this.#seal();
     if (unsealable) return { refusal: unsealable };
     const key = await this.#decrypt(`member:${id}`, "signin", r.sealed, r.iv);
-    return key === null ? { refusal: AiAccounts.#sealRefusal("the sign-in does not open under the seal secret of your "
-      + "group's Civicsmith, which has changed; its member signs in again. Nothing was used.") } : { key };
+    return key === null ? { refusal: AiAccounts.#sealRefusal(localize("ai-accounts.index.the_sign_in_does_not", "the sign-in does not open under the seal secret of your team's Civicsmith, which has changed; its member signs in again. Nothing was used.")) } : { key };
   }
 
   /* R19: SIGNIN_NOT_HELD, minted here alone: a sign-in account chosen whose token is not held. */
   static #signinNotHeld(member) {
     /* DEC-49 REGION is-signin-held */
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_HELD", "the Claude sign-in that serves this act is not held: "
-      + "it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. "
-      + "Nothing was used.", { member });
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_HELD", localize("ai-accounts.index.the_claude_sign_in_that", "the Claude sign-in that serves this act is not held: it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. Nothing was used."), { member });
     /* END DEC-49 REGION is-signin-held */
   }
 
@@ -863,8 +879,7 @@ export class AiAccounts {
     if (unsealable) return unsealable;
     const secret = await this.#decrypt(`member:${id}`, r.kind, r.sealed, r.iv);
     if (secret === null)
-      return AiAccounts.#sealRefusal("the reference does not open under the seal secret of your group's Civicsmith, "
-        + "which has changed; the member connects their account again. Nothing was used.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_reference_does_not_open", "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used."));
     return { ok: true, kind: r.kind, secret };
   }
 
@@ -911,7 +926,7 @@ export class AiAccounts {
 
   /* R5's record, and (T41; R16) its change beside it, naming it as its origin. */
   #groupKeyAct(act, detail, by) {
-    const at = stampSecond();
+    const at = this.#at();
     this.sql.exec(`INSERT INTO group_key_acts (act, detail, actor, at) VALUES (?,?,?,?)`, act, detail ?? null,
       AiAccounts.#memberOf(by), at);
     const [change, d] = AiAccounts.#legacyChange(act, detail ?? null);
@@ -921,14 +936,14 @@ export class AiAccounts {
   /* R5: one key for the group's copy, replacing any earlier one; off when first set (a replacement keeps the switch
      as it was). Answers `{ok, set_at}`, never the key. */
   async groupKeySet({ key = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "setting the group's Anthropic API key");
+    const bar = this.#adminBar(by, "setting the team's Anthropic API key");
     if (bar) return bar;
     const empty = AiAccounts.#noSecret(key);
     if (empty) return empty;
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(AiAccounts.#GROUP_KEY_OWNER, "apikey", key);
-    const setAt = stampSecond();
+    const setAt = this.#at();
     /* the key and its record (R5, R16) in one act */
     this.#tx(() => {
       const first = !this.#groupKeyFacts().held;
@@ -945,7 +960,7 @@ export class AiAccounts {
   /* R5, R9: removes the key, which switches it off and turns both its switches off; (T40; R9) every R14 switch of
      it; with none, `removed: false`. */
   groupKeyRemove({ by = null } = {}) {
-    const bar = this.#adminBar(by, "removing the group's Anthropic API key");
+    const bar = this.#adminBar(by, "removing the team's Anthropic API key");
     if (bar) return bar;
     const held = this.#groupKeyFacts().held;
     const off = USE_SWITCHES.map((k) => `${AiAccounts.#USE_COLUMN[k]}=${k === "explore" ? "'no'" : "0"}`).join(", ");
@@ -958,7 +973,7 @@ export class AiAccounts {
 
   /* R5: switches the key on or off; only `true` is on, and it is on only while a key is held. */
   groupKeySwitch({ on = false, by = null } = {}) {
-    const bar = this.#adminBar(by, "switching the group's Anthropic API key");
+    const bar = this.#adminBar(by, "switching the team's Anthropic API key");
     if (bar) return bar;
     const v = on === true ? 1 : 0;
     this.#tx(() => {
@@ -980,7 +995,7 @@ export class AiAccounts {
     if (id !== null && !isMachineIdentity(viewer) && this.membership.isAdministrator(id)) return { ok: true, ...f };
     if (id !== null && !isMachineIdentity(viewer) && this.#memberFacts(id)?.status === "active")
       return { ok: true, on: f.on };
-    return notAnAdmin(viewer ?? null, "reading the group's Anthropic API key");
+    return notAnAdmin(viewer ?? null, "reading the team's Anthropic API key");
   }
 
   /* R9 (N674; K1798): the group key's switches, for `ai-runs`' dispatch of a `level: "group"` account; an in-plane
@@ -1009,7 +1024,7 @@ export class AiAccounts {
     if (bar) return bar;
     const id = AiAccounts.#memberOf(member);
     const already = !!this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id);
-    if (!already) this.sql.exec(`INSERT INTO group_key_notices (member_id, seen_at) VALUES (?,?)`, id, stampSecond());
+    if (!already) this.sql.exec(`INSERT INTO group_key_notices (member_id, seen_at) VALUES (?,?)`, id, this.#at());
     return { ok: true, seen: true, already };
   }
 
@@ -1017,8 +1032,7 @@ export class AiAccounts {
   #noticeDue(id) {
     /* DEC-49 REGION is-group-key-notice-seen */
     if (this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id)) return null;
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "GROUP_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
-      + "questions go to Anthropic under the group's API account. Nothing was sent.", { member: id });
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "GROUP_KEY_NOTICE_DUE", localize("ai-accounts.index.this_member_has_not_yet", "this member has not yet read the notice that their questions go to Anthropic under the team's API account. Nothing was sent."), { member: id });
     /* END DEC-49 REGION is-group-key-notice-seen */
   }
 
@@ -1070,14 +1084,12 @@ export class AiAccounts {
     if (r.level === "project") {
       const key = await this.#decrypt(`project:${r.project}`, "apikey", r.row.sealed, r.row.iv);
       if (key === null)
-        return AiAccounts.#sealRefusal("the project's key does not open under the seal secret of your group's "
-          + "Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used.");
+        return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_projects_key_does_not", "the project's key does not open under the seal secret of your team's Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used."));
       return { ok: true, kind: "apikey", level: "project", project: r.project, key };
     }
     const key = await this.#decrypt(AiAccounts.#GROUP_KEY_OWNER, "apikey", r.row.sealed, r.row.iv);
     if (key === null)
-      return AiAccounts.#sealRefusal("the group's key does not open under the seal secret of your group's Civicsmith, "
-        + "which has changed; an administrator sets it again. Nothing was used.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
     return { ok: true, kind: "apikey", level: "group", key };
   }
 
@@ -1126,8 +1138,7 @@ export class AiAccounts {
     if (!(g && g.sealed && g.is_on)) return { refusal: this.#noAccount(id) };
     if (!AiAccounts.#usesOf(g)[use]) return { refusal: AiAccounts.#switchedOff("group", use) };
     if (this.#memberFacts(id)?.status !== "active")
-      return { refusal: AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the group's key serves only acts "
-        + "of active members. Nothing was used.") };
+      return { refusal: AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.the_teams_key_serves_only", "the team's key serves only acts of active members. Nothing was used.")) };
     const due = notice ? this.#noticeDue(id) : null;
     if (due) return { refusal: due };
     return { level: "group", kind: "apikey", row: g };
@@ -1185,9 +1196,7 @@ export class AiAccounts {
     /* DEC-49 REGION is-keep-away-reason */
     if ((turnOn && !given) || (given && length > KEEP_AWAY_REASON.max) || (reason !== null && reason !== undefined
         && typeof reason !== "string"))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", `keeping material away from the assistant is `
-        + `turned on only with a reason of ${KEEP_AWAY_REASON.min} to ${KEEP_AWAY_REASON.max} characters, which every `
-        + `member reads${given ? `; this one has ${length}` : ""}. Nothing was changed.`);
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", localize("ai-accounts.index.keeping_material_away_from_the", "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.", { min: String(KEEP_AWAY_REASON.min), max: String(KEEP_AWAY_REASON.max), v1: String(given ? localize("ai-accounts.index.this_one_has", "; this one has {length}", { length: String(length) }) : "") }));
     /* END DEC-49 REGION is-keep-away-reason */
     return null;
   }
@@ -1196,7 +1205,7 @@ export class AiAccounts {
      blank; a reason given with `on: false` is kept under the same bounds. Each refusal writes nothing. (T40; R22) It
      takes `uses`, the kinds of use the limit covers (all when absent). */
   aiKeepAwaySet({ on = false, uses = null, reason = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "keeping the group's material away from every assistant");
+    const bar = this.#adminBar(by, localize("ai-accounts.index.keeping_the_teams_material_away", "keeping the team's material away from every assistant"));
     if (bar) return bar;
     const turnOn = on === true;
     const noReason = AiAccounts.#keepAwayReason(turnOn, reason);
@@ -1205,7 +1214,7 @@ export class AiAccounts {
     if (u.fault) return u.fault;
     const given = typeof reason === "string" && reason.trim() !== "";
     this.#tx(() => {
-      const at = stampSecond();
+      const at = this.#at();
       this.sql.exec(`INSERT INTO ai_keep_away (is_on, reason, set_by, set_at, uses) VALUES (?,?,?,?,?)`, turnOn ? 1 : 0,
         given ? reason : null, AiAccounts.#memberOf(by), at, u.json);
       /* R16: the change beside it */
@@ -1240,9 +1249,8 @@ export class AiAccounts {
   static #keptAway(st) {
     /* DEC-49 REGION is-kept-away */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEPT_AWAY", st.on === true
-      ? "the group keeps its material away from every assistant, so no account was read or used. Nothing was sent."
-      : "whether the group keeps its material away from every assistant could not be read, so no account was read or "
-        + "used. Nothing was sent.", { keep_away: { reason: st.reason, set_by: st.set_by, set_at: st.set_at } });
+      ? localize("ai-accounts.index.the_team_keeps_its_material", "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent.")
+      : localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."), { keep_away: { reason: st.reason, set_by: st.set_by, set_at: st.set_at } });
     /* END DEC-49 REGION is-kept-away */
   }
 
@@ -1265,10 +1273,8 @@ export class AiAccounts {
     if (lim.on === false || (lim.on === true && !AiAccounts.#covers(lim, use))) return null;
     /* DEC-49 REGION is-project-kept-away */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_AI_KEPT_AWAY", lim.on === true
-      ? "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing "
-        + "was sent."
-      : "whether this project keeps its material away from the assistant could not be read, so no account was read or "
-        + "used. Nothing was sent.",
+      ? localize("ai-accounts.index.this_project_keeps_its_material", "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing was sent.")
+      : localize("ai-accounts.index.whether_this_project_keeps_its", "whether this project keeps its material away from the assistant could not be read, so no account was read or used. Nothing was sent."),
       { project: String(project), use: use ?? null, keep_away: { reason: lim.reason, set_by: lim.set_by, set_at: lim.set_at } });
     /* END DEC-49 REGION is-project-kept-away */
   }
@@ -1369,7 +1375,7 @@ export class AiAccounts {
 
   /* R10's record, and (T41; R16) its change beside it, naming it as its origin. */
   #projectAct(project, act, detail, by) {
-    const at = stampSecond();
+    const at = this.#at();
     this.sql.exec(`INSERT INTO project_account_acts (project_id, act, detail, actor, at) VALUES (?,?,?,?,?)`, project, act,
       detail ?? null, AiAccounts.#memberOf(by), at);
     const [change, d] = AiAccounts.#legacyChange(act, detail ?? null);
@@ -1388,7 +1394,7 @@ export class AiAccounts {
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(`project:${project}`, "apikey", key);
-    const setAt = stampSecond();
+    const setAt = this.#at();
     const actor = AiAccounts.#memberOf(by);
     this.#tx(() => {
       const held = this.#projectAccountRow(project);
@@ -1415,16 +1421,13 @@ export class AiAccounts {
     const parts = this.#participants(project);
     /* DEC-49 REGION is-project-sole-member */
     if (!parts || parts.some((x) => x.member !== id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_NOT_SOLE_MEMBER", "a member's own sign-in serves a project only "
-        + "while that member is its only participant, and this project has others (owners included); it can hold an "
-        + "Anthropic API key instead. Nothing was written.", { project });
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_NOT_SOLE_MEMBER", localize("ai-accounts.index.a_members_own_sign_in", "a member's own sign-in serves a project only while that member is its only participant, and this project has others (owners included); it can hold an Anthropic API key instead. Nothing was written."), { project });
     /* END DEC-49 REGION is-project-sole-member */
     /* DEC-49 REGION is-signin-connected */
     if (!this.#connected(id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_CONNECTED", "you are not connected through your Claude "
-        + "subscription, so there is no sign-in of yours to serve the project. Nothing was written.", { project });
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_CONNECTED", localize("ai-accounts.index.you_are_not_connected_through", "you are not connected through your Claude subscription, so there is no sign-in of yours to serve the project. Nothing was written."), { project });
     /* END DEC-49 REGION is-signin-connected */
-    const setAt = stampSecond();
+    const setAt = this.#at();
     this.#tx(() => {
       const held = this.#projectAccountRow(project);
       if (held && held.kind === "signin" && held.member_id === id)
@@ -1501,7 +1504,7 @@ export class AiAccounts {
     if (out) return out;
     const already = !!this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project);
     if (!already) this.sql.exec(`INSERT INTO project_key_notices (member_id, project_id, seen_at) VALUES (?,?,?)`, id, project,
-      stampSecond());
+      this.#at());
     return { ok: true, seen: true, already };
   }
 
@@ -1509,8 +1512,7 @@ export class AiAccounts {
   #projectNoticeDue(id, project) {
     /* DEC-49 REGION is-project-key-notice-seen */
     if (this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project)) return null;
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
-      + "questions go to Anthropic under this project's API account. Nothing was sent.",
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_KEY_NOTICE_DUE", localize("ai-accounts.index.this_member_has_not_yet_2", "this member has not yet read the notice that their questions go to Anthropic under this project's API account. Nothing was sent."),
       { member: id, project, project_name: this.#projectName(project), disclosure: this.#disclosure(project) });
     /* END DEC-49 REGION is-project-key-notice-seen */
   }
@@ -1556,7 +1558,7 @@ export class AiAccounts {
     if (u.fault) return u.fault;
     const given = typeof reason === "string" && reason.trim() !== "";
     this.#tx(() => {
-      const at = stampSecond();
+      const at = this.#at();
       this.sql.exec(`INSERT INTO project_keep_away (project_id, is_on, uses, reason, set_by, set_at) VALUES (?,?,?,?,?,?)`,
         project, turnOn ? 1 : 0, u.json, given ? reason : null, AiAccounts.#memberOf(by), at);
       /* R16: the change beside it */
@@ -1607,7 +1609,7 @@ export class AiAccounts {
       const { sealed, iv } = await this.#encrypt(String(owner), String(kind), String(text));
       return { ok: true, sealed, iv };
     } catch {
-      return AiAccounts.#sealRefusal("the key could not be sealed by your group's Civicsmith. Nothing was stored or read.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_key_could_not_be", "the key could not be sealed by your team's Civicsmith. Nothing was stored or read."));
     }
   }
 
@@ -1619,8 +1621,7 @@ export class AiAccounts {
     const text = typeof sealed === "string" && typeof iv === "string"
       ? await this.#decrypt(String(owner), String(kind), sealed, iv) : null;
     if (text === null)
-      return AiAccounts.#sealRefusal("the key does not open under the seal secret of your group's Civicsmith, which "
-        + "has changed; an administrator sets it again. Nothing was used.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
     return { ok: true, text };
   }
 
@@ -1683,12 +1684,12 @@ export const KEPT_AWAY_UNREADABLE = deepFreeze(new AiAccounts({ sql: null }).aiK
    `record`, `membership` and `sealSecret` are read on the first call only (R32: credentials' factory passes the seal
    secret it is given). */
 const OF = new WeakMap();
-export function aiAccountsOf(ctx, { record = null, membership = null, sealSecret = null } = {}) {
+export function aiAccountsOf(ctx, { record = null, membership = null, sealSecret = null, now = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let a = OF.get(storage);
   if (!a) {
     a = new AiAccounts({ sql: storage.sql, core: record ?? recordOf(ctx),
-                         membership: membership ?? membershipOf(ctx, { record }), sealSecret });
+                         membership: membership ?? membershipOf(ctx, { record }), sealSecret, now });
     OF.set(storage, a);
     a.start();
   }
@@ -1704,14 +1705,18 @@ export function aiAccountsOf(ctx, { record = null, membership = null, sealSecret
    routed; the retired `accountswitchset` and `groupswitchset` (R4, R9) are not in it. Which credential reaches each op
    is op-declarations' and control-plane's. */
 export function aiAccountsOps(a, url, body, env) {
+  /* R39 (K5192): the store's environment is the instance clock's source (`#nowMs`). `a` is the instance, or `credentials`'
+     instance, which answers through its `accounts`; both read the same clock. */
+  const owner = a instanceof AiAccounts ? a : a?.accounts;
+  if (owner && env && typeof env === "object") owner.env = env;
   const bodyField = (k) => (body && typeof body === "object" && !Array.isArray(body) && typeof body[k] === "string" ? body[k] : null);
   const by = () => url.searchParams.get("by");
   return {
     /* R18: the member's own act; `subscriptionConnected` is in-plane and not routed. */
     subscriptiondisconnect: () => a.subscriptionDisconnect({ member: url.searchParams.get("by"), by: url.searchParams.get("by") }),
-    /* R1, R2: the member's own account, `by` and `viewer` the stamps */
-    accountreferenceset: () => a.accountReferenceSet({ ...(body || {}), by: url.searchParams.get("by") }),
-    accountreferenceremove: () => a.accountReferenceRemove({ ...(body || {}), by: url.searchParams.get("by") }),
+    /* R1, R38: the member's own account. The door's stamped `by` is both the member and the act; a `member` in the body is not read. */
+    accountreferenceset: () => a.accountReferenceSet({ ...(body || {}), member: by(), by: by() }),
+    accountreferenceremove: () => a.accountReferenceRemove({ member: by(), by: by() }),
     accountreference: () => a.accountReferenceState({ member: url.searchParams.get("member"),
                                                       viewer: url.searchParams.get("viewer") }),
     /* R5, R6, R8: the group's key and its notice */
@@ -1746,3 +1751,38 @@ export function aiAccountsOps(a, url, body, env) {
                                                              viewer: url.searchParams.get("viewer") }),
   };
 }
+
+/* R35 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  subscriptiondisconnect: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.subscriptiondisconnect", "credential governance: a member clears their own subscription fact; the subject is a credential, not a bundle"),
+    fields: { accepts: [], requires: [] } },
+  groupkeynoticeseen: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("ai-accounts.declared.groupkeynoticeseen", "personal state, keyed by member: the notice of the group's key seen by them"),
+    fields: { accepts: [], requires: [] } },
+  groupkeyremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.groupkeyremove", "credential governance: the group's assistant key, an administrator's"),
+    fields: { accepts: [], requires: [] } },
+  groupkeyswitch: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("ai-accounts.declared.groupkeyswitch", "the copy's configuration: whether the group's assistant key is on; an administrator's, not an act on an object"),
+    fields: { accepts: ["on"], requires: [] } },
+  groupkeyset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.groupkeyset", "credential governance: the group's assistant key, an administrator's; never answered"),
+    fields: { accepts: ["key"], requires: ["key"] } },
+  accountreferenceset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.accountreferenceset", "credential governance: a member's own assistant account reference, never answered; the subject is a credential, not a bundle"),
+    fields: { accepts: ["kind","secret"], requires: ["kind","secret"] } },
+  accountreferenceremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.accountreferenceremove", "credential governance: a member removes their own account reference; the subject is a credential, not a bundle"),
+    fields: { accepts: [], requires: [] } },
+  accountusesset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("ai-accounts.declared.accountusesset", "the account's configuration: an owner sets one of its uses' switches (explore no, ask or yes); it moves no document, claim or grade"),
+    fields: { accepts: ["owner","switch","on"], requires: ["owner","switch","on"] } },
+  projectkeyset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectkeyset", "credential governance: an owner holds the project's API key, never answered; the subject is who pays for the assistant, not a bundle"),
+    fields: { accepts: ["project","key"], requires: ["project","key"] } },
+  projectsigninset: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectsigninset", "credential governance: the sole participant's own sign-in made the project's account; the subject is who pays for the assistant, not a bundle"),
+    fields: { accepts: ["project"], requires: ["project"] } },
+  projectaccountremove: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "credential", description: localize("ai-accounts.declared.projectaccountremove", "credential governance: an owner removes the project's account; the subject is who pays for the assistant, not a bundle"),
+    fields: { accepts: ["project"], requires: ["project"] } },
+  projectaccountswitch: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate", description: localize("ai-accounts.declared.projectaccountswitch", "the account's configuration: whether the project's account is on; an owner's; moves no document, claim or grade"),
+    fields: { accepts: ["project","on"], requires: ["project"] } },
+  projectaikeepaway: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("ai-accounts.declared.projectaikeepaway", "setting: whether a project keeps its material away from the assistant, an owner's act with a reason; moves no bundle"),
+    fields: { accepts: ["project","on","uses","reason"], requires: ["project"] } },
+  projectkeynoticeseen: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "caller-owned", description: localize("ai-accounts.declared.projectkeynoticeseen", "personal state, keyed (member, project): the notice of the project's account seen by them"),
+    fields: { accepts: ["project"], requires: ["project"] } },
+  aikeepaway: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("ai-accounts.declared.aikeepaway", "setting: whether the group keeps its material away from every assistant, an administrator's act with a reason; moves no bundle"),
+    fields: { accepts: ["on","uses","reason"], requires: [] } },
+});

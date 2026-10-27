@@ -10,6 +10,8 @@ import { scene, V, MACHINE, F, DOC } from "./fixture.mjs";
 import { Conformance, CONFORMANCE_CHECKS, FINDING_KINDS, ADOPTION_KEYS, ACCEPTED_SAYS, SOURCE_FACTS_UNRECORDED, VOID_SAYS,
          REASON_MAX, determinationVoided, noSuchDetermination, determinationSuperseded } from "../../../src/conformance/index.mjs";
 import { ACCEPTED_WORK_CHECKS } from "../../../src/accepted-work/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { caseCheckOfNoSuchCase } from "../case-check/fixtures.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -348,7 +350,7 @@ test("R36 R37 R9: the link is appended and read per standard (cured_by, curesOf)
   /* the cure superseded: not standing, with why; nothing moves */
   w.c.determine(compliant({ supersedes: cure.id, reason: "restated" }));
   const after = w.c.curesOf({ determination: target.id, viewer: V("pat") }).standards[0].link;
-  assert.deepEqual([after.link, after.cure_standing, after.cure_why], [l.link, false, "the curing determination has been superseded"]);
+  assert.deepEqual([after.link, after.cure_standing, after.cure_why], [l.link, false, word("conformance.curing_determination_superseded")]);
   /* unlink: R7's reason codes, a machine refused, an unknown link one answer */
   for (const reason of [undefined, "", "  "]) refused(nothing(w, () => w.c.cureUnlink({ link: l.link, reason, author: V("olive"), viewer: V("olive") })), "CONFORMANCE_NO_REASON");
   refused(nothing(w, () => w.c.cureUnlink({ link: l.link, reason: 7, author: V("olive"), viewer: V("olive") })), "CONFORMANCE_BAD_REASON");
@@ -397,8 +399,10 @@ test("R24 R31 R32: a pinned held check or accepted finding the viewer may not se
   const d = w.c.determine(input({ findings: [F, H, { ref, edition: 1 }] }));
   assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
   w.imports.hiddenFrom = [V("pat")];
+  /* case-check's real refusal to a viewer without standing, from its published fixture (K4990): the same bytes as an absent case */
+  const noSuchCase = caseCheckOfNoSuchCase().refusal;
   const fenced = new Proxy(w.caseCheck, { get: (t, p) => (p === "caseCheckOf"
-    ? (a) => (a.viewer === V("pat") ? { ok: false, reason: "NO_SUCH_CASE" } : t.caseCheckOf(a))
+    ? (a) => (a.viewer === V("pat") ? noSuchCase : t.caseCheckOf(a))
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const c = new Conformance({ storage: w.st, record: w.record, membership: w.membership, promotion: w.promotion, host: w.host,
     content: w.content, inquiry: w.k, strength: w.strength, reevaluation: w.reevaluation, publication: w.publication,

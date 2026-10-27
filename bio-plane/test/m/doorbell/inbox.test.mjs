@@ -11,6 +11,7 @@ import { DOORBELL_CHECKS } from "../../../src/doorbell/checks.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
+// fixtures-contract: answer-envelope door-helpers
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
 const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
   return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
@@ -240,7 +241,7 @@ const tallyRows = (rows) => rows(`SELECT day, refused, limit_reached FROM doorbe
 test("R19 R10 R17: every knock the doorbell turns away is counted by its UTC day, the envelope, a required argument, base64, empty, size, a weak secret and either rate limit, and every knockAttempt refusal; an admitted knock and a GET are not", async () => {
   const { send, c, rows } = setup();
   const day = new Date().toISOString().slice(0, 10);
-  await send(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) });
+  await send(null, { raw: "x".repeat(KNOCK.maxEnvelope + 1) });
   await send(null, { raw: "not json" });
   await send({ contentB64: "!!!" });
   await send({ contentText: "" });

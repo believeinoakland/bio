@@ -1,0 +1,382 @@
+/* control-plane (fix round 9, K4842; job 43; R-SEAM, R-ONE, R-CLOCK, R-NOLOAD): THE SECOND HALF OF THE SEAM, sections 10-13 of `t51-round9-seam.test.mjs` (plan 3b): a member's own acts
+   through the real plane under Miniflare, files made by the library's generators (`docgen`, `sheetgen`), counts, rows and fields, never a wall time (R-CLOCK).
+     10  G134a/d  a part kind found, cited and shown: every part of a DOCX / PPTX / ODT is a unit with its kind; `op=search` returns it with the kind; the citation names it; the Document page shows it
+     11  G135/G126  the states of a read come from the job row; the registrar with the real table (a kill between the put and the filing finds one job row)
+     12  G131a/g  the encoding matrix through the upload and the fetch
+     13  G130a-d  detection polyglots through the upload
+   Requirement ids in titles: R100, R120, R123, R125, R130-R135 (control-plane); the owners' ids ride beside the cause. A test whose provider's behaviour is not yet met is RED BY NAME (its title says so
+   and the record names the CHANGE asked of BOB): no assertion is weakened. */
+import "../../sandbox.mjs";
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
+import { PART_KIND_WORDS } from "../../../src/content/index.mjs";
+import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
+import { OPS } from "../../../src/op-declarations/index.mjs";
+import { boot } from "../interface-shell/harness.mjs";
+import { generate as docGenerate } from "../../docgen.mjs";
+import { makeKit } from "./r8-kit.mjs";
+import { world, scanOf } from "./r9-seam-reading.mjs";
+import { FAULT_SCRIPT } from "./r9-seam-documents.mjs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
+import zlib from "node:zlib";
+import { makeZip } from "../../make-zip.mjs";
+import { after } from "node:test";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const sha256 = (b) => createHash("sha256").update(b).digest("hex");
+const ENDED = ["finished", "final", "refused"];
+const MiB = 1024 * 1024;
+
+const enc = encodeURIComponent;
+let counter = 0;
+export const uniq = () => `${Date.now().toString(36)}${(counter++).toString(36)}`;
+const textOf = (v) => JSON.stringify(v || {});
+export const bytesOf = async (g) => Buffer.from(await g.bytes());
+
+/** the member's upload through the real door */
+export async function put(k, auth, bytes, { name, type, statement = name }) {
+  const res = await k.plane(`/api/?op=captureupload&statement=${enc(statement)}&name=${enc(name)}&type=${enc(type)}`, { method: "POST", headers: auth, body: bytes });
+  const body = await res.json();
+  return { status: res.status, up: body.result ?? body, headers: res.headers };
+}
+/** the capture screen's promotion of the document the upload answered, under `project` ("" for none) */
+export async function fileIt(k, auth, up, { title, project = "" }) {
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(k.screenCall(auth), { doc: up.document, title, locator: up.document.locator, project });
+  assert.equal(made.refused, undefined, "promoted: " + JSON.stringify(made).slice(0, 400));
+  return made.bundleId;
+}
+/** the reading by digest, waited for until it has ended (whole, or ended with a reason) */
+export async function readEnded(k, auth, sha, ms = 240000) {
+  let last = null;
+  const got = await k.until(async () => {
+    last = (await k.get(auth, { op: "reading", sha256: sha })).result;
+    const c = last && last.completeness;
+    return last && last.found === true && last.more !== true && c && (c.state === "whole" || c.failure === "final") ? last : null;
+  }, ms, 2000);
+  assert.ok(got, "the reading ended: " + textOf(last && { found: last.found, more: last.more, completeness: last.completeness, job: last.job }).slice(0, 500));
+  return got;
+}
+/** every text unit of a reading, paged by `next` */
+export async function allUnits(k, auth, sha) {
+  let r = (await k.get(auth, { op: "reading", sha256: sha })).result;
+  const units = [...(r.text_units || [])];
+  for (let i = 0; i < 400 && r && r.next != null; i++) {
+    r = (await k.get(auth, { op: "reading", sha256: sha, after: String(r.next) })).result;
+    units.push(...(r.text_units || []));
+  }
+  return units;
+}
+/** `op=search` for a passage by one word (the generators' unit ids are distinct words) */
+export const passageHits = async (k, auth, word) => ((await k.get(auth, { op: "search", q: `passage:"${word}"` })).result || {}).hits || [];
+/** the member's find-in-this-document */
+export const findIn = async (k, auth, sha, term) => { const f = (await k.post(auth, "findin", { scope: { capture: sha }, kinds: ["term"], term })).body; return ((((f && f.result) || f || {}).kinds || [])[0] || {}).items || []; };
+
+/* the closed list of a part's kind (reading-pipeline R47) by the generator's part name */
+export const KIND_OF = Object.freeze({ body: "body", footnote: "footnote", endnote: "endnote", header: "header", footer: "footer", comment: "comment", deleted: "tracked_deletion", textbox: "text_box",
+  notes: "speaker_note", master: "master_text", hidden: "body" });
+
+export function sections(kit, counting) {
+  void counting;
+  const k = kit;
+  const owner = (h) => k.ownerOf(h).then((o) => o.auth);
+  const owner0 = (kk) => kk.ownerOf("r9p-bea").then((o) => o.auth);
+
+  /* one document of `recipe`, uploaded, filed under a project of its own, its reading waited for */
+  async function filedDoc(handle, recipe, name) {
+    const auth = await owner(handle);
+    const g = docGenerate(recipe);
+    const project = await k.projectOf(auth, `R9 §10 ${recipe.kind} ${uniq()}`);
+    const { up } = await put(k, auth, await bytesOf(g), { name, type: g.type });
+    assert.equal(up.ok, true, JSON.stringify(up).slice(0, 400));
+    const bundle = await fileIt(k, auth, up, { title: name, project });
+    const reading = await readEnded(k, auth, up.capture.sha256);
+    return { auth, g, up, bundle, project, sha: up.capture.sha256, reading, units: await allUnits(k, auth, up.capture.sha256) };
+  }
+
+  /* ======================================== §10 · G134a, G134d · a part kind found, cited and shown ======================================== */
+
+  /* each truth unit of a generated document: its words are a unit of the reading with the kind the part names, and `op=search` returns the passage with that kind */
+  async function partsFoundWithTheirKinds(d) {
+    const wrong = [];
+    for (const u of d.g.truth.all()) {
+      const want = KIND_OF[u.part];
+      const unit = d.units.find((x) => String(x.text).includes(u.id) && x.kind === want);
+      if (!unit) wrong.push(`${u.part}: no unit of kind ${want} holds ${u.id} (kinds with it: ${d.units.filter((x) => String(x.text).includes(u.id)).map((x) => x.kind)})`);
+      const found = await k.until(async () => { const h = await passageHits(k, d.auth, u.id); return h.length ? h : null; }, 90000, 2000);
+      if (!found) { wrong.push(`${u.part}: op=search finds nothing for ${u.id}`); continue; }
+      const hit = found.find((h) => h.bundle_id === d.bundle) || found[0];
+      if (hit.kind !== want) wrong.push(`${u.part}: the hit says kind ${hit.kind}, wanted ${want}`);
+    }
+    return wrong;
+  }
+
+  test("R9 seam §10 (G134a, G134d, DOCS O4; R123 R135 R100): a DOCX with a footnote, endnote, header, footer, comment, tracked deletion and text box: every part is a unit with its kind, found by `op=search` with that kind, and the reading is whole", { timeout: 900000 }, async () => {
+    const d = await filedDoc("r9p-ann", { kind: "docx", seed: 9134, size: { units: 4 }, parts: ["footnote", "endnote", "header", "footer", "comment", "deleted", "textbox"] }, "parts.docx");
+    assert.equal(d.reading.completeness.state, "whole", textOf(d.reading.completeness));
+    assert.deepEqual(await partsFoundWithTheirKinds(d), []);
+  });
+
+  test("R9 seam §10 (G134a, G134d, DOCS P3; R123 R135): a PPTX with speaker notes, master text and a hidden slide: the notes are `speaker_note`, the master `master_text`, the hidden slide is read", { timeout: 900000 }, async () => {
+    const d = await filedDoc("r9p-ann", { kind: "pptx", seed: 9135, size: { units: 3 }, parts: ["notes", "master", "hidden"] }, "parts.pptx");
+    assert.deepEqual(await partsFoundWithTheirKinds(d), []);
+  });
+
+  test("R9 seam §10 (G134a, G134d, DOCS D1; R123 R135): an ODT with a footnote, a header and a comment: each is a unit of its own kind, and the footnote's words are not fused onto its paragraph", { timeout: 900000 }, async () => {
+    const d = await filedDoc("r9p-ann", { kind: "odt", seed: 9136, size: { units: 4 }, parts: ["footnote", "header", "comment"] }, "parts.odt");
+    assert.deepEqual(await partsFoundWithTheirKinds(d), []);
+    const foot = d.g.truth.unit(5).id;
+    const fused = d.units.filter((u) => u.kind === "body" && String(u.text).includes(foot));
+    assert.deepEqual(fused.map((u) => String(u.text).slice(0, 60)), [], "no body unit holds the footnote's words");
+  });
+
+  test("R9 seam §10 (G134d, DOCS O4; R123 R135) (red until the leg check accepts a `doc-part` extent: citing a footnote is refused `BASIS_REFUSED` `CONTENT_EXTENT_UNREADABLE` today, \"extent kind 'doc-part' is not one of ...\"): the footnote found is cited in a question, and the content row's reference names the kind", { timeout: 900000 }, async () => {
+    const d = await filedDoc("r9p-ann", { kind: "docx", seed: 9137, size: { units: 3 }, parts: ["footnote"] }, "cited.docx");
+    const cs = k.screenCall(d.auth);
+    const question = await k.questionOf(d.auth, d.project, "Which figure does the footnote give?");
+    const foot = d.g.truth.unit(4).id;
+    const item = (await findIn(k, d.auth, d.sha, foot))[0];
+    assert.ok(item, "the footnote is found in its document");
+    const cited = await cs.call("cite", { body: { project: question, role: "supports", found: item } });
+    const result = k.R(cited);
+    assert.notEqual(result.ok, false, "the citation of a footnote is accepted: " + textOf(result).slice(0, 500));
+    const again = (await findIn(k, d.auth, d.sha, foot))[0];
+    assert.ok(again && again.content_id, "the cited footnote has a content row: " + textOf(again).slice(0, 300));
+    const row = k.R(await k.get(d.auth, { op: "content", id: again.content_id }));
+    assert.ok(textOf(row).includes(PART_KIND_WORDS.footnote), "the citation's reference names the kind: " + textOf(row).slice(0, 500));
+  });
+
+  test("R9 seam §10 (G134d, DOCS O4; R123 R135): the Document page shows the kind beside a footnote's words, and the body's beside the body's, from the plane's own reading", { timeout: 900000 }, async () => {
+    const d = await filedDoc("r9p-ann", { kind: "docx", seed: 9138, size: { units: 3 }, parts: ["footnote"] }, "page.docx");
+    const plane = Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
+      const r = await k.plane(`/api/?${new URLSearchParams({ ...req.query, op })}`, { method: req.body === undefined ? "GET" : "POST", headers: { ...d.auth, "content-type": "application/json" },
+        ...(req.body === undefined ? {} : { body: JSON.stringify(req.body) }) });
+      return { status: r.status, json: await r.json().catch(() => null) };
+    }]));
+    const p = await boot({ screens: SCREENS, plane, path: "/app/document/" + d.bundle });
+    const main = () => p.doc.getElementById("cs-main");
+    const until = async (done, ms = 90000) => { const end = Date.now() + ms; for (;;) { await p.settle(20); if (done()) return true; if (Date.now() > end) return false; await k.later(100); } };
+    assert.ok(await until(() => !!main().querySelector("[data-text-state]")), "the Document page is drawn");
+    const drawn = new Set(main().querySelectorAll("[data-part-kind]").map((t) => t.getAttribute("data-part-kind")));
+    assert.ok(drawn.has("footnote") && drawn.has("body"), `the page shows the kinds: ${[...drawn]}`);
+    const foot = d.g.truth.unit(4).id;
+    const quote = main().querySelectorAll("blockquote").find((b) => String(b.textContent).includes(foot));
+    assert.ok(quote, "the footnote's words are drawn");
+    assert.equal(quote.querySelector("[data-part-kind]").getAttribute("data-part-kind"), "footnote", "with its kind beside them");
+  });
+
+  /* ======================================== §11 · G135a-f, G126 · the states of a read; the registrar with the real table ======================================== */
+
+  const faultKits = [];
+  after(() => { for (const f of faultKits) { try { f.mf.dispose(); } catch { /* gone */ } } });
+  /* a kit whose R2 `put` of a named digest fails `times` times (the platform's seam; the plane under it is the real one) */
+  function faultKit(tag, cfg) {
+    let f;
+    f = makeKit({ tag, bindings: { DAEMON_TOKEN: `dmn-${tag}-0123456789abcdef` }, serviceBindings: { SELF: (req) => f.mf.dispatchFetch(req) } });
+    f.ready = f.mf.setOptions({ ...f.OPTIONS, script: FAULT_SCRIPT(cfg), scriptPath: join(HERE, "r9-fault-entry.worker.mjs") });
+    faultKits.push(f);
+    return f;
+  }
+  const readingRows = async (kk, sha) => (kk.R(await kk.get(await kk.founder(), { op: "owedwork", sha })).owed || []).filter((r) => r.kind === "reading");
+  /* a text of about 4 MB: the smallest size the door defers to the job table (the plane's head-of-line case) */
+  const bigText = (tag) => { const line = (i) => `line ${String(i).padStart(6, "0")} ${tag} ` + "council-minutes ".repeat(5).padEnd(80, ".") + "\n"; const out = []; for (let i = 0; i < 40000; i++) out.push(line(i)); out.push("ENDMARKER" + tag); return Buffer.from(out.join("")); };
+
+  test("R9 seam §11 (G126, G126c; R130 R123): the real job table: an upload whose first put fails registers no row (the row commits or rolls back with the filing), the retry registers exactly one `reading` row keyed by the whole digest, and the same bytes again leave one", { timeout: 900000 }, async () => {
+    const bytes = bigText(uniq()), sha = sha256(bytes);
+    const f = faultKit(`r9p11a`, { putFail: [{ sha, times: 1 }] });
+    await f.ready;
+    const auth = await owner0(f);
+    const first = await put(f, auth, bytes, { name: "minutes.txt", type: "text/plain" });
+    assert.notEqual(first.up.reading_pending, true, "a filing that failed promises no reading: " + textOf({ ...first.up, document: undefined }).slice(0, 300));
+    assert.deepEqual((await readingRows(f, sha)).map((r) => r.job_state), [], "no row for a capture the filing did not keep");
+    const second = await put(f, auth, bytes, { name: "minutes.txt", type: "text/plain" });
+    assert.equal(second.up.ok, true, textOf(second.up).slice(0, 300));
+    assert.equal(second.up.reading_pending, true, "deferred to the job table");
+    const rows = await readingRows(f, sha);
+    assert.deepEqual(rows.map((r) => [r.sha, r.job_state]), [[sha, "queued"]], "exactly one row, keyed by the whole digest, queued");
+    const third = await put(f, auth, bytes, { name: "minutes.txt", type: "text/plain" });
+    assert.equal(third.up.existed, true, "the same bytes again are held already");
+    assert.equal((await readingRows(f, sha)).length, 1, "and still one row");
+  });
+
+  test("R9 seam §11 (G135f, G126; R135 R130 R133) (red until the finished row carries the finishing pass's counters: it states written 0 and failed 1 `NO_HOME` for a read that wrote every unit): a scan read to its end: `op=reading`'s job state is finished, nothing owed, and its counters are the reading's own", { timeout: 900000 }, async () => {
+    const w = world({ tag: "r9p11b" });
+    const ann = await w.person("r9p-ann");
+    const bytes = Buffer.from(scanOf(8, uniq())), sha = w.sha(bytes);
+    const up = await w.upload(ann, bytes, { name: "scan.pdf", type: "application/pdf" });
+    await w.file(ann, up, "scan");
+    let r = null;
+    const ended = await w.until(async () => { await w.tick(1); r = await w.reading(ann, sha); return r && r.job && ENDED.includes(r.job.state) && r.completeness && r.completeness.state === "whole" ? r : null; }, 240000, 500);
+    assert.ok(ended, "the read ended: " + textOf({ completeness: r && r.completeness, job: r && r.job }).slice(0, 500));
+    assert.equal(r.job.owed, 0, "nothing is owed");
+    assert.deepEqual([r.job.written, r.job.failed], [r.completeness.counters.written, 0], `the row's counters are the reading's: ${textOf(r.job)} against ${textOf(r.completeness.counters)}`);
+    assert.deepEqual((await w.owed(sha)).rows.filter((x) => ["reading", "ocr"].includes(x.kind)), [], "no row is left open");
+  });
+
+  test("R9 seam §11 (G135a, G135e, DOCS R1/R2/R3; R135 R100 R123) an RTF, an email and a legacy Word file the member filed are each stated by their kind, final, and the job row ends (the first pass leaves it `queued` with `failed` 1 `NO_HOME`; the test waits for the alarm's pass)", { timeout: 900000 }, async () => {
+    const auth = await owner0(k);
+    const cases = [["rtf", "a.rtf", "text/rtf", Buffer.from("{\\rtf1\\ansi A line of RTF " + uniq() + "}")],
+      ["email", "a.eml", "message/rfc822", Buffer.from("From: a@b.c\r\nSubject: " + uniq() + "\r\n\r\nbody\r\n")],
+      ["legacy_word", "a.doc", "application/msword", Buffer.concat([Buffer.from([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]), Buffer.from(uniq().repeat(60))])]];
+    const bad = [];
+    for (const [kind, name, type, body] of cases) {
+      const { up } = await put(k, auth, body, { name, type });
+      await fileIt(k, auth, up, { title: name });
+      const sha = up.capture.sha256;
+      const r = await k.until(async () => { const x = (await k.get(auth, { op: "reading", sha256: sha })).result; return x && x.found && x.job && x.job.state !== "queued" && x.job.state !== null ? x : (x && x.found && x.job && x.job.state === null ? x : null); }, 120000, 2000);
+      const reading = (r && r.reading) || up.document.reading || {};
+      if (!(reading.failure === "final" && reading.reason === "UNSUPPORTED_FORMAT" && reading.kind === kind)) bad.push(`${kind}: not stated by its kind: ${textOf({ f: reading.failure, r: reading.reason, k: reading.kind })}`);
+      if (!r || !(r.job.state === null || ENDED.includes(r.job.state))) bad.push(`${kind}: the job row did not end: ${textOf(r && r.job)}`);
+    }
+    assert.deepEqual(bad, []);
+  });
+
+  /* ======================================== §12 · G131a, G131g · the encoding matrix, upload and fetch ======================================== */
+
+  const ENCODINGS = ["latin-1", "windows-1252", "utf-16le-bom", "utf-16be-bom", "utf-8-bom", "bad-byte"];
+  /* a decode is judged by its units: every truth unit checked (the first, a middle and the last) is in a unit's text, and no unit holds U+FFFD or NUL unless the reading says it is not whole */
+  function judgeDecode(g, units, reading) {
+    const bad = [], truth = g.truth, n = truth.units, spot = [1, Math.ceil(n / 2), n];
+    const stated = reading.reading && reading.reading.reason === "ENCODING_UNSUPPORTED";
+    const whole = reading.completeness && reading.completeness.state === "whole";
+    if (stated) return bad;   /* ENCODING_UNSUPPORTED {name} is an allowed answer: the truth was named, never guessed */
+    const torn = units.filter((u) => /[\uFFFD\u0000]/.test(String(u.text)));
+    const counted = (reading.reading && reading.reading.encoding_replaced) || 0;   /* the tolerance: a replacement is allowed when the reading counts it (G131g) */
+    if (torn.length && whole && counted < torn.length) bad.push(`U+FFFD or NUL in ${torn.length} unit(s) of a whole reading that counts ${counted} replaced`);
+    const damaged = truth.badByte ? truth.badByte.n : null;
+    for (const i of spot) if (i !== damaged && !units.some((u) => String(u.text).includes(truth.unit(i).text))) bad.push(`unit ${i} (${truth.unit(i).text}) is not in the reading`);
+    return bad;
+  }
+  async function decodeOnce(kk, auth, g, { name, type, path, project }) {
+    const bytes = await bytesOf(g);
+    let up;
+    if (path === "upload") up = (await put(kk, auth, bytes, { name, type })).up;
+    else {
+      kk.serve(name, bytes, { type });
+      const got = await kk.acquire(auth, { locator: `https://www.example.gov/files/${name}`, project });
+      up = { document: (got.body.result || got.body).document, capture: { sha256: sha256(bytes) } };
+    }
+    assert.ok(up.document, `${path}: a document is answered`);
+    await fileIt(kk, auth, up, { title: name, project });
+    const sha = sha256(bytes);
+    const reading = await readEnded(kk, auth, sha);
+    return { reading, units: await allUnits(kk, auth, sha) };
+  }
+  for (const path of ["upload", "fetch"]) {
+    test(`R9 seam §12 (G131g, DOCS T7, ${path}; R100 R123 R135): each encoding of a text, declared in the type or not: the text equals the truth, or the reading says \`ENCODING_UNSUPPORTED\`; never U+FFFD or NUL in a whole reading`, { timeout: 1200000 }, async () => {
+      const auth = await owner(`r9p-enc-${path}`);
+      const project = await k.projectOf(auth, `R9 §12 ${path} ${uniq()}`);
+      const wrong = [];
+      let seed = path === "upload" ? 9300 : 9400;
+      for (const encoding of ENCODINGS) for (const declared of [true, false]) {
+        if (encoding === "bad-byte" && !declared) continue;   /* its own test below */
+        const g = docGenerate({ kind: "text", seed: seed++, size: { units: 60 }, encoding, charset: declared ? "header" : "none" });
+        const name = `enc-${encoding}-${declared ? "d" : "u"}-${path}.txt`;
+        const got = await decodeOnce(k, auth, g, { name, type: declared ? g.type : "text/plain", path, project });
+        for (const w of judgeDecode(g, got.units, got.reading)) wrong.push(`${encoding} ${declared ? "declared" : "undeclared"}: ${w}`);
+      }
+      assert.deepEqual(wrong, []);
+    });
+  }
+
+  test("R9 seam §12 (G131a, SHEET C27/J-17; R100 R123 R135): a UTF-8 CSV with a curly quote, accented letters, CJK and an emoji in every row, past the block cut, is read without a lost character: the first, a middle and the last row hold their characters and no unit holds U+FFFD", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-csv");
+    const tag = uniq();
+    const rows = Array.from({ length: 6000 }, (_, i) => `${i + 1},Cr\u00e9dit \u00c9 \u00d1 \u2019 \u6f22\u5b57 \ud83d\ude00 ${tag}r${i + 1},note ${i + 1}`);
+    const bytes = Buffer.from(["id,name,note", ...rows].join("\n") + "\n", "utf8");
+    assert.ok(bytes.length > 128 * 1024, `past the block cut (${bytes.length} B)`);
+    const { up } = await put(k, auth, bytes, { name: `c27-${tag}.csv`, type: "text/csv" });
+    await fileIt(k, auth, up, { title: "c27" });
+    await readEnded(k, auth, up.capture.sha256);
+    const text = (await allUnits(k, auth, up.capture.sha256)).map((u) => String(u.text)).join("\n");
+    const lost = [1, 3000, 6000].filter((i) => !text.includes(`Cr\u00e9dit \u00c9 \u00d1 \u2019 \u6f22\u5b57 \ud83d\ude00 ${tag}r${i}`));
+    assert.deepEqual(lost, [], "rows whose characters were lost");
+    assert.ok(!/[\uFFFD\u0000]/.test(text), "no replacement character or NUL in any unit");
+  });
+
+  for (const path of ["upload", "fetch"]) {
+    test(`R9 seam §12 (G131g, DOCS T7, ${path}) (red until the detection decodes an undeclared UTF-8 text with one invalid byte as UTF-8 with the replacement counted, or names it: it is decoded wholly as windows-1252, \`encoding_assumed\`, \`œuvre\` read as mojibake): the text with a bad byte and no declared charset equals the truth or is named \`ENCODING_UNSUPPORTED\``, { timeout: 900000 }, async () => {
+      const auth = await owner(`r9p-bb-${path}`);
+      const project = await k.projectOf(auth, `R9 §12 bb ${path} ${uniq()}`);
+      const g = docGenerate({ kind: "text", seed: path === "upload" ? 9501 : 9601, size: { units: 60 }, encoding: "bad-byte", charset: "none" });
+      const got = await decodeOnce(k, auth, g, { name: `bb-${path}.txt`, type: "text/plain", path, project });
+      assert.deepEqual(judgeDecode(g, got.units, got.reading), []);
+    });
+  }
+
+  /* ======================================== §13 · G130a-d · detection polyglots through the upload ======================================== */
+
+  const cat = (...a) => Buffer.concat(a.map((x) => Buffer.from(x)));
+  const u32 = (n) => { const b = Buffer.alloc(4); b.writeUInt32BE(n); return b; };
+  const chunk = (t, d) => cat(u32(d.length), Buffer.from(t), d, u32(zlib.crc32(cat(Buffer.from(t), d))));
+  /* a 1 x 1 PNG, with a tEXt chunk holding `text` when given; a JPEG shell (SOI, a COM segment holding `text`, EOI) -- // MOVE: imggen makes neither a polyglot nor a JPEG */
+  const pngWith = (text) => cat([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], chunk("IHDR", cat(u32(1), u32(1), [8, 0, 0, 0, 0])), text ? chunk("tEXt", Buffer.from("Comment\0" + text)) : "", chunk("IDAT", zlib.deflateSync(Buffer.from([0, 200]))), chunk("IEND", Buffer.alloc(0)));
+  const jpegWith = (text) => cat([0xFF, 0xD8, 0xFF, 0xFE, 0, text.length + 2], Buffer.from(text), [0xFF, 0xD9]);
+  const formatOf = (up) => (up.document && up.document.profile && up.document.profile.format && up.document.profile.format.format) || null;
+  const shapeOf = (up) => { const r = up.document.reading || {}; return { failure: r.failure ?? null, reason: r.reason ?? null, container: r.text_container ?? null, tier: r.text_tier ?? null }; };
+
+  test("R9 seam §13 (G130a, SCAN A12; R100 R123): a JPEG with `%PDF-1.4` in a COM segment, a JPEG with `<html` in one, and a PNG with `%PDF-` in a tEXt chunk are profiled and read as the image each is, exactly as the same image with nothing in the comment is", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-poly");
+    const t = uniq();
+    const cases = [["jpg", "image/jpeg", (x) => jpegWith(x), `%PDF-1.4 ${t}`], ["jpg", "image/jpeg", (x) => jpegWith(x), `<html><body>${t}`], ["png", "image/png", (x) => pngWith(x), `%PDF-1.4 ${t}`]];
+    const bad = [];
+    for (const [ext, type, make, hostile] of cases) {
+      const control = (await put(k, auth, make(`plain ${t} ${hostile.length}`), { name: `plain.${ext}`, type })).up;
+      const poly = (await put(k, auth, make(hostile), { name: `poly.${ext}`, type })).up;
+      if (formatOf(poly) !== formatOf(control)) bad.push(`${ext} with ${hostile.slice(0, 8)}: profiled ${formatOf(poly)}, the plain image ${formatOf(control)}`);
+      if (JSON.stringify(shapeOf(poly)) !== JSON.stringify(shapeOf(control))) bad.push(`${ext} with ${hostile.slice(0, 8)}: read as ${JSON.stringify(shapeOf(poly))}, the plain image ${JSON.stringify(shapeOf(control))}`);
+    }
+    assert.deepEqual(bad, []);
+  });
+
+  test("R9 seam §13 (G130b, SHEET C23/C24/C32/C33; R100 R123 R135) (red until csv-reader's `isDelimitedText` is the one decision: the C01 bytes declared `application/vnd.ms-excel` or `application/octet-stream` end `final`, not read, and a `.tsv` declared `text/plain` is read as prose): delimited text declared by any of the types the plane accepts is read as a sheet with cells", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-types");
+    const t = uniq();
+    const csv = (n) => Buffer.from(["h1,h2,h3", ...Array.from({ length: 50 }, (_, i) => `x${n}${t}${i},y${i},z${i}`)].join("\n") + "\n");
+    const tsv = (n) => Buffer.from(Array.from({ length: 50 }, (_, i) => `a${n}${t}${i}\tb${i}\tc${i}`).join("\n") + "\n");
+    const cases = [["csv", "text/csv", csv(0), "c.csv"], ["csv", "application/vnd.ms-excel", csv(1), "c.csv"], ["csv", "application/octet-stream", csv(2), "c.csv"],
+      ["tsv", "text/tab-separated-values", tsv(3), "t.tsv"], ["tsv", "text/plain", tsv(4), "t.tsv"]];
+    const bad = [];
+    for (const [kind, type, bytes, name] of cases) {
+      const { up } = await put(k, auth, bytes, { name, type });
+      await fileIt(k, auth, up, { title: `${name} ${type}` });
+      const r = await k.until(async () => { const x = (await k.get(auth, { op: "reading", sha256: up.capture.sha256 })).result; return x && x.found && x.completeness ? x : null; }, 90000, 1500);
+      const first = r && r.text_units && r.text_units[0];
+      if (!(first && first.extent && first.extent.kind === "sheet-range")) bad.push(`${kind} declared ${type}: not read as a sheet (${r ? JSON.stringify({ comp: r.completeness.state, failure: r.completeness.failure ?? null, extent: first && first.extent }) : "no reading"})`);
+    }
+    assert.deepEqual(bad, []);
+  });
+
+  test("R9 seam §13 (G130c, DOCS O9; R100 R123): a DOCX of 8 MiB - 1, 8 MiB and 8 MiB + 1 bytes is stored with `profile.format` docx, never undetermined", { timeout: 1200000 }, async () => {
+    const auth = await owner("r9p-big");
+    const bad = [];
+    for (const [i, bytes] of [8 * MiB - 1, 8 * MiB, 8 * MiB + 1].entries()) {
+      const g = docGenerate({ kind: "docx", seed: 9700 + i, size: { units: 6, bytes } });
+      const body = await bytesOf(g);
+      if (Math.abs(body.length - bytes) > 4096) { bad.push(`the generator made ${body.length} B for ${bytes}`); continue; }
+      const { up } = await put(k, auth, body, { name: `big${i}.docx`, type: g.type });
+      if (up.ok !== true) { bad.push(`${bytes}: ${textOf(up).slice(0, 200)}`); continue; }
+      if (formatOf(up) !== "docx") bad.push(`${body.length} B: profile.format is ${formatOf(up)}, not docx`);
+    }
+    assert.deepEqual(bad, []);
+  });
+
+  test("R9 seam §13 (G130d, DOCS O11; R100 R123): a macro-enabled DOCX with `%PDF-1.7` in its first KiB is profiled as the Word package it is, not a PDF, and is read: its paragraph is found", { timeout: 900000 }, async () => {
+    const auth = await owner("r9p-docm");
+    const t = uniq();
+    const te = (x) => Buffer.from(x);
+    const docm = (lead) => makeZip([{ name: "[Content_Types].xml", method: 0, data: te(`${lead}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.ms-word.document.macroEnabled.main+xml"/></Types>`) },
+      { name: "_rels/.rels", data: te('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>') },
+      { name: "word/document.xml", data: te(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>polyglot paragraph ${t}</w:t></w:r></w:p></w:body></w:document>`) },
+      { name: "word/vbaProject.bin", data: Buffer.alloc(300, 1) }]);
+    const type = "application/vnd.ms-word.document.macroEnabled.12";
+    const control = (await put(k, auth, docm(`<!-- ${t} plain -->`), { name: "plain.docm", type })).up;
+    const { up } = await put(k, auth, docm(`%PDF-1.7 <!-- ${t} -->`), { name: "poly.docm", type });
+    assert.equal(formatOf(up), formatOf(control), `profiled ${formatOf(up)}, the plain package ${formatOf(control)}`);
+    await fileIt(k, auth, up, { title: "poly" });
+    const r = await readEnded(k, auth, up.capture.sha256);
+    assert.ok((await allUnits(k, auth, up.capture.sha256)).some((u) => String(u.text).includes(`polyglot paragraph ${t}`)), "the paragraph is found: " + textOf(r.completeness).slice(0, 200));
+  });
+}

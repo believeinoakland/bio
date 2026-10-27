@@ -1,0 +1,370 @@
+screen ops (SCREENS ∪ registry acts) 369; declared 0; undeclared 369
+accountdrafts	screens-publish/case-editor registry/case-editor
+accountpropose	screens-publish/case-editor registry/case-editor
+accountreferenceremove	screens-settings/connect registry/connect
+accountreferenceset	screens-settings/connect registry/connect
+accountusesset	screens-settings/teamai screens-settings/connect screens-inquiry/projectai registry/connect registry/teamai registry/projectai
+acquire	screens-intake/capture screens-investigate/money registry/capture registry/money
+actioncorrespond	screens-action/action registry/action
+actioncreate	screens-investigate/money screens-action/request screens-action/actionnew screens-action/dash-action registry/dash-action registry/money registry/actionnew registry/request
+actionhold	screens-action/hold registry/hold
+actionholdrelease	screens-action/hold registry/hold
+actioninquiry	screens-action/action
+actionlaws	screens-action/request screens-action/action registry/request registry/action
+actionlawspropose	screens-action/action registry/action
+actionmove	screens-daily/queue screens-action/action registry/queue registry/action
+actionpressure	screens-action/action registry/action
+actionrisktier	screens-action/action registry/action
+actionscope	screens-action/action registry/action
+actionstake	screens-action/start-send
+addparticipant	screens-investigate/timeline registry/timeline
+addressedrecord	registry/matter
+addresseesuggest	screens-action/request screens-action/actionnew registry/actionnew registry/request
+addworkbook	screens-investigate/calculation registry/calculation
+adminendorse	screens-settings/members registry/home registry/members registry/queue
+adminremove	screens-settings/members registry/members
+adoptversion	screens-daily/home screens-daily/queue screens-inquiry/dash-project screens-inquiry/document registry/home registry/dash-project registry/queue registry/document
+aikeepaway	screens-entry/setup screens-settings/teamai registry/setup registry/teamai
+ailimitset	screens-entry/setup screens-settings/teamai screens-settings/connect screens-inquiry/projectai registry/setup registry/connect registry/teamai registry/projectai
+airunclose	screens-inquiry/question screens-inquiry/assistant registry/question registry/assistant
+airunopen	screens-inquiry/question screens-inquiry/assistant registry/question registry/assistant
+aliaswithdraw	screens-investigate/person
+archivelist	screens-intake/archive registry/archive
+ask	screens-daily/answers registry/answers registry/assistant
+aspirationdeadend	registry/objective
+aspirationdeclare	registry/objective
+aspirationdepart	registry/objective
+aspirationretire	registry/objective
+attest	screens-inquiry/document registry/document
+attribute	screens-publish/case-editor registry/case-editor
+authoritychain	screens-investigate/money registry/money
+biasadopt	registry/bias
+biasdebt	registry/bias
+biasdebtresolve	registry/bias
+biasinhale	registry/bias
+biasmanifest	registry/bias
+bind	screens-investigate/calculation registry/calculation
+bootstrap	registry/install registry/update registry/updates
+calculationaccept	screens-investigate/calculation registry/calculation
+calculationcreate	screens-daily/finder screens-investigate/calculation registry/finder registry/calculation
+calculationdraw	screens-investigate/calculation registry/calculation
+captureaccount	registry/ceremony
+captureprogressions	registry/document
+capturerequest	screens-intake/capture registry/capture
+capturerequestretry	registry/capture
+captureupload	screens-intake/capture registry/capture
+casedraft	screens-inquiry/question screens-publish/case-editor registry/question registry/case-editor registry/docket
+caseimport	screens-publish/imported registry/imported
+caseratify	screens-publish/ceremony registry/ceremony
+checkpointrecord	screens-action/plan registry/plan
+checkrequest	screens-inquiry/question screens-investigate/money registry/question registry/money
+cite	screens-daily/finder screens-daily/find-in screens-inquiry/question screens-inquiry/document registry/finder registry/document registry/find-in registry/question
+claim	screens-entry/setup registry/setup
+clockadopt	screens-investigate/due-date registry/due-date
+clockpropose	screens-investigate/due-date registry/due-date
+committedagainstpaid	screens-investigate/money registry/money
+communicationprepare	screens-action/start-send screens-action/request registry/start-send registry/request
+conclude	screens-inquiry/question registry/question
+connect	screens-investigate/person registry/person
+connectionassert	registry/document
+connectionchoose	screens-inquiry/document registry/document
+consequencerecord	registry/matter
+consequencerevise	registry/matter
+contradictionclarify	registry/contradiction
+contradictiondismiss	registry/contradiction
+contradictionoptin	registry/contradiction
+contradictionresolve	registry/contradiction
+contradictionrespond	registry/contradiction
+contradictiontakeup	registry/contradiction
+counselpacket	screens-action/counsel registry/counsel
+courtlink	screens-investigate/proceeding registry/proceeding
+courtnoticeset	screens-entry/setup screens-settings/group registry/setup registry/group
+createevent	screens-investigate/timeline screens-investigate/money registry/timeline registry/money
+createset	screens-investigate/money registry/money
+declare	screens-investigate/proceeding registry/proceeding
+declaredstakeset	screens-settings/group registry/group
+declaretie	screens-investigate/ties registry/ties
+declinetoescalate	screens-action/matter registry/matter
+deepercheck	screens-intake/open-file registry/open-file
+determine	registry/matter
+discharge	screens-investigate/timeline registry/timeline
+disclosureshown	screens-settings/connect registry/connect
+docketfile	screens-publish/docket registry/docket
+docketpost	screens-publish/docket registry/docket
+drawquestion	screens-inquiry/project registry/project
+enroll	screens-entry/join registry/join
+entityalias	screens-investigate/person registry/person
+entitycreate	screens-entry/setup screens-settings/places screens-investigate/people screens-investigate/proceeding registry/setup registry/places registry/people registry/proceeding
+escalationadvance	screens-action/matter registry/matter
+escalationattach	registry/matter
+escalationdecline	registry/matter
+escalationend	screens-action/matter registry/matter
+escalationevaluate	registry/matter
+escalationopen	screens-action/matter registry/matter
+escalationreopen	screens-action/matter registry/matter
+escalationresume	registry/matter
+escalationstoppursuing	screens-action/matter registry/matter
+escalationsuspend	registry/matter
+exclude	screens-investigate/money registry/money
+expertiseconfirm	screens-settings/members registry/home registry/members registry/queue
+expertisedeclare	screens-settings/account registry/account
+explore	screens-inquiry/document screens-investigate/people screens-investigate/person screens-investigate/explore registry/document registry/people registry/person registry/explore
+exploreapprove	screens-daily/queue registry/queue
+explorepreset	screens-investigate/explore registry/explore
+exploreverify	screens-investigate/explore registry/explore
+export	registry/group
+exportlog	registry/group
+factconfirm	screens-settings/group registry/group
+filingapprove	screens-action/start-send screens-action/request screens-action/dash-action registry/home registry/dash-action registry/queue registry/start-send registry/request
+filingprepare	screens-action/start-send registry/start-send
+filingrecordsent	screens-action/start-send screens-action/request registry/start-send registry/request
+filingsecondapprove	screens-action/start-send registry/start-send
+findin	screens-daily/finder screens-daily/find-in screens-inquiry/project screens-inquiry/document screens-investigate/timeline screens-investigate/money registry/finder registry/document registry/find-in registry/project registry/timeline registry/money
+followregister	screens-investigate/person screens-investigate/proceeding registry/person registry/proceeding
+founderhandleset	screens-entry/setup
+frontier	screens-daily/finder registry/finder
+goalclose	registry/objective
+goaldeclare	registry/objective
+goallink	registry/objective
+gradenote	screens-intake/archive screens-inquiry/document screens-investigate/money registry/archive registry/document registry/money
+groupdescriptiondraft	screens-settings/group-identity registry/group-identity
+groupdescriptionset	screens-settings/group-identity registry/group-identity
+groupdomainset	screens-entry/setup screens-settings/group registry/setup registry/group
+groupkeynoticeseen	screens-settings/connect registry/connect
+groupkeyremove	screens-settings/teamai registry/teamai
+groupkeyset	screens-entry/setup screens-settings/teamai registry/setup registry/teamai
+groupkeyswitch	screens-entry/setup screens-settings/teamai registry/setup registry/teamai
+grouplanguagesset	screens-settings/group registry/group
+grouplogoset	screens-settings/group registry/group
+groupnameset	screens-entry/setup screens-settings/group registry/setup registry/group
+handlecheck	screens-entry/join registry/join
+heldcaptures	screens-intake/held registry/held
+heldrestore	screens-intake/held screens-inquiry/question registry/held registry/question
+heldsetaside	screens-intake/held screens-intake/archive registry/held registry/archive
+holdnoticeprepare	screens-action/holdnotice registry/holdnotice
+holdnoticesent	screens-action/holdnotice registry/holdnotice
+hostingaccessset	screens-entry/setup screens-settings/group registry/setup registry/group
+hypothesishold	screens-inquiry/question screens-investigate/timeline screens-investigate/money registry/question registry/timeline registry/money
+hypothesisrevise	registry/question
+hypothesiswithdraw	registry/question
+identityclaim	screens-inquiry/document screens-investigate/person registry/document registry/person
+importaccept	screens-publish/imported registry/imported
+importacceptwithdraw	registry/imported
+importflag	screens-publish/imported registry/imported
+importwatch	screens-publish/imported registry/imported
+inboxpull	screens-intake/inbox registry/inbox
+inboxresolve	screens-intake/inbox registry/inbox
+include	screens-investigate/money registry/money
+infolevelset	screens-settings/account registry/account
+inquirydivide	registry/question
+inquiryground	screens-inquiry/question registry/question
+instance	registry/timeline
+invitelook	screens-entry/join registry/join
+invitewithdraw	screens-settings/members registry/members
+itemtakeup	screens-action/plan registry/plan
+joinlinkenable	screens-settings/members registry/members
+joinlinkinvite	screens-entry/join registry/join
+keepversion	screens-daily/home screens-daily/queue screens-inquiry/dash-project screens-inquiry/document registry/home registry/dash-project registry/queue registry/document
+knock	screens-publish/doorbell registry/doorbell
+knockerconsent	registry/doorbell
+knocksof	registry/inbox
+lawrelate	screens-investigate/standard registry/standard
+lead	registry/leads
+leadlook	registry/leads
+leadread	registry/leads
+leadshare	registry/leads
+login	screens-entry/front registry/front
+memberadd	screens-entry/setup screens-settings/members registry/setup registry/members
+membercaps	screens-settings/members registry/members
+memberlanguageset	screens-settings/account registry/join registry/account
+memberpairingset	registry/account
+memberset	screens-settings/members registry/members
+monitor	screens-intake/capture screens-inquiry/document registry/capture registry/document
+monitoring	registry/watching
+monitorpause	registry/watching
+monitorset	screens-intake/capture screens-inquiry/document registry/capture registry/document
+monitorslate	registry/watching
+narrow	screens-inquiry/question registry/question
+notedelete	screens-settings/notes registry/notes
+noterevise	screens-settings/notes registry/notes
+noteturn	screens-settings/notes registry/notes
+notewrite	screens-settings/notes registry/notes
+noticepost	screens-inquiry/project registry/project
+noticeprepare	screens-inquiry/project registry/project
+objectivecondition	registry/objective
+obscuremark	screens-publish/ceremony registry/ceremony
+obscuremarkwithdraw	screens-publish/ceremony registry/ceremony
+officesseed	screens-entry/setup screens-settings/places registry/setup registry/places
+openoriginal	screens-intake/open-file registry/open-file
+openwithwarning	screens-intake/open-file registry/open-file
+optionadd	screens-action/plan registry/plan
+optionadopt	screens-action/plan registry/plan
+optiondispose	screens-action/plan registry/plan
+optionstart	screens-action/start-send registry/start-send
+optionstartpreview	screens-action/plan screens-action/start-send registry/plan registry/start-send
+pagetranscribe	screens-inquiry/document registry/document
+passwordreset	screens-entry/reset registry/reset
+passwordresetlink	screens-settings/members
+pdfstructure	registry/document
+personexpunge	screens-investigate/person registry/person
+placewanted	screens-entry/setup screens-settings/places registry/setup registry/places
+planask	screens-action/plan registry/plan
+planclose	screens-action/plan registry/plan
+planopen	screens-inquiry/project screens-inquiry/question registry/project registry/question
+plansubjectadd	screens-action/plan registry/plan
+pressurerecord	screens-action/hold registry/hold
+procedureguides	screens-action/action registry/action
+profilesset	screens-entry/setup screens-settings/places registry/setup registry/places
+progression	registry/timeline
+progressiondefine	screens-investigate/timeline registry/timeline
+projectaccountremove	screens-inquiry/projectai registry/projectai
+projectaccountswitch	screens-inquiry/projectai registry/projectai
+projectaikeepaway	screens-inquiry/projectai registry/projectai
+projectbarset	screens-inquiry/project registry/project
+projectfork	screens-inquiry/project registry/project
+projectinvite	screens-inquiry/project registry/project
+projectjoin	screens-daily/home screens-daily/projects screens-daily/queue screens-inquiry/project screens-inquiry/projectai registry/home registry/projects registry/queue registry/project registry/projectai
+projectkeynoticeseen	screens-inquiry/projectai registry/projectai
+projectkeyset	screens-daily/queue screens-inquiry/projectai registry/queue registry/projectai
+projectleave	screens-inquiry/project registry/project
+projectowneradd	screens-inquiry/project registry/home registry/queue registry/project
+projectownerremove	screens-inquiry/project registry/project
+projectownerrescue	screens-inquiry/project registry/project
+projectremove	screens-inquiry/project registry/project
+projectrequest	screens-daily/home screens-daily/projects screens-inquiry/project registry/home registry/projects registry/project
+projectrequestanswer	screens-daily/home screens-daily/queue registry/home registry/queue
+projectrequestwithdraw	screens-daily/home screens-daily/projects screens-inquiry/project registry/home registry/projects registry/project
+projectsigninset	screens-inquiry/projectai registry/projectai
+projectstakeset	screens-inquiry/project
+projectvisibilityset	screens-inquiry/project registry/project
+promote	screens-daily/home screens-daily/projects screens-daily/queue screens-inquiry/project screens-investigate/explore registry/home registry/bias registry/projects registry/queue registry/project registry/explore
+proposedispose	screens-daily/queue screens-inquiry/question screens-investigate/timeline registry/queue registry/question registry/timeline
+provenanceroute	registry/document
+publish	screens-publish/ceremony registry/ceremony
+publishat	screens-publish/ceremony registry/ceremony
+publishatcancel	screens-publish/ceremony registry/ceremony
+publishatmove	screens-publish/ceremony registry/ceremony
+publishedcase	screens-publish/published registry/published
+publishpreflight	screens-publish/ceremony registry/ceremony
+publishtensions	screens-publish/ceremony registry/ceremony
+queuemute	screens-daily/queue registry/queue
+queuesnooze	screens-daily/queue registry/queue
+readtranslate	screens-inquiry/question registry/question
+reattest	registry/ceremony
+reauth	screens-settings/connect registry/connect
+reconcile	screens-investigate/money registry/money
+recordcheck	screens-investigate/calculation registry/calculation
+recorddatedfact	screens-daily/find-in screens-investigate/timeline registry/find-in registry/timeline
+recordfact	screens-daily/find-in screens-investigate/money registry/find-in registry/money
+recordline	screens-investigate/proceeding registry/person registry/proceeding
+recordpersonfact	screens-daily/find-in screens-investigate/person registry/find-in registry/person
+recover	screens-entry/forgot registry/forgot
+recoverycodesissue	screens-entry/setup screens-settings/recovery registry/setup registry/recovery
+reevaluationrecord	registry/question
+reevaluations	registry/question
+reinstate	screens-inquiry/question registry/question registry/case-editor
+relate	screens-investigate/timeline registry/timeline
+relationdeclare	screens-investigate/person registry/person
+release	screens-intake/held screens-intake/archive screens-inquiry/dash-project screens-inquiry/document registry/home registry/dash-project registry/queue registry/held registry/archive registry/document
+releasescanhold	screens-intake/open-file registry/open-file
+reminderanswer	screens-daily/queue screens-action/dash-action registry/dash-action registry/queue
+reminderset	screens-investigate/due-date screens-action/action registry/due-date registry/action
+reopen	registry/question
+resolutiondefect	registry/document
+resolve	screens-investigate/person registry/person
+resolvetestify	screens-investigate/person registry/person
+retire	screens-inquiry/document registry/document
+reviewcomment	screens-publish/review-copy screens-publish/review-outside registry/review-copy registry/review-outside
+reviewgrant	screens-publish/review-copy registry/review-copy
+reviewrevoke	screens-publish/review-copy registry/review-copy
+ruleanswer	screens-daily/answers registry/answers
+ruleconfirm	screens-settings/grouprules registry/grouprules
+ruledraft	screens-settings/grouprules registry/grouprules
+rulewithdraw	screens-settings/grouprules registry/grouprules
+runtime	registry/updates
+safeview	screens-intake/open-file registry/open-file
+scenarioset	screens-action/plan registry/plan
+search	screens-daily/finder screens-daily/find-in screens-daily/answers screens-inquiry/question screens-investigate/people registry/finder registry/find-in registry/question registry/answers registry/people
+secondlook	screens-daily/finder
+secondlookclear	screens-daily/finder registry/finder
+securitymap	screens-settings/security registry/security
+securitytooladd	screens-entry/setup screens-settings/security registry/setup registry/security
+securitytoolremove	screens-settings/security registry/security
+securitytooltest	screens-settings/security registry/security
+select	screens-daily/finder registry/finder
+selectionrelease	screens-daily/finder registry/finder
+selftest	registry/updates
+setpassword	screens-settings/account registry/account
+sever	screens-inquiry/question registry/question registry/case-editor
+signeradd	screens-settings/members registry/members
+signerregisterown	screens-settings/account screens-publish/ceremony registry/account registry/ceremony
+signerrevokeown	screens-settings/account registry/account
+signerset	screens-settings/members registry/members
+signout	screens-settings/account registry/account
+signouteverywhere	screens-settings/account registry/account
+signrequest	screens-publish/ceremony registry/ceremony
+sourceconsent	registry/about-knocker
+sourceconsentwithdraw	registry/about-knocker
+sourcedisclose	registry/about-knocker
+sourcelink	screens-intake/inbox registry/inbox
+sourcepersonlink	registry/about-knocker
+spotcheckvisit	screens-investigate/calculation registry/calculation
+standardadopt	screens-investigate/standard registry/standard
+standarddeclare	screens-daily/find-in screens-investigate/standard registry/find-in registry/standard
+standardinforce	registry/standard
+standingquestionend	screens-daily/answers registry/answers
+standingquestionset	screens-daily/find-in screens-daily/answers registry/find-in registry/answers
+startfrom	screens-daily/home registry/home
+statementack	screens-publish/case-editor screens-publish/review-outside registry/case-editor registry/review-outside
+stepsource	screens-investigate/explore registry/explore
+stepsourcewithdraw	screens-investigate/explore
+strengthbarset	screens-settings/group registry/group
+subscriptiondisconnect	screens-settings/connect registry/connect
+subscriptionsignin	screens-settings/connect registry/connect
+successrecord	registry/matter
+suggest	screens-inquiry/assistant registry/assistant
+sweeps	registry/watching
+tabledeclare	screens-daily/find-in screens-investigate/calculation registry/find-in registry/calculation
+taskforward	screens-daily/queue registry/home registry/queue
+taskresolve	screens-daily/home screens-daily/queue screens-action/dash-action registry/home registry/dash-action registry/queue
+templatesave	registry/start-send
+testify	screens-intake/capture screens-investigate/calculation registry/capture registry/calculation
+themedeclare	screens-investigate/theme registry/theme
+themeplace	screens-inquiry/question screens-inquiry/document screens-investigate/theme registry/theme registry/document registry/question
+themepropose	screens-inquiry/document registry/document
+themeread	screens-daily/projects screens-daily/finder screens-investigate/theme registry/projects registry/theme registry/finder
+themewithdraw	screens-inquiry/document screens-investigate/theme registry/theme registry/document
+thread	screens-inquiry/document screens-investigate/timeline registry/document registry/timeline
+transcribe	screens-inquiry/document registry/document
+transcriptionattest	registry/document
+translationadopt	screens-settings/translations registry/translations
+translationconfirm	screens-settings/translations registry/translations
+translationdraft	screens-settings/translations registry/translations
+translationgrant	screens-settings/translations registry/translations
+translationrevert	screens-settings/translations registry/translations
+triage	registry/objective
+unlock	screens-entry/front registry/front
+updatelater	screens-settings/updates screens-daily/queue
+updateskip	screens-settings/updates
+updatestart	screens-settings/updates
+verify	screens-publish/published registry/published
+versionaccept	screens-inquiry/question registry/question
+versionconsider	screens-inquiry/question registry/question
+versioncurrent	screens-inquiry/question registry/question
+versionhide	screens-inquiry/question registry/question
+versionnotice	screens-inquiry/document registry/document
+versionreject	screens-inquiry/question registry/question
+versionrevert	screens-inquiry/question registry/question
+watchitem	screens-daily/finder
+websitekeycreate	screens-settings/members registry/members
+whatchangedpropose	screens-publish/case-editor registry/case-editor
+withdrawconclusion	screens-inquiry/question registry/question
+withdrawidentityclaim	screens-investigate/person registry/person
+withdrawtie	screens-investigate/ties registry/ties
+wizardapprove	screens-wizards/wizards registry/wizards
+wizarddraft	screens-wizards/wizards registry/wizards
+wizardretire	screens-wizards/wizards registry/wizards
+wizardrevise	screens-wizards/wizards registry/wizards
+wizards	screens-wizards/wizards registry/wizards
+wizardsubmit	screens-wizards/wizards registry/wizards
+writinghelp	screens-settings/notes screens-settings/group screens-settings/grouprules screens-intake/capture screens-investigate/person screens-publish/case-editor screens-action/action screens-action/actionnew screens-action/hold screens-action/holdnotice registry/bias registry/group registry/notes registry/capture registry/contradiction registry/project registry/objective registry/question registry/person registry/plan registry/start-send registry/actionnew registry/action registry/hold registry/holdnotice registry/grouprules registry/matter registry/case-editor registry/imported registry/about-knocker registry/leads registry/watching

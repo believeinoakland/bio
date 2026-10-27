@@ -22,6 +22,7 @@
 
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresTensionSection } from "./formats.mjs";
+import { WORDS, wordsOfFormat } from "./words.mjs";
 
 /** R1: the fields of a `captures:` row, in the order they are written. */
 export const CAPTURE_FIELDS = Object.freeze(["capture", "member", "grade", "grade_basis", "co_attested", "timestamp_at",
@@ -40,8 +41,9 @@ export const BLOCKS_PREDATE_SENTENCE = "this case document's format predates the
 /** R27: a `/5` or later document that carries no readable block: what it stated is undetermined, never filled. */
 export const BLOCK_UNREADABLE_SENTENCE = "this case document declares a format that states each capture's grade, "
   + "co-attestation and source, but carries no readable block for it, so what it stated is undetermined";
-/** `publication` R51 (sources R4): how an entry recorded without its value is stated. */
-export const NOT_RECORDED_STATED = "known to the group, not recorded";
+/** `publication` R51 (sources R4): how an entry recorded without its value is stated, in the `/7`-and-earlier words
+ *  (R33: a `/8` document says "team", `./words.mjs`; this is the frozen `"group"` sentence). */
+export const NOT_RECORDED_STATED = WORDS.group.notRecorded;
 
 /* A value on one front-matter line (R2): line breaks folded, quotes and backslashes made apostrophes, trimmed (as the
    deleted store's `#fmSafe` was); so the text written is the text read back, and a spelling compares equal to itself.
@@ -67,13 +69,15 @@ const rowsBlock = (key, rows, fields) => (rows.length
 
 /** R28 (`publication` R51, R52): the one spelling of what the public may be told of one entry `sources.publishableAt` answered: its kind
  *  (and attribute), then its value, or that it is known without its value; a pseudonym link names the other source as
- *  answered; a hostile entry adds the exposer's claim sentence. Null for anything that is not an entry. */
-export function sourceStatement(entry) {
+ *  answered; a hostile entry adds the exposer's claim sentence. Null for anything that is not an entry. R33: the
+ *  not-recorded sentence is spelled in the words of the document's format, `format` (the format in force when none is
+ *  given), so a `/7` row keeps "the group" and a `/8` row says "the team". */
+export function sourceStatement(entry, format) {
   if (!entry || typeof entry !== "object" || typeof entry.kind !== "string" || !entry.kind) return null;
   const label = entry.attribute ? `${entry.kind} ${entry.attribute}` : entry.kind;
   const what = entry.kind === "pseudonym_link" ? `the same person as ${entry.to ?? "another source"}`
     : typeof entry.value === "string" && entry.value.trim() ? entry.value
-    : NOT_RECORDED_STATED;
+    : wordsOfFormat(format).notRecorded;
   return oneLine(`${label}: ${what}${entry.how === "hostile" && entry.claim ? ` (${entry.claim})` : ""}`);
 }
 
@@ -161,7 +165,9 @@ export function caseDocumentBlocks(text) {
   }
 }
 
-/** R28 (`publication` R51, R52): which `sources:` rows no longer hold, `[{capture, stated, basis}]` in input order.
+/** R28 (`publication` R51, R52): which `sources:` rows no longer hold, `[{capture, stated, basis}]` in input order. R33: a
+ *  stored row is compared with the sentence of the version its document states, `format` (the format in force when none
+ *  is given), so a row signed in the `/7` words still holds and a `/8` row is compared with the "team" sentence.
  *  `publishable(capture)` answers, for the capture, `{entries, received}`: every entry `publishableAt({audience:
  *  "public", at})` answers now over the sources behind it, and the receipt's time, or null when no source stands behind
  *  the capture; it is asked once per distinct capture, never for a row whose `capture` is not a string, and one that
@@ -169,7 +175,7 @@ export function caseDocumentBlocks(text) {
  *  capture's withheld statement (`unnamedSourceStatement`) with `basis: null`; every other row is answered, so nothing
  *  is stated that `publishableAt` did not answer at the commit. FAIL CLOSED: an answer that is not an object, or whose
  *  `entries` is not a list, holds no row of that capture. Pure; never throws. */
-export function sourceRowsStanding(rows, publishable) {
+export function sourceRowsStanding(rows, publishable, format) {
   const failed = [];
   const cache = new Map();
   for (const r of Array.isArray(rows) ? rows : []) {
@@ -192,7 +198,7 @@ export function sourceRowsStanding(rows, publishable) {
       holds = !!p && stated !== null && (basis === null
         ? stated === unnamedSourceStatement({ capture, received: p.received })
         : SOURCE_BASES.includes(basis)
-          && p.entries.some((e) => e && e.basis === basis && sourceStatement(e) === stated));
+          && p.entries.some((e) => e && e.basis === basis && sourceStatement(e, format) === stated));
     } catch { holds = false; }
     if (!holds) failed.push({ capture, stated, basis });
   }

@@ -1,4 +1,4 @@
-/* screens-entry R6 (and R8–R11, R14–R20, R22, R23): `setup`, "Set up your team's Civicsmith", in the setup frame at
+/* screens-entry R6 (and R8–R11, R14–R20, R22, R23, R26, R30, R33, R34): `setup`, "Set up your team's Civicsmith", in the setup frame at
    `/app/setup` (the shell forwards `/#boot=` here and hands the one-time password as `view.fragment.boot`, taken from
    the address on load). Drawn as the design draws it (R22, DEC-279): numbered parts that open and close (`.cs-part`),
    each with its name, one line of what it is for and its state; choices (`.cs-choice`) that open only what they need;
@@ -19,6 +19,9 @@
    radios and checkboxes, watched on the page's clock (`cs.later`) as `join` watches its handle, and the screen redrawn
    when one changes. Self-contained (interface-shell R21). */
 
+/* The page holds each function below as its own text, so no value is declared at this module's scope: R34's fact path and zones
+   are written inside each function that uses them (S-1). */
+
 export const setup = {
   id: "setup",
 
@@ -34,12 +37,16 @@ export const setup = {
       // R19: "Show my recovery codes" only before the founder has seen hers
       codes: { op: "recoverycodesstate" },
       profiles: { op: "profiles" },
+      // R34: the team's own time zone as it governs (local-facts R21), on the fact's own path
+      zone: { op: "factstatus", query: { path: "@team/time_zone" } },
       place: { op: "placewantedstate" },
       offices: { op: "entitieskind", query: { kind: "office", limit: "500" }, empty: (v) => !(v && Array.isArray(v.entities) && v.entities.length) },
       keepaway: { op: "aikeepawaystate" },
       groupkey: { op: "groupkeystate" },
       court: { op: "courtnotice" },
       hosting: { op: "hostingaccess" },
+      // R33: the scanner's true state (signatures held or not); drawn only while the scanner part is built in
+      scan: { op: "scanstatus" },
       members: { op: "memberlist" },
       catalogue: { op: "securitytoolcatalogue" },
       tools: { op: "securitytools", empty: (v) => !(v && Array.isArray(v.tools) && v.tools.length) },
@@ -48,6 +55,8 @@ export const setup = {
 
   render(cs, view) {
     const W = cs.w, E = cs.esc, S = "screen.setup.";
+    // R34: the zones the design names (`label.timezones.<id>`)
+    const ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
     const ui = view.ui || {};
     const data = view.data || {};
     const ok = (r) => (r && r.state === "ok" ? r.value : null);
@@ -82,12 +91,50 @@ export const setup = {
       const open = !skipped && (o.open || ui.at === key);
       return `<details class="cs-part" data-part="${key}" data-state="${state}"${skipped ? ' data-skipped="true"' : ""}${open ? " open" : ""}><summary>`
         + `<span class="n">${n}</span><span class="t">${W(titleKey)}</span><span class="why">${o.why || W(whyKey)}</span>`
-        + `<span class="cs-due"${state === "done" ? ' data-due="met"' : ""}>${W(S + "state." + state)}</span><span class="chev" aria-hidden="true"></span></summary>`
+        + (skipped
+          ? `<span class="cs-due cs-card" tabindex="0" data-level="1" data-skipped-mark="true" data-tip="${E(W(S + "state.skipped.help"))}">${W(S + "state.skipped")}</span>`
+          : `<span class="cs-due"${state === "done" ? ' data-due="met"' : ""}>${W(S + "state." + state)}</span>`)
+        + `<span class="chev" aria-hidden="true"></span></summary>`
         + `<div class="body">${inner}${o.skip === false ? "" : skip(key)}</div></details>`;
     };
-    // R23: "Skip for now" sends nothing and records nothing; the part is shown skipped while the page is open
+    // R23, R25: "Skip for now" sends nothing and records nothing; the part is shown skipped (its mark reads
+    // `screen.setup.state.skipped`, explained by `.skipped.help`) while the page is open
     const skip = (key) => `<div class="mk-acts"><label class="cs-btn" data-tone="quiet" data-skip="${key}" tabindex="0" data-level="2" data-tip="${E(W("setup.skip_does"))}">`
       + `<input type="checkbox" class="sr" id="su-skip-${key}"${ui.skipped && ui.skipped[key] ? " checked" : ""}>${W("setup.skip")}</label></div>`;
+
+    // R26: the file the team puts on its website, drawn from the answer `instance-setup` gives (`domain_claim.well_known`:
+    // `{path, body}`, or null) and never built here; the steps that need its path only when it is answered
+    const domainFile = () => {
+      const claim = id.domain_claim;
+      if (!claim || typeof claim !== "object") return "";
+      const F = "screen.domainfile.";
+      const wk = claim.well_known && typeof claim.well_known === "object" && typeof claim.well_known.path === "string" && claim.well_known.body !== undefined ? claim.well_known : null;
+      const segs = wk ? wk.path.split("/").filter(Boolean) : [];
+      const name = segs.at(-1) || "", folder = segs.length > 1 ? segs[0] : "";
+      const text = wk ? (typeof wk.body === "string" ? wk.body : JSON.stringify(wk.body, null, 2)) + "\n" : "";
+      const address = wk && claim.domain ? "https://" + claim.domain + wk.path : "";
+      const steps = [["step1"], ["step2", folder && { folder: { html: `<code>${E(folder)}</code>` } }], ["step3"], ["step4", address && { address: { html: `<code>${E(address)}</code>` } }], ["step5"]]
+        .filter(([k, fills]) => (k !== "step2" && k !== "step4") || fills);
+      const verdict = claim.latest && typeof claim.latest.verdict === "string" ? claim.latest.verdict : "";
+      const gap = (kind) => `<div class="cs-gap" data-gap="${kind === "undetermined" ? "undetermined" : "refused"}" data-state="${kind}"><span>${W(F + "refused." + kind)}</span></div>`;
+      return (["absent", "mismatched", "undetermined"].includes(verdict) ? gap(verdict) : "")
+        + `<details class="mk-details" data-domainfile><summary>${W(F + "summary")}</summary><p class="mk-small">${W(F + "what")}</p>`
+        + (wk ? `<div class="cs-sheet"><b class="mk-small">${E(name)}</b><pre class="mk-small" data-domainfile-text>${E(text)}</pre><div class="mk-acts">${String(cs.save(name, text, { label: F + "download" }) || "")}${String(cs.copy(text, { label: "shell.copy" }) || "")}</div></div>` : "")
+        + `<p class="mk-small">${W(F + "steps")}</p><ol class="mk-small">${steps.map(([k, fills]) => `<li>${W(F + k, fills || undefined)}</li>`).join("")}</ol>`
+        + `<p class="mk-small">${W(F + "daily")}</p>`
+        + `<details class="mk-details"><summary>${W(F + "refused.summary")}</summary><div>${["malformed", "absent", "mismatched", "undetermined", "notadmin"].map(gap).join("")}</div></details></details>`;
+    };
+    // R30: who recorded the hosting account: the setup or the system have their own words; a member is drawn as before
+    const recordedBy = (by) => {
+      if (typeof by !== "string" || !by) return "member";
+      const who = by.replace(/^member:/, "");
+      return who === "" || who === "admin" || who === "bootstrap" || who === "setup" ? "setup" : /^(token|class|daemon|system|seed|session|accelerator|sweep)/.test(who) ? "system" : "member";
+    };
+    const hostingNow = (cur) => {
+      const by = recordedBy(cur.recorded_by);
+      return by === "member" ? W(S + "hosting.now", { holders: String(cur.holders || "") })
+        : `${W("screen.group.hosting.now." + by, { date: { html: cs.date(cur.at) } })} ${E(String(cur.holders || ""))}`;
+    };
 
     const out = [];
     // R15: the lede ("Welcome… First, claim it") follows the claimed state: drawn only while the instance answers that
@@ -156,6 +203,10 @@ export const setup = {
     const host = ok(data.hosting) || {};
     const tools = ok(data.tools) && Array.isArray(data.tools.value.tools) ? data.tools.value.tools : [];
     const members = ok(data.members) && Array.isArray(data.members.value.members) ? data.members.value.members : null;
+    // a tool is named by its provider's display name (vendor and product, from the catalogue read), never by its id
+    const cat = ok(data.catalogue) || {};
+    const providers = [].concat(cat.offered || [], cat.held || [], cat.refused || []).filter((x) => x && x.provider_id);
+    const nameOf = (x) => { const c = x && (x.vendor || x.product ? x : providers.find((k) => k.provider_id === x.provider_id)); return c && (c.vendor || c.product) ? [c.vendor, c.product].filter(Boolean).join(" · ") : ""; };
     // R22: each part's state from its own read; a read that does not answer leaves it optional, never done
     const answered = (r) => !!r && (r.state === "ok" || r.state === "empty");
     const done = (r, test) => (answered(r) && test() ? "done" : "optional");
@@ -189,7 +240,7 @@ export const setup = {
     out.push("<div>" + part(1, "claim", S + "claim", S + "part.claim.why", "done", codes || `<p>${claimed}</p>`, { open: !!codes || !!ui.claimedHere, why: `<span data-state="claimed">${claimed}</span>`, skip: false }));
 
     // 2 Your team: R14, the name first, saying where it shows; the website only if the team has one
-    const site = choice("su-site", id.domain ? "yes" : "no");
+    const site = choice("su-site", id.domain || (id.domain_claim && id.domain_claim.domain) ? "yes" : "no");
     out.push(part(2, "group", S + "part.group", S + "part.group.why", states.group,
       explained(cs.field("su-name", S + "name.field", { help: S + "name.help", value: named }), S + "name.tip")
       + `<div class="mk-acts">${cs.act("groupnameset")}</div>`
@@ -197,11 +248,33 @@ export const setup = {
       + pick("su-site", S + "site.q", [{ value: "no", key: S + "site.no" }, { value: "yes", key: S + "site.yes", tip: S + "site.tip" }], site)
       + (site === "yes" ? (id.domain && id.domain_verified_at ? `<p>${W(S + "domain.verified", { domain: id.domain })}</p>` : "")
         + cs.field("su-domain", S + "domain", { help: S + "domain.help", value: id.domain || "" })
-        + `<div class="mk-acts">${cs.act("groupdomainset")}</div>` : ""),
+        + `<div class="mk-acts">${cs.act("groupdomainset")}</div>` + domainFile() : ""),
       { open: states.group !== "done" }));
 
+    // R34: the team's time zone, a step of part 3. Done once the team itself has stated it (the fact governs by a correction);
+    // a zone only a place gives is offered as the choice, not counted as stated. A stated zone is changed under Settings.
+    const zoneName = (z) => {
+      if (ZONES.includes(z)) return W("label.timezones." + z);
+      let generic = "";
+      try { const f = new Intl.DateTimeFormat("en", { timeZone: z, timeZoneName: "longGeneric" }).formatToParts(new Date()).find((x) => x.type === "timeZoneName"); generic = f ? f.value : ""; } catch (e) { generic = ""; }
+      const city = String(z).split("/").pop().replace(/_/g, " ");
+      return E(generic ? generic + " (" + city + ")" : city);
+    };
+    const zoneStep = () => `<div data-zone>` + cs.state(data.zone, (z) => {
+      const gov = z && z.governs && typeof z.governs.value === "string" ? z.governs : null;
+      const stated = !!gov && gov.origin === "corrected";
+      const head = `<p class="mk-note"><b>${W(S + "zone")}</b>${stated ? ` <span class="cs-due" data-due="met" data-state="zonedone">${W(S + "state.done")}</span>` : ""}</p><p class="mk-note">${W(S + "zone.help")}</p>`;
+      if (stated) return head + `<p data-state="timezone">${W("screen.group.timezone.governs.local", { zone: { html: zoneName(gov.value) } })}</p>`;
+      const cur = gov ? gov.value : ZONES[0];
+      const options = [...ZONES.map((x) => [x, "label.timezones." + x]), ...(ZONES.includes(cur) ? [] : [{ value: cur, text: String(zoneName(cur)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }])];
+      return head + cs.choice("su-zone", "screen.group.timezone", options, { value: cur })
+        + cs.field("su-zone-how", "screen.group.timezone.how", { autocomplete: "off" })
+        + cs.field("su-zone-src", "screen.group.timezone.source", { help: "screen.group.timezone.source.help", autocomplete: "off" })
+        + `<div class="mk-acts">${cs.act("factconfirm", { label: "act.factconfirm.label.group" })}</div>`;
+    }) + "</div>";
+
     // 3 Where your team works: the place chosen among those Civicsmith knows, or "Somewhere else", which opens the place
-    // wanted
+    // wanted; then the team's time zone (R34)
     const known = [...active, ...choices.filter((c) => !active.some((a) => a.id === c.id))];
     const place = choice("su-pick", active.length ? String(active[0].id) : known.length ? "" : "other");
     out.push(part(3, "places", S + "places", S + "part.places.why", states.places, cs.state(data.profiles, () =>
@@ -211,7 +284,7 @@ export const setup = {
       + `<p class="mk-note">${W(S + "places.help")}</p>`
       + (place === "other" ? (wanted ? `<p>${W(S + "place.wanted.now", { name: wanted })}</p>` : "")
         + cs.field("su-place", S + "place.wanted", { help: S + "place.wanted.help", value: wanted }) + `<div class="mk-acts">${cs.act("placewanted")}</div>` : "")
-      + `<div class="mk-acts">${cs.act("profilesset")}</div>`)));
+      + `<div class="mk-acts">${cs.act("profilesset")}</div>`) + zoneStep()));
 
     // 4 The officials you deal with: the place's public offices, or, for a place not yet known, offices added by hand
     const placeName = active.length ? active.map((x) => x.name || x.id).join(", ") : "";
@@ -258,14 +331,30 @@ export const setup = {
       + pick("su-court", S + "court.legend", [{ value: "tell", key: S + "court.tell" }, { value: "dont", key: S + "court.dont" }], court.choice || null)
       + `<div class="mk-acts">${cs.act("courtnoticeset")}</div>`));
 
+    // R33: what is true of the scanner. Signatures held: the checked sentence. None: since when and why, in the words the
+    // answer's keys carry (else its own words), never the scanner's code. Unread, unreachable or not answered: nothing is
+    // claimed that is not known.
+    const scannerState = () => {
+      const sc = ok(data.scan);
+      if (!sc) return "";
+      const ns = sc.no_signatures && typeof sc.no_signatures === "object" ? sc.no_signatures : null;
+      if (!ns) return sc.scanner && (sc.scanner.unreachable === true || sc.scanner.bound === false) ? "" : `<p class="mk-note" data-state="scanner">${W(S + "security.scanner")}</p>`;
+      // the key's word where the list holds it and every fill is answered; else the answer's own words
+      const said1 = (key, words, fills) => { const t = typeof key === "string" ? String(W(key, fills)) : ""; return t && t !== E(key) && !/\{\w+\}/.test(t) ? t : typeof words === "string" ? E(words) : ""; };
+      const status = /^REFUSED:[^:]*:(\d{3})$/.exec(String(ns.reason || ""));
+      const first = said1(ns.key, ns.words, ns.since ? { date: { html: cs.date(ns.since) } } : {});
+      const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
+      return (first ? `<p class="mk-note" data-state="nosignatures">${first}</p>` : "") + (second ? `<p class="mk-note" data-state="nosignatures-reason">${second}</p>` : "");
+    };
+
     // 7 Security: each offered tool with the fields its entry names; the scanner's sentence only while one runs
     out.push(part(7, "security", S + "security", S + "part.security.why", states.security,
-      (boot.part_scanner === true ? `<p class="mk-note">${W(S + "security.scanner")}</p>` : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
+      (boot.part_scanner === true ? scannerState() : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
       + (ui.tool ? `<p data-state="tool">${W(ui.tool.passed ? S + "security.passed" : S + "security.failed", { tool: ui.tool.name })}</p>` : "")
-      + tools.map((t) => `<p>${W(S + "security.held", { tool: t.name || t.label || t.provider_id || t.tool_id || "" })}</p>`).join("")
+      + tools.map((t) => nameOf(t)).filter(Boolean).map((n) => `<p>${W(S + "security.held", { tool: n })}</p>`).join("")
       // R12: an empty catalogue draws nothing (a failed read is still drawn as failed)
       + (data.catalogue && data.catalogue.state === "empty" ? "" : cs.state(data.catalogue, (c) => (Array.isArray(c.offered) ? c.offered : []).map((t, i) => {
-        const name = t.name || t.label || t.provider_id || "";
+        const name = nameOf(t);
         const cfg = Array.isArray(t.config) ? t.config : [];
         const creds = Array.isArray(t.credentials) ? t.credentials : [];
         // each of the tool's own fields by the kit's field, its name the entry's (R12)
@@ -284,7 +373,7 @@ export const setup = {
       + cs.field("su-adm-id", S + "admins.id", { help: S + "admins.id.help", autocomplete: "off" })
       + cs.field("su-adm-cover", S + "admins.cover", { autocomplete: "off" })
       + `<div class="mk-acts"><span class="mk-actwrap" data-level="2" data-tip="${E(W("setup.admin.invite_does"))}">${cs.act("memberadd", { tone: "primary", label: "setup.admin.invite" })}</span></div>`
-      + (host.current ? `<p>${W(S + "hosting.now", { holders: String(host.current.holders || "") })}</p>` : "")
+      + (host.current ? `<p>${hostingNow(host.current)}</p>` : "")
       + cs.field("su-holders", S + "hosting.field", { help: S + "hosting.help" }) + cs.field("su-hnote", S + "hosting.note")
       + `<div class="mk-acts">${cs.act("hostingaccessset")}</div>`) + "</div>");
 
@@ -391,14 +480,23 @@ export const setup = {
     // each part's act keeps its part open while its answer is drawn (R22)
     { op: "groupnameset", rereads: ["identity"],
       send(view, el, cs) { view.ui.at = "group"; const name = String(cs.value("su-name") || "").trim(); return name ? { body: { name } } : { refuse: "screen.setup.name.empty" }; } },
+    // R26: the verifier's refusals in the design's words
     { op: "groupdomainset", rereads: ["identity"],
-      send(view, el, cs) { view.ui.at = "group"; const domain = String(cs.value("su-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.setup.domain.empty" }; } },
+      send(view, el, cs) { view.ui.at = "group"; const domain = String(cs.value("su-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.setup.domain.empty" }; },
+      refusals: { GROUP_DOMAIN_MALFORMED: "screen.domainfile.refused.malformed", NOT_AN_ADMIN: "screen.domainfile.refused.notadmin" } },
     // the place chosen: one the profiles hold, or none ("Somewhere else")
     { op: "profilesset", rereads: ["profiles", "offices"],
       send(view, el, cs) {
         view.ui.at = "places";
         const id = String(cs.value("su-pick") || (view.ui.shown || {})["su-pick"] || "");
         return { body: { profiles: id && id !== "other" ? [id] : [] } };
+      } },
+    // R34: the team's own time zone, stated on its own path with how and where it was checked (local-facts R21; the owner
+    // refuses a value that is no zone, and a statement without them); the page composes nothing of the fact
+    { op: "factconfirm", rereads: ["zone"],
+      send(view, el, cs) {
+        view.ui.at = "places";
+        return { body: { act: "correct", value: String(cs.value("su-zone") || "").trim(), how: String(cs.value("su-zone-how") || "").trim(), source: String(cs.value("su-zone-src") || "").trim(), path: "@team/time_zone" } };
       } },
     { op: "placewanted", rereads: ["place"],
       send(view, el, cs) { view.ui.at = "places"; const name = String(cs.value("su-place") || "").trim(); return name ? { body: { name } } : { refuse: "screen.setup.place.empty" }; } },
@@ -409,7 +507,9 @@ export const setup = {
         view.ui.at = "offices";
         const label = String(cs.value("su-office") || "").trim();
         const note = String(cs.value("su-office-note") || "").trim();
-        return label ? { body: { kind: "office", label, note: note || null } } : { refuse: "screen.setup.office.empty" };
+        // R6: `entities` R1 refuses an office with no note, so one is never sent without it
+        if (!label) return { refuse: "screen.setup.office.empty" };
+        return note ? { body: { kind: "office", label, note } } : { refuse: "refusal.ENTITY_NO_NOTE" };
       },
       done(view, answer, cs) { view.ui.office = String(cs.value("su-office") || "").trim(); } },
     // on only with a reason in the founder's own words, its field the act's reason (interface-shell R11); then every
@@ -461,7 +561,7 @@ export const setup = {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         if (a && a.invite) view.ui.invite = { expires: a.expires, link: (view.origin || "") + "/#invite=" + encodeURIComponent(a.invite) };
       } },
-    // a tool added with the fields its entry names, then tested (file-safety R28, R29), as setup-page R30 did
+    // a tool added with the fields its entry names, then tested (file-safety R28, R29)
     { op: "securitytooladd", rereads: ["tools"],
       send(view, el, cs) {
         view.ui.at = "security";
@@ -483,7 +583,7 @@ export const setup = {
           if (!v) return { refuse: "screen.setup.security.missing", fills: { field: names[k] } };
           credentials[names[k]] = v;
         }
-        view.ui.toolName = t.name || t.label || t.provider_id || "";
+        view.ui.toolName = [t.vendor, t.product].filter(Boolean).join(" · ");
         return { body: { providerId: t.provider_id, config, credentials, handlingDigest: t.handling_digest, confirmRetention: cs.value("su-st-" + i + "-keep") === true, use: "on_request" } };
       },
       async done(view, answer, cs) {

@@ -35,7 +35,7 @@ function withT31(fakes = {}) {
                             project: "PRJ-A", submitted_at: iso(NOW - 5000) }]),
       brokenScripts: page([
         { kind: "withdrawn", script: "WIZ-1", version: 1, name: "File a records request", author: "alice", project: "PRJ-A",
-          at: iso(NOW - 4000), refusal: { code: "STEP_GONE", check: "C-131.1", translation: "a screen it reads is gone" } },
+          at: iso(NOW - 4000), refusal: { code: "WIZARD_STEP_REFUSED", check: "C-131.7", translation: "a screen it reads is gone" } },
         { kind: "restored", script: "WIZ-1", version: 1, name: "File a records request", author: "alice", project: "PRJ-A",
           at: iso(NOW - 3000) }]),
     },

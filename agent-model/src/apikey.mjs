@@ -9,6 +9,7 @@
  * its earlier ones from the cache too. Four breakpoints are the API's limit; this uses three. Only uncached input
  * counts toward the input-tokens-per-minute limit (assistant-substrate §4), so the marks also stretch the rate. */
 import { usageOf, silent, refused } from "./outcome.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export const MODEL_ENDPOINT = "https://api.anthropic.com/v1/messages";
 export const MODEL_API_VERSION = "2023-06-01";
@@ -64,7 +65,7 @@ export async function apikeyTurn(key, serialized) {
   let body = null;
   try { body = await res.json(); } catch { body = null; }
   if (body == null || typeof body !== "object")
-    return { ...silent(`the model API answered ${res.status} with a body that is not JSON`, key), usage: usageOf(null) };
+    return { ...silent(localize("agent-model.apikey.the_model_api_answered_status", "the model API answered {status} with a body that is not JSON", { status: String(res.status) }), key), usage: usageOf(null) };
   const usage = usageOf(body.usage);
   /* A 429 (a rate limit, or `enforced_spend_limit_reached`) is a plain refusal like any other status: the run's
      ceiling and the member's own account decide what happens next, never a retry here. */

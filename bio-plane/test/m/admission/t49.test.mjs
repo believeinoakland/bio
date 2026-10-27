@@ -21,7 +21,7 @@ const reqOf = ({ address = SRC, token, query = "" } = {}) => {
   if (token) headers.authorization = `Bearer ${token}`;
   return new Request(`https://plane.example/api${query}`, { method: "POST", headers });
 };
-const sessionRows = (w) => w.sql.exec(`SELECT * FROM ${W.SESSION_WINDOW_TABLE} ORDER BY session, bucket`);
+const sessionRows = (w) => (w.a.flush(), w.sql.exec(`SELECT * FROM ${W.SESSION_WINDOW_TABLE} ORDER BY session, bucket`));
 const total = (rows) => rows.reduce((n, r) => n + Number(r.count), 0);
 const routes = (env) => env.calls.map((c) => c.route);
 const gateOf = (env, token, op, extra = {}) => A.doorWindowGate({ req: reqOf({ token }), env, op, spec: OPS[op], doAnswer, ...extra });

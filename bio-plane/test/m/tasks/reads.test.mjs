@@ -2,10 +2,10 @@
    recentTasks (with N373's statuses and N410's assignees), resolvedTasks, taskExists (gated, N374). Each never throws; a store without the table answers empty or false. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, host, NOW, iso } from "./world.mjs";
+import { world, host, NOW, iso, projectOf } from "./world.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
 
-const DOC = "INFO-2026-0001-doc", DOC2 = "INFO-2026-0002-other", PRJ = "PROJ-2026-0001-hidden";
+const DOC = "INFO-2026-0001-doc", DOC2 = "INFO-2026-0002-other", PRJ = projectOf("Hidden").projectId;
 
 function seeded() {
   const w = world();

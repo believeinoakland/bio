@@ -5,11 +5,10 @@ import { readFileSync } from "node:fs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, memberVersions } from "../../../src/setup.mjs";
 import * as leaf from "../../../src/setup-fleet.mjs";
 
-test("N234 (K405): the installer's names come from a leaf that loads alone, importing nothing, and setup.mjs re-exports the same values; R47's block is held there too", async () => {
-  /* Loaded as a data: module, where no import can resolve: a leaf that imported anything would fail to load here. */
-  const text = readFileSync(new URL("../../../src/setup-fleet.mjs", import.meta.url), "utf8");
-  const alone = await import("data:text/javascript;base64," + Buffer.from(text).toString("base64"));
-  assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "FORGOT_HELP", "GROUP_SLUG_RE", "HOSTING_CONTROL", "HOSTING_RECOVERY_DEPLOYER", "hostingControlBlock"]);
+test("N234 (K405, R98): the installer's names come from a leaf whose only import is setup-words, and setup.mjs re-exports the same values; R47's block is held there too", async () => {
+  /* The leaf's import is setup-words (R98), which the installer already carries: loaded as the module it is, not as a data: module. */
+  const alone = await import("../../../src/setup-fleet.mjs");
+  assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "FORGOT_HELP", "GROUP_SLUG_RE", "HOSTING_CONTROL", "HOSTING_RECOVERY_DEPLOYER", "HOSTING_RECOVERY_DEPLOYER_KEY", "hostingControlBlock"]);
   assert.deepEqual(alone.HOSTING_CONTROL, leaf.HOSTING_CONTROL);
   assert.equal(alone.hostingControlBlock("notice"), leaf.hostingControlBlock("notice"));
   assert.equal(alone.hostingControlBlock("notice", { guideHref: "#g" }), leaf.hostingControlBlock("notice", { guideHref: "#g" }));
@@ -83,9 +82,6 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed", "memberlanguage",
     "memberlanguageset", "officesseed", "placewanted", "placewantedstate", "profiles", "profilesset",
     "recordcpuprobestep", "runtimeobservations", "seatsseed",
-    /* T37 (R67–R74): the translation ops and the door's store-internal record route */
-    "translationadopt", "translationconfirm", "translationdraft", "translationdraftrecord", "translationgrant",
-    "translationmark", "translationrevert", "translations", "interfacewords",
     /* T45 (R77): the administrators' act setting the group's declared stake */
     "declaredstakeset",
     /* T46 (R79): a member's own explanation level */
@@ -93,6 +89,10 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     /* T47 (R84, R85): the group's logo and languages, and the logo read control-plane serves */
     "grouplogoset", "grouplogo", "grouplanguagesset", "grouplanguages",
     /* T48 (R89, R90): the update notice and the administrators' three choices */
-    "updatenotice", "updatestart", "updatelater", "updateskip"].sort());
+    "updatenotice", "updatestart", "updatelater", "updateskip",
+    /* T51 (R95): the seven facts `op=bootstrap` states to a credentialed caller, a store-internal route */
+    "bootstrapfacts",
+    /* T51 (R105, K5170): the migrations' counts `op=selftest` states to an administrator, a store-internal route */
+    "selftestmigrations"].sort());
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

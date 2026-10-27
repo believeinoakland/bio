@@ -9,6 +9,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { FAIL } from "./walker.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const MOCK_PATH = "docs/development/ux-substrate/layouts.html";
@@ -133,6 +134,28 @@ export async function designMock(b, { dir, commit = assetsCommit(), root = ROOT 
       kept.set(key, png);
       return png;
     },
+    /* R21: screen `id` as the mock draws it with its own "In this mockup, show" control `control` set to the option whose label
+       matches `option` (a pattern's source), at `width`, as PNG bytes; `{why}` instead when the mock has no such screen,
+       control or option, so a mock missing a state fails by its name */
+    async drawState(id, control, option, width) {
+      const r = await page.evaluate(([id, control, option, dev]) => {
+        if (!REG.some((x) => x.id === id)) return "screen";
+        const W = window.CS_WALK; Object.assign(W.st, { mode: "screen", id, ai: false, dev, step: 0 }); W.draw();
+        const sel = document.getElementById(control);
+        if (!sel) return "control";
+        const o = [...sel.options].find((x) => new RegExp(option, "i").test(x.textContent));
+        if (!o) return "option";
+        sel.value = o.value; sel.dispatchEvent(new Event("change", { bubbles: true }));
+        const sc = document.getElementById("vscale"), box = document.getElementById("vdev");
+        sc.style.transform = "none";
+        Object.assign(box.style, { width: "max-content", height: "auto", overflow: "visible" });
+        return "ok:" + o.textContent.trim();
+      }, [id, control, option, width <= PHONE ? "phone" : "desktop"]);
+      if (r.startsWith("ok:")) return { png: await page.locator("#vscale").screenshot(), label: r.slice(3) };
+      return { why: r === "screen" ? localize("journey-check.design.the_mock_draws_no_such_screen", "the mock draws no such screen")
+        : r === "control" ? localize("journey-check.design.the_mock_offers_no_control", "the mock offers no control {control}", { control: String(control) })
+          : localize("journey-check.design.the_mock_s_offers_no_state", "the mock's {control} offers no state like /{option}/", { control: String(control), option: String(option) }) };
+    },
     /* R18: every step of design journey `journey` as the design's file holds it, in its order, the assistant's and the
        no-assistant's alike: `{s, v, act, only}` (`only` is "ai", "noai" or null) */
     async allSteps(journey) {
@@ -178,22 +201,22 @@ export const JOURNEY_29_ORDER = Object.freeze([
   ["question", "new", "airunopen"], ["question", "running", null], ["question", "ended", "airunopen"], ["question", "new", "search"],
   ["capture", "question", "acquire"], ["document", "held", "release"], ["document", null, "cite"],
   ["question", "proposal", "versionaccept"], ["question", null, "conclude"], ["question", "concluded", null]].map(([s, v, act]) => Object.freeze({ s, v, act })));
-export const stepName = (journey, k, st) => `journey ${journey} step ${k + 1} (${st.s}${st.v ? ", " + st.v : ""}${st.act ? ", " + st.act : ""})`;
+export const stepName = (journey, k, st) => localize("journey-check.design.journey_journey_step_v1_s", "journey {journey} step {v1} ({s}{v2}{v3})", { journey: String(journey), v1: String(k + 1), s: String(st.s), v2: String(st.v ? ", " + st.v : ""), v3: String(st.act ? ", " + st.act : "") });
 export async function journeyPairs(walk, b, mock, { out, liveOf, journey = JOURNEY_29, width = 1280, notWalked = false, order = JOURNEY_29_ORDER }) {
   const written = [];
   const steps = await mock.allSteps(journey);
   if (journey === JOURNEY_29) for (const [k, want] of order.entries()) {
     const got = steps[k];
     if (!got || got.s !== want.s || got.v !== want.v || got.act !== want.act)
-      walk.fail(FAIL.DESIGN, `${stepName(journey, k, want)}: the design's file holds no such step there`);
+      walk.fail(FAIL.DESIGN, localize("journey-check.design.stepname_the_designs_file_holds", "{stepName}: the design's file holds no such step there", { stepName: String(stepName(journey, k, want)) }));
   }
   for (const [k, st] of steps.entries()) {
     const name = stepName(journey, k, st);
     const live = liveOf(st, k);
-    if (!live && notWalked && st.only === "ai") { walk.notes.push(`${name}: not walked, the assistant does not work (K3717)`); continue; }
+    if (!live && notWalked && st.only === "ai") { walk.notWalked(name); continue; }
     const design = await mock.drawStepAt(journey, k, width);
-    if (!live) { walk.fail(FAIL.DESIGN, `${name}: no LIVE screenshot of it, so no pair`); continue; }
-    if (!design) { walk.fail(FAIL.DESIGN, `${name}: the design mock at ${mock.commit} draws no such step`); continue; }
+    if (!live) { walk.fail(FAIL.DESIGN, localize("journey-check.design.name_no_live_screenshot_of", "{name}: no LIVE screenshot of it, so no pair", { name: String(name) })); continue; }
+    if (!design) { walk.fail(FAIL.DESIGN, localize("journey-check.design.name_the_design_mock_at", "{name}: the design mock at {commit} draws no such step", { name: String(name), commit: String(mock.commit) })); continue; }
     written.push(await pair(b, readFileSync(live), design, join(out, "pairs", `journey-${journey}-step-${String(k + 1).padStart(2, "0")}-${st.s}.png`), { title: name }));
   }
   return written;

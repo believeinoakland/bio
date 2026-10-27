@@ -1,4 +1,4 @@
-/* signin-door: THE SUBSCRIPTION SIGN-IN DOOR (R1–R5; T47-91; N1001; connect §3), split by copy from `control-plane`
+/* signin-door: THE SUBSCRIPTION SIGN-IN DOOR (R1–R6; T47-91; N1001; connect §3), split by copy from `control-plane`
    (its R65, R78, R85–R87; K617, K624). This file is the door's Worker half: what `control-plane` calls when it routes
    `subscriptionsignin`, `subscriptiondisconnect`, `signintrace`, a member's revocation and an ask's or draft's answer.
    The store's half (the in-plane `credentials` calls and the bounded trace) is `ops.mjs`, a store-internal map.
@@ -30,6 +30,7 @@
    door sends as JSON (`answer-envelope` decorates a refusal with its row). `log(line)` writes one log line (default
    `console.log` of the JSON). Nothing here throws. */
 import { storeSilent } from "../answer-envelope/index.mjs";
+import { hasWord, localize, word } from "../setup-words/index.mjs";
 
 export const SIGNIN_STEPS = Object.freeze(["start", "code", "state", "signout"]);
 /* R1 (K2200 (9)): the steps that start or complete a sign-in, refused under keep-away. */
@@ -38,8 +39,15 @@ const KEPT_AWAY_STEPS = Object.freeze(["start", "code"]);
 const DISCLOSURE_STEPS = Object.freeze(["start"]);
 /* R1: the door's member words under the UX stream's keys, read by key until `words.json` holds them. */
 export const SIGNIN_WORDS = Object.freeze({
-  "ai.refused.signinabsent": "Signing in with Claude is not installed in your group's Civicsmith yet. Whoever installed "
-    + "your group's Civicsmith can add it.",
+  "ai.refused.signinabsent": hasWord("ai.refused.signinabsent") ? word("ai.refused.signinabsent")
+    : localize("signin-door.index.signing_in_with_claude_is", "Signing in with Claude is not installed in your team's Civicsmith yet. Whoever installed your team's Civicsmith can add it."),
+});
+/* R6 (K5046 (c); op-declarations R80, R81): the one op this door answers and declares, beside its function; `control-plane`
+   no longer declares it. `step` is required: `agent-worker` R66's `BAD_STEP` is relayed as R1 relays it. */
+export const DECLARED_OPS = Object.freeze({
+  subscriptionsignin: Object.freeze({ classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: null,
+    weight: "credential", description: localize("signin-door.declared.subscriptionsignin", "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle"),
+    fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } }),
 });
 /* R3 (`agent-worker` R83): the two headers the door sends, and no other of its own. */
 export const TRACE_HEADER = "x-civicsmith-trace";
@@ -107,7 +115,7 @@ async function ask(store, path, init = { method: "POST", body: "{}" }) {
 }
 
 const unbound = () => ({ status: 503, body: { ok: false, reason: "AGENT_WORKER_UNBOUND",
-  detail: "your group's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in." } });
+  detail: localize("signin-door.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in.") } });
 const silent = (why) => ({ status: 502, body: { ok: false, reason: "AGENT_WORKER_SILENT",
   detail: `the assistant member ${why}. Nothing was kept.` } });
 
@@ -266,8 +274,7 @@ export async function signintrace({ env, store }) {
   /* DEC-49 REGION is-signintrace-test-instance
      C-69.7 (`answer-envelope`'s DISPATCH_CHECKS row, K3143): the one site of the code (K231). */
   if (!testInstanceOf(env))
-    return { status: 403, body: { ok: false, reason: "SIGNINTRACE_NOT_TEST", detail: "the sign-in trace is kept only "
-      + "on a test instance of Civicsmith, and your group's Civicsmith is not one. Nothing was read." } };
+    return { status: 403, body: { ok: false, reason: "SIGNINTRACE_NOT_TEST", detail: localize("signin-door.index.the_sign_in_trace_is", "the sign-in trace is kept only on a test instance of Civicsmith, and your team's Civicsmith is not one. Nothing was read.") } };
   /* END DEC-49 REGION is-signintrace-test-instance */
   const out = await ask(store, STORE_ROUTES.traceRead, { method: "GET" });
   if (out.refused || !out.answered) return unreadAnswer("signintrace", out, undefined);

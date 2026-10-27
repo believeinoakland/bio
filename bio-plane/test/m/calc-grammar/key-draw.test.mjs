@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { resultKey, draw, interval, METHOD } from "../../../src/calc-grammar/index.mjs";
+import { resultKey, draw, drawSliced, DRAW_SLICE, interval, METHOD } from "../../../src/calc-grammar/index.mjs";
 
 const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const R = { method: METHOD, inputs: [{ name: "t", kind: "table" }], steps: [{ op: "count", as: "c", from: "t" }], output: "c" };
@@ -74,4 +74,40 @@ test("R17 the exact hypergeometric interval: low and high are the extreme frame 
     { frame_size: 5.5, sample_size: 3, successes: 1, confidence: "0.9" }, { frame_size: 5, sample_size: 3, successes: 1, confidence: "1" },
     { frame_size: 5, sample_size: 3, successes: 1, confidence: "0" }, { frame_size: 5, sample_size: 3, successes: 1, confidence: "95%" },
     { frame_size: 5, sample_size: 3, successes: 1 }]) assert.equal(interval(bad).refused, "INTERVAL_INVALID", JSON.stringify(bad));
+});
+
+test("R23 a draw over 1,000,000 keys yields on bounded slices and answers the sample a plain draw and any SHA-256 tool give", async () => {
+  const frame = Array.from({ length: 1_000_000 }, (_, i) => `ROW-${(i * 7919) % 1_000_003}`);
+  const seed = "2026-10-25 public draw";
+  const n = 100;
+  const want = frame.map((key) => ({ key, h: sha(`${seed}\n${key}`) }))
+    .sort((a, b) => (a.h < b.h ? -1 : a.h > b.h ? 1 : 0)).slice(0, n).map((x) => x.key);
+  let yields = 0; let longest = 0; let last = performance.now();
+  const r = await drawSliced({ frame, n, seed }, { yieldNow: async () => { yields++; const t = performance.now(); longest = Math.max(longest, t - last); last = performance.now(); await new Promise((res) => setImmediate(res)); last = performance.now(); } });
+  longest = Math.max(longest, performance.now() - last);
+  assert.deepEqual(r.sample, want);
+  assert.equal(r.frame_hash, sha(JSON.stringify([...frame].sort())));
+  assert.equal(r.seed, seed);
+  assert.ok(yields >= frame.length / DRAW_SLICE, `yielded ${yields} times`);
+  assert.ok(longest < 500, `the longest stretch without a yield was ${Math.round(longest)} ms`);
+  assert.deepEqual(draw({ frame, n, seed }), r, "the plain draw answers the same");
+  assert.deepEqual(await drawSliced({ frame: ["b", "a", "c"], n: 2, seed: "x" }), draw({ frame: ["b", "a", "c"], n: 2, seed: "x" }), "no yield function is no yield");
+  assert.equal((await drawSliced({ frame: ["a", "a"], n: 1, seed: "x" }, {})).refused, "FRAME_INVALID");
+  assert.equal((await drawSliced({ frame: ["a"], n: 2, seed: "x" }, {})).refused, "DRAW_TOO_LARGE");
+  await assert.rejects(() => drawSliced({ frame: "abc", n: 1, seed: "x" }), TypeError);
+});
+
+test("R23 interval over a frame of 100,000 values answers in moments, the extreme counts the tail rule names", () => {
+  const C = (m, k) => { if (k < 0 || k > m) return 0n; k = Math.min(k, m - k); let r = 1n; for (let i = 1; i <= k; i++) r = (r * BigInt(m - k + i)) / BigInt(i); return r; };
+  const N = 100_000; const n = 400; const x = 40;
+  const t0 = performance.now();
+  const r = interval({ frame_size: N, sample_size: n, successes: x, confidence: "0.95" });
+  assert.ok(performance.now() - t0 < 5000);
+  const total = C(N, n);
+  const ok = (t) => 2n * 100n * t >= 5n * total;
+  const up = (M) => { let s = 0n; for (let k = x; k <= Math.min(n, M); k++) s += C(M, k) * C(N - M, n - k); return s; };
+  const down = (M) => { let s = 0n; for (let k = 0; k <= x; k++) s += C(M, k) * C(N - M, n - k); return s; };
+  assert.ok(ok(up(r.low)) && !ok(up(r.low - 1)), "low is the least count whose upper tail is not below the rule");
+  assert.ok(ok(down(r.high)) && !ok(down(r.high + 1)), "high is the greatest count whose lower tail is not below the rule");
+  assert.match(r.method, /hypergeometric/);
 });

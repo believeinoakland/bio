@@ -7,6 +7,7 @@ import { seeded, post, prepare, V, MACHINE, NOW, DAY, WEEK, monday, day } from "
 import { ACTIVITY_LEVELS, ACTIVITY_METHOD, ACTIVITY_METHOD_VERSION, ACTIVITY_WINDOW, ATTESTATION_FORMAT, levelOf }
   from "../../../src/network-notices/index.mjs";
 import { instanceStatement } from "../../../src/attestation/index.mjs";
+import { noKeyInstanceSign } from "../attestation/fixtures.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { createHash } from "node:crypto";
 
@@ -209,7 +210,8 @@ test("R13 a monthly falling due with no key bound is not issued; the miss is sta
   w.weeksOfWork(w.P, 4);
   await post(w);
   const sign = w.attestation.instanceSign;
-  w.attestation.instanceSign = async () => ({ ok: false, reason: "RECEIPT_NO_KEY" });
+  const keyRefusal = await noKeyInstanceSign();
+  w.attestation.instanceSign = async () => keyRefusal;
   w.clock.now = at("2026-11-01T00:10:00Z");
   const t = await w.nn.attestTick();
   assert.equal(t.monthly.length, 0);

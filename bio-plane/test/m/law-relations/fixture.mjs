@@ -13,9 +13,11 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash, randomBytes } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { keyedServiceOff } from "../acquisition/fixtures.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { recogniseCitations } from "../../../src/idspaces.mjs";
 import { LawRecords, weakestCeiling } from "../../../src/law-relations/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s), "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -126,30 +128,30 @@ export function world({ construct = true, lookup = null } = {}) {
     eventDay: (event, edge, viewer) => {
       const e = events.get(event);
       return e && (viewer == null || membership.inSight(e.bundle, viewer)) && e.day ? { day: e.day, why: null }
-        : { day: null, why: `the event ${event} is not held, or may not be read` };
+        : { day: null, why: word("standards.why.event_held_read", { event_id: String(event) }) };
     },
     eventWhen: (event, viewer) => { const d = reads.eventDay(event, "start", viewer); return d.day ? d : null; },
     gradeOf: (ids) => weakestCeiling(ids.length ? content.standings(ids) : {}, ids),
     zone: () => "UTC",
     recognise: (t) => recogniseCitations(t),
-    citationLookup: async (a) => { calls.lookup.push(a); return lookup ? lookup(a) : { ok: false, reason: "KEYED_SERVICE_OFF" }; },
+    citationLookup: async (a) => { calls.lookup.push(a); return lookup ? lookup(a) : keyedServiceOff(); },
     idsAtKey: (key, portion) => [...standards.values()].filter((s) => s.instrument === key && (portion === null || s.portion_path === portion))
       .map((s) => s.id).sort(),
     idsOfKind: (kind, limit) => [...standards.values()].filter((s) => s.kind === kind).map((s) => s.id).sort().slice(0, limit),
     idsCovering: (day) => [...standards.values()].filter((s) => inPeriod(s, day)).map((s) => s.id).sort(),
     noSuchStandard: (id, extra) => hostRefusal("NO_SUCH_STANDARD", { standard: id, ...(extra || {}) }),
     portionUnknown: (end, standard, portion) => hostRefusal("PORTION_UNKNOWN", { end, standard, portion }),
-    refuseNoId: (op) => hostRefusal("STANDARD_NO_ID", { op }),
-    refuseDateInvalid: (date) => hostRefusal("STANDARD_DATE_INVALID", { date }),
+    refuseNoId: (op) => hostRefusal("STANDARD_NO_ID", { op }), // fixtures-contract: standards host-refusals
+    refuseDateInvalid: (date) => hostRefusal("STANDARD_DATE_INVALID", { date }), // fixtures-contract: standards host-refusals
     refuseFieldUnknown: (a, keys) => {
       const unknown = Object.keys(a).filter((k) => !keys.includes(k)).sort();
-      return unknown.length ? hostRefusal("STANDARD_FIELD_UNKNOWN", { rejected: unknown, accepted: [...keys] }) : null;
+      return unknown.length ? hostRefusal("STANDARD_FIELD_UNKNOWN", { rejected: unknown, accepted: [...keys] }) : null; // fixtures-contract: standards host-refusals
     },
-    refuseReason: (fault) => hostRefusal("STANDARD_NO_REASON", { fault }),
-    refuseNoSuchProposal: (id) => hostRefusal("STANDARD_NO_SUCH_PROPOSAL", { proposal: id }),
-    refuseProposalAdopted: (id, as) => hostRefusal("STANDARD_PROPOSAL_ADOPTED", { proposal: id, adopted_as: as }),
-    refuseProposerUnnamed: () => hostRefusal("STANDARD_PROPOSER_UNNAMED"),
-    refuseWhyInvalid: () => hostRefusal("STANDARD_WHY_INVALID"),
+    refuseReason: (fault) => hostRefusal("STANDARD_NO_REASON", { fault }), // fixtures-contract: standards host-refusals
+    refuseNoSuchProposal: (id) => hostRefusal("STANDARD_NO_SUCH_PROPOSAL", { proposal: id }), // fixtures-contract: standards host-refusals
+    refuseProposalAdopted: (id, as) => hostRefusal("STANDARD_PROPOSAL_ADOPTED", { proposal: id, adopted_as: as }), // fixtures-contract: standards host-refusals
+    refuseProposerUnnamed: () => hostRefusal("STANDARD_PROPOSER_UNNAMED"), // fixtures-contract: standards host-refusals
+    refuseWhyInvalid: () => hostRefusal("STANDARD_WHY_INVALID"), // fixtures-contract: standards host-refusals
   };
   const w = {
     st, host, record, membership, content, ex, reads, standards, events, calls,

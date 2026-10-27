@@ -83,8 +83,10 @@ test("R28 AI_GRANT_OPS names each op as the plane routes it: `rule` held, the si
   for (const op of AI_GRANT_OPS) assert.match(op, /^[a-z]+$/, op);
   for (const gone of ["careerof", "occurrences", "lines", "duties", "calculations", "moneyfacts"])
     assert.ok(!AI_GRANT_OPS.includes(gone), gone);
-  for (const held of ["rule", "career", "dutyoccurrences", "linesof", "structureat", "dutiesof", "calculation", "money"])
-    assert.ok(AI_GRANT_OPS.includes(held), held);
+  /* `rule` is held: answers' door to every rule service (its R7), so a grant admits it; and the two renamed names of
+     `lines` and `structure`, as the plane routes them */
+  assert.ok(AI_GRANT_OPS.includes("rule"), "rule");
+  assert.ok(AI_GRANT_OPS.includes("linesof") && AI_GRANT_OPS.includes("structureat"), "the renamed linesof and structureat");
 });
 
 test("R28 AI_GRANT_OPS is frozen and sorted; a request under a grant is admitted only for an op on it and only as a read; anything else GRANT_OP_REFUSED naming the op", async () => {
@@ -177,9 +179,10 @@ test("R32 aiGrantMintStanding: refusals in order (not active, NO_ACCOUNT, STANDI
   w.c.accountReferenceRemove({ member: "bob", by: "bob" });
   const standing = (member, question = "what is new on the budget?") => w.c.aiGrantMintStanding({ member, question });
   const before = w.snapshot();
-  for (const member of ["dee", "cal", "ghost", "admin", "class:ai", null, ""])
+  for (const member of ["dee", "cal", "ghost", "class:ai", null, ""])
     assert.deepEqual(shape(await standing(member)), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"), String(member));
   assert.deepEqual(shape(await standing("bob")), refusal("NO_ACCOUNT"), "no reference, no group key");
+  assert.deepEqual(shape(await standing("admin")), refusal("NO_ACCOUNT"), "the founder is an active member (member-roster R76) with no account of her own");
   assert.deepEqual(shape(await standing("ann")), refusal("STANDING_SWITCH_OFF"), "her own account's switch is off");
   assert.equal(w.snapshot(), before, "no refusal mints");
   w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });

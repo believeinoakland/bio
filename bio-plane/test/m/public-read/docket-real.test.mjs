@@ -17,6 +17,7 @@ const doAnswer = async (res) => { const r = await res; const out = await r.json(
   return out.ok === true ? { answered: true, result: out.result } : { answered: false }; };
 const HELPERS = { json, doAnswer, storeRefusal: (out) => json(out.reply.body, out.reply.status),
                   storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
+                  // fixtures-contract: answer-envelope door-helpers
                   requiredArgument: (op, argument) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument }) };
 
 function served() {

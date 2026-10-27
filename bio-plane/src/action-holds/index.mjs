@@ -22,6 +22,7 @@
  *                        `sight`, `visibilityOf`, `existenceAct`, `noSuchProject` (R2, R6–R8, R12).
  *   docket               `docketPressureOf`, `docketPressureMarks` (its R27; R2, R3).
  *   roster               project-roster's `projectScope` (its R23; R2's counsel matter).
+ *   localFacts           local-facts' `governingView` (its R12): the `threat_letter` legal facts `pressureFor` states (R18).
  *   doorbell             `registerReader` (its R3): the litigation-hold reader (R4); `null` registers none.
  *   ratification         `registerHoldReader` (its R45): the reader of holds over a project (R10); `null` registers none.
  *   now, env             the instance clock (milliseconds; default `env.BIO_NOW_MS`, else the wall clock).
@@ -41,6 +42,8 @@ import { parseFrontmatter, normalizeType, isMachineIdentity, BUNDLE_ID_RE } from
 import { ACTION_ACT_CHECKS, ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTION_HOLDS_CHECKS } from "./checks.mjs";
 import { ACTION_HOLDS_TABLES, migrateActionHolds } from "./schema.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 export { ACTION_HOLDS_SCHEMA, ACTION_HOLDS_TABLES } from "./schema.mjs";
 export { ACTION_HOLDS_CHECKS, ACTION_HOLDS_WORDS } from "./checks.mjs";
@@ -88,8 +91,6 @@ const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detai
    (the notice's text), so `HOLD_NOT_IN_PLACE` is minted at one site with its one row (C-149.11). `place` is R2's
    (`{target, ord?}`, `{project}` or `{case}`); its keys are answered beside the row as given, each a string or a whole
    number, and nothing else of it. The detail is one fixed sentence. Writes nothing and never throws. */
-const HOLD_NOT_IN_PLACE_DETAIL = "a hold notice is recorded for a hold in place, and the hold at this place is not in place: "
-  + "none has been placed there, or it was released. Nothing was written.";
 export function holdNotInPlace(place = null) {
   let keys = {};
   try {
@@ -102,7 +103,7 @@ export function holdNotInPlace(place = null) {
   /* DEC-49 REGION is-hold-not-in-place */
   const row = ACTION_HOLDS_CHECKS.HOLD_NOT_IN_PLACE;
   return { ok: false, reason: "HOLD_NOT_IN_PLACE", code: "HOLD_NOT_IN_PLACE", check: row.check, translation: row.translation,
-           ...keys, detail: HOLD_NOT_IN_PLACE_DETAIL };
+           ...keys, detail: localize("action-holds.index.a_hold_notice_is_recorded", "a hold notice is recorded for a hold in place, and the hold at this place is not in place: none has been placed there, or it was released. Nothing was written.") };
   /* END DEC-49 REGION is-hold-not-in-place */
 }
 
@@ -121,12 +122,12 @@ const given = (v) => v !== undefined && v !== null && !(typeof v === "string" &&
 export class ActionHolds {
   #deps;
 
-  constructor({ storage, record, membership, host = null, actions = undefined, docket = undefined, roster = undefined, now = null,
-                env = null } = {}) {
+  constructor({ storage, record, membership, host = null, actions = undefined, docket = undefined, roster = undefined,
+                localFacts = undefined, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, actions, docket, roster };
+    this.#deps = { host, actions, docket, roster, localFacts };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -144,6 +145,8 @@ export class ActionHolds {
      own bytes, `pressure_kind` and `pressure_note`; K2849). Reached on the same host unless a test passes its own. */
   get actions() { return this.#reach("actions", (h) => actionsOf(h)); }
   get roster() { return this.#reach("roster", (h) => projectRosterOf(h, { record: this.record, membership: this.membership })); }
+  /* R18: the group's governing view (local-facts R12), reached on the same host unless a test passes its own. */
+  get localFacts() { return this.#reach("localFacts", (h) => localFactsOf(h, { record: this.record, membership: this.membership })); }
 
   migrate() { migrateActionHolds(this.sql); }
 
@@ -188,15 +191,12 @@ export class ActionHolds {
   #pressureRefusal({ who, mark, direction }) {
     /* DEC-49 REGION is-pressure */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a "
-        + "machine credential may not mark it. Nothing was written.");
+      return refuse("MACHINE_CANNOT_MARK_PRESSURE", localize("action-holds.index.marking_pressure_directed_at_the", "marking pressure directed at the team is a member's judgement; a machine credential may not mark it. Nothing was written."));
     if (!mark || !PRESSURE_KINDS.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX || /["\\\r\n]/.test(mark.raw))
-      return refuse("PRESSURE_REFUSED", `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS.join(", ")}, the note `
-        + `1 to ${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`,
+      return refuse("PRESSURE_REFUSED", localize("action-holds.index.a_pressure_mark_is_kind_note", "a pressure mark is {kind, note}: kind one of {kinds}, the note 1 to {max} characters with no quote, backslash or line break. Nothing was written.", { kinds: PRESSURE_KINDS.join(", "), max: NOTE_MAX }),
         { legal: PRESSURE_KINDS, max: NOTE_MAX });
     if (direction !== "received")
-      return refuse("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. `
-        + "Nothing was written.");
+      return refuse("PRESSURE_NOT_RECEIVED", localize("action-holds.index.pressure_is_marked_on_a", "pressure is marked on a received entry; this one is {v1}. Nothing was written.", { v1: String(direction || localize("action-holds.index.not_one", "not one")) }));
     /* END DEC-49 REGION is-pressure */
     return null;
   }
@@ -207,7 +207,7 @@ export class ActionHolds {
     const who = String(author ?? "").trim();
     const mark = ActionHolds.#pressureOf(pressure);
     if (!who || isMachineIdentity(who)) return this.#pressureRefusal({ who });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-holds.index.one_action_at_a_time_pass", "one action at a time: pass target=<action id>") };
     const shape = this.#pressureRefusal({ who, mark, direction: "received" });
     if (shape) return { ...shape, target };
     const b = this.#visibleAction(target, viewer);
@@ -219,16 +219,16 @@ export class ActionHolds {
     const n = positionOf(ord);
     const entry = Number.isInteger(n) ? ledger[n] : undefined;
     /* DEC-49 REGION is-pressure-entry */
+    /* R21 (T51; K4206; P8): an absent `ord` is refused naming it; a position no entry stands at is the same code without it. */
     if (!entry || typeof entry !== "object")
-      return refuse("PRESSURE_NO_ENTRY", "no correspondence entry stands at that position. Nothing was written.",
-        { target, ord: ord ?? null, entries: ledger.length });
+      return refuse("PRESSURE_NO_ENTRY", localize("action-holds.index.no_correspondence_entry_stands_at", "no correspondence entry stands at that position. Nothing was written."),
+        { target, ord: ord ?? null, entries: ledger.length, ...(given(ord) ? {} : { field: "ord" }) });
     /* END DEC-49 REGION is-pressure-entry */
     const notReceived = this.#pressureRefusal({ who, mark, direction: entry.direction });
     if (notReceived) return { ...notReceived, target, ord: n };
     /* DEC-49 REGION is-pressure-marked */
     if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) || entry.pressure_kind !== undefined)
-      return refuse("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. "
-        + "Nothing was written.", { target, ord: n });
+      return refuse("PRESSURE_MARKED", localize("action-holds.index.that_entry_is_already_marked", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written."), { target, ord: n });
     /* END DEC-49 REGION is-pressure-marked */
     const at = stampInstant("second", this.#nowMs());
     this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
@@ -244,16 +244,14 @@ export class ActionHolds {
      one does or a position that is no whole number is given (`shapeOnly` stops there: R2 asks the rest later); then
      each place's own sight: `NO_SUCH_BUNDLE`, `NOT_AN_ACTION` and `HOLD_PLACE_REFUSED` for a position at which no entry
      stands, or for a project the answer to one the author may not name (R2's named projects'). */
-  #placeOf({ target = null, ord = null, project = null, caseId = null, viewer = null, shapeOnly = false }) {
-    const names = [given(target), given(project), given(caseId)].filter(Boolean).length;
-    if (!names) return { refusal: { ok: false, reason: "NO_TARGET", detail: "a hold is placed at one place: pass target=<action id> "
-      + "(and ord=<entry position> for one entry), or project=<project id>" } };
+  #placeOf({ target = null, ord = null, project = null, caseId = null, docketEntry = null, pressureRef = null, viewer = null, shapeOnly = false }) {
+    const names = [given(target), given(project), given(caseId), given(docketEntry), given(pressureRef)].filter(Boolean).length;
+    if (!names) return { refusal: { ok: false, reason: "NO_TARGET", detail: localize("action-holds.index.a_hold_is_placed_at_one", "a hold is placed at one place: pass target=<action id> (and ord=<entry position> for one entry), or project=<project id>") } };
     const hasOrd = given(ord);
     const n = hasOrd ? positionOf(ord) : null;
     /* DEC-49 REGION is-hold-place */
     if (names > 1 || (hasOrd && (!given(target) || !Number.isInteger(n))))
-      return { refusal: refuse("HOLD_PLACE_REFUSED", "a hold is placed at exactly one place: an action, an entry of one "
-        + "by its position (a whole number from zero), or a project. Nothing was written.") };
+      return { refusal: refuse("HOLD_PLACE_REFUSED", localize("action-holds.index.a_hold_is_placed_at_exactly", "a hold is placed at exactly one place: an action, an entry of one by its position (a whole number from zero), or a project. Nothing was written.")) };
     /* END DEC-49 REGION is-hold-place */
     if (shapeOnly) return { place: null };
     if (given(target)) {
@@ -266,10 +264,30 @@ export class ActionHolds {
       const ledger = (this.#heldFm(id) || {}).correspondence;
       /* DEC-49 REGION is-hold-place */
       if (!Array.isArray(ledger) || !ledger[n] || typeof ledger[n] !== "object")
-        return { refusal: refuse("HOLD_PLACE_REFUSED", "no correspondence entry of that action stands at that position, so "
-          + "no hold can be placed on it. Nothing was written.", { target: id, ord: n }) };
+        return { refusal: refuse("HOLD_PLACE_REFUSED", localize("action-holds.index.no_correspondence_entry_of_that", "no correspondence entry of that action stands at that position, so no hold can be placed on it. Nothing was written."), { target: id, ord: n }) };
       /* END DEC-49 REGION is-hold-place */
       return { place: { kind: "entry", bundle: id, ord: n, target: id } };
+    }
+    if (given(docketEntry)) {
+      /* R19: a docket `legal` mark's place is its case's project, read through `docket.docketPressureOf` (its R27), which
+         answers an entry the viewer may not see as an absent one. */
+      const e = str(String(docketEntry));
+      const d = this.docket;
+      let r = null;
+      try { r = d ? d.docketPressureOf({ entry: e, viewer }) : null; } catch { r = null; }
+      if (!r) return { refusal: { ok: false, reason: "DOCKET_UNREADABLE", detail: localize("action-holds.index.the_dockets_marks_could_not", "the docket's marks could not be read, so whether that entry is marked cannot be said. Nothing was written.") } };
+      if (r.ok === false) return { refusal: r };
+      if (r.kind !== "legal" || typeof r.project !== "string" || !this.#mayName(r.project, viewer))
+        return { refusal: refuse("HOLD_PLACE_REFUSED", localize("action-holds.index.that_docket_entry_carries_no", "that docket entry carries no legal-pressure mark you can see, so it is no place for a hold. Nothing was written."), { docket_entry: e }) };
+      return { place: { kind: "project", bundle: r.project, ord: WHOLE, project: r.project, docket_entry: e } };
+    }
+    if (given(pressureRef)) {
+      /* R2 (T51; SCREENS-ACTION J36): a pressure record's place is its project; an absent record, a malformed name and a
+         project the viewer does not see at FULL are answered alike. */
+      const ref = str(String(pressureRef)), m = PRESSURE_REF_RE.exec(ref);
+      const known = m && this.#seesFull(m[1], viewer) && this.#one(`SELECT seq FROM pressure_records WHERE bundle_id=? AND seq=?`, m[1], Number(m[2]));
+      if (!known) return { refusal: noSuchProject(m ? m[1] : ref) };
+      return { place: { kind: "project", bundle: m[1], ord: WHOLE, project: m[1], pressure: ref } };
     }
     if (given(caseId)) {
       const c = str(String(caseId));
@@ -297,7 +315,8 @@ export class ActionHolds {
 
   /* R2: a place as answers state it. */
   static #placeKeys(place) {
-    if (place.kind === "project") return { project: place.project, ...(place.case ? { case: place.case } : {}) };
+    if (place.kind === "project")
+      return { project: place.project, ...(place.case ? { case: place.case } : {}), ...(place.docket_entry ? { docket_entry: place.docket_entry } : {}), ...(place.pressure ? { pressure: place.pressure } : {}) };
     return { target: place.target, ord: place.kind === "entry" ? place.ord : null };
   }
 
@@ -313,9 +332,7 @@ export class ActionHolds {
     const keys = f ? Object.keys(f) : [];
     const kind = keys.length === 1 && HOLD_FROM_KINDS.includes(keys[0]) ? keys[0] : null;
     const v = kind ? f[kind] : null;
-    const no = () => ({ refusal: refuse("HOLD_FROM_REFUSED", "what prompted a hold is a pressure mark, a pressure record, a "
-      + "docket entry marked as legal pressure, or a counsel matter, standing at the place the hold is placed; this names "
-      + "none you can see there. Nothing was written.", { from: kind ? { [kind]: v } : null }) });
+    const no = () => ({ refusal: refuse("HOLD_FROM_REFUSED", localize("action-holds.index.what_prompted_a_hold_is", "what prompted a hold is a pressure mark, a pressure record, a docket entry marked as legal pressure, or a counsel matter, standing at the place the hold is placed; this names none you can see there. Nothing was written."), { from: kind ? { [kind]: v } : null }) });
     /* DEC-49 REGION is-hold-from */
     if (kind === "mark") {
       const m = objectOf(v);
@@ -336,8 +353,7 @@ export class ActionHolds {
       const d = this.docket;
       let r = null;
       try { r = d ? d.docketPressureOf({ entry: e, viewer }) : null; } catch { r = null; }
-      if (!r) return { refusal: { ok: false, reason: "DOCKET_UNREADABLE", detail: "the docket's marks could not be read, so "
-        + "whether that entry is marked cannot be said. Nothing was written." } };
+      if (!r) return { refusal: { ok: false, reason: "DOCKET_UNREADABLE", detail: localize("action-holds.index.the_dockets_marks_could_not", "the docket's marks could not be read, so whether that entry is marked cannot be said. Nothing was written.") } };
       if (r.ok === false && r.reason === "DOCKET_UNREADABLE") return { refusal: r };
       if (r.ok === false || r.kind !== "legal" || r.project !== place.project) return no();
       return { from: { kind, ref: e } };
@@ -376,11 +392,9 @@ export class ActionHolds {
     const why = typeof reason === "string" ? reason.trim() : "";
     /* DEC-49 REGION is-hold */
     const machine = !preview && (!who || isMachineIdentity(who))
-      ? refuse("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a "
-        + "machine credential may not state it. Nothing was written.") : null;
+      ? refuse("MACHINE_CANNOT_SET_HOLD", localize("action-holds.index.saying_whether_a_litigation_hold", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.")) : null;
     const shape = !preview && (!HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX || /["\\\r\n]/.test(why))
-      ? refuse("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX} `
-        + "characters and no quote, backslash or line break. Nothing was written.", { legal: HOLD_STATES, max: NOTE_MAX })
+      ? refuse("HOLD_REFUSED", localize("action-holds.index.a_litigation_hold_is_one", "a litigation hold is one of {states}, with a reason of 1 to {max} characters and no quote, backslash or line break. Nothing was written.", { states: HOLD_STATES.join(", "), max: NOTE_MAX }), { legal: HOLD_STATES, max: NOTE_MAX })
       : null;
     /* END DEC-49 REGION is-hold */
     if (machine) return machine;
@@ -389,8 +403,7 @@ export class ActionHolds {
     if (shaped.refusal) return shaped.refusal;
     /* DEC-49 REGION is-hold-release-own-act */
     if (mode === "hold" && h === "released")
-      return refuse("HOLD_RELEASE_IS_ITS_OWN_ACT", "a hold is released by its own act, op=actionholdrelease, which "
-        + "states what the release restarts. Nothing was written.", { target });
+      return refuse("HOLD_RELEASE_IS_ITS_OWN_ACT", localize("action-holds.index.a_hold_is_released_by", "a hold is released by its own act, op=actionholdrelease, which states what the release restarts. Nothing was written."), { target });
     /* END DEC-49 REGION is-hold-release-own-act */
     if (shape) return { ...shape, ...(target ? { target } : {}) };
     let named = [];
@@ -406,21 +419,24 @@ export class ActionHolds {
     const latest = this.#one(`SELECT seq, hold FROM action_holds WHERE bundle_id=? AND ord=? ORDER BY seq DESC LIMIT 1`,
       place.bundle, place.ord);
     if (preview) {
+      /* R6 (T51): the placing act's `from` locates the place; one naming none the viewer sees there is refused. */
+      const located = this.#fromOf(from, place, viewer);
+      if (located.refusal) return located.refusal;
       const all = this.#restarts(place.bundle, place.ord);
       const seen = all.filter((p) => this.#mayName(p, viewer));
       return { ok: true, ...where, hold: latest ? latest.hold : null, restarts: seen, out_of_view: seen.length < all.length };
     }
     /* DEC-49 REGION is-hold-already-released */
     if (release && latest && latest.hold === "released")
-      return refuse("HOLD_ALREADY_RELEASED", "this place's hold is already released; a release ends a hold in place. "
-        + "Nothing was written.", where);
+      return refuse("HOLD_ALREADY_RELEASED", localize("action-holds.index.this_places_hold_is_already", "this place's hold is already released; a release ends a hold in place. Nothing was written."), where);
     /* END DEC-49 REGION is-hold-already-released */
     /* R2: the first named project the author may not name answers as membership answers it (its R77, R78). */
     for (const p of named) {
       const seen = this.#projectSeen(p, viewer);
       if (seen) return seen;
     }
-    const prompted = release ? { from: null } : this.#fromOf(from, place, viewer);
+    /* R5 (T51): a release takes `from` as the placing act names it; it locates the place and is kept with the statement. */
+    const prompted = this.#fromOf(from, place, viewer);
     if (prompted.refusal) return prompted.refusal;
     const at = stampInstant("second", this.#nowMs());
     /* R5: `restarted` is what R6 would answer at this instant, whatever the author sees, read and written in one
@@ -444,6 +460,7 @@ export class ActionHolds {
     });
     if (release)
       return { ok: true, ...where, hold: "released", reason: why, by: who, at,
+               ...(prompted.from ? { from: ActionHolds.#fromAnswer(prompted.from.kind, prompted.from.ref) } : {}),
                restarted: written.list.filter((p) => this.#mayName(p, viewer)) };
     return { ok: true, ...where, hold: h, reason: why, by: who, at,
              ...(prompted.from ? { from: ActionHolds.#fromAnswer(prompted.from.kind, prompted.from.ref) } : {}),
@@ -451,14 +468,14 @@ export class ActionHolds {
   }
 
   /** R5 (DEC-113; K1134 (3)): a member states `released` at a place, recording what it restarted. */
-  actionHoldRelease({ target = null, ord = null, project = null, case: caseId = null, reason = null, viewer = null,
+  actionHoldRelease({ target = null, ord = null, project = null, case: caseId = null, from = null, reason = null, viewer = null,
                       author = null } = {}) {
-    return this.actionHold({ target, ord, project, case: caseId, reason, viewer, author, [HOLD_MODE]: "release" });
+    return this.actionHold({ target, ord, project, case: caseId, from, reason, viewer, author, [HOLD_MODE]: "release" });
   }
 
   /** R6 (DEC-113): what releasing a place's hold would restart, before any member releases it. Writes nothing. */
-  holdReleasePreview({ target = null, ord = null, project = null, case: caseId = null, viewer = null } = {}) {
-    return this.actionHold({ target, ord, project, case: caseId, viewer, [HOLD_MODE]: "preview" });
+  holdReleasePreview({ target = null, ord = null, project = null, case: caseId = null, from = null, viewer = null } = {}) {
+    return this.actionHold({ target, ord, project, case: caseId, from, viewer, [HOLD_MODE]: "preview" });
   }
 
   /* R2, R7 (C-149.4): a list of project ids, given as a list, its JSON, or ids separated by commas. At R2 (`exact`
@@ -476,8 +493,9 @@ export class ActionHolds {
     /* DEC-49 REGION is-hold-projects */
     if ((!absent || exact) && (!ids || ids.some((x) => typeof x !== "string" || !PROJECT_ID_RE.test(x))
         || distinct.size > HOLD_PROJECTS_MAX || (exact && (!ids.length || distinct.size !== ids.length))))
-      return refuse("HOLD_PROJECTS_REFUSED", `projects is a list of ${exact ? "1 to " : "at most "}${HOLD_PROJECTS_MAX} `
-        + `distinct project ids (PROJ-…)${exact ? ", each named once" : ""}. Nothing was ${exact ? "read" : "written"}.`,
+      return refuse("HOLD_PROJECTS_REFUSED", exact
+        ? localize("action-holds.index.projects_is_a_list_of_1", "projects is a list of 1 to {max} distinct project ids (PROJ-…), each named once. Nothing was read.", { max: HOLD_PROJECTS_MAX })
+        : localize("action-holds.index.projects_is_a_list_of_at", "projects is a list of at most {max} distinct project ids (PROJ-…). Nothing was written.", { max: HOLD_PROJECTS_MAX }),
         { max: HOLD_PROJECTS_MAX });
     /* END DEC-49 REGION is-hold-projects */
     return { ok: true, projects: absent ? [] : [...distinct] };
@@ -541,8 +559,8 @@ export class ActionHolds {
   /** R2 (T45): a place's hold statements, oldest first (as `actions` R25's read showed a legal mark's), its current
    *  `hold`, and the hold notices recorded for it (R11: when, how and how held; never a recipient). The place's own
    *  refusals answer an absent or invisible one. Writes nothing. */
-  holdsOf({ target = null, ord = null, project = null, case: caseId = null, viewer = null } = {}) {
-    const at = this.#placeOf({ target, ord, project, caseId, viewer });
+  holdsOf({ target = null, ord = null, project = null, case: caseId = null, docket_entry: docketEntry = null, pressure = null, viewer = null } = {}) {
+    const at = this.#placeOf({ target, ord, project, caseId, docketEntry, pressureRef: pressure, viewer });
     if (at.refusal) return withRow(at.refusal);
     const { place } = at;
     const notices = this.#rows(`SELECT seq, sent_on, medium, artifact_sha, account, recorded_by, recorded_at FROM hold_notices
@@ -550,6 +568,35 @@ export class ActionHolds {
       seq: n.seq, at: n.sent_on, medium: n.medium ?? null, held_as: n.artifact_sha ? "capture" : "testimony",
       ...(n.artifact_sha ? { artifact_sha: n.artifact_sha } : { account: n.account }), by: n.recorded_by, recorded_at: n.recorded_at }));
     return { ok: true, ...ActionHolds.#placeKeys(place), ...this.#holdsAt(place.bundle, place.ord, viewer), notices };
+  }
+
+  /** R22 (T51; SCREENS-ACTION J36): every place at which a hold has been stated that the viewer may see (an action she sees,
+   *  a project she may name), in (place id, position) order, each with its latest `hold`, who stated it, when and why,
+   *  `from` (what prompted the statements there, oldest first) and the `projects` the hold covers now that she may name.
+   *  At most 500 per page; `cursor` is `<id>#<position>` (-1 for a whole action or a project) when `truncated`. A place she
+   *  may not see is absent (R13). Writes nothing. */
+  holdsPlaced({ after = null, limit = null, viewer = null } = {}) {
+    const max = clampLimit(limit, HOLDS_DUE_MAX, HOLDS_DUE_MAX);
+    const cur = after === null || after === undefined || after === "" ? null : /^(.+)#(-?\d+)$/.exec(String(after));
+    const seek = cur ? [cur[1], Number(cur[2])] : after ? [String(after), Number.MAX_SAFE_INTEGER] : null;
+    const places = this.#rows(`SELECT h.bundle_id, h.ord, b.object_type AS t FROM action_holds h JOIN bundles b ON b.bundle_id = h.bundle_id
+      GROUP BY h.bundle_id, h.ord ORDER BY h.bundle_id, h.ord`);
+    const items = [];
+    let truncated = false;
+    for (const p of places) {
+      if (seek && !(p.bundle_id > seek[0] || (p.bundle_id === seek[0] && p.ord > seek[1]))) continue;
+      const seen = p.t === "project" ? this.#mayName(p.bundle_id, viewer) : !!this.#visibleAction(p.bundle_id, viewer);
+      if (!seen) continue;
+      if (items.length === max) { truncated = true; break; }
+      const { holds } = this.#holdsAt(p.bundle_id, p.ord, viewer);
+      const last = holds[holds.length - 1];
+      items.push({ place: p.t === "project" ? { project: p.bundle_id } : { target: p.bundle_id, ord: p.ord === WHOLE ? null : p.ord },
+        hold: last.hold, by: last.by, at: last.at, reason: last.reason, from: holds.filter((x) => x.from).map((x) => x.from),
+        projects: [...this.#covered(p.bundle_id, p.ord)].sort().filter((x) => this.#mayName(x, viewer)),
+        _key: `${p.bundle_id}#${p.ord}` });
+    }
+    const tail = truncated ? items[items.length - 1] : null;
+    return { ok: true, items: items.map(({ _key, ...x }) => x), limit: max, truncated, cursor: tail ? tail._key : null };
   }
 
   /** R7 (DEC-113): for each of 1 to 50 projects, whether a hold in place covers it: `held: true` with the `at` and `by`
@@ -560,8 +607,7 @@ export class ActionHolds {
     if (!asked.ok) return asked;
     let rows;
     try { rows = this.#standing(); } catch {
-      return { ok: false, reason: "HOLDS_UNREADABLE", detail: "the litigation holds could not be read, so whether these "
-        + "projects are held cannot be said. Ask again." };
+      return { ok: false, reason: "HOLDS_UNREADABLE", detail: localize("action-holds.index.the_litigation_holds_could_not", "the litigation holds could not be read, so whether these projects are held cannot be said. Ask again.") };
     }
     const earliest = new Map();
     for (const r of rows) if (r.project && !earliest.has(r.project)) earliest.set(r.project, r);
@@ -725,7 +771,7 @@ export class ActionHolds {
     if (!docketAt && !recordAt) {
       let marks;
       try { marks = this.#marks({ kind: "legal", after: from, viewer }); } catch {
-        return { ok: false, reason: "ACTIONS_UNREADABLE", detail: "the actions' marks could not be read; this is not an empty list" };
+        return { ok: false, reason: "ACTIONS_UNREADABLE", detail: localize("action-holds.index.the_actions_marks_could_not", "the actions' marks could not be read; this is not an empty list") };
       }
       const placed = new Set(this.#rows(`SELECT DISTINCT bundle_id || '#' || ord AS k FROM action_holds`).map((r) => r.k));
       const prompted = new Set(this.#rows(`SELECT from_ref FROM action_holds WHERE from_kind = 'mark'`).map((r) => r.from_ref));
@@ -750,7 +796,7 @@ export class ActionHolds {
         try { r = d ? d.docketPressureMarks({ kind: "legal", after: cursor, limit: 1000 }) : null; } catch { r = null; }
         if (!r || r.ok === false)
           return r && r.reason === "DOCKET_UNREADABLE" ? r
-            : { ok: false, reason: "DOCKET_UNREADABLE", detail: "the docket's marks could not be read; this is not an empty list" };
+            : { ok: false, reason: "DOCKET_UNREADABLE", detail: localize("action-holds.index.the_dockets_marks_could_not_list", "the docket's marks could not be read; this is not an empty list") };
         for (const m of r.marks || []) {
           cursor = m.mark;
           if (!m.project || !sees(m.project) || resolved.has(m.entry)) continue;
@@ -798,11 +844,10 @@ export class ActionHolds {
     const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
     const acct = String(account ?? "").trim();
     if (sha && !/^[0-9a-f]{64}$/.test(sha))
-      return { refusal: { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" } };
+      return { refusal: { ok: false, reason: "BAD_SHA", detail: localize("action-holds.index.artifact_sha_is_a_sha256", "artifact_sha is a sha256 hash (64 hex characters)") } };
     for (const [name, v] of [["account", acct], ["medium", String(medium ?? "").trim()]])
       if (v.length > NOTE_MAX || /["\\\r\n]/.test(v))
-        return { refusal: { ok: false, reason: `BAD_${name.toUpperCase()}`, detail: `${name} is at most ${NOTE_MAX} `
-          + "characters and cannot contain a quote, a backslash, or a newline" } };
+        return { refusal: { ok: false, reason: `BAD_${name.toUpperCase()}`, detail: localize("action-holds.index.a_field_is_at_most", "{name} is at most {max} characters and cannot contain a quote, a backslash, or a newline", { name, max: NOTE_MAX }) } };
     /* R17 (T48; N1024): the register judgment is `action-records` R16's one site. */
     if (sha) {
       const records = actionRecordsOf(this.#deps.host, { storage: { sql: this.sql }, record: this.record, membership: this.membership });
@@ -820,8 +865,7 @@ export class ActionHolds {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-send */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_SEND", "recording that the hold notice was sent is a member's statement of what she "
-        + "did; a machine credential may not make it. Nothing was written.");
+      return refuse("MACHINE_CANNOT_SEND", localize("action-holds.index.recording_that_the_hold_notice", "recording that the hold notice was sent is a member's statement of what she did; a machine credential may not make it. Nothing was written."));
     /* END DEC-49 REGION is-machine-send */
     const p = objectOf(place) || {};
     const found = this.#placeOf({ target: p.target ?? null, ord: p.ord ?? null, project: p.project ?? null,
@@ -904,13 +948,14 @@ export class ActionHolds {
     if (!recordAt) {
       let rows;
       try { rows = this.#marks({ action: a || null, project: a ? null : p || null, after: from, viewer }).slice(0, max + 1); } catch {
-        return { ok: false, reason: "ACTIONS_UNREADABLE", detail: "the actions' marks could not be read; this is not an empty list" };
+        return { ok: false, reason: "ACTIONS_UNREADABLE", detail: localize("action-holds.index.the_actions_marks_could_not", "the actions' marks could not be read; this is not an empty list") };
       }
       for (const r of rows)
         items.push({ arrived: { action: r.bundle_id, ord: r.ord },
                      project: r.project && this.#mayName(r.project, viewer) ? r.project : null,
                      kind: r.kind, note: r.note, by: r.marked_by, at: r.at,
-                     ...(r.kind === "legal" ? this.#holdsAt(r.bundle_id, r.ord, viewer) : {}), _key: `${r.bundle_id}#${r.ord}` });
+                     ...(r.kind === "legal" ? this.#holdsAt(r.bundle_id, r.ord, viewer) : {}),
+                     hold: this.#holdOf(r.bundle_id, r.ord, "mark", `${r.bundle_id}#${r.ord}`), _key: `${r.bundle_id}#${r.ord}` });
     }
     if (!a && items.length <= max) {
       let seek = recordAt ? [recordAt[1], Number(recordAt[2])] : null;
@@ -926,7 +971,8 @@ export class ActionHolds {
           const ref = `${r.bundle_id}#pressure/${r.seq}`;
           items.push({ arrived: { pressure: ref }, project: r.bundle_id, kind: r.kind, note: r.note, by: r.recorded_by,
                        at: r.recorded_at, arrived_on: r.arrived_on, held_as: r.artifact_sha ? "capture" : "testimony",
-                       ...(r.artifact_sha ? { artifact_sha: r.artifact_sha } : { account: r.account }), _key: ref });
+                       ...(r.artifact_sha ? { artifact_sha: r.artifact_sha } : { account: r.account }),
+                       hold: this.#holdOf(null, WHOLE, "pressure", ref), _key: ref });
           if (items.length > max) break;
         }
         if (items.length > max || rows.length <= max) break;
@@ -936,13 +982,50 @@ export class ActionHolds {
     const page = items.slice(0, max);
     const tail = page[page.length - 1];
     return { ok: true, items: page.map(({ _key, ...x }) => x), limit: max, truncated,
-             cursor: truncated && tail ? tail._key : null };
+             cursor: truncated && tail ? tail._key : null, ...(a ? this.#factsOn(a, viewer) : {}) };
+  }
+
+  /* R18: the latest statement (`in_place`, `released`) at a mark's own place (its entry) or placed `from` it, or at a
+     record: the statements placed `from` the record (a project place is every record's, so it is no record's own); null
+     while none. Newest by its instant, then its sequence. */
+  #holdOf(bundle, ord, fromKind, fromRef) {
+    const r = this.#one(`SELECT hold FROM action_holds WHERE (bundle_id = ? AND ord = ?) OR (from_kind = ? AND from_ref = ?)
+      ORDER BY at DESC, seq DESC, rowid DESC LIMIT 1`, bundle, ord, fromKind, fromRef);
+    return r ? r.hold : null;
+  }
+
+  /* R18 (T51; DEC-340, U366; `local-facts` R12): the governing view's `legal_facts` of trigger `threat_letter` whose
+     `applies_to` names the action's kind or is absent, each once, only when the action holds a `legal` mark; with the
+     label that they are information. `facts: []` for none; `facts: null` with why when the view or the marks cannot be
+     read, never `[]`. The fact is the profile's: nothing says whether it protects the group. */
+  #factsOn(action, viewer) {
+    const why = (reason, detail) => ({ facts: null, facts_why: { reason, detail } });
+    let legal;
+    try { legal = this.#marks({ action, kind: "legal", viewer }); } catch {
+      return why("ACTIONS_UNREADABLE", localize("action-holds.index.the_actions_marks_could_not", "the actions' marks could not be read; this is not an empty list"));
+    }
+    if (!legal.length) return { facts: [] };
+    let v = null;
+    try { v = this.localFacts && typeof this.localFacts.governingView === "function" ? this.localFacts.governingView() : null; } catch { v = null; }
+    if (!v || v.ok !== true || !v.view || typeof v.view !== "object")
+      return why("GOVERNING_VIEW_UNREADABLE", localize("action-holds.index.the_governing_view_could_not", "the governing view could not be read, so the legal facts on a threat letter cannot be said; this is not an empty list"));
+    const kind = (this.#heldFm(action) || {}).action_kind ?? null;
+    const seen = new Set(), facts = [];
+    for (const f of Array.isArray(v.view.legal_facts) ? v.view.legal_facts : []) {
+      if (!f || typeof f !== "object" || f.trigger !== "threat_letter" || seen.has(f.key)) continue;
+      const to = f.applies_to;
+      if (to !== undefined && to !== null && !(Array.isArray(to) ? to.includes(kind) : to === kind)) continue;
+      seen.add(f.key);
+      facts.push({ key: f.key ?? null, statement: f.statement ?? null, citation: f.citation ?? null, status: f.status ?? null,
+                   basis: f.basis ?? null, profile: f.profile ?? null });
+    }
+    return facts.length ? { facts, label: word("guide.procedure.legalinfo") } : { facts };
   }
 }
 
 /* The acts answer their catalogue-backed refusals with code, check and translation. */
 for (const m of ["actionPressure", "actionHold", "actionHoldRelease", "holdReleasePreview", "projectHolds", "holdsOf",
-                 "holdNoticeSent", "pressureRecord", "pressureFor", "holdsDue"]) {
+                 "holdNoticeSent", "pressureRecord", "pressureFor", "holdsDue", "holdsPlaced"]) {
   const fn = ActionHolds.prototype[m];
   ActionHolds.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
@@ -1011,9 +1094,9 @@ export function actionHoldsOps(h, url, body) {
       reason: q("reason") ?? b.reason ?? null, projects: b.projects ?? q("projects"), viewer: q("viewer"), author: q("author") }),
     /* R5, R6, R7 (DEC-113): the hold's release, what it would restart, and whether projects are held. */
     actionholdrelease: () => h.actionHoldRelease({ target: q("target") || b.target || null, ord: q("ord") ?? b.ord ?? null,
-      project: pick("project"), case: pick("case"), reason: q("reason") ?? b.reason ?? null, viewer: q("viewer"), author: q("author") }),
+      project: pick("project"), case: pick("case"), from: b.from ?? q("from"), reason: q("reason") ?? b.reason ?? null, viewer: q("viewer"), author: q("author") }),
     actionholdpreview: () => h.holdReleasePreview({ target: q("target") || b.target || null, ord: q("ord") ?? b.ord ?? null,
-      project: pick("project"), case: pick("case"), viewer: q("viewer") }),
+      project: pick("project"), case: pick("case"), from: b.from ?? q("from"), viewer: q("viewer") }),
     projectholds: () => h.projectHolds({ projects: b.projects ?? q("projects"), viewer: q("viewer") }),
     /* R11: the hold notice a member sent. */
     holdnoticesent: () => h.holdNoticeSent({ place: b.place ?? q("place"), at: pick("at"), medium: pick("medium"),
@@ -1021,8 +1104,31 @@ export function actionHoldsOps(h, url, body) {
     /* R12: pressure that arrived outside any action. */
     pressurerecord: () => h.pressureRecord({ project: pick("project"), pressure: pressure(), artifactSha: pick("artifact_sha"),
       account: pick("account"), at: pick("at"), viewer: q("viewer"), author: q("author") }),
+    /* R19 (T51; DEC-340): what still wants a hold, read as an op; exactly R3's read, `viewer` the plane's stamp. */
+    holdsdue: () => h.holdsDue({ after: q("after") || null, limit: q("limit") || null, viewer: q("viewer") }),
+    /* R22 (T51): every place a hold was stated, with its latest hold; exactly `holdsPlaced`, `viewer` the plane's stamp. */
+    holdsplaced: () => h.holdsPlaced({ after: q("after") || null, limit: q("limit") || null, viewer: q("viewer") }),
     /* R16 (T48; N1035; K3145): the pressure marks and records, read as an op; exactly R12's read, `viewer` the plane's stamp. */
     pressurefor: () => h.pressureFor({ project: q("project") || null, action: q("action") || null, after: q("after") || null,
       limit: q("limit") || null, viewer: q("viewer") }),
   };
 }
+
+/* R20 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  actionhold: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.actionhold.does",
+    fields: { accepts: ["target","ord","project","case","from","hold","reason","projects"], requires: ["hold","reason",["target","project","case"]] } },
+  actionholdrelease: { classes: ["admin","member","probe"], mutating: true, weight: "terminal", description: "act.actionholdrelease.does",
+    fields: { accepts: ["target","ord","project","case","from","reason"], requires: ["reason",["target","project","case"]] } },
+  actionholdpreview: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("action-holds.declared.actionholdpreview", "read: what releasing one entry's hold would restart — the projects it alone covers that the viewer may see, and whether any is out of view — keyed by (action, entry ordinal); writes nothing"),
+    fields: { accepts: ["target","ord","project","case","from"], requires: [["target","project","case"]] } },
+  holdsplaced: { classes: ["admin","member","probe"], machineClasses: [], mutating: false, weight: "read", description: localize("action-holds.declared.holdsplaced", "read: every place a hold was stated that the member may see, with its latest hold and what prompted it; writes nothing (action-holds R22)"),
+    fields: { accepts: ["after","limit"], requires: [] } },
+  holdnoticesent: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("action-holds.declared.holdnoticesent", "a member records that she sent the hold notice for a hold in place, held as the bytes sent or her account; it records no recipient and no one's compliance (action-holds R11)"),
+    fields: { accepts: ["place","at","medium","artifact_sha","account"], requires: ["place","at",["account","artifact_sha"]] } },
+  actionpressure: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: "act.actionpressure.does",
+    fields: { accepts: ["target","ord","pressure","pressure_kind","pressure_note"], requires: ["target","ord",["pressure","pressure_kind"]] } },
+  pressurerecord: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: "act.pressurerecord.does",
+    fields: { accepts: ["project","pressure","pressure_kind","pressure_note","artifact_sha","account","at"], requires: ["project","at",["account","artifact_sha"],["pressure","pressure_kind"]] } },
+});

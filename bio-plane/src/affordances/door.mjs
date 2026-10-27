@@ -36,8 +36,9 @@ const CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that
  *  surface loads once, searchfields' precedent; with one, `facts` is R13–R14's answer for it: a refusal is returned as
  *  given (stated `ok: false`), and otherwise the target's acts (R8–R10) decorated. */
 export function affordancesAnswer({ target = null, facts = null, kinds, gate, screens = [], wizard_scripts = [],
-                                    writing_help_refused = null } = {}) {
-  const vocabularies = vocabulariesFor(kinds);
+                                    writing_help_refused = null, profile = null } = {}) {
+  /* R67, R68: `profile` is the store's `affordancevocab` answer, handed to `vocabulariesFor` beside the kinds. */
+  const vocabularies = vocabulariesFor(kinds, profile);
   const dec = (a) => decorate(a, gate);
   /* REC-38: the SAME block on both arms, and deliberately NOT filtered by a target: a capture act's subject is a capture
      sha, and whether one is attestable turns on the bytes being in the store — a fact `affordanceFacts` does not carry
@@ -96,10 +97,14 @@ export async function affordancesOp(url, stub, { json, doAnswer, storeSilent, st
     /* R37: the screens and offered scripts, asked of the store for this viewer; no viewer stamped is left off, so the
        store reads it null as the facts read an absent stamp (R15), never as "". */
     : `http://do/affordancescreens?${stamped({ viewer })}`;
-  const [kOut, out] = await Promise.all([doAnswer(stub.fetch("http://do/actionkinds")), doAnswer(stub.fetch(second))]);
+  /* R67, R68: the third question, beside the kinds on both arms (one round trip): what the active profiles add to the
+     vocabularies. A store that does not answer it (a refusal, a silence) leaves those keys out of the answer, never the answer. */
+  const [kOut, out, vOut] = await Promise.all([doAnswer(stub.fetch("http://do/actionkinds")), doAnswer(stub.fetch(second)),
+    doAnswer(stub.fetch("http://do/affordancevocab"))]);
   if (kOut.refused) return storeRefusal(kOut);
   if (!kOut.answered) return storeSilent("affordances", kOut.correlation);
   const kinds = kOut.result?.kinds;
+  const profile = vOut && vOut.answered && !vOut.refused && vOut.result && vOut.result.ok === true ? vOut.result : null;
   const answer = (result) => json({ ok: true, result, store: storeName, tokenClass: cls }, 200);
   /* REC-52: a store silence or refusal is answered as one, never as "no screens" or as "there are no facts about that
      object", which is a claim about the object: what the acts on an object are is the whole of what this op is asked,
@@ -109,12 +114,12 @@ export async function affordancesOp(url, stub, { json, doAnswer, storeSilent, st
   if (!target) {
     if (!out.answered || !out.result) return storeSilent("affordances", out.correlation);
     return answer(affordancesAnswer({ kinds, gate, screens: out.result.screens, wizard_scripts: out.result.wizard_scripts,
-                                      writing_help_refused: out.result.writing_help_refused }));
+                                      writing_help_refused: out.result.writing_help_refused, profile }));
   }
   if (!out.answered) return storeSilent("affordances", out.correlation);
   const facts = out.result;
   if (!facts) return storeSilent("affordances");
-  const result = affordancesAnswer({ target, facts, kinds, gate });
+  const result = affordancesAnswer({ target, facts, kinds, gate, profile });
   if (result.ok === false)
     return json({ ...result, store: storeName, tokenClass: cls }, result.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
   return answer(result);

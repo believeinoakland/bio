@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, TEST, TEXT } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ROW = ft.FILING_TEMPLATE_CHECKS.TEMPLATE_BLANK_UNKNOWN;
 const A = V("alice");
@@ -14,7 +15,7 @@ test("R32 blankUnknownRefusal answers C-125.4 with its row, naming the first bla
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.blank], [false, "TEMPLATE_BLANK_UNKNOWN", "TEMPLATE_BLANK_UNKNOWN",
     "C-125.4", ROW.translation, "mayor_name"]);
   assert.deepEqual([r.action, r.blanks], ["ACTN-1", Object.keys(ft.FILING_BLANKS)], "extra merged");
-  assert.equal(r.detail, "{{mayor_name}} is not a blank filings fill");
+  assert.equal(r.detail, localize("filing-templates.index.blank_is_not_a_blank_filings_fill", "{{{blank}}} is not a blank filings fill", { blank: "mayor_name" }));
   assert.equal(ft.blankUnknownRefusal("{{x}}").blank, "x", "extra may be absent");
   /* the named blank is the refusal's own, never one extra sends */
   assert.equal(ft.blankUnknownRefusal("{{x}}", { blank: "other" }).blank, "x");

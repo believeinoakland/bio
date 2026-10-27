@@ -1,0 +1,88 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+One Park Service page.
+
+CASE-2026-6911 · 79de40dda69eaeb5d8228e51b2c40cab8d089361b977192fec8475121239d94f
+
+Edition 1 · signed October 27, 2026 · published October 27, 2026
+
+This case is the work of Alpha walk team. Each finding shows two strengths: how well its documents are held, and how firmly they are linked.
+
+FINDINGS
+FINDING 1
+
+The Park Service page tells visitors what to plan.
+
+Relied on
+
+Capture Not graded yet: no member has graded this.
+
+Connection Not graded yet: no member has graded this.
+
+What would overturn it A newer Park Service page that says otherwise.
+
+Evidence
+
+Plan Your Visit - Acadia National Park (U.S. National Park Service) Paragraph 2
+
+NO BAR IS RECORDED for this case edition, and that is not a bar of zero. Either the case was published before a case carried its own standard, or no bar was ever declared — in which case the case claims no cleared standard and says so, because undetermined is first-class here and is never rounded to a number nobody chose.
+
+CORRECTIONS AND ORDERS
+
+None since it was published.
+
+Every correction, withdrawal and court order on this case is listed on its docket.
+
+LEFT OUT OF THIS CASE
+
+Nothing beyond that one page.
+
+Written by sparky and published by sparky, October 27, 2026.
+
+Who else read this statement
+
+No one else on the team has said they read this statement.
+
+CONTRADICTIONS THE TEAM DISCLOSED
+
+The team disclosed no contradictions in this edition.
+
+HOW THIS TEAM READS EVIDENCE
+
+The team has no stake in the roof or the committee; it reads the memo as the memo only.
+
+Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.
+
+This team declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material.
+
+EVIDENCE
+Capture
+B
+Check the signature
+Read the case
+Download the complete edition
+Print the case
+
+Anyone can check that these files are the ones your team signed, using the signature and the public key shown here. A check proves the files were not changed after signing. It does not prove that what they say is true.
+
+READ IT AT A MINIMUM STRENGTH
+
+Choose the weakest strength you will accept on each side. The page then shows only the findings at or above both.
+
+How well the documents are held
+No minimum
+C or better
+B or better
+A only
+How firmly they are linked
+No minimum
+C or better
+B or better
+A only
+Show only findings this strong
+CHECK A FILE YOU HOLD
+Choose a file, or paste a fingerprint of 64 letters and numbers, then check again.
+The file itself never leaves your computer.
+Its SHA-256
+The file's fingerprint: a 64-character code your computer can work out from the file. Paste it here; the file itself never leaves your computer.
+Check it

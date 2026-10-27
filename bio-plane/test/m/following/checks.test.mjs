@@ -147,11 +147,14 @@ for (const [code, row] of Object.entries(FOLLOWING_CHECKS)) {
 async function otherFamilies() {
   const modules = JSON.parse(readFileSync(join(REPO, "build/modules.json"), "utf8")).modules;
   const out = [];
+  /* plane R68: the start registration is the first import of the plane's graph, before any table is read (R81). The walk
+     imports plane files that reach it, so it runs here first. */
+  await import(join(REPO, "bio-plane/src/plane/register.mjs"));
   const walk = async (p) => {
     const abs = join(REPO, p);
     if (!existsSync(abs)) return;
     if (statSync(abs).isDirectory()) { for (const f of readdirSync(abs)) if (!["node_modules", "dist", "test"].includes(f)) await walk(join(p, f)); return; }
-    if (!p.endsWith(".mjs")) return;
+    if (!p.endsWith(".mjs") || p.startsWith("bio-plane/src/store-assembly/")) return; // K5164: a second composition root (plan item 80)
     const ns = await import(abs);
     for (const [k, v] of Object.entries(ns))
       if (/_CHECKS$/.test(k) && v && typeof v === "object" && !Array.isArray(v)) out.push({ file: p, family: k, rows: v });
@@ -185,7 +188,7 @@ test("R1 C-137.1–C-137.20: following's own family, each row numbered once with
 test("R18 (DEC-149): no row's translation names a place, and none names the group's own system except as \"your group's Civicsmith\"", () => {
   for (const [code, r] of Object.entries(FOLLOWING_CHECKS)) {
     assert.doesNotMatch(r.translation, /oakland|alameda|california|ellery/i, code);
-    const t = r.translation.replace(/your group's Civicsmith/g, "");
+    const t = r.translation.replace(/your team's Civicsmith/g, "");
     assert.doesNotMatch(t, /\b(?:this|the|your|your own|our|its)\s+(?:Civicsmith\s+|group's\s+)?(?:instance|copy|plane)\b|\bservers?\b|Civicsmith/i, code);
   }
 });

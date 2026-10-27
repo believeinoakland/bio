@@ -34,6 +34,7 @@
 
 import { checkBundle } from "./record-grammar/index.mjs";
 import { recordChecks } from "./promotion/record-checks.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 /* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
    PINNED TO IT FROM HERE ON. The sentence below is the whole point of this
@@ -339,7 +340,7 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    `CASE_DERIVATION_CHECKS` and `ATTRIBUTION_CHECKS` exports (N212, N214, N251).
    MINOR, rule 17 moving the stamp for arrivals, departures and a changed composition. ROW_CENSUS (R50) is re-pinned to
    this tree as R50 now words it (N350: lines sort by check, then code, then by the line itself; every fleet member's
-   `scripts/` and `civicos-ui/deploy-ui.mjs` left out): 827 rows. The d470 census, of the catalogue file only, moved
+   `scripts/` left out): 827 rows. The d470 census, of the catalogue file only, moved
    with legacy-checks' removal (359 -> 358); its 1.44.0 row was legacy-tests' re-pin. */
 /* 1.45.0 (PROMOTION #16, T15 layer 2, 2026-09-30; N318, K425, K482): EVERY ROW CHANGE SINCE 1.44.0, counted wherever
    the rows live (R34, R47), read by diffing R50's census lines of `tranche/T15` after its layer 1 merged against
@@ -1148,7 +1149,41 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    record names (membership's `MODULE_ORDER` is now generated from `modules.json`, which moves no gate's order).
    ROW_CENSUS (R50) re-pinned to this tree: 1909 rows. Rows a T50 job in layers 3-11 adds or changes are T51's stamp
    (plan T50, rule 5 item 2). */
-export const CATALOG_VERSION = "1.77.0";
+/* 1.78.0 (PROMOTION #49, T51-15, 2026-10-18; T50's rule 5 (2), T51's rule 5 (2); K3843): MINOR. The stamp of every row
+   awaiting it at T50's close (T50's layers 3-11) and of T51's layer 2 (membership, project-roster, credentials merged
+   into `tranche/T51`), read by diffing R50's census lines of that tree against 1.77.0's own
+   (`test/fixtures/row-census-1.77.0.jsonl`: 1909 rows, 962db2b0...): nine new rows, 327 changed, none retired.
+   ARRIVED (9): C-100.26 NO_SET, C-100.27 SET_TOO_LARGE; C-137.27 MARK_NO_ITEM, C-137.28 MARK_NO_SUCH_ITEM, C-137.29
+   SECOND_LOOK_NO_NOTE, C-137.30 SECOND_LOOK_NOT_OPEN; C-139.21 BAD_FOR; C-22.31 LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE;
+   C-25.36 VERSION_NAME_MALFORMED.
+   CHANGED (327), code and number unmoved, each its `where` or translation (the words read by key, N1116, as the
+   modules that hold them moved them); the list is the diff of the two fixtures. THE FAMILIES THAT ARRIVED: none.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T50 L3-L11 or T51 L2 job record names. This module adds
+   no row (R58 is a read).
+   ROW_CENSUS (R50) re-pinned to this tree: 1918 rows. Rows a T51 job in layers 3-11 adds or changes are T52's stamp
+   (plan T51, rule 5 item 2). */
+/* 1.79.0 (PROMOTION #51, CR-5, 2026-10-19; T51's rule 5 (2); K4015, K4104, K4114): MINOR. The stamp of every row the jobs
+   after T51's layer 2 added or changed (L3 to L11 and R1 to R8, and the completion round's jobs merged before this
+   one), read by diffing R50's census lines of `tranche/T51` against 1.78.0's own (`test/fixtures/row-census-1.78.0.jsonl`:
+   1918 rows, 31b4a129...): five new rows, 75 changed, none retired.
+   ARRIVED (5): C-117.59 MINUTES_NOT_PUBLIC_COMMENT, C-117.60 BAD_MINUTES; C-25.37 VERSION_COMPARE_NO_INQUIRY, C-25.38
+   VERSION_COMPARE_NO_VERSION, C-25.39 VERSION_COMPARE_NO_SUCH_VERSION.
+   CHANGED (75), code and number unmoved, each its `where` or translation (the words read by key, as the modules that hold
+   them moved them); the list is the diff of the two fixtures. THE FAMILIES THAT ARRIVED: none. CHANGED IN WHAT THE
+   GATES RUN, no row line moving: none a job record names. This module adds no row (R59 is a field of a read). The
+   census no longer leaves out `civicos-ui/` scripts, the directory being deleted (T51-126, K3838, N1246).
+   ROW_CENSUS (R50) re-pinned to this tree: 1923 rows. Rows a T52 job adds or changes are T53's stamp. */
+/* 1.80.0 (PROMOTION #1, T52-8, 2026-10-27; K5339): MINOR. The stamp of every row the jobs after 1.79.0's tree added or
+   changed (modules after layer 2, merged after PROMOTION #51's stamp; no job record named them `awaiting stamp`), read by
+   diffing R50's census lines of this tree against 1.79.0's own (`test/fixtures/row-census-1.79.0.jsonl`: 1923 rows,
+   c5885eaf...): 48 new rows, 12 changed, none retired. THE CAUSE of T51's red `row-census`: the pin was stamped once
+   and rows moved after it with no stamp, which the suite refuses by name; this is the layer-2 stamp it waits for.
+   ARRIVED (48): C-102.34-.39, C-103.8-.12, C-107.5, C-113.45, C-118.11, C-124.66, C-130.17-.22, C-136.9, C-138.18-.19,
+   C-140.44-.45, C-154.1, C-155.1, C-18.22-.24, C-33.55-.64, C-87.18, C-91.10-.11, C-93.40-.42, C-96.55.
+   CHANGED (12), code and number unmoved: C-113.32, C-140.4, C-140.7, C-146.25, C-146.6, C-146.7, C-33.54, C-87.1,
+   C-94.5, C-94.6, C-96.17, C-96.39. THE FAMILIES THAT ARRIVED: none. This module adds no row.
+   ROW_CENSUS (R50) re-pinned to this tree: 1971 rows. Rows a T52 job adds or changes are T53's stamp. */
+export const CATALOG_VERSION = "1.80.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1240,8 +1275,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1909,
-  digest: "962db2b0fc620f04b8edfe7ebf5e489543d0721b4b6638764dd2c7e7e024d766" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1971,
+  digest: "17406b472cd7001dfef7d6028e0746b51ef7df322d42ad9fff1f2e1af16a5609" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -1275,8 +1310,7 @@ const te = new TextEncoder();
 function caseCatalogueFailed(e) {
   return { gateVersion: GATE_VERSION, ok: false,
            findings: [{ check: "CASE_CATALOGUE_FAILED",
-                        detail: `the case-document catalogue could not judge this document, so it is not passed: `
-                              + String(e && e.message ? e.message : e).slice(0, 200) }],
+                        detail: localize("promotion.gate.the_case_document_catalogue_could", "the case-document catalogue could not judge this document, so it is not passed: {String}", { String: String(String(e && e.message ? e.message : e).slice(0, 200)) }) }],
            warnings: 0 };
 }
 
@@ -1362,7 +1396,14 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
 
   /* The plane's own remaining duty: bytes the register claims must exist. */
   for (const r of registers || []) {
-    const probe = await hasCapture(r.capture_sha);
+    let probe = await hasCapture(r.capture_sha);
+    /* R28 (K5130): a register row whose `path` in the image holds bytes hashing to its `capture_sha` is present
+       there: a member's own testified observation is held only so (provenance's `testify`, an inline file
+       registered with its digest), never in the bucket. Bytes that differ leave the bucket's answer as it was. */
+    if (!probe.present && typeof image?.[r.path] === "string") {
+      const held = image[r.path];
+      if (await sha256(held) === r.capture_sha) probe = { present: true, bytes: te.encode(held).length };
+    }
     /* D-556 (BOB #34, 2026-09-25 00:00Z; Intake Doctrine section 8): A WHOLE-HASH ROW HELD IN PARTS RATIFIES
        when every part the record names (the bundle's data/provenance.json) is present and its digest verifies:
        the audit calls those bytes SOUND (D-533), and publication now copies them part by part and re-verifies
@@ -1374,23 +1415,19 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
       const label = (ps) => ps.map((p) => p.file || p.sha256).join(", ");
       if (why)
         errors.push({ check: "PLANE_PART_UNVERIFIED",
-                      detail: `registered capture is held in parts, and ${why}, so no part could be verified`,
+                      detail: localize("promotion.gate.registered_capture_is_held_in", "registered capture is held in parts, and {why}, so no part could be verified", { why: String(why) }),
                       where: { path: r.path, sha256: r.capture_sha } });
       else if (missing.length)
         errors.push({ check: "PLANE_PART_MISSING",
-                      detail: `registered capture is held in parts, and ${missing.length} of the ${named.length} `
-                            + `parts the record names are not in the working bucket: ${label(missing)}`,
+                      detail: localize("promotion.gate.registered_capture_is_held_in_2", "registered capture is held in parts, and {length} of the {length_2} parts the record names are not in the working bucket: {label}", { length: String(missing.length), length_2: String(named.length), label: String(label(missing)) }),
                       where: { path: r.path, sha256: r.capture_sha, missing_parts: missing } });
       else if (disagree.length || unverified.length || (typeof r.bytes === "number" && sum !== r.bytes))
         errors.push({ check: "PLANE_PART_UNVERIFIED",
                       detail: disagree.length
-                        ? `registered capture is held in parts, and the stored size or digest of `
-                          + `${disagree.length} disagrees with the record: ${label(disagree)}`
+                        ? localize("promotion.gate.registered_capture_is_held_in_3", "registered capture is held in parts, and the stored size or digest of {length} disagrees with the record: {label}", { length: String(disagree.length), label: String(label(disagree)) })
                         : unverified.length
-                        ? `registered capture is held in parts, all present, but the digest of `
-                          + `${unverified.length} could not be verified: ${label(unverified)}`
-                        : `registered capture is held in parts, and the parts the record names sum to ${sum} `
-                          + `bytes where the register says ${r.bytes}`,
+                        ? localize("promotion.gate.registered_capture_is_held_in_4", "registered capture is held in parts, all present, but the digest of {length} could not be verified: {label}", { length: String(unverified.length), label: String(label(unverified)) })
+                        : localize("promotion.gate.registered_capture_is_held_in_5", "registered capture is held in parts, and the parts the record names sum to {sum} bytes where the register says {bytes}", { sum: String(sum), bytes: String(r.bytes) }),
                       where: { path: r.path, sha256: r.capture_sha,
                                ...(disagree.length ? { disagreeing_parts: disagree } : {}),
                                ...(unverified.length ? { unverified_parts: unverified } : {}) } });
@@ -1401,17 +1438,13 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        then there is nothing to verify or to copy under any hash. */
     if (!probe.present && probe.heldInParts)
       errors.push({ check: "PLANE_HELD_IN_PARTS",
-                    detail: `registered capture is held only in parts: the acquisition receipt of your team's Civicsmith `
-                          + `names the whole hash, and the working bucket stores the document as its parts, each under `
-                          + `its own hash, but the record's data/provenance.json names no parts for it. `
-                          + `Publication copies the parts the record names, so name them there, or register `
-                          + `the parts rather than the whole`,
+                    detail: localize("promotion.gate.registered_capture_is_held_only", "registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole"),
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (!probe.present)
-      errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,
+      errors.push({ check: "PLANE_MISSING_BYTES", detail: localize("promotion.gate.capture_absent_from_bucket", "registered capture is absent from the working bucket"),
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (typeof r.bytes === "number" && probe.bytes !== r.bytes)
-      errors.push({ check: "PLANE_SIZE", detail: `capture bytes differ from the register`,
+      errors.push({ check: "PLANE_SIZE", detail: localize("promotion.gate.capture_bytes_differ", "capture bytes differ from the register"),
                     where: { path: r.path, want: r.bytes, got: probe.bytes } });
   }
 

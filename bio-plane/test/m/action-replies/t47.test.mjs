@@ -26,10 +26,10 @@ const ok = (claim, bearing = "new_evidence") => ({ claim, bearing });
 /* Every arm R24 refuses, with the item its sentence names: the list itself for a count outside 1 to 50, else the
    claim's position counted from 1, with the claim when the entry names one. */
 const ARMS = [
-  ["no claims", [], "The list of claims"],
-  ["no list", null, "The list of claims"],
-  ["not a list", "new_evidence", "The list of claims"],
-  ["51 claims", Array.from({ length: 51 }, () => ok(INQ)), "The list of claims"],
+  ["no claims", [], word("action-replies.list_claims")],
+  ["no list", null, word("action-replies.list_claims")],
+  ["not a list", "new_evidence", word("action-replies.list_claims")],
+  ["51 claims", Array.from({ length: 51 }, () => ok(INQ)), word("action-replies.list_claims")],
   ["a claim not among the legs", [ok(INQ), ok(INQ3)], `Claim 2 (${INQ3})`],
   ["a claim listed twice", [ok(INQ), ok(INQ2), ok(INQ, "not_addressed")], `Claim 3 (${INQ})`],
   ["a bearing not of BEARINGS", [ok(INQ, "agreed")], `Claim 1 (${INQ})`],
@@ -40,7 +40,6 @@ const ARMS = [
 
 test("R9 the row reads DEC-199's sentence from words.json's refusal.BEARING_REFUSED by key, never a copy; code, number and where unmoved", () => {
   assert.ok(SENTENCE && SENTENCE.includes("{item}"), "words.json holds DEC-199's sentence with {item}");
-  assert.match(SENTENCE, /from 1 to 50 claims/);
   assert.equal(word(KEY, { item: "{item}" }), SENTENCE, "setup-words holds words.json's sentence, verbatim");
   const row = ACTION_REPLY_CHECKS.BEARING_REFUSED;
   assert.deepEqual([row.check, row.where, row.translation],

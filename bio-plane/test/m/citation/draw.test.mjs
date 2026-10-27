@@ -8,6 +8,8 @@ import { world, V, STAMP, NOW, projMd, inqMd } from "./fixture.mjs";
 import { Citation, CITE_CHECKS, citationOps } from "../../../src/citation/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { basisRefusals } from "../inquiry/fixtures.mjs";
 
 const ANN = { viewer: V("ann"), author: "member:ann", identity: V("ann") };
 const VERA = { viewer: V("vera"), author: "member:vera", identity: V("vera") };
@@ -47,8 +49,10 @@ test("R14: draws the question into the case as one confirmed cites edge carrying
   assert.equal(w.md(p).replace(/\n## Session Log\n[\s\S]*$/, ""),
                before.replace("references: []", `references:\n${blockOf(w.md(p), "references").trimEnd()}`)
                      .replace(/last_updated: .*/, `last_updated: "${STAMP}"`).replace(/\n## Session Log\n[\s\S]*$/, ""));
-  assert.equal(logOf(w.md(p)), `### Session ${STAMP} | Cited 1 record | member:ann\nTrigger: question ${Q} drawn into this case\n`
-    + `Changes: cites edges added to ${Q}. Note: the budget team asks this too.\n`);
+  assert.equal(logOf(w.md(p)), localize("citation.index.session_cited_one_record", "### Session {when} | Cited 1 record | {who}\n", { when: STAMP, who: "member:ann" })
+    + localize("citation.index.trigger_question_drawn", "Trigger: question {qid} drawn into this case\n", { qid: Q })
+    + localize("citation.index.changes_cites_edges_added", "Changes: cites edges added to {listed}.{note}\n",
+      { listed: Q, note: localize("citation.index.log_note", " Note: {note}.", { note: "the budget team asks this too" }) }));
   /* R3's case answer, handle null and drift and moved false, with no selection's gate. */
   const head = w.record.head(p);
   assert.deepEqual(Object.keys(r).sort(), Object.keys(viaCite).sort());
@@ -60,8 +64,9 @@ test("R14: draws the question into the case as one confirmed cites edge carrying
   /* With no note the entry names none, as cite's does. */
   const p3 = w.project("Third");
   assert.equal(w.cit.drawQuestion({ project: p3, inquiry: Q, ...ANN }).ok, true);
-  assert.equal(logOf(w.md(p3)), `### Session ${STAMP} | Cited 1 record | member:ann\nTrigger: question ${Q} drawn into this case\n`
-    + `Changes: cites edges added to ${Q}.\n`);
+  assert.equal(logOf(w.md(p3)), localize("citation.index.session_cited_one_record", "### Session {when} | Cited 1 record | {who}\n", { when: STAMP, who: "member:ann" })
+    + localize("citation.index.trigger_question_drawn", "Trigger: question {qid} drawn into this case\n", { qid: Q })
+    + localize("citation.index.changes_cites_edges_added", "Changes: cites edges added to {listed}.{note}\n", { listed: Q, note: "" }));
 });
 
 test("R14: the case then draws on the question — the real inquiry reads it among the projects drawing on it — and a case that already draws on it answers ok, cited empty, writing nothing", async () => {
@@ -190,7 +195,7 @@ test("R14: NO_BUNDLE_MD, UNPARSEABLE_FRONTMATTER, UNSPLICEABLE_REFERENCES and CI
 
 test("R14: a refusal from the write is answered unchanged, with handle null and drift false, nothing written; the write refusing nothing, the edge lands", () => {
   const { w, p } = setup();
-  let refusal = { ok: false, reason: "SOME_STEP_REFUSED", code: "SOME_STEP_REFUSED", detail: "refused" };
+  let refusal = basisRefusals().basisRefused;
   w.promotion.registerStep("citation-test", { check: (c) => (c.bundleId === p ? refusal : null) });
   const before = w.md(p);
   assert.deepEqual(w.cit.drawQuestion({ project: p, inquiry: Q, ...ANN }), { ...refusal, project: p, handle: null, drift: false });

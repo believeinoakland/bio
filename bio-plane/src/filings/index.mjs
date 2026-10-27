@@ -17,8 +17,12 @@
  * reload loses nothing (R59); R40's quoting check is `filing-templates`' (R57, its R33). (T50) The matter's stake: the
  * action's own, else its project's, else none (R60), stands in the stamp's `group` beside the team's stake and in the
  * in-band block's words (R61), after an accepted source's identity and stake on its line (R63); `stakeAtPreparation`
- * tells the preparation screen whether to ask (R62: a prompt, never a gate). Every sentence it writes is read by key
- * through setup-words (`./words.mjs`; R51, R52; N1116, N1132).
+ * tells the preparation screen whether to ask (R62: a prompt, never a gate). (T51) It registers once with `case-inputs`
+ * (its R19) the source of the minutes beside the group's public comment (R64: `minutesComparisonsOn`), and
+ * `templatesForAction` also answers the templates a kind holds that are not offered, with what each lacks, and a court-filed
+ * kind (R65). Every sentence it writes is read by key through setup-words (`./words.mjs`; R51, R52; N1116, N1132), the
+ * ones written first here by `localize` (setup-words R14), and an undetermined reason another module answers as
+ * `{key, vars}` is said in words with `said` (K3997).
  *
  * A NEW MODULE (T8, layer 9): nothing moved into it and it writes no legacy file. Its tables are `./schema.mjs`; a
  * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule. Its R26 library moved to `filing-templates` (T21,
@@ -46,6 +50,8 @@
  *                  `designation`, `edition` (R39, R41) and `editionInForce` (R40), R8's carriage of a standard not free.
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
  *   promotion      `fact("producingGroup")` (its R40; R3's `group`, N331), from `promotionOf` on the same host unless given.
+ *   caseInputs     `registerMinutesComparisons` (its R19; R64), from `caseInputsOf` when this module is handed one or the
+ *                  composition root's environment (`env`), as `action-replies` registers its open requests (R3).
  *   events         `timeline` (its R28–R30; R33's chronology) and `readEvent` (its R26; the captures R9's exhibits take from
  *                  the events the chronology lists), from `eventsOf` (T33-75, K1494).
  *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`),
@@ -53,7 +59,8 @@
  *                  retirement (a test may); absent, the group is read through `promotion.fact("producingGroup")`.
  *   profiles       a function answering the active profiles (ids or profile objects) to combine; default record-core's
  *                  setting `jurisdiction_profiles` (its R26).
- *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
+ *   now            the clock for the instants it writes, an ISO string (default: `env`'s `BIO_NOW_MS`, else the wall clock).
+ *   env            the store's environment (K5202, K5132's rule): `BIO_NOW_MS` is the instance clock when no `now` is handed.
  *
  * READ CONTRACTS it joins in its own SQL: publication's `cases` and `published_cases` (`case_id`, `edition`,
  * `project_id`, `ratified_at`, its R40); provenance's `register` and `captured_locators` (its R48).
@@ -82,6 +89,7 @@ import { eventsOf } from "../events/index.mjs";
 import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, blankUnknownRefusal, withRow as templatesRow,
          RFC_QUOTING_SENTENCE, rfcQuotingRefusal } from "../filing-templates/index.mjs";
 import { docketOf } from "../docket/index.mjs";
+import { caseInputsOf } from "../case-inputs/index.mjs";
 import { caseCheckOf } from "../case-check/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { actionHoldsOf, holdNotInPlace } from "../action-holds/index.mjs";
@@ -102,6 +110,7 @@ import { rowOf } from "./checks.mjs";
 import { deadlineDate, realDate, COUNTED_FROM } from "./dates.mjs";
 import { keyed, sentencesOf, isQuestion, verdictsOf, asks, askAllowed, disclosureLines, OVERRIDE_HEAD,
          overrideDisclosure, matterWords } from "./outward.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
 export { FILINGS_CHECKS } from "./checks.mjs";
@@ -146,6 +155,7 @@ export const COMMUNICATION_PURPOSE_MAX = 500;
 export const COMMUNICATION_PURPOSES = Object.freeze(["document_infraction", "chance_to_fix"]);
 /** R37: the audiences a documenting version may be written for. */
 export const AUDIENCES = Object.freeze(["violating_party", "members", "oversight", "public", "broad"]);
+const PUBLIC_COMMENT = "public_comment";
 /** R44: whose act a public comment or testimony is. */
 export const VOICES = Object.freeze(["group", "self"]);
 /** R8: what a counsel packet is assembled for. */
@@ -170,8 +180,8 @@ export function inbandBlock(q) {
   const matter = q.group ? matterWords(q.group.matter_stake, { source: true }) : null;
   return [INBAND_RULE, word("filings.format", { format: q.format }),
           word("filings.hash_sha_bytes", { sha256: q.hash.sha256, over: q.hash.over, bytes: q.hash.bytes, canonical: q.hash.canonical }),
-          word("filings.date_author", { date: q.date ?? "undetermined", author: q.author ?? "undetermined" }),
-          word("filings.floors_capture_connection", { capture: f.capture ?? "none", connection: f.connection ?? "none", detail: f.detail ?? "" }).trimEnd(),
+          word("filings.date_author", { date: q.date ?? localize("filings.index.undetermined", "undetermined"), author: q.author ?? localize("filings.index.undetermined", "undetermined") }),
+          word("filings.floors_capture_connection", { capture: f.capture ?? localize("filings.index.none", "none"), connection: f.connection ?? localize("filings.index.none", "none"), detail: f.detail ?? "" }).trimEnd(),
           ...(q.group ? [groupLine(q.group), ...(matter ? [`${matter}.`] : [])] : []),
           JSON.stringify(q), ""].join("\n");
 }
@@ -179,7 +189,7 @@ export function inbandBlock(q) {
 export function groupLine(g) {
   const who = [g.name, g.domain].filter(Boolean).join(", ");
   return word("filings.group_declared_stake", { who: who || word("filings.public_identity_undetermined"),
-                                                stake: g.stake == null ? "none declared" : g.stake });
+                                                stake: g.stake == null ? localize("filings.index.none_declared", "none declared") : g.stake });
 }
 /** R15: the sentence a Tier 3 kind carries in the evidence package. */
 export const COUNSEL_SENTENCE = word("filings.action_requires_competent");
@@ -226,7 +236,7 @@ export class Filings {
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
                 localFacts = null, filingTemplates = null, events = null, docket = null, projectRoster = null,
                 actionHolds = null, caseCheck = null, acceptedWork = null, grammar = null, accountCheck = null,
-                producingGroup = null, profiles = null, now = null } = {}) {
+                producingGroup = null, profiles = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates, events, docket, projectRoster, actionHolds, caseCheck, acceptedWork };
@@ -241,7 +251,9 @@ export class Filings {
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : null;
     this.#profilesGiven = typeof profiles === "function";
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
-    this.now = typeof now === "function" ? now : () => stampInstant("second");
+    /* K5202 (K5132's rule): the clock handed in, else the store's environment (`env.BIO_NOW_MS`, read by `#when`), else the wall clock */
+    this.now = typeof now === "function" ? now : null;
+    this.env = env && typeof env === "object" ? env : null;
     for (const m of SERVICES) { const fn = this[m].bind(this); this[m] = (...a) => withRow(fn(...a)); }
   }
 
@@ -289,7 +301,15 @@ export class Filings {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
-  #when() { const w = this.now(); return typeof w === "string" && w ? w : stampInstant("second"); }
+  /* K5202 (K5132's rule, as credentials' `#nowMs`): every instant this module records. A handed `now` answers first, then the
+     store's `BIO_NOW_MS` (a string or a number of milliseconds), else the wall clock, to the second. */
+  #when() {
+    const w = this.now ? this.now() : null;
+    if (typeof w === "string" && w) return w;
+    const raw = this.env ? this.env.BIO_NOW_MS : undefined;
+    const v = raw === undefined || raw === null || raw === "" ? NaN : Number(raw);
+    return Number.isFinite(v) && v >= 0 ? stampInstant("second", v) : stampInstant("second");
+  }
   #call(fn) { try { return fn(); } catch { return null; } }
 
   /* ---------------------------------------------------------------- the reads of the modules it uses */
@@ -373,6 +393,30 @@ export class Filings {
     return b ? str(b.project) : null;
   }
 
+  /* R1, R6, R7, R8, R23, R36, R42, R47 (K4557; E9): a project's weighty filing acts need a member who has joined the project:
+     a member invited and not yet joined has view rights only (membership §7.5). The one question every such act asks, after
+     its sight check and before any write, of the stamped member: `membership.projectAuthority(project, identity, "joined",
+     act)`, whose refusal (PROJECT_ACT_NOT_A_PARTICIPANT, which tells the member to join) is relayed as it came. A machine
+     credential or an absent identity is not asked (membership's rule); a filing with no project is untouched, and so is
+     any act where no membership module answers (nothing else in this module could have read the project's sight either). */
+  #joinedBar(project, identity, act) {
+    const p = str(project);
+    const m = p ? this.membership : null;
+    return m && typeof m.projectAuthority === "function" ? m.projectAuthority(p, identity, "joined", act) : null;
+  }
+
+  /* The project of a filing about to be prepared: the action's own, else the project of the determination it rests on, as
+     the preparer reads it: the one the draft's basis will record (`#basisOf`), so a preparer who may not see the
+     determination prepares a draft that names no project, and the draft is not associated with one. */
+  #prepProject(a, viewer) {
+    return a.project || (this.#restsOn(a, viewer).det || {}).project || null;
+  }
+
+  /* The project of a draft: the action's, else the one its basis records (as R42 reads it). */
+  #draftProject(d) {
+    return this.#bundleProject(d.action_id) || (parse(d.basis) || {}).project || null;
+  }
+
   /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`; R74 (T45): its
      `ground`); null when it carries none. */
   static #override(o) {
@@ -399,7 +443,7 @@ export class Filings {
   #noFiling(id) {
     /* DEC-49 REGION is-no-such-filing */
     return { ok: false, reason: "NO_SUCH_FILING", filing: str(id),
-             detail: "no draft by that id is readable here; one you may not see answers the same" };
+             detail: localize("filings.index.no_draft_by_that_id", "no draft by that id is readable here; one you may not see answers the same") };
     /* END DEC-49 REGION is-no-such-filing */
   }
 
@@ -407,7 +451,7 @@ export class Filings {
   #noPacket(id) {
     /* DEC-49 REGION is-no-such-packet */
     return { ok: false, reason: "NO_SUCH_PACKET", id: str(id),
-             detail: "no counsel packet by that id and version is readable here; one you may not see answers the same" };
+             detail: localize("filings.index.no_counsel_packet_by_that_id", "no counsel packet by that id and version is readable here; one you may not see answers the same") };
     /* END DEC-49 REGION is-no-such-packet */
   }
 
@@ -557,7 +601,7 @@ export class Filings {
       const day = Filings.#actDay(act);
       out.act_date = day ? { value: day, source: str(act.at) ? det.id : evId }
         : period && (str(period.from) || str(period.to))
-          ? { value: `${str(period.from) || "undetermined"} to ${str(period.to) || "undetermined"}`, source: det.id }
+          ? { value: localize("filings.index.from_to_to", "{from} to {to}", { from: str(period.from) || localize("filings.index.undetermined", "undetermined"), to: str(period.to) || localize("filings.index.undetermined", "undetermined") }), source: det.id }
           : none(word("filings.act_date_undetermined", { act: Filings.#actDayWhy(act) }));
       /* R27: conformance states only that something was withheld (`det.withheld`), never which list it left, so neither
          list is given as though whole; the why names nothing of what was withheld. */
@@ -574,7 +618,7 @@ export class Filings {
         : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none(word("filings.determination_names_standard"));
       const fs = det.findings;
       out.findings = det.withheld ? none(cut)
-        : fs.length ? { value: fs.map((f) => `${f.id} (case ${f.case ?? "undetermined"}, edition ${f.edition ?? "undetermined"})`).join("; "),
+        : fs.length ? { value: fs.map((f) => localize("filings.index.id_case_v1_edition_v2", "{id} (case {v1}, edition {v2})", { id: String(f.id), v1: String(f.case ?? localize("filings.index.undetermined", "undetermined")), v2: String(f.edition ?? localize("filings.index.undetermined", "undetermined")) })).join("; "),
                         source: fs.map((f) => `${f.id}@${f.case ?? "?"}/${f.edition ?? "?"}`).join(", ") }
           : none(word("filings.determination_names_finding"));
     } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
@@ -586,7 +630,7 @@ export class Filings {
       : none(word("filings.action_states_law"));
     const clock = action.clock.filter((c) => str(c.date) && str(c.basis));
     out.clock = clock.length
-      ? { value: clock.map((c) => `${c.date}: ${str(c.text) || str(c.description) || "a deadline"} (${c.basis})`).join("; "), source: action.id }
+      ? { value: clock.map((c) => `${c.date}: ${str(c.text) || str(c.description) || localize("filings.index.a_deadline", "a deadline")} (${c.basis})`).join("; "), source: action.id }
       : none(word("filings.action_holds_clock"));
     const venue = entry && isObj(entry.venue) ? entry.venue : null;
     const vsrc = venue ? `profile:${venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` : null;
@@ -624,7 +668,7 @@ export class Filings {
     /* DEC-49 REGION is-action-closed */
     if (CLOSED.includes(a.current_state))
       return { ok: false, reason: "ACTION_CLOSED", action: a.id, state: a.current_state,
-               detail: `the action is ${a.current_state}; nothing is prepared for a closed action` };
+               detail: localize("filings.index.the_action_is_state_nothing_is", "the action is {state}; nothing is prepared for a closed action", { state: String(a.current_state) }) };
     /* END DEC-49 REGION is-action-closed */
     return null;
   }
@@ -662,8 +706,8 @@ export class Filings {
     /* DEC-49 REGION is-fill-unknown-blank */
     if (!isObj(fills) || unknown !== undefined)
       return { ok: false, reason: "FILL_UNKNOWN_BLANK", ...extra, blank: isObj(fills) ? unknown : null, blanks: [...named],
-               detail: isObj(fills) ? `the text names no blank {{${unknown}}}: a member fills only the blanks the text names`
-                 : "fills is a map of the text's blank names to your own words for each" };
+               detail: isObj(fills) ? localize("filings.index.the_text_names_no_blank", "the text names no blank '{blank}': a member fills only the blanks the text names", { blank: String(unknown) })
+                 : localize("filings.index.fills_is_a_map_of_blank_names", "fills is a map of the text's blank names to your own words for each") };
     /* END DEC-49 REGION is-fill-unknown-blank */
     for (const [n, v] of Object.entries(fills)) {
       const bad = Filings.#unwritable(v, { ...extra, blank: n });
@@ -686,7 +730,7 @@ export class Filings {
     const version = isObj(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
     if (!t || typeof t.offeredVersion !== "function")
       return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: id,
-                            detail: "no module answers the group's templates here, so none is readable" });
+                            detail: localize("filings.index.no_module_answers_the_templates_readable", "no module answers the team's templates here, so none is readable") });
     return t.offeredVersion({ template: id, version, viewer });
   }
 
@@ -695,7 +739,7 @@ export class Filings {
     /* DEC-49 REGION is-template-kind-mismatch */
     if (v.kind && v.kind !== a.kind)
       return { ok: false, reason: "TEMPLATE_KIND_MISMATCH", template: v.template, template_kind: v.kind, kind: a.kind,
-               detail: `the template is written for ${v.kind}, and this action is ${a.kind}` };
+               detail: localize("filings.index.the_template_is_written_for_kind", "the template is written for {template_kind}, and this action is {kind}", { template_kind: String(v.kind), kind: String(a.kind) }) };
     /* END DEC-49 REGION is-template-kind-mismatch */
     return null;
   }
@@ -705,7 +749,7 @@ export class Filings {
     /* DEC-49 REGION is-text-unwritable */
     if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf8(body) > FILING_TEXT_MAX)
       return { ok: false, reason: "TEXT_UNWRITABLE", ...extra, max_bytes: FILING_TEXT_MAX,
-               detail: `the text must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
+               detail: localize("filings.index.the_text_must_be_non_empty_utf8", "the text must be non-empty UTF-8 text of at most {max} bytes", { max: FILING_TEXT_MAX }) };
     /* END DEC-49 REGION is-text-unwritable */
     return null;
   }
@@ -732,24 +776,26 @@ export class Filings {
                   language = null, own_doing = null, names_pending = null, textcheck = null, fills = null } = {}) {
     const who = str(preparer);
     /* DEC-49 REGION is-filing-prepare */
-    if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
+    if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: localize("filings.index.no_stamped_preparer_a_draft_names", "no stamped preparer: a draft names who prepared it") };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "filingprepare");
+    if (bar) return bar;
     const closed = this.#closed(a);
     if (closed) return closed;
     const v = this.#view();
     const gov = this.governingTier(a, v);
     if (gov.tier === "undetermined")
       return { ok: false, reason: "FILING_TIER_UNDETERMINED", action: a.id, governing: gov,
-               detail: "the action's risk tier is undetermined and is never read as 1: a member states it first (op=actionrisktier)" };
+               detail: localize("filings.index.the_actions_risk_tier_is_undetermined", "the action's risk tier is undetermined and is never read as 1: a member states it first (op=actionrisktier)") };
     if (gov.tier === 3)
       return { ok: false, reason: "TIER3_COUNSEL_PACKET", action: a.id, governing: gov,
-               detail: "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet" };
+               detail: localize("filings.index.the_governing_tier_is_3_no", "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet") };
     const named = isObj(template) ? !!str(template.id) || Object.keys(template).length > 0 : template != null && template !== "";
     const own = text !== undefined && text !== null;
     if (named && own)
       return { ok: false, reason: "TEMPLATE_AND_TEXT", action: a.id,
-               detail: "name a template or write the words, not both" };
+               detail: localize("filings.index.name_a_template_or_write_the", "name a template or write the words, not both") };
     /* END DEC-49 REGION is-filing-prepare */
     const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
     let used = null;
@@ -773,9 +819,10 @@ export class Filings {
         /* DEC-49 REGION is-template-not-named */
         return { ok: false, reason: "TEMPLATE_NOT_NAMED", action: a.id, kind: a.kind, templates: offered,
                  ...(list && list.ok && list.templates.length > TEMPLATES_NAMED_MAX ? { truncated: true } : {}),
-                 detail: `${conflicted ? "the active profiles give different templates for this kind, so none is given"
-                   : !v.view ? v.why : "the profile holds no file template for this kind"}: name a template${offered.length
-                   ? " (the offered ones are listed)" : ""} or write the words` };
+                 detail: localize("filings.index.reason_name_a_template_or_write", "{reason}: name a template{listed} or write the words", {
+                   reason: conflicted ? localize("filings.index.the_active_profiles_give_different_templates", "the active profiles give different templates for this kind, so none is given")
+                     : !v.view ? v.why : localize("filings.index.the_profile_holds_no_file_template", "the profile holds no file template for this kind"),
+                   listed: offered.length ? localize("filings.index.the_offered_ones_are_listed", " (the offered ones are listed)") : "" }) };
         /* END DEC-49 REGION is-template-not-named */
       }
       used = this.#offered(named ? template : { id: profileTpl.id }, viewer);
@@ -783,7 +830,7 @@ export class Filings {
       /* DEC-49 REGION is-template-use-brief */
       if (used.use === "brief")
         return { ok: false, reason: "TEMPLATE_USE_BRIEF", template: used.template, version: used.version,
-                 detail: "this template is a briefing to counsel: it serves a counsel packet (op=counselpacket), never a filing" };
+                 detail: localize("filings.index.this_template_is_a_briefing_to", "this template is a briefing to counsel: it serves a counsel packet (op=counselpacket), never a filing") };
       /* END DEC-49 REGION is-template-use-brief */
       const mismatch = Filings.#kindMismatch(used, a);
       if (mismatch) return mismatch;
@@ -792,7 +839,7 @@ export class Filings {
     const mf = Filings.#fills(fills, own ? text : used.text, who, { action: a.id });
     if (!mf.ok) return mf;
     /* T45: the marks the member states (R34, R39, R43, R44, R48), refused whole when malformed */
-    const mk = Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
+    const mk = Filings.#marks({ voice: Filings.#voiceOf(voice, a), audience, language, own_doing, names_pending, textcheck });
     if (!mk.ok) return mk;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
@@ -873,34 +920,36 @@ export class Filings {
     const named = typeof purpose === "string" ? purpose.trim() : "";
     const assembled = COMMUNICATION_PURPOSES.includes(named) && (text === null || text === undefined);
     /* DEC-49 REGION is-communication-prepare */
-    if (!who) return { ok: false, reason: "COMMUNICATION_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
+    if (!who) return { ok: false, reason: "COMMUNICATION_NO_PREPARER", detail: localize("filings.index.no_stamped_preparer_a_draft_names", "no stamped preparer: a draft names who prepared it") };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "communicationprepare");
+    if (bar) return bar;
     const closed = this.#closed(a);
     if (closed) return closed;
     if (!assembled && (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX))
       return { ok: false, reason: "COMMUNICATION_TEXT_REFUSED", max_bytes: FILING_TEXT_MAX,
-               detail: `the communication's words must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
+               detail: localize("filings.index.the_communications_words_must_be_non_empty", "the communication's words must be non-empty UTF-8 text of at most {max} bytes", { max: FILING_TEXT_MAX }) };
     const why = named;
     if (!why || why.length > COMMUNICATION_PURPOSE_MAX || WELL_FORMED.test(why))
       return { ok: false, reason: "COMMUNICATION_PURPOSE_REFUSED", max: COMMUNICATION_PURPOSE_MAX,
-               detail: `say what the communication is for, in at most ${COMMUNICATION_PURPOSE_MAX} characters` };
+               detail: localize("filings.index.say_what_the_communication_is_for", "say what the communication is for, in at most {max} characters", { max: COMMUNICATION_PURPOSE_MAX }) };
     /* END DEC-49 REGION is-communication-prepare */
-    const mk = Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
+    const mk = Filings.#marks({ voice: Filings.#voiceOf(voice, a), audience, language, own_doing, names_pending, textcheck });
     if (!mk.ok) return mk;
     if (why === "document_infraction" && !mk.marks.audience)
       return { ok: false, reason: "FILING_MARK_REFUSED", field: "audience",
-               detail: `a documenting version names its audience: one of ${AUDIENCES.join(", ")}` };
+               detail: localize("filings.index.a_documenting_version_names_its_audience", "a documenting version names its audience: one of {audiences}", { audiences: AUDIENCES.join(", ") }) };
     /* R23: the findings and inquiries chosen, each the preparer may see; one not seen answers as one absent */
     const chosen = from == null ? [] : Array.isArray(from) ? from : null;
     if (chosen === null || chosen.length > FROM_MAX || !chosen.every((x) => typeof x === "string" && x.trim()))
-      return { ok: false, reason: "FILING_MARK_REFUSED", field: "from", detail: `from lists at most ${FROM_MAX} finding or inquiry ids` };
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "from", detail: localize("filings.index.from_lists_at_most_n_finding", "from lists at most {max} finding or inquiry ids", { max: FROM_MAX }) };
     const fromFacts = [];
     for (const id of [...new Set(chosen.map((x) => x.trim()))]) {
       const f = this.#findingRead(id, viewer);
       /* DEC-49 REGION is-communication-from */
       if (!f) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id,
-                       detail: "no finding or inquiry by that id is readable here; one you may not see answers the same" };
+                       detail: localize("filings.index.no_finding_or_inquiry_by_that_id", "no finding or inquiry by that id is readable here; one you may not see answers the same") };
       /* END DEC-49 REGION is-communication-from */
       fromFacts.push(f);
     }
@@ -967,26 +1016,26 @@ export class Filings {
       : { part: name, text: words(unread(x), true), source: null, undetermined: true });
     const office = [val.counterparty_role.value, val.counterparty_body.value].filter(Boolean).join(", ");
     const out = [];
-    out.push(part("the act", val.act, (w, none) => word("filings.act", { words: w, office: office && !none ? `, by ${office}` : "" })));
-    out.push(part("the standard", val.standards, (w) => word("filings.standard_measured_against", { words: w })));
+    out.push(part(localize("filings.index.the_act", "the act"), val.act, (w, none) => word("filings.act", { words: w, office: office && !none ? localize("filings.index.by_office", ", by {office}", { office }) : "" })));
+    out.push(part(localize("filings.index.the_standard", "the standard"), val.standards, (w) => word("filings.standard_measured_against", { words: w })));
     if (purpose === "document_infraction") {
       const standard = this.#venueStandard(v, a.kind);
       const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
       for (const f of facts) {
-        const g = f.grade && f.grade.pair ? Object.entries(f.grade.pair).map(([k, x]) => `${k} ${x && x.grade ? x.grade : "undetermined"}`).join(", ") : "undetermined";
-        out.push({ part: "a point", text: word("filings.point_finding_grade", { claim: f.claim && (f.claim.conclusion || f.claim.question) || f.finding, finding: f.finding, kind: f.kind, grade: g }), source: f.source });
+        const g = f.grade && f.grade.pair ? Object.entries(f.grade.pair).map(([k, x]) => `${k} ${x && x.grade ? x.grade : localize("filings.index.undetermined", "undetermined")}`).join(", ") : localize("filings.index.undetermined", "undetermined");
+        out.push({ part: localize("filings.index.a_point", "a point"), text: word("filings.point_finding_grade", { claim: f.claim && (f.claim.conclusion || f.claim.question) || f.finding, finding: f.finding, kind: f.kind, grade: g }), source: f.source });
       }
       for (const e of exhibits)
-        out.push({ part: "evidence", text: word("filings.evidence_capture_grade", { locator: e.locator ?? e.sha256, grade: e.grade && e.grade.grade ? e.grade.grade : "undetermined" }),
+        out.push({ part: localize("filings.index.evidence", "evidence"), text: word("filings.evidence_capture_grade", { locator: e.locator ?? e.sha256, grade: e.grade && e.grade.grade ? e.grade.grade : localize("filings.index.undetermined", "undetermined") }),
                    source: e.sha256 });
       const unsure = [...facts.filter((f) => f.kind === "unpublished").map((f) => word("filings.finding_published", { finding: f.finding })),
                       ...exhibits.filter((e) => !(e.grade && e.grade.grade)).map((e) => word("filings.grade", { locator: e.locator ?? e.sha256 }))];
-      out.push({ part: "still uncertain", text: unsure.length ? word("filings.uncertain", { unsure: unsure.join("; ") }) : word("filings.uncertain_nothing_record"),
+      out.push({ part: localize("filings.index.still_uncertain", "still uncertain"), text: unsure.length ? word("filings.uncertain", { unsure: unsure.join("; ") }) : word("filings.uncertain_nothing_record"),
                  source: null });
       if (marks.audience === "violating_party") {
         const c = a.clock.find((x) => realDate(x.date) && str(x.basis) && (x.status ?? "pending") === "pending");
-        out.push(c ? { part: "a time for review and response", text: word("filings.invite_review_response", { date: c.date, basis: c.basis }), source: `${a.id}/clock` }
-          : { part: "a time for review and response", text: word("filings.time_review_response_undetermined"),
+        out.push(c ? { part: localize("filings.time_review_response", "a time for review and response"), text: word("filings.invite_review_response", { date: c.date, basis: c.basis }), source: `${a.id}/clock` }
+          : { part: localize("filings.time_review_response", "a time for review and response"), text: word("filings.time_review_response_undetermined"),
               source: null, undetermined: true });
       }
       return out;
@@ -994,24 +1043,29 @@ export class Filings {
     /* chance_to_fix */
     const asks = this.#allowedAsks(det, v.view, viewer).filter((x) => x.what !== ASK_WHAT.route);
     const requires = asks.filter((x) => x.what === ASK_WHAT.requirement);
-    out.push(requires.length ? { part: "correcting the act", text: word("filings.correcting_act_look", { requires: requires.map((r) => r.words).join("; ") }),
+    out.push(requires.length ? { part: localize("filings.correcting_act", "correcting the act"), text: word("filings.correcting_act_look", { requires: requires.map((r) => r.words).join("; ") }),
                                  source: requires.map((r) => r.source).join(", ") }
-      : { part: "correcting the act", text: word("filings.correcting_act_undetermined"), source: null, undetermined: true });
+      : { part: localize("filings.correcting_act", "correcting the act"), text: word("filings.correcting_act_undetermined"), source: null, undetermined: true });
     const harm = asks.filter((x) => x.what === ASK_WHAT.consequence);
-    out.push(harm.length ? { part: "remedying the harm", text: word("filings.remedying_harm_look", { harm: harm.map((r) => r.words).join("; ") }),
+    out.push(harm.length ? { part: localize("filings.remedying_harm", "remedying the harm"), text: word("filings.remedying_harm_look", { harm: harm.map((r) => r.words).join("; ") }),
                              source: harm.map((r) => r.source).join(", ") }
-      : { part: "remedying the harm", text: word("filings.remedying_harm_consequence"), source: null });
+      : { part: localize("filings.remedying_harm", "remedying the harm"), text: word("filings.remedying_harm_consequence"), source: null });
     const law = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.find((d) => d.applies_to === a.kind && !d.defends) : null;
     const window = a.clock.find((x) => realDate(x.date) && (x.basis_kind === "window"));
-    out.push(law ? { part: "a time", text: word("filings.time_law_allows", { days: law.days ?? law.amount ?? "a period", count: law.count ?? law.units ?? "days",
+    out.push(law ? { part: localize("filings.index.a_time", "a time"), text: word("filings.time_law_allows", { days: law.days ?? law.amount ?? localize("filings.index.a_period", "a period"), count: law.count ?? law.units ?? localize("filings.index.days", "days"),
                                                                              citation: law.citation ?? word("filings.citation_stated") }),
                      source: `profile:${law.profile}/deadlines/${law.rule}` }
-      : window ? { part: "a time", text: word("filings.time_set", { date: window.date, basis: window.basis ?? word("filings.stated") }), source: `${a.id}/clock` }
-      : { part: "a time", text: word("filings.time_undetermined_profile"), source: null, undetermined: true });
+      : window ? { part: localize("filings.index.a_time", "a time"), text: word("filings.time_set", { date: window.date, basis: window.basis ?? word("filings.stated") }), source: `${a.id}/clock` }
+      : { part: localize("filings.index.a_time", "a time"), text: word("filings.time_undetermined_profile"), source: null, undetermined: true });
     return out;
   }
 
   /* ---------------------------------------------------------------- T45: what an outward text is checked for */
+
+  /* R44: a public comment prepared with no voice is the group's act. Another kind states none, as the member leaves it. */
+  static #voiceOf(voice, a) {
+    return voice == null && a.kind === PUBLIC_COMMENT ? "group" : voice;
+  }
 
   /* R34, R37, R39, R43, R44, R48: the marks a member states at preparation, read and refused whole when malformed
      (`FILING_MARK_REFUSED`, naming the field): `voice` (R44), `audience` (R37, R42), `language` (R43, a BCP 47 tag the
@@ -1024,18 +1078,18 @@ export class Filings {
       return { ok: false, reason: "FILING_MARK_REFUSED", field, detail };
       /* END DEC-49 REGION is-filing-mark-refused */
     };
-    if (voice != null && !VOICES.includes(voice)) return bad("voice", `voice is one of ${VOICES.join(", ")}`);
-    if (audience != null && !AUDIENCES.includes(audience)) return bad("audience", `audience is one of ${AUDIENCES.join(", ")}`);
+    if (voice != null && !VOICES.includes(voice)) return bad("voice", localize("filings.index.voice_is_one_of", "voice is one of {voices}", { voices: VOICES.join(", ") }));
+    if (audience != null && !AUDIENCES.includes(audience)) return bad("audience", localize("filings.index.audience_is_one_of", "audience is one of {audiences}", { audiences: AUDIENCES.join(", ") }));
     if (language != null && (typeof language !== "string" || !/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$/.test(language)))
-      return bad("language", "language is a language tag, such as en or en-GB");
+      return bad("language", localize("filings.index.language_is_a_language_tag_such", "language is a language tag, such as en or en-GB"));
     if (ownDoing != null && (!Array.isArray(ownDoing) || ownDoing.length > 5000 || !ownDoing.every((i) => Number.isInteger(i) && i >= 0)))
-      return bad("own_doing", "own_doing lists the indexes of sentences about the group's own doing");
-    if (pending != null && typeof pending !== "boolean") return bad("names_pending", "names_pending is true or false");
+      return bad("own_doing", localize("filings.index.own_doing_lists_the_indexes_of", "own_doing lists the indexes of sentences about the team's own doing"));
+    if (pending != null && typeof pending !== "boolean") return bad("names_pending", localize("filings.index.names_pending_is_true_or_false", "names_pending is true or false"));
     let tc = null;
     if (textcheck != null) {
       const items = isObj(textcheck) && Array.isArray(textcheck.sentences) ? textcheck.sentences : null;
       if (!items || items.length > 5000 || !items.every((x) => isObj(x) && typeof x.quote === "string" && x.quote.trim() && typeof x.reads_as === "string"))
-        return bad("textcheck", "textcheck is the assistant's answer: {sentences: [{quote, reads_as, why}]}");
+        return bad("textcheck", localize("filings.index.textcheck_is_the_assistants_answer", "textcheck is the assistant's answer: sentences, each with its quote, what it reads as and why"));
       tc = items.map((x) => ({ quote: x.quote, reads_as: x.reads_as, ...(typeof x.why === "string" ? { why: x.why } : {}) }));
     }
     return { ok: true, marks: { voice: voice ?? null, audience: audience ?? null, language: language ?? null,
@@ -1102,7 +1156,7 @@ export class Filings {
     return { state: judged.length && (!answer || answer.ok !== true) ? "undetermined" : "read", items, cites: refs.map((c) => c.ref),
              says: word("filings.says.supported_supported_record", {
                supported: count("supported"), unsupported: count("unsupported"), contradicted: count("contradicted"),
-               count: count("undetermined") ? `, ${count("undetermined")} not judged` : "" }) };
+               count: count("undetermined") ? localize("filings.index.n_not_judged", ", {n} not judged", { n: count("undetermined") }) : "" }) };
   }
 
   /* R39, R43, R38: action-grammar's `pointOut` (its R18) for one phrasing kind over the sentences, in the member's
@@ -1236,20 +1290,20 @@ export class Filings {
       const findings = [];
       const res = Array.isArray(resolutions) ? resolutions : resolutions == null ? [] : null;
       const g = this.grammar;
-      if (res === null) findings.push({ detail: "resolutions is a list" });
+      if (res === null) findings.push({ detail: localize("filings.index.resolutions_is_a_list", "resolutions is a list") });
       else if (typeof g.assertionResolutionFindings === "function")
         this.#call(() => g.assertionResolutionFindings({ sentences, pointed, resolutions: res }, findings));
       /* DEC-49 REGION is-assertion-resolution-refused */
       if (findings.length)
         return { refusal: { ok: false, reason: "ASSERTION_RESOLUTION_REFUSED", filing, findings,
-                            detail: "a resolution names no pointed sentence, names one twice, or is malformed" } };
+                            detail: localize("filings.index.a_resolution_names_no_pointed_sentence", "a resolution names no pointed sentence, names one twice, or is malformed") } };
       /* END DEC-49 REGION is-assertion-resolution-refused */
       const u = typeof g.assertionsUnresolved === "function" ? this.#call(() => g.assertionsUnresolved({ sentences, pointed, resolutions: res })) : null;
       /* DEC-49 REGION is-assertion-unresolved */
       if (u && Array.isArray(u.unresolved) && u.unresolved.length)
         return { refusal: { ok: false, reason: "ASSERTION_UNRESOLVED", filing,
                             sentences: u.unresolved.map((i) => ({ index: i, text: sentences[i] })),
-                            detail: "each sentence pointed out as asserting a breach is resolved: rewritten, said to only ask, or the act treated as a breach claim" } };
+                            detail: localize("filings.index.each_sentence_pointed_out_as_asserting", "each sentence pointed out as asserting a breach is resolved: rewritten, said to only ask, or the act treated as a breach claim") } };
       /* END DEC-49 REGION is-assertion-unresolved */
       breach = !!(u && u.breach_claim);
       recorded = res;
@@ -1264,14 +1318,14 @@ export class Filings {
       return { refusal: { ok: false, reason: "CONTRADICTED_HELD", filing,
                           sentences: held.filter((h) => !released.some((r) => r.ord === h.index))
                             .map((h) => ({ index: h.index, text: sentences[h.index], contradicted_by: h.contradicted_by ?? null })),
-                          detail: "a contradicted sentence is held back unless the approval names it with a reason (release: [{ord, reason}])" } };
+                          detail: localize("filings.index.a_contradicted_sentence_is_held_back", "a contradicted sentence is held back unless the approval names it with a reason (release: the sentence's number and the reason)") } };
     /* END DEC-49 REGION is-contradicted-held */
     const own = o.pointed && o.pointed.own_benefit_ask && o.pointed.own_benefit_ask.state === "read" ? o.pointed.own_benefit_ask.pointed || [] : [];
     /* DEC-49 REGION is-self-benefit-ask */
     if (own.length)
       return { refusal: { ok: false, reason: "SELF_BENEFIT_ASK", filing,
                           sentences: [...new Set(own.map((p) => p.index))].map((i) => ({ index: i, text: sentences[i] })),
-                          detail: "rewrite each sentence that asks for the benefit of the group or its members; there is no override" } };
+                          detail: localize("filings.index.rewrite_each_sentence_that_asks_for", "rewrite each sentence that asks for the benefit of the team or its members; there is no override") } };
     /* END DEC-49 REGION is-self-benefit-ask */
     /* R57: the check is `filing-templates`' one (its R33), asked on the approved text and answered with its row */
     const unquoted = rfc ? rfcQuotingRefusal(String(body ?? ""), { filing }) : null;
@@ -1285,13 +1339,13 @@ export class Filings {
   #breachRevision(id, who, viewer, when) {
     const lease = this.record.acquireLease(id, who, 30000);
     if (!lease || !lease.ok)
-      return { ok: false, reason: "LEASE_HELD", target: id, detail: "another member is writing to this action right now; nothing was approved" };
+      return { ok: false, reason: "LEASE_HELD", target: id, detail: localize("filings.index.another_member_is_writing_to_this", "another member is writing to this action right now; nothing was approved") };
     try {
       const f = this.record.readFile(id, "bundle.md");
-      if (!f || typeof f.text !== "string") return { ok: false, reason: "NO_DOCUMENT", target: id, detail: "the action has no readable bundle.md" };
+      if (!f || typeof f.text !== "string") return { ok: false, reason: "NO_DOCUMENT", target: id, detail: localize("filings.index.the_action_has_no_readable_document", "the action has no readable bundle.md") };
       const lines = f.text.split("\n");
       const end = lines[0] === "---" ? lines.indexOf("---", 1) : -1;
-      if (end === -1) return { ok: false, reason: "NO_DOCUMENT", target: id, detail: "the action's bundle.md has no front matter" };
+      if (end === -1) return { ok: false, reason: "NO_DOCUMENT", target: id, detail: localize("filings.index.the_actions_document_has_no_front_matter", "the action's bundle.md has no front matter") };
       const at = lines.findIndex((l, i) => i > 0 && i < end && /^breach:/.test(l));
       if (at >= 0) lines[at] = "breach: true"; else lines.splice(end, 0, "breach: true");
       const li = lines.findIndex((l, i) => i > 0 && i < lines.indexOf("---", 1) && /^last_updated:/.test(l));
@@ -1323,7 +1377,7 @@ export class Filings {
     /* DEC-49 REGION is-not-the-groups-act */
     if (marks.voice === "self")
       return { ok: false, reason: "NOT_THE_GROUPS_ACT", filing: d.filing_id, voice: "self",
-               detail: "prepared as yourself: your own notes are never approved, stamped or recorded as the group's act" };
+               detail: localize("filings.index.prepared_as_yourself_your_own_notes", "prepared as yourself: your own notes are never approved, stamped or recorded as the team's act") };
     /* END DEC-49 REGION is-not-the-groups-act */
     return null;
   }
@@ -1372,12 +1426,12 @@ export class Filings {
     const changed = [];
     const gov = this.governingTier(a);
     if (gov.tier !== was.tier) changed.push(word("filings.governing_tier", { tier: was.tier, tier_2: gov.tier }));
-    if (json(a.counterparty ?? null) !== json(was.counterparty ?? null)) changed.push("the counterparty");
+    if (json(a.counterparty ?? null) !== json(was.counterparty ?? null)) changed.push(localize("filings.index.the_counterparty", "the counterparty"));
     const then = was.determination ? this.#det(was.determination, MACHINE_READER) : null;
     const now = this.#restsOn(a, MACHINE_READER).det;
     if (was.determination && (!then || !then.live))
       changed.push(word("filings.determination_superseded", { determination: was.determination,
-                                                              then: then && then.superseded_by ? ` by ${then.superseded_by}` : "" }));
+                                                              then: then && then.superseded_by ? localize("filings.index.by_who", " by {who}", { who: then.superseded_by }) : "" }));
     else if ((now ? now.id : null) !== (was.determination ?? null)) changed.push(word("filings.the_determination_the_action_rests"));
     const laws = a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null;
     if (json(laws) !== json(was.governing_laws ?? null)) changed.push(word("filings.governing_laws"));
@@ -1401,7 +1455,7 @@ export class Filings {
     const held = this.#one(`SELECT approved_by, at FROM filing_approvals WHERE filing_id=?`, id);
     /* DEC-49 REGION is-already-approved */
     if (held) return { ok: false, reason: "ALREADY_APPROVED", filing: id, approved_by: held.approved_by, at: held.at,
-                       detail: "a draft is approved at most once; prepare a new draft to approve another text" };
+                       detail: localize("filings.index.a_draft_is_approved_at_most", "a draft is approved at most once; prepare a new draft to approve another text") };
     /* END DEC-49 REGION is-already-approved */
     return null;
   }
@@ -1430,10 +1484,12 @@ export class Filings {
     /* DEC-49 REGION is-filing-approve */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_APPROVE",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: a machine prepares, and a member approves`
-                           : "no member is named as the one approving" };
+               detail: who ? localize("filings.index.who_is_a_machine_identity_a_machine", "'{who}' is a machine identity: a machine prepares, and a member approves", { who: who.slice(0, 60) })
+                           : localize("filings.index.no_member_is_named_as_the_one", "no member is named as the one approving") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingapprove");
+    if (bar) return bar;
     const self = Filings.#notTheGroups(d);
     if (self) return self;
     const held = this.#alreadyApproved(d.filing_id);
@@ -1441,11 +1497,11 @@ export class Filings {
     const changed = this.#staleness(d);
     if (changed.length)
       return { ok: false, reason: "FILING_STALE", filing: d.filing_id, changed,
-               detail: `since the draft was prepared: ${changed.join("; ")} changed. Prepare it again.` };
+               detail: localize("filings.index.since_the_draft_was_prepared_changed", "since the draft was prepared: {changed} changed. Prepare it again.", { changed: changed.join("; ") }) };
     const body = text === undefined || text === null ? d.text : text;
     if (typeof body === "string" && UNFILLED_RE.test(body))
       return { ok: false, reason: "STILL_UNFILLED", filing: d.filing_id, unfilled: [...body.matchAll(/\[UNFILLED: ([^\]\n]*)\]/g)].map((m) => m[1]),
-               detail: "the text still holds a blank the record could not fill; a member writes it in first" };
+               detail: localize("filings.index.the_text_still_holds_a_blank", "the text still holds a blank the record could not fill; a member writes it in first") };
     const unwritable = Filings.#unwritable(body, { filing: d.filing_id });
     if (unwritable) return unwritable;
     /* END DEC-49 REGION is-filing-approve */
@@ -1495,8 +1551,8 @@ export class Filings {
 
   /** R59 (T48; N1034, K3145): one prepared draft or communication as it was stored, so a reload between preparing and
    *  approving loses nothing: its text, blanks with their sources, unfilled blanks with why, the member's own fills
-   *  (R55, each labelled the member's), template (R29), advisory and offers (R4, R58), notices, label (R5) and action,
-   *  beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
+   *  (R55, each labelled the member's), template (R29), exhibits and venue standard (R25), advisory and offers (R4, R58),
+   *  notices, label (R5) and action, beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
    *  record and nothing is written; a draft that is absent, or whose action or basis the viewer may not see (R13, R27),
    *  is `NO_SUCH_FILING`, one answer. */
   filingRead({ filing = null, viewer = null } = {}) {
@@ -1516,6 +1572,7 @@ export class Filings {
       ...(comm ? { purpose: d.purpose } : { tier: d.tier, venue: parse(d.venue) }),
       text: d.text, blanks, unfilled: comm ? [] : (parse(d.unfilled) || []), fills: blanks.filter(own),
       template: comm ? null : parse(d.template),
+      exhibits: comm ? [] : (parse(d.exhibits) ?? []), venue_standard: comm ? null : (parse(d.venue_standard) ?? null),
       ...(!comm && d.tier === 2 ? { advisory: d.advisory ?? null, offers: COUNSEL_OFFER } : {}),
       disclosure: d.disclosure ?? null, notices,
       outward: checked,
@@ -1543,22 +1600,24 @@ export class Filings {
     /* DEC-49 REGION is-filing-sent */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_FILE",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: only a member files and records it`
-                           : "no member is named as the one who sent it" };
+               detail: who ? localize("filings.index.who_is_a_machine_identity_only_a", "'{who}' is a machine identity: only a member files and records it", { who: who.slice(0, 60) })
+                           : localize("filings.index.no_member_is_named_as_the_one_who_sent", "no member is named as the one who sent it") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingsent");
+    if (bar) return bar;
     const self = Filings.#notTheGroups(d);
     if (self) return self;
     if (!this.#one(`SELECT 1 AS x FROM filing_approvals WHERE filing_id=?`, d.filing_id))
-      return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a member approves the draft before it is recorded as sent" };
+      return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: localize("filings.index.a_member_approves_the_draft_before", "a member approves the draft before it is recorded as sent") };
     const sent = this.#one(`SELECT ord, sent_on, recorded_by FROM filing_sendings WHERE filing_id=?`, d.filing_id);
     if (sent) return { ok: false, reason: "ALREADY_SENT", filing: d.filing_id, ord: sent.ord, at: sent.sent_on,
-                       recorded_by: sent.recorded_by, detail: "this draft is already recorded as sent" };
+                       recorded_by: sent.recorded_by, detail: localize("filings.index.this_draft_is_already_recorded_as_sent", "this draft is already recorded as sent") };
     /* R42: where the project names this act as needing a second member's approval, it is sent only once one is recorded */
     const second = this.#secondNeeded(d, viewer);
     if (second.needed && !this.#one(`SELECT 1 AS x FROM filing_second_approvals WHERE filing_id=?`, d.filing_id))
       return { ok: false, reason: "SECOND_APPROVAL_NEEDED", filing: d.filing_id, matched: second.matched,
-               detail: "your project asks a second member to approve this act (op=filingsecondapprove) before it is sent" };
+               detail: localize("filings.index.your_project_asks_a_second_member", "your project asks a second member to approve this act (op=filingsecondapprove) before it is sent") };
     /* END DEC-49 REGION is-filing-sent */
     /* R54 (T47; DEC-209 (4)): the venue's own number for the sending (a portal's request number), as the member gives it:
        one line of 1 to 100 characters (code points), kept as written; asked before actions is written to */
@@ -1567,7 +1626,7 @@ export class Filings {
     if (ref !== null && (typeof ref !== "string" || !ref.trim() || [...ref].length > SENT_REFERENCE_MAX || /[\r\n\u2028\u2029]/.test(ref)
                          || WELL_FORMED.test(ref)))
       return { ok: false, reason: "SENT_REFERENCE_MALFORMED", filing: d.filing_id, max: SENT_REFERENCE_MAX,
-               detail: `the venue's reference is one line of 1 to ${SENT_REFERENCE_MAX} characters, as the venue gave it` };
+               detail: localize("filings.index.the_venues_reference_is_one_line", "the venue's reference is one line of 1 to {max} characters, as the venue gave it", { max: SENT_REFERENCE_MAX }) };
     /* END DEC-49 REGION is-sent-reference-malformed */
     if (!this.actions || typeof this.actions.actionCorrespond !== "function")
       return this.#noAction(d.action_id);
@@ -1609,7 +1668,7 @@ export class Filings {
       const p = c && typeof c.clockPropose === "function"
         ? this.#call(() => c.clockPropose({ target: d.action_id, rule: r.rule, proposer: who, viewer })) : null;
       return { rule: r.rule, starts: r.starts, citation: r.citation ?? null,
-               offered: p ?? { ok: false, reason: "UNAVAILABLE", detail: "no module offers a clock entry" } };
+               offered: p ?? { ok: false, reason: "UNAVAILABLE", detail: localize("filings.index.no_module_offers_a_clock_entry", "no module offers a clock entry") } };
     });
     return {
       next_state: next
@@ -1645,18 +1704,20 @@ export class Filings {
     /* DEC-49 REGION is-second-approve */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_APPROVE",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: a member approves` : "no member is named as the one approving" };
+               detail: who ? localize("filings.index.who_is_a_machine_identity_a_member", "'{who}' is a machine identity: a member approves", { who: who.slice(0, 60) }) : localize("filings.index.no_member_is_named_as_the_one", "no member is named as the one approving") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingsecondapprove");
+    if (bar) return bar;
     const ap = this.#one(`SELECT approved_by FROM filing_approvals WHERE filing_id=?`, d.filing_id);
-    if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a member approves the draft before a second member does" };
+    if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: localize("filings.index.a_member_approves_the_draft_before_a_second", "a member approves the draft before a second member does") };
     if (ap.approved_by === who)
       return { ok: false, reason: "SAME_APPROVER", filing: d.filing_id, approved_by: who,
-               detail: "the second approval is made by a member other than the one who approved the text" };
+               detail: localize("filings.index.the_second_approval_is_made_by", "the second approval is made by a member other than the one who approved the text") };
     /* END DEC-49 REGION is-second-approve */
     const held = this.#one(`SELECT approved_by, at FROM filing_second_approvals WHERE filing_id=?`, d.filing_id);
     if (held) return { ok: false, reason: "ALREADY_APPROVED", filing: d.filing_id, approved_by: held.approved_by, at: held.at,
-                       detail: "a second member has already approved this draft, and that approval stands" };
+                       detail: localize("filings.index.a_second_member_has_already_approved_this", "a second member has already approved this draft, and that approval stands") };
     const at = this.#when();
     this.sql.exec(`INSERT INTO filing_second_approvals (filing_id, action_id, approved_by, at) VALUES (?,?,?,?)`, d.filing_id, d.action_id, who, at);
     return { ok: true, filing: d.filing_id, action: d.action_id, second_approved_by: who, at, approved_by: ap.approved_by,
@@ -1678,27 +1739,29 @@ export class Filings {
     /* DEC-49 REGION is-joint-signatory */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_APPROVE",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: a member records a partner's signature` : "no member is named" };
+               detail: who ? localize("filings.index.who_is_a_machine_identity_a_member_records", "'{who}' is a machine identity: a member records a partner's signature", { who: who.slice(0, 60) }) : localize("filings.index.no_member_is_named", "no member is named") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "jointsignatory");
+    if (bar) return bar;
     const ap = this.#one(`SELECT sha, body_sha FROM filing_approvals WHERE filing_id=?`, d.filing_id);
-    if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a joint text is approved here before a partner's signature is recorded" };
+    if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: localize("filings.index.a_joint_text_is_approved_here_before", "a joint text is approved here before a partner's signature is recorded") };
     const a = this.#action(d.action_id, viewer);
     const org = str(organisation);
     const partner = a && org ? a.partners.find((p) => str(p.organisation) === org) : null;
     if (!partner)
       return { ok: false, reason: "NOT_A_PARTNER", filing: d.filing_id, organisation: org,
-               partners: a ? a.partners.map((p) => p.organisation) : [], detail: "the organisation is not among the action's partners" };
+               partners: a ? a.partners.map((p) => p.organisation) : [], detail: localize("filings.index.the_organisation_is_not_among_the_actions", "the organisation is not among the action's partners") };
     const fp = ap.body_sha || ap.sha;
     if (str(body_sha) !== fp)
       return { ok: false, reason: "JOINT_FINGERPRINT_MISMATCH", filing: d.filing_id, organisation: org, body_sha: fp,
-               detail: "the partner's text has another fingerprint: the same text was not approved" };
+               detail: localize("filings.index.the_partners_text_has_another_fingerprint", "the partner's text has another fingerprint: the same text was not approved") };
     /* END DEC-49 REGION is-joint-signatory */
     const how = typeof account === "string" ? account.trim() : "";
     if (!how || how.length > ACCOUNT_MAX || /[\r\n]/.test(how))
-      return { ok: false, reason: "FILING_MARK_REFUSED", field: "account", detail: `say how the partner's act is known, on one line of at most ${ACCOUNT_MAX} characters` };
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "account", detail: localize("filings.index.say_how_the_partners_act_is_known", "say how the partner's act is known, on one line of at most {max} characters", { max: ACCOUNT_MAX }) };
     if (this.#one(`SELECT 1 AS x FROM joint_signatories WHERE filing_id=? AND organisation=?`, d.filing_id, org))
-      return { ok: false, reason: "ALREADY_APPROVED", filing: d.filing_id, organisation: org, detail: "this partner's signature is already recorded" };
+      return { ok: false, reason: "ALREADY_APPROVED", filing: d.filing_id, organisation: org, detail: localize("filings.index.this_partners_signature_is_already_recorded", "this partner's signature is already recorded") };
     const at = this.#when();
     this.sql.exec(`INSERT INTO joint_signatories (filing_id, action_id, organisation, role, body_sha, account, recorded_by, at)
                    VALUES (?,?,?,?,?,?,?,?)`, d.filing_id, d.action_id, org, str(partner.role), fp, how, who, at);
@@ -1714,7 +1777,7 @@ export class Filings {
   holdNoticePrepare({ place = null, preparer = null, viewer = null } = {}) {
     const who = str(preparer);
     /* DEC-49 REGION is-hold-notice-prepare */
-    if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a notice names who prepared it" };
+    if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: localize("filings.index.no_stamped_preparer_a_notice_names", "no stamped preparer: a notice names who prepared it") };
     /* END DEC-49 REGION is-hold-notice-prepare */
     const h = this.actionHolds;
     const p = isObj(place) ? { ...(str(place.target) ? { target: str(place.target) } : {}),
@@ -1724,18 +1787,21 @@ export class Filings {
       return { ...holdNotInPlace(p), why: word("filings.why.module_answers_holds") };
     const r = this.#call(() => h.holdsOf({ ...p, viewer }));
     if (!r || r.ok === false) return r || { ...holdNotInPlace(p), why: word("filings.why.hold_read") };
+    /* K4557: the notice speaks for the team, so it is the project's: the place's own, else its target's (an action's) */
+    const bar = this.#joinedBar(p.project || this.#bundleProject(p.target), who, "holdnoticeprepare");
+    if (bar) return bar;
     const list = Array.isArray(r.statements) ? r.statements : Array.isArray(r.holds) ? r.holds : Array.isArray(r.items) ? r.items : [];
     const latest = list.length ? list[list.length - 1] : null;
     if (!latest || latest.hold !== "in_place")
       return holdNotInPlace(p);
-    const where = p.project ? `the project ${p.project}` : Number.isInteger(p.ord) ? word("filings.entry_action", { ord: p.ord, target: p.target ?? word("filings.stated") }) : `the action ${p.target}`;
+    const where = p.project ? localize("filings.index.the_project_p", "the project {project}", { project: p.project }) : Number.isInteger(p.ord) ? word("filings.entry_action", { ord: p.ord, target: p.target ?? word("filings.stated") }) : localize("filings.index.the_action_a", "the action {action}", { action: String(p.target) });
     const lines = [
       word("filings.litigation_hold_notice"),
       word("filings.hold_place", { where, at: latest.at ?? word("filings.date_record_state") }),
       word("filings.reason_stated", { reason: latest.reason ?? word("filings.reason_recorded") }),
       word("filings.keep_outside_civicsmith", { kinds: word("filings.documents_letters_emails") }),
     ];
-    const sources = [{ part: "the place", source: p.project || p.target }, { part: "the reason and the date", source: `hold:${p.project || p.target}${Number.isInteger(p.ord) ? `#${p.ord}` : ""}` }];
+    const sources = [{ part: localize("filings.index.the_place", "the place"), source: p.project || p.target }, { part: localize("filings.reason_date", "the reason and the date"), source: `hold:${p.project || p.target}${Number.isInteger(p.ord) ? `#${p.ord}` : ""}` }];
     const at = this.#when();
     const text = lines.join("\n");
     return this.record.transact(() => {
@@ -1775,18 +1841,84 @@ export class Filings {
       return { ok: true, action: a.id, kind: a.kind, governing: gov, versions: [],
                says: gov.tier === 3 ? word("filings.says.governing_tier_file") : word("filings.says.governing_tier_undetermined") };
     const t = this.filingTemplates;
+    /* R65 (T51; N858 D8; DEC-340): a kind whose venue is filed with a court is offered and lists no template (`filing-templates`
+       R28); every other kind also answers the templates it holds that are not offered, with what each lacks (its R35) */
+    const entry = (this.#view().view?.action_kinds || []).find((k) => k.kind === a.kind) || null;
+    const court = !!(entry && isObj(entry.venue) && entry.venue.how === "court");
+    if (court)
+      return { ok: true, action: a.id, kind: a.kind, governing: gov, versions: [], not_offered: [], court_petition: true,
+               says: word("filings.says.file_templates_offered") };
     const list = t && typeof t.templatesFor === "function" ? this.#call(() => t.templatesFor({ kind: a.kind, use: "file", viewer })) : null;
     if (!list || list.ok === false)
-      return { ok: true, action: a.id, kind: a.kind, governing: gov, versions: [], read: false,
+      return { ok: true, action: a.id, kind: a.kind, governing: gov, versions: [], not_offered: [], court_petition: false, read: false,
                says: word("filings.says.group_templates_read") };
+    const un = t && typeof t.unofferedFor === "function" ? this.#call(() => t.unofferedFor({ kind: a.kind, viewer })) : null;
+    const unRows = Array.isArray(un) ? un : isObj(un) && un.ok !== false && Array.isArray(un.templates) ? un.templates : null;
+    const notOffered = (unRows || []).filter(isObj).map((x) => ({ handle: x.handle ?? null, name: x.name ?? null,
+                                                                  lacks: Array.isArray(x.lacks) ? x.lacks : [] }));
     const versions = list.templates.filter((x) => (x.use ?? "file") === "file")
       .flatMap((x) => (x.versions || []).map((y) => ({ template: x.id, name: x.name ?? null, origin: x.origin ?? null, profiles: x.profiles ?? null,
                                                        version: y.version ?? null, number: y.number ?? null, state: y.state ?? null,
                                                        approved_at: y.approved ? y.approved.at ?? null : y.approved_at ?? null,
                                                        ...(y.default ? { default: true } : {}) })))
       .sort((p, q) => String(q.approved_at ?? "").localeCompare(String(p.approved_at ?? "")) || Number(q.number ?? 0) - Number(p.number ?? 0));
-    return { ok: true, action: a.id, kind: a.kind, governing: gov, versions, ...(list.truncated ? { truncated: true } : {}),
+    return { ok: true, action: a.id, kind: a.kind, governing: gov, versions, not_offered: notOffered, court_petition: false,
+             ...(unRows === null ? { not_offered_read: false } : {}), ...(list.truncated ? { truncated: true } : {}),
              says: word("filings.says.file_templates_offered") };
+  }
+
+  /* ---------------------------------------------------------------- R64: the minutes beside the group's public comment */
+
+  /** R64 (T51; N880 (U4); DEC-340, U366; K3935; `case-inputs` R19; `actions` R108): the source this module registers once
+   *  with `case-inputs.registerMinutesComparisons`, for the signing view. For each action the viewer may see whose kind is
+   *  `public_comment`, whose `advances` or `rests_on` legs name a bundle among `members` (as `action-replies` R3 derives
+   *  it), and that holds a `received` entry with `minutes` (`actions` R108), one row `{meeting, date, minutes, filed,
+   *  same}`: `minutes` the text of the entry's passage (`content`'s read of the extent), `filed` the approved text of the
+   *  action's latest draft or communication recorded sent (R7), `same` true exactly when the two are equal after
+   *  whitespace is folded (`case-inputs` R19). An action with no recorded sending or no minutes entry gives no row, and
+   *  one whose passage the viewer may not see is left out as absent. It asks no reason, refuses nothing and writes
+   *  nothing; it throws when it cannot read, so `case-inputs` answers `undetermined`. */
+  minutesComparisonsOn({ case: caseId = null, members = [], viewer = null } = {}) {
+    void caseId;
+    const ids = new Set((Array.isArray(members) ? members : [])
+      .map((m) => (typeof m === "string" ? m : isObj(m) ? m.bundle_id : null)).filter((x) => typeof x === "string" && x));
+    if (!ids.size) return [];
+    const acts = this.actions;
+    if (!acts || typeof acts.actionsFor !== "function")
+      throw new Error(localize("filings.index.no_module_answers_the_actions_minutes", "no module answers the actions here, so the minutes cannot be compared"));
+    const fold = (t) => String(t).replace(/\s+/g, " ").trim();
+    const out = [];
+    let after = null;
+    for (;;) {
+      const page = acts.actionsFor({ kind: "public_comment", after, limit: FILINGS_FOR_MAX, viewer });
+      if (!page || page.ok === false || !Array.isArray(page.items))
+        throw new Error(localize("filings.index.the_public_comments_could_not_be_read", "the public comments could not be read"));
+      for (const it of page.items) {
+        const a = this.#action(isObj(it) ? it.id : it, viewer);
+        if (!a || !a.legs.some((l) => (!l.kind || ["rests_on", "advances"].includes(l.kind)) && ids.has(l.target))) continue;
+        const entries = a.correspondence.map((e, i) => ({ ...e, ord: Number.isInteger(e.ord) ? e.ord : i }))
+          .filter((e) => e.direction === "received" && isObj(e.minutes));
+        const entry = entries.length ? entries.reduce((p, q) => (q.ord >= p.ord ? q : p)) : null;
+        if (!entry) continue;
+        const sent = this.#one(`SELECT ap.text FROM filing_sendings s JOIN filing_approvals ap ON ap.filing_id=s.filing_id
+                                 WHERE s.action_id=? ORDER BY COALESCE(s.ord, -1) DESC, s.recorded_at DESC, s.filing_id DESC LIMIT 1`, a.id);
+        if (!sent) continue;
+        const m = entry.minutes, p = isObj(m.passage) ? m.passage : {};
+        const cid = str(p.content_id) || str(p.contentId);
+        const c = this.content;
+        const row = cid && c && typeof c.contentRow === "function" ? c.contentRow(cid) : null;
+        if (row && str(row.bundle_id) && typeof c.sees === "function" && !c.sees(row.bundle_id, viewer)) continue;
+        const text = row && typeof c.passageText === "function" ? c.passageText(cid) : null;
+        if (typeof text !== "string")
+          throw new Error(localize("filings.index.the_minutes_passage_could_not_be_read", "the passage of the minutes could not be read"));
+        const meeting = str(m.meeting), date = str(m.date);
+        if (!meeting || !date) continue;
+        out.push({ meeting, date, minutes: text, filed: sent.text, same: fold(text) === fold(sent.text) });
+      }
+      if (!page.truncated || !page.cursor) break;
+      after = page.cursor;
+    }
+    return out;
   }
 
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
@@ -2052,7 +2184,7 @@ export class Filings {
     for (const f of facts) add(f.subject_entity, word("filings.entity_finding_concerns"), f.source);
     const from = Filings.#actDay(act) || (isObj(act.period) ? realDate(act.period.from) : null);
     const to = at.slice(0, 10);
-    const base = { title: "Chronology", marking, set, from, to,
+    const base = { title: localize("filings.index.chronology", "Chronology"), marking, set, from, to,
                    ...(from ? {} : { from_says: word("filings.act_states_date") }) };
     const empty = (says) => ({ ...base, lanes: { world: { label: LANE_WORDS.world, items: [], placed_nowhere: [], truncated: false },
                                                  ours: { label: LANE_WORDS.ours, sources: [] } }, events: [], says });
@@ -2184,17 +2316,17 @@ export class Filings {
     const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function"
       ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
     return {
-      facts: section("Facts", facts, det ? (det.withheld ? unseen : {}) : { says: facts.length
+      facts: section(localize("filings.index.facts", "Facts"), facts, det ? (det.withheld ? unseen : {}) : { says: facts.length
         ? word("filings.says.determination_held_matter") : word("filings.says.determination_held_action") }),
       chronology: privileged ? { ...chronology, privileged } : chronology,
-      exhibits: section("Exhibits", this.#exhibits(this.#citesOf(a, det, facts, events), standard), {
+      exhibits: section(localize("filings.index.exhibits", "Exhibits"), this.#exhibits(this.#citesOf(a, det, facts, events), standard), {
         venue_standard: standard,
         says: standard.state === "stated" ? word("filings.says.exhibit_capture_grade") : word("filings.says.exhibit_capture_grade_attestation") }),
-      standards: section("Standards", standards, det ? (det.withheld || refused ? unseen : {})
+      standards: section(localize("filings.index.standards", "Standards"), standards, det ? (det.withheld || refused ? unseen : {})
         : { says: word("filings.says.determination_held_standard") }),
       theories: section(word("filings.candidate_theories_remedies"), theories,
         { says: theories.length ? word("filings.says.candidate_counsel_weigh") : word("filings.says.candidate_theory_remedy") }),
-      deadlines: section("Deadlines", this.#deadlines(v, a, det, viewer),
+      deadlines: section(localize("filings.index.deadlines", "Deadlines"), this.#deadlines(v, a, det, viewer),
         { says: v.view ? word("filings.says.date_computed_recorded", { counted_from: COUNTED_FROM })
                        : word("filings.says.claim_deadline_known", { why: v.why }) }),
       consequences: section(word("filings.consequences_breach"),
@@ -2221,7 +2353,7 @@ export class Filings {
       const fs = (c.findings || []).map((id) => { const f = this.#findingRead(id, viewer); if (!f) hidden = true; return f; }).filter(Boolean);
       return { statement: c.statement, findings: fs.map((f) => ({ finding: f.finding, kind: f.kind, claim: f.claim, source: f.source })),
                sources: fs.flatMap((f) => (f.citations || []).map((x) => ({ target: x.target, ...(x.content_id ? { content_id: x.content_id } : {}), source: f.source }))),
-               named_by: "the member", source: `challenged#${i}` };
+               named_by: localize("filings.index.the_member", "the member"), source: `challenged#${i}` };
     });
     const pressure = [];
     let pressureSays = null;
@@ -2325,8 +2457,8 @@ export class Filings {
     /* DEC-49 REGION is-counsel-packet */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_NAME_COUNSEL",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: the group names its counsel`
-                           : "no member is named as the one naming counsel" };
+               detail: who ? localize("filings.index.who_is_a_machine_identity", "'{who}' is a machine identity: the team names its counsel", { who: String(who.slice(0, 60)) })
+                           : localize("filings.index.no_member_is_named_as_the_one_naming", "no member is named as the one naming counsel") };
     /* R8 (DEC-88, C-115.44): the author's words on why, kept as written. Blank is empty after trim; the bound counts
        code points, as publication's attribution reason does (K1030). Asked before the action, so nothing is read or
        written for a packet with no reason. */
@@ -2335,12 +2467,14 @@ export class Filings {
     if (why == null || !why.trim() || chars > PACKET_REASON_MAX)
       return { ok: false, reason: "PACKET_NO_REASON", max: PACKET_REASON_MAX,
                detail: why == null
-                 ? (reason === undefined || reason === null ? "say in your own words why this packet is assembled (reason)"
-                   : `the reason must be your words, as text; a ${typeof reason} was sent`)
-                 : !why.trim() ? "the reason is blank: say in your own words why this packet is assembled"
-                 : `the reason is ${chars} characters, over the ${PACKET_REASON_MAX} a packet's reason is kept to; refused rather than cut` };
+                 ? (reason === undefined || reason === null ? localize("filings.index.say_in_your_own_words_why_this", "say in your own words why this packet is assembled (reason)")
+                   : localize("filings.index.the_reason_must_be_your_words_as", "the reason must be your words, as text; a {sent} was sent", { sent: typeof reason }))
+                 : !why.trim() ? localize("filings.index.the_reason_is_blank_say_in", "the reason is blank: say in your own words why this packet is assembled")
+                 : localize("filings.index.the_reason_is_n_characters_over", "the reason is {chars} characters, over the {max} a packet's reason is kept to; refused rather than cut", { chars, max: PACKET_REASON_MAX }) };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "counselpacket");
+    if (bar) return bar;
     /* R8 (K924): a packet at every governing tier; counsel is required at Tier 3 or an undetermined tier (never read as
        1, D-182), optional below it, and one given is named by both a name and an organisation. */
     const gov = this.governingTier(a);
@@ -2348,8 +2482,9 @@ export class Filings {
     const c = counsel == null && !needed ? null : this.#counsel(counsel);
     if (counsel == null ? needed : !c)
       return { ok: false, reason: "NO_COUNSEL", max: COUNSEL_FIELD_MAX, action: a.id, governing: gov,
-               detail: `${needed ? `at a governing tier of ${gov.tier === 3 ? "3" : "undetermined"} counsel is named` : "counsel, when named,"} `
-                     + `by a name and an organisation (contact optional), each one line of at most ${COUNSEL_FIELD_MAX} characters` };
+               detail: localize("filings.index.who_by_a_name_and_an_organisation", "{who} by a name and an organisation (contact optional), each one line of at most {max} characters", {
+                   who: needed ? localize("filings.index.at_a_governing_tier_of_tier_counsel", "at a governing tier of {tier} counsel is named", { tier: gov.tier === 3 ? "3" : localize("filings.index.undetermined", "undetermined") })
+                     : localize("filings.index.counsel_when_named", "counsel, when named,"), max: COUNSEL_FIELD_MAX }) };
     /* END DEC-49 REGION is-counsel-packet */
     /* R31: a `brief` template, its version and refusals as R28's */
     let used = null;
@@ -2359,7 +2494,7 @@ export class Filings {
       /* DEC-49 REGION is-template-use-file */
       if (used.use !== "brief")
         return { ok: false, reason: "TEMPLATE_USE_FILE", template: used.template, version: used.version,
-                 detail: "this template is wording the group files in its own name: a briefing takes a brief template" };
+                 detail: localize("filings.index.this_template_is_wording_the_team_files", "this template is wording the team files in its own name: a briefing takes a brief template") };
       /* END DEC-49 REGION is-template-use-file */
       const mismatch = Filings.#kindMismatch(used, a);
       if (mismatch) return mismatch;
@@ -2368,13 +2503,13 @@ export class Filings {
        the member names them. `NO_DETERMINATION` is retired: a packet needs no determination and no override. */
     const goal = purpose == null ? "claim" : purpose;
     if (!PACKET_PURPOSES.includes(goal))
-      return { ok: false, reason: "FILING_MARK_REFUSED", field: "purpose", detail: `purpose is one of ${PACKET_PURPOSES.join(", ")}` };
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "purpose", detail: localize("filings.index.purpose_is_one_of", "purpose is one of {purposes}", { purposes: PACKET_PURPOSES.join(", ") }) };
     const named = challenged == null ? [] : Array.isArray(challenged) ? challenged : null;
     const okStatement = (x) => isObj(x) && typeof x.statement === "string" && x.statement.trim() && x.statement.length <= 2000
       && (x.findings == null || (Array.isArray(x.findings) && x.findings.length <= FROM_MAX && x.findings.every((f) => typeof f === "string" && f.trim())));
     if (named === null || named.length > CHALLENGED_MAX || !named.every(okStatement) || (named.length && goal !== "defence"))
       return { ok: false, reason: "FILING_MARK_REFUSED", field: "challenged",
-               detail: `a defence packet names at most ${CHALLENGED_MAX} challenged statements, each {statement, findings?}` };
+               detail: localize("filings.index.a_defence_packet_names_at_most_n", "a defence packet names at most {max} challenged statements, each with its words and, if you have them, the findings it rests on", { max: CHALLENGED_MAX }) };
     const { det, hidden } = this.#restsOn(a, viewer);
     const marking = counselMarking(c);
     /* R10 (T45; v0.2 rule 15): a packet for an action of a counsel-matter project carries the privilege marking and a
@@ -2415,7 +2550,7 @@ export class Filings {
     /* R34 (T45): the briefing is checked sentence by sentence against the record, its unsupported sentences pointed out */
     const check = this.#outward(filled.text, { a, facts: this.#matterFacts(a, det, viewer).facts, det, view: v.view,
       marks: { own_doing: [], voice: null, language: null, audience: null, names_pending: false }, form: "briefing", viewer });
-    return { title: "Briefing", marking, ...(privileged ? { privileged } : {}), text: notFor ? `${notFor}\n\n${filled.text}` : filled.text,
+    return { title: localize("filings.index.briefing", "Briefing"), marking, ...(privileged ? { privileged } : {}), text: notFor ? `${notFor}\n\n${filled.text}` : filled.text,
              items: filled.blanks, unfilled: filled.unfilled, template: Filings.#templateOf(used), record_check: check.record_check,
              ...(notFor ? { not_written_for: notFor } : {}),
              says: word("filings.says.group_briefing_counsel") };
@@ -2576,8 +2711,8 @@ export class Filings {
     /* DEC-49 REGION is-packet-export */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_EXPORT",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: only a member hands a packet to counsel`
-                           : "no member is named as the one exporting" };
+               detail: who ? localize("filings.index.who_is_a_machine_identity_only_a_member_hands", "'{who}' is a machine identity: only a member hands a packet to counsel", { who: who.slice(0, 60) })
+                           : localize("filings.index.no_member_is_named_as_the_one_exporting", "no member is named as the one exporting") };
     const read = this.counselPacketRead({ id, version, viewer });
     if (!read.ok) return read;
     /* END DEC-49 REGION is-packet-export */
@@ -2588,7 +2723,7 @@ export class Filings {
     const a = this.#action(read.action, viewer);
     const stakeProject = (a && str(a.project)) || project;
     const { bytes, inband } = await this.#stamped(Filings.render(read),
-      { what: `counsel packet ${read.id} version ${read.version}`, date: at, author: who, project,
+      { what: localize("filings.index.counsel_packet_id_version_version", "counsel packet {id} version {version}", { id: String(read.id), version: String(read.version) }), date: at, author: who, project,
         stake: { project: stakeProject, matter: a ? this.#matterStake(a, stakeProject) : null } });
     const sha = sha256HexSync(bytes);
     this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha, inband)
@@ -2709,7 +2844,7 @@ export class Filings {
                   proposer = null, viewer = null } = {}) {
     const who = str(proposer);
     /* DEC-49 REGION is-theory-propose */
-    if (!who) return { ok: false, reason: "THEORY_NO_PROPOSER", detail: "no stamped proposer: a proposal names who made it" };
+    if (!who) return { ok: false, reason: "THEORY_NO_PROPOSER", detail: localize("filings.index.no_stamped_proposer_a_proposal_names", "no stamped proposer: a proposal names who made it") };
     let actionId = str(action), packetId = null;
     if (str(packet)) {
       const rows = this.#packet(packet, viewer);
@@ -2722,21 +2857,21 @@ export class Filings {
     const rem = remedy == null ? null : String(remedy).trim() || null;
     if (!t || t.length > THEORY_TEXT_MAX || (rem !== null && rem.length > THEORY_TEXT_MAX))
       return { ok: false, reason: "NO_THEORY", max: THEORY_TEXT_MAX,
-               detail: `state the candidate theory, and any remedy, each in at most ${THEORY_TEXT_MAX} characters` };
+               detail: localize("filings.index.state_the_candidate_theory_and_any", "state the candidate theory, and any remedy, each in at most {max} characters", { max: THEORY_TEXT_MAX }) };
     const list = (Array.isArray(standards) ? standards : typeof standards === "string" ? standards.split(",") : [])
       .map((s) => String(s ?? "").trim()).filter(Boolean);
-    if (!list.length) return { ok: false, reason: "THEORY_NO_STANDARDS", detail: "a candidate theory names the standards it rests on" };
+    if (!list.length) return { ok: false, reason: "THEORY_NO_STANDARDS", detail: localize("filings.index.a_candidate_theory_names_the_standards", "a candidate theory names the standards it rests on") };
     const reads = this.standards && typeof this.standards.standardRead === "function"
       ? list.map((s) => this.#call(() => this.standards.standardRead({ id: s, viewer }))) : null;
     if (!reads || reads.some((r) => !r))
       return { ok: false, reason: "THEORY_STANDARD_UNREADABLE",
-               detail: "no module answers a standard's read here, so the standards named cannot be read" };
+               detail: localize("filings.index.no_module_answers_a_standards_read", "no module answers a standard's read here, so the standards named cannot be read") };
     /* standards' own refusal (its NO_SUCH_STANDARD, C-112) passes through as it came, naming the standard. */
     const refused = reads.find((r) => r.ok === false);
     if (refused) return refused;
     const w = typeof why === "string" ? why.trim() : "";
     if (!w || w.length > THEORY_WHY_MAX)
-      return { ok: false, reason: "THEORY_WHY_REFUSED", max: THEORY_WHY_MAX, detail: `say why in at most ${THEORY_WHY_MAX} characters` };
+      return { ok: false, reason: "THEORY_WHY_REFUSED", max: THEORY_WHY_MAX, detail: localize("filings.index.say_why_in_at_most_n_characters", "say why in at most {max} characters", { max: THEORY_WHY_MAX }) };
     /* END DEC-49 REGION is-theory-propose */
     const at = this.#when();
     return this.record.transact(() => {
@@ -2754,7 +2889,7 @@ export class Filings {
 
   /** R32 (K922 (1)): a member starts a template draft from an approved filing draft (R6), or a draft of a new version of a
    *  named template, by handing the approved text and `from: {filing, sha}` to `filing-templates.templateDraft` (its R3)
-   *  and answering its answer. A new template's `project` defaults to the project the draft drew on, its `kind` to the
+   *  and answering its answer. A new template's `project` is the one the request names, else the action's, else the project the draft drew on (C65), its `kind` to the
    *  action's, its `use` to `file` and its `profiles` to those that give the action's kind (else `general`); the R26
    *  library is gone (K921), and its rows are `filing-templates`' to migrate (K927). */
   templateSave({ filing = null, template = null, project = null, name = null, kind = null, use = null, profiles = null,
@@ -2764,20 +2899,36 @@ export class Filings {
     const approved = this.#one(`SELECT text, sha FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     /* DEC-49 REGION is-template-save */
     if (!approved) return { ok: false, reason: "TEMPLATE_FROM_UNAPPROVED", filing: d.filing_id,
-                            detail: "a template is drafted from a draft a member has approved" };
+                            detail: localize("filings.index.a_template_is_drafted_from_a_draft", "a template is drafted from a draft a member has approved") };
     /* END DEC-49 REGION is-template-save */
     const t = this.filingTemplates;
     if (!t || typeof t.templateDraft !== "function")
       return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: str(template),
-                            detail: "no module answers the group's templates here, so no template can be drafted" });
+                            detail: localize("filings.index.no_module_answers_the_templates_drafted", "no module answers the team's templates here, so no template can be drafted") });
     const named = template != null && template !== "";
+    /* R67 (T51; DEC-377; R17): a filing that needs counsel first (the action's governing tier, now, is 3) is kept as a
+       template only as a brief. `filing-templates` judges the kind's tier in the profiles (its R1); this judges the
+       action's, which the draft's own tier (1 or 2 when it was prepared) no longer says once the action's was raised.
+       The refusal is that module's own row for it (`TEMPLATE_TIER3_FILE`, its R1), answered as it gives it. A new
+       template keeps the `use` it is asked for (`file` by default); a new version keeps its template's. */
+    const act = this.#action(d.action_id, viewer);
+    if (act && this.governingTier(act).tier === 3) {
+      const read = named ? this.#call(() => t.templateRead({ template, viewer })) : null;
+      const kept = named ? (read && read.ok !== false && read.template ? read.template.use : null) : use ?? "file";
+      if (kept === "file")
+        return templatesRow({ ok: false, reason: "TEMPLATE_TIER3_FILE", filing: d.filing_id, kind: d.kind || act.kind || null,
+                              detail: localize("filings.index.a_filing_that_needs_counsel_first_is_kept_only_as_a_brief",
+                                "this filing needs counsel first (the governing tier is 3): it is kept as a template only as a brief (use: brief)") });
+    }
     const defaults = {};
     if (!named) {
       const v = this.#view();
       const actionKind = d.kind || (this.#action(d.action_id, viewer) || {}).kind || null;
       const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === (kind ?? actionKind)) : null;
       const givers = entry ? [entry.profile, ...(Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : [])].filter(Boolean) : [];
-      defaults.project = project ?? (parse(d.basis) || {}).project ?? null;
+      /* C65 (T51): the project the request names, else the action's, else the basis's, as the module's other acts take it
+         (`a.project || basis.project`): an action resting on no determination has none in its basis */
+      defaults.project = str(project) || str(act && act.project) || str((parse(d.basis) || {}).project) || null;
       defaults.kind = kind ?? actionKind;
       defaults.use = use ?? "file";
       defaults.profiles = profiles ?? (givers.length ? [...new Set(givers)] : "general");
@@ -2839,7 +2990,7 @@ export class Filings {
       ? this.#call(() => this.conformance.determinationRead({ id: str(determination), viewer })) : null;
     if (!raw)
       return { ok: false, reason: "DETERMINATION_UNREADABLE", determination: str(determination),
-               detail: "no module answers a determination's read here, so none is readable" };
+               detail: localize("filings.index.no_module_answers_a_determinations_read", "no module answers a determination's read here, so none is readable") };
     /* conformance's own refusal (its NO_SUCH_DETERMINATION) passes through as it came: absent and unseen, one answer. */
     if (raw.ok === false) return raw;
     const d = this.#det(determination, viewer);
@@ -2889,6 +3040,15 @@ export function filingsOf(host, deps) {
     f.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f.evidenceBlock(arg));
+    /* R64 (case-inputs R19; N880 (U4)): once per host, as `action-replies` registers its open requests (case-inputs R8): the
+       `case-inputs` handed in, or the host's own when the composition root's environment is handed in. A source already
+       held (`PROVIDER_DECLARED`) stands. */
+    let ci = null;
+    if (d.caseInputs !== null && (d.caseInputs || d.env)) {
+      try { ci = d.caseInputs || caseInputsOf(host); } catch { ci = null; }
+    }
+    if (ci && typeof ci.registerMinutesComparisons === "function")
+      ci.registerMinutesComparisons("filings", { minutesComparisonsOn: (args) => f.minutesComparisonsOn(args || {}) });
   }
   return f;
 }
@@ -2944,3 +3104,38 @@ export function filingsOps(f, url, body) {
     availableactions: () => f.availableActions({ determination: q("determination"), viewer: q("viewer") }),
   };
 }
+
+/* R68 (T51; K4168, K4202; op-declarations R80, R81; op-grades R49; test-support R15): the ops this module serves that the screens
+   send, declared by their owner beside the ops map: each row's class, weight and description are the op's existing rows', its
+   fields are what the arm reads. `filingrecordsent` is the name the screens send; the door resolves it to the arm `filingsent`
+   (`OP_ALIASES`). What an arm refuses only in some cases (the words of a communication when its purpose names none to
+   assemble; counsel at a governing tier of 3; the project of a template whose draft rested on no determination) is not
+   a field it refuses without, so it is accepted and not required. */
+const MEMBER_ACTS = ["admin", "member", "probe"];
+const MARKS = ["voice", "audience", "language", "own_doing", "names_pending", "textcheck"];
+export const DECLARED_OPS = Object.freeze({
+  filingprepare: { classes: MEMBER_ACTS, mutating: true, weight: "reversible", description: "act.filingprepare.does",
+    fields: { accepts: ["action", "template", "text", "fills", ...MARKS], requires: ["action"] } },
+  communicationprepare: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.communicationprepare", "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labeled as its preparer's; never sent until a member approves it (filings R23)"),
+    fields: { accepts: ["action", "text", "purpose", "from", "fills", ...MARKS], requires: ["action", "purpose"] } },
+  filingapprove: { classes: MEMBER_ACTS, mutating: true, weight: "terminal", description: "act.filingapprove.does",
+    fields: { accepts: ["filing", "text", "release", "resolutions", "textcheck"], requires: ["filing"] } },
+  filingrecordsent: { classes: MEMBER_ACTS, mutating: true, weight: "reasoned", description: "act.filingrecordsent.does",
+    fields: { accepts: ["filing", "at", "medium", "artifact_sha", "artifactSha", "account", "reference"],
+              requires: ["filing", "at", ["account", "artifact_sha", "artifactSha"]] } },
+  filingsecondapprove: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "terminal",
+    description: localize("filings.declared.filingsecondapprove", "filing-directed: keyed by filing id; a member other than the approver records the second approval a project's setting asks, at most once; moves no bundle"),
+    fields: { accepts: ["filing"], requires: ["filing"] } },
+  jointsignatory: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    description: localize("filings.declared.jointsignatory", "filing-directed: keyed by (filing, partner organisation); a member records that the partner approved the same text by its own act; no shared plan is made; moves no bundle"),
+    fields: { accepts: ["filing", "organisation", "body_sha", "account"], requires: ["filing", "organisation", "body_sha", "account"] } },
+  counselpacket: { classes: MEMBER_ACTS, mutating: true, weight: "reasoned", description: "act.counselpacket.does",
+    fields: { accepts: ["action", "counsel", "template", "reason", "purpose", "challenged"], requires: ["action", "reason"] } },
+  holdnoticeprepare: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.holdnoticeprepare", "a member prepares a plain notice telling members what to keep outside Civicsmith for a hold in place, assembled from the record and labeled as a draft; a member sends it by her own hand (filings R47)"),
+    fields: { accepts: ["place"], requires: ["place"] } },
+  templatesave: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.templatesave", "draft-directed: a member starts a template draft from an approved filing draft, keyed by the draft; writes the template library's rows and moves no bundle"),
+    fields: { accepts: ["filing", "template", "project", "name", "kind", "use", "profiles", "notes"], requires: ["filing", ["name", "template"]] } },
+});

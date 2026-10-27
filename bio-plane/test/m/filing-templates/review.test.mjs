@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { seeded, draft, approved, V, MACHINE, TEXT, sha, secret } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank");
 const code = (r) => [r.ok, r.reason, r.code, r.check, r.translation];
@@ -93,7 +94,7 @@ test("R9 templateReview records one review against the present sha: a member (wi
                    [true, "member", "frank", [{ label: "paralegal", confirmed: false }], sha(TEXT)]);
   const p = w.ft.templateReview({ outcome: "no_concerns", scope: "legal sufficiency", credential: "bar no. 123 (test)", secretSha: secret("pro") });
   assert.deepEqual([p.review.kind, p.review.reviewer.name, p.review.reviewer.organisation, p.review.reviewer.credential, p.review.reviewer.credential_says],
-                   ["professional", "Pat Lawyer", "Legal Aid (test)", "bar no. 123 (test)", "as stated; never verified"]);
+                   ["professional", "Pat Lawyer", "Legal Aid (test)", "bar no. 123 (test)", word("filing-templates.credential_says.stated_verified")]);
   const v = w.ft.templateRead({ version: d.version, template: d.template, viewer: A }).version;
   assert.deepEqual(v.reviews.map((r) => [r.kind, r.outcome, r.scope, r.stands]),
                    [["member", "concerns", "plain language", true], ["professional", "no_concerns", "legal sufficiency", true]]);

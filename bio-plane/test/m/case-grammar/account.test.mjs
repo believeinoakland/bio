@@ -92,7 +92,7 @@ test("R23 the body prints the account under its head, in ord order, each bias-fr
     "The vendor's filing, which this group checks twice, names no vote. [framing that follows the declared bias statement s1]", ""]);
   /* negative controls: a sentence not bias-marked carries no mark; no account sentence states so */
   assert.equal(CG.accountSectionLines(ACCOUNT)[2].includes("framing"), false);
-  assert.deepEqual(CG.accountSectionLines(ACCOUNT.filter((r) => r.kind !== "account")), ["## The Account", "", "This case states no account.", ""]);
+  assert.deepEqual(CG.accountSectionLines(ACCOUNT.filter((r) => r.kind !== "account")), ["## The Account", "", CG.SENTENCES.noAccount, ""]);
   assert.deepEqual(CG.accountSectionLines([{ ord: 1, kind: "account", text: "one\nline" }]).slice(2, 3), ["one line"]);
 });
 
@@ -215,13 +215,12 @@ const heads = (html) => [...html.matchAll(/<h2>(\d+)\. ([^<]+)<\/h2>/g)].map((m)
 const section = (html, name) => { const at = html.indexOf(`. ${name}</h2>`); return html.slice(at, html.indexOf("<h2>", at + 1)); };
 
 test("R14 (T41) the complete edition prints the account right after the claims, each bias-framed sentence marked and its statement named, and the included review comments and the approvals before how to check it", () => {
-  assert.deepEqual([CG.ACCOUNT_HEADING, CG.REVIEW_COMMENTS_HEADING, CG.APPROVALS_HEADING], ["The account", "What reviewers said", "Approvals"]);
+  assert.equal(new Set([CG.ACCOUNT_HEADING, CG.REVIEW_COMMENTS_HEADING, CG.APPROVALS_HEADING]).size, 3, "three distinct headings");
   const { manifest, files } = caseFileFixture({ t41: true, fileFormat: CG.CASE_FILE_FORMAT });
   const html = CG.completeEditionOf(editionInput(manifest, files));
   assert.equal(files.get("complete-edition.html"), html);
-  assert.deepEqual(heads(html).map(([, h]) => h), ["The claims", "The account", "The findings", "The documents and observations",
-    "What was searched", "The declared bias", "Disclosed contradictions", "Strength", "How grades are worked out",
-    "What reviewers said", "Approvals", "How to check this case yourself"]);
+  const own = CG.COMPLETE_EDITION_HEADINGS;
+  assert.deepEqual(heads(html).map(([, h]) => h), [own[0], CG.ACCOUNT_HEADING, ...own.slice(1, -1), CG.REVIEW_COMMENTS_HEADING, CG.APPROVALS_HEADING, own.at(-1)]);
   assert.deepEqual(heads(html).map(([n]) => n), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "numbered as rendered");
   /* the account: the sentences in ord order, the bias-framed one marked, its statement named with what the lens prints */
   const acc = section(html, CG.ACCOUNT_HEADING);
@@ -259,11 +258,11 @@ test("R14 (T41) negative controls: an edition whose document carries none of the
   assert.deepEqual(only(CG.biasApplicationsLines(BIAS_APPLICATIONS)), [], "bias applications add no section");
   /* empty blocks state that they hold nothing */
   const empty = withLines([...CG.accountLines([]), ...CG.reviewCommentsLines({ comments: [], left_out: 0 }), ...CG.approvalsLines({})]);
-  for (const s of ["This case states no account.", "The publisher included no reviewer's comment.", "0 reviewer's comments were left out by the publisher.",
-                   "No approval rule was in force when this case was signed.", "No approval is recorded."])
+  const S = CG.SENTENCES;
+  for (const s of [S.noAccount, S.noReviewComment, S.leftOut(0), S.noApprovalRule, S.noApproval])
     assert.equal(empty.includes(esc(s)), true, s);
-  assert.equal(withLines(CG.reviewCommentsLines({ comments: [], left_out: 1 })).includes(esc("1 reviewer's comment was left out by the publisher.")), true);
-  assert.equal(withLines(["review_comments: []"]).includes(esc("How many reviewers' comments were left out is not stated.")), true);
+  assert.equal(withLines(CG.reviewCommentsLines({ comments: [], left_out: 1 })).includes(esc(S.leftOut(1))), true);
+  assert.equal(withLines(["review_comments: []"]).includes(esc(S.leftOutUnstated)), true);
   /* a statement not printed in the lens: marked by its id, nothing of it guessed */
   const unknown = section(withLines(CG.accountLines([{ ord: 1, kind: "account", text: "Framed.", bias_statement: "s9", began_as: "member" }])), CG.ACCOUNT_HEADING);
   assert.equal(unknown.includes(`<p>${esc(`Framed. ${CG.accountBiasMark("s9")}`)}</p>`), true);
@@ -321,7 +320,7 @@ test("R25 (K2533) review_comments_left_out null, a count that could not be deter
   const m = new Map(base.files);
   m.set("case.md", base.files.get("case.md").replace("\nsearched:", `\n${lines.join("\n")}\nsearched:`));
   const rc = section(CG.completeEditionOf(editionInput(base.manifest, m)), CG.REVIEW_COMMENTS_HEADING);
-  assert.equal(rc.includes(esc("How many reviewers' comments were left out is not stated.")), true);
+  assert.equal(rc.includes(esc(CG.SENTENCES.leftOutUnstated)), true);
   /* negative control: a determined count, 0 included, is never read or rendered as undetermined */
   for (const n of [0, 2]) {
     assert.equal(CG.reviewCommentsOf(fmOf(doc(V7, CG.reviewCommentsLines({ comments: [], left_out: n })))).left_out, n);

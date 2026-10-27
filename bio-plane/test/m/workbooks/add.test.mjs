@@ -3,6 +3,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, seeded, xlsx, BASIC, V, MACHINE } from "./fixture.mjs";
 import { WORKBOOKS_TABLES } from "../../../src/workbooks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { recomputeNotEnabled } from "../../../../sheet-worker/test/fixtures.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 
@@ -13,7 +15,7 @@ async function ready() {
   return w;
 }
 
-test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NOT_A_WORKBOOK, NO_QUESTION, NO_PERIOD, NO_PROJECT, each writing nothing; then holds the workbook with its question, period, project, origin and author; a repeat answers already", async () => {
+test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NO_QUESTION, NO_PERIOD, NO_PROJECT, a repeat answering already, then the size and cell refusals (WORKBOOK_FILE_TOO_LARGE, NOT_A_WORKBOOK, WORKBOOK_TOO_LARGE), each writing nothing; then holds the workbook with its question, period, project, origin and author; a repeat answers already", async () => {
   const w = await ready();
   const cap = w.capture(BASIC()).capSha;
   const text = w.capture("plain words, not a workbook").capSha;
@@ -27,7 +29,7 @@ test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NOT_A_WORKBOOK, 
     [{ ...good, captureSha: "f".repeat(64) }, "CAPTURE_NOT_HELD"],
     [{ ...good, captureSha: inHidden }, "CAPTURE_NOT_HELD"],          /* one the actor may not see, answered alike */
     [{ ...good, by: undefined }, "CAPTURE_NOT_HELD"],                 /* no actor: fail closed */
-    [{ ...good, captureSha: text, question: "" }, "NOT_A_WORKBOOK"],  /* before NO_QUESTION */
+    [{ ...good, captureSha: text, question: "" }, "NO_QUESTION"],    /* NOT_A_WORKBOOK now follows the cheap refusals (R1 amended, G44) */
     [{ ...good, question: "  ", period: "" }, "NO_QUESTION"],
     [{ ...good, period: "", project: "nope" }, "NO_PERIOD"],
     [{ ...good, period: { from: " " } }, "NO_PERIOD"],
@@ -42,13 +44,16 @@ test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NOT_A_WORKBOOK, 
     assert.ok(r.detail, "a refusal carries its detail");
   }
   const nw = await w.wb.addWorkbook({ ...good, captureSha: text });
+  assert.equal(codeOf(nw), "NOT_A_WORKBOOK");
   assert.match(nw.why, /./, "NOT_A_WORKBOOK carries office-readers' reason");
   assert.deepEqual(w.snapshot(), before, "a refused add writes nothing");
-  /* the size guard: a workbook whose cells office-readers will not read is not a workbook here */
+  /* the size gate: a capture stored above the bound is refused with its size, before its bytes load (G44) */
   const huge = w.capture(xlsx([{ name: "S", cells: { A1: { s: "x".repeat(21 * 1024 * 1024) } } }])).capSha;
   const g = await w.wb.addWorkbook({ ...good, captureSha: huge });
-  assert.equal(codeOf(g), "NOT_A_WORKBOOK");
-  assert.match(g.why, /over_size_bound/, "with office-readers' reason");
+  assert.equal(codeOf(g), "WORKBOOK_FILE_TOO_LARGE");
+  assert.equal(g.condition, "stored_size");
+  assert.ok(g.detail);
+  assert.deepEqual(w.snapshot(), before, "a refused add writes nothing");
   const r = await w.wb.addWorkbook({ ...good, captureSha: cap.toUpperCase() });
   assert.equal(r.ok, true);
   assert.equal(r.already, false);
@@ -71,7 +76,8 @@ test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NOT_A_WORKBOOK, 
 
 test("R2 readWorkbook answers bindings, inputs, latest recompute, lint, method notes, checks, grade facts and the disclosure, and never recomputes", async () => {
   let calls = 0;
-  const w = await seeded({ recompute: async () => { calls++; return { ok: false, reason: "NOT_ENABLED", why: "not enabled" }; } });
+  const notEnabled = await recomputeNotEnabled();
+  const w = await seeded({ recompute: async () => { calls++; return notEnabled; } });
   const r = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
   for (const k of ["workbook", "bindings", "inputs", "recompute", "lint", "method_notes", "checks", "grade_facts", "disclosure"])
     assert.ok(k in r, k);
@@ -84,7 +90,7 @@ test("R2 readWorkbook answers bindings, inputs, latest recompute, lint, method n
   await w.wb.lint({ ...w.at, viewer: V("bob") });
   assert.equal(calls, 1, "no read asks the engine");
   const again = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
-  assert.equal(again.recompute.status, "not recomputed here", "the latest recompute");
+  assert.equal(again.recompute.status, word("workbooks.recomputed"), "the latest recompute");
   assert.equal(w.count("workbook_recomputes"), 1, "reads write nothing");
   assert.equal(again.inputs.length, 3);
   assert.equal(again.lint.length, 1);

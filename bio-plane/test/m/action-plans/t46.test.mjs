@@ -71,13 +71,13 @@ test("R46 (b): plansToLookAgain answers a look_again day on the local day of now
   assert.equal(due.day, "2026-11-01");
   assert.deepEqual(due.items.map((i) => [i.plan, i.look_again]), [[w.PL, "2026-11-01"]], "control: the local day has begun");
   /* the reverse: a zone ahead of UTC (the place's view as actions R68 answers it) */
-  w.actions.place = () => ({ time_zone: { value: "Asia/Tokyo", status: "researched", basis: "TEST" } });
+  w.record.setSetting("team_time_zone", "Asia/Tokyo", "test");   /* the team's stated zone governs (K5292) */
   const ahead = look("2026-10-31T15:00:00Z");
   assert.equal(ahead.day, "2026-11-01");
   assert.deepEqual(ahead.items.map((i) => i.plan), [w.PL], "begun in the plan's zone, not yet in UTC");
   assert.deepEqual(look("2026-10-31T14:59:59Z").items, [], "control: a second before local midnight");
   /* no zone held: the day is undetermined and nothing is answered due, however late */
-  w.actions.place = () => null;
+  w.record.setSetting("team_time_zone", "", "test"); w.record.setSetting("jurisdiction_profiles", [], "test"); w.actions.place = () => null;
   const none = look("2027-06-01T12:00:00Z");
   assert.deepEqual(none.items, []);
   assert.equal(none.day.state, "undetermined");
@@ -123,13 +123,13 @@ test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's
   /* T50-47 (K3736): C-124.2 PLAN_NO_TITLE reads refusal.PLAN_NO_TITLE by key too (DEC-260), answered above. */
   assert.equal(PLAN_WORDS["refusal.PLAN_NO_TITLE"], WORDS["refusal.PLAN_NO_TITLE"], "PLAN_NO_TITLE held by key, verbatim");
   assert.equal(ACTION_PLAN_CHECKS.PLAN_NO_TITLE.translation, WORDS["refusal.PLAN_NO_TITLE"]);
-  /* control: this module's other rows, which words.json does not hold, keep theirs (R47). (T47: R49 amends R47's clause
-     on C-124.63, which now reads DEC-199's sentence by key; its test is t47's.) */
-  for (const [c, r] of Object.entries(ACTION_PLAN_CHECKS))
-    if (!(`refusal.${c}` in WORDS)) assert.equal(`refusal.${c}` in PLAN_WORDS, false, c);
-  /* T50-47: words.json now holds refusal.PLAN_NO_TITLE (DEC-260), so the unheld control row is SUBJECT_MALFORMED */
-  assert.equal(WORDS["refusal.SUBJECT_MALFORMED"], undefined);
-  assert.match(ACTION_PLAN_CHECKS.SUBJECT_MALFORMED.translation, /\S/);
+  /* control (R47): every code this module mints has a words.json row, so none keeps its own text, but ADDRESSEE_INCOMPLETE
+     (R54, T51): a code the design has no row for yet, which keeps its own `localize`d sentence and is reported to BOB;
+     SUBJECT_MALFORMED reads its row by key (T51, action-plans words check, K3949) and PLAN_WORDS, which holds only R47's
+     rows, does not carry it */
+  const NO_ROW_YET = ["ADDRESSEE_INCOMPLETE"];
+  for (const c of Object.keys(ACTION_PLAN_CHECKS)) assert.ok(`refusal.${c}` in WORDS || NO_ROW_YET.includes(c), c);
+  assert.equal(ACTION_PLAN_CHECKS.SUBJECT_MALFORMED.translation, WORDS["refusal.SUBJECT_MALFORMED"]);
   assert.equal("refusal.SUBJECT_MALFORMED" in PLAN_WORDS, false);
 });
 

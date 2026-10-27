@@ -3,8 +3,9 @@
    zone America/Halifax (UTC−3). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, CP, actionMd } from "./fixture.mjs";
+import { world, V, ALICE, CP, actionMd, determinations } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d";
@@ -15,9 +16,10 @@ const rests = (t) => ["action_basis:", `  - target: ${t}`, "    kind: rests_on"]
 const exact = (v) => ({ value: String(v), sign: "+", precision: "exact", label: "computed fact" });
 
 function setUp() {
-  const w = world();
-  w.doc("CONF-2026-0001-p1");
-  w.determinations.set("CONF-2026-0001-p1", { project: "PROJ-2026-0001", sees: [M] });
+  const d = determinations([ALICE]);
+  const w = world({ conformance: d.conformance });
+  w.project = d.project;
+  w.doc(d.live);
   w.action(A, ["clock:",
     ...E("2026-09-10", "met", "window", ["    met_on: 2026-09-09"]),          /* 0 on time: met the day before */
     ...E("2026-09-12", "met", "commitment", ["    owed_by: group", "    met_on: 2026-09-15"]),  /* 1 the group's own commitment: late, 3 days */
@@ -31,7 +33,7 @@ function setUp() {
     ...E("2026-09-14", "pending", "stated", ['    stated_by: "the clerk"', '    held_in: "a letter"']),  /* 9 stated, not marked the group's */
     ...E("2026-09-16", "pending", "rule", ["    owed_by: group"]),           /* 10 a rule the group owes: pending past */
     ...E("2026-09-17", "met", "stated", ["    owed_by: group", '    stated_by: "the registry"', '    held_in: "a notice"', "    met_on: 2026-09-17"]),  /* 11 on time */
-    ...rests("CONF-2026-0001-p1")]);
+    ...rests(d.live)]);
   /* B's entry is marked met by a later revision dated 2026-09-15T02:00Z: still the 14th in the action's zone. */
   w.action(B, ["clock:", ...E("2026-09-14", "pending", "window")]);
   const t = w.text(B).replace("status: pending", "status: met").replace('last_updated: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-15T02:00:00Z"');
@@ -63,8 +65,8 @@ test("R15 lateness counts the group's own entries (owed_by: group, whatever thei
   /* T45 controls: a body's commitment (A:8) and a stated date not marked the group's (A:9) are never counted. */
   for (const ord of [4, 8, 9]) assert.ok(!r.entries.some((x) => x.action === A && x.ord === ord), `A:${ord}`);
   assert.deepEqual(r.not_counted.map((x) => [x.action, x.ord, x.why]), [
-    [A, 5, "the entry names no basis kind and no owed_by, so whether it is the group's own is not stated"],
-    [D, 0, "met, and the day it was met is not held"]]);
+    [A, 5, localize("action-clocks.why.entry_names_basis", "the entry names no basis kind and no owed_by, so whether it is the team's own is not stated")],
+    [D, 0, localize("action-clocks.why.met_day_met", "met, and the day it was met is not held")]]);
   /* the method is calc-grammar's: its recipe and trace answered, the counts its exact outputs. */
   assert.equal(r.method.recipe.method, "bio-calc/1");
   assert.deepEqual(r.method.trace.map((s) => s.step), ["on_time_rows", "on_time", "late_rows", "late", "days_late", "pending_rows", "pending_past", "denominator"]);
@@ -72,7 +74,7 @@ test("R15 lateness counts the group's own entries (owed_by: group, whatever thei
   /* the period bounds it, the project narrows it. */
   const sept10 = w.c.lateness({ from: "2026-09-10", to: "2026-09-12", viewer: M });
   assert.deepEqual(sept10.entries.map((x) => [x.action, x.ord]), [[A, 0], [A, 1], [C, 0], [C, 1]]);
-  const p1 = w.c.lateness({ from: "2026-09-01", to: "2026-09-30", project: "PROJ-2026-0001", viewer: M });
+  const p1 = w.c.lateness({ from: "2026-09-01", to: "2026-09-30", project: w.project, viewer: M });
   assert.deepEqual([p1.on_time.value, p1.late.value, p1.pending_past.value, p1.denominator.value], ["2", "1", "2", "6"]);
   /* a period reaching A:3's date counts it, not yet due. */
   const oct = w.c.lateness({ from: "2026-10-01", to: "2026-10-31", viewer: M });
@@ -88,7 +90,7 @@ test("R15 never a finding about government: no rule entry the group does not owe
   assert.ok(!r.entries.some((x) => x.action === A && x.ord === 4) && !r.not_counted.some((x) => x.ord === 4 && x.action === A), "a rule entry the group does not owe is not counted, nor listed");
   const text = JSON.stringify(r);
   for (const word of ["Town Clerk", "Port Ellery", "counterparty", "violation", "breach", "noncompli"]) assert.ok(!text.includes(word), word);
-  assert.match(r.says, /never a finding about anyone else's conduct/);
+  assert.equal(r.says, word("action-clocks.says.index_group_deadlines"));
   assert.equal(w.c.remindersDue({ viewer: M }).items.length, 0, "no reminder or item minted");
   for (const [from, to] of [["2026-09-30", "2026-09-01"], ["soon", "2026-09-30"], ["2026-09-01", "2026-02-30"], [null, null]])
     assert.equal(w.c.lateness({ from, to, viewer: M }).reason, "LATENESS_REFUSED", `${from}–${to}`);

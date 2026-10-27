@@ -18,6 +18,7 @@ import { connectionsOf } from "../../../src/connections/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { investigationOf, INVESTIGATION_TABLES } from "../../../src/investigation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -113,7 +114,7 @@ export function world(opts = {}) {
   };
   const intent = {
     progress: ({ project }) => w.progress.get(project) ?? { ok: true, project, objective: "Know whether the award was proper", condition: null,
-      computable: false, why: "progress cannot be computed: the objective states no condition the record can be measured against" },
+      computable: false, why: word("intent.why.progress_cannot_computed") },
     gaps: ({ project }) => ({ ok: true, project, gaps: w.gapsOf.get(project) ?? [] }),
     watchSet: ({ project }) => ({ entities: [`ENT-for-${project}`], progressions: [], captures: [], limit: 1000, truncated: false, cursor: null }),
   };

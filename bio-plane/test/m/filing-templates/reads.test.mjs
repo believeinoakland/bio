@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { seeded, world, draft, approved, V, MACHINE, TEST, HARBOUR, TEXT, sha, secret, twoProfiles, reviewedOf, attributed, PROFILE_IDS, PRO_REVIEW } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank"), D = V("dave");
 const code = (r) => [r.ok, r.reason, r.code, r.check, r.translation];
@@ -113,7 +114,7 @@ test("R15 the profile's templates are read as approved versions of origin profil
                    ["approved", pt.text, sha(pt.text), 1, "Ada Example", "Cy Example", "2026-09-01", "TEST", "A made-up template for tests."]);
   assert.deepEqual(v.contributors, [{ kind: "member", name: "Ben Example" }]);
   assert.deepEqual(v.reviews[0].reviewer, { name: "Dee Example", organisation: "Marlow Commons Legal Society (test)",
-                                            credential: "solicitor (test)", credential_says: "as the profile states it; never verified" });
+                                            credential: "solicitor (test)", credential_says: word("filing-templates.credential_says.profile_states_verified") });
   assert.equal(r.default, true);
   /* R3 may take it as from; R13 may comment; R4, R7–R11 do not apply */
   const ver = "TPL-test-records-request@1";

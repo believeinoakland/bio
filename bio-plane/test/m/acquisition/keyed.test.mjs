@@ -7,21 +7,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, network, text } from "./fixture.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL,
          civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 
 const KEY = "SENTINEL-KEY-9f3a7c1e5b";
 const HOST = "www.courtlistener.com";
 const OFF = { ok: false, reason: "KEYED_SERVICE_OFF", code: "KEYED_SERVICE_OFF", check: "C-96.21",
-              translation: "The group's key for this service is off.", service: "courtlistener" };
+              translation: "The team's key for this service is off.", service: "courtlistener" };
 
 /* credentials R29's `keyedServiceFor`, as the store hands it in: each call recorded. */
 const credentials = ({ on = true, key = KEY, answer = null } = {}) => {
   const calls = [];
   return { calls, async keyedServiceFor({ service }) { calls.push(service);
     if (answer) return answer;
-    return on ? { ok: true, service, key } : { ...OFF, detail: "the group's key for this service is off or not held; the caller goes on without it." }; } };
+    return on ? { ok: true, service, key } : { ...OFF, detail: localize("acquisition.keyed.the_team_s_key_for", "the team's key for this service is off or not held; the caller goes on without it") }; } };
 };
 const withCreds = (w, c) => { w.store.credentials = c; return w; };
 
@@ -87,7 +87,7 @@ test("R36 R28: only a public https address on the service's own host is fetched,
     ["another host", { request: { url: "https://evil.example/api/rest/v4/citation-lookup/", method: "POST" } }, "BAD_KEYED_REQUEST"],
     ["a look-alike host", { request: { url: "https://www.courtlistener.com.evil.example/x", method: "GET" } }, "BAD_KEYED_REQUEST"],
     ["plain http", { request: { url: "http://www.courtlistener.com/api/", method: "GET" } }, "BAD_KEYED_REQUEST"],
-    ["credentials in the address", { request: { url: "https://u:p@www.courtlistener.com/api/", method: "GET" } }, "BAD_KEYED_REQUEST"],
+    ["a userinfo in the address", { request: { url: "https://u:p@www.courtlistener.com/api/", method: "GET" } }, "BAD_KEYED_REQUEST"],
     ["a DELETE", { request: { url: LOOKUP, method: "DELETE" } }, "BAD_KEYED_REQUEST"],
     ["a form of non-strings", { request: { url: LOOKUP, method: "POST", form: { text: 7 } } }, "BAD_KEYED_REQUEST"],
     ["no request", { request: null }, "BAD_KEYED_REQUEST"],
@@ -119,7 +119,7 @@ test("R36 R9 R23: a governed refusal, a thrown fetch, a redirect and a refusal a
   const thrown = withCreds(world(), credentials());
   const t = await call(thrown, () => new Error(`connection reset carrying Token ${KEY}`), (s) => keyedFetch(s, req()));
   assert.deepEqual([t.out.ok, t.out.reason], [false, "FETCH_FAILED"]);
-  assert.match(t.out.detail, /not carried because the group's key rode it/);
+  assert.match(t.out.detail, /not carried because the team's key rode it/);
   keyNowhere(thrown, t, "thrown");
   const moved = withCreds(world(), credentials());
   const m = await call(moved, { [LOOKUP]: new Response("", { status: 302, headers: { location: "https://elsewhere.example/" } }) }, (s) => keyedFetch(s, req()));

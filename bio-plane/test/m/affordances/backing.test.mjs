@@ -516,12 +516,7 @@ const CODE = { testify: "TESTIMONY_NO_WORDS", transcribe: "TRANSCRIBE_NO_TEXT", 
 test("R19: every op DEC-88 bands `reasoned` and T22's four, called well-formed without its authored reason (or "
    + "words), is refused with a code in JUSTIFICATION_REFUSALS and writes nothing; given one, it is accepted", async () => {
   const want = [...Object.keys(REASONED_CASES)].sort();
-  const DEC88_RULED = ["testify", "lead", "leadlook", "leadshare", "transcribe", "transcriptionattest", "attesttext",
-    "resolvetestify", "entitycreate", "versionadopt", "progressiondefine", "goaldeclare", "aspirationdeclare",
-    "aspirationdeadend", "objectivecondition", "biasadopt", "strengthbar", "standarddeclare", "standardadopt",
-    "escalationopen", "escalationattach", "counselpacket", "attribute", "statementack", "workobjective", "inboxresolve",
-    "declinetoescalate", "heldsetaside", "heldrestore", "addressfrequencyset"];
-  assert.deepEqual(want, [...DEC88_RULED].sort(), "every reasoned op that asks a reason has its case here");
+  assert.deepEqual(want, Object.keys(CODE).sort(), "every reasoned op that asks a reason has its case and its code here");
   for (const op of want) assert.equal(RUNGS[op], "reasoned", op);
   const bad = [];
   for (const op of want) {

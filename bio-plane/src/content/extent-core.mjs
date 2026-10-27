@@ -19,6 +19,11 @@
  * C-25.10) until it was deleted (T19, control-plane R43); that leg grammar is now `inquiry-grammar`'s and reads this
  * core.
  *
+ * ONE ADDITION TO THE COPY (G167, K4985; R48): the tenth kind, `doc-part` (R1, R58). `legExtent` reads its `extent_part`,
+ * `checkContentExtent` judges its shape (`checkPart`, moved here from `./extent.mjs`) and `describePart` is its human form,
+ * so the leg grammar, which reads this core directly, and the face answer one thing and a content id is minted over the
+ * extent the reading found. Its algebra (canonical form) is text-chain's.
+ *
  * `./extent.mjs` is the one public face (R1–R10); what the grammar has gained since (envelope, a rect's space, the
  * MediaBox bound) is written there, over this, never here. */
 
@@ -26,6 +31,7 @@ import {
   CONTENT_EXTENT_KINDS, CONTENT_EXTENT_A1_RE, rangeCorners, a1ToRowCol, canonicalExtent, describeExtent, contentCitedAs,
 } from "../textchain.mjs";
 import { CONTENT_EXTENT_CHECKS } from "./checks.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 /** `dom` is NOT in the map above and that is the point: it is refused BY NAME
  *  rather than falling through the unknown-kind arm, because the two are
@@ -35,8 +41,8 @@ export const CONTENT_EXTENT_KIND_NO_PRODUCER = 'dom';
 
 /** DEC-49's refusal helper for this family. Its spelling, the name exactly `refusal` and the code a DOUBLE-QUOTED
  *  STRING LITERAL at every call site below inside the `is-content-extent` region, is the catalogue's, kept line for
- *  line (R48); it is what the old guard `civicos-ui/check-refusal-codes.mjs` matched (deleted in T20). Every refusal
- *  it answers carries its row's `check` and `translation` from this module's own table, which
+ *  line (R48); the DEC-49 guard that matched that spelling was retired in T20, and the region marker names where each
+ *  site sits. Every refusal it answers carries its row's `check` and `translation` from this module's own table, which
  *  `test/m/content/seams.test.mjs` (R48) proves for every C-45 row at the grammar, the mint and a citation;
  *  DEC-49's totality across the plane is control-plane's `test/m/control-plane/families.test.mjs` (its R22). */
 function refusal(key, detail, extra = null) {
@@ -124,6 +130,12 @@ export function legExtent(leg) {
   if (kind === 'doc-table') {
     if (l.extent_table !== undefined && l.extent_table !== null) out.table = l.extent_table;
     if (l.extent_cell !== undefined && l.extent_cell !== null) out.cell = l.extent_cell;
+  }
+  /* G167 (K4985, R48): a `doc-part` is the package part and the element reference a reader names for a non-body unit
+     (R1, R58). `extent_ref` is read above for every kind; the part is read here, or the content id a citation mints would
+     be over a different extent than the reading found. */
+  if (kind === 'doc-part') {
+    if (l.extent_part !== undefined && l.extent_part !== null) out.part = l.extent_part;
   }
   if (kind === 'image') {
     if (l.extent_part !== undefined && l.extent_part !== null) out.part = l.extent_part;
@@ -277,33 +289,27 @@ export function checkContentExtent(extent, ctx = {}) {
   const e = extent && typeof extent === 'object' ? extent : null;
   if (!e)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `no extent was supplied and none could be read from the leg`);
+      localize('content.extent-core.no_extent_was_supplied', 'no extent was supplied and none could be read from the leg'));
   if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
     return refusal("CONTENT_EXTENT_NO_PRODUCER",
-      `extent kind 'dom' names a region of an HTML document. Nothing produces a dom address `
-      + `yet (CONTENT-HTML), so a row minted against one would be an address into a `
-      + `grammar no producer writes and no reader can evaluate`);
-  const row = CONTENT_EXTENT_KINDS[e.kind];
+      localize('content.extent-core.dom_names_a_region', 'extent kind \'dom\' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate'));
+  /* `doc-part` (R1, R58; G167) is text-chain's canonical arm and not one of its eight kinds; its shape is judged below */
+  const row = e.kind === 'doc-part' ? { landed: true } : CONTENT_EXTENT_KINDS[e.kind];
   if (!row)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `extent kind '${String(e.kind).slice(0, 40)}' is not one of: `
-      + `${Object.keys(CONTENT_EXTENT_KINDS).join(', ')}`);
+      localize('content.extent-core.extent_kind_string_is_not', 'extent kind \'{String}\' is not one of: {keys}', { String: String(String(e.kind).slice(0, 40)), keys: String(Object.keys(CONTENT_EXTENT_KINDS).join(', ')) }));
   if (!row.landed)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `extent kind '${e.kind}' (${row.human}) is named in the grammar and what it covers cannot `
-      + `yet be evaluated, so it mints nothing. The pdf-page and document arms landed with `
-      + `REC-82 and the other three follow with REC-85`);
+      localize('content.extent-core.extent_kind_kind_human_is', 'extent kind \'{kind}\' ({human}) is named in the grammar and what it covers cannot yet be evaluated, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85', { kind: String(e.kind), human: String(row.human) }));
   if (e.kind === 'pdf-page') {
     if (!Number.isInteger(e.page) || e.page < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a pdf-page extent names which page, as a 0-based integer. This one names `
-        + `'${String(e.page).slice(0, 40)}'`);
+        localize('content.extent-core.pdf_page_names_which_page', 'a pdf-page extent names which page, as a 0-based integer. This one names \'{page}\'', { page: String(String(e.page).slice(0, 40)) }));
     if (e.rect !== undefined && e.rect !== null
         && !(Array.isArray(e.rect) && e.rect.length === 4
              && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a pdf-page extent's rect is four finite numbers or absent. A rect that is present and `
-        + `unreadable is worse than none, because it looks like a region somebody chose`);
+        localize('content.extent-core.pdf_page_rect_unreadable', 'a pdf-page extent\'s rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose'));
     /* THE PAGE SET. Checked only where the record HOLDS one — an absent page
        count is undetermined and stated on the row, never a refusal, because a
        gate that refused every page citation on a document whose page set this
@@ -313,8 +319,7 @@ export function checkContentExtent(extent, ctx = {}) {
     if (ctx.known !== false
         && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
       return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
-        `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
-        + `extent names page ${e.page}`);
+        localize('content.extent-core.this_captures_page_set_holds', 'this capture\'s page set holds {pageCount} page(s) (0-{v1}) and the extent names page {page}', { pageCount: String(ctx.pageCount), v1: String(ctx.pageCount - 1), page: String(e.page) }));
   }
   /* ==================================================================== *
      REC-85 / IC-83 — THE OTHER THREE ARMS, each in two halves that answer two
@@ -393,24 +398,20 @@ export function checkContentExtent(extent, ctx = {}) {
   if (e.kind === 'sheet-cell') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-cell extent names which sheet, as the workbook spells it. This one names `
-        + `'${String(e.sheet).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_cell_names_which_sheet', 'a sheet-cell extent names which sheet, as the workbook spells it. This one names \'{sheet}\'', { sheet: String(String(e.sheet).slice(0, 40)) }));
     if (typeof e.cell !== 'string' || !CONTENT_EXTENT_A1_RE.test(e.cell.trim()))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names `
-        + `'${String(e.cell).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_cell_names_which_cell', 'a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names \'{cell}\'', { cell: String(String(e.cell).slice(0, 40)) }));
     const outside = coversSheetCell(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === 'doc-para') {
     if (!Number.isInteger(e.para) || e.para < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-para extent names which paragraph, as a 0-based integer. This one names `
-        + `'${String(e.para).slice(0, 40)}'`);
+        localize('content.extent-core.doc_para_names_which_paragraph', 'a doc-para extent names which paragraph, as a 0-based integer. This one names \'{para}\'', { para: String(String(e.para).slice(0, 40)) }));
     if (e.run !== undefined && e.run !== null && !(Number.isInteger(e.run) && e.run >= 0))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-para extent's run is a 0-based integer or absent. A run that is present and `
-        + `unreadable is worse than none, because it looks like a span somebody chose`);
+        localize('content.extent-core.doc_para_run_unreadable', 'a doc-para extent\'s run is a 0-based integer or absent. A run that is present and unreadable is worse than none, because it looks like a span somebody chose'));
     const outside = coversDocPara(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
@@ -421,12 +422,10 @@ export function checkContentExtent(extent, ctx = {}) {
        two spellings of slide 1 exist and would mint two rows for one shape. */
     if (!Number.isInteger(e.slide) || e.slide < 1)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). `
-        + `This one names '${String(e.slide).slice(0, 40)}'`);
+        localize('content.extent-core.a_slide_shape_extent_names', 'a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). This one names \'{String}\'', { String: String(String(e.slide).slice(0, 40)) }));
     if (e.shape !== undefined && e.shape !== null && !(Number.isInteger(e.shape) && e.shape >= 0))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a slide-shape extent's shape is a 0-based integer or absent. A shape that is present `
-        + `and unreadable is worse than none, because it looks like an element somebody chose`);
+        localize('content.extent-core.slide_shape_unreadable', 'a slide-shape extent\'s shape is a 0-based integer or absent. A shape that is present and unreadable is worse than none, because it looks like an element somebody chose'));
     const outside = coversSlideShape(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
@@ -444,34 +443,29 @@ export function checkContentExtent(extent, ctx = {}) {
   const citedAs = contentCitedAs(e);
   if (citedAs !== 'text' && citedAs !== 'bytes')
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of `
-      + `text, bytes. This one says '${String(citedAs).slice(0, 40)}'`);
+      localize('content.extent-core.cited_as_says_whether_a', 'cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of text, bytes. This one says \'{String}\'', { String: String(String(citedAs).slice(0, 40)) }));
   if (citedAs === 'bytes' && e.kind !== 'image')
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `only an image can be cited as its bytes. A ${e.kind} extent addresses text, and reading `
-      + `'bytes' here as 'text' would silently change what the citation claims, so it is refused`);
+      localize('content.extent-core.only_an_image_can_be', 'only an image can be cited as its bytes. A {kind} extent addresses text, and reading \'bytes\' here as \'text\' would silently change what the citation claims, so it is refused', { kind: String(e.kind) }));
+  if (e.kind === 'doc-part') return checkPart(e, ctx);
   if (e.kind === 'sheet-range') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-range extent names which sheet, as the workbook spells it. This one names `
-        + `'${String(e.sheet).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_range_names_which_sheet', 'a sheet-range extent names which sheet, as the workbook spells it. This one names \'{sheet}\'', { sheet: String(String(e.sheet).slice(0, 40)) }));
     if (typeof e.range !== 'string' || !rangeCorners(e.range))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one `
-        + `names '${String(e.range).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_range_names_which_cells', 'a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one names \'{range}\'', { range: String(String(e.range).slice(0, 40)) }));
     const outside = coversSheetRange(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === 'doc-table') {
     if (!Number.isInteger(e.table) || e.table < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-table extent names which table, as a 0-based ordinal in document order. This one `
-        + `names '${String(e.table).slice(0, 40)}'`);
+        localize('content.extent-core.doc_table_names_which_table', 'a doc-table extent names which table, as a 0-based ordinal in document order. This one names \'{table}\'', { table: String(String(e.table).slice(0, 40)) }));
     if (e.cell !== undefined && e.cell !== null
         && !(typeof e.cell === 'string' && CONTENT_EXTENT_A1_RE.test(e.cell.trim())))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-table extent's cell is A1 notation over the table's grid (B3) or absent. A cell `
-        + `that is present and unreadable is worse than none, because it looks like one somebody chose`);
+        localize('content.extent-core.doc_table_cell_unreadable', 'a doc-table extent\'s cell is A1 notation over the table\'s grid (B3) or absent. A cell that is present and unreadable is worse than none, because it looks like one somebody chose'));
     const outside = coversDocTable(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
@@ -485,29 +479,24 @@ export function checkContentExtent(extent, ctx = {}) {
     if (hasPart === hasPage)
       return refusal("CONTENT_EXTENT_UNREADABLE",
         hasPart
-          ? `an image extent names EITHER the embedded part's content hash OR a page and rectangle, `
-            + `and this one names both — one image stated twice, where the two can disagree`
-          : `an image extent names the embedded part's content hash (in a container) or the page `
-            + `it is on (in a PDF), and this one names neither`);
+          ? localize('content.extent-core.image_names_both_part_and_page', 'an image extent names EITHER the embedded part\'s content hash OR a page and rectangle, and this one names both — one image stated twice, where the two can disagree')
+          : localize('content.extent-core.image_names_neither_part_nor_page', 'an image extent names the embedded part\'s content hash (in a container) or the page it is on (in a PDF), and this one names neither'));
     if (hasPart && !(typeof e.part === 'string' && /^[0-9a-fA-F]{64}$/.test(e.part.trim())))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `an image's part is the SHA-256 of the embedded media member, 64 hexadecimal characters. `
-        + `This one names '${String(e.part).slice(0, 40)}'`);
+        localize('content.extent-core.an_images_part_is_the', 'an image\'s part is the SHA-256 of the embedded media member, 64 hexadecimal characters. This one names \'{String}\'', { String: String(String(e.part).slice(0, 40)) }));
     if (hasPage) {
       if (!Number.isInteger(e.page) || e.page < 0)
         return refusal("CONTENT_EXTENT_UNREADABLE",
-          `an image extent's page is a 0-based integer. This one names '${String(e.page).slice(0, 40)}'`);
+          localize('content.extent-core.an_image_extents_page_is', 'an image extent\'s page is a 0-based integer. This one names \'{String}\'', { String: String(String(e.page).slice(0, 40)) }));
       if (e.rect !== undefined && e.rect !== null
           && !(Array.isArray(e.rect) && e.rect.length === 4
                && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
         return refusal("CONTENT_EXTENT_UNREADABLE",
-          `an image extent's rect is four finite numbers or absent. A rect that is present and `
-          + `unreadable is worse than none, because it looks like a region somebody chose`);
+          localize('content.extent-core.image_rect_unreadable', 'an image extent\'s rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose'));
       if (ctx.known !== false
           && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
         return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
-          `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
-          + `image extent names page ${e.page}`);
+          localize('content.extent-core.this_captures_page_set_holds_2', 'this capture\'s page set holds {pageCount} page(s) (0-{v1}) and the image extent names page {page}', { pageCount: String(ctx.pageCount), v1: String(ctx.pageCount - 1), page: String(e.page) }));
       /* D-420: the page set says the page EXISTS; the record's placement list
          says whether an image is PAINTED there. No list held (a PDF acquired
          before D-420, a walk that did not finish, a capture that is not a PDF)
@@ -536,11 +525,13 @@ export function checkContentExtent(extent, ctx = {}) {
        different: a PDF page's chain (layer or OCR) covers what is on the page. */
     if (hasPart && citedAs === 'text')
       return refusal("CONTENT_EXTENT_NO_CHAIN",
-        `this citation asks for the TEXT of an embedded image, and nothing in this record has read `
-        + `text off an embedded image — the container's transcription covers its text parts and `
-        + `never its media. Cite the image as itself (cited_as: bytes), or cite the passage that `
-        + `quotes it`);
+        localize('content.extent-core.embedded_image_text_has_no', 'this citation asks for the TEXT of an embedded image, and nothing in this record has read text off an embedded image — the container\'s transcription covers its text parts and never its media. Cite the image as itself (cited_as: bytes), or cite the passage that quotes it'));
   }
+  /* R62 (K5157): THE FORMAT HOLDS THE KIND. Asked where the record holds the capture's format and skipped where it does not
+     (R8); after every shape and container arm above, so an unreadable address stays unreadable and a figure the context
+     holds still names itself, and before the chain arm, which is a fact about the capture and not the extent. */
+  const misfit = ctx.known !== false ? kindFormatMisfit(e, ctx.container) : null;
+  if (misfit) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", misfit);
   /* THE CHAIN, LAST, AND IT IS A FACT ABOUT THE CAPTURE RATHER THAN THE EXTENT.
      A content row is an address into TEXT somebody or something produced, and a
      capture nobody has read holds no text to address. A DOCUMENT extent is
@@ -567,9 +558,34 @@ export function checkContentExtent(extent, ctx = {}) {
   if (ctx.known !== false && citedAs !== 'bytes'
       && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal("CONTENT_EXTENT_NO_CHAIN",
-      `this record holds no extraction chain for the capture this leg cites, so there is no `
-      + `transcription over ${describeExtent(e)} for the citation to point at`);
+      localize('content.extent-core.this_record_holds_no_extraction', 'this record holds no extraction chain for the capture this leg cites, so there is no transcription over {describeExtent} for the citation to point at', { describeExtent: String(describeExtent(e)) }));
   /* END DEC-49 REGION is-content-extent */
+  return null;
+}
+
+/* R1 (K4910; G167) — A `doc-part`'S SHAPE: the package part and the element reference a reader names for a non-body unit
+   (`reading-pipeline` R47), each a non-empty string or absent, one at least present. The record lists no parts of a capture
+   to bound one against (they arrive as text units), so a well-formed one is admitted and its existence rests on the index
+   that found it (R8: `part_list`, in `./extent.mjs`); a capture nobody read holds no text to address (C-45.2), as for an
+   envelope item. Judged here, in the core, so the leg grammar and the face answer one thing. */
+/** A `doc-part`'s human form: its element reference, else its package part (R1, R2). `./extent.mjs`' `describeExtent` reads it. */
+export function describePart(e) {
+  const at = typeof e.ref === 'string' && e.ref.trim() ? e.ref.trim() : typeof e.part === 'string' && e.part.trim() ? e.part.trim() : '';
+  return localize('content.extent-core.part_ref', 'part {at}', { at: String(at.slice(0, 120)) });
+}
+
+function checkPart(e, ctx) {
+  const said = (v) => String(v).slice(0, 40);
+  for (const k of ['part', 'ref'])
+    if (e[k] !== undefined && e[k] !== null && !(typeof e[k] === 'string' && e[k].trim()))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        localize('content.extent-core.a_part_extent_names_the', 'a part extent names the package part and the element reference of the unit as the reader emitted them, each a non-empty string. This one names \'{String}\' as its {k}', { String: said(e[k]), k }));
+  if (!(typeof e.part === 'string' && e.part.trim()) && !(typeof e.ref === 'string' && e.ref.trim()))
+    return refusal("CONTENT_EXTENT_UNREADABLE",
+      localize('content.extent-core.a_part_extent_names_neither', 'a part extent names the package part or the element reference of the unit as the reader emitted them, and this one names neither'));
+  if (ctx.known !== false && !(Array.isArray(ctx.chain) && ctx.chain.length))
+    return refusal("CONTENT_EXTENT_NO_CHAIN",
+      localize('content.extent-core.this_record_holds_no_extraction_2', 'this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at', { describeExtent: describePart(e) }));
   return null;
 }
 
@@ -603,13 +619,36 @@ export function checkContentExtent(extent, ctx = {}) {
  * not read is how one shipped `translation: undefined` to a member. Minting
  * C-45.1 in here would have put three of its four sites OUTSIDE
  * `is-content-extent` while the row's `where` went on naming that region alone
- * (the MULTI-SITE-CODE condition the old guard `civicos-ui/check-refusal-codes.mjs`,
- * deleted in T20, documented and could not close). So these functions answer
+ * (the MULTI-SITE-CODE condition: the DEC-49 guard, retired in T20, documented it and
+ * could not close). So these functions answer
  * WHAT IS WRONG and `checkContentExtent` answers WHICH CODE THAT IS, which keeps
  * all four C-45.1 sites inside the one span the row claims. That every C-45.1
  * this module answers carries its row's check and translation is
  * `test/m/content/seams.test.mjs`' (R48).
  */
+
+/** R62 — THE EXTENT KINDS EACH FORMAT HOLDS. Only the six kinds that address a place in one family of document are judged
+ *  (a page of a PDF, a sheet's cell or range, a paragraph, a table of a text document, a slide's shape): the kinds that
+ *  also address a part (`image`, `doc-part`, `envelope`) and the whole document are held by more than one family and are
+ *  not judged here. A format outside this table is not judged either: the record is not refused for what it did not
+ *  measure. */
+const FORMAT_HOLDS = Object.freeze({
+  pdf: ["pdf-page"],
+  docx: ["doc-para", "doc-table"], odt: ["doc-para", "doc-table"],
+  xlsx: ["sheet-cell", "sheet-range"], ods: ["sheet-cell", "sheet-range"], csv: ["sheet-cell", "sheet-range"],
+  pptx: ["slide-shape"], odp: ["slide-shape"],
+  text: ["doc-para"],
+});
+const PLACE_KINDS = new Set(Object.values(FORMAT_HOLDS).flat());
+
+/** An extent of a place kind over a capture whose held format cannot hold that kind: the sentence naming the kind and the
+ *  format, or null (the format not held, not in the table, or the kind held by it). */
+function kindFormatMisfit(e, container) {
+  const format = container && typeof container.format === 'string' ? container.format.trim().toLowerCase() : '';
+  if (!format || !Object.prototype.hasOwnProperty.call(FORMAT_HOLDS, format)) return null;
+  if (!PLACE_KINDS.has(e.kind) || FORMAT_HOLDS[format].includes(e.kind)) return null;
+  return localize('content.extent-core.format_cannot_hold_kind', 'a {kind} extent cannot be held by a {format} document, which holds {holds}', { kind: String(e.kind), format: String(format), holds: String(FORMAT_HOLDS[format].join(', ')) });
+}
 
 /** A cell of a named sheet, against the workbook as the record holds it.
  *  Returns the sentence naming what is outside, or null. */
@@ -619,17 +658,13 @@ function coversSheetCell(e, container) {
   const want = String(e.sheet).trim();
   const sheet = sheets.find((x) => x && typeof x.name === 'string' && x.name === want);
   if (!sheet)
-    return `this capture's workbook holds ${sheets.length} sheet(s) `
-      + `(${sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')}`
-      + `${sheets.length > 12 ? ', …' : ''}) and the extent names a sheet called '${want.slice(0, 40)}'`;
+    return word('content.text.capture_workbook_holds', { count: String(sheets.length), sheets: String(sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')), more: String(sheets.length > 12 ? ', …' : ''), want: String(want.slice(0, 40)) });
   const at = a1ToRowCol(e.cell);
   if (!at) return null;
   if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at.row > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) `
-      + `and the extent names row ${at.row}`;
+    return word('content.text.sheet_capture_holds', { want: String(want.slice(0, 40)), rows: String(sheet.rows), row: String(at.row) });
   if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at.col > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent `
-      + `names column ${at.col}`;
+    return word('content.text.sheet_capture_holds_column', { want: String(want.slice(0, 40)), cols: String(sheet.cols), col: String(at.col) });
   return null;
 }
 
@@ -639,8 +674,7 @@ function coversDocPara(e, container) {
   const n = container ? container.paragraphs : null;
   if (!(Number.isInteger(n) && n > 0)) return null;
   if (e.para >= n)
-    return `this capture's text holds ${n} paragraph(s) (0-${n - 1}) and the extent names `
-      + `paragraph ${e.para}`;
+    return word('content.text.capture_text_holds', { n: String(n), n2: String(n - 1), para: String(e.para) });
   return null;
 }
 
@@ -650,13 +684,11 @@ function coversSlideShape(e, container) {
   const slides = container && Array.isArray(container.slides) ? container.slides : null;
   if (!slides || !slides.length) return null;
   if (e.slide > slides.length)
-    return `this capture's deck holds ${slides.length} slide(s) (1-${slides.length}) and the extent `
-      + `names slide ${e.slide}`;
+    return word('content.text.capture_deck_holds', { slides: String(slides.length), slide: String(e.slide) });
   const slide = slides[e.slide - 1];
   const n = slide ? slide.shapes : null;
   if (Number.isInteger(e.shape) && Number.isInteger(n) && n > 0 && e.shape >= n)
-    return `slide ${e.slide} of this capture holds ${n} shape(s) (0-${n - 1}) and the extent names `
-      + `shape ${e.shape}`;
+    return word('content.text.slide_capture_holds', { slide: String(e.slide), n: String(n), n3: String(n - 1), shape: String(e.shape) });
   return null;
 }
 
@@ -688,17 +720,13 @@ function coversSheetRange(e, container) {
   const want = String(e.sheet).trim();
   const sheet = sheets.find((x) => x && typeof x.name === 'string' && x.name === want);
   if (!sheet)
-    return `this capture's workbook holds ${sheets.length} sheet(s) `
-      + `(${sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')}`
-      + `${sheets.length > 12 ? ', …' : ''}) and the extent names a sheet called '${want.slice(0, 40)}'`;
+    return word('content.text.capture_workbook_holds', { count: String(sheets.length), sheets: String(sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')), more: String(sheets.length > 12 ? ', …' : ''), want: String(want.slice(0, 40)) });
   const k = rangeCorners(e.range);
   if (!k) return null;
   if (Number.isInteger(sheet.rows) && sheet.rows > 0 && k.r1 > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) `
-      + `and the range reaches row ${k.r1}`;
+    return word('content.text.sheet_capture_holds_row', { want: String(want.slice(0, 40)), rows: String(sheet.rows), r1: String(k.r1) });
   if (Number.isInteger(sheet.cols) && sheet.cols > 0 && k.c1 > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the range `
-      + `reaches column ${k.c1}`;
+    return word('content.text.sheet_capture_holds_column_range', { want: String(want.slice(0, 40)), cols: String(sheet.cols), c1: String(k.c1) });
   return null;
 }
 
@@ -708,18 +736,15 @@ function coversDocTable(e, container) {
   const tables = container && Array.isArray(container.tables) ? container.tables : null;
   if (!tables) return null;
   if (e.table >= tables.length)
-    return `this capture's document holds ${tables.length} table(s)`
-      + `${tables.length ? ` (0-${tables.length - 1})` : ''} and the extent names table ${e.table}`;
+    return word('content.text.capture_document_holds', { count: String(tables.length), range: String(tables.length ? ` (0-${tables.length - 1})` : ''), table: String(e.table) });
   if (typeof e.cell !== 'string' || !e.cell.trim()) return null;
   const t = tables[e.table] || {};
   const at = a1ToRowCol(e.cell);
   if (!at) return null;
   if (Number.isInteger(t.rows) && t.rows > 0 && at.row > t.rows)
-    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent `
-      + `names row ${at.row}`;
+    return word('content.text.table_capture_holds', { table: String(e.table), rows: String(t.rows), row: String(at.row) });
   if (Number.isInteger(t.cols) && t.cols > 0 && at.col > t.cols)
-    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names `
-      + `column ${at.col}`;
+    return word('content.text.table_capture_holds_column', { table: String(e.table), cols: String(t.cols), col: String(at.col) });
   return null;
 }
 
@@ -730,8 +755,7 @@ function coversImage(e, container) {
   if (!images) return null;
   const want = String(e.part).trim().toLowerCase();
   if (images.some((x) => x && typeof x.part === 'string' && x.part.toLowerCase() === want)) return null;
-  return `this capture's container holds ${images.length} image(s) and none of them has the content `
-    + `hash ${want.slice(0, 16)}… that the extent names`;
+  return word('content.text.capture_container_holds', { images: String(images.length), want: String(want.slice(0, 16)) });
 }
 
 /** D-440 — an embedded image's `{part}`, against WHETHER THIS CAPTURE IS A
@@ -744,11 +768,7 @@ function coversImage(e, container) {
 function partOutsideAnyContainer(container) {
   if (!container || container.office !== false) return null;
   const fmt = typeof container.format === 'string' && container.format ? container.format : null;
-  return `this capture is ${fmt ? `a ${fmt.slice(0, 20)} document` : 'a document'}, not an office `
-    + `container, so its own bytes hold no embedded media part and a {part} names bytes this document `
-    + `does not contain. An image served beside a page is its OWN document: acquire it at its own `
-    + `address and cite that document whole`
-    + (fmt === 'pdf' ? `. An image painted on a PDF page is addressed by its page and rect, not a part` : '');
+  return localize('content.extent-core.capture_is_not_an_office', 'this capture is {kind}, not an office container, so its own bytes hold no embedded media part and a part reference names bytes this document does not contain. An image served beside a page is its OWN document: acquire it at its own address and cite that document whole{pdf}', { kind: fmt ? `a ${fmt.slice(0, 20)} document` : 'a document', pdf: fmt === 'pdf' ? word('content.text.image_painted_pdf') : '' });
 }
 
 /** D-440 — WHAT AN ADMITTED `{part}` COULD NOT BE CHECKED AGAINST, stated, or
@@ -765,14 +785,10 @@ export function imagePartUndetermined(extent, ctx = {}) {
   const c = ctx.container && typeof ctx.container === 'object' ? ctx.container : null;
   if (!c || c.office == null)
     return { level: 'container_kind',
-             why: `${c && typeof c.kind_why === 'string' ? c.kind_why : 'this record does not hold which kind of document this capture is'}`
-               + ` — so whether this part is a member of the document's own bytes is UNDETERMINED, `
-               + `admitted and stated rather than guessed either way` };
+             why: localize('content.extent-core.kind_unheld_part_undetermined', '{kind_why} — so whether this part is a member of the document\'s own bytes is UNDETERMINED, admitted and stated rather than guessed either way', { kind_why: c && typeof c.kind_why === 'string' ? c.kind_why : localize('content.extent-core.kind_not_held', 'this record does not hold which kind of document this capture is') }) };
   if (c.office === true && !Array.isArray(c.images))
     return { level: 'image_list',
-             why: `this capture is an office container and this record holds no list of its embedded `
-               + `images (it was acquired before the wire carried one, or no entry itemised it), so whether `
-               + `the part is among them is UNDETERMINED, admitted and stated rather than guessed` };
+             why: localize('content.extent-core.office_container_no_image_list', 'this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed') };
   return null;
 }
 
@@ -799,15 +815,12 @@ function coversImagePlacement(e, container) {
   const onPage = all.filter((x) => x && x.page === e.page && Array.isArray(x.rect) && x.rect.length === 4);
   if (!(Array.isArray(e.rect) && e.rect.length === 4)) {
     if (onPage.length) return null;
-    return `page ${e.page} of this capture paints no image — the record holds ${all.length} image `
-      + `placement(s) over the whole document, and none is on this page`;
+    return word('content.text.page_capture_paints', { page: String(e.page), all: String(all.length) });
   }
   const norm = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
   const want = norm(e.rect);
   const same = (r) => norm(r).every((v, i) => Math.abs(v - want[i]) <= 0.001 + 1e-9);
   if (onPage.some((x) => same(x.rect))) return null;
   const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(', ')}]`).join(' ');
-  return `page ${e.page} of this capture paints ${onPage.length} image(s)`
-    + `${onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''} and none at `
-    + `[${want.join(', ')}], the rectangle the extent names`;
+  return word('content.text.page_capture_paints_image', { page: String(e.page), count: String(onPage.length), listed: String(onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''), rect: String(want.join(', ')) });
 }

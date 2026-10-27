@@ -6,10 +6,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world as retrievalWorld, V, sha, infoMd } from "../retrieval/fixture.mjs";
+import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { Ratification, ratificationOf, ratificationOps, RELEASE_ACK_MAX,
          RELEASE_CHECKS } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter, canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OWNER = "o";
 const WHO = V("ann");
@@ -116,7 +118,7 @@ test("R20: an acknowledgment, then a mitigation, over RELEASE_ACK_MAX or holding
 
 /* ---- R21 ---- */
 
-test("R21: the selection's refusal is answered as retrieval's refuse-weight resolve gives it: NO_SUCH_SELECTION, NOT_YOURS", async () => {
+test("R21: the selection's refusal is answered as retrieval's refuse-weight resolve gives it: NO_SUCH_SELECTION, SELECTION_NOT_YOURS", async () => {
   const w = setup();
   w.info("INFO-2026-0503");
   const h = await w.select(["INFO-2026-0503"]);
@@ -124,7 +126,7 @@ test("R21: the selection's refusal is answered as retrieval's refuse-weight reso
   assert.equal(none.reason, "NO_SUCH_SELECTION");
   assert.deepEqual(none, w.retrieval.selectionResolve({ handle: "sel_nope", viewer: WHO, owner: OWNER, weight: "refuse" }));
   const theirs = w.release(h, { owner: "someone-else" });
-  assert.equal(theirs.reason, "NOT_YOURS");
+  assert.equal(theirs.reason, "SELECTION_NOT_YOURS");
   assert.deepEqual(theirs, w.retrieval.selectionResolve({ handle: h, viewer: WHO, owner: "someone-else", weight: "refuse" }));
   assert.equal(w.state("INFO-2026-0503"), "collected");
 });
@@ -275,7 +277,7 @@ test("R24, R26: every member is released as a new version authored by the member
     assert.match(fm.last_updated, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, "to the second");
     assert.deepEqual([fm.current_state, fm.prior_state, fm.criticality], ["verified", "collected", "supporting"]);
     assert.deepEqual(fm.state_history, [{ timestamp: fm.last_updated, from_state: "collected", to_state: "verified",
-      blurb: `batch release via selection ${h}; acknowledgment and mitigation in Session Log`, author: WHO }]);
+      blurb: word("ratification.blurb", { handle: String(h) }), author: WHO }]);
     const log = text.slice(text.indexOf("## Session Log"), text.indexOf("## Review Notes"));
     assert.ok(log.endsWith(`### Session ${fm.last_updated} | Released (batch) | ${WHO}\nTrigger: selection ${h}\n`
       + `Changes: state collected to verified.\nAcknowledgment: ${ACK}\nMitigation: ${MIT}\n\n`), log);
@@ -331,8 +333,9 @@ test("R25: a member whose bundle.md is gone at its turn is NO_DOCUMENT, one whos
   assert.deepEqual([unsplice.r.reason, unsplice.r.bundleId, unsplice.r.releasedSoFar], ["UNSPLICEABLE_STATE_HISTORY", ids[1], [ids[0]]]);
   assert.match(unsplice.r.detail, /C-4\.2/);
   assert.equal(unsplice.w.state(ids[0]), "verified");
-  const refused = await drive(() => {}, { ok: false, reason: "STALE_BASE", detail: "d" });
-  assert.deepEqual(refused.r, { ok: false, reason: "STALE_BASE", detail: "d", bundleId: ids[1], releasedSoFar: [ids[0]] });
+  const stale = staleBaseRefusal();
+  const refused = await drive(() => {}, stale);
+  assert.deepEqual(refused.r, { ...stale, bundleId: ids[1], releasedSoFar: [ids[0]] });
   assert.equal(refused.w.state(ids[0]), "verified");
 });
 

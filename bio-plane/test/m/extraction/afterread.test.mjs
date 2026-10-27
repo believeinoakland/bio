@@ -5,7 +5,7 @@
    module's to test). Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer, pageUnits, pressThenPass } from "./fixture.mjs";
 import { readHooksOf } from "../../../src/reading-pipeline/index.mjs";
 
 const S1 = "1".repeat(64), S2 = "2".repeat(64), S3 = "3".repeat(64);
@@ -127,17 +127,16 @@ test("R69 R34: a re-read that writes its reading calls afterRead once after the 
   Object.assign(box, w);
   bundle(w.s, "B-1");
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
-  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: reading("generic", { at: "2026-09-01T00:00:00Z", page_count: 2 }) });
-  rec.calls.length = 0;
   const text = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
-  const pdf = { format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: 2, notes: [] }) };
-  const r = await withEntry(pdf, () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1",
-    env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
-  assert.equal(r.body.reextraction.written, true);
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: reading("generic", { at: "2026-09-01T00:00:00Z", page_count: 2, tier3_candidate: true }), textUnits: pageUnits(text) });
+  rec.calls.length = 0;
+  /* (fix round 9, R103) the press owes the page; the ledger's pass writes the re-read */
+  const { x } = await pressThenPass(w, d, { OCR_WORKER: member(() => ocrAnswer([1])) });
+  assert.equal(x.written, true);
   assert.equal(rec.calls.length, 1);
   assert.deepEqual([rec.calls[0].captureSha, rec.calls[0].captureClass, rec.calls[0].inTransaction], [d, "generic", false]);
   assert.ok(rec.calls[0].reading.reextracted, "the re-read's own reading");
-  assert.deepEqual(r.body.reextraction.after_read, { ran: ["events"], failed: [{ module: "people", error: "boom" }] });
+  assert.deepEqual(x.after_read, { ran: ["events"], failed: [{ module: "people", error: "boom" }] });
   /* a re-read that writes nothing calls nothing */
   const none = await withEntry({ format: "pdf", structure: async () => ({ ok: true, text: i2([{ page: 0, text: "All text" }]), pages: 1, notes: [] }) },
     () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([])) } }));

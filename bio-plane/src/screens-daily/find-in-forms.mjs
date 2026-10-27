@@ -20,14 +20,11 @@ export function forms() {
   const pick = function (cs, id, label, prefix, list, value) { return cs.choice(id, label, opts(prefix, list), { value: value, acts: {} }); };
   const val = function (cs, id) { const v = cs.value(id); return v === null || v === undefined ? "" : String(v).trim(); };
 
-  // The team's time zone as `factstatus` lists it (local-facts R2): the zone of the profile's own `time_zone`, as it governs here.
+  // The team's time zone as `factstatus` answers its own path (local-facts R21, R2): the zone that governs, stated or agreed by the profiles.
   const zoneOf = function (view) {
     const r = view.data && view.data.zone;
-    const facts = r && r.state === "ok" && r.value && Array.isArray(r.value.facts) ? r.value.facts : [];
-    const f = facts.filter(function (x) { return x && x.fact && x.fact.fact === "time_zone" && !x.fact.office && x.governs; })[0];
-    const v = f && f.governs ? f.governs.value : null;
-    const id = typeof v === "string" ? v : v && typeof v.value === "string" ? v.value : v && typeof v.zone === "string" ? v.zone : "";
-    return id || "";
+    const g = r && r.state === "ok" && r.value ? r.value.governs : null;
+    return g && typeof g.value === "string" ? g.value : "";
   };
   // A zone is shown by its name, never its id (DEC-322): the design's seven by key, any other by the browser's generic name and its city.
   const zoneName = function (cs, id) {
@@ -125,13 +122,16 @@ export function forms() {
         out.stage = val(cs, f + "-stage");
         out.from = { as_written: val(cs, f + "-payer") };
         out.to = { as_written: val(cs, f + "-payee") };
-        out.date = val(cs, f + "-date");
+        // R81: `recordfact` accepts no `date`; the day of an actual payment is the day the fact holds over (its period).
+        out.period = { from: val(cs, f + "-date"), to: val(cs, f + "-date"), precision: "day" };
       }
       return { body: Object.assign(out, q) };
     }
     if (op === "tabledeclare") {
       const header = val(cs, f + "-header").split(",").map(function (x) { return x.trim(); }).filter(Boolean);
-      return { body: { source: it.content_id ? String(it.content_id) : { capture_sha: it.capture_sha, extent: it.extent }, header: header } };
+      // R81: a table is declared with its schema, the header's columns as strings (calculations R1), as `calculation` declares one.
+      return { body: { source: it.content_id ? String(it.content_id) : { capture_sha: it.capture_sha, extent: it.extent }, header: header,
+        schema: { fields: header.map(function (name) { return { name: name, type: "string" }; }) } } };
     }
     return null;
   };

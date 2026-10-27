@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import { T49_SHARES } from "../../../src/op-declarations/t49.mjs";
 import { composeNeeds } from "../../../src/op-declarations/compose.mjs";
 import { needsRows } from "../../../src/op-capabilities/index.mjs";
@@ -24,7 +25,6 @@ const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
 const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
   .filter((n) => !["FAMILY_OPS", "FAMILY_SESSION_OPS"].includes(n)).sort();
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 /* a caller not arriving by a session is judged against machineClasses where given (admission R5) */
 const machineAdmits = (op) => ["admin", "member", "probe", "daemon", "ai"].filter((c) => (OPS[op].machineClasses ?? OPS[op].classes ?? []).includes(c));
 
@@ -150,22 +150,23 @@ test("R72, R34 (T49): projectownervotes is named in ACT_HELP_ABSENT under the re
 const familyRows = () => Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds)
   .filter(([, k]) => OP_KINDS[k].needs !== undefined).map(([op, k]) => [op, OP_KINDS[k].needs])));
 
-test("R3 (T49; K3298, K3339): NEEDS is composed from op-capabilities.needsRows() (323 hand-written rows) and each family op's row from its kind (515 rows), the aliases applied over the whole — 865 keys, the 848 it held before the split, the two T49 family ops and the 15 T50 adds (R73) — every hand-written row and every family row answered as given, every alias row equal to its op's, the table frozen and the same on every read", () => {
+test("R3 (T49; K3298, K3339): NEEDS is composed from op-capabilities.needsRows() (323 hand-written rows) and each family op's row from its kind (534 rows), the aliases applied over the whole — 882 keys, the 848 it held before the split, the two T49 family ops, the 15 T50 adds (R73) and the 16 T51 adds (R77 to R79, R22 `holdsplaced`) — every hand-written row and every family row answered as given, every alias row equal to its op's, the table frozen and the same on every read", () => {
   const hand = needsRows();
   const fam = familyRows();
   assert.equal(Object.keys(hand).length, 323);
-  assert.equal(Object.keys(fam).length, 500 + 15, "T49's 500 and R73's 15");
+  assert.equal(Object.keys(fam).length, 500 + 15 + 16 + 1 + 1 + 1, "T49's 500, R73's 15, T51's 16 (action-holds R22's `holdsplaced` among them) and strength's `strengthbarset` (R21, K4254) (R77 to R79; publishedfrozen, public, a present null row), money's `moneysets` (R17, R19; T51 fix round 3, K4369) and calculations' `moneyingestread` (T51 fix round 6, G55)");
   /* the two parts share no op */
   assert.deepEqual(Object.keys(fam).filter((op) => Object.hasOwn(hand, op)), []);
   const aliasRows = Object.entries(OP_ALIASES).filter(([, op]) => Object.hasOwn(NEEDS, op)).map(([al]) => al);
-  assert.equal(aliasRows.length, 27);
-  assert.equal(Object.keys(NEEDS).length, 323 + 515 + 27);
-  assert.equal(Object.keys(NEEDS).length, 848 + 2 + 15, "848 before the split, founderhandleset and projectownervotes (T49), and R73's 15 (T50)");
+  assert.equal(aliasRows.length, 26);
+  /* R83 (K4237): and `export`'s row, the founder's session act that is no family op */
+  assert.equal(Object.keys(NEEDS).length, 323 + 534 + 26 + 1);
+  assert.equal(Object.keys(NEEDS).length, 848 + 2 + 15 + 16 + 1 + 1 + 1, "848 before the split, founderhandleset and projectownervotes (T49), R73's 15 (T50), T51's 16, export (R83), moneysets (T51 fix round 3) and moneyingestread (T51 fix round 6)");
   for (const [op, row] of Object.entries(hand)) assert.equal(NEEDS[op], row, `${op}: the hand-written row`);
   for (const [op, row] of Object.entries(fam)) assert.equal(NEEDS[op], row, `${op}: the family row`);
   for (const al of aliasRows) assert.equal(NEEDS[al], NEEDS[OP_ALIASES[al]], `${al}: an alias row equals its op's`);
   /* nothing else is in the table */
-  assert.deepEqual(Object.keys(NEEDS).filter((op) => !Object.hasOwn(hand, op) && !Object.hasOwn(fam, op) && !aliasRows.includes(op)), []);
+  assert.deepEqual(Object.keys(NEEDS).filter((op) => !Object.hasOwn(hand, op) && !Object.hasOwn(fam, op) && !aliasRows.includes(op)), ["export"]);
   /* the new ops' rows come from their kinds: present nulls */
   for (const op of ["founderhandleset", "projectownervotes"]) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
   assert.ok(!Object.hasOwn(hand, "founderhandleset") && !Object.hasOwn(hand, "projectownervotes"));

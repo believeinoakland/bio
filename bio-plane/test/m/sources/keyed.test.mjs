@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET, sha } from "./fixture.mjs";
-import { SOURCES_CHECKS, SOURCES_TABLES, SERVICE_MAX, TERMS_MAX, sourcesOps } from "../../../src/sources/index.mjs";
+import { SOURCES_CHECKS, SOURCES_TABLES, SOURCES_OP_NAMES, SERVICE_MAX, TERMS_MAX, sourcesOps } from "../../../src/sources/index.mjs";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -142,8 +142,8 @@ test("R18 no path takes rows in bulk from a member-keyed source, no act runs una
   const own = w.captured({ actor: "bob" }), more = w.captured({ actor: "bob" });
   /* never in bulk: no op but the one mark, and the mark takes one capture; a list, a batch or rows are not a capture */
   const ops = Object.keys(sourcesOps(w.s, new URL("http://do/x"), {}));
-  assert.deepEqual(ops.filter((k) => !["sourceof", "sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw",
-                                       "knockerconsent", "sourcerung", "sourcereadlog", "sourcepublishable"].includes(k)), ["sourcekeyed"],
+  const before_mark = SOURCES_OP_NAMES.filter((k) => k !== "sourcekeyed");
+  assert.deepEqual(ops.filter((k) => !before_mark.includes(k)), ["sourcekeyed"],
                    "the only new path is the one-capture mark: no import of a vendor's records");
   const before = w.snapshot();
   for (const bulk of [{ captureSha: [own.sha, more.sha] }, { captures: [own.sha, more.sha] }, { rows: [{ name: "Pat" }] },

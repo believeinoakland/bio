@@ -169,7 +169,10 @@ test("R57: otherwise the ceiling is derivationCap(chain, target), why naming the
   for (const atts of [undefined, [], "x", [att({ kind: "page", page: 5 })]]) {
     const r0 = gradeCeiling(chain, { page: 0 }, atts);
     assert.deepEqual({ ...r0, why: undefined }, { ceiling: null, determinant: "derivation", by: [], why: undefined });
-    assert.match(r0.why, /page 0/);
+    /* R57, BOB's K4863: the page is spelled 1-based, as the chain sentence's is (R39); the stored page is 0. */
+    assert.match(r0.why, /page 1(?!\d)/);
+    assert.doesNotMatch(r0.why, /page 0/);
+    assert.match(gradeCeiling(chain, { page: 4 }, atts).why, /page 5(?!\d)/);
     const r1 = gradeCeiling(chain, { page: 1 }, atts);
     assert.equal(r1.ceiling, derivationCap(chain, { page: 1 }));
     assert.equal(r1.ceiling, "C");

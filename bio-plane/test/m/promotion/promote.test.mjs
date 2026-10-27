@@ -3,7 +3,7 @@
  * and the record against the requirement its title names. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from "./fixtures.mjs";
+import { makePromotion, staleBaseRefusal, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from "./fixtures.mjs";
 import { INLINE_MAX, PROMOTION_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
 import * as P from "../../../src/promotion/index.mjs";
 import { STATES, vocabFor, normalizeType, OBJECT_TYPES } from "../../../src/record-grammar/index.mjs";
@@ -33,6 +33,17 @@ test("R1: base is the compare-and-swap (EXISTS, ABSENT, CAS_STALE naming expecte
   const ok = p.promote(revise(ID, head.bundleSha, infoDoc(ID, { title: "Changed" })));
   assert.equal(ok.ok, true);
   assert.equal(record.head(ID).title, "Changed");
+});
+
+test("R1: the stale-base refusal fixture is promotion's real CAS_STALE answer, made by its code when it is called (K4993 (1))", () => {
+  const stale = staleBaseRefusal();
+  assert.equal(stale.ok, false);
+  assert.deepEqual([stale.reason, stale.code, stale.check, typeof stale.translation, typeof stale.detail], ["CAS_STALE", "CAS_STALE", "C-33.21", "string", "string"]);
+  assert.match(stale.expected, /^[0-9a-f]{64}$/);
+  assert.match(stale.got, /^[0-9a-f]{64}$/);
+  assert.notEqual(stale.expected, stale.got);
+  /* two calls make two answers, not one stored literal */
+  assert.notEqual(staleBaseRefusal(), stale);
 });
 
 test("R2: a refused promotion leaves the record exactly as it was; an accepted one commits every row in one transaction", () => {

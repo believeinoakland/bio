@@ -15,6 +15,8 @@
  * ids, codes and translations (its R22; N529); no copy is held here (K529), and `index.mjs` re-exports it for this
  * module's importers. */
 
+import { word, localize } from '../setup-words/index.mjs';
+
 const at = (fn, region) => `src/case-authoring/index.mjs ${fn} > ${region}`;
 
 /* C-32.6, C-33.14 — op=publish's own two rows from the catalogue's machine-fence and act-shape families (R1, R3; K6,
@@ -24,18 +26,13 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   MACHINE_CANNOT_PUBLISH: {
     check: 'C-32.6',
     where: at('#publishCase', 'is-machine-publish'),
-    translation: 'Publishing puts the group\'s name on a case, together with an assertion that it '
-      + 'is complete and a stated position on putting it to the people it concerns. Both of those '
-      + 'are declared judgements, and the credential that asked here is an automated one. It can '
-      + 'assemble the case; sign in to publish it.',
+    translation: localize('case-authoring.checks.publishing_puts_the_teams_name', 'Publishing puts the team\'s name on a case, together with an assertion that it is complete and a stated position on putting it to the people it concerns. Both of those are declared judgements, and the credential that asked here is an automated one. It can assemble the case; sign in to publish it.'),
   },
   /* R3: a case silent about what it leaves out (REC-64). */
   NO_STATEMENT: {
     check: 'C-33.14',
     where: at('#publishCase', 'is-publish-statement'),
-    translation: 'A published case has to say what it does NOT cover. A case that is silent about '
-      + 'its own limits is claiming to cover everything, and that is the overclaim this record '
-      + 'exists to refuse.',
+    translation: localize('case-authoring.checks.a_published_case_has_to_say', 'A published case has to say what it does NOT cover. A case that is silent about its own limits is claiming to cover everything, and that is the overclaim this record exists to refuse.'),
   },
   /* R56 (C:A-15; DEC-76.4; T33-69): a load-bearing finding's calculation that differs on recompute or rests on an
      unbound input, not disclosed. A new row of this module's table (R29); its id and words are BOB's (J1 (2), as
@@ -44,9 +41,7 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   CALCULATION_NOT_DISCLOSED: {
     check: 'C-136.1',
     where: at('#calculationsJudged', 'is-calculation-disclosed'),
-    translation: 'A calculation a load-bearing finding rests on gives a different result when your group\'s Civicsmith '
-      + 'recomputes it, or rests on a figure typed in without a source, and this publication does not say so. List it '
-      + 'with your own words, and publish again; the published case will state it. Nothing was published.',
+    translation: word('refusal.CALCULATION_NOT_DISCLOSED'),
   },
   /* R61 (T36; N717, N648; K1723, K1739, K2002, K2129): the case uses a standard as a published case may not
      (`case-checker` R21: a copyrighted standard's whole text, a passage of one no finding relies on, or a benchmark
@@ -55,10 +50,16 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   STANDARDS_USE_REFUSED: {
     check: 'C-136.2',
     where: at('#publishCase', 'is-standards-use'),
-    translation: 'This case uses a standard as a published case may not: it would carry the whole text of a standard '
-      + 'that is not free to read, quote a passage of one that no finding relies on, or call a finding that rests only '
-      + 'on benchmarks "violated" or "nonconforming". Each is named below. Change the case and prepare it again. '
-      + 'Nothing was prepared.',
+    translation: word('refusal.STANDARDS_USE_REFUSED'),
+  },
+  /* R14 (fix round 6, G47; K4666, K4672): the case document, built, is over `publication`'s `CASE_DOCUMENT_BYTES_MAX`
+     (a protective bound, K1881). The act's first refusal after the text is built, before any side effect, so nothing is
+     prepared and the record is unchanged. The next free number of C-136; its words are a stand-in (K3930), the row owed
+     to the UX design stream (B491). */
+  CASE_DOCUMENT_TOO_LARGE: {
+    check: 'C-136.9',
+    where: at('#publishCase', 'is-case-document-too-large'),
+    translation: localize('case-authoring.checks.case_document_too_large', 'This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.', { size: '{size}', bound: '{bound}', materials: '{materials}', members: '{members}' }),
   },
 });
 
@@ -71,35 +72,24 @@ export const CASE_DERIVATION_CHECKS = Object.freeze({
   CASE_IDENTITY_AMBIGUOUS: {
     check: 'C-44.1',
     where: at('#publishCase', 'case-identity-derivation'),
-    translation: 'This publication did not say which case it is. The findings you are publishing '
-      + 'already serve more than one published case, and a finding is allowed to serve many — so '
-      + 'the record cannot work out from them alone whether you are publishing a further edition '
-      + 'of one of those cases or starting a new case that rests on the same work. Nothing has '
-      + 'been published and nothing has changed. Say which case this is, or say that it is a new '
-      + 'one, and publish again.',
+    translation: word('refusal.CASE_IDENTITY_AMBIGUOUS'),
   },
   /* R9: the three conditions under which naming a draft would bind its readings falsely, each asked before a case id is
      minted, so a refusal spends none; none of them can refuse a publication that names no draft. */
   PUBLISH_DRAFT_NOT_FOUND: {
     check: 'C-44.3',
     where: at('#publishCase', 'is-publish-draft-found'),
-    translation: 'The draft named for this case is not a draft of this project that you can open. Nothing was '
-      + 'published. Name the draft this case was prepared in, or publish without naming one; readings of a '
-      + 'draft that was not named are then counted in the case file and not attributed to anyone.',
+    translation: word('refusal.PUBLISH_DRAFT_NOT_FOUND'),
   },
   PUBLISH_DRAFT_NOT_THIS_CASE: {
     check: 'C-44.4',
     where: at('#publishCase', 'is-publish-draft-this-case'),
-    translation: 'The draft named here was prepared for a different case than the one being published, so its '
-      + 'readers did not read this one. Nothing was published. Publish the case that draft is for, or name '
-      + 'the draft of this case.',
+    translation: word('refusal.PUBLISH_DRAFT_NOT_THIS_CASE'),
   },
   PUBLISH_DRAFT_ALREADY_BOUND: {
     check: 'C-44.5',
     where: at('#publishCase', 'is-publish-draft-bound'),
-    translation: 'That draft has already been named as the draft of another published case, and the people who '
-      + 'read it are listed there. One draft becomes one case, so it cannot be named for this one too. '
-      + 'Nothing was published.',
+    translation: word('refusal.PUBLISH_DRAFT_ALREADY_BOUND'),
   },
   /* R58 (N681; K1833; DEC-147): an edition of the case is signed and waiting to be published at its set time
      (publish-schedule R1, read through its R7; publication R66, R74 before N823), asked after R7 and before R8, before
@@ -108,7 +98,6 @@ export const CASE_DERIVATION_CHECKS = Object.freeze({
   CASE_EDITION_WAITING: {
     check: 'C-44.6',
     where: at('#publishCase', 'is-case-edition-waiting'),
-    translation: 'An edition of this case is signed and waiting to be published at the time set. Prepare the next '
-      + 'edition after it is published, or cancel it first. Nothing was prepared.',
+    translation: word('refusal.CASE_EDITION_WAITING'),
   },
 });

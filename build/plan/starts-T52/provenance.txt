@@ -1,0 +1,6 @@
+Round R1, layer 3, module provenance, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module provenance`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-9 · W5 · B-K1 · BLOCKER · one helper files a releasable bundle (canonical dataset with its own `content_hash`, `data/dataset.json`, the `snapshots/` file, the chain), with `screens-intake/capture.mjs:141-189`'s dataset shape (copied, not moved: that file is served to the browser and stays as it is; BOB's, K5370): provenance R81; the testimony filer (`provenance/index.mjs:2010-2018`) calls it. `ratification/release.mjs:195-201` is right and untouched. Tested through the real entries: a pulled knock, an unpacked archive member, a testimony each vouched ("Vouched for by …"); control: an upload. W22 (store-door) and W33 (control-plane) call it. PL1 W5.

@@ -266,7 +266,7 @@ export default {
         { stage: "appeal", label: "application for internal review", citation: "Test Stat. § 1.130" },
         { stage: "appeal_decision", label: "decision on internal review", citation: "Test Stat. § 1.131" }],
       requesters: { text: "any resident of the state, or a body corporate registered in it", citation: "Test Stat. § 1.102", status: "researched", basis: "TEST" },
-      basis: "TEST" },
+      response: "records_answer", basis: "TEST" },
     { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. § 4", basis: "TEST" },
     { level: "federal", name: "National Records Access Act (test)", citation: "Test U.S.C. § 552", basis: "TEST" },
   ],
@@ -358,7 +358,7 @@ export default {
   ],
   deadlines: [
     /* the pre-T33 form, `days: n`, read as units: days, amount: n */
-    { rule: "records_answer", applies_to: "records_request", days: 5, count: "business", starts: "received", closures: "town",
+    { rule: "records_answer", label: "answer to a records application", applies_to: "records_request", days: 5, count: "business", starts: "received", closures: "town",
       extension: { days: 5, count: "business", when: "the records are held off site", citation: "Test Stat. § 1.141" },
       observed: { closures: "court", status: "researched", basis: "TEST" },
       citation: "Test Stat. § 1.140", status: "researched", basis: "TEST" },

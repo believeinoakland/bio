@@ -1,0 +1,235 @@
+# translations (T51)
+
+**Status** · session_013fsGnfsXmN9WkNCN2pULce · depth 2 · COMPLETE · handled B8
+
+## Change B4 (K4822, from control-plane J47)
+
+Every ok answer of `interfaceWords` (both arms, and the throwing-storage answer) now carries `words_version` (R20's `wordsVersion()`) beside `language`; a refused tag carries none. Test: "R20 every ok answer of interfaceWords ... carries words_version" (red before: the field was undefined). translations 42/42; instance-setup/t50, control-plane/t51-interfacewords, screens-settings/translations green; the module's bundle stays stale (BOB regenerates).
+
+## Completion, fix round 8, G113 and G114 (TRANSLATIONS #3, session_0127cgdteY6TNWkhQcKQFfuz, START B3)
+
+**G113 (R19, amends R8).** (1) Cause: `interfaceWords` (`bio-plane/src/translations/index.mjs`, the method, formerly :716-740) answered every word of the list as `{key, text, en, fallback}`, `fallback: true` for each word with no shown translation, whatever the request; the shell keeps only `fallback === false`. Now, with no `language` named, only the words the team shows in the viewer's language are answered (none held: `words: []`, a few dozen bytes); with a `language` named, every word as before (the settings screen's read). The error answer follows the same split (no word without a language, every word in English with one). (2) Missed because no test bounded what the answer holds against what the shell uses; now `r8-shown-words.test.mjs` asserts the answer is at most 4 KiB with no translation held, through the method and through the route. (3) Failing-first test `bio-plane/test/m/translations/r8-shown-words.test.mjs`, "R19 with no language named ...": seen RED against the old code (its first assertion, the empty `words` list against the 25,808-word answer, fails; the file failed), then green: 41 of 41. It covers none held, one adoption (exactly that word, `fallback: false`), an awaiting word not sent until confirmed, the `language` arm and the route answering every word, another language and a viewer with none. (4) **N** here (**P** after the redeploy is BOB's).
+
+**G114, my half (R20).** `wordsVersion()` (in-process): `"<max adoption seq>.<max confirmation seq>.<max undo seq>"` read from the three append-only tables, e.g. `0.0.0`; it names no member and no word, is the same across reads and isolates (read from the storage alone), and changes at an adoption, a confirmation and an undo; a mark, a draft, a refused act and a read leave it. Test (failing-first, red against the old code: `wordsVersion` is not a function): "R20 wordsVersion() ...", green. instance-setup (R103) and control-plane (R127) call it; I added no op and no wire field.
+
+**Existing tests changed (R8 amended, not weakened).** `translations.test.mjs` (the R8 `interfaceWords` test, the R4 shown-reading and the draft-is-no-state reading) and `reading.test.mjs` (R11) read the default arm and now assert the shown words alone; each keeps its every-word, never-blank assertions through a `language` named.
+
+**Owed to BOB (outside my paths).**
+- Requirements: R8's `interfaceWords` bullet should say what R19 says (default arm: only `fallback: false` words; `language` named: every word); R19 and R20 lose "not yet met".
+- Word row (K4269): the op's declared description, `op-grades/t37.mjs:67` and its row in `setup-words/rows.mjs` (:21294), still reads "every interface word in a language ... never blank, with `en` beside it". Proposed: "the interface words the team shows in the member's language, each with the English beside it; with a language named, every word in that language, the English where none is shown". I did not touch either (not my paths).
+- The settings screen asks the full list with `language` named (`screens-settings/translations.mjs:21`), which this change keeps; `translations/index.mjs` `translationsOps` already passes `language` from the query or body.
+
+**Deferred.** None.
+
+**Found in another module.** Nothing new.
+
+**Stale generated artifacts.** `bio-plane/dist/bio-plane.bundled.mjs` (holds the old arm); `setup-words/rows.mjs` (description row above). BOB regenerates.
+
+**Ran.**
+- `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/translations/`: 41 tests, 41 pass, 0 fail.
+- Users the impact names that read this op: `instance-setup/t50`, `control-plane/t37-door` and `t51-interfacewords`, `plane/t50`, `screens-settings/translations`, `op-grades/t37`: 38 tests, 38 pass. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 8 modules affected (instance-setup 26/26, answer-envelope 5/5, store-door 6/6, signin-door 2/2, screens-action 2/30, control-plane 70/87, plane 59/73, translations); I ran the files above, not the whole set.
+- `checks/format.mjs`: 0 failures. `architecture` 0. `coverage` 20 of 20 live ids, 0. `words` 0. `ownership` (1 file as of the first commit) 0.
+
+Size (session_0127cgdteY6TNWkhQcKQFfuz): test runs 6, module lines 1019
+
+## Completion, fix round 7, G84 (TRANSLATIONS #2, session_01D3PnCpi1vCRCeUDnt7Sw8P, START B2)
+
+**Applied: R2 as BOB rewrote it.** `INTERFACE_WORDS` is now `interfaceWords()` (`bio-plane/src/translations/index.mjs:37`), built at its first call and the same frozen array after; the key map (`wordByKey()`) is lazy likewise; `INTERFACE_WORDS_COMMIT` stays a constant. Every use inside the module and the seven test files that read the constant is re-pointed.
+
+**Who else imports the old name** (`git grep -n INTERFACE_WORDS`, outside `build/`, `release/` and the generated bundle): `bio-plane/src/setup.mjs:61` (a re-export) and `bio-plane/test/m/instance-setup/t50.test.mjs:12,14,19,54,119`. Both are `instance-setup`'s, for INSTANCE-SETUP #28 to re-point. **Until it does, `setup.mjs` does not link** ("does not provide an export named 'INTERFACE_WORDS'"), so `instance-setup`, `answer-envelope`, `store-door` and `signin-door` tests (38 in all) fail at import, and so does anything that loads the plane from source. That is the planned order (B2); it is not a defect in this module. The bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale (it holds the old constant); BOB regenerates it.
+
+**Tests (K4426).** (1) `interface-words.test.mjs`: "R2 importing the module does no pass over the word list": a child process wraps 15 array methods and the array iterator, counts calls on `WORD_ROWS` made from this module's files, imports the module (0), then calls `interfaceWords()` (counter above 0, the control). Seen red against the old code (1 pass at import). "R2 interfaceWords() deep-equals the list of the old constant over the real table and answers the same frozen array on every call". (2) Why missed: `bundler` R31 only warns and no test bounded load-time work; the first test now bounds this module's. (3)-(4) **N**.
+
+**L.** The count: 0 passes by this module at import (1 before). `measureStart` of the plane was not taken: the plane no longer links from source until `instance-setup` re-points (above) and its bundle is a generated artifact I do not write; BOB measures at the round end.
+
+**Found in another module.** `record-grammar/document.mjs:22` calls `word()` at load, which builds `setup-words`' key table (`rowsByKey`, `setup-words/index.mjs:9`), one `WORD_ROWS.map` at import (about the size of the passes G84 removes). My test does not count it, since it is not this module's; BOB may want it lazy or off the load path.
+
+**Declared ops.** Unchanged (`DECLARED_OPS`: translationgrant, translationadopt, translationconfirm, translationrevert); no op added.
+
+**Ran.**
+- `node --test bio-plane/test/m/translations/`: 38 tests, 38 pass, 0 fail.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected `translations` 7/7, `instance-setup` 25/25, `answer-envelope` 5/5, `store-door` 6/6, `signin-door` 2/2, `screens-action` 2/30, `control-plane` 69/85, `plane` 54/66. Of those I ran `instance-setup`, `answer-envelope`, `store-door`, `signin-door`: all fail at import for the `setup.mjs` re-export above and for no other reason; `control-plane`, `plane` and `screens-action` load the same chain and were not run.
+- `checks/format.mjs`: 0 failures. `architecture` 0. `coverage` 18 of 18 live ids, 0. `words` 0. `ownership` (9 files) 0.
+
+Size (session_01D3PnCpi1vCRCeUDnt7Sw8P): test runs 6, module lines 1004
+
+## Completion (TRANSLATIONS #2, T51-105)
+
+**Entries applied.**
+- R17: `not_drafted[].why` is `{key, vars}`, a word key with its fills. The three reasons are `translations.not_drafted.not_answered`, `.not_one_line` (`vars: {max: TRANSLATION_TEXT_MAX}`) and `.placeholders_differ`. A word the assistant itself reported keeps `setup.why.assistant_draft` and replaces the other reason.
+- The new `bio-plane/src/translations/words.mjs` holds the module's literal `word` calls (`say`, `why`, `keysRead`). `index.mjs` reads its notes and `why` words through it. Every key the source names is a word and is in the `translations` list of `words-reads.json`.
+- Words findings, all 12 listed by `checks/words.mjs` plus the 7 plain ones in `words-pass/translations.md`. The check now shows 0 failures for the module.
+  - All the strings are now `localize('translations.index.<slug>', …)`, including the two registration refusals and the draft-signal detail. I converted these diagnostics too, so no REPORT is needed.
+  - Sentences assembled from fragments (`LANGUAGE_MALFORMED`, `NO_SUCH_WORD`, `TRANSLATION_NOTHING_TO_DRAFT`, `LANGUAGE_NOT_SET`) are whole sentences per case.
+  - The route-keys handlist test now asserts counts, not a list.
+- Tests: `words.test.mjs` is new and holds the R17 and key-list tests. The two existing assertions on `why` now compare keys.
+
+**Deferred.** None.
+
+**Found in other modules.**
+- `screens-settings` has 2 failing tests at the tranche tip, also with my changes stashed: "the screens are the registry's … (interface-shell R38)" and "R39 words by key". Neither is mine.
+- `answer-envelope/page-policy.test.mjs` imports `bio-plane/src/signpage.mjs` of control-plane, which fails the architecture check. Neither is mine.
+- Screens-settings reads `why` now as `{key, vars}` (R17); I did not change that module.
+- `setup-words` `rows.mjs` is stale against my new ids, as expected; BOB regenerates it at the layer close.
+
+**Ran.**
+- `node --test bio-plane/test/m/translations/`: 32 tests, 32 pass, 0 fail.
+- `checks/format.mjs`: 0 failures.
+- `checks/architecture.mjs … translations`: 0 failures.
+- `checks/coverage.mjs … translations`: 17 of 17 live ids named, 0 failures.
+- `checks/ownership.mjs … translations tranche/T51 job/T51/translations`: 0 failures.
+- `checks/words.mjs … translations`: 0 failures.
+- `setup-words/build.mjs --check`: only the expected stale-rows note.
+- `node --test control-plane/t37-door screens-settings/`: 153 pass, 2 fail (both screens-settings, above).
+- `checks/run.mjs`: format 0 failures; architecture 1 failure (answer-envelope's); words 1085 failures across other modules, none naming translations.
+
+Size (session_01XjFJQ53dT8DEubR4duSRf2): test runs 8, module lines 988
+
+## J1 · COMPLETE
+
+T51-105 applied: R17 (not_drafted[].why as {key, vars}), words.mjs, all 12 words findings and 7 plain ones converted to localize (no REPORT needed). Tests 32/32, format/architecture/coverage/ownership/words 0 failures for translations. Found elsewhere: screens-settings 2 tests red at the tip without my changes (interface-shell R38 registry test; R39 words by key); screens-settings reads why as {key, vars} now. Details in build/jobs/T51/translations.md.
+
+## J2 · COMPLETE
+
+G84 / R2 applied: INTERFACE_WORDS is now interfaceWords(), lazy and frozen, key map lazy; 0 passes over WORD_ROWS by this module at import (1 before; failing-first test seen red). translations 38/38; format, architecture, coverage (18 of 18), words, ownership 0 failures. Only other users: instance-setup's setup.mjs:61 and test/m/instance-setup/t50.test.mjs; until INSTANCE-SETUP #28 re-points them setup.mjs does not link, so instance-setup, answer-envelope, store-door, signin-door (and chains through the plane) fail at import. Plane measureStart not taken (that chain does not link from source; bundle is yours to regenerate). Found elsewhere: record-grammar/document.mjs:22 calls word() at load, building setup-words' key table (one WORD_ROWS.map at import). Details: build/jobs/T51/translations.md.
+
+## J3 · COMPLETE
+
+Round 8 G113/G114 applied. R19: interfacewords with no language named answers only fallback:false words (none held: words [], well under 4 KiB; language named: every word). R20: wordsVersion() = '<max adoption seq>.<max confirmation seq>.<max undo seq>', changes at adopt/confirm/undo only. Failing-first tests seen red then green; translations 41/41, users 38/38; format, architecture, coverage (20 of 20), words, ownership 0 failures. Owed to you (outside my paths): R8 wording, R19/R20 'not yet met' marks, and the op description word row (op-grades/t37.mjs:67, setup-words rows.mjs:21294) with my proposed text; stale bundle and rows.mjs. Details: build/jobs/T51/translations.md.
+
+## J4 · COMPLETE
+
+B4 applied: every ok answer of interfacewords (both arms and the error answer) carries words_version beside language; test R20 added. translations 42/42, users green; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/translations.md.
+
+## Fix round 10, Wave A batch 1 (B5)
+
+Entries applied: (1) `interfacewords` declared in `DECLARED_OPS` (`translations/index.mjs`, R21): `classes` admin/member, `machineClasses` [], `mutating` false, `stamps` viewer, `needs` null, `weight` read, `fields` accepts `language`, `v`, requires none, the description keyed `translations.declared.interfacewords` through `localize`, English as control-plane's. (2) Both `store-replies` lines of `fixture.mjs` carry `// fixtures-contract: store-door store-replies`.
+
+Fixture published: `memberLanguageRead` in `bio-plane/test/m/translations/fixtures.mjs`, made by the real `registerMemberLanguageRead` and `wordsVersion` when the test runs; its test `fixtures.test.mjs` (R11 R20) calls it and checks the real answers, with a control that the stamp moves at an adoption. New R21 test in `declared-ops.test.mjs`.
+
+Lines done and left: `fixtures.mjs … translations --list` shows only the two `fixture.mjs` lines, now `contract-no-run`, waiting for `store-door`'s `fixtures-run: translations store-replies`. No `fixtures-own` or `fixtures-generic` marker added.
+
+**For BOB at the merge:** delete from `bio-plane/src/control-plane/owner-ops.mjs` the `interfacewords` row, lines 33–38 on this branch point (the R116 comment, lines 33–35, and the row itself): `interfacewords: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read", description: localize("control-plane.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"), fields: { accepts: ["language", "v"], requires: [] } },` — an op declared by two modules stops the plane's start (`plane/declarations.mjs:182-186`). R-WORDS for UX-DESIGN's HANDOFF: the word `translations.declared.interfacewords` has no row in `setup-words` (the English falls back from `localize`); it needs one, same English.
+
+Tests and checks: `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/translations/*.test.mjs`: 44 pass, 0 fail. `checks/format.mjs`: 0 failures. `checks/architecture.mjs … translations`: 0 failures. `checks/coverage.mjs … translations`: 21 of 21 ids named, 0 failures. `checks/ownership.mjs … translations tranche/T51`: 0 failures. `impact.mjs origin/tranche/T51 HEAD`: 8 modules, 200 test files (translations, instance-setup, answer-envelope, store-door, signin-door, screens-action, control-plane, plane). Run as is, 150 files fail, all from `op-declarations: interfacewords: declared by two owners, translations and control-plane (R81)` (answer-envelope, control-plane, plane, 2 instance-setup report files): the row BOB deletes at the merge. With that one row deleted in a scratch edit (reverted, never committed), those files run 941 tests, 924 pass, 2 fail: control-plane's R116/R112 interfacewords test (it asserts the row in control-plane's map; control-plane's to re-point) and an R24 screens-words test (not about this module); plane's g83-location, t42, t44–t47 files fail as files (g83 after 135 s), cause not examined by me. Words check run beyond the module's own words test: none.
+
+Size (session_0125wgcLMbmJWHkUpq5Duamc): test runs 9, module lines 1023
+
+## J5 · COMPLETE · re B5
+
+B5 applied. (1) `interfacewords` declared in translations `DECLARED_OPS` (R21; same classes, weight read, stamps viewer, accepts language+v, requires none, description keyed `translations.declared.interfacewords`, same English; that key has no setup-words row yet, for UX-DESIGN's HANDOFF). (2) Both `store-replies` lines (fixture.mjs) marked `fixtures-contract: store-door store-replies`; they show contract-no-run until store-door's run is merged. Fixture `memberLanguageRead` published (fixtures.mjs, tested). No fixtures-own/generic marker added.
+MUST LEAVE control-plane/owner-ops.mjs in the same merge: lines 33-38 on this branch point, the R116 comment (33-35) and the row `interfacewords: { classes: ["admin","member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null, weight: "read", description: localize("control-plane.declared.interfacewords", ...), fields: { accepts: ["language","v"], requires: [] } },`. Until then 150 impacted files fail on R81 (declared by two owners); with it deleted: 924 of 941 pass; 2 fail, control-plane's own R116/R112 test (asserts the row there) and an R24 screens-words test; plane g83-location/t42/t44-t47 fail as files, cause not examined.
+Module tests 44/44; format, architecture, coverage (21 of 21), ownership 0 failures. Record: build/jobs/T51/translations.md.
+
+## Completion, fix round 10, B6 (TRANSLATIONS #5, session_01Tf5NmNFqYZCzWAek1veTcX, START B6)
+
+**R18 (K5195; amended).** `translationdraft` was served by the module's arm (`translations/index.mjs`, `translationDraft`, the route at `:810`) and sent by screens-settings' translations page, but undeclared (the census's undeclared list). Cause: `DECLARED_OPS` had the other four ops, not this one. Now (`bio-plane/src/translations/index.mjs:824-827`, the first row of `DECLARED_OPS`): `classes` `["admin","member"]`, `machineClasses` `[]`, `mutating` true (to_language writes drafts; to_english its fact, per op-declarations R35), `weight` `caller-owned` and the description as op-grades' `t37` grades and words it (the owner and hand rows must agree; `reversible`, my first choice, failed `DECLARED_OP_DISAGREES` in plane, op-grades and screens-settings), `fields.accepts` `language`, `direction`, `keys`, `key`, `fields.requires` `language`, `direction`. `keys` and `key` are not required: `key` is for to_english only.
+
+**Test.** `bio-plane/test/m/translations/declared-ops.test.mjs`: "R18 translations declares translationdraft: ..." (`:66` onward), naming R18, through `declaredOpHolds` with the door's `translationsOps`. Red before the declaration (the helper threw: no `fields` arrays); green after.
+
+**Results.**
+- Module tests: `bio-plane/test/m/translations/*.test.mjs` 45 of 45 pass (declared-ops 6 of 6).
+- Users named by `impact.mjs origin/tranche/T51 HEAD` (DECLARED_OPS is a shared table, 20 modules, 464 test files): I ran the declaration, translation, op-grades and op-declarations test files and the screens-settings and store-door files, 80 files, 758 tests: 753 pass, 5 fail. The same 5 fail on the tranche tip without my change (run with `bio-plane/src/translations/index.mjs` at `HEAD~1`, the 7 files that hold them). They are not this module's: credentials `rows-ops`, instance-setup `t47`, capture-requests `plane`, screens-settings `connect`, `group`, `identity`, `updates` (R5/R76, R58, R68, R69 ×2). Reported to BOB below.
+- `checks/format.mjs`, `architecture.mjs`, `coverage.mjs` (21 of 21 live ids named), `fixtures.mjs translations --list` (0 failures), `ownership.mjs translations` (3 files changed by translations, 0 failures).
+- `checks/run.mjs /home/user/bio`: 16 findings, none in translations' files. Two groups name translations as the provider and sit in other modules' files: (a) `answer` `interfacewords` in `bio-plane/test/m/interface-shell/harness.mjs:88` (`[op-table interfacewords]`), and `translationdraft` in `bio-plane/test/m/screens-settings/seed-common.mjs:119` and `translations.test.mjs:87` (`[op-table]`): hand-built answers for ops the provider serves. These must be re-pointed to translations' published fixture by the owners (screens-settings, interface-shell). (b) the rest are other modules' (plane, store-assembly, the words check). I did not run `run.mjs` against the tranche tip, so I cannot say these predate this job; my change adds no words (the count is unchanged, no key added) and touches no test file of another module.
+
+**Markers.** None added (`fixtures-own`, `fixtures-generic`): none.
+
+**Deferred.** None.
+
+**REPORT for BOB (other modules).** The 5 failing tests above (on the tranche tip too). The `[op-table]` hand answers at `screens-settings/seed-common.mjs:119`, `screens-settings/translations.test.mjs:87` and `interface-shell/harness.mjs:88` (owners to re-point).
+
+Size (session_01Tf5NmNFqYZCzWAek1veTcX): test runs 7, module lines 4 (`index.mjs`, 4 added; `declared-ops.test.mjs`, 6 added).
+
+## J6 · COMPLETE
+
+COMPLETE, fix round 10 (B6, plan item 95; K5195): R18 met for `translationdraft`.
+
+- Declared in `bio-plane/src/translations/index.mjs` `DECLARED_OPS` (`:824-827`): classes admin and member, no machine class, mutating, weight `caller-owned` (op-grades t37's grade), description as op-grades words it, accepts `language`, `direction`, `keys`, `key`, requires `language`, `direction`.
+- Test: `bio-plane/test/m/translations/declared-ops.test.mjs`, "R18 translations declares translationdraft ..." (red before, green after). R18 named there.
+- Module tests 45 of 45. Users (impact: 80 files run, 758 tests): 753 pass, 5 fail, the same 5 on the tranche tip without my change (credentials rows-ops, instance-setup t47, capture-requests plane, screens-settings connect, group, identity, updates).
+- Checks: format, architecture, coverage, fixtures (0), ownership (0) green. run.mjs: 16 findings, none in translations' files; the two `[op-table]` hand answers for translations' ops (screens-settings seed-common.mjs:119, translations.test.mjs:87; interface-shell harness.mjs:88) are for their owners to re-point to translations' published fixture.
+- Markers added: none. Deferred: none.
+- Size and record: build/jobs/T51/translations.md, section "fix round 10, B6".
+
+## Completion, fix round 10, Wave A: `interfacewords`'s words answer published (TRANSLATIONS #6, session_01KFtq9Cm6EqDrBRK4KzWp2Y, START B7; K5217, K5202)
+
+**What changed.**
+- `bio-plane/test/m/translations/fixtures.mjs:24-37` (new export `interfaceWordsAnswer({ language })`): the real `interfacewords` answer through `frame` (the op route the control plane's door meets), for two readers: `default`, a member who reads no language (the shell's English, so no word held), and `other`, a member who reads `language` after one real adoption of an ordinary word (shown at once, R5). Each call boots a fresh world over the ai-accounts test world (an earlier module, `build/modules.json` 39, so importable here); nothing is stored. The default answer is taken before the adoption, so the stamp moves between the two (R20).
+- `bio-plane/test/m/translations/fixtures.mjs:3-6`: imports `assert`, `frame`, the ai-accounts world and `interfaceWords` for the fixture.
+- `bio-plane/test/m/translations/fixtures.test.mjs` (new test, R8 R19 `interfaceWordsAnswer answers the real op ...`): the default member holds `words: []` with `language: null`; the other member holds exactly the adopted word, `{key, text: "Algo", en, fallback: false}`, `language: "es"`; a second call's answer is equal and a separate object (control).
+- No source change under `bio-plane/src/translations/`; no `fixtures-own` or `fixtures-generic` marker added.
+
+**Failing first, then green.** Red before the export existed: `TypeError: interfaceWordsAnswer is not a function`. Green after the fixture was added (2 of 2).
+
+**Break once.** The test's expected text was broken to `"Otro"`: 1 pass, 1 fail (red). Restored to `"Algo"`: 2 pass, 0 fail (green).
+
+**Ran** (absolute root `/home/user/bio`):
+- `node --import ./bio-plane/test/platform-sqlite.mjs --test bio-plane/test/m/translations/*.test.mjs`: 46 tests, 46 pass, 0 fail, exit 0.
+- `node /home/user/civicos-process/checks/fixtures.mjs /home/user/bio translations --list`: 0 failures; the two lines left at `fixture.mjs:78` and `:85` (`accepted(store-replies)`, the `store-door` contract, waiting for store-door, later in the order) are the `// fixtures-contract` markers from B5, named there, not new.
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs translations`: 0 failures. `checks/coverage.mjs translations`: 21 of 21 live ids named, 0 failures.
+- `checks/ownership.mjs ... $(git merge-base origin/tranche/T51 HEAD) HEAD`: 1 file changed by translations, 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding in `bio-plane/src/translations/` or `bio-plane/test/m/translations/`. Words count: 19247 (no word added by this round).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected (the change adds a fixture and its test only; no source changed).
+
+**Branch.** Recreated `job/T51/translations` from `origin/job/T51/translations` as B7 directs (the old local branch kept as `stale/translations-local`), then merged `origin/tranche/T51` into it. Nothing reset or forced.
+
+**Deferred.** None.
+
+**Found in another module (REPORT to BOB).**
+- `bio-plane/test/m/interface-shell/harness.mjs:88` still hand-builds an `interfacewords` answer (`ok({ ok: true, language: null, words: [] })`, the op-table of the run's findings: `[op-table interfacewords] ... -> translations (earlier)`). It is interface-shell's to re-point to `interfaceWordsAnswer` from this module's `fixtures.mjs` (its R5, R7, R10, R82, R84, R103 frame tests). Not edited here.
+- `checks/run.mjs` also shows hand-built `translationdraft` answers at `bio-plane/test/m/screens-settings/seed-common.mjs:119` and `translations.test.mjs:87` (op-table `translationdraft`, which is this module's op, R18). Whose to re-point: screens-settings. Not edited here.
+- The `checks/run.mjs` run shows findings in `store-assembly` (`src/store-assembly/wiring.mjs:78`, `wizards.mjs:51`) and interface-shell's `harness.mjs:88`. None are in translations' files.
+
+**Stale generated artifacts.** None from this round (no source of a bundle's input changed; `bio-plane/dist/bio-plane.bundled.mjs` holds no fixture).
+
+**Size (session_01KFtq9Cm6EqDrBRK4KzWp2Y): test runs 6, module lines 1027** (`bio-plane/src/translations/*.mjs`; this round's diff is 24 and 19 added lines in the two fixture files).
+
+## J7 · COMPLETE
+
+COMPLETE, START B7 (K5217): `interfacewords`'s words answer is published in translations' `fixtures.mjs` as `interfaceWordsAnswer({ language })`: the real op=interfacewords answer through `frame`, for a member in the default language (no word held, the shell's English) and one who reads another (the one adopted word, shown, with its English), each over a fresh world, never stored.
+
+Changed (job pushed, 21308b38e6): `bio-plane/test/m/translations/fixtures.mjs:24-37` (the fixture, and imports at :3-6); `bio-plane/test/m/translations/fixtures.test.mjs` (new test, R8 R19; control: a second call is equal and a separate object). No source change; no fixtures-own or fixtures-generic marker added.
+
+Failing first: red (interfaceWordsAnswer is not a function), then green. Break once: the expected text broken, red (1 fail); restored, green.
+
+Ran (root /home/user/bio): module suite 46/46 pass; fixtures check 0 failures (the two store-door contract lines at fixture.mjs:78, :85 are B5's, waiting on store-door); format 0; architecture 0; coverage 21 of 21; ownership 0; run.mjs no finding in translations' files, words count not risen; impact 0 of 178 (no source changed).
+
+REPORT, other modules (not edited here): (1) interface-shell `bio-plane/test/m/interface-shell/harness.mjs:88` still hand-builds an `interfacewords` answer; to re-point to `interfaceWordsAnswer` (its R5, R7, R10, R82, R84, R103 frame tests). (2) screens-settings `seed-common.mjs:119` and `translations.test.mjs:87` hand-build `translationdraft` answers (translations' op, R18); screens-settings to re-point.
+
+Deferred: none. Record: build/jobs/T51/translations.md, section "Completion, fix round 10, Wave A". Size (session_01KFtq9Cm6EqDrBRK4KzWp2Y): test runs 6, module lines 1027.
+
+## Completion, fix round 10, B8 (TRANSLATIONS #7, session_013fsGnfsXmN9WkNCN2pULce, START B8; K5222)
+
+**What changed.**
+- `bio-plane/test/m/translations/fixtures.mjs:38-53` (new export `translationDraftAnswer({ direction })`): the real `translationdraft` answer (R16, R18) for a reachable assistant (the group's account, `on`), over a fresh world each call, never stored. `to_language` by a granted member asks for the words still missing in `es` (the first 100, in order); `to_english` by an administrator reads back the one kept protected word.
+- `bio-plane/test/m/translations/fixtures.test.mjs` (new test, R16 R18): the real answer is `ASSISTANT_DRAFT_UNAVAILABLE` with its `check`, the words to draft, `offered_official: []`, a to_english answer for one kept word, and a second call equal but a separate object (control). Failing first: `translationDraftAnswer is not a function`. Break once (expected reason set to `AI_KEPT_AWAY`): 2 pass, 1 fail (red); restored: 3 pass, 0 fail (green).
+- No source change; no `fixtures-own` or `fixtures-generic` marker added.
+
+**The success answer does not exist on the real path (file:line).** B8 asks for the draft recorded by `translationDraftRecord` after the door's agent-worker step (`store-door/dispatch.mjs:510-517`). That step is not built: `translationdraft` in `store-door/dispatch.mjs:510-517` runs only `translationDraftRefusal` and `assistantFor` (account and keep-away), then returns `translations.translationDraft(...)`, and nothing in `store-door` calls `translationDraftRecord` or agent-worker's `/draft`. `translations/index.mjs` `translationDraft` (its end, the `draftUnavailable` return) always answers `ASSISTANT_DRAFT_UNAVAILABLE` after the gates, the same as `wizard-scripts/index.mjs:1539` for `writinghelp`. So no real path can record a draft, and I published what the real op answers instead, as B8 directs. No `AGENT_WORKER` double was needed: none is called on this path.
+
+**Results.**
+- Module suite `bio-plane/test/m/translations/*.test.mjs`: 47 tests, 47 pass, 0 fail.
+- `checks/format.mjs`: 178 modules, 0 failures. `checks/architecture.mjs translations`: 0 failures. `checks/coverage.mjs translations`: 21 of 21 live ids named, 0 failures. `checks/words.mjs translations`: 0 failures (words 19247, not risen).
+- `checks/fixtures.mjs /home/user/bio translations --list`: 0 failures; the two `fixture.mjs:78` and `:85` lines (`accepted(store-replies)`, store-door's run) are B5's, waiting on store-door.
+- `checks/ownership.mjs`: 1 file changed by translations, 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding in translations' files; the two `[op-table translationdraft]` findings are screens-settings' hand-built answers (`seed-common.mjs:119`, `translations.test.mjs:87`), for screens-settings to re-point to `translationDraftAnswer` (this module's op, R18).
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 0 of 178 modules affected (fixture and test only).
+
+**Markers.** None added. **Deferred.** None.
+
+**REPORT for BOB.** (1) screens-settings `seed-common.mjs:119` and `translations.test.mjs:87` hand-build the `translationdraft` answers; screens-settings owns the re-point to `translationDraftAnswer`. (2) The door's agent-worker step for `translationdraft` is not built (`store-door/dispatch.mjs:510-517`); when it lands, the success answer (`translationDraftRecord`) needs its own fixture. Owed by BOB's plan, not this job.
+
+Size (session_013fsGnfsXmN9WkNCN2pULce): test runs 6, module lines 1027 (`bio-plane/src/translations/*.mjs`, unchanged; this round's diff is 45 added lines in the two fixture files).
+
+## J8 · COMPLETE
+
+COMPLETE, START B8 (K5222): translationdraft's real answer is published in translations' fixtures.mjs as translationDraftAnswer({ direction }) (bio-plane/test/m/translations/fixtures.mjs:38-53), made over a fresh world each call; test fixtures.test.mjs (R16, R18), red on a wrong reason, green restored. Commit 3f7757ea23 on job/T51/translations.
+
+The success answer is not on the real path: store-door/dispatch.mjs:510-517 never calls translationDraftRecord or agent-worker's /draft; translations/index.mjs translationDraft always answers ASSISTANT_DRAFT_UNAVAILABLE after the gates (as wizard-scripts/index.mjs:1539 for writinghelp). So the fixture publishes that real answer with the words to draft; no AGENT_WORKER double was needed.
+
+Results: module suite 47/47; format 0; architecture 0; coverage 21 of 21; words 0; fixtures --list 0 failures (the two fixture.mjs:78/:85 store-door contract lines are B5's); ownership 0; impact 0 of 178. No marker added (fixtures-own, fixtures-generic: none). Deferred: none.
+
+REPORT: screens-settings seed-common.mjs:119 and translations.test.mjs:87 hand-build translationdraft answers; screens-settings to re-point to translationDraftAnswer. The door's agent-worker draft step is unbuilt; a success-answer fixture waits on it.
+
+Size (session_013fsGnfsXmN9WkNCN2pULce): test runs 6, module lines 1027.

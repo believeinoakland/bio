@@ -6,10 +6,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { interfacePage, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
+import { OPS, BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
-import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
+import { groupName, open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, COPY, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
+const GROUP = await groupName();
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["screens-publish"];
@@ -66,7 +67,7 @@ test("R10 an empty read is drawn empty, never failed: no drafts, no comments, no
     assert.ok(main(p).querySelector('[data-state="empty"]'), path);
     assert.equal(main(p).querySelector('[data-state="failed"]'), null, path);
   }
-  const q = await open(`/app/review-copy/${P}`, { plane: { reviewcomments: ok({ comments: [] }) } });
+  const q = await open(`/app/review-copy/${P}`, { plane: { reviewcopy: ok(COPY({ comments: [], statement_acknowledgements: null })) } });
   assert.ok(!drew(q, "screen.review-copy.comments"), "R20: a section that holds nothing is not drawn");
   assert.equal(q.root().querySelector('[data-state="failed"]'), null);
 });
@@ -109,11 +110,19 @@ test("R10 (interface-shell R21) the nine registry screens, each drawing exactly 
   for (const s of SCREENS) {
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
-    assert.deepEqual(s.acts.map((a) => a.op).sort(), reg.acts.map((a) => a.op).sort(), s.id);
+    /* op-declarations R76: the registry keeps an act done in the browser alone as `owed:<act> DEC-330`; the table names it for the screen */
+    const browser = (op) => Object.hasOwn(BROWSER_ACTS, op) && BROWSER_ACTS[op].screen === s.id;
+    /* an act the registry holds as `owed:<op> <ref>` is the op itself once its owner declares it (FR-30: `casedetails`, `casedetailsset`) */
+    const owed = (op) => { const m = /^owed:(\S+)/.exec(op); return m && Object.hasOwn(OPS, m[1]) ? m[1] : op; };
+    const named = reg.acts.map((a) => (Object.entries(BROWSER_ACTS).find(([, b]) => b.screen === s.id && b.registry === a.op) || [owed(a.op)])[0]);
+    assert.deepEqual(s.acts.map((a) => a.op).sort(), named.sort(), s.id);
     for (const a of s.acts) {
-      assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
-      assert.equal(a.label, `act.${a.op}.label.${s.id}`);
+      assert.ok(browser(a.op) ? !Object.hasOwn(OPS, a.op) : Object.hasOwn(OPS, a.op), `${a.op} is a browser act or in OPS`);
+      /* the design keys an act the registry holds as `owed:<op> <ref>` under that owed name, whether the op is declared yet or not */
+      const owedRow = reg.acts.some((x) => String(x.op).startsWith(`owed:${a.op} `));
+      assert.equal(a.label, browser(a.op) || owedRow ? `act.owed_${a.op}.label.${s.id}` : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
+      if (browser(a.op) || owedRow) assert.ok(s.words.includes(`act.owed_${a.op}.does`), `${a.op}: its explanation listed`);
     }
     assert.ok(Object.isFrozen(s) && typeof s.render === "function" && typeof s.reads === "function");
   }
@@ -145,18 +154,24 @@ test("R24 what each screen draws is the word's text read through setup-words, fi
   const draws = [
     [`/app/case-editor/${P}`, {}, [["screen.case-editor.ladder"], ["screen.case-editor.leavesout"], ["screen.case-editor.ack.by", { who: "mai" }]]],
     [`/app/review-copy/${P}`, {}, [["screen.review-copy.heading", { case: "The Coliseum lease", edition: "2" }], ["screen.review-copy.share"]]],
-    [`/app/ceremony/${P}/${DR}`, {}, [["screen.ceremony.permanent"], ["screen.ceremony.heading", { case: "The Coliseum lease", edition: "2" }]]],
-    [`/app/published/${C}`, { session: null }, [["screen.published.howtoread"], ["screen.published.whose", { group: "River Town" }], ["published.check.title"], ["published.check.field.help"]]],
+    [`/app/ceremony/${P}/${DR}`, {}, [["screen.ceremony.heading", { case: "The Coliseum lease", edition: "2" }]]],
+    [`/app/published/${C}`, { session: null }, [["screen.published.howtoread"], ["screen.published.whose", { group: GROUP }], ["published.check.title"], ["published.check.field.help"]]],
     ["/app/imported/IMP-2026-0001", {}, [["screen.imported.findings"], ["screen.imported.result.part"]]],
     [`/app/docket/${P}/${C}`, {}, [["screen.docket.order"], ["screen.docket.sub", { case: C }]]],
-    ["/app/doorbell", { session: null }, [["screen.doorbell.heading", { group: "River Town" }], ["screen.doorbell.happens.court"]]],
-    ["/app/review", { session: null, hash: "#grant=" + GRANT_SECRET }, [["screen.review-outside.heading", { group: "River Town" }], ["screen.review-outside.comments.go"], ["review.statement.title"], ["review.statement.note.help"]]],
+    ["/app/doorbell", { session: null }, [["screen.doorbell.heading", { group: GROUP }], ["screen.doorbell.happens.court"]]],
+    ["/app/review", { session: null, hash: "#grant=" + GRANT_SECRET }, [["screen.review-outside.heading", { group: GROUP }], ["screen.review-outside.comments.go"], ["review.statement.title"], ["review.statement.note.help"]]],
   ];
   for (const [path, boot, keys] of draws) {
     const p = await open(path, { boot });
     for (const [k, vars] of keys) assert.ok(drew(p, k, vars), `${path}: ${k}`);
   }
   assert.throws(() => word("screen.published.whose", {}), (e) => e.code === "WORD_VAR_MISSING", "control: a word missing a fill is no word");
+  /* R70 (fix round 2, C48): only the Sign step says that publishing makes the edition permanent */
+  const signing = await open(`/app/ceremony/${P}/${DR}`, { boot: { idb: await keptKey() } });
+  assert.ok(!drew(signing, "screen.ceremony.permanent"), "R70: not before the edition is prepared");
+  tick(signing, "ce-tie", "yes");
+  await press(signing, "publish", { reason: "r" });
+  assert.ok(drew(signing, "screen.ceremony.permanent"), "R70: the Sign step says it");
 });
 
 /* K3171 (JOURNEY-CHECK #1 J4 (2)): a screen whose subject is absent from its address sends no subject read and draws
@@ -197,7 +212,7 @@ test("R24 no word is drawn with a placeholder left unfilled on any screen, in th
   await press(ready, "publish", { reason: "r" });
   seen.push(["ceremony prepared and signing", ready]);
   const shared = await open(`/app/review-copy/${P}`, { plane: { reviewgrant: ok({ grantId: "GRT-2", draftId: DR, recipient: "Ana", secret: GRANT_SECRET }), publishpreflight: ok({ steps: [{ publish_at: { zone: "America/Los_Angeles" } }] }) } });
-  await press(shared, "reviewgrant", { values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
+  await press(shared, "reviewgrant", { reason: "so the reader can comment before publication", values: { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-30" } });
   seen.push(["review-copy with the reader's link", shared]);
   const first = await open(`/app/case-editor/${P}`, { plane: { casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: DR, case: { case_id: C, edition: 1, identity: "The Coliseum lease" }, created_by: "dev" }] }) } });
   seen.push(["case-editor, a first edition", first]);

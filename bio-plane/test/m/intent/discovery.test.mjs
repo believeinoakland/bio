@@ -4,6 +4,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { INTENT_CHECKS } from "../../../src/intent/index.mjs";
 import { seeded, V, MACHINE, DAY } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { disposeAct } from "../inquiry/fixtures.mjs";
 
 /* Two entities missing the same required stage of `proc`: one progression proposal carrying both instances. */
 async function withProposals() {
@@ -48,7 +50,7 @@ test("R15 R22 (DEC-149, T35-51) a second registration of a source answers SOURCE
   const w = seeded();
   assert.equal(w.i.registerSource("monitoring", () => []).ok, true);
   const again = w.i.registerSource("monitoring", () => []);
-  const words = "This source of proposals is already registered. A source registers once, when your group's Civicsmith starts.";
+  const words = word("refusal.SOURCE_DECLARED");
   assert.deepEqual([again.ok, again.reason, again.code, again.check, again.translation],
                    [false, "SOURCE_DECLARED", "SOURCE_DECLARED", "C-111.24", words]);
   assert.equal(INTENT_CHECKS.SOURCE_DECLARED.translation, words, "the row carries the same sentence");
@@ -146,7 +148,8 @@ test("R17 a question surfaced by a machine that no member acted on within the ag
   assert.equal(fm.state_history.at(-1).author, "plane:intent");
   assert.deepEqual(w.calls.selections.map((s) => [s.ids, s.owner, s.kind]), [[["INQ-2026-0001"], "plane:intent", "enumerated"]]);
   assert.deepEqual(w.calls.dispose.map((d) => [d.handle, d.to, d.reason, d.owner, d.author]),
-                   [["sel-1", "deferred", "surfaced by an assistant; no member acted within 30 days", "plane:intent", "plane:intent"]]);
+                   [[w.calls.handles[0], "deferred", "surfaced by an assistant; no member acted within 30 days", "plane:intent", "plane:intent"]]);
+  assert.equal(w.calls.handles.length, 1, "one selection, the real retrieval's own handle");
   for (const id of ["INQ-2026-0002", "INQ-2026-0003", "INQ-2026-0004"]) assert.equal(w.fm(id).current_state, "surfaced", id);
   for (let n = 1; n <= 5; n++) assert.ok(w.record.head(`INQ-2026-000${n}`), "nothing is deleted");
   /* the interval is an instance setting */
@@ -216,7 +219,9 @@ test("R27 ageDue answers the earliest ageing instant of any ageable question, pa
   w.record.setSetting("intent_ageing_days", 30, V("alice"));
   /* a question R17 tried and could not move stays due, tried again at a later firing, and is never woken for */
   const dispose = w.stand.inquiry.dispose;
-  w.stand.inquiry.dispose = () => ({ ok: false, reason: "HELD_ELSEWHERE" });
+  const refusal = disposeAct({ to: "no-such-state" }).done;   // inquiry's real BAD_TARGET_STATE
+  assert.equal(refusal.ok, false);
+  w.stand.inquiry.dispose = () => refusal;
   const r = await w.i.ageSurfaced(T);
   assert.deepEqual(r.aged, []);
   assert.deepEqual(r.refused.map((x) => x.id), ["INQ-2026-0001-question"]);

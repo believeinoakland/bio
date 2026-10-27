@@ -16,6 +16,8 @@ import { acceptDatetime } from "../../../src/capture-sources/memento.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { registeredHomes } from "../provenance/fixtures.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 export const H = (hex) => hex.padEnd(64, "0").slice(0, 64);
@@ -39,28 +41,39 @@ export function storage() {
   return s;
 }
 
-/* An evidence bucket stand-in (the R2 binding's shape), recording every call. */
+/* An evidence bucket stand-in (the R2 binding's shape), recording every call. As R2 does, an object put with a `sha256` is
+   reported by `head` and `get` with the checksum it was verified by (`checksums.sha256`, bytes), unless a test sets
+   `checksums = false` to stand for a store that gives none. */
 export function bucket() {
-  const held = new Map(), calls = [];
-  const obj = (k) => { const b = held.get(k); return { key: k, size: b.length, body: b,
-    arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
+  const held = new Map(), sums = new Map(), calls = [];
+  const obj = (k, b) => { const sum = b.checksums !== false && sums.get(k); return { key: k, size: held.get(k).length, body: held.get(k),
+    ...(sum && b.checksums !== false ? { checksums: { sha256: sum } } : {}),
+    arrayBuffer: async () => held.get(k).buffer.slice(held.get(k).byteOffset, held.get(k).byteOffset + held.get(k).length) }; };
   return {
-    calls, held, failPut: false,
-    async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k) : null; },
-    async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes)); return { key: k }; },
-    async delete(k) { calls.push(["delete", k]); held.delete(k); },
+    calls, held, failPut: false, checksums: true,
+    async head(k) { calls.push(["head", k]); if (!held.has(k)) return null; const o = obj(k, this); return { key: k, size: o.size, ...(o.checksums ? { checksums: o.checksums } : {}) }; },
+    async get(k, o) { calls.push(o ? ["get", k, o] : ["get", k]); if (!held.has(k)) return null;
+      const full = obj(k, this);
+      if (o && o.range) { const part = held.get(k).slice(o.range.offset, o.range.offset + o.range.length); return { ...full, body: part, arrayBuffer: async () => part.buffer.slice(part.byteOffset, part.byteOffset + part.length) }; }
+      return full; },
+    async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes));
+      if (opts && typeof opts.sha256 === "string" && /^[0-9a-f]{64}$/.test(opts.sha256)) sums.set(k, Uint8Array.from(Buffer.from(opts.sha256, "hex")).buffer); else sums.delete(k);
+      return { key: k }; },
+    async delete(k) { calls.push(["delete", k]); held.delete(k); sums.delete(k); },
   };
 }
 
 /* host-governor's R1–R14 as the store reaches them, each call recorded; `refuse` names hosts to refuse and `held`
    hosts cooling off. */
 export function governor({ refuse = [], held = [] } = {}) {
-  const calls = [];
+  const calls = [], granted = {};
   return {
-    calls, configured: [],
-    governorAdmit({ host }) { calls.push(["admit", host]); return refuse.includes(host)
-      ? { admitted: false, reason: "cooling_off", retry_in_ms: 5000 } : { admitted: true, wait_ms: 0, appetite_per_min: 12 }; },
+    calls, granted, configured: [],
+    /* R29: a `peek` answers as the admission would and writes nothing; any other admission that is granted books one grant */
+    governorAdmit({ host, peek = false }) { calls.push([peek === true ? "peek" : "admit", host]);
+      if (refuse.includes(host)) return { admitted: false, reason: "cooling_off", retry_in_ms: 5000 };
+      if (peek !== true) granted[host] = (granted[host] || 0) + 1;
+      return { admitted: true, wait_ms: 0, appetite_per_min: 12 }; },
     governorReport(r) { calls.push(["report", r.host, r.status, r.retry_after_ms]); return { recorded: true }; },
     governorConfig(c) { this.configured.push(c); return { configured: true, ...c }; },
     isHeld(host) { calls.push(["isHeld", host]); return held.includes(host); },
@@ -73,26 +86,54 @@ export function governor({ refuse = [], held = [] } = {}) {
    parts its home's document names (R6). `captureGrade` answers as R24, R25, R26 and R59 state for the vias recorded. */
 export function provenance({ registered = [], acquired = [], sql = null, homes = {}, named = {}, heldAt = {} } = {}) {
   const receipts = [], holds = [];
+  /* `homeOf` and `registerHolds` are provenance's own (R4, R6) over provenance's own real world (its `registeredHomes` fixture): a home the
+     test names in `homes` (or `registered`) is registered when the chain is next asked, by really promoting a bundle that carries a register
+     document; a receipt is recorded with the real provenance too */
+  let real = registeredHomes();
+  let synced = new Map(), created = new Set(), alias = {};
+  const sync = () => {
+    const want = [...Object.entries(homes), ...registered.filter((r) => !homes[r]).map((r) => [r, null])];
+    /* a capture named in `homes` again under another bundle starts the real world over, with the receipts recorded so far */
+    if (want.some(([s, b]) => synced.has(s) && synced.get(s) !== b)) {
+      real = registeredHomes(); synced = new Map(); created = new Set(); alias = {};
+      for (const r of receipts) if (r.addressNorm && r.captureSha) real.provenance.recordReceipt(r);
+    }
+    const groups = new Map();
+    for (const [s, bundleId] of want) {
+      if (synced.has(s)) continue;
+      const k = bundleId ?? `INFO-2026-${String(synced.size + groups.size + 1).padStart(4, "0")}-registered`;
+      groups.set(k, [...(groups.get(k) ?? []), { sha: s, declared: bundleId }]);
+    }
+    for (const [bundleId, captures] of groups) {
+      /* a bundle already promoted takes no more captures from this fixture: the later ones are promoted in a bundle of their own, named back below */
+      const realId = created.has(bundleId) ? `${bundleId}~${created.size}` : bundleId;
+      if (realId !== bundleId) alias[realId] = bundleId;
+      created.add(realId);
+      const r = real.many(realId, captures);
+      if (r.ok !== true) throw new Error(`fixture provenance: ${bundleId}: ${JSON.stringify(r)}`);
+      for (const c of captures) synced.set(c.sha, c.declared);
+    }
+  };
+  const named_ = (h) => (h && alias[h.bundleId] ? { ...h, bundleId: alias[h.bundleId] } : h);
   const vias = (s) => [...new Set(receipts.filter((r) => r.captureSha === s).map((r) => r.via || "direct"))];
   const p = {
     receipts, holds, homes, named, heldAt,
     recordReceipt(r) {
       receipts.push(r);
+      if (r.addressNorm && r.captureSha) real.provenance.recordReceipt(r);
       if (sql && r.addressNorm && r.captureSha)
         sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved)
                   VALUES (?,?,?,?,?,?,?) ON CONFLICT DO UPDATE SET observations=observations+1, last_retrieved=excluded.last_retrieved`,
                  r.addressNorm, r.address ?? r.addressNorm, r.captureSha, r.via || "direct", r.retrievalLocator ?? null, r.retrieved, r.retrieved);
       return { recorded: true };
     },
-    registerHolds({ sha: s, bundle = null }) { holds.push(s); return { ok: true, sha: s, asked: true, registered: registered.includes(s),
-      acquired: acquired.includes(s) || receipts.some((r) => r.captureSha === s),
-      ...(bundle ? { parts: named[s] ? { state: "named", parts: named[s] } : { state: "none" } } : {}) }; },
+    registerHolds(a) { holds.push(a.sha); sync(); return { ...real.provenance.registerHolds(a), ...(a.bundle ? { parts: named[a.sha] ? { state: "named", parts: named[a.sha] } : { state: "none" } } : {}) }; },
     /* R12: the bundle's captures with `held_at` (a test names it in `heldAt`, else the earliest receipt's instant) */
     capturesOf(bundleId) {
       return Object.keys(homes).filter((s) => homes[s] === bundleId).sort().map((s) => ({ capture_sha: s,
         held_at: heldAt[s] ?? receipts.filter((r) => r.captureSha === s).map((r) => r.retrieved).sort()[0] ?? null }));
     },
-    homeOf(s) { return homes[s] ? { bundleId: homes[s], path: "data/x", encoding: "binary", bytes: 0, registered: "T", authored: false } : null; },
+    homeOf(s) { sync(); return named_(real.provenance.homeOf(s)); },
     captureGrade(s, depth = 0) {
       const v = vias(s);
       if (v.includes("direct")) return { grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured" };
@@ -127,7 +168,7 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
   const state = { outcomes: [], reach: new Map(), sessions: new Map(), day: null, render: { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 },
                   slots: new Map(), admits: [], spends: [], validators: new Map(), actors: [], events: [], limits: new Map(),
                   assets: new Map(), siteRecords: [], links: [], emitted: [], sessionSaves: [], sessionDrops: [],
-                  captured: [], clockMs: null, recordFails: false };
+                  captured: [], late: [], clockMs: null, recordFails: false };
   const today = (at) => (at || stamp()).slice(0, 10);
   const dayOf = (at) => { const d = today(at); if (state.day !== d) { state.day = d; state.render = { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 }; } return state.render; };
   return {
@@ -147,14 +188,14 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
     sourceReachability({ addressNorm }) {
       const r = state.reach.get(addressNorm);
       if (!r) return { address_norm: addressNorm, known: false, consecutive_failures: 0, governed_refusals: 0, fallback_eligible: false,
-                       basis: "no attempt on this address has ever been recorded" };
+                       basis: word("capture.basis.attempt_address_ever") };
       const eligible = r.consecutive_failures >= failures;
       return { address_norm: addressNorm, known: true, ...r, fallback_eligible: eligible,
-               basis: eligible ? `${r.consecutive_failures} consecutive failures produced by the source, threshold ${failures}` : "not eligible: the threshold is not met" };
+               basis: eligible ? word("capture.basis.consecutive_failures_produced", { consecutive_failures: String(r.consecutive_failures), failures: String(failures) }) : word("capture.basis.eligible_threshold_met") };
     },
-    /* capture R22 */
+    /* capture R22; as capture's own does (capture R22, K5205), a handed `at` (milliseconds) is the instant the session is saved at */
     saveCaptureSession(s) { state.sessionSaves.push(s); const cur = state.sessions.get(s.session);
-      const now = state.clockMs ?? Date.now();
+      const now = s.at != null ? Number(s.at) : (state.clockMs ?? Date.now());
       state.sessions.set(s.session, { ...s, ticks: cur ? cur.ticks + 1 : 1, created: cur ? cur.created : stamp(now), updated: stamp(now),
                                       expires: stamp(now + (Number(s.ttlMs) || 3600000)) });
       return { session: s.session, saved: true, ticks: cur ? cur.ticks + 1 : 1 }; },
@@ -173,9 +214,12 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
       if (!state.captured.some((c) => c.captureSha === captureSha && c.question === question && c.by === by)) state.captured.push({ captureSha, question, by, at });
       return { recorded: true };
     },
-    loadCaptureSession({ session }) { const s = state.sessions.get(session);
+    /* as capture's does (R22): a session past its hour is pruned on the way past, so it is not found */
+    loadCaptureSession({ session }) { const now = stamp(state.clockMs ?? Date.now());
+      for (const [k, x] of state.sessions) if (x.expires < now) state.sessions.delete(k);
+      const s = state.sessions.get(session);
       return s ? { session, found: true, locator: s.locator, primarySha: s.primarySha, primaryFile: s.primaryFile, base: s.base, ticks: s.ticks, state: s.state }
-               : { session, found: false, note: "no such capture session: it either never existed, was already finished, or expired" }; },
+               : { session, found: false, note: word("capture.note.capture_session_either") }; },
     dropCaptureSession({ session }) { state.sessionDrops.push(session); state.sessions.delete(session); return { session, dropped: true }; },
     /* capture R39–R40: the concurrency cap first, then the day's account; a reservation held until spent. */
     renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null }) {
@@ -208,6 +252,8 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
       return v && (v.etag || v.lastModified) ? { etag: v.etag, lastModified: v.lastModified } : null; },
     /* capture R69 */
     recordCaptureActor(a) { state.actors.push(a); return { recorded: true }; },
+    /* capture R68 (T51; C12): a co-attestation that ended after the capture was answered, recorded when it ends */
+    recordLateAttestations(a) { state.late.push({ ...a, recordedAt: Date.now() }); return { recorded: true }; },
     /* capture R15: one event per (kind, capture). */
     async taskEnqueue(e) {
       if (!state.events.some((x) => x.kind === e.kind && x.captureSha === e.captureSha)) state.events.push(e);
@@ -242,12 +288,12 @@ export function world({ env = {}, gov = {}, provOpts = {}, prov = undefined, fai
   core.migrate();
   for (const t of PROVENANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
   const g = governor(gov);
+  const mem = membership({ admins });
   const p = prov === undefined ? provenance({ sql: s.sql, ...provOpts }) : prov;
   const att = attestationOf(host, { record: core, provenance: p, signingKey, instanceName: "inst" });
   const store = captureStore({ core, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9", ...env }, gov: g, prov: p, failures });
   store.attestation = att;
   /* acquisition's own instance over the same storage (R38–R41, R43), handed in as `store.acquisition` (capture R73's form) */
-  const mem = membership({ admins });
   const acq = acquisition ? acquisitionOf(host, { record: core, provenance: p, membership: mem }) : null;
   if (acq) store.acquisition = acq;
   return { s, b, core, gov: g, prov: p, att, store, acq, mem, host, rows: (q, ...a) => s.sql.exec(q, ...a),
@@ -273,11 +319,25 @@ export function network(routes) {
   return { seen, attest, restore() { globalThis.fetch = orig; } };
 }
 
-/* One acquisition over a scripted network; a member session unless `o` says otherwise. */
+/* One acquisition over a scripted network; a member session unless `o` says otherwise. R20 (fix round 3, C12): the answer does
+   not wait for co-attestation, which goes on after it, so the scripted network stays up until the attempt a pending answer names
+   has been recorded against the capture (capture R68), unless `o.settle` is false: then the answer carries `settled()`, which a
+   test that times the answer awaits when it is done. The other keys of `o` are `acquire`'s. */
 export async function run(w, routes, body, o = {}) {
+  const { settle = true, ...opts } = o;
   const net = network(routes);
-  try { const r = await acquire(w.store, body, { cls: "member", member: true, sessMember: "m1", storeName: "bio", ...o }); return { ...r, net }; }
-  finally { net.restore(); }
+  const had = w.store.state.late.length;
+  try {
+    const r = await acquire(w.store, body, { cls: "member", member: true, sessMember: "m1", storeName: "bio", ...opts });
+    const pending = !!(r.body && r.body.document && Array.isArray(r.body.document.attestation_attempts)
+      && r.body.document.attestation_attempts.some((a) => a && a.pending === true));
+    const settled = async () => {
+      for (let i = 0; pending && i < 3000 && w.store.state.late.length === had; i++) await new Promise((x) => setTimeout(x, 10));
+      net.restore();
+    };
+    if (settle) { await settled(); return { ...r, net }; }
+    return { ...r, net, settled };
+  } catch (e) { net.restore(); throw e; }
 }
 export async function lookup(w, routes, args) {
   const net = network(routes);
@@ -324,4 +384,10 @@ export async function eligible(w, addr = "https://gone.example/doc") {
 export function rendererEnv(answer) {
   const calls = [];
   return { calls, RENDERER: { fetch: async (u, init) => { calls.push(JSON.parse(init.body)); return new Response(JSON.stringify(typeof answer === "function" ? answer() : answer)); } } };
+}
+
+/* R122: the door promotes what a call files, so each filed member of an archive has a home; a test that runs the daemon over an archive after a
+   call that filed members, with no door in between, states that promotion here (a member with no home is offered again, R122 (2)). */
+export function promoteFiled(w) {
+  for (const r of w.rows("SELECT sha256 FROM archive_entries WHERE state='filed' AND sha256 IS NOT NULL")) w.prov.homes[r.sha256] ??= "INFO-door";
 }

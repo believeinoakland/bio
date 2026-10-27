@@ -14,6 +14,7 @@ const { DISPATCH_CHECKS } = await import("../../../src/answer-envelope/checks.mj
 /* A store whose purge route and reader record what reached them. */
 function store({ namespace = "bio", held } = {}) {
   const log = { routes: 0, asked: [] };
+// fixtures-own: input a route map handed to the door under test; the purge route only counts that it ran
   const s = { namespace: () => namespace, routes: () => ({ purge: () => { log.routes++; return { ok: true, scope: "all" }; } }),
               membership: () => null };
   if (held !== undefined) s.purgeHeld = (a) => { log.asked.push(a); return typeof held === "function" ? held(a) : held; };
@@ -86,6 +87,7 @@ test("R4: only `op=purge` is held — every other route runs without the reader 
   /* purge with no route in the map: unknown op, nothing asked */
   assert.deepEqual((await go(s, "purge")).json, { ok: false, error: "unknown op: purge" });
   assert.equal(asked.length, 0);
+// fixtures-own: input a route map handed to the door under test; the purge route only counts that it ran
   s.routes = () => ({ purge: () => ({ ok: true }) });
   assert.equal((await go(s, "purge")).status, 409);
   assert.equal(asked.length, 1);

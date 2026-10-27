@@ -2,14 +2,17 @@
    the frame and from first paint, the paths of `elsewhere` and `updates`, T48's re-points, the two stylesheets and the
    undefined class refused, the phone frame, the guide's marks in the title row, no zero and no slug, absence and a
    refusal's own words, fields and rows as designed, More as rows, and the rungless acts' marks. */
+import { frameAnswers } from "./frame-answers.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { interfacePage, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { ADMIN_SCREENS } from "../../../src/wizard-scripts/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
-import { boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
+import { fitSend, boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
+import { inWorld, bootAs, obligations } from "./world.mjs";
 import { documentOf } from "./dom.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { ALL, HELD } from "./screens.fixture.mjs";
@@ -77,7 +80,7 @@ test("R54 the paths of the screens PR #34's registry adds are mock-shell.js' PAT
 });
 
 test("R55 (amended by R73) the one op a screen needs that the registry does not list stays a named re-point: stepsourcewithdraw on explore; control: a screen naming another unlisted op still throws", () => {
-  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"] });
+  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"], document: ["readheld", "resolve"], person: ["linecurrentthrough"], setup: ["factconfirm"], question: ["leggrade"], queue: ["signerknown"] });
   const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
   assert.equal(checkScreens([r("explore", "stepsourcewithdraw")]), true);
   assert.ok(interfacePage([r("explore", "stepsourcewithdraw")]).length > 1000, "served");
@@ -101,7 +104,7 @@ test("R56 the page links civicsmith.css and then shell.css, both before its own 
   for (const [c, reader] of Object.entries(HOOK_CLASSES)) assert.ok(typeof reader === "string" && reader.length > 10, c + " names what reads it");
   /* the shell's own program draws only defined classes */
   const defined = stylesheetClasses(ASSET_FILES["civicsmith.css"].body, ASSET_FILES["shell.css"].body, styleOf(html));
-  const shellOwn = classLiterals(/<script[^>]*>([\s\S]*)<\/script>/.exec(interfacePage([]))[1]);
+  const shellOwn = classLiterals(interfaceScript([]));
   for (const c of shellOwn) assert.ok(defined.has(c) || Object.hasOwn(HOOK_CLASSES, c), c);
   assert.ok(shellOwn.size > 30);
 });
@@ -112,8 +115,9 @@ test("R56 class literals: written classes are taken, every one of a class attrib
   assert.deepEqual([...stylesheetClasses("/* .nope */ .x{background:url(a.b.png)} .y .z:hover{content:\".q\"} @media (max-width:760px){.w{}}")].sort(), ["w", "x", "y", "z"]);
 });
 
+const FRAME_ANSWERS = await frameAnswers();
 test("R57 the working frame is the design's page: at the phone width the masthead shows icons only (the mark and the group's name, search, the explanation control, the avatar), each label kept as its accessible name, and the tabs are drawn last inside the frame, which is fixed-height; control: at 1280 px the labels are drawn and the tabs hidden by the stylesheet", async () => {
-  const p = await boot({ screens: ALL, phone: true, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  const p = await boot({ screens: ALL, phone: true, plane: { ...FRAME_ANSWERS, assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const frame = p.root().querySelector(".cs-frame");
   assert.ok(frame.classList.contains("cs-frame") && frame.getAttribute("data-frame") === "working");
   const mast = frame.querySelector(".cs-mast");
@@ -136,7 +140,7 @@ test("R57 the working frame is the design's page: at the phone width the masthea
   assert.match(style, /#cs-root>\.cs-frame\{[^}]*flex:1 1 auto[^}]*overflow:hidden/);
   assert.match(style, /#cs-root>\.cs-frame>\.cs-main\{overflow:auto/);
   /* control: at 1280 px the labels are drawn, and civicsmith.css hides the tabs outside its 760 px query */
-  const q = await boot({ screens: ALL, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
+  const q = await boot({ screens: ALL, plane: { ...FRAME_ANSWERS, assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const m2 = q.root().querySelector(".cs-mast");
   assert.equal(m2.querySelector(".mk-mastsearch").textContent, word("shell.search"));
   assert.equal(m2.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"));
@@ -190,20 +194,25 @@ test("R59 the guide's marks are drawn inside the screen's title row, after its h
 });
 
 test("R60 the masthead never draws a count at zero, never the group's slug (\"Your group\" when groupidentity answers no display_name), and names the explanation level by its own words; control: a set name is drawn", async () => {
-  const p = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "FINDING" }] }), groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
+  const { world, me } = await inWorld();
+  const slug = (await me.read("groupidentity")).group;
+  assert.equal((await me.read("groupidentity")).display_name, null, "the world's team is unnamed");
+  const p = await bootAs(world, me, { screens: ALL });
   const mast = p.root().querySelector(".cs-mast");
   assert.equal(mast.querySelector('[data-kind="todo"]'), null, "zero To-do items draw no count");
   assert.ok(!mast.textContent.includes("0"));
   assert.equal(mast.querySelector(".mk-grp").textContent, word("shell.group.unnamed"));
-  assert.ok(!p.root().innerHTML.includes("river-town"), "no slug anywhere the shell draws");
-  assert.ok(!p.doc.title.includes("river-town"), "nor the page's title");
+  assert.ok(!p.root().innerHTML.includes(slug), "no slug anywhere the shell draws");
+  assert.ok(!p.doc.title.includes(slug), "nor the page's title");
   assert.equal(mast.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"), "R76: the button names itself and its setting");
   await p.click('[data-shell="level"]');
   assert.equal(p.root().querySelector('.cs-mast [data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.pause"));
   /* control: a set name is drawn, and a count above zero */
-  const q = await boot({ screens: ALL });
-  assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, "River Town");
-  assert.equal(q.root().querySelector('.cs-mast [data-kind="todo"]').textContent, "2 to do");
+  const name = (await me.act("groupnameset", { body: { name: "River Town" } })).display_name;
+  const items = await obligations(world, me, 3);
+  const q = await bootAs(world, me, { screens: ALL });
+  assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, name);
+  assert.equal(q.root().querySelector('.cs-mast [data-kind="todo"]').textContent, word("shell.todo", { n: items.length }));
 });
 
 test("R61 absence: a subject read refused with an absence code draws only Nothing is here, with the way back to its place; a subject screen opened with no subject likewise, reading nothing; a refusal with its own words draws them alone; a failure without words draws could not be read with its reference; control: a 5xx still draws can't be reached", async () => {
@@ -298,11 +307,11 @@ test("R63 R69 the phone's More page heads with screen.more.sub and lists the pla
   }
 });
 
-test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark and its explanation only: Sign in, Search, Start a project, Capture and Mute each draw theirs; control: Search still runs on press, and a weighed act carries its weight, not a mark", async () => {
-  const cases = [["front", "login"], ["finder", "search"], ["home", "promote"], ["capture", "acquire"], ["queue", "queuemute"]];
+test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark and its explanation only: Sign in, Search, Capture and Mute draw theirs (Reversible: none above it), a Terminal-marked act its mark; control: Search still runs on press, and a weighed act carries its weight, not a mark. (fix round 2, C76) Start a project is marked Reasoned and asks nothing, so it draws no mark", async () => {
+  const cases = [["front", "login"], ["finder", "search"], ["capture", "acquire"], ["queue", "queuemute"], ["connect", "subscriptiondisconnect"]];
   for (const [id, op] of cases) {
     assert.ok(Object.hasOwn(MARKS, op), op + " in MARKS");
-    const s = { id, reads: () => ({}), acts: [{ op }], render: fn(`return cs.act("${op}");`) };
+    const s = { id, reads: () => ({}), acts: [{ op, send: fitSend(op) }], render: fn(`return cs.act("${op}");`) };
     const p = await boot({ screens: [s], path: "/app/" + id, plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "create_projects", "publish"] }) } });
     const b = btn(p, op);
     assert.ok(b, op);
@@ -315,7 +324,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
       continue;
     }
     assert.equal(w.getAttribute("data-mark"), String(MARKS[op]).toLowerCase(), op);
-    assert.equal(w.textContent, MARKS[op], op + ": the weight's own name");
+    assert.equal(w.textContent, word("weight." + String(MARKS[op]).toLowerCase() + ".name"), op + ": the weight's own name, read by key");
     assert.ok(w.textContent.length > 3, op + " named");
     assert.ok(b.getAttribute("data-tip").includes(w.textContent + ":"), op + " explained");
     await p.click(b);
@@ -323,7 +332,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
     assert.equal(p.byOp(op).length, 1, op + " runs on press");
   }
   /* control: a weighed act carries its weight */
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release", send: fitSend("release") }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
   assert.equal(btn(q, "release").querySelector(".w").hasAttribute("data-mark"), false);
   assert.equal(btn(q, "cite").querySelector(".w"), null, "R77: a Reversible act draws no weight");

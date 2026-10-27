@@ -1,28 +1,27 @@
 # office-readers — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078). Last changed T51 (T51-6: R34 new, a document's own title in `metadata`; N1202; K3627); marked not yet met (T51). Last changed T51 (csv split: the csv entry, its dialect, typed cells, large-text arm and the sheet-cell/sheet-range builders moved to `csv-reader`; K624, K531, K617, K3268, K4523); R11's csv bound note moved with it. Fix round 6 (T51): R11 amended, the xlsx entry's sheets carry `lineRows` (G15; K4579). Fix round 9 (T51; G124c, G125d, G128e, G131e, G131g, G133c, G133d, G134; K4831 (7), K4834, K4837): R12, R30, R37 amended (the figures from the table; dates typed, reversing R30's rule; a point read bounded by a window), R36 and R37 moved to Provides, R38-R45 new (every part kind a unit, character references, the one decode, a linear walk, streamed digests, retained objects, omitted table cells); marked not yet met (T51).
 
 ## Public
 
 ### Purpose
 
-Reads DOCX, PPTX, XLSX and CSV bytes into `format-registry`'s I7 entry contract:
+Reads DOCX, PPTX and XLSX bytes into `format-registry`'s I7 entry contract:
 detection, the I2 structure shape (links with IC-1 element references, and the DEC-5
 evidentiary envelope) and the I2 text shape. It also exports the per-container
 element-reference builders that `odf-reader` reuses so its OpenDocument entries emit
 byte-identical reference shapes for the same kinds. It holds no record, reads nothing
-beyond the bytes it is handed, and writes nothing.
+beyond the bytes it is handed, and writes nothing. CSV is `csv-reader`'s; `csv.mjs` stays here only as a one-line re-export of its entry (K3268).
 
 ### Provides
 
-Four registry entries, each the shape `format-registry` requires: `format` (a string),
-`detect(bytes, contentType)`, `parts(bytes)`, `structure(partsOrBytes)`, `text(partsOrBytes)`,
-and — `csv` only — `dialect(bytes)`. `structure` and `text` accept either raw bytes or
+Three registry entries, each the shape `format-registry` requires: `format` (a string),
+`detect(bytes, contentType)`, `parts(bytes)`, `structure(partsOrBytes)`, `text(partsOrBytes)`. `structure` and `text` accept either raw bytes or
 `parts()`'s own output, so a caller that already paid for `parts()` does not pay twice.
 
 #### Detection
 
-- **R1** Each entry's `format` is `"docx"`, `"pptx"`, `"xlsx"` or `"csv"`.
+- **R1** Each entry's `format` is `"docx"`, `"pptx"` or `"xlsx"` (csv: moved to csv-reader R1).
 - **R2** `docxEntry`, `pptxEntry`, `xlsxEntry`: `detect(bytes, null)` returns `null` when
   `bytes` has no ZIP local-file-header magic, or has the magic but no readable central
   directory (the acquire-time 1 KiB prefix seam — a bare `PK\x03\x04` sniff never claims
@@ -34,12 +33,7 @@ and — `csv` only — `dialect(bytes)`. `structure` and `text` accept either ra
   returns `{format, confidence:"likely", signals}` when `contentType` exactly equals the
   format's registered content type (`DOCX_CONTENT_TYPE`, `PPTX_CONTENT_TYPE`,
   `XLSX_CONTENT_TYPE`), else `null`.
-- **R3** `csvEntry.detect(bytes, _)` returns `null` for every `bytes` value, always — a CSV
-  has no magic bytes, and the shape a byte signature would need is a shape prose can wear
-  (measured, not assumed: OFFICE-FORMATS.md "CSV"). `detect(null, contentType)` returns
-  `{format:"csv", confidence:"likely", signals}` when `contentType`, case-folded, is
-  `text/csv` or one of the older synonyms `application/csv` /
-  `text/comma-separated-values`; else `null`.
+- **R3** *(retired: moved to csv-reader R2, K4523)*
 
 #### `parts()`
 
@@ -54,18 +48,14 @@ and — `csv` only — `dialect(bytes)`. `structure` and `text` accept either ra
   state all come from it and nothing downstream can proceed without it. Any other part
   (a sheet, `sharedStrings.xml`, `docProps/core.xml`) failing is carried in `undetermined`
   while `ok` stays `true`.
-- **R6** `csvEntry.parts`: `{ok:false, why:"empty_body"}` for zero-length bytes;
-  `{ok:false, why:"decoder_unavailable:<encoding>"}` when the bytes declare (by BOM) an
-  encoding the runtime has no `TextDecoder` for. Otherwise `{ok:true, ...}` always,
-  regardless of what the delimiter or encoding signature could determine — an undetermined
-  dialect is carried on the result, never refused.
+- **R6** *(retired: moved to csv-reader R3, K4523)*
 
 #### `structure()` — the I2 shape
 
-Every entry's `structure()` returns `{ok, container:"docx"|"pptx"|"xlsx"|"csv", links,
+Every entry's `structure()` returns `{ok, container:"docx"|"pptx"|"xlsx", links,
 counts:{anchor,intra,deferred,refused,undetermined}, evidentiary, notes[]}` plus one
 format-specific unit-count field (`paragraphs` for docx, `slides` for pptx, `sheets` for
-xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
+xlsx), or `{ok:false, container, reason}` when `parts` failed. csv's `structure()` is csv-reader R4.
 
 - **R7** Each `links[]` entry is `{partition, wrapper, target, source}`. `partition` is
   `"deferred"` (http/https or a bare relative target) or `"refused"` (every other URI
@@ -96,7 +86,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   `external_workbook`, `multi_sheet_reference`, `no_such_sheet`, `outside_grid`,
   `empty_reference`, `table_part_unreadable:<why>`, `table_element_absent`.
 - **R10** The DEC-5 evidentiary envelope, `evidentiary:{container, kinds, items,
-  undetermined, counts}`, is the SAME shape across every entry:
+  undetermined, counts}`, is the SAME shape across the three entries here (csv-reader R4 states csv's):
   - `docx`: `{kind:"tracked-change", change:"insertion"|"deletion", author, date, text
     (insertion) | superseded (deletion), source}` per `<w:ins>`/`<w:del>`; `{kind:"comment",
     id, author, date, initials, text, source}` per `word/comments.xml` entry;
@@ -118,18 +108,15 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
     whose `state` is `"hidden"` or `"veryHidden"` (read from the small `workbook.xml`, so
     this item is emitted even when the sheet's own part is over the size guard);
     `{kind:"core-properties", ...}` as docx.
-  - `csv`: always `{kinds:[], items:[], undetermined: [] | [guardMarker], counts:{}}` — the
-    format has no relationships, embeds nothing and carries no metadata part, so the zero
-    is a fact about the format and `notes` says so.
+  - `csv`: moved to csv-reader R4.
 
 #### `text()` — the I2 text shape
 
-- **R11** Every entry's `text()` returns `{ok, container, document, undetermined,
+- **R11** Each entry's `text()` returns `{ok, container, document, undetermined, (T51 fix round 6, G15; K4579; amends R11) The xlsx entry's `text()` also carries, on each sheet, `lineRows`: one 1-based row number per line of the sheet's `text`, the same length, in the order of the lines (file order); a row with no readable `r` follows the row before it, and an empty sheet carries `[]`; absent (unknown) when the sheet could not be read. Test: `line-rows.test.mjs`: rows out of order, an empty row, an empty-string row, a styled empty cell and a row with no `r`.
   counts, images}` plus a format-specific per-unit list, or `{ok:false, container, reason}`
   when `parts` failed. `images` (docx/pptx/xlsx) is every image under the format's own
   media directory (`word/media/`, `ppt/media/`, `xl/media/`), content-addressed and
-  exhaustive, or `null` when it could not be walked; csv's `images` is always `[]` (the
-  format has no media directory to have looked in — a zero of the format, not of a walk).
+  exhaustive, or `null` when it could not be walked.
   - `docx`: `document` is `<w:t>` text joined per paragraph, newline-joined across
     paragraphs; `w:delText` (deleted text) is NEVER in it — it lives only in the
     evidentiary `superseded` field; `w:ins` (inserted text) IS in it. `paragraphs` is
@@ -169,15 +156,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
     `usedSheetRange` unit derived from them, or `null` for an empty/unmeasured sheet. A
     `t="s"` cell whose shared-string index cannot be resolved is a stated `undetermined`,
     never an invented string.
-  - `csv`: `document` equals the one sheet's `text`. `sheets` is one entry,
-    `{sheet:0, name:CSV_SHEET_NAME, hidden:false, rows:null, cols:null, usedRows, usedCols,
-    range, text, undetermined}` — `rows`/`cols` are `null` (RFC 4180 fixes no maximum, so
-    there is no bound to state, unlike xlsx's fixed grid). Row 1 is always row 1: no record
-    is consumed, skipped or reinterpreted as a header. An empty field is a measured
-    emptiness (no cell, no undetermined entry), distinct from a field the encoding could
-    not read. Under an undetermined encoding, the grid still stands (delimiters, quotes and
-    line breaks are ASCII); only a field actually holding a byte ≥ 0x80 is `undetermined`,
-    named by its own `sheet-cell` reference with a `null` value — never mojibake.
+  - `csv`: moved to csv-reader R5.
 
 #### The size guard
 
@@ -186,7 +165,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   `word/document.xml` + `word/comments.xml`; pptx: every `ppt/slides/*.xml` +
   `ppt/notesSlides/*.xml`; xlsx: every worksheet part + `xl/sharedStrings.xml`) are summed
   from the ZIP central directory, BEFORE any inflation. Over `MEASURED_OOXML_TEXT_BOUND_BYTES`
-  (20 MiB), text extraction is refused: `text()` returns `document:null` and the guard's own
+  (20 MiB, the table's figure, R35), text extraction is refused: `text()` returns `document:null` and the guard's own
   marker verbatim in `undetermined`, never a silent truncation, and `structure()` skips only
   the parts that needed inflating — the container walk, rels, and any part read directly
   from the small central-directory-adjacent metadata (docx: none extra; pptx:
@@ -200,29 +179,11 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   limit's name where that part's failure is stated today (an `undetermined` link or entry,
   `images:null` with `imagesWhy`, an `active` item with `read:false`), never omitted
   silently.
-- **R13** `csvEntry`: the guard compares the BODY's own byte length (after any BOM), not a
-  declared-uncompressed figure — a CSV has no central directory to sum — against
-  `MEASURED_CSV_TEXT_BOUND_BYTES`. Over the bound, `structure()` and `text()` both carry the
-  guard marker verbatim in `undetermined`; the dialect (R14) still stands, because it is
-  read from the signature window, which is always within the bound.
+- **R13** *(retired: moved to csv-reader R6, K4523)*
 
-#### `dialect()` — csv only
+#### `dialect()` (csv only; moved)
 
-- **R14** `csvEntry.dialect(bytes) -> {encoding, encodingConfidence, encodingSignals,
-  delimiter, delimiterConfidence, delimiterSignals, undetermined:[...]} | null`. This is the
-  SAME computation `structure()`/`text()`'s own `dialect` field uses (one builder), so a
-  dialect read at intake and a dialect read from a later full parse of the same bytes
-  cannot disagree. `encoding`: a BOM decides it at `"certain"`; absent a BOM, no byte ≥ 0x80
-  in the first 1 MiB gives `"us-ascii"` at `"certain"` (not `"utf-8"`: the bytes say
-  something every 8-bit superset decodes identically, which is the narrower true claim);
-  valid UTF-8 in that window gives `"utf-8"` at `"likely"`; otherwise `encoding:null` with
-  `undetermined` including `"encoding_undetermined"`. `delimiter`: exactly one of
-  comma/semicolon/tab/pipe occurring a consistent, non-zero number of times outside quotes
-  across the first 50 complete lines of the signature window gives that delimiter at
-  `"certain"`; two or more equally consistent gives `delimiter:null` with
-  `"delimiter_undetermined_tied"`; none consistent gives `"delimiter_undetermined_none_consistent"`;
-  fewer than 2 complete lines gives `"delimiter_undetermined_too_few_lines"`. Returns `null`
-  when the bytes are empty or their BOM-declared encoding has no runtime decoder.
+- **R14** *(retired: moved to csv-reader R7, K4523)*
 
 ### Reference builders (reused by `odf-reader`)
 
@@ -237,11 +198,8 @@ second copy that could drift.
   table[, cell]}`. `table` is the table's 0-based ordinal in document order (nested tables
   included, counted as they open; a table in an `mc:AlternateContent` branch not read, R11, is not counted); `cell` is A1 notation over the table's own grid,
   included only when given.
-- **R17** `sheetCellRef(sheet, cell) -> {kind:"sheet-cell", ref:"<sheet>!<cell>", sheet, cell}`.
-- **R18** `usedSheetRange(name, usedRows, usedCols) -> {kind:"sheet-range",
-  ref:"<name>!A1:<colLetters(usedCols)><usedRows>", sheet:name, range} | null`. `null` when
-  `usedRows`/`usedCols` are not both positive integers — nothing was measured, or the
-  measured extent is empty; never a range over an unmeasured or empty sheet.
+- **R17** *(retired: moved to csv-reader R10; `formats-xlsx.mjs` re-exports `sheetCellRef`, K4523)*
+- **R18** *(retired: moved to csv-reader R11; `formats-xlsx.mjs` re-exports `usedSheetRange`, K4523)*
 - **R19** `slideShapeRef(slide, shape=null) -> {kind:"slide-shape", ref:"slide <slide>",
   slide[, shape]}`. `slide` is 1-based and equal to the number in `ref`; `shape` is the
   0-based shape-sequence index, included only when the reference genuinely targets a shape.
@@ -249,22 +207,22 @@ second copy that could drift.
 **Range units (reused by `odf-reader`; N27, K279)**
 
 - **R26** `a1Corner(s) -> {col, row} | null`. One A1 corner, both 1-based: one to three letters (read without case; bijective base 26, `A`=1, `ZZZ`=18278), then a row 1–9,999,999 with no leading zero; either `$` marker allowed and ignored; surrounding whitespace trimmed. `null` for anything else: a non-string, a whole row or column, a range, a sheet-qualified reference, row 0. Never throws.
-- **R27** `rangeUnitFor(sheetName, a, b, sheets, grid = null) -> {unit} | {why}`. `a`, `b`: corners as R26 returns them, in any order; `sheets`: the workbook's sheet names; `grid`: the format's bound `{rows, cols}`, or `null` when the format fixes none. `unit` is the `sheet-range` reference (R18's shape and builder) of the rectangle, top-left corner first. The sheet matches exactly, else without case when exactly one sheet answers; the unit carries the workbook's spelling. `why`: `not_a_range_reference` (a corner is not `{col, row}` of positive integers), `no_such_sheet` (no sheet answers, two answer without case, or `sheetName`/`sheets` is not a string/array), `outside_grid` (either corner past `grid` on either axis). Never throws. R9's units are built through it.
+- **R27** `rangeUnitFor(sheetName, a, b, sheets, grid = null) -> {unit} | {why}`. `a`, `b`: corners as R26 returns them, in any order; `sheets`: the workbook's sheet names; `grid`: the format's bound `{rows, cols}`, or `null` when the format fixes none. `unit` is the `sheet-range` reference (csv-reader R11's shape and builder) of the rectangle, top-left corner first. The sheet matches exactly, else without case when exactly one sheet answers; the unit carries the workbook's spelling. `why`: `not_a_range_reference` (a corner is not `{col, row}` of positive integers), `no_such_sheet` (no sheet answers, two answer without case, or `sheetName`/`sheets` is not a string/array), `outside_grid` (either corner past `grid` on either axis). Never throws. R9's units are built through it.
 
 - **R28** `docxRenumbering(documentXml) -> {paragraphs:[{old, new, outer}], runs:[{old, new, outer}], tables:[{old, new}]}`: for a stored docx reading made before N26, every `<w:p>`, `<w:r>` and `<w:tbl>` as the pre-N26 walk numbered it (`old`, 0-based, every branch of `mc:AlternateContent` counted), its index under R11 and R16 (`new`), `null` for one inside a branch not read, with `outer` the new index of the paragraph that holds that `mc:AlternateContent`. Used only by extraction's migration of stored ¶ and table references (N26, layer 4); retired once that migration has run (K747).
 - **R29** `pptxRenumbering(parts) -> {slides:[{slide, shapes:[{old, new}]}]} | null`: `parts` is `pptxEntry.parts(bytes)`'s own result, read synchronously as R28; `null` unless it is `ok`. For a stored pptx reading made before N439, one entry per slide part the reading walked, in deck order and numbered as the reading numbers slides (a slide whose part could not be read is not listed), every shape as the pre-N439 walk numbered it (`old`, 0-based, every branch of `mc:AlternateContent` counted) and its index under R11's pptx arm (`new`), `null` for a shape inside a branch not read. Used only by extraction's migration of stored `slide-shape` references (layer 4); retired once that migration has run, as R28 (K795 (6), K863).
 
 #### Typed cells and office metadata (T33-10)
 
-- **R30** (C:A-3; K1448) `xlsxEntry.text()` and `csvEntry.text()` give each sheet a `cells` list, `[{source, value, type, declared, cached, formula}]`, one per cell holding a value or a formula, in row then column order. `source` is the cell's `sheet-cell` reference (R17). `value` is the cell's stored lexical value exactly as the file holds it (xlsx `<v>`, an inline string's text, or a resolved shared string; a csv field's decoded text), never re-rendered through a binary float, so `0.1` stays `"0.1"`. `type` is one of `number`, `text`, `boolean`, `date`, `time`, `error` (`time` given by `odf-reader` alone), read only from what the file declares (xlsx `t`: absent or `n` number, `s`, `str` and `inlineStr` text, `b` boolean, `d` date, `e` error); a date implied only by a cell's style is not inferred; every csv field is `text`. `declared` is the format's own type token as written (`null` for csv). For a cell carrying `<f>`, `formula` is its text and `cached` its cached `<v>` (`null` when the file carries none), the same pair R10's `formula` item holds; otherwise both are `null`. Nothing is recalculated (R10's rule: a cached value is the file's statement, never this module's computation). A cell whose shared string cannot be resolved, or a csv field under an undetermined encoding (R11), keeps its entry with `value: null` and stays in `undetermined`. Over the size guard (R12, R13) `cells` is `null`, never `[]`. `cells` is the contract `odf-reader` R46 gives `.ods` sheets, field for field.
-- **R31** (B §(d) EVENTS 3; K1505 (11)) `docxEntry.text()`, `pptxEntry.text()` and `xlsxEntry.text()` also carry `metadata`: `{author, lastModifiedBy, created, modified, source: "docProps/core.xml"}`, the core-properties item's `creator`, `lastModifiedBy`, `created` and `modified` (R10) exactly as the part writes them (W3CDTF strings unchanged), each `null` when absent; `metadata` is `null` when there is no readable core part, and the reason is in `undetermined`. It is what the file states about itself, the one source `content` hands `events` for an edit act's author and dates; this module asserts no act (R24). csv's `metadata` is always `null` (the format carries none).
+- **R30** (C:A-3; K1448) `xlsxEntry.text()` gives each sheet a `cells` list, `[{source, value, type, declared, cached, formula}]`, one per cell holding a value or a formula, in row then column order. `source` is the cell's `sheet-cell` reference (R17). `value` is the cell's stored lexical value exactly as the file holds it (xlsx `<v>`, an inline string's text, or a resolved shared string), never re-rendered through a binary float, so `0.1` stays `"0.1"`. `type` is one of `number`, `text`, `boolean`, `date`, `time`, `error` (`time` given by `odf-reader` alone), read only from what the file declares (xlsx `t`: absent or `n` number, `s`, `str` and `inlineStr` text, `b` boolean, `d` date, `e` error); a date implied only by a cell's style is not inferred. *(Replaced by the fix round 9 rule at the end of this requirement.)* `declared` is the format's own type token as written. For a cell carrying `<f>`, `formula` is its text and `cached` its cached `<v>` (`null` when the file carries none), the same pair R10's `formula` item holds; otherwise both are `null`. Nothing is recalculated (R10's rule: a cached value is the file's statement, never this module's computation). A cell whose shared string cannot be resolved keeps its entry with `value: null` and stays in `undetermined`. Over the size guard (R12) `cells` is `null`, never `[]`. `cells` is the contract `odf-reader` R46 gives `.ods` sheets, field for field (`serial` below excepted). csv's cells: csv-reader R8.
+  **Dates typed (fix round 9, G134c; S-11; K4831 (7); reverses the rule above, Bob told).** A cell whose number format, read from the file's `styles.xml` (the built-in date and date-time format numbers and the custom formats that carry date tokens), is a date or date-time format is `type: "date"` although the file declares no date type. Its `value` is the date as ISO 8601 (`YYYY-MM-DD`, with `THH:MM:SS` when the stored number has a time part), computed under the workbook's own date system (1900, or 1904 when the workbook declares it); `serial` is the stored lexical value as the file holds it (`<v>`, `"45413"`), kept beside; `declared` is unchanged. The sheet's `text` and `document` show the ISO date for such a cell, so `2024-05-01` is found in an XLSX as it is in a CSV and an ODS. A cell whose number is outside the dates its system can express, or whose format carries only a time, stays `number` with its lexical value; a `t="d"` cell is already ISO and keeps its value with no `serial`. A cell that is not a typed date has no `serial` key.
+- **R31** (B §(d) EVENTS 3; K1505 (11)) `docxEntry.text()`, `pptxEntry.text()` and `xlsxEntry.text()` also carry `metadata`: `{author, lastModifiedBy, created, modified, source: "docProps/core.xml"}`, the core-properties item's `creator`, `lastModifiedBy`, `created` and `modified` (R10) exactly as the part writes them (W3CDTF strings unchanged), each `null` when absent; `metadata` is `null` when there is no readable core part, and the reason is in `undetermined`. It is what the file states about itself, the one source `content` hands `events` for an edit act's author and dates; this module asserts no act (R24). csv's `metadata` is csv-reader R8's.
 
 #### Active content (T35-9)
 
 - **R32** (K1888) `docxEntry`, `pptxEntry` and `xlsxEntry`: `structure()` and `text()` both
   carry `active`, the same list from one builder: every part of the file that can act when
-  it is opened, found and read, never run. csv's `active` is always `[]` (the format can
-  carry none). One item per finding, in central-directory order of its `part`, and within
+  it is opened, found and read, never run. csv's `active` is csv-reader R8's. One item per finding, in central-directory order of its `part`, and within
   one `.rels` part in that part's order:
   - `{kind:"vba-project", part, read, why, project, modules, autoRun, suspicious, undetermined}` for each
     member whose name's last segment is `vbaProject.bin` (without regard to case), read
@@ -299,7 +257,7 @@ second copy that could drift.
   `structure()` and `text()` with every requirement above unchanged; R4's "discriminated as
   the entry's own format" holds for a twin's `variant` as for the plain row. Their
   `structure()` and `text()` answers carry `variant` (`ooxml.discriminate`'s, e.g.
-  `"docm"`; `null` for a plain file, absent for csv), and their `active` (R32) lists the VBA
+  `"docm"`; `null` for a plain file), and their `active` (R32) lists the VBA
   project. `detect(null, contentType)` also answers `{format, confidence:"likely",
   signals}` for each twin's package content type (`application/vnd.ms-word.document.macroEnabled.12`,
   `application/vnd.ms-word.template.macroEnabled.12`, `application/vnd.ms-excel.sheet.macroEnabled.12`,
@@ -310,9 +268,29 @@ second copy that could drift.
   `application/vnd.ms-powerpoint.addin.macroEnabled.12`), with `format` the twin's.
  
 
-Errors: none of R1–R33 ever throws. A precondition this module cannot verify (bytes that
+- **R34** (T51; N1202; K3627; amends R31) `docxEntry.text()` and `pptxEntry.text()` also carry in `metadata` the key `title`: the core part's `title` (`dc:title`) exactly as the part writes it, so `reading-pipeline` R34 titles the reading from it and the record's lists name the document. When the core part states no title, or one that is empty or only whitespace, `metadata` has no `title` key at all (never `null`, never an invented title, never the file name or a heading of the body); when there is no readable core part, `metadata` is `null` as R31 says and has no title. R31's other keys are unchanged. Test: a docx and a pptx whose `docProps/core.xml` states a title give it in `metadata.title`; control: a core part with no `title` element, with an empty one and with a whitespace-only one gives `metadata` with no `title` key; a file with no core part gives `metadata: null`.
+
+- **R35** (fix round 4b, F7; K4487, K4504; ooxml R35; amends R11, R12, R30) **Large text is read in pieces.** Text over `MEASURED_OOXML_TEXT_BOUND_BYTES` up to ooxml's ceiling is read in pieces by `text()` and `structure()`: xlsx a run of whole rows at a time, docx by the two body walks fed in pieces, pptx a part at a time. The answer is what a small file's would be, except that no typed `cells` are made (`sheets[].cells` and docx `tables[].cells` are `null`), `text()` carries `piecewise` (ooxml `textPlan`'s) and `structure()` notes `text_read_in_pieces`. Over the ceiling the marker is `textPlan`'s `guard`, `final: true`. A part that cannot be read in pieces or is itself over the bound (an xlsx sheet or docx body with no cut in 8 MiB, a pptx slide or notes part, a docx comments part over 20 MiB) is stated `over_size_bound` with `size` and `final: true` (`detail: "piece_unbounded"` where no cut was found) where that part's failure is stated; a part whose CRC or length fails gives no text of it, only the reason. Test: `large-text.test.mjs` (30 MB xlsx, docx, pptx, real packages; read in a worker of 128 MB old space). csv's arm: csv-reader R9.
+
+- **R36** (G41; K4636, K4639, K4642; amends R30, R35, R11's xlsx arm) `xlsxEntry.text(partsOrBytes, opts)` takes an optional `opts.inlineCellsMax`, a number of bytes (the caller's figure; reading-pipeline's 512 KiB, K4646). With it a sheet's `cells` are listed only while the cells of all the workbook's sheets together, as JSON in UTF-8 bytes, are within it; past it every sheet the read walked has `cells: null` and `cells_held: true`, and nothing else about the sheet changes (its text, `lineRows`, extent, counts and `undetermined` are what the whole read gives); over the whole-read bound (R35) `cells` is null and `cells_held` true too. Without the option, or with one that is not a number of at least 0, every cell is listed as R30 says and `cells_held` is never present. A sheet that could not be read has `cells: null` and no `cells_held`. A cell whose declared type is outside the format's list is stated in `undetermined` (`cell_type_unknown`) whether the cells are listed, held or read in pieces. Test: `g41-held.test.mjs`.
+- **R37** (G41; K4636, K4642, K4647) `xlsxEntry.cellsIn(partsOrBytes, {sheet, fromRow, toRow, fromCol, toCol, maxCells})`, an optional slot of the entry (as `dialect` is, format-registry R? unchanged), answers `{ok:true, sheet, cells, rows:{from,to}, next_row?, undetermined}`: the typed cells (R30's shape, made by the same code) of the named sheet (its name, else without case when one answers, or its 0-based position) in rows `fromRow` to `toRow` (to the end of the sheet when absent) and columns `fromCol` to `toCol`, in row then column order, equal to what the whole read lists for them, hidden rows and columns included (R23). A call answers whole rows, at most `maxCells` cells (default 20,000, `CELLS_IN_MAX`; the first row whole if alone it is over); the row that would pass it is left, `next_row` is its number (null when nothing in range remains) and `rows.to` the last row answered. `undetermined` states each cell of the range whose type is outside the list or whose shared string cannot be resolved. The sheet part is inflated in windows and only the rows in range are parsed, rows being taken ascending as the format requires. (Fix round 9, G131e; S-20) A point read does not inflate and CRC-check the whole sheet part on every call: it works from access points the whole read left in the reading, and the bytes it serves for a call at row 700,000 are bounded by the rows asked for and one window, not by the sheet's size or the row's offset. A refusal is `{ok:false, reason}`: `invalid_argument` (with `argument`), `no_such_sheet`, `over_size_bound` (over the streamed ceiling, with `size`, `bound`, `final`), `sheet_unreadable`, or the part's own reason (`crc_mismatch`, `size_mismatch`, ...); it never throws. The shared strings stay one list held whole and the zip's central directory stays whole, both bounded by R12's declared-text guard and the 32 MiB ceiling (ooxml R35), which is what G41 proves; ods, docx and pptx tables keep their cells in the reading (`odf-reader` and `docx.mjs` unchanged; above 1 MiB of reading they meet extraction's guard and are stated refused). Test: `g41-held.test.mjs`. `next_row` is absent when nothing in range remains; rows and columns 1-based and inclusive (K4647).
+
+- **R38** (fix round 9, G134a, G134d; X11; K4831 (7)) **Every part of a document is a unit with its kind.** `docxEntry.text()`, `pptxEntry.text()` and `xlsxEntry.text()` carry `parts`: `[{kind, ref, part, text, hidden?}]`, one per piece of text in the file outside the body's own units, in document order, `ref` the element reference of where it sits (R15-R19, `sheetCellRef` for a sheet note) and `part` the package part it came from. `kind` is one of the closed list `body`, `footnote`, `endnote`, `header`, `footer`, `comment`, `tracked_deletion`, `text_box`, `speaker_note`, `master_text`, `cell_note`: docx footnotes, endnotes, headers, footers, comments, tracked deletions (their deleted text, which stays out of `document`, R11) and text boxes; pptx speaker notes, slide-master and layout text and text boxes, a hidden slide's text marked `hidden: true`; xlsx cell comments (`cell_note`). `document` stays the body's text and the lists R11 describes are unchanged: `parts` adds, never replaces. Text the file holds that is in no unit is a stated `undetermined`, never a reading that says it is whole. Since K4924: each part's `ref` is a non-empty STRING that addresses that piece alone within its `part` (reading-pipeline R47 keeps a `ref` only when it is a string, text-chain R97's `doc-part` arm addresses by `part` and `ref`): a footnote, endnote or comment by its own id (`footnote <id>`, `endnote <id>`, `comment <id>`), a header or footer by its part, a tracked deletion, text box or speaker note by its anchor's reference written as a string (R15-R19's `ref` text) with a run or ordinal where two share it; the anchor's element reference, where it has one, stays beside it as `anchor` (R15-R19's object). No two pieces of one document share (`part`, `ref`). **Amended (fix round 9, G166; K4985):** a text box's words are a piece of kind `text_box` only: the `text_box` part names the paragraphs it holds (`paras`, their indices in the body's `paragraphs`), and those paragraphs are not also body text, so a search finds the box's words once, as `text_box`. Test: a DOCX whose body holds a text box: its words come back as one `text_box` piece and no `body` paragraph (control-plane seam §10). The same holds for a PowerPoint text box whose words a slide's shape text already carries (pptx): one unit, of one kind (K4987). Control: a paragraph outside any box stays body. (Fix round 10, cause 16; K5053) A hidden slide's text is held once: it is one unit, of its kind, marked `hidden: true`, and is not also a second unit of the slide's body; a deck of N texts gives N units. Test: a deck of six slides with notes and a hidden slide: the texts and the units are equal in number, and the hidden slide's is marked.
+- **R39** (fix round 9, G134a) A DOCX or PPTX whose only content in a place is a picture lists the picture (R11's `images`) and states it unread in `undetermined` (`image_unread`, with its `ref`); this module calls no OCR, and the marker is what the pipeline owes OCR for.
+- **R40** (fix round 9, G133c; X12, S-21) A numeric character reference that names no Unicode scalar value (above U+10FFFF, a surrogate, U+0000, digits that do not parse) never makes a read throw, in the body or in any part: the part holding it is stated unreadable in `undetermined` (`{part, why:"char_ref_invalid", final:true}`), the same on every call, and the rest of the document is read.
+- **R41** (fix round 9, G131g; X9; K4628 reversed) Every text part (`word/document.xml`, a notes, comments, header or footer part, a slide, a sheet, shared strings) is decoded through ooxml's `decodeText` (its R36), so a UTF-16 part is read and not found empty; text inside `<![CDATA[ ]]>` in `<w:t>` and its sibling text elements is read; a part decoded with more than 0.5 % replacement characters is stated `partial` in `undetermined` with the count.
+- **R42** (fix round 9, G133d; X6) **Reading a part costs work linear in its size.** The scan of a docx, pptx or xlsx part examines each byte a bounded number of times: `counts.scanned_bytes` is at most 4 times the part's bytes, whatever its shape (an unterminated tag, 40,000 copies of `<a b="`, 20,000 unclosed `<w:comment `, 200,000 `<!x>`). A tag longer than 64 KiB is not a tag: its bytes are text and it is stated in `undetermined` (`tag_over_bound`). `text(partsOrBytes, {yieldNow})` and `structure()` await `yieldNow()` at least every 65,536 tokens when it is a function; the answer is the same without it.
+- **R43** (fix round 9, G125d; X7) An embedded part's or an image's identity (`part`, the sha256) is taken as the member streams through ooxml's `streamMember`, never from the member held whole: the largest buffer held for it is one read window and one inflate chunk, and a member over ooxml's `MEMBER_MAX` or `ARCHIVE_RATIO_MAX` (its R31) is refused before inflation and stated by that name where R12 states a refused part.
+- **R44** (fix round 9, G124c; X2) **What the walk retains is bounded before the walk.** A docx, pptx or xlsx whose body would retain more than the table's office retained-objects figure (250,000 paragraphs, cells and links together) or more decoded characters at once than the table's decoded-characters row is refused before the walk, by name and with its figure: `undetermined` carries `{why:"TOO_MANY_OBJECTS", n, bound, final:true}` (`n` the count reached) or the decoded-characters equivalent, `document` is `null`, and nothing else is read from the body. Both figures are `READ_BOUNDS` rows taken through `boundOf`; the job proposes the decoded-characters figure from its capped child and BOB records it. The shapes the bound answers are one-cell tables, empty paragraphs, hundreds of thousands of tiny paragraphs, hyperlinks and nested tables at equal bytes. (Fix round 10, cause 11a; K5053) The count is made before the part is held whole in memory, not during the walk: a docx or pptx whose body holds more than the figure's 250,000 objects is refused by name with `{n, bound}` however large its part (a part of 19 MiB holding 100,000 one-cell tables included), and the read never uses more than 85 % of the object's cap (R46's margin holds for docx and pptx as for xlsx). The figure 250,000 is unchanged: a document of 200,000 paragraphs is read whole. Test: the shape harness at the 128 MB cap with a docx of a 19 MiB part and 100,000 one-cell tables (refused `TOO_MANY_OBJECTS`) and a docx of 200,000 paragraphs (read whole), each within 85 % of `capFor(128)`.
+- **R45** (fix round 9, G128e; N22) Past `opts.inlineCellsMax` (reading-pipeline's 512 KiB), the cells of a docx table (R11) and of a pptx table are omitted: `tables[].cells` is `null` with `cells_omitted: true` and the statement in `undetermined`; the paragraphs and `document` still carry every cell's text, so the document stays indexed and searchable to its last cell. A held form of those cells is Stage 3's.
+- **R46** (fix round 9, G178; K5006) **A workbook is read within its memory with room to spare.** `xlsxEntry.text()` over a workbook within its bound peaks at most 85 % of the object's cap (`capFor`, runtime-limits): a sheet's text and the document's are not built while the unpacked parts and shared strings they came from are still all held. Test: the shape harness's 150,000-row xlsx (`g41-shape`) peaks at most 85 % of `capFor(128)`, and survives five runs with its process pinned to one core beside three CPU burners. Control: a small workbook answers the same text as before.
+- **R47** (fix round 9, G185; K5011; S-15-S-18) **XLSX cells as the file states.** A shared formula's dependents carry their own formula text; a row or cell with no `r` is placed by its position; a styled empty cell does not extend the used range (office R11); `mergeCells` is read and a covered cell stated as covered. Test: each case.
+- **R48** (fix round 9, G186; K5020; CORPUS #1's F1) **A workbook whose rows and cells carry no `r` is read whole.** The `r` attributes of a row and a cell are optional: a sheet that omits them takes its rows and columns from the order the file states them (each row the one after the last, each cell the column after the last), so its used range, its `sheet-range` unit and its cells are what a referenced copy of the same sheet gives, never a null range or an empty reading. Test: plane's `g124f-bounds.test.mjs` "G124f finding F1" (1,000 narrow rows with no `r`), C07 and C08 (1,048,576 and 1,048,577 rows) read through the reading as a referenced copy reads, or refused with size and limit as R46's bound states.
+
+Errors: none of R1–R45 ever throws. A precondition this module cannot verify (bytes that
 are not this format, a value `recognise`-style helpers were not asked to check) is answered
 as a stated `undetermined`/`ok:false`, never an exception and never a guess.
+- **R49** (fix round 10, cause 21 (b); K5056, K4630; as `csv-reader` R22) **A workbook wider than its format's grid is refused whole.** An xlsx sheet whose used range is more than 16,384 columns wide is refused whole, stated with the count and the limit in the form of R6's marker with `metric:"columns"`, never read on with an `outside_grid` note; a sheet of exactly 16,384 columns is read. Test: an xlsx of 10 rows and 16,385 columns is refused with `{metric:"columns", size:16385, bound:16384}`; control: 16,384 columns read.
 
 ## Private
 
@@ -321,14 +299,17 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 - `subresources`: `linkWrapper` (`.deferred`, `.refused`, `.anchor`, `.intra`) — the one
   path every outbound/internal link record is classified and wrapped through, so the same
   four partitions apply across HTML, PDF and the office formats without re-derivation.
-- `ooxml`: the OOXML/ODF container primitives — `hasZipMagic`, `readContainer`, `readPart`,
+- `runtime-limits`: `boundOf` and `statement` (its R29-R31), for every ceiling this module keeps (R12, R35, R44), with no numeric literal for one (K4835 (1)).
+- `test-support`: `docgen`, `sheetgen`, `zipChunks64` and their truth (its R19, R21-R24), for the tests at the platform's shape.
+- `ooxml`: `decodeText` (its R36) and `streamMember` for R41 and R43, and the container primitives — `hasZipMagic`, `readContainer`, `readPart`,
   `normalizePartName`, `discriminate` (the full magic + parts + declared-content-type
   discrimination), `walkRels`/`parseRels`/`relsPartFor`, `sizeGuard` and
   `declaredTextBytes` with the measured bound `MEASURED_OOXML_TEXT_BOUND_BYTES`,
   `CORE_PROPERTIES_PART`/`readCoreProperties`, `withContainerImages`, and (T35-9)
   `readVbaProject` with `VBA_AUTORUN_NAMES`/`VBA_SUSPICIOUS_KEYWORDS` and the limits
-  `MEMBER_MAX`/`ARCHIVE_TOTAL_MAX` (its R30–R33). `csv.mjs` uses
-  only the measured bound constant, not the container walk (it is not a container).
+  `MEMBER_MAX`/`ARCHIVE_TOTAL_MAX` (its R30–R33).
+- `csv-reader`: `sheetCellRef`, `usedSheetRange` (its R10, R11), re-exported by `formats-xlsx.mjs`, and `columnLetters`, `sheetRangeRef` (implementation; `docx.mjs` and `odf.mjs` import them through `formats-xlsx.mjs`); `csv.mjs` re-exports its `csvEntry`.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 
@@ -347,7 +328,7 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 - **R24** This module asserts nothing about MEANING (that judgment belongs to `content`/
   `entities`, through I2) and writes nothing to the record.
 - **R25** No place is named in this module; it holds no jurisdiction-specific behaviour to
-  take from a profile (confirmed by reading all four files: the one match for "Oakland" is
+  take from a profile (confirmed by reading all three files: the one match for "Oakland" is
   a corpus filename cited as measurement evidence in a design comment, not a fact the code
   branches on).
 
@@ -357,15 +338,13 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
   shape and IC-1 element-reference union built from it.
 - `docs/development/OFFICE-FORMATS.md`, the ruled sections: "What each part-map offers",
   "What these formats carry" (the DEC-5 evidentiary extras), "The architectural answer"
-  (the I7 entry shape), "Bounds and the size guard", and "CSV" (BOB #32's design and its
-  measured page, and the unsettled bound stated at DIST-14 above).
+  (the I7 entry shape), "Bounds and the size guard".
 - `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §6, the extent grammar this module's
   reference builders instantiate for the `doc-para`, `doc-table`, `sheet-cell`,
   `sheet-range` and `slide-shape` kinds.
+- K4831 (7) and K4834 (fix round 9): every part of a document read and searchable, each result marked with its kind; Excel date cells typed as dates with the original number kept beside (reverses R30's T33 rule); K4837: the retained-objects and decoded-characters bounds stated by name before the walk (R38, R42, R44).
 - Bob's rulings: DEC-5 (2026-08-01 — surface tracked changes, comments, speaker notes,
-  hidden state and document metadata as evidence; never redact); BOB #32 (2026-09-24 — the
-  CSV entry's design); BOB #33 (2026-09-24 21:55Z, REC-218 — the dialect persisted as
-  `reading.dialect`, read through this module's optional `dialect` slot); K1888
+  hidden state and document metadata as evidence; never redact); K1888
   (2026-10-06, the virus package: the readers' structure check, `build/plan/study-virus-scanning.md`
   §3 A), R32; K1881 with F18 of `build/plan/draft-T35-security-review.md` (a cap and a
   total on every part read), R12.
@@ -384,10 +363,10 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
   2026-07-31 row). That is `content`'s work, through an interface change, not this
   module's: this module's evidentiary envelope is already the shape that kind would read
   from.
-- `columnLetters`, `sheetRangeRef`, `csvCellRef`, `walkDocumentBody`, `walkDocumentTables`,
-  `parseComments`, `walkSlide`, `encodingSignature`, `delimiterSignature`, `walkRecords`,
-  and the `*_CONTENT_TYPE` / `CSV_SHEET_NAME` / `MEASURED_CSV_TEXT_BOUND_BYTES` constants
-  are exported and used only within this module's own four files and their own tests
+- `columnLetters`, `sheetRangeRef`, `walkDocumentBody`, `walkDocumentTables`,
+  `parseComments`, `walkSlide`,
+  and the `*_CONTENT_TYPE` constants
+  are exported and used only within this module's own three files and their own tests
   today — no other module imports them (checked by grep across `bio-plane/src`,
   `docprofile`, `pdf-worker`, `ocr-worker`). They are implementation, not Provides; a job
   promotes one to Provides only once another module actually imports it.
@@ -395,13 +374,13 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
   `sheet-range` unit, a multi-area name skipped with a stated reason) is written above as
   the ruled requirement. The job that meets it should reuse `usedSheetRange`'s shape for
   the emitted unit rather than hand-building a `sheet-range` object a second way.
-- DIST-14's bound question (R11/R13) is not this module's to resolve: the deciding
+- DIST-14's bound question (R11; csv's is csv-reader R6) is not this module's to resolve: the deciding
   measurement needs a deployed plane, which is DIST's act. Until it lands, the bound stays
   `MEASURED_OOXML_TEXT_BOUND_BYTES` reused, and a job on this module should not change the
   figure without a new measurement recorded under `measurements/`.
 - R32's `active` is the office half of the per-capture "active content" list (the PDF half is
   `pdf-reader`'s R36); the threat grade, the members' warning and the assistant's rule
   read it downstream (K1888), so its item shape should stay plain data. The VBA parsing is
-  `ooxml`'s (P6: this module stays near 3,700 lines; the job reports if it would pass about
+  `ooxml`'s (P6: this module is about 3,300 lines (csv moved out, T51); the job reports if it would pass about
   4,000). A test fixture with a VBA project can be any small `.docm` whose olevba report is
   recorded beside it.

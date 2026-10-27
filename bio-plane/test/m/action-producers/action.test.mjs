@@ -7,8 +7,9 @@
    project's active owners, else the administrators: membership R65, R68, R86) are its own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, escalationsAnswer, noEscalations } from "./world.mjs";
 import { WORD } from "./words.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const day = (ms) => iso(ms).slice(0, 10);
@@ -87,7 +88,7 @@ test("R2: one OBLIGATION per checkpoint action-plans answers due, keyed OBLIGATI
     { plan: "PLN-1", project: "PRJ-1", scenario: 1, version: 2, phase: "p1", set_by: "bob", due: day(NOW - 4 * DAY), days_since_due: 4 },
     { plan: "PLN-1", project: "PRJ-1", scenario: 2, version: 1, phase: "p2", set_by: "token:member", due: day(NOW), days_since_due: 0 },
     { plan: "PLN-2", project: "PRJ-H", scenario: 1, version: 1, phase: "p1", set_by: "alice", due: day(NOW - DAY), days_since_due: 1 }];
-  const w = people({ actionPlans: { checkpointsDue: (a) => { asked = a; return { ok: true, items: due, limit: 500, truncated: false }; } } });
+  const w = people({ actionPlans: { checkpointsDue: (a) => { asked = a; return escalationsAnswer(...due); } } });
   const ids = (r) => ofKind(r, "plan-checkpoint-due").map((i) => i.id).sort();
   const bob = w.read("bob");
   assert.deepEqual(asked, { nowMs: NOW }, "K711: checkpointsDue({nowMs}) at the read's instant");
@@ -131,7 +132,7 @@ test("R3: one OBLIGATION per (escalation, proposed edge) escalation answers the 
       instant: iso(NOW - 6 * DAY), age_ms: 6 * DAY, ids: ["RESP-1"], by: "protocol" },
     { id: "ESC-2", project: "PRJ-1", opened_by: "token:member", from: 1, to: 2, stage: "notification", instant: "not an instant",
       ids: [], by: "protocol" }];
-  const w = people({ escalation: { escalationsDue: (a) => { asked = a; return { ok: true, items: due, limit: 500, truncated: false }; } } });
+  const w = people({ escalation: { escalationsDue: (a) => { asked = a; return escalationsAnswer(...due); } } });
   const ids = (r) => ofKind(r, "escalation-stage-proposed").map((i) => i.id).sort();
   const alice = w.read("alice");
   assert.deepEqual(asked, { nowMs: NOW, viewer: "member:alice" });
@@ -146,7 +147,7 @@ test("R3: one OBLIGATION per (escalation, proposed edge) escalation answers the 
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]]);
   assert.deepEqual(it.basis.ids, ["RESP-1"]);
   assert.equal(byId(w.read("olga"))["OBLIGATION::escalation-stage-proposed::ESC-2::2"].age.state, "undetermined");
-  w.fakes.escalation.escalationsDue = () => ({ ok: true, items: [], limit: 500, truncated: false });
+  w.fakes.escalation.escalationsDue = () => noEscalations();
   assert.deepEqual(ids(w.read("alice")), [], "it leaves when the edge is advanced or declined, or the escalation suspended or ended");
 });
 
@@ -226,7 +227,7 @@ test("R5: one OBLIGATION litigation-hold per legal mark action-holds.holdsDue an
   assert.equal(byId(alice)["OBLIGATION::litigation-hold::ACT-2::0"].age.state, "undetermined");
   assert.deepEqual(it.recipients, ["ada", "alice"], "every administrator and the marker (read before ida was added)");
   assert.deepEqual(it.options, [{ id: "actionhold", label: WORD("door.actionhold"), weight: "single" },
-    { id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" },
+    { id: "actionholdrelease", label: word("action-producers.label.record_hold_needed"), weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "both its doors (DEC-113): the hold in place and its release, beside the acts on the action");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");
   assert.equal(it.basis.source, "action-holds.holdsDue"); assert.equal(it.basis.bound.truncated, false);
@@ -337,4 +338,39 @@ test("R8 (DEC-113): one FINDING litigation-hold-released per release action-hold
   w.fakes.actionHolds.holdsReleased = () => { n += 1; return page([{ ...released[0], seq: n }], { truncated: true, cursor: `ACT-1#2#${n}` }); };
   const cut = ofKind(w.read("alice"), "litigation-hold-released");
   assert.equal(n, 20); assert.equal(cut.length, 20); assert.ok(cut.every((i) => i.basis.bound.truncated === true));
+});
+
+test("R26: every item names an action by its title, never its id: the legal-threat, reminder, released-hold and local-fact items; an action with no title is named by the module's fallback", () => {
+  const TITLE = "Comment on the filing rule";
+  const w = people({
+    actionClocks: {
+      remindersDue: () => page([
+        { action: "ACT-1", ord: 0, date: day(NOW + 5 * DAY), basis: "b", text: "response due", on: day(NOW), set_by: "alice", project: "PRJ-1" },
+        { action: "ACT-2", ord: 0, date: day(NOW + 5 * DAY), basis: "b", text: "response due", on: day(NOW), set_by: "alice", project: "PRJ-1" }]),
+      calendarFactsRead: () => ({ ok: true, actions_limit: 500, truncated: false,
+        paths: [{ path: "profile:p/hours/clerk", actions: [{ action: "ACT-1", project: "PRJ-1", created_by: "alice" }] }] }) },
+    actionHolds: {
+      holdsDue: () => page([
+        { action: "ACT-1", ord: 2, note: "a letter threatening suit", marked_by: "alice", marked_at: iso(NOW - DAY), project: "PRJ-1" },
+        { action: "ACT-2", ord: 1, note: "a subpoena", marked_by: "alice", marked_at: iso(NOW - DAY), project: "PRJ-1" }]),
+      holdsReleased: () => page([
+        { action: "ACT-1", ord: 2, seq: 3, released_by: "olga", released_at: iso(NOW - DAY), reason: "settled", placers: ["alice"], restarted: [] },
+        { action: "ACT-2", ord: 1, seq: 4, released_by: "olga", released_at: iso(NOW - DAY), reason: "settled", placers: ["alice"], restarted: [] }]) },
+    localFacts: { factsDue: () => ({ ok: true, unknown: [], absent: [], due: [{ path: "profile:p/hours/clerk", fact: {}, status: "unconfirmed",
+      due: true, why: "w", latest: null, due_from: "2026-08-01" }] }) } });
+  w.run(`UPDATE bundles SET title=?, project='PRJ-1' WHERE bundle_id='ACT-1'`, TITLE);
+  w.run(`UPDATE bundles SET title='', project='PRJ-1' WHERE bundle_id='ACT-2'`);
+  const r = w.read("alice");
+  const of = (kind, action) => r.items.filter((i) => i.kind === kind && (i.subject?.id === action || i.basis?.action === action || i.basis?.actions?.includes(action)));
+  for (const kind of ["action-reminder", "litigation-hold", "litigation-hold-released", "local-fact-due"]) {
+    const [it] = of(kind, "ACT-1");
+    assert.ok(it, `${kind}: the item on the titled action is drawn`);
+    assert.ok(it.summary.includes(TITLE), `${kind}: the summary holds the action's title (${it.summary})`);
+    assert.ok(!it.summary.includes("ACT-1"), `${kind}: and never its id (${it.summary})`);
+  }
+  for (const kind of ["action-reminder", "litigation-hold", "litigation-hold-released"]) {
+    const [it] = of(kind, "ACT-2");
+    assert.ok(it, `${kind}: the item on the untitled action is drawn`);
+    assert.ok(!it.summary.includes("ACT-2"), `${kind}: an action with no title is never named by its id (${it.summary})`);
+  }
 });

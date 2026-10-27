@@ -3,6 +3,7 @@
  * (R1's `unfollow`), and the per-meeting link is a chain whose last row governs. */
 
 export const FOLLOWING_SCHEMA = `
+-- G21 (K4571): body_cursor is a followed body's read in progress (JSON; where the next tick goes on), or its finished read's count.
 -- R1, R7, R9, R10, R20: ONE ROW PER FOLLOW. subject is JSON ({kind, ...}); home the bundle whose project the follow
 -- lives in and its captures land in (null: group-wide); gated JSON for R8 (null: public). A policy watch (R20) has
 -- author '' (none: the group's standing watch, K1727).
@@ -21,7 +22,8 @@ CREATE TABLE IF NOT EXISTS follows (
   ended_by    TEXT,
   last_read   TEXT,
   last_outcome TEXT,
-  ended_reason TEXT
+  ended_reason TEXT,
+  body_cursor TEXT
 );
 
 -- R22: a follow's end date, set at the follow, changed by followEnd or R25's answer; appended with who and when and
@@ -106,6 +108,17 @@ CREATE TABLE IF NOT EXISTS portal_snapshots (
   PRIMARY KEY (follow_id, seq)
 );
 
+-- R10, R17 (G46): a snapshot whose rows JSON is over PORTAL_ROWS_INLINE_MAX holds a marker in portal_snapshots.rows and its
+-- text here in chunks, in order by part; written with its snapshot row in one transaction.
+CREATE TABLE IF NOT EXISTS portal_snapshot_parts (
+  follow_id   INTEGER NOT NULL,
+  seq         INTEGER NOT NULL,
+  part        INTEGER NOT NULL,
+  bundle_id   TEXT,
+  chunk       TEXT NOT NULL,
+  PRIMARY KEY (follow_id, seq, part)
+);
+
 -- R20, R21: every version a policy watch has seen at its address, in the order seen: the policy's own text capture
 -- first (seq 1, its receipt's first retrieval), then each read whose bytes differed from the one before. Never
 -- edited or removed: a later version is a new row beside the earlier ones.
@@ -153,6 +166,7 @@ export const FOLLOWING_TABLES = Object.freeze([
   t("per_meeting_links", { keys: ["bundle_id"], sight: "bundle", version_chain: true }),
   t("per_meeting_captures", { keys: ["bundle_id"], sight: "bundle" }),
   t("portal_snapshots", { keys: ["bundle_id"], sight: "source" }),
+  t("portal_snapshot_parts", { keys: ["bundle_id"], sight: "source" }),
   t("policy_versions", { keys: ["bundle_id"], sight: "source" }),
   t("follow_ends", { keys: [], sight: "group" }),
   t("watch_links", { keys: ["home"], sight: "bundle" }),
@@ -168,4 +182,6 @@ export function migrateFollowing(sql) {
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
   /* R14, R22: a follows table made before T45 gains its ending's reason */
   if (![...sql.exec(`PRAGMA table_info(follows)`)].some((r) => r.name === "ended_reason")) sql.exec(`ALTER TABLE follows ADD COLUMN ended_reason TEXT`);
+  /* G21: a follows table made before the cursor gains it; a body read before it starts its next pass whole */
+  if (![...sql.exec(`PRAGMA table_info(follows)`)].some((r) => r.name === "body_cursor")) sql.exec(`ALTER TABLE follows ADD COLUMN body_cursor TEXT`);
 }

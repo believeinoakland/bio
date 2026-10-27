@@ -131,7 +131,7 @@ test("R3: a principal served by a sign-in explores only while that sign-in accou
   assert.deepEqual(on.opened.map((o) => o.owner), [`project:${PROJ}`]);
   assert.equal(w.calledAs("open")[0].principalClaude, `project:${PROJ}`);
   /* Her own account is that same sign-in, explore at no when the off tick ran: refused here before ai-use is asked. */
-  assert.equal(off.refused, 3, "the group, the project and her own account");
+  assert.equal(off.refused, 3, "the team, the project and her own account");
   assert.equal(w.calledAs("exploreAllowed").some((a) => a.owner === "member:alice"), false);
 });
 

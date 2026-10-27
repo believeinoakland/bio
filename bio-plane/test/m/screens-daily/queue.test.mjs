@@ -2,11 +2,55 @@
    kinds, the words, the due dates, the hints, the note shown once, the grouping by case, and each act an item offers with what
    it sends. Items are in `queue` R6's shape, their options decorated (R17) and their dispositions naming their doors (R12,
    R46). Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
+import "../../sandbox.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { storeWorld } from "../store-request/fixtures.mjs";
 import { open, ok, refused, text, ops, acts, button, press, beside, last, main, screen, word, hasWord, dmy, withScreens } from "./page.mjs";
 import { ADMIN } from "../interface-shell/harness.mjs";
 
+const timeout = { timeout: 300000 };
+const openW = (w, as, path, plane = {}, o = {}) => open(path, plane, { ...w.boot(as), ...o });
+/** A team on the REAL store (store-request's `storeWorld()`): rosa (administrator, owner of both projects), mai (a member, joined to both), ana (a member),
+ *  the projects "Pothole repairs" and "The Coliseum lease", and the team's time zone (a day is read where the team is). */
+async function team(env = {}) {
+  const w = await storeWorld({ env });
+  const rosa = await w.signIn("rosa", { admin: true });
+  const mai = await w.signIn("mai");
+  const ana = await w.signIn("ana");
+  await w.recipes.profiles(rosa, ["oakland-alameda"]);
+  const p1 = await w.recipes.project(rosa, "Pothole repairs"), p2 = await w.recipes.project(rosa, "The Coliseum lease");
+  for (const p of [p1, p2]) { await rosa.act("projectinvite", { query: { projectId: p, handle: "mai" } }); await mai.act("projectjoin", { query: { projectId: p } }); }
+  return { w, rosa, mai, ana, p1, p2 };
+}
+/** A web page "Doc <name>" held in `project` (in the case: a question of the project rests on it), and a check of it asked of `to` by rosa (her To do).
+ *  Answers the document's bundle id. */
+async function todo(w, rosa, to, project, name) {
+  const doc = await w.recipes.page(rosa, "Doc " + name, { project });
+  await w.recipes.question(rosa, project, { title: "About " + name, text: "Is " + name + " so?", legs: [{ target: doc.bundle, role: "supports" }], draw: true });
+  await rosa.act("checkrequest", { body: { target: doc.bundle, member: to.handle, note: "please look at " + name } });
+  return doc.bundle;
+}
+const itemsOf = async (as) => (await as.read("queue")).items;
+const todoOf = (items, name) => items.find((i) => i.kind === "check-requested" && i.subject.title === "Doc " + name);
+/** The world's `queue` answer for `as` with `edit` applied to the list of items (not the muted, answered or set-aside lists): the real items, some shown
+ *  as the page draws what no producer of the store makes (each use says which). */
+const queueAs = (w, as, edit) => async (req) => {
+  const a = await w.boot(as).door(req);
+  const r = a.json && a.json.result;
+  if (r && Array.isArray(r.items) && !req.query.muted && !req.query.answered && !req.query.aside) { r.items = edit(r.items); r.item_count = r.items.length; }
+  return a;
+};
+/** An unsent request by the real acts: an action of `project` (a records request), a letter drafted for it and approved by rosa, not recorded sent. */
+async function unsent(w, rosa, project, title) {
+  const doc = ["---", "object_type: action", "title: " + title, "current_state: active", 'created: "2026-10-01T00:00:00Z"', 'last_updated: "2026-10-01T00:00:00Z"',
+    "action_kind: records_request", "project: " + project, "---", "", "An action.", ""].join("\n");
+  const action = (await rosa.act("actioncreate", { body: { document: doc } })).id;
+  await rosa.act("actionrisktier", { query: { target: action, tier: "1", reason: "a plain request" }, body: { target: action, tier: 1, reason: "a plain request" } });
+  const filing = (await rosa.act("filingprepare", { body: { action, text: "Dear clerk, " + title + "." } })).id;
+  await rosa.act("filingapprove", { body: { filing } });
+  return { action, filing };
+}
 const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
 const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 const ITEMS = [
@@ -14,7 +58,7 @@ const ITEMS = [
     summary: "Ana asked you to check a calculation", detail: "812 of 903 reports", due: day(-1),
     options: [{ id: "cite", label: "Cite" }], disposition: { available: false, instead: "taskresolve" } },
   { id: "FINDING::tension::PROJ-2::x", class: "FINDING", kind: "tension", case: PROJ("PROJ-2", "The Coliseum lease"),
-    subject: { kind: "bundle", id: "INF-8" }, summary: "Two documents give different dates",
+    subject: { kind: "bundle", id: "INF-8" }, summary: "Two filings disagree about the date",
     hint: { matched: "Form 700 against votes", how: "the check matched names", false_alarm_rate: 0.12, false: 3, looked: 25, reason: "a name shared by two people" },
     options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "FINDING::tension::PROJ-2::x", projects: ["PROJ-2"] } },
   { id: "FINDING::newer::1", class: "FINDING", kind: "newer-capture-affects-reference", case: PROJ("PROJ-2", "The Coliseum lease"),
@@ -31,7 +75,7 @@ const ITEMS = [
 ];
 const FEED = { items: ITEMS, item_count: 8, truncated: true };
 const PLANE = { queue: ok(FEED) };
-const mainQueue = (p) => p.byOp("queue").filter((r) => r.query.limit !== "500" && r.query.muted === undefined);
+const mainQueue = (p) => p.byOp("queue").filter((r) => r.query.limit !== "500" && r.query.muted === undefined && r.query.count === undefined); /* the frame's count read (interface-shell R7, sent when the list comes back cut) is not the screen's */
 const itemOf = (p, id) => main(p).querySelectorAll(".cs-row").find((r) => r.querySelectorAll("button[data-act]").some((b) => b.dataset.item === id));
 const opsOf = (row) => row.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
 const UNTITLED = word("queue.source.untitled", { date: "" }).trim();
@@ -123,7 +167,7 @@ test("R2: the three-kinds note is shown once per member on the device", async ()
 test("R3: an item's acts are its options and disposition's doors among the registered acts; any other option is \"Open\", a link to its subject's screen", async () => {
   const p = await open("/app/queue", PLANE, { screens: withScreens("document") });
   assert.deepEqual(opsOf(itemOf(p, "TSK-1")), ["taskresolve"]);
-  assert.deepEqual(opsOf(itemOf(p, "FINDING::tension::PROJ-2::x")), ["proposedispose", "queuemute"]);
+  assert.deepEqual(opsOf(itemOf(p, "FINDING::tension::PROJ-2::x")), ["proposedispose", "proposedispose", "queuemute"], "R68: Dismiss, then Defer");
   assert.deepEqual(opsOf(itemOf(p, "FINDING::newer::1")), ["adoptversion", "keepversion", "queuemute"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::action-reminder::ACT-1::0::d")), ["reminderanswer"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::explore-ask::x")), ["exploreapprove"]);
@@ -153,8 +197,8 @@ test("R3: each act sends its op's body for the item it was drawn on; an act aski
   const snooze = button(p, "queuesnooze");
   const f = snooze.dataset.f;
   assert.equal(snooze.closest("details").querySelector("summary").textContent, word("act.queuesnooze.label.queue"));
-  await press(p, "queuesnooze", { values: { [f + "-until"]: "2026-10-20" } });
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: "2026-10-20" });
+  await press(p, "queuesnooze", { values: { [f + "-until"]: day(3) } });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: day(3) });
   const keep = await press(p, "keepversion");
   assert.deepEqual(last(p, "keepversion").body, { notice: "VN-5" });
   const adopt = button(p, "adoptversion");
@@ -173,30 +217,40 @@ test("R3: each act sends its op's body for the item it was drawn on; an act aski
   assert.ok(keep);
 });
 
-test("R3: forwarding, a project key and a question from a hint, each with its own field, and nothing sent without it", async () => {
-  const items = [
-    { id: "TSK-2", class: "OBLIGATION", kind: "check", case: PROJ("PROJ-1", "Pothole repairs"), summary: "s", options: [{ id: "taskforward" }, { id: "projectkeyset" }, { id: "promote" }] },
-  ];
-  const p = await open("/app/queue", { queue: ok({ items }), promote: ok({ ok: true, bundleId: "INQ-3" }), whoami: ok({ tokenClass: "member", session: true, member: "mai", handle: "mai", capabilities: ["contribute"] }) });
+test("R3: forwarding, a project key and a question from a hint, each with its own field, and nothing sent without it", timeout, async () => {
+  const { w, rosa, mai, p1 } = await team();
+  await todo(w, rosa, mai, p1, "Forward");
+  await todo(w, rosa, mai, p1, "Keys");
+  const real = await itemsOf(mai);
+  const [fwdItem, keyItem] = [todoOf(real, "Forward"), todoOf(real, "Keys")];
+  // The store's check to-do offers none of these three acts (taskforward and promote are doors of a set act or a wizard, a project key the owner's): the two real to-dos
+  // are shown with the options the page draws these fields by.
+  await mai.act("reauth", { body: { password: mai.password } });   // a project's key asks for the password again
+  const offered = (items) => items.map((i) => (i.id === fwdItem.id ? { ...i, options: [{ id: "taskforward" }], disposition: {} } : i.id === keyItem.id ? { ...i, options: [{ id: "projectkeyset" }, { id: "promote" }], disposition: {} } : i));
+  const p = await openW(w, mai, "/app/queue", { queue: queueAs(w, mai, offered) });
   const fwd = await press(p, "taskforward");
   assert.equal(p.byOp("taskforward").length, 0);
   assert.equal(beside(p, fwd), word("screen.queue.fieldfirst"));
   await press(p, "taskforward", { values: { [button(p, "taskforward").dataset.f + "-to"]: "@ana" } });
-  assert.deepEqual(last(p, "taskforward").body, { id: "TSK-2", to: "ana" });
+  assert.deepEqual(last(p, "taskforward").body, { id: fwdItem.id, to: "ana" });
   await press(p, "projectkeyset", { values: { [button(p, "projectkeyset").dataset.f + "-key"]: "sk-ant-x" } });
-  assert.deepEqual(last(p, "projectkeyset").body, { project: "PROJ-1", key: "sk-ant-x" });
+  assert.deepEqual(last(p, "projectkeyset").body, { project: p1, key: "sk-ant-x" });
   assert.equal(last(p, "projectkeyset").url.includes("sk-ant"), false, "the key travels in the body only");
   await press(p, "promote", { values: { [button(p, "promote").dataset.f + "-question"]: "Did the council vote?" } });
   const r = last(p, "promote");
-  assert.equal(r.query.project, "PROJ-1");
+  // R81: the guard (the owner's declaration) takes the package fields only; the project is the file's own line.
+  assert.equal(r.query.project, undefined);
+  assert.deepEqual(Object.keys(r.body).sort(), ["base", "bundleId", "files", "meta", "snapKey"]);
+  assert.match(r.body.bundleId, /^INQ-\d{4}-\d+/, "the id comes from the store (allocid)");
+  assert.match(r.body.files[0].text, new RegExp("\\nproject: " + p1 + "\\n"));
   assert.equal(r.body.meta.object_type, "inquiry");
   assert.equal(r.body.meta.title, "Did the council vote?");
-  assert.match(r.body.files[0].text, /question: "Did the council vote\?"/);
-  assert.ok(r.body.files[0].text.includes("Trigger: " + word("file.trigger.queue", { item: "TSK-2" }) + "\n"), "the session log's trigger is the keyed word, as text");
-  assert.equal(p.location.pathname, "/app/question/INQ-3");
+  assert.match(r.body.files[0].text, /## Question\n\nDid the council vote\?\n/);
+  assert.ok(r.body.files[0].text.includes("Trigger: " + word("file.trigger.queue", { item: keyItem.id }) + "\n"), "the session log's trigger is the keyed word, as text");
+  assert.equal(p.location.pathname, "/app/question/" + r.body.bundleId, "the real store took the package and the page went on to the question");
 });
 
-test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal beside its act; an item resolved or muted leaves the list on the re-read", async () => {
+test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal beside its act; an item resolved or muted leaves the list on the re-read", timeout, async () => {
   const empty = await open("/app/queue", { queue: ok({ items: [] }) });
   assert.ok(text(empty).includes(word("screen.queue.empty")));
   const loading = await open("/app/queue", { queue: { pending: true } });
@@ -204,10 +258,15 @@ test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal besi
   const failed = await open("/app/queue/kind", { queue: (req) => (req.query.sort ? refused("QUEUE_SORT_UNKNOWN", "That sort is not one the queue knows.") : ok({ items: [] })) });
   assert.ok(main(failed).querySelector('[data-state="failed"]'));
   assert.ok(!text(failed).includes(word("screen.queue.empty")));
-  let done = false;
-  const p = await open("/app/queue", { queue: () => ok({ items: done ? ITEMS.slice(1) : ITEMS }), taskresolve: () => { done = true; return ok({ ok: true, id: "TSK-1", status: "resolved" }); } });
+  const { w, rosa, mai, p1 } = await team();
+  await todo(w, rosa, mai, p1, "Work orders");
+  await todo(w, rosa, mai, p1, "Permits");
+  const p = await openW(w, mai, "/app/queue");
+  const first = button(p, "taskresolve").dataset.item;
+  assert.ok(itemOf(p, first));
   await press(p, "taskresolve");
-  assert.equal(itemOf(p, "TSK-1"), undefined, "re-read after the act: the resolved item is gone");
+  assert.equal(itemOf(p, first), undefined, "re-read after the act: the resolved item is gone");
+  assert.ok((await itemsOf(mai)).every((i) => i.id !== first), "the real to-do is resolved");
   const r = await open("/app/queue", { ...PLANE, taskresolve: refused("TASK_NOT_YOURS", "This task is not yours to resolve.") });
   const b = await press(r, "taskresolve");
   assert.match(beside(r, b), /not yours|TASK_NOT_YOURS/);
@@ -240,40 +299,64 @@ test("R13 (DEC-212): the unsent-request item draws \"Pick up where you left off\
   assert.equal(pick.textContent, word("screen.queue.unsent.pickup"));
   assert.equal(row.querySelector('button[data-act="queuesnooze"]').closest("details").querySelector("summary").textContent, word("screen.queue.unsent.keep"));
   assert.ok(row.querySelector('button[data-act="actionmove"]').textContent.startsWith(word("screen.queue.unsent.drop")));
+  assert.ok(row.querySelector('button[data-act="actionmove"]').getAttribute("data-tip").includes(String(word("act.actionmove.here.queue")).replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;")), "the drop explains itself by its queue word (R54)");
   // Control: actionmove is drawn on no other item.
   assert.equal(itemOf(p, "TSK-1").querySelectorAll('button[data-act="actionmove"]').length, 0);
   const other = await open("/app/queue", { queue: ok({ items: [{ ...ITEMS[0], options: [{ id: "actionmove" }] }] }) });
   assert.ok(!ops(other).includes("actionmove"), "an item offering actionmove among its options does not draw it");
 });
 
-test("R13: \"Drop the request\" sends actionmove to abandoned with the member's reason; \"Keep it for later\" snoozes its case to the chosen day", async () => {
-  let gone = false;
-  const p = await open("/app/queue", { queue: () => ok({ items: gone ? [] : [UNSENT] }),
-    actionmove: () => { gone = true; return ok({ ok: true, target: "ACT-9", to: "abandoned" }); }, queuesnooze: ok({ ok: true }) });
+test("R13: \"Drop the request\" sends actionmove to abandoned with the member's reason; \"Keep it for later\" snoozes its case to the chosen day", timeout, async () => {
+  const { w, rosa, p1 } = await team();
+  const [a, b] = [await unsent(w, rosa, p1, "Demand to rescind"), await unsent(w, rosa, p1, "Request the logs")];
+  const real = await itemsOf(rosa);
+  const unsentOf = (x) => real.find((i) => i.kind === "request-unsent" && i.subject.id === x.action);
+  assert.ok(unsentOf(a) && unsentOf(b), "the real queue holds both unsent requests");
+  const p = await openW(w, rosa, "/app/queue");
   const snooze = button(p, "queuesnooze");
-  const b = await press(p, "queuesnooze");
+  const bt = await press(p, "queuesnooze");
   assert.equal(p.byOp("queuesnooze").length, 0, "control: no day, nothing sent");
-  assert.equal(beside(p, b), word("screen.queue.fieldfirst"));
-  await press(p, "queuesnooze", { values: { [snooze.dataset.f + "-until"]: "2026-10-30" } });
-  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: "2026-10-30" });
+  assert.equal(beside(p, bt), word("screen.queue.fieldfirst"));
+  // The first drawn request is dropped (the snooze below holds the case's other one back, so it comes after).
+  const dropped = button(p, "actionmove").dataset.item;
+  const gone = real.find((i) => i.id === dropped);
   await press(p, "actionmove", { reason: "We found the logs online" });
-  assert.deepEqual(last(p, "actionmove").body, { target: "ACT-9", to: "abandoned", reason: "We found the logs online" });
-  assert.equal(itemOf(p, "CONDITION::request-unsent::FIL-3"), undefined, "re-read after the act: the dropped request leaves the list");
+  assert.deepEqual({ ...last(p, "actionmove").query, op: undefined }, { op: undefined, target: gone.subject.id, to: "abandoned", reason: "We found the logs online" }, "the store reads actionmove's fields from the query");
+  assert.ok(!itemOf(p, dropped), "re-read after the act: the dropped request leaves the list");
+  assert.ok((await itemsOf(rosa)).every((i) => i.id !== dropped), "the real action is abandoned");
+  assert.ok(snooze);
+  await press(p, "queuesnooze", { values: { [button(p, "queuesnooze").dataset.f + "-until"]: day(10) } });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: p1, until: day(10) });
   const r = await open("/app/queue", { queue: ok({ items: [UNSENT] }), actionmove: refused("ACTION_NOT_FOUND", "No such action.") });
   const c = await press(r, "actionmove", { reason: "x" });
   assert.match(beside(r, c), /No such action|ACTION_NOT_FOUND/);
 });
 
-test("R18 (queue R19, R20): \"Mute a kind\" sends the case form {case, kinds}: the item's kind for its nearest home case; an item with no case offers the item mute", async () => {
-  const nested = { state: "determined", ungrouped: false, ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs", depth: 2 }, { id: "INQ-4", type: "inquiry", title: "Which streets?", depth: 1 }] };
-  const p = await open("/app/queue", { queue: ok({ items: [
-    { id: "FINDING::tension::1", class: "FINDING", kind: "tension", case: nested, summary: "Two dates", options: [], disposition: {} },
-    { id: "CONDITION::quiet::2", class: "CONDITION", kind: "project-quiet", case: { ungrouped: true, ancestors: [] }, summary: "Quiet", options: [], disposition: {} },
-  ] }), queuemute: ok({ ok: true }) });
+test("R18 (queue R19, R20): \"Mute a kind\" sends the case form {case, kinds}: the item's kind for its nearest home case; an item with no case offers the item mute", timeout, async () => {
+  const { w, rosa, p1, p2 } = await team();
+  // A finding of the second project (a question of the first, concluded, and drawn into the second), and an item in no case (a capture finished with nobody waiting).
+  const doc = await w.recipes.page(rosa, "Source", { project: p1 });
+  const q = await w.recipes.question(rosa, p1, { title: "Which streets?", text: "Which streets are worst?", legs: [{ target: doc.bundle, role: "supports" }], draw: true });
+  await rosa.act("drawquestion", { query: { project: p2, inquiry: q.id, note: "" } });
+  await rosa.act("conclude", { query: { target: q.id, project: p1, reading: "The worst streets are named on the record.", falsifier: "The record shows otherwise." } });
+  const address = "https://records.example.org/minutes-mute.html";
+  w.script(address, async () => new Response("<html><head><title>Minutes</title></head><body><p>The council met.</p></body></html>", { status: 200, headers: { "content-type": "text/html" } }));
+  const asked = await w.recipes.question(rosa, p1, { title: "Asked", text: "What did the council decide?" });
+  await rosa.act("capturerequest", { body: { address, target: asked.id } });
+  await w.door({ url: "/api/?op=capturerequestdrain", init: { method: "POST", headers: { "content-type": "application/json" }, body: "{}" } }, { token: w.env.DAEMON_TOKEN });
+  await w.tick(120_000);
+  const real = await itemsOf(rosa);
+  const finding = real.find((i) => i.kind === "shared-inquiry-concluded-by-another-project"), quiet = real.find((i) => i.kind === "capture-completed-unattended");
+  assert.ok(finding && quiet && quiet.case.ungrouped === true, "the real queue holds a finding and an item in no case");
+  // The store homes this finding under its project; the page's rule reads the ancestor of least depth, so the finding is shown under the question inside the project
+  // (the question the finding is about), as a finding of a case nested in a project is.
+  const project = finding.case.ancestors.find((a) => a.type === "project");
+  const nested = { ...finding, case: { ...finding.case, ancestors: [{ id: q.id, type: "inquiry", title: "Which streets?", depth: 1 }, { ...project, depth: 2 }] } };
+  const p = await openW(w, rosa, "/app/queue", { queue: queueAs(w, rosa, () => [nested, quiet]) });
   await press(p, "queuemute");
-  assert.deepEqual(last(p, "queuemute").body, { case: "INQ-4", kinds: ["tension"] }, "the nearest home case, a question");
+  assert.deepEqual(last(p, "queuemute").body, { case: q.id, kinds: [finding.kind] }, "the nearest home case, a question");
   await press(p, "queuemute", { nth: 1 });
-  assert.deepEqual(last(p, "queuemute").body, { item: "CONDITION::quiet::2" }, "no case: the item");
+  assert.deepEqual(last(p, "queuemute").body, { item: quiet.id }, "no case: the item");
 });
 
 test("R18: control: a to-do offers no mute (queue R31)", async () => {
@@ -284,9 +367,14 @@ test("R18: control: a to-do offers no mute (queue R31)", async () => {
 const UPDATE = (security) => ({ id: "OBLIGATION::update-ready::0.84.0", class: "OBLIGATION", kind: "update-ready", assignee_role: "admin", case: { ungrouped: true, ancestors: [] },
   detail: { version: "0.84.0", date: "2026-10-13", security }, options: [{ id: "updatelater" }], disposition: {} });
 
-test("R19 (DEC-226 (1)): the update to-do is drawn under its own section with its release and date, \"See what changes\" and Not now; the security mark when marked", async () => {
-  // An administrator's act (instance-setup R90): drawn to an administrator's session.
-  const p = await open("/app/queue", { queue: ok({ items: [UPDATE(true), ITEMS[0]] }), updatelater: ok({ ok: true }), whoami: ok({ ...ADMIN, capabilities: ["contribute"] }) });
+test("R19 (DEC-226 (1)): the update to-do is drawn under its own section with its release and date, \"See what changes\" and Not now; the security mark when marked", timeout, async () => {
+  // An administrator's act (instance-setup R90): drawn to an administrator's session. The release is a stored, verified notice newer than the running version
+  // (R88's row: its signature is a release key's, which no act of the world holds), and the to-do, the section and the act are the real store's.
+  const { w } = await team({ VERSION: "0.80.0" });
+  const rosa = await w.signIn("founder");   // the team's founding administrator: the instance setup's administrator
+  w.ctx.storage.sql.exec(`INSERT INTO release_notices (version, date, manifest, security, notes, sig, found_at) VALUES ('0.84.0', '2026-10-13', '{}', 1, '{}', 'sig', '2026-10-12T00:00:00Z')`);
+  assert.ok((await itemsOf(rosa)).some((i) => i.kind === "update-ready"), "the real queue holds the update to-do");
+  const p = await openW(w, rosa, "/app/queue");
   const sec = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("queue.update.section"));
   assert.ok(sec, "its section");
   assert.ok(sec.querySelector("h2").getAttribute("data-tip").length > 10, "explained by queue.update.section_says");
@@ -297,6 +385,7 @@ test("R19 (DEC-226 (1)): the update to-do is drawn under its own section with it
   await press(p, "updatelater", { reason: "Later this week" });
   assert.deepEqual(last(p, "updatelater").body.version, "0.84.0");
   assert.ok(p.byOp("queue").length >= 2, "re-read: when one administrator acts, it leaves on the next read");
+  assert.ok(!(await itemsOf(rosa)).some((i) => i.kind === "update-ready"), "the real to-do has left");
   const plain = await open("/app/queue", { queue: ok({ items: [UPDATE(false)] }) });
   assert.ok(!text(plain).includes(word("updates.ready.security")));
   assert.ok(text(plain).includes(word("queue.update.ready", { version: "0.84.0", date: dmy("2026-10-13") })));
@@ -320,7 +409,7 @@ const SOURCE = (i, kind = "source-modified", title = `Doc ${i}`) => ({ id: `FIND
 
 test("R22: five source-modified items draw one item reading \"5 documents changed at their source\", with the keyed detail, opening the list of its documents, each a reference with its own options", async () => {
   const p = await open("/app/queue", { queue: ok({ items: [1, 2, 3, 4].map((i) => SOURCE(i)).concat([SOURCE(5, "source-modified", null)]) }) });
-  const rows = main(p).querySelectorAll(".cs-row");
+  const rows = main(p).querySelectorAll("section .cs-row");
   assert.equal(rows.length, 1, "one item");
   assert.ok(text(p, rows[0]).includes(word("queue.source-modified.many", { n: "5" })));
   assert.ok(text(p, rows[0]).includes(word("queue.source.detail")));
@@ -328,15 +417,15 @@ test("R22: five source-modified items draw one item reading \"5 documents change
   const list = rows[0].querySelector('details[data-sources="source-modified"]');
   assert.ok(list);
   assert.deepEqual(list.querySelectorAll("li").map((li) => li.querySelector(".cs-card, a.cs-ref").textContent.trim()), ["Doc 1", "Doc 2", "Doc 3", "Doc 4", UNTITLED]);
-  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]').length, 5, "each document with its own options");
-  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]')[4].dataset.finding, "FINDING::source-modified::B-5");
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"][data-to="dismissed"]').length, 5, "each document with its own options (R68: and its Defer)");
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"][data-to="dismissed"]')[4].dataset.finding, "FINDING::source-modified::B-5");
 });
 
 test("R22: control: a single item draws .one; source-removed is its own item; on Home the same items are one item too", async () => {
   const p = await open("/app/queue", { queue: ok({ items: [SOURCE(1), SOURCE(2, "source-removed"), SOURCE(3, "source-removed")] }) });
   assert.ok(text(p).includes(word("queue.source-modified.one")));
   assert.ok(text(p).includes(word("queue.source-removed.many", { n: "2" })));
-  assert.equal(main(p).querySelectorAll(".cs-row").length, 2);
+  assert.equal(main(p).querySelectorAll("section .cs-row").length, 2);
   const h = await open("/app", { queue: ok({ items: [1, 2, 3, 4, 5].map((i) => SOURCE(i)) }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }) });
   assert.ok(inOrderText(h, [word("screen.home.needsgroup"), word("queue.source-modified.many", { n: "5" })]));
   assert.equal(main(h).querySelectorAll("section .cs-row").length, 1);
@@ -346,13 +435,17 @@ test("R28: a to-do names its subject by its title, a reference, and its act by t
   const items = [{ id: "TSK-8", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), summary: "https://example.org/permit.pdf",
     subject: { kind: "bundle", id: "INF-7", title: "Permit application" }, options: [], disposition: { instead: "taskresolve" } },
   { id: "TSK-9", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), summary: "https://example.org/other.pdf",
-    subject: { kind: "bundle", id: "INF-9" }, age: { since: "2026-10-03T00:00:00Z" }, options: [], disposition: { instead: "taskresolve" } }];
-  const p = await open("/app/queue", { queue: ok({ items, item_count: 2 }) }, { screens: withScreens("document") });
-  const [titled, bare] = main(p).querySelectorAll(".cs-row");
+    subject: { kind: "bundle", id: "INF-9" }, age: { since: "2026-10-03T00:00:00Z" }, options: [], disposition: { instead: "taskresolve" } },
+  { id: "TSK-10", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), summary: "Check this one",
+    subject: { kind: "bundle", id: "INF-10" }, age: { since: "2026-10-03T00:00:00Z" }, options: [], disposition: { instead: "taskresolve" } }];
+  const p = await open("/app/queue", { queue: ok({ items, item_count: 3 }) }, { screens: withScreens("document") });
+  const [titled, bare, plain] = main(p).querySelectorAll("section .cs-row");
   assert.equal(titled.querySelector('a.cs-ref[href="/app/document/INF-7"]').textContent, "Permit application");
   assert.ok(titled.querySelector('button[data-act="taskresolve"]').textContent.startsWith(word("act.taskresolve.label.queue")));
   assert.doesNotMatch(text(p), /https?:/);
-  assert.equal(bare.querySelector("a.cs-ref").textContent, word("queue.source.untitled", { date: dmy("2026-10-03") }), "control: a subject with no title draws the untitled word");
+  // C25 (K4437): a subject with no title whose words are the address it came from is named by the one rule: its host and the day, never the file part.
+  assert.equal(bare.querySelector("a.cs-ref").textContent, word("document.untitled.web", { site: "example.org", date: dmy("2026-10-03") }), "no title: the host and the day");
+  assert.equal(plain.querySelector("a.cs-ref").textContent, word("queue.source.untitled", { date: dmy("2026-10-03") }), "control: a subject with no title and no address draws the untitled word");
 });
 
 test("R31: a reply owed by another side whose date has passed is \"no reply recorded\" in a row, never \"overdue\"", async () => {
@@ -370,4 +463,97 @@ test("R34: every key the queue reads is a word of the list; the retired overdue 
   for (const k of screen("queue").words) assert.ok(hasWord(k), k);
   assert.ok(!screen("queue").words.includes("screen.queue.due.overdue"), "DEC-256's retired row");
   for (const k of ["queue.update.section", "action.noreply.title", "file.trigger.queue"]) assert.ok(screen("queue").words.includes(k), k);
+});
+
+// R71, R73, R74: where an item opens. A subject with a screen opens it; a settling kind opens the screen that settles it; the rest draw no Open.
+const opensOf = async (item, o = {}) => {
+  const p = await open("/app/queue", { queue: ok({ items: [{ id: "X-1", class: "OBLIGATION", case: { ungrouped: true, ancestors: [] }, options: [{ id: "somethingelse" }], disposition: { available: false, instead: "taskresolve" }, summary: "A sentence of its own", ...item }], item_count: 1 }) }, { screens: withScreens("matter", "account", "bias", "contradiction", "document"), ...o });
+  const row = main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes("A sentence of its own"));
+  return row.querySelectorAll("a[data-nav]").filter((a) => a.textContent === word("screen.queue.open")).map((a) => a.getAttribute("href"));
+};
+
+test("R71: an item whose subject kind has a screen opens it (escalation its matter, key the account); one whose subject opens nothing draws no Open", async () => {
+  assert.deepEqual(await opensOf({ kind: "escalation-stage-proposed", subject: { kind: "escalation", id: "ESC-1" } }), ["/app/matter/ESC-1"]);
+  assert.deepEqual(await opensOf({ kind: "signer-self-registered", subject: { kind: "key", id: "mai" } }), ["/app/account/mai"]);
+  assert.deepEqual(await opensOf({ kind: "request-awaiting", subject: { kind: "capture_request", id: "CR-1" } }), [], "a subject that opens nothing draws no Open");
+  // Control: a document subject still opens `document`.
+  assert.deepEqual(await opensOf({ kind: "check", subject: { kind: "bundle", id: "INF-7" } }), ["/app/document/INF-7"]);
+});
+
+test("R73: a bias-debt item's Open opens `bias` at that debt; an item of another kind is unchanged", async () => {
+  assert.deepEqual(await opensOf({ kind: "bias-debt", subject: { kind: "run", id: "RUN-4", context: { type: "project", id: "PROJ-1" } } }), ["/app/bias/RUN-4"]);
+  assert.deepEqual(await opensOf({ kind: "check", subject: { kind: "bundle", id: "INF-7" } }), ["/app/document/INF-7"]);
+});
+
+test("R74: a tension row opens `contradiction` at its pair; other kinds are unchanged", async () => {
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "tension", subject: { kind: "bundle", id: "INF-8", candidate: "CAND-2" } }), ["/app/contradiction/CAND-2"]);
+  assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty", subject: { kind: "contradiction_candidate", id: "CAND-3" } }), ["/app/contradiction/CAND-3"]);
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "newer-capture-affects-reference", subject: { kind: "capture", id: "abc123" } }), ["/app/document/abc123"]);
+});
+
+test("R74: a conflict the member sees only half of opens `<candidate>/<project>`, the project from `between_projects[0]` (a candidate) or `parties[0]` (a notice), the slash unescaped; control: a whole-seen candidate still opens by its id", async () => {
+  assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty-unseen", subject: { kind: "contradiction_candidate", id: "CAND-3", between_projects: [{ project: "PROJ-1" }, { project: "PROJ-2" }] } }), ["/app/contradiction/CAND-3/PROJ-1"]);
+  assert.deepEqual(await opensOf({ class: "FINDING", kind: "tension", subject: { kind: "contradiction_notice", id: "N-1", candidate: "CAND-2", parties: [{ project: "PROJ-9" }] } }), ["/app/contradiction/CAND-2/PROJ-9"]);
+  assert.deepEqual(await opensOf({ class: "OBLIGATION", kind: "contradiction-duty", subject: { kind: "contradiction_candidate", id: "CAND-3" } }), ["/app/contradiction/CAND-3"]);
+});
+
+// C73 (fix round 2): the line says how the list is sorted, and the vouch to-dos follow the sort.
+const HELD1 = { ok: true, held: [{ bundle_id: "INF-H1", title: "Photo", source: { address: "https://city.example/gate", via: "web" }, collected_since: "2026-10-03T10:00:00Z", actor: "mai" }], state: "held", truncated: false, next: null };
+const SORTED = [
+  { id: "TSK-A", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), age: { since: "2026-10-05T10:00:00Z" }, due: day(2), summary: "Alpha item", options: [], disposition: { instead: "taskresolve" } },
+  { id: "TSK-B", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-2", "The Coliseum lease"), age: { since: "2026-10-01T10:00:00Z" }, summary: "Bravo item", options: [], disposition: { instead: "taskresolve" } },
+  { id: "F-C", class: "FINDING", kind: "tension", case: PROJ("PROJ-2", "The Coliseum lease"), age: { since: "2026-09-20T10:00:00Z" }, summary: "Charlie item", options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "F-C", projects: ["PROJ-2"] } },
+];
+const orderOf = (p) => main(p).querySelectorAll(".cs-row").map((r) => text(p, r)).map((t) => (t.includes("Alpha") ? "A" : t.includes("Bravo") ? "B" : t.includes("Charlie") ? "C" : t.includes("Photo") ? "V" : "?")).filter((x) => x !== "?").join("");
+
+test("R2, C73: after a sort the line names the sort and no longer says the list is grouped by case; by case it still says grouped; the vouch to-dos follow the sort", async () => {
+  const plane = { queue: ok({ items: SORTED, item_count: 3 }), heldcaptures: ok(HELD1) };
+  const grouped = word("screen.queue.grouped");
+  for (const s of ["added", "due", "kind"]) {
+    const p = await open("/app/queue/" + s, plane);
+    const line = text(p, main(p).querySelector("p.mk-sub"));
+    assert.ok(line.includes(word("screen.queue.sorted", { sort: word(`screen.queue.sort.${s}`) })), `sorted by ${s}`);
+    assert.ok(!line.includes(grouped), `${s}: not grouped by case`);
+    assert.ok(line.includes(word("screen.queue.count.many", { n: "4" })), "the vouch to-do is counted");
+  }
+  const byCase = await open("/app/queue/case", plane);
+  assert.ok(text(byCase, main(byCase).querySelector("p.mk-sub")).includes(grouped), "control: by case it is grouped by case");
+  const dflt = await open("/app/queue", plane);
+  assert.ok(text(dflt, main(dflt).querySelector("p.mk-sub")).includes(grouped), "control: the default is grouped by case");
+  assert.equal(orderOf(dflt), "ABCV", "by case: the group of no case is last with the vouch to-do in it");
+  assert.equal(orderOf(await open("/app/queue/added", plane)), "AVBC", "by time added, newest first: the to-do arose on 3 October");
+  // The list is drawn by case in the order the sort gives the cases; the to-do in no case comes after the items the sort puts before it.
+  assert.equal(orderOf(await open("/app/queue/due", plane)), "ABCV", "by time due: after the item with a day due and the to-dos with none");
+  assert.equal(orderOf(await open("/app/queue/kind", plane)), "ABCV", "by kind: its group follows the cases the sort reaches first");
+});
+
+// C75 (fix round 2): forward to a member is a pick list, and forwarding to oneself is refused in words.
+test("R3, C75: forwarding is a choice of the group's members; forwarding to oneself is refused in words and sends nothing; one member sends her handle", timeout, async () => {
+  const { w, rosa, mai, p1 } = await team();
+  await rosa.act("memberadd", { body: { memberId: "bo", cover: "a member invited and not yet joined" } });
+  await todo(w, rosa, mai, p1, "Forward");
+  const item = todoOf(await itemsOf(mai), "Forward");
+  // The store's check to-do offers no forward option of its own: the real to-do is shown with the option the page draws the choice by.
+  const offered = (items) => items.map((i) => (i.id === item.id ? { ...i, options: [{ id: "taskforward" }], disposition: {} } : i));
+  const p = await openW(w, mai, "/app/queue", { queue: queueAs(w, mai, offered) });
+  const f = button(p, "taskforward").dataset.f;
+  const choice = p.doc.getElementById(f + "-to");
+  assert.equal(choice.tagName.toLowerCase(), "select", "a choice, not a box to type a handle in");
+  const roster = (await mai.read("memberlist")).members;
+  const handles = roster.filter((m) => m.status === "active" && m.handle).map((m) => m.handle);
+  assert.ok(handles.includes("mai") && handles.includes("ana"), "the real roster holds both");
+  assert.ok(roster.some((m) => m.status !== "active"), "control: the roster holds one who is not a choice (invited, not yet a member)");
+  const ids = roster.filter((m) => m.status === "active" && m.handle).map((m) => m.member_id);
+  assert.deepEqual(choice.querySelectorAll("option").filter((o) => o.getAttribute("value")).map((o) => [o.getAttribute("value"), o.textContent.trim()]), ids.map((id, i) => [id, handles[i]]), "the group's active members who have a handle: each by her member id, named by her handle (A-02)");
+  const none = await press(p, "taskforward");
+  assert.equal(p.byOp("taskforward").length, 0, "no one chosen, nothing sent");
+  assert.equal(beside(p, none), word("screen.queue.fieldfirst"));
+  const self = await press(p, "taskforward", { values: { [f + "-to"]: "mai" } });
+  assert.equal(p.byOp("taskforward").length, 0, "oneself is refused before anything is sent");
+  assert.equal(beside(p, self), word("refusal.ALREADY_THEIRS"));
+  await press(p, "taskforward", { values: { [f + "-to"]: "ana" } });
+  assert.deepEqual(last(p, "taskforward").body, { id: item.id, to: "ana" }, "control: another member is sent");
+  // Control: when the group's members are not answered the handle is typed as before.
+  const typed = await openW(w, rosa, "/app/queue", { queue: ok({ items: [{ id: "TSK-2", class: "OBLIGATION", kind: "check", case: PROJ("PROJ-1", "Pothole repairs"), summary: "s", options: [{ id: "taskforward" }] }] }), memberlist: refused("NOT_YET", "No.", 500) });
+  assert.equal(typed.doc.getElementById(button(typed, "taskforward").dataset.f + "-to").tagName.toLowerCase(), "input");
 });

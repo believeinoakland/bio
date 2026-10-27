@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import { world, stubOf, bucket, caseDoc, NOW, V } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 class StoreSilent extends Error { constructor(op) { super(op); this.op = op; } }
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -162,5 +163,6 @@ test("R6 (d442) the container assembleCaseContainer builds for B's case edition 
   assert.ok(man.case_document.text.includes("case_strength:"));
   assert.equal(man.case_document.text, w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=1`, CASE_B).text,
                "the case document whole");
-  assert.match(man.verify, /Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT/);
+  assert.ok(man.verify.endsWith(localize("public-read.worker.verify_member_pair_in_document", " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes.")),
+            "the member-pair sentence closes the container's verify");
 });

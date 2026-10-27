@@ -1,0 +1,9 @@
+# Bob's product rulings: the quality bar for members and releases
+
+**Status** · Bob's product rulings on the quality bar for members and releases, by subject (Bob, K5323), read whole by the work that plans a tranche or a round, cuts a release, or judges a screen, journey or speed. Each line keeps its source ids; `build/rulings.md` is the full log. Moved from `rulings-active.md` when the process redesign was adopted; a ruling of Bob's on this subject is added here in the commit that records it.
+
+- Real users (Bob, K3052) must understand the product, be comfortable with it and pick journeys reflecting their interests. BOB pushes back, with reasons, on any ruling or plan, Bob's included, that leaves them something unfit: each plan is audited screen by screen and journey by journey against the design before it opens (a missing screen is a defect); a release is checked as administrator and member at `/` and every screen before Bob is told it is ready. Layout, wording, flow and look go to UX-DESIGN as one HANDOFF, BOB keeps what is broken (K3462).
+- A release must render properly, be as close to fully functional as reasonable and work as designed (Bob, K3296); civicsmith.org at `workers.dev` first, then BOB walks Bob through his domain.
+- Speed (K4354): a screen drawn and an act answered within 2 s, a web capture within 15 s, on the test copy; slower is a defect the PERFORMANCE lane reports.
+- Long-term goals (Bob, K4164): "a source tree that isn't fragile", "architecturally clean", and rigorous, efficient bug-finding. A fix lands in the module that owns the cause; a cause needing edits across layers is fixed by moving ownership, never by spreading the edit; the dead-end census runs before every release.
+- Bob's construct rulings live in canon (Capability Ladders, Intake Doctrine §3, AI Roles §3 rule 11): apply them from there, do not re-ask (K1944). Substrate first: a member screen is never a precondition of a substrate stage (K1430).

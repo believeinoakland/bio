@@ -108,7 +108,7 @@ test("R44 recordAssessment refuses MEMBER_ACT_ONLY, R6's, PROVISION_MALFORMED (t
   assert.equal(v.kind, "assessment");
   assert.deepEqual(v.use.provision, { standard: "STD-ACC-1" });
   assert.deepEqual(v.use.unmet.map((u) => [u.provision.portion, u.extent.capture_sha, u.extent.extent.page]), [["II.A", s, 1]]);
-  assert.equal(v.use.says, word("events.says.assessment_against", { subject: "Harbor College", by: "Accrediting Board", date: word("events.text.date_recorded"), standard: "STD-ACC-1", result: "found unmet: STD-ACC-1 II.A" }));
+  assert.equal(v.use.says, word("events.says.assessment_against", { subject: "Harbor College", by: "Accrediting Board", date: word("events.text.date_recorded"), standard: "STD-ACC-1", result: word("events.text.found_unmet", { standards: "STD-ACC-1 II.A" }) }));
   const none = w.ev.recordAssessment(base({ unmet: [] }));
   const n = w.ev.readEvent({ eventId: none.event_id, viewer: MEMBER }).event.use;
   assert.deepEqual(n.unmet, []);
@@ -126,7 +126,7 @@ test("R45 every read answers a use with its facet and its members' words; discre
   assert.deepEqual([u.stated_reason.capture_sha, u.stated_reason.extent.page], [s, 1]);
   assert.equal(u.stated_reason.words, "Reason: the lot is too narrow for the setback.", "words read from the record, not a caller");
   assert.equal(u.outcome.value, "granted");
-  assert.equal(u.says, word("events.says.discretion_used", { by: "Dana Director", date: "2026-03-04", why: "stated reason: “Reason: the lot is too narrow for the setback.”" }));
+  assert.equal(u.says, word("events.says.discretion_used", { by: "Dana Director", date: "2026-03-04", why: word("events.text.reason_given", { reason: "“Reason: the lot is too narrow for the setback.”" }) }));
   /* "none", no decider, no date, no provision */
   const bare = w.ev.recordDiscretion(base({ statedReason: "none", provision: null, participants: [], attestations: [{ captureSha: s, extent: page(0) }] })).event_id;
   const b = read(bare);
@@ -136,12 +136,14 @@ test("R45 every read answers a use with its facet and its members' words; discre
   /* a passage whose text is not held is named without words, never "no reason stated" */
   const plain = w.capture("plain");
   const nt = w.ev.recordDiscretion(base({ statedReason: { captureSha: plain, extent: doc } })).event_id;
-  assert.ok(read(nt).says.endsWith(`stated reason: ${word("events.text.cited_passage_words")}`));
+  assert.ok(read(nt).says.endsWith(word("events.text.reason_given", { reason: word("events.text.cited_passage_words") })));
   /* a waiver's facet and words */
   const wv = w.ev.recordDiscretion(base({ kind: "waiver", scope: { captureSha: s, extent: page(2) }, conditions: [{ captureSha: s, extent: page(1) }], expiry: "2027-06-30" })).event_id;
   const x = read(wv);
   assert.deepEqual([x.scope.words, x.conditions.length, x.expiry.value], ["Granted for 12 Elm Way, until the work ends.", 1, "2027-06-30"]);
-  assert.match(x.says, /^Waiver granted by Dana Director, 2026-03-04, stated reason: “Reason: .*”; waived: “Granted for 12 Elm Way, until the work ends\.”; conditions: “Reason: .*”; expires 2027-06-30$/);
+  assert.equal(x.says, word("events.says.waiver_waived", { outcome: word("events.outcome.granted"), by: "Dana Director", date: "2026-03-04",
+    why: word("events.text.reason_given", { reason: "“Reason: the lot is too narrow for the setback.”" }), scope: "“Granted for 12 Elm Way, until the work ends.”",
+    conditions: word("events.text.conditions_listed", { conditions: "“Reason: the lot is too narrow for the setback.”" }), expiry: word("events.text.expires_on", { date: "2027-06-30" }) }));
   const wv2 = read(w.ev.recordDiscretion(base({ kind: "waiver", scope: { captureSha: s, extent: page(2) } })).event_id);
   assert.ok(wv2.says.endsWith(`${word("events.text.conditions_stated")}; ${word("events.text.expiry_stated")}`));
   /* every read: eventsFor, timeline, statementsOf's lists and the connection owner carry the facet */
@@ -156,7 +158,7 @@ test("R45 every read answers a use with its facet and its members' words; discre
   assert.equal(read(mixed).stated_reason.words, "Our private reason.");
   const seen = read(mixed, OUTSIDER);
   assert.deepEqual(seen.stated_reason, { withheld: true });
-  assert.ok(seen.says.endsWith(`stated reason: ${word("events.text.document_see")}`));
+  assert.ok(seen.says.endsWith(word("events.text.reason_given", { reason: word("events.text.document_see") })));
   assert.ok(!JSON.stringify(seen).includes(hidden) && !JSON.stringify(seen).includes("private"));
   /* withdrawal */
   const wd = (x) => w.ev.withdrawUse({ eventId: d, reason: "recorded against the wrong permit", by: MEMBER, ...x });

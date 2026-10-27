@@ -5,7 +5,19 @@
  *
  * Scenario: { subdomain, scripts: { <name>: { body?, settings? (limits?, bindings?), settingsStatus?, scriptStatus? } },
  *             put: "accept" | "ignore", settingsAfterPut?: object, serving: { <name>: string },
- *             servingAfterPut?: "version" | "never", unreachable?: [<substring>], containers?: <status> }
+ *             servingAfterPut?: "version" | "never", unreachable?: [<substring>], containers?: <status>,
+ *             schedulesPut?: "accept" | "ignore" | "reject", schedulesStored?: [<cron>], schedulesGet?: <status>,
+ *             scriptPutClearsSchedules?: boolean, observabilityAfterPut?: object, settingsUnreadableAfterPut?: boolean,
+ *             startupTimeMs?: number | "none" (G84: the upload's answer carries `result.startup_time_ms`, as Cloudflare's documented answer does; "none" leaves the field out) }
+ * A script's cron schedules are `scripts.<name>.schedules` (an array of cron strings). Its schedules endpoint (G1) answers
+ * PUT by storing what was sent (`schedulesPut` "ignore" answers 200 and stores nothing, "reject" answers 403, and
+ * `schedulesStored` stores that list instead of what was sent) and GET with the stored list (`schedulesGet` names a status
+ * to fail with); a script that does not exist answers 404. `scriptPutClearsSchedules` makes a script PUT clear them, the
+ * platform behaviour the plan leaves unconfirmed.
+ * Workers Logs (G54): a script PUT stores the metadata's `observability` in the script's settings, and a PUT whose metadata
+ * has none leaves the settings without the key, which is how the platform reports Workers Logs off (measured on biosmoke8,
+ * 2026-10-20). `observabilityAfterPut` states another value after the PUT; `settingsUnreadableAfterPut` makes the settings
+ * endpoint answer 500 once the PUT has landed.
  * A script with no entry does not exist (404). A PUT the scenario accepts stores the uploaded module as
  * the script's body, the metadata's limits as its settings (unless `settingsAfterPut` says otherwise),
  * and, unless `servingAfterPut` is "never", the metadata's VERSION as what the instance serves. The account's
@@ -57,6 +69,21 @@ globalThis.fetch = async (input, init = {}) => {
     if (!s) return json(404, { success: false });
     return json(200, { success: true, result: s.settings ?? {} });
   }
+  if ((m = path.match(/\/workers\/scripts\/([^/]+)\/schedules$/))) {
+    const s = S.scripts[m[1]];
+    if (method === "PUT") {
+      const sent = JSON.parse(String(init.body));
+      log({ ...entry, schedules: sent });
+      if (!s) return json(404, { success: false, errors: [{ code: 10007, message: "This Worker does not exist" }] });
+      if (S.schedulesPut === "reject") return json(403, { success: false, errors: [{ code: 10000, message: "Authentication error" }] });
+      if (S.schedulesPut !== "ignore") s.schedules = S.schedulesStored ?? sent.map((x) => x.cron);
+      return json(200, { success: true, result: { schedules: (s.schedules || []).map((cron) => ({ cron })) } });
+    }
+    log(entry);
+    if (S.schedulesGet) return json(S.schedulesGet, { success: false });
+    if (!s) return json(404, { success: false });
+    return json(200, { success: true, result: { schedules: (s.schedules || []).map((cron) => ({ cron })) } });
+  }
   if ((m = path.match(/\/workers\/scripts\/([^/]+)$/))) {
     const name = m[1];
     if (method === "PUT") {
@@ -67,11 +94,14 @@ globalThis.fetch = async (input, init = {}) => {
       if (S.put === "accept") {
         const s = (S.scripts[name] ||= {});
         s.body = module;
-        s.settings = S.settingsAfterPut ?? { limits: metadata.limits, bindings: metadata.bindings };
+        if (S.scriptPutClearsSchedules) s.schedules = [];
+        const obs = S.observabilityAfterPut ?? metadata.observability;
+        s.settings = S.settingsAfterPut ?? { limits: metadata.limits, bindings: metadata.bindings, ...(obs !== undefined ? { observability: obs } : {}) };
+        if (S.settingsUnreadableAfterPut) s.settingsStatus = 500;
         const v = metadata.bindings.find((b) => b.name === "VERSION");
         if (S.servingAfterPut !== "never" && v) S.serving[name] = v.text;
       }
-      return json(200, { success: true });
+      return json(200, { success: true, result: { id: name, ...(S.startupTimeMs !== undefined && S.startupTimeMs !== "none" ? { startup_time_ms: S.startupTimeMs } : {}) } });
     }
     log(entry);
     const s = S.scripts[name];

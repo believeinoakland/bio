@@ -57,6 +57,7 @@ import {
   ACTIVITY_METHOD_VERSION, ACTIVITY_METHOD_EARLIER_LABELS, levelOf, SEAL_SLOTS, WEEK_SLOTS, SEAL_METHOD, leafHash,
   weekLeafHash, slotsFor, randomHex, randomPositions, treeOf, rootOf, pathOf, verifyOpening, OPENING_FORMAT,
 } from "./seals.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { NETWORK_NOTICE_CHECKS } from "./checks.mjs";
 export { NETWORK_NOTICES_SCHEMA, NETWORK_NOTICES_TABLES } from "./schema.mjs";
@@ -89,17 +90,19 @@ export const NOTICE_STATUSES = Object.freeze(["open", "stopped", "closed", "laps
 /** R3: the doorbell's path relative to the group's public address (`capture`'s knock, its R32: `op=knock`). */
 export const DOORBELL_PATH = "?op=knock";
 /** R3: the fixed sentence every revision carries. Its final words are the UX design stream's (K1031). */
-export const OTHERS_WELCOME = "Others working on this are welcome to make contact.";
+export const OTHERS_WELCOME = word("network-notices.others_working_welcome");
 /** R2: the outward-act warning, as a code and its meaning; its words are the UX design stream's (K1031 (5)). */
 export const OUTWARD_ACT_WARNING = Object.freeze({
   code: "outward_act",
-  meaning: "The public, including anyone being examined, will see this notice, and stopping it later will not unsay it.",
+  meaning: word("network-notices.public_including_anyone"),
 });
 /** R2 (K1031 (4)): the caution's code; it never refuses, and its words are the UX design stream's. */
 export const CAUTION_TWO_OPEN = "two_open_without_published_work";
 /** R21: how the keys of the group's own Civicsmith are labelled. The public reads it with no credential, so it says
  *  "this group's Civicsmith", never "your group's" nor "this copy" (DEC-149, K1821, K1833). */
-export const COPY_KEY_LABEL = "this group's Civicsmith key";
+export const COPY_KEY_LABEL = word("network-notices.group_civicsmith_key");
+/** R1, R4: the detail of NOTICE_NO_INSTANCE_KEY, read by key where the list holds it (setup-words R13, R14). */
+export const NO_INSTANCE_KEY_DETAIL = localize("network-notices.index.no_instance_key_detail", "your team's Civicsmith holds no signing key of its own, and a notice is never published without its signed level");
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 /* R15: the user agent the timestamp requests carry, naming the product (DEC-124). */
@@ -253,10 +256,9 @@ export class NetworkNotices {
       if (!stopping) return { refusal: refuse("NOTICE_PROJECT_CLOSED", "the project is closed; only a stop of its open notice is taken", { project: pid }) };
     }
     const slug = this.#slug();
-    if (!slug) return { refusal: refuse("NOTICE_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous notices") };
+    if (!slug) return { refusal: refuse("NOTICE_NO_GROUP_SLUG", localize("network-notices.index.no_group_slug_detail", "no team slug is recorded, and there are no anonymous notices")) };
     if (!(await this.#keyBound()))
-      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published "
-        + "without its signed level") };
+      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", NO_INSTANCE_KEY_DETAIL) };
     /* END DEC-49 REGION is-notice-caller */
     return { pid, member, slug };
   }
@@ -392,8 +394,7 @@ export class NetworkNotices {
     const att = this.#attestation({ nid: held.nid, pid: held.pid, kind: "posted", asOfMs: nowMs,
                                     revisionDigest: held.digest, revisionStatus: held.revision.status });
     const signed = await this.#sign(att.digest);
-    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published "
-        + "without its signed level");
+    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", NO_INSTANCE_KEY_DETAIL);
     const out = this.record.transact(() => {
       const latest = this.#latestRevision(held.nid);
       if ((latest ? latest.revision : 0) !== held.n - 1 || (held.firstRevision && this.#notice(held.nid)))
@@ -909,7 +910,7 @@ export class NetworkNotices {
     const title = (p && p.data && str(p.data.title)) || str(heading) || null;
     return { ok: true, group: this.#slug(), case: id, edition: ed,
              link: `?op=publishedcase&caseId=${encodeURIComponent(id)}&edition=${ed}`, title, summary: str(row.scope) || null,
-             sends: "nothing: copy these fields, or open them" };
+             sends: word("network-notices.nothing_copy_fields") };
   }
 }
 
@@ -968,6 +969,15 @@ export function networkNoticesOps(m, url, body) {
     directorysubmission: () => m.directorySubmission({ case: q("case"), edition: q("edition"), viewer: stamps.viewer }),
   };
 }
+
+/* R31 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  noticeprepare: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("network-notices.declared.noticeprepare", "read: a working-on notice's next revision composed for its owner to sign, keyed by project, with its statement and digest; stores nothing and writes nothing"),
+    fields: { accepts: ["project","notice","wording","body","matter","since","collaborate","handoff","final"], requires: ["project","wording","since"] } },
+  noticepost: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "attested", description: localize("network-notices.declared.noticepost", "project-directed: keyed by a project, reached from the project; an owner's signed notice"),
+    fields: { accepts: ["digest","signature","acknowledged"], requires: ["digest","signature","acknowledged"] } },
+});
 
 /** The credential-free reads served at the group's public address (`public-read` R18), under the names K1150 fixed:
  *  name → `{read(params), params}`; a read is handed only the parameters it declares. */

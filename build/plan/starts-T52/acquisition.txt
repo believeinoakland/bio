@@ -1,0 +1,6 @@
+Round R1, layer 3, module acquisition, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module acquisition`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-10 · N1261 · K4459 · `checks.mjs:362` reads `refusal.CAPTURE_NOT_KEPT` (DEC-412's row, now on `main`) instead of its stand-in; `checks.test.mjs` R29 R31 stay green. START drafted at `build/plan/archive/starts-T51-F4/acquisition-2.txt`.

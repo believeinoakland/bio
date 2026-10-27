@@ -3,8 +3,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, OP_ALIASES,
-         phoneOf } from "../../../src/op-grades/index.mjs";
+         LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
+import { reqText, ticked, tickedAll, readRows, declaredSentence, doesSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
@@ -52,13 +53,12 @@ const R22_REASONS = {
   unpack: "archive-directed: keyed by a held archive's capture, reached from its screen; files its entries as captures of "
     + "their own at the archive's grade, each promoted beside it",
   coarchiveset: "setting: the group's choice whether a capture asks for a co-archive; an administrator's act; moves no bundle",
-  signout: "session-directed: ends the caller's own session, or every session of the caller's role; moves no bundle",
-  signouteverywhere: "session-directed: ends the caller's own session, or every session of the caller's role; moves no "
-    + "bundle",
-  recoverycodesissue: "credential: an administrator's own recovery codes, shown once; moves no bundle",
-  recover: "credential: a recovery code and a new password, reached with no session; moves no bundle",
+  signout: declaredSentence("credentials", "signout"),
+  signouteverywhere: declaredSentence("credentials", "signout"),
+  recoverycodesissue: declaredSentence("credentials", "recoverycodesissue"),
+  recover: declaredSentence("credentials", "recover"),
 };
-/* K2043 (B3): the other ops op-declarations declares in T35 for L5's and L6's owners, each with the code its reasoned
+/* K2043 (B3): the other ops T35 grades for L5's and L6's owners, each with the code its reasoned
    grade rests on (in the family) or its ground */
 const B3_WRITES = { standardforce: "reasoned", standardforcewithdraw: "reasoned", standardrelease: "reasoned",
   standardadoption: "reasoned", standardimpose: "reasoned", standardbenchmark: "reasoned", usewithdraw: "reasoned",
@@ -69,10 +69,11 @@ const B3_CODES = { standardforce: "STANDARD_NO_REASON", standardforcewithdraw: "
   standardrelease: "STANDARD_NO_REASON", standardadoption: "STANDARD_NO_REASON", standardimpose: "STANDARD_NO_REASON",
   standardbenchmark: "STANDARD_NO_REASON", usewithdraw: "NO_REASON", uselink: "DUTY_NO_REASON",
   useunlink: "DUTY_NO_REASON" };
-const B3_READS = ["bindsat", "editioninforce", "forcesof", "overridesof", "usesof", "applicationrecipes", "poweruses",
-  "recordsrequests"];
-const R22_READS = ["archivelist", "coarchivestate", "findin", "entitieskind", "securitymap", "recoverycodesstate",
-  "adminrecoverystep"];
+/* the reads of T35's table: R22 names its own in backticks (`credit` is public and apart), the rest are K2043's */
+/* a read whose owner words it without the "read: " lead holds the owner's sentence (K4168): securitymap */
+const T35_READS = [...readRows(T35_NON_ACTS), ...Object.keys(T35_NON_ACTS).filter((op) => T35_NON_ACTS[op] === doesSentence(op))].filter((op) => op !== "credit");
+const R22_READS = T35_READS.filter((op) => tickedAll(reqText(22)).includes(op));
+const B3_READS = T35_READS.filter((op) => !R22_READS.includes(op));
 
 test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `reversible`, unpack `undetermined`, the "
    + "note revise and delete and both sign-outs `caller-owned`, the recovery acts `credential` — each with R22's reason, "
@@ -91,8 +92,9 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
   for (const [op, why] of Object.entries(R22_REASONS)) assert.equal(NON_ACTS[op], why, op);
   for (const op of ["noterevise", "notedelete"]) assert.equal(NON_ACTS[op], NON_ACTS.notewrite, op);
   for (const op of R22_READS) {
-    assert.ok(NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 20, op);
-    assert.equal(gradeOf(op), op === "securitymap" ? "caller-owned" : null, op); /* R39 (T48) gave securitymap its row */
+    /* securitymap is declared in its owner's words, which do not lead with "read: " (K4168) */
+    assert.ok(op === "securitymap" ? NON_ACTS[op] === doesSentence(op) : NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 20, op);
+    assert.equal(gradeOf(op), null, op); /* a read takes no grade; securitymap is one too (K4210) */
   }
   assert.match(NON_ACTS.findin, /records nothing/);
   assert.equal(NON_ACTS.credit, "read: public, no credential");
@@ -105,8 +107,14 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
   assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   for (const t of [T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS]) assert.ok(!Object.hasOwn(t, "subscriptionsignin"));
   /* R18 over them: the sign-outs are phone acts, the recovery acts are not */
-  assert.deepEqual(["signout", "signouteverywhere", "recoverycodesissue", "recover", "unpack", "coarchiveset"].map(phoneOf),
-    [true, true, false, false, true, true]);
+  /* every op R22 names that carries a grade: R18's rule decides its phone (the credential ones are not phone acts) */
+  const R22_GRADED = ticked(reqText(22)).filter((op) => gradeOf(op) !== null);
+  const offPhone = (op) => ["terminal", "attested", "irreversible"].includes(RUNGS[op]) || RUNG_ABSENT[op]?.ground === "credential"
+    || IRREVERSIBLE_WEIGHT.includes(op) || LARGER_SCREEN_ACTS.includes(op);
+  for (const op of R22_GRADED) assert.equal(phoneOf(op), !offPhone(op), op);
+  assert.deepEqual([phoneOf("signout"), phoneOf("signouteverywhere"), phoneOf("unpack"), phoneOf("coarchiveset")],
+    [true, true, true, true]);
+  assert.deepEqual([phoneOf("recoverycodesissue"), phoneOf("recover")], [false, false]);
   /* negative control */
   assert.notDeepEqual({ ...got, unpack: "substrate" }, R22_WRITES);
 });

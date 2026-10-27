@@ -14,6 +14,7 @@ import { checkGuide, registerConductCheck, conductCheckHolder } from "../../../s
 import { ENQUIRE_MODE, RUN_ORIGINS, DRAFT_MODE, DRAFT_KINDS, DRAFT_REACH, RUN_BOUNDS, DEPLOYMENT_SEQUENCE }
   from "../../../src/run-rules/index.mjs";
 import { ROOT, read, foundIn, section, canonDocuments, published } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CANON = () => read(INVESTIGATION_SOURCE);
 /* "§6" is the section headed "6. AI use in an investigation": the number and its dot open the heading. */
@@ -60,8 +61,8 @@ test("R43 every clause of R40–R44 is a span of BIO_Investigation_v0_1.md found
 
 test("R41 INTAKE_QUESTIONS is the interview's six questions, one frozen list, each in §6's sentence in its order; the enquire layer carries them with the planning rules, a remembered claim becoming something to find and never stated as the body's words", () => {
   assert.ok(Object.isFrozen(INTAKE_QUESTIONS));
-  assert.deepEqual(INTAKE_QUESTIONS, ["what happened", "which public body, and where", "since when",
-    "what was promised or expected, and by whom", "what you already have", "what you want to come of it"]);
+  assert.deepEqual(INTAKE_QUESTIONS, ["what happened", word("skilldoctrine.intake.which_body"), "since when",
+    word("skilldoctrine.intake.promised"), word("skilldoctrine.intake.already_have"), word("skilldoctrine.intake.want")]);
   assert.ok(foundIn(sec("§6"), INTAKE_SENTENCE.text), "§6's sentence, verbatim");
   assert.equal(INTAKE_SENTENCE.text.split(": ")[1].replace(/\.$/, "").split("; ").join("|"), INTAKE_QUESTIONS.join("|"),
     "the six, in the sentence's order, nothing added or dropped");

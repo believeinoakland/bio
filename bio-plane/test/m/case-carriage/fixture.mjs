@@ -24,7 +24,7 @@ import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 export { sha, V, provDoc, infoMd };
 export const NOW = "2026-09-28T01:00:00Z";
 
-export function world() {
+export function world(extra = {}) {
   const w = provenanceWorld({ now: NOW });
   const { host, record, membership, promotion, st } = w;
   /* sources (layer 3) over a stand-in for the doorbell's `pulledKnocksOf` (its R18; since T42-8, not capture's); its
@@ -43,7 +43,7 @@ export function world() {
                                   put: (d, b) => ev.put(String(d), b) });
   const bucket = bucketStandIn();
   const cc = caseCarriageOf(host, { record, membership, promotion, sources: src, acceptedWork, extraction,
-                                    now: () => w.clock.now, bucket, store: "bio", provenance: w.prov });
+                                    now: () => w.clock.now, bucket, store: "bio", provenance: w.prov, ...extra });
   let n = 0, r = 0;
   return Object.assign(w, {
     src, acceptedWork, units, unitCalls, cc, evidence: ev, bucket,
@@ -146,6 +146,23 @@ export function world() {
       return s;
     },
   });
+}
+
+/** A document a member supplied: its bytes only in the evidence store, registered on its own bundle as a PDF, its
+ *  home's provenance recording its type; `via` the receipt it arrives by (null: none, a capture with no receipt).
+ *  Answers its digest. */
+export function supplied(w, id, bytes, { via = "doorbell", name = "file.pdf", type = "application/pdf", stated = null } = {}) {
+  const b = Buffer.from(bytes), s = sha(b);
+  w.doc(id, { text: `the page about ${id}` });
+  const path = `snapshots/${name}`;
+  w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
+                s, id, path, stated ?? b.length, NOW);
+  w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`, id, path, s, b.length, s);
+  w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`,
+    JSON.stringify({ documents: [{ file: path, capture: { method: "acquire", sha256: s, encoding: "binary", bytes: b.length, content_type: type } }] }), id);
+  w.evidence.held.set(s, b);
+  if (via) w.receipt(s, via);
+  return s;
 }
 
 /** The names of a ZIP's entries, read from its central directory as its end record locates it (so an archive stored

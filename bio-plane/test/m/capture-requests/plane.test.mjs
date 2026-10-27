@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 import { planeEntry } from "./plane-world.mjs";
 import { CAPTURE_REQUEST_CHECKS } from "../../../src/capture-requests/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CAPTURE_FETCH_FAILED_CHECK = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED.check;
 
@@ -116,7 +117,7 @@ async function world() {
     "produced_by:", "  mode: agent", "  capability_tier: high", "group: g", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "", "What?", "",
-    "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+    word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
     "## Review Notes", ""].join("\n");
   const create = async (id, headers) => {
     const text = md(id);
@@ -282,16 +283,19 @@ async function holdAcquired(tok, locator, over = {}) {
   return cap.sha256;
 }
 
-test("R48 in the plane (T50): a capture a member made with acquire's `for` and no request is listed by op=heldcaptures with the question and its asker, read through this module's reader and capture's asks (capture R83, R94); a question no inquiry answers to is the withheld sentence with no id; a capture with no `for` answers questions: []", async () => {
+test("R48 in the plane (T50): a capture a member made with acquire's `for` and no request is listed by op=heldcaptures with the question and its asker, read through this module's reader and capture's asks (capture R83, R94); a `for` naming no question is refused BAD_FOR (control-plane R105, acquisition R47) before any fetch, and nothing is held for it; a capture with no `for` answers questions: []", async () => {
   const { RUTH } = await world();
   const row = await heldOf(RUTH, await holdAcquired(RUTH, "https://up.example.org/for-ask.pdf", { for: "INQ-2026-9000-cr" }));
   assert.ok(row, "no held row for the acquired capture");
   assert.equal(row.captured_for && row.captured_for.withheld, null, JSON.stringify(row.captured_for));
   assert.deepEqual(row.captured_for.questions.map((q) => [q.question, q.title, q.asker]), [["INQ-2026-9000-cr", "What?", "ruth"]]);
-  const g = await heldOf(RUTH, await holdAcquired(RUTH, "https://up.example.org/for-ghost.pdf", { for: "INQ-2026-9999-none" }));
-  assert.deepEqual(g.captured_for.questions, []);
-  assert.equal(typeof g.captured_for.withheld, "string");
-  assert.doesNotMatch(JSON.stringify(g.captured_for), /INQ-2026-9999-none/);
+  /* R105 (T50; acquisition R47): a member's `for` must name a question she may see, so a question no inquiry answers to
+     never reaches the record through acquire: refused before any fetch, nothing filed. The reader's withheld answer for a
+     question not held is asserted at unit level (t50.test.mjs, R48: a question not held). */
+  const ghost = "https://up.example.org/for-ghost.pdf";
+  const refused = (await call("acquire", RUTH, { locator: ghost, for: "INQ-2026-9999-none" })).body;
+  assert.deepEqual([refused.ok, refused.code, refused.check], [false, "BAD_FOR", "C-139.21"], JSON.stringify(refused));
+  assert.equal(SEEN.filter((u) => u === ghost).length, 0, "no fetch was made for the refused `for`");
   /* Control: no `for`, no request */
   const n = await heldOf(RUTH, await holdAcquired(RUTH, "https://up.example.org/for-none.pdf"));
   assert.deepEqual(n.captured_for, { questions: [], withheld: null });

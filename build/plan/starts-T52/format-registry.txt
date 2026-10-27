@@ -1,0 +1,6 @@
+Round R1, layer 1, module format-registry, tranche T52. Your depth: 2. BOB: BOB #318 (session_018BhcecvoXTMTpRGK9c3KwB).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module format-registry`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-3 · K5339 red · R31 (SHEET C32 C33 C23 C24: delimited text read as a sheet): first: settle the cause on the tranche tip, then fix it.

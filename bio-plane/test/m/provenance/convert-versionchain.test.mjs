@@ -176,6 +176,38 @@ test("R17, R18: over sixty versions, the order is first-held date (not bundle-id
                    [true, 1, 1, 1, false, 0, null]);
 });
 
+test("R17, R18: versions first seen in the same second are ordered as the record registered them, the sha only where that ties; a second apart keeps first-seen order", () => {
+  const w = world();
+  const A = "e.org/notice.pdf";
+  const SECOND = day(5);
+  /* The copy is registered after the first capture but its sha sorts before the first's, so a sha tiebreak would put it first. */
+  let first, copy;
+  for (let k = 0; !copy; k++) {
+    const a = `notice as first captured ${k}\n`, b = `notice as checked again ${k}\n`;
+    if (sha(b) < sha(a)) { first = a; copy = b; }
+  }
+  const f = holdVersion(w, "INFO-2026-0101-first", { text: first, path: "documents/notice.pdf" });
+  const c = holdVersion(w, "INFO-2026-0102-copy", { text: copy, path: "documents/notice-copy.pdf" });
+  assert.ok(c.sha < f.sha, "fixture: the copy's sha sorts first");
+  w.prov.recordReceipt({ addressNorm: A, captureSha: f.sha, retrieved: SECOND });
+  w.prov.recordReceipt({ addressNorm: A, captureSha: c.sha, retrieved: SECOND, via: "check-now" });
+  const r = w.prov.versionChain({ addressNorm: A, at: c.sha, viewer: V("x") });
+  assert.deepEqual(r.versions.map((v) => v.capture_sha), [f.sha, c.sha]);
+  assert.equal(r.at_index, 1);
+  assert.equal(r.predecessor.capture_sha, f.sha);
+  const back = w.prov.versionChain({ addressNorm: A, at: f.sha, viewer: V("x") });
+  assert.deepEqual([back.at_index, back.predecessor], [0, null]);
+  /* Control: a second apart, first-seen order decides whatever the registration order was. */
+  const B = "e.org/other.pdf";
+  const late = holdVersion(w, "INFO-2026-0103-late", { text: "other, seen late\n", path: "documents/other.pdf" });
+  const early = holdVersion(w, "INFO-2026-0104-early", { text: "other, seen early\n", path: "documents/other-early.pdf" });
+  w.prov.recordReceipt({ addressNorm: B, captureSha: late.sha, retrieved: day(7) });
+  w.prov.recordReceipt({ addressNorm: B, captureSha: early.sha, retrieved: day(6) });
+  const o = w.prov.versionChain({ addressNorm: B, at: late.sha, viewer: V("x") });
+  assert.deepEqual(o.versions.map((v) => v.capture_sha), [early.sha, late.sha]);
+  assert.deepEqual([o.at_index, o.predecessor.capture_sha], [1, early.sha]);
+});
+
 test("R18: every refusal carries its catalogue row's check and translation exactly, and a version held at another address refuses as unheld", () => {
   assert.deepEqual(Object.keys(VERSION_CHAIN_CHECKS).sort(),
                    ["VERSION_CHAIN_BAD_ANCHOR", "VERSION_CHAIN_NO_ADDRESS", "VERSION_CHAIN_NO_SUCH_VERSION"]);

@@ -13,9 +13,12 @@
  * or Irreversible weight is added. By R18 `phone` follows the rung or ground: every op here answers true (advisory;
  * nothing refuses by device).
  *
- * R39's three: `translationdraft` leaves the `undetermined` ground (it is edited in ./t37.mjs, where its row stands),
- * and `groupdescriptiondraft` and `securitymap` are given `RUNG_ABSENT` rows below, so `interface-shell` R11 draws none of
- * the three as a reasoned act. R42's `MARKS` is in ./marks.mjs. */
+ * R39's: `translationdraft` leaves the `undetermined` ground (it is edited in ./t37.mjs, where its row stands), and
+ * `groupdescriptiondraft` is a read (K4247): it takes no row here, and its NON_ACTS reason is its owner's word (R51).
+ * `securitymap` is a read, not an absence (K4210): its NON_ACTS sentence stands and no ground is given, since the owner
+ * (credentials) declares it `read`. R42's `MARKS` is in ./marks.mjs. */
+
+import { localize } from "../setup-words/index.mjs";
 
 const R = (s) => `read: ${s}; writes nothing`;
 
@@ -43,11 +46,9 @@ export const T48_RUNGS = {
 
 /* ---- the stated absences ---- */
 export const T48_RUNG_ABSENT = {
-  /* R39 (N1042; K3149), amending R2: an administrator's own draft request, and an administrator's own read of a tally. Each
-     is drawn with no weight and no reason asked, since none is an act on the record; their NON_ACTS sentences stand
-     (R16, R22). */
-  groupdescriptiondraft: { ground: "caller-owned", is: "an administrator's own request for a labeled machine draft of the group's description, answered into their own field and never the group's words until they keep it by their own act (instance-setup R65)" },
-  securitymap:           { ground: "caller-owned", is: "an administrator's own read of the group's count-only security tally by kind and period, with its usual and its level, naming no address and no handle (file-safety)" },
+  /* R39 (N1042; K3149), amending R2 (K4247): `groupdescriptiondraft` was here until store-door declared it a read, and a
+     read carries no ground, so it has no absence: its NON_ACTS sentence is its owner's word (R51). `securitymap` was here
+     too until K4210 made it a read (credentials' declaration weighs it `read`), so it has no absence. */
   /* R41. membership R143: a member's own mark of when she last looked at Home, answered to her alone and recorded at the
      read, as memberlanguageset's subject; it asks no reason */
   lookedsince:           { ground: "caller-owned", is: "a member's own mark of the instant she last looked at Home, recorded when she looks and answered to her alone; it asks no reason and holds nothing else (membership R143)" },
@@ -67,7 +68,7 @@ export const T48_NON_ACTS = {
     + "already dates and what is followed (following R30)"),
   readtranslate: "draft: a machine translation of one passage of the group's own writing (a note, question, finding or "
     + "notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes "
-    + "nothing (plane R50)",
+    + "nothing (store-assembly R53)",
   /* R40 */
   updateskip: "release-directed: keyed by a verified release notice, reached from Settings › Updates and the "
     + "administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer "
@@ -81,8 +82,7 @@ export const T48_NON_ACTS = {
   updatenotice: R("the verified release notice Settings › Updates draws, to administrators only (instance-setup R89)"),
   /* R41 */
   aiuseovertime: R("one assistant account's use over time, by day and by period, to that account's owners (ai-use R14)"),
-  exploregraph: R("what the record joins a centre to, two rings out: the nodes and steps the connection graph draws on "
-    + "Explore connections, a person's Connections and the money trail (explore R21)"),
+  exploregraph: R(localize("op-grades.t48.what_the_record_joins_a", "what the record joins a centre to, two rings out: the nodes and steps the connection graph draws on Explore connections, a person's Connections and the money trail (explore R21)")),
   standardproposals: R("the proposals made for one project's standards, open, adopted or all, each labeled as who "
     + "proposed it and whether it is machine work (standards R57)"),
   filingread: R("one prepared draft or communication as it was stored, its text, blanks, fills and offers, beside its "

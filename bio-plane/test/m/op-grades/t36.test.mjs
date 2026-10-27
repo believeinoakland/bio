@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t36.mjs";
+import { readRows, declaredSentence } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]) && NON_ACTS[op].length > 30;
@@ -26,8 +27,7 @@ test("R23: K2092's five ops — standardinforcethrough, standardinforcethroughwi
   for (const [op, code] of Object.entries(R23_CODES)) assert.ok(JUSTIFICATION_REFUSALS.includes(code), `${op}: ${code}`);
   assert.equal(NON_ACTS.standardinforcethrough, STANDARD_THROUGH);
   assert.equal(NON_ACTS.standardinforcethroughwithdraw, STANDARD_THROUGH);
-  assert.equal(NON_ACTS.spotcheckvisit, "draw-directed: keyed by a draw and one drawn item, reached from the spot-check; "
-    + "ties the visitor's own testimony to the item; moves no bundle");
+  assert.equal(NON_ACTS.spotcheckvisit, declaredSentence("calculations", "spotcheckvisit"));
   for (const op of R23_READS) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
   assert.deepEqual([...Object.keys(R23_WRITES), ...R23_READS].filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   assert.deepEqual(Object.keys(R23_WRITES).map(phoneOf), [true, true, true]);
@@ -42,22 +42,16 @@ const R24_WRITES = { releasescanhold: "reasoned", deepercheck: "observational", 
   openoriginal: "observational", openwithwarning: "observational", scanbatch: "observational", deeperbatch: "observational",
   renderbatch: "substrate", securityforward: "substrate", securitytooladd: "credential", securitytoolremove: "credential",
   securitytooltest: "substrate" };
-const R24_READS = ["verdictnotes", "threatof", "originalstate", "safeview", "safecopy", "scanstatus", "scanfindings",
-  "findingkind", "securitytools", "securitytoolcatalogue", "securitytoolevents"];
-const FILE_ASKED = "file-directed: keyed by a capture's digest; asks the group's outside tools about this file; records "
-  + "no one";
-const TOOLS = "setting: the group's security tools, an administrator's act; moves no bundle";
+/* the reads of T36's table that are neither R23's two nor R25's `aikeepawaystate`: file-safety's (R24 counts 23 ops in all) */
+const R24_READS = readRows(T36_NON_ACTS).filter((op) => !R23_READS.includes(op) && op !== "aikeepawaystate");
+const FILE_ASKED = declaredSentence("file-safety", "deepercheck");
+const TOOLS = declaredSentence("file-safety", "securitytooladd");
 const WAKES = "scheduler: the security wakes; name no member and move no bundle";
 const R24_REASONS = {
-  openoriginal: "file-directed: keyed by a capture's digest, reached from the safe view's one click; answers the "
-    + "original's bytes to a member who may see it, a high-risk file only after a fresh clean deeper check (`override`); "
-    + "records no one",
-  openwithwarning: "file-directed: keyed by a capture's digest, reached from the warning before opening; answers a "
-    + "high-risk original after the member's two confirmations, never under a scan hold; records no one and keeps no "
-    + "confirmation",
+  openoriginal: declaredSentence("file-safety", "openoriginal"),
+  openwithwarning: declaredSentence("file-safety", "openwithwarning"),
   deepercheck: FILE_ASKED, safecopyrequest: FILE_ASKED,
-  releasescanhold: "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one "
-    + "member's reasoned act of two, never a machine's; moves no bundle",
+  releasescanhold: declaredSentence("file-safety", "releasescanhold"),
   securitytooladd: TOOLS, securitytooltest: TOOLS, securitytoolremove: TOOLS,
   scanbatch: WAKES, renderbatch: WAKES, deeperbatch: WAKES, securityforward: WAKES,
 };
@@ -109,8 +103,7 @@ test("R25: aikeepaway `reasoned` on AI_KEEP_AWAY_NO_REASON (T37: credentials R51
   assert.ok(JUSTIFICATION_REFUSALS.includes("AI_KEEP_AWAY_NO_REASON"));
   assert.ok(JUSTIFICATION_REFUSALS.includes("NO_REASON"), "NO_REASON stays for the ops that still answer it");
   assert.equal(JUSTIFICATION_REFUSALS.filter((c) => c === "AI_KEEP_AWAY_NO_REASON").length, 1);
-  assert.equal(NON_ACTS.aikeepaway, "setting: whether the group keeps its material away from every assistant, an "
-    + "administrator's act with a reason; moves no bundle");
+  assert.equal(NON_ACTS.aikeepaway, declaredSentence("ai-accounts", "aikeepaway"));
   assert.ok(isRead("aikeepawaystate"));
   assert.equal(gradeOf("aikeepawaystate"), null);
   assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "aikeepaway") && !Object.hasOwn(MACHINE_REFUSALS, "aikeepawaystate"));
@@ -122,8 +115,8 @@ test("R25: aikeepaway `reasoned` on AI_KEEP_AWAY_NO_REASON (T37: credentials R51
 });
 
 test("R23 R24 R25: T36's tables hold exactly these ops, none both graded and stated absent", () => {
-  assert.deepEqual(Object.keys(T36_RUNGS).sort(),
-    ["aikeepaway", "releasescanhold", "spotcheckvisit", "standardinforcethrough", "standardinforcethroughwithdraw"]);
+  assert.deepEqual(Object.keys(T36_RUNGS).sort(), [...Object.keys(R23_WRITES), ...Object.keys(R24_WRITES), "aikeepaway"]
+    .filter((op) => Object.hasOwn(T36_RUNGS, op)).sort());
   assert.deepEqual([...Object.keys(T36_RUNGS), ...Object.keys(T36_RUNG_ABSENT)].sort(),
     [...Object.keys(R23_WRITES), ...Object.keys(R24_WRITES), "aikeepaway"].sort());
   assert.deepEqual(Object.keys(T36_NON_ACTS).sort(), [...Object.keys(R23_WRITES), ...R23_READS, ...Object.keys(R24_WRITES),

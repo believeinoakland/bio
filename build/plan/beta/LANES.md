@@ -1,0 +1,43 @@
+# The beta's design lanes
+
+**Status** · In force, Bob's (K5417, K5418, 2026-10-27): "let's get all of this designed, then integrated into a comprehensive build plan, and THEN start building it". Written by BOB #320. Every lane reads §1 and its own section whole at takeover. BOB keeps this file and `MAP.md`; no lane edits either.
+
+## 1. Rules for every lane
+
+- **Where you write.** Your own branch off `tranche/T53`, and only your own folder (named in your section). Never `build/requirements/`, `build/plan/current.md`, another lane's folder or product code (TESTS-SWEEP alone changes test files). BOB merges your folder into `tranche/T53` at each of his checks. Push with `git -c http.version=HTTP/1.1 push origin <branch>`. Never force-push, never rewrite `main`, never print a secret, Cloudflare account `20b533579290b9b93168345edd3b7f72` only.
+- **Your files.** `HANDOFF.md`: section 0 is the state now and the next steps, rewritten whole after every entry, so a handover is always ready; entries below it are numbered with your prefix (§2). `DECISIONS.md`: one line per decision of Bob's that you carry (id · date · his words, quoted · source), never reworded. Drafts: one subject per file. `NEXT-SESSION-PROMPT.md`: the prompt your successor starts from.
+- **Sizes, in code.** `HANDOFF.md` at most 25,600 bytes, every other file at most 51,200 (`node /home/user/civicos-process/tools/proc.mjs sizes --product /home/user/bio` lists every file over; run it before each commit, and commit nothing over). `NEXT-SESSION-PROMPT.md` under 8 KB. When `HANDOFF.md` nears its cap, move its oldest entries whole to `build/plan/archive/<your folder>/`; a successor never reads the archive at takeover. A draft that grows past its cap is split by subject.
+- **Reading.** Read in full, never scan (P20). A file over 50 KB is read by a Sonnet worker at medium effort told the task and what follows it, never into your own context. Your takeover reading set stays under 150 KB.
+- **Context.** After each entry read `context_usage` (`get_session`, no id). At 40 % of `max_tokens`, hand over: rewrite section 0 and the prompt, push, and ask BOB by `send_message` to start your successor. BOB starts it, and it archives you.
+- **Deciding.** You decide nothing that is Bob's (policy, doctrine, requirements and what they mean, high-level architecture, UX; P17). Each such question goes to BOB by `send_message` with an explanation Bob can follow, options and your recommendation. BOB brings it to Bob, records his answer as a K ruling and sends it to every lane it touches. Lower-level technical points: recommend; BOB decides. Ask nothing Bob has already answered (search `build/rulings.md`; your `DECISIONS.md`).
+- **What you deliver.** Requirement drafts in the house format (`build/requirements/README.md`): for each module, what it provides, uses and keeps, and what it satisfies, each line ending with its Test; new modules with their proposed layer and `uses`; ops and their grades; what a screen needs (to UX-DESIGN through BOB, as needs, never designs); what must be measured and on what copy; what you need from another lane. Mark each draft READY when it is complete for PLANNING.
+- **Cooperating.** At takeover and at each entry, read `build/plan/beta/MAP.md` and the other lanes' `HANDOFF.md` section 0 on `tranche/T53`. A need from another lane goes to BOB, who adds it to `MAP.md` and relays it. Never message another lane directly; UX-DESIGN is reached only through BOB.
+- **Reporting.** After each entry, send BOB one line by `send_message`: your prefix and number, what is new, what you need. BOB's session is the one named on `build/plan/current.md`'s Status line on `tranche/T53`; check it with `get_session` before sending.
+- **Accounts.** The work moves between Bob's three accounts when one's weekly capacity nears its end. On BOB's `SPIN DOWN` message: finish or abandon the current step cleanly, rewrite section 0 and the prompt, push, reply `SPUN DOWN`, and stop. Your successor on the next account starts from your prompt.
+- **Models.** Lane sessions as §2 says; workers given model and effort in each call (Haiku at low for mechanical work, Sonnet at medium for reading and drafting, never Opus).
+
+## 2. The lanes
+
+| lane | prefix | branch · folder | model | scope | starts from |
+|---|---|---|---|---|---|
+| **AI-DESIGN #3** | A | `lane/ai-design` (merge `tranche/T53` in first) · `build/plan/lane-ai-design/` | Opus | AI provider selection (a team's, a project's, a member's AI) and the assistant fully designed: what it does on every screen and journey, its modules (keep, adapt, retire), the provider boundary, its tests and limits, its costs to a team | `HANDOVER.md` there (A41): Bob's decisions AIR1-AIR45 for BOB to record as K rulings, the rulings they supersede, N1220 to refresh, the technical points left to BOB |
+| **PLATFORM** | P | `lane/platform` · `build/plan/beta/platform/` | Sonnet | The three service levels (Bob, K4746: Team, Organization, Coalition/institution on Enterprise; the record split N1271), performance and responsiveness designed in (a time budget for every screen and op, the combined read K4599, the admission fold N1264), where a team's record lives (K4746 (2), N1273's region picker), the per-level load test (N1274) | `build/plan/lane-performance/` (CHARTER, HANDOFF, archive P1-P26), K4746, K4747, K4599, K4635 |
+| **CAPABILITIES** | C | `lane/capabilities` · `build/plan/beta/capabilities/` | Sonnet | Every feature put off until after the alpha (`build/plan/next.md`; `carried-T52-R1.md`'s "Left out"): public registers and alerts (N1259), following the trail (N1260), places in layers (N1257), email capture (N824) and the rest, each with Bob's open points brought as options | `draft-T52-DEC406.md`, `draft-T52-DEC409.md`, `draft-T52-plan.md`, `draft-T52-N1260-requirements.md`, DEC-447 |
+| **FILES** | F | `lane/files` · `build/plan/beta/files/` | Sonnet | Every file type and size the beta reads (N1266, studied closely for Bob first, K4632; N1267 sizes, K4628 option B; N1267a), how each is read, held and shown, and the acceptance corpus (N1268) | `build/plan/lane-reading-architecture/` (`GAP.md`, `stage0/RESULTS.md`), K4831 |
+| **JOURNEYS #4** | W | `lane/journeys` · `build/plan/lane-journeys/` | Sonnet | The alpha's defects found whole: walk every feature and journey that needs no assistant on the deployed 0.87.0, each defect a cause with its owning module and how it was missed; confirm which carried T52 entries still stand | its `CHARTER.md` and `HANDOFF.md`; `build/plan/walk-T51b-live/`; `carried-T52-R1.md` |
+| **TESTS-SWEEP** | S | `lane/tests-sweep` · `build/plan/beta/tests-sweep/` and test files | Sonnet | The tests rethink's option A (Bob, K5418): every test that asserts English asserts the word key and values instead; the words check refuses English in tests; each K5339 and K5343 red run once and sorted; the 89 fixtures findings cleared. A mechanical pass (P7): one full run of every module it touched before its merge, recorded by module | `build/plan/tests-rethink-T52.html`, K5258, K5313, `proc tests` |
+| **PLANNING** | L | `lane/planning` · `build/plan/beta/planning/` | Opus | Turns the lanes' READY drafts into one consistent set of requirement lines and architecture changes (new modules, layers, order), then into T53's comprehensive build plan by layer (the carried entries, every new capability, the sweep's merge first), each job's reading set within its budget, each exclusion with its hard reason (P19). Proposes; BOB reviews, brings Bob what is his and writes every line | this file, `MAP.md`, `carried-T52-R1.md`, `build/layers.md`, `build/modules.json`, `build/requirements/README.md` |
+| **UX-DESIGN #43** | U | its own stream (`claude/gallant-brown-zg0wc1`) | Opus | Every screen and word the other lanes need, as their needs arrive through BOB | its own charter |
+
+## 3. Sessions (BOB keeps this table)
+
+| lane | session | started |
+|---|---|---|
+| AI-DESIGN #3 | `session_018BhcedQQCRAKFMw8Mi8Xka` | 2026-10-27, BOB #320 |
+| PLATFORM #1 | `session_018BhceduzvspNp7pagSnBaL` | 2026-10-27, BOB #320 |
+| CAPABILITIES #1 | `session_018BhcefgnFUeeyqm8N5bN75` | 2026-10-27, BOB #320 |
+| FILES #1 | `session_018Bhcecv29TYVd71UxV9qGX` | 2026-10-27, BOB #320 |
+| JOURNEYS #4 | `session_018Bhcef2FG9FpTXzkPVijim` | 2026-10-27, BOB #320 |
+| TESTS-SWEEP #1 | `session_018BhcechYohm1LHA7fup1fn` | 2026-10-27, BOB #320 |
+| PLANNING #1 | `session_018Bhcefb6SwLLagYbDTHR1M` | 2026-10-27, BOB #320 |
+| UX-DESIGN #43 | `session_018BhcefCkHUHGG8UK3QabvX` | 2026-10-27, BOB #320 |

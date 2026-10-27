@@ -11,6 +11,7 @@ const { credentialsOf, ACCOUNT_CHECKS } = await import("../../../src/credentials
 const { aiAccountsOf } = await import("../../../src/ai-accounts/index.mjs");
 const { membershipOf } = await import("../../../src/membership/index.mjs");
 const { instanceSetupOf } = await import("../../../src/setup.mjs");
+const { translationsOf } = await import("../../../src/translations/index.mjs");
 const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
 const { answersOf } = await import("../../../src/answers/index.mjs");
 const { wizardScriptsOf } = await import("../../../src/wizard-scripts/index.mjs");
@@ -38,9 +39,8 @@ test("R1 (N379, K566): the record store's door dispatches sources' own map — e
   const r = await record();
   const { sourcesOps } = await import("../../../src/sources/index.mjs");
   const routes = Object.keys(sourcesOps({}, new URL("http://do/"), null));
-  /* T33 (sources R16; K1550): `sourcekeyed`, a member's mark of a keyed result, joins them */
-  assert.deepEqual(routes.sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcekeyed",
-                                   "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+  /* the no-account route is among sources' own routes, whatever else sources declares (T33, sources R16, K1550) */
+  assert.ok(routes.includes("knockerconsent"), "knockerconsent is sources' route");
   for (const op of routes) {
     const a = await r.go(`${op}?by=ann&viewer=member:ann&source=203.0.113.9&now=${Date.now()}`, "POST", { captureSha: "a".repeat(64) });
     assert.equal(a.status, 200, `${op}: ${JSON.stringify(a.json).slice(0, 200)}`);
@@ -113,12 +113,12 @@ async function drafts() {
      admitted call (one with no refusal handed) */
   const W = wizardScriptsOf(r.ctx), realHelp = W.writingHelp.bind(W), handed = [];
   W.writingHelp = (args) => { handed.push(args); if (!args.assistant?.refusal) seen.push(["writinghelp", args]); return realHelp(args); };
-  /* translationdraft's handler is instance-setup's own (T37-30): wrapped, never replaced, so what it is handed is seen and
-     what it answers is its own */
-  const setup = instanceSetupOf(r.ctx), firstAsked = [];
-  const realFirst = setup.translationDraftRefusal.bind(setup), realDraft = setup.translationDraft.bind(setup);
-  setup.translationDraftRefusal = (args) => { firstAsked.push(args); return realFirst(args); };
-  setup.translationDraft = (args) => { seen.push(["translationdraft", args]); return realDraft(args); };
+  /* translationdraft's handler is translations' own (T51-143: the door calls it directly): wrapped, never replaced, so what
+     it is handed is seen and what it answers is its own */
+  const setup = instanceSetupOf(r.ctx), firstAsked = [], tr = translationsOf(r.ctx);
+  const realFirst = tr.translationDraftRefusal.bind(tr), realDraft = tr.translationDraft.bind(tr);
+  tr.translationDraftRefusal = (args) => { firstAsked.push(args); return realFirst(args); };
+  tr.translationDraft = (args) => { seen.push(["translationdraft", args]); return realDraft(args); };
   const reads = { account: 0, use: 0 }, asked = [];
   const accountFor = C.accountFor.bind(C), U = aiUseOf(r.ctx), useCheck = U.useCheck.bind(U);
   const A = answersOf(r.ctx), askAccount = A.askAccount.bind(A);
@@ -128,7 +128,7 @@ async function drafts() {
   const code = (a) => a.json.result.code ?? a.json.result.reason;
   /* a draft's use, counted to the account that paid through the door's own `askusage` (R11) */
   const spend = (member, calls) => r.go(`askusage?viewer=member:${member}`, "POST", { mode: "draft", usage: USE, calls });
-  return { r, C, U, seen, handed, code, firstAsked, reads, asked, spend };
+  return { r, C, U, seen, handed, code, firstAsked, reads, asked, spend, tr };
 }
 
 /* The group's keep-away, credentials' (its R51, R57; DEC-172), which R10 reads through
@@ -213,8 +213,7 @@ test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-
 });
 
 test("R10 (N669, N765, N812; K2200, K2201, K2238, K2500; instance-setup R67; answers R30): `translationdraft`, in both directions, answers instance-setup's own first refusal (`translationDraftRefusal`, asked with the body's `language`, `direction`, `keys`, `key` and the stamped `by`) before anything of the door's — TRANSLATION_DIRECTION_UNKNOWN, TRANSLATION_NOT_GRANTED, and NOT_AN_ADMIN for `to_english` — kept away or not; then AI_KEPT_AWAY as `credentials.aiKeptAway({use: \"draft\"})` answers it, no account read and no draft routed; then `answers.askAccount`'s refusals for kind draft, NO_ACCOUNT and AI_LIMIT_REACHED; admitted, instance-setup's `translationDraft` receives those arguments and `assistant: {on, account: {kind, level}}`, a caller's `assistant` never read and no key handed, and answers its words (negative control: a granted speaker clears the first refusal)", async () => {
-  const { r, C, U, seen, code, firstAsked, reads, asked, spend } = await drafts();
-  const setup = instanceSetupOf(r.ctx);
+  const { r, C, U, seen, code, firstAsked, reads, asked, spend, tr } = await drafts();
   /* `by` as control-plane stamps it, the folded member id; `viewer` the member */
   const draft = (by, body) => r.go(`translationdraft?by=${by}&viewer=member:${by}`, "POST", body);
   const word = (await import("../../../src/setup-words/index.mjs")).WORD_ROWS
@@ -232,9 +231,9 @@ test("R10 (N669, N765, N812; K2200, K2201, K2238, K2500; instance-setup R67; ans
   }
   assert.deepEqual([reads, asked, seen], [{ account: 0, use: 0 }, [], []]);
   /* negative control: a granted speaker clears it, and meets keep-away; an awaiting kept word clears to_english's */
-  const g = setup.translationGrant({ member: "bea", language: "es", by: "ann" });
+  const g = tr.translationGrant({ member: "bea", language: "es", by: "ann" });
   assert.equal(g.ok, true, JSON.stringify(g));
-  const kept = setup.translationAdopt({ language: "es", key: word.key, text: "palabra de prueba", by: "bea" });
+  const kept = tr.translationAdopt({ language: "es", key: word.key, text: "palabra de prueba", by: "bea" });
   assert.deepEqual([kept.ok, kept.state], [true, "awaiting"], JSON.stringify(kept));
   const TO_LANG2 = { language: "es", direction: "to_language" };
   for (const [body, by] of [[TO_LANG2, "bea"], [TO_EN, "ann"]])
@@ -382,6 +381,7 @@ test("R12: no place is named in this module's behaviour or outward text — ever
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|emeryville|contra costa)\b/i;
   assert.match("Oakland", PLACES);
   const texts = [];
+// fixtures-own: input a route map handed to the door under test; its routes throw or answer as the test states
   const s = { routes: () => ({ boom: () => { throw new Error("x"); }, purge: () => ({ ok: true }) }), membership: () => null,
               namespace: () => "bio", purgeHeld: () => true };
   texts.push((await go(s, "x", { method: "POST", body: "{" })).json, (await go(s, "nosuch")).json,

@@ -10,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as dp from "../registry.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const { doctypeFor, doctypes, registerDoctype, readText, assess, NO_TYPE, CONFIDENCE, CONTRACT } = dp;
 const enc = (s) => new TextEncoder().encode(s);
@@ -28,13 +29,13 @@ const stub = (key, marker, extra, confidence = CONFIDENCE.CERTAIN) => ({
 test("R36 R4 R13 R19 R35 nothing is registered by default: doctypeFor answers the stated no-type answer, never throws, and readText and assess claim nothing", async () => {
   assert.deepEqual(doctypes(), [], "this module registers no content type of its own");
   assert.ok(Object.isFrozen(NO_TYPE));
-  assert.deepEqual({ ...NO_TYPE }, { key: "unregistered", label: "no content type is registered", version: 0,
+  assert.deepEqual({ ...NO_TYPE }, { key: "unregistered", label: localize("docprofile.registry.no_content_type_is_registered", "no content type is registered"), version: 0,
                                      fallback: true, contract: CONTRACT.SUBSTANCE });
   for (const ctx of [{ text: "a letter about nothing in particular" }, { text: "" }, {}]) {
     const r = doctypeFor(ctx);
     assert.equal(r.type, NO_TYPE);
     assert.deepEqual([r.confidence, r.signals, r.considered, r.also], [CONFIDENCE.NONE, [], [], []]);
-    assert.match(r.why, /no content type is registered/);
+    assert.equal(r.why, localize("docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described"));
   }
   // readText: a determined reading with no reader, stated (R19)
   const t = readText("a letter about nothing in particular", {});
@@ -90,7 +91,7 @@ test("R36 R4 R5 the seam: registerDoctype appends a new key, replaces a held key
   // the registered fallback answers what nothing recognises
   const none = doctypeFor({ text: "nothing at all" });
   assert.deepEqual([none.type, none.confidence], [fallback, CONFIDENCE.NONE]);
-  assert.match(none.why, /no registered content type recognised/);
+  assert.equal(none.why, localize("docprofile.registry.no_registered_content_type_recognised", "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"));
 });
 
 test("R4 R13 R19 R35 with the fallback replaced by a type that is not one, doctypeFor answers the stated no-type answer again", async () => {
@@ -98,7 +99,7 @@ test("R4 R13 R19 R35 with the fallback replaced by a type that is not one, docty
   assert.ok(!doctypes().some((t) => t.fallback === true));
   const r = doctypeFor({ text: "a letter about nothing in particular" });
   assert.deepEqual([r.type, r.confidence], [NO_TYPE, CONFIDENCE.NONE]);
-  assert.match(r.why, /no content type is registered/);
+  assert.equal(r.why, localize("docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described"));
   // a type that does recognise still wins (R4)
   assert.equal(doctypeFor({ text: "GENERIC-STUB" }).type.key, "stub_fallback");
   const a = await assess(enc("<p>one</p>"), enc("<p>two</p>"), { sha256 });

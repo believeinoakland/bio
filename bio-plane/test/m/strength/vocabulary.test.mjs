@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE, ADMIN, REASON } from "./fixture.mjs";
 import { analystHits, ATOMS, CONNECTIVES, NOUNS, RESIDUE, residueAnchored, DEC32_ENTRY } from "./vocabulary.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { STRENGTH_AXES, VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS,
          STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
 import { legCapped } from "../../../src/leg-earning/index.mjs";
@@ -29,6 +30,8 @@ function clean(corpus) {
   const hits = corpus.flatMap(([where, s]) => analystHits(s).map((h) => `${where}: "${h.token}" (${h.why}) in: ${s}`));
   assert.deepEqual(hits, [], "an analyst's word reaches a member");
 }
+/* A word-table sentence as a pattern that matches it exactly, for a whys listing. */
+const literal = (s) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 /* A world whose capture bound is leg-earning's own `legCapped` (its R2), so its sentences are the ones a member reads. */
 function real(opts) {
   const w = world(opts);
@@ -141,8 +144,9 @@ test("R28: every named member's why the walk answers (R1, R2, R3, R5), on every 
     ["testimony read at its one letter", /is read at D here/],
     ["a hunch", /marked as a hunch/],
     ["a grade with no referent", /has no referent/],
-    ["a sub-inquiry unrated", /INQ-2026-0007-a is UNRATED on/],
-    ["a sub-inquiry undetermined, its detail embedded", /INQ-2026-0008-a is undetermined on connection: this connection axis/],
+    ["a sub-inquiry unrated", literal(word("strength.why.unrated_load_bearing", { from: "INQ-2026-0007-a", axis: "capture" }))],
+    ["a sub-inquiry undetermined, its detail embedded", literal(word("strength.why.undetermined",
+      { from: "INQ-2026-0008-a", axis: "connection", unknown: "" }))],
     /* The walk's own "reached its depth bound of 6 here" is written only below the top level, where the level's
        `detail` (embedded above) is all that travels up; it never reaches an answer. */
     ["an ungraded leg", /the leg carries no grade/],
@@ -242,7 +246,7 @@ test("R28: the bar's sentences (R14–R16) carry no analyst's word", () => {
 test("R28: every refusal row's translation (C-30, C-71, C-32.9, C-107) carries no analyst's word", () => {
   const rows = [VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS]
     .flatMap((t) => Object.entries(t).map(([code, row]) => [`${row.check} ${code}.translation`, row.translation]));
-  assert.equal(rows.length, 9 + 9 + 5);
+  assert.equal(rows.length, 9 + 9 + 6);
   for (const [where, t] of rows) assert.ok(typeof t === "string" && t.length > 20, where);
   clean(rows);
 });
@@ -284,7 +288,7 @@ test("R28: the sentences T28 added (another group's finding, R33; anonymous evid
                      legs: [{ target: REF, kind: "imported" }, { target: REF, kind: "imported", answer: { capture: "C" } },
                             { target: "INFO-2026-0001-a", kind: "document", grade: "B", grade_axis: "connection", captures: ["knock"] }] })];
   const corpus = answers.flatMap((a, i) => sentences(a, `answer ${i}`));
-  for (const re of [/another group's finding, in that group's case/, /publishes connection as undetermined/,
+  for (const re of [/another team's finding, in that team's case/, /publishes connection as undetermined/,
                     /without saying which edition/, /does not hold at edition 3/, /nothing here establishes what/,
                     /attests anonymously/, /case file states no answer/, /not a document, so a capture grade/])
     assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
@@ -321,9 +325,9 @@ test("R28: the sentences T33 added (a calculation's, a held standard's and an oc
   const p = w.s.strengthOf("INQ-2026-0001-a"), q = w.s.strengthOf("INQ-2026-0002-a"), o = w.s.strengthOf("INQ-2026-0003-a");
   const corpus = STRENGTH_AXES.flatMap((axis) => [...sentences(p[axis], axis), ...sentences(q[axis], `standard ${axis}`),
                                                   ...sentences(o[axis], `occurrence ${axis}`)]);
-  for (const re of [/weakest capture among its inputs/, /is not accepted/, /another program computed/, /is not a calculation your group's Civicsmith holds/,
+  for (const re of [/weakest capture among its inputs/, /is not accepted/, /another program computed/, /is not a calculation your team's Civicsmith holds/,
                     /no more than B for STD-2026-0001/, /no captured text at that version/, /held standard, so a connection grade/,
-                    /capture axis only/, /It is overdue as known today/, /due date is undetermined/, /not an obligation your group's Civicsmith holds/])
+                    /capture axis only/, /It is overdue as known today/, /due date is undetermined/, /not an obligation your team's Civicsmith holds/])
     assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
   corpus.push(["gradingMethodText v2", gradingMethodText(GRADING_METHOD_VERSION)]);
   clean(corpus);

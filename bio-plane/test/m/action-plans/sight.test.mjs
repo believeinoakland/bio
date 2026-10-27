@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, by, OFFICE, ms, NOW, FIRST } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = ms(NOW);
 const read = (w, who) => w.ap.planRead({ id: w.PL, viewer: V(who), nowMs: AT });
@@ -115,7 +116,7 @@ test("R35 (Terms): a determination resting on a finding the viewer may not see i
   w.hide(V("alice"), "INQ-2026-0902-g");
   const r = read(w, "alice");
   assert.equal(r.subjects[1].support, "short", "every visible finding meets the bar, and still short");
-  assert.equal(r.subjects[1].why, "a finding the determination rests on is not one you may see, so it is not shown to meet the project's bar");
+  assert.equal(r.subjects[1].why, word("action-plans.why.finding_determination_rests"));
   assert.equal(holds(r, "INQ-2026-0902-g"), false);
   assert.deepEqual(read(w, "bob"), before, "negative control: bob's support is established");
   assert.equal("out_of_view" in before, false);

@@ -3,11 +3,14 @@
  * `[lo, hi)` in seconds, an open or unknown EDTF end held as null (never a date). A day is its whole local day, never
  * its midnight (K1464). */
 import { parseDay, dayText, DAY_RE } from "./days.mjs";
-import { isZone, startOfDay, wallToInstants, instantText, parseInstant, localDayNumber } from "./zone.mjs";
+import { isZone, startOfDay, wallToInstants, instantText, parseInstant, localDayNumber, wallOf } from "./zone.mjs";
 import { readEdtf } from "./edtf.mjs";
+import { reason } from "./reasons.mjs";
 
 export const refuse = (code, why) => ({ refused: code, why });
 export const undetermined = (why, candidates) => (candidates ? { undetermined: true, why, candidates } : { undetermined: true, why });
+/* R30: the reasons after the first, each a `{key, vars}` too. */
+const withAlso = (answer, more) => (more.length ? { ...answer, also: more } : answer);
 export const isNo = (r) => !!(r && (r.refused || r.undetermined));
 
 const PRECISIONS = ["day", "minute", "second", "edtf"];
@@ -69,17 +72,22 @@ export function bounds(dt) {
   return { earliest: text(s.lo), latest: text(s.hi) };
 }
 
-const describe = (s) => `${s.dt.value} (${s.dt.precision} precision${s.dt.zone && s.dt.zone !== "UTC" ? `, ${s.dt.zone}` : ""})`;
+const zoneOf = (s) => (s.dt.zone ? s.dt.zone : "UTC");
 
 /** R5 over spans already read. */
 export function compareSpans(a, b) {
   if (a.hi !== null && b.lo !== null && a.hi <= b.lo) return "before";
   if (b.hi !== null && a.lo !== null && b.hi <= a.lo) return "after";
-  const open = [a, b].filter((s) => s.lo === null || s.hi === null);
-  if (open.length) return undetermined(`${open.map((s) => `${s.dt.value} has an ${s.lo === null ? s.start : s.end} end`).join(", and ")}, so which comes first is not settled`);
+  /* R30: the reason is a key with its fills; a second open end rides in `also`, as validAt's further reasons do */
+  const open = [a, b].filter((s) => s.lo === null || s.hi === null).map((s) => {
+    const side = s.lo === null ? "start" : "end", kind = s.lo === null ? s.start : s.end;
+    return reason(`civil-time.values.${side}_${kind}`, { value: String(s.dt.value) });
+  });
+  if (open.length) return withAlso(undetermined(open[0]), open.slice(1));
   if (a.dt.value === b.dt.value && a.dt.precision === b.dt.precision)
-    return undetermined(`both are ${a.dt.value} at ${a.dt.precision} precision, so the precision held does not say which came first`);
-  return undetermined(`${describe(a)} and ${describe(b)} overlap, so the precision held does not say which came first`);
+    return undetermined(reason("civil-time.precision_precision_held", { value: String(a.dt.value), precision: String(a.dt.precision) }));
+  return undetermined(reason("civil-time.values.overlap", { value: String(a.dt.value), precision: String(a.dt.precision), zone: zoneOf(a),
+    value_2: String(b.dt.value), precision_2: String(b.dt.precision), zone_2: zoneOf(b) }));
 }
 
 /** R5. */
@@ -104,6 +112,17 @@ export function localDay(instant, zone) {
   const z = zoneRefusal(zone);
   if (z) return z;
   return dayText(localDayNumber(t, zone));
+}
+
+/** R30: the wall clock of `instant` in `zone`, from the same zone arithmetic as `localDay`. */
+export function localClock(instant, zone) {
+  if (typeof instant !== "string" || typeof zone !== "string") throw new TypeError("localClock takes an instant and a zone, both strings");
+  const t = parseInstant(instant);
+  if (t === null) return refuse("DATE_INVALID", `'${instant}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
+  const z = zoneRefusal(zone);
+  if (z) return z;
+  const secondOfDay = ((wallOf(t, zone) % 86400) + 86400) % 86400;
+  return { hour: Math.floor(secondOfDay / 3600), minute: Math.floor(secondOfDay / 60) % 60 };
 }
 
 /** R7. */
@@ -132,8 +151,8 @@ export function joinLocal(date, time, zone) {
   const p = (n) => String(n).padStart(2, "0");
   const value = `${dm[1]}T${p(h)}:${tm[2]}`;
   const c = wallToInstants(parseDay(dm[1]) * 86400 + h * 3600 + +tm[2] * 60, zone);
-  if (!c.length) return undetermined(`${value} does not occur in ${zone}: the clocks move forward past it that day`);
-  if (c.length > 1) return undetermined(`${value} occurs twice in ${zone}: the clocks move back that day`, c.map(instantText));
+  if (!c.length) return undetermined(reason("civil-time.occur_clocks_move", { value: String(value), zone: String(zone) }));
+  if (c.length > 1) return undetermined(reason("civil-time.occurs_twice_clocks", { value: String(value), zone: String(zone) }), c.map(instantText));
   return { value, precision: "minute", zone };
 }
 
@@ -148,7 +167,8 @@ function boundSpan(b, precision, zone, side) {
   if (hasValue && hasEvent) return refuse("BOUND_BOTH", `the validity's ${side} gives both a value and an event`);
   if (hasValue) return boundSpan(b.value, b.precision || precision, b.zone || zone, side);
   if (hasEvent) {
-    if (b.at === undefined || b.at === null) return undetermined(`the bounding event is not resolved (${side}: ${b.event}${b.edge ? `, ${b.edge}` : ""})`);
+    if (b.at === undefined || b.at === null) return undetermined(b.edge ? reason("civil-time.values.event_unresolved", { event: String(b.event), edge: String(b.edge) })
+      : reason("civil-time.values.event_unresolved_edgeless", { event: String(b.event) }));
     return spanOf(b.at);
   }
   return { none: true };
@@ -162,7 +182,7 @@ export function validAt(validity, date, { view } = {}) {
   const zone = v.zone || (view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null);
   const precision = v.precision || "day";
   const needZone = [v.from, v.to].some((b) => typeof b === "string" || (b && typeof b === "object" && b.value != null && !b.zone));
-  if (needZone && !zone) return undetermined("the validity states no zone and the view gives no time_zone");
+  if (needZone && !zone) return undetermined(reason("civil-time.validity_states_zone"));
   if (needZone) { const z = zoneRefusal(zone); if (z) return z; }
   const d = spanOf(date);
   if (isNo(d)) return d;
@@ -173,13 +193,13 @@ export function validAt(validity, date, { view } = {}) {
   if (!to.none && !to.undetermined && to.hi !== null && d.lo !== null && d.lo >= to.hi) return "out";
   const whys = [];
   const within = (b, side) => {
-    if (b.none) { whys.push(side === "from" ? "no start is stated" : "no end is stated"); return false; }
+    if (b.none) { whys.push(reason(side === "from" ? "civil-time.start_stated" : "civil-time.end_stated")); return false; }
     if (b.undetermined) { whys.push(b.why); return false; }
     const ok = side === "from" ? b.lo !== null && d.lo !== null && d.lo >= b.lo : b.hi !== null && d.hi !== null && d.hi <= b.hi;
-    if (!ok) whys.push(`${d.dt.value} overlaps the ${side === "from" ? "start" : "end"} ${b.dt.value} at the precision held`);
+    if (!ok) whys.push(reason(side === "from" ? "civil-time.values.overlaps_start" : "civil-time.values.overlaps_end", { value: String(d.dt.value), bound: String(b.dt.value) }));
     return ok;
   };
   const a = within(from, "from"), b = within(to, "to");
   if (a && b) return "in";
-  return undetermined(whys.join("; "));
+  return withAlso(undetermined(whys[0]), whys.slice(1));
 }

@@ -159,9 +159,14 @@ CREATE INDEX IF NOT EXISTS reevaluation_input_changes_calc ON reevaluation_input
 -- and when the last complete one began, and the receipt mark: receipt_seq is
 -- counted up by each receipt (provenance's onReceipt), and each pass keeps the
 -- count it began at, so "a receipt since the last complete pass began" is one
--- comparison of two integers, never two instants in the same second. No
--- receipt's content is stored. Absent (never written, or purged whole) reads as
--- no pass yet complete and no receipt counted.
+-- comparison of two integers, never two instants in the same second. G66: a
+-- capture joins a page's version chain when a document holding it is filed
+-- (a register row, provenance R17), which is not a receipt, so the filing mark
+-- is kept the same way: pass_mark and complete_mark are the highest register
+-- row the pass (the last complete pass) began at, and a higher row now is a
+-- filing since. NULL (a row written before the mark existed) reads as one pass
+-- owed. No receipt's content is stored. Absent (never written, or purged
+-- whole) reads as no pass yet complete and no receipt counted.
 CREATE TABLE IF NOT EXISTS reevaluation_sweep (
   id               INTEGER PRIMARY KEY CHECK (id = 1),
   cursor           TEXT,
@@ -169,7 +174,9 @@ CREATE TABLE IF NOT EXISTS reevaluation_sweep (
   pass_seq         INTEGER,
   complete_began   TEXT,
   complete_seq     INTEGER,
-  receipt_seq      INTEGER NOT NULL DEFAULT 0
+  receipt_seq      INTEGER NOT NULL DEFAULT 0,
+  pass_mark        INTEGER,
+  complete_mark    INTEGER
 );
 `;
 
@@ -197,6 +204,8 @@ export const REEVALUATION_TABLES = Object.freeze([
  *  address (the reference adoptVersion re-pins to), `across` the standards, key, portion and relation that link the two
  *  addresses (JSON). */
 const NOTICE_COLUMNS = Object.freeze([["newer_content", "TEXT"], ["across", "TEXT"]]);
+/** G66: the filing mark's columns on the sweep row, added to a table created before them and left NULL there. */
+const SWEEP_COLUMNS = Object.freeze([["pass_mark", "INTEGER"], ["complete_mark", "INTEGER"]]);
 
 /** Creates the tables; idempotent. */
 export function migrateReevaluation(sql) {
@@ -205,4 +214,7 @@ export function migrateReevaluation(sql) {
   const have = new Set([...sql.exec(`PRAGMA table_info(reevaluation_notices)`)].map((c) => c.name));
   for (const [name, type] of NOTICE_COLUMNS)
     if (!have.has(name)) sql.exec(`ALTER TABLE reevaluation_notices ADD COLUMN ${name} ${type}`);
+  const swept = new Set([...sql.exec(`PRAGMA table_info(reevaluation_sweep)`)].map((c) => c.name));
+  for (const [name, type] of SWEEP_COLUMNS)
+    if (!swept.has(name)) sql.exec(`ALTER TABLE reevaluation_sweep ADD COLUMN ${name} ${type}`);
 }

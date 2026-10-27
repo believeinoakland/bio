@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R33). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R42; fix round 3 adds R42, `question_count` and `shared_drafts` on the list; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests, R38 `mine` and `scope` on the list; fix round 10 adds R43, `by` read in the door's form (`actorOf`), and R44, the requester told the answer and `projectRequestsAnswered`). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `said`); T47 (R26) lists the
@@ -19,17 +19,28 @@
  * `participationWrite` (its R118); it joins record-core's `bundles` and `manifest` only on its read contract
  * (record-core R37) and asks every other bundle fact of `core.bundleInfo` (R34). Calls go one way: membership never calls this module but
  * through the two notice slots and the one guard this module registers in (membership R116, R117, R128). */
-import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
+import { MACHINE_CLASS_PREFIX, parseFrontmatter, LEGACY_TYPE_ALIASES } from "../record-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, noSuchProject, viewerPredicate } from "../membership/index.mjs";
-import { hasWord, word } from "../setup-words/index.mjs";
+import { hasWord, word, localize } from "../setup-words/index.mjs";
 import { PROJECT_ROSTER_SCHEMA, PROJECT_ROSTER_TABLES } from "./schema.mjs";
 import { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 export { PROJECT_ROSTER_TABLES } from "./schema.mjs";
 export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 
 const ROOT_ADMIN = Membership.ROOT_ADMIN;
+
+/** R43 (fix round 10; K5157): THE ACTOR `by` IN THE FORM THE DOOR STAMPS IT. A declared act arrives with `by` in the
+ *  viewer's form (`member:<id>`; the founder's is the bare `admin`), a legacy act with the bare member id; membership's
+ *  reads (`isProjectOwner`, `participation`, `isAdministrator`) take the member id. This is the one place the form is read:
+ *  `member:<id>` answers `<id>`, anything else (a bare id, the founder's `admin`, a machine `class:<cls>`, a non-string)
+ *  as it came, so a prefix is never added to one already there. */
+const MEMBER_FORM = /^member:([A-Za-z0-9._:-]{1,128})$/;
+export function actorOf(by) {
+  const m = typeof by === "string" ? MEMBER_FORM.exec(by) : null;
+  return m ? m[1] : by;
+}
 
 /** R31 (T50; `action-records` R17): THE STAKE'S TWO REFUSALS, pure. `null` for a member's stamp and a stake that is
  *  `null` or trimmed text of 1 to 1,000 characters on one line with no control character; else the one refusal, its
@@ -39,11 +50,10 @@ export function stakeFault({ by, stake, of = "project", projectId = null } = {})
   const row = (code, detail, translation) => ({ ok: false, reason: code, code, check: PROJECT_SCOPE_CHECKS[code].check,
     translation, detail, project: projectId ?? null });
   if (typeof by !== "string" || !by || by.startsWith(MACHINE_CLASS_PREFIX) || !/^[A-Za-z0-9._:-]{1,128}$/.test(by))
-    return row("MACHINE_CANNOT_SET_STAKE", "a stake is a member's own words, set by a signed-in member. Nothing was written.",
+    return row("MACHINE_CANNOT_SET_STAKE", localize("project-roster.index.a_stake_is_a_members", "a stake is a member's own words, set by a signed-in member. Nothing was written."),
       PROJECT_SCOPE_CHECKS.MACHINE_CANNOT_SET_STAKE.translation);
   if (stake !== null && ProjectRoster.stakeText(stake) === undefined)
-    return row("STAKE_MALFORMED", "the stake is some text of 1 to 1,000 characters on one line, or null to clear it. "
-      + "Nothing was written.", of === "action"
+    return row("STAKE_MALFORMED", localize("project-roster.index.the_stake_is_some_text", "the stake is some text of 1 to 1,000 characters on one line, or null to clear it. Nothing was written."), of === "action"
       ? (hasWord("refusal.STAKE_MALFORMED.action") ? word("refusal.STAKE_MALFORMED.action") : null)
       : PROJECT_SCOPE_CHECKS.STAKE_MALFORMED.translation);
   return null;
@@ -188,6 +198,7 @@ export class ProjectRoster {
    * uninvited member cannot see that a project EXISTS. The ownership decisions (R6) and the removals an owner made (R2,
    * membership R36 writes them) are read here beside the participants, by the same readers. */
   projectParticipants({ projectId, by } = {}) {
+    by = actorOf(by);
     const mine = this.m.participation(projectId, by);
     if (!mine && !this.#adminAtFull(projectId, by)) return noSuchProject(projectId);   /* membership R78 */
     /* R29: a name given to a reader is a handle, the founder's the one membership holds for her (null while none). */
@@ -233,6 +244,14 @@ export class ProjectRoster {
     } catch { return null; }
   }
 
+  /* R45: a handle resolved to its member, the founder's held handle answering the founder (`admin`, active), so it never
+     answers NO_SUCH_HANDLE; any other handle is membership's, null when no one holds it. */
+  #memberOfHandle(handle) {
+    const fh = this.#founderHandle();
+    if (fh !== null && handle === fh) return { member_id: ROOT_ADMIN, handle: fh, status: "active" };
+    return this.m.memberByHandle(handle);
+  }
+
   /* R29: a member id shown where a handle is read: the founder's held handle (null while none), others as they are. */
   #nm(id) { return id === ROOT_ADMIN ? this.#founderHandle() : id; }
 
@@ -275,11 +294,12 @@ export class ProjectRoster {
      ALL existing owners. Consensus on addition is the load-bearing half, exactly as in §4.7: without it one owner
      recruits confederates and manufactures the majority that then removes the others. */
   projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" }); if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project may propose another owner of it" };
-    const target = this.m.memberByHandle(handle);
+               detail: localize("project-roster.index.owner_add_needs_an_owner", "only an owner of this project may propose another owner of it") };
+    const target = this.#memberOfHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     const p = this.m.participation(projectId, target.member_id);
@@ -291,7 +311,7 @@ export class ProjectRoster {
       const row = PROJECT_ROSTER_CHECKS.TARGET_NOT_JOINED;
       return { ok: false, reason: "TARGET_NOT_JOINED", code: "TARGET_NOT_JOINED", check: row.check,
                translation: row.translation, handle, ...(p ? { state: p.state } : {}),
-               detail: "an owner is a joined participant with the owner flag, so the member joins the project first" };
+               detail: localize("project-roster.index.owner_must_be_joined_first", "an owner is a joined participant with the owner flag, so the member joins the project first") };
     }
     /* END DEC-49 REGION is-owner-target-joined */
     if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
@@ -310,7 +330,7 @@ export class ProjectRoster {
       if (awaiting.length)
         return { ok: false, reason: "CONSENSUS_REQUIRED", projectId, handle,
                  have: have.sort().map((x) => this.#nm(x)), awaiting: awaiting.sort().map((x) => this.#nm(x)),
-                 detail: "every existing owner must agree to an addition beyond the second" };
+                 detail: localize("project-roster.index.owner_add_needs_every_owner", "every existing owner must agree to an addition beyond the second") };
     }
     const deciders = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter).sort();
     this.m.participationWrite("ownerOn", { projectId, memberId: target.member_id, by, at: now });   /* membership R118 */
@@ -328,6 +348,7 @@ export class ProjectRoster {
      about this exception strips anyone. Its caller-and-project refusals are membership's `rescueRefusal` (its R75),
      asked here so the offer (affordances) and the act cannot disagree. */
   projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
+    by = actorOf(by);
     /* Sight before position — so NOT_AN_ADMIN is said only to a member who can already see the project (an invited
        one). An administrator sees a discoverable project at FULL, and a hidden one it is not in at EXISTENCE, where
        the rescue alone stays reachable (D54; membership R60): there every answer below names only what that EXISTENCE
@@ -345,8 +366,8 @@ export class ProjectRoster {
     if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
     if (blocked) return named(blocked);
     const why = String(reason ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
-    const target = this.m.memberByHandle(handle);
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("project-roster.index.rescue_needs_a_reason", "authority changes are recorded with a reason") };
+    const target = this.#memberOfHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
 
@@ -360,31 +381,30 @@ export class ProjectRoster {
     this.#recordOwnerDecision(projectId, "rescue", target.member_id, [by], [why], now);
     return { ok: true, projectId, handle, by: this.#nm(by), reason: why, owner: true,
              owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)), addedNotReplaced: true,
-             detail: "the inactive owners keep their rows. If one is reactivated they are an owner again "
-                   + "alongside this one, and removing them is then the ordinary 7.10 process." };
+             detail: localize("project-roster.index.the_inactive_owners_keep_their", "the inactive owners keep their rows. If one is reactivated they are an owner again alongside this one, and removing them is then the ordinary 7.10 process.") };
   }
 
   /* R4 (§7.10 removal). A majority of all owners, the target in the denominator and not voting, EXCEPT at exactly two
      owners where both must agree and the target is one of them. The floor is one owner. */
   projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" }); if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project votes on its ownership" };
-    const target = this.m.memberByHandle(handle);
+               detail: localize("project-roster.index.owner_remove_needs_an_owner", "only an owner of this project votes on its ownership") };
+    const target = this.#memberOfHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (!this.m.isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
     const why = String(reason ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("project-roster.index.owner_remove_needs_a_reason", "ownership changes are recorded with a reason") };
 
     /* DEC-49 REGION is-owner-floor — REC-64/C-33.28. */
     const owners = this.m.projectOwners(projectId);
     const math = Membership.ownerMath(owners.length);
     if (!math.possible)
       return { ok: false, reason: "LAST_OWNER", ...math,
-               detail: "one owner is the floor, so the last owner of a project is not removable. Add "
-                     + "another owner first, or deactivate the project (7.11)." };
+               detail: localize("project-roster.index.one_owner_is_the_floor", "one owner is the floor, so the last owner of a project is not removable. Add another owner first, or deactivate the project (7.11).") };
     /* END DEC-49 REGION is-owner-floor */
     /* REC-224: a removal that would leave the project with owners who have ALL asked to leave is refused, naming them:
        the project would be left with nobody committed to running it. The code's row is membership's C-33.48. */
@@ -392,13 +412,11 @@ export class ProjectRoster {
     const committed = this.#committedOwners(projectId).filter((o) => o !== target.member_id);
     if (!committed.length)
       return { ok: false, reason: "LAST_COMMITTED_OWNER", ...math, leaving: remaining.sort().map((x) => this.#nm(x)),
-               detail: `removing this owner would leave only owners who have asked to leave (${remaining.map((x) => this.#nm(x)).join(", ")}), `
-                     + "so nobody would be committed to the project. Add another owner first (7.10), or deactivate "
-                     + "the project (7.11). Nothing was written." };
+               detail: localize("project-roster.index.removing_this_owner_would_leave", "removing this owner would leave only owners who have asked to leave ({map}), so nobody would be committed to the project. Add another owner first (7.10), or deactivate the project (7.11). Nothing was written.", { map: String(remaining.map((x) => this.#nm(x)).join(", ")) }) };
     /* At three and above the target does not vote. At two they must, which is the whole divergence from §4.7. */
     if (!math.targetMayVote && by === target.member_id)
       return { ok: false, reason: "TARGET_CANNOT_VOTE", ...math,
-               detail: "the target is counted in the denominator but does not vote" };
+               detail: localize("project-roster.index.owner_remove_target_cannot_vote", "the target is counted in the denominator but does not vote") };
 
     if (this.#one(
       `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? AND voter=?`,
@@ -526,9 +544,8 @@ export class ProjectRoster {
   #scopeOwn(projectId, act) {
     /* DEC-49 REGION is-project-scope-guard */
     return ProjectRoster.#scopeRefusal("PROJECT_SCOPE_OWN", projectId, act === "rescue"
-      ? "this is a member's own project (Action v0.2 rule 15), and it is never rescued: her source role and her own "
-        + "text stay hers, even when she can no longer act. Nothing was written."
-      : "this is a member's own project (Action v0.2 rule 15): nobody else is invited to it. Nothing was written.");
+      ? localize("project-roster.index.this_is_a_members_own", "this is a member's own project (Action v0.2 rule 15), and it is never rescued: her source role and her own text stay hers, even when she can no longer act. Nothing was written.")
+      : localize("project-roster.index.this_is_a_members_own_2", "this is a member's own project (Action v0.2 rule 15): nobody else is invited to it. Nothing was written."));
     /* END DEC-49 REGION is-project-scope-guard */
   }
 
@@ -540,8 +557,7 @@ export class ProjectRoster {
     /* DEC-49 REGION is-project-scope-guard */
     if (act === "visibility" && setting === "discoverable" && (scope === "counsel_matter" || scope === "own"))
       return ProjectRoster.#scopeRefusal("PROJECT_SCOPE_KEEPS_HIDDEN", projectId,
-        `this project is ${scope === "own" ? "a member's own project" : "a counsel matter"}, and that scope keeps it `
-        + "hidden (Action v0.2 rule 15). Remove the scope first if it should be discoverable. Nothing was written.",
+        localize("project-roster.index.this_project_is_v1_and", "this project is {v1}, and that scope keeps it hidden (Action v0.2 rule 15). Remove the scope first if it should be discoverable. Nothing was written.", { v1: String(scope === "own" ? "a member's own project" : "a counsel matter") }),
         { scope });
     /* END DEC-49 REGION is-project-scope-guard */
     return null;
@@ -563,6 +579,7 @@ export class ProjectRoster {
    *  nothing. The participant is asked of membership's fence (its R55, `joined`) as the member `by` names, so a caller
    *  that is no member of the project, a machine credential or the founder included, is refused there. */
   projectScopeSet({ projectId, scope, reason, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     const who = typeof by === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(by) ? by : "unnamed:caller";
@@ -573,31 +590,27 @@ export class ProjectRoster {
     /* DEC-49 REGION is-project-scope-set */
     if (!ProjectRoster.PROJECT_SCOPES.includes(scope))
       return refusal("PROJECT_SCOPE_UNKNOWN",
-        `${JSON.stringify(String(scope ?? "").slice(0, 40))} is not a scope: a project is a counsel matter `
-        + "(counsel_matter), a member's own project (own), or neither (none). Nothing was written.");
+        localize("project-roster.index.stringify_is_not_a_scope", "{stringify} is not a scope: a project is a counsel matter (counsel_matter), a member's own project (own), or neither (none). Nothing was written.", { stringify: String(JSON.stringify(String(scope ?? "").slice(0, 40))) }));
     const why = ProjectRoster.#reason(reason);
     if (!why) return ProjectRoster.#noReason(
-      `a project's scope is set with a reason of at most ${ProjectRoster.REASON_MAX} characters. Nothing was written.`);
+      localize("project-roster.index.scope_set_needs_a_reason", "a project's scope is set with a reason of at most {max} characters. Nothing was written.", { max: String(ProjectRoster.REASON_MAX) }));
     if (this.m.visibilityOf(projectId) !== "hidden")
       return refusal("PROJECT_SCOPE_NEEDS_HIDDEN",
-        "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was "
-        + "written.");
+        localize("project-roster.index.scope_needs_a_hidden_project", "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was written."));
     if (scope === "own" || current === "own") {
       const participants = this.#one(`SELECT COUNT(*) AS n FROM project_participants WHERE project_id=?`, projectId).n;
       if (!this.m.isProjectOwner(projectId, by) || participants !== 1)
         return refusal("PROJECT_SCOPE_OWN_NOT_SOLE",
-          "a project becomes, or stops being, a member's own project only by its owner while that owner is its one "
-          + "participant, in any state. Nothing was written.");
+          localize("project-roster.index.a_project_becomes_or_stops", "a project becomes, or stops being, a member's own project only by its owner while that owner is its one participant, in any state. Nothing was written."));
     }
     if (scope === current)
-      return refusal("PROJECT_SCOPE_UNCHANGED", `the project's scope is already ${scope}. Nothing was written.`);
+      return refusal("PROJECT_SCOPE_UNCHANGED", localize("project-roster.index.the_projects_scope_is_already", "the project's scope is already {scope}. Nothing was written.", { scope: String(scope) }));
     /* END DEC-49 REGION is-project-scope-set */
     const at = new Date().toISOString();
     this.sql.exec(`INSERT INTO project_scopes (project_id, scope, reason, set_by, at) VALUES (?,?,?,?,?)`,
       projectId, scope, why, by, at);
     return { ok: true, projectId, scope, previous: current, reason: why, by, at,
-             detail: "the scope applies from now on, to every act that would publish, cite or send; nothing already "
-                   + "published, sent or cited changes." };
+             detail: localize("project-roster.index.the_scope_applies_from_now", "the scope applies from now on, to every act that would publish, cite or send; nothing already published, sent or cited changes.") };
   }
 
   /* R24: the active profiles' view (record-core's `getSetting`, `jurisdictions.combine`), for its `{kind}` entries;
@@ -625,40 +638,39 @@ export class ProjectRoster {
   /** R24: SET WHICH ACTS NEED A SECOND MEMBER'S APPROVAL. An owner's act (administrators and the founder included, as
    *  R3), after sight; each entry checked, then each kind against the active profiles' view, then the reason. */
   projectApprovalSet({ projectId, needs, reason, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project sets which of its acts need a second member's approval" };
+               detail: localize("project-roster.index.approval_set_needs_an_owner", "only an owner of this project sets which of its acts need a second member's approval") };
     const refusal = (code, detail, extra) => ProjectRoster.#scopeRefusal(code, projectId, detail, extra);
     /* DEC-49 REGION is-project-approval-set */
     if (!Array.isArray(needs))
-      return refusal("APPROVAL_RULE_INVALID", "the rules are a list, empty to restore one member's approval. Nothing "
-        + "was written.", { entry: null, index: null });
+      return refusal("APPROVAL_RULE_INVALID", localize("project-roster.index.approval_rules_are_a_list", "the rules are a list, empty to restore one member's approval. Nothing was written."),
+        { entry: null, index: null });
     const clean = [];
     for (const [i, e] of needs.entries()) {
       const n = ProjectRoster.#approvalEntry(e);
       if (!n)
-        return refusal("APPROVAL_RULE_INVALID", `rule ${i + 1} is not one of {kind}, {tier} (1, 2 or 3) or `
-          + "{public: true}. Nothing was written.", { entry: e ?? null, index: i });
+        return refusal("APPROVAL_RULE_INVALID", localize("project-roster.index.approval_rule_is_not_valid", "rule {n} is not one of {kind}, {tier} (1, 2 or 3) or {public: true}. Nothing was written.", { n: String(i + 1), kind: "{kind}", tier: "{tier}" }),
+          { entry: e ?? null, index: i });
       clean.push(n);
     }
     const held = clean.some((n) => n.kind) ? this.#actionKinds() : new Set();
     for (const [i, n] of clean.entries())
       if (n.kind && !held.has(n.kind))
-        return refusal("APPROVAL_KIND_UNKNOWN", `${JSON.stringify(n.kind)} is not a kind of action in your group's `
-          + "active jurisdiction profiles. Nothing was written.", { entry: n, index: i });
+        return refusal("APPROVAL_KIND_UNKNOWN", localize("project-roster.index.stringify_is_not_a_kind", "{stringify} is not a kind of action in your team's active jurisdiction profiles. Nothing was written.", { stringify: String(JSON.stringify(n.kind)) }), { entry: n, index: i });
     /* END DEC-49 REGION is-project-approval-set */
     const why = ProjectRoster.#reason(reason);
     if (!why) return ProjectRoster.#noReason(
-      `a project's approval setting is set with a reason of at most ${ProjectRoster.REASON_MAX} characters. Nothing `
-      + "was written.");
+      localize("project-roster.index.approval_set_needs_a_reason", "a project's approval setting is set with a reason of at most {max} characters. Nothing was written.", { max: String(ProjectRoster.REASON_MAX) }));
     const at = new Date().toISOString();
     this.sql.exec(`INSERT INTO project_approval_settings (project_id, needs, reason, set_by, at) VALUES (?,?,?,?,?)`,
       projectId, JSON.stringify(clean), why, by, at);
     return { ok: true, projectId, needs: clean, reason: why, by, at,
-             detail: clean.length ? "the acts these rules match need a second member's approval before sending."
-               : "one member approves every act, the default." };
+             detail: clean.length ? localize("project-roster.index.the_acts_these_rules_match", "the acts these rules match need a second member's approval before sending.")
+               : localize("project-roster.index.one_member_approves_every_act", "one member approves every act, the default.") };
   }
 
   /** R24: DOES AN ACT NEED A SECOND APPROVAL? `{needed, matched}`, `matched` the latest setting's entries that apply:
@@ -697,6 +709,7 @@ export class ProjectRoster {
   /** R31: SET OR CLEAR THE PROJECT'S STAKE. Sight first (the Terms'), then a machine credential, then position (joined,
    *  or an administrator at FULL sight), then the text; each refusal writes nothing. */
   projectStakeSet({ projectId, stake, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     /* DEC-49 REGION is-project-stake-set */
@@ -795,6 +808,9 @@ export class ProjectRoster {
    *  administrator's gate withholds only hidden projects they are not in, and a hidden project is never listed here, so
    *  they too are listed none.
    *
+   *  R44 (fix round 10; K5157): `request` is the latest in ANY state, `{state, asked, closed, closed_comment}`, the last two
+   *  null until it is answered, so a requester whose request was declined is told, and with the owner's word.
+   *
    *  `limit` is the cap APPLIED, the caller's to lower and never to raise; `truncated` is MEASURED by reading one row
    *  past it, never derived from the page (a full page and a complete answer read alike). The page is the first `limit`
    *  in `bundle_id` order, so a page means the same thing twice. */
@@ -809,16 +825,15 @@ export class ProjectRoster {
     /* DEC-49 REGION is-project-directory-member */
     if (!member)
       return refusal("PROJECT_DIRECTORY_NEEDS_A_MEMBER",
-        "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in "
-        + "member. A credential with no member behind it is outside no project, and an empty list would say "
-        + "something untrue about the record.");
+        localize("project-roster.index.the_project_directory_lists_the", "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in member. A credential with no member behind it is outside no project, and an empty list would say something untrue about the record."));
     /* END DEC-49 REGION is-project-directory-member */
     const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_DIRECTORY_LIMIT);
     /* `request` is the caller's own latest request to each listed project, joined in the SAME statement, so the page
        and its requests cannot disagree. Only the caller's own row is joined: whose else has asked is not a fact the
        directory holds. A granted request never appears: a grant makes the caller a participant, at FULL sight. */
     const projects = this.#rows(
-      `SELECT b.bundle_id AS id, r.state AS rstate, r.asked_at AS rasked, r.closed_at AS rclosed
+      `SELECT b.bundle_id AS id, r.state AS rstate, r.asked_at AS rasked, r.closed_at AS rclosed,
+              r.closed_comment AS rcomment
          FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
          LEFT JOIN project_join_requests r
            ON r.seq = (SELECT MAX(r2.seq) FROM project_join_requests r2
@@ -827,7 +842,7 @@ export class ProjectRoster {
         ORDER BY b.bundle_id
         LIMIT ?`, member, ...gate.args, cap + 1)
       .map((r) => ({ id: r.id, name: this.#bundle(r.id)?.title ?? null,
-                     request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null } : null }));
+                     request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null, closed_comment: r.rcomment ?? null } : null }));
     const truncated = projects.length > cap;
     /* Cut by a slice at the published cap, so the collection `truncated` was measured over stays beside the page. */
     const page = truncated ? projects.slice(0, cap) : projects;
@@ -846,8 +861,9 @@ export class ProjectRoster {
    *  which is an empty list and never a refusal: an empty list is true of what that viewer sees.
    *
    *  `stage` is the project document's recorded `current_state` (record-core R37) as recorded, null when none is: not
-   *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). No
-   *  question count: Home takes it from basis-versions' read. `limit` and `truncated` are R9's rule. Writes nothing.
+   *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). The
+   *  question count is R42's (it was Home's, from basis-versions' read, one per project). `limit` and `truncated` are
+   *  R9's rule. Writes nothing.
    *
    *  R27 (T47; DEC-201 `projects`): each project's `owner`, the member who opened it (its first author, as the record
    *  states), `{member, handle}`, the founder's as R29 names her, or null when that opener is no
@@ -855,11 +871,20 @@ export class ProjectRoster {
    *
    *  R34 (T50): each row's `participation`, the viewer's own state.
    *
+   *  R38 (T51; N1184, DEC-340): each row's `mine`, `{in, owner}` (the viewer's own stamp only: `in` joined to it, `owner`
+   *  holding its owner flag, membership R54, R65) and `scope` (R23's, `none`, `own` or `counsel_matter`).
+   *
+   *  R42 (fix round 3; C14): each row's `question_count` (`#questionCounts`) and `shared_drafts` `{count, newest}` from
+   *  the `sharedDraftsOf` reader the caller hands in (`null` on every row when none is), both null on a row seen only
+   *  at an administrator's EXISTENCE (R39).
+   *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked = {}) {
-    const { viewer = null, limit = null } = asked && typeof asked === "object" ? asked : {};
+    const { viewer = null, limit = null, after = null, sharedDraftsOf = null } = asked && typeof asked === "object" ? asked : {};
     const gate = viewerPredicate(viewer);
+    /* R36: `after` is a project id, read only when a non-empty string; anything else starts from the first. */
+    const cursor = typeof after === "string" && after !== "" ? after : null;
     const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_LIST_LIMIT);
     /* R27: the opener joined in the same statement, so the page and its owners cannot disagree: the project's first
        manifest entry's `author` (record-core R37: `manifest`, first by `created`, then `rowid`, the order it recorded
@@ -873,25 +898,159 @@ export class ProjectRoster {
                              ORDER BY x.created, x.rowid LIMIT 1) AS opener
                  FROM bundles b WHERE b.object_type = 'project') b
          LEFT JOIN members o ON o.status = 'active' AND o.member_id = b.opener
-        WHERE b.object_type = 'project' AND (${gate.sql})
+        WHERE b.object_type = 'project' AND (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
         ORDER BY b.bundle_id
-        LIMIT ?`, ROOT_ADMIN, ...gate.args, cap + 1);
-    const truncated = rows.length > cap;
-    const page = truncated ? rows.slice(0, cap) : rows;
+        LIMIT ?`, ROOT_ADMIN, ...gate.args, cursor, cursor, cap + 1);
+    /* R39 (T51 fix round; C84): an administrator's list also holds each hidden project the rescue is open to her for,
+       merged into R26's rows in id order, so paging counts them as it counts any row. */
+    const asker = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
+    const admin = !!asker && this.m.isAdministrator(asker);
+    const rescue = admin ? this.#rescueOpenRows(asker, viewer, gate, cursor, cap + 1) : [];
+    const merged = rescue.length ? [...rows, ...rescue].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).slice(0, cap + 1) : rows;
+    const truncated = merged.length > cap;
+    const both = truncated ? merged.slice(0, cap) : merged;
+    const open = new Set(rescue.map((r) => r.id));
+    const page = both.filter((r) => !open.has(r.id));
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
+    /* R42 (fix round 3; C14, P2.2): each project's question count, for the page in two statements, and its shared drafts,
+       from the reader the caller handed in, asked once for the page. */
+    const questions = this.#questionCounts(page.map((r) => r.id), gate);
+    const shared = this.#sharedDrafts(sharedDraftsOf, page.map((r) => r.id), viewer);
     /* R34 (T50; N1118): the viewer's own state in each project as membership records it; null for a non-participant. */
     const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
     const own = new Map(me && page.length ? this.#rows(
-      `SELECT project_id, state FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
-      me, ...page.map((r) => r.id)).map((x) => [x.project_id, x.state]) : []);
-    const projects = page.map((r) => ({ id: r.id, participation: own.get(r.id) ?? null,
+      `SELECT project_id, state, owner FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
+      me, ...page.map((r) => r.id)).map((x) => [x.project_id, x]) : []);
+    /* R38 (T51; N1184): each project's scope, the latest record's (R23's rule, read for the page in one statement). */
+    const scopes = new Map(page.length ? this.#rows(
+      `SELECT project_id, scope FROM project_scopes WHERE project_id IN (${page.map(() => "?").join(",")}) ORDER BY seq`,
+      ...page.map((r) => r.id)).map((x) => [x.project_id, x.scope]) : []);
+    const projects = both.map((r) => open.has(r.id)
+      /* R39: at an administrator's EXISTENCE of the project, nothing of it beyond its id and name, and the mark. */
+      ? { id: r.id, participation: null, mine: { in: false, owner: false }, scope: null, name: this.#bundle(r.id)?.title ?? null,
+          stage: null, owner: null, members: [], activity: Array(ProjectRoster.ACTIVITY_WEEKS).fill(0), lastChange: null,
+          rescue_open: true, question_count: null, shared_drafts: null }
+      : { id: r.id, participation: own.get(r.id)?.state ?? null,
+      mine: { in: own.get(r.id)?.state === "joined", owner: !!own.get(r.id)?.owner },
+      scope: scopes.get(r.id) ?? "none",
       name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
       owner: r.founder ? this.#person(ROOT_ADMIN, null)
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
       members: members.get(r.id) ?? [], activity: activity.get(r.id) ?? Array(ProjectRoster.ACTIVITY_WEEKS).fill(0),
-      lastChange: lastChange.get(r.id) ?? null }));
-    return { ok: true, projects, count: projects.length, limit: cap, truncated };
+      lastChange: lastChange.get(r.id) ?? null, ...(admin ? { rescue_open: false } : {}),
+      question_count: questions.get(r.id) ?? 0, shared_drafts: shared === null ? null : shared.get(r.id) ?? { count: 0, newest: null } });
+    return { ok: true, projects, count: projects.length, limit: cap, truncated,
+             next: truncated ? projects[projects.length - 1].id : null };
   }
+
+  /* R39 (T51 fix round; C84): THE HIDDEN PROJECTS THE RESCUE IS OPEN TO `asker` FOR, up to `n`, in id order after `cursor`:
+     the project is hidden and `viewer`'s sight of it is EXISTENCE (`#rescueAtExistence`, R5's), membership's
+     `rescueRefusal` answers null (an administrator, owner rows, every owner inactive) and its scope is not `own` (R22).
+     The statement only narrows what is read to hidden projects below FULL sight whose owners are all inactive; each is
+     then asked of the act's own predicates, so the mark and the act cannot disagree. Writes nothing. */
+  #rescueOpenRows(asker, viewer, gate, cursor, n) {
+    const out = [];
+    for (const c of this.#rows(
+      `SELECT b.bundle_id AS id FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
+        WHERE b.object_type = 'project' AND s.setting = 'hidden' AND NOT (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
+          AND EXISTS (SELECT 1 FROM project_participants o WHERE o.project_id = b.bundle_id AND o.owner = 1)
+          AND NOT EXISTS (SELECT 1 FROM project_participants o JOIN members om ON om.member_id = o.member_id AND om.status = 'active'
+                           WHERE o.project_id = b.bundle_id AND o.owner = 1)
+        ORDER BY b.bundle_id`, ...gate.args, cursor, cursor)) {
+      if (out.length >= n) break;
+      if (!this.#rescueAtExistence(c.id, viewer) || this.m.rescueRefusal(c.id, asker) !== null
+          || this.projectScope(c.id).scope === "own") continue;
+      out.push({ id: c.id });
+    }
+    return out;
+  }
+
+  /** R42 (fix round 3; C14, P2.2): THE QUESTION COUNT of each of `ids` (already those the viewer sees at FULL), a Map project
+   *  -> count, in two statements however many projects there are: the inquiries the project draws on, by basis-versions
+   *  R41's own test (its document holds a `cites` reference to the inquiry not marked `severed`), restated here over
+   *  record-core's read contract (R37: `files.content` of `bundle.md`, `bundles.object_type`), since that module is a
+   *  later one. A target counts when the record holds it as an inquiry and the viewer's sight (`gate`, membership R43, the
+   *  rule R50 applies) admits it; distinct targets once. A store without the table, an unreadable document or a failing
+   *  statement reads as none. Writes nothing; never throws. */
+  #questionCounts(ids, gate) {
+    const counts = new Map();
+    if (!ids.length) return counts;
+    try {
+      const cited = new Map();
+      for (const d of this.#rows(`SELECT bundle_id AS project, content FROM files WHERE path='bundle.md' AND bundle_id IN (${
+        ids.map(() => "?").join(",")})`, ...ids)) {
+        let fm = {};
+        try { fm = typeof d.content === "string" ? parseFrontmatter(d.content).data || {} : {}; } catch { fm = {}; }
+        const live = [...new Set((Array.isArray(fm.references) ? fm.references : [])
+          .filter((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed")
+          .map((x) => String(x.target ?? "").trim()).filter(Boolean))];
+        if (live.length) cited.set(d.project, live);
+      }
+      const targets = [...new Set([...cited.values()].flat())];
+      if (!targets.length) return counts;
+      const seen = new Set(this.#rows(
+        `SELECT b.bundle_id AS bundle_id FROM bundles b WHERE b.bundle_id IN (SELECT value FROM json_each(?))
+            AND b.object_type IN (SELECT value FROM json_each(?)) AND (${gate.sql})`,
+        JSON.stringify(targets), ProjectRoster.INQUIRY_TYPES, ...gate.args).map((r) => r.bundle_id));
+      for (const [project, live] of cited) counts.set(project, live.filter((t) => seen.has(t)).length);
+    } catch { counts.clear(); }
+    return counts;
+  }
+
+  /** R42: THE SHARED DRAFTS of each of `ids`, a Map project -> `{count, newest}`, from `reader`, the one the caller hands
+   *  in (`review` R43's `sharedDraftsByProject({projectIds, viewer})`, wired by the door, control-plane R118), asked once
+   *  for the whole page. `null` (not a Map) when no reader was handed in or it failed, so every row answers `null`. An
+   *  entry the reader leaves out, or cannot be read as `{count, newest}`, is `{count: 0, newest: null}`. Never throws. */
+  #sharedDrafts(reader, ids, viewer) {
+    if (typeof reader !== "function") return null;
+    const out = new Map();
+    if (!ids.length) return out;
+    let got = null;
+    try { got = reader({ projectIds: ids, viewer }); } catch { return null; }
+    if (!got || typeof got !== "object") return null;
+    for (const id of ids) {
+      const e = Object.hasOwn(got, id) ? got[id] : null;
+      out.set(id, e && Number.isInteger(e.count) && e.count > 0
+        ? { count: e.count, newest: typeof e.newest === "string" ? e.newest : null } : { count: 0, newest: null });
+    }
+    return out;
+  }
+
+  /* Every stored `object_type` spelling of an inquiry, the declared one and its legacy aliases (basis-versions' own). */
+  static INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIASES)
+    .filter((t) => LEGACY_TYPE_ALIASES[t] === "inquiry")]);
+
+  /** R35 (T51; N1209): THE VIEWER'S OWN INVITATIONS, each project where her participation is `invited`, `{projectId, name,
+   *  invited_by, invited_at}` in project id order; `invited_by` is `{member, handle}` (the founder as R29 names her) or
+   *  null when none was recorded or it names no member. Only her own rows; a viewer naming no active member gets an empty
+   *  list. Paged as R36 pages (`after`, `next`). Writes nothing, never throws. */
+  projectInvitations(asked = {}) {
+    const { viewer = null, limit = null, after = null } = asked && typeof asked === "object" ? asked : {};
+    const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_INVITATIONS_LIMIT);
+    const empty = { ok: true, invitations: [], count: 0, limit: cap, truncated: false, next: null };
+    try {
+      const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : viewerPredicate(viewer).member;
+      if (!me || !this.#activeMemberRow(me)) return empty;
+      const cursor = typeof after === "string" && after !== "" ? after : null;
+      /* `invited_by` is part of membership's read contract (its R120, amended T51, K3838); read here and nowhere else. */
+      const rows = this.#rows(
+        `SELECT p.project_id AS id, p.created AS at, p.invited_by AS by_id, i.member_id AS inviter, i.handle AS inviter_handle
+           FROM project_participants p JOIN bundles b ON b.bundle_id = p.project_id AND b.object_type = 'project'
+           LEFT JOIN members i ON i.member_id = p.invited_by
+          WHERE p.member_id = ? AND p.state = 'invited' AND (? IS NULL OR p.project_id > ?)
+          ORDER BY p.project_id LIMIT ?`, me, cursor, cursor, cap + 1);
+      const truncated = rows.length > cap;
+      const page = truncated ? rows.slice(0, cap) : rows;
+      const invitations = page.map((r) => ({ projectId: r.id, name: this.#bundle(r.id)?.title ?? null,
+        invited_by: r.by_id === ROOT_ADMIN ? this.#person(ROOT_ADMIN, null)
+          : r.inviter ? { member: r.inviter, handle: r.inviter_handle ?? null } : null,
+        invited_at: r.at ?? null }));
+      return { ok: true, invitations, count: invitations.length, limit: cap, truncated,
+               next: truncated ? invitations[invitations.length - 1].projectId : null };
+    } catch { return empty; }
+  }
+
+  static PROJECT_INVITATIONS_LIMIT = 200;
 
   /* R26's page size, R9's rule: a chosen ceiling, lowered by the caller and never raised. */
   static PROJECT_LIST_LIMIT = 200;
@@ -996,7 +1155,7 @@ export class ProjectRoster {
      nothing. The founder's viewer is spelled bare `admin` or `member:admin` (membership R43); every other member is
      matched by `viewerPredicate`'s own parse, never a second one. */
   #requester(by, viewer) {
-    const me = this.#activeMemberRow(by);
+    const me = this.#activeMemberRow(actorOf(by));
     if (!me) return null;
     if (me.member_id === ROOT_ADMIN)
       return viewer === ROOT_ADMIN || viewerPredicate(viewer).member === ROOT_ADMIN ? me : null;
@@ -1015,9 +1174,7 @@ export class ProjectRoster {
     const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d);
     /* DEC-49 REGION is-join-request-member */
     return refusal("PROJECT_REQUEST_NEEDS_A_MEMBER",
-      `${detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who `
-      + `asked, signed in as themselves (Membership Architecture v2 §7.14), and a machine credential, the operator's `
-      + `bearer and the member bearer have nobody behind them to ask.`);
+      localize("project-roster.index.detail_a_request_to_join", "{detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who asked, signed in as themselves (Membership Architecture v2 §7.14), and a machine credential, the operator's bearer and the member bearer have nobody behind them to ask.", { detail: String(detail) }));
     /* END DEC-49 REGION is-join-request-member */
   }
 
@@ -1025,9 +1182,7 @@ export class ProjectRoster {
     const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d, extra);
     /* DEC-49 REGION is-join-request-none-open */
     return refusal("PROJECT_REQUEST_NONE_OPEN",
-      `${detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going `
-      + `hidden (Membership Architecture v2 §7.14), and each of those closes it for good; the member may ask `
-      + `again.`);
+      localize("project-roster.index.detail_a_request_is_open", "{detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going hidden (Membership Architecture v2 §7.14), and each of those closes it for good; the member may ask again.", { detail: String(detail) }));
     /* END DEC-49 REGION is-join-request-none-open */
   }
 
@@ -1069,8 +1224,7 @@ export class ProjectRoster {
     const me = this.#requester(by, viewer);
     if (!me)
       return this.#noRequester(projectId,
-        "asking to join a project is a signed-in member's own act (Membership Architecture v2 §7.14). A "
-        + "credential with no active member behind it asks nothing. Nothing was written.");
+        localize("project-roster.index.asking_to_join_a_project", "asking to join a project is a signed-in member's own act (Membership Architecture v2 §7.14). A credential with no active member behind it asks nothing. Nothing was written."));
     /* Only a PROJECT is asked to join: any other bundle is visible to every member (§7.9), so its sight would read
        FULL and misname it a project the caller is in. It is answered as what it is — no project by that id. */
     const b = this.#bundle(projectId);
@@ -1085,14 +1239,11 @@ export class ProjectRoster {
       return this.m.existenceAct(projectId, viewer);
     if (sight === Membership.SIGHT_FULL)
       return refusal("PROJECT_REQUEST_NOT_OUTSIDE",
-        "you can already see this project, so there is nothing to ask: a participant is already in it (an "
-        + "invited one joins by the checkbox, §7.4), and an administrator's sight of a project is not a "
-        + "position in it (§7.3). Nothing was written.");
+        localize("project-roster.index.you_can_already_see_this", "you can already see this project, so there is nothing to ask: a participant is already in it (an invited one joins by the checkbox, §7.4), and an administrator's sight of a project is not a position in it (§7.3). Nothing was written."));
     const open = this.#openJoinRequest(projectId, me.member_id);
     if (open)
       return refusal("PROJECT_REQUEST_ALREADY_OPEN",
-        "you already have an open request to join this project. One is open at a time: withdraw it to ask "
-        + "again. Nothing was written.", { asked: open.asked_at });
+        localize("project-roster.index.you_already_have_an_open", "you already have an open request to join this project. One is open at a time: withdraw it to ask again. Nothing was written."), { asked: open.asked_at });
     /* END DEC-49 REGION is-join-request-ask */
     const c = ProjectRoster.#requestComment(comment);
     const at = new Date().toISOString();
@@ -1100,7 +1251,7 @@ export class ProjectRoster {
       `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
        VALUES (?,?,?,?,?,'open')`, projectId, me.member_id, shown, c, at);
     return { ok: true, projectId, name: shown, state: "open", comment: c, asked: at,
-             detail: "your request is open. The project's owners answer it; until they do it stays open." };
+             detail: localize("project-roster.index.your_request_is_open_the", "your request is open. The project's owners answer it; until they do it stays open.") };
   }
 
   /** R11: WITHDRAW (§7.14: "The requester may withdraw an open request"). The requester's own act on their own record,
@@ -1110,12 +1261,10 @@ export class ProjectRoster {
     const me = this.#requester(by, viewer);
     if (!me)
       return this.#noRequester(projectId,
-        "withdrawing a request to join is the requester's own act, and a credential with no active member "
-        + "behind it made none. Nothing was written.");
+        localize("project-roster.index.withdrawing_a_request_to_join", "withdrawing a request to join is the requester's own act, and a credential with no active member behind it made none. Nothing was written."));
     if (!this.#openJoinRequest(projectId, me.member_id))
       return this.#noOpenRequest(projectId,
-        "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is "
-        + "the same whatever that id names. Nothing was written.");
+        localize("project-roster.index.you_have_no_open_request", "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written."));
     const at = new Date().toISOString();
     this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at);
     return { ok: true, projectId, state: "withdrawn", closed: at };
@@ -1126,6 +1275,7 @@ export class ProjectRoster {
    *  credential are refused by name. GRANT writes `invited`, `invited_by` the granting owner — never `joined` (§7.4).
    *  DECLINE is recorded with the owner's optional comment. A refused grant leaves the request open. */
   projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
+    by = actorOf(by);
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
     const want = String(answer ?? "");
@@ -1137,27 +1287,21 @@ export class ProjectRoster {
     /* DEC-49 REGION is-join-request-answer */
     if (!this.m.isProjectOwner(projectId, by))
       return refusal("PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
-        `a request to join ${String(projectId).slice(0, 80)} is answered by its OWNERS (Membership Architecture `
-        + `v2 §7.14; only owners invite, §7.2), and ${String(this.#nm(by) ?? "an unnamed caller").slice(0, 80)} is not one `
-        + `of them. Administrators see requests and answer none. Nothing was written.`);
+        localize("project-roster.index.a_request_to_join_string", "a request to join {String} is answered by its OWNERS (Membership Architecture v2 §7.14; only owners invite, §7.2), and {String_2} is not one of them. Administrators see requests and answer none. Nothing was written.", { String: String(String(projectId).slice(0, 80)), String_2: String(String(this.#nm(by) ?? localize("project-roster.index.an_unnamed_caller", "an unnamed caller")).slice(0, 80)) }));
     if (!ProjectRoster.JOIN_REQUEST_ANSWERS.includes(want))
       return refusal("PROJECT_REQUEST_UNKNOWN_ANSWER",
-        `${JSON.stringify(want.slice(0, 40))} is not an answer: a request is granted or declined, and nothing `
-        + `else. Nothing was written.`);
+        localize("project-roster.index.stringify_is_not_an_answer", "{stringify} is not an answer: a request is granted or declined, and nothing else. Nothing was written.", { stringify: String(JSON.stringify(want.slice(0, 40))) }));
     const target = this.m.memberByHandle(handle);
     const open = target ? this.#openJoinRequest(projectId, target.member_id) : null;
     if (!open)
       return this.#noOpenRequest(projectId,
-        `${JSON.stringify(String(handle ?? "").slice(0, 80))} has no open request to join this project, so there `
-        + `is nothing to answer. Nothing was written.`, { handle: handle ?? null });
+        localize("project-roster.index.stringify_has_no_open_request", "{stringify} has no open request to join this project, so there is nothing to answer. Nothing was written.", { stringify: String(JSON.stringify(String(handle ?? "").slice(0, 80))) }), { handle: handle ?? null });
     if (want === "grant" && target.status !== "active")
       return refusal("PROJECT_REQUEST_REQUESTER_INACTIVE",
-        `${JSON.stringify(target.handle)} is not an active member, and a grant is an invitation (§7.2), which `
-        + `goes to an active member. The request stays open. Nothing was written.`, { handle: target.handle });
+        localize("project-roster.index.stringify_is_not_an_active", "{stringify} is not an active member, and a grant is an invitation (§7.2), which goes to an active member. The request stays open. Nothing was written.", { stringify: String(JSON.stringify(target.handle)) }), { handle: target.handle });
     if (want === "grant" && this.m.participation(projectId, target.member_id))
       return refusal("PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT",
-        `${JSON.stringify(target.handle)} is already a participant of this project, so a grant would invite `
-        + `nobody new. The request stays open: decline it, or the requester withdraws it. Nothing was written.`,
+        localize("project-roster.index.stringify_is_already_a_participant", "{stringify} is already a participant of this project, so a grant would invite nobody new. The request stays open: decline it, or the requester withdraws it. Nothing was written.", { stringify: String(JSON.stringify(target.handle)) }),
         { handle: target.handle });
     /* END DEC-49 REGION is-join-request-answer */
     const c = ProjectRoster.#requestComment(comment);
@@ -1169,7 +1313,7 @@ export class ProjectRoster {
              comment: c, closed: at,
              ...(want === "grant"
                ? { participation: "invited",
-                   detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (§7.4)." }
+                   detail: localize("project-roster.index.granted_as_an_invitation_the", "granted as an invitation: the member is INVITED, and joins by the checkbox (§7.4).") }
                : {}) };
   }
 
@@ -1181,7 +1325,8 @@ export class ProjectRoster {
    *  asking — so a request LAPSED by a project going hidden is still the requester's to read, and names nothing they had
    *  not already seen. Its answering owner is NOT in the requester's view: who owns a project is contents. Both lists
    *  are bounded as R9's directory is (the first `limit` in the order made). */
-  projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {
+  projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {   /* R37: rows carry `member_id` */
+    by = actorOf(by);
     const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_REQUESTS_LIMIT);
     const refusal = (code, detail) => {
       const row = PROJECT_JOIN_REQUEST_CHECKS[code];
@@ -1192,10 +1337,9 @@ export class ProjectRoster {
       const me = this.#requester(by, viewer);
       if (!me)
         return this.#noRequester(null,
-          "a member's own requests to join are read by that member, signed in. A credential with no active "
-          + "member behind it has made none.");
+          localize("project-roster.index.a_members_own_requests_to", "a member's own requests to join are read by that member, signed in. A credential with no active member behind it has made none."));
       const mine = this.#rows(
-        `SELECT project_id AS project, project_name AS name, comment, state, asked_at AS asked,
+        `SELECT project_id AS project, member_id, project_name AS name, comment, state, asked_at AS asked,
                 closed_comment, closed_at AS closed
            FROM project_join_requests WHERE member_id=? ORDER BY seq LIMIT ?`, me.member_id, cap + 1);
       const mineCut = mine.length > cap;
@@ -1209,12 +1353,10 @@ export class ProjectRoster {
     /* DEC-49 REGION is-join-requests-project */
     if (!this.m.isProjectOwner(projectId, by) && !this.#adminAtFull(projectId, by))
       return refusal("PROJECT_REQUESTS_NOT_VISIBLE",
-        "a project's requests to join are seen by the requester, the project's owners and administrators "
-        + "(Membership Architecture v2 §7.14), and not by other participants: a pending requester is not a "
-        + "participant (§7.8). Your own requests are read without naming a project.");
+        localize("project-roster.index.a_projects_requests_to_join", "a project's requests to join are seen by the requester, the project's owners and administrators (Membership Architecture v2 §7.14), and not by other participants: a pending requester is not a participant (§7.8). Your own requests are read without naming a project."));
     /* END DEC-49 REGION is-join-requests-project */
     const theirs = this.#rows(
-      `SELECT m.handle, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
+      `SELECT m.handle, r.member_id, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
               r.closed_comment, r.closed_at AS closed
          FROM project_join_requests r JOIN members m ON m.member_id = r.member_id
          LEFT JOIN members cb ON cb.member_id = r.closed_by
@@ -1223,6 +1365,33 @@ export class ProjectRoster {
     const theirsPage = theirsCut ? theirs.slice(0, cap) : theirs;
     return { ok: true, own: false, projectId, requests: theirsPage, count: theirsPage.length, limit: cap,
              truncated: theirsCut };
+  }
+
+  /** R44 (fix round 10; K5157): THE REQUESTS A MEMBER ANSWERED, `{ok, answered, count, limit, truncated}`, `answered`
+   *  newest first (by the instant closed), each `{projectId, name, requester: {member, handle}, answer, comment,
+   *  closed}`: the join requests closed `granted` or `declined` with `closed_by` that member (a withdrawal is the
+   *  requester's own and a lapse the one who hid the project: neither is an answer), only for projects she sees at FULL
+   *  (membership R43, the rule every list here applies), so a project she is out of names nothing. `by` and `viewer`
+   *  must name one active member, as R14's own list asks (`PROJECT_REQUEST_NEEDS_A_MEMBER`). Capped as R14; writes
+   *  nothing; for `queue`'s answered list, which reads it in process. */
+  projectRequestsAnswered({ by, viewer = null, limit = null } = {}) {
+    const me = this.#requester(by, viewer);
+    if (!me)
+      return this.#noRequester(null,
+        localize("project-roster.index.the_requests_you_answered_are", "the requests a member answered are read by that member, signed in. A credential with no active member behind it answered none."));
+    const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_REQUESTS_LIMIT);
+    const gate = viewerPredicate(me.member_id === ROOT_ADMIN ? ROOT_ADMIN : viewer);
+    const rows = this.#rows(
+      `SELECT r.project_id AS id, r.member_id AS member, m.handle AS handle, r.state AS answer, r.closed_comment AS comment,
+              r.closed_at AS closed
+         FROM project_join_requests r JOIN bundles b ON b.bundle_id = r.project_id AND b.object_type = 'project'
+         JOIN members m ON m.member_id = r.member_id
+        WHERE r.closed_by = ? AND r.state IN ('granted','declined') AND (${gate.sql})
+        ORDER BY r.closed_at DESC, r.seq DESC LIMIT ?`, me.member_id, ...gate.args, cap + 1);
+    const truncated = rows.length > cap;
+    const page = (truncated ? rows.slice(0, cap) : rows).map((x) => ({ projectId: x.id, name: this.#bundle(x.id)?.title ?? null,
+      requester: { member: x.member, handle: x.handle }, answer: x.answer, comment: x.comment ?? null, closed: x.closed }));
+    return { ok: true, answered: page, count: page.length, limit: cap, truncated };
   }
 
   /* THE REQUESTS READ'S PAGE SIZE, a chosen ceiling as R9's: a list a person reads to answer or to recall their own
@@ -1255,6 +1424,34 @@ const parseList = (v) => { try { return JSON.parse(v); } catch { return v; } };
 const stakeParam = (url) => (!url.searchParams.has("stake") ? undefined
   : url.searchParams.get("stake") === "null" ? null : url.searchParams.get("stake"));
 
+/* R40, R41 (T51 fix round; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send,
+   declared by their owner beside the ops map: each row's class, weight and description are the op's existing rows' (the
+   hand rows of `op-declarations` and `op-grades`, with which they agree), its fields are what the arm below reads from
+   the request (the stamps `by` and `viewer` excluded). `reason` is accepted where the arm reads one of its own. */
+export const DECLARED_OPS = Object.freeze({
+  projectowneradd: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectowneradd", "roster act on a project"),
+    fields: { accepts: ["projectId", "handle"], requires: ["projectId", "handle"] } },
+  projectownerremove: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned",
+    description: "act.projectownerremove.does",
+    fields: { accepts: ["projectId", "handle", "reason"], requires: ["projectId", "handle", "reason"] } },
+  projectownerrescue: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned",
+    description: "act.projectownerrescue.does",
+    fields: { accepts: ["projectId", "handle", "reason"], requires: ["projectId", "handle", "reason"] } },
+  projectrequest: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequest", "request to join (§7.14): made at EXISTENCE sight, where no object is before the caller — reached from op=projectdirectory's row, not from a target's control strip"),
+    fields: { accepts: ["projectId", "comment"], requires: ["projectId"] } },
+  projectrequestwithdraw: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequestwithdraw", "request to join (§7.14): the requester's act on their own REQUEST, not on a bundle — listed by op=projectrequests"),
+    fields: { accepts: ["projectId"], requires: ["projectId"] } },
+  projectrequestanswer: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequestanswer", "request to join (§7.14): an owner's grant or decline of a REQUEST, not a state of the project — listed in the owner's queue by op=projectrequests"),
+    fields: { accepts: ["projectId", "handle", "answer", "comment"], requires: ["projectId", "handle", "answer"] } },
+  projectstakeset: { classes: ["admin", "member", "probe"], mutating: true, weight: "reversible",
+    description: localize("project-roster.declared.projectstakeset", "project-directed: a project's declared stake, every value kept, keyed by project; moves no bundle"),
+    fields: { accepts: ["projectId", "stake"], requires: ["projectId", "stake"] } },
+});
+
 export function projectRosterOps(r, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1277,7 +1474,10 @@ export function projectRosterOps(r, url, body, env) {
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
     /* T47 (R26–R28): the projects the stamped viewer sees at FULL, with each one's recorded stage, opener, members and
        activity; the instant is the server's, never a query's. */
-    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit") }),
+    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after"),
+      sharedDraftsOf: env && typeof env.sharedDraftsOf === "function" ? env.sharedDraftsOf : null }),
+    /* T51 (R35): the stamped viewer's own invitations. */
+    projectinvitations: () => r.projectInvitations({ viewer: q("viewer"), limit: q("limit"), after: q("after") }),
     projectparticipants: () => r.projectParticipants({ projectId: q("projectId"), by: q("by") }),
     /* REC-150: `by` and `viewer` are the control plane's stamps. */
     projectrequest: () => r.projectRequest({ projectId: q("projectId"), comment: q("comment"), by: q("by"),

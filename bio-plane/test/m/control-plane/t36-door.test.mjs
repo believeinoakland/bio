@@ -1,6 +1,6 @@
 /* control-plane T36 (T36-37): R59 and R28 (F1's tail, K2111: a credential in the address refused C-38.10 by admission's
    gate, run directly after admission R1), R53 (`assistantset` not routed), R60 (standards' and calculations' new ops),
-   R61 (file-safety's 23 ops; the byte answers relayed as their owner gives them), R62 (a member's and an `ai`
+   R61 (every op file-safety's map serves; the byte answers relayed as their owner gives them), R62 (a member's and an `ai`
    credential's opening of an original through file-safety), R63 (credentials' keep-away), K2146 (the forward strips a
    caller's `secretSha` and `bySecret`) and R29 over standards' body author. Driven through `makeFetch(hooks)` over the
    harness's store, which records every request the plane makes. */
@@ -21,6 +21,7 @@ const served = (headers) => new Response(BYTES, { status: 200, headers: { "conte
 
 /* every op file-safety's map serves (its R5–R38), read from the map itself */
 const FILE_SAFETY_OPS = Object.keys(fileSafetyOps(null, new URL("http://do/"), null, {})).sort();
+const familyOps = (owner, pick) => Object.entries(O.OP_FAMILIES[owner].kinds).filter(([op, kind]) => pick(op, kind)).map(([op]) => op);
 const BYTE_OPS = ["openoriginal", "openwithwarning", "safeview", "safecopy"];
 
 function callers() {
@@ -114,8 +115,10 @@ test("R53 (T36; instance-setup R53), R63: `assistantset` and `securitycount` are
 
 test("R60, R63, R29 (op-declarations R31, R33): standards' three in-force-through ops, calculations' two spot-check ops and credentials' two keep-away ops reach the store's route of their own name for every caller their specs admit, each declared stamp set from the credential whatever the caller forged, the body's own fields kept; standards' acts carry the author in the body (standards R50 reads it there); a caller their specs refuse reaches no store", async () => {
   const { w, list } = callers();
-  const ops = ["standardinforcethrough", "standardinforcethroughwithdraw", "inforcethroughof", "spotcheckvisit", "spotcheck",
-               "aikeepaway", "aikeepawaystate"];
+  /* the owners' own declarations: standards' in-force-through ops, calculations' spot checks, the account owner's keep-away */
+  const ops = [...familyOps("standards", (op) => op.includes("inforcethrough")), ...familyOps("calculations", (op) => op.startsWith("spotcheck")),
+               ...familyOps("ai-accounts", (op) => op.startsWith("aikeepaway"))];
+  assert.equal(ops.length, 7);
   let reached = 0;
   const seenOps = new Set();
   for (const op of ops) {
@@ -184,8 +187,8 @@ test("K2146 (R44, R59; publication R73): the generic forward strips `secretSha` 
 
 /* ---------------------------------------------------------------- R61 */
 
-test("R61, R29 (op-declarations R32): every one of file-safety's 23 ops reaches the store's route of its own name for every caller its spec admits — with the stamps it declares set from the credential, none the caller forged — and every caller it refuses reaches no store", async () => {
-  assert.equal(FILE_SAFETY_OPS.length, 23, FILE_SAFETY_OPS.join(","));
+test("R61, R29 (op-declarations R32): every op file-safety's map serves reaches the store's route of its own name for every caller its spec admits — with the stamps it declares set from the credential, none the caller forged — and every caller it refuses reaches no store", async () => {
+  assert.ok(FILE_SAFETY_OPS.length > 0, "the owner's own map is the list: no hand number (K3268)");
   const { w, list } = callers();
   let reached = 0;
   const seenOps = new Set();
@@ -206,7 +209,7 @@ test("R61, R29 (op-declarations R32): every one of file-safety's 23 ops reaches 
   }
   assert.deepEqual([...seenOps].sort(), FILE_SAFETY_OPS, "every op reaches its route for some caller");
   /* the member-session-only ops refuse every machine credential (op-declarations R32's machineClasses: []) */
-  for (const op of ["openoriginal", "openwithwarning", "deepercheck", "safecopyrequest", "releasescanhold"]) {
+  for (const op of familyOps("file-safety", (op, kind) => kind === "sightact" || op === "releasescanhold")) {
     w.env.calls.length = 0;
     const r = await call(w.env, { op, token: w.env.ADMIN_TOKEN, method: "POST", params: { capture: SHA }, body: {} });
     assert.ok([401, 403].includes(r.status), `${op}: ${r.status}`);
@@ -287,6 +290,7 @@ test("R62 (rev. 2 conflict (c); K1888 (3); BOB's review (8)): a member's session
   const agent = aik();
   const { env, S } = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: ["capture"] }) }, answer: (c) => {
     if (c.route !== "openoriginal" && c.route !== "openwithwarning") return null;
+    // fixtures-generic: answer (a refusal of file-safety's route is relayed past as given; its code is arbitrary here)
     return answer === "bytes" ? served({ "x-capture-sha256": SHA }) : ok({ ok: false, reason: answer, code: answer });
   } });
   let captureRead = 0;

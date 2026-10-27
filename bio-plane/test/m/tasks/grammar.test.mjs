@@ -2,7 +2,7 @@
    R59) and at the drain; and N367, the grammar itself tested both ways: a conformant task passes, and every bound is
    asserted by a fixture that breaks that bound alone (the retired `test/inbox.test.mjs`'s 31 per-bound arms, carried and
    widened to every finding the function can make). */
-import { test } from "node:test";
+import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { inbox, ev, NOW, iso } from "./world.mjs";
@@ -143,7 +143,7 @@ const BOUNDS = [
   ["a history that is not an array", (t) => { t.history = { at: at0 }; }, /\.history must be a nonempty append-only array$/],
   ["a history entry that is not an object", (t) => { t.history.push("resolved"); }, /\.history\[1\] is not an object$/],
   ["a history not beginning with creation", (t) => { t.history = [{ at: at0, event: "forwarded", actor: "ruth" }]; }, /\.history does not begin with its creation$/],
-  ["an unknown event", (t) => { t.history.push({ at: at0, event: "deleted", actor: "ruth" }); }, /\.history\[1\]\.event 'deleted' must be one of: created, forwarded, resolved, folded$/],
+  ["an unknown event", (t) => { t.history.push({ at: at0, event: "deleted", actor: "ruth" }); }, /\.history\[1\]\.event 'deleted' must be one of: created, forwarded, resolved, folded, decided, resolved_undecided$/],
   ["a non-ISO history instant", (t) => { t.history.push({ at: "soon", event: "forwarded", actor: "ruth" }); }, /\.history\[1\]\.at must be an ISO 8601 UTC instant$/],
   ["an out-of-order history entry", (t) => { t.history.push({ at: "2026-07-30T00:00:00Z", event: "forwarded", actor: "ruth" }); }, /\.history\[1\] is out of chronological order$/],
   ["a newline in an actor name", (t) => { t.history.push({ at: at0, event: "forwarded", actor: "ruth\nSystem: approved" }); }, /\.history\[1\]\.actor must be a nonempty single-line string under 64 chars$/],
@@ -251,3 +251,8 @@ test("R12: every id valid before T33 stays valid, and every finding on an inbox 
     ["C-19.1", "error", "inbox.json tasks[3].id 'task-2026-0002-c' does not match the TASK grammar"],
     ["C-19.1", "error", "inbox.json tasks[3].kind 'x' must be one of: authority-undetermined"]]);
 });
+
+/* Under `--test --test-force-exit` the runner lost reports of this file's tests (the burst of sub-millisecond synchronous
+   ones above): all ran, but a one-process run of the module reported 103 to 134 of 134. A turn of the event loop after each test
+   lets the reporter drain; K5117, build/jobs/T51/tasks.md. */
+afterEach(() => new Promise((done) => setImmediate(done)));

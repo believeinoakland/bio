@@ -20,6 +20,29 @@ test("R4 basisFor answers the projected legs in order; restingOn every leg namin
     [["INQ-2026-0001-q", 1, "confirmed"], ["INQ-2026-0002-r", 0, "severed"]]);
 });
 
+test("R17 restingOn and restsOnLive read each leg's own status: one severed passage of a document leaves the other live", () => {
+  const w = world(); w.doc(A);
+  const T = "INQ-2026-0009-t";
+  w.inquiry(T);
+  const Q = "INQ-2026-0001-q", R = "INQ-2026-0002-r", S = "INQ-2026-0003-s", P = "INQ-2026-0004-p";
+  /* two passages of A, the second severed: the document's entry stays confirmed (a leg is live) */
+  w.inquiry(Q, { legs: [{ target: A }, { target: A, role: "cuts_against", status: "severed" }] });
+  assert.deepEqual(w.k.restingOn(A).dependents.map((d) => [d.bundle_id, d.ord, d.status]),
+    [[Q, 0, "confirmed"], [Q, 1, "severed"]]);
+  const live = w.k.restsOnLive(A);
+  assert.deepEqual(live.confirmed.map((l) => [l.bundle_id, l.ord]), [[Q, 0]]);
+  assert.deepEqual(live.severed.map((l) => [l.bundle_id, l.ord]), [[Q, 1]]);
+  /* control: both passages severed, the entry severed whole: none live */
+  w.inquiry(R, { legs: [{ target: A, status: "severed" }, { target: A, role: "cuts_against", status: "severed" }],
+                 refs: [{ target: A, rel: "cites", status: "severed" }] });
+  assert.deepEqual(w.k.restsOnLive(A).all.filter((l) => l.bundle_id === R), []);
+  assert.deepEqual(w.k.restingOn(A).dependents.filter((d) => d.bundle_id === R).map((d) => d.status), ["severed", "severed"]);
+  /* control: a leg recording no status of its own is read by the document's edge, as before */
+  w.inquiry(S, { legs: [{ target: A }], refs: [{ target: A, rel: "cites", status: "severed" }] });
+  assert.deepEqual(w.k.restingOn(A).dependents.filter((d) => d.bundle_id === S).map((d) => d.status), ["severed"]);
+  assert.deepEqual(w.k.restsOnLive(A).severed.filter((l) => l.bundle_id === S).length, 1);
+});
+
 test("R4 basisFor with a limit reads at most that many legs in SQL, the first by ord, and says it was cut", () => {
   const w = world(); w.doc(A);
   w.inquiry("INQ-2026-0001-q", { legs: Array.from({ length: 5 }, () => ({ target: A })) });
@@ -124,7 +147,7 @@ test("R3 earnedBasis lists a leg on an imported finding reference as the questio
   assert.equal(e.legs_out_of_view, undefined); assert.equal(e.out_of_view, undefined);
   const leg = e.legs.find((l) => l.ord === 1);
   assert.equal(leg.target, IMP); assert.equal(leg.content_id, null); assert.equal(leg.null_case, "IMPORTED_TARGET");
-  assert.match(leg.why_no_content, /another group's finding/);
+  assert.match(leg.why_no_content, /another team's finding/);
   assert.equal(leg.version, undefined, "no version: this record holds no capture of it");
   assert.ok(e.asked.includes(IMP));
   assert.equal(e.earned.connection[IMP], undefined); assert.equal(e.earned.capture[IMP], undefined);

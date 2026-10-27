@@ -25,6 +25,7 @@ async function doAnswer(res) {
 const storeRefusal = (out, extra = {}) => json({ ...out.reply.body, ...extra }, out.reply.status);
 const storeSilent = (op, correlation = undefined) =>
   json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, detail: "the store did not answer", correlation }, 502);
+// fixtures-contract: answer-envelope door-helpers
 const requiredArgument = (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
 const HELPERS = { json, requiredArgument, storeSilent, storeRefusal, doAnswer };
 class StoreSilent extends Error { constructor(op) { super(op); this.op = op; } }
@@ -77,6 +78,7 @@ test("R4 R10 the door's publishedmanifest answers the whole projection wrapped a
 
 test("R9 R18 the door's verify, publishedmanifest and publicread answer the store's own refusal with its status and sentence, and a reply that is no answer as STORE_DID_NOT_ANSWER, with the correlation id when given", async () => {
   const refused = () => Response.json({ ok: false, reason: "BAD_JSON", detail: "the body was not JSON" }, { status: 400 });
+  // fixtures-contract: store-door store-replies
   const internal = () => Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: "0f0e0d0c-0b0a-4908-8706-050403020100" }, { status: 500 });
   const stack = () => Response.json({ ok: false, error: "Error: boom\n    at Store.fetch (store.mjs:1:1)" }, { status: 500 });
   for (const [op, q] of [["verify", { sha256: "a".repeat(64) }], ["publishedmanifest", {}], ["publicread", { name: "noticespublic" }]]) {
@@ -101,8 +103,20 @@ test("R3 R5 the door hands publishedcase and publishedbytes to the Worker's rout
   assert.deepEqual([cb.caseId, cb.findings[0].body.state], ["CASE-2026-0001", "published"]);
   const b = await door("publishedbytes", { sha256: pin }, env, stubOf(w));
   assert.deepEqual([b.status, await b.text()], [200, text]);
-  assert.deepEqual(PUBLIC_READ_DOOR_OPS, ["verify", "publishedmanifest", "publishedcase", "publishedbytes", "publicread",
-                                          "docketpublic", "docketfeed", "credit"]);
-  for (const op of ["caseflags", "casedocument", "instancegroup", "publishedlist", ""])
+  assert.deepEqual(PUBLIC_READ_DOOR_OPS, ["verify", "publishedmanifest", "publishedlist", "publishedcase", "publishedbytes",
+                                          "publicread", "docketpublic", "docketfeed", "credit"]);
+  for (const op of ["caseflags", "casedocument", "instancegroup", ""])
     assert.equal(await door(op, {}, env, stubOf(w)), null, op);
+});
+
+test("R2 R10 the door's publishedlist answers the published list (`cases` and `bundles`) with no credential, from the published store and never the bootstrap read", async () => {
+  const { w, env } = publishedCase();
+  const asked = [];
+  const stub = { fetch(req) { asked.push(new URL(req.url).pathname); return stubOf(w).fetch(req); } };
+  const r = await door("publishedlist", {}, env, stub);
+  assert.equal(r.status, 200);
+  const body = await r.json();
+  assert.deepEqual(body, { ok: true, ...w.read("publishedlist") });
+  assert.ok(Array.isArray(body.cases) && body.cases.some((c) => c.case_id === "CASE-2026-0001"), "the case is listed");
+  assert.deepEqual(asked, ["/publishedlist"]);
 });

@@ -1,0 +1,78 @@
+<title>Why work slips to T52</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap">
+<style>
+/* Layout: one reading column, a memo; the proposed text set apart as redline blocks. */
+:root{--bg:#f7f8f6;--fg:#1d2420;--muted:#5b6660;--rule:#d5dbd6;--accent:#2f6b4f;--del:#9b2f2f;--delbg:#f6e7e5;--insbg:#e5f1ea;
+--display:"Source Serif 4",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151a17;--fg:#e4e9e5;--muted:#9aa59f;--rule:#2d3631;--accent:#7cc39e;--del:#e59a92;--delbg:#3a2220;--insbg:#1d3328;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151a17;--fg:#e4e9e5;--muted:#9aa59f;--rule:#2d3631;--accent:#7cc39e;--del:#e59a92;--delbg:#3a2220;--insbg:#1d3328;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+main{max-width:44rem;margin:0 auto;padding-block:2.5rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:1.75rem}
+h1,h2{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2rem;font-weight:600}h2{font-size:1.3rem;font-weight:600;color:var(--accent)}
+p,ul,ol{margin:0}section{display:grid;gap:.75rem}li+li{margin-top:.4rem}
+.lede{color:var(--muted)}
+.k{font-family:var(--mono);font-size:.85em}
+.red{display:grid;gap:.5rem;border-left:3px solid var(--rule);padding-left:1rem}
+.red .lab{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+del{background:var(--delbg);color:var(--del);text-decoration:line-through;padding:0 .15em}
+ins{background:var(--insbg);text-decoration:none;padding:0 .15em}
+.q{border:1px solid var(--rule);border-radius:6px;padding:1rem;display:grid;gap:.5rem}
+.q b{font-family:var(--display);font-size:1.05rem}
+</style>
+<main>
+<header style="display:grid;gap:.5rem">
+<h1>Why work slips to T52</h1>
+<p class="lede">BOB #213, 18 October 2026. Why work keeps getting moved to the next tranche despite your rulings, what I propose to change, and the two decisions I need from you.</p>
+</header>
+
+<section>
+<h2>Your rulings already say it</h2>
+<ul>
+<li><b>K642</b> (30 Sept): every tranche includes everything that can safely be done in it.</li>
+<li><b>K882</b> (1 Oct): as much work as possible goes into every tranche; open work joins any layer not yet started.</li>
+<li><b>K1741</b> (6 Oct): planning only part of the work is a breach.</li>
+<li><b>K3815</b> (today): "I don't want any excuses for why you didn't do this or that in T51."</li>
+<li><b>K3905</b> (today): the installer hang fixed in T51, not T52.</li>
+<li><b>K3912</b> (today, your message): "EVERYTHING is to be done in T51."</li>
+</ul>
+</section>
+
+<section>
+<h2>Why it keeps happening</h2>
+<ol>
+<li><b>The principles still tell every BOB to defer.</b> P10 says "an entry that arises during a tranche goes to the next plan", and once a layer closes, nothing more runs in it. P19 lists "the order" (that is, the layer has already closed) as an acceptable reason to defer, and lets work that changes no behaviour wait up to three tranches. Every new BOB reads the principles at takeover, and the principles outrank rulings. So whenever a job finds something in a module whose layer has closed, the written rule sends it to the next tranche, and your rulings lose. 22 of the 87 entries now in the next-tranche list give that reason, and 8 more give the three-tranche wait.</li>
+<li><b>A one-line note in the next-tranche list is the easiest thing to do, and nothing checks it.</b> Reopening a job or adding to a layer takes more work. Nothing stops BOB from writing the note instead.</li>
+<li><b>Today's case was my own error.</b> The case-authoring job was still open and no rule required deferring. I misread your allowance for the wording sweeps (K3804) as covering it. That is now fixed and the work stays in T51.</li>
+</ol>
+</section>
+
+<section>
+<h2>The fix: the exact change to the principles</h2>
+<p>A change to the principles needs your approval of the exact wording. Struck text is removed; highlighted text is added.</p>
+<div class="red"><span class="lab">P10, first bullet</span>
+<p>A tranche's plan is fixed when the tranche starts<ins> in what its entries mean; work found while it runs is added to it</ins>. <del>An entry that arises during a tranche goes to the next plan.</del> <ins><b>Nothing found in a tranche waits for the next.</b> A flaw, gap or improvement is done by its module's running job; else in the START of its module's job in a layer not yet started; else, for a module whose layer has closed, in the tranche's <b>completion round</b>: after the last layer and before the release is cut, one job per such module, run concurrently, lower layers first where one uses another. A completion round needs no further approval.</ins></p></div>
+<div class="red"><span class="lab">P19, the deferral sentence</span>
+<p>An entry is deferred <ins>to the next tranche</ins> only for <del>a named hard reason (the order, P4; a module's size before its split, P6; a dependency not yet built; one job per module, P8; a question that is Bob's, P17; a deployment or measurement), never for the tranche's size or a job's smallness. A module whose only entries change no behavior (wording, citations, re-points kept working by a delegate, test hygiene) may wait for its next substantive entry, at most three tranches; the plan names each wait.</del><ins>one of three reasons: a decision of Bob's not yet made (P17); a deployment or measurement that cannot happen inside the tranche; something outside the product that does not yet exist. Never because of the order, a layer already closed, the tranche's size, a job's smallness, or because it changes no behaviour. Each deferred entry is named, with its reason, in the tranche's report to Bob.</ins></p></div>
+<p>What follows from it is mine to do, with no further approval: the mechanics get the completion round, and the format check will fail any next-tranche entry whose reason is not one of the three. The completion round runs jobs exactly as a layer does. I will prove it on the small dry-run tranche while layer 9 runs, so T51 does not wait for it.</p>
+</section>
+
+<section>
+<h2>Your two decisions</h2>
+<div class="q"><b>1. Approve the change above?</b>
+<p><b>Recommended: approve.</b> It is the only way to stop this for good: a ruling cannot outrank the principle that causes it. If you don't approve, I keep T51 complete by asking you, item by item, for permission to run jobs in layers that have closed (K1548).</p></div>
+<div class="q"><b>2. The ~45 wording-only sweeps you let wait for T52 (K3804)</b>
+<p><b>A. Run them in T51's completion round (recommended).</b> They are the same jobs either way, mostly on the cheapest model. Doing them now spares a whole tranche, which you said is the expensive part.</p>
+<p><b>B. Keep them for T52</b>, as K3804 says.</p></div>
+</section>
+
+<section>
+<h2>Already under way</h2>
+<ul>
+<li>Work found by a running job stays in that job (case-authoring and public-read this hour).</li>
+<li>A worker is listing every entry now outside T51, by layer, so that everything in a layer not yet started (L9, L11, and L8's modules that have no job) joins T51 now, with no question to you.</li>
+<li>Only items that truly wait on you stay out: the stewards' contact address, the AI choices, the dashboards question (S20) and your Logpush registration.</li>
+</ul>
+</section>
+</main>

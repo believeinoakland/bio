@@ -8,7 +8,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as R from "../../../src/case-catalogue/checks.mjs";
 import * as RG from "../../../src/record-grammar/index.mjs";
-import { isNoticeReference } from "../../../src/case-grammar/index.mjs";
+import { isNoticeReference, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMATS_ACCEPTED } from "../../../src/case-grammar/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 
 const PIN = "a".repeat(64);
@@ -32,7 +33,7 @@ function doc() {
     completeness_excluded: [{ target: null, description: "the 2019 permits", reason: "not yet requested" }],
     searched: { subject_source: "case_basis", subjects: 2 }, searched_levels: [],
     required_strength: { declared: true, capture: "B", connection: null },
-    bias_manifest: { in_force: false, stated: "no manifest was in force", pins_proposed: 0,
+    bias_manifest: { in_force: false, stated: word("bias.manifest_force"), pins_proposed: 0,
                      pins_proposed_stated: "no adoption pinned a proposed revision" },
     bias_manifest_bundles: [], bias_manifest_pins_proposed: [],
     case_citations: [{ target: "INFO-2026-0001-minutes", version: "pinned", capture: "c".repeat(64) },
@@ -50,7 +51,7 @@ const fires = (mutate, check, ctx = CTX) => R.checkCaseDocument(mutate(doc()), c
 
 /* The seventeen arms of C-41, each with the one mutation that fires it (casesign's list, extended to every arm). */
 const ARMS = [
-  ["FORMAT", "C-41.1", (d) => { d.format = "bio-case-document/9"; return d; }],
+  ["FORMAT", "C-41.1", (d) => { d.format = "bio-case-document/10"; return d; }],
   ["IDENTITY", "C-41.2", (d) => { d.case_id = "CASE-2026-9999"; return d; }],
   ["EDITION", "C-41.3", (d) => { d.case_edition = 7; return d; }],
   ["PROJECT", "C-41.4", (d) => { d.case_project = "null"; return d; }],
@@ -110,8 +111,7 @@ test("R1: the case arms of C-2.8 (each member's frozen blocks, as the document s
 });
 
 test("R1, R4: C-41.16 — an edition above 1 with no \"What changed\" statement, a blank one, or one its block's hash disowns is refused with R1's translation word for word; edition 1 without one, and edition 2 with one, pass", () => {
-  const msg = "A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the "
-            + "statement, then sign. Nothing was signed.";
+  const msg = localize("case-catalogue.checks.a_new_edition_of_a", "A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.");
   const wc = (body) => R.checkCaseDocument(doc(), { ...CTX, body }).filter((x) => x.check === "C-41.16");
   for (const body of [NO_WC, `${NO_WC}\n## What Changed in This Edition, and Why\n\n   \n`]) {
     const got = wc(body);
@@ -264,19 +264,25 @@ test("R2, N69: isCaseMemberBytes and the copy record-grammar keeps for C-3.1's h
 /* N538 (DEC-124; K1365 (1), K1367): `bio-case-document/7` is `/6` in every field (case-grammar R1), and the catalogue reads
    it as `/6`: the same findings by the same arms, each message naming the format the document declares. A `/6`
    document's messages are byte for byte those before T31, which named the then-current `/6` (the deployed copy may hold
-   one). Every arm of the family is driven over both, with the one mutation that fires it. */
-test("R1, R4 (N538): a /7 case document is read as /6: it draws no finding, each of C-41.1–C-41.17 fires on it as on the /6 twin, and every message names the format the document declares, a /6 one's unchanged", () => {
+   one). `bio-case-document/8` (the format in force, T51-136) states what `/7` states, so it is read as `/7` the same way
+   (case-grammar R1). Every arm of the family is driven over `/6` and both newer formats, pinned by name, with the one
+   mutation that fires it. */
+test("R1, R4 (N538): a /7 case document is read as /6 and a /8 one as /7: each draws no finding, each of C-41.1–C-41.17 fires on it as on the /6 twin, and every message names the format the document declares, a /6 one's unchanged", () => {
   const as = (fmt, d = doc()) => ({ ...d, format: fmt });
   const run = (d, ctx) => R.checkCaseDocument(d, ctx);
-  for (const fmt of ["bio-case-document/6", "bio-case-document/7"])
+  const NEWER = [CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT];
+  for (const fmt of [CASE_DOCUMENT_FORMAT_V6, ...NEWER])
     assert.deepEqual(checks(as(fmt), { ...CTX, body: BODY, memberBasis: { [M1]: [], [M2]: [] } }), [], `${fmt}: the baseline`);
   for (const [key, num, mutate, also = [], ctx = { ...CTX, body: BODY }] of ARMS) {
     if (key === "FORMAT") continue;
-    const six = run(mutate(as("bio-case-document/6")), ctx), seven = run(mutate(as("bio-case-document/7")), ctx);
+    const six = run(mutate(as(CASE_DOCUMENT_FORMAT_V6)), ctx);
     assert.deepEqual([...new Set(six.map((x) => x.check))].sort(), [num, ...also].sort(), `${num} (and only what it drags) on the /6 document`);
-    assert.deepEqual(seven, six.map((x) => ({ ...x, message: x.message.replaceAll("bio-case-document/6", "bio-case-document/7") })),
-      `${num}: the /7 document draws the /6 document's findings, the token aside`);
-    assert.ok(!six.some((x) => x.message.includes("bio-case-document/7")), `${num}: a /6 document is never told /7`);
+    for (const fmt of NEWER) {
+      assert.deepEqual(run(mutate(as(fmt)), ctx), six.map((x) => ({ ...x, message: x.message.replaceAll(CASE_DOCUMENT_FORMAT_V6, fmt) })),
+        `${num}: the ${fmt} document draws the /6 document's findings, the token aside`);
+    }
+    assert.ok(!six.some((x) => x.message.includes(CASE_DOCUMENT_FORMAT_V7)), `${num}: a /6 document is never told /7`);
+    assert.ok(!six.some((x) => x.message.includes(CASE_DOCUMENT_FORMAT)), `${num}: a /6 document is never told /8`);
   }
   /* byte identity for /6 with the messages as written before T31 (`a ${CASE_DOCUMENT_FORMAT} case document …`, /6 then) */
   const before = {
@@ -288,16 +294,20 @@ test("R1, R4 (N538): a /7 case document is read as /6: it draws no finding, each
     const [m] = run(mutate(as("bio-case-document/6")), CTX).filter((x) => x.check === num).map((x) => x.message);
     assert.ok(m.startsWith(before[num]), `${key}: ${m.slice(0, 120)}`);
   }
-  /* an earlier format is named as itself, never as the current one */
+  /* an earlier format is named as itself, never as the current one: the sentence for the declared format, whole */
   for (const fmt of ["bio-case-document/3", "bio-case-document/4", "bio-case-document/5"]) {
     const [m] = run({ ...as(fmt), completeness: { ...doc().completeness, statement_by: undefined } }, CTX)
       .filter((x) => x.check === "C-41.13").map((x) => x.message);
-    assert.ok(m.startsWith(`a ${fmt} case document requires completeness.statement_by`), m.slice(0, 80));
+    assert.equal(m, localize("case-catalogue.checks.a_declared_case_document_requires_5",
+      "a {declared} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got {v1}{v2})",
+      { declared: fmt, v1: "null", v2: "" }));
   }
-  /* C-41.1 names the current format and every format accepted as written */
-  const [bad] = run(as("bio-case-document/9"), CTX).filter((x) => x.check === "C-41.1");
-  for (const fmt of ["/7", "/6", "/5", "/4", "/3", "/2", "/1"]) assert.ok(bad.message.includes(`'bio-case-document${fmt}'`), fmt);
-  assert.ok(bad.message.startsWith("a case document declares format 'bio-case-document/7', or one of the earlier"), bad.message.slice(0, 90));
+  /* C-41.1 names the current format (CASE_DOCUMENT_FORMAT, in force) and every format accepted as written */
+  const [bad] = run(as("bio-case-document/10"), CTX).filter((x) => x.check === "C-41.1");
+  for (const fmt of ["/8", "/7", "/6", "/5", "/4", "/3", "/2", "/1"]) assert.ok(bad.message.includes(`'bio-case-document${fmt}'`), fmt);
+  assert.equal(bad.message, localize("case-catalogue.checks.a_case_document_declares_format",
+    "a case document declares format '{CASE_DOCUMENT_FORMAT}', or one of the earlier formats accepted as written ({map}) (got '{format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one",
+    { CASE_DOCUMENT_FORMAT, map: CASE_DOCUMENT_FORMATS_ACCEPTED.filter((x) => x !== CASE_DOCUMENT_FORMAT).map((x) => `'${x}'`).join(", "), format: "bio-case-document/10" }));
 });
 
 test("R4: the family is declared gate findings, not refusal rows: no export is named *_CHECKS, no row carries a where or a code, and each row names its check and what it asks", () => {
@@ -320,4 +330,48 @@ test("R5: no place is named in this module's vocabularies or findings", () => {
   ]);
   assert.ok(said.length > 2000, "negative control: the findings were drawn");
   assert.doesNotMatch(said, /oakland|alameda|california|berkeley/i);
+});
+
+test("R2, R31: C-2.8's grounds arm counts only live legs, as strength does: a ground whose every leg is severed has no row to ask for", () => {
+  const leg = (target, ground) => ({ target, role: "supports", grade: "B", grade_axis: "capture", ground });
+  const grounded = (refs, rows) => {
+    const m = member();
+    m.basis = [leg("INFO-2026-0001-a", "part 1"), leg("INFO-2026-0002-b", "part 2")];
+    m.references = refs;
+    m.published_strength_grounds = rows.map((g) => ({ ground: g, axis: "capture", state: "graded", grade: "B" }));
+    return m;
+  };
+  const cite = (target, status) => ({ target, rel: "cites", status });
+  const live = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "confirmed")];
+  const severed = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "severed")];
+  assert.deepEqual(armOf(grounded(severed, ["part 1"])), [], "part 2's only leg is severed: no row for it, no finding");
+  assert.deepEqual(armOf(grounded(live, ["part 1"])), ["C-2.8"], "control: the same leg live and its row absent is still the finding");
+  assert.deepEqual(armOf(grounded(live, ["part 1", "part 2"])), [], "control: every live ground has its row");
+  const oneLeg = grounded(severed, ["part 1"]);
+  oneLeg.basis.push(leg("INFO-2026-0001-a", "part 2"));
+  assert.deepEqual(armOf(oneLeg), ["C-2.8"], "a ground with a live leg left is asked for");
+});
+
+test("R6: the case document's member arm reads a member's references beside its basis: a severed leg is dropped there as on the member's own arm", () => {
+  const leg = (target, ground) => ({ target, role: "supports", grade: "B", grade_axis: "capture", ground });
+  const basis = [leg("INFO-2026-0001-a", "part 1"), leg("INFO-2026-0002-b", "part 2")];
+  const cite = (target, status) => ({ target, rel: "cites", status });
+  const live = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "confirmed")];
+  const severed = [cite("INFO-2026-0001-a", "confirmed"), cite("INFO-2026-0002-b", "severed")];
+  const withGrounds = (grounds) => {
+    const d = doc();
+    d.case_strength_grounds = grounds.map((g) => ({ target: M2, ground: g, axis: "capture", state: "graded", grade: "B" }));
+    return d;
+  };
+  const asked = (grounds, entry) => R.checkCaseDocument(withGrounds(grounds), { ...CTX, memberBasis: { [M2]: entry } });
+  const codes = (out) => out.map((x) => x.check);
+  assert.deepEqual(codes(asked(["part 1"], { basis, references: severed })), [], "part 2's only leg is severed: no row for it, no finding");
+  assert.deepEqual(codes(asked(["part 1"], { basis, references: live })), ["C-2.8"], "control: the same leg live and its row absent is still the finding");
+  assert.deepEqual(codes(asked(["part 1", "part 2"], { basis, references: live })), [], "control: every live ground has its row");
+  assert.deepEqual(codes(asked(["part 1"], { basis })), ["C-2.8"], "an entry with no references drops no leg");
+  assert.deepEqual(codes(asked(["part 1"], basis)), ["C-2.8"], "control: the array form is unchanged, no leg dropped");
+  assert.deepEqual(codes(asked(["part 1", "part 2"], basis)), [], "control: the array form with every row is clean");
+  const first = asked(["part 1"], { basis, references: [cite("INFO-2026-0002-b", "confirmed"), cite("INFO-2026-0002-b", "severed")] });
+  assert.deepEqual(codes(first), ["C-2.8"], "the first entry for a target decides, as strength reads it");
+  assert.deepEqual(codes(R.checkCaseDocument(doc(), { ...CTX, memberBasis: { [M2]: { references: severed } } })), [], "an entry with no basis asks the basis arms of nothing");
 });

@@ -1,0 +1,296 @@
+# case-grammar: the words check after the conversion (K3949)
+
+Layer 8. 265 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/case-grammar/account.mjs:120` [copy] "This case states no account." — signed or pinned text
+- inline `bio-plane/src/case-grammar/account.mjs:47` "[framing that follows the declared bias statement {}]" — signed or pinned text
+- inline `bio-plane/src/case-grammar/blocks.mjs:78` "the same person as {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/blocks.mjs:88` [copy] "the source has not consented to being named, and no public record n..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/blocks.mjs:94` "{}: {}; received as" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:167` [copy] "an unreadable value" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:183` "a case file's manifest is an object, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:189` "the manifest has no field {} in {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:191` "the format is {} (or {} or {}, read as written), and this manifest ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:193` "the source group is named by its slug, and this manifest states {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:195` "the case is named by its id, and this manifest states {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:197` "the edition is a whole number from 1, and this manifest states {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:199` "the case document's SHA-256 is 64 lower-case hex digits, and this m..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:207` "a signing key is {key, fingerprint}, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:208` "a signing key has no field {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:212` "a key's fingerprint is SHA256: and 43 base64 characters, and this i..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:213` "the key {} is listed twice" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:222` "a part is {index, sha256, bytes}, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:223` "a part has no field {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:224` "the parts are numbered from 1 in order, so this one is {}, and it s..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:225` "a part's SHA-256 is 64 lower-case hex digits, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:226` "a part's size is a whole number of bytes, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:237` "a file is {path, sha256, bytes, part, kind}, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:238` "a file has no field {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:240` "a file's kind is one of {}, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:242` "a {} case file carries no {}: that kind is {}'s" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:243` "{} is not a path {} spells for any file" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:245` "{} is where a {} is carried, and this file says it is a {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:247` "{} is listed twice" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:250` "a file's SHA-256 is 64 lower-case hex digits, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:252` "a calculation's input is named by its SHA-256, and {} is listed wit..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:254` "an archive is named by its SHA-256, and {} is listed with another" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:255` "a file's size is a whole number of bytes, and this is {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:256` "a file is in one of the parts listed, and this one names {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:267` "a case file carries exactly one {}, and this one lists {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:271` "a case file carries at most one {}, and this one lists {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:280` "{} is a {} under {}, and the case file carries no document under th..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:296` "{} is a copy carried in its original's place, and no row of the cas..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:298` "{} is a {} under {}, whose material the case carries as its copy: t..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:302` "the case document carries {} as its copy at {}, and the case file l..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:312` "part {} carries no file" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:314` "part {}'s SHA-256 is not the one its files give" — signed or pinned text
+- inline `bio-plane/src/case-grammar/casefile.mjs:315` "part {}'s size is not the sum of its files' sizes" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:100` [copy] "What reviewers said" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:104` [copy] "Outcomes since the last edition" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:106` [copy] "What they did" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:106` [copy] "What we did" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:109` [copy] "recomputed at publication, and the result agrees with the one stored" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:110` [copy] "recomputed at publication, and the result differs from the one stored" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:111` [copy] "not recomputed at publication: an input it names was not bound" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:117` [copy] "A case has two strengths, never one." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:121` "Capture: how faithfully the documents this rests on were taken in, ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:122` "what they say. A is the strongest, D the weakest. It never says whe..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:123` "Connection: how firmly those documents are tied to what the finding..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:124` "follow the link. A is the strongest, D the weakest. It never says w..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:125` [copy] "Testimony: a member's own firsthand account, graded beside the two ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:151` "Carried as a copy with marked areas covered; the copy's fingerprint..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:152` "Carried as a copy with nothing covered and none of the original's m..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:153` "Carried as a cleaned copy, with none of the details of who made it ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:214` [copy] "no location stated" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:215` [copy] "an unreadable location" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:233` [copy] "A case file with no readable case document" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:234` [copy] "This case file carries no readable case document, so nothing of the..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:239` [copy] "no bar declared" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:240` "capture {}, connection {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:242` "{} · Case {} · Edition {}. Declared bias:" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:243` "{}. Bar (floors): {}. Case document SHA-256: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:267` "What this case is about: {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:270` "{}: no conclusion is recorded for it." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:272` "{}: the claim is undetermined: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:283` "{} This finding: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:293` [copy] "This case document lists no materials." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:294` [copy] "No document or observation is reached by this case's findings." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:318` [copy] "This case document does not state what was searched." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:319` "Computed at {} over {} subject(s), {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:320` "with a recorded observation. It records what was looked for, not ho..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:321` [stitched] "{} level ({}): {}: {} subject(s), {} looked at, {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:323` "{} never looked at, {} undetermined. {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:330` "The publisher's acknowledgement: {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:332` "on {}: {} Justification: {}. Evidence:" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:343` [copy] "This case disclosed no contradiction." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:345` "{}: {} Seen side: {}. State: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:346` "{}: {}, against {}. State: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:353` "Each finding is graded on its own, on capture and on connection sep..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:354` "combines them, and this case has no strength of its own." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:358` "This project's bar: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:364` "This case was graded by method {}, whose words this rendering does ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:365` [copy] "This case document does not state the grading method it was graded by." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:366` "It was checked under catalogue version {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:370` "You can check this case yourself, without {} and without a network ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:374` "finding against the bar, and runs the same publication checks." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:376` "document whose fingerprint matches completes it), or did not recrea..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:377` [copy] "Recreating a case shows it is intact and consistent. It does not sh..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:399` "{} · Case {} · Edition {}" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:402` [copy] "A case file that could not be read" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:403` [copy] "This case file could not be read whole, so nothing of the case is s..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:411` "{} is already shown above in this chain." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:412` [copy] "This chain goes deeper than six steps; the steps below are not foll..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:416` "This case file carries no grading facts for {}, so its chain is not..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:417` "{} rests on nothing." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:453` [copy] "an unreadable value" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:457` [copy] "What they did and what we did are two lists, never mixed. Each item..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:461` [copy] "Nothing is stated in this lane." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:466` [copy] "No calculation is reached by this case's findings." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:467` "Each calculation is stated so that anyone can run its recipe again ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:468` "computed fact, never a judgment." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:483` [copy] "This case states no account." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:497` [copy] "No outcome is carried into this edition." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:503` [copy] "The publisher included no reviewer's comment." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:504` [copy] "How many reviewers' comments were left out is not stated." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:505` "{} reviewer's comment{} left out by the publisher." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:510` [copy] "No approval rule was in force when this case was signed." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:511` [copy] "no one named" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:514` [copy] "No approval is recorded." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:528` "Held in the record of {}{}{}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:532` "An attestation of a kind this rendering does not know: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:542` "Published and signed by {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:89` [copy] "The documents and observations" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:90` [copy] "Disclosed contradictions" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:90` [copy] "How grades are worked out" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:90` [copy] "The declared bias" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:90` [copy] "What was searched" — signed or pinned text
+- inline `bio-plane/src/case-grammar/complete.mjs:91` [copy] "How to check this case yourself" — signed or pinned text
+- inline `bio-plane/src/case-grammar/edition.mjs:137` "No manifest was in force when this case was published: no bias set ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/edition.mjs:138` "it. That is stated, not left blank: it is a different fact from a l..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/edition.mjs:140` "The lens this case was produced under is undetermined, so no statem..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/edition.mjs:183` "No acknowledgement is stated." — signed or pinned text
+- inline `bio-plane/src/case-grammar/edition.mjs:187` "This case was produced under {} statement{} of declared bias in" — signed or pinned text
+- inline `bio-plane/src/case-grammar/edition.mjs:188` "force when it was published, each printed here with its reasons." — signed or pinned text
+- inline `bio-plane/src/case-grammar/index.mjs:104` "This case rests, directly or through another finding, on {} firstha..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/index.mjs:105` "{} recorded by {}. What it shows of who SAID each one is" — signed or pinned text
+- inline `bio-plane/src/case-grammar/index.mjs:107` "§4). An observation names no person in its own bytes; the words bel..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/index.mjs:111` "- **{}** — NO LEVEL IS CHOSEN: {}. This edition cannot be signed un..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/index.mjs:112` "chooses one, or the finding resting on it leaves the case." — signed or pinned text
+- inline `bio-plane/src/case-grammar/index.mjs:154` [copy] "**Who else read this statement.**" — signed or pinned text
+- inline `bio-plane/src/case-grammar/outcomes.mjs:73` "{} Rests on: {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/standing.mjs:41` [copy] "Its role in this case is not stated" — signed or pinned text
+- inline `bio-plane/src/case-grammar/standing.mjs:43` "{} · this project declared no bar" — signed or pinned text
+- inline `bio-plane/src/case-grammar/standing.mjs:46` "{} · not asked to meet this project's bar ({})" — signed or pinned text
+- inline `bio-plane/src/case-grammar/standing.mjs:49` "{} · this project's bar is ({})" — signed or pinned text
+- inline `bio-plane/src/case-grammar/standing.mjs:53` "{} · meets this project's bar ({})" — signed or pinned text
+- inline `bio-plane/src/case-grammar/standing.mjs:54` "{} · short of this project's bar on {} ({})" — signed or pinned text
+- inline `bio-plane/src/case-grammar/standing.mjs:57` [copy] "Its standing against this project's bar could not be read" — signed or pinned text
+- inline `bio-plane/src/case-grammar/tensions.mjs:28` [copy] "explained, not yet shown" — signed or pinned text
+- inline `bio-plane/src/case-grammar/tensions.mjs:29` [copy] "taken up as a question" — signed or pinned text
+- inline `bio-plane/src/case-grammar/tensions.mjs:30` [copy] "held irreconcilable, to be reopened by new evidence" — signed or pinned text
+- inline `bio-plane/src/case-grammar/tensions.mjs:34` "This finding rests on a side in conflict with a record not shown he..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/tensions.mjs:35` "record and who holds it are not named." — signed or pinned text
+- inline `bio-plane/src/case-grammar/tensions.mjs:70` [copy] "the case's owner" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:100` [table] "The team's rule in force at signing required approval by: {}{}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:101` [table] "Attested by a member of the team, credited to the {}{}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:102` [table] "Vouched for by the team {}, under this case's own signature." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:44` [table] "Everyone who investigates looks through a lens: what they care abou..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:46` [table] "This group declares its lens, with its reasons and its evidence, so..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:47` [table] "looked at the material." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:52` [copy] "the project that produced it" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:53` [copy] "the name its author chose to appear under" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:58` [table] "Verify it with the checker from the group's public read {}, or agai..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:59` [table] "manifest and the group's published record." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:60` [table] "Fingerprint of the original (SHA-256), which the group holds and th..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:62` [table] "1. Get the checker, one file, from the publishing group's public re..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:63` [table] "specification of the case file's format from {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:64` [table] "This is another group's finding." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:65` [table] "The account is the publisher's own, sentence by sentence; every sen..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:66` [table] "framed by the group's declared bias is marked, and its statement na..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:67` [table] "The group's rule in force at signing required approval by: {}{}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:68` [table] "Attested by a member of the group, credited to the {}{}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:69` [table] "Vouched for by the group {}, under this case's own signature." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:75` [copy] "a source this team checks more closely before relying on it" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:76` [copy] "an inference this team allows or refuses to draw" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:77` [copy] "a pattern this team has evidence an institution or source follows" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:80` [table] "Everyone who investigates looks through a lens: what they care abou..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:82` [table] "This team declares its lens, with its reasons and its evidence, so ..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:83` [table] "looked at the material." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:85` [copy] "known to the team, not recorded" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:86` [copy] "the project that produced it" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:86` [copy] "the team that publishes this case" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:87` [copy] "the cover the team knows its author by" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:87` [copy] "the name its author chose to appear under" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:89` [copy] "a team not named" — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:91` [table] "Verify it with the checker from the team's public read {}, or again..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:92` [table] "manifest and the team's published record." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:93` [table] "Fingerprint of the original (SHA-256), which the team holds and thi..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:94` [copy] "not recomputed here: a workbook this team's Civicsmith did not reco..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:95` [table] "1. Get the checker, one file, from the publishing team's public rea..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:96` [table] "specification of the case file's format from {}." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:97` [table] "This is another team's finding." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:98` [table] "The account is the publisher's own, sentence by sentence; every sen..." — signed or pinned text
+- inline `bio-plane/src/case-grammar/words.mjs:99` [table] "framed by the team's declared bias is marked, and its statement named." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:218` "What reviewers said" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:222` "The documents and observations" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:223` "Disclosed contradictions" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:223` "How grades are worked out" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:223` "The declared bias" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:223` "What was searched" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:224` "How to check this case yourself" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:224` "What reviewers said" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:262` "The publisher included no reviewer's comment." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:262` "This case states no account." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:263` "No approval is recorded." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:263` "No approval rule was in force when this case was signed." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:266` "How many reviewers' comments were left out is not stated." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:324` "How many reviewers' comments were left out is not stated." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/account.test.mjs:95` "This case states no account." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/blocks.test.mjs:21` [part] "this case document's format predates the statement of each capture'..." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/blocks.test.mjs:22` [part] "co-attestation and source, so it states none; that is not a stateme..." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/blocks.test.mjs:23` [part] "this case document declares a format that states each capture's grade," — part test copy
+- testcopy `bio-plane/test/m/case-grammar/blocks.test.mjs:24` [part] "co-attestation and source, but carries no readable block for it, so..." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/calculations.test.mjs:184` "not recomputed here" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/casefile.test.mjs:220` "the source has not consented to being named, and no public record n..." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/citations.test.mjs:21` [part] "version undetermined (signed before capture pins): this document was" — part test copy
+- testcopy `bio-plane/test/m/case-grammar/citations.test.mjs:22` [part] "signed before a case's citation edges were pinned to the capture th..." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:102` "A case has two strengths, never one." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:117` [part] "It does not show that it is true." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:177` "The chain stops here: what that finding rests on is in its own case..." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:182` "This case states no acceptance for it." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:190` "Included whole in this case file." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:210` "This case file carries no grading facts for" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:212` "This case document does not state what was searched." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:212` "This case document lists no materials." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:213` "This case document does not state the grading method it was graded by." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:307` "· this project declared no bar" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:333` "Its standing against this project's bar could not be read" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:342` "The documents and observations" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:343` "Disclosed contradictions" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:343` "How grades are worked out" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:343` "The declared bias" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:343` "What was searched" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:344` "How to check this case yourself" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:361` "The publisher's disclosure:" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:379` "No calculation is reached by this case's findings." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:380` "Nothing is stated in this lane." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:47` "The documents and observations" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:48` "Disclosed contradictions" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:48` "How grades are worked out" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:48` "The declared bias" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:48` "What was searched" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:49` "How to check this case yourself" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:69` "is already shown above in this chain." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:79` "Extracted text fingerprint:" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:81` "A finding this case relies on rests on it." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/complete.test.mjs:81` "Included whole in this case file." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/edition.test.mjs:143` "Everyone who investigates looks through a lens: what they care abou..." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/edition.test.mjs:234` "**Who else read this statement.**" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/formats.test.mjs:176` "explained, not yet shown" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/formats.test.mjs:177` "held irreconcilable, to be reopened by new evidence" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/formats.test.mjs:177` "taken up as a question" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/formats.test.mjs:188` "the case's owner" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/formats.test.mjs:204` [part] "This finding rests on a side in conflict with a record not shown he..." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/formats.test.mjs:205` [part] "record and who holds it are not named." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/marked.test.mjs:86` "A finding this case relies on rests on it." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/obscured.test.mjs:177` "Extracted text fingerprint:" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/obscured.test.mjs:179` "Included whole in this case file." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/obscured.test.mjs:266` "Only supporting findings rest on it." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/obscured.test.mjs:355` "Extracted text fingerprint:" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/obscured.test.mjs:356` "A finding this case relies on rests on it." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/obscured.test.mjs:358` "Included whole in this case file." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/outcomes.test.mjs:103` "Outcomes since the last edition" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/outcomes.test.mjs:132` "No outcome is carried into this edition." — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/sections.test.mjs:108` "**Who else read this statement.**" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/sections.test.mjs:49` [part] "its author has chosen no level" — part test copy
+- testcopy `bio-plane/test/m/case-grammar/sections.test.mjs:65` [part] "chooses one, or the finding resting on it leaves the case." — part test copy
+- testcopy `bio-plane/test/m/case-grammar/words.test.mjs:141` "a team not named" — signed or pinned text
+- testcopy `bio-plane/test/m/case-grammar/words.test.mjs:170` [part] "its author has chosen no level" — part test copy
+- testcopy `bio-plane/test/m/case-grammar/words.test.mjs:256` "a team not named" — signed or pinned text
+
+## Plain findings (K3957)
+
+22 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-grammar.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-grammar/blocks.mjs:40` "co-attestation and source, so it states none; that is not a statement that there were none"
+- plain `bio-plane/src/case-grammar/blocks.mjs:43` "co-attestation and source, but carries no readable block for it, so what it stated is u..."
+- plain `bio-plane/src/case-grammar/casefile.mjs:203` "the manifest names at least one signing key, with its fingerprint"
+- plain `bio-plane/src/case-grammar/casefile.mjs:210` "a signing key is its public key on one line"
+- plain `bio-plane/src/case-grammar/casefile.mjs:219` "the manifest lists at least one part"
+- plain `bio-plane/src/case-grammar/casefile.mjs:231` "the manifest lists every file of the case file"
+- plain `bio-plane/src/case-grammar/casefile.mjs:262` "the files are listed in path order"
+- plain `bio-plane/src/case-grammar/casefile.mjs:318` "the manifest could not be read whole"
+- plain `bio-plane/src/case-grammar/edition.mjs:141` "printed and nothing is claimed either way"
+- plain `bio-plane/src/case-grammar/index.mjs:175` "signed before a case's citation edges were pinned to the capture they were made against..."
+- plain `bio-plane/src/case-grammar/tensions.mjs:38` "directly; deeper findings disclose their own when published"
+- plain `bio-plane/src/case-grammar/tensions.mjs:41` "states none; that is not a statement that none existed"
+- plain `bio-plane/src/case-grammar/tensions.mjs:44` "carries no readable tension section, so what it disclosed is undetermined"
+- plain `bio-plane/src/case-grammar/words.mjs:39` "a source this group checks more closely before relying on it"
+- plain `bio-plane/src/case-grammar/words.mjs:40` "an inference this group allows or refuses to draw"
+- plain `bio-plane/src/case-grammar/words.mjs:41` "a pattern this group has evidence an institution or source follows"
+- plain `bio-plane/src/case-grammar/words.mjs:50` "known to the group, not recorded"
+- plain `bio-plane/src/case-grammar/words.mjs:52` "the group that publishes this case"
+- plain `bio-plane/src/case-grammar/words.mjs:53` "the cover the group knows its author by"
+- plain `bio-plane/src/case-grammar/words.mjs:54` "a member of this group"
+- plain `bio-plane/src/case-grammar/words.mjs:61` "not recomputed here: a workbook this group's Civicsmith did not recompute"
+- plain `bio-plane/src/case-grammar/words.mjs:88` "a member of this team"

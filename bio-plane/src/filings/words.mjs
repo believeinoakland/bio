@@ -15,6 +15,16 @@ export function word(key, vars = {}) {
   return out;
 }
 
+/** K3997, CR-14: an undetermined reason another module answers as `{key, vars}` (civil-time, lines, action-clocks) said in
+ *  words where this module builds a sentence a member reads: its key through `word`, each var that is itself a reason said
+ *  first. Anything else (a string already said, a number) is answered as it came, never through `String()`. */
+export function said(r) {
+  if (!r || typeof r !== "object" || typeof r.key !== "string") return r;
+  const vars = {};
+  for (const [k, v] of Object.entries(r.vars && typeof r.vars === "object" ? r.vars : {})) vars[k] = said(v);
+  return word(r.key, vars);
+}
+
 /** The keys this module has read in this process, sorted: what a test compares with the design's `reads` for it. */
 export const wordsRead = () => [...READ].sort();
 

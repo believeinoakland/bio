@@ -12,6 +12,8 @@
  *  of the entries named in `changes` (target → {status, note}). An entry whose note line is absent gains one, because
  *  the reason has to land somewhere; an entry with no status is not ours to guess at. Null unless every change
  *  applied. */
+import { localize } from "../setup-words/index.mjs"
+
 export function spliceEdgeStatus(text, changes) {
   const lines = text.split("\n");
   if (lines[0] !== "---") return null;
@@ -73,8 +75,7 @@ export function spliceReferences(text, additions) {
   if (end === -1) return null;
 
   const block = additions.map((a) =>
-    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`
-    + (typeof a.extent_capture === "string" ? `\n    extent_capture: ${a.extent_capture}` : ""));
+    localize("citation.splice.rel_rel_target_target_status", "  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: \"{v1}\"{v2}", { rel: String(a.rel), target: String(a.target), status: String(a.status), v1: String(a.note ?? ""), v2: String(typeof a.extent_capture === "string" ? `\n    extent_capture: ${a.extent_capture}` : "") }));
 
   let ref = -1;
   for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
@@ -136,10 +137,13 @@ export function spliceBasis(text, legs) {
   const block = legs.map((l) => [
     `  - target: ${l.target}`,
     `    role: ${l.role}`,
+    /* R16: a leg on another team's finding names the one edition it rests on, and no grade of its own */
+    ...(Number.isInteger(l.target_edition) ? [`    target_edition: ${l.target_edition}`] : []),
     ...(l.grade ? [`    grade: ${l.grade}`] : []),
     ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
     ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
     ...(l.note ? [`    note: "${l.note}"`] : []),
+    ...(typeof l.ground === "string" && l.ground ? [`    ground: ${l.ground}`] : []),
     ...legExtentLines(l),
   ].join("\n"));
 
@@ -163,6 +167,171 @@ export function spliceBasis(text, legs) {
   return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
 
+/** R17: REMOVE the legs on `target` from the `basis` block, touching nothing else: the entries are found as
+ *  `spliceEdgeStatus` finds a reference's, by the `target:` line, and dropped whole; a block left empty becomes
+ *  `basis: []`. Answers `{text, editions}` (the `target_edition` of each leg removed, in order, null for a leg naming
+ *  none), or null when the block is not in a shape this grammar can edit in place or holds no leg on `target`. */
+export function removeBasisLegs(text, target) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  const gone = new Set(), editions = [];
+  starts.forEach((from, s) => {
+    const to = (s + 1 < starts.length ? starts[s + 1] : last + 1) - 1;
+    let found = null, edition = null;
+    for (let i = from; i <= to; i++) {
+      const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+      if (t && found === null) found = t[1].replace(/^["']|["']$/g, "");
+      const e = /^\s*(?:- )?target_edition:\s*(\d+)\s*$/.exec(lines[i]);
+      if (e) edition = Number(e[1]);
+    }
+    if (found === target) { for (let i = from; i <= to; i++) gone.add(i); editions.push(edition); }
+  });
+  if (!gone.size) return null;
+  if (gone.size >= starts.length && starts.every((f, s) => gone.has(f))) {
+    return { text: [...lines.slice(0, bi), "basis: []", ...lines.slice(last + 1)].join("\n"), editions };
+  }
+  return { text: lines.filter((_, i) => !gone.has(i)).join("\n"), editions };
+}
+
+/** R24: set the capture-axis grade of the `n`th leg of the `basis` block (its order in the block), touching nothing else
+ *  of that leg or the document: any `grade`, `grade_axis` and `grade_source` lines it held are dropped and the three
+ *  written after its `role:` line, as `spliceBasis` orders them. `target` is the target the caller read the leg by, checked
+ *  against the entry so a document that moved under the caller is not written. Answers the new text, or null when the block
+ *  is not in a shape this grammar can edit in place, holds no `n`th entry, or that entry is not on `target`. */
+export function setLegGrade(text, n, target, grade) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  if (!Number.isInteger(n) || n < 0 || n >= starts.length) return null;
+  const from = starts[n], to = (n + 1 < starts.length ? starts[n + 1] : last + 1) - 1;
+  let found = null, roleAt = -1, targetAt = -1;
+  const entry = [];
+  for (let i = from; i <= to; i++) {
+    const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+    if (t && found === null) { found = t[1].replace(/^["']|["']$/g, ""); targetAt = entry.length; }
+    if (/^\s*(?:- )?(grade|grade_axis|grade_source):/.test(lines[i])) continue;
+    if (/^\s*(?:- )?role:/.test(lines[i]) && roleAt === -1) roleAt = entry.length;
+    entry.push(lines[i]);
+  }
+  if (found !== target) return null;
+  const at = roleAt === -1 ? targetAt : roleAt;
+  entry.splice(at + 1, 0, `    grade: ${grade}`, "    grade_axis: capture", "    grade_source: capture");
+  return [...lines.slice(0, from), ...entry, ...lines.slice(to + 1)].join("\n");
+}
+
+/** R25 (K5407): set the own `status` of the `n`th legs of the `basis` block (`changes`: order in the block → {target, status?, role?}; a `status` of `severed` is written as `status: "severed"` and any other drops the line (absent is live, K5407), and a `role` rewrites that leg's role line, and no other leg's),
+ *  touching nothing else of any leg or the document: a `status` line a leg held is dropped and the new one written after
+ *  its `role:` line. `target` is checked against the entry, as `setLegGrade` checks it, so a document that moved under the
+ *  caller is not written. Answers the new text, or null when the block is not in a shape this grammar can edit in place,
+ *  holds no such entry, or an entry is not on its target. */
+export function setLegStatus(text, changes) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  const out = [];
+  out.push(...lines.slice(0, bi + 1));
+  for (let s = 0; s < starts.length; s++) {
+    const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : last + 1) - 1;
+    const entry = lines.slice(from, to + 1);
+    const ch = changes.get(s);
+    if (!ch) { out.push(...entry); continue; }
+    let found = null, roleAt = -1, targetAt = -1;
+    const kept = [];
+    for (const ln of entry) {
+      const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(ln);
+      if (t && found === null) { found = t[1].replace(/^["']|["']$/g, ""); targetAt = kept.length; }
+      if (ch.status && /^\s*(?:- )?status:/.test(ln)) continue;
+      if (/^\s*(?:- )?role:/.test(ln) && roleAt === -1) {
+        roleAt = kept.length;
+        if (ch.role) { kept.push(ln.replace(/role:.*$/, `role: ${ch.role}`)); continue; }
+      }
+      kept.push(ln);
+    }
+    if (found !== ch.target) return null;
+    if (ch.status === "severed") kept.splice((roleAt === -1 ? targetAt : roleAt) + 1, 0, `    status: "severed"`);
+    out.push(...kept);
+  }
+  for (const n of changes.keys()) if (!Number.isInteger(n) || n < 0 || n >= starts.length) return null;
+  out.push(...lines.slice(last + 1));
+  return out.join("\n");
+}
+
+/** R23: set the `role` of every leg in the `basis` block whose `target` is in `targets`, touching nothing else of the leg
+ *  or the document. Answers `{text, from}`, `from` mapping each target to the roles its legs held before (in order), or null
+ *  when the block is not in a shape this grammar can edit in place, or a named target's leg has no `role:` line to
+ *  rewrite. A leg already on `role` is rewritten to itself (the bytes are the same). */
+export function setBasisRole(text, targets, role) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  const out = lines.slice(), from = new Map();
+  for (let s = 0; s < starts.length; s++) {
+    const a = starts[s], b = (s + 1 < starts.length ? starts[s + 1] : last + 1) - 1;
+    let target = null, at = -1, was = null;
+    for (let i = a; i <= b; i++) {
+      const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+      if (t && target === null) target = t[1].replace(/^["']|["']$/g, "");
+      const r = /^(\s*(?:- )?)role:\s*(.+?)\s*$/.exec(lines[i]);
+      if (r && at === -1) { at = i; was = r[2]; }
+    }
+    if (target === null || !targets.has(target)) continue;
+    if (at === -1) return null;
+    out[at] = lines[at].replace(/role:.*$/, `role: ${role}`);
+    if (!from.has(target)) from.set(target, []);
+    from.get(target).push(was);
+  }
+  return from.size === targets.size ? { text: out.join("\n"), from } : null;
+}
+
 /** Set a top-level frontmatter scalar that is already there (copied from the retired legacy store, K57); the text unchanged when the
  *  key is absent. Used for `last_updated`, which every citing document carries. */
 export function setScalar(text, key, value) {
@@ -178,7 +347,7 @@ export function setScalar(text, key, value) {
  *  document has none), as both acts wrote it inline in the retired legacy store (a copy, K57). */
 export function appendSessionLog(text, entry) {
   const at = text.indexOf("## Session Log");
-  if (at < 0) return text + "\n## Session Log\n\n" + entry;
+  if (at < 0) return localize("citation.splice.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", { text: String(text), entry: String(entry) });
   const nxt = text.indexOf("\n## ", at + 1);
   const cut = nxt === -1 ? text.length : nxt + 1;
   return text.slice(0, cut) + entry + "\n" + text.slice(cut);

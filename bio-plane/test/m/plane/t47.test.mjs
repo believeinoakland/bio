@@ -1,122 +1,27 @@
-/* plane T47's composition (T47-66; N908, N955, N961, N981, N993, N1002; K3030, K3084, K3089, K3137): instance-setup's
-   disclosure read registered with credentials (R44); case-inputs' and action-records' maps spread before their source
-   modules' and the route map re-pinned to T47's ops (R45, R48); the Store's `dispatchMemberRun` RPC taking no
-   credential (R46); a draft grant's `op=rule` read opened with the draft use (answers R35); and the plane's global scope
-   measured against bundler R31's budget (R43). R47 is t46.test.mjs' (the sign-in's held token on the wire). Each test
-   drives the plane at its interface (construction over a storage, the object's door and RPC, the built artifact) and
-   carries a negative control (K874). */
+/* plane R43, R46, R48 (T47-66; N955, N993, N1002; K3147): the Store's `dispatchMemberRun` RPC takes no credential (R46); the
+   plane's global scope is measured against bundler R31's budget (R43); the page the Worker serves is composed from the nine
+   screen modules' screens (R48). Each drives the plane at its interface (the object's RPC, the built artifact, the
+   Worker's page) and carries a negative control (K874). The composition tests of T47 are `store-assembly`'s. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+
 import { relative } from "node:path";
 import { store } from "./fixture.mjs";
-import { MODULE_MAPS, ownMaps } from "./maps.mjs";
-import { credentialsOf } from "../../../src/credentials/index.mjs";
-import { instanceSetupOf, ASSISTANT_DISCLOSURE } from "../../../src/setup.mjs";
-import { caseInputsOf, caseInputsOps } from "../../../src/case-inputs/index.mjs";
-import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
-import { actionRecordsOf, actionRecordsOps } from "../../../src/action-records/index.mjs";
-import { actionsOf } from "../../../src/actions/index.mjs";
-import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
+
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
-import { answersOf } from "../../../src/answers/index.mjs";
-import { draftOnObject } from "../../../src/plane/ask.mjs";
+
+import { interfaceScript, interfaceScriptHash } from "../../../src/interface-shell/index.mjs";
 
 /* Instants and minted ids differ between two objects; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
-const SESSION = "s".repeat(64);
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 const member = (x, id, role = "member") => x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status,
   capabilities, created, updated) VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
 
-/* ===== R44 (T47; N981; K3030; credentials R64) ===== */
-
-test("R44 (T47; N981; credentials R64, R22; instance-setup R54): at start the plane registers instance-setup's disclosureOf with credentials once, so through the door a member with no disclosure recorded is refused DISCLOSURE_DUE at accountreferenceset and admitted once disclosureshown records it; a second registration is refused LISTENER_DECLARED", async () => {
-  const x = await store({ env: { ACCOUNT_SEAL_SECRET: "a-long-seal-secret-for-the-t47-test" } });
-  member(x, "ann");
-  const set = async () => JSON.parse(await (await x.fetch("/accountreferenceset?by=member:ann&viewer=member:ann",
-    { method: "POST", body: JSON.stringify({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann" }) })).text());
-  const refused = await set();
-  assert.equal(refused.result.ok, false, JSON.stringify(refused));
-  assert.equal(refused.result.reason, "DISCLOSURE_DUE", JSON.stringify(refused));
-  assert.equal(credentialsOf(x.ctx).accountReferenceState({ member: "member:ann", viewer: "member:ann" }).reference ?? null, null,
-               "nothing was set");
-  /* the read is instance-setup's, on this object's one instance */
-  assert.equal(credentialsOf(x.ctx).disclosureDue({ member: "member:ann" }).reason, "DISCLOSURE_DUE");
-  const shown = JSON.parse(await (await x.fetch("/disclosureshown?by=member:ann&viewer=member:ann",
-    { method: "POST", body: JSON.stringify({ member: "member:ann", version: ASSISTANT_DISCLOSURE.version }) })).text());
-  assert.equal(shown.result.ok, true, JSON.stringify(shown));
-  assert.equal(instanceSetupOf(x.ctx).disclosureOf({ member: "member:ann" }).shown, true);
-  const admitted = await set();
-  assert.equal(admitted.result.ok, true, JSON.stringify(admitted));
-  /* the plane's registration is held: a second, whoever makes it, is refused */
-  const again = credentialsOf(x.ctx).registerDisclosureRead("zz-probe", () => ({ shown: true }));
-  assert.deepEqual([again.ok, again.reason], [false, "LISTENER_DECLARED"], JSON.stringify(again));
-  /* negative control: another member, never shown it, is still refused */
-  member(x, "bob");
-  assert.equal(credentialsOf(x.ctx).disclosureDue({ member: "member:bob" }).reason, "DISCLOSURE_DUE");
-});
-
 /* ===== R45, R48 (T47; N908, N961; op-declarations R57–R59, R61; tasks R19): the route map ===== */
 
-test("R45 (T47; N908, N961; case-inputs R16, action-records R15): case-inputs' map is spread directly before case-authoring's and action-records' directly before actions', each over the one instance its source module's factory creates, so statementack, whatchangedpropose, whatchangeddrafts and action-records' acts answer through the door what that instance's map answers; control: case-authoring's map no longer holds case-inputs' ops", async () => {
-  const u = new URL("http://do/");
-  const x = await store(), twin = await store();
-  const names = MODULE_MAPS.map(([m]) => m);
-  assert.equal(names.indexOf("case-inputs"), names.indexOf("case-authoring") - 1, "case-inputs directly before case-authoring");
-  assert.equal(names.indexOf("action-records"), names.indexOf("actions") - 1, "action-records directly before actions");
-  assert.equal(caseAuthoringOf(x.ctx).inputs, caseInputsOf(x.ctx), "case-authoring's own case-inputs is the one routed");
-  assert.equal(actionsOf(x.ctx).records, actionRecordsOf(x.ctx), "actions' own action-records is the one routed");
-  const keys = Object.keys(x.s.routes(u, null));
-  const ci = Object.keys(caseInputsOps(caseInputsOf(x.ctx), u, null));
-  const ar = Object.keys(actionRecordsOps(actionRecordsOf(x.ctx), u, null));
-  assert.deepEqual(ci, ["whatchangedpropose", "whatchangeddrafts", "statementack"]);
-  /* R58 (T50; K3746): the arms are read from action-records' own map, never counted here; T50's two are among them */
-  for (const op of ["actionstake", "actioninquiry"]) assert.ok(ar.includes(op), `${op} is action-records'`);
-  assert.ok(ar.length > 0 && new Set(ar).size === ar.length, "its arms, each once");
-  /* at their places: case-inputs' ops directly before case-authoring's first own op */
-  const firstCa = Object.keys(caseAuthoringOps(caseAuthoringOf(x.ctx), u, null))[0];
-  assert.deepEqual(keys.slice(keys.indexOf(firstCa) - ci.length, keys.indexOf(firstCa)), ci);
-  const at = keys.indexOf(ar[0]);
-  assert.deepEqual(keys.slice(at, at + ar.length), ar, "action-records' acts at its place");
-  for (const op of ci) assert.equal(Object.hasOwn(caseAuthoringOps(caseAuthoringOf(x.ctx), u, null), op), false, op);
-  const paths = [...ci.map((op) => [caseInputsOps, caseInputsOf, `${op}?case=CASE-2026-none&draft=D-none&edition=1&viewer=member:nobody&author=member:nobody`]),
-                 ...ar.map((op) => [actionRecordsOps, actionRecordsOf, `${op}?target=ACTN-2026-0009-none&viewer=member:nobody&author=member:nobody&proposer=member:nobody`])];
-  for (const [ops, of, path] of paths) {
-    const op = path.split("?")[0];
-    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
-    const direct = await ops(of(twin.ctx), new URL(`http://do/${path}`), {})[op]();
-    assert.equal(res.status, 200, op);
-    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
-  }
-  /* negative control: an op of neither map is no route */
-  assert.equal(keys.includes("statementackzz"), false);
-});
-
-/* T47's new ops served through owners' maps (op-declarations R57–R59, R61; tasks R19; R45's list), each to be reached
-   through the door. `signintrace` is the Worker door's own (control-plane R87), never a store route, so not listed. */
-const T47_OPS = ["projectlist", "projectquestions", "drawquestion", "projectbarset", "monitorset", "peopledirectory",
-  "unlock", "reauth", "passwordresetlink", "passwordresetlook", "passwordreset",
-  "grouplogoset", "grouplanguagesset", "grouplanguages", "signrequest"];
-
-test("R45, R48 (T47; op-declarations R57–R59, R61; tasks R19): the route map is re-pinned to T47's new ops: each is in the map of the module that serves it, in the route map, and answers through control-plane's door what that map answers called directly; an op no map serves is no route", async () => {
-  const u = new URL("http://do/");
-  const x = await store(), twin = await store();
-  const keys = Object.keys(x.s.routes(u, null));
-  for (const op of T47_OPS) {
-    const owner = ownMaps(x.ctx, u, null, x.env).find(([, m]) => Object.hasOwn(m, op));
-    assert.ok(owner, `no module's map serves ${op}`);
-    assert.ok(keys.includes(op), `the route map lacks ${op}`);
-    const path = `${op}?viewer=member:nobody&by=member:nobody&author=member:nobody&project=PROJ-2026-none&case=CASE-2026-none&edition=1`;
-    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
-    const fn = MODULE_MAPS.find(([m]) => m === owner[0])[1];
-    let direct;
-    try { direct = await fn(twin.ctx, new URL(`http://do/${path}`), {}, twin.env)[op](); } catch (e) { direct = { threw: String(e) }; }
-    assert.equal(res.status, 200, `${op} (${owner[0]})`);
-    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
-  }
-  assert.equal(keys.includes("signintrace"), false, "the sign-in trace is the Worker door's, no store route");
-  assert.equal(keys.includes("zzprobe47"), false);
-});
+/* T47's new ops are served by these owners' maps (op-declarations R57–R59, R61; tasks R19; R45's list): the ops are read from
+   the owners' own maps (K3268), never listed here. `signintrace` is the Worker door's own (control-plane R87), never a store
+   route. */
 
 /* ===== R46 (T47; N955; ai-runs R18; credentials R63) ===== */
 
@@ -140,41 +45,6 @@ test("R46 (T47; N955; ai-runs R18, credentials R63): the Store's RPC dispatchMem
     await x.s.dispatchMemberRun();
     assert.deepEqual(seen.at(-1), {});
   } finally { ai.dispatchMemberRun = was; }
-});
-
-/* ===== answers R35 (T47; K3089): a draft grant's `op=rule` read ===== */
-
-test("R33 (T47; K3089; answers R35, R30): a grant the draft path minted whose first read is op=rule opens its read log with use `draft`, the plane's stamp, whatever use the caller's address names; control: an ask's grant opens it with `ask`", async () => {
-  const asks = [];
-  const env = { ACCOUNT_SEAL_SECRET: "a-long-seal-secret-for-the-t47-test", AGENT_WORKER: { fetch: async (u, init) => {
-    asks.push([u, JSON.parse(init.body)]);
-    return new Response(JSON.stringify({ ok: true, draft: { text: "t" }, label: { kind: "machine" } }), { status: 200 }); } } };
-  const { deployed, GATE_FLAGS, GATE_SET, GATE_PARTS } = await import("./fixture.mjs");
-  const { assistantGateOf } = await import("../../../src/plane/ask.mjs");
-  const x = await store({ env, before: (ctx) => assistantGateOf(ctx, { flags: GATE_FLAGS, testSet: GATE_SET }) });
-  await deployed(x.ctx, GATE_PARTS);
-  member(x, "ada", "admin");
-  member(x, "ann");
-  const c = credentialsOf(x.ctx);
-  assert.equal(c.aiKeepAwaySet({ on: false, by: "ada" }).ok, true);
-  x.ctx.storage.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`,
-                         createHash("sha256").update(SESSION).digest("hex"), Date.now() + 3600e3);
-  assert.equal(instanceSetupOf(x.ctx).disclosureShown({ member: "member:ann", version: ASSISTANT_DISCLOSURE.version, by: "member:ann" }).ok, true);
-  assert.equal((await c.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" })).ok, true);
-  assert.equal((await c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" })).ok, true);
-  assert.equal(answersOf(x.ctx).ruleServicesSwitch({ on: true, by: "member:ada" }).ok, true);
-  const d = await (await draftOnObject(x.ctx, x.env, { op: "writinghelp", member: "ann", session: SESSION, told: "t", act: "conclude", field: "reason" })).json();
-  assert.match(d.grant, /^[0-9a-f]{64}$/, JSON.stringify(d));
-  const rule = (grant) => x.fetch("/rule?service=profiles&viewer=member:ann&use=ask", { method: "POST", headers: { "x-bio-grant": grant }, body: "{}" });
-  const rr = await rule(d.grant);
-  assert.equal(rr.status, 200);
-  assert.equal(JSON.parse(await rr.text()).result.ok, true, "the rule service answered");
-  assert.equal(answersOf(x.ctx).readLog(d.grant).use, "draft", "the draft grant's log opened as a draft");
-  /* control: an ask's grant */
-  const g = await c.aiGrantMint({ member: "member:ann", by: "member:ann", session: SESSION });
-  assert.equal(g.ok, true, JSON.stringify(g));
-  await rule(g.token);
-  assert.equal(answersOf(x.ctx).readLog(g.token).use, "ask");
 });
 
 /* ===== R43 (T47; N993; bundler R31; K3147) ===== */
@@ -224,66 +94,33 @@ test("R48 (T47; N1002; DEC-201; control-plane R81, R82): the page the plane's Wo
     assert.match(res.headers.get("content-type") || "", /^text\/html/, path);
     pages[path] = await res.text();
   }
-  let screens = 0;
+  /* interface-shell R1, R2: the page loads the shell's script from one external element, its integrity the hash of that script;
+     the renders are drawn by that script, so they are looked for in it (answer-envelope R6 may stamp the element with a nonce) */
+  const all = [];
+  let WIZARD_GUIDE;   /* the wizards' guide, read with their screens, as the composed page reads it (control-plane's APP_OPTIONS) */
   for (const mod of SCREEN_MODULES) {
-    let SCREENS;
-    try { ({ SCREENS } = await import(`../../../src/${mod}/index.mjs`)); } catch (e) { assert.fail(`${mod}: ${String(e && e.message).split("\n")[0]}`); }
+    let SCREENS, GUIDE;
+    try { ({ SCREENS, GUIDE } = await import(`../../../src/${mod}/index.mjs`)); } catch (e) { assert.fail(`${mod}: ${String(e && e.message).split("\n")[0]}`); }
+    if (mod === "screens-wizards") WIZARD_GUIDE = GUIDE;
     assert.ok(Array.isArray(SCREENS) && SCREENS.length > 0, `${mod} offers screens`);
-    for (const s of SCREENS) {
-      screens++;
-      for (const [path, page] of Object.entries(pages))
-        assert.ok(page.includes(String(s.render)), `${path}: ${mod}'s ${s.id} is not drawn by the page`);
-    }
+    all.push(...SCREENS);
+  }
+  const script = interfaceScript(all, { guide: WIZARD_GUIDE });
+  const hash = interfaceScriptHash(all, { guide: WIZARD_GUIDE });
+  for (const [path, page] of Object.entries(pages)) {
+    const tags = [...page.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]);
+    assert.equal(tags.length, 1, `${path}: one script element`);
+    assert.match(tags[0], /^<script (nonce="[^"]*" )?src="\/app\/shell-[^"]+\.js" integrity="sha256-[A-Za-z0-9+/=]+">$/, path);
+    assert.ok(page.includes(`integrity="${hash}"`), `${path}: the page's script is the shell's script over these screens`);
+  }
+  let screens = 0;
+  for (const s of all) {
+    screens++;
+    assert.ok(script.includes(String(s.render)), `${s.id}'s render is not in the shell's script the page loads`);
   }
   assert.ok(screens >= SCREEN_MODULES.length);
-  /* negative control: a render no module offers is not in the page */
+  /* negative control: a render no module offers is not in the shell's script */
   const probe = function render() { return "zz-probe-screen-t47"; };
-  assert.equal(pages["/app"].includes(String(probe)), false);
+  assert.equal(script.includes(String(probe)), false);
 });
 
-/* ===== R45 (T47; K3150; control-plane R71): the owner map's action-clocks getter ===== */
-
-test("R45, R35 (T47; K3150; control-plane R71): `clockpropose`, served by control-plane's owner map, reaches the plane's one action-clocks instance through its `actionClocks` getter and answers through the door what that instance answers called directly; control: the instance is the plane's own (a spy on it is reached)", async () => {
-  const x = await store(), twin = await store();
-  const keys = Object.keys(x.s.routes(new URL("http://do/"), null));
-  assert.ok(keys.includes("clockpropose"), "the route map lacks clockpropose");
-  const path = "clockpropose?target=ACTN-2026-0009-none&rule=R-none&proposer=member:nobody&viewer=member:nobody";
-  const via = JSON.parse(mask(await (await x.fetch(`/${path}`, { method: "POST", body: "{}" })).text()));
-  const twinAnswer = await twin.s.routes(new URL(`http://do/${path}`), {}).clockpropose();
-  assert.deepEqual(via, JSON.parse(mask(JSON.stringify({ ok: true, result: twinAnswer ?? null }))));
-  const ac = actionClocksOf(x.ctx), was = ac.clockPropose.bind(ac);
-  let hit = 0;
-  ac.clockPropose = (q) => { hit++; return was(q); };
-  try { await x.fetch(`/${path}`, { method: "POST", body: "{}" }); } finally { ac.clockPropose = was; }
-  assert.equal(hit, 1, "the plane's action-clocks instance answered");
-});
-
-/* ===== R49 (T47; K3143; signin-door R2, R4, R5) ===== */
-
-test("R49 (T47; K3143; signin-door R2, R4, R5): signin-door's store-internal map is spread whole directly after credentials' map, over the plane's one credentials instance: signindisclosuredue answers credentials' DISCLOSURE_DUE through the door (R44's registration in force), signintokenhold holds a token without answering it, and none of the five has an op spec, so no caller is served one; control: an op neither map holds is no route", async () => {
-  const { signinDoorOps } = await import("../../../src/signin-door/ops.mjs");
-  const { OPS } = await import("../../../src/op-declarations/index.mjs");
-  const u = new URL("http://do/");
-  const x = await store({ env: { ACCOUNT_SEAL_SECRET: "a-long-seal-secret-for-the-t47-test" } });
-  member(x, "ann");
-  const own = Object.keys(signinDoorOps(credentialsOf(x.ctx), u, null, x.env));
-  assert.deepEqual([...own].sort(), ["signindisclosuredue", "signintokenhold", "signintokenrefused", "signintracekeep", "signintraceread"]);
-  const keys = Object.keys(x.s.routes(u, null));
-  const cred = Object.keys(MODULE_MAPS.find(([m]) => m === "credentials")[1](x.ctx, u, null, x.env));
-  const at = keys.indexOf(cred.at(-1)) + 1;
-  assert.deepEqual(keys.slice(at, at + own.length), own, "directly after credentials' map");
-  for (const op of own) assert.equal(Object.hasOwn(OPS, op), false, `${op} has no op spec: never served to a caller`);
-  const via = async (path, body = {}) => JSON.parse(await (await x.fetch(`/${path}`, { method: "POST", body: JSON.stringify(body) })).text());
-  const due = await via("signindisclosuredue?by=member:ann");
-  assert.equal(due.result.reason, "DISCLOSURE_DUE", JSON.stringify(due));
-  assert.equal(instanceSetupOf(x.ctx).disclosureShown({ member: "member:ann", version: ASSISTANT_DISCLOSURE.version, by: "member:ann" }).ok, true);
-  assert.deepEqual((await via("signindisclosuredue?by=member:ann")).result, { ok: true });
-  const TOKEN = "sk-ant-oat01-SENTINEL-r49-held-token";
-  const held = await via("signintokenhold?by=member:ann", { token: TOKEN });
-  assert.equal(held.result.ok, true, JSON.stringify(held));
-  assert.equal(JSON.stringify(held).includes(TOKEN), false, "the token is never answered");
-  assert.equal(credentialsOf(x.ctx).accountReferenceState({ member: "member:ann", viewer: "member:ann" }).subscription.held, true);
-  assert.equal((await via("signintokenrefused?by=member:ann")).result.dropped, true);
-  /* negative control */
-  assert.equal(keys.includes("signinzz"), false);
-});

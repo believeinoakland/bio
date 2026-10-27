@@ -104,8 +104,8 @@ test("R49 acts: readtranslate, the published catalogue's own entry read by id wi
   assert.equal(acts.drafts[0].act, catalog.find((a) => a.id === ACT), "the catalogue's own entry, unchanged");
   assert.equal(acts.drafts[0].defined_by, "plane R50");
   assert.equal(READING_TRANSLATION_ACT.id, ACT);
-  const relabelled = catalog.map((a) => (a.id === ACT ? { ...a, label: "Read in my language" } : a));
-  assert.equal(readingTranslationLayer(relabelled).body.acts.drafts[0].act.label, "Read in my language");
+  const relabelled = catalog.map((a) => (a.id === ACT ? { ...a, label: "relabelled by the test" } : a));
+  assert.equal(readingTranslationLayer(relabelled).body.acts.drafts[0].act.label, "relabelled by the test");
   const lits = SRC.flatMap((f) => stringLiterals(read(f)));
   assert.equal(lits.filter((l) => l === ACT).length, 1, `${ACT} is named once`);
   assert.ok(!lits.includes(`the ${ACT} act`));

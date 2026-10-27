@@ -1130,7 +1130,7 @@
   },
   {
    "key": "refusal.LIFECYCLE_TOKEN_MALFORMED",
-   "en": "A stage, the entry it follows, an outcome and a due date are each written as one short token of lower-case letters, digits, underscores or hyphens, at most forty characters. One of them was not, so nothing was written.",
+   "en": "A stage, the entry it follows, an outcome and a due date are each written as one short token of lowercase letters, digits, underscores or hyphens, at most forty characters. One of them was not, so nothing was written.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -1694,7 +1694,7 @@
   },
   {
    "key": "refusal.NOT_SCANNED",
-   "en": "This file could not be scanned before it opens, so the original was not opened. Its reason is stated beside it. Read the safe view meanwhile, or ask again once the scanner can read it.",
+   "en": "This file could not be scanned before it opens, so the original was not opened. Its reason is stated beside it. Show the safe view meanwhile, or ask again once the scanner can read it.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -2642,7 +2642,7 @@
   },
   {
    "key": "refusal.SCAN_STALE",
-   "en": "This high-risk file was last found clean more than a week ago, and the scanner cannot check it again now, so the original was not opened. Read the safe view, or ask for a deeper check.",
+   "en": "This high-risk file was last found clean more than a week ago, and the scanner cannot check it again now, so the original was not opened. Show the safe view, or ask for a deeper check.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -5505,12 +5505,6 @@
   {
    "key": "case-disclosures.document_grade_attestation",
    "en": "## Each Document's Grade And Co-attestation",
-   "protected": false,
-   "note": "DEC-260"
-  },
-  {
-   "key": "case-disclosures.document_case_findings",
-   "en": "Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade {earned_capture_ceiling} document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgment.",
    "protected": false,
    "note": "DEC-260"
   },

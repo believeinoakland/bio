@@ -13,8 +13,9 @@
     "anything else": "R6: 404 {ok: false, code: \"UNKNOWN\"}"
   },
   "image": {
-    "repository": "ghcr.io/believeinoakland/agent-runner",
-    "digest": "sha256:b0220ffa2336503cb97edea1355ddb14633264f48c915eb6426a7319cd9243d8",
+    "repository": "docker.io/civicsmith/agent-runner",
+    "digest": "sha256:4febfa540e99d9c0dbb21482a43f8997c7efce6ca63eaddb2dae9b57a8800415",
+    "source_sha256": "fecf834a4e8f2f3a3db66abf6d05e2d0d747cd6dd6d7600f66e73c7f48974681",
     "platform": "linux/amd64",
     "port": 8080,
     "schedulingPolicy": "default"

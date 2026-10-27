@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, BOB, CAT, DAN, AI, P1, Q, QP1, QH } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R24: stepPropose holds a machine's proposal apart, labelled the system's, never a step until accepted", () => {
   const w = world();
@@ -71,7 +72,7 @@ test("R26: acceptanceCounts answers, group-wide only, how many were accepted in 
 
 test("R28: stepAccept refuses a proposed step that is absent or unseen with NO_SUCH_STEP_PROPOSAL (C-142.28, its number and translation unchanged), never NO_SUCH_PROPOSAL (intent's)", async () => {
   const { STEPS_CHECKS } = await import("../../../src/steps/index.mjs");
-  const ROW = { check: "C-142.28", translation: "There is no proposed step here by that id that you can see. Nothing was written." };
+  const ROW = { check: "C-142.28", translation: word("refusal.NO_SUCH_STEP_PROPOSAL") };
   assert.equal(STEPS_CHECKS.NO_SUCH_STEP_PROPOSAL.check, ROW.check);
   assert.equal(STEPS_CHECKS.NO_SUCH_STEP_PROPOSAL.translation, ROW.translation);
   assert.equal(Object.hasOwn(STEPS_CHECKS, "NO_SUCH_PROPOSAL"), false, "intent's code is not held here");

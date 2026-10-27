@@ -10,8 +10,8 @@
  * complete edition (R14, `./complete.mjs`), a finding's standing against the bar (R15, `./standing.mjs`), the
  * calculations a case rests on with their PROV-O rendering (R18, R19, `./calculations.mjs`), the published timeline
  * (R20, `./timeline.mjs`), the people a case names with its signers' ties (R21, `./people.mjs`) and a member's subject
- * (R22, `./subject.mjs`), the account, bias applications, review comments and approvals a case carries (R23–R26,
- * `./account.mjs`), the two blocks read as one and the sources that still hold (R27, R28, `./blocks.mjs`), and the
+ * (R22, `./subject.mjs`), the basis version a finding stood on (R34, `./basisversion.mjs`), the account, bias
+ * applications, review comments and approvals a case carries (R23–R26, `./account.mjs`), the two blocks read as one and the sources that still hold (R27, R28, `./blocks.mjs`), and the
  * outcomes carried into an edition (R29, `./outcomes.mjs`). It reads no table,
  * holds no store and never throws.
  *
@@ -24,11 +24,13 @@ import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 import { WHAT_CHANGED_HEAD } from "./edition.mjs";
+import { wordsOfFormat } from "./words.mjs";
+import { SENTENCES } from "./sentences.mjs";
 
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
-         caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials } from "./formats.mjs";
+         caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials, caseDocumentFormatFor } from "./formats.mjs";
 export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
          withheldSourceStatement, sourceRowWithheld, WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
@@ -37,18 +39,20 @@ export { caseTensionsOf, disclosedCandidates, TENSION_STATE_WORDS, TENSION_HIGHL
          TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE } from "./tensions.mjs";
 export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBlockLines, whatChangedSectionLines,
          whatChangedOf, LENS_HEAD, LENS_STATEMENT_FIELDS, LENS_CITATION_FIELDS, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES,
-         LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
+         lensClosingSentencesOf, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
+export { WORDS, caseWordsOf } from "./words.mjs";
+export { SENTENCES } from "./sentences.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
-export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_OBSCURED_FIELDS, MATERIAL_OBSCURED_MARKED_FIELD, MATERIAL_OBSCURED_KIND_FIELD,
-         MATERIAL_OBSCURED_KINDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
+export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_TITLE_FIELD, MATERIAL_OBSCURED_FIELDS, MATERIAL_OBSCURED_MARKED_FIELD, MATERIAL_OBSCURED_KIND_FIELD,
+         MATERIAL_OBSCURED_KINDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_ATTESTATION_SHA_FIELD, MATERIAL_KINDS,
          MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
          GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
-export { CASE_FILE_FORMAT, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH,
+export { CASE_FILE_FORMAT, CASE_FILE_FORMAT_V4, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH,
          CASE_FILE_KINDS, CASE_FILE_V2_KINDS, CASE_FILE_V3_KINDS, CASE_FILE_ORIGINAL_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_OPTIONAL_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
          CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
-         casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
+         caseFileFormatFor, refsOnSeveralRows, materialFileKey, casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
 export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
          extractedTextOf } from "./facts.mjs";
 export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
@@ -57,6 +61,7 @@ export { CALCULATION_FIELDS, RECOMPUTE_STATUSES, calculationsLines, calculations
 export { TIMELINE_FIELDS, TIMELINE_LANES, timelineLines, timelineOf } from "./timeline.mjs";
 export { PEOPLE_FIELDS, MEMBER_TIE_FIELDS, peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
 export { memberSubjectOf } from "./subject.mjs";
+export { memberBasisVersionLines, memberBasisVersionOf } from "./basisversion.mjs";
 export { ACCOUNT_FIELDS, ACCOUNT_KINDS, ACCOUNT_ORIGINS, ACCOUNT_CITE_KINDS, ACCOUNT_HEAD, accountBiasMark, accountLines,
          accountOf, accountSectionLines, BIAS_APPLICATION_FIELDS, BIAS_APPLICATION_TARGETS, BIAS_APPLICATION_EFFECTS,
          biasApplicationsLines, biasApplicationsOf, REVIEW_COMMENT_FIELDS, REVIEW_COMMENTS_LEFT_OUT_KEY, reviewCommentsLines,
@@ -92,20 +97,21 @@ export function attributionFrontmatterLines(rows) {
       `    shown: ${r.shown == null ? "null" : `"${fmSafe(r.shown)}"`}`,
       `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])];
 }
-export function attributionBodyLines(given) {
+/* R33: the section is spelled in the words of the version `format` names (the format in force when none is given), so a
+   prepared `/7` document re-authored later keeps its `/7` words and a `/8` one says "team". */
+export function attributionBodyLines(given, format) {
   const rows = rowsOf(given);
-  const said = { group: "the group that publishes this case", project: "the project that produced it",
-                 cover: "the cover the group knows its author by", name: "the name its author chose to appear under" };
+  const words = wordsOfFormat(format);
+  const said = words.attributionSaid;
   return [ATTRIBUTION_PROSE_HEAD, "",
     `This case rests, directly or through another finding, on ${rows.length} firsthand observation`
-    + `${rows.length === 1 ? "" : "s"} recorded by a member of this group. What it shows of who SAID each one is `
+    + `${rows.length === 1 ? "" : "s"} recorded by ${words.attributionMember}. What it shows of who SAID each one is `
     + "that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md "
     + "§4). An observation names no person in its own bytes; the words below are the whole of the attribution.",
     "",
     ...rows.map((r) => ({ ...r, observation: r.observation == null && r.capture != null ? r.capture : r.observation }))
       .map((r) => !r.level
-      ? `- **${r.observation}** — NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author `
-        + "chooses one, or the finding resting on it leaves the case."
+      ? SENTENCES.noLevel(r.observation, r.why)
       : `- **${r.observation}** — attributed to ${said[r.level]}${r.shown == null ? " (this record names no "
         + "producing group, so none is printed)" : `: ${r.shown}`} — level \`${r.level}\`, chosen at edition `
         + `${r.chosen_at_edition}.`),
@@ -147,7 +153,7 @@ export const SECTIONS = Object.freeze({
     const ours = (i) => runs.every(([a, b]) => a < 0 || i < a || i >= b);
     const f0 = lines.findIndex((l, i) => l.startsWith("  statement_sha: ") && ours(i));
     const f1 = lines.indexOf("completeness_excluded:");
-    const b0 = lines.findIndex((l, i) => l.startsWith("**Who else read this statement.**") && ours(i));
+    const b0 = lines.findIndex((l, i) => l.startsWith(SENTENCES.whoElse) && ours(i));
     const b1 = lines.indexOf("## What Was Searched");
     return f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1 ? null : { f0, f1, b0, b1: b1 - 1 };
   }),

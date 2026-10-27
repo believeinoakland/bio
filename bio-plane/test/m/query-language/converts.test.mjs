@@ -12,6 +12,7 @@ import { CONTENT_MINTED_BY_PLANE } from "../../../src/content/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
 const V = "class:member";
+const UNDETERMINED = "undetermined";
 const sorted = (a) => [...a].sort();
 const uniq = (a) => [...new Set(a)];
 
@@ -204,8 +205,8 @@ test("R6 R18 (content-arm) rows=content's `cited` and `chain_last` state what th
     assert.deepEqual(w.run({ q: `content:${kind}`, viewer: V, rows: "content" }, "meaning").rows
       .filter((r) => docsWith((x) => x.chain_last === kind).includes(r.bundle_id) && r.chain_last !== kind)
       .map((r) => r.content_id), [], `content:${kind}: the rows of the documents it selects say ${kind} where they are`);
-  assert.deepEqual(sorted(w.ids({ q: "content:chain=does-not-apply", viewer: V })), docsWith((r) => r.chain_last === CHAIN_DOES_NOT_APPLY));
-  assert.deepEqual(sorted(w.ids({ q: "content:chain=undetermined", viewer: V })), docsWith((r) => r.chain_last === null));
+  assert.deepEqual(sorted(w.ids({ q: `content:chain=${CHAIN_DOES_NOT_APPLY}`, viewer: V })), docsWith((r) => r.chain_last === CHAIN_DOES_NOT_APPLY));
+  assert.deepEqual(sorted(w.ids({ q: `content:chain=${UNDETERMINED}`, viewer: V })), docsWith((r) => r.chain_last === null));
 });
 
 test("R15 (content-arm) rows=content returns each selected document's whole content set, and rows=leg one row per leg with its content", () => {
@@ -342,7 +343,7 @@ test("R15 (passage-arm) rows=passage: only the units that matched, each an addre
   assert.deepEqual(hit.rows.map((r) => [r.bundle_id, JSON.parse(r.extent).page, r.ref, r.seq, r.chain_kind, r.truncated, r.content_id]),
     [["BIG", 0, "page 1", 0, "layer", 1, null], ["BIG", 1, "page 2", 1, "layer", 0, "cur"], ["PACKET", 0, "page 1", 0, "layer", 0, null]],
     "one of the packet's three pages; both truncation values carried; a content id only where a current row exists");
-  assert.ok(hit.rows.every((r) => r.snippet.includes("[hydrostatic]")), "the snippet centres on the term");
+  assert.ok(hit.rows.every((r) => r.snippet.includes("\u0001hydrostatic\u0002")), "the snippet centres on the term");
   assert.deepEqual(w.run({ q: "passage:hydrostatic", viewer: V, rows: "passage" }, "meaning", { mode: "count" }).rows, [{ n: 3 }]);
   const bare = w.run({ q: "id:PACKET", viewer: V, rows: "passage" }, "meaning");
   assert.equal(bare.plan.meaning.matched, false);

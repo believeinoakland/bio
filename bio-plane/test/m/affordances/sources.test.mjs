@@ -14,6 +14,7 @@ import { captureAccountStatement } from "../../../src/capture/index.mjs";
 const NS_RATIFY = "bio-ratify";
 import { ACTS, CONSENT_PROMPT } from "../../../src/affordances.mjs";
 import { JUSTIFICATION_REFUSALS, MACHINE_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const NO_EVIDENCE = [undefined, "", "   ", null];
 const inFamily = (r, label) =>
@@ -134,6 +135,6 @@ test("R19: reattest, graded `attested`, asks the timestamp authority for a fresh
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.ok(net.seen.length >= 1 && net.seen.every((x) => over(x.init)), "the authority is asked, each time over this digest");
   assert.deepEqual(r.late_attestations.map((o) => [o.kind, o.ok, o.late]), [["timestamp", true, true]]);
-  assert.equal(r.late_attestations[0].proves, `proves the bytes existed by ${r.late_attestations[0].at}, not at capture`);
+  assert.equal(r.late_attestations[0].proves, word("capture.text.proves_bytes_existed", { at: String(r.late_attestations[0].at) }));
   assert.deepEqual([r.attested, r.attestation.over, r.attestation.kind], [true, d, "rfc3161"]);
 });

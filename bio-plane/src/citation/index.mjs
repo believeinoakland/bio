@@ -4,7 +4,8 @@
  * a case drawing one question in without a selection (`drawQuestion`, R14), its withdrawal and restoration on a case's
  * edge or a question's leg (`sever`, `reinstate`, R4, R15: status changes, never deletions) and the one rule
  * of what may be cited now (`retiredNotCitable`, R5), and the read of who cited a captured passage (`recordedBy`, R13,
- * `./recorded.mjs`), registered with `retrieval` (its R76) where `citationOf` first makes it. It judges nothing about a leg's grammar, grade or the basis
+ * `./recorded.mjs`), registered with `retrieval` (its R76) where `citationOf` first makes it. A question may also rest on
+ * another team's accepted finding at a named edition, and take that leg back (`citeImported`, `withdrawImported`, R16, R17). It judges nothing about a leg's grammar, grade or the basis
  * graph: it composes legs, and `inquiry` judges them at the write (its R11), as it judges every other leg.
  *
  * Extracted from the legacy modules (T7, T6-2; K3, K64, K83, K102, N55): `store.mjs` (`cite`, `#edgeTransition`,
@@ -34,6 +35,8 @@
  *                registry with the grammar and roles inquiry exports. One lacking any of the three refuses citing onto
  *                a question `INQUIRY_UNAVAILABLE` (never written ungraded by default); `restingOn`, the leg projection
  *                read back, is how R13 finds a capture's legs.
+ *   acceptedWork `{acceptedFinding, openFlagsOn}` (accepted-work R2): the facts at an edition that `citeImported`'s receipt
+ *                carries as `origin` (R16); by default `acceptedWorkOf(host)`. Its refusal itself runs inside the write.
  *   storage      the Durable Object's storage (default `host.storage`): R13 reads record-core's `bundles` contract (its R37)
  *                through its `sql` in one statement.
  *   now          the module's clock, milliseconds since the epoch (default: the wall clock). */
@@ -48,12 +51,17 @@ import { contentOf, citationExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { retrievalOf, answerChanged } from "../retrieval/index.mjs";
 import { inquiryOf, checkLegExtentGrammar, BASIS_ROLES } from "../inquiry/index.mjs";
-import { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
-import { spliceEdgeStatus, spliceReferences, spliceBasis, setScalar, appendSessionLog } from "./splice.mjs";
+import { importedFindingRef, IMPORTED_FINDING_RE, CALCULATION_REF_RE, OCCURRENCE_REF_RE, DERIVED_CONNECTION_ID_RE } from "../inquiry-grammar/index.mjs";
+import { BASIS_GRADES } from "../record-grammar/grades.mjs";
+import { acceptedWorkOf } from "../accepted-work/index.mjs";
+import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS, CITE_LEG_GRADE_CHECKS } from "./checks.mjs";
+import { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setLegGrade, setLegStatus, setScalar, appendSessionLog } from "./splice.mjs";
 import { recordedBy } from "./recorded.mjs";
+import { localize } from "../setup-words/index.mjs";
 
-export { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
-export { spliceEdgeStatus, spliceReferences, spliceBasis, legExtentLines } from "./splice.mjs";
+export { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS, CITE_LEG_GRADE_CHECKS } from "./checks.mjs";
+export { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setLegGrade, legExtentLines } from "./splice.mjs";
 export { RECORDED_LIMIT_DEFAULT, RECORDED_LIMIT_MAX } from "./recorded.mjs";
 
 /** R1: citing writes one frontmatter entry per cited record into a single `bundle.md`, so the edges one citing object
@@ -90,6 +98,14 @@ export const EXTENT_PARAMS = Object.freeze({
   content_id: "text",
 });
 
+/* R22: a leg's (or an incoming part's) part as one comparable string: its content id and extent fields, none for the
+   whole document. */
+function partKey(o) {
+  return JSON.stringify(Object.keys(EXTENT_PARAMS).sort()
+    .filter((k) => o[k] !== undefined && o[k] !== null && String(o[k]).trim() !== "")
+    .map((k) => [k, Array.isArray(o[k]) ? o[k].join(",") : String(o[k]).trim()]));
+}
+
 /* R1 (T35; N698, DEC-164 (4)): a found match's extent (`content`'s extent grammar, retrieval R73) as the part bag a
    cited extent arrives in: each field `f` as `extent_f`, so the found part meets exactly the refusals a named part
    meets, and a field no part carries (`extent_space`, a nested note) is refused by name (C-45.7), never dropped. */
@@ -108,6 +124,12 @@ const given = (v) => v !== null && v !== undefined && String(v).trim() !== "";
 /* A refusal with a catalogue row carries the row's check and translation (R1). */
 const rowOf = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
 
+/* R16: a positive whole number, spelled as a number or as digits (the address carries it as text); else null. */
+const editionOf = (v) => {
+  if (typeof v === "number") return Number.isInteger(v) && v >= 1 ? v : null;
+  return typeof v === "string" && /^[1-9]\d{0,8}$/.test(v.trim()) ? Number(v.trim()) : null;
+};
+
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
 /* ------------------------------------------------------------------ the module */
@@ -117,8 +139,9 @@ export class Citation {
      row (R6). */
   #recorded = new Map();
 
-  constructor({ record, membership, promotion, content, retrieval, provenance = null, inquiry = null, storage = null, now } = {}) {
+  constructor({ record, membership, promotion, content, retrieval, provenance = null, inquiry = null, acceptedWork = null, storage = null, now } = {}) {
     this.record = record;
+    this.acceptedWork = acceptedWork;
     /* R13: the store, for one read of record-core's `bundles` contract (its R37); absent, R13 reads it bundle by bundle. */
     this.sql = storage && storage.sql ? storage.sql : null;
     this.provenance = provenance;
@@ -215,7 +238,7 @@ export class Citation {
    *  `leg-earning`'s `restsOnLive` read a leg's severance from. A REASON IS REQUIRED by both: the catalogue's own remedy
    *  for a bad edge is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method
    *  for both directions and both arms, because they are the same operation over the same grammar. */
-  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null }) {
+  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null, role = null, extent = null }) {
     /* Weight `refuse`, hard-coded exactly as `cite` hard-codes `report`: a caller that could choose the weight would
        make the distinction advisory (R7). */
     const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
@@ -229,9 +252,7 @@ export class Citation {
     const onInquiry = normalizeType(p.type) === "inquiry";
     if (p.type !== "project" && !onInquiry)
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.type,
-               detail: "citations live on the citing object, and this is neither a case nor a question, so it holds "
-                     + "no citation to withdraw or restore. A case keeps them in its references; a question keeps "
-                     + "them in the basis its answer rests on." };
+               detail: localize("citation.index.citations_live_on_the_citing", "citations live on the citing object, and this is neither a case nor a question, so it holds no citation to withdraw or restore. A case keeps them in its references; a question keeps them in the basis its answer rests on.") };
     /* REC-134: moving a project's own citation edge is work inside that project (§7.5). A question is shared material,
        not a project's (INVESTIGATIVE-SESSION §7), so its arm asks no position, as `cite`'s does not (R1, R15). */
     if (!onInquiry) {
@@ -242,22 +263,49 @@ export class Citation {
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
-               detail: `${verb} an edge records WHY. The catalog's own remediation for a bad reference is `
-                     + `"sever with reason", and an edge moved with no reason is an unexplained change `
-                     + `wearing a status field.` };
+               detail: localize("citation.index.verb_an_edge_records_why", "{verb} an edge records WHY. The catalog's own remediation for a bad reference is \"sever with reason\", and an edge moved with no reason is an unexplained change wearing a status field.", { verb: String(verb) }) };
     if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes, so `
-                     + `those would reshape the document rather than appear in it` };
+               detail: localize("citation.index.a_reason_is_at_most", "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it", { max: String(EDGE_REASON_MAX) }) };
+
+    /* R23: a reinstatement may also put a question's leg on the other side. A case's edge carries no role, so a role sent
+       there is refused by name as `cite` refuses it, never dropped; on a question it is one of the vocabulary. */
+    const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
+    if (rl !== null) {
+      if (!onInquiry)
+        return { ok: false, reason: "ROLE_NOT_APPLICABLE", ...rowOf(CITE_CHECKS, "ROLE_NOT_APPLICABLE"), project, handle,
+                 got: rl, drift: sel.drift,
+                 detail: localize("citation.index.a_role_says_what_material", "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.") };
+      if (!this.inquiry || !Array.isArray(this.inquiry.BASIS_ROLES))
+        return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
+                 detail: localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.") };
+      if (!this.inquiry.BASIS_ROLES.includes(rl))
+        return { ok: false, reason: "BAD_ROLE", ...rowOf(CITE_CHECKS, "BAD_ROLE"), project, handle, got: rl,
+                 roles: this.inquiry.BASIS_ROLES.slice(), drift: sel.drift,
+                 detail: localize("citation.index.rl_is_not_a_role", "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.", { rl, roles: this.inquiry.BASIS_ROLES.join(", ") }) };
+    }
+
+    /* R25: on a question the call names a passage by its part, as `cite` names it. The field names are judged as R1 judges
+       them (a part is refused by name, never dropped); a case's edge is the document, so its arm reads no part. */
+    const bag = onInquiry && extent && typeof extent === "object" ? extent : {};
+    if (onInquiry) {
+      const unknownFields = Object.keys(bag).filter((k) => !(k in EXTENT_PARAMS)).sort();
+      if (unknownFields.length)
+        return { ok: false, reason: "UNKNOWN_EXTENT_FIELD", ...rowOf(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
+                 project, handle, drift: sel.drift, got: unknownFields, fields: Object.keys(EXTENT_PARAMS),
+                 detail: localize("citation.index.this_call_names_fields", "this call names {names}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: {fields}.", { names: unknownFields.map((k) => `'${k}'`).join(", "), fields: Object.keys(EXTENT_PARAMS).join(", ") }) };
+    }
+    const named = onInquiry && partKey(bag) !== partKey({});
+    if (named && sel.members.length > 1)
+      return { ok: false, reason: "EXTENT_ON_MANY", ...rowOf(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
+               project, handle, offenders: sel.members.slice().sort(), drift: sel.drift,
+               detail: localize("citation.index.a_part_of_a_document_is", "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.", { n: String(sel.members.length) }) };
 
     /* An EMPTY selection is refused, not a successful no-op: promoting an UNCHANGED document would put a revision
        recording that nothing happened into an append-only history. */
     if (!sel.members.length)
       return { ok: false, reason: "EMPTY_SELECTION", project, handle, drift: sel.drift,
-               detail: "this selection resolves to no members, so there is nothing to move. It may have "
-                     + "named ids that do not exist, or its members may have been purged or hidden since "
-                     + "it was made." };
+               detail: localize("citation.index.this_selection_resolves_to_nothing_to_move", "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.") };
 
     /* THE MIRROR OF `cite`'s CITABILITY TEST (REC-72): a case may cite information or a question, so it may also
        withdraw from and restore either; through `normalizeType`, so a legacy `focus`/`problem` spelling is the
@@ -271,8 +319,7 @@ export class Citation {
     if (offenders.length)
       return { ok: false, reason: "NOT_INFORMATION", project, handle, offenders: offenders.sort(),
                citable: ["information", "inquiry"],
-               detail: "a citation points at material or at a question, and these members of the selection are "
-                     + "neither, so they carry no citation to move. The whole call is refused rather than narrowed." };
+               detail: localize("citation.index.a_citation_points_at_material", "a citation points at material or at a question, and these members of the selection are neither, so they carry no citation to move. The whole call is refused rather than narrowed.") };
 
     /* REC-183 / C-33.39: moving an edge INTO `confirmed` is a citation made now, so it asks cite's question through
        R5's one predicate, with the same code and the same whole-call refusal; otherwise severing, retiring and
@@ -283,11 +330,7 @@ export class Citation {
       if (retiredMembers.length)
         return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
                  project, handle, offenders: retiredMembers.sort(), drift: sel.drift,
-                 detail: "the group has RETIRED these since the edge was severed, recording that they are "
-                       + "superseded or no longer stand, and reinstating the edge would read to every later "
-                       + "member as live support. Cite what superseded them, or re-collect the source as a new "
-                       + "record and cite that. The whole call is refused rather than narrowed to the members "
-                       + "that are not retired." };
+                 detail: localize("citation.index.the_team_has_retired_these", "the team has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.") };
     }
 
     const doc = this.#document(project, null);
@@ -310,23 +353,73 @@ export class Citation {
        so the batch is refused by name rather than partially applied: a half-run state change is what weight `refuse`
        exists to prevent. */
     const wrong = [];
-    for (const id of sel.members) {
-      const e = current.get(id);
-      if (!e || !from.includes(e.status)) wrong.push(id);
+    /* R25: on a question each selected member's passage is one leg, named by its part (R22's identity). `legAt` maps a
+       member to the position in `basis[]` of the leg to move; `legs` is each target's legs with their own status, a leg
+       with none read through the document's entry, as every leg written before a passage had a status of its own. */
+    const legAt = new Map();
+    /* K5407: a leg carries `status: "severed"` while severed and none while live. A leg of a document severed before a passage
+       had a status of its own (its entry `severed`, no leg of it carrying a status) reads through the entry. */
+    const statusOf = (leg, e, doc_) => {
+      if (typeof leg.status === "string" && leg.status !== "") return leg.status;
+      const sibs = (Array.isArray(doc_.data.basis) ? doc_.data.basis : []).filter((l) => l && typeof l === "object" && l.target === leg.target);
+      return e.status === "severed" && !sibs.some((l) => typeof l.status === "string" && l.status !== "") ? "severed" : e.status === "severed" ? "confirmed" : e.status;
+    };
+    if (onInquiry) {
+      const basisAll = Array.isArray(doc.data.basis) ? doc.data.basis : [];
+      const mine = partKey(bag);
+      const ambiguous = [];
+      for (const id of sel.members) {
+        const e = current.get(id);
+        const held = [];
+        basisAll.forEach((l, n) => { if (l && typeof l === "object" && l.target === id) held.push(n); });
+        let at = -1;
+        if (named) at = held.find((n) => partKey(basisAll[n]) === mine) ?? -1;
+        else if (held.length === 1) at = held[0];
+        else if (held.length > 1) { ambiguous.push({ id, parts: held.map((n) => ({ ...Object.fromEntries(Object.keys(EXTENT_PARAMS).filter((k) => basisAll[n][k] !== undefined && basisAll[n][k] !== null && String(basisAll[n][k]).trim() !== "").map((k) => [k, basisAll[n][k]])) })) }); continue; }
+        if (at < 0 || !e || !from.includes(statusOf(basisAll[at], e, doc))) { wrong.push(id); continue; }
+        legAt.set(id, at);
+      }
+      /* DEC-49 REGION is-which-passage — C-33.65. */
+      if (ambiguous.length)
+        return { ok: false, reason: "WHICH_PASSAGE", ...rowOf(CITE_CHECKS, "WHICH_PASSAGE"), project, handle,
+                 offenders: ambiguous.map((a) => a.id).sort(), passages: Object.fromEntries(ambiguous.map((a) => [a.id, a.parts])),
+                 drift: sel.drift,
+                 detail: localize("citation.index.which_passage", "this question rests on {ids} in more than one passage, and the call did not say which one to move. Name the passage by its part; each passage is listed. Nothing was written.", { ids: ambiguous.map((a) => a.id).sort().join(", ") }) };
+      /* END DEC-49 REGION is-which-passage */
+    } else {
+      for (const id of sel.members) {
+        const e = current.get(id);
+        if (!e || !from.includes(e.status)) wrong.push(id);
+      }
     }
     if (wrong.length)
       return { ok: false, reason: from.includes("severed") ? "NOT_SEVERED" : "NOT_CITED",
                project, handle, offenders: wrong.sort(), drift: sel.drift,
-               detail: `${verb} requires an edge currently in ${from.map((s) => `'${s}'`).join(" or ")}. `
-                     + `These targets are not, so the whole call is refused: a batch that moved only the `
-                     + `eligible members would be a state change the operator did not ask for.` };
+               detail: localize("citation.index.verb_requires_an_edge_currently", "{verb} requires an edge currently in {states}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.", { verb: String(verb), states: from.map((s) => `'${s}'`).join(" or ") }) };
 
     const when = stampInstant("second", this.now());
     /* The reason is APPENDED to the note, never substituted: the reason an edge was cited is as much a part of the
        record as the reason it stopped being relied on. Bounded, the oldest text dropped first, because the superseded
-       revision is in history and the newest reasoning is what a reader needs first. */
+       revision is in history and the newest reasoning is what a reader needs first. On a question the entry (the
+       document's) moves only when its live legs change from some to none or from none to some (R25); a passage that
+       moves beside another live one is recorded by its own leg and the Session Log. */
     const changes = new Map();
+    const legChanges = new Map();
     for (const id of sel.members) {
+      if (onInquiry) {
+        const basisAll = doc.data.basis;
+        const at = legAt.get(id);
+        legChanges.set(at, { target: id, status: to, ...(rl !== null ? { role: rl } : {}) });
+        const live = basisAll.some((l, n) => l && typeof l === "object" && l.target === id
+          && (n === at ? to !== "severed" : statusOf(l, current.get(id), doc) !== "severed"));
+        const entryTo = live ? (current.get(id).status === "severed" ? "confirmed" : current.get(id).status) : "severed";
+        if (entryTo === current.get(id).status) continue;
+        const prev = String(current.get(id).note ?? "");
+        let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why}`;
+        if (note.length > EDGE_NOTE_MAX) note = note.slice(note.length - EDGE_NOTE_MAX);
+        changes.set(id, { status: entryTo, note });
+        continue;
+      }
       const prev = String(current.get(id).note ?? "");
       let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why}`;
       if (note.length > EDGE_NOTE_MAX) note = note.slice(note.length - EDGE_NOTE_MAX);
@@ -336,24 +429,45 @@ export class Citation {
     const spliced = spliceEdgeStatus(doc.text, changes);
     if (!spliced)
       return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
-               detail: "the references block is not in a shape this grammar can edit in place" };
+               detail: localize("citation.index.the_references_block_not_in_shape", "the references block is not in a shape this grammar can edit in place") };
 
-    let text = setScalar(spliced, "last_updated", `"${when}"`);
+    /* R23, R25: the named leg's own status, and its role when one was sent, go in the same write; the other legs of the same
+       document are not named, so they keep their side, status, grade, part and pin. */
+    let withRole = spliced, roleMoved = [], roleFrom = [];
+    if (onInquiry) {
+      const set = setLegStatus(spliced, legChanges);
+      if (!set)
+        return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
+                 detail: localize("citation.index.the_questions_basis_block", "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.") };
+      withRole = set;
+      if (rl !== null)
+        for (const [at, ch] of legChanges) {
+          const was = doc.data.basis[at].role;
+          if (was !== rl) { roleMoved.push(ch.target); roleFrom.push(was); }
+        }
+      roleMoved.sort();
+      roleFrom = [...new Set(roleFrom)].sort();
+    }
+    let text = setScalar(withRole, "last_updated", `"${when}"`);
     const ids = [...sel.members].sort();
     const shown = ids.slice(0, CITE_LOG_SAMPLE);
     const listed = shown.join(", ") + (ids.length > shown.length ? `, and ${ids.length - shown.length} more` : "");
+    const logHead = ids.length === 1
+      ? localize("citation.index.session_head_one_citation", "### Session {when} | {verb} {count} citation | {who}\n", { when, verb, count: String(ids.length), who: author || "member" })
+      : localize("citation.index.session_head_many_citations", "### Session {when} | {verb} {count} citations | {who}\n", { when, verb, count: String(ids.length), who: author || "member" });
     text = appendSessionLog(text,
-      `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"}`
-      + ` | ${author || "member"}\n`
-      + `Trigger: selection ${handle}\n`
+      logHead
+      + localize("citation.index.trigger_selection_handle", "Trigger: selection {handle}\n", { handle: String(handle) })
       + (onInquiry
-        ? `Changes: basis legs on ${listed} moved to '${to}', each leg kept as it was. Reason: ${why}.\n`
-        : `Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.\n`));
+        ? (roleMoved.length
+          ? localize("citation.index.changes_basis_legs_role_moved", "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was except the role of {moved}, which moves from {from} to {role}. Reason: {why}.\n", { listed, to, moved: roleMoved.join(", "), from: roleFrom.join(", "), role: String(rl), why: String(why) })
+          : localize("citation.index.changes_basis_legs_on", "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n", { listed, to, why: String(why) }))
+        : localize("citation.index.changes_cites_edges_to", "Changes: cites edges to {listed} moved to '{to}'. Reason: {why}.\n", { listed, to, why: String(why) })));
 
     const bytes = new TextEncoder().encode(text);
     if (bytes.length > INLINE_MAX)
       return { ok: false, reason: "CITATION_TOO_LARGE", project, bytes: bytes.length, limit: INLINE_MAX,
-               detail: "the reasons appended to these citations would push bundle.md past the 1MB inline limit" };
+               detail: localize("citation.index.the_reasons_appended_to_these", "the reasons appended to these citations would push bundle.md past the 1MB inline limit") };
     /* The type from the DOCUMENT, as `cite` writes it: byte-identical for a case, correct for a question. The write's
        refusals come back unchanged (a question whose document cannot be revised is refused as any write to it is,
        inquiry R11; R15). */
@@ -366,17 +480,26 @@ export class Citation {
                 `reason`. */
              [resultKey]: ids, why, from, to,
              bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: sel.gate,
-             ...(onInquiry ? { citingObjectType: "inquiry" } : {}) };
+             ...(onInquiry ? { citingObjectType: "inquiry" } : {}),
+             ...(rl !== null ? { role: rl, roleMoved } : {}) };
   }
 
-  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
-    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity,
+  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null, extent = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity, extent,
       from: ["confirmed", "proposed"], to: "severed", verb: "Severed", resultKey: "severed" });
   }
 
-  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
-    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity,
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null, role = null, extent = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity, role, extent,
       from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
+  }
+
+  /* R21: the labels a question's `grounds[]` declares, from its document. */
+  #declaredGrounds(project) {
+    const d = this.#document(project, null);
+    return d.ok && Array.isArray(d.data.grounds)
+      ? d.data.grounds.filter((g) => g && typeof g === "object" && typeof g.ground === "string" && g.ground.trim()).map((g) => g.ground.trim())
+      : [];
   }
 
   /* ---- cite (R1–R3) ---- */
@@ -395,7 +518,7 @@ export class Citation {
    *     that judges it again at the write.
    *   - IT ASKS ONE THING ABOUT A TARGET'S STATE, ON BOTH ARMS: whether the group RETIRED it (R5). */
   cite({ project = null, handle = null, found = null, question = null, viewer = null, owner = null,
-         note = "", author = null, role = null, extent = null, identity = null } = {}) {
+         note = "", author = null, role = null, extent = null, identity = null, ground = null } = {}) {
     /* T35 (N698, DEC-164 (4), (5)): WHAT IS CITED, from ONE source, asked before anything else. A selection (`handle`,
        with an optional `extent`), or one match "Find in this" answered (`found`, retrieval R73), which stands in place
        of both: its document is the one member, its extent that member's part. Being found changes no judgement: the
@@ -406,11 +529,8 @@ export class Citation {
     if (fromFound === given(handle) || (fromFound && bagGiven))
       return { ok: false, reason: "CITE_ONE_SOURCE", ...rowOf(CITE_EXTENT_CHECKS, "CITE_ONE_SOURCE"), project,
                detail: fromFound
-                 ? "this call names a passage found by search and also a selection or a part of a document. A found "
-                   + "passage already names its document and its part, so the record could not tell which you meant; "
-                   + "nothing was written."
-                 : "this call names neither a selection nor a passage found by search, so there is nothing to cite; "
-                   + "nothing was written." };
+                 ? localize("citation.index.this_call_names_a_passage", "this call names a passage found by search and also a selection or a part of a document. A found passage already names its document and its part, so the record could not tell which you meant; nothing was written.")
+                 : localize("citation.index.this_call_names_neither", "this call names neither a selection nor a passage found by search, so there is nothing to cite; nothing was written.") };
     let foundDoc = null, foundCapture = null;
     if (fromFound) {
       /* Read for its capture and extent ONLY, never its words: the words are the search's, the part is the record's. */
@@ -426,18 +546,14 @@ export class Citation {
                  missing: [...(doc ? [] : ["document"]), ...(sha ? [] : ["capture_sha"]),
                            ...(isObj(found) && isObj(found.extent) && typeof found.extent.kind === "string"
                                && found.extent.kind.trim() ? [] : ["extent"])],
-                 detail: "a passage found by search is cited by the document it is in, the capture it was found in "
-                       + "and its part of that capture, and this one names "
-                       + "no document you can see, no capture, or no part; nothing was written." };
+                 detail: localize("citation.index.a_passage_found_by_search", "a passage found by search is cited by the document it is in, the capture it was found in and its part of that capture, and this one names no document you can see, no capture, or no part; nothing was written.") };
       /* The part was found in THESE bytes; a leg on this document is pinned to `content.captureFor`'s capture (R2,
          REC-220). Where they differ the part would be written against bytes it was not found in. */
       const pinned = this.content.captureFor(doc);
       if (pinned !== sha)
         return { ok: false, reason: "FOUND_CAPTURE_MOVED", ...rowOf(CITE_EXTENT_CHECKS, "FOUND_CAPTURE_MOVED"), project,
                  document: doc, found_capture: sha, pinned_capture: pinned ?? null,
-                 detail: `this passage was found in capture ${sha} of ${doc}, and a citation of ${doc} is pinned to `
-                       + `${pinned ? `capture ${pinned}` : "no capture"}, so its part could name different words. `
-                       + "Nothing was written." };
+                 detail: localize("citation.index.this_passage_was_found_in", "this passage was found in capture {sha} of {doc}, and a citation of {doc_2} is pinned to {v1}, so its part could name different words. Nothing was written.", { sha: String(sha), doc: String(doc), doc_2: String(doc), v1: String(pinned ? `capture ${pinned}` : "no capture") }) };
       foundDoc = doc; foundCapture = sha;
       extent = foundExtentBag(found.extent);
     }
@@ -452,12 +568,11 @@ export class Citation {
       const qh = this.record.head(qid);
       if (!qh || !this.membership.inSight(qid, viewer))
         return { ok: false, reason: "NO_SUCH_QUESTION", ...rowOf(CITE_CHECKS, "NO_SUCH_QUESTION"), project, question: qid,
-                 detail: "no question by that id is one you can see, so this citation cannot be kept with it; nothing "
-                       + "was written." };
+                 detail: localize("citation.index.no_question_kept_with_it", "no question by that id is one you can see, so this citation cannot be kept with it; nothing was written.") };
       if (normalizeType(qh.type) !== "inquiry")
         return { ok: false, reason: "NOT_AN_INQUIRY", ...rowOf(CITE_CHECKS, "NOT_AN_INQUIRY"), project, question: qid,
                  got: qh.type,
-                 detail: `${qid} is not a question, so it cannot be the question this was cited for; nothing was written.` };
+                 detail: localize("citation.index.not_a_question_cited_for", "{qid} is not a question, so it cannot be the question this was cited for; nothing was written.", { qid }) };
       questionId = qid;
     }
     /* END DEC-49 REGION is-cite-question */
@@ -477,9 +592,7 @@ export class Citation {
     const ontoInquiry = normalizeType(p.type) === "inquiry";
     if (p.type !== "project" && !ontoInquiry)
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.type,
-               detail: "citations live on the CITING object, and this is neither a case nor a question. A case "
-                     + "keeps them in its references; a question keeps them in the basis its answer rests on "
-                     + "(State Rules 5.2). Nothing else in the record holds either." };
+               detail: localize("citation.index.citations_live_on_the_citing_object", "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either.") };
     /* REC-134: citing INTO A PROJECT edits that project's document, work inside it, so the actor must have JOINED it
        (§7.5). The question arm is untouched: an inquiry is shared material, not a project's (INVESTIGATIVE-SESSION §7). */
     if (!ontoInquiry) {
@@ -494,7 +607,7 @@ export class Citation {
     const nt = String(note ?? "");
     if (nt.length > NOTE_MAX || /["\\\r\n]/.test(nt))
       return { ok: false, reason: "BAD_NOTE", ...rowOf(CITE_CHECKS, "BAD_NOTE"),
-               detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline" };
+               detail: localize("citation.index.a_note_is_at_most", "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline") };
     /* END DEC-49 REGION is-cite-note */
 
     /* THE ROLE (REC-37), judged before the members so a member who has not said what the material DOES is told that
@@ -506,8 +619,7 @@ export class Citation {
     if (ontoInquiry && (!this.inquiry || typeof this.inquiry.earned !== "function"
                         || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
       return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
-               detail: "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned "
-                     + "registry, and your group's Civicsmith was created without them, so nothing was written." };
+               detail: localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.") };
     /* DEC-49 REGION is-cite-role — REC-64/C-33.16-18. */
     const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
     if (ontoInquiry) {
@@ -515,24 +627,28 @@ export class Citation {
       if (rl === null)
         return { ok: false, reason: "NO_ROLE", ...rowOf(CITE_CHECKS, "NO_ROLE"), project, handle, roles: roles.slice(),
                  drift: sel.drift,
-                 detail: "a leg of a question's basis says what the material DOES for the answer, and this call "
-                       + "does not say. It is never assumed: a leg that cuts against the case is first-class "
-                       + "here, and guessing would put a claim about your own reasoning in the record that you "
-                       + `did not make. State role as one of: ${roles.join(", ")}.` };
+                 detail: localize("citation.index.a_leg_of_a_questions_basis", "a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: {roles}.", { roles: roles.join(", ") }) };
       if (!roles.includes(rl))
         return { ok: false, reason: "BAD_ROLE", ...rowOf(CITE_CHECKS, "BAD_ROLE"), project, handle, got: rl,
                  roles: roles.slice(), drift: sel.drift,
-                 detail: `'${rl}' is not a role a basis leg can carry. The set is closed and is published by `
-                       + `op=affordances beside the act: ${roles.join(", ")}.` };
+                 detail: localize("citation.index.rl_is_not_a_role", "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.", { rl, roles: roles.join(", ") }) };
     } else if (rl !== null) {
       return { ok: false, reason: "ROLE_NOT_APPLICABLE", ...rowOf(CITE_CHECKS, "ROLE_NOT_APPLICABLE"), project, handle,
                got: rl, drift: sel.drift,
-               detail: "a role says what material does for a QUESTION's answer, and this citing object is a "
-                     + "case. A case's citation edge carries no role, so this one would be dropped rather than "
-                     + "recorded — refused instead, because a field stated in one place and honoured nowhere is "
-                     + "how the record and its projections drift apart." };
+               detail: localize("citation.index.a_role_says_what_material", "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.") };
     }
     /* END DEC-49 REGION is-cite-role */
+
+    /* R21: the group a new leg joins, a label the question already declares; refused by name on a case (no groups) and for a
+       label the question does not declare, never dropped. Whether the grouping is whole is the write's. */
+    /* DEC-49 REGION is-cite-ground — C-33.58. */
+    const gl = given(ground) ? String(ground).trim() : null;
+    const declaredGrounds = ontoInquiry ? this.#declaredGrounds(project) : [];
+    if (gl !== null && !declaredGrounds.includes(gl))
+      return { ok: false, reason: "BAD_GROUND", ...rowOf(CITE_CHECKS, "BAD_GROUND"), project, handle, got: gl,
+               grounds: declaredGrounds, drift: sel.drift,
+               detail: localize("citation.index.bad_ground", "a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.", { ground: gl }) };
+    /* END DEC-49 REGION is-cite-ground */
 
     /* Every member must be CITABLE: information, or a QUESTION, on both arms (REC-72: a case may draw on a question;
        REC-37: a question rests on material or another question, DEC-23). A question citing ITSELF is not caught here:
@@ -549,16 +665,12 @@ export class Citation {
         /* Its own reason, because on this arm an inquiry IS citable. */
         ? { ok: false, reason: "NOT_CITABLE", project, handle,
             offenders: offenders.sort(), drift: sel.drift, citable: ["information", "inquiry"],
-            detail: "a question rests on material or on another question, and nothing else in the record can be "
-                  + "a leg of its basis. These members of the selection are neither, and the whole call is "
-                  + "refused rather than narrowed to the ones that are." }
+            detail: localize("citation.index.a_question_rests_on_material", "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.") }
         /* The wire string does not move (renaming a reason code is a break, REC-37); `detail` says what is refused
            and `citable` carries the vocabulary. Renaming it is recorded as Bob's decision, not taken here. */
         : { ok: false, reason: "NOT_INFORMATION", project, handle,
             offenders: offenders.sort(), drift: sel.drift, citable: ["information", "inquiry"],
-            detail: "a case rests on material, or on a question the group is asking. These members of the "
-                  + "selection are neither, and the whole call is refused rather than narrowed to the ones "
-                  + "that are." };
+            detail: localize("citation.index.a_case_rests_on_material", "a case rests on material, or on a question the team is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.") };
 
     /* DEC-49 REGION is-cite-retired — D-168 / C-33.39. A RETIRED ITEM IS NOT CITABLE (State Rules §4.1): a citation
        made after the retirement is the harm `retire`'s CITED refusal guards, entered by the other door. Asked through
@@ -567,13 +679,10 @@ export class Citation {
     if (retiredMembers.length)
       return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
                project, handle, offenders: retiredMembers.sort(), drift: sel.drift,
-               detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and "
-                     + "a citation made now would read to every later member as live support. Cite what "
-                     + "superseded them, or re-collect the source as a new record and cite that. The whole call "
-                     + "is refused rather than narrowed to the members that are not retired." };
+               detail: localize("citation.index.the_team_has_retired_these_now", "the team has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.") };
     /* END DEC-49 REGION is-cite-retired */
 
-    const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
+    const doc = this.#document(project, localize("citation.index.projects_bundle_md_does_not_parse", "the project's own bundle.md does not parse under the restricted grammar"));
     if (!doc.ok) return doc;
 
     /* Partition the selection against what the document already carries. SEVERED IS NOT ABSENT: a severed edge is a
@@ -590,9 +699,15 @@ export class Citation {
        referenced under another relation (C-6.3 asks that a leg's target be in references[], not for a duplicate). */
     const referenced = new Set(existing
       .filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
-    const legged = new Set(ontoInquiry && Array.isArray(doc.data.basis)
-      ? doc.data.basis.filter((l) => l && typeof l === "object" && typeof l.target === "string").map((l) => l.target)
-      : []);
+    /* R22: a document is cited already only under the same PART; the parts the question's legs hold, per target. */
+    const leggedParts = new Map();
+    if (ontoInquiry && Array.isArray(doc.data.basis))
+      for (const l of doc.data.basis)
+        if (l && typeof l === "object" && typeof l.target === "string") {
+          if (!leggedParts.has(l.target)) leggedParts.set(l.target, new Set());
+          leggedParts.get(l.target).add(partKey(l));
+        }
+    const legged = new Set(leggedParts.keys());
 
     const severed = [], already = [], add = [];
     for (const id of sel.members) {
@@ -605,9 +720,7 @@ export class Citation {
     if (severed.length)
       return { ok: false, reason: "SEVERED_EDGE", ...rowOf(CITE_CHECKS, "SEVERED_EDGE"), project, handle,
                offenders: severed.sort(), drift: sel.drift,
-               detail: "these targets already carry a SEVERED cites edge, which is a recorded decision to cut "
-                     + "the dependency, not the absence of one. Citing neither reverses it silently nor skips "
-                     + "past it. Reinstating a severance is a separate action that records its own reason." };
+               detail: localize("citation.index.these_targets_already_carry", "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason.") };
     /* END DEC-49 REGION is-cite-severed */
 
     /* REC-97 / IC-90 — WHAT PART OF THE DOCUMENT THE LEG RESTS ON. Nothing here is dropped: every arm refuses BY NAME
@@ -623,28 +736,16 @@ export class Citation {
     if (unknownFields.length)
       return { ok: false, reason: "UNKNOWN_EXTENT_FIELD", ...rowOf(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
                project, handle, drift: sel.drift, got: unknownFields, fields: Object.keys(EXTENT_PARAMS),
-               detail: `this call names ${unknownFields.map((k) => `'${k}'`).join(", ")}, which this act `
-                     + `does not carry, so the record cannot tell what part of the document was meant. It is `
-                     + `REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation `
-                     + `that looks like the one you made and is not. The fields this act takes are: `
-                     + `${Object.keys(EXTENT_PARAMS).join(", ")}.` };
+               detail: localize("citation.index.this_call_names_fields", "this call names {names}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: {fields}.", { names: unknownFields.map((k) => `'${k}'`).join(", "), fields: Object.keys(EXTENT_PARAMS).join(", ") }) };
     const authored = Object.keys(bag).filter((k) => String(bag[k] ?? "").trim() !== "").sort();
     if (authored.length && !ontoInquiry)
       return { ok: false, reason: "EXTENT_NOT_APPLICABLE", ...rowOf(CITE_EXTENT_CHECKS, "EXTENT_NOT_APPLICABLE"),
                project, handle, got: authored, drift: sel.drift,
-               detail: "which part of a document a citation rests on is recorded on a leg of a QUESTION's "
-                     + "basis, and this citing object is a case. A case's citation edge names the document "
-                     + "and has no slot for a page or a passage, so this extent would be dropped rather "
-                     + "than recorded — refused instead, for the reason a role is refused here: a field "
-                     + "stated in one place and honoured nowhere is how the record and its projections "
-                     + "drift apart." };
+               detail: localize("citation.index.which_part_of_a_document", "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded — refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart.") };
     if (authored.length && add.length > 1)
       return { ok: false, reason: "EXTENT_ON_MANY", ...rowOf(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
                project, handle, offenders: add.slice().sort(), drift: sel.drift,
-               detail: `a part of a document is a part of ONE document, and this call would write `
-                     + `${add.length} legs. Writing the same page or passage onto each of them would put `
-                     + `claims in the record that nobody made — the extent was named once. Cite the one `
-                     + `document this part belongs to, and cite the rest separately.` };
+               detail: localize("citation.index.a_part_of_a_document_is", "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.", { n: String(add.length) }) };
     /* THE SPELLING FENCE, BAD_NOTE's rule one field down: these values are written as frontmatter scalars. */
     const legFields = {};
     for (const k of authored) {
@@ -652,10 +753,7 @@ export class Citation {
       if (raw.length > EXTENT_VALUE_MAX || /["\\\r\n#]/.test(raw))
         return { ok: false, reason: "BAD_EXTENT_VALUE", ...rowOf(CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE"),
                  project, handle, field: k, drift: sel.drift,
-                 detail: `'${k}' cannot be written into the record as it stands: a value describing which `
-                       + `part of a document is at most 200 characters and cannot contain a quotation mark, `
-                       + `a backslash, a line break or a comment mark. Those characters would reshape the `
-                       + `document rather than appear in it.` };
+                 detail: localize("citation.index.k_cannot_be_written_into", "'{k}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.", { k }) };
       const t = EXTENT_PARAMS[k];
       if (t === "int" && /^\d+$/.test(raw)) legFields[k] = parseInt(raw, 10);
       else if (t === "nums") {
@@ -666,6 +764,21 @@ export class Citation {
     }
     /* END DEC-49 REGION is-cite-extent */
 
+    /* R22: on a question a member already cited under a DIFFERENT part (another content_id or extent, the whole
+       document being a part of its own) is a new leg, not a repeat; the same part stays alreadyCited. */
+    if (ontoInquiry && already.length) {
+      const mine = partKey(legFields);
+      const fresh = already.filter((id) => !leggedParts.get(id).has(mine));
+      if (fresh.length) {
+        for (const id of fresh) already.splice(already.indexOf(id), 1);
+        add.splice(0, add.length, ...sel.members.filter((id) => !already.includes(id) && !severed.includes(id)));
+        if (authored.length && add.length > 1)
+          return { ok: false, reason: "EXTENT_ON_MANY", ...rowOf(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
+                   project, handle, offenders: add.slice().sort(), drift: sel.drift,
+                   detail: localize("citation.index.a_part_of_a_document_is", "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.", { n: String(add.length) }) };
+      }
+    }
+
     /* AND NOW THE LEG GRAMMAR JUDGES IT, under the write's own name: the composed part goes through
        `inquiry.checkLegExtentGrammar`, the same function that judges it again at the write, so an unlanded kind, an
        unparseable page, a malformed content id and a leg naming both an id and an extent are refused HERE, before a
@@ -673,24 +786,21 @@ export class Citation {
        Outside the region above, because `BASIS_REFUSED` is not a row of this module's. */
     if (authored.length) {
       const ef = [];
-      this.inquiry.checkLegExtentGrammar(legFields, "the part of the document this citation names", "C-2.8", ef);
+      this.inquiry.checkLegExtentGrammar(legFields, localize("citation.index.the_part_of_the_document_label", "the part of the document this citation names"), "C-2.8", ef);
       const exErrs = ef.filter((x) => x.severity === "error");
       if (exErrs.length)
         return { ok: false, reason: "BASIS_REFUSED", project, handle, drift: sel.drift,
                  findings: exErrs.map((x) => ({ check: x.check, code: x.code ?? null,
                                                 detail: x.message, repairs: x.repairs ?? [] })),
-                 detail: "the part of the document this citation names is refused by the SAME catalog "
-                       + "function op=promote runs at the write, so nothing was written. A citation that "
-                       + "names no part means the whole document, which is always a legal thing to cite." };
+                 repairs: [],
+                 detail: localize("citation.index.the_part_of_the_document_refused", "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite.") };
     }
 
     const when = stampInstant("second", this.now());
 
     if (!sel.members.length)
       return { ok: false, reason: "EMPTY_SELECTION", project, handle, drift: sel.drift,
-               detail: "this selection resolves to no members, so there is nothing to cite. It may have "
-                     + "named ids that do not exist, or its members may have been purged or hidden since "
-                     + "it was made." };
+               detail: localize("citation.index.this_selection_resolves_to_nothing_to_cite", "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.") };
     /* Nothing to do is a SUCCESS that writes nothing: citing must be safely retryable, since drift is reported rather
        than fatal and a member who reads a drift report will reasonably press again. AND WHEN A PART WAS NAMED, SAY
        THAT IT WENT NOWHERE (narrowing an existing citation is its own act, Bob's 5.3). */
@@ -698,12 +808,9 @@ export class Citation {
       return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
                cited: [], alreadyCited: already.sort(), severed: [], question: questionId,
                bundleSha: p.bundleSha, rowVersion: null,
-               detail: "every member of the selection was already cited; nothing was written"
-                     + (authored.length
-                        ? ". The part of the document this call named was written NOWHERE, because no leg "
-                        + "was written at all: making an existing citation more specific is a separate "
-                        + "authored act on this record's own plan."
-                        : "") };
+               detail: localize("citation.index.every_member_of_the_selection", "every member of the selection was already cited; nothing was written{v1}", { v1: String(authored.length
+                        ? localize("citation.index.part_named_written_nowhere", ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.")
+                        : "") }) };
 
     /* THE WRITE, PER ARM; both go through the document (R6). */
     let spliced = null, filled = [];
@@ -724,8 +831,7 @@ export class Citation {
                                          ...(edgePins.has(target) ? { extent_capture: edgePins.get(target) } : {}) })));
       if (!spliced)
         return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
-                 detail: "the project's references block is not in a shape this grammar can extend in place. "
-                       + "Citing edits only that block and never rewrites the rest of the document." };
+                 detail: localize("citation.index.projects_references_block_extend", "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document.") };
     } else {
       /* THE SUBJECT COMES FROM THE BYTES, the authority, not from a projection of them. */
       const subject = typeof doc.data.subject_entity === "string" && doc.data.subject_entity.trim() !== ""
@@ -740,14 +846,15 @@ export class Citation {
         return this.content.captureFor(target);
       };
       filled = add.map((target) => {
+        const grp = gl !== null ? { ground: gl } : {};
         const earned = reg && reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
         const pin = pinOf(target);
         const pinned = pin ? { extent_capture: pin } : {};
         /* ONLY THE CONNECTION AXIS IS FILLED: the capture axis's earned value is a ceiling, not a measurement. */
         return earned && earned.grade
           ? { target, role: rl, grade: earned.grade, grade_axis: "connection", grade_source: "resolution",
-              note: nt, why: earned.why, ...legFields, ...pinned }
-          : { target, role: rl, note: nt, why: null, ...legFields, ...pinned };
+              note: nt, why: earned.why, ...grp, ...legFields, ...pinned }
+          : { target, role: rl, note: nt, why: null, ...grp, ...legFields, ...pinned };
       });
       /* references FIRST and only where the document does not already carry the target: C-6.3 refuses a leg whose
          target is not in references[], and the two projections of one document must not disagree. */
@@ -756,15 +863,12 @@ export class Citation {
       const withRefs = newRefs.length ? spliceReferences(doc.text, newRefs) : doc.text;
       if (!withRefs)
         return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
-                 detail: "the question's references block is not in a shape this grammar can extend in place. "
-                       + "Citing edits only that block and the basis block, and never rewrites the rest of "
-                       + "the document." };
+                 detail: localize("citation.index.the_questions_references_block", "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document.") };
       spliced = spliceBasis(withRefs, filled);
       if (!spliced)
         /* ITS OWN REASON: a member told "references" about a basis failure would look in the wrong block. */
         return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
-                 detail: "the question's basis block is not in a shape this grammar can extend in place. "
-                       + "Citing appends legs to that block and never rewrites the rest of the document." };
+                 detail: localize("citation.index.the_questions_basis_block", "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.") };
     }
 
     /* last_updated moves, so a Session Log entry accounts for the act (C-13.2), BOUNDED (R3): the edges are the
@@ -777,25 +881,26 @@ export class Citation {
     const ungraded = filled.filter((l) => !l.grade).length;
     const graded = filled.length - ungraded;
     const setMovedNote = !fromFound && answerChanged(sel.drift, sel.moved)
-      ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
+      ? localize("citation.index.set_had_moved_since", " (the set had moved since it was made; citing is report-weight and proceeded)") : "";
     /* R3 (T35): what the act was cited FROM, a selection or a passage found by search in its document, and the
        question it was looked for for, when one was named. */
-    const trigger = (fromFound ? `Trigger: a part of ${foundDoc} found by search in capture ${foundCapture}`
-                               : `Trigger: selection ${handle}${setMovedNote}`)
-      + (questionId ? `; for question ${questionId}` : "") + "\n";
+    const trigger = (fromFound
+      ? localize("citation.index.trigger_a_part_found_in_capture", "Trigger: a part of {doc} found by search in capture {capture}", { doc: String(foundDoc), capture: String(foundCapture) })
+      : localize("citation.index.trigger_selection_moved", "Trigger: selection {handle}{moved}", { handle: String(handle), moved: setMovedNote }))
+      + (questionId ? localize("citation.index.for_question_suffix", "; for question {question}", { question: String(questionId) }) : "") + "\n";
+    const logNote = nt ? localize("citation.index.log_note", " Note: {note}.", { note: nt }) : "";
+    const logHead = ontoInquiry
+      ? (add.length === 1
+        ? localize("citation.index.session_rested_one_record", "### Session {when} | Rested this question on 1 record ({role}) | {who}\n", { when, role: rl, who: author || "member" })
+        : localize("citation.index.session_rested_many_records", "### Session {when} | Rested this question on {count} records ({role}) | {who}\n", { when, count: String(add.length), role: rl, who: author || "member" }))
+      : (add.length === 1
+        ? localize("citation.index.session_cited_one_record", "### Session {when} | Cited 1 record | {who}\n", { when, who: author || "member" })
+        : localize("citation.index.session_cited_many_records", "### Session {when} | Cited {count} records | {who}\n", { when, count: String(add.length), who: author || "member" }));
     text = appendSessionLog(text, ontoInquiry
-      ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"}`
-        + ` (${rl}) | ${author || "member"}\n`
-        + trigger
-        + `Changes: basis legs added for ${listed}, each with role ${rl}. `
-        + `Grades: ${graded} filled from the record's own resolutions to this question's subject; `
-        + `${ungraded} left undetermined and stated.`
-        + `${nt ? ` Note: ${nt}.` : ""}\n`
-      : `### Session ${when} | Cited ${add.length} record${add.length === 1 ? "" : "s"}`
-        + ` | ${author || "member"}\n`
-        + trigger
-        + `Changes: cites edges added to ${listed}.`
-        + `${nt ? ` Note: ${nt}.` : ""}\n`);
+      ? logHead + trigger
+        + localize("citation.index.changes_basis_legs_added", "Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n", { listed, role: rl, graded: String(graded), ungraded: String(ungraded), note: logNote })
+      : logHead + trigger
+        + localize("citation.index.changes_cites_edges_added", "Changes: cites edges added to {listed}.{note}\n", { listed, note: logNote }));
 
     /* Past the inline bound, refused here in words that name the real limit (a maximum legal selection once reached
        the write as OVERSIZE_INLINE), the whole call rather than a prefix, which would silently change which records
@@ -808,10 +913,7 @@ export class Citation {
                project, handle, drift: sel.drift,
                requested: add.length, bytes: bytes.length, limit: INLINE_MAX,
                roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / perEdge)),
-               detail: `citing this many records at once would push this ${ontoInquiry ? "question" : "case"}'s `
-                     + "bundle.md past the 1MB inline limit. Every edge is written into the document, so the "
-                     + "ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller "
-                     + "batches; nothing has been written." };
+               detail: localize("citation.index.citing_this_many_records", "citing this many records at once would push this {object}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.", { object: ontoInquiry ? "question" : "case" }) };
     }
 
     const fm = doc.data;
@@ -820,7 +922,9 @@ export class Citation {
     /* THE WRITE'S REFUSALS COME BACK UNCHANGED (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASIS_CYCLE; since T42 the
        machine-passage read R11 asks, inquiry R62 with run-productions R25: PROPOSAL_NOT_TAKEN_UP,
        MACHINE_PASSAGE_UNCHECKED; N834): this act composes legs; the write judges them. No seam of its own (K2608). */
-    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
+    if (!promoted.ok)
+      return { ...promoted, project, handle, drift: sel.drift,
+               ...(promoted.reason === "BASIS_REFUSED" ? { repairs: [] } : {}) };
 
     return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
              cited: add.slice().sort(), alreadyCited: already.sort(), severed: [], question: questionId,
@@ -845,6 +949,112 @@ export class Citation {
                              : {}) };
   }
 
+  /* ---- legGrade (R24) ---- */
+
+  /** R24 (T51 fix round 10; DEC-439 to DEC-441; K5303; D-M1, C-M4): A MEMBER GRADES HOW WELL THE TEAM'S COPY SHOWS A CITED
+   *  PASSAGE. One document leg of a question's `basis[]`, found by its target and its part (R22), takes the capture-axis
+   *  grade the member states, with source `capture` (the only source the capture axis admits, `inquiry-grammar` R11's arm),
+   *  up to the capture ceiling `inquiry.earned` answers for it (`leg-earning` R1, R8): a letter above it is refused
+   *  `GRADE_OVER_CEILING` naming the ceiling, so no leg is given a grade the record did not earn (R8). The write
+   *  judges the revised document again as it judges every leg (`inquiry` R11). A leg of a kind the record derives, or on
+   *  another team's finding, is not the member's to grade; a leg already graded on another axis keeps that grade (a leg
+   *  carries one). A grade is the member's act, so a machine is refused as it is for R16. */
+  legGrade({ project = null, target = null, grade = null, reason = "", author = null, viewer = null, identity = null,
+             extent = null } = {}) {
+    /* DEC-49 REGION is-leggrade-member */
+    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author) || author.trim().toLowerCase() === "admin")
+      return { ok: false, reason: "MACHINE_CANNOT_GRADE_LEG", ...rowOf(CITE_LEG_GRADE_CHECKS, "MACHINE_CANNOT_GRADE_LEG"), project,
+               detail: localize("citation.index.leggrade_member_only", "only a named member says how well your team's copy shows a passage; this came from an automated or unnamed credential, so nothing was written.") };
+    const obj = this.#citingObject(project, viewer);
+    if (!obj.ok) return obj;
+    const p = obj.head;
+    if (normalizeType(p.type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", ...rowOf(CITE_CHECKS, "NOT_AN_INQUIRY"), project, got: p.type,
+               detail: localize("citation.index.leggrade_not_a_question", "{project} is not a question, and a passage is graded where a question rests on it; nothing was written.", { project: String(project) }) };
+    const gr = given(grade) ? String(grade).trim() : "";
+    if (!BASIS_GRADES.includes(gr))
+      return { ok: false, reason: "BAD_GRADE", ...rowOf(CITE_LEG_GRADE_CHECKS, "BAD_GRADE"), project, got: given(grade) ? String(grade) : null,
+               grades: BASIS_GRADES.slice(),
+               detail: localize("citation.index.leggrade_bad_grade", "a grade is one letter, {grades}; nothing was written.", { grades: BASIS_GRADES.join(", ") }) };
+    /* END DEC-49 REGION is-leggrade-member */
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON", project,
+               detail: localize("citation.index.leggrade_needs_reason", "a grade records WHY, and a grade with no reason is an unexplained claim about your team's copy; nothing was written.") };
+    if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON", project,
+               detail: localize("citation.index.a_reason_is_at_most", "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it", { max: String(EDGE_REASON_MAX) }) };
+    if (!this.inquiry || typeof this.inquiry.earned !== "function")
+      return { ok: false, reason: "INQUIRY_UNAVAILABLE", project,
+               detail: localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.") };
+
+    const doc = this.#document(project, null);
+    if (!doc.ok) return doc;
+    const tg = given(target) ? String(target).trim() : "";
+    const bag = isObj(extent) ? extent : {};
+    const mine = partKey(bag);
+    const basis = Array.isArray(doc.data.basis) ? doc.data.basis : [];
+    const at = basis.findIndex((l) => isObj(l) && l.target === tg && partKey(l) === mine);
+    if (at < 0)
+      return { ok: false, reason: "NOT_CITED", project, target: tg || null,
+               detail: localize("citation.index.leggrade_not_cited", "this question holds no leg on that passage, so there is nothing to grade. A different part of the same document is a different passage.") };
+    const leg = basis[at];
+
+    /* DEC-49 REGION is-leggrade-leg */
+    const kind = IMPORTED_FINDING_RE.test(tg) ? "imported" : CALCULATION_REF_RE.test(tg) ? "calculation"
+      : OCCURRENCE_REF_RE.test(tg) ? "occurrence" : DERIVED_CONNECTION_ID_RE.test(tg) ? "derived_connection"
+      : normalizeType(OBJECT_TYPES[tg.split("-")[0]]) === "inquiry" ? "question" : null;
+    if (kind)
+      return { ok: false, reason: "LEG_NOT_GRADABLE", ...rowOf(CITE_LEG_GRADE_CHECKS, "LEG_NOT_GRADABLE"), project, target: tg, kind,
+               detail: localize("citation.index.leggrade_not_gradable", "this passage is not one your team holds a copy of, so a member does not grade it: the record works its grade out from what it rests on, or takes it from the other team's edition. Nothing was written.") };
+    const held = leg.grade !== undefined && leg.grade !== null && String(leg.grade).trim() !== "";
+    if (held && leg.grade_axis !== "capture")
+      return { ok: false, reason: "LEG_GRADE_OTHER_AXIS", ...rowOf(CITE_LEG_GRADE_CHECKS, "LEG_GRADE_OTHER_AXIS"), project, target: tg,
+               axis: leg.grade_axis ?? null, grade: String(leg.grade),
+               detail: localize("citation.index.leggrade_other_axis", "this passage already carries a grade of {grade} on the {axis} axis, and a passage carries one grade, so that grade is kept and nothing was written.", { grade: String(leg.grade), axis: String(leg.grade_axis ?? "unstated") }) };
+    /* END DEC-49 REGION is-leggrade-leg */
+
+    /* DEC-49 REGION is-leggrade-ceiling */
+    const subject = typeof doc.data.subject_entity === "string" && doc.data.subject_entity.trim() !== ""
+      ? doc.data.subject_entity.trim() : null;
+    const reg = this.inquiry.earned(subject, [tg]);
+    const ceil = reg && reg.earned && reg.earned.capture ? reg.earned.capture[tg] : null;
+    const ceiling = ceil && ceil.mode === "ceiling" && BASIS_GRADES.includes(ceil.grade) ? ceil.grade : null;
+    if (ceiling === null || BASIS_GRADES.indexOf(gr) < BASIS_GRADES.indexOf(ceiling))
+      return { ok: false, reason: "GRADE_OVER_CEILING", ...rowOf(CITE_LEG_GRADE_CHECKS, "GRADE_OVER_CEILING"), project, target: tg, grade: gr,
+               ceiling, why: ceil && typeof ceil.why === "string" ? ceil.why : null,
+               detail: ceiling === null
+                 ? localize("citation.index.leggrade_no_ceiling", "the record cannot say how well your team's copy of {target} shows it, so it cannot support any grade here; nothing was written.", { target: tg })
+                 : localize("citation.index.leggrade_over_ceiling", "the most the record can support for your team's copy of {target} is {ceiling}, and {grade} is stronger; nothing was written.", { target: tg, ceiling, grade: gr }) };
+    /* END DEC-49 REGION is-leggrade-ceiling */
+
+    const spliced = setLegGrade(doc.text, at, tg, gr);
+    if (!spliced)
+      return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
+               detail: localize("citation.index.the_questions_basis_block", "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.") };
+    const when = stampInstant("second", this.now());
+    const who = author.trim();
+    const was = held ? String(leg.grade) : null;
+    let text = setScalar(spliced, "last_updated", `"${when}"`);
+    text = appendSessionLog(text,
+      localize("citation.index.session_graded_leg", "### Session {when} | Graded {target} on the capture axis | {who}\n", { when, target: tg, who })
+      + localize("citation.index.trigger_graded_leg", "Trigger: the member's own grade of how well the team's copy shows {target}\n", { target: tg })
+      + localize("citation.index.changes_graded_leg", "Changes: basis leg on {target} graded {grade} on the capture axis, up to the record's ceiling of {ceiling}; before: {was}. Reason: {why}.\n",
+                 { target: tg, grade: gr, ceiling, was: was ?? localize("citation.index.leggrade_was_none", "no grade"), why }));
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.length > INLINE_MAX)
+      return { ok: false, reason: "CITATION_TOO_LARGE", project, bytes: bytes.length, limit: INLINE_MAX,
+               detail: localize("citation.index.leggrade_too_large", "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.") };
+    const promoted = this.#write(project, p, text, when, author, doc.data, doc.data.object_type ?? p.type);
+    /* The write's refusals come back unchanged (inquiry R11): it judges the revised leg as it judges every other. */
+    if (!promoted.ok) return { ...promoted, project };
+    const role = typeof leg.role === "string" ? leg.role : null;
+    return { ok: true, project, citingObjectType: "inquiry", target: tg, role, grade: gr, grade_axis: "capture", grade_source: "capture",
+             ceiling, was, why,
+             leg: { target: tg, role, grade: gr, grade_axis: "capture", grade_source: "capture" },
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion };
+  }
+
   /* ---- drawQuestion (R14) ---- */
 
   /** R14 (T47; N975): DRAWING ONE QUESTION INTO A CASE in one served act, with no selection and no document sent by
@@ -860,15 +1070,14 @@ export class Citation {
     /* A question draws on another question by `cite` (its basis); this act is a case's. */
     if (p.type !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.type,
-               detail: "a question is drawn into a case, and this is not a case. A question rests on another "
-                     + "question through a leg of its own basis, which citing onto it writes." };
+               detail: localize("citation.index.a_question_is_drawn_into", "a question is drawn into a case, and this is not a case. A question rests on another question through a leg of its own basis, which citing onto it writes.") };
     const denied = this.membership.projectAuthority(project, identity, "joined", "drawquestion");
     if (denied) return denied;
 
     const nt = String(note ?? "");
     if (nt.length > NOTE_MAX || /["\\\r\n]/.test(nt))
       return { ok: false, reason: "BAD_NOTE", ...rowOf(CITE_CHECKS, "BAD_NOTE"),
-               detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline" };
+               detail: localize("citation.index.a_note_is_at_most", "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline") };
 
     /* The question, as `cite`'s optional question is judged (R1): an absent one and one this viewer may not see are
        answered alike. */
@@ -876,19 +1085,17 @@ export class Citation {
     const qh = qid ? this.record.head(qid) : null;
     if (!qh || !this.membership.inSight(qid, viewer))
       return { ok: false, reason: "NO_SUCH_QUESTION", ...rowOf(CITE_CHECKS, "NO_SUCH_QUESTION"), project, question: qid || null,
-               detail: "no question by that id is one you can see, so it cannot be drawn into this case; nothing was "
-                     + "written." };
+               detail: localize("citation.index.no_question_drawn_into_case", "no question by that id is one you can see, so it cannot be drawn into this case; nothing was written.") };
     if (normalizeType(qh.type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", ...rowOf(CITE_CHECKS, "NOT_AN_INQUIRY"), project, question: qid,
                got: qh.type,
-               detail: `${qid} is not a question, so it cannot be drawn into this case as one; nothing was written.` };
+               detail: localize("citation.index.not_a_question_drawn_into", "{qid} is not a question, so it cannot be drawn into this case as one; nothing was written.", { qid }) };
     if (this.retiredNotCitable(qid))
       return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
                project, handle: null, offenders: [qid], drift: false,
-               detail: "the group has RETIRED this, recording that it is superseded or no longer stands, and drawing "
-                     + "on it now would read to every later member as live support. Draw on what superseded it." };
+               detail: localize("citation.index.the_team_has_retired_this", "the team has RETIRED this, recording that it is superseded or no longer stands, and drawing on it now would read to every later member as live support. Draw on what superseded it.") };
 
-    const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
+    const doc = this.#document(project, localize("citation.index.projects_bundle_md_does_not_parse", "the project's own bundle.md does not parse under the restricted grammar"));
     if (!doc.ok) return doc;
     /* SEVERED IS NOT ABSENT (R1's rule): a severed edge is a recorded decision, restored by `reinstate` (R4) with its
        own reason, never re-drawn. Any other `cites` edge to it means the case already draws on it. */
@@ -897,40 +1104,200 @@ export class Citation {
     if (edge && edge.status === "severed")
       return { ok: false, reason: "SEVERED_EDGE", ...rowOf(CITE_CHECKS, "SEVERED_EDGE"), project, handle: null,
                offenders: [qid], drift: false,
-               detail: "this case already carries a SEVERED edge to this question, which is a recorded decision to cut "
-                     + "the dependency, not the absence of one. Drawing on it again would neither reverse that "
-                     + "decision silently nor skip past it. Reinstating a severance is a separate action that records "
-                     + "its own reason." };
+               detail: localize("citation.index.this_case_already_carries", "this case already carries a SEVERED edge to this question, which is a recorded decision to cut the dependency, not the absence of one. Drawing on it again would neither reverse that decision silently nor skip past it. Reinstating a severance is a separate action that records its own reason.") };
     const base = { ok: true, project, handle: null, weight: "report", moved: false, drift: false };
     if (edge)
       return { ...base, cited: [], alreadyCited: [qid], severed: [], question: null,
                bundleSha: p.bundleSha, rowVersion: null,
-               detail: "this case already draws on this question; nothing was written" };
+               detail: localize("citation.index.this_case_already_draws", "this case already draws on this question; nothing was written") };
 
     /* THE WRITE, `cite`'s case arm for a one-member selection: one `confirmed` `cites` edge carrying the note, no
        pin (a question has no bytes, DEC-21), the references block extended in place and nothing else rewritten. */
     const spliced = spliceReferences(doc.text, [{ rel: "cites", target: qid, status: "confirmed", note: nt }]);
     if (!spliced)
       return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
-               detail: "the project's references block is not in a shape this grammar can extend in place. "
-                     + "Drawing a question in edits only that block and never rewrites the rest of the document." };
+               detail: localize("citation.index.drawing_references_block", "the project's references block is not in a shape this grammar can extend in place. Drawing a question in edits only that block and never rewrites the rest of the document.") };
     const when = stampInstant("second", this.now());
     let text = setScalar(spliced, "last_updated", `"${when}"`);
     text = appendSessionLog(text,
-      `### Session ${when} | Cited 1 record | ${author || "member"}\n`
-      + `Trigger: question ${qid} drawn into this case\n`
-      + `Changes: cites edges added to ${qid}.${nt ? ` Note: ${nt}.` : ""}\n`);
+      localize("citation.index.session_cited_one_record", "### Session {when} | Cited 1 record | {who}\n", { when, who: author || "member" })
+      + localize("citation.index.trigger_question_drawn", "Trigger: question {qid} drawn into this case\n", { qid })
+      + localize("citation.index.changes_cites_edges_added", "Changes: cites edges added to {listed}.{note}\n", { listed: qid, note: nt ? localize("citation.index.log_note", " Note: {note}.", { note: nt }) : "" }));
     const bytes = new TextEncoder().encode(text);
     if (bytes.length > INLINE_MAX)
       return { ok: false, reason: "CITATION_TOO_LARGE", project, handle: null, drift: false,
                requested: 1, bytes: bytes.length, limit: INLINE_MAX,
                roomFor: 0,
-               detail: "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every "
-                     + "edge is written into the document; nothing has been written." };
+               detail: localize("citation.index.drawing_this_question_in_would", "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every edge is written into the document; nothing has been written.") };
     const promoted = this.#write(project, p, text, when, author, doc.data, doc.data.object_type ?? p.type);
     if (!promoted.ok) return { ...promoted, project, handle: null, drift: false };
     return { ...base, cited: [qid], alreadyCited: [], severed: [], question: null, pinned_captures: { [qid]: null },
              bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: null, expires: null };
+  }
+
+  /* ---- citeImported, withdrawImported (R16, R17) ---- */
+
+  /* R16, R17: only a named member rests a question on another team's finding or takes it back. A machine is record-grammar's
+     whole question (`isMachineIdentity`), and the bare founder's viewer `admin` names no member (membership R43). */
+  #importedMemberRefusal(author, inquiry) {
+    /* DEC-49 REGION is-cite-imported-member */
+    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author) || author.trim().toLowerCase() === "admin")
+      return { ok: false, reason: "MACHINE_CANNOT_CITE_IMPORTED", ...rowOf(CITE_IMPORTED_CHECKS, "MACHINE_CANNOT_CITE_IMPORTED"), inquiry,
+               detail: localize("citation.index.imported_member_only", "only a named member rests a question on another team's finding or takes it back; this came from an automated or unnamed credential, so nothing was written.") };
+    /* END DEC-49 REGION is-cite-imported-member */
+    return null;
+  }
+
+  /* The question both acts name, through sight (R9) and then its type. */
+  #importedQuestion(inquiry, viewer) {
+    const obj = this.#citingObject(inquiry, viewer);
+    if (!obj.ok) return obj;
+    if (normalizeType(obj.head.type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", ...rowOf(CITE_CHECKS, "NOT_AN_INQUIRY"), inquiry, got: obj.head.type,
+               detail: localize("citation.index.imported_not_a_question", "{inquiry} is not a question, and another team's finding is cited from a question; nothing was written.", { inquiry: String(inquiry) }) };
+    return obj;
+  }
+
+  /* R16: what the other team's case published, read once the leg stands, from accepted-work's one door: the group, the
+     case, the edition and the acceptance (by, at, reason), and how many flags are open on it. Null when it cannot be read. */
+  #originOf(ref, edition, viewer) {
+    const aw = this.acceptedWork;
+    if (!aw || typeof aw.acceptedFinding !== "function") return null;
+    try {
+      const a = aw.acceptedFinding({ ref, edition, viewer });
+      if (!isObj(a) || a.absent === true || a.unreadable === true || !isObj(a.acceptance)) return null;
+      const f = typeof aw.openFlagsOn === "function" ? aw.openFlagsOn({ ref, edition, viewer }) : null;
+      const open = isObj(f) && Array.isArray(f.flags) ? f.flags.length : null;
+      return { group: a.group ?? null, case: a.case ?? null, edition: a.edition ?? edition, finding: a.finding ?? null,
+               acceptance: { by: a.acceptance.by ?? null, at: a.acceptance.at ?? null, reason: a.acceptance.reason ?? null },
+               openFlags: open };
+    } catch { return null; }
+  }
+
+  /** R16 (T51; K4189; UC-082): RESTING A QUESTION ON ANOTHER TEAM'S ACCEPTED FINDING at one named edition: one leg on
+   *  the question's `basis[]`, `target`, `target_edition`, `role` and `note`, nothing else. No grade is written: the leg
+   *  is read as the edition publishes it, never stronger (`strength` R33), and the target is not in `references[]`
+   *  (`inquiry-grammar` R11). Whether the edition is accepted is not asked here: the write asks it (`accepted-work` R3,
+   *  R4), and its refusal comes back unchanged inside `BASIS_REFUSED`. */
+  citeImported({ inquiry = null, import: importId = null, finding = null, edition = null, role = null, note = "",
+                 author = null, viewer = null, identity = null } = {}) {
+    const machine = this.#importedMemberRefusal(author, inquiry);
+    if (machine) return machine;
+    const obj = this.#importedQuestion(inquiry, viewer);
+    if (!obj.ok) return obj;
+    const p = obj.head;
+
+    /* DEC-49 REGION is-cite-imported-shape */
+    const ref = importedFindingRef(importId, finding);
+    if (!ref)
+      return { ok: false, reason: "IMPORTED_REF_MALFORMED", ...rowOf(CITE_IMPORTED_CHECKS, "IMPORTED_REF_MALFORMED"), inquiry,
+               detail: localize("citation.index.imported_ref_malformed", "the import and the finding named here do not spell another team's finding, so there is nothing to rest the question on; nothing was written.") };
+    const ed = editionOf(edition);
+    if (ed === null)
+      return { ok: false, reason: "IMPORTED_EDITION_MALFORMED", ...rowOf(CITE_IMPORTED_CHECKS, "IMPORTED_EDITION_MALFORMED"), inquiry, ref,
+               detail: localize("citation.index.imported_edition_malformed", "an edition is a whole number of one or more, the edition of the other team's case your team accepted, because each edition is its own document with its own published grades; nothing was written.") };
+    /* END DEC-49 REGION is-cite-imported-shape */
+
+    if (!this.inquiry || !Array.isArray(this.inquiry.BASIS_ROLES))
+      return { ok: false, reason: "INQUIRY_UNAVAILABLE", inquiry,
+               detail: localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.") };
+    const roles = this.inquiry.BASIS_ROLES;
+    const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
+    if (rl === null)
+      return { ok: false, reason: "NO_ROLE", ...rowOf(CITE_CHECKS, "NO_ROLE"), inquiry, ref, roles: roles.slice(),
+               detail: localize("citation.index.a_leg_of_a_questions_basis", "a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: {roles}.", { roles: roles.join(", ") }) };
+    if (!roles.includes(rl))
+      return { ok: false, reason: "BAD_ROLE", ...rowOf(CITE_CHECKS, "BAD_ROLE"), inquiry, ref, got: rl, roles: roles.slice(),
+               detail: localize("citation.index.rl_is_not_a_role", "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.", { rl, roles: roles.join(", ") }) };
+    const nt = String(note ?? "");
+    if (nt.length > NOTE_MAX || /["\\\r\n]/.test(nt))
+      return { ok: false, reason: "BAD_NOTE", ...rowOf(CITE_CHECKS, "BAD_NOTE"),
+               detail: localize("citation.index.a_note_is_at_most", "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline") };
+
+    const doc = this.#document(inquiry, localize("citation.index.projects_bundle_md_does_not_parse", "the project's own bundle.md does not parse under the restricted grammar"));
+    if (!doc.ok) return doc;
+    /* Already resting on this finding: ok, nothing written. A later edition is `reevaluation`'s act (DEC-12), not a second leg. */
+    const held = (Array.isArray(doc.data.basis) ? doc.data.basis : []).find((l) => isObj(l) && l.target === ref);
+    if (held)
+      return { ok: true, inquiry, citingObjectType: "inquiry", cited: [], alreadyCited: [ref],
+               edition: Number.isInteger(held.target_edition) ? held.target_edition : null,
+               bundleSha: p.bundleSha, rowVersion: null,
+               detail: localize("citation.index.imported_already_cited", "this question already rests on that finding; nothing was written. Moving to a later edition is the re-evaluation's act, not a second leg.") };
+
+    const spliced = spliceBasis(doc.text, [{ target: ref, role: rl, target_edition: ed, note: nt }]);
+    if (!spliced)
+      return { ok: false, reason: "UNSPLICEABLE_BASIS", inquiry,
+               detail: localize("citation.index.the_questions_basis_block", "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.") };
+    const when = stampInstant("second", this.now());
+    const who = author || "member";
+    let text = setScalar(spliced, "last_updated", `"${when}"`);
+    text = appendSessionLog(text,
+      localize("citation.index.session_rested_on_imported", "### Session {when} | Rested this question on another team's finding ({role}) | {who}\n", { when, role: rl, who })
+      + localize("citation.index.trigger_imported_finding", "Trigger: {ref} at edition {edition}\n", { ref, edition: String(ed) })
+      + localize("citation.index.changes_imported_leg_added", "Changes: basis leg added for {ref} at edition {edition}, role {role}. Grade: as that edition published it, none of its own.{note}\n", { ref, edition: String(ed), role: rl, note: nt ? localize("citation.index.log_note", " Note: {note}.", { note: nt }) : "" }));
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.length > INLINE_MAX)
+      return { ok: false, reason: "CITATION_TOO_LARGE", inquiry, bytes: bytes.length, limit: INLINE_MAX,
+               detail: localize("citation.index.imported_would_be_too_large", "resting on this finding would push this question's bundle.md past the 1MB inline limit; nothing has been written.") };
+
+    const promoted = this.#write(inquiry, p, text, when, author, doc.data, doc.data.object_type ?? p.type);
+    /* The write's refusals come back unchanged: BASIS_REFUSED carrying IMPORTED_NOT_ACCEPTED (C-21.4) or ACCEPTED_WORK_UNREADABLE
+       (C-21.5) from accepted-work's check, DIVIDED_CANNOT_RESTRUCTURE, the rest of inquiry R11's. */
+    if (!promoted.ok) return { ...promoted, inquiry };
+
+    return { ok: true, inquiry, citingObjectType: "inquiry", role: rl, cited: [ref], alreadyCited: [],
+             legs: [{ target: ref, target_edition: ed, role: rl }], gradesFilled: 0,
+             origin: this.#originOf(ref, ed, viewer ?? author),
+             inherits: localize("citation.index.imported_inherits_publication", "citing this inherits the fact of publication, not the credibility of its content"),
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion };
+  }
+
+  /** R17 (T51; K4189; R15): TAKING THAT LEG BACK. `sever` cannot (an imported leg is not in `references[]`), so this
+   *  removes the leg from the live `basis[]` with a Session Log entry; the earlier bytes stay in history and each frozen
+   *  version keeps its copy (`basis-versions` R29). */
+  withdrawImported({ inquiry = null, import: importId = null, finding = null, reason = "", author = null, viewer = null,
+                     identity = null } = {}) {
+    const machine = this.#importedMemberRefusal(author, inquiry);
+    if (machine) return machine;
+    const obj = this.#importedQuestion(inquiry, viewer);
+    if (!obj.ok) return obj;
+    const p = obj.head;
+
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return { ok: false, reason: "NO_REASON",
+               detail: localize("citation.index.imported_withdraw_needs_reason", "taking another team's finding off a question records WHY, and a change with no reason is an unexplained change; nothing was written.") };
+    if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON",
+               detail: localize("citation.index.a_reason_is_at_most", "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it", { max: String(EDGE_REASON_MAX) }) };
+
+    const doc = this.#document(inquiry, localize("citation.index.projects_bundle_md_does_not_parse", "the project's own bundle.md does not parse under the restricted grammar"));
+    if (!doc.ok) return doc;
+    const ref = importedFindingRef(importId, finding);
+    const resting = ref !== null && (Array.isArray(doc.data.basis) ? doc.data.basis : []).some((l) => isObj(l) && l.target === ref);
+    if (!resting)
+      return { ok: false, reason: "NOT_CITED", inquiry, ref,
+               detail: localize("citation.index.imported_not_cited", "this question holds no leg on that finding, so there is nothing to take back. A leg on a document or a question is severed, not withdrawn.") };
+
+    const cut = removeBasisLegs(doc.text, ref);
+    if (!cut)
+      return { ok: false, reason: "UNSPLICEABLE_BASIS", inquiry,
+               detail: localize("citation.index.imported_basis_block_not_editable", "the question's basis block is not in a shape this grammar can edit in place; nothing was written.") };
+    const when = stampInstant("second", this.now());
+    const editions = cut.editions.filter((e) => e !== null);
+    let text = setScalar(cut.text, "last_updated", `"${when}"`);
+    text = appendSessionLog(text,
+      localize("citation.index.session_took_imported_back", "### Session {when} | Took another team's finding back off this question | {who}\n", { when, who: author || "member" })
+      + localize("citation.index.trigger_imported_finding", "Trigger: {ref} at edition {edition}\n", { ref, edition: editions.join(", ") })
+      + localize("citation.index.changes_imported_leg_removed", "Changes: basis leg on {ref} (edition {edition}) removed. Reason: {why}.\n", { ref, edition: editions.join(", "), why }));
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.length > INLINE_MAX)
+      return { ok: false, reason: "CITATION_TOO_LARGE", inquiry, bytes: bytes.length, limit: INLINE_MAX,
+               detail: localize("citation.index.imported_withdraw_too_large", "the reason would push this question's bundle.md past the 1MB inline limit; nothing has been written.") };
+    const promoted = this.#write(inquiry, p, text, when, author, doc.data, doc.data.object_type ?? p.type);
+    if (!promoted.ok) return { ...promoted, inquiry };
+    return { ok: true, inquiry, citingObjectType: "inquiry", withdrawn: [ref], editions, why,
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion };
   }
 }
 
@@ -956,7 +1323,8 @@ export function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
-    c = new Citation({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, retrieval, provenance, inquiry });
+    const acceptedWork = d.acceptedWork || acceptedWorkOf(host, { record, promotion });
+    c = new Citation({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, retrieval, provenance, inquiry, acceptedWork });
     instances.set(host, c);
     /* R13 (retrieval R76): the read registered once, at start, against the one retrieval instance `findIn` runs on (the
        plane's boot reaches this factory before the first request). A stand-in that offers no registration is left alone. */
@@ -971,32 +1339,91 @@ export function citationOf(host, deps) {
    from the caller (R7). */
 function foundParam(raw) {
   if (raw === null || raw === undefined) return null;
+  if (typeof raw !== "string") return raw;
   try { return JSON.parse(raw); } catch { return raw; }
 }
 
-export function citationOps(c, url) {
+export function citationOps(c, url, body) {
   const q = (key) => url.searchParams.get(key);
+  /* C31, R20 (K4308): `cite` WRITES, so it takes its fields from the POST body; where the body does not carry one, the
+     address's value is still read (a caller not yet moved), and the body wins where both are sent. A call naming no source
+     is refused CITE_ONE_SOURCE, writing nothing. The door's stamps (`viewer`, `owner`, `author`, `identity`) stay in the
+     address. Weight is read from nowhere (R7). */
+  const b = isObj(body) ? body : {};
+  const has = (key) => b[key] !== undefined && b[key] !== null;
+  const s = (key) => (has(key) ? String(b[key]) : q(key));
+  const bag = [...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_"));
+  const part = Object.fromEntries([...bag, ...Object.entries(b).filter(([k]) => k === "content_id" || k.startsWith("extent_"))
+                                                              .map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])]);
   return {
     cite: () => c.cite({
-      project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
-      note: q("note") ?? "", author: q("author"), identity: q("identity"),
+      project: s("project"), handle: s("handle"), viewer: q("viewer"), owner: q("owner"),
+      note: s("note") ?? "", author: q("author"), identity: q("identity"),
       /* REC-37: the leg's ROLE, read only on the inquiry arm and REFUSED rather than dropped on the other. */
-      role: q("role"),
+      role: s("role"), ground: s("ground"),
       /* REC-97 / IC-90: every parameter the leg-part grammar could own arrives WHOLE and the act decides, by name,
          which ones it carries; a named `get()` per field is what once dropped a part in silence. None sent is an empty
          bag, which is `document`. */
-      extent: Object.fromEntries([...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_"))),
-      /* T35 (N698): a found match travels as one JSON parameter, read whole; one that does not parse is passed on as
-         sent, for FOUND_MALFORMED to name. `question` is the optional question it was looked for for. */
-      found: foundParam(q("found")),
-      question: q("question"),
+      extent: part,
+      /* T35 (N698): a found match travels as one value, read whole: an object, or one JSON string parsed; one that does
+         not parse is passed on as sent, for FOUND_MALFORMED to name. `question` is the optional question it was looked
+         for for. */
+      found: foundParam(has("found") ? b.found : q("found")),
+      question: s("question"),
     }),
     sever: () => c.sever({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
-                           reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),
+                           reason: q("reason") ?? "", author: q("author"), identity: q("identity"),
+                           /* R25: the passage, by its part, as `cite` names it. */
+                           extent: part }),
     reinstate: () => c.reinstate({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
-                                   reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),
+                                   reason: q("reason") ?? "", author: q("author"), identity: q("identity"),
+                                   /* R23: optional; body-first as `cite`'s (R20). */
+                                   role: s("role"), extent: part }),
     /* R14 (T47; N975): one question drawn into a case, named by `inquiry`; no selection and no document. */
     drawquestion: () => c.drawQuestion({ project: q("project"), inquiry: q("inquiry"), note: q("note") ?? "",
                                          author: q("author"), viewer: q("viewer"), identity: q("identity") }),
+    /* R24 (T51 fix round 10): a member grades how well the team's copy shows a cited passage; the fields from the body first, as
+       `cite`'s (R20), the passage's part by its `content_id` or `extent_*` fields. */
+    leggrade: () => c.legGrade({ project: s("project"), target: s("target"), grade: s("grade"), reason: s("reason") ?? "",
+                                 extent: part, author: q("author"), viewer: q("viewer"), identity: q("identity") }),
+    /* R16, R17 (T51; K4189): a question rests on another team's accepted finding at an edition, and takes it back. */
+    citeimported: () => c.citeImported({ inquiry: q("inquiry"), import: q("import"), finding: q("finding"), edition: q("edition"),
+                                         role: q("role"), note: q("note") ?? "", author: q("author"), viewer: q("viewer"),
+                                         identity: q("identity") }),
+    withdrawimported: () => c.withdrawImported({ inquiry: q("inquiry"), import: q("import"), finding: q("finding"),
+                                                reason: q("reason") ?? "", author: q("author"), viewer: q("viewer"),
+                                                identity: q("identity") }),
   };
 }
+
+/* R18 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that a screen sends or that this
+   tranche adds, declared by their owner beside the ops map. Class, mutating and weight are the op's existing rows'
+   (`op-declarations`, `op-grades`; the two new ops' are K4189's table); the fields are what each arm reads from the address.
+   The stamps (`viewer`, `owner`, `author`, `identity`) are the door's. A part of a document travels as `extent_*` fields and
+   `content_id` (EXTENT_PARAMS); `cite` refuses any other `extent_*` by name (C-45.7). */
+export const DECLARED_OPS = Object.freeze({
+  cite: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reversible",
+    description: localize("citation.declared.cite", "cites material or a question into a case's references or a question's basis, and sever takes it back"),
+    fields: { accepts: ["project", "handle", "found", "question", "note", "role", "ground", ...Object.keys(EXTENT_PARAMS)],
+              requires: ["project", ["handle", "found"]] } },
+  drawquestion: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reversible",
+    description: localize("citation.declared.drawquestion", "project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle"),
+    fields: { accepts: ["project", "inquiry", "note"], requires: ["project", "inquiry"] } },
+  sever: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
+    description: localize("citation.declared.sever", "moves a case's cites edge, or a question's own leg, to severed with the member's reason; nothing is deleted"),
+    fields: { accepts: ["project", "handle", "reason", ...Object.keys(EXTENT_PARAMS)], requires: ["project", "handle", "reason"] } },
+  reinstate: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
+    description: localize("citation.declared.reinstate", "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason"),
+    fields: { accepts: ["project", "handle", "reason", "role", ...Object.keys(EXTENT_PARAMS)], requires: ["project", "handle", "reason"] } },
+  leggrade: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reversible",
+    description: localize("citation.declared.leggrade", "a member's grade of how well your team's copy shows a passage a question rests on, up to the most the record supports, with the reason"),
+    fields: { accepts: ["project", "target", "grade", "reason", ...Object.keys(EXTENT_PARAMS)],
+              requires: ["project", "target", "grade", "reason"] } },
+  citeimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reversible",
+    description: localize("citation.declared.citeimported", "rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back"),
+    fields: { accepts: ["inquiry", "import", "finding", "edition", "role", "note"],
+              requires: ["inquiry", "import", "finding", "edition", "role"] } },
+  withdrawimported: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
+    description: localize("citation.declared.withdrawimported", "takes another team's finding off a question's answer with the member's reason; the history keeps it, and so does each version already frozen"),
+    fields: { accepts: ["inquiry", "import", "finding", "reason"], requires: ["inquiry", "import", "finding", "reason"] } },
+});

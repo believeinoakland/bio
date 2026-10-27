@@ -162,6 +162,14 @@ const RELEASES = [
      on it, so 0.85.0 boots on that store. The commit is dist/cut-0.84.0's signed cut with the installer's embed
      (K3235), whose release/ holds it. */
   ["0.84.0", "396d992d316a9a61e1127ae801be5a5805f4bce9"],
+  /* 0.85.0: deployed to biosmoke8 2026-10-14 to 2026-10-16 (K3569, K3581) and not distributed; biosmoke8's store migrated and
+     was written on it, so 0.86.0 boots on that store. The commit is dist/cut-0.85.0's signed cut with the installer's
+     embed (step 8), whose release/ holds it. */
+  ["0.85.0", "1053faa726f56a1e322ff64ad9243eb0adab6e90"],
+  /* 0.86.0: deployed to biosmoke8 from 2026-10-20 (K4176, K4178) and the release installed by the installer since; biosmoke8's
+     store migrated and was written on it, so 0.87.0 boots on that store. The commit is dist/cut-0.86.0's signed cut with the
+     installer's embed, whose release/ holds it. */
+  ["0.86.0", "1a1715414958c6d99ca2ecd14b320b360266149f"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
@@ -180,7 +188,8 @@ export class ProbeStore extends Store {
     const url = new URL(req.url);
     if (url.pathname === "/rawsql") {
       const { sql, args = [] } = await req.json();
-      try { return Response.json({ ok: true, rows: [...this.sql.exec(sql, ...args)] }); }
+      /* The released planes' Store held \`this.sql\`; the current one (plane R1, T51) reads its SQLite as \`this.ctx.storage.sql\`. */
+      try { return Response.json({ ok: true, rows: [...(this.sql ?? this.ctx.storage.sql).exec(sql, ...args)] }); }
       catch (e) { return Response.json({ ok: false, error: String(e && e.message || e) }); }
     }
     return super.fetch(req);
@@ -224,6 +233,7 @@ const bootCurrent = (persist) =>
    a bricked Durable Object answers with an error page, and `.json()` on it would end
    the module with no tally, which names nothing. */
 const asJson = async (res) => { const txt = await res.text();
+  // fixtures-own: harness the test's own report of a body that is not JSON (a bricked object's error page), made at the transport, never a module's answer
   try { return JSON.parse(txt); } catch { return { ok: false, status: res.status, error: `non-JSON ${res.status}: ${txt.slice(0, 300)}` }; } };
 /* HOW A CREDENTIAL TRAVELS (admission R5, R20; K2166). A RELEASED plane is driven as it shipped: its credential in the
    address (`?token=`), the member binding its default. The CURRENT plane reads a credential only from the

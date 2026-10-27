@@ -145,9 +145,9 @@ test("R55 a tie the step refuses, or a steps that throws, never changes the row 
   assert.ok(d.captured[0].step_product.reason, "steps' own refusal code is relayed");
   assert.equal(w.req(a.request).state, "captured");
 
-  const throwing = world({ steps: { step: ({ step }) => ({ ok: true, step }),
-                                    recordProduct: () => { throw new Error("boom"); } } }).scene();
-  const b = throwing.ask({ step: "STP-2026-bbbbbbbbbbbbbbbb" });
+  const throwing = world().scene();
+  throwing.steps.recordProduct = () => { throw new Error("boom"); };
+  const b = throwing.ask({ step: stepOf(throwing) });
   const d2 = await throwing.cr.drain();
   assert.equal(d2.captured[0].step_product.ok, false);
   assert.equal(throwing.req(b.request).state, "captured");

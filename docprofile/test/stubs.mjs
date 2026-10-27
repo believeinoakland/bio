@@ -25,7 +25,7 @@ import {
 const ROW = /<tr><td><a href="MeetingDetail\.aspx\?ID=(\d+)[^"]*">([^<]*?)(?: - ([A-Z]+))?<\/a><\/td><td>([^<]*)<\/td><td>(?:<a href="View\.ashx\?M=A&amp;ID=(\d+)">)?[^<]*(?:<\/a>)?<\/td><td>(?:<a href="View\.ashx\?M=M&amp;ID=(\d+)">)?/g;
 const isoOf = (mdy) => { const [m, d, y] = mdy.split("/").map(Number); return new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10); };
 
-export const stubMeetings = {
+export const stubMeetings = { // fixtures-own: harness a test reader registered through this module's own registerDoctype seam; no module provides it
   key: "stub_meetings", label: "stub: a list of meetings", version: 1, contract: CONTRACT.MEMBERSHIP,
   detect(ctx) {
     const t = String(ctx.text || "");
@@ -83,7 +83,7 @@ export const stubMeetings = {
 
 /* A masthead names the document on a line of its own, once per page (FURNITURE_RECURS). */
 const ITEMS_WORD = /^ITEMS\b/;
-export const stubItems = {
+export const stubItems = { // fixtures-own: harness a test reader registered through this module's own registerDoctype seam; no module provides it
   key: "stub_items", label: "stub: a list of filed items", version: 1, contract: CONTRACT.MEMBERSHIP,
   detect(ctx) {
     const t = String(ctx.text || "");
@@ -123,7 +123,7 @@ export const stubItems = {
   },
 };
 
-export const stubFallback = {
+export const stubFallback = { // fixtures-own: harness a test reader registered through this module's own registerDoctype seam; no module provides it
   key: "stub_fallback", label: "stub: a document of no recognised type", version: 1, fallback: true,
   contract: CONTRACT.SUBSTANCE,
   detect() { return { match: false, confidence: CONFIDENCE.NONE }; },

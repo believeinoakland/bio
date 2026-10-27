@@ -1,0 +1,176 @@
+/* The roster's services, moved from `membership`'s `roster.test.mjs` (the ids in the comments are `membership`'s earlier ones):
+   R9 `memberAdd`, R10 and R11 invitations, R12 `inviteLook`, R13 `enroll`, R14 `memberList`, R15 the pairing setting. (R18,
+   the roster's projects, is R71's, tested in `t50-roster-mark.test.mjs` and `split.test.mjs`.) */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { world, V } from "./fixture.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { MEMBER_ROSTER_ROWS } from "../../../src/member-roster/checks.mjs";
+const { CUSTODIAL_CHECKS } = MEMBER_ROSTER_ROWS;
+
+test("R9 memberAdd: NOT_AN_ADMIN for a non-administrator member, a machine credential accepted; refusals in order", async () => {
+  const w = await world().group("ann");
+  assert.equal((await w.m.memberAdd({ memberId: "bad id", cover: "c", by: "ann" })).reason, "NOT_AN_ADMIN");
+  const machine = await w.m.memberAdd({ memberId: "mach", cover: "c", by: "class:admin" });
+  assert.equal(machine.ok, true);
+  assert.equal(w.row(`SELECT invited_by FROM members WHERE member_id='mach'`).invited_by, "class:admin");
+  for (const id of ["a", "-ab", "Ab", "a_b", "a".repeat(42), "", null])
+    assert.equal((await w.m.memberAdd({ memberId: id, cover: "c", by: "admin" })).reason, "BAD_MEMBER_ID", String(id));
+  assert.equal((await w.m.memberAdd({ memberId: "a".repeat(41), cover: "c", by: "admin" })).ok, true);
+  assert.equal((await w.m.memberAdd({ memberId: "admin", cover: "c", by: "admin" })).reason, "MEMBER_ID_RESERVED");
+  assert.equal((await w.m.memberAdd({ memberId: "ok1", by: "admin" })).reason, "NO_COVER");
+  assert.equal((await w.m.memberAdd({ memberId: "ok1", name: "a name is not a cover", by: "admin" })).reason, "NO_COVER");
+  assert.equal((await w.m.memberAdd({ memberId: "ann", cover: "c", by: "admin" })).reason, "EXISTS");
+  assert.equal((await w.m.memberAdd({ memberId: "ok2", cover: "c", expertise: ["CPA"], by: "admin" })).reason,
+    "EXPERTISE_IS_NOT_ASSIGNED");
+  /* R97's BAD_EXPIRY last: after EXPERTISE_IS_NOT_ASSIGNED, and before anything is written. */
+  assert.equal((await w.m.memberAdd({ memberId: "ok2", cover: "c", expertise: ["CPA"], expiresInDays: 0, by: "admin" })).reason,
+    "EXPERTISE_IS_NOT_ASSIGNED");
+  assert.equal((await w.m.memberAdd({ memberId: "ann", cover: "c", expiresInDays: 0, by: "admin" })).reason, "EXISTS");
+  const bad = await w.m.memberAdd({ memberId: "ok3", cover: "c", expiresInDays: 31, by: "admin" });
+  assert.deepEqual([bad.reason, bad.code, bad.check], ["BAD_EXPIRY", "BAD_EXPIRY", "C-96.23"]);
+  assert.equal(w.row(`SELECT member_id FROM members WHERE member_id='ok3'`), null);
+  /* DEC-134 (1): ADMINS_FIRST is retired: with one administrator an ordinary member is invited. */
+  const early = world();
+  await early.claim();
+  const ee = await early.m.memberAdd({ memberId: "ee", cover: "c", by: "admin" });
+  assert.deepEqual([ee.ok, ee.role], [true, "member"]);
+  assert.equal("ADMINS_FIRST" in CUSTODIAL_CHECKS, false, "the code is retired");
+  assert.equal(Object.values(CUSTODIAL_CHECKS).some((x) => x.check === "C-96.5"), false, "its row never reused");
+});
+
+test("R10 an ordinary member (or an admin below two) is invited once: invited_by, status_by, capabilities, hash only", async () => {
+  const w = world();
+  await w.claim();
+  const s = await w.m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
+  assert.deepEqual([s.ok, s.role], [true, "admin"]);
+  assert.equal(w.row(`SELECT status FROM members WHERE member_id='second'`).status, "invited");
+  await w.m.enroll({ invite: s.invite, handle: "second", password: "second-passphrase-x" });
+  const a = await w.m.memberAdd({ memberId: "ann", cover: "c", by: "second" });
+  assert.deepEqual([a.ok, a.role, a.capabilities, a.invited_by], [true, "member", ["contribute"], "second"]);
+  assert.match(a.invite, /^[0-9a-f]{32}$/);
+  const b = await w.m.memberAdd({ memberId: "bob", cover: "c", capabilities: ["publish", "fly"], by: "second" });
+  assert.deepEqual(b.capabilities, ["publish"]);
+  const row = w.row(`SELECT * FROM members WHERE member_id='ann'`);
+  assert.deepEqual([row.status, row.invited_by, row.status_by], ["invited", "second", "second"]);
+  assert.notEqual(row.invite_hash, a.invite);
+  assert.doesNotMatch(JSON.stringify(w.rows(`SELECT * FROM members`)), new RegExp(a.invite));
+  assert.doesNotMatch(JSON.stringify(w.m.memberList({ administer: true })), new RegExp(a.invite), "never again");
+});
+
+test("R11 an administrator while two exist is proposed; the proposer endorses; no invitation exists yet", async () => {
+  const w = await world().group();
+  const p = await w.m.memberAdd({ memberId: "third", cover: "c", role: "admin", by: "second" });
+  assert.deepEqual([p.ok, p.reason, p.proposed, p.have, p.awaiting], [false, "CONSENSUS_REQUIRED", true, ["second"], ["admin"]]);
+  assert.equal(p.invite, undefined);
+  const row = w.row(`SELECT status, invite_hash FROM members WHERE member_id='third'`);
+  assert.deepEqual(row, { status: "proposed", invite_hash: null });
+  const m = await w.m.memberAdd({ memberId: "fourth", cover: "c", role: "admin", by: "class:admin" });
+  assert.deepEqual(m.have, [], "a machine credential records no endorsement");
+});
+
+test("R12 inviteLook gives cover, role, capabilities and expertise, never the member id; spent = never existed", async () => {
+  const w = await world().group();
+  const a = await w.m.memberAdd({ memberId: "ann", cover: "the CPA", capabilities: ["publish"], by: "admin" });
+  const look = await w.m.inviteLook({ invite: a.invite });
+  assert.deepEqual(look, { ok: true, cover: "the CPA", role: "member", capabilities: ["publish"], expertise: [] });
+  assert.doesNotMatch(JSON.stringify(look), /"ann"/);
+  const never = await w.m.inviteLook({ invite: "0".repeat(32) });
+  const junk = await w.m.inviteLook({ invite: "not an invite" });
+  await w.m.enroll({ invite: a.invite, handle: "ann", password: "ann-passphrase-x" });
+  const spent = await w.m.inviteLook({ invite: a.invite });
+  assert.deepEqual(spent, never);
+  assert.deepEqual(junk, never);
+  assert.equal(never.reason, "NO_SUCH_INVITATION");
+});
+
+test("R13 enroll: refusals in order; success activates, stamps the member, spends the invitation", async () => {
+  const w = await world().group("taken");
+  const a = await w.m.memberAdd({ memberId: "ann", cover: "c", capabilities: ["publish"], by: "admin" });
+  assert.equal((await w.m.enroll({ invite: "f".repeat(32), handle: "ann", password: "x".repeat(12) })).reason, "NO_SUCH_INVITATION");
+  assert.equal((await w.m.enroll({ invite: a.invite, handle: " ", password: "x".repeat(12) })).reason, "NO_HANDLE");
+  assert.equal((await w.m.enroll({ invite: a.invite, handle: "Ann!", password: "x".repeat(12) })).reason, "BAD_HANDLE");
+  assert.equal((await w.m.enroll({ invite: a.invite, handle: "taken", password: "x".repeat(12) })).reason, "HANDLE_TAKEN");
+  assert.equal((await w.m.enroll({ invite: a.invite, handle: "ann-h", password: "x".repeat(11) })).reason, "PASSWORD_TOO_SHORT");
+  const ok = await w.m.enroll({ invite: a.invite, handle: "ann-h", password: "x".repeat(12), cover: "mine", role: "admin",
+    capabilities: ["create_projects"] });
+  assert.deepEqual(ok, { ok: true, memberId: "ann", handle: "ann-h" });
+  const row = w.row(`SELECT * FROM members WHERE member_id='ann'`);
+  assert.deepEqual([row.status, row.status_by, row.handle, row.cover, row.role, row.invite_hash, row.capabilities],
+    ["active", "ann", "ann-h", "c", "member", null, JSON.stringify(["publish"])]);
+  assert.equal((await w.m.enroll({ invite: a.invite, handle: "again", password: "x".repeat(12) })).reason, "NO_SUCH_INVITATION");
+  assert.equal(w.creds.passwords.get("member:ann"), "x".repeat(12), "the password was set through R95's setter");
+});
+
+test("R14 memberList: every stamp, expertise as R20; cover only under the administer stamp", async () => {
+  const w = await world().group("ann");
+  w.m.expertiseDeclare({ memberId: "ann", label: "CPA" });
+  w.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('old','c','member','invited','t','t')`);
+  for (const administer of [undefined, false, "0", "yes"]) {
+    const rows = w.m.memberList({ administer }).members;
+    for (const r of rows) assert.ok(!("cover" in r), `cover present with administer=${administer}`);
+  }
+  for (const administer of [true, "1"]) {
+    const rows = w.m.memberList({ administer }).members;
+    /* R147: the founder's row comes first and, having no cover, carries none; the members' covers follow in id order */
+    assert.equal(rows[0].member_id, "admin");
+    assert.ok(!("cover" in rows[0]), "the founder's row carries no cover");
+    assert.deepEqual(rows.slice(1).map((r) => r.cover), ["cover of ann", "c", "cover of second"]);
+  }
+  const ann = w.m.memberList({}).members.find((r) => r.member_id === "ann");
+  assert.deepEqual([ann.handle, ann.role, ann.status, ann.status_by, ann.invited_by, ann.capabilities],
+    ["ann", "member", "active", "ann", "admin", ["contribute"]]);
+  assert.deepEqual(ann.expertise, w.m.expertiseList({ memberId: "ann" }).expertise);
+  const old = w.m.memberList({}).members.find((r) => r.member_id === "old");
+  assert.deepEqual([old.status_by, old.invited_by, old.handle], ["not recorded", "not recorded", null]);
+  assert.equal(w.ops("administer=1").memberlist().members.find((r) => r.member_id === "ann").cover, "cover of ann");
+  assert.ok(w.ops("").memberlist().members.every((r) => !("cover" in r)));
+});
+
+test("R15 publishing a pairing is the member's or an administrator's per-member setting", async () => {
+  const w = await world().group("ann", "bob");
+  assert.deepEqual(w.m.memberPairings().pairings, []);
+  assert.equal(w.m.memberPairingSet({ memberId: "nobody", published: true, by: "admin" }).reason, "NO_SUCH_MEMBER");
+  const notYours = w.m.memberPairingSet({ memberId: "ann", published: true, by: "bob" });
+  assert.deepEqual([notYours.ok, notYours.reason, notYours.code, notYours.check, notYours.translation, notYours.by],
+    [false, "PAIRING_NOT_YOURS", "PAIRING_NOT_YOURS", "C-96.12", CUSTODIAL_CHECKS.PAIRING_NOT_YOURS.translation, "bob"]);
+  assert.equal(w.m.memberPairingSet({ memberId: "ann", published: true, by: "ann" }).ok, true);
+  assert.equal(w.ops("by=second", { memberId: "bob", published: true }).memberpairingset().ok, true);
+  assert.deepEqual(w.ops().memberpairings().pairings, [{ handle: "ann", cover: "cover of ann", published: true },
+                                                      { handle: "bob", cover: "cover of bob", published: true }]);
+  assert.equal(w.m.memberList({}).members.find((r) => r.member_id === "ann").pairing_published, true);
+  w.m.memberPairingSet({ memberId: "bob", published: false, by: "bob" });
+  assert.deepEqual(w.m.memberPairings().pairings.map((p) => p.handle), ["ann"]);
+  for (const r of w.m.memberList({}).members) assert.ok(!("cover" in r), "R17 still holds for the roster");
+});
+
+test("R15 memberPairings answers each viewer only what R15 lets it see: an unpublished pairing reaches its member and the administrators (N85, K124)", async () => {
+  const w = await world().group("ann", "bob", "cal");
+  w.m.memberPairingSet({ memberId: "ann", published: true, by: "ann" });
+  await w.m.memberAdd({ memberId: "dee", cover: "cover of dee", by: "admin" });   // invited, never enrolled: no handle
+  const handles = (a) => a.pairings.map((p) => p.handle);
+  const all = ["ann", "bob", "cal", "second"];
+  // published pairings reach every caller, and with no stamp only those (fails closed)
+  assert.deepEqual(handles(w.m.memberPairings()), ["ann"]);
+  for (const v of [null, "", "junk", "member:", `${MACHINE_CLASS_PREFIX}member`, `${MACHINE_CLASS_PREFIX}ai`, V("nobody")])
+    assert.deepEqual(handles(w.m.memberPairings({ viewer: v })), ["ann"], JSON.stringify(v));
+  // a member sees the published ones and their own
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("bob") })), ["ann", "bob"]);
+  assert.deepEqual(w.m.memberPairings({ viewer: V("bob") }).pairings.find((p) => p.handle === "bob"),
+    { handle: "bob", cover: "cover of bob", published: false });
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("ann") })), ["ann"]);
+  // an administrator sees every enrolled member's pairing, by the administer stamp or as a viewer
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("cal"), administer: "1" })), all);
+  assert.deepEqual(handles(w.m.memberPairings({ administer: true })), all);
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("second") })), all, "an active administrator");
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: "admin" })), all, "the founder");
+  for (const no of ["0", "true", "", false, 1]) assert.deepEqual(handles(w.m.memberPairings({ viewer: V("cal"), administer: no })),
+    ["ann", "cal"], `administer ${JSON.stringify(no)} is not the stamp`);
+  // an administrator no longer active is an ordinary viewer; a revoked member still sees their own
+  w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
+  assert.deepEqual(handles(w.m.memberPairings({ viewer: V("second") })), ["ann", "second"]);
+  // the op passes the stamps through
+  assert.deepEqual(handles(w.ops(`viewer=${encodeURIComponent(V("bob"))}`).memberpairings()), ["ann", "bob"]);
+  assert.deepEqual(handles(w.ops("administer=1").memberpairings()), all);
+  assert.deepEqual(handles(w.ops("", { administer: "1", viewer: "admin" }).memberpairings()), ["ann"], "a body is never a stamp");
+});

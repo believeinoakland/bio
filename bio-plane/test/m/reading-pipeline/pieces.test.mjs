@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
-import { fresh, bucket, evidenceStore, hold, doc, member, withEntry, i2, noText, unreadImage, ocrAnswer, calibration } from "./fixture.mjs";
+import { EVIDENCE_PREFIX, fresh, bucket, evidenceStore, hold, doc, member, withEntry, i2, noText, unreadImage, ocrAnswer, calibration } from "./fixture.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
@@ -17,6 +17,7 @@ import { registerDoctypes } from "../../../../doctypes/index.mjs";
    store does. */
 registerDoctypes(registerDoctype);
 
+const sha256Of = (u8) => createHash("sha256").update(u8).digest("hex");
 const hex = (s) => createHash("sha256").update(s).digest("hex");
 const { tier2Escalate, decodeView, pageBoxesFrom, needsTier3, tier3Extend, tier3SeedFrom, layerChainFor, readingFromWire,
         textCountsOf, textUnitsFor, bytesOf, CAPTURE_TEXT_UNIT_CAP, PROVENANCE_SCHEME } = rp;
@@ -133,7 +134,7 @@ test("R23 R10 R11 R12 R13 R14 R15 R17: layerChainFor, readingFromWire, textCount
   assert.equal(textCountsOf(null), null);
   /* textUnitsFor: one unit per page with a glyph; none is null, never an empty list */
   const u = textUnitsFor(i2([{ page: 2, text: "two" }, { page: 3, text: " " }]));
-  assert.deepEqual(u.textUnits, [{ extent: { kind: "pdf-page", page: 2, rect: null }, seq: 0, text: "two" }]);
+  assert.deepEqual(u.textUnits, [{ extent: { kind: "pdf-page", page: 2, rect: null }, seq: 0, text: "two", kind: "body" }]);   /* R47: kind */
   assert.deepEqual(textUnitsFor(i2([{ page: 0, text: "" }])), { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null });
   assert.deepEqual(textUnitsFor(null), { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null });
 });
@@ -151,6 +152,33 @@ test("R23 R2 R24: bytesOf reads the evidence store handed in by digest, assemble
                /part 2 of 2 is not held/);
   assert.match((await bytesOf(store, { capture: { sha256: "x" }, parts: [{ sha256: p1, bytes: 21 * 1024 * 1024 }] })).why, /over the \d+ B/);
   assert.ok(b.calls.every(([op, k]) => op !== "get" || k.startsWith("bio/captures/")), "only the store's own keys are read");
+});
+
+test("R2 R23: bytesOf reads the whole object held under the document's fingerprint first, a 21 MB three-part capture included; with parts only, over the bound, it still refuses", async () => {
+  const b = bucket();
+  const store = evidenceStore(b);
+  const third = 7 * 1024 * 1024;
+  const parts = [new Uint8Array(third).fill(1), new Uint8Array(third).fill(2), new Uint8Array(third).fill(3)];
+  const shas = [];
+  for (const p of parts) shas.push(await hold(b, p));
+  const whole = new Uint8Array(third * 3);
+  parts.forEach((p, i) => whole.set(p, i * third));
+  const document = (digest) => ({ capture: { sha256: digest }, parts: parts.map((p, i) => ({ sha256: shas[i], bytes: p.length })) });
+  /* control: parts only (no whole held), 21 MiB, over MULTIPART_READ_MAX: refused as before */
+  const wholeSha = sha256Of(whole);
+  const refused = await bytesOf(store, document(wholeSha));
+  assert.equal(refused.bytes, null);
+  assert.match(refused.why, /over the \d+ B/);
+  /* the whole object held: read, whole and unaltered, parts never fetched */
+  await hold(b, whole);
+  b.calls.length = 0;
+  const got = await bytesOf(store, document(wholeSha));
+  assert.equal(got.bytes.length, third * 3);
+  assert.ok(Buffer.from(got.bytes).equals(Buffer.from(whole)));
+  assert.deepEqual(b.calls.map(([, k]) => k), [`${EVIDENCE_PREFIX}${wholeSha}`], "only the whole object is read");
+  /* a whole object absent and a store that throws on it: parts within the bound are still assembled */
+  const small = await hold(b, "ab");
+  assert.equal(new TextDecoder().decode((await bytesOf(store, { capture: { sha256: "f".repeat(64) }, parts: [{ sha256: small, bytes: 2 }] })).bytes), "ab");
 });
 
 test("R23: the pieces hold no state: the same inputs answer the same, call after call", async () => {
@@ -214,10 +242,16 @@ const PDF = new Uint8Array(readFileSync(new URL("../../fixtures/legistar-agenda-
    pdf-reader as it was before that merge (9b9fc8e3f7^) this module's answer still digests to the old pin, 3f4eb430...051f;
    with it, every difference is those 45 characters: the counts, the page digests and lengths that hold them, the units'
    text, one entity's label ("Code Enforcement’s"), and the basis's full-decode statement. The docx pin is unchanged. */
+/* Fix round 9 (K4861 (2), K4872): the PDF pin re-taken on the tranche before this job's change, the providers merged: docprofile R18
+   counts glyphs (K4865: `text_glyphs` 51,105 of the 60,842 characters) and pdf-reader's range carries its pages' boxes and image
+   placements (PDF-READER #15, K4866); this job's own additions are taken off by name below (`withoutRound9`). */
 const PINNED = {
-  pdf: "5b1437e6bb0062322d648ad10b22df16aba636dab1b342fecb9f42646199f17a",
-  docx: "b70fa4e8976d4c6ef3f663145af1b943d204b306eab29f7470dd9ea50038cd25",
+  pdf: "11d6e0b8f98ee9b1b010bc201ad9dbbba11066f0ec6b353d87d790beee69fbba",
+  docx: "d9fed8a2df2b60d328a087abe6ef8a28a0cd830af64396e7b51dc1f3676da01d",
 };
+/* T51-190 (K3930: the list wins): the docx pin was re-taken once. The no-page-grain sentence on `provenance.pages_why`
+   is now the word row `reading-pipeline.text_carries_per`, which spells "itemized" where the source had "itemised";
+   that letter is the whole difference from the earlier pin (checked by replacing it back, which reproduced the old digest). */
 
 test("R2 R15 (over-strictness): a real PDF and an office capture are read through this module byte for byte as before the move: the whole answer, reading and text units, digests to the pin, beside R28's and R34's added keys", async () => {
   for (const [name, bytes, format, ct] of [["pdf", PDF, "pdf", "application/pdf"], ["docx", DOCX, "docx", DOCX_CT]]) {
@@ -229,14 +263,25 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     assert.ok(out.reading.read_from_text && Array.isArray(out.text_units) && out.text_units.length > 0, `${name}: read, with units`);
     /* R28 (K1556; K2092) adds `metadata` (and a workbook's or a `.docx` document's `cells`) to the reading on purpose;
        every other byte stays pinned. */
-    const { metadata, cells, title, ...before } = out.reading;
+    const { metadata, cells, title, words_total, words_read, ...before } = out.reading;
+    /* R35 (T51 fix round 2) adds the two word counts on purpose: a capture read whole answers them equal; every other byte
+       stays pinned. */
+    assert.ok(Number.isInteger(words_total) && words_total > 0 && words_total === words_read, `${name}: R35's counts, equal`);
     /* R34 (T50) adds `title` on purpose, null for a PDF and an office capture (no entry states one); every other byte
        stays pinned. */
-    assert.equal(title, null, `${name}: R34's title is present and null`);
+    /* K4363: a PDF reads the /Info Title its structure reader states (this fixture's is "Agenda"). */
+    assert.equal(title, name === "pdf" ? "Agenda" : null, `${name}: R34's title is present`);
     assert.ok(metadata === null || (metadata && typeof metadata === "object"), `${name}: R28's metadata is present`);
     if (name === "docx") assert.deepEqual(cells, {}, "docx: a body with no tables reads cells {}");
     else assert.equal(cells, undefined, `${name}: no cells for a document that is neither a workbook nor a .docx`);
     if (name === "pdf") assert.deepEqual([before.text_chars, before.text_undetermined], [60842, 0], "pdf: decoded whole since K2399");
-    assert.equal(hex(JSON.stringify({ ...out, reading: before })), PINNED[name], name);
+    /* fix round 9 (R45, R47, R48) adds the contract's counters, next and final, a unit's kind (`body` here) and an unread picture
+       inside a text page (the PDF's one) on purpose; every other byte stays pinned */
+    const { pictures_unread, ...pinned } = before;
+    assert.equal(pictures_unread, name === "pdf" ? 1 : undefined, `${name}: R48's unread picture`);
+    const { counters, next, final, ...rest } = out;
+    assert.ok(counters && final === true && next === null, `${name}: the contract's fields`);
+    const units = rest.text_units.map(({ kind, ...u }) => { assert.equal(kind, "body"); return u; });
+    assert.equal(hex(JSON.stringify({ ...rest, text_units: units, reading: pinned })), PINNED[name], name);
   }
 });

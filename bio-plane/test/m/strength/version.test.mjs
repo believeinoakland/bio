@@ -6,6 +6,7 @@ import { world, MACHINE } from "./fixture.mjs";
 import { STRENGTH_AXES, VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS, VERSION_LEGS_MAX, ORIGIN_LIMIT,
          refusePairComposed } from "../../../src/strength/index.mjs";
 import { BASIS_VERSION_LEGS_MAX } from "../../../src/basis-versions/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-a", C = "INFO-2026-0003-a";
@@ -60,11 +61,15 @@ test("R7, R24: C-30.9 too many states, then C-30.5 unknown state, then C-30.3 no
   w.currents.set(`PROJ-2026-0042-abc|${INQ}`, "gone");
   const outlived = vs(w, { project: "PROJ-2026-0042-abc" });
   refused(outlived, "VERSION_STRENGTH_NO_SUCH_VERSION");
-  assert.match(outlived.detail, /pointer has outlived the reading/);
+  assert.equal(outlived.detail, [localize("strength.index.no_reading_named_belongs_to", "no reading named '{name}' belongs to {inq}.", { name: "gone", inq: INQ }),
+    localize("strength.index.points_at_it_so_the_pointer_has_outlived",
+      "{project} points at it, so the pointer has outlived the reading it names.", { project: "PROJ-2026-0042-abc" })].join(" "));
   assert.equal(VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_NO_SUCH_VERSION.check, "C-30.4");
   const ex = vs(w, { version: "idea" });
   refused(ex, "VERSION_STRENGTH_STATE_EXCLUDED");
-  assert.match(ex.detail, /Ask again naming suggested/);
+  assert.equal(ex.detail, localize("strength.index.is_and_this_answer_counts_ask_again",
+    "'{name}' is {state} and this answer counts {states}. Ask again naming {state} among the states to see what it would come to — the answer will say on its face that it is a view you constructed and not what this record stands on.",
+    { name: "idea", state: "suggested", states: "accepted" }));
   assert.equal(VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_STATE_EXCLUDED.check, "C-30.6");
 });
 
@@ -74,12 +79,12 @@ test("R8, R20: states default to accepted; any other set is a what-if and says s
   assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
   assert.deepEqual(d.state_set, ["accepted"]);
   assert.equal(d.what_if, false);
-  assert.match(d.filter, /counting only readings a member has adopted \(accepted\).*not filtered/);
+  assert.equal(d.filter, word("strength.text.computed_over_reading", { name: "main", state_set: "accepted" }));
   const wi = vs(w, { version: "idea", states: ["suggested", "accepted", "suggested"] });
   assert.equal(wi.ok, true);
   assert.deepEqual(wi.state_set, ["suggested", "accepted"], "deduped, in the machine's order");
   assert.equal(wi.what_if, true);
-  assert.match(wi.filter, /^WHAT-IF — a view you constructed, not what this record stands on/);
+  assert.equal(wi.filter, word("strength.text.view_constructed_record", { name: "idea", state_set: "suggested, accepted" }));
   /* R20: a what-if writes nothing. */
   assert.equal(w.rows(`SELECT state FROM inquiry_basis_versions WHERE name='idea'`)[0].state, "suggested");
 });
@@ -124,17 +129,18 @@ test("R9: each leg's grade comes from the record; inert legs are named in ungrad
   assert.equal(g[2].grade, "C", "a member's signed testimony about the connection survives");
   assert.equal(g[3].grade, "D");
   assert.equal(g[4].grade, "B");
-  assert.match(g[4].why, /authored at A and is reported at B/);
+  assert.ok(g[4].why.endsWith(word("strength.carries.leg_authored_reported", { why: "", authored: "A", capped: "B" })));
   assert.deepEqual(r.ungraded.map((x) => x.ord).sort(), [1, 5, 6]);
   /* N184 (K220): the arithmetic names an inert version leg with its own reason; the record's reason is published in
      `ungraded`, beside it and never in its place. */
   for (const axis of STRENGTH_AXES)
     for (const ord of [1, 5]) {
       const m = r.pair[axis].not_load_bearing.find((x) => x.via === "leg" && x.ord === ord);
-      assert.equal(m.why, "the leg carries no grade", `${axis} ${ord}`);
+      assert.equal(m.why, word("strength.why.leg_carries_grade"), `${axis} ${ord}`);
     }
-  assert.match(r.ungraded.find((x) => x.ord === 1).why, /has earned nothing connecting/);
-  assert.match(r.ungraded.find((x) => x.ord === 5).why, /holds no captured bytes/);
+  const ung = (ord) => r.ungraded.find((x) => x.ord === ord);
+  assert.equal(ung(1).why, word("strength.inert.record_earned_connecting", { target_id: ung(1).target_id }));
+  assert.equal(ung(5).why, word("strength.inert.record_holds_captured", { target_id: ung(5).target_id }));
   assert.deepEqual(r.hunches.map((x) => x.ord), [7]);
   assert.equal(r.grades_from, "earnedBasisRegistry");
   assert.equal(r.subject_entity, "ENT-1");
@@ -289,9 +295,7 @@ test("R9: a version's capture leg on an unmeasured transcription is inert and sa
   const w = versioned();
   const U = "INFO-2026-0008-a", NONE = "INFO-2026-0009-a";
   w.ceilings.set(U, { grade: null, captures: 1, determined: false, undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
-    why: `The record holds 1 capture of ${U}, but every transcription of its text is UNMEASURED: no step in the `
-       + "provenance of this document's text carries a measured fidelity, so what a leg resting on that text may "
-       + "claim about how it was captured is undetermined." });
+    why: `${U}: 1 capture, fidelity unmeasured` });
   w.version(INQ, "unmeasured", "suggested", [
     { target: U, axis: "capture", source: "capture", ground: "P1" },                /* §7's leg: no letter stated */
     { target: U, grade: "B", axis: "capture", source: "capture", ground: "P1" },    /* and one claiming a letter */
@@ -303,10 +307,10 @@ test("R9: a version's capture leg on an unmeasured transcription is inert and sa
   assert.deepEqual(r.graded, [], "no leg on the unmeasured transcription is load-bearing");
   const why = (ord) => r.ungraded.find((x) => x.ord === ord)?.why;
   for (const ord of [0, 1]) {
-    assert.match(why(ord), /every transcription of its text is UNMEASURED/, `ord ${ord}`);
-    assert.doesNotMatch(why(ord), /holds no captured bytes/, `ord ${ord}`);
+    assert.equal(why(ord), `${U}: 1 capture, fidelity unmeasured`, `ord ${ord}`);
+    assert.notEqual(why(ord), word("strength.inert.record_holds_captured", { target_id: U }), `ord ${ord}`);
   }
-  assert.match(why(2), /holds no captured bytes for INFO-2026-0009-a/, "the no-bytes sentence stays for a document with none");
+  assert.equal(why(2), word("strength.inert.record_holds_captured", { target_id: NONE }), "the no-bytes sentence stays for a document with none");
   assert.equal(r.pair.capture.state, "unrated");
   assert.deepEqual(r.pair.capture.not_load_bearing.map((m) => m.ord).sort(), [0, 1, 2]);
 });

@@ -4,7 +4,7 @@
    Driven at the module's interface: `registerPublicReads`, `publicRead` and its store op `publicread` (`publicReadOps`)
    over a real world, and the door (`publicReadDoorOp`, `publicReadDoorRead`) over the published store's stub, with the
    plane's helpers bound as `control-plane` R23 and R25 state them. Each claim has its negative control. */
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf, bucket } from "./fixture.mjs";
@@ -168,7 +168,7 @@ test("R18 R17 an unregistered name says that it is not registered, with its row 
   const none = w.read("publicread", { name: "nosuchread" });
   assert.deepEqual([none.ok, none.reason, none.code, none.check, none.name], [false, "PUBLIC_READ_NOT_REGISTERED", "PUBLIC_READ_NOT_REGISTERED", "C-98.10", "nosuchread"]);
   assert.equal(none.translation, word("refusal.PUBLIC_READ_NOT_REGISTERED"));
-  assert.match(none.detail, /no public read named "nosuchread" is registered/);
+  assert.equal(none.detail, localize("public-read.index.no_public_read_named_stringify", "no public read named {stringify} is registered on this team's Civicsmith, so there is nothing to serve under that name", { stringify: String(JSON.stringify("nosuchread")) }));
   const r = await door(w, env, "publicread", { name: "nosuchread" });
   assert.equal(r.status, 404);
   assert.deepEqual(await r.json(), none);

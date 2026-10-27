@@ -11,7 +11,9 @@ import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
-         civicsmithUserAgent, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
+         civicsmithUserAgent, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+import { renderFailure } from "../capture-sources/fixtures.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
 
@@ -104,9 +106,9 @@ test("R3 R32: the archive arm needs an eligible address, finds a memento through
   assert.equal(w.prov.receipts[0].via, "archive.org");
   assert.equal(w.prov.receipts[0].retrievalLocator, replay);
   const chain = r.body.document.provenance_chain;
-  assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, "Internet Archive Wayback Machine");
+  assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, word("capture-sources.name.internet_archive_wayback"));
   assert.equal(chain[1].document_address, addr);
-  assert.match(chain[1].evidence, new RegExp(`SHA-256 ${sha("archived bytes")}, computed by your group's Civicsmith`));
+  assert.ok(chain[1].evidence.includes(localize("capture-sources.memento.sha_256_digest_computed_by", "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated", { digest: sha("archived bytes") })));
   assert.equal(r.body.document.capture.authority, "Internet Archive");
   /* attestation R4 (K59, K1224): the instance signs its receipt through the attestation instance handed in */
   assert.deepEqual(w.signed().map((x) => [x.capture_sha, x.retrieval_locator]), [[sha("archived bytes"), replay]], "the receipt is signed");
@@ -240,7 +242,7 @@ test("R5 R6 R7 R29: the render arm refuses before any fetch, admits against the 
   assert.equal(env.calls.length, 0, "no renderer was asked");
   assert.equal(w2.prov.receipts.length, 0);
   /* failed render: nothing filed */
-  const w3 = world({ env: rendererEnv({ ok: false, error: "crashed" }) });
+  const w3 = world({ env: rendererEnv(await renderFailure({ class: "no_session" })) });
   const fail = await run(w3, { "https://r.example/page": page(HTML()) }, { locator: "https://r.example/page", render: true });
   assert.deepEqual([fail.status, fail.body.reason, fail.body.check, fail.body.translation, fail.body.filed], [502, "RENDER_FAILED", ...row("RENDER_FAILED"), false]);
   assert.equal(w3.prov.receipts.length, 0);
@@ -348,7 +350,10 @@ test("R10: hashed as it arrives, stored in parts of 8 MiB; each refusal named; e
   assert.deepEqual(mp.body.document.parts.map((p) => p.bytes), [8 * 1024 * 1024, 10], "parts of 8 MiB, whatever the chunking");
   assert.deepEqual(mp.body.document.parts.map((p) => p.file), ["snapshots/big.part000", "snapshots/big.part001"]);
   assert.ok(w.b.calls.filter((c) => c[0] === "put").every((c) => c[2] && c[2].sha256), "each part stored with its checksum");
-  assert.equal(w.held(sha(big)), false, "the whole is never stored under its own hash");
+  /* T51 (C5): a multipart capture is also kept whole, under its own digest, so every reader finds it as it finds a single part;
+     the parts stay named and held (provenance R7 reads a capture past MULTIPART_KEEP_MAX by them). */
+  assert.equal(w.held(sha(big)), true, "the whole is kept under its own hash (fix2-t51.test.mjs holds the rest of it)");
+  assert.equal(sha(w.bytesOf(sha(big))), sha(big));
   assert.deepEqual(outcome("https://a.example/big"), ["success"]);
   /* over 256 MiB: TOO_LARGE, the stream cancelled */
   let cancelled = false, sent = 0;
@@ -411,7 +416,7 @@ test("R12: a continuation resumes the session's outstanding files against the se
   assert.ok(!second.net.seen.some((x) => x.url === "https://s.example/p"), "the primary is not fetched again");
   assert.ok(second.net.seen.length >= 1, "the outstanding files are");
   assert.equal(second.body.continued.primary.sha256, primary, "against the session's own primary");
-  assert.equal(second.body.document, undefined, "a continuation files no new document");
+  assert.equal(second.body.document, undefined, "a continuation writes no document");
   assert.equal(w.prov.receipts.length, receipts, "and writes no receipt");
 });
 
@@ -461,7 +466,7 @@ test("R14 R16 R31: transport, the chain, the capture block, the origin and the f
   assert.equal(hop.asserts, `these bytes were served for https://a.example/dir/report.txt at ${d.retrieved}`);
   assert.deepEqual([hop.bound, hop.via], [false, "direct"]);
   assert.deepEqual([d.capture.method, d.capture.actor_class, d.capture.actor, d.capture.encoding, d.capture.bytes, d.capture.content_type],
-                   ["bio-plane acquire, https fetch, hashed at receipt", "member", "m1", "binary", 9, "text/plain"]);
+                   [localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"), "member", "m1", "binary", 9, "text/plain"]);
   assert.equal(d.capture.sha256, sha("body text"));
   assert.deepEqual(d.origin, { kind: "named_request" }, "R31 (K1126): a body's matchedSweep is ignored");
   assert.deepEqual(d.attestation_attempts.length > 0, true);
@@ -557,8 +562,7 @@ test("R18: the grade is the ceiling for a direct fetch and the archive letter fo
 test("R18 (N80): every success answer carries the note composed from the enforced ceiling and the letter above it; no refusal carries one; the composer refuses a sentence it cannot make true", async () => {
   const w = world();
   assert.equal(ACQUIRE_GRADE_NOTE, acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE), "composed from the one definitions");
-  assert.equal(ACQUIRE_GRADE_NOTE, `Grade ${EARNED_CAPTURE_CEILING}: bytes as fetched, hashed at receipt. Grade ${UNREACHABLE_CAPTURE_GRADE} needs a `
-    + `chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${EARNED_CAPTURE_CEILING} toward evidentiary weight.`);
+  assert.equal(ACQUIRE_GRADE_NOTE, word("acquisition.text.grade_bytes_fetched", { ceiling: String(EARNED_CAPTURE_CEILING), unreachable: String(UNREACHABLE_CAPTURE_GRADE) }));
   assert.match(acquireGradeNote("C", "B"), /^Grade C: .* Grade B needs .* raises C toward/, "the letters are the arguments, never typed");
   for (const [c, u] of [[null, "A"], ["B", null], [undefined, undefined]]) assert.throws(() => acquireGradeNote(c, u), /cannot be composed truthfully/);
   const d = await run(w, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
@@ -695,7 +699,15 @@ test("R20 R28: every capture asks attestation's attest for a timestamp and, wher
   const g = world();
   const ok = await run(g, (u, init) => u === "https://a.example/x" ? text("x")
     : init.method === "POST" ? new Response(granted(sha("x"))) : new Response("archived", { status: 200 }), { locator: "https://a.example/x" });
-  const first = ok.body.document.attestation_attempts[0];
+  /* R20 (fix round 3, C12): no set time is waited for the timestamp, so a grant that takes more than a tick to read is recorded
+     against the capture when it ends (capture R68), not in the document the answer carried; either way the attempt is this one */
+  let first = ok.body.document.attestation_attempts[0];
+  if (first.pending) {
+    let late = null;
+    for (let i = 0; i < 500 && !(late = g.store.state.late[0]); i++) await new Promise((r) => setTimeout(r, 10));
+    assert.ok(late, "the attempt is recorded when it ends");
+    first = late.attempts[0];
+  }
   assert.deepEqual([first.ok, first.kind, first.attempted, ok.net.attest.filter((x) => x.init.method === "POST").length], [true, "rfc3161", true, 1]);
   assert.ok(g.held(first.token_sha256), "the token is held under its own digest");
   /* the archive arm's locator is itself an archive replay, so no co-archive is asked of it */
@@ -703,9 +715,9 @@ test("R20 R28: every capture asks attestation's attest for a timestamp and, wher
   const arch = await run(a, wayback([{ ts: "20250101000000", body: "a" }]), { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin" });
   assert.equal(arch.status, 200);
   assert.ok(arch.net.attest.length >= 1 && arch.net.attest.every((x) => x.init.method === "POST"), "timestamps only");
-  /* a capture in parts: no object under the whole's hash, so attest asks the register, and this plane's receipt lets it proceed */
+  /* a capture in parts: no object under the whole's hash (past MULTIPART_KEEP_MAX the whole is not kept, C5), so attest asks the register, and this plane's receipt lets it proceed */
   const mp = world();
-  const big = new Uint8Array(8 * 1024 * 1024 + 1).fill(3);
+  const big = new Uint8Array(MULTIPART_KEEP_MAX + 1).fill(3);
   const m = await run(mp, { "https://a.example/big": () => new Response(big) }, { locator: "https://a.example/big" });
   assert.deepEqual([m.status, mp.prov.holds.includes(sha(big))], [200, true]);
   assert.ok(m.body.document.attestation_attempts.every((x) => x.attempted === true), "asked, on the receipt's strength");
@@ -780,7 +792,7 @@ test("R21 R31: the capture-request arm files the drain's own origin as a sweep, 
   const rr = await arm(rw, { "https://a.example/doc": () => page(HTML("<div id=app></div>")) }, { render: true }, { render: false });
   assert.equal(rr.body.document.capture.method, "rendered", "the row's render flag, never the body's");
   const nr = await arm(rw, { "https://a.example/doc": () => page(HTML("<div id=app></div>")) }, { render: false }, { render: true });
-  assert.equal(nr.body.document.capture.method, "bio-plane acquire, https fetch, hashed at receipt");
+  assert.equal(nr.body.document.capture.method, localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"));
 });
 
 test("R22: with the held capture's digest the arm fetches conditionally on the validators its own fetch recorded; a 304 files nothing and writes no receipt; without validators, identical bytes answer held", async () => {

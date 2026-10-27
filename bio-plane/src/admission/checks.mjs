@@ -136,7 +136,7 @@ export const ADMISSION_CHECKS = worded({
     where: 'src/admission/index.mjs admit > is-admission',
   },
   /* **THE LIVE DEFECT THIS ROW CLOSES, and it is why REC-79 chose this family.**
-     `civicos-ui/app.html` hand-authored a sentence for this code:
+     the legacy interface hand-authored a sentence for this code:
      *"This credential cannot write to the record. Capturing needs a member
      holding contribute."* But this refusal is PLANE-WIDE — it is minted for
      whatever capability the op needed, and `create_projects` and `publish` are

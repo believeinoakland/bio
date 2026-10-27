@@ -1,0 +1,806 @@
+{
+ "_note": "DEC-342: refusal codes the server emits that were given no refusal.<CODE> row, each with why (not a refusal, or no request can trigger it) and where it is returned (bio-plane/src, origin/main at 2026-10-18). If any can reach a member, the design words it at once.",
+ "skipped": [
+  {
+   "code": "APPROVAL_READER_DECLARED",
+   "why": "startup wiring registered twice; no request can trigger it",
+   "where": [
+    "ratification/index.mjs:728"
+   ]
+  },
+  {
+   "code": "ASSEMBLY_FAILED",
+   "why": "internal failure assembling a case container after publishing; not a refusal",
+   "where": [
+    "ratification/index.mjs:1025"
+   ]
+  },
+  {
+   "code": "ATTEMPT_SUPERSEDED",
+   "why": "journey-check test runner sign-in stand-in only",
+   "where": [
+    "journey-check/runner.mjs:52"
+   ]
+  },
+  {
+   "code": "AUTHORITY_NOT_RESOLVABLE",
+   "why": "internal module registration refusal; no request can trigger",
+   "where": [
+    "observation-log/index.mjs:685",
+    "observation-log/index.mjs:685"
+   ]
+  },
+  {
+   "code": "BAD_CODE",
+   "why": "journey-check test runner sign-in stand-in only",
+   "where": [
+    "journey-check/runner.mjs:53"
+   ]
+  },
+  {
+   "code": "BAD_JSON",
+   "why": "malformed request body from app code, not something a member types",
+   "where": [
+    "plane/ask.mjs:60",
+    "plane/ask.mjs:86",
+    "answer-envelope/index.mjs:207"
+   ]
+  },
+  {
+   "code": "BAD_MEMBER",
+   "why": "journey-check test runner sign-in stand-in only",
+   "where": [
+    "journey-check/runner.mjs:41"
+   ]
+  },
+  {
+   "code": "BAD_REQUEST",
+   "why": "journey-check test runner message error only",
+   "where": [
+    "journey-check/runner.mjs:40",
+    "journey-check/runner.mjs:90",
+    "journey-check/runner.mjs:114"
+   ]
+  },
+  {
+   "code": "BAD_TALLY",
+   "why": "internal usage counter given bad outcome or mode; no member input",
+   "where": [
+    "answers/index.mjs:310"
+   ]
+  },
+  {
+   "code": "BASIS_UNKNOWN",
+   "why": "internal argument error: a due-date basis kind the code does not define",
+   "where": [
+    "civil-time/rules.mjs:386"
+   ]
+  },
+  {
+   "code": "BUDGET_EXHAUSTED",
+   "why": "per-reference capture outcome recorded in the capture record; not a refusal of a request",
+   "where": [
+    "subresources.mjs:1053"
+   ]
+  },
+  {
+   "code": "BUDGET_REACHED",
+   "why": "internal CPU-timing routine's stop reason, not a request refusal",
+   "where": [
+    "cpu.mjs:128"
+   ]
+  },
+  {
+   "code": "CAP_REACHED",
+   "why": "per-reference capture outcome recorded in the capture record; not a refusal of a request",
+   "where": [
+    "subresources.mjs:1047"
+   ]
+  },
+  {
+   "code": "CDX_NOT_AN_ARRAY",
+   "why": "parser failure on the web archive's own reply, not a member request",
+   "where": [
+    "cdx.mjs:39"
+   ]
+  },
+  {
+   "code": "CDX_NO_HEADER",
+   "why": "parser failure on the web archive's own reply, not a member request",
+   "where": [
+    "cdx.mjs:43"
+   ]
+  },
+  {
+   "code": "CDX_UNPARSEABLE",
+   "why": "parser failure on the web archive's own reply, not a member request",
+   "where": [
+    "cdx.mjs:38"
+   ]
+  },
+  {
+   "code": "CLASS_UNKNOWN",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:45"
+   ]
+  },
+  {
+   "code": "COLLAPSED_SRCSET_FAMILY",
+   "why": "capture fetch policy label for skipped picture variants; not a refusal",
+   "where": [
+    "subresources.mjs:764"
+   ]
+  },
+  {
+   "code": "COMBINE_FAILED",
+   "why": "internal exception while combining local-facts profiles",
+   "where": [
+    "local-facts/rules.mjs:93"
+   ]
+  },
+  {
+   "code": "CONNECTION_PAIR_NO_PAIR",
+   "why": "not a refusal: a per-connection undetermined note, shown as status",
+   "where": [
+    "connections/index.mjs:668"
+   ]
+  },
+  {
+   "code": "CONSUMER_DECLARED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "scheduler/index.mjs:452"
+   ]
+  },
+  {
+   "code": "CONSUMER_MALFORMED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "scheduler/index.mjs:448",
+    "scheduler/index.mjs:454"
+   ]
+  },
+  {
+   "code": "COPY_FAILED",
+   "why": "post-publish copy step failure reported in an internal result; no request is refused by it",
+   "where": [
+    "ratification/index.mjs:1002",
+    "ratification/index.mjs:1011"
+   ]
+  },
+  {
+   "code": "CRYPTO_UNAVAILABLE",
+   "why": "platform lacks signature support; internal failure no request can cause",
+   "where": [
+    "sshsig.mjs:200"
+   ]
+  },
+  {
+   "code": "DECORATION_DECLARED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:295",
+    "retrieval/index.mjs:308"
+   ]
+  },
+  {
+   "code": "DECORATION_MALFORMED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:293",
+    "retrieval/index.mjs:306"
+   ]
+  },
+  {
+   "code": "DISPATCH_FAILED",
+   "why": "internal fallback marking an AI run withheld after an unexpected error",
+   "where": [
+    "ai-runs/index.mjs:1763"
+   ]
+  },
+  {
+   "code": "DISPOSE_FAILED",
+   "why": "automatic ageing job fallback label, not returned to a request",
+   "where": [
+    "intent/index.mjs:1416"
+   ]
+  },
+  {
+   "code": "DRAW_ONLY",
+   "why": "internal rollback marker used to draw a notice id",
+   "where": [
+    "network-notices/index.mjs:321"
+   ]
+  },
+  {
+   "code": "DUTIES_UNREADABLE",
+   "why": "internal read failure that yields an undetermined derivation, not a refusal",
+   "where": [
+    "leg-earning/index.mjs:971"
+   ]
+  },
+  {
+   "code": "ESCALATION_ABSENT",
+   "why": "internal monitoring wiring, module absent",
+   "where": [
+    "monitoring/index.mjs:3289"
+   ]
+  },
+  {
+   "code": "ESCALATION_UNREAD",
+   "why": "internal monitoring failure reading escalations",
+   "where": [
+    "monitoring/index.mjs:3293"
+   ]
+  },
+  {
+   "code": "EXPLORE_ALLOWED_UNREADABLE",
+   "why": "internal background-exploration failure; no request can trigger",
+   "where": [
+    "question-explorer/index.mjs:438"
+   ]
+  },
+  {
+   "code": "FACTS_DECLARED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:270"
+   ]
+  },
+  {
+   "code": "FACTS_MALFORMED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:268"
+   ]
+  },
+  {
+   "code": "FAKE_MODEL_FAILED",
+   "why": "journey-check test runner fake model failure",
+   "where": [
+    "journey-check/runner.mjs:81"
+   ]
+  },
+  {
+   "code": "FIELD_DECLARED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:379"
+   ]
+  },
+  {
+   "code": "FIELD_MALFORMED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:369"
+   ]
+  },
+  {
+   "code": "FORMAT_UNREGISTERED",
+   "why": "internal registry fault for the PDF extractor; no request input triggers it",
+   "where": [
+    "extraction/index.mjs:1397"
+   ]
+  },
+  {
+   "code": "HASH_DISAGREEMENT",
+   "why": "internal integrity fault between two hashes of same bytes; no request can trigger",
+   "where": [
+    "acquisition/index.mjs:1031",
+    "capture/index.mjs:685"
+   ]
+  },
+  {
+   "code": "HOLD_READER_DECLARED",
+   "why": "startup wiring registered twice; no request can trigger it",
+   "where": [
+    "ratification/index.mjs:783"
+   ]
+  },
+  {
+   "code": "INTENT_ABSENT",
+   "why": "internal wiring check in the monitoring job; no member request",
+   "where": [
+    "monitoring/index.mjs:3035"
+   ]
+  },
+  {
+   "code": "KINDS_MISSING",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:37"
+   ]
+  },
+  {
+   "code": "KIND_MISSING",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:40"
+   ]
+  },
+  {
+   "code": "KIND_TAKEN",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:42",
+    "connection-grammar/registry.mjs:43"
+   ]
+  },
+  {
+   "code": "LINE_HOLDS_NO_AMOUNT",
+   "why": "internal row gate on stored line rows; callers cannot supply such fields",
+   "where": [
+    "lines/index.mjs:175"
+   ]
+  },
+  {
+   "code": "LINE_NO_HYPOTHESIS",
+   "why": "internal row gate on stored line rows; writes are checked earlier",
+   "where": [
+    "lines/index.mjs:181"
+   ]
+  },
+  {
+   "code": "LINE_ROW_MALFORMED",
+   "why": "internal row-shape gate; no request can send a non-object row",
+   "where": [
+    "lines/index.mjs:173"
+   ]
+  },
+  {
+   "code": "LOOKUP_FAILED",
+   "why": "internal fallback when the citation lookup throws; answer degrades",
+   "where": [
+    "law-relations/index.mjs:626"
+   ]
+  },
+  {
+   "code": "MAX_STEP_REACHED",
+   "why": "internal CPU-timing routine's stop reason, not a request refusal",
+   "where": [
+    "cpu.mjs:131"
+   ]
+  },
+  {
+   "code": "MAX_TURNS",
+   "why": "journey-check test runner turn limit",
+   "where": [
+    "journey-check/runner.mjs:83"
+   ]
+  },
+  {
+   "code": "METHOD_NOT_ALLOWED",
+   "why": "HTTP method mismatch from app code; no member action reaches it",
+   "where": [
+    "plane/ask.mjs:58",
+    "plane/ask.mjs:84"
+   ]
+  },
+  {
+   "code": "NEIGHBOURS_MISSING",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:36"
+   ]
+  },
+  {
+   "code": "NOTHING_PENDING",
+   "why": "background deadline recheck finding nothing to change; not a member request",
+   "where": [
+    "monitoring/index.mjs:3238"
+   ]
+  },
+  {
+   "code": "NOTICE_ABSENT",
+   "why": "internal scheduler wiring fault logged, not a request refusal",
+   "where": [
+    "scheduler/index.mjs:635"
+   ]
+  },
+  {
+   "code": "NOTICE_THREW",
+   "why": "internal scheduler wiring fault logged, not a request refusal",
+   "where": [
+    "scheduler/index.mjs:636"
+   ]
+  },
+  {
+   "code": "NOT_BOUND",
+   "why": "timestamp token check failure against internal digest; internal service fault",
+   "where": [
+    "tsa.mjs:164",
+    "tsa.mjs:171"
+   ]
+  },
+  {
+   "code": "NOT_BYTES",
+   "why": "internal type check on PDF input; no member request",
+   "where": [
+    "pdfstructure.mjs:3020"
+   ]
+  },
+  {
+   "code": "NOT_HTML",
+   "why": "note that subresource capture was skipped; capture itself succeeds",
+   "where": [
+    "acquisition/index.mjs:1442"
+   ]
+  },
+  {
+   "code": "NO_BROWSE_DOOR",
+   "why": "start-up wiring fault between modules; no request can trigger it",
+   "where": [
+    "following/index.mjs:1486",
+    "following/index.mjs:1487"
+   ]
+  },
+  {
+   "code": "NO_DECLARATION_SEAM",
+   "why": "module startup: database declaration seam absent, internal only",
+   "where": [
+    "capture/index.mjs:81"
+   ]
+  },
+  {
+   "code": "NO_FAKE_MODEL",
+   "why": "journey-check test runner stand-in, not a product refusal",
+   "where": [
+    "journey-check/runner.mjs:100"
+   ]
+  },
+  {
+   "code": "NO_RECEIPT_NOTICE",
+   "why": "module wiring: provenance listener registration at start, internal only",
+   "where": [
+    "case-carriage/index.mjs:1189"
+   ]
+  },
+  {
+   "code": "NO_SELECTION",
+   "why": "automatic ageing job fallback; no member request reaches it",
+   "where": [
+    "intent/index.mjs:1413"
+   ]
+  },
+  {
+   "code": "NO_SUCH_SESSION",
+   "why": "note that continued capture session was missing; capture proceeds as ordinary",
+   "where": [
+    "acquisition/index.mjs:711"
+   ]
+  },
+  {
+   "code": "NO_TOKEN",
+   "why": "timestamp-authority response parse failure; internal service fault",
+   "where": [
+    "tsa.mjs:152"
+   ]
+  },
+  {
+   "code": "NO_VIEWER",
+   "why": "internal control-plane stamp missing; members cannot omit it",
+   "where": [
+    "calculations/index.mjs:1193",
+    "calculations/index.mjs:2120",
+    "people/index.mjs:229"
+   ]
+  },
+  {
+   "code": "NO_WATCH_DOOR",
+   "why": "start-up wiring fault between modules; no request can trigger it",
+   "where": [
+    "following/index.mjs:1316"
+   ]
+  },
+  {
+   "code": "OPEN_SEALS_FAILED",
+   "why": "fallback label for a failed internal notice after the commit already stands",
+   "where": [
+    "ratification/index.mjs:1435"
+   ]
+  },
+  {
+   "code": "OUTSIDE_THE_DOCUMENT",
+   "why": "capture fetch policy label for skipped site furniture; not a refusal",
+   "where": [
+    "subresources.mjs:773"
+   ]
+  },
+  {
+   "code": "OWNER_DUPLICATE",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:35"
+   ]
+  },
+  {
+   "code": "OWNER_FAILED",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:85"
+   ]
+  },
+  {
+   "code": "OWNER_MISSING",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:34"
+   ]
+  },
+  {
+   "code": "OWNER_UNKNOWN",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:81"
+   ]
+  },
+  {
+   "code": "PENDING_CLOCKS_UNREAD",
+   "why": "internal monitoring job failing to read clocks",
+   "where": [
+    "monitoring/index.mjs:3144"
+   ]
+  },
+  {
+   "code": "PLACE_ARRIVALS_MALFORMED",
+   "why": "internal start-up registration refusal",
+   "where": [
+    "queue-producers/index.mjs:2599"
+   ]
+  },
+  {
+   "code": "PLACE_ARRIVALS_REGISTERED",
+   "why": "internal start-up registration refusal",
+   "where": [
+    "queue-producers/index.mjs:2601"
+   ]
+  },
+  {
+   "code": "PLATFORM_LIMIT",
+   "why": "per-reference capture outcome recorded in the capture record; not a refusal of a request",
+   "where": [
+    "subresources.mjs:1154"
+   ]
+  },
+  {
+   "code": "PREPARATION_UNDETERMINED",
+   "why": "internal: the case preparation could not be found after publication stored it",
+   "where": [
+    "case-check/index.mjs:133",
+    "case-check/index.mjs:145"
+   ]
+  },
+  {
+   "code": "PRIMARY_UNREADABLE",
+   "why": "note that subresource capture was skipped; capture itself succeeds",
+   "where": [
+    "acquisition/index.mjs:1446"
+   ]
+  },
+  {
+   "code": "PROVIDER_DECLARED",
+   "why": "startup provider registered twice; no member request can trigger it",
+   "where": [
+    "translations/index.mjs:145",
+    "public-read/index.mjs:245",
+    "public-read/index.mjs:278"
+   ]
+  },
+  {
+   "code": "PROVIDER_MALFORMED",
+   "why": "startup provider registration error; no member request can trigger it",
+   "where": [
+    "translations/index.mjs:142",
+    "public-read/index.mjs:242",
+    "public-read/index.mjs:275"
+   ]
+  },
+  {
+   "code": "RECEIPT_NOT_SIGNED",
+   "why": "stated note on a successful capture; not a refusal",
+   "where": [
+    "acquisition/index.mjs:1142"
+   ]
+  },
+  {
+   "code": "RECORD_CHECK_UNREAD",
+   "why": "verdict tag marking sentences undetermined, not a declined request",
+   "where": [
+    "filings/outward.mjs:37"
+   ]
+  },
+  {
+   "code": "REFUSED_LOCATOR",
+   "why": "capture classifier outcome for non-public page references; not a member-facing refusal",
+   "where": [
+    "subresources.mjs:391"
+   ]
+  },
+  {
+   "code": "REFUSED_SCHEME",
+   "why": "capture classifier outcome for skipped page references; not a member-facing refusal",
+   "where": [
+    "subresources.mjs:385"
+   ]
+  },
+  {
+   "code": "REGISTRATION_FAILED",
+   "why": "internal start-up wiring failure; no request can trigger it",
+   "where": [
+    "case-import/index.mjs:1742",
+    "docket/index.mjs:1183",
+    "docket/index.mjs:1185"
+   ]
+  },
+  {
+   "code": "REGISTRATION_THREW",
+   "why": "internal start-up wiring failure; no request can trigger it",
+   "where": [
+    "case-carriage/index.mjs:1191"
+   ]
+  },
+  {
+   "code": "REGISTRATION_UNANSWERED",
+   "why": "internal start-up wiring failure; no request can trigger it",
+   "where": [
+    "case-carriage/index.mjs:1194"
+   ]
+  },
+  {
+   "code": "RESOLVER_DECLARED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:283"
+   ]
+  },
+  {
+   "code": "RESOLVER_MALFORMED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:281"
+   ]
+  },
+  {
+   "code": "REUSE_CHECK_FAILED",
+   "why": "internal post-publish check failure caught and recorded; not a refusal",
+   "where": [
+    "ratification/index.mjs:1015"
+   ]
+  },
+  {
+   "code": "REVIEW_COMMENTS_DECLARED",
+   "why": "module wiring: second registration of review comments reader at start, internal only",
+   "where": [
+    "case-account/index.mjs:531"
+   ]
+  },
+  {
+   "code": "SIDE_UNKNOWN",
+   "why": "internal argument error: overdue side other than the two defined",
+   "where": [
+    "civil-time/rules.mjs:424"
+   ]
+  },
+  {
+   "code": "SIGNIN_TOKEN_REFUSED",
+   "why": "journey-check test runner token check only",
+   "where": [
+    "journey-check/runner.mjs:99"
+   ]
+  },
+  {
+   "code": "TAIL_DECLARED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:343"
+   ]
+  },
+  {
+   "code": "TAIL_MALFORMED",
+   "why": "startup module registration error; no member request can trigger it",
+   "where": [
+    "retrieval/index.mjs:342"
+   ]
+  },
+  {
+   "code": "THIRD_PARTY",
+   "why": "capture fetch policy label for skipped outside content; not a refusal",
+   "where": [
+    "subresources.mjs:769"
+   ]
+  },
+  {
+   "code": "TOO_LARGE_TO_PARSE",
+   "why": "note that subresource capture was skipped; capture itself succeeds",
+   "where": [
+    "acquisition/index.mjs:1438"
+   ]
+  },
+  {
+   "code": "UNIT_UNKNOWN",
+   "why": "internal argument error: span unit the code does not define",
+   "where": [
+    "civil-time/rules.mjs:471"
+   ]
+  },
+  {
+   "code": "UNKNOWN_EVENT",
+   "why": "module wiring: listener registration for unknown capture event, internal only",
+   "where": [
+    "capture/index.mjs:476"
+   ]
+  },
+  {
+   "code": "UNKNOWN_READER",
+   "why": "module wiring: reader registration at start for unknown slot, internal only",
+   "where": [
+    "capture/index.mjs:500",
+    "doorbell/index.mjs:180"
+   ]
+  },
+  {
+   "code": "UNKNOWN_WORD",
+   "why": "developer error: code asks for a wording key that does not exist",
+   "where": [
+    "setup-words/index.mjs:20"
+   ]
+  },
+  {
+   "code": "VIEW_FAILED",
+   "why": "internal exception while building a local-facts view",
+   "where": [
+    "local-facts/rules.mjs:158"
+   ]
+  },
+  {
+   "code": "WAIT_SOURCE_DECLARED",
+   "why": "internal module registration at startup; no member request reaches it",
+   "where": [
+    "ai-runs/index.mjs:307"
+   ]
+  },
+  {
+   "code": "WAIT_SOURCE_MALFORMED",
+   "why": "internal module registration at startup; no member request reaches it",
+   "where": [
+    "ai-runs/index.mjs:306"
+   ]
+  },
+  {
+   "code": "WORD_FORBIDDEN",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:49"
+   ]
+  },
+  {
+   "code": "WORD_MISSING",
+   "why": "internal registry wiring or owner-read failure at code level; no member request triggers it",
+   "where": [
+    "connection-grammar/registry.mjs:46"
+   ]
+  },
+  {
+   "code": "WORD_VAR_MISSING",
+   "why": "developer error: wording placeholder left unfilled",
+   "where": [
+    "setup-words/index.mjs:23"
+   ]
+  },
+  {
+   "code": "WORK_PRODUCTS_DECLARED",
+   "why": "internal module registration at startup; no member request reaches it",
+   "where": [
+    "bias/index.mjs:776"
+   ]
+  },
+  {
+   "code": "WORK_PRODUCTS_MALFORMED",
+   "why": "internal module registration at startup; no member request reaches it",
+   "where": [
+    "bias/index.mjs:773"
+   ]
+  }
+ ]
+}

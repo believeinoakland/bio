@@ -3,7 +3,8 @@
    `bounds` gives, or null where not stated; an upper bound (R24) has `start` null and `precision` `upper_bound`. A day is
    never read as its midnight (K1464): it is its whole local day. Sequence is computed here on each read and never stored. */
 import { bounds, compare, isCalendarDate } from "../civil-time/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { localize } from "../setup-words/index.mjs";
+import { reason, reasonText } from "./reasons.mjs";
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const MINUTE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -21,18 +22,18 @@ export function readDate(v, zone) {
     else if (MINUTE.test(s)) { value = s; precision = "minute"; }
     else if (SECOND.test(s)) { value = s; precision = "second"; }
     else if (INSTANT.test(s)) { value = s.slice(0, 19); precision = "second"; z = "UTC"; }
-    else return { bad: `'${s.slice(0, 60)}' is not a date (YYYY-MM-DD, or with a time of day)` };
+    else return { bad: localize("events.time.value_is_not_a_date", "{value} is not a date: write a day as YYYY-MM-DD, with a time of day if it has one", { value: String(s.slice(0, 60)) }) };
   } else if (v && typeof v === "object" && !Array.isArray(v) && typeof v.value === "string" && typeof v.precision === "string") {
     value = v.value; precision = v.precision; if (typeof v.zone === "string" && v.zone) z = v.zone;
-  } else return { bad: "a date is a string YYYY-MM-DD (or with a time of day) or {value, precision, zone}" };
+  } else return { bad: localize("events.time.a_date_is_written_as", "a date is written as a day (YYYY-MM-DD), with a time of day if it has one, or given with its precision and its zone") };
   if (precision !== "edtf" && !isCalendarDate(value.slice(0, 10)))
-    return { bad: `'${value.slice(0, 10)}' is not a day of the calendar` };
+    return { bad: localize("events.time.day_is_not_a_day", "{day} is not a day of the calendar", { day: String(value.slice(0, 10)) }) };
   if (z !== null) {
     let b;
     try { b = bounds({ value, precision, zone: z }); } catch (e) { return { bad: String(e && e.message || e) }; }
-    if (b.refused) return { bad: b.why };
-    if (b.undetermined) return { bad: b.why };
-  } else if (!["day", "minute", "second", "edtf"].includes(precision)) return { bad: `'${precision}' is not a precision` };
+    if (b.refused) return { bad: reasonText(b.why) };
+    if (b.undetermined) return { bad: reasonText(b.why) };
+  } else if (!["day", "minute", "second", "edtf"].includes(precision)) return { bad: localize("events.time.precision_is_not_a_precision", "{precision} is not a precision", { precision: String(precision) }) };
   return { value, precision, zone: z };
 }
 
@@ -51,16 +52,16 @@ const dt = (w) => ({ value: w.value, precision: w.precision, zone: w.zone });
 
 /** R31: `before`, `after` or `{undetermined, why}`, comparing two whens; never a guess, never stored. */
 export function sequenceOf(a, b) {
-  if (!a || !b) return { undetermined: true, why: word("events.why.placed_nowhere_event") };
+  if (!a || !b) return { undetermined: true, why: reason("events.why.placed_nowhere_event") };
   if (a.precision === "upper_bound" || b.precision === "upper_bound" || !a.zone || !b.zone) {
     if (a.end && b.start && a.end <= b.start) return "before";
     if (b.end && a.start && b.end <= a.start) return "after";
-    const why = !a.zone || !b.zone ? word("events.text.held_zone_span") : word("events.text.upper_bound_says");
+    const why = !a.zone || !b.zone ? reason("events.text.held_zone_span") : reason("events.text.upper_bound_says");
     return { undetermined: true, why };
   }
   const c = compare(dt(a), dt(b));
   if (c === "before" || c === "after") return c;
-  return { undetermined: true, why: c && c.why ? c.why : word("events.why.precision_held_settle") };
+  return { undetermined: true, why: c && c.why ? c.why : reason("events.why.precision_held_settle") };
 }
 
 /** A time a caller names (`from`, `to`, `at`): a day, a minute or an instant, as a span in `zone`; null when absent. */

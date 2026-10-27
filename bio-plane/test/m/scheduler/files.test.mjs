@@ -8,8 +8,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as scheduler from "../../../src/scheduler/index.mjs";
-import { world, storage, writes, NOW, FILE_CONSUMERS } from "./fixture.mjs";
+import { world, storage, writes, NOW, FILE_CONSUMERS, pinNow } from "./fixture.mjs";
 import { world as fsWorld, pdf } from "../file-safety/fixture.mjs";
+import { FILE_SAFETY_CHECKS } from "../../../src/file-safety/index.mjs";
+import { batchTickAnswers, declaredRefusals } from "../file-safety/fixtures.mjs";
 
 const { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, ALWAYS_DUE, FILE_SAFETY_CONSUMERS, SCHED_GRACE_MS, Scheduler, schedulerOf } = scheduler;
 const FIVE = ["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"];
@@ -27,7 +29,7 @@ const wanting = (wakes) => Object.fromEntries(FIVE.map((n, i) => [n, { wake: wak
 test("R24, R5, R2: the five stand after dated-waits, in R24's order, before R25's document-copy, each answering under its own key (filescan, filerender, filedeeper, fileforward, filereputation); without file-safety they are absent", () => {
   assert.deepEqual([...FILE_SAFETY_CONSUMERS], FIVE);
   assert.deepEqual([...FILE_CONSUMERS], FIVE, "the fixture's list is the module's");
-  assert.deepEqual(SCHEDULER_ORDER.slice(SCHEDULER_ORDER.indexOf("dated-waits")), ["dated-waits", ...FIVE, "document-copy", "question-explore"], "then document-copy, then R26's question-explore (T41)");
+  assert.deepEqual(SCHEDULER_ORDER.slice(SCHEDULER_ORDER.indexOf("dated-waits")), ["dated-waits", ...FIVE, "document-copy", "question-explore", "ingest"], "then document-copy, then R26's question-explore (T41), then G55's ingest");
   assert.deepEqual(FIVE.map((n) => SCHEDULER_KEYS[n]), KEYS);
   for (const n of FIVE) {
     assert.equal(RANKED.includes(n), false, `${n}: given its now alone`);
@@ -41,10 +43,11 @@ test("R24, R5, R2: the five stand after dated-waits, in R24's order, before R25'
 });
 
 test("R2, R24: each of the five that ticks answers under its key, the owner's answer as it is; one that did not tick is absent", async () => {
+  const real = await batchTickAnswers();   /* file-safety's own answers: the deeper batch's and the forward counts' */
   const answers = [{ ok: true, scanned: 2, found: 0, not_scanned: 0, remaining: 0 },
     { ok: true, rendered: 1, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0, queued: 0 }, remaining: 0 },
-    { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 },
-    { ok: true, sent: [], failed: [], record: null },
+    real.deeper,
+    real.forward,
     { ok: true, refreshed: [{ tool_id: "rep-1", list_version: "v2", fetched_at: iso(NOW) }], failed: [], skipped: [] }];
   const { s } = world(Object.fromEntries(FIVE.map((n, i) => [n, { wake: NOW, tick: answers[i] }])));
   const r = await s.onAlarm(NOW);
@@ -158,9 +161,11 @@ test("R24, R11, R18: a restarted instance re-derives the five's wakes from file-
   assert.deepEqual(st.kv.get("sched_files"), { "file-scan": { last: NOW, more: false }, "file-forward": { hour: NOW, to: NOW, log: true } }, "left as it was");
 });
 
-test("R24, R3: a refusal file-safety answers (SCANNER_ABSENT, RENDERER_ABSENT, DEEPER_CHECKS_UNREADABLE, FORWARD_PERIOD_INVALID) is the tick's answer, and the next wake is again R39's; a batch or a wake that throws is answered {error} and every other consumer still ticks", async () => {
-  const refusals = ["SCANNER_ABSENT", "RENDERER_ABSENT", "DEEPER_CHECKS_UNREADABLE", "FORWARD_PERIOD_INVALID", "SCANNER_ABSENT"]
-    .map((code) => ({ ok: false, code, reason: code, detail: "refused" }));
+test("R24, R3: a refusal file-safety answers (one of its declared refusal codes) is the tick's answer, and the next wake is again R39's; a batch or a wake that throws is answered {error} and every other consumer still ticks", async () => {
+  const declared = Object.keys(FILE_SAFETY_CHECKS).filter((c) => /_(ABSENT|UNREADABLE|INVALID)$/.test(c));
+  const real = await declaredRefusals();   /* file-safety's real refusal of each declared code */
+  assert.deepEqual([...declared].sort(), Object.keys(real).sort(), "every declared code has its real refusal");
+  const refusals = FIVE.map((_, i) => real[declared[i % declared.length]]);
   const later = [NOW + 86_400_000, NOW + 300_000, NOW + 300_000, NOW + 3_600_000, NOW + 600_000];
   const fired = new Set();
   const set = Object.fromEntries(FIVE.map((n, i) => [n, { wake: () => (fired.has(n) ? later[i] : NOW), tick: () => { fired.add(n); return refusals[i]; } }]));
@@ -180,7 +185,7 @@ test("R24, R3: a refusal file-safety answers (SCANNER_ABSENT, RENDERER_ABSENT, D
 
 /* ---- onFileWork (file-safety R40), R9's notice for the five ---- */
 
-test("R24, R9, R17: handed file-safety, the scheduler registers once with onFileWork; each call arms the alarm at once to the earliest wake, writing nothing else and running no batch", async () => {
+test("R24, R9, R17: handed file-safety, the scheduler registers once with onFileWork; each call arms the alarm at once to the earliest wake, writing nothing else and running no batch", async (t) => { pinNow(t);
   const w = world(wanting([null, null, null, null, null]));
   const fs = w.o.fileSafety;
   const st = storage();
@@ -257,7 +262,7 @@ test("R24 (K1892, K1929): nothing the five pass or answer names who opened a fil
 /* the earliest of the real file-safety's own R39 wakes at `now` */
 const earliest = (fs, now) => { const ws = WAKES.map((m) => fs[m](now)).filter((x) => x !== null); return ws.length ? Math.min(...ws) : null; };
 
-test("R24, R9: against the real file-safety, a capture received tells onFileWork, which arms the alarm at once; the firing scans and renders it and the alarm is then R39's earliest wake, never the firing instant", async () => {
+test("R24, R9: against the real file-safety, a capture received tells onFileWork, which arms the alarm at once; the firing scans it and renders one view; while views stay queued the alarm is R39's wake, the firing instant, for the next firing, and the wake ends after the last view", async () => {
   const w = fsWorld();
   const st = storage();
   const s = new Scheduler({ storage: st, owners: {} });
@@ -275,11 +280,21 @@ test("R24, R9: against the real file-safety, a capture received tells onFileWork
   assert.equal(w.calls("/scan").length, 1, "one batch to the scanner");
   assert.equal(r.filerender.ok, true, JSON.stringify(r.filerender));
   assert.equal(r.nextAt, earliest(w.fs, at), "R39's earliest wake");
-  assert.ok(r.nextAt === null || r.nextAt > at, `no spin: ${r.nextAt} after ${at}`);
+  /* R39 (K4902): while a view or safe copy stays queued the render wake is `now`, one render a tick; the alarm is re-armed for the next
+     firing, never a loop inside this one (this onAlarm returned after one render), and the run is bounded: the wake ends after the last view */
+  let last = r, firings = 1;
+  while (last.nextAt !== null && last.nextAt <= at && firings < 10) {
+    assert.equal(last.nextAt, at, "while views are queued the wake is the firing instant");
+    assert.equal(st.alarm, last.nextAt, "the alarm is set for the next firing");
+    last = await s.onAlarm(at);
+    firings++;
+  }
+  assert.ok(firings <= 4, `bounded: ${firings} firings for three views`);
+  assert.ok(last.nextAt === null || last.nextAt > at, `no spin: ${last.nextAt} after ${at}`);
   assert.equal("fileforward" in r, false, "no log tool on: forward wants no wake (R39)");
   assert.equal("filereputation" in r, false, "no reputation tool on: none (R39)");
   /* a week on, the re-scan falls due (file-safety R4, R39) */
-  const next = r.nextAt ?? at + 7 * 86_400_000;
+  const next = last.nextAt ?? at + 7 * 86_400_000;
   w.clock.now = next;
   const again = await s.onAlarm(next);
   assert.ok("filescan" in again || "filerender" in again, JSON.stringify(again));

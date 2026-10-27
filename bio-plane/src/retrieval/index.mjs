@@ -22,8 +22,8 @@ import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_S
   from "../observation-log/index.mjs";
 import * as QL from "../query.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
-         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
-import { localFactsOf } from "../local-facts/index.mjs";
+         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP, MARK_OPEN, MARK_CLOSE } from "../query.mjs";
+import { localFactsOf, TEAM_ZONE_PATH } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { routeFinding } from "../provenance-routes/index.mjs";
@@ -34,28 +34,25 @@ import { PROJECTION_COLUMNS, PROJECTION_INDEXED, PROJECTION_TABLE, PROJECTION_RE
          SELECTION_SCHEMA, RETRIEVAL_PURGE, SELECTION_ID_CHUNK } from "./schema.mjs";
 import { Frontier, FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE } from "./frontier.mjs";
 import { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERMS_SCHEMA, TERM_FIELDS, fieldRelation, termRows } from "./fields.mjs";
-import { entitiesOf } from "../entities/index.mjs";
-import { eventsOf } from "../events/index.mjs";
-import { standardsOf } from "../standards/index.mjs";
-import { moneyOf } from "../money/index.mjs";
-import { peopleOf } from "../people/index.mjs";
-import { Browser } from "./browse.mjs";
+import { retrievalBrowseOf, BROWSE_SCOPES } from "../retrieval-browse/index.mjs";
+import { kindsOf, unitsByRowid, partialReads, unitKey, PARTIAL_LISTED_MAX } from "./units.mjs";
 import { say } from "./words.mjs";
-import { Finder, FIND_KINDS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
-         FIND_TERM_MAX, RECORDED_BY_MODULES } from "./findin.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 export { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 export { meaningLevels } from "./levels.mjs";
 export { SELECTION_ID_CHUNK, PROJECTION_TABLE, PROJECTION_RELATION } from "./schema.mjs";
 export { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERM_FIELDS } from "./fields.mjs";
-export { FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
-         FIND_WORDS_MAX, FIND_TERM_MAX, FIND_EVENT_TYPES, FIND_PEOPLE_KINDS, FIND_ORIGIN, matchMoney, matchDates,
-         matchRequirements, cutWords, RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED } from "./findin.mjs";
+export { PART_KINDS, PARTIAL_LISTED_MAX } from "./units.mjs";
+/* R90: the names retrieval exported from `findin.mjs` and `browse.mjs`, now `retrieval-browse`'s (its R14). */
+export { retrievalBrowseOf, FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT,
+         FIND_ITEMS_MAX, FIND_WORDS_MAX, FIND_TERM_MAX, FIND_EVENT_TYPES, FIND_PEOPLE_KINDS, FIND_ORIGIN, FIND_ROW_CELLS_MAX,
+         matchMoney, matchDates, matchRequirements, cutWords, extentOfSource, RECORDED_BY_MODULES, RECORDED_BY_LIMIT,
+         RECORDED_NONE_REGISTERED, BROWSE_KINDS, BROWSE_ONLY, BROWSE_SCOPES, BROWSE_LIMIT_DEFAULT, BROWSE_LIMIT_MAX,
+         BROWSE_MARKS_MAX, BROWSE_ID_CHUNK } from "../retrieval-browse/index.mjs";
 /* R33, R71: the names of the tables this module declares. */
 export const RETRIEVAL_TABLES = Object.freeze([...RETRIEVAL_PURGE.map((t) => t.name), TERMS_TABLE]);
-export { FIND_ROW_CELLS_MAX } from "./findin.mjs";
-export { BROWSE_KINDS, BROWSE_ONLY, BROWSE_LIMIT_DEFAULT, BROWSE_LIMIT_MAX, BROWSE_MARKS_MAX } from "./browse.mjs";
 export { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE };
 
 /* ---- S-10 step 5: selections ----
@@ -113,6 +110,44 @@ function digestOf(ids) {
   return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
 }
 
+/* R88: the two routes a search reads apart, as the refusal names them: `passages` (a `passage:` term, read at meaning
+   grain) and `fields` (the record's own text and fields, and every other arm). */
+const ROUTES = Object.freeze(["fields", "passages"]);
+
+/* R88: whether an `OR` of the parsed query (`query-language`'s `ast`, R1) joins, at any depth, a `passage:` term to a term
+   of another route: some branch of one `OR` holds a passage term and another branch of the same `OR` holds any other. An
+   `AND` (the default) joins the routes without crossing them, and a `NOT` keeps its operand's route. */
+function routesCrossed(ast) {
+  const routesOf = (n) => !n || typeof n !== "object" ? new Set()
+    : n.op === "not" ? routesOf(n.kid)
+    : Array.isArray(n.kids) ? new Set(n.kids.flatMap((k) => [...routesOf(k)]))
+    : new Set([n.op === "meaning" && n.arm === "passage" ? "passages" : "fields"]);
+  const walk = (n) => {
+    if (!n || typeof n !== "object") return false;
+    if (n.op === "not") return walk(n.kid);
+    if (!Array.isArray(n.kids)) return false;
+    if (n.op === "or") {
+      const sets = n.kids.map(routesOf);
+      if (sets.some((s, i) => s.has("passages") && sets.some((t, j) => j !== i && t.has("fields")))) return true;
+    }
+    return n.kids.some(walk);
+  };
+  return walk(ast);
+}
+
+/* R9: a conjunction holding a NOT has no wider reading to offer: `query-language` reads its OR as the union of the NOT's
+   complement with the words, which counts every record (F-B10 (c)), so none is offered. */
+const holdsNot = (ast) => !!ast && typeof ast === "object" && (ast.op === "not" || (Array.isArray(ast.kids) && ast.kids.some(holdsNot)));
+
+/* R88: the refusal, with no row run. */
+const crossedRefusal = () => ({ ok: false, reason: "ROUTES_CROSSED", code: "ROUTES_CROSSED", routes: [...ROUTES],
+  detail: "an OR joins a passage: term (the passages route) to a term of another route (the fields route: the record's "
+        + "own text and fields); each route is counted by its own read, so ask them apart or join them with AND" });
+
+/* R87: the scopes `searchFields` publishes, `retrieval-browse`'s `BROWSE_SCOPES` as it gives them (its R13). */
+const SCOPE_KEYS = Object.freeze(BROWSE_SCOPES.map((s) => s.key));
+const SCOPE_NONE = Object.freeze([""]);   // a scope holding no id reads no bundle: the ids arm of a compile never reads an empty list as "none"
+
 const rand = (n = 12) => [...crypto.getRandomValues(new Uint8Array(n))]
   .map((b) => b.toString(16).padStart(2, "0")).join("");
 
@@ -136,8 +171,6 @@ export class Retrieval {
   #hiddenRuns = null;           // R39: {module, fn}
   #selectionListeners = [];     // R52: {module, fn, seq}
   #fields = [];                 // R62: {module, field, table, key, col, seq}
-  #recordedBy = [];             // R76: {module, fn, seq}
-  #browseMarks = null;          // R86: {module, fn}
   /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
      relation (query-language R25), and each registered field through its owner's (its R26). */
   #via = Object.freeze({ projection: PROJECTION_RELATION });
@@ -150,11 +183,6 @@ export class Retrieval {
   #localFacts; #combine; #host;
   /* query-language's money words (its R28), injected until it reads `money` itself (K1563 (1); its J2). */
   #money = null;
-  /* R74's `people`: entities' name lookup (its R17). `undefined`: the host's own, made when first asked. */
-  #entities;
-  /* R73's `recorded`: the four recording modules whose `recordedBy` reads it calls, each an instance or a function
-     answering one; a module not handed is the host's own, made when first asked. */
-  #recorders;
 
   constructor({ storage, record, membership, promotion, extraction, observation = null, now = null, selectionNow = null,
                 order = null, terms = null, localFacts = undefined, combine = combineProfiles, host = null, money = null,
@@ -177,12 +205,15 @@ export class Retrieval {
     this.#host = host;
     this.#money = money && typeof money === "object" ? money : null;
     this.#combine = typeof combine === "function" ? combine : null;
-    this.#entities = entities;
-    this.#recorders = new Map(RECORDED_BY_MODULES.map((m) =>
-      [m, recorders && typeof recorders === "object" && recorders[m] !== undefined ? recorders[m] : undefined]));
     this.frontierReader = new Frontier(this);
-    this.finder = new Finder(this);
-    this.browser = new Browser(this);
+    /* R90: "Find in this" and browse are `retrieval-browse`'s (its R14); it is handed the five reads whose rules stay
+       here: R28's gate (`sight`, `planOf`, `runQuery`), R69's locale and R77's selection read. */
+    this.browseModule = retrievalBrowseOf({
+      sql: this.#sql, membership, host, order, entities, recorders,
+      sight: (viewer) => this.sight(viewer), planOf: (input) => this.planOf(input),
+      runQuery: (statement, tally) => this.runQuery(statement, tally), localeOf: () => this.localeOf(),
+      selectionRead: (args) => this.selectionRead(args),
+    });
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -268,7 +299,7 @@ export class Retrieval {
       return { ok: false, reason: "FACTS_MALFORMED", detail: "a registration names its module and its function" };
     if (this.#actionFacts)
       return { ok: false, reason: "FACTS_DECLARED", module, declaredBy: this.#actionFacts.module,
-               detail: "the action facts are registered once" };
+               detail: localize("retrieval.index.action_facts_once", "the action facts are registered once") };
     this.#actionFacts = { module, fn };
     return { ok: true, module };
   }
@@ -377,7 +408,7 @@ export class Retrieval {
       return bad("a relation is a table, a key and a column, each an SQL identifier");
     const held = this.#fields.find((f) => f.field === field);
     if (held) return { ok: false, reason: "FIELD_DECLARED", module, field, declaredBy: held.module,
-                       detail: "a field is registered once" };
+                       detail: localize("retrieval.index.field_registered_once", "a field is registered once") };
     this.#fields.push({ module, field, table, key, col, seq: this.#fields.length });
     this.#fields.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     this.#via = Object.freeze({ projection: PROJECTION_RELATION,
@@ -397,55 +428,11 @@ export class Retrieval {
     return { ok: true, module };
   }
 
-  /** R76 (N715; K31, K2063): a later module's read by capture and extent, `fn({captureSha, extent?, limit, viewer})`
-   *  answering in `events` R49's shape, which R73 calls for every capture a find reads, after the four it names. A
-   *  malformed registration, or a second by the same module, is refused by membership's `listenerRefusal` (its R81);
-   *  the four R73 names are held already, so none of them registers here. Reads run in the modules' total order. */
-  registerRecordedBy(module, fn) {
-    const held = [...RECORDED_BY_MODULES.map((m) => ({ module: m })), ...this.#recordedBy];
-    const refused = listenerRefusal(held, module, fn);
-    if (refused) return refused;
-    this.#recordedBy.push({ module, fn, seq: this.#recordedBy.length });
-    this.#recordedBy.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
-    return { ok: true, module };
-  }
-
-  /** R86 (N1092; DEC-238 S23 "A"; K31's pattern, as R52, R76): the one later module (`following`) that holds a member's
-   *  watches and the team's second-look flags registers its read once at start: `fn({viewer, only, limit})` answers
-   *  `{items, truncated}` (the ids marked) and `fn({viewer, ids})` answers `{watched, flagged}` for those ids. A malformed
-   *  registration, or a second whoever makes it (the slot takes one), is refused by membership's `listenerRefusal`. */
-  registerBrowseMarks(module, fn) {
-    const refused = listenerRefusal(this.#browseMarks, module, fn);
-    if (refused) return refused;
-    this.#browseMarks = { module, fn };
-    return { ok: true, module };
-  }
-
-  /** R85, R86: the registered read of marks, or null. */
-  browseMarks() { return this.#browseMarks; }
-
-  /** R73, R76: the reads a find calls, in order: `events`, `standards`, `money` and `people`'s `recordedBy`, then each
-   *  registered one. `read` is null, with why, for a module whose instance offers none; `registered` says which. */
-  recordedReads() {
-    const own = RECORDED_BY_MODULES.map((m) => {
-      let inst = this.#recorders.get(m);
-      if (inst === undefined) {
-        inst = null;
-        const make = { events: eventsOf, standards: standardsOf, money: moneyOf, people: peopleOf }[m];
-        try { if (this.#host) inst = make(this.#host); } catch { inst = null; }
-        this.#recorders.set(m, inst);
-      }
-      if (typeof inst === "function") {
-        try { inst = inst(); } catch { inst = null; }
-        this.#recorders.set(m, inst);
-      }
-      return inst && typeof inst.recordedBy === "function"
-        ? { module: m, read: (a) => inst.recordedBy(a), registered: false }
-        : { module: m, read: null, registered: false,
-            why: inst ? say("retrieval.why.offers_recordedby_read", { m }) : say("retrieval.why.reachable", { m }) };
-    });
-    return [...own, ...this.#recordedBy.map((r) => ({ module: r.module, read: r.fn, registered: true }))];
-  }
+  /** R76, R86 (R90): the two registrations are `retrieval-browse`'s (its R4, R11); the slot is the module's. */
+  registerRecordedBy(module, fn) { return this.browseModule.registerRecordedBy(module, fn); }
+  registerBrowseMarks(module, fn) { return this.browseModule.registerBrowseMarks(module, fn); }
+  /** R90: the reads a find calls, in order, as `retrieval-browse` holds them (`answers`' and `citation`'s tests read it). */
+  recordedReads() { return this.browseModule.recordedReads(); }
 
   /* ---- the T33 fields, the local day, the compile (R68, R69) ---- */
 
@@ -493,20 +480,47 @@ export class Retrieval {
     return rows.length;
   }
 
-  /** R69: the time zone that governs on this instance: local-facts' governing value (its R2) for the active profiles'
-   *  `time_zone`, else the active profiles' own (`jurisdictions` R41, through their combined view), else null. Two
-   *  profiles governing different zones govern none. Never throws. */
-  zone() {
+  /** R69: the time zone that governs on this instance: the team's own zone when the team stated one (local-facts R21),
+   *  else local-facts' governing value (its R2) for the active profiles' `time_zone`, else the active profiles' own
+   *  (`jurisdictions` R41, through their combined view), else null. Two
+   *  profiles governing different zones govern none. Never throws. `{why: true}` answers `{zone, source, why}` instead
+   *  of the zone alone (G62's logging): `source` is `local-facts` or `profiles` (null with no zone) and, with no zone,
+   *  `why` a code, `no_profiles`, `profiles_disagree` or `no_zone_stated` (null with one); no sentence. */
+  zone({ why = false } = {}) {
+    const r = this.#zoneRead();
+    return why === true ? r : r.zone;
+  }
+
+  /* local-facts' instance, made on its first use; its construction creates and declares its tables, a write. With
+     `teamOnly` it is made only where its table exists: a team's zone is stated into that table (local-facts R21), so a
+     database without it has no stated zone to read, and the read writes nothing (R32). Not cached while the table is
+     absent, so a zone stated later is read. */
+  #localFactsFor(teamOnly) {
+    if (this.#localFacts !== undefined) return this.#localFacts;
+    if (!this.#host) { this.#localFacts = null; return null; }
+    if (teamOnly && !this.#rows(`SELECT 1 AS n FROM sqlite_master WHERE type='table' AND name='local_fact_acts'`).length) return null;
+    this.#localFacts = localFactsOf(this.#host);
+    return this.#localFacts;
+  }
+
+  #zoneRead() {
+    const found = (zone, source) => ({ zone, source, why: null });
+    const none = (why) => ({ zone: null, source: null, why });
     let ids = null;
     try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
-    if (!Array.isArray(ids) || !ids.length) return null;
     const ok = (z) => (typeof z === "string" && z !== "" ? z : null);
     try {
-      if (this.#localFacts === undefined) {
-        this.#localFacts = null;
-        if (this.#host) this.#localFacts = localFactsOf(this.#host);
+      /* local-facts R21: a zone the team stated governs first, with or without an installed place profile */
+      const lf = this.#localFactsFor(true);
+      if (lf && typeof lf.factStatus === "function") {
+        const team = lf.factStatus({ path: TEAM_ZONE_PATH });
+        const stated = team && team.ok !== false && team.governs && team.governs.origin === "corrected" ? ok(team.governs.value) : null;
+        if (stated) return found(stated, "local-facts");
       }
-      const lf = this.#localFacts;
+    } catch { /* fall through to the profiles */ }
+    if (!Array.isArray(ids) || !ids.length) return none("no_profiles");
+    try {
+      const lf = this.#localFactsFor(false);
       if (lf && typeof lf.factStatus === "function") {
         const zones = new Set();
         for (const id of ids) {
@@ -514,14 +528,15 @@ export class Retrieval {
           const z = r && r.ok !== false && r.governs ? ok(r.governs.value) : null;
           if (z) zones.add(z);
         }
-        if (zones.size === 1) return [...zones][0];
-        if (zones.size > 1) return null;
+        if (zones.size === 1) return found([...zones][0], "local-facts");
+        if (zones.size > 1) return none("profiles_disagree");
       }
     } catch { /* fall through to the profiles */ }
     try {
       const c = this.#combine ? this.#combine(ids) : null;
-      return c && c.ok && c.view && c.view.time_zone ? ok(c.view.time_zone.value) : null;
-    } catch { return null; }
+      const z = c && c.ok && c.view && c.view.time_zone ? ok(c.view.time_zone.value) : null;
+      return z ? found(z, "profiles") : none("no_zone_stated");
+    } catch { return none("no_zone_stated"); }
   }
 
   /** R61, R62, R68: the relations every compile names: the projection, each registered field (R62), and each live T33
@@ -779,15 +794,105 @@ export class Retrieval {
     return this.#rows(stmt.sql, ...stmt.args);
   }
 
-  /** R6–R9, R78: `op=search`. Synchronous: a page's decorations (R78) answer synchronously too. */
-  search(input = {}) {
+  /* R87: `input.scope`, a key of `BROWSE_SCOPES`, as the ids `retrieval-browse`'s `scopeMembers` names for the viewer (its
+     R13: bundles the viewer's gate passes, at most 5,000), intersected with any `ids` the caller gave. `null` scope: the
+     input as it is. An unknown key is refused SCOPE_UNKNOWN naming `scopes`. The compile gates the same ids again (R28). */
+  #scoped(input) {
+    const asked = input.scope;
+    if (asked === undefined || asked === null || asked === "") return { key: null, input };
+    const key = String(asked);
+    if (!SCOPE_KEYS.includes(key))
+      return { refusal: { ok: false, reason: "SCOPE_UNKNOWN", code: "SCOPE_UNKNOWN", scopes: [...SCOPE_KEYS],
+                          detail: localize("retrieval.index.no_scope_called_stringify_the", "no scope called {stringify}; the scopes are {SCOPE_KEYS}", { stringify: String(JSON.stringify(key.slice(0, 40))), SCOPE_KEYS: String(SCOPE_KEYS.join(", ")) }) } };
+    const held = this.browseModule.scopeMembers({ scope: key, viewer: input.viewer ?? null });
+    let ids = held && held.ok === true && Array.isArray(held.ids) ? held.ids : [];
+    if (Array.isArray(input.ids) && input.ids.length) { const given = new Set(input.ids); ids = ids.filter((id) => given.has(id)); }
+    return { key, truncated: !!(held && held.truncated),
+             undetermined: held && held.undetermined && typeof held.undetermined.why === "string" ? held.undetermined.why : null,
+             input: { ...input, ids: ids.length ? ids : SCOPE_NONE } };
+  }
+
+  /* R87: what the answer says of the scope applied: the key (or null), `scope_truncated` only when the scope held more ids
+     than the bound, and `scope_undetermined` (why) when its marks could not be read, so an empty answer is not read as a
+     fact about the record. */
+  #scopeSaid(sc) {
+    return { scope: sc.key, ...(sc.truncated ? { scope_truncated: true } : {}),
+             ...(sc.undetermined ? { scope_undetermined: sc.undetermined } : {}) };
+  }
+
+  /* R92: the documents the rows name, `{bundle_id, title}` by id, and for `withConclusion` the frontmatter's conclusion
+     too. The rows came through the viewer's gate (R28), so the ids read here are ones the viewer may see. */
+  #documentsOf(ids, withConclusion) {
+    const out = new Map(), uniq = [...new Set(ids.filter((i) => typeof i === "string" && i))];
+    for (let i = 0; i < uniq.length; i += SELECTION_ID_CHUNK) {   /* R98: within the plane's 100-variable bound (D-36) */
+      const part = uniq.slice(i, i + SELECTION_ID_CHUNK), marks = part.map(() => "?").join(",");
+      const sel = withConclusion ? ", bp.fm_json AS fm" : "", join = withConclusion
+        ? ` LEFT JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id` : "";
+      for (const r of this.#rows(`SELECT b.bundle_id, b.title${sel} FROM bundles b${join} WHERE b.bundle_id IN (${marks})`, ...part)) {
+        let conclusion = null;
+        if (withConclusion && r.fm) { try { const c = JSON.parse(r.fm).conclusion; conclusion = typeof c === "string" && c.trim() ? c.trim() : null; } catch { conclusion = null; } }
+        out.set(r.bundle_id, { title: r.title ?? null, conclusion });
+      }
+    }
+    return out;
+  }
+
+  /* R92: a question's excerpt, cut from "title, conclusion" (never `bundle.md`, which holds its markdown, ids and
+     hashes) around the first of the query's terms it holds, `snip` words long, the matches in `MARK_OPEN`/`MARK_CLOSE` and the cuts in `…`
+     as R6's snippet has them; with no term in those words, their start. */
+  static #questionExcerpt(title, conclusion, terms, snip) {
+    const words = [title, conclusion].filter((t) => typeof t === "string" && t.trim()).join(" ").split(/\s+/).filter(Boolean);
+    if (!words.length) return null;
+    const needles = (terms || []).map((t) => String(t).toLowerCase().replace(/\*$/, "").replace(/^"|"$/g, "").trim())
+      .flatMap((t) => t.split(/\s+/)).filter((t) => /[\p{L}\p{N}]/u.test(t));
+    const at = words.findIndex((w) => needles.some((n) => w.toLowerCase().includes(n)));
+    const n = Math.min(64, Math.max(4, Math.floor(Number(snip)) || 12));
+    const from = at < 0 ? 0 : Math.max(0, Math.min(at - Math.floor(n / 2), words.length - n));
+    const part = words.slice(from, from + n).map((w) => {
+      const low = w.toLowerCase(), hit = needles.find((x) => low.includes(x));
+      if (!hit) return w;
+      const i = low.indexOf(hit);
+      return w.slice(0, i) + MARK_OPEN + w.slice(i, i + hit.length) + MARK_CLOSE + w.slice(i + hit.length);
+    });
+    return (from > 0 ? "\u2026 " : "") + part.join(" ") + (from + n < words.length ? " \u2026" : "");
+  }
+
+  /* R92: each hit names its document (`document {bundle_id, title}`), and a question's text excerpt is built from its
+     title and conclusion. R95, R96: each hit also names the part it was found in (`kind`, null where undetermined) and
+     where (`capture_sha`, `extent_kind`, `extent`, `ref`), all null for a hit that is not a passage's. Added before R78's
+     decorations, which therefore cannot replace any of it. */
+  #namedHits(hits, plan, input) {
+    if (!hits.length) return hits;
+    const asks = hits.some((h) => normalizeType(h.object_type) === "inquiry" && h.snippet_from === "text" && h.snippet != null);
+    const docs = this.#documentsOf(hits.map((h) => h.bundle_id), asks);
+    /* R95, R96 (`query-language` R34): the unit a passage snippet came from, read by the `rowid` the hit names. */
+    const units = unitsByRowid((q, ...a) => this.#rows(q, ...a),
+      hits.filter((h) => h.snippet_from === "passage").map((h) => h.snippet_unit));
+    return hits.map((h) => {
+      const d = docs.get(h.bundle_id) || { title: h.title ?? null, conclusion: null };
+      const u = h.snippet_from === "passage" ? units.get(h.snippet_unit) : null;
+      const out = { ...h, document: { bundle_id: h.bundle_id, title: d.title },
+                    kind: u ? u.kind : null, capture_sha: u ? u.capture_sha : null,
+                    extent_kind: u ? u.extent_kind : null, extent: u ? u.extent : null, ref: u ? u.ref : null };
+      if (normalizeType(h.object_type) === "inquiry" && h.snippet_from === "text" && h.snippet != null)
+        out.snippet = Retrieval.#questionExcerpt(d.title, d.conclusion, plan.terms, input.snippetChars) ?? h.snippet;
+      return out;
+    });
+  }
+
+  /** R6–R9, R78, R87: `op=search`. Synchronous: a page's decorations (R78) answer synchronously too. */
+  search(given = {}) {
+    const sc = this.#scoped(given);
+    if (sc.refusal) return sc.refusal;
+    const input = sc.input;
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
     const plan = this.#compile(input);
+    if (routesCrossed(plan.ast)) return crossedRefusal();
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const out = {
       query: { q: String(input.q ?? ""), terms: plan.terms, match: plan.match,
-               sort: plan.sort, warnings: plan.warnings, mode },
+               sort: plan.sort, warnings: plan.warnings, mode, ...this.#scopeSaid(sc) },
       /* The gate is reported, not assumed. `scope` is DENY when the caller presented no recognisable viewer, which is
          the fail-closed answer, and `applied` counts the statements that carried the gate. */
       gate: { scope: plan.gate, applied: 0 },
@@ -795,7 +900,7 @@ export class Retrieval {
     };
     if (mode === "page") {
       /* R78: the registered decorations add keys to the page's hits, and to nothing else in the answer. */
-      out.hits = this.#decorateHits(this.runQuery(plan.statements.page(), tally), input.viewer ?? null);
+      out.hits = this.#decorateHits(this.#namedHits(this.runQuery(plan.statements.page(), tally), plan, input), input.viewer ?? null);
     } else if (mode === "ids") {
       /* Select-all: every id in the set, ordered identically to the page so the set an operator selected is the set
          they were looking at. */
@@ -811,11 +916,12 @@ export class Retrieval {
     /* R9: the affordance that makes AND safe. A bare conjunction that returns zero is re-run as OR and the wider count
        is offered. It costs one extra query only in the case that already returned nothing. */
     out.widen = null;
-    if (total === 0 && plan.widenable && input.widen !== false) {
+    if (total === 0 && plan.widenable && !holdsNot(plan.ast) && input.widen !== false) {
       const or = this.#compile({ ...input, implicitOp: "or" });
-      const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
+      /* R88: the OR reading is never offered across routes, since it would count what the query was refused for. */
+      const n = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
-                               detail: "no record matches all of these terms; this many match any of them" };
+                               detail: localize("retrieval.index.no_record_matches_all", "no record matches all of these terms; this many match any of them") };
     }
     out.gate.applied = tally.applied;
     return out;
@@ -858,55 +964,90 @@ export class Retrieval {
    *  THROWS if it arrives without the gate. `total` IS COUNTED THROUGH THE SAME JOINS AND THE SAME PREDICATE as the
    *  rows, which is what makes hidden identical to absent here, and NOTHING publishes how many rows the gate removed
    *  (REC-36). THE REFUSALS ARE DEC-49's SHAPE, from this module's own rows (C-23.1, C-23.2). */
-  meaningRows(input = {}) {
+  meaningRows(given = {}) {
     const known = Object.keys(MEANING);
     const refuse = (key, detail) => {
       const row = MEANING_READ_CHECKS[key];
       return { ok: false, reason: key, check: row.check, translation: row.translation, detail };
     };
+    const sc = this.#scoped(given);
+    if (sc.refusal) return sc.refusal;
+    const input = sc.input;
     const asked = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
     if (!asked)
       return refuse("MEANING_ROWS_NO_ARM",
-        `op=meaningrows answers at MEANING grain and must be told which: rows=${known.join("|")}. `
-        + "Each reads a different table and answers a different question, so there is no default that "
-        + "would not be answering something you did not ask.");
+        localize("retrieval.index.op_meaningrows_answers_at_meaning", "op=meaningrows answers at MEANING grain and must be told which: rows={known}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.", { known: String(known.join("|")) }));
     if (!known.includes(asked))
       return refuse("MEANING_ROWS_UNKNOWN_ARM",
-        `no meaning of the kind ${JSON.stringify(asked)} is held. The kinds that are: `
-        + known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; "));
-    const plan = this.#compile({
+        localize("retrieval.index.no_meaning_of_the_kind", "no meaning of the kind {stringify} is held. The kinds that are: {map}", { stringify: String(JSON.stringify(asked)), map: String(known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")) }));
+    const compileArgs = {
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
       /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
       snippetChars: Number(input.snippetChars) || undefined,
-    });
+    };
+    const plan = this.#compile(compileArgs);
+    if (routesCrossed(plan.ast)) return crossedRefusal();
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
-    const rows = this.#legEarnedCapture(plan.meaning.arm, this.runQuery(plan.statements.meaning(), tally));
+    const rows = this.#namedRows(plan.meaning.arm, this.#legEarnedCapture(plan.meaning.arm, this.runQuery(plan.statements.meaning(), tally)));
     /* REC-90 — THE FOUR-LEVEL STATEMENT (R13), on the same gate and the same scope. */
     const lv = this.runQuery(plan.statements.meaning({ mode: "levels" }), tally)[0] || {};
     /* REC-92 (R14) — THE CONTENT-AXIS TALLY, ONLY for an arm that searches the text index. */
     const axis = plan.meaning.fts ? this.#contentAxisTally(plan, tally) : null;
     const obs = this.observation;
+    /* R9 at meaning grain: a conjunction that finds no rows is re-run as OR and the wider count offered, as `search` does. */
+    let widen = null;
+    if (total === 0 && plan.widenable && !holdsNot(plan.ast) && input.widen !== false) {
+      const or = this.#compile({ ...compileArgs, implicitOp: "or" });
+      const n = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
+      if (n > 0) widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
+                           detail: localize("retrieval.index.no_record_matches_all", "no record matches all of these terms; this many match any of them") };
+    }
     return {
       ok: true,
       /* The GRAIN travels with the answer, in words: an inquiry resting on four legs is FOUR rows here and ONE row
          through op=search, and both are right. */
       arm: plan.meaning.arm, table: plan.meaning.table,
       grain: plan.meaning.grain, identity: plan.meaning.identity,
-      query: { q: String(input.q ?? ""), warnings: plan.warnings, meaningArms: plan.meaningArms },
+      query: { q: String(input.q ?? ""), warnings: plan.warnings, meaningArms: plan.meaningArms, ...this.#scopeSaid(sc) },
       gate: { scope: plan.gate, applied: tally.applied },
       /* REC-108 / D-379: only the FILTER route can run at this grain. */
       cached: cachedNotes(plan.cached, { facets: false, ordered: false }),
       rows, count: rows.length,
-      limit: plan.meaning.limit, offset: plan.meaning.offset, total,
-      ...meaningLevels(plan.meaning.level, Number(lv.documents || 0), Number(lv.documents_with_rows || 0), total,
+      limit: plan.meaning.limit, offset: plan.meaning.offset, total, widen,
+      ...this.#withExistenceOnly(meaningLevels(plan.meaning.level, Number(lv.documents || 0), Number(lv.documents_with_rows || 0), total,
                        { arm: plan.meaning.arm, matched: plan.meaning.matched, axis,
                          vocab: obs ? { states: obs.vocabulary.CONTENT_AXIS_STATES,
-                                        undetermined: obs.vocabulary.CONTENT_AXIS_UNDETERMINED } : null }),
+                                        undetermined: obs.vocabulary.CONTENT_AXIS_UNDETERMINED } : null }), input.viewer ?? null),
     };
+  }
+
+  /* R92: a passage row names the document holding its unit, `document {bundle_id, title}`. R95: and the part's `kind`, read
+     by the unit's address (null where the unit was stored before the kind: undetermined, never `body`). */
+  #namedRows(arm, rows) {
+    if (arm !== "passage" || !Array.isArray(rows) || !rows.length) return rows;
+    const docs = this.#documentsOf(rows.map((r) => r && r.bundle_id), false);
+    const kinds = kindsOf((q, ...a) => this.#rows(q, ...a), rows.filter((r) => r && r.capture_sha != null));
+    return rows.map((r) => (r ? { ...r, ...(docs.has(r.bundle_id) ? { document: { bundle_id: r.bundle_id, title: docs.get(r.bundle_id).title } } : {}),
+                                  kind: kinds.get(unitKey(r)) ?? null } : r));
+  }
+
+  /* R89: R13's `scope` also names the projects the viewer's sight of is existence only (`membership` R44), each
+     `{project, name}` as R77 gives them (never its `owners`), and their count: the projects, never a count of the
+     documents in them, and never a project the viewer has no sight of at all (R29's exception). */
+  #withExistenceOnly(levels, viewer) {
+    const seen = [];
+    try {
+      if (typeof this.membership.existenceAct === "function")
+        for (const { bundle_id: id } of this.#rows(`SELECT bundle_id FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`)) {
+          const act = this.membership.existenceAct(id, viewer);
+          if (act && act.project === id) seen.push({ project: act.project, name: act.name ?? null });
+        }
+    } catch { seen.length = 0; }
+    return { ...levels, scope: { ...levels.scope, existence_only_projects: seen, existence_only_count: seen.length } };
   }
 
   /** REC-114 / D-383 (R12) — A LEG LISTING'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE RECORD CAN EARN FOR THAT LEG'S
@@ -972,10 +1113,15 @@ export class Retrieval {
       if (Object.prototype.hasOwnProperty.call(counts, axis.state)) counts[axis.state] += 1;
       else counts[V.CONTENT_AXIS_UNDETERMINED] += 1;
     }
+    /* R97: the captures in scope whose reading is not whole are counted apart, with how far each had got. */
+    const partial = partialReads((q, ...a) => this.#rows(q, ...a), page.map((r) => r.capture_sha),
+      typeof this.extraction.progressOf === "function" ? (shas) => this.extraction.progressOf(shas) : null);
     return {
       captures_counted: page.length, truncated, bound: MEANING_AXIS_CAP,
       ...counts,
       not_read: notRead,
+      partial: partial.length, partial_reads: partial.slice(0, PARTIAL_LISTED_MAX),
+      partial_truncated: partial.length > PARTIAL_LISTED_MAX,
       /* THE VOCABULARY TRAVELS WITH THE TALLY, PL-17's rule. */
       vocabulary: V.CONTENT_AXIS_STATES, undetermined_value: V.CONTENT_AXIS_UNDETERMINED,
     };
@@ -995,6 +1141,8 @@ export class Retrieval {
                                  route: this.#via.fields && this.#via.fields[k] ? "registered" : live[k] ? t33.get(k).route : null }
                              : { available: true }) }])),
       ftsColumns: FTS_COLUMNS, defaultFacets: DEFAULT_FACETS, idsMax: IDS_MAX,
+      /* R87: the scopes a search is narrowed to, `retrieval-browse`'s (its R13), named in no language. */
+      scopes: BROWSE_SCOPES.map((s) => ({ key: s.key, kinds: [...s.kinds], only: s.only })),
       meaning: meaningVocabulary(),
       syntax: [
         say("retrieval.syntax.bare_words_ranked"),
@@ -1005,24 +1153,19 @@ export class Retrieval {
         /* R54 (K105): the proximity operator, stated in the published grammar. */
         say("retrieval.syntax.near_finds_words"),
         say("retrieval.syntax.field_value_filters"),
-        "field:>value, field:<value, field:a..b compare and range",
+        localize("retrieval.index.field_compare_range", "field:>value, field:<value, field:a..b compare and range"),
         say("retrieval.syntax.field_asks_field"),
         say("retrieval.syntax.fm_path_fm"),
         say("retrieval.syntax.leg_resolves_concerns"),
         /* REC-90: `content:` searches WHAT HAS BEEN CITED OR MARKED CITABLE, never the text of the documents
            themselves — `passage:` is that question. */
-        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
-        + "content:pdf-page by extent kind, content:stale for citations made under a transcription the "
-        + "record has replaced, content:machine by who minted it, content:ocr by the chain's last step, "
-        + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
-        "content: does NOT search the text of the documents -- it searches what has been cited or marked "
-        + "citable in them, so an empty answer is a fact about citation and never about what a document says",
+        localize("retrieval.index.content_reaches_layer", "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages"),
+        localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says"),
         say("retrieval.syntax.passage_searches_documents"),
         say("retrieval.syntax.content_cap_undetermined"),
         say("retrieval.syntax.content_chain_apply"),
         say("retrieval.syntax.content_cap_apply"),
-        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
-        + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
+        localize("retrieval.index.meaning_arm_takes", "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)"),
         say("retrieval.syntax.leg_asks_record"),
         say("retrieval.syntax.sort_field_sort"),
       ],
@@ -1045,7 +1188,7 @@ export class Retrieval {
     const findings = [];
     for (const r of rows) {
       if (r.fts_id === null || r.fts_id === undefined) {
-        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the record has no text index key" });
+        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: localize("retrieval.index.record_no_text_index_key", "the record has no text index key") });
         continue;
       }
       const have = this.#one(`SELECT ${FTS_COLUMNS.join(", ")} FROM bundles_fts WHERE rowid=?`, r.fts_id);
@@ -1137,10 +1280,13 @@ export class Retrieval {
    *  array that is COMPLETE tells no lie; its named consumers (the browser, the audit, the migration verifier) need it
    *  whole, and `roster.test.mjs` (R63) holds it complete. Paging is opt-in: a positive `limit` answers the envelope
    *  `{bundles, limit, cursor, total}`, `limit` the bound applied after the 5,000 ceiling (REC-57) and `total` what the
-   *  VIEWER may see (a total over rows the caller cannot read would say "something is hidden"). */
+   *  VIEWER may see of the same `type` and `state` (a total over rows the caller cannot read would say "something is
+   *  hidden"; a total narrowed by `after` would say the page is the whole set). */
   listBundles({ type = null, state = null, after = null, limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
+    /* R93: the bundle's project, the empty text for a project-less bundle, read in this same statement. */
     let q = `SELECT b.bundle_id, b.object_type, b.current_state, b.title, b.last_updated, b.bundle_sha,
+                    COALESCE(b.project, '') AS project,
                     m.seq AS route_seq, m.at AS route_at, m.by AS route_by, m.finding AS route_finding,
                     m.state_at AS route_state_at, m.register_state AS route_register,
                     m.undetermined AS route_undetermined, m.documents_n AS route_documents_n
@@ -1153,6 +1299,8 @@ export class Retrieval {
        (the record grammar's R5) rather than answered with an empty page, as `query-language` does for `type:`. */
     if (type) { w.push(`b.object_type=?`); a.push(normalizeType(type)); }
     if (state) { w.push(`b.current_state=?`); a.push(state); }
+    /* R63: the total counts the viewer's bundles that match `type` and `state` as the page does, never narrowed by `after`. */
+    const counted = { where: w.join(" AND "), args: [...a] };
     if (after) { w.push(`b.bundle_id > ?`); a.push(after); }
     q += ` WHERE ${w.join(" AND ")} ORDER BY b.bundle_id`;
     const asked = Number(limit);
@@ -1162,7 +1310,7 @@ export class Retrieval {
     const rows = this.#rows(`${q} LIMIT ?`, ...a, cap).map(Retrieval.#withRoute);
     return { bundles: rows, limit: cap,
              cursor: rows.length === cap ? rows[rows.length - 1].bundle_id : null,
-             total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n };
+             total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE ${counted.where}`, ...counted.args).n };
   }
 
   /** R64 (`op=index`): the index projection, every bundle R63's gate passes, in id order. It names no locator: there is
@@ -1220,20 +1368,19 @@ export class Retrieval {
   /** R18: create a selection. `kind` is decided by what the caller supplied, not by size: an explicit id list is an
    *  enumeration, a bare query is a query selection. Bob settled that select-all means the query, 2026-07-25. */
   async selectionCreate({ q = "", viewer = null, owner = null, sort = null, dir = null, ids = null, kind = null } = {}) {
-    if (!owner) return { ok: false, reason: "NO_OWNER", detail: "a selection is owned by the credential that made it" };
+    if (!owner) return { ok: false, reason: "NO_OWNER", detail: localize("retrieval.index.selection_owned_by_credential", "a selection is owned by the credential that made it") };
     this.sweepSelections();
     const wanted = kind || (Array.isArray(ids) && ids.length ? "enumerated" : "query");
     if (wanted !== "query" && wanted !== "enumerated")
-      return { ok: false, reason: "BAD_KIND", detail: "a selection is 'query' or 'enumerated'" };
+      return { ok: false, reason: "BAD_KIND", detail: localize("retrieval.index.selection_kind_query_enumerated", "a selection is 'query' or 'enumerated'") };
     const tally = { applied: 0 };
     let members = [];
     if (wanted === "enumerated") {
       const list = [...new Set((ids || []).map(String))];
-      if (!list.length) return { ok: false, reason: "EMPTY", detail: "an enumerated selection needs at least one id" };
+      if (!list.length) return { ok: false, reason: "EMPTY", detail: localize("retrieval.index.enumerated_needs_one_id", "an enumerated selection needs at least one id") };
       if (list.length > SELECTION_MAX_ITEMS)
         return { ok: false, reason: "TOO_LARGE", limit: SELECTION_MAX_ITEMS, got: list.length,
-                 detail: "an enumeration this large is refused rather than quietly turned into a query selection, "
-                       + "because that would change what the operator's click meant. Select by query instead." };
+                 detail: localize("retrieval.index.an_enumeration_this_large_is", "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead.") };
       /* Chunked, because SQLite bounds how many variables one statement binds. Every chunk still goes through compile()
          and therefore through the viewer gate: an id the viewer may not see never enters the selection. */
       for (let i = 0; i < list.length; i += SELECTION_ID_CHUNK) {
@@ -1301,8 +1448,10 @@ export class Retrieval {
     if (!sel) return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
     /* END DEC-49 REGION is-selection-known */
     /* Ownership is enforced, not inferred from the handle being hard to guess. */
+    /* DEC-49 REGION is-selection-yours — C-33.59. */
     if (!owner || sel.owner !== owner)
-      return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+      return { ok: false, reason: "SELECTION_NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
+    /* END DEC-49 REGION is-selection-yours */
     const now = new Date(this.#selNowMs());
     const expires = new Date(now.getTime() + SELECTION_TTL_MS).toISOString();
     this.#sql.exec(`UPDATE selections SET touched=?, expires=? WHERE handle=?`, now.toISOString(), expires, handle);
@@ -1310,7 +1459,7 @@ export class Retrieval {
   }
 
   /** R77 (N729; K1991, K2092): what `selectionResolve` answers at `weight: "report"` — the members re-resolved under
-   *  the current viewer, with the drift; NO_SUCH_SELECTION for an unknown, released or expired handle, NOT_YOURS for
+   *  the current viewer, with the drift; NO_SUCH_SELECTION for an unknown, released or expired handle, SELECTION_NOT_YOURS (R99) for
    *  another owner's — and it writes nothing: no sweep, no extended life, no column of any selection row changed, so an
    *  expired selection not yet swept answers NO_SUCH_SELECTION and stays as it was. `expires` is the selection's own.
    *  Never throws: a selection that cannot be read answers as one not held. Not an op (`answers` R28 reads it). */
@@ -1321,9 +1470,9 @@ export class Retrieval {
       const sel = typeof handle === "string" && handle ? this.#one(`SELECT * FROM selections WHERE handle=?`, handle) : null;
       if (!sel || sel.expires < this.#nowIso()) return none;
       if (!owner || sel.owner !== owner)
-        return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+        return { ok: false, reason: "SELECTION_NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
       return this.#selectionAnswer(sel, viewer, "report", sel.expires);
-    } catch { return { ...none, detail: "the selection could not be read, so it is answered as one not held" }; }
+    } catch { return { ...none, detail: localize("retrieval.index.selection_not_read_not_held", "the selection could not be read, so it is answered as one not held") }; }
   }
 
   /* R19, R20, R77: one selection's answer under `viewer` at `weight`, `expires` the life it now has. */
@@ -1341,8 +1490,7 @@ export class Retrieval {
       ...(stopped ? { reason: "SET_MOVED", code: "SET_MOVED",
                       check: SELECTION_CHECKS.SET_MOVED.check,
                       translation: SELECTION_CHECKS.SET_MOVED.translation,
-                      detail: "this action changes state, so it will not run against a set that moved "
-                            + "since it was selected. Look at the selection again and re-select." } : {}),
+                      detail: localize("retrieval.index.this_action_changes_state_so", "this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select.") } : {}),
       drift, members: stopped ? [] : members.map((m) => m.bundle_id),
       expires,
       gate: { applied: tally.applied },
@@ -1419,7 +1567,7 @@ export class Retrieval {
   selectionRelease({ handle = null, owner = null } = {}) {
     if (!owner) return { ok: false, reason: "NO_OWNER" };
     const sel = handle ? this.#one(`SELECT owner FROM selections WHERE handle=?`, handle) : null;
-    if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "NOT_YOURS" };
+    if (handle && (!sel || sel.owner !== owner)) return { ok: false, reason: "SELECTION_NOT_YOURS" };
     const before = this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c;
     this.record.transact(() => {
       if (handle) {
@@ -1445,7 +1593,7 @@ export class Retrieval {
    *  `query-language`'s refusal. It writes nothing: no selection, no observation, no row of its own (R32). */
   runSaved({ form = null, owner = null, viewer = null, limit = null } = {}) {
     const notYours = { ok: false, reason: "NOT_YOUR_QUERY", code: "NOT_YOUR_QUERY",
-                       detail: "no saved query of yours answers to that" };
+                       detail: localize("retrieval.index.no_saved_query_of_yours", "no saved query of yours answers to that") };
     const isForm = !!form && typeof form === "object" && !Array.isArray(form) && form.v === 1 && typeof form.q === "string";
     if (!isForm || typeof owner !== "string" || !owner || typeof viewer !== "string" || viewer !== owner) return notYours;
     /* N584: the check that the form compiles as saved is made with R72's relations and R69's zone, the ones `answers`
@@ -1554,125 +1702,13 @@ export class Retrieval {
     };
   }
 
-  /* ---- "Find in this" (R73–R75; T35-37, N698, DEC-164) ---- */
+  /** R90: `op=findin` (`retrieval-browse` R1–R9). */
+  findIn(args = {}) { return this.browseModule.findIn(args); }
 
-  /** R73: a find over one scope, by kind, that records nothing. The scope is resolved here under the viewer's sight
-   *  (every capture the viewer may not see is left out and counted nowhere, R29); the kinds are answered by
-   *  `findin.mjs`'s matchers over at most `FIND_CAPTURES_PER_CALL` captures, in capture-sha order, `next` naming where
-   *  to continue. `owner` is the control plane's owner stamp, which a selection scope is read under (R19: a selection
-   *  is its maker's); it defaults to the viewer. It writes nothing: a selection named as the scope is read through
-   *  `selectionRead` (R77), never extending its life, and no observation, fact or reading is written; it calls no
-   *  model. Each match carries `recorded`, who recorded it (R76's reads; `findin.mjs`). */
-  findIn({ scope = null, kinds = null, term = null, limit = null, cursor = null, viewer = null, owner = null } = {}) {
-    const no = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
-    if (typeof viewer !== "string" || !viewer)
-      return no("VIEWER_MISSING", "a find answers only to a stamped viewer, and this request carries none");
-    if (scope == null || (typeof scope === "object" && !Array.isArray(scope) && !Object.keys(scope).length))
-      return no("NO_SCOPE", "a find runs over one scope: a capture, a selection, a set of ids or a project");
-    const forms = ["capture", "selection", "ids", "project"];
-    const keys = scope && typeof scope === "object" && !Array.isArray(scope) ? Object.keys(scope) : null;
-    if (!keys || keys.length !== 1 || !forms.includes(keys[0]))
-      return no("SCOPE_UNKNOWN", `a scope is exactly one of ${forms.map((f) => `{${f}}`).join(", ")}`, { forms });
-    const form = keys[0], value = scope[form];
-    const resolved = this.#findScope(form, value, viewer, typeof owner === "string" && owner ? owner : viewer);
-    if (resolved.ok === false) return resolved;
-    const asked = Array.isArray(kinds) ? kinds : typeof kinds === "string" && kinds ? kinds.split(",") : [];
-    const wanted = [...new Set(asked.map((k) => String(k).trim()).filter(Boolean))];
-    if (!wanted.length) return no("NO_KINDS", `a find names the kinds it looks for: ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
-    const unknown = wanted.filter((k) => !FIND_KINDS.includes(k));
-    if (unknown.length)
-      return no("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; `
-        + `the kinds are ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
-    const words = typeof term === "string" ? term.trim() : "";
-    if (wanted.includes("term") && !words) return no("NO_TERM", "the kind term finds a name or term as written, and none was given");
-    if (words.length > FIND_TERM_MAX)
-      return no("TERM_TOO_LONG", `a term is at most ${FIND_TERM_MAX} characters`, { limit: FIND_TERM_MAX, got: words.length });
-    const n = Number(limit);
-    const cap = limit == null || limit === "" || !Number.isFinite(n) ? FIND_ITEMS_DEFAULT
-      : Math.max(1, Math.min(FIND_ITEMS_MAX, Math.floor(n)));
-    const after = typeof cursor === "string" && cursor ? cursor : null;
-    const remaining = resolved.captures.filter((c) => after === null || c.capture_sha > after);
-    const page = remaining.slice(0, FIND_CAPTURES_PER_CALL);
-    const next = remaining.length > page.length ? page[page.length - 1].capture_sha : null;
-    const found = this.finder.find({ captures: page, kinds: wanted, term: words, limit: cap, viewer,
-                                     whole: after === null && next === null });
-    /* R80, R81: each match names its document and, held, its content row. */
-    this.finder.annotate(found, page, viewer);
-    /* R73, R76 (N715): who recorded each match, through the recording modules' reads by capture. */
-    const recorded = this.finder.recorded(found, page, viewer);
-    return { ok: true, scope: { form, [form]: value, captures: resolved.captures.length, title: resolved.title ?? null },
-             kinds: found, captures_read: page.length, limit: cap, captures_limit: FIND_CAPTURES_PER_CALL, next,
-             recorded_read: recorded.read, recorded_not_read: recorded.not_read };
-  }
-
-  /* R73's scope, resolved under the viewer's sight to the captures it holds (`[{capture_sha, bundle_id}]`, one entry
-     per capture under its first visible bundle, in capture-sha order), or the scope's refusal. A capture is held by
-     the bundles that register it (provenance's `register`, its R48). */
-  #findScope(form, value, viewer, owner) {
-    const no = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
-    const sees = this.sight(viewer);
-    const byCapture = new Map();
-    const holdOf = (bundleIds) => {
-      for (let i = 0; i < bundleIds.length; i += SELECTION_ID_CHUNK) {
-        const part = bundleIds.slice(i, i + SELECTION_ID_CHUNK);
-        for (const r of this.#rows(`SELECT DISTINCT capture_sha, bundle_id FROM register
-                                     WHERE bundle_id IN (${part.map(() => "?").join(",")})`, ...part))
-          if (sees(r.bundle_id)) keep(r);
-      }
-    };
-    const keep = (r) => { const b = byCapture.get(r.capture_sha); if (!b || r.bundle_id < b) byCapture.set(r.capture_sha, r.bundle_id); };
-    const ownersOf = (sha) => this.#rows(`SELECT DISTINCT capture_sha, bundle_id FROM register WHERE capture_sha = ?`, sha)
-      .filter((r) => sees(r.bundle_id));
-    const SHA = /^[0-9a-f]{64}$/;
-    if (form === "capture") {
-      const sha = typeof value === "string" ? value.trim() : "";
-      const held = sha ? ownersOf(sha) : [];
-      if (!held.length)
-        return no("CAPTURE_NOT_HELD", "this record holds no capture with that fingerprint that you may see");
-      held.forEach(keep);
-    } else if (form === "selection") {
-      /* R77: read, never resolved, so the find extends no selection's life and writes nothing (N729). */
-      const sel = this.selectionRead({ handle: typeof value === "string" ? value : "", viewer, owner });
-      if (sel.ok !== true) return { ok: false, reason: sel.reason, detail: sel.detail };
-      holdOf(sel.members);
-    } else if (form === "ids") {
-      const list = Array.isArray(value) ? [...new Set(value.filter((v) => typeof v === "string" && v).map((v) => v.trim()))] : [];
-      if (list.length > FIND_IDS_MAX)
-        return no("SCOPE_TOO_LARGE", `an enumerated scope holds at most ${FIND_IDS_MAX} ids`, { limit: FIND_IDS_MAX, got: list.length });
-      for (const id of list.filter((v) => SHA.test(v))) ownersOf(id).forEach(keep);
-      holdOf(list.filter((v) => !SHA.test(v)));
-    } else {
-      const id = typeof value === "string" ? value.trim() : "";
-      const proj = id ? this.#one(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id = ?`, id) : null;
-      if (!proj || normalizeType(proj.object_type) !== "project" || !sees(id))
-        return no("NO_SUCH_PROJECT", "this record holds no project by that id that you may see");
-      holdOf([id, ...this.#rows(`SELECT bundle_id FROM bundles WHERE project = ? ORDER BY bundle_id`, id).map((r) => r.bundle_id)]);
-    }
-    const captures = [...byCapture].map(([capture_sha, bundle_id]) => ({ capture_sha, bundle_id }))
-      .sort((a, b) => (a.capture_sha < b.capture_sha ? -1 : a.capture_sha > b.capture_sha ? 1 : 0));
-    /* R80: a capture's title is the title of the bundle R73 attributes it to, a project's its own; a set has none. */
-    const titleOf = (id) => {
-      const row = id ? this.#one(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
-      return row && typeof row.title === "string" && row.title.trim() ? row.title : null;
-    };
-    const title = form === "capture" ? titleOf(captures[0] ? captures[0].bundle_id : null)
-      : form === "project" ? titleOf(String(value).trim()) : null;
-    return { ok: true, captures, title };
-  }
-
-  /** R74's `term`, through the compiler (R28): a compile with this module's relations and zone. */
+  /** R90: a host read of `retrieval-browse` (its R14): a compile for its `term` kind, through the compiler (R28): a compile with this module's relations and zone. */
   planOf(input) { return this.#compile(input); }
 
-  /** R74's `people`: entities' name lookup (its R17), the host's own unless a caller handed one; null when none. */
-  entitiesFor() {
-    if (this.#entities === undefined) {
-      this.#entities = null;
-      try { if (this.#host) this.#entities = entitiesOf(this.#host); } catch { this.#entities = null; }
-    }
-    return this.#entities;
-  }
-
-  /** R75: the primary language subtag of the active profiles' `locale` (`jurisdictions` R37), lower-cased, or null
+  /** R90: a host read of `retrieval-browse`, R69's source. The primary language subtag of the active profiles' `locale` (`jurisdictions` R37), lower-cased, or null
    *  when no profile is active or none states one (profiles that disagree have it withheld, its R15). */
   localeOf() {
     let ids = null;
@@ -1685,8 +1721,8 @@ export class Retrieval {
     } catch { return null; }
   }
 
-  /** R85, R86: `op=browse` (`browse.mjs`). */
-  browse(args = {}) { return this.browser.read(args); }
+  /** R90: `op=browse` (`retrieval-browse` R10–R12). */
+  browse(args = {}) { return this.browseModule.browse(args); }
 
   /** R35–R50: `op=frontier` (`frontier.mjs`). */
   frontier(args = {}) { return this.frontierReader.read(args); }
@@ -1790,6 +1826,11 @@ function registerFigures(r) {
 
 /** R58, K3: the ops this module answers (R78 adds none: its decorations reach `op=search`'s page through `search`), as entries of the store's op map (its dispatcher spreads them in). `url` carries
  *  the control plane's stamps (`viewer`, `owner`, `identity`), never taken from the caller's own parameters there. */
+/* The names `retrievalRoutes` answers (R58, R66, R90): this module's own list, which its test pins the map against. */
+export const RETRIEVAL_ROUTE_OPS = Object.freeze(["browse", "contentaxis", "file", "findin", "frontier", "image", "index", "list",
+  "meaningrows", "projection", "projectionclear", "projectionplan", "reproject", "search", "searchfields", "searchindexcheck",
+  "select", "selection", "selectionlist", "selectionrelease"]);
+
 export function retrievalRoutes(r, url, body) {
   const q = url.searchParams;
   return {
@@ -1807,10 +1848,11 @@ export function retrievalRoutes(r, url, body) {
       facetMode: q.get("facetmode"),
       widen: q.get("widen") !== "0",
       snippetChars: Number(q.get("snippet")) || 12,
+      scope: q.get("scope"),
     }),
     meaningrows: () => r.meaningRows({ q: q.get("q") ?? "", rows: q.get("rows"), viewer: q.get("viewer"),
                                        limit: q.get("limit"), offset: q.get("offset"),
-                                       snippetChars: Number(q.get("snippet")) || undefined,
+                                       snippetChars: Number(q.get("snippet")) || undefined, scope: q.get("scope"),
                                        ids: Array.isArray(body?.ids) ? body.ids : null }),
     searchfields: () => r.searchFields(),
     select: () => r.selectionCreate({ q: q.get("q") ?? "", viewer: q.get("viewer"), owner: q.get("owner"),
@@ -1847,3 +1889,20 @@ export function retrievalRoutes(r, url, body) {
     },
   };
 }
+
+/* R91 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
+   the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
+export const DECLARED_OPS = Object.freeze({
+  findin: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("retrieval.declared.findin", "read: what a scope holds of the kinds asked, each match with its words and extent, found by search; it records nothing; writes nothing"),
+    fields: { accepts: ["scope","kinds","term","limit","cursor"], requires: ["scope","kinds"] } },
+  select: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("retrieval.declared.select", "selection lifecycle, owned by the credential that made it"),
+    fields: { accepts: ["q","sort","dir","kind","ids"], requires: [] } },
+  selectionrelease: { classes: ["admin","member","probe"], mutating: true, weight: "caller-owned", description: localize("retrieval.declared.selectionrelease", "selection lifecycle, owned by the credential that made it"),
+    fields: { accepts: ["handle"], requires: [] } },
+  frontier: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.frontier.label.finder",
+    fields: { accepts: ["level","limit"], requires: [] } },
+  search: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.search.label.finder",
+    fields: { accepts: ["q","sort","dir","limit","offset","mode","facets","facetmode","widen","snippet","scope"], requires: [] } },
+  list: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("retrieval.declared.list", "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing"),
+    fields: { accepts: ["type","state","after","limit"], requires: [] } },
+});

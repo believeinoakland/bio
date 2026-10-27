@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { seeded, V, MACHINE, sha } from "./fixture.mjs";
 import { canonicalCsv, parseCsv, ROLES, MONEY_ROLES, KEY_ROLES, ROSTER_ROLES, TABLE_MAX_BYTES, TABLE_MAX_CELLS }
   from "../../../src/calculations/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
 const F = [{ name: "vendor", type: "string" }, { name: "amount", type: "number", currency: "USD" }, { name: "paid", type: "date" }];
@@ -67,7 +68,7 @@ test("R1 declareTable's refusals in order, each with a negative control: NO_SOUR
 test("R1 a table of 1,000,000 cells, the bound, is declared and evaluated as calc-grammar's streamed table within a Worker's heap: every act runs in a heap capped at 128 MB, and each calculation grows the heap over the held table by a few MB", (t) => {
   const run = execFileSync(process.execPath, ["--expose-gc", "--max-old-space-size=128", fileURLToPath(new URL("./fixtures/heap.mjs", import.meta.url))],
     { encoding: "utf8", maxBuffer: 1 << 20, env: { ...process.env, CALC_HEAP_CHILD: "1" } });
-  const out = JSON.parse(run);
+  const out = JSON.parse(run.trim().split("\n").at(-1));
   assert.deepEqual(out.declared, { rows: 100000, cells: 1000000 }, "the bound's own size, declared");
   t.diagnostic(`held after declaring: ${out.held_mb.toFixed(1)} MB`);
   for (const [name, a] of Object.entries(out.acts)) {
@@ -136,7 +137,7 @@ test("R1 with no evidence store bound a table's bytes cannot be held: refused NO
   const cells = [["A1", "vendor"], ["B1", "amount"], ["C1", "paid"], ["A2", "Acme"], ["B2", "12"], ["C2", "2025-08-01"]].map(([cell, value]) => ({ source: { cell }, value, type: "s" }));
   const r = await w.c.declareTable({ source: w.sheet(cells, "A1:C2"), schema: { fields: F }, header: HEADER, by: V("bob") });
   assert.equal(code(r), "NO_EVIDENCE_STORE");
-  assert.equal(r.detail, "your group's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
+  assert.equal(r.detail, localize("calculations.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written."));
   assert.doesNotMatch(r.detail, /\b(this|the) instance\b|\bcopy\b|\bplane\b|\bserver\b|\bbound\b/);
   assert.equal(w.count("calc_tables"), 0);
 });
@@ -210,4 +211,52 @@ test("R3 a table may carry a vintage under a key the member names; tablesAt answ
   assert.equal(code(w.c.tablesAt({ key: "rates", at: "2023-02-30", viewer: V("bob") })), "NO_DATE");
   assert.equal(code(await w.c.declareTable({ source: w.csv("x\n9\n"), schema: { fields }, header: ["x"], vintage: { key: "rates", valid: { from: "2023-13-01" } }, by: V("bob") })), "BAD_SCHEMA");
   assert.equal(code(await w.c.declareTable({ source: w.csv("x\n9\n"), schema: { fields }, header: ["x"], vintage: { key: "rates", valid: { from: null, to: null }, supersedes: "0".repeat(64) }, by: V("bob") })), "BAD_SCHEMA", "it supersedes a held table");
+});
+
+test("R1 (K5148) a declaration of held bytes with other roles or schema replaces them and answers replaced: [field], never a bare already; the key stays the bytes; the next ingest sees the corrected roles and writes only the rows not yet held (R14)", async () => {
+  const w = seeded();
+  w.person("Pat Quill", "P001");
+  const acme = w.entity("Acme Paving", "institution");
+  const FIELDS = [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }];
+  const cwFields = [{ name: "vendor_no", type: "string" }, { name: "entity", type: "string" }];
+  const cwRoles = { vendor_no: { role: "crosswalk_from" }, entity: { role: "crosswalk_to" } };
+  /* the first crosswalk names S-1 only; the corrected one also names S-2 */
+  const cw1 = await w.table(`vendor_no,entity\nS-1,${acme}\n`, cwFields, { roles: cwRoles });
+  const cw2 = await w.table(`vendor_no,entity\nS-1,${acme}\nS-2,${acme}\n`, cwFields, { roles: cwRoles });
+  const roles = (cw) => ({ payer: { role: "payer", scheme: "ellery_person" }, payee: { role: "payee", crosswalk: { table: cw.sha, from: "vendor_no", to: "entity" } }, amount: { role: "amount" } });
+  const text = "payer,payee,amount\nP001,S-1,5\nP001,S-2,6\n";
+  const a = await w.table(text, FIELDS, { roles: roles(cw1) });
+  const bind = { amount: "amount", payer: "payer", payee: "payee", kind: { value: "payment" }, phase: { value: "actual" },
+    stage: { value: "paid" }, basis: { value: "cash" }, currency: { value: "USD" }, period: { value: "2025-07-01/2026-06-30" } };
+  const b = w.c.adoptBinding({ table: a.sha, roles: bind, by: V("bob") });
+  const one = await w.c.ingestMoney({ binding: b.binding, rows: "all", reason: "the whole ledger", by: V("bob") });
+  w.clock.now = new Date(Date.parse(w.clock.now) + 60000).toISOString();   /* an act's key names its instant */
+  assert.deepEqual(one.written.map((x) => x.row), [0]);
+  assert.deepEqual(one.not_written.map((x) => [x.row, x.reason]), [[1, "PAYEE_NOT_IDENTIFIED"]]);
+  /* a re-declaration with the same roles and schema is the held table, as before */
+  const same = await w.c.declareTable({ source: w.csv(text), schema: { fields: FIELDS }, header: ["payer", "payee", "amount"], roles: roles(cw1), by: V("bob") });
+  assert.equal(same.already, true);
+  assert.equal(same.replaced, undefined);
+  /* the same file with the corrected crosswalk: held as B, named in replaced, the key the bytes' */
+  const b2 = await w.c.declareTable({ source: w.csv(text), schema: { fields: FIELDS }, header: ["payer", "payee", "amount"], roles: roles(cw2), by: V("bob") });
+  assert.equal(b2.ok, true);
+  assert.equal(b2.sha, a.sha, "the key stays the bytes");
+  assert.deepEqual(b2.replaced, ["roles"]);
+  assert.notEqual(b2.already, true, "never a bare already");
+  assert.deepEqual(b2.roles, roles(cw2));
+  assert.equal(w.count("calc_tables"), 3);
+  assert.deepEqual((await w.c.readTable({ sha: a.sha, viewer: V("bob") })).roles, roles(cw2), "the corrected roles are the held ones");
+  /* a different schema (a typed column read as text) is named too, with its cells recounted */
+  const s2 = await w.c.declareTable({ source: w.csv(text), schema: { fields: [FIELDS[0], FIELDS[1], { name: "amount", type: "string" }] }, header: ["payer", "payee", "amount"], roles: roles(cw2), by: V("bob") });
+  assert.deepEqual(s2.replaced, ["schema"]);
+  assert.equal(s2.schema.fields[2].type, "string");
+  const back = await w.c.declareTable({ source: w.csv(text), schema: { fields: FIELDS }, header: ["payer", "payee", "amount"], roles: roles(cw1), by: V("bob") });
+  assert.deepEqual(back.replaced, ["roles", "schema"]);
+  const fixed = await w.c.declareTable({ source: w.csv(text), schema: { fields: FIELDS }, header: ["payer", "payee", "amount"], roles: roles(cw2), by: V("bob") });
+  assert.deepEqual(fixed.replaced, ["roles"]);
+  /* the walker's second ingest: the payee the new crosswalk names is seen, and only the row not yet held is written */
+  const two = await w.c.ingestMoney({ binding: b.binding, rows: "all", reason: "the whole ledger", by: V("bob") });
+  assert.deepEqual(two.written.map((x) => x.row), [1]);
+  assert.deepEqual(two.not_written.map((x) => [x.row, x.reason]), [[0, "ROW_ALREADY_WRITTEN"]]);
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM money_facts`)[0].n, 2, "facts already written stay; none twice");
 });

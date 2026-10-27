@@ -22,6 +22,8 @@
  * law relation: a definition or an exception is a reading, and a member records what it
  * means, in `standards` (R15). */
 import { vocabulary } from "../docprofile/doctypes/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
+import { lineIndex, spend } from "./windows.mjs";
 
 /* ---------------------------------------------------------------- the view's forms */
 
@@ -71,13 +73,8 @@ export function codeForms(ctx) {
 
 /* ---------------------------------------------------------------------- text lines */
 
-/** Every line of the text with its offset, so an extent is an offset into the text read. */
-function linesOf(raw) {
-  const out = [];
-  let at = 0;
-  for (const line of raw.split("\n")) { out.push({ start: at, end: at + line.length, text: line }); at += line.length + 1; }
-  return out;
-}
+/* Every line of the text is held as an offset (R38, ./windows.mjs `lineIndex`), so an extent is an offset into the text
+   read and a large text is never split into a list of its lines. */
 
 /** A title as printed after a heading's number: up to its own full stop, or the line's end.
  *  `stopped` requires the stop: a code's heading ends its title with one (measured: every
@@ -109,7 +106,8 @@ function comparePaths(a, b) {
 /** A code's section headings in the text read, in document order. */
 function codeHeadings(lines, forms) {
   const out = [];
-  for (const l of lines) {
+  for (let li = 0; li < lines.length; li++) {
+    const l = lines.at(li);
     /* One document is of one code: after the first heading, only that code's headings
        divide it (a paragraph opening "1946 Termination of Tenancy." in a code section is
        another code's citation, not a section of a second code). */
@@ -123,7 +121,7 @@ function codeHeadings(lines, forms) {
          a citation or a list line, not the next section. */
       const path = f.split ? number.split(f.split).filter(Boolean) : [number];
       if (out.length && comparePaths(path, out[out.length - 1].path) <= 0) break;
-      out.push({ start: l.start + (l.text.length - l.text.trimStart().length), line: l, number, heading: title, form: f, path });
+      out.push({ start: l.start + (l.text.length - l.text.trimStart().length), li, number, heading: title, form: f, path });
       break;
     }
   }
@@ -135,11 +133,12 @@ function codeHeadings(lines, forms) {
 function instrumentHeadings(lines) {
   const out = [];
   let expect = 1;
-  for (const l of lines) {
+  for (let li = 0; li < lines.length; li++) {
+    const l = lines.at(li);
     const m = /^[ \t]*(?:SECTION|Section)[ \t]+(\d{1,3})[A-Z]?[ \t]*\.[ \t]*(.*)$/.exec(l.text);
     if (!m || Number(m[1]) !== expect) continue;
     expect++;
-    out.push({ start: l.start + (l.text.length - l.text.trimStart().length), line: l, number: m[1],
+    out.push({ start: l.start + (l.text.length - l.text.trimStart().length), li, number: m[1],
                heading: titleOf(m[2]), form: null, path: [m[1]] });
   }
   return out;
@@ -154,8 +153,8 @@ function subsections(lines, sec, end, form, locate) {
   if (!form || !form.markers.length) return out;
   const open = [];          // [{level, value, entry}]
   const close = (depth, at) => { while (open.length > depth) open.pop().entry.end = at; };
-  for (const l of lines) {
-    if (l.start <= sec.line.start || l.start >= end) continue;
+  for (let li = sec.li + 1; li < lines.length && lines.start(li) < end; li++) {
+    const l = lines.at(li);
     const t = l.text.trimStart();
     const at = l.start + (l.text.length - t.length);
     let placed = null;
@@ -205,27 +204,49 @@ function subsections(lines, sec, end, form, locate) {
 /** The code headings of a text (R9): how many there are, whether the first non-blank line
  *  is one, and the label of the code the first names. */
 export function codeHeadingsIn(raw, ctx) {
-  const lines = linesOf(String(raw || ""));
-  const heads = codeHeadings(lines, codeForms(ctx));
-  const first = lines.find((l) => l.text.trim().length);
-  return { count: heads.length, first: !!(first && heads.length && heads[0].line === first),
-           label: heads.length ? heads[0].form.label : null };
+  /* R37: the same reading as `codeHeadings`, a line at a time, so a large text is never split into a list of all its
+     lines. */
+  raw = String(raw || "");
+  spend(raw.length);
+  const forms = codeForms(ctx);
+  let count = 0, firstForm = null, lastPath = null, firstHeadAt = -1, firstLineAt = -1;
+  for (let start = 0; ;) {
+    const nl = raw.indexOf("\n", start);
+    const text = raw.slice(start, nl < 0 ? raw.length : nl);
+    if (firstLineAt < 0 && text.trim().length) firstLineAt = start;
+    for (const f of count ? [firstForm] : forms) {
+      const m = f.heading.exec(text);
+      if (!m) continue;
+      const title = titleOf(m.groups.rest, true);
+      if (!title) continue;
+      const path = f.split ? m.groups.num.split(f.split).filter(Boolean) : [m.groups.num];
+      if (count && comparePaths(path, lastPath) <= 0) break;
+      if (!count) { firstForm = f; firstHeadAt = start; }
+      count++;
+      lastPath = path;
+      break;
+    }
+    if (nl < 0) break;
+    start = nl + 1;
+  }
+  return { count, first: !!(firstLineAt >= 0 && count && firstHeadAt === firstLineAt),
+           label: count ? firstForm.label : null };
 }
 
 /** The sections of the text read, with each extent (R10–R12), or none and why (R11, R24). */
 export function readSections(raw, form, ctx, locate) {
-  const lines = linesOf(raw);
+  const lines = lineIndex(raw);
   const forms = codeForms(ctx);
   const heads = form === "code" ? codeHeadings(lines, forms) : form === "instrument" ? instrumentHeadings(lines) : [];
   if (!heads.length) {
     const why = form === "code"
-      ? (forms.length ? "no line of this text opens with a section number of a code the active jurisdiction profiles name, "
-                        + "followed by a title, so it is not divided into sections"
-                      : "no active jurisdiction profile gives a section-number form for any code, so no code section is read")
+      ? (forms.length ? localize("doctypes.sections.no_code_heading", "no line of this text opens with a section number of a code the active jurisdiction profiles name, followed by a title, so it is not divided into sections")
+                      : localize("doctypes.sections.no_code_forms", "no active jurisdiction profile gives a section-number form for any code, so no code section is read"))
       : form === "instrument"
         ? "no `SECTION 1.` heading opens a line of this instrument, so its text is not divided into sections"
-        : "this text was read as neither an instrument nor a code section, so it is not divided into sections"
-          + (forms.length ? "" : "; and no active jurisdiction profile gives a section-number form for any code");
+        : forms.length
+          ? localize("doctypes.sections.neither_form", "this text was read as neither an instrument nor a code section, so it is not divided into sections")
+          : localize("doctypes.sections.neither_form_no_codes", "this text was read as neither an instrument nor a code section, so it is not divided into sections; and no active jurisdiction profile gives a section-number form for any code");
     return { sections: [], sections_why: why };
   }
   const sections = [];
@@ -238,16 +259,37 @@ export function readSections(raw, form, ctx, locate) {
   return { sections, sections_why: null };
 }
 
-/** The deepest section whose extent holds `offset`, or null. */
+/** The deepest section whose extent holds `offset`, or null (found by looking through every section). */
 function holder(sections, offset) {
   let best = null;
   for (const s of sections)
     if (offset >= s.start && offset < s.end && (!best || s.path.length > best.path.length)) best = s;
   return best;
 }
+/** `holder` for many offsets over the same sections, in work that does not grow with the number of sections each time
+ *  (R40): sections nest, so the deepest one holding an offset is the nearest of the last section to start at or before it
+ *  and the sections that hold that one's start. Sections not in the order of their starts are looked through, as `holder`
+ *  does. */
+function holderOf(sections) {
+  const n = sections.length;
+  const parent = new Int32Array(n);
+  const open = [];
+  for (let i = 0; i < n; i++) {
+    if (i && sections[i].start < sections[i - 1].start) return (offset) => holder(sections, offset);
+    while (open.length && sections[open[open.length - 1]].end <= sections[i].start) open.pop();
+    parent[i] = open.length ? open[open.length - 1] : -1;
+    open.push(i);
+  }
+  return (offset) => {
+    let lo = 0, hi = n - 1, at = -1;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (sections[mid].start <= offset) { at = mid; lo = mid + 1; } else hi = mid - 1; }
+    while (at >= 0 && !(offset < sections[at].end)) at = parent[at];
+    return at >= 0 ? sections[at] : null;
+  };
+}
 const unplacedWhy = (sections) => (sections.length
-  ? "no section read from this text holds this passage (it stands before the first heading)"
-  : "this text was not divided into sections, so no section can be named for this passage");
+  ? localize("doctypes.sections.unplaced", "no section read from this text holds this passage (it stands before the first heading)")
+  : localize("doctypes.sections.not_divided", "this text was not divided into sections, so no section can be named for this passage"));
 
 /* ------------------------------------------------------------------ the definitions */
 
@@ -263,41 +305,106 @@ const TERMS = new RegExp(`${Q_OPEN}([^"“”‘’'\\n]{1,120}?)${Q_CLOSE}`, "g
 /* A line that is only a list or subsection marker (`1.`, `(a)`, `ii.`). */
 const MARKER_LINE = /^\s*\(?[A-Za-z0-9]{1,4}[.)]\s*$/;
 
-/** Where a definitional passage ends: its paragraph's end, or, for a paragraph ending in a
- *  colon, past the list it introduces (marker lines and the paragraph after each). */
-function passageEnd(raw, from) {
-  const lines = linesOf(raw);
-  let i = lines.findIndex((l) => from >= l.start && from <= l.end);
-  if (i < 0) return raw.length;
-  let end = lines[i].end;
-  if (!/:\s*$/.test(lines[i].text)) return end;
+/** The bounds of the line that holds `at`, found again only when `at` leaves the line last found (R40: many passages on
+ *  one long line do not each look for its ends). */
+function lineFinder(raw) {
+  let from = -1, to = -1;
+  return (at) => {
+    if (at < from || at > to) {
+      from = at > 0 ? raw.lastIndexOf("\n", at - 1) + 1 : 0;
+      const nl = raw.indexOf("\n", from);
+      to = nl < 0 ? raw.length : nl;
+    }
+    return [from, to];
+  };
+}
+
+/** Where a definitional passage ends: its paragraph's end, or, for a paragraph ending in a colon, past the list it
+ *  introduces (marker lines and the paragraph after each). R38: read from the text a line at a time. */
+function passageEnd(raw, from, lineOf) {
+  if (from > raw.length) return raw.length;
+  const lineEnd = (at) => { const nl = raw.indexOf("\n", at); return nl < 0 ? raw.length : nl; };
+  const [lineStart, first] = lineOf(from);
+  let end = first;
+  /* A line ends in a colon when its last character that is not white space is one. */
+  let last = end;
+  while (last > lineStart && /\s/.test(raw[last - 1])) last--;
+  if (!(last > lineStart && raw[last - 1] === ":")) return end;
   let afterMarker = false;
-  for (i++; i < lines.length; i++) {
-    const l = lines[i];
-    if (MARKER_LINE.test(l.text)) { afterMarker = true; end = l.end; continue; }
+  while (end < raw.length) {
+    const next = lineEnd(end + 1);
+    if (MARKER_LINE.test(raw.slice(end + 1, next))) { afterMarker = true; end = next; continue; }
     if (!afterMarker) break;
     afterMarker = false;
-    end = l.end;
+    end = next;
   }
   return end;
+}
+
+/* What a line must hold for either voice to match in it (R40): the verb that closes a definition, or the opener of the
+   "as used in this" form. A line without it is not run through the voice's pattern, whose chain of terms is read again
+   from each quote of a line that has none. */
+const DEFINES_GATE = /shall[ \t]+mean|shall[ \t]+include|means|includes|is[ \t]+defined[ \t]+as|refers[ \t]+to/;
+const AS_USED_GATE = /as[ \t]+used[ \t]+in[ \t]+this/i;
+
+/* A line longer than this is read around the places its gate matches and not whole (R40, B13): the chain of quoted terms
+   a definition names is read again from each quote of a line that has a verb far from them, so a line of tens of
+   thousands of quoted words with a verb at its end would be read once for each word. What is read is the stretch before
+   the verb in which a chain stands (`before` characters; a chain of more than that many characters of quoted terms
+   before its verb reads from its later terms) and the stretch after the opener of the "as used in this" form. */
+const LONG_LINE = 3000;
+
+/** Calls `fn(m)` for each match of the global pattern `re` in `raw`, `m.index` an offset in `raw`. A match of the
+ *  definitional voices never holds a line break, so the text is read a line at a time, and only the lines `gate` admits;
+ *  a long line only around the places the gate matches (`before` and `after` characters about each). */
+function eachLineMatch(raw, re, gate, fn, before = 1500, after = 80) {
+  const global = new RegExp(gate.source, gate.flags.includes("g") ? gate.flags : gate.flags + "g");
+  for (let at = 0; ;) {
+    const nl = raw.indexOf("\n", at);
+    const end = nl < 0 ? raw.length : nl;
+    if (end - at <= LONG_LINE) {
+      const line = raw.slice(at, end);
+      if (line && gate.test(line)) {
+        re.lastIndex = 0;
+        for (const m of line.matchAll(re)) { m.index += at; fn(m); }
+      }
+    } else {
+      const line = raw.slice(at, end);
+      let done = 0;
+      for (const g of line.matchAll(global)) {
+        const from = Math.max(done, g.index - before), to = Math.min(line.length, g.index + g[0].length + after);
+        if (to <= done) continue;
+        re.lastIndex = 0;
+        for (const m of line.slice(from, to).matchAll(re)) {
+          if (from + m.index < done) continue;
+          m.index += at + from; fn(m);
+          done = m.index - at + m[0].length;
+        }
+        done = Math.max(done, to);
+      }
+    }
+    if (nl < 0) return;
+    at = nl + 1;
+  }
 }
 
 /** Every passage defining a term (R13), in reading order: `{term, start, end, source,
  *  section}`, `end` the end of its paragraph or the start of the next definition in it. */
 export function readDefinitions(raw, sections, locate) {
+  spend(raw.length * 2);   // the two voices each read the text once
   const hits = [];
-  for (const re of [DEFINES, AS_USED]) {
-    re.lastIndex = 0;
-    for (const m of raw.matchAll(re)) {
+  for (const [re, gate, before, after] of [[DEFINES, DEFINES_GATE, 1500, 80], [AS_USED, AS_USED_GATE, 20, 500]]) {
+    eachLineMatch(raw, re, gate, (m) => {
       TERMS.lastIndex = 0;
       const tail = AS_USED === re ? m[0].slice(m[0].search(new RegExp(Q_OPEN + "[^" + "\"“”‘’'" + "]*" + Q_CLOSE + "$"))) : m[0];
       const base = m.index + m[0].length - tail.length;
       for (const t of tail.matchAll(TERMS)) hits.push({ start: base + t.index, at: m.index, term: t[1].trim() });
-    }
+    }, before, after);
   }
   hits.sort((a, b) => a.start - b.start);
+  /* The hits are in the order of their starts, so a start met twice is the last one kept. */
   const kept = [];
-  for (const h of hits) if (!kept.some((k) => k.start === h.start)) kept.push(h);
+  for (const h of hits) if (!kept.length || kept[kept.length - 1].start !== h.start) kept.push(h);
   /* A passage's terms share its extent: from its first term to its end. */
   const passages = [];
   for (const h of kept) {
@@ -305,10 +412,11 @@ export function readDefinitions(raw, sections, locate) {
     if (p && p.at === h.at) p.terms.push(h); else passages.push({ at: h.at, start: h.start, terms: [h] });
   }
   const out = [];
+  const holderAt = holderOf(sections), lineOf = lineFinder(raw);
   passages.forEach((p, i) => {
-    let end = passageEnd(raw, p.start);
+    let end = passageEnd(raw, p.start, lineOf);
     if (i + 1 < passages.length && passages[i + 1].start < end && passages[i + 1].start > p.start) end = passages[i + 1].start;
-    const s = holder(sections, p.start);
+    const s = holderAt(p.start);
     for (const t of p.terms) {
       const d = { term: t.term, start: t.start, end, source: locate(t.start) || null, section: s ? s.path : null };
       if (!s) d.why = unplacedWhy(sections);
@@ -326,37 +434,68 @@ const EXCEPTS = /\b(?:except[ \t]+as[ \t]+(?:otherwise[ \t]+)?(?:provided|set[ \
    abbreviations legal text cites by. */
 const ABBREV = /(?:\b(?:Sec|Secs|No|Nos|Gov|Govt|Ord|Res|Stat|Stats|Cal|Civ|Pen|Proc|Ch|Art|Subd|seq|al|etc|Inc|St|Code|U\.S|i\.e|e\.g|v|vs|Mr|Ms|Dr)|\b[A-Z])$/;
 
-function sentenceOf(raw, at, endAt) {
-  const lineStart = raw.lastIndexOf("\n", at - 1) + 1;
-  const lineEndRaw = raw.indexOf("\n", endAt);
-  const lineEnd = lineEndRaw < 0 ? raw.length : lineEndRaw;
-  let start = lineStart;
-  const before = raw.slice(lineStart, endAt);
-  const stopRe = /[.;](?=\s+["“(]?[A-Z])/g;
-  for (const m of before.matchAll(stopRe))
-    if (lineStart + m.index < at && !ABBREV.test(before.slice(0, m.index))) start = lineStart + m.index + 1;
-  while (start < at && /\s/.test(raw[start])) start++;
-  let end = lineEnd;
-  const after = raw.slice(endAt, lineEnd);
-  for (const m of after.matchAll(/[.;](?=\s|$)/g)) {
-    if (ABBREV.test(raw.slice(lineStart, endAt + m.index))) continue;
-    end = endAt + m.index + 1;
-    break;
-  }
-  return { start, end };
+const SPACE = /\s/;
+/** The sentence around each exceptive passage, one passage after another in the order of the text (R14): `(at, endAt)`
+ *  gives `{start, end}`. A sentence starts after the last stop before the passage on its line (a stop is a `.` or `;`
+ *  and white space and a capital, and not the end of an abbreviation) and ends at the first stop after it, or at the end
+ *  of the line. R40: the stops are met once, by a cursor along the line, and the end found for one passage is the end of
+ *  every passage before it, so a line of 40,000 passages is read once and not 40,000 times. */
+function sentenceReader(raw) {
+  let ls = -1, le = -1;                  // the line being read
+  let cursor = 0, stopStart = 0;         // stops met up to `cursor`; the start after the last of them
+  let tFrom = -1, tTo = -1, tEnd = -1;   // the last end found: for any passage ending in [tFrom, tTo] it is tEnd
+  const tail = (j) => ABBREV.test(raw.slice(Math.max(ls, j - 8), j));
+  return (at, endAt) => {
+    if (at < ls || at > le || at < cursor) {
+      ls = raw.lastIndexOf("\n", at - 1) + 1;
+      const nl = raw.indexOf("\n", endAt);
+      le = nl < 0 ? raw.length : nl;
+      cursor = ls; stopStart = ls; tFrom = -1;
+    }
+    for (let j = cursor; j < at; j++) {
+      const c = raw.charCodeAt(j);
+      if (c !== 46 && c !== 59) continue;
+      let k = j + 1;
+      if (!(k < raw.length && SPACE.test(raw[k]))) continue;
+      while (k < raw.length && SPACE.test(raw[k])) k++;
+      if (k < raw.length && "\"“(".includes(raw[k])) k++;
+      if (!(k < raw.length && raw.charCodeAt(k) >= 65 && raw.charCodeAt(k) <= 90)) continue;
+      if (tail(j)) continue;
+      stopStart = j + 1;
+    }
+    cursor = at;
+    let start = stopStart;
+    while (start < at && SPACE.test(raw[start])) start++;
+    if (!(tFrom >= 0 && endAt >= tFrom && endAt <= tTo)) {
+      let stop = le, end = le;
+      for (let i = endAt; i < le; i++) {
+        const c = raw.charCodeAt(i);
+        if (c !== 46 && c !== 59) continue;
+        if (!(i + 1 === le || SPACE.test(raw[i + 1]))) continue;
+        if (tail(i)) continue;
+        stop = i; end = i + 1;
+        break;
+      }
+      tFrom = endAt; tTo = stop; tEnd = end;
+    }
+    return { start, end: tEnd };
+  };
 }
 
 /** Every passage that excepts (R14), one per sentence, in reading order: `{start, end,
  *  source, section, cites}`, `cites` the section numbers it names in the view's forms, and
  *  for an instrument its own `Section n` references to its own sections. */
 export function readExceptions(raw, sections, form, ctx, locate) {
+  spend(raw.length);
   const forms = codeForms(ctx);
   const own = new Set(form === "instrument" ? sections.filter((s) => s.path.length === 1).map((s) => s.number) : []);
   const out = [];
+  const holderAt = holderOf(sections), sentenceOf = sentenceReader(raw), starts = new Set();
   EXCEPTS.lastIndex = 0;
   for (const m of raw.matchAll(EXCEPTS)) {
-    const { start, end } = sentenceOf(raw, m.index, m.index + m[0].length);
-    if (out.some((x) => x.start === start)) continue;
+    const { start, end } = sentenceOf(m.index, m.index + m[0].length);
+    if (starts.has(start)) continue;
+    starts.add(start);
     const text = raw.slice(start, end);
     const cites = [];
     const hits = [];
@@ -364,7 +503,7 @@ export function readExceptions(raw, sections, form, ctx, locate) {
     if (own.size) for (const c of text.matchAll(/\bSections?[ \t]+(\d{1,3})\b/g)) if (own.has(c[1])) hits.push({ at: c.index, n: c[1] });
     hits.sort((a, b) => a.at - b.at);
     for (const h of hits) if (!cites.includes(h.n)) cites.push(h.n);
-    const s = holder(sections, start);
+    const s = holderAt(start);
     const e = { start, end, source: locate(start) || null, section: s ? s.path : null, cites };
     if (!s) e.why = unplacedWhy(sections);
     out.push(e);
@@ -384,32 +523,85 @@ const K = new Uint32Array([
   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08,
   0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
   0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
-export function sha256Hex(str) {
-  const bytes = new TextEncoder().encode(String(str));
-  const len = bytes.length;
-  const padded = new Uint8Array(((len + 9 + 63) >> 6) << 6);
-  padded.set(bytes);
-  padded[len] = 0x80;
-  const dv = new DataView(padded.buffer);
-  dv.setUint32(padded.length - 8, Math.floor(len / 0x20000000));
-  dv.setUint32(padded.length - 4, (len << 3) >>> 0);
-  const H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
-  const W = new Uint32Array(64);
-  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
-  for (let o = 0; o < padded.length; o += 64) {
-    for (let i = 0; i < 16; i++) W[i] = dv.getUint32(o + i * 4);
+class Sha256 {
+  constructor() {
+    this.H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+    this.W = new Uint32Array(64);
+    this.tail = new Uint8Array(64);
+    this.held = 0;
+    this.length = 0;
+  }
+  block(b, o) {
+    const { H, W } = this;
+    const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let i = 0; i < 16; i++) W[i] = (b[o + i * 4] << 24) | (b[o + i * 4 + 1] << 16) | (b[o + i * 4 + 2] << 8) | b[o + i * 4 + 3];
     for (let i = 16; i < 64; i++) {
       const s0 = rotr(W[i - 15], 7) ^ rotr(W[i - 15], 18) ^ (W[i - 15] >>> 3);
       const s1 = rotr(W[i - 2], 17) ^ rotr(W[i - 2], 19) ^ (W[i - 2] >>> 10);
       W[i] = (W[i - 16] + s0 + W[i - 7] + s1) >>> 0;
     }
-    let [a, b, c, d, e, f, g, h] = H;
+    let [a, b2, c, d, e, f, g, h] = H;
     for (let i = 0; i < 64; i++) {
       const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + W[i]) >>> 0;
-      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
-      h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b2) ^ (a & c) ^ (b2 & c))) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b2; b2 = a; a = (t1 + t2) >>> 0;
     }
-    H[0] += a; H[1] += b; H[2] += c; H[3] += d; H[4] += e; H[5] += f; H[6] += g; H[7] += h;
+    H[0] += a; H[1] += b2; H[2] += c; H[3] += d; H[4] += e; H[5] += f; H[6] += g; H[7] += h;
   }
-  return [...H].map((x) => x.toString(16).padStart(8, "0")).join("");
+  update(bytes) {
+    this.length += bytes.length;
+    let o = 0;
+    if (this.held) {
+      const take = Math.min(64 - this.held, bytes.length);
+      this.tail.set(bytes.subarray(0, take), this.held);
+      this.held += take; o = take;
+      if (this.held < 64) return this;
+      this.block(this.tail, 0);
+      this.held = 0;
+    }
+    for (; o + 64 <= bytes.length; o += 64) this.block(bytes, o);
+    this.tail.set(bytes.subarray(o), 0);
+    this.held = bytes.length - o;
+    return this;
+  }
+  hex() {
+    const rest = this.held;
+    const pad = new Uint8Array(((rest + 9 + 63) >> 6) << 6);
+    pad.set(this.tail.subarray(0, rest));
+    pad[rest] = 0x80;
+    const dv = new DataView(pad.buffer);
+    dv.setUint32(pad.length - 8, Math.floor(this.length / 0x20000000));
+    dv.setUint32(pad.length - 4, (this.length << 3) >>> 0);
+    for (let o = 0; o < pad.length; o += 64) this.block(pad, o);
+    return [...this.H].map((x) => x.toString(16).padStart(8, "0")).join("");
+  }
+}
+
+export function sha256Hex(str) {
+  return new Sha256().update(new TextEncoder().encode(String(str))).hex();
+}
+
+const DIGEST_PIECE = 1 << 16;
+
+/** The SHA-256 of `raw.slice(start, end).replace(/\s+/g, " ").trim()`, read a piece at a time (R38): a section that runs
+ *  over a large text is never copied whole, normalised and encoded. A piece is never cut between the two halves of a
+ *  surrogate pair, and a white-space run across two pieces is one space, so the digest is the whole slice's. */
+export function textDigest(raw, start, end, piece = DIGEST_PIECE) {
+  const sha = new Sha256();
+  const enc = new TextEncoder();
+  let started = false, space = false;
+  for (let at = start; at < end;) {
+    let cut = Math.min(end, at + piece);
+    while (cut < end && raw.charCodeAt(cut - 1) >= 0xd800 && raw.charCodeAt(cut - 1) <= 0xdbff) cut++;
+    let q = raw.slice(at, cut).replace(/\s+/g, " ");
+    at = cut;
+    if (q.startsWith(" ")) { if (started) space = true; q = q.slice(1); }
+    if (!q) continue;
+    const trailing = q.endsWith(" ");
+    if (trailing) q = q.slice(0, -1);
+    sha.update(enc.encode(space ? ` ${q}` : q));
+    space = trailing;
+    started = true;
+  }
+  return sha.hex();
 }

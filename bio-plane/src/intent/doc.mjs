@@ -7,6 +7,7 @@
  * byte alone. */
 
 import { parseFrontmatter, deriveInquiryTitle, BASIS_GRADES } from "../record-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const ASPIRATION = "aspiration", GOAL = "goal";
 export const ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
@@ -154,7 +155,7 @@ export function aspirationDoc({ id, scope, owner, statement, entities, progressi
     `scope: ${scope}`, `owner: ${owner ?? "null"}`, `entities: [${entities.join(", ")}]`,
     `progressions: [${progressions.join(", ")}]`, `author: ${TOKEN.test(author) ? author : q(author)}`,
     ...CORE_TAIL, "---", "", "## Statement", "", statement.trim(), "", "## Dead Ends", "",
-    "## Session Log", "", `### Session ${at} | Declared | ${author}`, `Changes: ${scope} aspiration declared.`, ""].join("\n");
+    "## Session Log", "", `### Session ${at} | Declared | ${author}`, word("intent.changes_aspiration_declared", { scope: String(scope) }), ""].join("\n");
 }
 
 /** R26: a new goal's document, `open`. */
@@ -163,7 +164,7 @@ export function goalDoc({ id, statement, bounds, aspiration, author, at }) {
     "current_state: open", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`,
     `aspiration: ${aspiration ?? "null"}`, `author: ${TOKEN.test(author) ? author : q(author)}`, "objectives: []",
     ...CORE_TAIL, "---", "", "## Statement", "", statement.trim(), "", "## Bounds", "",
-    bounds.trim(), "", "## Session Log", "", `### Session ${at} | Declared | ${author}`, "Changes: goal declared.", ""]
+    bounds.trim(), "", "## Session Log", "", `### Session ${at} | Declared | ${author}`, word("intent.changes_goal_declared"), ""]
     .join("\n");
 }
 
@@ -175,10 +176,14 @@ export const CONDITION_KEY = "objective_condition";
 export const AMOUNT_PERIOD_FIELDS = Object.freeze(["from", "to", "precision", "zone", "fiscal", "body"]);
 const AMOUNT_PREFIX = "amount_";
 
+/** The author's words on one line the front matter holds: a quote, backslash or any run of white space (a line break
+ *  included) becomes one space. The Session Log keeps the words whole; this is the copy that travels with the condition. */
+export const oneLine = (s) => String(s).replace(/["\\\s]+/g, " ").trim();
+
 /** The condition's lines under `objective_condition:`. Every value was checked to be a bare token first, or (the
  *  `amount` filter, R31) a string the grammar holds between quotes. The front matter has one level of map, so the
  *  amount is written flat as `amount_*` keys, apart from the `filter_*` keys a member's other filters take. */
-export function conditionLines(c, by, at) {
+export function conditionLines(c, by, at, reason) {
   const lines = [`  progression: ${c.progression}`, `  entity: ${c.entity}`, `  relation: ${c.relation ?? "null"}`];
   for (const [k, v] of Object.entries(c.filter || {})) {
     if (k !== "amount") { lines.push(`  filter_${k}: ${v}`); continue; }
@@ -187,11 +192,13 @@ export function conditionLines(c, by, at) {
     for (const f of AMOUNT_PERIOD_FIELDS) if (v.period && v.period[f] != null) lines.push(`  ${AMOUNT_PREFIX}period_${f}: ${q(v.period[f])}`);
   }
   lines.push(`  required_grade: ${c.required.grade ?? "null"}`, `  required_stages: [${c.required.stages.join(", ")}]`,
-             `  share: ${c.satisfied.share}`, `  set_by: ${TOKEN.test(by) ? by : q(by)}`, `  set_at: ${q(at)}`);
+             `  share: ${c.satisfied.share}`, `  set_by: ${TOKEN.test(by) ? by : q(by)}`, `  set_at: ${q(at)}`,
+             `  set_reason: ${q(oneLine(reason))}`);
   return lines;
 }
 
-/** The condition a project's document holds, in the shape R2 takes, with who set it and when; null when none. */
+/** The condition a project's document holds, in the shape R2 takes, with who set it, when and why (`set_reason`, null for
+ *  a condition set before the reason was stored); null when none. */
 export function conditionOf(fm) {
   const b = fm && fm[CONDITION_KEY];
   if (!b || typeof b !== "object" || Array.isArray(b)) return null;
@@ -211,6 +218,6 @@ export function conditionOf(fm) {
     condition: { progression: b.progression ?? null, entity: b.entity ?? null, relation: b.relation ?? null,
                  filter: Object.keys(filter).length ? filter : null,
                  required: { grade: b.required_grade ?? null, stages }, satisfied: { share: b.share ?? null } },
-    set_by: b.set_by ?? null, set_at: b.set_at ?? null,
+    set_by: b.set_by ?? null, set_at: b.set_at ?? null, set_reason: b.set_reason ?? null,
   };
 }

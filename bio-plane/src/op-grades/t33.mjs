@@ -14,6 +14,8 @@
  * `./index.mjs` spreads these three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`; this file imports nothing, so the
  * spread closes no cycle. Grouped by owner, in `modules.json` order. */
 
+import { localize } from "../setup-words/index.mjs";
+
 const R = (s) => `read: ${s}; writes nothing`;
 
 /* ---- the rungs, each with the backing it names (`affordances` R19) ---- */
@@ -211,6 +213,7 @@ export const T33_NON_ACTS = {
   moneysummable: R("whether named facts may be summed, or the first dimension that differs"),
   moneyreconcile: R("whether two money facts are consistent, or each dimension that differs"),
   moneyset: R("one money set's inclusions, exclusions and open proposals, each with its reason"),
+  moneysets: localize("money.declared.moneysets", "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing"),   // money R28 (fix round 3, B3)
   committedagainstpaid: R("a contract's committed and paid facts with their sums and the difference, never a verdict"),
   authoritychain: R("the chain of authorising events toward the event a fact concerns, bounded"),
   /* money-checks */
@@ -279,6 +282,7 @@ export const T33_NON_ACTS = {
   tabledeclare: "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle",
   bindingadopt: "table-directed: keyed by (table, roles); writes calculations' rows and moves no bundle",
   moneyingest: "binding-directed: keyed by (binding, rows); money facts written as the machine's at a member's request",
+  moneyingestread: localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing"),   // G55 (K4562): a read, no rung
   calculationcreate: "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle",
   calculationaccept: "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute",
   calculationdraw: "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle",
@@ -310,6 +314,7 @@ export const T33_NON_ACTS = {
   standingaiswitch: "the copy's configuration: whether standing questions' AI half runs; an administrator's, not an act on an object",
   rule: R("one rule service's value with its basis, grade and label, or not held"),
   asktallies: R("the day counts of answered, refused and withheld results, to an administrator"),
+  ruleservicesstate: localize("answers.declared.ruleservicesstate", "read: whether the rule services are switched on, so a screen draws their control only while on; writes nothing"),   // K5157: answers' declared read, its owner's sentence (R13, R51)
   standing: R("a member's own standing questions"),
   standinganswers: R("the runs of a member's own standing questions that found something new"),
   /* following */

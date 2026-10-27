@@ -7,10 +7,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { world } from "./fixture.mjs";
-import { WORD } from "./words.mjs";
+import { WORD, LIST } from "./words.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const LIST = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/words.json"), "utf8"));
 const SRC = join(ROOT, "bio-plane/src/case-account");
 
 /* the sentences the list holds long enough to be a copy (a shorter one, "the count is undetermined", is a fragment of prose) */

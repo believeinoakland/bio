@@ -73,6 +73,8 @@ import aspnetWebforms from "./handlers/aspnet-webforms.mjs";
 import wordpress from "./handlers/wordpress.mjs";
 import clientRendered from "./handlers/client-rendered.mjs";
 import conservative from "./handlers/conservative.mjs";
+import * as ooxml from "../bio-plane/src/ooxml.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The module's whole interface is reachable from this file: the ladder and the
    registry (recogniser.mjs), the event catalogue (events.mjs), the regions and the
@@ -139,9 +141,18 @@ export function applyBoundary(text, boundary) {
   const outside = String(text).length - inner.length;
   return { text: PLACEHOLDER + inner + PLACEHOLDER,
            found: [{ rule: "outside_the_document", region: REGION.PRESENTATIONAL,
-                     label: "everything around the document itself, such as navigation and footers",
+                     label: localize("site-profiles.index.everything_around_the_document_itself", "everything around the document itself, such as navigation and footers"),
                      count: 1, bytes: outside }],
            bytes: outside };
+}
+
+/* The encoding the caller knows: an explicit `ctx.charset`, else the `charset` of the content
+   type the caller passed or of the response's `content-type` header. */
+function declaredCharset(ctx) {
+  if (typeof ctx.charset === "string" && ctx.charset) return ctx.charset;
+  const ct = String(ctx.content_type || (ctx.headers && ctx.headers["content-type"]) || "");
+  const m = /;\s*charset\s*=\s*"?([^";\s]+)/i.exec(ct);
+  return m ? m[1] : undefined;
 }
 
 /** The three digests for one document, under one handler. */
@@ -153,8 +164,17 @@ export async function digests(bytes, handler, ctx) {
   const h = handler || {};
   const identity = await sha256(bytes);
   if (!h.textual) return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false };
-  let text = "";
-  try { text = new TextDecoder("utf-8", { fatal: false }).decode(bytes); } catch { text = ""; }
+  /* The one decode (R22, G131g): ooxml's `decodeText`, by the encoding the caller knows (a
+     `charset` of the content type) or the document's own declaration or BOM. A declared
+     encoding it cannot decode makes the document not textual here: both digests equal the
+     identity and the result says why, so nothing is ever compared on replacement characters. */
+  const declared = declaredCharset(ctx);
+  const dec = ooxml.decodeText(bytes, { declared, name: ctx.name || ctx.locator || declared, kind: "html" });
+  if (!dec.ok)
+    return { identity, rendition: identity, evidentiary: identity, applied: [], textual: false,
+             undecodable: { why: dec.why, name: dec.name },
+             why: localize("site-profiles.index.the_document_is_written_in", "the document is written in an encoding this system cannot read, so it is compared byte for byte") };
+  const text = dec.text;
   let rules = [];
   try { rules = (typeof h.rules === "function" ? h.rules(ctx) : null) || []; } catch { rules = []; }
   if (!Array.isArray(rules)) rules = [];
@@ -182,6 +202,8 @@ export async function digests(bytes, handler, ctx) {
     boundary_missed: !!b.missed,
     mechanical_bytes: r1.bytes, presentational_bytes: r2.bytes,
     textual: true,
+    encoding: { name: dec.encoding, assumed: dec.assumed, replaced: dec.replaced,
+                replaced_ratio: dec.replaced_ratio, disagree: dec.disagree },
   };
 }
 
@@ -210,21 +232,21 @@ export async function compare(before, after, handler, ctx) {
                  applied: a.applied, digests: { before: a, after: b } };
   if (a.identity === b.identity)
     return { ...base, verdict: "identical", evidentiary_change: false,
-             why: "the source served exactly the same document" };
+             why: localize("site-profiles.index.the_source_served_exactly_the_same", "the source served exactly the same document") };
   /* Without a confident handler, the narrowing rules are not trusted and the
      honest answer is that the bytes differ and nobody can yet say what that
      means. Silence here is safer than a wrong "unchanged". */
   if (base.confidence !== CONFIDENCE.CERTAIN && !h.conservative)
     return { ...base, verdict: "undetermined", evidentiary_change: null,
-             why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters" };
+             why: localize("site-profiles.index.the_document_differs_and_this_kind", "the document differs and this kind of document is not recognised well enough to say whether the difference matters") };
   if (a.evidentiary !== b.evidentiary)
     return { ...base, verdict: "changed", evidentiary_change: true,
-             why: "the substance of the document differs" };
+             why: localize("site-profiles.index.the_substance_of_the_document", "the substance of the document differs") };
   if (a.rendition !== b.rendition)
     return { ...base, verdict: "restyled", evidentiary_change: false,
-             why: "the substance is the same; something around it changed, such as navigation or related links" };
+             why: localize("site-profiles.index.the_substance_is_the_same", "the substance is the same; something around it changed, such as navigation or related links") };
   return { ...base, verdict: "unchanged", evidentiary_change: false,
-           why: "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs" };
+           why: localize("site-profiles.index.the_substance_and_the_appearance", "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs") };
 }
 
 /** Can this capture be shown as a faithful rendition, and if not, what is the
@@ -254,9 +276,9 @@ export function fidelity(manifest, handler, ctx) {
   const critical = missing.filter(critical_);
   if (critical.length)
     return { level: "insufficient", missing, critical,
-             why: "a file the page needs in order to look the way the source published it has not been collected" };
+             why: localize("site-profiles.index.a_file_the_page_needs", "a file the page needs in order to look the way the source published it has not been collected") };
   return { level: "degraded", missing, critical: [],
-           why: "everything the page needs to read correctly is held; some decoration is not" };
+           why: localize("site-profiles.index.everything_the_page_needs_to", "everything the page needs to read correctly is held; some decoration is not") };
 }
 
 /* ---- the STACK axis: one registry of the shared shape ----
@@ -295,10 +317,18 @@ export function identify(ctx) {
   const handler = r.member;
   if (!r.matched)
     return { handler, confidence: CONFIDENCE.NONE, signals: [], considered: r.considered,
-             why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported" };
+             why: localize("site-profiles.index.no_handler_recognised_this_document", "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported") };
   const out = { handler, confidence: r.confidence, signals: r.signals, considered: r.considered };
-  /* `kind` is the handler's own classification; a handler that defines none has none. */
-  if (typeof handler.kind === "function") out.kind = handler.kind(ctx);
+  /* `kind` is the handler's own classification, given the confidence it matched at; a
+     handler that defines none, or answers none, has none. */
+  if (typeof handler.kind === "function") {
+    const kind = handler.kind(ctx, r.confidence);
+    if (kind !== undefined) out.kind = kind;
+  }
+  /* A shell is a `client_rendered` match at CERTAIN and nothing less (R2, G140): the
+     handler's class is `shell`, this answer's `shell` is whether THIS document is one. The
+     answer decides how a document is watched and never what is read from it (R21). */
+  if (handler.shell && r.confidence === CONFIDENCE.CERTAIN) out.shell = true;
   return out;
 }
 

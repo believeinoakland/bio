@@ -90,7 +90,7 @@ test("R120 the read contract: the stated tables and columns exist under those na
   const contract = {
     members: { member_id: "TEXT", handle: "TEXT", status: "TEXT" },
     project_participants: { project_id: "TEXT", member_id: "TEXT", state: "TEXT", owner: "INTEGER", owner_order: "INTEGER",
-                            comment: "TEXT", created: "TEXT" },
+                            invited_by: "TEXT", comment: "TEXT", created: "TEXT" },
     project_sight: { project_id: "TEXT", setting: "TEXT" },
     project_visibility: { seq: "INTEGER", project_id: "TEXT", setting: "TEXT", set_by: "TEXT", reason: "TEXT", at: "TEXT" },
     project_removals: { seq: "INTEGER", project_id: "TEXT", member_id: "TEXT", removed_by: "TEXT", comment: "TEXT", at: "TEXT" },

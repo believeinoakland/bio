@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, draft, approved, V, MACHINE, STEPS, step, LIBRARY } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank"), E = V("erin"), D = V("dave"), C = V("carol");
 const row = (c) => wz.WIZARD_SCRIPTS_CHECKS[c];
@@ -104,7 +105,7 @@ test("R4 adopt: {base}: a copy's author brings a newer approved version of its b
   const c2 = w.wz.wizardDraft({ project: w.P, copy: n2.version, author: B, viewer: B });
   refused(w.wz.wizardRevise({ version: c2.version, adopt: { base: base.version }, author: B, viewer: B }), "NO_SUCH_WIZARD", "older");
   /* a script that is not a copy has no base to adopt from */
-  const d = draft(w, { name: "Not a copy" });
+  const d = draft(w, { name: word("screen.wizards.nobase") });
   refused(w.wz.wizardRevise({ version: d.version, adopt: { base: n2.version }, author: F, viewer: F }), "NO_SUCH_WIZARD");
   /* a base dave cannot see answers absent to him */
   const dq = w.wz.wizardDraft({ project: w.Q, copy: REQ, author: D, viewer: D });

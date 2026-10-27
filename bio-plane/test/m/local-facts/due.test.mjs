@@ -1,6 +1,7 @@
 /* local-facts: factsDue (R4). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, V, P, TP } from "./fixture.mjs";
 
 const paths = (r) => r.due.map((d) => d.path).sort();
@@ -15,8 +16,8 @@ test("R4 without paths: every fact of the active profiles that is unconfirmed (l
   const y = r.due.find((d) => d.path === P.y2027);
   assert.equal(y.due, false);
   assert.equal(y.due_from, "2026-11-01");
-  assert.match(y.why, /falls due on 2026-11-01/);
-  assert.match(r.due.find((d) => d.path === P.y2026).why, /due from 2025-11-01/);
+  assert.equal(y.why, word("local-facts.why.member_confirmed", { due_why: word("local-facts.year_falls_due", { due_from: "2026-11-01" }) }));
+  assert.equal(r.due.find((d) => d.path === P.y2026).why, word("local-facts.why.member_confirmed", { due_why: word("local-facts.year_due", { due_from: "2025-11-01" }) }));
   /* confirmed facts leave; a corrected one is a member's act and is not listed; a disputed one is */
   w.act(P.tz, "confirm");
   w.act(P.clerkHours, "correct", { value: { weekly: [{ day: "mon", open: "09:00", close: "10:00" }] }, source: "notice" });
@@ -26,7 +27,7 @@ test("R4 without paths: every fact of the active profiles that is unconfirmed (l
   assert.ok(!paths(r).includes(P.clerkHours));
   const disputed = r.due.find((d) => d.path === P.y2027);
   assert.equal(disputed.status, "disputed");
-  assert.match(disputed.why, /disputed by member:bob, 2026-09-27/, "the local day of 01:00Z in the profile's zone (R3)");
+  assert.equal(disputed.why, word("local-facts.index.disputed_by_by_when", { by: "member:bob", when: "2026-09-27" }), "the local day of 01:00Z in the profile's zone (R3)");
   /* lapsed: the time zone 183 local days on (confirmed 2026-09-27 local, lapsing at 2027-03-29's local midnight) */
   r = w.at("2027-03-30T00:00:00Z").lf.factsDue({});
   const tz = r.due.find((d) => d.path === P.tz);
