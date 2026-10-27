@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
 import { provenance as acquisitionProvenance } from "../acquisition/fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
 import { acquisitionOf, CAPTURE_MAX, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
@@ -55,7 +55,7 @@ const setup = () => {
    transaction (a throw or a refusal rolls its rows back as it rolls back the SQL rows) */
 const registrar = (w) => {
   const j = jobRegistrarStub();
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   w.c.registerJob = j.registerJob;
   w.c.armJobs = j.armJobs;
   const real = w.core.transact.bind(w.core);
@@ -139,7 +139,7 @@ test("R109: a registrar that is the options', not the store's, is read as keepLa
   const r = await up(w.c, te.encode("by options"), { registerJob: mine.registerJob, armJobs: mine.armJobs });
   assert.equal(r.ok, true);
   assert.equal(mine.rows().length, 1, "the options' registrar was used when the store has none");
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   w.c.registerJob = theirs.registerJob;
   assert.equal((await up(w.c, te.encode("by the store"), { registerJob: mine.registerJob })).ok, true);
   assert.deepEqual([theirs.rows().length, mine.rows().length], [1, 1], "the store's was preferred");
@@ -161,7 +161,7 @@ test("R109 (a kill between the put and the transaction): the parts are stored fi
   assert.deepEqual(j.rows().map((x) => [x.kind, x.sha]), [["reading", sha(big)]], "the retry leaves exactly one row");
   /* a refusing registrar */
   const v = setup();
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   v.c.registerJob = () => ({ ok: false, reason: "JOB_NOT_KEPT" });
   v.c.armJobs = async () => { throw new Error("armed though refused"); };
   const t0 = tables(v);
@@ -259,7 +259,7 @@ test("R110 (control): an upload that is not an archive registers no `unpack` row
   assert.equal((await up(w.c, te.encode("plain text, not a zip"))).ok, true);
   assert.deepEqual(j.rows().map((x) => x.kind), ["reading"]);
   const v = archiveWorld();
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   v.c.registerJob = (e) => (e.kind === "unpack" ? { ok: false, reason: "JOB_NOT_KEPT" } : { ok: true, existed: false, state: "queued" });
   const z = makeZip([{ name: "a.txt", data: "alpha" }]);
   const t0 = tables(v);

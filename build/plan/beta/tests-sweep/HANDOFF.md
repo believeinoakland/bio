@@ -8,7 +8,7 @@
 
 **Next:**
 1. DONE S2: census (`CENSUS.md`). Next: classify the regex assertions (`rx-files.txt`, 653 files) the same way A/B/C; then convert class A and the regex tests whose English is a `words.json` value.
-2. Sort the 89 fixtures findings: mechanical (test-only) vs needing a module's judgment (listed for T53 jobs, P7).
+2. DONE S4 (`FIXTURES.md`).
 3. Run each K5339/K5343 red once (`proc tests`), sort stale / real.
 4. Extend the words check to refuse English in tests (the check lives in `civicos-process/checks/words.mjs`, outside this repo: needs BOB's word, listed in DECISIONS/questions below).
 5. Full run of every touched module before the merge; verdict and module list to BOB.
@@ -26,3 +26,6 @@ Read; baseline counts above. Finding: most of the 89 fixtures findings are stubs
 ### S3 · 2026-10-27 · first conversion
 `newgroup/test/wizard.test.mjs` (module installer): 8 class A literals now read by key (`word`, plus a local `lead` for the text before a placeholder): 208/208 before and after; words check 0. Method: a literal maps to exactly one `words.json` key, the key's placeholders are filled with the test's own values, and the page is checked for the word's text as before (escaped with `h` only where the page escapes). Not yet done in class A: 5 literals with several matching keys (ai-use, escalation draft:94, leg-earning held:127, screens-action fix10, case-grammar complete, wizard-scripts t50 names) need the key the code reads: look at the product call, never guess. `walk-T51-final/scripts` is not a module test; skip.
 Touched modules so far: installer (`newgroup/test/wizard.test.mjs`). Full `proc tests` run owed before the merge.
+
+### S4 · 2026-10-27 · fixtures findings sorted (FIXTURES.md)
+89 became 3. 86 were `contract-no-run`: markers named provider `plane`, the contract run lives in `store-assembly` now; markers re-pointed (comments only, 26 files), plus a marker in test-support's `job-registrar-stub.mjs`. 3 orphan `fixtures-run` lines in store-assembly's `r10-fixtures-run.test.mjs` (control-plane x2, screens-intake x1) are listed for T53 jobs. `tranche/T53` merged into the lane branch first (606 commits). Touched modules (comments only): acquisition, capture, doorbell, file-safety, monitoring, test-support. Full `proc tests` run still owed with the conversions.

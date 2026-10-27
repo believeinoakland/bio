@@ -19,7 +19,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /* the stand-in ledger: entries by key (the session for supporting files, the digest otherwise), re-registration re-arms */
 const ledger = () => {
   const entries = new Map(), log = [];
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   return { entries, log, owedLater: async (e) => { log.push(e); entries.set(e.kind === "subresources" ? e.session : e.sha, e); return { ok: true }; } };
 };
 const imgs = (n) => Array.from({ length: n }, (_, i) => `<img src="/img/i${i}.png">`).join("");
@@ -40,7 +40,7 @@ const oneRow = (log) => [...new Map(log.map((e) => [JSON.stringify(e), e])).valu
 test("R100 (F5): 120 supporting files with 30 deferred, 61 minutes later the alarm fetches them: the session is parked past its hour, owed in the ledger, finished by owedRun and dropped", async () => {
   const w = world();
   const L = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = L.owedLater;
   w.store.recordCaptureLimit({ runtime: "subrequests", observed: 100 });
   const fetched = [];
@@ -96,7 +96,7 @@ test("R100 (F5) control: without the plane's ledger the session expires at its h
 test("R100 (F5): a member's continue while the work is owed registers the entry again (the ledger re-arms it) and a complete walk leaves nothing owed", async () => {
   const w = world();
   const L = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = L.owedLater;
   w.store.recordCaptureLimit({ runtime: "subrequests", observed: 100 });
   const routes = bigRoutes(120);
@@ -109,7 +109,7 @@ test("R100 (F5): a member's continue while the work is owed registers the entry 
   /* control: a page that needs no session registers nothing */
   const w2 = world();
   const L2 = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w2.store.owedLater = L2.owedLater;
   const small = await run(w2, bigRoutes(3), { locator: `${O}/big.html`, subresources: true });
   assert.equal(small.body.snapshot.complete, true);
@@ -129,7 +129,7 @@ test("R100 R99 (F5): a pending render is owed work: parked past its hour, finish
   const PG = "https://r.example/pending";
   const w = world({ env: neverRenderer() });
   const L = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = L.owedLater;
   const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
   const sid = first.body.document.render_pending.session;
@@ -166,7 +166,7 @@ test("R100 R99 (F5) control: a render the object lost that does not come back en
   const PG = "https://r.example/lost";
   const w = world({ env: neverRenderer() });
   const L = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = L.owedLater;
   const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
   const sid = first.body.document.render_pending.session;
@@ -192,7 +192,7 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   /* the daily budget */
   const w = world();
   const L = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = L.owedLater;
   w.rows("INSERT INTO unpack_days (day, entries, bytes) VALUES (?, 0, 0)", today());
   w.rows("UPDATE unpack_days SET entries=? WHERE day=?", UNPACK_DAILY_ENTRIES, today());
@@ -204,7 +204,7 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   /* the call's share */
   const w2 = world();
   const L2 = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w2.store.owedLater = L2.owedLater;
   const big = many(UNPACK_CALL_ENTRIES + 50, "share");
   const r2 = await zipAt(w2, big);
@@ -219,7 +219,7 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   /* a stop on the tree's figure is not owed: it never shrinks, only a member goes past it (R40), and the archive's page states it */
   const w4 = world();
   const L4 = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w4.store.owedLater = L4.owedLater;
   const tz = many(150, "tree");
   await zipAt(w4, tz);
@@ -236,7 +236,7 @@ test("R100 (F11): an automatic unpack that stops on a daily budget, or for the c
   assert.equal(rc.body.unpack.waiting, 50);
   const d = world();
   const Ld = ledger();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   d.store.owedLater = Ld.owedLater;
   const zd = many(3, "done");
   await zipAt(d, zd);
@@ -252,13 +252,13 @@ test("R96 R100 (F2): keepPast awaits the store's putFromParts within the bound a
   const whole = "f".repeat(64);
   const evFast = { putFromParts: async () => ({ ok: true }) };
   const later = [];
-  // fixtures-contract: plane keep-later
+  // fixtures-contract: store-assembly keep-later
   const kept = await keepPast({}, evFast, { sha: whole, parts, boundMs: 25000, elapsedMs: 0, keepLater: async (k) => { later.push(k); return { ok: true }; } });
   assert.deepEqual([kept.started, kept.kept, kept.keep_pending], [true, true, false]);
   assert.deepEqual(later, []);
   const evSlow = { putFromParts: async () => { await sleep(300); return { ok: true }; } };
   const slow = await keepPast({}, evSlow, { sha: "e".repeat(64), parts: parts.map((p) => ({ sha256: p })), boundMs: 5100, elapsedMs: 0,
-                                           // fixtures-contract: plane keep-later
+                                           // fixtures-contract: store-assembly keep-later
                                            keepLater: async (k) => { later.push(k); return { ok: true }; } });
   assert.deepEqual([slow.started, slow.kept, slow.keep_pending], [true, false, true]);
   assert.deepEqual(later, [{ sha: "e".repeat(64), parts }]);
@@ -266,7 +266,7 @@ test("R96 R100 (F2): keepPast awaits the store's putFromParts within the bound a
   assert.deepEqual([none.started, none.kept, none.keep_pending], [false, false, false]);
   /* a keepLater the store carries is used when none is handed */
   const stored = [];
-  // fixtures-contract: plane keep-later
+  // fixtures-contract: store-assembly keep-later
   const viaStore = await keepPast({ keepLater: async (k) => { stored.push(k); return { ok: true }; } }, { putFromParts: async () => { await sleep(300); return { ok: true }; } },
                                   { sha: "d".repeat(64), parts, boundMs: 5100 });
   assert.equal(viaStore.keep_pending, true);

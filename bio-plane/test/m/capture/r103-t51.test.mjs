@@ -29,7 +29,7 @@ const setup = () => { const b = multipartBucket(); const f = fresh({ evidence: b
 const wholeKey = (big) => `bio/captures/${sha(big)}`;
 const up = (c, bytes, extra = {}) => c.uploadCapture({ bytes, statement: STATEMENT, by: "m1", at: AT, ...extra });
 /* the plane's hand-off, recording what it is given (plane/pending.mjs keepLater) */
-// fixtures-contract: plane keep-later
+// fixtures-contract: store-assembly keep-later
 const handOff = (c) => { const given = []; c.keepLater = async (k) => { given.push(k); return { ok: true }; }; return given; };
 
 test("R103 (F2): with no ledger a 40 MiB upload in five parts is made whole under its digest by the store's real putFromParts, awaited inside the bound, with nothing owed", async () => {

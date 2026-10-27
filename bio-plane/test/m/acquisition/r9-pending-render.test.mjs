@@ -19,14 +19,14 @@ const gated = () => {
   let open; const gate = new Promise((r) => (open = r)); const calls = [];
   return { calls, open, RENDERER: { fetch: async (u, init) => { const q = JSON.parse(init.body); calls.push(q); await gate; return new Response(JSON.stringify(R_ANSWER(q.url))); } } };
 };
-// fixtures-contract: plane owed-ledger
+// fixtures-contract: store-assembly owed-ledger
 const ledger = () => { const entries = new Map(), log = []; return { entries, log, owedLater: async (e) => { log.push(e); entries.set(e.session ?? e.sha, e); return { ok: true }; } }; };
 
 test("R117, R99, R100: the object restarts after the render returned and before its delivery: the row finds the kept page in the record, delivers the document once and renders nothing again", async () => {
   const PG = "https://r.example/r117-after";
   const g = gated();
   const w = world({ env: g.RENDERER ? { RENDERER: g.RENDERER } : {} });
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   const L = ledger(); w.store.owedLater = L.owedLater;
   const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
   const sid = first.body.document.render_pending.session;
@@ -57,7 +57,7 @@ test("R117 control: the object restarts before the render returned: the row stil
   const PG = "https://r.example/r117-before";
   const g = gated();
   const w = world({ env: { RENDERER: g.RENDERER } });
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   const L = ledger(); w.store.owedLater = L.owedLater;
   const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
   const sid = first.body.document.render_pending.session;
@@ -79,7 +79,7 @@ test("R117 control: a render that ends within the bound leaves no row and no ses
   const PG = "https://r.example/r117-quick";
   const g = gated(); g.open();
   const w = world({ env: { RENDERER: g.RENDERER } });
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   const L = ledger(); w.store.owedLater = L.owedLater;
   const r = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 2000 });
   assert.equal(r.body.ok, true);
@@ -92,7 +92,7 @@ test("R117: a failed render's answer is written beside the row too, and the rest
   const PG = "https://r.example/r117-failed";
   let open; const gate = new Promise((r) => (open = r)); let calls = 0;
   const w = world({ env: { RENDERER: { fetch: async () => { calls++; await gate; return new Response(JSON.stringify({ ok: false, error: "the page crashed", failure_class: "permanent" })); } } } });
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   const L = ledger(); w.store.owedLater = L.owedLater;
   const first = await run(w, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 20 });
   const sid = first.body.document.render_pending.session;

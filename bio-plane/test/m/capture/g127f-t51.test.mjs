@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha } from "./fixture.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { byteLedger, PLATFORM_FIGURES } from "../../../src/byte-ledger.mjs";
@@ -88,7 +88,7 @@ const setup = ({ minPart = 0, clock = null } = {}) => {
 };
 const registrar = (w) => {
   const j = jobRegistrarStub();
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   w.c.registerJob = j.registerJob;
   w.c.armJobs = j.armJobs;
   const real = w.core.transact.bind(w.core);
@@ -468,7 +468,7 @@ test("R113 and R109 (the filing): a refusing registrar rolls the whole filing ba
   const w = setup();
   const file = varied(2500, 14), ps = partsOf(file, 1000);
   let calls = 0;
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   w.c.registerJob = (e) => (++calls === 1 ? { ok: false, reason: "JOB_NOT_KEPT" } : { ok: true, existed: false, state: "queued" });
   const b = await begin(w.c, file);
   for (let i = 0; i < 3; i++) await put(w.c, b.upload, i, ps[i]);

@@ -56,7 +56,7 @@ const bigSource = () => new Response(big, { headers: { "content-type": "applicat
 
 /* a fetch parked as owed work (R105): a 9 MiB capture is over what the call fetches within its bound */
 async function parkedFetch(w) {
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: bigSource }, { locator: BIG, project: "P" }, { settle: false });
   return first.body.fetch_pending.session;
@@ -107,7 +107,7 @@ export async function owedRunAnswer({ kind, reason } = {}) {
   const failed = kind === "final" && reason === "RENDER_FAILED" ? await renderFailure({ class: "no_session" }) : null;
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(failed ?? RENDERED(JSON.parse(init.body).url))); } } } });
   const entries = new Map();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   const notAPage = kind === "final" && reason === "RENDER_NOT_A_PAGE";
   const net = network({ [PG]: () => (notAPage ? new Response("%PDF-1.4", { headers: { "content-type": "application/pdf" } }) : page(SHELL)) });
