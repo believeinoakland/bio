@@ -2,7 +2,7 @@
 # Plan T51b · the alpha, on the redesigned process
 **Status** · OPEN · BOB #317 · session_01224iDvCaoPmHYZNq2oLxtm · depth 1
 **Jobs** · none
-**Owed** · none
+**Owed** · start action-plans
 
 # Plan: T51b round R1 · the team-zone pass, finished
 
