@@ -4,7 +4,7 @@
 
 ## 0. State now and next steps
 
-**State.** BOB is #322 (`session_018Bhcedcx1arC3HPfsGQvzJ`). UX-DESIGN's DEC-465 to DEC-467 folded (L9); K5471 folded (L10; CONSISTENCY row 20 for BOB). K5464 and K5468 applied (A2's jurisdictions and local-facts lines are now CAPABILITIES' `N1257-requirements-a2.md` R134, R135, R31, R32; `lines-A2` keeps civil-time and money). The seven A drafts are READY for BOB (K5456 folded; lines resting on L1-L26 bracketed, standing as written if Bob answers as recommended). Folded into `plan-T53-draft.md` by layer: FILES's READY drafts, PLATFORM's (time budgets, combined read, load test, record placement PL30-PL35), AI-DESIGN's A43-A45 (eleven drafts; findings in `FOLD-AI.md`), CAPABILITIES' N1257 (revised for K5452, K5458) and N1260. `CONSISTENCY.md` has rows 11-19 and the L6 id census. Worker outputs of L6 (scratchpad, not kept): their findings are in FOLD-AI and CONSISTENCY.
+**State.** BOB is #322 (`session_018Bhcedcx1arC3HPfsGQvzJ`). UX-DESIGN's DEC-465 to DEC-467 folded (L9); K5471 folded (L10); K5473 applied and JOURNEYS folded (L11). K5464 and K5468 applied (A2's jurisdictions and local-facts lines are now CAPABILITIES' `N1257-requirements-a2.md` R134, R135, R31, R32; `lines-A2` keeps civil-time and money). The seven A drafts are READY for BOB (K5456 folded; lines resting on L1-L26 bracketed, standing as written if Bob answers as recommended). Folded into `plan-T53-draft.md` by layer: FILES's READY drafts, PLATFORM's (time budgets, combined read, load test, record placement PL30-PL35), AI-DESIGN's A43-A45 (eleven drafts; findings in `FOLD-AI.md`), CAPABILITIES' N1257 (revised for K5452, K5458) and N1260. `CONSISTENCY.md` has rows 11-19 and the L6 id census. Worker outputs of L6 (scratchpad, not kept): their findings are in FOLD-AI and CONSISTENCY.
 
 **Next steps, in order.**
 1. (done L7) BOB's K5464 applied: the run-rules map, layer 6's positions (FOLD-AI §2.9), CONSISTENCY 11-19; A2 re-cut onto N1257's placeless team-rules layer (its "Owed by N1257" list relayed by BOB to CAPABILITIES; the three lower-level names confirmed by BOB: `FISCAL_YEAR_IN_RECORDS`, `fiscal_year` in a place team layer refused as `TEAM_SECTION_REFUSED`, the fact path per N1257 R25, R27; (a)-(g) relayed to CAPABILITIES). When CAPABILITIES' N1257 companions carry those amendments, check A2 against them.
@@ -54,3 +54,15 @@ BOB #322 merged UX-DESIGN U500 (DEC-465 to DEC-467) and named what is owed. Fold
 ## L10 · 2026-10-27 · K5471 folded
 
 Plan entries: FILES's KIND-TABLE (format-registry, READY) and PHOTO-DATA (with A4); AI-DESIGN A47 (ai-accounts R68-R74 incl. `aikeyseal`, `aiorderset`; observation-log R40-R41 and ai-runs R99-R104, the run record; instance-setup R109 and the installer's two gateway permissions, R107 into installer R2 and R108 into installer-steps R45); `NS_AI_RUN`; the installer's refused Logpush read (K5471 (5)); JOURNEYS W6's 130 defects as a placeholder under layer 11 until its drafts arrive. CONSISTENCY row 20: four differences between A4's photo table and PHOTO-DATA, incl. where "near {place}" gets a place name without an outside service.
+
+## L11 · 2026-10-27 · K5473; A4 the one photo source; JOURNEYS folded
+
+K5473: row 20 decided as recommended; A4 aligned by a Sonnet worker (serials, owner, artist and copyright read, not shown by default; "near {place}" from the shipped and team layers only, else rounded; `left_out` the closed key list for DEC-467's {what}); the installer asks for a read-only Logs scope (Bob's act: register it on the OAuth client). JOURNEYS W7's drafts READY: a Sonnet worker set the 130 defects out by owning module in the new detail file `plan-T53-journeys.md` (§A entries with MERGE marks against T52, §B the 19 points Bob's, §C defects with no line, §D four placements for BOB); the plan points to it.
+
+## L12 · 2026-10-27 · K5474, K5475, C21's ids
+
+K5475 (Bob, AI1 B): Gate 1 at Bob's marks admits a part; the real public-matters set later a standing check; the plan's AI1 waits cleared, N1258 and N829 restated. K5474: JOURNEYS' 19 points sorted (J1-J7 Bob's, B558 to UX-DESIGN, four decided), noted in `plan-T53-journeys.md` §B. BOB's C21 rule recorded in CONSISTENCY §1: the A lines keep their ids; colliding CAPABILITIES lines take the next free (content R65, citation R28, queue R98, screens-settings R83, screens-daily R110).
+
+## L13 · 2026-10-27 · K5476
+
+`plan-T53-journeys.md` §D replaced by BOB's placements (K5476): R-127 interface-shell, R-13 screens-investigate, R-84 a new events entry with the plane's route, R-83 `withdrawEvent` in events, R-65 calculations with retrieval R18-R19 as control; the two numbers at START.
