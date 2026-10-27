@@ -183,7 +183,7 @@
 
 **ai-gate** (new; after agent-worker; K5457)
 - T53 · K5457 · the Gate 1 suite: signed bank and thresholds, items scored by code on a stub plane through agent-model, per-part verdicts, Wilson intervals, the gate record · `lane-ai-design/draft-ai-gate.md` R1-R40, R65, R66 `[waits: Bob's pass marks after the first measuring run, AD13, K5475]`
-- T53 · K5457 · characterization and cost shown before a run, consent, canaries, the lifecycle signal · same, R41-R53 `[waits: AI6, AI7]`
+- T53 · K5457 · characterization and cost shown before a run, consent, canaries, the lifecycle signal · same, R41-R53 (AI6 A with an administrator's switch to turn re-testing off and a queue reminder while off, K5480; AI7 B, K5481) `[owed: AI-DESIGN's lines for the switch's op and queue kind]`
 - T53 · K5457 · the results bundle and the library row, `partsRefused` · same, R54-R64 `[waits: AI8; ai-issuer]`
 
 N1258 and N829: the real public-matters set, when it exists, is a standing check that can switch a part off for an AI (K5475, supersedes N829's and K2479's gate for the beta); who writes the set is Bob's, later
@@ -276,7 +276,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 - T53 · DEC-466 · each label names the AI (`screen.machine.*.ai`); a finished run lists its parts and switches (N1219: ai-runs' segments); Setup's ready and not-ready states (interface-shell R20's read); the installer's gateway line matched to K4464's grant · DEC-466 → ai-runs R99-R104 (layer 6), instance-setup R109 and the installer lines below
 - T53 · DEC-466 U5, K5471 (2) · the installer asks for exactly the AI gateway's two permissions (installer R2, A47's R107) and an install without them completes, the assistant still usable (installer-steps R45, A47's R108); Setup's ready state (instance-setup R109, A47) · `lane-ai-design/draft-instance-setup.md` `[owed: whether "AI Gateway - Edit" carries reading, OPEN in the draft]`
 - T53 · K5471 (5) · the installer's Logpush read is refused (Cloudflare "Authentication error" on plat-s1's install): its scopes (K5449, K5460) lack Logs Read: the installer asks for a read-only Logs scope (installer R2's count to seven), the check keeping its strength (K5473 (2)) · K5471, K5473 `[first: Bob's one act, registering the scope on the OAuth client]`
-- T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7
+- T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7; DEC-468, DEC-469 (the words reconciled: the payer's by-member view, the opt-in note, moment j)
 
 **op-declarations**, **op-grades**, **interface-shell** (the assistant)
 - T53 · N1220 · the 43 AI ops declared with grade and budget class (an "AI act" class owed by PLATFORM, P1), the retired ops removed; the assistant's reads as one combined read (P2) · `lane-ai-design/draft-assistant-screens.md` §4, §5 P1, P2 `[owed: PLATFORM's AI act class]`
