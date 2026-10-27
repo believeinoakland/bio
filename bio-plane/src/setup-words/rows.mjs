@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19436 design words, 1162 protected; SHA-256
-   0f2e41144fdc2ee29ea7ee587a699bd5c28f76ee0309b3f12a34ca773be5278b) followed by 7518 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19438 design words, 1162 protected; SHA-256
+   f13184adf6d76dd20ef996da632339123f1a53c15f518ab9f9cfbaef0ddf8488) followed by 7516 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "0f2e41144f";
+export const WORDS_COMMIT = "f13184adf6";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -11578,7 +11578,7 @@ export const WORD_ROWS = Object.freeze([
   ["calculations.declared.moneyingestread","Reads what a money ingest has stored, a page at a time, with the true counts and whether the ingest is complete. Changes nothing.","DEC-424: B495 G55: the declared op's description (a builders' line like the other declared ops'; written because BOB asked for the row)",null,false,"design"],
   ["notice-producers.ingest.done","Your table has been read: {written} of {rows} rows were written as money facts, and {not_written} were not.","DEC-424: B495 G55: the Queue item to the member who asked, when a background ingest is done; {written} {rows} {not_written} counts",null,false,"design"],
   ["notice-producers.ingest.stopped","Reading your table stopped after {written} of {rows} rows were written as money facts; the rest were not. The facts already written stay, marked as not complete.","DEC-424: B495 G55: the Queue item when a background ingest was stopped; {written} {rows} counts; the stop's own reason follows from calculations.ingest.stopped_*",null,false,"design"],
-  ["money.ingest.partial","This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete.","DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key",null,false,"design"],
+  ["money.ingest.partial","This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}","DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; DEC-451: {ingest} kept while money R31's test pins the key in this sentence; {ingest} the ingest's key",null,false,"design"],
   ["case-authoring.index.case_document_too_large","This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.","DEC-424: B495 case-authoring R14 (G47): preparing a case whose document is over its bound; {size} {bound} in MB, {materials} {members} counts",null,false,"design"],
   ["case-authoring.checks.case_document_too_large","This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.","DEC-424: B495 G47: the same sentence as the check's translation (C-136.9); same fills",null,false,"design"],
   ["case-authoring.index.case_document_not_stored","The case document couldn't be stored, so nothing was prepared and nothing was changed. Prepare the case again. If it fails again, tell an administrator.","DEC-424: B495 G47: the store refused the document for a reason other than its size",null,false,"design"],
@@ -11981,6 +11981,8 @@ export const WORD_ROWS = Object.freeze([
   ["screen.document.reading.notext.one","Page {pages} has no words that can be read, so it can't be searched or cited. You can still open it.","DEC-450: the singular of screen.document.reading.notext (one page)",null,false,"design"],
   ["screen.capture.supporting.toolarge.one","One was too large to keep.","DEC-450: the singular of screen.capture.supporting.toolarge",null,false,"design"],
   ["screen.capture.supporting.unavailable.one","One couldn't be fetched from where it is published.","DEC-450: the singular of screen.capture.supporting.unavailable",null,false,"design"],
+  ["money.index.no_body_named_for_fiscal","{fiscal} names no body, and your team's profiles hold no fiscal year shared by every body, so it can't be turned into dates. Name the body whose fiscal year it is.","DEC-451: money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal} the fiscal year as sent. Beside money.index.the_active_profiles_hold_no",null,false,"design"],
+  ["money.index.no_body_named_no_period","Your team's profiles have no fiscal year {fiscal} shared by every body. Name the body whose fiscal year it is.","DEC-451: money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal}. Beside money.index.the_profiles_fiscal_year_for",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -24902,8 +24904,6 @@ export const WORD_ROWS = Object.freeze([
   ["money.index.money_sets_are_listed_by","money sets are listed by what they concern: name the id (moneysets&concerns=...)",null,null,false,"code"],
   ["money.index.name_the_money_facts_by","name the money facts by their ids",null,null,false,"code"],
   ["money.index.no_authorising_event_is_held","no authorising event is held for this event",null,null,false,"code"],
-  ["money.index.no_body_named_for_fiscal","no body was named for the fiscal year {fiscal}, and the active profiles hold no fiscal year that applies to every body, so it cannot be mapped",null,null,false,"code"],
-  ["money.index.no_body_named_no_period","no body was named, and the profiles' fiscal year names no period {fiscal}",null,null,false,"code"],
   ["money.index.no_money_fact_id_could","no money fact id could be drawn",null,null,false,"code"],
   ["money.index.no_money_fact_with_that","no money fact with that id is held here, or it is not visible to the asker; a money fact is recorded with op=moneyrecord before anything can name it",null,null,false,"code"],
   ["money.index.no_money_set_string_is","no money set {String} is held",null,null,false,"code"],

@@ -38207,20 +38207,6 @@
       "line": 1243
     },
     {
-      "id": "money.index.no_body_named_for_fiscal",
-      "en": "no body was named for the fiscal year {fiscal}, and the active profiles hold no fiscal year that applies to every body, so it cannot be mapped",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 290
-    },
-    {
-      "id": "money.index.no_body_named_no_period",
-      "en": "no body was named, and the profiles' fiscal year names no period {fiscal}",
-      "module": "money",
-      "file": "bio-plane/src/money/index.mjs",
-      "line": 304
-    },
-    {
       "id": "money.index.no_money_fact_id_could",
       "en": "no money fact id could be drawn",
       "module": "money",
