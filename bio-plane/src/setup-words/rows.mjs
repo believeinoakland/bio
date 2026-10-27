@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19432 design words, 1162 protected; SHA-256
-   2efa5d8a2e81654e2a2b88ca3945dd0d675e13fc6a021ecc2242fe7d2051a8bd) followed by 7517 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   2efa5d8a2e81654e2a2b88ca3945dd0d675e13fc6a021ecc2242fe7d2051a8bd) followed by 7516 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -23112,7 +23112,6 @@ export const WORD_ROWS = Object.freeze([
   ["explore.declared.exploreverify","read: whether a derived connection re-derives to its id, and which hops it rests on; writes nothing",null,null,false,"code"],
   ["explore.graph.rings_is_one_or_two","rings is 1 or 2: the graph shows the records one or two steps from the centre",null,null,false,"code"],
   ["explore.label.event","{kind} · {date}",null,null,false,"code"],
-  ["explore.label.event_undated","{kind} · undated",null,null,false,"code"],
   ["explore.ops.a_preset_is_one_of","a preset is one of {PRESET_NAMES}",null,null,false,"code"],
   ["explore.presets.no_to_named","no to is named: a path between two records names both",null,null,false,"code"],
   ["explore.presets.others_held","with {held} others held{settled}",null,null,false,"code"],
