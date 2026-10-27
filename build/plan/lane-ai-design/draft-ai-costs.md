@@ -1,6 +1,6 @@
 # The assistant's costs to a team, and what is measured on which copy (draft)
 
-**Status** · DRAFT, AI-DESIGN #3, 2026-10-27; READY for PLANNING and PLATFORM. No requirement lines of its own: the lines that carry these costs are in `draft-ai-use.md` (usage, estimates, thresholds), `draft-ai-gate.md` (test cost and ceiling, characterization), `draft-agent-model.md` (gateway log as a usage source) and `draft-ai-catalogue.md` (prices with date). This file says who pays what, and how each figure is obtained. Every figure below is an example from the lane's research (`NOTES.md`, `NOTES-2.md`, read 2026-10-17 to 10-21, grade Stated unless marked) and is to be re-confirmed before it is shown. An unconfirmed figure is OPEN and restricts nothing (K3540).
+**Status** · READY for PLANNING and PLATFORM. No requirement lines of its own: the lines that carry these costs are in `draft-ai-use.md` (usage, estimates, thresholds), `draft-ai-gate.md` (test cost and ceiling, characterization), `draft-agent-model.md` (gateway log as a usage source) and `draft-ai-catalogue.md` (prices with date). This file says who pays what, and how each figure is obtained. Every figure below is an example from the lane's research (`NOTES.md`, `NOTES-2.md`, read 2026-10-17 to 10-21, grade Stated unless marked) and is to be re-confirmed before it is shown. An unconfirmed figure is OPEN and restricts nothing (K3540).
 
 ## 1. Who pays what
 
