@@ -47,3 +47,6 @@ CC4 points to PLANNING's A4-R1..R6.
 
 ### F11 · 2026-10-27
 C14 carried: ML7-ML12 added to mail-reader, ML4 and CC5 aligned to the one nesting count and the one ledger; READY again.
+
+### F12 · 2026-10-27
+Owed by DEC-467/DEC-460 written: KIND-TABLE.md (plain kind names, states and per-kind limits for the screens) and PHOTO-DATA.md (photo data kept as data vs left out). One policy question (place in a published case) for BOB.
