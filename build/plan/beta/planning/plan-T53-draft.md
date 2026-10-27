@@ -180,10 +180,11 @@
 **ai-use**
 - T53 · K5457 · the neutral usage record (provider-reported money apart from Civicsmith's estimate; never zero for the unmeasured); provider limits as limits reached; thresholds, alerts, reconciliation · `lane-ai-design/draft-ai-use.md` R1-R26
 - T53 · K5459 · a paying team or project sees each member's use over thirty days; a personal subscription never · same, R27
+- T53 · K5480 · op `airetestset`, an administrator's switch turning re-testing off (R28) · `lane-ai-design/draft-ai-use.md` (A50)
 
 **ai-gate** (new; after agent-worker; K5457)
 - T53 · K5457 · the Gate 1 suite: signed bank and thresholds, items scored by code on a stub plane through agent-model, per-part verdicts, Wilson intervals, the gate record · `lane-ai-design/draft-ai-gate.md` R1-R40, R65, R66 `[waits: Bob's pass marks after the first measuring run, AD13, K5475]`
-- T53 · K5457 · characterization and cost shown before a run, consent, canaries, the lifecycle signal · same, R41-R53 (AI6 A with an administrator's switch to turn re-testing off and a queue reminder while off, K5480; AI7 B, K5481) `[owed: AI-DESIGN's lines for the switch's op and queue kind]`
+- T53 · K5457 · characterization and cost shown before a run, consent, canaries, the lifecycle signal · same, R41-R53 (AI6 A with an administrator's switch to turn re-testing off and a queue reminder while off, K5480; AI7 B, K5481) ; R52 asks `retestAllowed` before each canary (A50)
 - T53 · K5457 · the results bundle and the library row, `partsRefused` · same, R54-R64 (AI8 as Bob amended it, K5482: the shared results page shows every tested AI; a team's results active six months, combined statistically) `[waits: ai-issuer]`
 
 N1258 and N829: the real public-matters set, when it exists, is a standing check that can switch a part off for an AI (K5475, supersedes N829's and K2479's gate for the beta); who writes the set is Bob's, later
@@ -230,6 +231,9 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 **queue-producers**
 - T53 · A6 (DEC-462) · one item per member listing each new key, by key words (R56, R57) · `planning/lines-A5-A6-signing.md` (A6)
 - T53 · N1257 · `place-profile-arrived` for a layer of any level; a rule change told once to administrators (R58) · `capabilities/N1257-requirements-modules.md`
+
+**queue**
+- T53 · K5480 · `classOfKind` gains `retesting-off`, an OBLIGATION kind: one undismissable item while re-testing is off (R1) · AI-DESIGN A50
 
 **queue**, **screens-daily**
 - T53 · A6 · a per-key choice of act passed through (queue), a line and two acts per key, never handled by "choose several" (screens-daily) · `planning/lines-A6-queue-acts.md` (Q-A6-1, Q-A6-2 decided, K5456; their wording a UX need)
