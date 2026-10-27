@@ -4,20 +4,20 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 ## 0 · The state now and the next steps
 
-**Lane** · AI-DESIGN #4 (`session_018BhcedHXD9yareupMq6poX`, Opus), started 2026-10-27 by BOB #322; #3 archived. Branch `lane/ai-design` (T53 merged in at takeover). BOB is the session on `build/plan/current.md`'s Status line on `tranche/T53` (BOB #322, `session_018Bhcedcx1arC3HPfsGQvzJ`, at A58). PLANNING #2 is `session_018Bhceg7ptZUBDjGtWWSVz4`. Scope: AI provider selection and the assistant designed whole (LANES.md §2).
+**Lane** · AI-DESIGN #4 (`session_018BhcedHXD9yareupMq6poX`, Opus), started 2026-10-27 by BOB #322; #3 archived. Branch `lane/ai-design` (T53 merged in at takeover). BOB is the session on `build/plan/current.md`'s Status line on `tranche/T53` (BOB #323, `session_018BhcefwigYo6VB6PEac3TJ`; #322 archived; at A59). PLANNING #2 is `session_018Bhceg7ptZUBDjGtWWSVz4`. Scope: AI provider selection and the assistant designed whole (LANES.md §2).
 
 **The design is complete and folded by PLANNING** (A43–A47 merged into `tranche/T53`). Every draft is READY:
 - New modules: `draft-ai-catalogue.md` (L2), `draft-ai-gate.md` (L6), `draft-ai-issuer.md` (L11, Civicsmith's own Worker).
 - Adapted modules: `draft-ai-accounts.md` with `draft-ai-accounts-dec465.md`; `draft-credentials.md`; `draft-agent-model.md`; `draft-ai-use.md`; `draft-agent-runner.md`; `draft-agent-run-path.md`; `draft-run-record.md`; `draft-run-rules.md`; `draft-signatures.md`; `draft-instance-setup.md`.
 - Screens and costs: `draft-assistant-screens.md`; `draft-ai-costs.md`. Supporting: `NEXT-ENTRIES.md`, `DESIGN-BRIEF.md`, `INVENTORY.md`.
 
-**Bob's answers** are in `DECISIONS.md` (AD1–AD58), each with its K. All folded, AI1–AI14 included (AI8 and AI9 at A52; AI12's opt-in health counts, missed earlier, at A53). **Open with Bob:** nothing. Every AI question, AI1–AI16, is answered (last: AI15 K5493 at A57, AI16 K5494 at A58), and no draft carries a pending mark.
+**Bob's answers** are in `DECISIONS.md` (AD1–AD58), each with its K. All folded, AI1–AI14 included (AI8 and AI9 at A52; AI12's opt-in health counts, missed earlier, at A53). **Open with Bob:** nothing. Every AI question, AI1–AI16, is answered (last: AI15 K5493 at A57, AI16 K5494 at A59), and no draft carries a pending mark.
 
 **BOB's decisions since takeover:** K5490 (catalogue For BOB 14, 15; issuer 12, 13: as recommended), K5492 (A54's For BOB 5–7), K5491 (ai-use B9 changed: a personal subscription's calls stay out of the health report, the counter carries a `personal` flag; B10 and issuer 9 as recommended). U8, U9 relayed to UX-DESIGN (B559).
 
 **For BOB (open):** none. K5492 decided A54's For BOB 5–7 as recommended; U10 relayed (B560); the `membership` role-change listener (dec465 For BOB 3) stays a recommendation for PLANNING. PLATFORM's AI act and Gate 1 run figures are confirmed only after the first measuring run (screens §4).
 
-**State for PLANNING:** every draft in this folder is READY and final against Bob's answers: the three new modules (`ai-catalogue`, `ai-gate`, `ai-issuer`), the adapted ones (`ai-accounts` with its DEC-465/DEC-471 delta, `credentials`, `agent-model`, `ai-use`, `agent-runner`, `agent-run-path`, `run-record`, `run-rules`, `signatures`, `instance-setup`), the screens and costs. What changed since PLANNING's last fold (A47) is A48–A58: AI1–AI16 folded, new lines catalogue R54, R55; gate R67; issuer R25, R26; ai-use R28–R33; instance-setup R110; ai-accounts R68 (replaced), R75, R76; screens U8–U11 and the ops `airesultown`, `aihealthshare`, `aihealthpreview`, `aicreditsclear`. New `queue` kinds: `retesting-off`, `ai-credits-stop`.
+**State for PLANNING:** every draft in this folder is READY and final against Bob's answers: the three new modules (`ai-catalogue`, `ai-gate`, `ai-issuer`), the adapted ones (`ai-accounts` with its DEC-465/DEC-471 delta, `credentials`, `agent-model`, `ai-use`, `agent-runner`, `agent-run-path`, `run-record`, `run-rules`, `signatures`, `instance-setup`), the screens and costs. What changed since PLANNING's last fold (A47) is A48–A58: AI1–AI16 folded, new lines catalogue R54, R55; gate R67; issuer R25, R26; ai-use R28–R33; instance-setup R110; ai-accounts R68 (replaced), R75, R76; screens U8–U11 and the ops `airesultown`, `aihealthset`, `aihealthpreview`, `aicreditsclear`. New `queue` kinds: `retesting-off`, `ai-credits-stop`.
 
 **Next steps, in order**
 1. Answer PLANNING's and BOB's questions on the drafts as they fold A48–A58; read `MAP.md` and the other lanes' section 0 at each entry; keep each file under its cap (`proc sizes`); hand over at 40%.
@@ -91,3 +91,6 @@ Binding terms are optional reading behind a link beside the connect act, never a
 
 ## A58 · 2026-10-27 · Bob's AI16 folded (K5494); the lane's drafts final for PLANNING
 AI16 A: `draft-ai-issuer.md` stands whole (status line); AD58. The last "marked pending" status notes cleared from `draft-agent-model.md`, `draft-agent-runner.md`, `draft-credentials.md`, `draft-agent-run-path.md` (its For Bob 1 marked answered, K5477) and `draft-ai-accounts.md`. Every AI question is answered; section 0 lists what PLANNING has not yet folded (A48–A58). **Need:** nothing from Bob; PLANNING to fold A48–A58.
+
+## A59 · 2026-10-27 · Drafts aligned with DEC-475 (U8–U10 drawn)
+UX-DESIGN's DEC-475 (U508) drew U8–U10 and Bob's AI6, AI8, AI9, AI11–AI14. Aligned: `op=aihealthset` (was `aihealthshare`, ai-use R32, screens); `queue.retesting-off.summary` (ai-use R29); the three payer-flag word keys in dec465 R75 (one Queue kind, the cause in the item, as K5492); run-record R105: `WAIT_THEN_SWITCH_CHOICES` drawn as 5, 15, 60 minutes, and the plain `aiwait` takes the same lengths; screens `airesultsread` also reads the team's allowed list for "Tested, not on your team's list"; U8–U10 marked drawn. DEC-475's "three payer-flag stops" are one kind with three causes (K5492). **For BOB:** confirm the wait lengths (DEC-475 marks them BOB's). **Need:** nothing from Bob.
