@@ -21,3 +21,4 @@
 - Kinds with texts in the beta (Bob, K5509, on C17: "B"): the records request plus Oakland's other lower-stakes kinds (civil grand jury complaint, State Controller referral, public comment, media outreach); never court petitions.
 - The professional reviewer (Bob, K5510, on C18: "as recommended"): a named volunteer lawyer or a paid firm, whichever Bob finds; name, organisation and credential recorded and shown; a changed text is reviewed again.
 - Who writes texts (Bob, K5511, on C19: "A, though a machine can compose the initial draft of the text"): a named person, shown, outside every listed group, the writer of record; a machine may compose the first draft, declared in the notes; never a machine reviewer or approver.
+- Keeping texts true (Bob, K5512, on C20: "as recommended"): re-reviewed at every release touching their kind and when a source page changes; until an owner is named, a text over 12 months old shows its review date and a "last checked" line.
