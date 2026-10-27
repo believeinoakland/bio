@@ -131,3 +131,7 @@ BOB #324 decided L42's three points (K line with R1-R7's): file-safety before do
 ## L44 · 2026-10-27 · TESTS-SWEEP's three fixtures findings; K5562-K5563
 
 TESTS-SWEEP's `FIXTURES.md` (lane/tests-sweep ddf8bf4c): 86 of 89 cleared in the sweep; the three orphan fixtures-run lines of `store-assembly/r10-fixtures-run.test.mjs` are entries under control-plane (lines 23, 29) and screens-intake (line 27). Bob ruled K5562 (the founder removes an administrator alone, with a reason) and K5563 (the founder's endorsement alone issues an administrator invitation; a waiting proposal cancellable by the founder or the proposer); a Sonnet worker drafts `lines-K5562-K5563-founder.md`. BOB recorded L37, L39 and L42's decisions as K5564. DECISIONS gains K5562, K5563.
+
+## L45 · 2026-10-27 · K5565: English-in-tests entries
+
+BOB decided TESTS-SWEEP S5 (K5565): only certain sites converted by the sweep; a baseline refuses English in new or changed tests; every other site a conversion entry of its module's T53 job. `plan-T53-tests-english.md`: the one entry's text, and a row per module (165, layer order) with CENSUS's literal A/B files and CENSUS-RX's regex A/B/C sites, read by each job at START. Found: 58 modules have no other T53 entry, so R1 gains 58 jobs (recommended as ordinary jobs of their layer; a mechanical pass would not fit B sites, P7). Before R1 (1) merges the baseline with the sweep. One pointer line in the plan.
