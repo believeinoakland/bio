@@ -143,3 +143,7 @@ A Sonnet worker read member-roster, screens-settings and the README whole with t
 ## L47 · 2026-10-27 · the 58 conversion-only jobs; the plan trimmed
 
 BOB #324 agreed the 58 modules whose only T53 work is the English conversion are ordinary jobs of their layer, `haiku-5-5` where test-only and `sonnet-5-5` where a B site needs a key from the module first (K3518): marked in `plan-T53-tests-english.md` (16 haiku, 42 sonnet). The plan's layer-6 AI entries (run-rules to ai-gate, observation-log) moved whole to `plan-T53-ai.md`, one pointer line left: the plan is 45 KB.
+
+## L48 · 2026-10-27 · K5566; DEC-484 compared
+
+BOB decided L46's eleven technical points as recommended and Found 3 `TARGET_NOT_AN_ADMIN` (K5566); technical 5 (vote-carried removals' reasons shown too) is Bob's B3, bracketed in K5562-R2, R5. DEC-484 (U517) draws Members for K5562-K5563, merging with U512-U516 (Before R1 (10), `plan-T53-design-rows.md`). Compared with the eight word NEEDs: still owed 3's heading, 5 (her act in a removal under way) and 8 (the two new refusals, `IMPOSSIBLE_AT_TWO`), sent to BOB. `lines-K5562-K5563-founder.md` READY for BOB.

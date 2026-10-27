@@ -4,7 +4,7 @@
 
 ## Before R1
 
-- **The merge.** U512-U516 merge together (DEC-481 and DEC-483 sit on U512-U515's commits) before R1 or with the first job of layer 3: DEC-479 turns screens-publish's R10 test red until the Inbox draws "Show it safely", so the merge comes with `doorbell`'s `inboxview` and screens-publish's Inbox in the same R1 (BOB's). Plan Before R1 (10).
+- **The merge.** U512-U517 merge together (U517 is DEC-484, a53db53de0: Members for K5562, K5563; its owed is `lines-K5562-K5563-founder.md`'s) (DEC-481 and DEC-483 sit on U512-U515's commits) before R1 or with the first job of layer 3: DEC-479 turns screens-publish's R10 test red until the Inbox draws "Show it safely", so the merge comes with `doorbell`'s `inboxview` and screens-publish's Inbox in the same R1 (BOB's). Plan Before R1 (10).
 - **Order within layer 3 (BOB's, P4).** DEC-479 puts `file-safety` in `doorbell`'s uses, but `doorbell` (49) is before `file-safety` (50) in `modules.json`. `file-safety` does not use `doorbell`, and every user of `doorbell` (`sources` 51 and later) stays after both, so the two are swapped (file-safety 49, doorbell 50), member-roster R27's `MODULE_ORDER` re-pinned in the same act (decided, BOB #324).
 - **DEC-482** is docs only: BOB regenerates the case-checker bundle with the words.
 
