@@ -13,8 +13,8 @@
 - `combined-read-and-fold-draft.md` **READY**: fold and combined read, PL10-PL17; two technical points BOB's.
 - `load-test-draft.md` **READY**: PL40-PL43 (`load-check`, built in R1 by K5448), the `eu` rehearsal, per-type load from FILES F5, archive fan-out (C12).
 - `record-placement-draft.md` **READY** for placement and the picker (K5440, K5441, K5443; Cloudflare's pages quoted 2026-10-27); the split (§4) superseded by S0.
-- `whole-record-move-draft.md` **DRAFT**: PL50-PL57 for `corpus-export` and the installer's import.
-- `service-levels-draft.md` **DRAFT**: Team / Institution / Enterprise = Levels 1 / 2 / 3 (K5442), PL20-PL29 (the install's level choice, outgrowing at 70 % / 90 %); figures not yet measured; Enterprise quoted, not measured (K5454).
+- `whole-record-move-draft.md` **READY** (K5569): PL50-PL57 for `corpus-export` and the installer's import.
+- `service-levels-draft.md` **READY** (K5569): Team / Institution / Enterprise = Levels 1 / 2 / 3 (K5442), PL20-PL29 (the install's level choice, outgrowing at 70 % / 90 %); figures not yet measured; Enterprise quoted, not measured (K5454).
 - `levels-2-3-study-plan.md` **PLAN** (K5444, K5448): S0 done, S1 under way, S2 two prototypes (B, C), S3 quoted, S4 report to Bob.
 - `study/`: `table-inventory.md` (+TSV), `s0-options-for-the-split.md`, `s1-steps.md`, `s1-results.md`, `s1-tooling-notes.md`, `second-copy-options.md`. `DECISIONS.md`: K4354, K4599, K4635, K4746, K4747, K3060 D5, K5438, K5440-K5444, K5448, K5454.
 

@@ -1,6 +1,6 @@
 # Moving a team's whole record: export and import (draft)
 
-**Status** · DRAFT for PLANNING (K5441, K5443 (4)). PLATFORM #1, 2026-10-27. This is PL35 of `record-placement-draft.md`, written as lines for `corpus-export` and the installer, as BOB ruled (K5443). Region is fixed at Level 1; a move is an export and an import into a new copy, said before the region is chosen (K5441). Inputs: `corpus-export` R1-R15 (today's export is of "the working corpus", verified, paged, logged), `installer`, `record-placement-draft.md` PL30-PL34.
+**Status** · **READY** for PLANNING (K5569, 2026-10-27: as it stands; no move down) (K5441, K5443 (4)). PLATFORM #1, 2026-10-27. This is PL35 of `record-placement-draft.md`, written as lines for `corpus-export` and the installer, as BOB ruled (K5443). Region is fixed at Level 1; a move is an export and an import into a new copy, said before the region is chosen (K5441). Inputs: `corpus-export` R1-R15 (today's export is of "the working corpus", verified, paged, logged), `installer`, `record-placement-draft.md` PL30-PL34.
 
 ## 1. What today's export is, and what a move needs beyond it
 

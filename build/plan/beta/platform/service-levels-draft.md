@@ -1,6 +1,6 @@
 # The three service levels (draft)
 
-**Status** · DRAFT. The structure is READY for PLANNING; every figure is an estimate until `load-test-draft.md` replaces it (K4746 (1): "figures confirmed by measurement before a team sees them"), and the Level 2 and 3 lines wait on N1271's study. PLATFORM #1, 2026-10-27. Inputs: K4746, K4635, K3060 D5, N1265, N1271, PERFORMANCE P17 (the study Bob answered "A for both questions"; Cloudflare's limits read 2026-10-23 and to be re-read before a figure is published).
+**Status** · **READY** for PLANNING (K5569, 2026-10-27: as it stands; figures stay "not yet measured" and are filled by the measurements alongside R1; unbuilt levels not selectable; no move down). Every figure is an estimate until `load-test-draft.md` replaces it (K4746 (1): "figures confirmed by measurement before a team sees them"), and the Level 2 and 3 lines wait on N1271's study. PLATFORM #1, 2026-10-27. Inputs: K4746, K4635, K3060 D5, N1265, N1271, PERFORMANCE P17 (the study Bob answered "A for both questions"; Cloudflare's limits read 2026-10-23 and to be re-read before a figure is published).
 
 ## 1. What a level is
 
