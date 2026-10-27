@@ -69,7 +69,7 @@ const ref = (text, go, tip, cls = '') => `<a href="#" class="cs-ref${cls ? ' ' +
 const card = (text, tip) => `<span class="cs-card" tabindex="0" data-tip="${esc(tip)}">${text}</span>`;
 const strength = (c, n, phrase, t, weak) => `<span class="cs-strength"${weak ? ` data-weak="${esc(weak)}"` : ''}>${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
 const gapm = (k, html) => `<span class="cs-gap" data-gap="${k}">${I({undetermined:'undetermined', withheld:'withheld', unrated:'unrated', nobody:'nobody', refused:'refused'}[k])}<span>${html}</span></span>`;
-const origin = (k, t) => `<span class="cs-origin" data-origin="${k}">${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged', search:'search'}[k])}${esc(t)}</span>`;
+const origin = (k, t, tip) => `<span class="cs-origin" data-origin="${k}"${tip ? ` data-tip="${esc(tip)}"` : ''}>${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged', search:'search'}[k])}${esc(t)}</span>`;
 const kindm = k => `<span class="cs-kind" data-kind="${k}">${I(k === 'todo' ? 'todo' : k)}${{todo:'To do', noticed:'Noticed', status:'Status'}[k]}</span>`;
 const due = (s, t) => `<span class="cs-due"${s ? ` data-due="${s}"` : ''}>${I(s === 'met' ? 'accepted' : 'clock')}${esc(t)}</span>`;
 const hint = t => `<span class="cs-hint">${I('hint')}${esc(t || 'Hint · machine work')}</span>`;

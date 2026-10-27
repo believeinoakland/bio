@@ -49,11 +49,11 @@
   "session": 11,
   "updates": 37,
   "home": 19,
-  "installer": 486,
+  "installer": 487,
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7917,
+  "screen": 7934,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19552,
+  "total": 19570,
   "protected": 1166
  },
  "words": [
@@ -84104,6 +84104,132 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-465: aimoments a: the continued account belongs to another owner"
+  },
+  {
+   "key": "screen.machine.draft.ai",
+   "en": "Draft · the assistant's ({ai})",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a draft by the assistant, with the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.draft.asked.ai",
+   "en": "Draft · the assistant's ({ai}), asked by {handle}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a draft, the AI named, who asked (U1)"
+  },
+  {
+   "key": "screen.machine.proposed.ai",
+   "en": "Proposed by the assistant ({ai})",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a proposal, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.date.ai",
+   "en": "Suggested by the assistant ({ai}), {date} · not yet weighed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a suggested version, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.plan.ai",
+   "en": "Suggested by the assistant ({ai}) · for a fixing project · not yet in the plan",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a suggested plan option, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.judgment.ai",
+   "en": "The assistant's judgment ({ai}), not a finding: a conflict in the world",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: the contradiction judgment, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.proposes.tier.ai",
+   "en": "The assistant ({ai}) proposes tier 1 · file freely",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a proposed risk tier, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.ai.tip",
+   "en": "Which AI did this work. On a long job the AI can change; the run's record lists each part.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: tooltip on every machine label that names an AI (U1)"
+  },
+  {
+   "key": "screen.run.parts.head",
+   "en": "How this run went",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a finished run: the parts list head (U2)"
+  },
+  {
+   "key": "screen.run.part",
+   "en": "Part {n} · {ai} on {account} · {from} to {to}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a finished run: one part (U2)"
+  },
+  {
+   "key": "screen.run.switch",
+   "en": "Went on to {ai} on {account}, because {reason}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a finished run: the change of AI between parts (U2)"
+  },
+  {
+   "key": "screen.run.declined",
+   "en": "{member} declined to go on with another AI; the run stopped.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a run that stopped because the member declined the change (U2)"
+  },
+  {
+   "key": "screen.ai.ready",
+   "en": "The assistant is ready: {n} accounts on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: setup and AI providers: the ready state (U3)"
+  },
+  {
+   "key": "screen.ai.ready.one",
+   "en": "The assistant is ready: one account on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: setup: the ready state, one account (U3)"
+  },
+  {
+   "key": "screen.ai.notready",
+   "en": "The assistant isn't ready: no account is on yet. Add one in AI providers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: AI providers: not ready (U3)"
+  },
+  {
+   "key": "screen.ai.projectonly",
+   "en": "Your team has no account of its own. The assistant works in {project} only, on that project's account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: AI providers: a project-only account (U3, interface-shell R20)"
+  },
+  {
+   "key": "screen.aiproviders.mock.e",
+   "en": "no account of the team's own, one project's only",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: aiproviders: the mock choice for the project-only state (U3)"
+  },
+  {
+   "key": "installer.cf.asks.gateway",
+   "en": "Create a gateway for the assistant, and keep your team's AI keys in it, in your own Cloudflare account. Civicsmith never sees them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: installer: the Cloudflare ask for the gateway (U5, AIR45)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

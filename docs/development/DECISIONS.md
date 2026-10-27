@@ -7118,3 +7118,15 @@ the design: the origin check is "Not developed by a Chinese organization", "Judg
 verified: the page's checks (walk, drawn words, library against tranche/T53) pass.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `mock-acts.js`, `registry.src.py`, `words-drawn.src.py` (DEC-465 block).
 owed: BOB: merge this commit (MERGE); place Bob's answer on member cost when it comes. AI-DESIGN and PLANNING: the sealed hold's op (`aikeyseal`), the owner opt-in on accounts, a member's list order (`aiorderset`).
+
+### DEC-466 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (B555: AI-DESIGN's `draft-assistant-screens.md` §5, U1, U2, U3, U5)
+for: design (T53, the beta)
+question: With several AIs in use, which AI did a piece of work; how a run that switched AI is recorded; when the assistant is ready to use; the installer's ask for Cloudflare to hold the team's AI keys.
+why it is Bob's: it is not (P17): screen detail beneath his rulings (K4443, K4464, K5429-K5433).
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: U1: each label on the assistant's work names the AI, in parentheses after "the assistant" (`screen.machine.*.ai`, with {ai} the model's display name, never the account), with the tooltip "Which AI did this work. On a long job the AI can change; the run's record lists each part." (`screen.machine.ai.tip`); rows code reads today keep their English. U2: a finished run lists "How this run went": each part ("Part {n} · {ai} on {account} · {from} to {to}"), each switch with its reason, or the member's refusal to go on. U3: Setup says "The assistant is ready: …" or "isn't ready: no account is on yet. Add one in AI providers."; a team with only a project's account says the assistant works in that project only; the AI providers card keeps its own count, so it draws only the not-ready and project-only states. U5: the installer's Cloudflare list adds "Create a gateway for the assistant, and keep your team's AI keys in it, in your own Cloudflare account. Civicsmith never sees them." Not drawn: U4 (the charge-or-rule answer waits on its tranche and Bob's Q1, Q2); U6 (the Cloudflare dashboard's labels need a live AI Gateway dashboard to check, AIR45's live test L1).
+verified: the page's checks (walk, drawn words, library against tranche/T53) pass.
+reasoning recorded in: this entry; `screens/mock-kit.js`, `mock-screens.js`, `words-drawn.src.py` (DEC-466 block).
+owed: BOB: merge this commit (MERGE). AI-DESIGN and PLANNING: the run record's parts (N1219), the ready state's read (interface-shell R20), the installer's gateway permission matched to K4464's grant; U6's dashboard labels at live test L1.
