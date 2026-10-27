@@ -1,0 +1,56 @@
+# PLANNING: Bob's decisions carried
+
+**Status** · One line per decision of Bob's this lane carries (id · date · his words, quoted · source), never reworded (LANES.md §1). Search `build/rulings.md` before asking Bob anything.
+
+- K5417 · 2026-10-27 · "let's get all of this designed, then integrated into a comprehensive build plan, and THEN start building it. This break up this design and planning work into the proper set of lanes that can work cooperatively on what needs to be done" · `build/rulings.md`, to BOB #320
+- K5418 · 2026-10-27 · "1. I approve the lane set. 2. Close T52 now 3. Option A"; on planning: "Lanes design. Today you take those designs from the many lanes and turn them into build plans ... I wonder if the build plan generation function should itself be a separate lane that you manage" · `build/rulings.md`, to BOB #320
+- K5418 · 2026-10-27 · on sizes: "How do we make sure that the handoff documents, not just BOB's but all lanes, don't exceed the capacity of refreshed sessions?" · `build/rulings.md`
+- K5418 · 2026-10-27 · on accounts: "We now have 3 Max 20x accounts ... when the weekly capacity of an account is about to be exceeded ... all work needs to be spun down and started back up in the next account with a fresh quota." · `build/rulings.md`
+- layers.md ruling 5, amended 2026-09-26 by P17 · "a change to a layer, or adding or removing a module that carries product capability, comes to Bob; `uses` edges, order within a layer, file ownership and helper or legacy modules are BOB's, decided and reported" · `build/layers.md`
+- K2425 · "D42 - email: A", after upload is in use (N824) · `build/plan/next.md`
+- K4635 · "You were suggestion A now and perhaps B for the beta. I agree with that." (N1271, the record split) · `build/plan/next.md`
+- K4747 · "The region picker for teams with legal requirements still comes after the alpha." (N1273) · `build/plan/next.md`
+- K5436 · 2026-10-27 · on QUESTIONS.html F2, of option B2: "as recommened" (a file of a type not yet read is kept whole, safe-graded and named, never refused for its type alone; RAR, programs, installers and disk images still refused) · `build/rulings.md`
+- K5435 · 2026-10-27 · on QUESTIONS.html F1, of option A2: "As recommended" (FILES's Tier 2 types read in the beta) · `build/rulings.md`
+- K5437 · 2026-10-27 · on QUESTIONS.html F3: "as recommened" (MBOX read; Tier 3 held and named until a real file is shown) · `build/rulings.md`
+- DEC-457 to DEC-464 · 2026-10-27 · A1-A8: "as recommended" (A1, A2, A3, A5, A6, A7); A4 "B, but only drop metadata is necessary"; A8 "B, with the proper grade assigned. Having a review further attest to a reading is better than not, but still only incrementally better." · `docs/development/DECISIONS.md`
+- K5438 · 2026-10-27 · on P1: "keep the current bar, but also recognize that different sized teams will require different levels of capabilities (Team, Institution, Enterprise)..." · `build/rulings.md`
+- K5440 · 2026-10-27 · on P2, option B: "as recommended" (the region picker's "near me" and "keep my data in this region") · `build/rulings.md`
+- K5441 · 2026-10-27 · on P3, option A: "a recommended" (a Level 1 region fixed once the store exists) · `build/rulings.md`
+- K5444 · 2026-10-27 · on P4: "Shouldn't, for example, a newsroom be able to start a CS copy at the institution level ... If a study of how to support levels 2 and 3 is needed, then let's start that study." · `build/rulings.md`
+- K5445 · 2026-10-27 · on C1: "as recommended, with the understanding that C is the objective - even if we aren't able to support that until after the beta." · `build/rulings.md`
+- K5446, K5447 · 2026-10-27 · on C3 and C4, option A: "as recommended" · `build/rulings.md`
+- K5450 · 2026-10-27 · on QUESTIONS.html C5, option A (N1257): "Perhaps there should be an "information" tag ('i' in circle) next to each entry or the page overall which shows how current the information is." · `build/rulings.md`
+- K5451 · 2026-10-27 · on QUESTIONS.html C6, option A (N1257): "as recommended" (a shipped layer never changed by a team; a team's marked correction of a calendar fact stands; laws and deadlines only reported) · `build/rulings.md`
+- K5452 · 2026-10-27 · on QUESTIONS.html C7 (N1257): "A team might be located outside the US even if their work is focused on some US jurisdiction. It's lso worth noting that a team's work might be state-wide or some other footprint not specific to a city or county." · `build/rulings.md`
+- K5454 · 2026-10-27 · on QUESTIONS.html P5, option A: "as recommended - we'll need to work with a CS team interested in setting up an enterprise scale copy before we can provide that support." (Enterprise listed at install as not yet available; Team and Institution built and measured in the beta) · `build/rulings.md`
+- K5495 · 2026-10-27 · on QUESTIONS.html C2 (N1272): "A, but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted." · `build/rulings.md`
+- K5496 · 2026-10-27 · on QUESTIONS.html C21, option A (N1272): "as recommended" (finding names, organisations and dates across a document is reading, not interpretation) · `build/rulings.md`
+- K5497 · 2026-10-27 · on QUESTIONS.html C7 remainder, option A (N1257): "as recommended" (US places only shipped; a team working outside the US adds its own places) · `build/rulings.md`
+- K5498 · 2026-10-27 · on QUESTIONS.html C8, option C (N1259): "as recommended" (California's own sources for company officers; never OpenCorporates) · `build/rulings.md`
+- K5499 · 2026-10-27 · on QUESTIONS.html C9 (N1259): "A" (only a home address's street lines removed from donor lists) · `build/rulings.md`
+- K5500 · 2026-10-27 · on QUESTIONS.html C10, option A (N1259): "as recommended" (the donor-use guard federal only for now) · `build/rulings.md`
+- K5503 · 2026-10-27 · on QUESTIONS.html C11, option B (N1259): "as recommended" (a seventh reason for naming a person: named in the public filing the case cites) · `build/rulings.md`
+- K5504 · 2026-10-27 · on QUESTIONS.html C12, option A (N824): "as recommended" (the forwarding address on the team's own domain; upload always beside it) · `build/rulings.md`
+- K5505 · 2026-10-27 · on QUESTIONS.html C13, option A (N824): "as recommended" (a private forwarding address per member) · `build/rulings.md`
+- K5506 · 2026-10-27 · on QUESTIONS.html C14, option A (N824): "as recommended" (forwarded mail waits until the member states where it came from) · `build/rulings.md`
+- K5507 · 2026-10-27 · on QUESTIONS.html C15, option A (N1110): "as recommended" (the hand-kept directory on civicsmith.org; declined listings and applications recorded now) · `build/rulings.md`
+- K5508 · 2026-10-27 · on QUESTIONS.html C16 (N858): "B, but a member should be able to opt-out of the review if they're the only member of the team." · `build/rulings.md`
+- K5509 · 2026-10-27 · on QUESTIONS.html C17 (N858): "B" (texts for the records request and Oakland's lower-stakes actions; never court petitions) · `build/rulings.md`
+- K5510 · 2026-10-27 · on QUESTIONS.html C18 (N858): "as recommended" (a named volunteer lawyer or a paid firm reviews; name, organisation, credential shown) · `build/rulings.md`
+- K5511 · 2026-10-27 · on QUESTIONS.html C19 (N858): "A, though a machine can compose the initial draft of the text" · `build/rulings.md`
+- K5512 · 2026-10-27 · on QUESTIONS.html C20 (N858): "as recommended" (re-review at each release touching its kind and on a changed source; a stale text shows its dates) · `build/rulings.md`
+- K5513 · 2026-10-27 · on QUESTIONS.html C22, option A (K5498): "as recommended" (a followed case checked daily on the team's free CourtListener key) · `build/rulings.md`
+- K5514 · 2026-10-27 · on QUESTIONS.html F4, option A (DEC-460): "as recommended" (a photo's place shown in an edition only where the author turns it on) · `build/rulings.md`
+- K5515 · 2026-10-27 · on QUESTIONS.html L1, option B: "as recommended" (offices may be a question's subject) · `build/rulings.md`
+- K5516 · 2026-10-27 · on QUESTIONS.html L2, option B: "as recommended" (every document the member may see, labeled with its project) · `build/rulings.md`
+- K5517 · 2026-10-27 · on QUESTIONS.html L3, option A: "as recommended" (a disputed fiscal year still groups, shown disputed) · `build/rulings.md`
+- K5518 · 2026-10-27 · on QUESTIONS.html L4, option B: "as recommended" (a source's existence is confidential too) · `build/rulings.md`
+- K5519 · 2026-10-27 · on QUESTIONS.html L5, option A: "as recommended" (the sender's file name shown to all, marked as their words) · `build/rulings.md`
+- K5520 · 2026-10-27 · on QUESTIONS.html L6, option A: "as recommended" (JPEG and PNG safe pictures first) · `build/rulings.md`
+- K5521 · 2026-10-27 · on QUESTIONS.html L7, option A: "as recommended" (camera serial and owner name kept, shown beside the picture) · `build/rulings.md`
+- K5522 · 2026-10-27 · on QUESTIONS.html L8, option A: "as recommended" (GPS as text, no map link) · `build/rulings.md`
+- K5523 · 2026-10-27 · on QUESTIONS.html L9: "B" (a photo's time and place citable as "the file says") · `build/rulings.md`
+- K5524 · 2026-10-27 · on QUESTIONS.html L10, option A: "as recommended" (a checked typing may equal a checked machine reading; said in the explanation) · `build/rulings.md`
+- K5525 · 2026-10-27 · on QUESTIONS.html L11, option A: "as recommended" (the member's credit choice wins) · `build/rulings.md`
+- K5526 · 2026-10-27 · on QUESTIONS.html L12, option A: "as recommended" (the beta is a release before 1.0) · `build/rulings.md`
