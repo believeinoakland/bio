@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7520 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7521 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22896,6 +22896,7 @@ export const WORD_ROWS = Object.freeze([
   ["docprofile.pipeline.the_substance_is_the_same","the substance is the same; only machinery this site rebuilds on every visit differs",null,null,false,"code"],
   ["docprofile.pipeline.the_two_captures_could_not","the two captures could not be compared ({String}), so nothing is claimed",null,null,false,"code"],
   ["docprofile.pipeline.the_two_captures_could_not_be_compared","the two captures could not be compared",null,null,false,"code"],
+  ["docprofile.readtext.no_text_was_supplied","no text was supplied",null,null,false,"code"],
   ["docprofile.readtext.no_text_was_supplied_so_no","no text was supplied, so no reading was attempted",null,null,false,"code"],
   ["docprofile.readtext.read_over_a_full_decode","read over a full decode ({chars} characters)",null,null,false,"code"],
   ["docprofile.readtext.read_over_a_partial_decode","read over a PARTIAL decode, stated: {undetermined} undetermined region(s)/code point(s){named} beside {chars} decoded characters",null,null,false,"code"],

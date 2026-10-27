@@ -21946,6 +21946,13 @@
       "line": 94
     },
     {
+      "id": "docprofile.readtext.no_text_was_supplied",
+      "en": "no text was supplied",
+      "module": "docprofile",
+      "file": "docprofile/readtext.mjs",
+      "line": 189
+    },
+    {
       "id": "docprofile.readtext.no_text_was_supplied_so_no",
       "en": "no text was supplied, so no reading was attempted",
       "module": "docprofile",
