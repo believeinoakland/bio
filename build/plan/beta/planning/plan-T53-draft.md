@@ -88,7 +88,7 @@
 - T53 · A3 · a pulled knock carries the knocker's file name as the knocker's word · `planning/lines-A3-A4-source-picture.md` (doorbell R29) `[owed: L2-5]`
 
 **file-safety**
-- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name read into the record, not shown by default; the place name shown, exact figures one step away `[waits: the published-place default, on Bob's page; L21 the colour profile]`
+- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name read into the record, not shown by default; the place name shown, exact figures one step away A4 the one source (K5473 (1)); "near {place}" from the shipped and team layers only, else rounded figures `[waits: the published-place default, on Bob's page; L21, L22]`
 - T53 · DEC-454 · the partial-scan reason in plain words · `docs/development/DECISIONS.md` DEC-454
 - T53 · N1266 (K5436) · a held-and-named file safe-graded like any other · `files/REQ-format-registry-beta.md` RF10
 
@@ -275,7 +275,7 @@
 - T53 · DEC-465 · origin an ordinary check ("Not offered" row removed); a team account's owner opt-in "Projects and members may add this account"; a member's list ordered (`aiorderset`); a key kept sealed in the team's Civicsmith (`aikeyseal`); aimoments names whose checks apply · DEC-465 → ai-accounts R69-R74 (layer 2)
 - T53 · DEC-466 · each label names the AI (`screen.machine.*.ai`); a finished run lists its parts and switches (N1219: ai-runs' segments); Setup's ready and not-ready states (interface-shell R20's read); the installer's gateway line matched to K4464's grant · DEC-466 → ai-runs R99-R104 (layer 6), instance-setup R109 and the installer lines below
 - T53 · DEC-466 U5, K5471 (2) · the installer asks for exactly the AI gateway's two permissions (installer R2, A47's R107) and an install without them completes, the assistant still usable (installer-steps R45, A47's R108); Setup's ready state (instance-setup R109, A47) · `lane-ai-design/draft-instance-setup.md` `[owed: whether "AI Gateway - Edit" carries reading, OPEN in the draft]`
-- T53 · K5471 (5) · the installer's Logpush read is refused (Cloudflare "Authentication error" on plat-s1's install): its scopes (K5449, K5460) lack Logs Read; the check stays advisory · K5471 `first: settle whether the scope is asked for or the check dropped`
+- T53 · K5471 (5) · the installer's Logpush read is refused (Cloudflare "Authentication error" on plat-s1's install): its scopes (K5449, K5460) lack Logs Read: the installer asks for a read-only Logs scope (installer R2's count to seven), the check keeping its strength (K5473 (2)) · K5471, K5473 `[first: Bob's one act, registering the scope on the OAuth client]`
 - T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7
 
 **op-declarations**, **op-grades**, **interface-shell** (the assistant)
