@@ -44549,6 +44549,414 @@
    "en": "The record's history is complete",
    "protected": false,
    "note": "DEC-453: the signing gate: the plain name of check C-12.2, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "screen.capture.finish.pending",
+   "en": "The page as a visitor saw it is still being made. It is filed as a second document when it is ready; look again in a moment.",
+   "protected": false,
+   "note": "DEC-454: Add, finishing a capture: in place of acquisition.index.render_pending_note (capture.mjs:496)"
+  },
+  {
+   "key": "screen.capture.finish.files",
+   "en": "Nothing new was filed: the page itself was already captured.",
+   "protected": false,
+   "note": "DEC-454: Add, finishing a capture that files no new document: in place of acquisition.note.continuation_files_new"
+  },
+  {
+   "key": "screen.capture.finish.done",
+   "en": "Finished: {title}, the page as a visitor saw it, is filed as a second document. It waits in Held captures until a member vouches for it.",
+   "protected": false,
+   "note": "DEC-454: Add, a finished capture; {title} the second document's title"
+  },
+  {
+   "key": "screen.capture.address.reading.pending",
+   "en": "Your team already holds a copy of this page. It hasn't been read yet, so its words can't be found or cited until it is.",
+   "protected": false,
+   "note": "DEC-454: Add, an address your team already holds, its reading not done"
+  },
+  {
+   "key": "screen.capture.address.reading.done",
+   "en": "Your team already holds a copy of this page, and it has been read.",
+   "protected": false,
+   "note": "DEC-454: Add, an address your team already holds, read"
+  },
+  {
+   "key": "screen.capture.fetch.done.noproject",
+   "en": "Fetched. {document} waits in Held captures until a member vouches for it.",
+   "protected": false,
+   "note": "DEC-454: Add, a fetch done with no project; {document} the document, as a link"
+  },
+  {
+   "key": "screen.document.text.partial.one",
+   "en": "Partial: page {pages} has no text",
+   "protected": false,
+   "note": "DEC-454: the singular of screen.document.text.partial (one page without text)"
+  },
+  {
+   "key": "screen.document.reading.beingread",
+   "en": "The rest of this file is still being read. Look again in a few minutes; a search covers what has been read so far.",
+   "protected": false,
+   "note": "DEC-454: Document, in place of state.loading while pages are still being read (document.mjs:377)"
+  },
+  {
+   "key": "document.read.more",
+   "en": "More passages",
+   "protected": false,
+   "note": "DEC-454: Document's passage pager (document.mjs:573), apart from document.read.next 'Next page', the page bar's"
+  },
+  {
+   "key": "screen.document.reading.firstn",
+   "en": "Showing {n} of {m} passages",
+   "protected": false,
+   "note": "DEC-454: Document, the passage count, in place of passages.head plus 'n / m'; {n} {m}"
+  },
+  {
+   "key": "screen.capture.read.queued",
+   "en": "Waiting its turn to be read. Its words can be found and cited once it has been read.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading queued (in place of screen.capture.reading.pending's 'Kept.')"
+  },
+  {
+   "key": "screen.capture.file.parts.hashing",
+   "en": "Checking the file before it is sent.",
+   "protected": false,
+   "note": "DEC-454: Add, a parted upload being hashed (in place of state.loading)"
+  },
+  {
+   "key": "screen.capture.file.parts.sending",
+   "en": "Sending part {n} of {m}.",
+   "protected": false,
+   "note": "DEC-454: Add, a parted upload being sent; {n} {m}"
+  },
+  {
+   "key": "screen.capture.read.fetching",
+   "en": "Fetching the file.",
+   "protected": false,
+   "note": "DEC-454: Add, the reading's first step"
+  },
+  {
+   "key": "screen.capture.read.reading",
+   "en": "Being read.",
+   "protected": false,
+   "note": "DEC-454: Add, the reading under way"
+  },
+  {
+   "key": "screen.capture.read.about",
+   "en": "About {minutes} more minutes.",
+   "protected": false,
+   "note": "DEC-454: Add, the reading's estimate; {minutes}"
+  },
+  {
+   "key": "screen.capture.read.about.one",
+   "en": "About a minute more.",
+   "protected": false,
+   "note": "DEC-454: the singular of screen.capture.read.about"
+  },
+  {
+   "key": "screen.capture.read.refused.ENCRYPTED",
+   "en": "The file is locked with a password, so its words can't be read. Add a copy that isn't locked.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused ENCRYPTED (in place of refusal.ENCRYPTED's 'The document is encrypted.')"
+  },
+  {
+   "key": "screen.capture.read.refused.TOO_LARGE",
+   "en": "This file is {size}, more than the {bound} your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused TOO_LARGE; {size} {bound} in MB (size.mb)"
+  },
+  {
+   "key": "screen.capture.read.refused.STRUCTURE_OVER_BOUND",
+   "en": "{part} is over the {bound} your team's Civicsmith can read. The file is kept whole and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused STRUCTURE_OVER_BOUND; {part} a plain part name (code owed), {bound}"
+  },
+  {
+   "key": "screen.capture.read.refused.ENCODING_UNSUPPORTED",
+   "en": "This file's text uses an encoding ({name}) that isn't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Add, a reading refused ENCODING_UNSUPPORTED; {name} the encoding's name"
+  },
+  {
+   "key": "screen.capture.refusal.upload.TOO_LARGE.figures",
+   "en": "That file is {size}, more than the {bound} that can be brought in this way. Nothing was written.",
+   "protected": false,
+   "note": "DEC-454: Add, an upload refused TOO_LARGE, with its figures (in place of the bare 'size · bound', capture.mjs:1436); {size} {bound} in MB"
+  },
+  {
+   "key": "screen.document.unsupported.rtf",
+   "en": "Files in the Rich Text format (.rtf) aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_rtf sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.email",
+   "en": "Email files (.eml, .msg) aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_email sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.legacy_excel",
+   "en": "Files in the old Excel format (.xls) aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_excel sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.legacy_powerpoint",
+   "en": "Files in the old PowerPoint format (.ppt) aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_powerpoint sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.legacy_office",
+   "en": "This file is in an old Office format that isn't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_legacy_office sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.tiff",
+   "en": "TIFF pictures aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_tiff sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.gif",
+   "en": "GIF pictures aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_gif sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.webp",
+   "en": "WebP pictures aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_webp sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.heic",
+   "en": "HEIC pictures aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_heic sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.avif",
+   "en": "AVIF pictures aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_avif sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.bmp",
+   "en": "BMP pictures aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_bmp sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.jp2",
+   "en": "JPEG 2000 pictures aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_jp2 sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "screen.document.unsupported.ico",
+   "en": "Icon files (.ico) aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_ico sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "capture.index.job_not_registered",
+   "en": "Your team's Civicsmith couldn't set up the reading for this file, so it wasn't added. Nothing was saved. Try adding it again.",
+   "protected": false,
+   "note": "DEC-454: capture: a file whose reading job could not be registered"
+  },
+  {
+   "key": "capture.index.body_over_request_ceiling",
+   "en": "This file is larger than the {bound} bytes one request can carry, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture: over the request ceiling; {bound} in bytes as the code passes it"
+  },
+  {
+   "key": "capture.ops.body_over_request_ceiling",
+   "en": "This file is larger than the {bound} bytes one request can carry, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture ops: the same as capture.index.body_over_request_ceiling"
+  },
+  {
+   "key": "capture.ops.body_over_capture_ceiling",
+   "en": "This file is larger than the {bound} bytes your team's Civicsmith keeps as one capture, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture ops: over the capture ceiling; {bound} bytes"
+  },
+  {
+   "key": "doorbell.index.job_not_registered",
+   "en": "The reading for this knock couldn't be set up, so the knock was left as it was and nothing was filed. Try again.",
+   "protected": false,
+   "note": "DEC-454: doorbell: a knock whose reading job could not be registered"
+  },
+  {
+   "key": "capture.index.upload_unknown",
+   "en": "Your team's Civicsmith has no file being sent in parts under that name for you. Start sending it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload (1 of 18)"
+  },
+  {
+   "key": "capture.index.upload_expired",
+   "en": "This upload was left open too long, so it was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.upload_not_open",
+   "en": "Every part of this file has already been sent. Finish the upload.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_conflict",
+   "en": "That part was already sent with different contents, so this one was refused.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_out_of_order",
+   "en": "Parts have to be sent in order. Send the next part in line.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.upload_lost",
+   "en": "Your team's Civicsmith lost track of the parts sent so far, so the upload was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_in_progress",
+   "en": "A part is still arriving. Send the next one when it has been received.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_size",
+   "en": "Each part must be exactly {bound} bytes, except the last, which holds the rest of the file. This one wasn't, so nothing was stored.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload; {bound} bytes"
+  },
+  {
+   "key": "capture.index.part_not_read",
+   "en": "This part couldn't be read, so nothing was stored. Send it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_digest_mismatch",
+   "en": "This part doesn't match the fingerprint sent with it, so nothing was stored. Send it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_not_stored",
+   "en": "Your team's file storage wouldn't accept this part, so nothing was recorded. Send it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parts_missing",
+   "en": "Some parts haven't been sent, so the upload wasn't finished and nothing was saved. Send the missing parts.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parts_out_of_order",
+   "en": "The parts listed aren't the ones that were sent, in the order they were sent, so the upload wasn't finished and nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.whole_digest_mismatch",
+   "en": "The parts put together don't match the fingerprint sent for the whole file, so the upload was stopped and nothing was kept.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_completed",
+   "en": "Your team's file storage wouldn't finish the upload, so it was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_unavailable",
+   "en": "Your team's Civicsmith can't take a file in parts right now, so nothing was saved.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_begun",
+   "en": "Your team's file storage wouldn't start an upload in parts, so nothing was saved. Try again.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_aborted",
+   "en": "Your team's file storage wouldn't cancel the upload. It stays open until it runs out of time, then it is stopped.",
+   "protected": false,
+   "note": "DEC-454: capture, parted upload (18 of 18)"
+  },
+  {
+   "key": "refusal.WORKBOOK_TOO_LARGE",
+   "en": "This workbook has {cells} cells, more than the {bound_cells} your team's Civicsmith can hold and read, so it wasn't added. Nothing was written.",
+   "protected": false,
+   "note": "DEC-454: workbooks: the refusal (until now only the code's stand-in); {cells} {bound_cells}"
+  },
+  {
+   "key": "file-safety.index.the_file_is_encrypted_so_no_safe_view",
+   "en": "This file is locked with a password, so no safe view can be made of it.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a safe view refused for an encrypted file"
+  },
+  {
+   "key": "file-safety.checks.the_file_scanner_could_not_read",
+   "en": "The file scanner couldn't read all of this file, so it counts as not checked. The reason is given beside it.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a partial scan (the reason beside it is still a code: owed)"
+  },
+  {
+   "key": "file-safety.index.reading_is_not_gated",
+   "en": "Your team's Civicsmith reads this file without waiting for its safety scan. The scan is a separate check; if it finds a threat, the file stays readable and searchable for now.",
+   "protected": false,
+   "note": "DEC-454: file-safety: drawn on Document once this row is held (document.mjs:399)"
+  },
+  {
+   "key": "file-safety.index.safe_view_first_pages",
+   "en": "This shows the first {pages} of the document's {source_pages} pages. It is a view of the document, not a reading of it.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a safe view of the first pages; {pages} {source_pages}"
+  },
+  {
+   "key": "file-safety.index.safe_view_is_a_view",
+   "en": "This is a view of the document, not a reading of it.",
+   "protected": false,
+   "note": "DEC-454: file-safety: a safe view"
+  },
+  {
+   "key": "queue.kind.reading-ended",
+   "en": "Documents you added, now read, partly read, or not taken in",
+   "protected": false,
+   "note": "DEC-454: the Queue's list of kinds (screens-daily reads every queue.kind.* row); beside the fetch-done kind's"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.pending",
+   "en": "This page is still being drawn in the background, so its supporting files haven't been looked for yet.",
+   "protected": false,
+   "note": "DEC-454: Document: supporting files not walked, RENDER_PENDING"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.toolarge",
+   "en": "This page is too large to look through for supporting files, so none were looked for.",
+   "protected": false,
+   "note": "DEC-454: Document: supporting files not walked, TOO_LARGE_TO_PARSE or PRIMARY_TOO_LARGE"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.unavailable",
+   "en": "Your team's Civicsmith couldn't look through this page for supporting files, so none were looked for.",
+   "protected": false,
+   "note": "DEC-454: Document: supporting files not walked, any other reason"
   }
  ],
  "rewrite": {
