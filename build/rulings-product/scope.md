@@ -14,3 +14,6 @@
 - Company officers (Bob, K5498, on C8: "as recommended"): California's API with the team's own key where sign-up is free, on a member's ask, or the state's bulk file brought in by a member; never OpenCorporates.
 - Donor addresses (Bob, K5499, on C9: "A"): only street lines removed; ZIP, coordinates and city kept.
 - Donor-use guard (Bob, K5500, on C10: "as recommended"): federal registers only for now (11 CFR 104.15); California's rule to a lawyer.
+- Naming a person from a cited public filing (Bob, K5503, on C11: "as recommended"): a seventh recorded reason, "named in the public filing the case cites", proven by the cited row, still recorded and checked.
+- Email capture (Bob, K5504, K5505, K5506, on C12, C13, C14: "as recommended"): the forwarding address on the team's own domain, uploading a saved email always beside it; a private address per member; forwarded mail waits in the member's private list until they state where it came from.
+- The group directory (Bob, K5507, on C15: "as recommended"): the hand-kept list on civicsmith.org; the record of a declined listing and a group's application built now, a listing desk later.
