@@ -141,6 +141,7 @@ test("R11: each check moved here with its number, code and translation unchanged
     ["RETIRED_NOT_CITABLE", "C-33.39", "src/citation/index.mjs cite > is-cite-retired"],
     ["NO_SUCH_QUESTION", "C-33.52", "src/citation/index.mjs cite > is-cite-question"],
     ["BAD_GROUND", "C-33.58", "src/citation/index.mjs cite > is-cite-ground"],
+    ["WHICH_PASSAGE", "C-33.65", "src/citation/index.mjs #edgeTransition > is-which-passage"],
     ["NOT_AN_INQUIRY", "C-33.53", "src/citation/index.mjs cite > is-cite-question"],
   ]);
   assert.deepEqual(Object.entries(CITE_EXTENT_CHECKS).map(([k, r]) => [k, r.check, r.where]), [
@@ -186,9 +187,11 @@ test("K3, R1, R7, R14: the op routes — the control plane's stamps are read fro
     identity: "member:ann", role: "supports", ground: null, extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
     found: null, question: null }]);
   const edgeArgs = { project: "P", handle: "H", viewer: "member:ann", owner: "o", reason: "why", author: "member:ann", identity: "member:ann" };
-  assert.deepEqual(calls[1], ["sever", edgeArgs]);
+  /* R25: both also read the passage's part, as `cite` names it. */
+  const part = { extent_kind: "pdf-page", extent_page: "2", content_id: "" };
+  assert.deepEqual(calls[1], ["sever", { ...edgeArgs, extent: part }]);
   /* R23: `reinstate` also reads the optional `role` (the body first, as `cite`'s fields); `sever` reads none. */
-  assert.deepEqual(calls[2], ["reinstate", { ...edgeArgs, role: "supports" }]);
+  assert.deepEqual(calls[2], ["reinstate", { ...edgeArgs, role: "supports", extent: part }]);
   citationOps(fake, new URL("http://x/?project=P&handle=H&reason=why"), {}).reinstate();
   assert.equal(calls.pop()[1].role, null, "control: no role sent, none read");
   const bare = citationOps(fake, new URL("http://x/?project=P"), { project: "P" });

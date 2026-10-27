@@ -56,7 +56,7 @@ import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { CITE_CHECKS, CITE_EXTENT_CHECKS, CITE_IMPORTED_CHECKS, CITE_LEG_GRADE_CHECKS } from "./checks.mjs";
-import { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setLegGrade, setScalar, appendSessionLog } from "./splice.mjs";
+import { spliceEdgeStatus, spliceReferences, spliceBasis, removeBasisLegs, setBasisRole, setLegGrade, setLegStatus, setScalar, appendSessionLog } from "./splice.mjs";
 import { recordedBy } from "./recorded.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -238,7 +238,7 @@ export class Citation {
    *  `leg-earning`'s `restsOnLive` read a leg's severance from. A REASON IS REQUIRED by both: the catalogue's own remedy
    *  for a bad edge is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method
    *  for both directions and both arms, because they are the same operation over the same grammar. */
-  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null, role = null }) {
+  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null, role = null, extent = null }) {
     /* Weight `refuse`, hard-coded exactly as `cite` hard-codes `report`: a caller that could choose the weight would
        make the distinction advisory (R7). */
     const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
@@ -284,6 +284,22 @@ export class Citation {
                  roles: this.inquiry.BASIS_ROLES.slice(), drift: sel.drift,
                  detail: localize("citation.index.rl_is_not_a_role", "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.", { rl, roles: this.inquiry.BASIS_ROLES.join(", ") }) };
     }
+
+    /* R25: on a question the call names a passage by its part, as `cite` names it. The field names are judged as R1 judges
+       them (a part is refused by name, never dropped); a case's edge is the document, so its arm reads no part. */
+    const bag = onInquiry && extent && typeof extent === "object" ? extent : {};
+    if (onInquiry) {
+      const unknownFields = Object.keys(bag).filter((k) => !(k in EXTENT_PARAMS)).sort();
+      if (unknownFields.length)
+        return { ok: false, reason: "UNKNOWN_EXTENT_FIELD", ...rowOf(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
+                 project, handle, drift: sel.drift, got: unknownFields, fields: Object.keys(EXTENT_PARAMS),
+                 detail: localize("citation.index.this_call_names_fields", "this call names {names}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: {fields}.", { names: unknownFields.map((k) => `'${k}'`).join(", "), fields: Object.keys(EXTENT_PARAMS).join(", ") }) };
+    }
+    const named = onInquiry && partKey(bag) !== partKey({});
+    if (named && sel.members.length > 1)
+      return { ok: false, reason: "EXTENT_ON_MANY", ...rowOf(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
+               project, handle, offenders: sel.members.slice().sort(), drift: sel.drift,
+               detail: localize("citation.index.a_part_of_a_document_is", "a part of a document is a part of ONE document, and this call would write {n} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.", { n: String(sel.members.length) }) };
 
     /* An EMPTY selection is refused, not a successful no-op: promoting an UNCHANGED document would put a revision
        recording that nothing happened into an append-only history. */
@@ -337,9 +353,44 @@ export class Citation {
        so the batch is refused by name rather than partially applied: a half-run state change is what weight `refuse`
        exists to prevent. */
     const wrong = [];
-    for (const id of sel.members) {
-      const e = current.get(id);
-      if (!e || !from.includes(e.status)) wrong.push(id);
+    /* R25: on a question each selected member's passage is one leg, named by its part (R22's identity). `legAt` maps a
+       member to the position in `basis[]` of the leg to move; `legs` is each target's legs with their own status, a leg
+       with none read through the document's entry, as every leg written before a passage had a status of its own. */
+    const legAt = new Map();
+    /* K5407: a leg carries `status: "severed"` while severed and none while live. A leg of a document severed before a passage
+       had a status of its own (its entry `severed`, no leg of it carrying a status) reads through the entry. */
+    const statusOf = (leg, e, doc_) => {
+      if (typeof leg.status === "string" && leg.status !== "") return leg.status;
+      const sibs = (Array.isArray(doc_.data.basis) ? doc_.data.basis : []).filter((l) => l && typeof l === "object" && l.target === leg.target);
+      return e.status === "severed" && !sibs.some((l) => typeof l.status === "string" && l.status !== "") ? "severed" : e.status === "severed" ? "confirmed" : e.status;
+    };
+    if (onInquiry) {
+      const basisAll = Array.isArray(doc.data.basis) ? doc.data.basis : [];
+      const mine = partKey(bag);
+      const ambiguous = [];
+      for (const id of sel.members) {
+        const e = current.get(id);
+        const held = [];
+        basisAll.forEach((l, n) => { if (l && typeof l === "object" && l.target === id) held.push(n); });
+        let at = -1;
+        if (named) at = held.find((n) => partKey(basisAll[n]) === mine) ?? -1;
+        else if (held.length === 1) at = held[0];
+        else if (held.length > 1) { ambiguous.push({ id, parts: held.map((n) => ({ ...Object.fromEntries(Object.keys(EXTENT_PARAMS).filter((k) => basisAll[n][k] !== undefined && basisAll[n][k] !== null && String(basisAll[n][k]).trim() !== "").map((k) => [k, basisAll[n][k]])) })) }); continue; }
+        if (at < 0 || !e || !from.includes(statusOf(basisAll[at], e, doc))) { wrong.push(id); continue; }
+        legAt.set(id, at);
+      }
+      /* DEC-49 REGION is-which-passage — C-33.65. */
+      if (ambiguous.length)
+        return { ok: false, reason: "WHICH_PASSAGE", ...rowOf(CITE_CHECKS, "WHICH_PASSAGE"), project, handle,
+                 offenders: ambiguous.map((a) => a.id).sort(), passages: Object.fromEntries(ambiguous.map((a) => [a.id, a.parts])),
+                 drift: sel.drift,
+                 detail: localize("citation.index.which_passage", "this question rests on {ids} in more than one passage, and the call did not say which one to move. Name the passage by its part; each passage is listed. Nothing was written.", { ids: ambiguous.map((a) => a.id).sort().join(", ") }) };
+      /* END DEC-49 REGION is-which-passage */
+    } else {
+      for (const id of sel.members) {
+        const e = current.get(id);
+        if (!e || !from.includes(e.status)) wrong.push(id);
+      }
     }
     if (wrong.length)
       return { ok: false, reason: from.includes("severed") ? "NOT_SEVERED" : "NOT_CITED",
@@ -349,9 +400,26 @@ export class Citation {
     const when = stampInstant("second", this.now());
     /* The reason is APPENDED to the note, never substituted: the reason an edge was cited is as much a part of the
        record as the reason it stopped being relied on. Bounded, the oldest text dropped first, because the superseded
-       revision is in history and the newest reasoning is what a reader needs first. */
+       revision is in history and the newest reasoning is what a reader needs first. On a question the entry (the
+       document's) moves only when its live legs change from some to none or from none to some (R25); a passage that
+       moves beside another live one is recorded by its own leg and the Session Log. */
     const changes = new Map();
+    const legChanges = new Map();
     for (const id of sel.members) {
+      if (onInquiry) {
+        const basisAll = doc.data.basis;
+        const at = legAt.get(id);
+        legChanges.set(at, { target: id, status: to, ...(rl !== null ? { role: rl } : {}) });
+        const live = basisAll.some((l, n) => l && typeof l === "object" && l.target === id
+          && (n === at ? to !== "severed" : statusOf(l, current.get(id), doc) !== "severed"));
+        const entryTo = live ? (current.get(id).status === "severed" ? "confirmed" : current.get(id).status) : "severed";
+        if (entryTo === current.get(id).status) continue;
+        const prev = String(current.get(id).note ?? "");
+        let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why}`;
+        if (note.length > EDGE_NOTE_MAX) note = note.slice(note.length - EDGE_NOTE_MAX);
+        changes.set(id, { status: entryTo, note });
+        continue;
+      }
       const prev = String(current.get(id).note ?? "");
       let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why}`;
       if (note.length > EDGE_NOTE_MAX) note = note.slice(note.length - EDGE_NOTE_MAX);
@@ -363,15 +431,20 @@ export class Citation {
       return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
                detail: localize("citation.index.the_references_block_not_in_shape", "the references block is not in a shape this grammar can edit in place") };
 
-    /* R23: the named legs go to the new role in the same write; the legs that did not change side are not named below. */
+    /* R23, R25: the named leg's own status, and its role when one was sent, go in the same write; the other legs of the same
+       document are not named, so they keep their side, status, grade, part and pin. */
     let withRole = spliced, roleMoved = [], roleFrom = [];
-    if (rl !== null) {
-      const set = setBasisRole(spliced, new Set(sel.members), rl);
+    if (onInquiry) {
+      const set = setLegStatus(spliced, legChanges);
       if (!set)
         return { ok: false, reason: "UNSPLICEABLE_BASIS", project,
                  detail: localize("citation.index.the_questions_basis_block", "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.") };
-      withRole = set.text;
-      for (const [id, was] of set.from) if (was.some((r) => r !== rl)) { roleMoved.push(id); roleFrom.push(...was.filter((r) => r !== rl)); }
+      withRole = set;
+      if (rl !== null)
+        for (const [at, ch] of legChanges) {
+          const was = doc.data.basis[at].role;
+          if (was !== rl) { roleMoved.push(ch.target); roleFrom.push(was); }
+        }
       roleMoved.sort();
       roleFrom = [...new Set(roleFrom)].sort();
     }
@@ -411,13 +484,13 @@ export class Citation {
              ...(rl !== null ? { role: rl, roleMoved } : {}) };
   }
 
-  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
-    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity,
+  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null, extent = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity, extent,
       from: ["confirmed", "proposed"], to: "severed", verb: "Severed", resultKey: "severed" });
   }
 
-  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null, role = null } = {}) {
-    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity, role,
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null, role = null, extent = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity, role, extent,
       from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
   }
 
@@ -1299,11 +1372,13 @@ export function citationOps(c, url, body) {
       question: s("question"),
     }),
     sever: () => c.sever({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
-                           reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),
+                           reason: q("reason") ?? "", author: q("author"), identity: q("identity"),
+                           /* R25: the passage, by its part, as `cite` names it. */
+                           extent: part }),
     reinstate: () => c.reinstate({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
                                    reason: q("reason") ?? "", author: q("author"), identity: q("identity"),
                                    /* R23: optional; body-first as `cite`'s (R20). */
-                                   role: s("role") }),
+                                   role: s("role"), extent: part }),
     /* R14 (T47; N975): one question drawn into a case, named by `inquiry`; no selection and no document. */
     drawquestion: () => c.drawQuestion({ project: q("project"), inquiry: q("inquiry"), note: q("note") ?? "",
                                          author: q("author"), viewer: q("viewer"), identity: q("identity") }),
@@ -1336,10 +1411,10 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["project", "inquiry", "note"], requires: ["project", "inquiry"] } },
   sever: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
     description: localize("citation.declared.sever", "moves a case's cites edge, or a question's own leg, to severed with the member's reason; nothing is deleted"),
-    fields: { accepts: ["project", "handle", "reason"], requires: ["project", "handle", "reason"] } },
+    fields: { accepts: ["project", "handle", "reason", ...Object.keys(EXTENT_PARAMS)], requires: ["project", "handle", "reason"] } },
   reinstate: { classes: ["admin", "member", "probe"], mutating: true, needs: "contribute", weight: "reasoned", refusal: "NO_REASON",
     description: localize("citation.declared.reinstate", "moves a severed cites edge, or a question's severed leg, back to confirmed with the member's reason"),
-    fields: { accepts: ["project", "handle", "reason", "role"], requires: ["project", "handle", "reason"] } },
+    fields: { accepts: ["project", "handle", "reason", "role", ...Object.keys(EXTENT_PARAMS)], requires: ["project", "handle", "reason"] } },
   leggrade: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["author", "viewer"], needs: "contribute", weight: "reversible",
     description: localize("citation.declared.leggrade", "a member's grade of how well your team's copy shows a passage a question rests on, up to the most the record supports, with the reason"),
     fields: { accepts: ["project", "target", "grade", "reason", ...Object.keys(EXTENT_PARAMS)],

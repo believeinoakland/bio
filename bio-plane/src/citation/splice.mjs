@@ -244,6 +244,55 @@ export function setLegGrade(text, n, target, grade) {
   return [...lines.slice(0, from), ...entry, ...lines.slice(to + 1)].join("\n");
 }
 
+/** R25 (K5407): set the own `status` of the `n`th legs of the `basis` block (`changes`: order in the block → {target, status?, role?}; a `status` of `severed` is written as `status: "severed"` and any other drops the line (absent is live, K5407), and a `role` rewrites that leg's role line, and no other leg's),
+ *  touching nothing else of any leg or the document: a `status` line a leg held is dropped and the new one written after
+ *  its `role:` line. `target` is checked against the entry, as `setLegGrade` checks it, so a document that moved under the
+ *  caller is not written. Answers the new text, or null when the block is not in a shape this grammar can edit in place,
+ *  holds no such entry, or an entry is not on its target. */
+export function setLegStatus(text, changes) {
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  let bi = -1;
+  for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { bi = i; break; }
+  if (bi === -1 || lines[bi].slice("basis:".length).trim() !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
+  }
+  const starts = [];
+  for (let i = bi + 1; i <= last; i++) if (/^ {2}- /.test(lines[i])) starts.push(i);
+  const out = [];
+  out.push(...lines.slice(0, bi + 1));
+  for (let s = 0; s < starts.length; s++) {
+    const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : last + 1) - 1;
+    const entry = lines.slice(from, to + 1);
+    const ch = changes.get(s);
+    if (!ch) { out.push(...entry); continue; }
+    let found = null, roleAt = -1, targetAt = -1;
+    const kept = [];
+    for (const ln of entry) {
+      const t = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(ln);
+      if (t && found === null) { found = t[1].replace(/^["']|["']$/g, ""); targetAt = kept.length; }
+      if (ch.status && /^\s*(?:- )?status:/.test(ln)) continue;
+      if (/^\s*(?:- )?role:/.test(ln) && roleAt === -1) {
+        roleAt = kept.length;
+        if (ch.role) { kept.push(ln.replace(/role:.*$/, `role: ${ch.role}`)); continue; }
+      }
+      kept.push(ln);
+    }
+    if (found !== ch.target) return null;
+    if (ch.status === "severed") kept.splice((roleAt === -1 ? targetAt : roleAt) + 1, 0, `    status: "severed"`);
+    out.push(...kept);
+  }
+  for (const n of changes.keys()) if (!Number.isInteger(n) || n < 0 || n >= starts.length) return null;
+  out.push(...lines.slice(last + 1));
+  return out.join("\n");
+}
+
 /** R23: set the `role` of every leg in the `basis` block whose `target` is in `targets`, touching nothing else of the leg
  *  or the document. Answers `{text, from}`, `from` mapping each target to the roles its legs held before (in order), or null
  *  when the block is not in a shape this grammar can edit in place, or a named target's leg has no `role:` line to

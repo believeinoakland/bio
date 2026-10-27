@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19436 design words, 1162 protected; SHA-256
-   0f2e41144fdc2ee29ea7ee587a699bd5c28f76ee0309b3f12a34ca773be5278b) followed by 7516 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   0f2e41144fdc2ee29ea7ee587a699bd5c28f76ee0309b3f12a34ca773be5278b) followed by 7518 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -21667,6 +21667,7 @@ export const WORD_ROWS = Object.freeze([
   ["citation.checks.what_material_does_for_an","What material does for an answer is a property of a question's basis, and the thing citing here is a case. A case's citation carries no such part, so this one would be dropped rather than recorded — and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart.",null,null,false,"code"],
   ["citation.checks.what_you_named_as_the","What you named as the question you were looking for this for is not a question: it is another kind of item in the record. Name the question itself, or cite without naming one.",null,null,false,"code"],
   ["citation.checks.which_part_of_a_document","Which part of a document a citation rests on is something a QUESTION's basis records, and the thing citing here is a case. A case's citation names the document and has nowhere to put a page or a passage, so this one would be dropped rather than recorded — and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart.",null,null,false,"code"],
+  ["citation.checks.which_passage","This question rests on this document in more than one passage, and the call did not say which one to take out or put back. Name the passage by its part. Nothing was written.",null,null,false,"code"],
   ["citation.declared.cite","cites material or a question into a case's references or a question's basis, and sever takes it back",null,null,false,"code"],
   ["citation.declared.citeimported","rests a question on another team's accepted finding at the edition shown; the grade is the edition's own, and withdrawimported takes it back",null,null,false,"code"],
   ["citation.declared.drawquestion","project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle",null,null,false,"code"],
@@ -21770,6 +21771,7 @@ export const WORD_ROWS = Object.freeze([
   ["citation.index.verb_an_edge_records_why","{verb} an edge records WHY. The catalog's own remediation for a bad reference is \"sever with reason\", and an edge moved with no reason is an unexplained change wearing a status field.",null,null,false,"code"],
   ["citation.index.verb_requires_an_edge_currently","{verb} requires an edge currently in {states}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.",null,null,false,"code"],
   ["citation.index.which_part_of_a_document","which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded — refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart.",null,null,false,"code"],
+  ["citation.index.which_passage","this question rests on {ids} in more than one passage, and the call did not say which one to move. Name the passage by its part; each passage is listed. Nothing was written.",null,null,false,"code"],
   ["citation.recorded.a_read_names_the_member","a read names the member reading; with none, nothing is answered",null,null,false,"code"],
   ["citation.recorded.an_extent_is_an_object","an extent is an object of one of the kinds {kinds}",null,null,false,"code"],
   ["citation.recorded.the_legs_that_cite_a","the legs that cite a passage are found through the inquiry module's leg projection, and your team's Civicsmith was created without it, so this read could not be made.",null,null,false,"code"],
