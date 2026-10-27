@@ -12,7 +12,7 @@
 3. (done L40: R1-R7 applied, re-measured, every job under 600 KB.)
 4. When every lane is folded: the plan under 51,200 bytes, detail files beside it; mark READY for BOB.
 
-**Waiting on.** Bob: nothing. BOB: nothing (R1-R7 recorded K5564). Lanes: PLATFORM only (service levels, whole-record move still DRAFT). Own work: K5562-K5563's lines (a worker drafting; check its pointers, then entries under member-roster and screens-settings).
+**Waiting on.** Bob: nothing. BOB: nothing (R1-R7 recorded K5564). Lanes: PLATFORM only (service levels, whole-record move still DRAFT). Own work: none open; BOB's word on `lines-K5562-K5563-founder.md`'s eleven technical points and Found 3.
 
 Entries L1-L15 are in `build/plan/archive/planning/HANDOFF-L1-L15.md` (moved at L35).
 
@@ -135,3 +135,7 @@ TESTS-SWEEP's `FIXTURES.md` (lane/tests-sweep ddf8bf4c): 86 of 89 cleared in the
 ## L45 · 2026-10-27 · K5565: English-in-tests entries
 
 BOB decided TESTS-SWEEP S5 (K5565): only certain sites converted by the sweep; a baseline refuses English in new or changed tests; every other site a conversion entry of its module's T53 job. `plan-T53-tests-english.md`: the one entry's text, and a row per module (165, layer order) with CENSUS's literal A/B files and CENSUS-RX's regex A/B/C sites, read by each job at START. Found: 58 modules have no other T53 entry, so R1 gains 58 jobs (recommended as ordinary jobs of their layer; a mechanical pass would not fit B sites, P7). Before R1 (1) merges the baseline with the sweep. One pointer line in the plan.
+
+## L46 · 2026-10-27 · K5562, K5563 drafted and placed
+
+A Sonnet worker read member-roster, screens-settings and the README whole with the code and drafted `lines-K5562-K5563-founder.md`: member-roster K5562-R1 to R3 (the founder's lone removal with a reason, a `remove_founder` row of `admin_votes`, the read `founderremovals`; others' removal unchanged), K5563-R1 to R5 (her endorsement alone issues; her own proposal issues at once; others' still need every administrator; `adminProposalCancel`, the row `revoked`, never deleted; `endorsementsOwed` lists every waiting proposal for her; the two ops declared), op-declarations K5563-R6, screens-settings K5562-R4, R5, K5563-R7, R8; eight words owed to UX-DESIGN; eleven technical points for BOB. PLANNING checked its pointers on disk. Found: `members.mjs`:147 hides the remove control from the founder at two; `:284` labels her act "Agree"; `adminRemove` tests only the role (index.mjs:876), so a repeat on a removed administrator reaches the vote path (recommend `TARGET_NOT_AN_ADMIN`); five words rows become untrue. Entries under member-roster (layer 2) and screens-settings.

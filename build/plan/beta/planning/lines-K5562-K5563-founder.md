@@ -1,6 +1,6 @@
 # K5562, K5563 — the founder in the app: removing and adding an administrator alone: lines
 
-**Status** · DRAFT for BOB · drafted by a worker (PLANNING), 2026-10-27, K5562, K5563 (Bob on QUESTIONS.html B1, B2: "as recommended"). Ids provisional. Read whole: `README.md`, `member-roster.md`, `screens-settings.md`, `lines-K5501-role-change.md`. Code: `member-roster/index.mjs`, `checks.mjs`, `schema.mjs`; `screens-settings/members.mjs`; `op-declarations/index.mjs`, `t51.mjs`, `op-declarations.md` (op names only).
+**Status** · DRAFT for BOB, checked by PLANNING L46 (pointers sampled on disk: `members.mjs`:59, 147, 271, 284; `member-roster/index.mjs`:876, 984, 995, 1519, 1890; the requirement lines' places) · drafted by a Sonnet worker, 2026-10-27, K5562, K5563 (Bob on QUESTIONS.html B1, B2: "as recommended"). Ids provisional. Read whole: `README.md`, `member-roster.md`, `screens-settings.md`, `lines-K5501-role-change.md`. Code: `member-roster/index.mjs`, `checks.mjs`, `schema.mjs`; `screens-settings/members.mjs`; `op-declarations/index.mjs`, `t51.mjs`, `op-declarations.md` (op names only).
 
 The founder (member-roster R23, R29, R31, R57) is the one administrator whose standing is the hosting account's (R4, R7); the rulings give her that power in the app and no more. "The founder" below is the session stamped `admin` (`by === Members.ROOT_ADMIN`, as `adminResign` tests it, index.mjs:378); the operator's bearer (`class:admin`) keeps R4 and R11 (Technical 8).
 

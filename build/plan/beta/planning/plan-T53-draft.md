@@ -75,6 +75,9 @@
 **membership**
 - T53 · K5501 · `onProjectLeft(module, fn)` called inside `projectRemove` (R36), `why: "removed"`; `projectLeave` and `projectOwnerRemove` call nobody (R158) · `planning/lines-K5501-role-change.md`
 
+**member-roster** (with op-declarations' rows)
+- T53 · K5562, K5563 · the founder removes an administrator alone with a reason, recorded and read by the team (`founderremovals`); her endorsement alone issues an administrator invitation; a waiting proposal cancelled by the founder or the proposer (`adminproposalcancel`); others' rules unchanged · `planning/lines-K5562-K5563-founder.md` K5562-R1 to R3, K5563-R1 to R6
+
 **ai-catalogue** (new; before ai-accounts; K5457)
 - T53 · N1220 (K5428-K5433, K5457) · the signed closed list of AIs: entry, plan, evidence, the seven checks, Gate 1 verdict per part, lifecycle, advisories, results library; signed updates verified and applied, the last good kept, rollback · `lane-ai-design/draft-ai-catalogue.md` R1-R53
 - T53 · K5457 · the seed payload and shipped provider data, data only · `lane-ai-design/draft-ai-catalogue.md` R39, R48 `[waits: BOB's key ceremony and seed signing; Bob's pass marks, K5475]`
@@ -306,6 +309,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 **screens-settings**
 - T53 · DEC-470 · the file-import key `registerfileimport` read by `keys.mjs`; the old key held until then · DEC-470
 - T53 · P9 (BOB #324, found on plat-s1) · with two or more administrators, `memberadd` and `adminendorse` answering `CONSENSUS_REQUIRED` (member-roster 4.7) leave an earlier `ui.invite` drawn (`members.mjs:317, 336` set it only when the answer carries `invite`, never clear it), so a dead `#invite=` link stays on screen: on `CONSENSUS_REQUIRED` clear any shown link and draw `screen.members.invite.nolink` with `awaiting`'s names (DEC-483); a link only when the answer carries `invite` · Test: a shown link, then `memberadd` answering `CONSENSUS_REQUIRED`, leaves no link and draws the awaiting sentence; Control: an ordinary invitation draws its link
+- T53 · K5562, K5563 · Members: the founder's remove control at two administrators, her removals and reasons shown to the team, her issuing endorsement, the cancel control, `nolink` never for her · `planning/lines-K5562-K5563-founder.md` K5562-R4, R5, K5563-R7, R8 `[owed: words, UX-DESIGN]`
 - T53 · N1220 (K5457) · `connect`, `teamai`, `projectai` and their acts retired, in the same change as screens-ai's first screens · `lane-ai-design/draft-assistant-screens.md` §2
 
 **screens-ai** (new, Before R1 (9); the AI screens)
