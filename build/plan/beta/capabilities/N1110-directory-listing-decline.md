@@ -86,3 +86,77 @@ Each carries Test/Control lines I have not written: they depend on Bob's B1 and 
 
 - When N1110 is placed, `next.md` should drop the "rule awaits Bob's approval" half of its hard reason and keep only B1's answer and the stewards' opening.
 - The rule's part numbers are stable ids; the key words (`screen.steward.rule.part.1` ...) can be reworded by the design stream without a requirement change.
+
+## Review (C7 worker)
+
+Reviewer: C7 worker, 2026-10-27, branch `lane/capabilities`, nothing committed. Covers this file and `N824-email-capture.md` (both edited in place; sizes after the edits: N824 about 43 KB, N1110 about 20 KB, both under 45,000 bytes). Counts: N824 28 corrections or marks, N1110 9; 37 in all.
+
+### N1110 (this file)
+
+Confirmed as drafted: Bob approved the listing rule on 2026-10-15 (DEC-270, K3384, `docs/development/DECISIONS.md:4228`; Publication §5E APPROVED); the draft's section 0 finding that `next.md` is stale is right (`build/plan/next.md:19` still says the rule awaits approval); the four parts in R24 match the approved text in order (`BIO_Publication_v0_1.md:380`); the "never for views, conclusions, whom it holds to account" sentence and "the group can ask again" are carried (R24, R25); `site` R15 draws the rule in both states (`site.md:39`); next free ids are right (stewards R23, site R16, network-notices R31 are the highest); `RULE_PART*`, `rule_text_version`, `listingRequest` exist nowhere in src, tests or requirements; stewards R12, R13, R14, R15, R22 say what the draft relies on; every `uses` edge in the drafted lines stays in earlier layers except the one marked below.
+
+Corrections (line: was -> now, evidence):
+1. Section 0, item 1: "Groups at work" -> also "Teams at work" (`site` R13, R16 say the keys read "team"; `site.md:37,40`).
+2. Section 0 table, last row: "Bob names the contact address and the retention figures" -> the address only; retention is already set, 90 and 365 days (`stewards` R15 `stewards.md:44`, `stewards/wrangler.jsonc:20-23`); also missing are `STEWARD_KEYS` and `SOURCE_KEY` (R1). Same fix in section 2 item 2.
+3. R24: `rule_text_version` is new configuration outside R1's five values; noted that a constant is simpler and `checkOpen` (R2) is unchanged.
+4. R25: "stay in the steward-visible history" -> only until `REPORT_RETENTION_DAYS` after the reinstatement (`stewards` R15).
+5. R17: "At generation the site reads ..." -> the site reads `LISTED_GROUPS` per request from a deploy value (`site/src/index.mjs:55-90`, `config(env)`), so the register is one more deploy value, not a generation-time file.
+6. R17: matching by "slug" -> by `address`; `LISTED_GROUPS` entries have no slug (`site/src/index.mjs:77-90`); `stewards` R12 `item` is free text (UNVERIFIED which identifier the stewards will use; BOB's choice).
+7. R17: "a malformed register fails the generation" -> a malformed deploy value is a 500 on every request (`site/src/index.mjs:4,127-129`), which would take the whole site down; BOB must rule whether this one value is ignored instead.
+8. R-D2a: "rate-bounded as R3's intake is" -> the bounds are `stewards` R4's (`stewards.md:23`).
+9. R32: "an administrator at `FULL` sight" -> an administrator (`member-roster` R23); `FULL` is a project's sight (`membership` R44). Layer: the display name is `instance-setup` (layer 11) and `network-notices` is layer 8 (`modules.json` indices 113 and 151), so the layer-11 door must pass it in; `network-notices` also lacks a `member-roster` edge for `groupDescription` (`member-roster` R44-R45).
+
+Unverified (marked in the lines): (a) which identifier a `public_listing` withdrawal's `item` carries (R17); (b) that a group's "place" is a field of the group's description (R32; `member-roster` R44 holds kinds, focus, purpose, visibility only); (c) that `filing-templates` R8's door has the byte-identical dead answer (R-D2c); (d) the claim that the stewards' Mail note limits telling a group to a steward's own mail client: `stewards` Suggestions "Mail" says the send binding delivers only to an address verified in Email Routing, so the service cannot mail a group (consistent with R26, but Cloudflare's rule is the stewards' note's, not checked here); (e) the D2 option lines (section 4) carry no Test/Control lines, as the draft says.
+
+### N824 (`N824-email-capture.md`)
+
+Confirmed as drafted: K5448 (DECISIONS.md:19) says N824's intake files through FILES' `mail-reader` and adds no parser; the draft now says so in section 3, 4.1 and 4.6 and nowhere names `email-reader` any more (it did, in the 4.1 uses line and in R3, R13's doc-clean line, R117 and section 5; fixed); the draft adds no parser of its own, but R10 read headers (`Auto-Submitted`, `Precedence`, `List-Id`, return path) and counted nesting that the section 3 interface did not list, so those fields were added to what `mail-reader` must answer; capture R86, R92, R93, R103, R107-R113, R115 say what the draft relies on; doorbell R2, R3, R12, R13, R19 likewise; provenance R42, R51, R59, R62, R63 likewise; `sources` R12; doc-clean R6; next free ids (capture R116, provenance R82, runtime-limits R37, instance-setup R107, doc-clean R13) are right; none of the new names (`MAIL_*`, `NO_SUCH_MAIL`, `EMAIL_VIA`, `mailaddress` ...) exists in src, tests, requirements or `modules.json`; there is no `mail-reader` in `modules.json` yet, so its place and edges are BOB's; `membership` holds no email address (`contradiction` R53 line 272 says so); `FETCHED_VIAS` is pinned to three entries (`provenance/upload.test.mjs:147`) and the draft leaves it alone.
+
+Cloudflare facts, checked against developers.cloudflare.com on 2026-10-27 (each stays marked UNVERIFIED in the draft with the result beside it):
+- Email Routing is free: confirmed (email-routing/ overview, "Available on Free and Paid plans").
+- Needs the domain's name servers on Cloudflare: corrected to "must be using Cloudflare DNS", domain chosen from the account, onboarding adds MX, SPF TXT and DKIM TXT records (email-routing/get-started/enable-email-routing/); full name-server delegation is not stated there.
+- A Worker can receive the mail: confirmed, an `email()` handler with `from`, `to`, `raw` (stream), `rawSize`, `headers`, and `setReject(reason)` (a permanent SMTP error) (email-routing/email-workers/runtime-api/).
+- 25 MiB inbound limit: confirmed, larger messages rejected; also 200 rules per domain, 200 destination addresses per account (email-routing/limits/).
+- Authentication results reaching the Worker: not documented; the postmaster page (email-routing/postmaster/) says Email Routing itself rejects mail failing SPF and DKIM and enforces the sender's DMARC policy. Still UNVERIFIED for the Worker.
+- The domain price, the plane being able to export `email()` through the installer's upload, and what a rejected message leaves in Cloudflare's logs are not checked. The plane today exports `{ fetch, scheduled }` only (`bio-plane/src/plane/index.mjs:71`).
+
+Corrections (line: was -> now, evidence):
+1. Header "Not read whole": no outside facts verified -> checked by C7.
+2. Section 0: ".eml uploaded as text/plain is indexed raw" -> stale since fix round 9: `reading-pipeline` R54 names an email and states it final, "Email is not read yet." (`reading-pipeline/index.mjs:2610,3021-3026`; `screens-inquiry/document.mjs:345-351`).
+3. B1: four Cloudflare facts marked and checked as above; name servers corrected.
+4. B1 E2: "Civicsmith's services transmit nothing from a team (`stewards` Purpose; v0.2 rule 14)" -> v0.2 rule 14 is "Nothing leaves by a system path. The instance transmits nothing" (`BIO_Action_v0_2.md:64`); `stewards` Purpose says a group's Civicsmith transmits nothing to Civicsmith's services.
+5. B2 S2: authentication results note (above).
+6. B5: "cleared after about a week (DEC-108)" -> DEC-108 (5), and that clearing is owed and not built (`doorbell` R3 says no requirement provides it; DECISIONS.md:1744 "owed").
+7. B7: "DEC-108" -> DEC-108 (4) for the gatekeeper.
+8. Section 2 item 1 and item 5: plane exports and `setReject` facts added.
+9. Section 3 FILES: `mail-reader` named, not in `modules.json`; `parseMessage` answer gains `auto_submitted`, `precedence`, `list_id`, `return_path`, `nesting_depth` so mail-door parses nothing (K5448).
+10. Section 3 PLATFORM: "Team, Organization, Coalition" -> "Team, Institution, Enterprise" (K5442, `LOAD-TABLE.md:3`, `HANDOFF.md:16`); `LANES.md:24` still has the older K4746 names.
+11. 4.1 uses line: `email-reader` -> `mail-reader`; layer check added (`scheduler` is layer 10, `op-declarations` and `control-plane` layer 11, so they use mail-door, not the reverse).
+12. R1: "member with `contribute`" refused "as `capture` R86 refuses her" -> R86's text has no capability check; `contribute` is `member-roster` R1's, checked by the op's class as `captureupload` is (`capture.md:222`, `control-plane` R72). Also: the mail domain is distinct from the website domain claim `groupDomainSet` (`instance-setup` R7-R9).
+13. R3: `email-reader` -> `mail-reader`.
+14. R6: "scheduler consumer, registered as the doorbell's discard clearing is" -> no such clearing exists; mail-door (layer 3) cannot register with `scheduler` (layer 10); `scheduler` gains the edge and registers the consumer (scheduler R5, R8; `tasks` does so for `task-drain`).
+15. R10: header flags and nesting read from `mail-reader`'s answer, not parsed here.
+16. R12: "declared with `op-declarations` and `control-plane`" -> the module exports its own `DECLARED_OPS` as `doorbell` R26 does (`op-declarations` R80-R81, `op-grades` R49-R50, `test-support` R15); `control-plane` gains the edge.
+17. R13: "capture's next free C-118 number" -> C-118.12 (`capture/checks.mjs:21`; the requirement text stops at C-118.11); a new family would start above C-155 (highest in src); one code, one module's table (`doorbell` R21), so `MAIL_NO_STATEMENT` and `MAIL_WITHIN_FAILED` are `capture`'s rows.
+18. R116: added `within` and `MAIL_WITHIN_FAILED` (R86 and K2452 keep a distinct code); added that `email` joins `RECEIVED_VIAS` (`capture/index.mjs:106`) so R76's note is null for it, pinned by `test/m/capture/held.test.mjs:559`; R109's `unpack` is for a `zip` profile only, so the attachments' job is R117's.
+19. R117: "an `unpack` job (R109)" -> `acquisition.unpack` opens ZIP archives only and refuses `NOT_AN_ARCHIVE` (acquisition R38, R41); a message needs a new job kind or amended acquisition lines, neither drafted; `JOB_KINDS` is a closed list pinned by `test/m/store-assembly/r9-jobs.test.mjs:41` and in `test-support`'s stub, with another in `control-plane/jobs.mjs:12`. BOB places it.
+20. R118: "`capture` R10" (retired, moved to acquisition R11) -> `acquisition` R10, R114.
+21. R83: `origin.kind` `email` changes the pinned C-18.1 sentence "must be one of: named_request, sweep, member, doorbell, upload" (`provenance/register-checks.test.mjs:242`, `upload.test.mjs:274`); R117's `container` block is admitted by R42 for method `unpacked` only, so R42 is amended.
+22. R37: figures "each exported once (`boundOf`) ... where PLATFORM sets one" -> new `mail` rows of `READ_BOUNDS` with `{standard, alpha, protective, key}` (runtime-limits R29-R31, R35's `same(n, key)`; `read-bounds.test.mjs:18` requires those four fields); `PLATFORM_FIGURES` has no per-level entry (`byte-ledger.mjs:11-17`), so per-level figures are UNVERIFIED and PLATFORM's.
+23. R107: "at `FULL` sight ... `op=groupidentity`'s pattern" -> an administrator, refused as `GROUP_IDENTITY_NOT_ADMIN` is (instance-setup R5), domain validated as R7 validates a group domain, history as R6 (`{value, set_at, set_by}`).
+24. R13 (doc-clean) and section 5: `email-reader` -> `mail-reader`.
+25-28. The four Cloudflare marks of B1 and the two of section 2 (counted above in 3 and 8) are recorded once each in the list above; the unclear item left open is that `doc-clean` (layer 1) and `mail-door` must follow `mail-reader` in the total order, which is BOB's placing; adding `mail-door` to `modules.json` also regenerates `member-roster/order.mjs` (`build/manifest.md`, generated artifacts).
+
+Unverifiable (all marked `UNVERIFIED` in the file): the registrar price of a domain; that the plane can export `email()` and the installer upload carries it; what Cloudflare's logs keep of a rejected message; whether authentication results reach a Worker; per-service-level figures; the byte cost of holding a 25 MiB message once on the Worker (PLATFORM); `D42`'s option texts (the draft's contradiction 1, still open); the exact set of headers `mail-reader` will answer (FILES').
+
+The 10 most important corrections across both files:
+1. N824 R117: attachments cannot ride the `unpack` job; `acquisition.unpack` is ZIP-only and `JOB_KINDS` is pinned (needs a new job kind or acquisition lines).
+2. N824 `email-reader` -> `mail-reader` everywhere (K5448), and the reader's answer must carry the header flags R10 used, so N824 parses nothing.
+3. N824 R6: the "doorbell's discard clearing" it copies does not exist; mail-door cannot register with `scheduler` (layer rule).
+4. N824 B1: Cloudflare facts checked; "name servers on Cloudflare" is "Cloudflare DNS"; `setReject`, `rawSize` and the 25 MiB limit confirmed with pages cited; authentication results to a Worker not documented.
+5. N824 R83: adding `email` to `ORIGIN_KINDS` breaks two pinned C-18.1 sentences; the attachment `container` block needs R42 amended.
+6. N824 R116/R13: one code, one table (`MAIL_NO_STATEMENT` is `capture`'s), `RECEIVED_VIAS` and R76's note, C-118.12 is next free.
+7. N824 R12: ops are declared by the module's own `DECLARED_OPS`, not by naming layer-11 modules it cannot use.
+8. N1110 R17: the site reads `LISTED_GROUPS` per request, entries have no slug, and a malformed value is a 500 for the whole site.
+9. N1110 section 0/2: retention figures already set (90 and 365); the stewards' service lacks the address and two secrets only.
+10. N1110 R32: administrator not "FULL sight"; display name lives in layer 11, which `network-notices` (layer 8) cannot use.
