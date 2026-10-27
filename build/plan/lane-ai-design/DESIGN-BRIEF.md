@@ -1,6 +1,6 @@
 # AI-DESIGN #3 · design brief for the beta's assistant (the frame every module draft follows)
 
-**Status** · 2026-10-27, AI-DESIGN #3. Not a ruling. It fixes, for the lane's own drafts, the technical choices AI-DESIGN #2 left to BOB, each as the lane's **recommendation to BOB** (marked [rec]); BOB decides them (P17), and a draft is revised if he decides otherwise. Bob's decisions are in `DECISIONS.md` (AD-n) and the K lines in `RULINGS-FOR-BOB.md`; the product requirements are `AI-PROVIDER-REQUIREMENTS.md`; the boundary `BOUNDARY-REQUIREMENTS.md` (BR-n); the suite `SUITE-REQUIREMENTS.md` (SR-n, CH-n); classification `WAY-THERE.md`.
+**Status** · 2026-10-27, AI-DESIGN #3. Not a ruling. **Every [rec] below decided by BOB as recommended (K5457).** It fixes, for the lane's own drafts, the technical choices AI-DESIGN #2 left to BOB, each as the lane's **recommendation to BOB** (marked [rec]); BOB decides them (P17), and a draft is revised if he decides otherwise. Bob's decisions are in `DECISIONS.md` (AD-n) and the K lines in `RULINGS-FOR-BOB.md`; the product requirements are `AI-PROVIDER-REQUIREMENTS.md`; the boundary `BOUNDARY-REQUIREMENTS.md` (BR-n); the suite `SUITE-REQUIREMENTS.md` (SR-n, CH-n); classification `WAY-THERE.md`.
 
 ## 1. Packaging [rec: Option 1, BOUNDARY §10]
 | module | layer | change | holds |

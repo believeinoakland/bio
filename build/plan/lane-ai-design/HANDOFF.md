@@ -12,7 +12,9 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **Open with Bob** · `QUESTIONS-FOR-BOB.md` AQ1–AQ10, on Bob's page `build/plan/beta/QUESTIONS.html` as AI1–AI10 (BOB #321, 2026-10-27; AQ8's three parts as one). PLANNING is folding the READY drafts; BOB is answering the "For BOB" points. AQ1 matters most: the real-matters test set is empty (N829), so under today's bar no member could use the assistant in the beta.
 
-**For BOB** · each draft's "For BOB" section (technical points with a recommendation). The cross-draft ones: packaging (`DESIGN-BRIEF.md` §1); who picks the entry (`agent-model.entryFor`, R55); the secret reaching the Worker by `op=aicredential` (run-path For BOB 1); unsigned challenge with the nonce table authoritative (lane recommends); library rows hold parts, speed and task cost only (lane recommends); `run-rules` `TEST_BAR_PARTS` migrated to the six part ids (no draft owns it: PLANNING); `signatures` R49–R53 (catalogue's Uses).
+**Decided by BOB (K5457):** every "For BOB" point of A43 as recommended (Option 1 packaging; issuer custody (b); `op=aicredential`; `ROLE_NEEDS`; K2892 read as "every part deployed and passed"; `NEXT-ENTRIES.md`; numbers set at START). The `[rec]` marks in the drafts and `DESIGN-BRIEF.md` now read as decided. **For PLANNING (owed, K5457):** `draft-run-rules.md` (the test bar per AI and part: R19, R29, R30 amended, R36 `GATE_PART_OF`, R37 pending AI1) and `credentials` R48's wording (in `draft-ai-accounts.md`, For BOB 13). PLANNING #2 is `session_018Bhceg7ptZUBDjGtWWSVz4`.
+
+**Was for BOB** · each draft's "For BOB" section (technical points with a recommendation). The cross-draft ones: packaging (`DESIGN-BRIEF.md` §1); who picks the entry (`agent-model.entryFor`, R55); the secret reaching the Worker by `op=aicredential` (run-path For BOB 1); unsigned challenge with the nonce table authoritative (lane recommends); library rows hold parts, speed and task cost only (lane recommends); `run-rules` `TEST_BAR_PARTS` migrated to the six part ids (no draft owns it: PLANNING); `signatures` R49–R53 (catalogue's Uses).
 
 **Needs placed** · PLATFORM: an "AI act" budget class and the assistant's declared reads (`draft-assistant-screens.md` §5 P1, P2). UX-DESIGN: U1–U6, sent by BOB as B555.
 
@@ -27,3 +29,6 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 ## A43 · 2026-10-27 · The assistant designed whole: every module draft READY for PLANNING; Bob's ten questions
 **For BOB:** the drafts listed in section 0, each in the house format with KEEP/AMEND/RETIRE/NEW per existing id and Tests with negative controls, names reconciled across them (`draft-assistant-screens.md` §7). Two new modules (`ai-catalogue` L2, `ai-gate` L6), one new Civicsmith service (`ai-issuer` L11), `agent-runner` repurposed, the remote Claude Code gate (`agent-worker` R110) retired in favour of "AI path ready". **For Bob:** `QUESTIONS-FOR-BOB.md` AQ1–AQ10 in plain words, for his page. **Finding:** the test bar (`run-rules` R19, R29) admits no AI part while N829's set is empty, so AQ1 decides whether the beta has an assistant at all. **Need:** Bob's answers; BOB's technical decisions.
+
+## A44 · 2026-10-27 · BOB's decisions taken in; the two owed deltas drafted
+K5457: every For BOB point decided as recommended. Drafted for PLANNING: `draft-run-rules.md` (READY; admit per entry and gate part, real-matters set as the standing measure pending AI1) and `credentials` R48 (in `draft-ai-accounts.md`). **Need:** Bob's AI1–AI10.
