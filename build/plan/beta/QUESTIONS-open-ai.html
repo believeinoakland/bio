@@ -6,14 +6,3 @@
 
     <span class="eyebrow">The assistant · from the AI-DESIGN lane</span>
     <p class="lede">In the beta, a team, a project or a member chooses which AI the assistant runs on, from a list Civicsmith keeps. Each AI on the list carries Civicsmith's evidence: the privacy checks the team set, and a test of whether it can do each part of the assistant's work (asking, drafting, reading documents, reading unclear pages, checks and plans, drafting a case's account).</p>
-    <article class="q" id="AI16">
-      <div class="meta"><span class="k">AI16</span><span>AI-DESIGN</span><span>asked 27 Oct · from AI10</span></div>
-      <h3>Should Civicsmith run one small service of its own, for the AI list and teams' sealed test results?</h3>
-      <p><span class="k">Why this matters.</span> You decided that the list of AIs updates at any time, not only with releases, and that teams can send sealed test results to you. Both need somewhere outside any team's copy that every copy can reach: a place that publishes the signed list and receives the sealed results. Today nothing like that exists. Each team's copy is its own.</p>
-      <p class="note">Example: on a Tuesday you approve "Llama 4 at Groq" for the list. Every team's copy picks it up the next day without a new release. A team in Fresno tests a local model and presses "Send the results", and the sealed file lands with you.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · One small Civicsmith service on Civicsmith's own Cloudflare account</span><span>It publishes the list and its notices, all signed with a key kept offline (the service itself cannot sign anything), and receives sealed results it cannot open. Opening and scoring happen apart from it. You decide what enters the list (AI7's rule aside). Gains: the list updates any time, and teams' results reach you. Costs: one more thing Civicsmith runs and pays for, small Cloudflare fees, and every copy depends on it for list updates (each copy keeps its last good list if the service is unreachable, as you ruled in AI9).</span></li>
-        <li><span class="k">B · Publish the list as a file in the public code repository, and receive results by email</span><span>Gains: nothing new to run. Costs: list updates are tied to the repository, results arrive by hand, and teams have no "Send" button.</span></li>
-        <li><span class="k">C · No central service; the list ships only with releases</span><span>Gains: simplest. Costs: goes against your decision that the list updates at any time, and teams' results have no way to reach you.</span></li>
-      </ul>
-    </article>
