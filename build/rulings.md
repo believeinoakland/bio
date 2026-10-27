@@ -5533,3 +5533,4 @@
 - K5539 · 2026-10-27 · beta plan (Bob's; L14) · Bob, on QUESTIONS.html L14 (2026-10-27): "B": Who may change a question's subject? B · Only its owner or an administrator · P17; K5426
 - K5540 · 2026-10-27 · beta plan (Bob's; L15) · Bob, on QUESTIONS.html L15 (2026-10-27): "B": Can a published question, or one divided into parts, have its subject changed? B · Both, with the change shown · P17; K5426
 - K5541 · 2026-10-27 · beta plan (Bob's; L16) · Bob, on QUESTIONS.html L16 (2026-10-27): "as recommended": May a member remove the subject altogether, with a reason? A · Yes A question named about the wrong person must be correctable. · P17; K5426
+- K5542 · 2026-10-27 · beta plan (Bob's; L17) · Bob, on QUESTIONS.html L17 (2026-10-27): "as recommended": May a concluded question's subject change, keeping its conclusion? A · Yes, with the strength before and after shown · P17; K5426
