@@ -18,6 +18,8 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **PLANNING's fold (FOLD-AI §1–§3, K5457) answered in A46:** every gap and form defect fixed; `draft-credentials.md` and `draft-signatures.md` (R49–R56) split out as their own files.
 
+**Bob's AI1 answered (K5475):** option B, as recommended. A part reaches members once the chosen AI passes Gate 1; the real-matters set becomes a standing check, and a part below its mark is switched off for that AI only. Folded into `draft-run-rules.md` R19 and R37 (per entry) and `draft-assistant-screens.md` §3; recorded as AD44. AI2–AI11 still open.
+
 **Merged and decided (BOB #322, K5471):** A46 and A47 merged into `tranche/T53`. `NS_AI_RUN` approved as a third signing namespace. A member may clear a payer flag on their own account (R68). R107 and R108 placed by PLANNING in `installer` R2 and `installer-steps` R45. "My projects" (owned or joined) is now on Bob's page; "owns" stays drafted until he answers.
 
 **Needs placed** · PLATFORM: an "AI act" budget class and the assistant's declared reads (`draft-assistant-screens.md` §5 P1, P2). UX-DESIGN: U1–U6, sent by BOB as B555.
@@ -63,3 +65,6 @@ T53 merged in (U500). New files, READY for PLANNING:
 **For BOB:** R107 and R108 amend `installer` R2 and `installer-steps` R45, so PLANNING should place them there. Which projects "my projects" means (owned, as drafted, or joined) is in the new accounts file's For BOB.
 
 **Need:** Bob's AI1–AI10.
+
+## A48 · 2026-10-27 · Bob's AI1 folded (K5475)
+The run-rules standing measure is now per entry: R75 records carry `entry_id`, and a part below its mark is refused for that AI only (Bob: "switched off for that AI"). `PART_WITHDRAWN` names the entry. Screens §3 and §6 Q1 marked answered; AD44 added. **Need:** AI2–AI11.

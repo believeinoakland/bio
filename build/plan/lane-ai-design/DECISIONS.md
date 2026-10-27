@@ -51,6 +51,9 @@ One line per decision (LANES.md §1): id · date · his words, quoted, never rew
 - AD38 · 2026-10-21 · health reports opt-in and content-free: "ok" · A20 · K4421
 - AD39 · 2026-10-21 · "Agreed" (who may set an ordered list: team administrators for team accounts, a project's owner for project accounts, each member for their own) · REQUIREMENTS §14 (4) · K4443
 
+## The beta's bar
+- AD44 · 2026-10-27 · "as recommended" (AI1, option B: a part reaches members once the chosen AI passes Gate 1 at marks Bob sets after the first measuring run; the real public-matters set, once written, is a standing accuracy check shown to teams, a part below its mark there switched off for that AI) · QUESTIONS-FOR-BOB AQ1, BOB #322's relay · K5475
+
 ## Costs
 - AD43 · 2026-10-27 · "If the team or project is paying for the AI usage, then they should see who's using what so that they can manage usage with that member before it gets out of control." (option A of UX-DESIGN's cost-visibility question; personal subscriptions stay private) · BOB #321's relay · K5459
 
