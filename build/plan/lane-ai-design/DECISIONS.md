@@ -65,6 +65,7 @@ One line per decision (LANES.md §1): id · date · his words, quoted, never rew
 - AD54 · 2026-10-27 · "A, but allow the member the option of choosing whether to wait before switching." (AI14: a provider down) · AI14 · K5489
 - AD55 · 2026-10-27 · "A, but the shared results page shows all AI, even those not approved yet by the team. They stay active for 6 months and are statistically joined to present overall results." (AI8; A: the sending team sees its own result at once) · AI8 · K5482
 - AD56 · 2026-10-27 · "as recommended" (AI9 A: a copy that cannot fetch the list keeps offering the last list it had, and says after two weeks that it is old) · AI9 · K5483
+- AD57 · 2026-10-27 · "A, but presented as any website enables users to view their terms of service when signing up for an account. They can choose to read them, or not." (AI15: binding terms quoted with page and date, restricting nothing) · AI15 · K5493
 
 ## Costs
 - AD43 · 2026-10-27 · "If the team or project is paying for the AI usage, then they should see who's using what so that they can manage usage with that member before it gets out of control." (option A of UX-DESIGN's cost-visibility question; personal subscriptions stay private) · BOB #321's relay · K5459
