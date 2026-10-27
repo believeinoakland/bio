@@ -1,6 +1,6 @@
 # Plan T53 round R1 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · DRAFT, growing; PLANNING L3, 2026-10-27. Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L16 (K5495-K5501, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
@@ -17,6 +17,7 @@
 - T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · same, R115-R117 plus the one placeless team-rules layer (CONSISTENCY §2.15, decided) `[owed: CAPABILITIES' amendment of R24, R100, R102, R115]`
 - T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · same, R119, R120 `[owed: F4's measure; the makers' key]`
 - `[owed: K5458's lines: every module that stores a rule, list or office name stores its layer (K5462: old records resolve on their own date)]`
+- T53 · K5497 (C7 remainder) · Civicsmith ships United States places only; a team choosing its places is told so; a team whose work is about a place outside the US names its places and adds their offices and rules itself (DEC-150); level names unchanged · `[owed: CAPABILITIES' lines]`
 - T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18, L3 (Bob)]`
 
 **civil-time**
@@ -42,6 +43,7 @@
 **format-registry**
 - T53 · N1266 (K5435-K5437) · the beta's roster, detection by content, macro variant, encrypted, unlisted named (K5436), refused set, `formatNameFor` · `files/REQ-format-registry-beta.md` RF1-RF9
 - T53 · DEC-467 · one table the screens read: each kind's plain name (by key) and its limits (runtime-limits' per-kind rows), for Add's "What can be added", held, refused and over-limit sentences · DEC-467 · `files/KIND-TABLE.md` (READY; built from runtime-limits' Level 1 rows, never the other way) `[owed: BOB confirms the stated figure for audio and video]`
+- T53 · DEC-473 · {kind} read `file.kind.<key>` by KIND-TABLE's key column (48 rows; the many-to-one map in DEC-473's owed), {reason} `file.refused.reason.*`; A4-R3's `left_out` kinds read `screen.photo.dropped.<kind>` (with screens-intake, screens-inquiry) · DEC-473 `[waits: BOB's merge of DEC-473 from the design stream]`
 
 **reader-container** (new; K4831 (2))
 - T53 · N1266, N1267 · legacy Office and RTF by conversion, macros never run, every image kind to OCR-ready frames, archives as streams within bounds, refusal before any read · `files/REQ-readers-beta.md` CC1-CC6 (CC4 replaced by A4, CONSISTENCY §2.2)
@@ -66,6 +68,9 @@
 **record-core**
 - `[owed: PLATFORM record placement, N1271; three points Bob's]`
 
+**membership**
+- T53 · K5501 · `onProjectLeft(module, fn)` called inside `projectRemove` (R36), `why: "removed"`; `projectLeave` and `projectOwnerRemove` call nobody (R158) · `planning/lines-K5501-role-change.md`
+
 **ai-catalogue** (new; before ai-accounts; K5457)
 - T53 · N1220 (K5428-K5433, K5457) · the signed closed list of AIs: entry, plan, evidence, the seven checks, Gate 1 verdict per part, lifecycle, advisories, results library; signed updates verified and applied, the last good kept, rollback · `lane-ai-design/draft-ai-catalogue.md` R1-R53
 - T53 · K5457 · the seed payload and shipped provider data, data only · same, R39, R48 `[waits: BOB's key ceremony and seed signing; Bob's pass marks, K5475]`
@@ -76,7 +81,8 @@
 - T53 · K5457 · R8, R12, R13, R18, R35 and twelve old ops retired, nineteen new declared, every user re-pointed in this tranche, no aliases (FOLD-AI §2 lists the sixteen modules) · same, Part 1, R36, R38, R61
 - T53 · DEC-465, DEC-466, K5471 · `aikeyseal` (R69), a member's own list order (R70), declared ops (R71), a share flag turned off (R72), `GATEWAY_UNAVAILABLE` naming who can grant it (R73), the readiness summary (R74); a member clears the payer flag on her own account (R68) · `lane-ai-design/draft-ai-accounts-dec465.md` (AI11 B, K5486: any project the member has joined; the draft's "owns" changed by AI-DESIGN)
 - T53 · K5457 · migration: apikey to the Anthropic API plan (sealed), signin to subscription (issued), project sign-in accounts ended and told once · same, R59
-- T53 · K5478, DEC-471, K5493 · `aicreditsclear` replaces R68 ("Clear it and turn the account back on"); the credits stop a Queue item, kind `ai-credits-stop` (R75); a dated terms change is a notice, never a step (R76); the `membership` role-change listener recommended (For BOB 3) · `lane-ai-design/draft-ai-accounts-dec465.md`
+- T53 · K5478, DEC-471, K5493 · `aicreditsclear` replaces R68 ("Clear it and turn the account back on"); the credits stop a Queue item, kind `ai-credits-stop` (R75); a dated terms change is a notice, never a step (R76); the `membership` role-change listener (For BOB 3, decided K5501: below) · `lane-ai-design/draft-ai-accounts-dec465.md`
+- T53 · K5501 · a member removed from a project (`projectRemove`) or revoked from the team loses her placements of shared accounts on its list in the same act, each a change, the project's owners told once; who placed an entry recorded (`placed_by`) (ai-accounts R77, R27 amended) · `planning/lines-K5501-role-change.md` `[owed: BOB on its five technical points]`
 
 **credentials**
 - T53 · K5457 · R27, R32, R48, R63, R66, R73 amended, R72 retired (the sealed key; `aicredential` on `AI_GRANT_OPS`) · `lane-ai-design/draft-ai-accounts.md` (credentials delta)
@@ -97,7 +103,7 @@
 **acquisition**, **capture**
 - T53 · N1266, N1267 · held-and-named filed whole with an owed reading (RF10), refused not filed (RF11), the refusal before any read (CC6) · `files/REQ-format-registry-beta.md` RF10-RF11
 - T53 · DEC-455 · capture: an op reading a preview's next rows from `next_row` (`previewmore`, name BOB's) · DEC-455
-- `[owed: CAPABILITIES N824 email intake; N1259 registers]`
+- `[owed: CAPABILITIES N824 email intake; N1259 registers (C8-C10 answered: K5498 California's own sources, the state API by the team's key read only when a member asks, the bulk file brought in, never OpenCorporates, paid sources by a member's own account only; K5499 only a home address's street lines removed from donor lists; K5500 the donor-use guard federal only, 11 CFR 104.15)]`
 
 ## Layer 4
 
@@ -106,7 +112,7 @@
 - T53 · DEC-454 · `content.extent`'s part key in plain words · DEC-454
 
 **extraction** (with screens-inquiry)
-- T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents · `[owed: CAPABILITIES N1269-N1272 READY]`
+- T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents; finding names, organisations and dates across a whole document is reading, not interpretation (K5496, C21 A); the page and search say what was interpreted, for which investigation, by whom and when, with "not interpreted for this investigation" in search, and the document view marks interpreted parts visibly (K5495, C2 A; the mark UX-DESIGN's) · `[owed: CAPABILITIES N1269-N1272 READY (Q2 still Bob's)]`
 
 **reading-pipeline**, **extraction**
 - T53 · N1266, N1267 (K5427) · the text bound 100 MB, HTML streamed to it; the held-unread verdict re-run when a reader arrives · `files/SIZES-N1267.md` §3, `REQ-format-registry-beta.md` RF10 `[owed: lines for reading-pipeline not drafted]`
@@ -297,7 +303,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 - T53 · N1274 · `runProfile`, `seedCopy`, `report` on a scratch copy only (PL40-PL43), run in R2 · `platform/load-test-draft.md` §5
 
 **JOURNEYS's defects** (K5471 (6))
-- W6-W7's 130 defects (6 BLOCKS: R-1, R-65 to R-68, R-94; 97 with no T52 entry), one entry each under its owning module, with JOURNEYS's READY lines (about 109): `planning/plan-T53-journeys.md` §A. Modules: jurisdictions (L1); promotion, provenance, capture, file-safety (L3); entities, events, money, explore, calculations (L5); publication, docket, public-read, case-import, case-authoring, review (L8); actions (L9); affordances, interface-shell, screens-entry, -wizards, -settings, installer-steps, site, screens-intake, -daily, -inquiry, -investigate, -publish, -action (L11). Each module's job reads its rows there at START. A defect wholly a carried entry merges into it (marked MERGE). `[waits: §B's 19 points, Bob's; §D for BOB]`
+- W6-W7's 130 defects (6 BLOCKS: R-1, R-65 to R-68, R-94; 97 with no T52 entry), one entry each under its owning module, with JOURNEYS's READY lines (about 109): `planning/plan-T53-journeys.md` §A. Modules: jurisdictions (L1); promotion, provenance, capture, file-safety (L3); entities, events, money, explore, calculations (L5); publication, docket, public-read, case-import, case-authoring, review (L8); actions (L9); affordances, interface-shell, screens-entry, -wizards, -settings, installer-steps, site, screens-intake, -daily, -inquiry, -investigate, -publish, -action (L11). Each module's job reads its rows there at START. A defect wholly a carried entry merges into it (marked MERGE). `[waits: J1-J7 only, Bob's (§B: eight decided by DEC-472, four by K5474; §D decided, K5476)]`. DEC-472's owed: interface-shell the keyboard rule (4); screens-settings, -entry, -investigate (1), (3), (5), (6); Security's floor a stated constant (2)
 
 The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52-37, T52-38; affordances T52-39; tasks T52-40; instance-setup T52-41; store-assembly T52-46, T52-47; store-request T52-48; screens-entry T52-54 to T52-56; screens-wizards T52-57; screens-action T52-81 to T52-84; site T52-96) stand as carried, each `C`.
 

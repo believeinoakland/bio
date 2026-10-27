@@ -1,19 +1,18 @@
 # PLANNING: handoff
 
-**Writer** · PLANNING #2 (prefix L), session `session_018Bhceg7ptZUBDjGtWWSVz4`, Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #321 (PLANNING #1 `session_018Bhcefb6SwLLagYbDTHR1M`, L1-L5, archived). Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
+**Writer** · PLANNING #3 (prefix L), session in `build/plan/beta/LANES.md` §3, Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #322 (PLANNING #1 L1-L5 and #2 `session_018Bhceg7ptZUBDjGtWWSVz4` L6-L15, both archived). Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
 
 ## 0. State now and next steps
 
-**State.** PLANNING #2 hands over at L15 (context 37 %). Folded into `plan-T53-draft.md` by layer (34 KB): the seven A drafts (READY for BOB; lines on Bob's open L1-L26 bracketed); FILES (readers, registry, sizes, corpus, KIND-TABLE; PHOTO-DATA defers to A4); PLATFORM (time budgets, combined read, load test, record placement PL30-PL35); AI-DESIGN final (A43-A58; findings and BOB's K5464 in `FOLD-AI.md`; layer 6 re-ordered, §2.9); CAPABILITIES N1257 (with K5452, K5458, K5462, K5467, K5468: A2's team-layer lines are CAPABILITIES' `N1257-requirements-a2.md` R134, R135, R31, R32) and N1260; JOURNEYS W6-W7 (130 defects in the detail file `plan-T53-journeys.md`, placements K5476); UX-DESIGN DEC-454 to DEC-470. `CONSISTENCY.md` rows 1-20 all decided; §1 holds the id rules (BOB numbers at writing; A lines keep theirs, C21). Nothing is open with BOB from this lane.
+**State.** PLANNING #3 took over at L16. Folded into `plan-T53-draft.md` by layer (36 KB): the seven A drafts (READY for BOB; lines on Bob's open L questions bracketed); FILES (readers, registry, sizes, corpus, KIND-TABLE, DEC-473's names); PLATFORM (time budgets, combined read, load test, record placement PL30-PL35); AI-DESIGN final (A43-A58, `FOLD-AI.md`); CAPABILITIES N1257 and N1260 (with K5495-K5500 noted where their lines will land); JOURNEYS (`plan-T53-journeys.md`: §B's eight UX points decided by DEC-472, four by K5474, only J1-J7 wait on Bob); K5501's lines drafted (`lines-K5501-role-change.md`: membership R158 `onProjectLeft`, ai-accounts R77 and R27 amended; five technical points for BOB). `CONSISTENCY.md` rows 1-20 all decided.
 
 **Next steps, in order.**
-1. (PLANNING #3) Takeover; merge tranche/T53 in; read MAP.md and every lane's section 0.
-2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (a-e), N824 (with its container member job), N1110, N858, N1265, N1269-N1272 (K5460-K5466 and later are its rulings); PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
-2a. Since the hand-over: K5495-K5500 (Bob on CAPABILITIES C2, C7-C10, C21; CAPABILITIES folds, then its drafts come READY) and DEC-472 (UX-DESIGN decided JOURNEYS' eight UX points, B558): unbracket those lines in `plan-T53-journeys.md` §B.
-3. On Bob's answers (L1-L26, J1-J7, N1257 D3, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes).
+1. BOB: K5501's five technical points (`lines-K5501-role-change.md`, end), each with a recommendation.
+2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (C8-C10 now answered, K5498-K5500), N824 (after M1), N1269-N1272 (Q2 still Bob's), N1257 (after L18), N1110, N858, N1265; PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)); DEC-473 waits on BOB's merge from the design stream.
+3. On Bob's answers (L1-L26, J1-J7, N1257 D3, L18, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
-**Waiting on.** Bob: L1-L26, J1-J7, N1257 D3, the published-place default. Lanes: as step 2.
+**Waiting on.** BOB: K5501's points. Bob: L1-L26, J1-J7, N1257 D3, L18, the published-place default. Lanes: as step 2.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -74,3 +73,7 @@ BOB #322 relayed K5475-K5494 (AI1-AI16 all answered by Bob), A48, A50, DEC-469, 
 ## L15 · 2026-10-27 · AI-DESIGN final (A48-A58) folded
 
 AI-DESIGN READY and final against AI1-AI16 (AD1-AD58), merged into tranche/T53. New lines folded: catalogue R54, R55 (R43-R45 amended); ai-gate R67 `combineResults` (R53, R63 amended); ai-issuer R25, R26 (R13, R16-R18 amended); ai-use R28-R33 (re-testing cap and switch, opt-in health counts); instance-setup R110 (the health sender); ai-accounts R68 replaced by `aicreditsclear`, R75, R76; the ops `airesultown`, `aihealthshare`, `aihealthpreview`, `aicreditsclear`, `aiwaitswitch`, `airetestset`; queue kinds `retesting-off`, `ai-credits-stop`. The plan's AI entries wait on nothing of Bob's; agent-model still on live checks L2, L3. Left for BOB at writing: dec465 For BOB 3 (the `membership` role-change listener), recommended.
+
+## L16 · 2026-10-27 · takeover; K5501 drafted; DEC-472, DEC-473, K5495-K5500 folded
+
+PLANNING #3 took over (reading set as the prompt names; tranche/T53 merged in), archived #2. K5501: a Sonnet worker read `membership.md` whole and drafted `lines-K5501-role-change.md`: the only act that ends a member's place in a project is `projectRemove` (membership R36, layer 2, before ai-accounts: a downward use); `onProjectLeft` (R158) fires there; ai-accounts R77 removes her placements (and her own account wherever placed) and tells the owners; R27 amended for team revocation (same listener function). Found: who placed a list entry is not recorded (rec `placed_by`); `leaving` still counts as joined (fire at the removal); ai-accounts' Uses cite membership R79, R81, moved to member-roster R25, R26 at T51. PLANNING corrected `MODULE_ORDER` to member-roster R27. DEC-472 (all eight as recommended) and K5474 marked in `plan-T53-journeys.md` §A; J1-J7 labelled. Plan: K5501 entries (layer 2), K5497 (jurisdictions), K5495-K5496 (extraction), K5498-K5500 (registers owed), DEC-473 (format-registry), JOURNEYS' wait narrowed to J1-J7. DECISIONS gains K5495-K5500.

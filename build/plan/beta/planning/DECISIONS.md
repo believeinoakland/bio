@@ -24,3 +24,9 @@
 - K5451 · 2026-10-27 · on QUESTIONS.html C6, option A (N1257): "as recommended" (a shipped layer never changed by a team; a team's marked correction of a calendar fact stands; laws and deadlines only reported) · `build/rulings.md`
 - K5452 · 2026-10-27 · on QUESTIONS.html C7 (N1257): "A team might be located outside the US even if their work is focused on some US jurisdiction. It's lso worth noting that a team's work might be state-wide or some other footprint not specific to a city or county." · `build/rulings.md`
 - K5454 · 2026-10-27 · on QUESTIONS.html P5, option A: "as recommended - we'll need to work with a CS team interested in setting up an enterprise scale copy before we can provide that support." (Enterprise listed at install as not yet available; Team and Institution built and measured in the beta) · `build/rulings.md`
+- K5495 · 2026-10-27 · on QUESTIONS.html C2 (N1272): "A, but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted." · `build/rulings.md`
+- K5496 · 2026-10-27 · on QUESTIONS.html C21, option A (N1272): "as recommended" (finding names, organisations and dates across a document is reading, not interpretation) · `build/rulings.md`
+- K5497 · 2026-10-27 · on QUESTIONS.html C7 remainder, option A (N1257): "as recommended" (US places only shipped; a team working outside the US adds its own places) · `build/rulings.md`
+- K5498 · 2026-10-27 · on QUESTIONS.html C8, option C (N1259): "as recommended" (California's own sources for company officers; never OpenCorporates) · `build/rulings.md`
+- K5499 · 2026-10-27 · on QUESTIONS.html C9 (N1259): "A" (only a home address's street lines removed from donor lists) · `build/rulings.md`
+- K5500 · 2026-10-27 · on QUESTIONS.html C10, option A (N1259): "as recommended" (the donor-use guard federal only for now) · `build/rulings.md`
