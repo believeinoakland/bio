@@ -1,6 +1,6 @@
 # N1257 places in layers, with N1256 federal offices: analysis, points and needs (draft)
 
-**Status** · READY for PLANNING (reviewed by CAPABILITIES #1, C2), with section J added; written by a worker, checked against the reading in section H.
+**Status** · READY for PLANNING (reviewed by CAPABILITIES #1, C2), with section J added; written by a worker, checked against the reading in section H. Revised 2026-10-27 for Bob's ruling K5452 (a team's work, not the team's location, decides its layers; its footprint is any set of places at any level): every changed line is listed in section L.
 For the beta's build plan, tranche T53. Carries DEC-404 (Bob, 2026-10-21: "Let's go with A after the alpha"), K4362, and DEC-401's option B (N1256). Design and requirements only; no code was changed.
 The requirement lines (section B) are in two companions: `N1257-requirements-jurisdictions.md` (draft R99 to R120) and `N1257-requirements-modules.md` (local-facts, instance-setup, installer, screens-settings, screens-action, actions, action-clocks, queue-producers, entities, filing-templates, reading-guides). Sections A and C to I are here.
 
@@ -16,11 +16,11 @@ Read from `build/requirements/*.md` and from the profile data (`jurisdictions/pr
 | 4 | The California layer: the Public Records Act, its deadlines, state holidays and offices | Inside the package: the Act (`records_response`, 10 days, +14), 14 state-law deadlines (agenda notice, claims, Brown Act demand and cure, grand jury, anti-SLAPP), `ccp_12`, the judicial list (CCP § 135, 2026 and two earlier years), the State Controller's calendar, one state office (the State Controller) | "State holidays": the data holds the court list (CCP § 135) and one office's calendar, not a state-employee list. 2027 court and City lists were not published at 2026-10-11 (R85) |
 | 5 | Alameda County its own layer | Little at county level: the Civil Grand Jury (office, fiscal year), the Superior Court (forum, hours), the assessor's systems and the parcel space, county pointers (legal aid). No county records law, deadline or holiday list | The layer is mostly new research |
 | 6 | The City of Oakland its own layer | Everything else: Sunshine Ordinance, 3 Municipal Code deadlines, City holidays, 3 offices, portal venue and receipt rule, `observed` practice, vocabulary, spaces, Legistar schemes, policy series, pointers, forums | A split, with migration |
-| 7 | A team chooses its state (California only) and, where held, its county | The installer offers whole held profiles, none preselected (`installer` R21); `profilesSet` replaces the list (`instance-setup` R14); setting `jurisdiction_profiles` (`record-core` R26) | No levels in the choice |
-| 8 | A team adds a missing county or city, with sources, marked its own research, serving only that team | Part is built: a member drafts a deadline or a legal fact from a held source, a second member confirms, Tier 2 and 3 need a qualification statement (`local-facts` R10 to R13, R18, R19; `screens-settings` R61); a member names an office or a court (R46, `entities` R63); the team's zone (`local-facts` R21). `RULE_IN_PROFILE` refuses a key the profile holds | Not built: a team's records law, holiday list with closure lists, office hours, venue, place where records are published. DEC-404 and next.md N1257 speak as if nothing is built |
+| 7 | A team chooses the places its work is focused on (K5452): any set of places at any level, wherever the team is, from what is held (California only today) | The installer offers whole held profiles, none preselected (`installer` R21); `profilesSet` replaces the list (`instance-setup` R14); setting `jurisdiction_profiles` (`record-core` R26) | No levels and no set in the choice |
+| 8 | A team adds a missing county or city (any number, K5452), with sources, marked its own research, serving only that team | Part is built: a member drafts a deadline or a legal fact from a held source, a second member confirms, Tier 2 and 3 need a qualification statement (`local-facts` R10 to R13, R18, R19; `screens-settings` R61); a member names an office or a court (R46, `entities` R63); the team's zone (`local-facts` R21). `RULE_IN_PROFILE` refuses a key the profile holds | Not built: a team's records law, holiday list with closure lists, office hours, venue, place where records are published. DEC-404 and next.md N1257 speak as if nothing is built |
 | 9 | A team never edits a read-only layer; it reports a rule it believes wrong | Profiles are release data; no op writes one. But `factConfirm` `correct` lets a member change a holiday year, hours or zone for this team, marked (`local-facts` R1, R2). `factStatus` lists disputes "so a member can report them for a profile fix; the instance transmits nothing" (R2); `ruleOffer` carries a team rule to the maintainers by hand (R13). The stewards' intake takes only abuse (`stewards` R3: four kinds) | No report of a rule; correction vs "read-only" is open (D2) |
 | 10 | Layers side by side; a request names its law | Yes: laws are a list on the kind (`laws`, unioned, R29), each law names its window (`response`, R96); a request holds its laws by name and level (`actions` R18, D-149). Tried: two profiles' deadlines merge field by field, so a field given by one layer only is no disagreement (`index.mjs:2098-2125`) | The law picker offers laws without knowing which bind which office (R106) |
-| 11 | A team outside California gets the federal layer only | A place not held: no profile active, `places` offers no law, deadline or holiday (`screens-settings` R60); the name is kept and its arrival told once (DEC-150; `instance-setup` R60, R62) | Federal alone is not a profile today |
+| 11 | A team whose work is focused outside California gets the federal layer and the held layers it names | A place not held: no profile active, `places` offers no law, deadline or holiday (`screens-settings` R60); the name is kept and its arrival told once (DEC-150; `instance-setup` R60, R62) | Federal alone is not a profile today |
 | 12 | How layers stack, and a one-key disagreement: BOB's | `combine` unions lists and withholds a one-value key on disagreement, "never chooses" (R12 to R16, R34, R55) | C1, C2 |
 
 **Four defects, found by trying the code or reading it, that the split meets at once** (each has a line in the jurisdictions companion):
@@ -39,9 +39,9 @@ Read from `build/requirements/*.md` and from the profile data (`jurisdictions/pr
 ## B. Requirement lines
 
 By module; every line is in the house format with Test and Control.
-- `jurisdictions` (companion 1): R99 layer; R100 level fit; R101 chain; R102 one key, two layers; R103 weekend; R104 closure lists across layers; R105 records help per law; R106 `governs`; R107 federal level for offices; R108 coverage; R109 federal layer; R110 California; R111 Alameda County; R112 Oakland; R113 chains checked; R114 package and migration, with its equality test; R115 team layer; R116 what a team may write; R117 team never replaces shipped; R118 test chain; R119 federal offices (N1256); R120 kept current.
+- `jurisdictions` (companion 1): R99 layer; R100 level fit; R101 forest of chains checked; R102 one key, two layers; R103 weekend; R104 closure lists across layers; R105 records help per law; R106 `governs`; R107 federal level for offices; R108 coverage; R109 federal layer; R110 California; R111 Alameda County; R112 Oakland; R113 every branch checked; R114 package and migration, with its equality test; R115 team layers (any number); R116 what a team may write; R117 team never replaces shipped; R118 test chain; R119 federal offices (N1256); R120 kept current.
 - `local-facts` (companion 2): R23 team layer entries, two members; R24 existing rules read as the team layer; R25 corrections stay the team's; R26 report a rule; R27 old paths.
-- `instance-setup`: R107 choose layers; R108 `profiles()` tells each layer; R109 a place named at its level; R110 team layers held in the record; R111 an update changes no choice and no recorded fact.
+- `instance-setup`: R107 choose the layers of the work's places; R108 `profiles()` tells each layer; R109 a place named at its level; R110 team layers held in the record; R111 an update changes no choice and no recorded fact.
 - `installer`: R86. `screens-settings`: R82, R83. `screens-action`: R60. `actions`: R112. `action-clocks`: R27. `queue-producers`: R58. `entities`: R68. `filing-templates`: R36. `reading-guides`: R17.
 - `civil-time`: none expected (F7). `stewards`: none now (C4). `newgroup`: no requirements file exists (`ls build/requirements`); the install's choice is `installer` R21's.
 
@@ -49,11 +49,12 @@ By module; every line is in the house format with Test and Control.
 
 ## C. BOB's points (lower level; DEC-404 gives them to BOB)
 
-**C1. How layers stack.**
-- A (recommended). A chain: one layer for each level, each naming the layer it sits in (`within`); city may sit directly in the state when no county layer is held (a team's own city). All active layers combine side by side, nothing overrides anything; a rule may count on a closure list a layer above it holds. Matches "a place is four layers" and "only its city"; lets the California rule for records be counted on a closure list and an Oakland observed practice be held in the Oakland layer. Cost: three new refusals and a `within` field. Lines R101, R104, `instance-setup` R107.
-- B. A flat set: any layers, no parent, each self-contained. Simplest in code (as today), but each layer must repeat the weekend and any list it counts on, and a team could pick Oakland without California.
+**C1. How layers stack.** (K5452 settles that a team may hold several layers of one level; what remains is BOB's: the shape and its cost.)
+- A (recommended). **A forest of chains.** Each layer names the layer it sits in (`within`, a layer of a higher level); the federal layer is the one root; below it any number of layers of any level. A state-wide footprint is a state layer with no county or city layer; a region is several county layers in one state; a footprint of a state and one city of another state is two branches; a city may sit directly in its state when no county layer is held (a team's own city), or in the federal layer when its state is not held. All active layers combine side by side, nothing overrides anything; a rule may count on a closure list a layer in its own branch holds. Names are layer-qualified (`<layer id>:<name>`), so two cities each holding a list called `city` cannot collide. Matches "a place is four layers", "only its city" and K5452's "any set of places". Lines R99, R101, R102, R104, R105, R113, `instance-setup` R107.
+- **What A costs.** (1) The three refusals of a chain grow to seven (`LAYER_ID_TWICE`, `LAYER_FEDERAL_TWICE`, `LAYER_PARENT_MISSING`, `LAYER_PARENT_LEVEL`, `LAYER_CYCLE`, `LAYER_NO_FEDERAL`, `NAME_AMBIGUOUS`), each checked for every branch, and a `within` field. (2) A name-resolution rule: a bare name resolves to its own layer's, else its branch's, else the only active layer that gives it, else `NAME_AMBIGUOUS`; any module that stores a rule or list name must also be able to store the layer. (3) A team-wide one-value fact (time zone, weekend, locale) stated differently by two branches is withheld at team level while each rule is read in its own branch's value; a screen must say so. (4) The places screen draws a tree, not a line (E1), and the choice is a set, not three steps (E2). (5) Tests grow: the test forest (R118), the shipped layers in every combination (R113), the time of `combine` with 1, 3 and 8 layers (F5, F11).
+- B. A flat set: any layers, no parent, each self-contained. Simplest in code (as today), several counties are trivial, but each layer must repeat the weekend and any list it counts on, and a team could pick Oakland without California.
 - C. Precedence by level. DEC-404 says no ("not overriding").
-- Sub-point: at most one layer per level (A) against several cities or counties in one team (needs layer-qualified list and rule names to avoid collisions; two cities each with a list called `city` would conflict). Recommended: one per level now; sibling layers wait for a team that asks.
+- Sub-point, now settled by K5452: several layers of one level are allowed. Not yet settled: whether a team's several counties may be saved as a named footprint for reuse (a package, R114); not drafted.
 
 **C2. A disagreement within one key** (two layers give different values to one thing, such as a zone, a kind's tier, a holiday year of one list).
 - A (recommended as the rule). Withhold the key and report both values with their layers; consumers answer "undetermined" (today's R15). Never guess a law.
@@ -88,21 +89,21 @@ Recommended A; it is what the draft's lines build (R108, `instance-setup` R108, 
 - B. Reports only, for everything; corrections of calendar facts go. Matches the words "does not edit" most strictly; a team with a wrong holiday waits for a release.
 - C. The team may apply its own value over a shipped one, marked. Overrides: contradicts DEC-404.
 
-**D3. A team outside the United States.** The four levels (federal, state, county, city) and the federal layer are the United States'. A team in another country has no layer to choose; today it gets nothing filled in (DEC-150), and the draft preselects the federal layer for every team, removable.
-- A (recommended). Say so on the choice: Civicsmith holds United States places; a team elsewhere names its place and writes none of the four levels, and adds its offices itself as today. The level names stay as DEC-404 has them.
+**D3. A team whose work is focused outside the United States.** (Bob, K5452: a team merely LOCATED abroad, with its work focused on a United States jurisdiction, is settled: it chooses the United States places of its work as any team does. A team whose WORK is focused in another country remains open.) The four levels (federal, state, county, city) and the federal layer are the United States'; Civicsmith holds United States places only. A team whose work is in another country has no layer to choose; today it gets nothing filled in (DEC-150), and the draft preselects the federal layer for every team, removable. A team working in both (some United States places and some abroad) gets the layers of the United States places it names and names the rest as free-text places.
+- A (recommended). Say so on the choice: Civicsmith holds United States places; a team whose work is elsewhere removes the federal layer, names its places in the free-text place and writes none of the four levels, and adds its offices itself as today. The level names stay as DEC-404 has them.
 - B. Rename the levels generally (nation, region, county, city) and let a team add a national layer. A bigger change to the vocabulary (R31) and to the decision.
 The draft assumes A (`installer` R86: the federal layer may be removed, and the page says what that means).
 
 ## E. What the places screen needs from UX-DESIGN (needs only, to go through BOB)
 
-1. A drawing of the chain: each active layer by level, its place, who holds it (Civicsmith's, read-only; or the team's own), when it was researched, how far its calendars reach.
-2. The choice of state, county, city, in that order, optional at each step; the federal layer preselected and removable with its meaning said.
+1. A drawing of the forest of chains (a tree: each layer under the layer it sits within, with several counties or cities side by side, and a state-wide footprint with nothing below the state): each active layer by level, its place, who holds it (Civicsmith's, read-only; or the team's own), when it was researched, how far its calendars reach.
+2. The choice "where does your work focus?": a set of places at any level (whole states, counties, cities, in any number and across states), not state-then-county-then-city, and not where the team is; nothing preselected below what the team names; the federal layer alone preselected and removable with its meaning said; a county or city added with its parents shown.
 3. A federal-only state: what the team has (FOIA, federal holidays, federal offices) and what it lacks, with the place-name field (DEC-150).
 4. "Add your county or city": a way to write entries of the sections in `jurisdictions` R116, each with its source and a second member's confirmation, and a way to see all unconfirmed ones together.
 5. "Report a rule" beside each shipped rule: what is shown to the member before anything is carried; the "carried" state.
 6. A read-only layer's rule drawn with its source beside it and no edit mark; a conflict drawn as "two layers disagree about X; nothing is assumed" with both values.
 7. Choosing a federal office on `request`: a search by agency or abbreviation before "Name the office yourself" (DEC-402), with the list's date.
-8. The install page: the same choice before a team exists (`installer` R86).
+8. The install page: the same choice of the work's places before a team exists (`installer` R86).
 9. The words keyed in `setup-words`; no place named in a word that is not data (`build/layers.md` rule 1).
 
 ## F. What must be measured, and on what copy
@@ -111,16 +112,17 @@ The draft assumes A (`installer` R86: the federal layer may be removed, and the 
 2. Every stored use of a profile id (section A's list) in a test instance upgraded from the alpha build: rows naming `oakland-alameda` in each table. Copy: the T53 test instance with a walked alpha record.
 3. The pre-split view fixture of R114: generated by script from the commit before the split; kept whole.
 4. The federal offices list: how many agencies and components, which fields each has (form, e-mail, mail, liaison, time zone, parent), how many lack a request means, the bytes of the layer, and the change between two reads at least 30 days apart (for R120's bound). Copy: the FOIA.gov agency-component service read with the makers' api.data.gov key (the key is a secret: no value is printed or stored in the repository); the developer page (2026-10-27) names the endpoint `https://api.foia.gov/api/agency_components` and the key requirement; a request without a key answered 403 `API_KEY_MISSING` on that day.
-5. Size and time of the layered view against the unsplit one: bytes of `combine`'s view and run time, on a request path and on the places screen (K4354: a screen within 2 seconds). Copy: the T53 test instance, 1280 px.
+5. Size and time of the layered view against the unsplit one, combined over a set of layers: bytes of `combine`'s view and run time with 1 layer (federal alone), 3 layers (federal, California, one county) and 8 layers (federal, California, three counties, three cities, made-up test layers), on a request path and on the places screen (K4354: a screen within 2 seconds). Copy: the T53 test instance, 1280 px.
 6. The county layer's real content: what Alameda County publishes as records and open-meeting rules, deadlines, holidays, hours, offices; by reading its own pages and code. Copy: the county's published sources, dated.
 7. `civil-time` resolving a closure list across layers: its tests run against the four-layer test chain (R118) and the shipped chains; a count over the federal list for 2026 and 2027 against the unsplit values.
 8. State holidays: Gov. Code § 6700 against CCP § 135 for 2026 and 2027, and whether either 2027 list is now published. Copy: the Legislature's text and the Judicial Council's calendar, dated.
 9. A team writing a city layer: minutes and mistakes per entry with the made-up test city, walked by a person who did not write the screen. Copy: the test instance with the test chain. (No real team is measured.)
+11. The chain check and name resolution (R101, R99) over 1, 3 and 8 layers and a forest with two branches: time of `combine`'s checks, and the number of names that need a layer qualifier in the shipped layers. Copy: the test forest (R118).
 10. Which modules read `profile`, `view.id`, `view.name` or `covers` for logic or display (grep over `build/requirements` and the code), so a changed tag breaks none.
 
 ## G. Needs from other lanes
 
-- PLATFORM: the record size and load a team layer adds (the table `team_layers`, its drafts, entries up to a stated number); the release bundle's size with the federal offices list; whether `combine` over four or five layers fits the request path's time and the plane's limits; the secret (the FOIA.gov key) as the makers' build secret, never in a team's copy.
+- PLATFORM: the record size and load a team layer adds (the table `team_layers`, its drafts, entries up to a stated number); the release bundle's size with the federal offices list; whether `combine` over one to eight or more layers (F5) fits the request path's time and the plane's limits; the secret (the FOIA.gov key) as the makers' build secret, never in a team's copy.
 - FILES: none expected.
 - AI-DESIGN: yes, the assistant's answers rely on layers. DEC-405's answer "applies rules (what a provision requires, the law in force, a computed due date)" reads the combined view; it should name the layer and its `as_of` for each rule it uses, say "not held" for a law whose layer the team has not chosen (a team with federal only asked about the Public Records Act), offer the search for it, and never write into a layer; a draft of a team entry reaches a member as labelled run output and enters only by her act (`local-facts` R5, R14).
 - UX-DESIGN (through BOB): section E.
@@ -154,3 +156,28 @@ Bob (via UX-DESIGN, DEC-458, A2 "as recommended"): a government's fiscal year co
 ## K. Bob's answers (2026-10-27)
 
 D1 (K5450): option A, plus an 'information' tag ('i' in a circle) next to each entry, or on the page overall, showing how current the information is: add to section E (UX need, sent through BOB). D2 (K5451): "as recommended": option A. D3 still with Bob.
+
+Bob (K5452, 2026-10-27): "A team might be located outside the US even if their work is focused on some US jurisdiction. It's also worth noting that a team's work might be state-wide or some other footprint not specific to a city or county." `DECISIONS.md` C7. Written in: section C1 (forest of chains), D3 (only a team whose work is outside the United States remains), E1, E2, E8, F5, F11, and the lines of section L.
+
+## L. What changed for K5452
+
+Bob's ruling (K5452; `DECISIONS.md` C7): a team's layers follow where its WORK is focused, not where the team is; its footprint is any set of places at any level; the install asks for the work's places and preselects nothing below what the team names (the federal layer may still be preselected and is removable); a team merely located abroad is settled. Lines altered, by file. The ids are the drafts' own ids; the ids of other modules are named with their module.
+
+**This file (`N1257-places-in-layers.md`).**
+- Head: the status line (revision note). Section A: row 7 (the choice is the work's places, a set), row 8 (any number of county or city layers), row 11 (federal plus the held layers the team names). Section B: the list of ids (R101, R113, R115, `instance-setup` R107 re-described).
+- C1 rewritten: option A is "a forest of chains", with what it costs (its list of costs), the sub-point "at most one layer per level" removed (settled by K5452), a new open sub-point (a saved footprint).
+- D3 rewritten into the remaining Bob-point: a team whose work is focused outside the United States; options A (recommended) and B; a team merely located abroad noted as settled.
+- E: needs 1 (a tree), 2 (a set of the work's places, nothing preselected below what the team names), 8 (the install page). F: measure 5 (1, 3 and 8 layers), new measure 11 (chain check and names over 1, 3 and 8 layers). G: PLATFORM's question (one to eight or more layers). K: the K5452 entry added. L: this section.
+- Unchanged on purpose: C2 to C7, D1, D2, J, H, I.
+
+**`N1257-requirements-jurisdictions.md`.**
+- Terms paragraph (branch, forest of chains, layer-qualified name) and the status line.
+- R99 (`within` any higher level; layer-qualified names; `NAME_AMBIGUOUS`), R101 (a forest, each branch checked; the refusals `LAYER_ID_TWICE`, `LAYER_FEDERAL_TWICE`, `LAYER_PARENT_LEVEL`, `LAYER_CYCLE` replace `LAYER_LEVEL_TWICE`; state-wide valid), R102 (branches never conflict on qualified facts; team-wide facts across branches), R104 (closure lists by qualified name in the branch), R105 (blocks per layer side by side), R110 (control line: state-wide), R113 (every branch, every combination), R115 (any number of team layers; may sit within the federal layer when the state is not held), R118 (the test forest).
+- Unchanged: R100, R103, R106 to R109, R111, R112, R114 (a package still resolves to its four layers), R116, R117, R119, R120.
+
+**`N1257-requirements-modules.md`.**
+- `local-facts` R23 (several team layers), R24 (the team's rules layer).
+- `instance-setup` R107 (a set of the work's places, any level and number; nothing preselected below the federal layer; parents added and shown), R108 (branches in `profiles()`), R109 (a set of place names).
+- `installer` R86 (the install asks where the work focuses, a set of places).
+- `screens-settings` R82 (a tree; the choice is a set).
+- Unchanged: `local-facts` R25 to R27, `instance-setup` R110, R111, `screens-settings` R83, `screens-action` R60, `actions` R112, `action-clocks` R27, `queue-producers` R58, `entities` R68, `filing-templates` R36, `reading-guides` R17.
