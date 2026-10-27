@@ -25,7 +25,6 @@
 ## Waiting on Bob (do not ask again)
 
 - A1-A8 through UX-DESIGN (C-K2, C-K6, B-K19, DS9, DS23, DS24, DS25, C-M2).
-- civicsmith.org listed by search engines (BOB #317's question).
 
 ## State worth knowing
 
