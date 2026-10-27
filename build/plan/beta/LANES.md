@@ -20,7 +20,7 @@
 
 | lane | prefix | branch · folder | model | scope | starts from |
 |---|---|---|---|---|---|
-| **AI-DESIGN #3** | A | `lane/ai-design` (merge `tranche/T53` in first) · `build/plan/lane-ai-design/` | Opus | AI provider selection (a team's, a project's, a member's AI) and the assistant fully designed: what it does on every screen and journey, its modules (keep, adapt, retire), the provider boundary, its tests and limits, its costs to a team | `HANDOVER.md` there (A41): Bob's decisions AIR1-AIR45 for BOB to record as K rulings, the rulings they supersede, N1220 to refresh, the technical points left to BOB |
+| **AI-DESIGN #4** | A | `lane/ai-design` (merge `tranche/T53` in first) · `build/plan/lane-ai-design/` | Opus | AI provider selection (a team's, a project's, a member's AI) and the assistant fully designed: what it does on every screen and journey, its modules (keep, adapt, retire), the provider boundary, its tests and limits, its costs to a team | `HANDOVER.md` there (A41): Bob's decisions AIR1-AIR45 for BOB to record as K rulings, the rulings they supersede, N1220 to refresh, the technical points left to BOB |
 | **PLATFORM** | P | `lane/platform` · `build/plan/beta/platform/` | Sonnet | The three service levels (Bob, K4746: Team, Organization, Coalition/institution on Enterprise; the record split N1271), performance and responsiveness designed in (a time budget for every screen and op, the combined read K4599, the admission fold N1264), where a team's record lives (K4746 (2), N1273's region picker), the per-level load test (N1274) | `build/plan/lane-performance/` (CHARTER, HANDOFF, archive P1-P26), K4746, K4747, K4599, K4635 |
 | **CAPABILITIES** | C | `lane/capabilities` · `build/plan/beta/capabilities/` | Sonnet | Every feature put off until after the alpha (`build/plan/next.md`; `carried-T52-R1.md`'s "Left out"): public registers and alerts (N1259), following the trail (N1260), places in layers (N1257), email capture (N824) and the rest, each with Bob's open points brought as options | `draft-T52-DEC406.md`, `draft-T52-DEC409.md`, `draft-T52-plan.md`, `draft-T52-N1260-requirements.md`, DEC-447 |
 | **FILES** | F | `lane/files` · `build/plan/beta/files/` | Sonnet | Every file type and size the beta reads (N1266, studied closely for Bob first, K4632; N1267 sizes, K4628 option B; N1267a), how each is read, held and shown, and the acceptance corpus (N1268) | `build/plan/lane-reading-architecture/` (`GAP.md`, `stage0/RESULTS.md`), K4831 |
@@ -33,8 +33,8 @@
 
 | lane | session | started |
 |---|---|---|
-| AI-DESIGN #3 | `session_018BhcedQQCRAKFMw8Mi8Xka` | 2026-10-27, BOB #320 |
-| PLATFORM #1 | `session_018BhceduzvspNp7pagSnBaL` | 2026-10-27, BOB #320 |
+| AI-DESIGN #4 | `session_018BhcedHXD9yareupMq6poX` | 2026-10-27, BOB #322 (#3 `session_018BhcedQQCRAKFMw8Mi8Xka` archived by #4) |
+| PLATFORM #2 | `session_018BhcegTAycjUS9ubrhLQ2p` | 2026-10-27, BOB #322 (#1 `session_018BhceduzvspNp7pagSnBaL` archived by #2) |
 | CAPABILITIES #2 | `session_018BhceefmwyUmQFrnSkiEv7` | 2026-10-27, BOB #322 (#1 `session_018BhcefgnFUeeyqm8N5bN75` archived by #2) |
 | FILES #1 | `session_018Bhcecv29TYVd71UxV9qGX` | 2026-10-27, BOB #320 |
 | JOURNEYS #4 | `session_018Bhcef2FG9FpTXzkPVijim` | 2026-10-27, BOB #320 |

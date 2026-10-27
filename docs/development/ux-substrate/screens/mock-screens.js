@@ -2964,7 +2964,7 @@ SCR.watching = c => ({ rail: 'add', title: 'Watched addresses', crumbs: ['Add', 
   ${sec('Ratify or stop a sweep', `${sheet(row(I('hold'), '<b class="mk-data">Planning commission staff reports</b><span class="meta">Sites: <span class="mk-data">oaklandca.gov</span> · The most it may fetch in one run: 200 pages</span>', ''))}${note('Ratifying sends your team\'s fetches to the named sites, within the scope and budget shown.')}${note('Each thing found is filed as collected material, never higher.')}${acts(btn('owed:sweepratify DEC-382', 'Ratify this sweep', { tone: 'primary' }), btn('owed:sweepratify DEC-382', 'Stop this sweep'))}${note('Only an owner of the project can ratify a sweep.')}${note('Any member who can write to the project can stop it.')}<details class="mk-details"><summary>When it is refused</summary><div style="display:grid;gap:6px">${gapm('refused', 'Only an owner of the project can ratify a sweep. Ask <span class="mk-data">Dev or Rosa</span>.')}${gapm('refused', 'The assistant cannot define or ratify a sweep. Only a member can, so nothing was changed.')}</div></details>`, { help: 'Lets an owner of the project start a sweep, and lets any member who can write to the project stop it.' })}
    ${note('A sweep follows links from pages it is told to start from and keeps the documents that match, as new collected material. It runs only after a project owner has ratified it.')}</div>`, { help: 'The sweeps of the projects you may see, with who ratified each and when it runs next.' })}` });
 
-/* DEC-407 public registers (DEC-406): registerimport, registerlist, registersearch, registerrowcite, registerwatch, registerwatchstop,
+/* DEC-407 public registers (DEC-406): registerfileimport (K5471), registerlist, registersearch, registerrowcite, registerwatch, registerwatchstop,
    alertconnect (the alpha, unassisted); registerask, registermatch, registerwatchpropose (after the alpha, drawn paused). */
 const regOff = h => h.replace(/<(button|input|textarea|select)\b/g, '<$1 disabled');
 SCR.registers = c => ({ rail: 'add', title: 'Public registers', crumbs: ['Add', 'Public registers'], main: `
@@ -2994,7 +2994,7 @@ SCR.registers = c => ({ rail: 'add', title: 'Public registers', crumbs: ['Add', 
   ${sec('Bring in a register', `<div style="display:grid;gap:12px">
    ${note('Your team\'s Civicsmith keeps the whole register as a capture, with its source and the date. It reads the register in the background, and the team is told in the queue when it is ready.')}
    ${note('Importing runs by fixed steps and never uses the assistant.')}
-   ${choice('mk-rgwhich', 'Which register', ['Oakland campaign finance (NetFile)', 'California campaign finance (CAL-ACCESS)', 'Federal campaign finance (FEC)', 'Economic interest filings (Form 700)', 'Oakland lobbyist directory', 'State license files'], 'Oakland campaign finance (NetFile)', { act: 'owed:registerimport DEC-406', data: true })}
+   ${choice('mk-rgwhich', 'Which register', ['Oakland campaign finance (NetFile)', 'California campaign finance (CAL-ACCESS)', 'Federal campaign finance (FEC)', 'Economic interest filings (Form 700)', 'Oakland lobbyist directory', 'State license files'], 'Oakland campaign finance (NetFile)', { act: 'owed:registerfileimport DEC-406', data: true })}
    <h3 class="mk-h3">Whole or in part</h3>
    ${note('Leave every box empty to bring in the whole register.')}
    ${note('Filled in from the project <b class="mk-data">Pothole repairs</b>; change it as you like.')}
@@ -3006,7 +3006,7 @@ SCR.registers = c => ({ rail: 'add', title: 'Public registers', crumbs: ['Add', 
    ${sheet(row(I('document'), 'Compared with what your record holds: <span class="mk-data">3,128</span> new rows, <span class="mk-data">1,482,000</span> bytes, about <span class="mk-data">4 minutes</span> to read in.', ''))}
    ${note('The filter is kept with the import and shown as what watching looks for.')}
    ${note('Phone and address columns are left out as it arrives.')}
-   ${acts(btn('owed:registerimport DEC-406', 'Bring in this register', { tone: 'primary' }), btn('owed:registerpreread K4403', 'Read it ahead, for the team'))}
+   ${acts(btn('owed:registerfileimport DEC-406', 'Bring in this register', { tone: 'primary' }), btn('owed:registerpreread K4403', 'Read it ahead, for the team'))}
    ${note('Reading it ahead keeps the register, whole or in the part you chose, as a resource for the team before any project asks.')}</div>`)}
   ${sec('Search the registers', `<div style="display:grid;gap:12px">
    ${field('mk-rgwho', 'Person or organization', '', { act: 'owed:registersearch DEC-406' })}

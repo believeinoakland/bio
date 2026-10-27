@@ -43,7 +43,7 @@ These six ids are the catalogue's part list (`ai-catalogue` R14); `ai-accounts` 
 ## 3. The gates, in the beta
 
 - **G-remote** (`agent-worker` R110, `ASSISTANT_REMOTE_NOT_READY`) is **retired**: the beta's path never needs a remote Claude Code session (`draft-agent-runner.md`). In its place, "AI path ready" for an act is: an account chosen by the cascade and order, its entry listed and offered under the checks in force, and the entry passed for the part, with `health` not `open`, `auth_failed`, `payer_unverified` or `retired`. Each failure is the matching `aimoments` moment.
-- **G-bar** (`run-rules` R19, R29: an AI part reaches members only after Civicsmith's frozen set of real matters; N829: the set has no matters) would keep every part off members' copies in the beta. This is Bob's (§6 Q1).
+- **G-bar** (`run-rules` R19, R29: an AI part reaches members only after Civicsmith's frozen set of real matters; N829: the set has no matters) would keep every part off members' copies in the beta. **Decided by Bob (K5475, AI1 option B):** a part reaches members once the chosen AI passes Gate 1 for it, at marks Bob sets after the first measuring run; the real-matters set, once written, is a standing accuracy check shown to teams, and a part below its mark there is switched off for that AI (`draft-run-rules.md` R19, R37).
 
 ## 4. DEC-420's 41 ops and the lane's additions (`aioptinset`, `aitermswithdraw`, `aiusebymember`, `aipayerclear`, `aipathready`, `aikeyseal`, `airunparts`, `assistantreadiness`; three Worker-only ops): owner, rung, budget class [rec, BOB's]
 
@@ -95,7 +95,7 @@ Words: op names keep DEC-420's spellings; "limit", never "budget", in words peop
 
 ## 6. For Bob (through BOB, written for him on `QUESTIONS.html`)
 
-**Q1 · What lets an AI part reach members in the beta.** Today a part reaches members only after it passes Civicsmith's set of real public matters with answers written by people (D14), and that set is empty (N829), so in the beta no member could use the assistant at all.
+**Q1 · What lets an AI part reach members in the beta. ANSWERED: B (K5475).** Today a part reaches members only after it passes Civicsmith's set of real public matters with answers written by people (D14), and that set is empty (N829), so in the beta no member could use the assistant at all.
 - A · keep the rule; nothing reaches members until Bob supplies or approves the matters (N1258 says he may) and each part passes them.
 - B · *(recommended)* an AI part reaches members once the AI chosen has passed Civicsmith's own capability test for that part (Gate 1, made of invented cases scored by code, AD7, AD13). The real matters, once written, become the standing accuracy measure N1258 asks for, shown to teams, and a part that falls below its bar there is withdrawn.
 - C · let members use untested parts with an "untested" label, as test copies do today.
@@ -134,7 +134,7 @@ The canonical set, one owner each; a caller uses the owner's spelling. Brief §2
 | `accountFor({member, act})` | ai-accounts | the account serving an act: `account_id`, `level`, `owner`, `provider`, `plan`, `means`, `entry_id`, `entries`, `personal`, `disclosed` |
 | `hopFor({member, act, from, reason, at_step_boundary})` | ai-accounts | the next pair down the owner's list; reasons `limit`, `unavailable`, `lapsed`, `capability`, `auth`, `member_switch`; `payer_change` is `{from_owner, to_owner}` or null |
 | `checksInForce({project, member, act})` | ai-accounts | the checks binding a piece of work (team locks, project ticks, member's own) |
-| `gatewayServedCheck`; flag | ai-accounts | the payer check per gateway call, reached by the Worker as `op=aigatewayserved`; a mismatch keeps the answer, flags the account, refuses later calls `PAYER_NOT_VERIFIED` until an administrator clears it with `op=aipayerclear` (pending Bob, `QUESTIONS-FOR-BOB.md`); an auth failure is `op=aicredentialfailed`, the credential `op=aicredential` |
+| `gatewayServedCheck`; flag | ai-accounts | the payer check per gateway call, reached by the Worker as `op=aigatewayserved`; a mismatch keeps the answer, flags the account, refuses later calls `PAYER_NOT_VERIFIED` until an administrator clears it with `op=aipayerclear` (Bob, K5478); an auth failure is `op=aicredentialfailed`, the credential `op=aicredential` |
 | `aipathready` | ai-runs, agent-worker | the plane's read of `agent-model` `health(account, entry)`; `ready` or the not-ready reason |
 | `GROUP_NEEDS`, `gateRecord`, `partAdmittedOn` | ai-gate (`partAdmittedOn` run-rules) | groups each part needs; the verdict record (`verdict` `passes`, `passes_with_limits`, `not_suitable`, `not_yet_rated`; `limits` `{kind, value}`; `suiteVersions`); admission of a part for an entry |
 | limit kinds | ai-gate | `context_depth`, `no_image_input`, `no_streaming`, `no_parallel_tools`, `output_cap` |
