@@ -966,6 +966,8 @@ const OPS_HAND = aliasRows({
   linkproject:{ classes: ["admin", "member", "probe"],           mutating: true  },
   /* Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a
      member's session. */
+  /* PROTO-B (throwaway; answers only with env PROTO_B=1): timings of text units and a term search, room against R2. */
+  protobprobe: { classes: ["admin"],                             mutating: false },
   cpuprobe:   { classes: ["admin", "probe"],                     mutating: true  },
   /* M2', the fetch layer; REC-33: `daemon` is admitted so the class can reach the archive arm, and the direct arm
      refuses it in the handler. */

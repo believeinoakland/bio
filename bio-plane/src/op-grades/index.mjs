@@ -660,6 +660,7 @@ const RUNG_ABSENT_DATA = {
   capture:              { ground: "substrate", is: "byte movement, content-addressed" },
   acquire:              { ground: "substrate", is: "the fetch layer (M2')" },
   linkproject:          { ground: "substrate", is: "admits an observed link as an edge, keyed by capture" },
+  protobprobe:          { ground: "substrate", is: "PROTO-B throwaway: times text units and a term search, room against R2" },
   cpuprobe:             { ground: "substrate", is: "the CPU probe — a Worker cannot time itself" },
   export:               { ground: "substrate", is: "writes an export manifest of what is already there" },
   taskdrain:            { ground: "substrate", is: "the task scheduler's own tick" },

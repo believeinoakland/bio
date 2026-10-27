@@ -11,6 +11,7 @@ import { schedulerOf } from "../scheduler/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
 import { deliverOwedRender } from "../control-plane/index.mjs";
+import { protobProbe } from "../proto-b/probe.mjs";   /* PROTO-B (throwaway): behind env PROTO_B=1 */
 
 /** R78 (K4530, B34; fix round 6, G12e): the response header `server-timing: object;dur=<ms>`, the milliseconds of I/O time the object spent on a
  *  route; control-plane reads it and adds `in-<route>` beside its `do-<route>`. It is I/O time and nothing more: workerd freezes `Date.now()` during
@@ -89,6 +90,13 @@ export class Store extends DurableObject {
     /* R102 (fix round 9, G93; K4565; scheduler R28): ANY REQUEST RE-ARMS. The scheduler's `heal` looks at the alarm at most once in five
        seconds for the instance and never during a firing, arming a lost or spent one; it never raises the request's answer. */
     try { await schedulerOf(this.ctx, this.env).heal(Date.now()); } catch { /* the watchdog's cron is the backstop */ }
+    /* PROTO-B (throwaway): only with PROTO_B=1, the probe's route; with the flag unset this line changes nothing */
+    if (this.env && this.env.PROTO_B === "1" && this.env.CAPTURES && new URL(req0.url).pathname === "/protobprobe") {
+      const q = new URL(req0.url).searchParams, args = {};
+      for (const [a, b] of q) args[a] = b;
+      const body = await protobProbe({ sql: this.ctx.storage.sql, bucket: this.env.CAPTURES, store: (this.ctx.id && this.ctx.id.name) || "bio", args });
+      return new Response(JSON.stringify(body), { headers: { "content-type": "application/json", [OBJECT_TIMING_HEADER]: objectTiming(t0, this.#startedAt) } });
+    }
     const req = await traceStamped(req0);   /* store-assembly R60: `acquire`'s trace, from the header capture sends */
     const res = await this.#assembled.dispatch(req);
     /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first
