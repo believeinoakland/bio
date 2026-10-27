@@ -2378,3 +2378,6 @@ From CAPABILITIES C27 (N1269, after DEC-476; Bob's C2, K5495): four gaps in the 
 2. No key for the all-interpreted case: with every part interpreted, today's words would print "Not yet: ." Needs its own sentence.
 3. `.none` and `.recorded` keys are not drawn.
 4. The chooser offers only the whole document and page ranges; it also needs sheet rows, paragraphs and slides (the units FILES reads).
+
+## B564 · HANDOFF · 2026-10-27 · session_018BhcefwigYo6VB6PEac3TJ · secondary
+From CAPABILITIES C28 (N858, K5512, K5529): one word needed, text.sourcechanged: a line on a reviewed text the link check flagged, "a source changed on {date}; re-review pending" (the text stays offered).
