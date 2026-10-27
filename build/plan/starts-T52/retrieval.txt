@@ -1,0 +1,6 @@
+Round R1, layer 5, module retrieval, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module retrieval`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-101 · query-language R35 (K5389) · test-only · retrieval's tests that assert a snippet's match in brackets (`passage-arm.test.mjs`'s R11/R15/R54 and R79 tests, `t51-round9.test.mjs` R95, `t51-fix2.test.mjs`) read `MARK_OPEN` and `MARK_CLOSE` (imported from query-language, never copied); after query-language merges (K5393).
