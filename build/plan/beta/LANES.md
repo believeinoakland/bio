@@ -27,7 +27,7 @@
 | **JOURNEYS #4** | W | `lane/journeys` · `build/plan/lane-journeys/` | Sonnet | The alpha's defects found whole: walk every feature and journey that needs no assistant on the deployed 0.87.0, each defect a cause with its owning module and how it was missed; confirm which carried T52 entries still stand | its `CHARTER.md` and `HANDOFF.md`; `build/plan/walk-T51b-live/`; `carried-T52-R1.md` |
 | **TESTS-SWEEP** | S | `lane/tests-sweep` · `build/plan/beta/tests-sweep/` and test files | Sonnet | The tests rethink's option A (Bob, K5418): every test that asserts English asserts the word key and values instead; the words check refuses English in tests; each K5339 and K5343 red run once and sorted; the 89 fixtures findings cleared. A mechanical pass (P7): one full run of every module it touched before its merge, recorded by module | `build/plan/tests-rethink-T52.html`, K5258, K5313, `proc tests` |
 | **PLANNING** | L | `lane/planning` · `build/plan/beta/planning/` | Opus | Turns the lanes' READY drafts into one consistent set of requirement lines and architecture changes (new modules, layers, order), then into T53's comprehensive build plan by layer (the carried entries, every new capability, the sweep's merge first), each job's reading set within its budget, each exclusion with its hard reason (P19). Proposes; BOB reviews, brings Bob what is his and writes every line | this file, `MAP.md`, `carried-T52-R1.md`, `build/layers.md`, `build/modules.json`, `build/requirements/README.md` |
-| **UX-DESIGN #43** | U | its own stream (`claude/gallant-brown-zg0wc1`) | Opus | Every screen and word the other lanes need, as their needs arrive through BOB | its own charter |
+| **UX-DESIGN #44** | U | its own stream (`claude/gallant-brown-zg0wc1`) | Opus | Every screen and word the other lanes need, as their needs arrive through BOB | its own charter |
 
 ## 3. Sessions (BOB keeps this table)
 
@@ -35,9 +35,9 @@
 |---|---|---|
 | AI-DESIGN #3 | `session_018BhcedQQCRAKFMw8Mi8Xka` | 2026-10-27, BOB #320 |
 | PLATFORM #1 | `session_018BhceduzvspNp7pagSnBaL` | 2026-10-27, BOB #320 |
-| CAPABILITIES #1 | `session_018BhcefgnFUeeyqm8N5bN75` | 2026-10-27, BOB #320 |
+| CAPABILITIES #2 | `session_018BhceefmwyUmQFrnSkiEv7` | 2026-10-27, BOB #322 (#1 `session_018BhcefgnFUeeyqm8N5bN75` archived by #2) |
 | FILES #1 | `session_018Bhcecv29TYVd71UxV9qGX` | 2026-10-27, BOB #320 |
 | JOURNEYS #4 | `session_018Bhcef2FG9FpTXzkPVijim` | 2026-10-27, BOB #320 |
 | TESTS-SWEEP #1 | `session_018BhcechYohm1LHA7fup1fn` | 2026-10-27, BOB #320 |
-| PLANNING #1 | `session_018Bhcefb6SwLLagYbDTHR1M` | 2026-10-27, BOB #320 |
-| UX-DESIGN #43 | `session_018BhcefCkHUHGG8UK3QabvX` | 2026-10-27, BOB #320 |
+| PLANNING #2 | `session_018Bhceg7ptZUBDjGtWWSVz4` | 2026-10-27, BOB #321 (#1 `session_018Bhcefb6SwLLagYbDTHR1M` archived by #2) |
+| UX-DESIGN #44 | `session_018Bhcefdgy83sFMSkwg7xRc` | 2026-10-27, BOB #322 (#43 `session_018BhcefCkHUHGG8UK3QabvX` archived by #44) |

@@ -1,6 +1,6 @@
 # N1266: the file types the beta reads, closely studied (for Bob, K4632)
 
-**Status** · DRAFT 1 by FILES #1, 2026-10-27, for BOB to bring to Bob with options and a recommendation (P17). Decides nothing. Part 1 is written for Bob; parts 2 to 6 are the working study behind it. Inputs: K4628, K4630, K4632, K4636, K4831; `next.md` N1266 to N1268; `format-registry.md`; GAP.md and stage0/RESULTS.md of the reading lane; the CPRA text (Gov. Code 7922.570 to 7922.580).
+**Status** · READY (F3). The list is settled by Bob: K5435 (A2: ruled list plus Tier 2), K5436 (B2: held and named), K5437 (D: MBOX in; PST, Access and Tier 3 held and named), K5427 (text 100 MB). Requirement drafts: `REQ-format-registry-beta.md`, `REQ-readers-beta.md`; screen needs: `UX-NEEDS.md`. First written as DRAFT 1 by FILES #1, 2026-10-27, for BOB to bring to Bob with options and a recommendation (P17). Decides nothing. Part 1 is written for Bob; parts 2 to 6 are the working study behind it. Inputs: K4628, K4630, K4632, K4636, K4831; `next.md` N1266 to N1268; `format-registry.md`; GAP.md and stage0/RESULTS.md of the reading lane; the CPRA text (Gov. Code 7922.570 to 7922.580).
 
 ## 1. For Bob
 
@@ -29,7 +29,7 @@
 
 Two things stay refused by name: RAR (your ruling) and programs, installers and disk images (safety).
 
-**C. The text size.** One bound for plain text, JSON, XML and the new text-like types: **100 MB** (N1267 as you ruled it) or **50 MB** (the figure the fix round used). Recommended: 100 MB, as ruled; the fix round's 50 MB was a working figure, and 100 MB costs nothing extra for text read in windows.
+**C. The text size (settled by BOB, K5427: 100 MB).** One bound for plain text, JSON, XML and the new text-like types: **100 MB** (N1267 as you ruled it) or **50 MB** (the figure the fix round used). Recommended: 100 MB, as ruled; the fix round's 50 MB was a working figure, and 100 MB costs nothing extra for text read in windows.
 
 **D. Outlook archives (PST) and Access databases.** Offer to read these only if the acceptance corpus (N1268) or a team shows they turn up. Recommended: **MBOX in the beta** (A2), **PST, Access and the rest of §5 held and named (B2) until a real file asks**, then added by a small ruling each.
 
@@ -39,7 +39,30 @@ Two things stay refused by name: RAR (your ruling) and programs, installers and 
 
 Five tests per type: **value** to an investigation of a public body (what Oakland bodies publish, what a member holds, what a records request returns); **how a member gets it** (upload, web capture, request response); **reader cost** (a reader we have, plain text, or a new tool; Workers or the container, per GAP.md); **risk** (macros, encryption, hostile files; K4831 (6)); **licence** of any tool (GAP-3.0, checked before use).
 
-**What the evidence is, honestly.** I found no count of the formats agencies actually send; the web sources I could reach are guidance pages from journalists, records managers and archivists, not statistics (the statute is firm; the prevalence is not). They agree on the pattern: PDFs, often scanned or printed from a spreadsheet, dominate; spreadsheets and delimited text come when asked for; email comes as EML, MBOX, MSG or PST when native, and as PDF prints otherwise. Oakland's own portals (Legistar for agendas and attachments, the open data portal, the city's records-request system) were not reachable for a format count in this session. **I therefore recommend the corpus step (§7, S2): sample real public Oakland files by type before the list is final, which turns this study from judgement into a count.**
+**What the evidence is, honestly** (updated in F2, with a count; see §2a). I found no count of the formats agencies actually send; the web sources I could reach are guidance pages from journalists, records managers and archivists, not statistics (the statute is firm; the prevalence is not). They agree on the pattern: PDFs, often scanned or printed from a spreadsheet, dominate; spreadsheets and delimited text come when asked for; email comes as EML, MBOX, MSG or PST when native, and as PDF prints otherwise. **The count in §2a is a first one, from two Oakland sources.**
+
+## 2a. A first count (F2, 2026-10-27, from the live sources)
+
+**Legistar** (the city's agendas and attachments; its public API): the attachments of the 400 most recent matters, **1,243 attachments, all PDF (100 %)**. Council business arrives as PDF. Size of a random 150 of them: median 218 KB, 90th percentile 1.6 MB, largest 19.4 MB. So the 100 MB / 5,000-page bound is far above the ordinary council attachment; it is there for the packets, scans and request releases that are not ordinary (pages not measured).
+
+**Oakland's open data portal** (data.oaklandca.gov; its catalog API): 739 assets. **313 are tables** (served as CSV, JSON and XML by the platform; map tables also as GeoJSON, KML/KMZ and shapefile). **102 are uploaded files**, by the portal's detected type:
+
+| type | files |
+|---|---|
+| PDF | 48 |
+| ZIP | 26 |
+| Excel 97-2003 (.xls) as detected | 22 |
+| Word .doc | 1 |
+| other Office (old binary) | 1 |
+| plain text | 1 |
+| PNG, JPEG | 2 |
+| QuickTime video | 1 |
+
+Many of the uploaded files are the city's own releases of public-records requests (their titles begin "PRR" and a request number): property lists, business-tax accounts, permit issuances, outcome tables. That is the closest picture so far of what a request returns.
+
+**What it shows.** (1) **Legacy Excel and ZIP matter more than the ruled list's order suggests**: 22 of 102 are old binary Excel and 26 are ZIPs, so .xls and archive contents are not rarities; they are most of what is not PDF. (2) **PDF is the bulk of council business**, so large-PDF reading (5,000 pages) and OCR are the weight of the beta. (3) **One video** sits among the files, confirming that video will arrive and must be held and named (Tier 4/5). (4) No email, PST, Access, WordPerfect, CAD or map-file upload appeared; this is evidence for holding Tier 3 until asked, not proof of absence. (5) Detection by content matters: the portal's own label "Excel" may hide CSV or XML spreadsheets saved under that name (not yet checked file by file).
+
+**Limits of the count.** Two sources; the open data portal's uploads are mostly 2014 to 2016 releases; types are the portal's, not mine; the zips' insides are not yet opened. The request system (NextRequest) returned no listing to an anonymous call, so its mix is unmeasured.
 
 ## 3. The type table
 
@@ -136,6 +159,6 @@ A file over its bound is refused with its size, never half read (K4628, K4831 (4
 ## 7. Next steps (mine)
 
 - **S1** On Bob's answers: finalize §3, then write the requirement drafts (format-registry entries, readers per type) in the house format.
-- **S2** Sample real public Oakland files by type (Legistar attachments, open-data downloads, request responses) to put counts under §3; needs a network route to those sites, which this session has not yet tested.
-- **S3** Draft the acceptance corpus (N1268): per type a small, a typical and a largest-allowed file, from public sources, generated where none exists.
-- **S4** Draft the sizes table and N1267a (the XLSX cell listing by window) once the 250,000 row question is closed.
+- **S2** (begun, §2a) Continue the sample: open the 26 zips and 22 "Excel" files, measure packet sizes and pages from Legistar, try the request system's public pages.
+- **S3** (done as DRAFT in `CORPUS-N1268.md`).
+- **S4** (done as DRAFT in `SIZES-N1267.md`).

@@ -41,104 +41,42 @@ blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-f
 </style>
 <main>
   <header style="display:grid;gap:10px">
-    <span class="eyebrow">Kept by BOB · last updated 27 October 2026, BOB #321</span>
+    <span class="eyebrow">Kept by BOB · last updated 27 October 2026, BOB #322</span>
     <h1>Questions for Bob</h1>
     <p class="lede">Every question from every lane that needs your decision is on this page, explained, with options and a recommendation. When you answer one, it moves to <a href="#answered">Answered</a> at the bottom, with your words and where they were recorded.</p>
-    <p><span class="count">4 open</span> <span class="count done">13 answered</span></p>
+    <p id="counts"><span class="count">… open</span></p>
   </header>
 
-  <div class="how">To answer, reply in chat and name the question. For example: <em>"P1: A. P2 as recommended."</em> You can also comment "As recommended" on an option right on this page You can answer some now and leave the rest.</div>
+  <div class="how">To answer, reply in chat and name the question. For example: <em>"P2 as recommended. C1: A."</em> You can also comment "As recommended" on an option right on this page You can answer some now and leave the rest.</div>
 
   <section class="group" id="open">
     <h2>Open</h2>
-
-    <span class="eyebrow">Speed and where a team's data lives · from the PLATFORM lane</span>
-    <p class="lede">You ruled that a team's copy of Civicsmith has three service levels (Team, Organization, Coalition), and that its data store is created near the team (K4746, K4747). Today only Level 1 exists: one data store per team. These questions set the beta's speed bar and what teams are told.</p>
-
-    <article class="q" id="P1">
-      <div class="meta"><span class="k">P1</span><span>PLATFORM · time budgets</span><span>asked 27 Oct</span></div>
-      <h3>How fast must the beta be?</h3>
-      <p>Today's bar (K4354): 2 seconds for a screen to appear, 2 seconds for an action to answer, 15 seconds for a web capture. All eight timed screens meet it now, at 0.9 to 2.0 seconds.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Keep the bar</span><span>Nothing new to build. The work goes into holding 2 seconds as the product grows.</span></li>
-        <li><span class="k">B · Keep 2 seconds to open a screen, but 1 second to move between screens and for simple lookups</span><span>Rides work already planned, with a stricter target for moving around inside the app.</span></li>
-        <li><span class="k">C · 1 second for everything</span><span>A redesign: each trip to the data store costs about 0.11 seconds, and many screens make several.</span></li>
-      </ul>
-    </article>
-
-    <article class="q" id="P2">
-      <div class="meta"><span class="k">P2</span><span>PLATFORM · record placement</span><span>asked 27 Oct</span></div>
-      <h3>What does the region picker promise?</h3>
-      <p>You said "a team with a legal requirement can pick a region". Cloudflare offers two different things. A <em>location hint</em> puts the data store near a place for speed, but guarantees nothing about where data is kept. A separate <em>jurisdiction</em> setting does guarantee it, for a few regions such as the EU. Only the second can meet a legal requirement. (The lane will re-check Cloudflare's current pages before this is built.)</p>
-      <ul class="opts">
-        <li><span class="k">A · Offer only "near me"</span><span>Speed only, no guarantee.</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">B · Offer both "near me" and "keep my data in this region", worded honestly about the difference</span><span>Matches your words. It costs more to build, since the guarantee needs a different Cloudflare setup.</span></li>
-        <li><span class="k">C · No picker; use the founder's region without asking</span><span>Simplest, but a team with a legal need can't meet it.</span></li>
-      </ul>
-    </article>
-
-    <article class="q" id="P3">
-      <div class="meta"><span class="k">P3</span><span>PLATFORM · record placement</span><span>asked 27 Oct</span></div>
-      <h3>Can a team change its region after it installs?</h3>
-      <p>A data store can't be moved once it is created.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Not at Level 1</span><span>A team that must move makes a new copy by export and import.</span></li>
-        <li><span class="k">B · Only when the team moves up to Level 2</span><span>Level 2 builds new data stores anyway, so the team can choose a region then.</span></li>
-      </ul>
-    </article>
-
-    <article class="q" id="P4">
-      <div class="meta"><span class="k">P4</span><span>PLATFORM · service levels</span><span>asked 27 Oct</span></div>
-      <h3>Which service levels do teams see?</h3>
-      <p>Only Level 1 exists and can be measured. Levels 2 and 3 depend on a study of how a record is split across data stores.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Show Level 1's measured figures; name Levels 2 and 3 as "when your record outgrows this", with no figures</span><span>Follows your rule that no figure is shown before it is measured.</span></li>
-        <li><span class="k">B · Show all three levels, with Level 2 and 3 figures marked as planned</span><span>Gives teams a fuller picture, but with numbers nobody has measured.</span></li>
-      </ul>
-    </article>
-
-    <p class="note">Coming soon from other lanes: the CAPABILITIES lane is preparing the open points on public registers (N1259), the reading "stretch goal" (N1269) and N1272. Each will appear here with its options when the lane has written it up.</p>
+    <div class="group" data-part="QUESTIONS-open-platform.html"><p class="empty">Loading…</p></div>
+    <div class="group" data-part="QUESTIONS-open-ai.html"><p class="empty">Loading…</p></div>
+    <div class="group" data-part="QUESTIONS-open-capabilities.html"><p class="empty">Loading…</p></div>
+    <div class="group" data-part="QUESTIONS-open-planning.html"><p class="empty">Loading…</p></div>
   </section>
 
   <section class="group" id="answered">
     <h2>Answered</h2>
-    <div class="answered">
-      <details>
-        <summary><span class="k">F3 · Outlook archives and Access databases: held until a real file turns up</span><span class="when">27 Oct · K5437</span></summary>
-        <div class="body"><blockquote>"as recommened"</blockquote><p>MBOX mailboxes are read in the beta. Outlook archives, Access databases and the other costly types are kept whole and named until a sample of real files or a team shows they turn up; each is then added by its own small ruling.</p></div>
-      </details>
-      <details>
-        <summary><span class="k">F2 · A file Civicsmith can't read yet: B2</span><span class="when">27 Oct · K5436</span></summary>
-        <div class="body"><blockquote>"as recommened"</blockquote><p>Such a file is kept whole, named plainly ("a Visio drawing; not read yet"), findable by its name and details, and read once a reader for it exists. RAR archives and programs stay refused.</p></div>
-      </details>
-      <details>
-        <summary><span class="k">F1 · How many file types the beta reads: A2</span><span class="when">27 Oct · K5435</span></summary>
-        <div class="body"><blockquote>"As recommended"</blockquote><p>The beta reads every type you ruled, plus about 15 cheap related types: calendar invites, contact cards, MBOX mailboxes, saved web pages, vector images, map files, macro Office files (macros never run), caption files and data exports.</p></div>
-      </details>
-      <details>
-        <summary><span class="k">Search engines and civicsmith.org</span><span class="when">27 Oct · K5424</span></summary>
-        <div class="body"><blockquote>"Search engines will eventually list civicsmith.org - but not until the 1.0 release is deployed."</blockquote><p>The site stays hidden from search engines, as it is today, until 1.0 is deployed. 1.0's plan includes the change that lists it.</p></div>
-      </details>
-      <details>
-        <summary><span class="k">Text file size limit: 100 MB</span><span class="when">22 Oct · K4628 (N1267)</span></summary>
-        <div class="body"><p>You had already agreed 100 MB for documents and text (N1267). A fix round used 50 MB as a working number. That number was BOB's, not yours, so your 100 MB stands (K5427).</p></div>
-      </details>
-      <details>
-        <summary><span class="k">A1–A8 · the alpha's live walks</span><span class="when">27 Oct · DEC-457 to DEC-464 (UX design stream)</span></summary>
-        <div class="body">
-          <p>Answered in the UX design stream and recorded there. Each is now a requirement for the beta's lanes:</p>
-          <ul class="plain">
-            <li><span class="k">A1</span> "as recommended": a question can name its subject when it is opened, and a member may change it later, with the reason kept.</li>
-            <li><span class="k">A2</span> "as recommended": a government's fiscal year comes from the place's records or a member's statement. Money never prints "*".</li>
-            <li><span class="k">A3</span> "as recommended": a handed-in file's source link is shown to listed members only.</li>
-            <li><span class="k">A4</span> "B, but only drop metadata is necessary": a safe picture is redrawn from a photo, dropping only the metadata safety requires.</li>
-            <li><span class="k">A5</span> "as recommended": the two Capture measures are named separately. Signing lists every ungraded passage.</li>
-            <li><span class="k">A6</span> "as recommended": one queue item per member for new signing keys.</li>
-            <li><span class="k">A7</span> "as recommended": pickers show this project's documents first.</li>
-            <li><span class="k">A8</span> "B, with the proper grade assigned…": a typed page can be cited at once, marked "not yet checked". A second member's check raises its grade by one step.</li>
-          </ul>
-        </div>
-      </details>
+    <div class="answered" data-part="QUESTIONS-answered.html"><p class="empty">Loading the answered questions…</p></div>
     </div>
   </section>
 </main>
+<script>
+(function(){
+  var boxes=[].slice.call(document.querySelectorAll('[data-part]'));
+  Promise.all(boxes.map(function(box){
+    return fetch(box.getAttribute('data-part')).then(function(r){if(!r.ok)throw new Error(r.status);return r.text();})
+      .then(function(t){box.innerHTML=t;})
+      .catch(function(){box.innerHTML='<p class="empty">This part could not be loaded. Reload the page to try again.</p>';});
+  })).then(function(){
+    var open=document.querySelectorAll('#open article.q').length;
+    var done=document.querySelectorAll('#answered details').length;
+    var c=document.getElementById('counts');
+    if(c) c.innerHTML='<span class="count">'+open+' open</span> <span class="count done">'+done+' answered</span>';
+    if(location.hash){var el=document.getElementById(location.hash.slice(1)); if(el) el.scrollIntoView();}
+  });
+})();
+</script>
+

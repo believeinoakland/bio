@@ -1,0 +1,192 @@
+<!-- Open questions for Bob from capabilities (K5426), shown on QUESTIONS.html; kept as its own file for the 51,200-byte cap. -->
+
+    <span class="eyebrow">Reading versus interpreting big documents · from the CAPABILITIES lane</span>
+    <p class="lede">Settled already: every document a member adds is kept whole and read whole, so every line can be searched and cited (K4571). <em>Interpreting</em> is a separate, selective act: turning parts of a document into structured facts, such as a sheet's figures, names or dates. You said deciding what to interpret "is itself an investigation of a different kind" (K4632). Today, a sheet's cells are interpreted only for the range a member opens or cites.</p>
+    <article class="q" id="C2">
+      <div class="meta"><span class="k">C2</span><span>CAPABILITIES · N1272</span><span>asked 27 Oct · rewritten 27 Oct for more context</span></div>
+      <h3>How do members know which parts of a document were interpreted, and for which investigation?</h3>
+      <p><span class="k">Background.</span> In C1 you decided that Civicsmith interprets only selected parts of a document (what a member opens or cites, parts a member marks, and later Civicsmith's own proposals). Every word of every document is still read and searchable. Interpreting is the extra step that turns a part into facts the record can use: amounts, names, dates, a sheet's figures. So a document can be fully searchable while only pages 3–9 have been turned into facts, and only for one investigation.</p>
+      <p><span class="k">The risk.</span> A member could assume that a document "in the record" has been fully worked through, when only a few pages were interpreted, and for a different investigation. You ruled that nothing is ever done silently (K4571), so the product has to say plainly what was and wasn't interpreted.</p>
+      <p class="note">Example: the Sewer fund investigation interprets pages 3–9 of a 400-page city budget. Months later, a Pothole repairs investigation opens the same budget. Its member needs to see that the budget is fully searchable, that pages 3–9 were turned into facts for the Sewer fund (by whom, and when), and that nothing has been interpreted for Pothole repairs yet.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · A plain line on the document's page and in search results, with an offer to interpret more</span><span>The line reads: "Read in full and searchable. Interpreted for Sewer fund: pages 3 to 9 (Rosa, 12 March). Not yet interpreted for Pothole repairs." Next to it is a button: "Interpret parts of this for Pothole repairs". Search results show a small "not interpreted for this investigation" mark.</span></li>
+        <li><span class="k">B · A, plus a list on each investigation's page</span><span>The list shows documents that matched the investigation's searches but haven't been interpreted for it, so a member can work through them. More helpful, but more on the screen. It could be added later if members ask for it.</span></li>
+      </ul>
+    </article>
+
+    <article class="q" id="C21">
+      <div class="meta"><span class="k">C21</span><span>CAPABILITIES · N1272</span><span>asked 27 Oct</span></div>
+      <h3>Are the names Civicsmith finds while reading a document "interpretation"?</h3>
+      <p>When Civicsmith reads a document today, it already picks out names, organisations and dates across the whole thing, so search can find "every document mentioning Rosa Diaz". Only spreadsheet cells are interpreted selectively. Your C1 answer says interpretation happens only for parts a member opens, cites or marks, and never for "everything up to a size".</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · No. Finding names to make a document searchable is part of reading; interpretation means turning a part into facts the record relies on (a figure, a connection, a dated event)</span><span>Search keeps working across whole documents. Nothing becomes a fact of the investigation until a member opens, cites or marks it.</span></li>
+        <li><span class="k">B · Yes. Names are found only in parts that are interpreted</span><span>Stricter. Search by name would then find only parts already interpreted, and would miss the rest of a document.</span></li>
+      </ul>
+    </article>
+
+    <span class="eyebrow">Places in layers · from the CAPABILITIES lane</span>
+    <p class="lede">You decided (DEC-404) that Civicsmith ships four read-only layers of places and rules (federal, state, county, city). Teams report errors but don't edit a layer, and a team's own research sits beside a layer and serves only that team. Three points remain.</p>
+    <article class="q" id="C7">
+      <div class="meta"><span class="k">C7</span><span>CAPABILITIES · N1257</span><span>asked 27 Oct · rewritten after your comment (K5452)</span></div>
+      <h3>What about a team whose work is focused outside the United States?</h3>
+      <p><span class="k">Already settled by your comment (K5452).</span> A team's layers follow where its <em>work</em> is focused, not where the team is located, so a team in Toronto investigating Oakland gets Oakland's layers. A team's footprint can also be any mix of levels: state-wide, a region, several counties or one city.</p>
+      <p><span class="k">What's left.</span> Civicsmith's four levels (federal, state, county, city) and its federal layer are the United States'. A team whose work is about a place in another country has no shipped layer to choose. Today it gets nothing filled in (DEC-150).</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Say so when the team chooses its places</span><span>Civicsmith holds United States places only. A team whose work is elsewhere names its places and adds their offices and rules itself, as its own research (as today). The level names stay as they are.</span></li>
+        <li><span class="k">B · Rename the levels in general terms (nation, region, county, city), and let a team add a national layer of its own</span><span>Prepares for teams abroad, but it's a bigger change to the words and to your decision DEC-404.</span></li>
+      </ul>
+    </article>
+
+
+
+    <span class="eyebrow">Public registers · from the CAPABILITIES lane</span>
+    <p class="lede">Public registers (N1259) let a team bring in public lists, such as company officers or campaign donors, and match them against its investigation.</p>
+    <article class="q" id="C8">
+      <div class="meta"><span class="k">C8</span><span>CAPABILITIES · N1259</span><span>asked 27 Oct</span></div>
+      <h3>Company officers: where does the data come from, and who pays?</h3>
+      <p>California sells a bulk file of company officers through an online account, and offers an API that needs a sign-up. OpenCorporates costs from about £2,250 a year, is free only for journalists and non-profits at its discretion, and forbids automated collection.</p>
+      <p>Your rule: a paid or account-gated source is used only when a member does it with their own account, with the price shown first, and never in the background.</p>
+      <ul class="opts">
+        <li><span class="k">A · A member orders the state file and brings it in</span></li>
+        <li><span class="k">B · A team connects the state API with its own key, if sign-up is free; read only when a member asks</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">C · Both: B where the sign-up is free, and A for the bulk file</span><span>Civicsmith never uses OpenCorporates.</span></li>
+        <li><span class="k">D · Leave it to the general "register not on the list" route</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C9">
+      <div class="meta"><span class="k">C9</span><span>CAPABILITIES · N1259</span><span>asked 27 Oct</span></div>
+      <h3>In a donor list, what counts as a home address and is removed?</h3>
+      <p>Federal campaign files give donors' ZIP codes to 9 digits, which can point to a single block.</p>
+      <ul class="opts">
+        <li><span class="k">A · Remove street lines only</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">B · Also cut ZIP codes to 5 digits and drop map coordinates; keep the city</span><span>The cost: two donors in one household can't be told apart.</span></li>
+        <li><span class="k">C · Also drop the city</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C10">
+      <div class="meta"><span class="k">C10</span><span>CAPABILITIES · N1259</span><span>asked 27 Oct</span></div>
+      <h3>Does the donor protection cover California and Oakland donors too?</h3>
+      <p>You ruled on the federal rule (11 CFR 104.15), which limits using donor lists for other purposes. Whether California has the same rule isn't confirmed.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Federal guard only for now; the California question goes on the list for a lawyer, with the federal one</span></li>
+        <li><span class="k">B · The same guard on every donor register now</span><span>Safer, but possibly stricter than the law.</span></li>
+        <li><span class="k">C · A notice only on state and local registers</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C11">
+      <div class="meta"><span class="k">C11</span><span>CAPABILITIES · N1259</span><span>asked 27 Oct</span></div>
+      <h3>A published case that cites a campaign filing: does each person named need a recorded reason?</h3>
+      <p>Today every person named in a published case needs one of six recorded reasons. None of them is "named in the public filing the case cites".</p>
+      <ul class="opts">
+        <li><span class="k">A · Keep the six reasons</span><span>Heavy: a member records a reason for every donor named.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">B · Add a seventh reason, which the cited row itself proves</span><span>Still recorded and checked.</span></li>
+        <li><span class="k">C · No reason needed for names from a cited public filing</span></li>
+      </ul>
+    </article>
+
+    <span class="eyebrow">Email capture · from the CAPABILITIES lane</span>
+    <p class="lede">Email capture (N824) lets a member forward an email, such as a city's reply to a records request, straight into Civicsmith.</p>
+    <article class="q" id="C12">
+      <div class="meta"><span class="k">C12</span><span>CAPABILITIES · N824</span><span>asked 27 Oct</span></div>
+      <h3>Where does the forwarding address live?</h3>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · On the team's own domain, with uploading a saved email always available beside it</span><span>About $10–15 a year, plus Cloudflare's free email routing. Not yet tested.</span></li>
+        <li><span class="k">B · On a domain Civicsmith runs</span></li>
+        <li><span class="k">C · No address; a member uploads a saved email file</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C13">
+      <div class="meta"><span class="k">C13</span><span>CAPABILITIES · N824</span><span>asked 27 Oct</span></div>
+      <h3>Who may send to it?</h3>
+      <p>Civicsmith holds no member's email address, so it can't tell who forwarded a message.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Each member gets a private address of their own</span><span>The address itself says who sent it.</span></li>
+        <li><span class="k">B · One address for the whole team</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C14">
+      <div class="meta"><span class="k">C14</span><span>CAPABILITIES · N824</span><span>asked 27 Oct</span></div>
+      <h3>When does forwarded mail enter the record?</h3>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · It waits in the member's private list until they add a statement of where it came from, as an upload requires</span></li>
+        <li><span class="k">B · It enters at once, marked as not yet described</span></li>
+      </ul>
+    </article>
+
+    <span class="eyebrow">The public list of groups · from the CAPABILITIES lane</span>
+    <article class="q" id="C15">
+      <div class="meta"><span class="k">C15</span><span>CAPABILITIES · N1110</span><span>asked 27 Oct</span></div>
+      <h3>Which directory of groups do you mean, and what is built for it?</h3>
+      <p>You approved the rule for declining or removing a listing (DEC-270). There are two possible directories: the hand-kept list on civicsmith.org, and believeincities.org, which is yours.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · The hand-kept list on civicsmith.org; build the record of a declined listing and a group's application now, and a listing desk later</span></li>
+        <li><span class="k">B · believeincities.org</span></li>
+      </ul>
+    </article>
+
+    <span class="eyebrow">Templates and procedure guides · from the CAPABILITIES lane</span>
+    <p class="lede">A <em>template</em> is wording a team may send in its own name, such as a records request. A <em>procedure guide</em> tells a member how a kind of request goes here: the routes in the order the law gives, and what to expect. Templates already need a named writer, public sources, and a professional's review.</p>
+    <article class="q" id="C16">
+      <div class="meta"><span class="k">C16</span><span>CAPABILITIES · N858</span><span>asked 27 Oct</span></div>
+      <h3>Do procedure guides need the same three things as templates?</h3>
+      <p>A wrong route in a guide could cost a team a deadline.</p>
+      <ul class="opts">
+        <li><span class="k">A · Sources only, plus the "legal information, not legal advice" label</span><span>As built today.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">B · The same as templates: a named writer, sources, a professional's review, and an approver other than the writer</span><span>The beta has one kind (C17), so the added cost is one more review.</span></li>
+        <li><span class="k">C · B for higher-stakes kinds only; lower-stakes guides need a writer, sources and an approver</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C17">
+      <div class="meta"><span class="k">C17</span><span>CAPABILITIES · N858</span><span>asked 27 Oct</span></div>
+      <h3>Which kinds of action get texts in the beta?</h3>
+      <p>Oakland's lower-stakes kinds: the records request, a complaint to the civil grand jury, a referral to the State Controller, public comment, and media outreach. Court petitions never get a template.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · The records request only</span><span>The journey is built around it, and each added kind needs a writer and a reviewer.</span></li>
+        <li><span class="k">B · A, plus the other lower-stakes kinds</span></li>
+        <li><span class="k">C · Everything except court petitions</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C18">
+      <div class="meta"><span class="k">C18</span><span>CAPABILITIES · N858</span><span>asked 27 Oct</span></div>
+      <h3>Who is the professional reviewer, and who pays?</h3>
+      <p>For a records request, the reviewer would be a lawyer who works on public-records law. They review the exact final text and its sources; any later change needs a new review. Civicsmith records the reviewer's name, organisation and stated credential, and every member who opens the text sees "reviewed by [name], [organisation], [date]".</p>
+      <p>Yours to decide: who, whether paid or a gift (and by whom, perhaps Believe in Oakland), and whether they must be independent of the groups that use the text.</p>
+      <ul class="opts">
+        <li><span class="k">A · A named volunteer open-government lawyer</span></li>
+        <li><span class="k">B · A paid review by a firm</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A or B · Whichever you find; Civicsmith accepts either, because it only records what the reviewer states</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C19">
+      <div class="meta"><span class="k">C19</span><span>CAPABILITIES · N858</span><span>asked 27 Oct</span></div>
+      <h3>Who writes the texts, and what about machine help?</h3>
+      <p>Civicsmith already refuses a machine as the writer or reviewer of a template.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · A named person, shown to members; not a member of any listed group; machine-suggested wording declared in the text's notes</span></li>
+        <li><span class="k">B · "Believe in Oakland staff" shown, with the named person recorded but not shown</span></li>
+      </ul>
+    </article>
+    <article class="q" id="C20">
+      <div class="meta"><span class="k">C20</span><span>CAPABILITIES · N858</span><span>asked 27 Oct</span></div>
+      <h3>How is a text kept true as laws change?</h3>
+      <p>A reviewed text is true on its review date. Who owns the re-reviews is yours to name.</p>
+      <ul class="opts">
+        <li><span class="k">A · Re-review at every release that touches its kind</span></li>
+        <li><span class="k">B · Re-review when one of its source pages changes</span><span>The link check flags it.</span></li>
+        <li><span class="k">C · A yearly re-review</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A and B · Until someone is named to own this, a text over 12 months old shows its review date and a "last checked" line</span></li>
+      </ul>
+    </article>
+
+    <span class="eyebrow">Files and photos · from the FILES lane</span>
+    <article class="q" id="F4">
+      <div class="meta"><span class="k">F4</span><span>FILES</span><span>asked 27 Oct</span></div>
+      <h3>When a case is published, does a photo in it show where the photo was taken?</h3>
+      <p><span class="k">Why this matters.</span> Most phone photos carry the place they were taken, often to within a few feet. You ruled (DEC-460) that Civicsmith keeps that data beside the photo's safe copy, and the member sees it in their own record. A published edition is public. Showing the place there can reveal a member's home, a source, or where a witness was standing.</p>
+      <p class="note">Example: Ana photographs a leaking gas line from her front porch and adds it to a case. If the case is published with the photo's place showing, anyone reading it can work out where she lives.</p>
+      <ul class="opts">
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · The author chooses, per photo; off unless they turn it on</span><span>Nothing private leaks by accident; when the place is the point (the leak is at this corner), the author shows it.</span></li>
+        <li><span class="k">B · Always shown</span><span>Simplest, and the most evidence, but it leaks places nobody meant to publish.</span></li>
+        <li><span class="k">C · Never shown in a published edition</span><span>Safest, but an author can't show a place when it matters.</span></li>
+      </ul>
+    </article>

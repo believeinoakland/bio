@@ -10,3 +10,17 @@
 - K2425 · "D42 - email: A", after upload is in use (N824) · `build/plan/next.md`
 - K4635 · "You were suggestion A now and perhaps B for the beta. I agree with that." (N1271, the record split) · `build/plan/next.md`
 - K4747 · "The region picker for teams with legal requirements still comes after the alpha." (N1273) · `build/plan/next.md`
+- K5436 · 2026-10-27 · on QUESTIONS.html F2, of option B2: "as recommened" (a file of a type not yet read is kept whole, safe-graded and named, never refused for its type alone; RAR, programs, installers and disk images still refused) · `build/rulings.md`
+- K5435 · 2026-10-27 · on QUESTIONS.html F1, of option A2: "As recommended" (FILES's Tier 2 types read in the beta) · `build/rulings.md`
+- K5437 · 2026-10-27 · on QUESTIONS.html F3: "as recommened" (MBOX read; Tier 3 held and named until a real file is shown) · `build/rulings.md`
+- DEC-457 to DEC-464 · 2026-10-27 · A1-A8: "as recommended" (A1, A2, A3, A5, A6, A7); A4 "B, but only drop metadata is necessary"; A8 "B, with the proper grade assigned. Having a review further attest to a reading is better than not, but still only incrementally better." · `docs/development/DECISIONS.md`
+- K5438 · 2026-10-27 · on P1: "keep the current bar, but also recognize that different sized teams will require different levels of capabilities (Team, Institution, Enterprise)..." · `build/rulings.md`
+- K5440 · 2026-10-27 · on P2, option B: "as recommended" (the region picker's "near me" and "keep my data in this region") · `build/rulings.md`
+- K5441 · 2026-10-27 · on P3, option A: "a recommended" (a Level 1 region fixed once the store exists) · `build/rulings.md`
+- K5444 · 2026-10-27 · on P4: "Shouldn't, for example, a newsroom be able to start a CS copy at the institution level ... If a study of how to support levels 2 and 3 is needed, then let's start that study." · `build/rulings.md`
+- K5445 · 2026-10-27 · on C1: "as recommended, with the understanding that C is the objective - even if we aren't able to support that until after the beta." · `build/rulings.md`
+- K5446, K5447 · 2026-10-27 · on C3 and C4, option A: "as recommended" · `build/rulings.md`
+- K5450 · 2026-10-27 · on QUESTIONS.html C5, option A (N1257): "Perhaps there should be an "information" tag ('i' in circle) next to each entry or the page overall which shows how current the information is." · `build/rulings.md`
+- K5451 · 2026-10-27 · on QUESTIONS.html C6, option A (N1257): "as recommended" (a shipped layer never changed by a team; a team's marked correction of a calendar fact stands; laws and deadlines only reported) · `build/rulings.md`
+- K5452 · 2026-10-27 · on QUESTIONS.html C7 (N1257): "A team might be located outside the US even if their work is focused on some US jurisdiction. It's lso worth noting that a team's work might be state-wide or some other footprint not specific to a city or county." · `build/rulings.md`
+- K5454 · 2026-10-27 · on QUESTIONS.html P5, option A: "as recommended - we'll need to work with a CS team interested in setting up an enterprise scale copy before we can provide that support." (Enterprise listed at install as not yet available; Team and Institution built and measured in the beta) · `build/rulings.md`
