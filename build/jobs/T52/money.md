@@ -1,6 +1,6 @@
 # money (T52)
 
-**Status** · session_018Bhcef9ixS7sA7mnPM5bZx · depth 2 · COMPLETE
+**Status** · session_018Bhcef9ixS7sA7mnPM5bZx · depth 2 · WAITING: BOB's users' suites run (proc tests --users) in progress; record stays COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
