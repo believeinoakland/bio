@@ -8,12 +8,12 @@
 
 Drafts: N1260 a/b (following the trail); N1257 six files (places in layers, federal offices, A2 fiscal year); N1259 a-f/b2 (registers, alerts, publication; docket poll final K5513); N824 email capture + container-member job + `-changes`; N1110; N1265; N858 (templates and guides; ids jurisdictions R136-R138, reading-guides R19-R20); N1269-N1272 (interpretation; aligned with DEC-476, UX needs sent as B562-B564); LOAD-TABLE for PLATFORM.
 
-**Hands off to PLANNING (K5527, K5529):** R137's hash in case-disclosures R40; N1257 R125/R126 matching edit (no room in that file); R138 field names verified in code; acquisition R36 amended (daily check of a followed case, CourtListener only, else NOT_PERMITTED); network-notices R23; sibling id collisions (content R63-R64, citation R26, queue R97, screens-settings R82) renumbered at fold.
+**Hands off to PLANNING (K5527, K5529):** R137's reviewed-text hash goes in jurisdictions R40 plus a filings R29 sentence (K5528 T8, not case-disclosures); N1257 R125/R126 matching edit (no room in that file); R138 field names verified in code; acquisition R36 amended (daily check of a followed case, CourtListener only, else NOT_PERMITTED); network-notices R23; sibling id collisions (content R63-R64, citation R26, queue R97, screens-settings R82) renumbered at fold.
 
 **Next steps:**
 1. On L18's answer: record it in DECISIONS.md; keep or drop a2 R135 (worker); no other draft waits.
 2. Answer PLANNING/BOB questions about the drafts; apply new K rulings by worker; keep files under 45,000 bytes; run `proc sizes` before each commit.
-3. If BOB has nothing more, the scope is done: tell BOB it is READY and finish.
+3. BOB accepted the lane as READY (C29). Stopped; BOB will message when Bob answers L18, then remove a2 R135's bracket.
 4. Lessons: workers read no code in first drafts; code-review workers find real defects; new files for additions; BOB numbers lines at writing.
 
 ## Entries
