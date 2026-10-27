@@ -47,3 +47,5 @@
 **P-9 · 2026-10-27** · `study/s1-steps.md`: the S1 seeding and run steps for `plat-s1` (BOB: tranche/T53 14b73ea14e, deploy-test workflow, Level 1, dry run first). Needs from BOB: a team on the copy (administrator and member by `PLATS1_*` variables) and, later, one redeploy from `proto/levels-2-3` for the throwaway measuring ops.
 
 **P-10 · 2026-10-27** · P5 answered (K5454): no Enterprise account now; S3 quotes Cloudflare, Enterprise "not yet available" at install. Waiting on BOB for `plat-s1`'s URL and team (S1 steps 1a-1c).
+
+**P-11 · 2026-10-27** · K5455: `study/second-copy-options.md` (worker, file:line cited): why deploy-test of a new copy is unsafe (shared fleet; plane cannot be created by `deploy.mjs`) and options A (plane alone), B (per-copy fleet names), C (installer install-alongside, per-slug names; Bob's act). Recommended to BOB: C for S1a-c, 1e, 1f, then a plane-only redeploy from `proto/levels-2-3` whose workflow and scripts are patched in that branch only, so 1d's measuring ops deploy without touching shared members.
