@@ -36,7 +36,8 @@ export function readEntities(ctx, ids, viewer) {
 
 /**
  * The names R29 adds for the graph's nodes, as a map to `{label, kind: null}` like `readEntities`': an `EVT-` node's kind
- * and date as `events.readEvent` answers them for the viewer ("{kind} · {date}", "{kind} · undated" when it holds none),
+ * in the Timeline's words (`screen.timeline.kind`) and its date as `events.readEvent` answers them for the viewer
+ * ("{kind} · {date}", the kind alone when it holds none),
  * an `INFO-` node's document title as the `documents` reader's `titlesOf` answers it (reads of at most 500 ids). An end the
  * owner does not answer, or answers with its own id, is absent; no reader leaves every such node unnamed.
  * @param {{events?: any, documents?: any}} ctx @param {Iterable<string>} ids @param {any} viewer
@@ -52,7 +53,8 @@ export function readNodeNames(ctx, ids, viewer) {
       const e = got && got.ok && got.found ? got.event : null;
       if (!isObj(e) || typeof e.kind !== 'string' || e.kind === '') continue;
       const date = isObj(e.when) && typeof e.when.value === 'string' && e.when.value !== '' ? e.when.value : null;
-      known.set(id, { label: date === null ? localize('explore.label.event_undated', '{kind} · undated', { kind: e.kind }) : localize('explore.label.event', '{kind} · {date}', { kind: e.kind, date }), kind: null });
+      const kind = localize('screen.timeline.kind', '{kind}', { kind: e.kind });
+      known.set(id, { label: date === null ? kind : localize('explore.label.event', '{kind} · {date}', { kind, date }), kind: null });
     }
   }
   const docs = typeof ctx.documents === 'function' ? ctx.documents() : ctx.documents;

@@ -25702,14 +25702,7 @@
       "en": "{kind} · {date}",
       "module": "explore",
       "file": "bio-plane/src/explore/labels.mjs",
-      "line": 55
-    },
-    {
-      "id": "explore.label.event_undated",
-      "en": "{kind} · undated",
-      "module": "explore",
-      "file": "bio-plane/src/explore/labels.mjs",
-      "line": 55
+      "line": 57
     },
     {
       "id": "explore.ops.a_preset_is_one_of",
