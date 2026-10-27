@@ -1,6 +1,6 @@
 # entities (T52)
 
-**Status** · session_018BhcecQhnVK36CsiRUDvsz · depth 2 · COMPLETE
+**Status** · session_018BhcecQhnVK36CsiRUDvsz · depth 2 · WAITING: COMPLETE sent to BOB; staying available
 **Sessions** · 1
 
 ## Completion (2026-10-27)
