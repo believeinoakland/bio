@@ -159,3 +159,7 @@ BOB #324 relayed PLATFORM's split: at once, the S1 Level 1 baseline and soak, pe
 ## L51 · 2026-10-27 · DEC-485
 
 UX-DESIGN's U518 (DEC-485) draws every Members word owed for K5562, K5563, K5568 and L48; cited in the screens-settings entry and the lines file; Before R1 (10) merges U512-U518 together.
+
+## L52 · 2026-10-27 · PLATFORM P-22: the Add door; the bar
+
+BOB relayed PLATFORM P-22. Settled from the code: the upload goes Worker, store-door (`STREAMED_BODY_OPS`, dispatch.mjs:373), store-assembly's owner ops (owner-ops.mjs:97), `capture.uploadCapture`: capture owns acceptance, first settling whether the wait is the room's reading slices or the door's queue. New detail file `plan-T53-platform-rows.md`: that defect; `heldcaptures` out of the first wave as a picker (op-declarations and the four screens) and kept counts for Home (queue, capture, case-authoring), both from PLATFORM's READY `time-budgets-draft.md` §3 and not yet entries; each, and the fold's entries, citing P-22's administrator figures (Home 3.5, Queue 3.5, Add 2.8, Project 4.8 s net at 503 documents) as the before bar.

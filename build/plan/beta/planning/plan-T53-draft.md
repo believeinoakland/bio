@@ -208,7 +208,7 @@
 - C T52-42 · T53 · K4599 · screens declare reads by wave; `screenread` (PL10, PL11); every op and screen a budget class (PL3, PL4) · `platform/combined-read-and-fold-draft.md` §3, `time-budgets-draft.md` §4
 
 **admission**
-- C T52-43 · T53 · N1264 · `admit` callable in the room, parity of every refusal, counting unchanged (PL12, PL13) · `platform/combined-read-and-fold-draft.md` §3
+- C T52-43 · T53 · N1264 · `admit` callable in the room, parity of every refusal, counting unchanged (PL12, PL13) · `platform/combined-read-and-fold-draft.md` §3; bar P-22 (`planning/plan-T53-platform-rows.md`)
 
 **store-door**
 - C T52-44, T52-45 · T53 · one RPC admits, stamps and runs; `screenread` inside it; slow reads cut (PL14, PL15) · `platform/combined-read-and-fold-draft.md` §3
@@ -295,6 +295,8 @@
 - DEC-477 · words only, nothing new for jobs (its dropped `screen.capture.refused.type.rar`, `.program` read by no code); DEC-478 · the Interpreted row's grouping and `part.*` names (screens-document, CAPABILITIES' N1272 lines above); `text.sourcechanged` (K5512) not drawn until the reviewed text's screen is
 
 **DEC-479 to DEC-483** · doorbell `inboxview`, the unsure-word count, `readheld`'s weight, the subject's history and public line, the email names' marks, the Inbox, the ceremony's emails: `planning/plan-T53-design-rows.md`
+
+**PLATFORM's plat-s1 findings** (P-22) · the Add door under three uploaders (capture), `heldcaptures` out of the first wave, kept counts for Home; P-22's 2.8-4.8 s the bar for these and the fold · `planning/plan-T53-platform-rows.md`
 
 **English in tests** (K5565) · every module with sites carries one conversion entry for its own, done in this tranche; 58 modules gain a job by it alone · `planning/plan-T53-tests-english.md`
 
