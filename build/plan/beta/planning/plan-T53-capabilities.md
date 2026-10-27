@@ -271,7 +271,7 @@
 - N824 P3 if not done before R1; the door's CPU at 25 MiB (it runs `mail-reader` before accepting).
 
 **Bob's acts**
-- N858: find the writer and reviewer per kind; approve each text with a K ruling; name who owns re-reviews; Bob's question on DEC-340's two `researched` facts (§2 item 9).
+- N858: find the writer and reviewer per kind; approve each text with a K ruling; name who owns re-reviews; DEC-340's two `researched` facts offered marked "researched, not reviewed" (K5538, C34).
 - N1110: steward address, `STEWARD_KEYS`, `SOURCE_KEY`, N1159's Email Routing test, the civicsmith.org domain (K3296), a site deploy per listing change (K1715).
 - N1159: the Email Routing domain (M1 P3).
 - M-N1272 (K5537): Bob marks the gold set blind, on files and pinned questions BOB prepares and gives him before the run.
@@ -338,4 +338,4 @@ Conflicts with PLANNING resolved as in §A (`/10`, acquisition R36); none with j
 - **N1272 R119**: answered, K5535 (C32): a ceiling per service level, shown when reached; PLATFORM sets the figure from measurements.
 - **M-N1272 gold-set reviewer**: answered, K5537 (C33 A): Bob marks the gold set blind; BOB prepares the files and pinned questions and gives them to him before the run.
 - **N1259-d R36 (case-disclosures R41)**: decided by BOB, K5531: a member's own written observation is the group's words, checked before signing and refused if it holds a home address or phone (DEC-408); refusing alters nothing, so R26 stands. Not Bob's.
-- **N858**: per-text writer, reviewer and any payment; the opt-out screen as an experience; whether DEC-340's two `researched` facts suffice; the K ruling for each text.
+- **N858**: per-text writer, reviewer and any payment; the opt-out screen as an experience; the K ruling for each text (Bob's acts when each is made, K5530). DEC-340's two `researched` facts: answered, K5538 (C34): offered marked "researched, not reviewed".

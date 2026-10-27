@@ -7,12 +7,12 @@
 **State.** PLANNING #3 at L23. Folded into `plan-T53-draft.md` by layer (42 KB): the seven A drafts (every L1-L12 answer applied); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (C29), its detail in `plan-T53-capabilities.md` (45 KB: §A entries by layer and module, §B new modules register-readers L1, registers L5, mail-door L3, §C acts and measurements, §D collisions applied, §E left-outs, §F BOB's points, §G Bob's points); JOURNEYS (`plan-T53-journeys.md`, only J1-J7 wait on Bob); PLANNING's own lines: `lines-K5501-role-change.md`, `lines-K5513-daily-follow.md` (aligned with N1259-c R41), `lines-K5527-texts-and-listing.md` (K5528). `CONSISTENCY.md` rows 1-20 decided.
 
 **Next steps, in order.**
-1. Bob: C34 (DEC-340's facts). CAPABILITIES' gaps closed by C31 (K5532); K5532's lines decided (K5533).
+1. (every C question answered, K5538.) CAPABILITIES' gaps closed by C31 (K5532); K5532's lines decided (K5533).
 2. Fold what is still not READY as BOB relays it: PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's fixtures findings list (K5425 (b)); DEC-474 to DEC-477 once merged.
 3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L14-L26, J1-J7, C34. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
+**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L14-L26, J1-J7. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -129,3 +129,7 @@ Bob answered L13 as recommended (K5536): the two A1 brackets on Q-A1-1 now read 
 ## L29 · 2026-10-27 · K5537
 
 Bob answered C33 A (K5537): he marks M-N1272's gold set blind himself; named as Bob's act in the plan's R2 line and `plan-T53-capabilities.md` §C.
+
+## L30 · 2026-10-27 · K5538
+
+Bob answered C34 as recommended (K5538): DEC-340's two researched facts are offered marked "researched, not reviewed"; noted in `plan-T53-capabilities.md`. Every C question is answered; open with Bob from this lane's scope: L14-L26 and J1-J7.

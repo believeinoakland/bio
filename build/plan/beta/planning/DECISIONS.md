@@ -58,3 +58,4 @@
 - K5535 · 2026-10-27 · on QUESTIONS.html C32, option A: "as recommended" (a ceiling on interpreted parts per service level, shown when reached) · `build/rulings.md`
 - K5536 · 2026-10-27 · on QUESTIONS.html L13, option A: "as recommended" (a subject change refused until the named connections are re-graded) · `build/rulings.md`
 - K5537 · 2026-10-27 · on QUESTIONS.html C33: "A" (Bob prepares the M-N1272 gold set himself, marking blind) · `build/rulings.md`
+- K5538 · 2026-10-27 · on QUESTIONS.html C34: "as recommended" (researched facts offered marked "researched, not reviewed") · `build/rulings.md`
