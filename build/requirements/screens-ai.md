@@ -38,7 +38,7 @@ Terms. The **cascade** is project, else member, else team. An **account** is `ai
 - `setup-words`: `word`, `hasWord`, the `WORD_ROWS` keys (R12).
 - `op-declarations`: the AI ops' specs, tests only (its AI-ops line).
 - `test-support`: fixtures.
-- Through the plane: `ai-accounts` (the accounts, order, checks, flags, `accountState`, `checksInForce`, the connect acts), `ai-catalogue` (`airesultsread`, the entries and plans), `ai-gate` (`aiconnecttest`, `aitestsetup`, `aitestrun`, `airesultsend`, `airesultsdecline`, `airesultown`), `ai-use` (limits, `aiusebymember`, `aihealthset`, `aihealthpreview`, `airetestset`), `ai-runs` (`aiwaitswitch`, `airunparts`, the run's choices), `instance-setup` (`assistantreadiness`). The names of the reads that these owners declare are BOB's at START.
+- Through the plane: `ai-accounts` (the accounts, order, checks, flags, `accountState`, `checksInForce`, the connect acts), `ai-catalogue` (`airesultsread`, the entries and plans), `ai-gate` (`aiconnecttest`, `aitestsetup`, `aitestrun`, `airesultsend`, `airesultsdecline`, `airesultown`), `ai-use` (limits, `aiusebymember`, `aihealthset`, `aihealthpreview`, `airetestset`), `ai-runs` (`aiwaitswitch`, `airunparts`, the run's choices), `instance-setup` (`assistantreadiness`). The names of the reads that these owners declare are named at START in `op-declarations` (K5571 (5)), the one place a read op is declared; this module uses them as named there.
 
 ### Invariants
 

@@ -8,7 +8,7 @@
 
 ### Purpose
 
-The subscription sign-in door: a member's own sign-in with her Claude subscription, relayed to `agent-worker`'s `POST /signin`, each request traced, the token held through `credentials` and never answered, logged or echoed, and the test instance's trace read.
+Retired whole (T53, K5571 (6); `draft-assistant-screens.md` §9). The subscription sign-in door (a member's own sign-in with her Claude subscription, relayed to `agent-worker`'s `POST /signin`) is replaced by the adapter's connect flow behind `agent-model` and the op `aisignin`, which `ai-accounts` owns and `op-declarations` R90 declares. This module provides nothing; its removal from `modules.json` and `layers.md` is BOB's act at the layer-11 START.
 
 ### Provides
 
@@ -23,14 +23,11 @@ The subscription sign-in door: a member's own sign-in with her Claude subscripti
 
 ### Uses
 
-- `agent-worker`: `POST /signin` through the `AGENT_WORKER` binding (its R66, R81, R84; R1, R3, R4).
-- `ai-accounts` (since T48; N996): `aiKeptAway`, `subscriptionConnected`, `disclosureDue`, `subscriptionTokenHold`, `accountReferenceState`, `subscriptionTokenRefused`, the member's revocation (its R2, R7, R18, R19, R23, R27; R1, R2, R4). A `modules.json` edge `signin-door → ai-accounts` once its code imports it (today it reaches them through `credentials`' delegates, `credentials` R72).
-- `admission`: the caller it admits (a member's own session; R1).
-- `answer-envelope`: the relay and refusal rows (R1, R2).
+- None. Every line is retired (K5571 (6)); the relay, its trace and the sign-in token hand-off left with the Claude sign-in route (`draft-assistant-screens.md` §9). The edges to `agent-worker`, `ai-accounts`, `admission` and `answer-envelope` go when BOB removes the module from `modules.json` at the layer-11 START.
 
 ### Invariants
 
-- None of its own beyond R1–R5: R1, R4 and R5 carry `control-plane` R30's rule that no code, token or secret is logged, stored, echoed or answered.
+- None. (The rule of `control-plane` R30 that no code, token or secret is logged, stored, echoed or answered binds the connect flow that replaces this module's lines, `ai-accounts` and `agent-model`.)
 
 ### Satisfies
 
@@ -38,4 +35,4 @@ The subscription sign-in door: a member's own sign-in with her Claude subscripti
 
 ### Suggestions
 
-- The split is copy then delete (K624): this module merges after `store-door` in L11; `control-plane`'s job (T47-65) deletes its copies after it.
+- None. The module is removed whole at the layer-11 START (BOB); `agent-worker`'s job removes `POST /signin`.
