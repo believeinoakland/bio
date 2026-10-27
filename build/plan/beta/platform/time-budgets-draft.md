@@ -52,7 +52,11 @@ Every registry screen (`docs/development/ux-substrate/`) and every op (`op-decla
 
 **screens (all)**: a new screen's UX needs arrive with its budget class (no design from this lane).
 
-## 5. For Bob (through BOB): the beta's bar
+## 5. The beta's bar: ANSWERED (K5438, Bob on P1, option A)
+
+Bob: "keep the current bar, but also recognize that different sized teams will require different levels of capabilities (Team, Institution, Enterprise)...". The bar stays as §2 states it, at every level; each level's range is the range within which it holds (`service-levels-draft.md` PL26-PL28). Options B and C below are kept for the record only; the classes in §2 stand as written (in-app moves and read acts keep their 2 s and 1 s as measured today; no tighter figure is adopted).
+
+The question as put:
 
 K4354 said "A for now, we may want to look at further reductions once the alpha-level workflow is done". The alpha's workflow is done; the beta can keep the bar or tighten it. This is policy, so it is Bob's.
 - **A. Keep K4354's figures** (2 s screen, 2 s act, 15 s capture). Lowest cost; the 8 measured screens already meet it, so the beta's work is holding it as the product grows and under load (§6 of `load-test-draft.md`). *Recommended.*

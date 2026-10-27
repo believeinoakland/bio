@@ -19,6 +19,10 @@ A level is defined by what a copy can do, each naming the design stage it needs 
 
 **How the 15-25 figure was made** (P17): the room serves about 30 calls a second at about 30 ms of work and 4,800 rows read each; a member at 2 screens a minute makes 20-40 calls a screen; queues lengthen well before full use. It is a model; the load test replaces it. **Not stated anywhere by Cloudflare** (P17): whether the Business SLA covers Workers and Durable Objects by name, and Enterprise prices; neither is published as a promise.
 
+**Names (K5438).** Bob now names the levels Team, Institution, Enterprise; K4746 named them Team, Organization, Coalition/institution. I read them as the same three, in order: Level 1 Team, Level 2 Institution (K4746's Organization), Level 3 Enterprise (K4746's Coalition/institution, on Cloudflare's Enterprise plan). BOB to confirm the reading; the words a team sees are UX-DESIGN's.
+
+**The bar holds at every level (K5438).** K4354's bar (2 s a screen, 2 s an action, 15 s a web capture) is kept at all three levels; a level's range (record size, members at once, load) is the range within which that bar holds. A copy whose workload passes its level's range is *told* it needs the next level, never left slower.
+
 ## 3. Requirement lines (draft)
 
 **runtime-limits** (layer 1)
@@ -33,13 +37,19 @@ A level is defined by what a copy can do, each naming the design stage it needs 
 - **PL24** A team moves from Level 1 to Level 2 by its own act (N1265): the copy runs an upgrade step on its own data that moves the record into the split design, with the Level 1 room kept whole as the rollback until the administrator confirms; a copy that cannot hold both (shelf, R2) refuses the step, naming what is short. Test: a seeded copy upgraded, read-equal before and after; a copy with no room refused.
 - **PL25** A team changing its Cloudflare plan without the split design changes its guarantees and upload size, not its level; `levelOf` stays 1. Test: a Level 1 copy declaring Business answers 1.
 
+**Outgrowing a level (K5438)** (screens-settings, with the plane's `stats`; the door already stamps every op's time)
+- **PL26** The plane keeps, per week, three measured indicators for the copy: the record's bytes against the level's record bound; the most members seen working in one 5-minute window against the level's rating; and the share of screens and acts whose p90 broke their class ceiling (`time-budgets-draft.md`). It keeps counts, never what a member did. Test: a fixture week of door stamps gives each indicator; an op's content is not in what is kept.
+- **PL27** A copy is **approaching** its level when any indicator has been above 70 % of the level's range (for the budget indicator: above 10 % of operations over) for 7 days, and **outgrowing** it at 90 % (or 25 %): the administrator is told, in plain words, what is measured, which level is next, and what moving up needs (PL24). It is never shown to a member. Test: each threshold crossing, the 7 days, the member who sees none.
+- **PL28** While Level 2 does not exist (until N1271 is built), a Level 1 copy that is outgrowing is told so truthfully: what it can do now (pare the record, K4635's second factor; a paring aid is a screen need) and that the next level is not yet offered. Test: the words key differs for "next level not yet offered".
+- *Screen need (to UX-DESIGN through BOB):* the Settings gauge gains the three indicators, the "approaching" and "outgrowing" states and the next-level line; the installer's level line (PL22) names the range.
+
 ## 4. What must be measured, and on what copy
 
 Per level, on a scratch copy at that design stage, never biosmoke8: record bound (writes fail at the shelf, the gauge's 70 % and 90 % hold), members-at-once at the budget (`time-budgets-draft.md`), upload size through the Worker and direct-to-R2, and the cost at the rated load (rows written is the first charge past the $5, P17: about $20 a month on the test copy's busiest day, sustained). Level 3 differs from Level 2 only by what Enterprise adds; those parts (5 GB uploads, region-held data) are measured on a copy whose owner holds the contract, so they are *stated, not measured*, until one does: the words say so (a figure from Cloudflare's published limit carries its source).
 
 ## 5. For Bob (through BOB)
 
-- **Whether to show a level's figures to a team before Level 2 and 3 exist.** Options: (a) show Level 1 only, and name Levels 2 and 3 as "when your record outgrows this" without figures; (b) show all three with the Level 2-3 figures marked as planned. *Recommend (a): K4746 forbids unmeasured figures, and Level 2's rest on a study not yet done.*
+- **(P4, open) Whether to show a level's figures to a team before Level 2 and 3 exist.** Options: (a) show Level 1 only, and name Levels 2 and 3 as "when your record outgrows this" without figures; (b) show all three with the Level 2-3 figures marked as planned. *Recommend (a): K4746 forbids unmeasured figures, and Level 2's rest on a study not yet done.*
 - **Whether a team is told its level at install** (N1273) or only in Settings. Recommend at install, as one line, since the founder chooses a plan then (N1265).
 
 ## 6. What I need from other lanes
