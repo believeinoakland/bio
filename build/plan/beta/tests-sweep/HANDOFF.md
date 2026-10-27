@@ -22,3 +22,7 @@ Read; baseline counts above. Finding: most of the 89 fixtures findings are stubs
 
 ### S2 · 2026-10-27 · census
 `census.mjs`, `classify.mjs`, `CENSUS.md`, `census-AB.json`, `rx-files.txt`. Assertion-position literals: A 31 (13 files, mechanical), B 135 (86 files, product source holds only English, so the module must give a key first: T53 job), C 782 (test data). Regex assertions: 653 files, unclassified. Finding: the sweep is mechanical only for class A and for regexes of words.json values; every test whose English lives only in product code needs its module's key first (rethink: "that module's job adds it").
+
+### S3 · 2026-10-27 · first conversion
+`newgroup/test/wizard.test.mjs` (module installer): 8 class A literals now read by key (`word`, plus a local `lead` for the text before a placeholder): 208/208 before and after; words check 0. Method: a literal maps to exactly one `words.json` key, the key's placeholders are filled with the test's own values, and the page is checked for the word's text as before (escaped with `h` only where the page escapes). Not yet done in class A: 5 literals with several matching keys (ai-use, escalation draft:94, leg-earning held:127, screens-action fix10, case-grammar complete, wizard-scripts t50 names) need the key the code reads: look at the product call, never guess. `walk-T51-final/scripts` is not a module test; skip.
+Touched modules so far: installer (`newgroup/test/wizard.test.mjs`). Full `proc tests` run owed before the merge.

@@ -222,6 +222,7 @@ const unescapeScripts = (s) => s.replace(/\\u00(3c|3e|26)/g, (_, h) => String.fr
 /* A key's sentence as a page draws it as text (the plain pages and the panels escape it), and the part of it before its `{said}`. */
 const h = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const headOf = (key, vars = {}) => word(key, { said: "\u0000", ...vars }).split("\u0000")[0];
+const lead = (key, vars = {}) => headOf(key, vars).replace(/[\s:]+$/, "");
 const callback = async (qs, cookie) => {
   const r = await req("/callback?" + qs, { headers: cookie ? { cookie } : {} });
   return new Response(unescapeScripts(await r.text()), { status: r.status, headers: r.headers });
@@ -311,7 +312,7 @@ console.log("\n--- callback refuses what it cannot verify ---");
   t("missing cookie stops the same way", body2.includes(h(word("installer.callback.unverified.title"))), true);
 
   const body3 = await (await callback("error=access_denied&error_description=User+refused", cookie)).text();
-  t("user refusal is reported as Cloudflare's decision", body3.includes("Permission was not granted"), true);
+  t("user refusal is reported as Cloudflare's decision", body3.includes(h(word("installer.callback.denied.title"))), true);
   t("still nothing upstream", calls.length, 0);
   globalThis.fetch = realFetch;
 }
@@ -739,7 +740,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
      update DELETES a working instance's binding. */
   t("keep_bindings does not inherit service bindings", meta.keep_bindings.includes("service"), false);
   t("the page says passwords and record are untouched", body.includes("exactly as they were"), true);
-  t("the update says which release it used and why", body.includes("Checked the release is Civicsmith's own, signed and unaltered"), true);
+  t("the update says which release it used and why", body.includes(lead("installer.update.progress.verified", { to: "\u0000" })), true);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -1140,7 +1141,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     recordsGroup("cross-town.cx.workers.dev", null),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`It runs release ${CUR_VER}; it ran 0.70.0.`), true);
+  t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(word("installer.update.done.says", { to: CUR_VER, from: "0.70.0" })), true);
   t("and it TELLS the operator the copy records no team, saying why from the version it read",
     [body.includes(h(word("installer.team.unrecorded.head"))), body.includes(h(word("installer.team.unrecorded.certain", { before: "0.70.0", first: "0.71.0" })))],
     [true, true]);
@@ -1174,7 +1175,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     recordsGroup("past-town.pt.workers.dev", "past-town"),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t(`PAST THE LINE (${RELEASE_VERSION} -> ${FLEET_VER}): the update lands`, body.includes(`It runs release ${FLEET_VER}; it ran ${RELEASE_VERSION}.`), true);
+  t(`PAST THE LINE (${RELEASE_VERSION} -> ${FLEET_VER}): the update lands`, body.includes(word("installer.update.done.says", { to: FLEET_VER, from: RELEASE_VERSION })), true);
   t("and tells NOTHING about the producing team: the copy records it",
     [body.includes(h(word("installer.team.unrecorded.head"))), body.includes("op=instancegroupseed")], [false, false]);
   t("and never seeds", groupCalls(calls), []);
@@ -1266,7 +1267,7 @@ async function d116Update(slug, after) {
   const r = await d116Update("all-town", { storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("ARMED: the capable release was the one installed, with its member", [r.memberPut, r.askedMembers], [true, true]);
-  t("ALL ON THE RELEASE: the update is reported done", r.body.includes(`It runs release ${FLEET_VER}; it ran 0.1.0.`), true);
+  t("ALL ON THE RELEASE: the update is reported done", r.body.includes(word("installer.update.done.says", { to: FLEET_VER, from: "0.1.0" })), true);
   t("and says what was confirmed — every part, not only the address",
     r.body.includes(h(word("installer.update.done.allanswer", { version: FLEET_VER }))), true);
   t("and names no lag", r.body.includes("not yet confirmed"), false);
@@ -1355,7 +1356,7 @@ async function d116Install(slug, reply) {
   const lag = await d116Install("fresh-loose", { version: FLEET_VER, storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
   t("INSTALL with an installed member the plane cannot reach: NOT \"running\", and the member NAMED",
-    [lag.includes("Your team's Civicsmith is running."), lag.includes("agent-worker was installed, but your team&#39;s Civicsmith holds no connection to it")],
+    [lag.includes(h(word("installer.success.running"))), lag.includes("agent-worker was installed, but your team&#39;s Civicsmith holds no connection to it")],
     [false, true]);
   t("and the credentials are still handed over — a lag never costs a team its only sight of them",
     [lag.includes('id=\\"out-boot\\"'), lag.includes('id=\\"out-probe\\"')], [true, true]);
@@ -1480,14 +1481,14 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     r.planePuts[0]?.find((b) => b.name === "DAEMON_TOKEN")?.text === r.planePuts.at(-1)?.find((b) => b.name === "DAEMON_TOKEN")?.text,
     true);
   t("INSTALL: the page reports the copy running, and says it was connected",
-    [r.body.includes(h(word("installer.success.running"))), r.body.includes("Your team's Civicsmith is connected to")], [true, true]);
+    [r.body.includes(h(word("installer.success.running"))), r.body.includes(lead("installer.connect.done", { names: "\u0000" }))], [true, true]);
 }
 {
   const r = await dist6("unbound-town", { mode: "update", pre: { "unbound-town": planeBase("unbound-town") } });
   t("UPDATE of a copy installed WITHOUT members: it gains a binding to each, by name (members it has none of are named under its slug, R64)", r.targets, RIGHT_OF("unbound-town"));
   t("UPDATE (no members before): every member reads SERVING through the plane", states(r.members), ALL_SERVING);
   t("UPDATE (no members before): reported done, every part confirmed",
-    [r.body.includes(`It runs release ${FLEET_VER}; it ran 0.1.0.`), r.refused], [true, []]);
+    [r.body.includes(word("installer.update.done.says", { to: FLEET_VER, from: "0.1.0" })), r.refused], [true, []]);
 }
 {
   /* The population D-297's installer left: members uploaded, plane bound to none of them. */
@@ -1514,7 +1515,7 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
   t("and nothing was refused: no binding to a worker that is not there", r.refused, []);
   t("and the page NAMES the missing binding and does NOT report the copy running",
     [like("installer.lag.member.failed", { name: "ocr-worker" }).test(unesc(r.body)),
-     r.body.includes("Your team's Civicsmith is running.")], [true, false]);
+     r.body.includes(h(word("installer.success.running")))], [true, false]);
 }
 {
   const r = await dist6("broken-agent-up", { mode: "update", broken: "agent-worker",
