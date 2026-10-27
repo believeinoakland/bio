@@ -20,10 +20,12 @@
 
 **The study, where it stands.** S0 found a room per project is a re-architecture of whole-store `transact` (616 tables, about 106 project-scoped): first candidates are **B** (bulk text and indexes out; search from an index outside SQLite) and **C** (a Worker-side cache of shared reads), A only as paper. S1 runs on `plat-s1` (0.87.0, Level 1, installed by Bob; `s1-tooling-notes.md`): step 1a done (empty team, six screens, 0.58-0.66 s net, hop `do-session` 50-57 ms against biosmoke8's 108-135 ms: placement about halves it); **step 1b done in small** (Seed A-lite: 120 files, 104 MB, 123 bundles, 28,889 text units, about 200 MB database; eight screens re-timed, net 0.57-0.91 s: `study/s1-results.md`). **Next: grow the seed** (the plan's Seed A is 500 documents and 0.4 GB; documents reach a project through the project's own door `/app/capture/address/<project id>` and the file upload is one act with no reason box: see the tooling notes), re-time, then 1c, 1d (needs the plane-only throwaway redeploy from `proto/levels-2-3`, BOB deploys), 1e ramp, 1f containers: **ask BOB before 1e and 1f**, naming what runs and for how long.
 
+**K5535 (C32) taken (P-19):** the interpretation ceiling per level is PL44-PL45 in `load-test-draft.md`; no figure until measured.
+
 **Open with Bob / BOB.** Nothing open with Bob. BOB: K5470 (auto mode refused setting `CIVICSMITH_TEST_INSTANCE` on plat-s1 via the API: not needed by my tools; say so if a journey-check walk is wanted). Needs from others: FILES' L1-L6 and P-M17 (BOB places); AI-DESIGN to confirm the AI-act and Gate 1 budgets.
 
 **Next steps.**
-1. Get an administrator invitation for PLATFORM #2 from Bob via BOB; enrol; invite a member.
+1. Done (P-21): signed in as plat-s1-admin via Bob's reset link; member plat2-member enrolled. A successor needs a new reset or invitation from Bob; credentials are session-local.
 2. Solve filing a document into a project; seed (1b) and re-time; then 1c.
 3. Build the throwaway measuring ops and the plane-only patch on `proto/levels-2-3` (workers), ask BOB to deploy; run 1d.
 4. After S1, S2 (prototypes B and C by workers on `proto/levels-2-3`), S3 (Enterprise quoted), S4 (the report to Bob, plain words, through BOB onto QUESTIONS.html).
@@ -66,3 +68,12 @@
 **P-17 · 2026-10-27** · Handover written (about 37 % context): section 0 and the prompt rewritten; `study/s1-tooling-notes.md` holds how to drive `plat-s1` (project `PROJ-2026-7919-plat-s1-study-project` made; the upload API shape; how a document reaches a project is not yet found). Credentials stay in PLATFORM #1's scratchpad and cannot pass on.
 
 **P-18 · 2026-10-27** · Step 1b (Seed A-lite) done: `study/s1-results.md` §1b. The administrator invitation BOB asked for (K5473 (4)) for PLATFORM #2 was **refused by auto mode** (a permission grant), so Bob must issue it; I did not work around it.
+
+**P-19 · 2026-10-27** · PLATFORM #2 took over (#1 archived). The invitation link given twice is dead; asked BOB for a fresh one. Bob's K5535 (C32) folded: PL44-PL45 (interpretation ceiling per level, from measured densities; method only, no figure) in `load-test-draft.md`, L4 and a request to CAPABILITIES in `time-budgets-draft.md`.
+
+**P-20 · 2026-10-27** · CAPABILITIES' counts (via BOB #323) for `interpretationOf`, `partsOf`, `proposeParts` graded in `time-budgets-draft.md` §3 (read act 1 s; full-load share with slicing and a kept answer; Explore, never first wave) and tied to the combined read (K4599, T-a to time Document with and without them) and to PL45. All proposed, none measured.
+
+**P-21 · 2026-10-27** · S1 unblocked. The invitation link was never live: plat-s1 already had two administrators, so a third (Admin3) is a proposal that issues no invitation until all endorse it (member-roster 4.7), and the Members screen kept showing a stale link (BOB #324 routes the defect to the plan). Bob instead sent a reset link for `plat-s1-admin`; used; I am signed in as administrator, and invited and enrolled `plat2-member` (member role). Credentials in the session scratchpad only (0600); the member's recovery codes were not saved (shown once), so a lost member password needs a reset by the admin. Admin3 left as it is (do not endorse). Seed A grown by 380 generated files (about 193 MB) through the project's Add door, 3 workers; screens to be re-timed when it ends.
+
+**P-22 · 2026-10-27** · Seed A complete (503 documents, about 297 MB, 127,502 text units, about 600 MB database) and the eight screens re-timed idle: `study/s1-results.md` §1b-full. **Finding:** the administrator's Home, Queue, Add and Project pass the 2 s bar (3.5, 3.5, 2.8, 4.8 s net) while the member's stay at 0.55-0.66 s: cheap ops wait behind the administrator-only `heldcaptures` and list reads over about 500 captures held unvouched (P24 again, at scale). The Add door timed out on 17 files (0.1-2.5 MB) with three parallel uploaders; all 17 passed alone in 11-15 s (contention, not file size): a defect candidate for the door's module, put to BOB. Next: 1c (record sizes) and the ramp (1e, approved), after specifying 1d's deploy for BOB.
+

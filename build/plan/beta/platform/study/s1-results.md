@@ -36,3 +36,27 @@ Seed A (1b) and the screens on a team with data; Project and Document screens (t
 | Projects | 1,191 (1,156-2,619) | 579 (522-695) | 1,309 (1,092-2,569) | 591 (579-594) | 23 (13) / 23 (13) |
 
 **Reading.** With data the net medians stay at 0.57-0.91 s (the bar is 2 s); raw medians reach 2.2-2.8 s for the administrator on Home, Queue, Project and Document, with ranges to 4.2 s: the proxy adds 1-2 s to concurrent requests (P18), so the raw figure overstates and the net figure understates; the truth for a member in the same place is between. **The administrator's screens are heavier than the member's** (Document 44 requests against 22, 913 against 676 ms net), as in P23. Compared with the empty team (1a), Held, Add and Document moved most (Held 577 to 800 ms, Add 592 to 782 ms): the room's own work begins to show, as P24 found on biosmoke8. At 104 MB the copy is far from the ceiling; the 2 GB and 6 GB seeds and the ramp (steps 1c, 1e) are what find it. **Caveats:** a fifth of the planned seed; reading still in progress while the screens were timed (the `textUnits` were still landing); nobody else on the copy; alpha code 0.87.0.
+
+## 1b-full. Seed A grown to 503 documents (PLATFORM #2), 1280 px
+
+**Status** · PLATFORM #2, 2026-10-27, `plat-s1` (alpha code 0.87.0, Level 1), reading finished and idle (127,502 text units, 503 of 503 indexed, no change over 2 minutes), nobody else on the copy. Medians of 5; administrator `plat-s1-admin`, member `plat2-member` (a member with no held captures of their own).
+
+**What was seeded.** 380 more generated files (190 text 50-500 KB, 95 CSV 1-5 MB, 47 DOCX, 48 PDF 20-100 pages; 193 MB) added to the study project through its own Add door, three workers; with the first 120 (104 MB) the project holds 500 documents and about 297 MB of files. `op=stats`: 503 bundles, 2,009 files, **127,502 text units**, `dbBytes` **600,000,000** (a coarse figure: about 600 MB), so about 2.0 times the file bytes.
+
+| screen | admin raw ms | admin net ms | requests (API) | member raw ms | member net ms | requests (API) |
+|---|---|---|---|---|---|---|
+| Home | 4,868 | **3,526** | 35 (25) | 1,763 | 659 | 31 (20) |
+| Queue | 4,463 | **3,456** | 24 (13) | 1,305 | 563 | 22 (13) |
+| Held | 1,542 | 992 | 22 (13) | 1,114 | 573 | 21 (12) |
+| Inbox | 2,129 | 638 | 19 (10) | 1,007 | 550 | 19 (10) |
+| Add | 3,419 | **2,752** | 22 (12) | 1,111 | 572 | 21 (12) |
+| Projects | 1,384 | 628 | 22 (13) | 1,224 | 578 | 23 (13) |
+| Project | 6,489 | **4,768** | 40 (29) | 2,015 | 649 | 35 (25) |
+| Document | 2,485 | 1,158 | 46 (33) | 1,270 | 621 | 21 (12) |
+
+(The first administrator run, `t1`, signed in as a wrong handle and is discarded; two further administrator sets, before and after confirming the room idle, agree within 5 %.)
+
+**Reading.** At 104 MB (1b) the administrator's screens were 0.6-0.9 s net. At 500 documents and 297 MB, **four administrator screens pass the 2 s bar at p50 (Home 3.5 s, Queue 3.5 s, Add 2.8 s, Project 4.8 s net)**, while the member's stay at 0.55-0.66 s. The ops that wait are cheap ones: `bootstrap`, `memberlist`, `grouplanguages` and `profiles` show 2.6-3.4 s of server time on Home, and `queue`, `inbox`, `wizardsat` and `capturerequests` 2.0-3.2 s on Queue and Add: the room's one thread answers them behind a heavy admin read. The heavy reads are the administrator's: `heldcaptures` (1.4 s alone on Queue, the P24 finding) and the Queue/Inbox lists, now over the roughly 500 captures still waiting in Held (nobody has vouched; a real team clears them). The member's frame has none of those reads and stays inside the bar. **So the ceiling this copy shows at Level 1 is not a size but a queue of held captures on the administrator's screens**: a team that lets captures wait, as the seed does, loses the 2 s bar at about 500 documents, well before any record-size limit. This is the alpha's code; the fold, the kept counts and `heldcaptures` as a picker (`time-budgets-draft.md` §3) are the fixes the draft already names; this run is their "before".
+
+**The Add door under three parallel uploads (a finding for BOB).** 17 of 380 uploads timed out at the page's 120 s wait with three workers (0.1-2.5 MB each: 8 CSV, 7 text, 2 PDF, no DOCX); **all 17 succeeded when re-tried one at a time, in 10.7-15.5 s**. So the file was not the cause: the door window queued behind the room's work (reading in progress) while other members' uploads were landing, as P24 found. A team with three members adding documents at once, with reading behind, can see a 2 minute wait on files under 3 MB. The 363 others took about 11-14 s each.
+

@@ -40,6 +40,12 @@ Every registry screen (`docs/development/ux-substrate/`) and every op (`op-decla
 - Home's `in-` time of 1.4 s (queue 331 ms, `casedrafts` x5, `heldcaptures`) is the room's work, not a hop: a combined read does not help it (P15), so its budget is kept by kept counts and cached roll-ups (G80, G12a, G12c).
 - Write acts are the largest unknown. Until timed they carry the class ceiling as an unmet claim.
 
+**Interpretation ops (N1272; counts from CAPABILITIES, not measured; all read-only, no AI).** Graded here, PL3 requires each to declare the class; the figures are *proposed* and become measured at L4 (§6).
+- `interpretationOf` (extraction R116): one pass over one capture's interpretation rows, so at most the R119 ceiling per team, plus one `progressOf` and one extent read. Class **read act**, 1.0 s, 2 hops. The ceiling PL45 sets must keep this pass inside the class at the level's rated load: the ceiling is judged by this op, not the reverse.
+- `partsOf` (reading-pipeline R65): one scan of a reading's units, up to 5,000 pages or 1,048,576 rows, capped at 10,000 parts and marked truncated past that. A member waits on it when the document opens, so class **full load share** (2.0 s with the screen), not a read act. A scan of that size must not hold the room's thread more than a batch (PL7 applies to it as to background work): it reads in slices, and its answer is derived once per reading version and kept (a kept count, as G80), so a second open is a lookup. Test fixture: 3 sheets of 100,000 rows (CAPABILITIES' own case).
+- `proposeParts` (investigation R27): captures x (1 `partsOf` + 1 text search per term), plus reads of refused proposals and live rows, at most 200 a call. Class **Explore** (2.0 s; a call that reaches it stops, says it stopped, and returns what it has with `next`), never a first-wave read of any screen.
+- **The combined read (K4599).** None of the three belongs to a screen's first wave. They are later waves or on-demand reads (PL10): the combined read (`screenread`) holds the room for the sum of its reads, and `partsOf` and `proposeParts` are the heaviest reads a Document screen could add. The Document screen's 21-29 reads already in the first wave (P15) stay the combined read's input; these three are added only after the screen is drawn. Whether the combined read is built stays K4599's measurement (T-a); this entry adds the Document screen as a second case beside Project's 22 reads: T-a times Document with and without them.
+
 ## 4. Requirement lines (draft; module owners proposed, PLANNING places them)
 
 **runtime-limits** (layer 1; keeps `PLATFORM_FIGURES`, R34)
@@ -77,8 +83,9 @@ A second, smaller question: whether a large file's reading time is promised to t
 
 - **L1** The registry's untimed screens, and the write acts, on a seeded `PERF` project the lane owns (P14, P26); biosmoke8 after its re-creation in western North America (K4747): the first figure to take is whether the hop fell from 108-135 ms (P23's "before").
 - **L2** Each budget re-timed after each deploy that BOB names, quiet copy, net of the proxy (K4733).
+- **L4** (Bob's K5535, C32) The 2 s ops of N1272 R119: `interpretationOf`, `proposeParts` and `partsOf` at a 5,000-page, 1-million-row document, quiet copy, then under the per-level load with the interpretation densities of PL44; and the ceiling on a team's interpreted parts for each level (PL45), set from those runs and not before.
 - **L3** Under load: the per-level load test (`load-test-draft.md`), on a scratch copy, never biosmoke8.
 
 ## 7. What I need from other lanes
 
-CAPABILITIES, FILES: each new screen or op, with its class and its estimated reads, and the rows and bytes it adds to a team's record (MAP.md §2). UX-DESIGN: nothing yet; the budgets name no design.
+CAPABILITIES: the ops that read interpretation (`interpretationOf`, `proposeParts`, `partsOf`, `cellsOf` with `interpreted`) each need a class (read-heavy, 2 s) in `time-budgets` and a declared read count; the rows and bytes one interpretation row adds, to confirm PL44's measurement. CAPABILITIES, FILES: each new screen or op, with its class and its estimated reads, and the rows and bytes it adds to a team's record (MAP.md §2). UX-DESIGN: nothing yet; the budgets name no design.
