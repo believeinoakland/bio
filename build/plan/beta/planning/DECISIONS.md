@@ -20,3 +20,7 @@
 - K5444 · 2026-10-27 · on P4: "Shouldn't, for example, a newsroom be able to start a CS copy at the institution level ... If a study of how to support levels 2 and 3 is needed, then let's start that study." · `build/rulings.md`
 - K5445 · 2026-10-27 · on C1: "as recommended, with the understanding that C is the objective - even if we aren't able to support that until after the beta." · `build/rulings.md`
 - K5446, K5447 · 2026-10-27 · on C3 and C4, option A: "as recommended" · `build/rulings.md`
+- K5450 · 2026-10-27 · on QUESTIONS.html C5, option A (N1257): "Perhaps there should be an "information" tag ('i' in circle) next to each entry or the page overall which shows how current the information is." · `build/rulings.md`
+- K5451 · 2026-10-27 · on QUESTIONS.html C6, option A (N1257): "as recommended" (a shipped layer never changed by a team; a team's marked correction of a calendar fact stands; laws and deadlines only reported) · `build/rulings.md`
+- K5452 · 2026-10-27 · on QUESTIONS.html C7 (N1257): "A team might be located outside the US even if their work is focused on some US jurisdiction. It's lso worth noting that a team's work might be state-wide or some other footprint not specific to a city or county." · `build/rulings.md`
+- K5454 · 2026-10-27 · on QUESTIONS.html P5, option A: "as recommended - we'll need to work with a CS team interested in setting up an enterprise scale copy before we can provide that support." (Enterprise listed at install as not yet available; Team and Institution built and measured in the beta) · `build/rulings.md`

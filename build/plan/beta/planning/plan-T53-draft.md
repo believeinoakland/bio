@@ -23,6 +23,7 @@
 **runtime-limits**
 - T53 · N1267 (K4628, K5427, K5439) · the beta's per-kind bounds and protective limits as one table · `files/SIZES-N1267.md`; per-level rows `[owed: PLATFORM service levels]` (CONSISTENCY §2.8)
 - T53 · K4354, K5438 · `TIME_BUDGETS` and `budgetOf` (PL1, PL2) · `platform/time-budgets-draft.md` §4
+- T53 · N1273 (K5440, K5441) · `STORE_JURISDICTIONS`, `storeJurisdiction`, the room from a jurisdiction or a hint, never both (PL30); the generation suffix on a jurisdiction room (PL31); a jurisdiction copy's R2 bucket in the same jurisdiction, the install failing before the room otherwise (PL34) · `platform/record-placement-draft.md` §3
 
 **structured-text-reader** (new)
 - T53 · N1266 (K5435) · JSON, NDJSON, XML, SVG, KML, GeoJSON, ICS, VCF, SRT, VTT in windows to 100 MB, structure kept, malformed read as far as it parses · `files/REQ-readers-beta.md` SR1-SR7
@@ -129,6 +130,9 @@
 - T53 · A5 · refused only when the statement is missing; the commit records it · `planning/lines-A5-A6-signing.md` (ratification R62-R63)
 - C T52-24
 
+**corpus-export**
+- T53 · K5441, K5443 · the whole team record exported by resumable parts, the one way to change region (PL50-PL53) · `platform/whole-record-move-draft.md` `[owed: READY]`
+
 **public-read** · C T52-23 · **case-disclosures** · C T52-25 · **case-inputs** · C T52-26 · **case-authoring** · C T52-27 · **case-check** · C T52-28
 
 ## Layer 9
@@ -174,8 +178,9 @@
 
 **screens-settings**, **installer**, **installer-steps**
 - C T52-58, T52-92 to T52-95 · T53 · N1257 (the places screen, the install choice) `[owed: READY]`; AI-DESIGN's provider screens `[owed]`
-- T53 · K5444, K5442 · a copy chooses its level at install (Team, Institution, Enterprise) and can move up later · `[owed: PLATFORM service levels; Levels 2-3 study]`
-- T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" a jurisdiction, for the record and its R2 bucket, never combined); a Level 1 region fixed once the store exists, said before the choice; moving by export and import (PL35: corpus-export and installer import) · `[owed: PLATFORM record-placement READY]`
+- T53 · K5444, K5442, K5454 · a copy chooses its level at install (Team, Institution; Enterprise listed as not yet available, PL29) and can move up later · `[owed: PLATFORM service levels; Levels 2-3 study]`
+- T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" storage in a jurisdiction, the room and its R2 bucket; what runs elsewhere said), the choice fixed and the move by export and import said before it (PL32); Settings states the placement truthfully (PL33) · `platform/record-placement-draft.md` §3 (installer, installer-steps, plane; screen needs to UX-DESIGN)
+- T53 · K5443 · the one way to change region: whole-record export (corpus-export, layer 8) and the installer's import (PL35, PL50-PL57) · `platform/whole-record-move-draft.md` `[owed: READY; one point maybe Bob's (a move carries members' sign-in material?)]`
 
 **control-plane**, **plane**
 - C T52-85 to T52-91 · T53 · N1264, K4599: routes `screenread` and the folded admission · `platform/combined-read-and-fold-draft.md` §3
@@ -197,4 +202,5 @@ The load test per level (N1274, `load-test-draft.md`), its short "before" run on
 - K5424 · lift civicsmith.org's `noindex` · Bob's: "not until the 1.0 release is deployed" (L12 on Bob's page: is the beta 1.0? recommended "before 1.0")
 - K5447 (B) · keeping an over-limit file and reading only part · Bob's: waits until Civicsmith's proposals work well (K5445)
 - N1270 · audio, video, forum formats · Bob's: after 1.0 (K4628); held and named meanwhile (K5436)
+- K5454 · Enterprise support (Level 3) · Bob's, a hard reason outside the product: built with the first Civicsmith team that wants an Enterprise-scale copy; listed at install as not yet available (PL29)
 - FILES Tier 3 readers (PST/OST, Access and the rest) · Bob's (K5437): each by its own ruling when a real file is shown
