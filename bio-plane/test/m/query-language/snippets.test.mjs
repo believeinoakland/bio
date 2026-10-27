@@ -106,7 +106,7 @@ test("R33 with no term the snippet and snippet_from are null; so are presence, a
   }
 });
 
-test("R35 T52-19 a body holding brackets, a literal [placed nowhere] or [object Object] is plain text: no match, and a match is marked by the marks only", () => {
+test("T52-19 a body holding brackets, a literal [placed nowhere] or [object Object] is plain text: no match, and a match is marked by the marks only", () => {
   const w = world();
   w.bundle("M", { title: "Marked", body: "text with [brackets] and [placed nowhere] and [object Object] and a control mark and …", meta: "onlymeta" });
   const h = hitsOf(w, { q: "onlymeta" }).M;
@@ -121,7 +121,7 @@ test("R35 T52-19 a body holding brackets, a literal [placed nowhere] or [object 
   assert.match(obj.snippet, /\[\u0001object\u0002 \u0001Object\u0002\]/);
 });
 
-test("R35 T52-19 a stored text that itself holds a mark character is cut with no mark and no stray mark character", () => {
+test("T52-19 a stored text that itself holds a mark character is cut with no mark and no stray mark character", () => {
   const w = world();
   w.bundle("N", { title: "Stray", body: "a \u0001stray\u0002 word and a needle here", meta: "m" });
   const s = hitsOf(w, { q: "needle" }).N.snippet;
@@ -129,7 +129,7 @@ test("R35 T52-19 a stored text that itself holds a mark character is cut with no
   assert.doesNotMatch(s, /[\u0001\u0002]/);
 });
 
-test("R35 T52-19 textOf removes the mark characters from what the index holds", () => {
+test("T52-19 textOf removes the mark characters from what the index holds", () => {
   const t = textOf("B-1", [{ path: "bundle.md", text: "---\ntitle: A\u0001B\n---\nbody \u0002here" }]);
   assert.doesNotMatch(t.title + t.body + t.meta, /[\u0001\u0002]/);
 });
