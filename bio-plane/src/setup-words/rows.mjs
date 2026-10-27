@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19580 design words, 1166 protected; SHA-256
-   3e15aefcf64b80d4b67b6e99b203b996719bbb4cf59b8163fd0d20f75ae62d59) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19594 design words, 1166 protected; SHA-256
+   dd315e416c78145b763822c77b78628032fe66fa10768ba7a4e6b0bf68d46312) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "3e15aefcf6";
+export const WORDS_COMMIT = "dd315e416c";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -11262,7 +11262,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aiproviders.bud.th.proj","Cost this month, by project","DEC-420: B488 aiproviders: bud th proj",null,false,"design"],
   ["screen.aiproviders.bud.th.cost","Cost","DEC-420: B488 aiproviders: bud th cost",null,false,"design"],
   ["screen.aiproviders.bud.norecord","Work in the record, outside any project","DEC-420: B488 aiproviders: bud norecord",null,false,"design"],
-  ["screen.aiproviders.bud.note","Each cost sums everyone's use and names no member. A member sees their own cost on Your AI.","DEC-420: B488 aiproviders: bud note",null,false,"design"],
+  ["screen.aiproviders.bud.note","Each cost sums everyone's use. A member sees their own cost on Your AI.","DEC-420: B488 aiproviders: bud note",null,false,"design"],
   ["screen.aiproviders.chk.head","Privacy and origin checks","DEC-420: B488 aiproviders: chk head",null,false,"design"],
   ["screen.aiproviders.chk.why","Seven checks, all required to start with.","DEC-420: B488 aiproviders: chk why",null,false,"design"],
   ["screen.aiproviders.chk.mock","In this mockup, show the checks","DEC-420: B488 aiproviders: chk mock",null,false,"design"],
@@ -11417,7 +11417,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aimine.use.calls","Requests","DEC-420: B488 aimine: use calls",null,false,"design"],
   ["screen.aimine.use.cost","Cost","DEC-420: B488 aimine: use cost",null,false,"design"],
   ["screen.aimine.use.nomoney","not measurable in money","DEC-420: B488 aimine: use nomoney",null,false,"design"],
-  ["screen.aimine.use.note","Only you see this: your own use across every account that served you.","DEC-420: B488 aimine: use note",null,false,"design"],
+  ["screen.aimine.use.note","Your own use across every account that served you.","DEC-420: B488 aimine: use note",null,false,"design"],
   ["screen.aimine.first.head","The first time material goes to a provider","DEC-420: B488 aimine: first head",null,false,"design"],
   ["screen.aimine.first.note","The assistant names the provider and waits for you before material first goes to it, and after any switch to another provider.","DEC-420: B488 aimine: first note",null,false,"design"],
   ["screen.aimine.first.see","You can see this notice, and the others like it, on When the AI can't go on.","DEC-420: B488 aimine: first see",null,false,"design"],
@@ -12118,6 +12118,20 @@ export const WORD_ROWS = Object.freeze([
   ["screen.document.cite.page","Page {n} of {m}, {file}","DEC-467: Document, the citation line of a multi-page file",null,false,"design"],
   ["screen.document.converted","Read from a converted copy of {file}; the original is kept.","DEC-467: Document, a file read from a converted copy",null,false,"design"],
   ["screen.document.encrypted","Needs a password. Civicsmith never asks for it or keeps it.","DEC-467: Document, an encrypted file (K4831 (6))",null,false,"design"],
+  ["screen.aiproviders.bymember.head","Use by member, this month","DEC-468: aiproviders, Limits and alerts: the heading of a team-paid account's by-member table (K5459)",null,false,"design"],
+  ["screen.aiproviders.bymember.note","Your team pays for this account, so its administrators see each member's use. A member's own subscription isn't shown here.","DEC-468: aiproviders: the line under the by-member table (K5459)",null,false,"design"],
+  ["screen.aiproviders.bymember.th.member","Member","DEC-468: aiproviders and aiproject: the by-member table, the member column (K5459)",null,false,"design"],
+  ["screen.aiproviders.bymember.th.runs","Runs","DEC-468: aiproviders and aiproject: the by-member table, the runs column (K5459)",null,false,"design"],
+  ["screen.aiproject.bymember.note","This project pays for this account, so its owners see each member's use on it.","DEC-468: aiproject: the line under the by-member table (K5459)",null,false,"design"],
+  ["screen.aimine.seenby","Your use on accounts your team or a project pays for is shown to their administrators. Your own subscription's use is yours alone.","DEC-468: aimine, Your use and cost (K5459)",null,false,"design"],
+  ["screen.layers.head","The rules each place brings","DEC-468: places: the heading of the layers, each with its information mark (K5450, DEC-404)",null,false,"design"],
+  ["screen.layers.info.label","How current this is","DEC-468: places: the information mark's name for assistive technology (K5450)",null,false,"design"],
+  ["screen.layers.info.entry","Read from {source} on {date}. Its calendars reach {reach}.","DEC-468: places: the information mark beside a layer; {source} {date} {reach} (K5450)",null,false,"design"],
+  ["screen.layers.info.past","After {reach}, not known.","DEC-468: places: the information mark beside a layer, a count past the calendars is never guessed; {reach} (K5450)",null,false,"design"],
+  ["screen.layers.info.promise","Civicsmith promises the date it read this, not that the law hasn't changed since. Not legal advice.","DEC-468: places: the information mark beside a layer (K5450)",null,false,"design"],
+  ["screen.layers.info.page","This page's rules come with each Civicsmith update. The newest was read on {date}.","DEC-468: places: the information mark by the page title; {date} (K5450)",null,false,"design"],
+  ["queue.kind.rules-changed","Rules that changed in this update","DEC-468: queue: the kind, for an administrator (K5450; the style of queue.kind.*)",null,false,"design"],
+  ["screen.queue.ruleschanged","{n} rules your team uses changed in this update: {list}. You're told once.","DEC-468: queue: an administrator item after an update (K5450); {n} {list}",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
