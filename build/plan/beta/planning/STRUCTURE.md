@@ -8,10 +8,10 @@
 |---|---|---|
 | R0 | TESTS-SWEEP's merge (option A, K5418): BOB's §5.10 mechanical pass, every touched module run once; then the words and fixtures checks at 0 | Every R1 job edits tests the sweep rewrites; sweep first means no job inherits an English-pinned test, and the checks a job's `complete` runs are clean (§5.2 (1): no tranche opens while the words check reports a finding). |
 | R1 | One round, layers 1 to 11 in order, one job per module that has entries (K5319): the carried entries, the defects JOURNEYS finds, and every new capability the lanes design | Bob's direction (K5417): design whole, one comprehensive plan, then build. One round keeps every capability's layers in one pass, so no capability's top half waits for a later round. |
-| R2 (measure) | Deploy R1 to a scratch copy and run what only a deployment can show: the per-level load test (N1274), the acceptance corpus (N1268), K4354's 2 s and 15 s budgets per screen (PLATFORM), the charge-or-rule accuracy measure (N1258) | Each is a measurement on a live copy (P19's "a measurement"); its defects become R3's entries. The scratch deploy is an act to confirm with Bob (Q1, §7). |
+| R2 (measure) | Deploy R1 to a scratch copy and run what only a deployment can show: the per-level load test (N1274), the acceptance corpus (N1268), K4354's 2 s and 15 s budgets per screen (PLATFORM), the charge-or-rule accuracy measure (N1258) | Each is a measurement on a live copy (P19's "a measurement"); its defects become R3's entries. The scratch deploys are BOB's under K5120, never biosmoke8 (K5434 (1)). |
 | R3 (completion) | Fixes from R2 and modules whose layer closed (P10) | §5.2: the tranche's completion round is its last. |
 
-**Within-layer order.** §5.3 starts every job of a layer at once, but several carried entries depend on another entry in the same layer (§3's "after" column; layer 11 most of all: op-declarations → admission → store-door → store-request → control-plane → plane → interface-shell → screens). K5319's redesign proposes "one job per module per round, started once what it uses has merged". Recommend BOB states, per layer-11 job, the set it starts after (its `uses` that also have entries), so `proc layer start` starts layer 11 in waves; I draft the waves in the plan (Q2).
+**Within-layer order** (K5434 (2), BOB's). No waves: P10 starts every job of a layer at once. A job whose used service another job of its layer changes takes the change as a CHANGE; a dependency that truly cannot run concurrently is placed in a lower layer (the order BOB's, P4; a new layer Bob's). So §3's `after` column marks where a CHANGE is expected, not a start order.
 
 **Each entry's form** stays T52-R1's (`archive/T52-R1.md`, "Reading an entry"): cause lines only, `first: settle X`, `[waits: X]`, `after <entry>`, the requirement ids it meets. New capability entries cite the lane draft and the requirement ids BOB writes from it.
 
@@ -20,7 +20,7 @@
 ## 2. Census
 
 - **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` has no `from`; layers.md: legacy-ui retired at T51, K4100). The plan's opening line says so.
-- **Carried entries**: 78 (T52-23 to T52-98, T52-100, T52-104; T52-103 done, K5406). Layers 8 (6), 9 (5), 10 (1), 11 (65), 1 (1, T52-100: file-scanner, moved from the completion round into R1's layer 1, since R1 reopens layer 1).
+- **Carried entries**: 78 (T52-23 to T52-98, T52-100, T52-104; T52-103 done, K5406). Layers 8 (6), 9 (5), 10 (1), 11 (65), 1 (1, T52-100: file-scanner, moved from the completion round into R1's layer 1, K5434 (3)).
 - **Their dependencies on T52's layers 1-6**: W1 (record-grammar), W3 (member-roster), W4 (membership), W5 (provenance), W7 (events), W10 (query-language), W11 (citation) were T52 R1 entries of layers 1 to 6, which closed and merged into `main` (e5f7190d, K5419). So every `after W1`…`after W11` in the carried file is met; JOURNEYS's confirmers say whether each fix holds on 0.87.0's successor.
 
 ## 3. Carried entries by layer and module
@@ -68,7 +68,7 @@
 | 11 | site | T52-96 | W | — | — |
 | 11 | journey-check | T52-97, T52-98 | N | installer | FILES (N1268 corpus), PLATFORM (N1274) |
 
-Layer 11 alone carries 26 jobs with 65 entries before any new capability is added. Its waves (draft, Q2): **11a** wizard-scripts, op-grades, affordances, tasks, instance-setup, op-declarations, store-assembly, store-request; **11b** admission (after op-declarations), store-door (after admission); **11c** interface-shell, control-plane (after store-door); **11d** every screens module, plane (after interface-shell, control-plane); **11e** installer-steps, installer, site; **11f** journey-check last.
+Layer 11 alone carries 26 jobs with 65 entries before any new capability is added. Its same-layer `after`s (op-declarations → admission → store-door → control-plane → plane → interface-shell → screens) are carried as CHANGEs (K5434 (2)); the plan names, per job, the services it expects to change under it.
 
 ## 4. Where each workstream lands (from `next.md`, `layers.md`, `modules.json`)
 
@@ -99,6 +99,7 @@ Each carries product capability, so its addition, layer and place come to Bob (l
 | 3 | `register-readers` (pure readers of NetFile, CAL-ACCESS, FEC, Form 700, licence files) | CAPABILITIES | L1, after csv-reader and office-readers | csv-reader, office-readers, format-registry, jurisdictions | drafted in `draft-T52-DEC406.md` (B-1, option A recommended) |
 | 4 | `registers` (imports, search, cite a row, watches) | CAPABILITIES | L5, after people and money | register-readers, capture, provenance, people, money, entities | as row 3 |
 | 5 | email intake (N824, a per-team forwarding address) | CAPABILITIES, FILES | L3, after capture | capture, provenance, the email reader (row 7) | Bob: "D42 - email: A", after upload is in use (K2425) |
+| 5a | FILES's tiers (K5435-K5437): Tier 2 read in the beta (macro-enabled Office and templates, .ics, .vcf, MBOX, MHTML, SVG, BMP, AVIF/HEIF, JPEG 2000, JSON Lines, GeoJSON, KML/KMZ, .srt/.vtt, text by content, single-file .gz/.bz2/.xz/.zst); a type not yet read held whole, safe-graded and named (K5436); Tier 3 held until a real file appears | FILES | readers in L1; the held-and-named path in file-safety, capture (L3) and reading-pipeline (L4) | — | ruled; FILES's draft places each |
 | 6 | legacy binary Office reader (.doc, .xls; and .msg, which shares the compound-file format) | FILES | L1, before office-readers' users | ooxml-like structure, runtime-limits | waits on FILES's study (K4632) |
 | 7 | email reader (.eml MIME; .msg via row 6), attachments as files | FILES | L1, after format-registry | format-registry, the readers | as row 6 |
 | 8 | archive reader (ZIP, each member within its kind's bound) | FILES | L1, after format-registry | format-registry, runtime-limits | as row 6; RTF, JSON, XML, TSV and the image types more likely extend existing readers |
@@ -119,12 +120,12 @@ For every lane: requirement drafts per module (provides, uses, keeps, satisfies,
 - **JOURNEYS**: for each carried entry STANDS / FIXED / CHANGED; new defects with owning modules.
 - **TESTS-SWEEP**: the module list it touched and the verdict, before R0.
 
-## 7. Questions for BOB (technical; nothing of Bob's decided here)
+## 7. Questions for BOB, answered (K5434, BOB #321)
 
-- **Q1** · R2's scratch deploy. A deploy to a scratch copy (never biosmoke8) is needed for N1274, N1268 and the time budgets. Is it covered by a standing approval, or is it Bob's act to approve once for T53? Recommend: bring it to Bob once with the plan, as one act covering every R2 measurement.
-- **Q2** · Layer 11's waves. Recommend the plan states each layer-11 job's start-after set and `proc layer start` honours it (K5319's "started once what it uses has merged"); if the tool cannot yet, BOB starts the waves by hand in §3's order.
-- **Q3** · T52-100 (file-scanner) moves from a completion-round entry into R1's layer 1, since R1 reopens layer 1 for FILES's readers. Recommend yes.
-- **Q4** · The plan's size. `proc round open` copies one plan file whole into `current.md`, and every file under `build/plan/` is capped at 51,200 bytes (§17). The 78 carried entries already take about 24 KB; every lane's new work will pass the cap. Options: (a) one round, entries kept to their cause lines and a pointer, each capability's detail in its own file under `build/plan/beta/` read whole at START (T52's PL-file pattern); (b) rounds by layer group (R1a layers 1-5, R1b 6-10, R1c 11), each its own plan; (c) both. Recommend (a), falling back to (b) only if (a) still passes the cap: (b) adds round boundaries the design does not need.
+- **Q1** · R2's scratch-copy deploys (N1274, N1268, the time budgets): BOB's under K5120, never Bob's; never biosmoke8.
+- **Q2** · No waves; same-layer dependencies are CHANGEs, or the dependent work moves to a lower layer (§1).
+- **Q3** · T52-100 goes into R1's layer 1.
+- **Q4** · Option (a): one round, each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at START; (b) rounds by layer group only if (a) still passes 51,200 bytes.
 
 ## 8. Owed to the plan by rulings and design merges since L1 (BOB #321, 2026-10-27)
 
