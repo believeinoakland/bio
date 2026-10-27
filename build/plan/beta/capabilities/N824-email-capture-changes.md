@@ -22,4 +22,8 @@
 
 ## Changed for K5527 (2) and K5530
 
-- **R6:** the 14-day notice is final, its notice kind `mail_cleared` a proposed name (UNVERIFIED removed). **B4:** bracketed on Bob's C31. **B6, section 4.1, the companion's layer arrangement:** `member-roster` added to `mail-door`'s uses (K5530 G: a new layer-3 module after `doorbell`, packaging K5504-K5506's capability, K2008).
+- **R6:** the 14-day notice is final, its notice kind `mail_cleared` a proposed name (UNVERIFIED removed). **B4:** bracketed on Bob's C31 (since answered, K5534, below). **B6, section 4.1, the companion's layer arrangement:** `member-roster` added to `mail-door`'s uses (K5530 G: a new layer-3 module after `doorbell`, packaging K5504-K5506's capability, K2008).
+
+## Changed for K5534 (B4)
+
+- **B4:** ANSWERED K5534 (Bob's own words, not a listed option); the bracket on C31 removed; options P1 to P3 shortened to one line. **R7, doc-clean R13:** a published copy shows the text, attachments and From, To, Cc, Date and Subject, never a technical header or an email address; names only where the author marks them material, one by one, else "withheld"; the marking recorded; tests and controls aligned; the raw message stays whole (K5527 (1)). **Section 3, UX-DESIGN need (e):** the author's per-name marking.
