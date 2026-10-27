@@ -1,10 +1,10 @@
 # Plan T53 round R1 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L19 (K5495-K5527, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L23 (CAPABILITIES' READY scope; K5495-K5529, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
-**Before R1 (BOB's acts):** (1) TESTS-SWEEP merged by its §5.10 pass; words and fixtures checks at 0; the fixtures findings needing a module's judgment become entries below (K5425 (b)) `[owed: TESTS-SWEEP's list]`. (2) Layer 6 re-ordered (FOLD-AI §2.9) and the new modules added to `modules.json` and `layers.md` (STRUCTURE §5; the ones carrying capability to Bob), member-roster R27's `MODULE_ORDER` (R61: modules.json's order) re-pinned. (3) Requirement lines written from the READY drafts named below, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures given to layer 11's START. (5) The design rows each entry names folded from `main` (K945).
+**Before R1 (BOB's acts):** (1) TESTS-SWEEP merged by its §5.10 pass; words and fixtures checks at 0; the fixtures findings needing a module's judgment become entries below (K5425 (b)) `[owed: TESTS-SWEEP's list]`. (2) Layer 6 re-ordered (FOLD-AI §2.9) and the new modules added to `modules.json` and `layers.md` (STRUCTURE §5; the ones carrying capability to Bob), member-roster R27's `MODULE_ORDER` (R61: modules.json's order) re-pinned. (3) Requirement lines written from the READY drafts named below, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures given to layer 11's START. (5) The design rows each entry names folded from `main` (K945). (6) CAPABILITIES' acts (`planning/plan-T53-capabilities.md` §C): M1 the `email()` probe on account `20b5…7f72` only (decides whether the plane's upload carries `email()`); M-R9 a member's own free CourtListener token by `request_credential`, never printed; record-core's two read-only checks on biosmoke8; the N1265 rehearsal shapes on `CS_TEST_CF_ACCOUNT_ID` alone (K4942). (7) `modules.json` and `layers.md` gain register-readers (L1), registers (L5) and, if Bob agrees, mail-door (L3). (8) DEC-474 to DEC-477 merged from the design stream (screens-inquiry R141-R147, screens-daily R111 wait on DEC-476).
 
 **CAPABILITIES' detail** (L23): `planning/plan-T53-capabilities.md` holds every CAPABILITIES entry by layer and module (N1259, N824, N1110, N1265, N858, N1269-N1272, N1257's layer names and record-core), its new modules (register-readers L1, registers L5, mail-door L3), measurements, BOB's acts, left-outs and points; each module's job reads its rows there at START. The lines below name each module once.
 
@@ -226,11 +226,13 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 **corpus-export**
 - T53 · K5441, K5443 · the whole team record exported by resumable parts, the one way to change region (PL50-PL53) · `platform/whole-record-move-draft.md` `[owed: READY]`
 
+**case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (R32) · `planning/plan-T53-capabilities.md` §A Layer 8
+
 **public-read** · C T52-23 · **case-disclosures** · C T52-25 · **case-inputs** · C T52-26 · **case-authoring** · C T52-27 · **case-check** · C T52-28
 
 ## Layer 9
 
-**conformance** · C T52-29 · **actions** · C T52-30; N1257 R112 (two laws, two clocks; the zone named) · **filings** · C T52-31 · **action-plans** · C T52-32, T52-33 · **action-clocks** · N1257 R27 (the layer a list comes from) · **filing-templates** · N1257 R36 (a template's places may name layers) · all `capabilities/N1257-requirements-modules.md`
+**conformance** · C T52-29 · **actions** · C T52-30; N1257 R112 (two laws, two clocks; the zone named) · **filings** · C T52-31 · **action-plans** · C T52-32, T52-33 · **action-clocks** · N1257 R27 (the layer a list comes from) · **filing-templates** · N1257 R36 (a template's places may name layers) · all `capabilities/N1257-requirements-modules.md`; layer names in actions, action-records, action-grammar, action-clocks, filing-templates, filings (K5458), filing-templates' shared judge `[owed: BOB writes]` · `planning/plan-T53-capabilities.md` §A Layer 9
 
 ## Layer 10
 
@@ -309,6 +311,8 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 - T53 · N1220, K5482-K5489 · the AI ops declared (the 43 plus `airesultown`, `aihealthshare`, `aihealthpreview`, `aicreditsclear`, `aiwaitswitch`, `airetestset`) with grade and budget class (an "AI act" class owed by PLATFORM, P1), the retired ops removed; the assistant's reads as one combined read (P2) · `lane-ai-design/draft-assistant-screens.md` §4, §5 P1, P2 `[owed: PLATFORM's AI act class]`
 - T53 · N1220 · every machine result labelled with its AI's name in the screens that show one (screens-intake, -daily, -investigate, -publish, -action, -wizards) · same, §2 (ii), §5 U1
 
+**installer**, **journey-check**, **notice-producers**, **queue**, **op-*** , **store-assembly**, **control-plane**, **instance-setup**, **stewards**, **site**, **screens-*** (CAPABILITIES) · N1265's check and gate (installer R86-R93, replacing T52-92's probe and T52-94's steps; journey-check R39-R41), installer R2 one line for every scope ask `[owed: BOB settles the count]`, register notices and kinds, the registers screen (screens-investigate, rec.), mail's ops and door, stewards' decline record `[waits: Bob's N1110 B2, B3]`, N1272's Interpreted row `[waits: DEC-476]` · `planning/plan-T53-capabilities.md` §A Layer 11
+
 **load-check** (new)
 - T53 · N1274 · `runProfile`, `seedCopy`, `report` on a scratch copy only (PL40-PL43), run in R2 · `platform/load-test-draft.md` §5
 
@@ -319,9 +323,13 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 
 ## R2 (measure, scratch copy, BOB's under K5120)
 
+CAPABILITIES' (§C of `planning/plan-T53-capabilities.md`): M-R3, M-R4, M-R7, M-R8, M-R10-M-R12 (registers: storage, streaming limits, counts, contact-shape false hits, extract sizes; the federal zips BOB's download), M-N1272 (proposals on the N1268 corpus, its bar and gold set recorded by BOB before the run), interpretation timings, N824 P3 if not before R1, the registers journey.
+
 The load test per level (N1274, `load-test-draft.md`), its short "before" run on the alpha's design first; the budget walk (L1, L2, L3 of `time-budgets-draft.md` §6); the acceptance corpus (N1268). Their defects are R3's entries.
 
 ## Left out of T53 (P19), each with its hard reason
+
+- CAPABILITIES' left-outs, each with its hard reason: `planning/plan-T53-capabilities.md` §E (webhooks, OpenFEC, OpenCorporates, the assisted register acts, company officers' bulk import until its line, Form 700 and the unmeasured registers, the listing desk, payment probe, Tier 2 texts, court-petition templates, interpreting everything, K5458's unlisted names).
 
 - K5424 · lift civicsmith.org's `noindex` · Bob's: "not until the 1.0 release is deployed" (K5526: the beta is a release before 1.0; the site stays hidden through it)
 - K5447 (B) · keeping an over-limit file and reading only part · Bob's: waits until Civicsmith's proposals work well (K5445)

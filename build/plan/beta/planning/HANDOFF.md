@@ -4,15 +4,15 @@
 
 ## 0. State now and next steps
 
-**State.** PLANNING #3 took over at L16. Folded into `plan-T53-draft.md` by layer (36 KB): the seven A drafts (READY for BOB; lines on Bob's open L questions bracketed); FILES (readers, registry, sizes, corpus, KIND-TABLE, DEC-473's names); PLATFORM (time budgets, combined read, load test, record placement PL30-PL35); AI-DESIGN final (A43-A58, `FOLD-AI.md`); CAPABILITIES N1257 and N1260 (with K5495-K5500 noted where their lines will land); JOURNEYS (`plan-T53-journeys.md`: §B's eight UX points decided by DEC-472, four by K5474, only J1-J7 wait on Bob); K5501's lines drafted (`lines-K5501-role-change.md`: membership R158 `onProjectLeft`, ai-accounts R77 and R27 amended; five technical points for BOB). `CONSISTENCY.md` rows 1-20 all decided.
+**State.** PLANNING #3 at L23. Folded into `plan-T53-draft.md` by layer (42 KB): the seven A drafts (every L1-L12 answer applied); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (C29), its detail in `plan-T53-capabilities.md` (45 KB: §A entries by layer and module, §B new modules register-readers L1, registers L5, mail-door L3, §C acts and measurements, §D collisions applied, §E left-outs, §F BOB's points, §G Bob's points); JOURNEYS (`plan-T53-journeys.md`, only J1-J7 wait on Bob); PLANNING's own lines: `lines-K5501-role-change.md`, `lines-K5513-daily-follow.md` (aligned with N1259-c R41), `lines-K5527-texts-and-listing.md` (K5528). `CONSISTENCY.md` rows 1-20 decided.
 
 **Next steps, in order.**
-1. (done, K5502) K5501's lines READY for BOB.
-2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (C8-C10 now answered, K5498-K5500), N824 (after M1), N1269-N1272 (Q2 still Bob's), N1257 (after L18), N1110, N858, N1265; PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
-3. On Bob's answers (L13-L26, L18 among them; L1-L12 applied, L18, L19; L13 rewritten on the page; and J1-J7): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes; J-lines in `plan-T53-journeys.md` §A read "waits Jn").
-4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
+1. BOB: `plan-T53-capabilities.md` §F (ten lower-level points) and §G (Bob's: N824 B4, mail-door as a module, N1110 B2 and B3, N1272 R119's visible limit, the M-N1272 gold-set reviewer, N1259-d R36 if doctrine, N858's per-text people). Gaps owed by CAPABILITIES: K5498's officers line; the line filing a keyed docket answer as a capture; N858 R137's source address and flag storage (K5529); N858 §3 step 3 the listed-group step; N824 R6's notice line.
+2. Fold what is still not READY as BOB relays it: PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's fixtures findings list (K5425 (b)); DEC-474 to DEC-477 once merged.
+3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
+4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** Bob: L13-L26 (L18 among them), J1-J7. Lanes: as step 2.
+**Waiting on.** BOB: §F. Bob: L13-L26, J1-J7, §G. Lanes: PLATFORM, TESTS-SWEEP; CAPABILITIES' five gaps.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -101,3 +101,7 @@ BOB #323 decided L20's T1-T8 as recommended (K5528): the guide hash by `record-g
 ## L22 · 2026-10-27 · N1257 D3 and the photo place cleared
 
 BOB #323: N1257 D3 is C7 (K5452, K5497) and the photo's published-place default is F4 (K5514), both answered. The places page's entry in the plan unbracketed (it waits only on CAPABILITIES' lines); the photo default was already folded at L18. Open with Bob: L13-L26 and J1-J7 only.
+
+## L23 · 2026-10-27 · CAPABILITIES' READY scope folded
+
+CAPABILITIES marked its whole scope READY (C29). Five Sonnet reading workers read N1259 a-f/b2, N824 (three files), N1110, N1265, N858, N1269-N1272 and N1257's layer-names and record-core whole and wrote fold notes; a sixth assembled `plan-T53-capabilities.md` (the detail file beside the plan, K5434 (4)) with PLANNING's decisions applied: CONSISTENCY §1's renumbering; one `/10` with N1259-d's extracts as optional rows; `nameResolve` pure (no L1→L2 edge); N824's attachment receipt in acquisition, not capture (no upward edge); investigation uses reading-pipeline and retrieval; three register reads in the Explore class; one installer R2 line. Findings: K5498 (officers) has no line; N824 B4 and N1110 B2, B3 are not ruled (CAPABILITIES' status said all settled); mail-door is a new capability module (Bob's); DEC-476 is not yet merged; K5528 T3 rested on a missing edge that exists. PLANNING's own lines fixed: K5513's purpose `docket-entries` with the page re-read when the key is off; K5527's machine reviewer not counted (never refused), its listed-group pointer. The plan's placeholders now point to the detail file; Before R1 gains (6)-(8), R2 and the left-outs CAPABILITIES' items. A local merge of `lane/capabilities` into this branch was undone before any push.
