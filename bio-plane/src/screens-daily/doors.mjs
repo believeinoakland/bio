@@ -33,7 +33,7 @@ export function doors() {
     const nNew = count(inbox, "inbox", function (k) { return k && k.status === "new"; });
     if (held && held.state === "failed") rows.push(cs.state("held", null));
     else if (held && held.state === "ok" && held.value && Array.isArray(held.value.held) && held.value.held.length) {
-      door(held, "/app/held", "act.release.label." + screen, "screen.held.name", held.value.held.length, "hold");
+      door(held, "/app/held", "act.release.label." + screen, "screen.held.name", (held.value.total ?? held.value.held.length), "hold");
     }
     if (inbox && inbox.state === "failed") rows.push(cs.state("inbox", null));
     else if (inbox && inbox.state === "ok" && inbox.value && Array.isArray(inbox.value.inbox)) {

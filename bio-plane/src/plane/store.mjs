@@ -5,6 +5,7 @@
    `onAlarm` (R4), the watchdog's and the heal's hooks (R79, R102) and the headers an answer carries (R78, R96). It writes no
    row and answers no op itself (R9); the composition body moved to `store-assembly` (K5046 (a), K624). */
 import { DurableObject } from "cloudflare:workers";
+import { recordOf } from "../record-core/index.mjs";
 import { assembleStore, namespaceOf, askOnObject, draftOnObject, traceStamped } from "../store-assembly/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
@@ -84,6 +85,7 @@ export class Store extends DurableObject {
   async fetch(req0) {
     if (this.#retired) return retiredAnswer();
     const t0 = Date.now();
+    const rv0 = this.#recordVersion();   /* PROTO C: the write counter before the call, and after it below */
     /* R102 (fix round 9, G93; K4565; scheduler R28): ANY REQUEST RE-ARMS. The scheduler's `heal` looks at the alarm at most once in five
        seconds for the instance and never during a firing, arming a lost or spent one; it never raises the request's answer. */
     try { await schedulerOf(this.ctx, this.env).heal(Date.now()); } catch { /* the watchdog's cron is the backstop */ }
@@ -91,8 +93,15 @@ export class Store extends DurableObject {
     const res = await this.#assembled.dispatch(req);
     /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first
        byte), whole milliseconds, as `server-timing: object;dur=<ms>`, which the door reads; compute is not in it. The object sets it; a value carried in is replaced. */
-    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); return res; }
-    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
+    const rv1 = this.#recordVersion();
+    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); if (rv0) { res.headers.set("x-record-version", rv0); res.headers.set("x-record-version-end", rv1); } return res; }
+    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); if (rv0) { headers.set("x-record-version", rv0); headers.set("x-record-version-end", rv1); } return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
+  }
+  /** PROTO C: `<instance>.<write counter>` (record-core R89), or "" when PROTO_C is unset; the instance part changes when the object restarts, as the counter restarts at 0. */
+  #instance = Math.random().toString(36).slice(2, 10);
+  #recordVersion() {
+    if (!(this.env && (this.env.PROTO_C === "1" || this.env.PROTO_C === "2"))) return "";
+    try { return `${this.#instance}.${recordOf(this.ctx).writeCount()}`; } catch { return ""; }
   }
 
   /** R95: a RETIRED room is a team's room of another generation: an object that is a room by its name (`bio`, `scratch`, or either

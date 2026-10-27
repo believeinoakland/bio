@@ -918,6 +918,7 @@ const OPS_HAND = aliasRows({
   actionkinds:      { classes: ["admin", "member", "probe"],     mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
+  protocprobe: { classes: ["admin"],                             mutating: false },   /* PROTO C (throwaway): the Worker cache's counts */
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
   /* REC-176: the census of manifest rows a repeated snap key overwrote; counts and lists, never rewrites;
      registeraudit's fence. */

@@ -2067,7 +2067,7 @@ export class Capture {
    *  fields of the documents it draws; only those rows are answered, the list and its order are the page's, and the
    *  store's reads overlap the examinations and groupings of the same page. */
   async heldCaptures({ member = null, project = null, bundle_id: bundleId = null, bundle_ids: bundleIds = null, sort = null, dir = null, limit = null, after = null,
-                       viewer = undefined, now = null, state = null, fields = null } = {}) {
+                       viewer = undefined, now = null, state = null, fields = null, total = null } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
     if (!HELD_SORTS.includes(by)) return Capture.#badArgument("heldcaptures", "sort", HELD_SORTS.join(" | "), by);
     const way = dir == null || dir === "" ? (by === "age" ? "desc" : "asc") : dir;
@@ -2160,7 +2160,9 @@ export class Capture {
                                       format: facts.first.has(r.bundle_id) ? facts.formats.get(facts.first.get(r.bundle_id).capture_sha) ?? null : null,
                                       whole: wholeOf(r.bundle_id),
                                       standing: r.standing === VOUCHED_STATE ? VOUCHED_STATE : "collected", ...alsoHere(r) }));
-      return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
+      /* PROTO C (held paged): `total` (asked with total=1) counts the list's rows by the same filters, not grouping archives, so it may exceed the rows a full walk lists */
+      const all = total === "1" ? { total: Number(this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE ${where.sql}`, ...where.args).n), total_approx: true } : {};
+      return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated, ...all,
                next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
     }
     /* R77 (T51 fix round 2; C14): the page's captures are graded in one batch (provenance R71), never one read for each. */
@@ -3841,7 +3843,7 @@ export function captureOps(c, url, body, env, h = {}) {
     captureseenin: () => c.fileSeenIn({ captureSha: (body && body.captureSha) ?? q("captureSha"), project: (body && body.project) ?? q("project"),
                                         by: q("by"), viewer: q("viewer") ?? "" }),
     heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), bundle_id: q("bundle_id"), bundle_ids: q("bundle_ids"), sort: q("sort"), dir: q("dir"), ...page,
-                                         state: q("state"), fields: q("fields"), viewer: q("viewer") ?? "" }),
+                                         state: q("state"), fields: q("fields"), total: q("total"), viewer: q("viewer") ?? "" }),
     heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
                                      viewer: q("viewer") ?? "" }),
     heldrestore: () => c.restoreHeld({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
