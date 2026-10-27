@@ -49,7 +49,7 @@ test("R36 eventsOps: one arm per act and read, parameters from the url (the cont
 
 test("R42 no place is named in the module's behaviour, defaults or outward text; zones, vote values and flows come from the profile", () => {
   /* every refusal and answer the module gives, over a store with no profile, names no place */
-  const w = world({ view: {} });
+  const w = world({ view: {}, profiles: false });
   const s = w.capture("noplace");
   const out = [];
   const say = (x) => { out.push(JSON.stringify(x)); return x; };
@@ -70,8 +70,9 @@ test("R42 no place is named in the module's behaviour, defaults or outward text;
   const v = w.ev.readEvent({ eventId: e, viewer: MEMBER }).event;
   assert.deepEqual([v.when.start, v.when.end, v.when.zone], [null, null, null]);
   assert.equal(w.ev.sequence({ a: e, b: e }).answer, "undetermined");
-  /* the zone, the vote values and the flows are the view's: another view, another zone */
-  const w2 = world({ view: { time_zone: { value: "UTC", status: "researched", basis: "TEST" } } });
+  /* the zone is the governing zone (K5292): the team's stated zone over the profile's, so another statement, another zone */
+  const w2 = world({ view: {} });
+  assert.equal(w2.record.setSetting("team_time_zone", "UTC", MEMBER).ok !== false, true);
   const s2 = w2.capture("utc");
   assert.equal(w2.ev.recordDatedFact({ captureSha: s2, extent: { kind: "document" }, kind: "meeting", value: "2026-02-02", method: "m", by: MEMBER }).dated_fact.zone, "UTC");
 });
