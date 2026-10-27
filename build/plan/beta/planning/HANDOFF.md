@@ -12,7 +12,9 @@
 4. Owed to others through BOB: FILES's CC4 points to A4-R1 to A4-R6 (K5448); screens-intake R36 and R5 amended for the safe picture (A4-R10); UX-DESIGN needs from A6 (the key sentence) and A4 (the "file says" lines).
 5. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB), the plan under 51,200 bytes, READY.
 
-**Waiting on.** Bob: L1-L12 and the twenty L4 questions. BOB: placing them; Q-A58-2's id check. Lanes: their READY drafts.
+**BOB's answer to L4 (after the hand-over request):** K5456 decides six as recommended (Q-A2-1, Q-A3A4-1, Q-A5-2, Q-A6-1, Q-A6-2 as UX wording needs, Q-A58-2): unbracket those lines first. The other fourteen are on Bob's page as L13-L26 (Q-A1-1..5 = L13-L17, Q-A2-2 = L18, Q-A3A4-2..5 = L19-L22, Q-A5-1 = L23, Q-A8-1 = L24, Q-A8-2 = L25, Q-A58-1 = L26). FILES's CC4 already points to A4 (BOB gives it A4-R1..R6). **AI-DESIGN's A43 drafts are READY: fold them next.**
+
+**Waiting on.** Bob: L1-L26. BOB: placing them; Q-A58-2's id check. Lanes: their READY drafts.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
