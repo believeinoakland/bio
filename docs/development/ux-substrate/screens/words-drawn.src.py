@@ -8570,7 +8570,7 @@ w473('file.refused.reason.rar', "files like it can't be unpacked safely here", '
 w473('file.refused.reason.diskimage', "a disk image can hold programs, and it isn't unpacked here", 'why a kind is not kept, {reason}')
 w473('screen.photo.dropped.thumbnail', 'a small preview picture', 'A4-R3 left_out kind thumbnail, {what}')
 w473('screen.photo.dropped.maker_note', "the camera maker's notes", 'A4-R3 left_out kind maker_note, {what}')
-w473('screen.photo.dropped.profile', 'the color profile', 'A4-R3 left_out kind profile, {what}')
+w473('screen.photo.dropped.profile', 'a color profile that failed its safety check', 'A4-R3 left_out kind profile, {what}; DEC-482: only a profile that failed the structural check (K5546 keeps a sound one, K5555)')
 w473('screen.photo.dropped.extra_picture', 'another picture inside the file', 'A4-R3 left_out kind extra_picture, {what}')
 w473('screen.photo.dropped.after_end', 'data after the end of the picture', 'A4-R3 left_out kind after_end, {what}')
 w473('screen.photo.dropped.xmp', 'editing notes (XMP)', 'A4-R3 left_out kind xmp, {what}')

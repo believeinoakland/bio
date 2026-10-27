@@ -84956,10 +84956,10 @@
   },
   {
    "key": "screen.photo.dropped.profile",
-   "en": "the color profile",
+   "en": "a color profile that failed its safety check",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-473: A4-R3 left_out kind profile, {what}"
+   "note": "DEC-473: A4-R3 left_out kind profile, {what}; DEC-482: only a profile that failed the structural check (K5546 keeps a sound one, K5555)"
   },
   {
    "key": "screen.photo.dropped.extra_picture",

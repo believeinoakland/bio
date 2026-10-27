@@ -7310,3 +7310,15 @@ the design: On the published case, under each finding whose question's subject c
 verified: the page's checks pass (walk, words drawn, library against tranche/T53); on tranche/T53 with these words files, words 0 failures, format 0; no code reads the new keys.
 reasoning recorded in: this entry; `screens/mock-screens.js` (published finding 1; question "Who it is about"), `words-drawn.src.py` (DEC-481 block).
 owed: BOB: merge this commit (MERGE; it carries U512 and U513's held commits, so it waits with them, or cherry-pick DEC-481's alone); the job that holds a subject's history (PLANNING L32's owner) answers each change with its date, member, old and new subject, part and reason; publication or public-read draws `screen.published.subjectchanged.*` choosing the form by whether the new subject may be named; screens-inquiry draws "Who it is about" and its notes.
+
+### DEC-482 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhceeRn5Di4Q4kwmEsXF9, UX design #45) (BOB #324's message, ~19:13 UTC: Bob's K5546, keep a photo's colour profile; BOB's K5555, a strict structural check first)
+for: design (T53, the beta)
+question: DEC-473's `screen.photo.dropped.profile` said "the color profile", as if every profile were left out of the safe picture.
+why it is Bob's: it is not (P17: words beneath K5546).
+provisional: as below. alternative: none. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: `screen.photo.dropped.profile` reads "a color profile that failed its safety check", so "Left out of the safe picture: {what}." names a profile only when the check refused it; a sound profile is kept and not mentioned. No other row speaks of color profiles.
+verified: the page's checks pass; on tranche/T53 with these words files, words 0 failures, format 0; no test reads the phrase; `case-checker/program.mjs` embeds the rows and changes at the next bundle regeneration.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (the DEC-473 row, in place).
+owed: BOB: merge this commit (MERGE; docs only); regenerate the case-checker bundle with the words.
