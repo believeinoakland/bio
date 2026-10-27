@@ -22,3 +22,4 @@
 - The professional reviewer (Bob, K5510, on C18: "as recommended"): a named volunteer lawyer or a paid firm, whichever Bob finds; name, organisation and credential recorded and shown; a changed text is reviewed again.
 - Who writes texts (Bob, K5511, on C19: "A, though a machine can compose the initial draft of the text"): a named person, shown, outside every listed group, the writer of record; a machine may compose the first draft, declared in the notes; never a machine reviewer or approver.
 - Keeping texts true (Bob, K5512, on C20: "as recommended"): re-reviewed at every release touching their kind and when a source page changes; until an owner is named, a text over 12 months old shows its review date and a "last checked" line.
+- Following a court case (Bob, K5513, on C22: "as recommended"): the follow is the ask under K5498; a daily check for new filings on the team's own free key, only for followed cases, stopping at unfollow.
