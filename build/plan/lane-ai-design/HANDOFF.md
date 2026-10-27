@@ -18,6 +18,8 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **PLANNING's fold (FOLD-AI §1–§3, K5457) answered in A46:** every gap and form defect fixed; `draft-credentials.md` and `draft-signatures.md` (R49–R56) split out as their own files.
 
+**Merged and decided (BOB #322, K5471):** A46 and A47 merged into `tranche/T53`. `NS_AI_RUN` approved as a third signing namespace. A member may clear a payer flag on their own account (R68). R107 and R108 placed by PLANNING in `installer` R2 and `installer-steps` R45. "My projects" (owned or joined) is now on Bob's page; "owns" stays drafted until he answers.
+
 **Needs placed** · PLATFORM: an "AI act" budget class and the assistant's declared reads (`draft-assistant-screens.md` §5 P1, P2). UX-DESIGN: U1–U6, sent by BOB as B555.
 
 **Next steps, in order**
@@ -48,5 +50,16 @@ Per FOLD-AI §1–§3 as BOB decided (K5457):
 - **Readiness**: `aipathready` with the `ai-health-probe` scheduler consumer (ai-runs R98).
 - **Screens**: interface-shell R20 amended (screens §8); one retirement list (screens §9); `aiusebymember` and the new ops added to §4; PLATFORM P-15's two classes, "AI act" and "Gate 1 run", named.
 - **Form, every draft**: house prefix on every line, Tests on every line, numbers moved to Suggestions as "set at START".
+
+**Need:** Bob's AI1–AI10.
+
+## A47 · 2026-10-27 · DEC-465 and DEC-466's owed lines drafted
+T53 merged in (U500). New files, READY for PLANNING:
+- **`draft-ai-accounts-dec465.md`**: R49 amended to DEC-465's two share flags; R54's `checksInForce` names whose checks apply; R69 `aikeyseal`; R70 `aiorderset` for a member's own list; R71–R74.
+- **`draft-run-record.md`**: observation-log R40, R41 (N1219's `read` and `disagree`); ai-runs R99–R104, "How this run went" with `op=airunparts`, and labels naming the AI (U1, U2).
+- **`draft-instance-setup.md`**: R107, R108, the installer's gateway permission matched to K4464 (exact Cloudflare names OPEN until a live test); R109 `assistantreadiness` (U3).
+- The catalogue's R4 gains `display_name`.
+
+**For BOB:** R107 and R108 amend `installer` R2 and `installer-steps` R45, so PLANNING should place them there. Which projects "my projects" means (owned, as drafted, or joined) is in the new accounts file's For BOB.
 
 **Need:** Bob's AI1–AI10.
