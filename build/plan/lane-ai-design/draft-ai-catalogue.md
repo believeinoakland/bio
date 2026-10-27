@@ -132,8 +132,8 @@ Terms. An **entry** is a catalogue row for one model at one host (`DESIGN-BRIEF.
 11. **Library rows travel in the payload** (R43) while few; split into a second signed document if the payload nears its cap. Recommended.
 12. **An omitted entry is not retired (R25).** The draft read an entry absent from a newer payload as retired, which contradicted R24 (a state changes only by a record naming it) and R27 (the highest-`seq` record naming it decides). Chosen: omission changes nothing; the entry keeps its state, shows `omitted_since`, and leaves the list only by an advisory or a payload naming it lapsed or retired. This keeps AIR24's no silent change, at the cost that Civicsmith must say a withdrawal, never just drop a row. Recommended as written.
 13. **The advisory reasons are one closed list (R26)**, `ADVISORY_REASONS`, which the issuer's R7 reads: `deprecation`, `canary_drift`, `served_mismatch`, `team_divergence`, `health`, `terms_change`, `other`. Recommended as written.
-14. **The six-month window applies to every row (R45, R55)**, Civicsmith's own included, so one rule decides what is active; Civicsmith's re-tests (K5480) keep its rows of AIs in use current. An entry's own `gate` record (R14), which decides offering, has no window. Recommended as written.
-15. **Tested AIs travel as their own list (R54)**, not as entries in a new state: no offering rule can then reach one by mistake, and a later listing keeps its id and rows. Recommended as written.
+14. **Decided as recommended (K5490).** **The six-month window applies to every row (R45, R55)**, Civicsmith's own included, so one rule decides what is active; Civicsmith's re-tests (K5480) keep its rows of AIs in use current. An entry's own `gate` record (R14), which decides offering, has no window. Recommended as written.
+15. **Decided as recommended (K5490).** **Tested AIs travel as their own list (R54)**, not as entries in a new state: no offering rule can then reach one by mistake, and a later listing keeps its id and rows. Recommended as written.
 
 ## For Bob
 

@@ -4,7 +4,7 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 ## 0 · The state now and the next steps
 
-**Lane** · AI-DESIGN #4 (`session_018BhcedHXD9yareupMq6poX`, Opus), started 2026-10-27 by BOB #322; #3 archived. Branch `lane/ai-design` (T53 merged in at takeover). BOB is the session on `build/plan/current.md`'s Status line on `tranche/T53` (BOB #322, `session_018Bhcedcx1arC3HPfsGQvzJ`, at A54). PLANNING #2 is `session_018Bhceg7ptZUBDjGtWWSVz4`. Scope: AI provider selection and the assistant designed whole (LANES.md §2).
+**Lane** · AI-DESIGN #4 (`session_018BhcedHXD9yareupMq6poX`, Opus), started 2026-10-27 by BOB #322; #3 archived. Branch `lane/ai-design` (T53 merged in at takeover). BOB is the session on `build/plan/current.md`'s Status line on `tranche/T53` (BOB #322, `session_018Bhcedcx1arC3HPfsGQvzJ`, at A55). PLANNING #2 is `session_018Bhceg7ptZUBDjGtWWSVz4`. Scope: AI provider selection and the assistant designed whole (LANES.md §2).
 
 **The design is complete and folded by PLANNING** (A43–A47 merged into `tranche/T53`). Every draft is READY:
 - New modules: `draft-ai-catalogue.md` (L2), `draft-ai-gate.md` (L6), `draft-ai-issuer.md` (L11, Civicsmith's own Worker).
@@ -13,7 +13,9 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **Bob's answers** are in `DECISIONS.md` (AD1–AD56), each with its K. All folded, AI1–AI14 included (AI8 and AI9 at A52; AI12's opt-in health counts, missed earlier, at A53). **Open with Bob:** AI15, AI16 (on the page; their lines stay drafts, marked pending, until answered).
 
-**For BOB (open):** from A52, catalogue For BOB 14 (the six-month window applies to Civicsmith's own rows too) and 15 (tested AIs as their own list), issuer For BOB 12 (scorer on a schedule) and 13 (no sender cap in the join); from A53, `ai-use` B9 (a member's own account counted, unnamed, in the team's health counts), B10 (`HEALTH_MIN_CALLS`), issuer For BOB 9 (health alone proposes only `watch`); from A54, `draft-ai-accounts-dec465.md` For BOB 5–7 (`aicreditsclear` reversible, one act and Queue kind for the flag's three causes, `queue` gains `ai-credits-stop`). For UX-DESIGN through BOB: U8 (results page), U9 (the health switch), U10 (the payer flag's other two causes), screens §5. PLATFORM's AI act and Gate 1 run figures are confirmed only after the first measuring run (screens §4).
+**BOB's decisions since takeover:** K5490 (catalogue For BOB 14, 15; issuer 12, 13: as recommended), K5491 (ai-use B9 changed: a personal subscription's calls stay out of the health report, the counter carries a `personal` flag; B10 and issuer 9 as recommended). U8, U9 relayed to UX-DESIGN (B559).
+
+**For BOB (open):** from A54, `draft-ai-accounts-dec465.md` For BOB 5–7 (`aicreditsclear` reversible, one act and Queue kind for the flag's three causes, `queue` gains `ai-credits-stop`); U10 for UX-DESIGN. PLATFORM's AI act and Gate 1 run figures are confirmed only after the first measuring run (screens §4).
 
 **Next steps, in order**
 1. As Bob answers AI15 and AI16, fold each: clear its pending marks, add an AD line. Until then the lane's scope is drafted READY and waits on those two answers.
@@ -75,3 +77,6 @@ K5487 lets teams "opt in to send counts of errors and refusals, never their cont
 
 ## A54 · 2026-10-27 · DEC-471's owed act drafted: `aicreditsclear` and its Queue item (K5478)
 T53 merged in (U504). `draft-ai-accounts-dec465.md` R68 (full new text, replacing `draft-ai-accounts.md` R68): `op=aicreditsclear`, DEC-471's "Clear it and turn the account back on", rung reversible with name and time (DEC-471 asks no reason; `PAYER_CLEAR_NO_REASON` dropped), clearing the flag for any of its three causes; R75 the `ai-credits-stop` Queue item (OBLIGATION, to whoever may clear it, `screen.aiproviders.stands.credits`, one per flagged account, closed by the clear or the account's removal), replacing R45's notice. `aipayerclear` renamed everywhere. Screens §4 row, U10. **Need:** BOB's view of For BOB 5–7 there; U10 relayed to UX-DESIGN.
+
+## A55 · 2026-10-27 · BOB's K5490 and K5491 folded
+K5490: the four A52 points marked decided. K5491: `draft-ai-use.md` R31 counts with a `personal` flag (never the account) and R33 leaves a personal subscription's calls out of every report and preview; B9 changed, B10 and issuer 9 decided. **Need:** For BOB 5–7 of A54; Bob's AI15, AI16.
