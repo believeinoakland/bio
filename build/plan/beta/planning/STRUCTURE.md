@@ -108,7 +108,7 @@ Each carries product capability, so its addition, layer and place come to Bob (l
 | 11 | bulk record tables in R2 (N1271's split) | PLATFORM | L2, after record-core | record-core | `record-placement-draft.md` not READY (three points Bob's) |
 | 12 | place layers (N1257) | CAPABILITIES | no new module: layers in jurisdictions (L1), team layers held through instance-setup and local-facts | — | READY (`capabilities/N1257-places-in-layers.md`); its two requirement companions not READY |
 
-Adding modules re-pins membership's `MODULE_ORDER` (R83) and regenerates `layers-view.html`; that work is a BOB act before R1's layer 2 START.
+Adding modules re-pins member-roster's `MODULE_ORDER` (R27, was membership R83) and regenerates `layers-view.html`; that work is a BOB act before R1's layer 2 START.
 
 ## 6. What each lane owes PLANNING (from LANES.md §1 "What you deliver")
 

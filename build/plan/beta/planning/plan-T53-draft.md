@@ -4,7 +4,7 @@
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
-**Before R1 (BOB's acts):** (1) TESTS-SWEEP merged by its §5.10 pass; words and fixtures checks at 0; the fixtures findings needing a module's judgment become entries below (K5425 (b)) `[owed: TESTS-SWEEP's list]`. (2) The new modules added to `modules.json` and `layers.md` (STRUCTURE §5; the ones carrying capability to Bob), membership R83's `MODULE_ORDER` re-pinned. (3) Requirement lines written from the READY drafts named below, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures given to layer 11's START. (5) The design rows each entry names folded from `main` (K945).
+**Before R1 (BOB's acts):** (1) TESTS-SWEEP merged by its §5.10 pass; words and fixtures checks at 0; the fixtures findings needing a module's judgment become entries below (K5425 (b)) `[owed: TESTS-SWEEP's list]`. (2) The new modules added to `modules.json` and `layers.md` (STRUCTURE §5; the ones carrying capability to Bob), member-roster R27's `MODULE_ORDER` (R61: modules.json's order) re-pinned. (3) Requirement lines written from the READY drafts named below, numbered per CONSISTENCY §1. (4) PLATFORM's throwaway test T-a on a scratch copy (K5434 (1)), its figures given to layer 11's START. (5) The design rows each entry names folded from `main` (K945).
 
 **Reading an entry.** As T52-R1 (`archive/T52-R1.md`, "Reading an entry"): `first: settle X`, `[waits: X]`, `after X` (a same-layer dependency arrives as a CHANGE, K5434 (2)). A detail file named by an entry is read whole at START; its lines are the module's requirements once BOB writes them.
 
@@ -43,6 +43,12 @@
 **office-readers**
 - T53 · N1267a · XLSX cells by window before any workbook bound above 250,000 · `next.md` N1267a `[owed: Bob's higher row; else left out, hard reason Bob's]`
 
+**signatures**
+- T53 · K5457 · two more namespaces (eight in all): the catalogue's and the Gate 1 suite's (R49-R53 as AI-DESIGN lists them; the run-key check the issuer's R12 needs) · `lane-ai-design/draft-ai-catalogue.md` (signatures), `draft-ai-gate.md` R54-R64 `[owed: the five lines written as lines; FOLD-AI §3]`
+
+**bundler**
+- T53 · K5457 · the agent Worker's `HEALTH` Durable Object and provider bindings (AI Gateway, Workers AI); `deleted_classes` for `RemoteSession`, in the same deploy that retires the remote route · `lane-ai-design/draft-agent-run-path.md` (agent-worker R35), `draft-agent-runner.md` R13
+
 **file-scanner**
 - C T52-100 · U5 · the streamed docx: renderer version moves with `plainPackage`
 
@@ -51,8 +57,17 @@
 **record-core**
 - `[owed: PLATFORM record placement, N1271; three points Bob's]`
 
-**credentials**, **ai-accounts**
-- `[owed: AI-DESIGN's module list (keep, adapt, retire), K5428-K5433]`
+**ai-catalogue** (new; before ai-accounts; K5457)
+- T53 · N1220 (K5428-K5433, K5457) · the signed closed list of AIs: entry, plan, evidence, the seven checks, Gate 1 verdict per part, lifecycle, advisories, results library; signed updates verified and applied, the last good kept, rollback · `lane-ai-design/draft-ai-catalogue.md` R1-R53
+- T53 · K5457 · the seed payload and shipped provider data, data only · same, R39, R48 `[waits: BOB's key ceremony and seed signing; AI1 pass marks]`
+
+**ai-accounts**
+- T53 · N1220 (K5457) · the account model (owner, provider, plan, means gateway/sealed/reference/issued/none, ordered entries); plan scope and the personal-subscription rule from the catalogue; the hop; disclosure per provider and host; checks P1-P7; free-tier acceptance; the gateway payer check · `lane-ai-design/draft-ai-accounts.md` R1-R64 `[waits: AI3-AI5]`
+- T53 · K5457 · R8, R12, R13, R18, R35 and twelve old ops retired, nineteen new declared, every user re-pointed in this tranche, no aliases (FOLD-AI §2 lists the sixteen modules) · same, Part 1, R36, R38, R61
+- T53 · K5457 · migration: apikey to the Anthropic API plan (sealed), signin to subscription (issued), project sign-in accounts ended and told once · same, R59
+
+**credentials**
+- T53 · K5457 · R27, R32, R48, R63, R66, R73 amended, R72 retired (the sealed key; `aicredential` on `AI_GRANT_OPS`) · `lane-ai-design/draft-ai-accounts.md` (credentials delta)
 
 ## Layer 3
 
@@ -113,7 +128,40 @@
 **citation**
 - T53 · A8 · a typed passage citable at once; the citation names typist and checker · `planning/lines-A8-typed-page.md` §6 `[owed: L2-11]`
 
-`[owed: AI-DESIGN (run-rules to agent-worker), N1220, N1258]`
+**run-rules**
+- T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37) · `lane-ai-design/draft-run-rules.md` `[waits: AI1 for R19's standing measure and R37; reading A or B, FOLD-AI §1]`
+
+**ai-runs**
+- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended) `[waits: AI1, AI3, AI10]`
+
+**agent-harness**
+- T53 · K5457 · `ROLE_NEEDS`, `needOf`, `partOf` over the six parts, `disclosureGate`, `resumeAt`; R17 moves with N1205 · `lane-ai-design/draft-agent-run-path.md` (agent-harness R20-R24)
+
+**agent-model** (before ai-use, FOLD-AI §2)
+- T53 · K5457 · first: the interface (`turn`, `converse`, `capabilities`, `estimate`, `health`) with the Anthropic adapter behind it, today's tests passing through `turn` (N1205's landing place) · `lane-ai-design/draft-agent-model.md` R1-R36, R43, R44, R54, R55
+- T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI4 (R47), AI10; live checks L2, L3]`
+
+**agent-runner**
+- T53 · K5457 · the Claude Code route retired in one change (R35, R42; RUNNER and REMOTE bindings off) · `lane-ai-design/draft-agent-runner.md` R13 `first: N1205's split`
+- T53 · K5457 · the Gate 1 test container (distroless, `/run` only, the key in memory for one run, per-run egress, sealed capture, manifest before the bundle, three deployments) · same, R5-R16, R26, R29, R30, R33, R41, R43-R60 `[waits: the offline keys]`
+
+**agent-steps**
+- T53 · K5457 · the entry by need per conversation, Gate 1 per part before the first turn, `ai_stop` at a step boundary, a notice before a new recipient, `idem`, `produced_by` · `lane-ai-design/draft-agent-run-path.md` (agent-steps R50-R57)
+
+**agent-worker**
+- T53 · N1205 (K5457) · first: the split: `/signin`, its relay and REMOTE dispatch (R66, R67, R81-R85, R109, R111) to agent-model's adapter; `ai_account`; no credential in the Worker · `lane-ai-design/draft-agent-run-path.md` (agent-worker) `first: agent-model's interface`
+- T53 · K5457 · each path takes its entry by need, refuses by name, labels every result, fails fast with three choices, turn-level progress, the sealed key by `aicredential` at the call · same, R120-R127 `[waits: AI1 (R121), AI10 (R124)]`
+
+**ai-use**
+- T53 · K5457 · the neutral usage record (provider-reported money apart from Civicsmith's estimate; never zero for the unmeasured); provider limits as limits reached; thresholds, alerts, reconciliation · `lane-ai-design/draft-ai-use.md` R1-R26
+- T53 · K5459 · a paying team or project sees each member's use over thirty days; a personal subscription never · same, R27
+
+**ai-gate** (new; after agent-worker; K5457)
+- T53 · K5457 · the Gate 1 suite: signed bank and thresholds, items scored by code on a stub plane through agent-model, per-part verdicts, Wilson intervals, the gate record · `lane-ai-design/draft-ai-gate.md` R1-R40, R65, R66 `[waits: AI1; Bob's floors after the first measuring run, AD13]`
+- T53 · K5457 · characterization and cost shown before a run, consent, canaries, the lifecycle signal · same, R41-R53 `[waits: AI6, AI7]`
+- T53 · K5457 · the results bundle and the library row, `partsRefused` · same, R54-R64 `[waits: AI8; ai-issuer]`
+
+`[owed: N1258 (the charge-or-rule measure) placed by AI-DESIGN as R2's standing measure; N829 outside the product, FOLD-AI §4]`
 
 ## Layer 8
 
@@ -177,7 +225,7 @@
 - C T52-74 to T52-80 · T53 · A7 (their pickers) · `planning/lines-A1-A7-subject-pickers.md` A7 §5; A5 (screens-publish: the signing step, the published statement)
 
 **screens-settings**, **installer**, **installer-steps**
-- C T52-58, T52-92 to T52-95 · T53 · N1257 (the places screen, the install choice) `[owed: READY]`; AI-DESIGN's provider screens `[owed]`
+- C T52-58, T52-92 to T52-95 · T53 · N1257 (the places screen, the install choice) `[owed: READY]`; the AI screens (below)
 - T53 · K5444, K5442, K5454 · a copy chooses its level at install (Team, Institution; Enterprise listed as not yet available, PL29) and can move up later · `[owed: PLATFORM service levels; Levels 2-3 study]`
 - T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" storage in a jurisdiction, the room and its R2 bucket; what runs elsewhere said), the choice fixed and the move by export and import said before it (PL32); Settings states the placement truthfully (PL33) · `platform/record-placement-draft.md` §3 (installer, installer-steps, plane; screen needs to UX-DESIGN)
 - T53 · K5443 · the one way to change region: whole-record export (corpus-export, layer 8) and the installer's import (PL35, PL50-PL57) · `platform/whole-record-move-draft.md` `[owed: READY; one point maybe Bob's (a move carries members' sign-in material?)]`
@@ -187,6 +235,17 @@
 
 **journey-check**
 - C T52-97, T52-98 · T53 · K4354 · the budget walk at 1280 and 390 px (PL5, PL6) · `platform/time-budgets-draft.md` §4 · T53 · N1268 · the acceptance corpus walk · `files/CORPUS-N1268.md` (CONSISTENCY §2.5)
+
+**ai-issuer** (new; Civicsmith's own Worker; K5457)
+- T53 · K5457 · serves the signed catalogue, advisories and seal key; single-use challenges; sealed test bundles received and kept for the off-Worker scorer; Bob's decisions recorded; signs and opens nothing · `lane-ai-design/draft-ai-issuer.md` R1-R24 `[waits: BOB's deploy to account 20b5…7f72, the operator's tools; AI8 for R18]`
+
+**screens-settings** (the AI screens)
+- T53 · N1220 (DEC-420, K5457) · `aiproviders`, `aiconnect`, `aimine`, `aiproject`, `aimoments`, `aitest`, `airesults`; `connect`, `teamai`, `projectai` and their acts retired · `lane-ai-design/draft-assistant-screens.md` §2, §4, §5; `UX-REQUIREMENTS.md` `[waits: UX-DESIGN's rows, B555]`
+- T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7
+
+**op-declarations**, **op-grades**, **interface-shell** (the assistant)
+- T53 · N1220 · the 43 AI ops declared with grade and budget class (an "AI act" class owed by PLATFORM, P1), the retired ops removed; the assistant's reads as one combined read (P2) · `lane-ai-design/draft-assistant-screens.md` §4, §5 P1, P2 `[owed: PLATFORM's AI act class]`
+- T53 · N1220 · every machine result labelled with its AI's name in the screens that show one (screens-intake, -daily, -investigate, -publish, -action, -wizards) · same, §2 (ii), §5 U1
 
 **load-check** (new)
 - T53 · N1274 · `runProfile`, `seedCopy`, `report` on a scratch copy only (PL40-PL43), run in R2 · `platform/load-test-draft.md` §5
