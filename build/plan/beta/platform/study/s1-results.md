@@ -60,3 +60,20 @@ Seed A (1b) and the screens on a team with data; Project and Document screens (t
 
 **The Add door under three parallel uploads (a finding for BOB).** 17 of 380 uploads timed out at the page's 120 s wait with three workers (0.1-2.5 MB each: 8 CSV, 7 text, 2 PDF, no DOCX); **all 17 succeeded when re-tried one at a time, in 10.7-15.5 s**. So the file was not the cause: the door window queued behind the room's work (reading in progress) while other members' uploads were landing, as P24 found. A team with three members adding documents at once, with reading behind, can see a 2 minute wait on files under 3 MB. The 363 others took about 11-14 s each.
 
+## 1e. The ramp, members' frames, 5 to 60 members (PLATFORM #2)
+
+**What ran.** A throwaway driver (not `load-check`; K5448) replays each screen's declared reads from the probe's op lists as N virtual members using the member account's token, one screen at a time, all of its reads in parallel, mix Home 25 %, Queue 15 %, Project 20 %, Document 15 %, Projects 10 %, Held, Inbox, Add 5 % each, think time exponential with mean 30 s (2 screens a minute, P17), 3 minutes a step (the draft's 10 minutes shortened), steps 5, 10, 15, 25, 40, 60, from one container through the agent proxy, on `plat-s1` (alpha 0.87.0, Level 1, Seed A of 503 documents idle). The numbers are the **raw frame time** (first request to last answer, proxy delay *in*, no draw): the driver is not a browser, so the browser-based "net" correction does not apply and the first printout's "net" column (negative in places) is discarded.
+
+| members | screens | errors | Home p50 / p90 | Queue p50 / p90 | Project p50 / p90 | Document p50 / p90 | Projects p50 / p90 |
+|---|---|---|---|---|---|---|---|
+| 5 | 42 | 0 % | 1,158 / 2,207 | 1,740 / 2,137 | 1,561 / 2,243 | 1,190 / 2,546 | 943 / 1,194 |
+| 10 | 68 | 0 % | 1,200 / 1,907 | 1,154 / 1,984 | 1,350 / 2,198 | 1,060 / 1,242 | 1,071 / 1,357 |
+| 15 | 100 | 0 % | 979 / 1,976 | 617 / 1,561 | 1,090 / 2,194 | 1,076 / 1,856 | 564 / 986 |
+| 25 | 155 | 0 % | 759 / 1,961 | 558 / 1,122 | 819 / 1,719 | 591 / 1,522 | 560 / 715 |
+| 40 | 251 | 0.03 % | 1,214 / 1,995 | 733 / 2,505 | 1,392 / 2,018 | 610 / 1,471 | 552 / 785 |
+| 60 | 355 | 0 % | 778 / 1,867 | 634 / 1,746 | 1,107 / 2,171 | 593 / 1,791 | 522 / 965 |
+
+**Reading.** From 5 to 60 members at 2 screens a minute each (up to 2 screens a second against the room) the room did not saturate: no step broke the stop rule (more than 1 % errors), and the median frame times **fall** from the first steps to the later ones (the first steps include connection and cold-object cost, with fewer samples); the p90 stays at 1.1-2.5 s raw, proxy included, with no rising trend. So for a team whose members mostly read, **this copy at Level 1 did not reach its limit at 60 concurrent members**; the limit is somewhere above that on this method.
+
+**What this does not show (read before relying on it).** (1) Reads of a **member's** frame only: the administrator's frames, which already pass the bar at idle (§1b-full), were not mixed in, and the heavy `heldcaptures` list is the same for every caller here so the cost it showed for the administrator does not appear. (2) One token for all virtual members (one session row), no writes, no uploads and no reading in progress: the door's queue under uploads (the 17 timeouts) is not tested. (3) The driver's container sits on the same proxy as every other test: raw times include its delay; nothing here converts them to the bar's net figure. (4) 3 minutes a step and one pass: p99 is not firm. **Next:** the same ramp with an administrator walker per ten members and one upload every minute, the soak at 80 % of the last step, and the record sizes (1c).
+
