@@ -45652,7 +45652,7 @@
       "en": "duplicate manifest key '{key}'",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 589
+      "line": 605
     },
     {
       "id": "record-grammar.bundle.escaped_markdown_character_v1_in",
@@ -45701,7 +45701,7 @@
       "en": "history file '{p}' maps to no manifest entry",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 668
+      "line": 684
     },
     {
       "id": "record-grammar.bundle.id_prefix_prefix_implies_wanttype",
@@ -45764,7 +45764,7 @@
       "en": "live last_updated '{last_updated}' precedes an earlier history entry '{newestPrior}': the live bundle.md is older than a version already superseded",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 699
+      "line": 715
     },
     {
       "id": "record-grammar.bundle.manifest_created_created_is_not",
@@ -45785,7 +45785,7 @@
       "en": "manifest keys out of order at '{key}'",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 590
+      "line": 606
     },
     {
       "id": "record-grammar.bundle.manifest_target_target_does_not",
@@ -45862,14 +45862,14 @@
       "en": "preserved refusal payload '{p}' has no refusal record at '{sibling}'",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 659
+      "line": 675
     },
     {
       "id": "record-grammar.bundle.promotion_record_for_key_is",
       "en": "promotion record for '{key}' is missing",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 599
+      "line": 615
     },
     {
       "id": "record-grammar.bundle.re_produce_the_package_from_the",
@@ -45890,14 +45890,14 @@
       "en": "rebuild manifest entry from surviving files",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 575
+      "line": 591
     },
     {
       "id": "record-grammar.bundle.record_a_history_loss_finding_and",
       "en": "record a history-loss finding and re-snapshot current state",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 599
+      "line": 615
     },
     {
       "id": "record-grammar.bundle.record_a_tamper_finding_if_history",
@@ -45988,21 +45988,21 @@
       "en": "refusal record '{p}' does not parse or names no outcome",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 650
+      "line": 666
     },
     {
       "id": "record-grammar.bundle.remove_the_orphaned_preserved_payload",
       "en": "remove the orphaned preserved payload",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 660
+      "line": 676
     },
     {
       "id": "record-grammar.bundle.remove_the_unexplained_refusal_artifacts",
       "en": "remove the unexplained refusal artifacts",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 651
+      "line": 667
     },
     {
       "id": "record-grammar.bundle.rename_alias_to_canonical",
@@ -46065,14 +46065,14 @@
       "en": "restore the newer bundle.md from history",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 700
+      "line": 716
     },
     {
       "id": "record-grammar.bundle.restore_the_refusal_record_from_history",
       "en": "restore the refusal record from history",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 651
+      "line": 667
     },
     {
       "id": "record-grammar.bundle.review_notes_content_from_the",
@@ -46121,7 +46121,7 @@
       "en": "snapshot '{snapPath}' recorded in manifest entry '{key}' is missing",
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 614
+      "line": 630
     },
     {
       "id": "record-grammar.bundle.stale_advisory_artifact_p_crashed",
