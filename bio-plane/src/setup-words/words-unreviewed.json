@@ -46656,13 +46656,6 @@
       "line": 83
     },
     {
-      "id": "refusal.SIGNATURES_RUN_UNDER_WAY",
-      "en": "Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/checks.mjs",
-      "line": 98
-    },
-    {
       "id": "refusal.WORKBOOK_FILE_TOO_LARGE",
       "en": "This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",
       "module": "workbooks",
