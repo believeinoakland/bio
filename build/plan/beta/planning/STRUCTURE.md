@@ -1,6 +1,6 @@
 # T53's build plan: its structure (draft)
 
-**Status** · DRAFT, not READY · PLANNING #1 (L1), 2026-10-27. A proposal for BOB: the shape of T53's comprehensive build plan, the carried T52 entries placed by layer and module, where each design lane's work lands in `build/layers.md`, and the new modules the lanes are likely to propose. Nothing here is a requirement line or a plan entry; BOB writes both (LANES.md §1). It turns READY once every lane's drafts are in and folded (§6 lists what each lane still owes). Read with `build/plan/carried-T52-R1.md`, `build/layers.md`, `build/modules.json` and `build/plan/next.md`.
+**Status** · READY (L56, every lane's drafts folded; the plan is `plan-T53-draft.md`) · PLANNING #1 (L1), 2026-10-27. A proposal for BOB: the shape of T53's comprehensive build plan, the carried T52 entries placed by layer and module, where each design lane's work lands in `build/layers.md`, and the new modules the lanes are likely to propose. Nothing here is a requirement line or a plan entry; BOB writes both (LANES.md §1). It turns READY once every lane's drafts are in and folded (§6 lists what each lane still owes). Read with `build/plan/carried-T52-R1.md`, `build/layers.md`, `build/modules.json` and `build/plan/next.md`.
 
 ## 1. The plan's shape (recommendation)
 

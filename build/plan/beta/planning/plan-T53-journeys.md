@@ -1,6 +1,6 @@
 # T53's JOURNEYS entries: the alpha's defects by owning module (PLANNING L11)
 
-**Status** · DRAFT for BOB · PLANNING #2, 2026-10-27 (K5471 (6), K5473 (3)). JOURNEYS W6-W7's register (130 defects, 6 BLOCKS) and READY requirement drafts (`lane-journeys/DRAFT-requirements-1..3.md`, about 109 lines) on `lane/journeys`, read whole by a Sonnet reading worker and set out one entry per defect under its owning module. The plan (`plan-T53-draft.md`) points here per module; this file is the detail a job reads at START (K5434 (4)). Lane overlaps marked (inferred) rest on a keyword match only and are checked when each job's reading set is drawn. Section B's 19 points are Bob's (going to him through BOB, K5473 (3)); a line waiting on one is bracketed in the draft.
+**Status** · READY for BOB (L56; J1-J7 answered) · PLANNING #2, 2026-10-27 (K5471 (6), K5473 (3)). JOURNEYS W6-W7's register (130 defects, 6 BLOCKS) and READY requirement drafts (`lane-journeys/DRAFT-requirements-1..3.md`, about 109 lines) on `lane/journeys`, read whole by a Sonnet reading worker and set out one entry per defect under its owning module. The plan (`plan-T53-draft.md`) points here per module; this file is the detail a job reads at START (K5434 (4)). Lane overlaps marked (inferred) rest on a keyword match only and are checked when each job's reading set is drawn. Section B's 19 points are Bob's (going to him through BOB, K5473 (3)); a line waiting on one is bracketed in the draft.
 
 ## Keys
 

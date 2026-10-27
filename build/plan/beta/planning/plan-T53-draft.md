@@ -1,6 +1,6 @@
 # Plan T53 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L34 (CAPABILITIES' READY scope; every L question answered; K5495-K5552, DEC-472, DEC-473). Form by K5434 (4) and K5567: one round, measurements at once unless they measure R1's code, no R3; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · READY for BOB (PLANNING L56, 2026-10-27, K5569): every lane's READY drafts folded, PLATFORM's service levels and whole-record move last; no mark waits on a lane draft or a question to Bob: each `[owed: …]` left is BOB's at writing or a technical point settled at START, each `[waits: …]` an act or a measurement named in it. Form by K5434 (4) and K5567: one round, measurements at once unless they measure R1's code, no R3; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
@@ -16,13 +16,13 @@
 - T53 · N1257 (DEC-404, N1256) · the four defects first: weekend compared by days, closure lists by qualified name in the branch, records_help per law, a `federal` office level · `capabilities/N1257-requirements-jurisdictions.md` R103-R105, R107
 - T53 · N1257 (K5452, K5458, K5462) · the layer model: layer and `within`, names addressed `layer:name`, the forest checked branch by branch, a conflict naming its layers, records laws saying whom they govern, coverage dates · `capabilities/N1257-requirements-jurisdictions.md` R99-R102, R106, R108
 - T53 · N1257 · the shipped layers (federal, California, Alameda County, Oakland), the every-footprint build check, the package alias and its equality test; the test forest · `capabilities/N1257-requirements-jurisdictions.md` R109-R114, R118
-- T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · `capabilities/N1257-requirements-jurisdictions.md` R115-R117 plus the one placeless team-rules layer (CONSISTENCY §2.15, decided) `[owed: CAPABILITIES' amendment of R24, R100, R102, R115]`
-- T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · `capabilities/N1257-requirements-jurisdictions.md` R119, R120 `[owed: F4's measure; the makers' key]`
+- T53 · N1257 (K5451, K5452) · team layers, any number, and what a team may write · `capabilities/N1257-requirements-jurisdictions.md` R115-R117 plus the one placeless team-rules layer (CONSISTENCY §2.15, decided; R115 as amended, READY C35)
+- T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · `capabilities/N1257-requirements-jurisdictions.md` R119, R120 `[waits: measure F4, the federal list's size (at once); the makers' key]`
 - T53 · N1257 (K5458, K5462) · `nameResolve` (R121, pure: callers pass the active layer set), the one-government fiscal year (R123, R124), N1259's register sections (R127-R133), N858's court-kind refusal (R136) and R137's display half, the beta's profile texts; every module that stores a rule, list or office name stores its layer (local-facts, entities, duties, reading-guides, layer 9, instance-setup, producers, screens) · `planning/plan-T53-capabilities.md` §A
 - T53 · K5497 (C7 remainder) · Civicsmith ships United States places only; a team choosing its places is told so; a team whose work is about a place outside the US names its places and adds their offices and rules itself (DEC-150); level names unchanged · `capabilities/N1257-requirements-jurisdictions.md`, `capabilities/N1257-requirements-modules.md` (K5497's lines)
 - T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` (L18 decided, K5543: the records' year governs, the team's statement set aside; R135 stands) (L3 decided, K5517: a disputed year still groups, shown disputed)
 
-- T53 · K5527 (4), (5) · N858's text record in the profile: a review's `reviewed_text_sha` (R40), a guide's attribution fields (R125), what counts as the professional review and `countedReview` (R126), R138 on `authored_by` and `machine_draft` · `planning/lines-K5527-texts-and-listing.md` §1, §3, §4 (T1-T8 decided, K5528) `[owed: CAPABILITIES' N858 READY]`
+- T53 · K5527 (4), (5) · N858's text record in the profile: a review's `reviewed_text_sha` (R40), a guide's attribution fields (R125), what counts as the professional review and `countedReview` (R126), R138 on `authored_by` and `machine_draft` · `planning/lines-K5527-texts-and-listing.md` §1, §3, §4 (T1-T8 decided, K5528; N858 READY, C29)
 
 **civil-time**
 - T53 · A2 · `fiscalPeriod` over a stated entry, `from`, reasons never holding `*` · `planning/lines-A2-fiscal-year.md` (civil-time)
@@ -34,7 +34,7 @@
 - T53 · A8 (DEC-464) · a typed passage's two grades (unchecked, checked one step stronger, never `EARNED_CAPTURE_CEILING`) · `planning/lines-A8-typed-page.md` §2 (L10 decided, K5524)
 
 **runtime-limits**
-- T53 · N1267 (K4628, K5427, K5439) · the beta's per-kind bounds and protective limits as one table · `files/SIZES-N1267.md`; per-level rows `[owed: PLATFORM service levels]` (CONSISTENCY §2.8)
+- T53 · N1267 (K4628, K5427, K5439) · the beta's per-kind bounds and protective limits as one table · `files/SIZES-N1267.md`; per-level rows PL20, PL21, PL45 (CONSISTENCY §2.8; K5569) · `planning/plan-T53-platform-rows.md`
 - T53 · K4354, K5438 · `TIME_BUDGETS` and `budgetOf` (PL1, PL2) · `platform/time-budgets-draft.md` §4
 - T53 · N1273 (K5440, K5441) · `STORE_JURISDICTIONS`, `storeJurisdiction`, the room from a jurisdiction or a hint, never both (PL30); the generation suffix on a jurisdiction room (PL31); a jurisdiction copy's R2 bucket in the same jurisdiction, the install failing before the room otherwise (PL34) · `platform/record-placement-draft.md` §3
 
@@ -56,10 +56,10 @@
 - T53 · A4 (DEC-460) · `redrawPicture`, `photoFactsOf`, strict strings · `planning/lines-A3-A4-source-picture.md` (image-cover R12-R14) (L6 decided, K5520: JPEG and PNG first)
 
 **office-readers**
-- T53 · N1267a · XLSX cells by window before any workbook bound above 250,000 · `next.md` N1267a `[owed: Bob's higher row; else left out, hard reason Bob's]`
+- T53 · N1267a · XLSX cells by window before any workbook bound above 250,000 · left out (below): the beta keeps 250,000 cells (`files/SIZES-N1267.md` §3)
 
 **signatures**
-- T53 · K5457, K5471 · three more namespaces: the catalogue's, the Gate 1 suite's and the AI run's (`NS_AI_RUN`) (R49-R53 as AI-DESIGN lists them; the run-key check the issuer's R12 needs) · `lane-ai-design/draft-ai-catalogue.md` (signatures), `draft-ai-gate.md` R54-R64 `[owed: the five lines written as lines; FOLD-AI §3]`
+- T53 · K5457, K5471 · three more namespaces: the catalogue's, the Gate 1 suite's and the AI run's (`NS_AI_RUN`) (R49-R53 as AI-DESIGN lists them; the run-key check the issuer's R12 needs) · `lane-ai-design/draft-ai-catalogue.md` (signatures), `draft-ai-gate.md` R54-R64; the five as lines in `lane-ai-design/draft-signatures.md` R49-R53 (READY)
 
 **bundler**
 - T53 · K5457 · the agent Worker's `HEALTH` Durable Object and provider bindings (AI Gateway, Workers AI); `deleted_classes` for `RemoteSession`, in the same deploy that retires the remote route · `lane-ai-design/draft-agent-run-path.md` (agent-worker R35), `draft-agent-runner.md` R13
@@ -70,7 +70,7 @@
 ## Layer 2
 
 **record-core**
-- `[owed: PLATFORM record placement, N1271; three points Bob's]`
+- no PLATFORM entry: placement is runtime-limits' (PL30-PL34); N1271's split left out (K5569, below)
 
 **membership**
 - T53 · K5501 · `onProjectLeft(module, fn)` called inside `projectRemove` (R36), `why: "removed"`; `projectLeave` and `projectOwnerRemove` call nobody (R158) · `planning/lines-K5501-role-change.md`
@@ -124,7 +124,7 @@
 - T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents; finding names, organisations and dates across a whole document is reading, not interpretation (K5496, C21 A); the page and search say what was interpreted, for which investigation, by whom and when, with "not interpreted for this investigation" in search, and the document view marks interpreted parts visibly (K5495, C2 A; the mark UX-DESIGN's) · · `planning/plan-T53-capabilities.md` §A Layer 4 (extraction R114-R119, reading-pipeline R64-R65, acquisition R135) and Layer 7 (investigation R26-R32) (R119: a ceiling per level, K5535, PLATFORM's figure)
 
 **reading-pipeline**, **extraction**
-- T53 · N1266, N1267 (K5427) · the text bound 100 MB, HTML streamed to it; the held-unread verdict re-run when a reader arrives · `files/SIZES-N1267.md` §3, `REQ-format-registry-beta.md` RF10 `[owed: lines for reading-pipeline not drafted]`
+- T53 · N1266, N1267 (K5427) · the text bound 100 MB, HTML streamed to it; the held-unread verdict re-run when a reader arrives · `files/SIZES-N1267.md` §3, `REQ-format-registry-beta.md` RF10 `[owed: BOB writes reading-pipeline's 100 MB line (SIZES §3) and RF10's]`
 
 ## Layer 5
 
@@ -141,7 +141,7 @@
 
 **explore**
 - T53 · N1260 (DEC-409 to DEC-411, K4403 (8)(9)) · every chain between two ends, the most direct, shorter paths beside a member's own, a time stop that can be continued · `capabilities/N1260-following-the-trail-a.md` §5 (R30-R35)
-- T53 · N1260 (DEC-447) · each kind's dimension; "Follow from here" per item kind, a fund included; op `followfrom` · `capabilities/N1260-following-the-trail-a.md` §6 (R36) `[owed: standards' `standardsBinding` line]`
+- T53 · N1260 (DEC-447) · each kind's dimension; "Follow from here" per item kind, a fund included; op `followfrom` · `capabilities/N1260-following-the-trail-a.md` §6 (R36) `[owed: BOB writes standards' `standardsBinding` line; no draft holds one]`
 
 **entities**
 - T53 · N1257, N1256 · `federalOfficesFind` (op `federaloffices`); a federal office made an entity only when chosen, FOIA its law · `capabilities/N1257-requirements-modules.md` (entities R68)
@@ -186,7 +186,7 @@
 **filings** (layer 9 job, listed here with its K5527 line) · T53 · K5527 (4) · R29: a profile template's recorded `sha` equals its counted review's hash; an earlier text flagged · `planning/lines-K5527-texts-and-listing.md` §2
 
 **corpus-export**
-- T53 · K5441, K5443 · the whole team record exported by resumable parts, the one way to change region (PL50-PL53) · `platform/whole-record-move-draft.md` `[owed: READY]`
+- T53 · K5441, K5443 · the whole team record exported by resumable parts, the one way to change region (PL50-PL53) · `platform/whole-record-move-draft.md` (READY, K5569) · rows: `planning/plan-T53-platform-rows.md`
 
 **case-grammar**, **case-disclosures**, **case-checker**, **public-read**, **corpus-export**, **network-notices** (N1259, N1110) · a cited register row as flat extracts in the one `/10`, the seventh reason (K5503), the extract checks, `listingRequest` (R32) · `planning/plan-T53-capabilities.md` §A Layer 8
 
@@ -249,9 +249,9 @@
 **screens-settings**, **installer**, **installer-steps**
 - C T52-58, T52-92 to T52-95 · the AI screens (below)
 - T53 · N1257 (K5450, K5452) · the places page as a tree, the choice a set, "Report a rule" the one act on a shipped rule, an information mark on each entry and the page (screens-settings R82, R83); the install asks where the work focuses, as a set, nothing below federal preselected (installer R86); instance-setup holds the choice and the team's layers (R107-R111) · `capabilities/N1257-requirements-modules.md` (D3 = C7, answered: K5452, K5497) (READY, C29) (CONSISTENCY §2.17 decided)
-- T53 · K5444, K5442, K5454 · a copy chooses its level at install (Team, Institution; Enterprise listed as not yet available, PL29) and can move up later · `platform/service-levels-draft.md` `[owed: READY; Levels 2-3 study]`
+- T53 · K5444, K5442, K5454 · a copy chooses its level at install (PL29; in T53 only Team selectable, Institution and Enterprise listed "not yet available", K5569); the gauge's level and outgrowing (PL22-PL28) · `platform/service-levels-draft.md` (READY) · rows: `planning/plan-T53-platform-rows.md`
 - T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" storage in a jurisdiction, the room and its R2 bucket; what runs elsewhere said), the choice fixed and the move by export and import said before it (PL32); Settings states the placement truthfully (PL33) · `platform/record-placement-draft.md` §3 (installer, installer-steps, plane; screen needs to UX-DESIGN)
-- T53 · K5443 · the one way to change region: whole-record export (corpus-export, layer 8) and the installer's import (PL35, PL50-PL57) · `platform/whole-record-move-draft.md` `[owed: READY; one point maybe Bob's (a move carries members' sign-in material?)]`
+- T53 · K5443 · the one way to change region: whole-record export (corpus-export, layer 8) and the installer's import (PL35, PL50-PL57) · `platform/whole-record-move-draft.md` (READY, K5569; sign-in material not carried, K1489, K1490) · rows: `planning/plan-T53-platform-rows.md`
 
 **control-plane**, **plane**
 - C T52-85 to T52-91 · T53 · N1264, K4599: routes `screenread` and the folded admission · `platform/combined-read-and-fold-draft.md` §3
@@ -275,12 +275,12 @@
 - T53 · N1220 (DEC-420, K5457) · `aiproviders`, `aiconnect`, `aimine`, `aiproject`, `aimoments`, `aitest`, `airesults` · `lane-ai-design/draft-assistant-screens.md` §2, §4, §5; `lane-ai-design/UX-REQUIREMENTS.md` `[waits: UX-DESIGN's rows, B555]`
 - T53 · DEC-465 · origin an ordinary check ("Not offered" row removed); a team account's owner opt-in "Projects and members may add this account"; a member's list ordered (`aiorderset`); a key kept sealed in the team's Civicsmith (`aikeyseal`); aimoments names whose checks apply · DEC-465 → `lane-ai-design/draft-ai-accounts-dec465.md` (ai-accounts R69-R74, layer 2)
 - T53 · DEC-466 (screens-ai, with interface-shell and the installer for their halves) · each label names the AI (`screen.machine.*.ai`); a finished run lists its parts and switches (N1219: ai-runs' segments); Setup's ready and not-ready states (interface-shell R20's read); the installer's gateway line matched to K4464's grant · DEC-466 → ai-runs R99-R104 (layer 6), instance-setup R109 and the installer lines below
-- T53 · DEC-466 U5, K5471 (2) (installer, installer-steps, instance-setup) · the installer asks for exactly the AI gateway's two permissions (installer R2, A47's R107) and an install without them completes, the assistant still usable (installer-steps R45, A47's R108); Setup's ready state (instance-setup R109, A47); the health sender beside `update-check` (R110, K5487) · `lane-ai-design/draft-instance-setup.md` `[owed: whether "AI Gateway - Edit" carries reading, OPEN in the draft]`
+- T53 · DEC-466 U5, K5471 (2) (installer, installer-steps, instance-setup) · the installer asks for exactly the AI gateway's two permissions (installer R2, A47's R107) and an install without them completes, the assistant still usable (installer-steps R45, A47's R108); Setup's ready state (instance-setup R109, A47); the health sender beside `update-check` (R110, K5487) · `lane-ai-design/draft-instance-setup.md` `[first: settle on Cloudflare's pages whether "AI Gateway - Edit" carries reading (else "- Read") and the Secrets Store scope's name]`
 - T53 · K5471 (5) (installer) · the installer's Logpush read is refused (Cloudflare "Authentication error" on plat-s1's install): its scopes (K5449, K5460) lack Logs Read: the installer asks for a read-only Logs scope (installer R2's count to seven), the check keeping its strength (K5473 (2)) · K5471, K5473 `[first: Bob's one act, registering the scope on the OAuth client]`
 - T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · `lane-ai-design/draft-assistant-screens.md` §5 U7; DEC-468, DEC-469 (the words reconciled: the payer's by-member view, the opt-in note, moment j)
 
 **op-declarations**, **op-grades**, **interface-shell** (the assistant)
-- T53 · N1220, K5482-K5489 · the AI ops declared (the 43 plus `airesultown`, `aihealthshare`, `aihealthpreview`, `aicreditsclear`, `aiwaitswitch`, `airetestset`) with grade and budget class (an "AI act" class owed by PLATFORM, P1), the retired ops removed; the assistant's reads as one combined read (P2) · `lane-ai-design/draft-assistant-screens.md` §4, §5 P1, P2 `[owed: PLATFORM's AI act class]`
+- T53 · N1220, K5482-K5489 · the AI ops declared (the 43 plus `airesultown`, `aihealthshare`, `aihealthpreview`, `aicreditsclear`, `aiwaitswitch`, `airetestset`) with grade and budget class (an "AI act" class owed by PLATFORM, P1), the retired ops removed; the assistant's reads as one combined read (P2) · `lane-ai-design/draft-assistant-screens.md` §4, §5 P1, P2 (the AI act class: `platform/time-budgets-draft.md` PL1, READY)
 - T53 · N1220 · every machine result labelled with its AI's name in the screens that show one (screens-intake, -daily, -investigate, -publish, -action, -wizards, -document) · `lane-ai-design/draft-assistant-screens.md` §2 (ii), §5 U1
 
 **installer**, **journey-check**, **notice-producers**, **queue**, **op-*** , **store-assembly**, **control-plane**, **instance-setup**, **stewards**, **site**, **screens-*** (CAPABILITIES) · N1265's check and gate (installer R86-R93, replacing T52-92's probe and T52-94's steps; journey-check R39-R41), installer R2 one line for every scope ask `[owed: BOB settles the count]`, register notices and kinds, the registers screen (screens-investigate, rec.), mail's ops and door, stewards' decline record (K5530: B2 stewards' own mail, B3 closed `RULE_PARTS`), N1272's Interpreted row (DEC-476, DEC-478) · `planning/plan-T53-capabilities.md` §A Layer 11
@@ -312,7 +312,7 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 **At once, alongside R1** (each measures what exists now or prepares a copy; its result goes to the job that reads it, before that job's layer START where it can):
 - Registers, on the source files and a throwaway on a scratch copy (`planning/plan-T53-capabilities.md` §C): M-R3 index storage at 73,043 / 1M / 5M rows (decides S1-S4 before registers' layer-5 START), M-R7 streaming throughput, CPU, subrequests and decoder state (sets `REGISTER_STREAM_MAX`, `SLICE_*` before register-readers' layer-1 START), M-R4 identifier forms, M-R8 count queries, M-R10 contact-shape false hits (by script, the drafted rule), M-R11 volatile text, M-R12 extract sizes; the federal zips BOB's download.
 - PLATFORM (BOB #324): the S1 Level 1 baseline and soak on plat-s1; per-table bytes and the plane-only measuring ops; P-M17 and FILES' L1-L6 on the alpha's reader; the budget walks of today's screens and acts (`platform/time-budgets-draft.md` §6 L1); the S2 prototypes B and C and T-a (throwaway; T-a is Before R1 (4)); the Enterprise quote; the load test's short "before" run on the alpha's design with PLATFORM's study driver (`platform/load-test-draft.md` §6; load-check itself is built in R1).
-- Preparation: the acceptance corpus's files (N1268, `files/CORPUS-N1268.md`); M-N1272's files, pinned questions and bar in `MEASUREMENTS.md`, and Bob's blind marking of the gold set (K5537); N824 P1-P2 with M1 (Before R1 (6)) and P3's delivery checks once Bob's Email Routing domain exists (N1159).
+- Preparation: N1257's F4, the federal offices list's size (`capabilities/LOAD-TABLE.md`); the acceptance corpus's files (N1268, `files/CORPUS-N1268.md`); M-N1272's files, pinned questions and bar in `MEASUREMENTS.md`, and Bob's blind marking of the gold set (K5537); N824 P1-P2 with M1 (Before R1 (6)) and P3's delivery checks once Bob's Email Routing domain exists (N1159).
 
 **After the code it measures** (each on a scratch copy deployed from the tranche, run the moment its module merges, never at a round's end; the one dependency named):
 - M-N1272, the proposals' precision and recall on the corpus · after extraction R114-R119 (layer 4).
@@ -320,7 +320,7 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 - N824's door CPU at 25 MiB · after mail-reader and mail-door (layers 1, 3).
 - The acceptance corpus walk (N1268) · after journey-check's walk and the readers (layers 1, 11).
 - The registers journey · after registers and the registers screen (layers 5, 11).
-- PLATFORM: the after-figures of the fold, the combined read and the work fixes · after PL12-PL14 (admission, store-door, layer 11); per-type load of the photo redraw, Tier 2 and held types, and archive fan-out · after the new readers (layer 1); the N1273 region picker and the `eu` rehearsal · after the installer's new path (layer 11); measured Level 2 · after N1271 is built.
+- PLATFORM: the after-figures of the fold, the combined read and the work fixes · after PL12-PL14 (admission, store-door, layer 11); per-type load of the photo redraw, Tier 2 and held types, and archive fan-out · after the new readers (layer 1); the N1273 region picker and the `eu` rehearsal · after the installer's new path (layer 11); Level 1's per-level figures are at once (`planning/plan-T53-platform-rows.md`); the whole-record move at 1, 5, 25 GB · after corpus-export and the installer's import (layers 8, 11).
 - The load test per level (N1274) and the budget walk L2, L3 · after load-check and layer 11's deploy.
 
 **No R3.** A defect a measurement finds goes to its module's job, which stays open until its layer closes (P10); a defect in a layer already closed goes to the tranche's completion round (§5.2), the only later round.
@@ -334,3 +334,5 @@ The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52
 - N1270 · audio, video, forum formats · Bob's: after 1.0 (K4628); held and named meanwhile (K5436)
 - K5454 · Enterprise support (Level 3) · Bob's, a hard reason outside the product: built with the first Civicsmith team that wants an Enterprise-scale copy; listed at install as not yet available (PL29)
 - FILES Tier 3 readers (PST/OST, Access and the rest) · Bob's (K5437): each by its own ruling when a real file is shown
+- N1271 · Institution and Enterprise's design stages and the upgrade step (PL24) · Bob's decision not yet made: the Levels 2-3 study and its report to Bob (K5444, K5569)
+- N1267a · XLSX cells by window · Bob's decision not yet made, a row above his alpha's 250,000 (K4831 (10))

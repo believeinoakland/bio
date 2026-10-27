@@ -1,6 +1,6 @@
 # T53's CAPABILITIES entries by owning module (PLANNING L23)
 
-**Status** · DRAFT for BOB; §F all decided as recommended and §G sorted by K5530 (BOB #323: F7 the probe upload only where no read can answer, K5449 (1) for the card line; F10 supersedes K5528 T3; mail-door BOB's packaging; N1110 B2 T1, B3 closed; N824 B4, the R119 ceiling, the gold-set reviewer and DEC-340's facts on Bob's page as C31-C34; N858's per-text people Bob's acts when each text is made; N1259-d R36 (case-disclosures R41) asked of BOB in plain words) · PLANNING #3, 2026-10-27. CAPABILITIES' READY scope (C29: N1259 a-f/b2, N824, N1110, N1265, N858, N1269-N1272, N1257 layer-names and record-core) read whole by five Sonnet reading workers and set out one entry per module by layer. Pointers `capabilities/<file>` are on `lane/capabilities` (merged into tranche/T53 by BOB). Ids are draft ids; renumbering per §D is applied in the entries. N1260 and N1257's earlier files are in `plan-T53-draft.md` itself.
+**Status** · READY for BOB (L56); §F all decided as recommended and §G sorted by K5530 (BOB #323: F7 the probe upload only where no read can answer, K5449 (1) for the card line; F10 supersedes K5528 T3; mail-door BOB's packaging; N1110 B2 T1, B3 closed; N824 B4, the R119 ceiling, the gold-set reviewer and DEC-340's facts on Bob's page as C31-C34; N858's per-text people Bob's acts when each text is made; N1259-d R36 (case-disclosures R41) asked of BOB in plain words) · PLANNING #3, 2026-10-27. CAPABILITIES' READY scope (C29: N1259 a-f/b2, N824, N1110, N1265, N858, N1269-N1272, N1257 layer-names and record-core) read whole by five Sonnet reading workers and set out one entry per module by layer. Pointers `capabilities/<file>` are on `lane/capabilities` (merged into tranche/T53 by BOB). Ids are draft ids; renumbering per §D is applied in the entries. N1260 and N1257's earlier files are in `plan-T53-draft.md` itself.
 
 ## Keys
 
@@ -33,7 +33,7 @@
 - T53 · N824 · `jobRegistrarStub` takes job kind `member` · N824-container-member-job R29 (first of the member-job chain)
 
 **runtime-limits**
-- T53 · N824 (K5527 (2)) · `mail` rows (message 25 MiB, 20 an hour a member, 200 a day a team, 14 days waiting, nesting 3) and `doorbell.discard_days` 7; the 25 MiB quoted once for `mail-door` and `mail-reader` (ML12 states it too) · N824 R37 `[owed: PLATFORM per-level figures]`. Number at write time: runtime-limits also gets N1267, PL1 and PL30-34 lines.
+- T53 · N824 (K5527 (2)) · `mail` rows (message 25 MiB, 20 an hour a member, 200 a day a team, 14 days waiting, nesting 3) and `doorbell.discard_days` 7; the 25 MiB quoted once for `mail-door` and `mail-reader` (ML12 states it too) · N824 R37 (per level: PL20's rows, K5569, `plan-T53-platform-rows.md`). Number at write time: runtime-limits also gets N1267, PL1 and PL30-34 lines.
 - T53 · N1259 · rows `REGISTER_STREAM_MAX`, `REGISTER_SEGMENT_MAX` · N1259-a acquisition R126 `[waits: M-R7]`
 
 **mail-reader** (FILES', layer 1, place at 14-17: after `ooxml` 13, `structured-text-reader` just before, ahead of `format-registry` 18 and `doc-clean` 30; BOB's)

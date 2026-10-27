@@ -1,6 +1,6 @@
 # T53's entries from the design rows DEC-479 to DEC-483 (PLANNING L42)
 
-**Status** · Placed; its three points decided by BOB #324 (L42: the swap, reading-pipeline, case-disclosures; K5564) · PLANNING #4, 2026-10-27. The owed work of DEC-479 to DEC-483 (UX-DESIGN U512-U516, on `claude/gallant-brown-zg0wc1` at d5d75136, not yet on `tranche/T53`), one entry per owning module, beside `plan-T53-draft.md` (which is near its cap). Each module's START carries its rows here verbatim with the DEC row (L37 R1, R3). Every point marked BOB's is lower-level (P17): owner, order, op names.
+**Status** · READY (L56) · Placed; its three points decided by BOB #324 (L42: the swap, reading-pipeline, case-disclosures; K5564) · PLANNING #4, 2026-10-27. The owed work of DEC-479 to DEC-483 (UX-DESIGN U512-U516, on `claude/gallant-brown-zg0wc1` at d5d75136, not yet on `tranche/T53`), one entry per owning module, beside `plan-T53-draft.md` (which is near its cap). Each module's START carries its rows here verbatim with the DEC row (L37 R1, R3). Every point marked BOB's is lower-level (P17): owner, order, op names.
 
 ## Before R1
 
