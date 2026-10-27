@@ -406,7 +406,7 @@ test("R19, R4, R5, R30 (K1674, K1683): OP_STAMPS maps every op this module decla
   /* R80: an op an owner declares is stamped by its declaration, registered beside the hand rows (`register-owners.mjs`), so
      the stamped ops outside the declarations are exactly the hand list; a declared op may be stamped by either */
   const DECLARED = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));
-  const HAND = [...new Set([...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased, "claim", "login", "agentpack"])];
+  const HAND = [...new Set([...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "tablebytes", "moneydetectorsrun", ...aliased, "claim", "login", "agentpack"])];
   assert.deepEqual(Object.keys(OP_STAMPS).filter((op) => !DECLARED.has(op)).sort(), HAND.filter((op) => !DECLARED.has(op)).sort());
   for (const al of aliased) assert.deepEqual([...OP_STAMPS[al]], [...OP_STAMPS[OP_ALIASES[al]]], al);
   for (const [op, keys] of Object.entries(OP_STAMPS)) {

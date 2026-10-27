@@ -2195,7 +2195,15 @@ test("R72: recordCoreOps holds eight ops, each answering what its service answer
   for (const c of ["0", "true", ""]) assert.ok(!("dbBytes" in ops("stats", { capacity: c })), `capacity=${c}`);
   ops("stats", {}); ops("stats", { viewer: "" });
   assert.deepEqual(asked.slice(-2), [[undefined, false], ["", false]]);
-  /* the seven are the five run here and `audit` and `purge`, which the tests that follow run */
+  /* PROTOTYPE tablebytes: per table name, rows and bytes plus dbBytes; writes nothing; falls back to counts without dbstat */
+  const tb = ops("tablebytes", {});
+  assert.ok(tb.tables.some((t) => t.name === "bundles" && typeof t.rows === "number"), "bundles is listed with a row count");
+  assert.ok(["dbstat", "count-only"].includes(tb.source));
+  assert.equal(tb.dbBytes, 512);
+  const before = rows(s, `SELECT COUNT(*) AS n FROM bundles`)[0].n;
+  ops("tablebytes", {});
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM bundles`)[0].n, before, "writes nothing");
+  /* the eight are the six run here and `audit` and `purge`, which the tests that follow run */
   assert.deepEqual([...exercised].sort(), held.filter((op) => op !== "audit" && op !== "purge"));
 });
 

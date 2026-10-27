@@ -11,7 +11,7 @@ test("R1: needsRows answers the 323 hand-written rows exactly as op-declarations
   const rows = needsRows();
   assert.deepEqual(Object.keys(rows).sort(), Object.keys(golden).sort());
   for (const [op, cap] of Object.entries(golden)) assert.equal(rows[op], cap, op);
-  assert.equal(Object.keys(rows).length, 323);
+  assert.equal(Object.keys(rows).length, 324);
   for (const [op, cap] of Object.entries(rows)) assert.ok(CAPS.includes(cap), `${op}: ${cap}`);
   assert.deepEqual(Object.keys(rows).sort(), Object.keys(rows).filter((k, i, a) => a.indexOf(k) === i).sort());
 });
@@ -19,7 +19,7 @@ test("R1: needsRows answers the 323 hand-written rows exactly as op-declarations
 test("R1: the count by value — contribute 185, publish 7 (ratify, caseratify, publishat, publish, reviewgrant, reviewrevoke, strengthbar), create_projects 1 (projectfork), a present null 130", () => {
   const by = {};
   for (const v of Object.values(needsRows())) by[String(v)] = (by[String(v)] ?? 0) + 1;
-  assert.deepEqual(by, { contribute: 185, publish: 7, create_projects: 1, null: 130 });
+  assert.deepEqual(by, { contribute: 185, publish: 7, create_projects: 1, null: 131 });
   const pub = Object.keys(needsRows()).filter((k) => needsRows()[k] === "publish").sort();
   assert.deepEqual(pub, ["caseratify", "publish", "publishat", "ratify", "reviewgrant", "reviewrevoke", "strengthbar"]);
   assert.deepEqual(Object.keys(needsRows()).filter((k) => needsRows()[k] === "create_projects"), ["projectfork"]);
