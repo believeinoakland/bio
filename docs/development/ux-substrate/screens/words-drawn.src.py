@@ -2875,7 +2875,7 @@ W.append(dict(key='screen.members.how.it.changes.with.the', en='How it changes w
 W.append(dict(key='screen.members.no.majority.that.leaves.out', en='no majority that leaves out the one facing removal can be reached', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
 W.append(dict(key='screen.members.removal.takes.a.majority.of', en='Removal takes a majority of all administrators.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
 W.append(dict(key='screen.members.the.one.facing.removal.is', en="The one facing removal is counted but doesn't vote, and a tie removes no one.", protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
-W.append(dict(key='screen.members.a.lone.administrator.can.never', en='A lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
+W.append(dict(key='screen.members.a.lone.administrator.can.never', en='Apart from the founder, a lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
 W.append(dict(key='screen.members.removing.teo.as.an.administrator', en='Removing {member} as an administrator', protected=False, note='DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal (adminremovalsopen target)'))
 W.append(dict(key='screen.members.four.administrators.rosa.dev.ana', en='{n} administrators: {members}.', protected=False, note='DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} every administrator counted, the one facing removal included; {members} their names as one list in the language\'s own list form (Intl.ListFormat, conjunction); who voted and who is awaited are the rows below it, one per member (screen.members.removal.*)'))
 W.append(dict(key='screen.members.this.takes.3.of.4', en="This takes {n} of {total} administrators' votes.", protected=False, note='DEC-330: B306 A72/A74: drawn sentence'))
@@ -8708,8 +8708,20 @@ w481('screen.question.subjectchanged.published', 'This question is in {case}, ed
 def w483(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-483: ' + note))
 # BOB #324's ask: inviting an administrator answered CONSENSUS_REQUIRED shows no link
-w483('screen.members.invite.nolink', 'No invitation link exists yet. It appears here once {names} have endorsed.', 'members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen')
+w483('screen.members.invite.nolink', 'No invitation link exists yet. It appears here once {names} have endorsed, or once the team\'s founder has.', 'members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen')
 w483('screen.members.invite.waiting.summary', 'When a new administrator waits on endorsements', "members: the design page's fold for the nolink line")
+
+def w484(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-484: ' + note))
+# BOB #324's ask: Bob's K5562 (the founder removes an administrator alone, with a reason the team sees) and K5563 (the founder's endorsement alone; cancelling a waiting proposal)
+w484('screen.members.founder.removes', "The team's founder can remove any other administrator alone, with a reason everyone on the team sees. Other administrators still need a majority vote, and no one can remove the founder.", 'members: in What removing an administrator takes, at every size (K5562)')
+w484('screen.members.founder.remove.summary', 'When the founder removes an administrator', "members: the fold with the founder's own removal (K5562)")
+w484('screen.members.founder.remove.reason', "Why remove their administrator's powers? (everyone on the team will see this)", "members: the founder's reason field (K5562)")
+w484('screen.members.removed.byfounder', '{founder}, the team\'s founder, removed {handle} as an administrator on {date}: “{reason}”', 'members, and the team\'s updates: the removal and its reason, shown to the team (K5562)')
+w484('screen.members.endorse.founder', "{handle} is proposed as an administrator. As the team's founder, your endorsement alone makes them one.", "members: endorse.what's line for the founder (K5563)")
+w484('screen.members.proposal.summary', 'When the founder endorses, or the proposal is cancelled', "members: the design page's fold for a proposed administrator's two outcomes")
+w484('screen.members.proposal.cancelled', '{handle}\'s proposal is cancelled. They stay a member, without an administrator\'s powers; the endorsements given so far stay in the history.', 'members: after Cancel this proposal (K5563)')
+REWRITE.update({'refusal.CONSENSUS_REQUIRED': "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}."})
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

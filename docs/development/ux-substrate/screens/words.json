@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 8066,
+  "screen": 8073,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 67,
-  "act": 1326,
+  "act": 1328,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -239,8 +239,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19790,
-  "protected": 1180
+  "total": 19799,
+  "protected": 1181
  },
  "words": [
   {
@@ -29184,10 +29184,10 @@
   },
   {
    "key": "refusal.CONSENSUS_REQUIRED",
-   "en": "Your endorsement is recorded. While the team has two or more administrators, a new one is invited only once every administrator endorses. Still to endorse: {awaiting}.",
+   "en": "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}.",
    "protected": false,
    "source": "DEC-256",
-   "note": "T49's requirement draws it by its words"
+   "note": "T49's requirement draws it by its words; DEC-259: reworded"
   },
   {
    "key": "refusal.OWNERS_ARE_ACTIVE",
@@ -47807,7 +47807,7 @@
   },
   {
    "key": "screen.members.a.lone.administrator.can.never",
-   "en": "A lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.",
+   "en": "Apart from the founder, a lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
@@ -85614,7 +85614,7 @@
   },
   {
    "key": "screen.members.invite.nolink",
-   "en": "No invitation link exists yet. It appears here once {names} have endorsed.",
+   "en": "No invitation link exists yet. It appears here once {names} have endorsed, or once the team's founder has.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-483: members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen"
@@ -85625,6 +85625,55 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-483: members: the design page's fold for the nolink line"
+  },
+  {
+   "key": "screen.members.founder.removes",
+   "en": "The team's founder can remove any other administrator alone, with a reason everyone on the team sees. Other administrators still need a majority vote, and no one can remove the founder.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-484: members: in What removing an administrator takes, at every size (K5562)"
+  },
+  {
+   "key": "screen.members.founder.remove.summary",
+   "en": "When the founder removes an administrator",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-484: members: the fold with the founder's own removal (K5562)"
+  },
+  {
+   "key": "screen.members.founder.remove.reason",
+   "en": "Why remove their administrator's powers? (everyone on the team will see this)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-484: members: the founder's reason field (K5562)"
+  },
+  {
+   "key": "screen.members.removed.byfounder",
+   "en": "{founder}, the team's founder, removed {handle} as an administrator on {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-484: members, and the team's updates: the removal and its reason, shown to the team (K5562)"
+  },
+  {
+   "key": "screen.members.endorse.founder",
+   "en": "{handle} is proposed as an administrator. As the team's founder, your endorsement alone makes them one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-484: members: endorse.what's line for the founder (K5563)"
+  },
+  {
+   "key": "screen.members.proposal.summary",
+   "en": "When the founder endorses, or the proposal is cancelled",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-484: members: the design page's fold for a proposed administrator's two outcomes"
+  },
+  {
+   "key": "screen.members.proposal.cancelled",
+   "en": "{handle}'s proposal is cancelled. They stay a member, without an administrator's powers; the endorsements given so far stay in the history.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-484: members: after Cancel this proposal (K5563)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -125186,6 +125235,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_adminproposalcancel.label.members",
+   "en": "Cancel this proposal",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.expertiseconfirm.label.members",
    "en": "Confirm declared expertise",
    "protected": true,
@@ -130911,6 +130966,12 @@
   {
    "key": "act.handlecheck.does",
    "en": "Checks, as you type, whether this handle can be used in the team: free, already taken, or using characters a handle can't have. It never says who has a handle.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_adminproposalcancel.does",
+   "en": "Cancels a waiting proposal to make a member an administrator. Only the team's founder or the member who proposed it can. Nothing else changes.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

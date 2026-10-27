@@ -350,6 +350,7 @@ const ACT_HELP = {
   exploreapprove: 'Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn\'t.',
   handlechange: 'Changes the handle the record shows on your work. Members see your earlier handle beside it, and no one else can ever take it. Allowed until your work first appears in a published case; after that it is fixed.',
   handlecheck: 'Checks, as you type, whether this handle can be used in the team: free, already taken, or using characters a handle can\'t have. It never says who has a handle.',
+  owed_adminproposalcancel: 'Cancels a waiting proposal to make a member an administrator. Only the team\'s founder or the member who proposed it can. Nothing else changes.',
   owed_mailnameshow: 'Shows one person\'s name in the published copy of an email, with your reason it is material to the case. Every other name reads “withheld”.',
   owed_mailnamewithhold: 'Withholds a name you showed. The published copy reads “withheld” in its place.',
   obscuremarkwithdraw: 'Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.',
