@@ -49,3 +49,5 @@ export const CHANGES = Object.freeze(["added", "withdrawn", "adjusted", "set_cha
 /* The members' words (K1486): money words by context, a followed flow a "money trail". The connection kind's word. */
 export const CONNECTION_KIND = "money_flow";
 export const CONNECTION_WORD = "money";
+export const SET_SOURCE_KIND = "money_source";
+export const SET_SOURCE_WORD = "source document";
