@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19393 design words, 1162 protected; SHA-256
-   94ba00d9e0f2a262bd58778e3c2fa9eaeb9ea820e0d89db4a59716b69c3fe9e2) followed by 7508 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   94ba00d9e0f2a262bd58778e3c2fa9eaeb9ea820e0d89db4a59716b69c3fe9e2) followed by 7511 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -24742,6 +24742,9 @@ export const WORD_ROWS = Object.freeze([
   ["membership.index.root_admin_names_the_founding","'{ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be enrolled under it",null,null,false,"code"],
   ["membership.index.stringify_is_not_a_setting","{stringify} is not a setting: a project is \"discoverable\" or \"hidden\", and nothing else. Nothing was written.",null,null,false,"code"],
   ["membership.index.subject_is_v1_production_and","{subject} is {v1} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is {v2}'s, who is not an owner of it. Being a registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.",null,null,false,"code"],
+  ["membership.index.that_handle_is_yours","that handle is yours; you cannot invite yourself to a project",null,null,false,"code"],
+  ["membership.index.that_member_is_already_in","that member is already a participant of this project",null,null,false,"code"],
+  ["membership.index.that_member_is_already_invited","that member is already invited to this project and has not joined yet",null,null,false,"code"],
   ["membership.index.the_choice_is_tell_or","the choice is `tell` or `dont`, and nothing else. Nothing was written.",null,null,false,"code"],
   ["membership.index.the_description_is_seen_by","the description is seen by `members` or by the `public` too.",null,null,false,"code"],
   ["membership.index.the_founders_handle_is_chosen","the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written.",null,null,false,"code"],

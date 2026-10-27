@@ -95,7 +95,7 @@ test("R128 the guard is asked after each act's own refusals: an act its own rule
   assert.equal(w.m.projectInvite({ projectId: P, handle: "cal", by: "bob" }).reason, "NOT_THE_OWNER");
   assert.equal(invite(w, "nobody-here").reason, "NO_SUCH_HANDLE");
   assert.equal(invite(w, "dee").reason, "NOT_ACTIVE");
-  assert.equal(invite(w, "ann").reason, "ALREADY_A_PARTICIPANT");
+  assert.equal(invite(w, "ann").reason, "THAT_IS_YOU");   /* R157: the owner's own handle */
   /* R45's own refusals: sight, not a project, not the owner, an unknown setting */
   assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-2026-0009-absent", setting: "hidden", by: "ann", viewer: V("ann") })
     .reason, "NO_SUCH_PROJECT");

@@ -1060,11 +1060,24 @@ export class Membership {
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: localize("membership.index.only_an_owner_of_this", "only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.") };
-    const target = this.memberByHandle(handle);
+    /* R157 (T52; W4, A-K8 (b) (c); amends R32): the founder's held handle (`member-roster` R59) answers the founder,
+       whose member id is `admin`, so it never answers NO_SUCH_HANDLE; `memberByHandle` itself stays (R48). */
+    const fh = this.founderHandle();
+    const target = typeof handle === "string" && handle !== "" && handle === fh
+      ? { member_id: ROOT_ADMIN, handle, status: "active" }
+      : this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
+    if (target.member_id === by || (typeof by === "string" && by === `member:${target.member_id}`))
+      return { ok: false, reason: "THAT_IS_YOU", handle,
+               detail: localize("membership.index.that_handle_is_yours", "that handle is yours; you cannot invite yourself to a project") };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
-    if (this.participation(projectId, target.member_id))
-      return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle };
+    const held = this.participation(projectId, target.member_id);
+    if (held && held.state === "invited")
+      return { ok: false, reason: "ALREADY_INVITED", handle,
+               detail: localize("membership.index.that_member_is_already_invited", "that member is already invited to this project and has not joined yet") };
+    if (held)
+      return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle,
+               detail: localize("membership.index.that_member_is_already_in", "that member is already a participant of this project") };
     { const guarded = this.#projectActGuarded("invite", projectId, by); if (guarded) return guarded; }   /* R128 */
     const now = this.#nowIso();
     this.participationWrite("invite", { projectId, memberId: target.member_id, by, at: now });
