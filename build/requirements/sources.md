@@ -1,6 +1,6 @@
 # sources — requirements
 
-**Status** · In force: approved by Bob 2026-09-30 (K509 (1): a new product module after `capture` in layer 3), its questions ruled as recommended (K509 (4), (5)). Last changed T51 (K4206: R22 new, `knockerconsent` declared; R21 declares its four ops); marked not yet met (T51). Before that T47 (T47-13: R20 new, `sourceChangesSince`, the instants at which a source's disclosures and consents changed, for `case-carriage` R21; N947, K2949). Before that T33 (T33-22: R16–R19; K1449, K1492); every other requirement met.
+**Status** · In force: approved by Bob 2026-09-30 (K509 (1): a new product module after `capture` in layer 3), its questions ruled as recommended (K509 (4), (5)). Last changed T51 (K4206: R22 new, `knockerconsent` declared; R21 declares its four ops); marked not yet met (T51). Before that T47 (T47-13: R20 new, `sourceChangesSince`, the instants at which a source's disclosures and consents changed, for `case-carriage` R21; N947, K2949). Before that T33 (T33-22: R16–R19; K1449, K1492); every other requirement met. Last changed T53 (BOB #325: R23 new, `sourceLinksFor`, DEC-459; K5456, K5518, K5544); marked not yet met (T53); it is the plan's owed line (`[owed: BOB writes from sources read whole]`), drafted from `lines-A3-A4-source-picture.md` A3-R1.
 
 **Size (P6).** New. Expected well under 4,000 lines: a history table, a consent table, a read log and their reads.
 
@@ -49,14 +49,17 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - **R17** `keyedResultOf(captureSha)` answers a marked capture's `{member_keyed: true, service, by, at, reproducible_by_public: false, grade_cap}`, else null; never throws. `grade_cap` is one rank below the letter `provenance.captureGrade` answers for that capture, in `BASIS_GRADES`' order (never above it, and D stays D): a reader grading a fact that cites the capture caps its capture axis there, so the result is cited at a lower grade than a public capture of the same page.
 - **R18** (K1492 (3), (6); K1449: never unattended) No path of this module takes rows in bulk from a member-keyed source: nothing here imports a vendor's records, and a result enters only as one capture marked by R16. No act here runs unattended: a machine credential, a daemon or a scheduled consumer is refused R16's `MACHINE_CANNOT_MARK`. Nothing records what a member searched for: the mark holds the vendor and terms, never a query, a search term or the results the member did not capture.
 
+**sourceLinksFor({captureShas, viewer})** (T53; DEC-459; A3)
+- **R23** (T53; DEC-459; K5456, K5518, K5544; amends R5) **A handed-in capture's source is linked for listed members only.** A member is *listed* for a source when she is named in the `sight` list (R5) of any recorded detail of that source (an entry with `recorded: true`); a source about which nothing is recorded has no listed member, so nobody is listed (K5544, L19 = A). For each capture asked, `sourceLinksFor({captureShas, viewer})` answers `{handed_in, source}`: `source` is answered only to a listed member of that capture's source; a viewer not listed (an administrator who is not listed included, K5456), a capture with no source and a capture the viewer may not see (its home outside the viewer's sight, `provenance.homeOf` and `membership` R43) are answered alike, with no `source` (the source's existence is confidential too, K5518). `handed_in` is true for every capture the viewer may see that came through the doorbell (a capture whose receipt route is `doorbell`, `provenance` R51), whoever the viewer is; it is false for an upload, and for a capture whose route is `email` or `email-attachment` (`provenance` R82, R84). The answer never holds a pseudonym, a knock id, the secret's digest, an entry or a rung. It writes nothing, answers no value (so adds nothing to a read log, R5) and never throws. Test: a listed member gets `source` for a doorbell capture; an unlisted member gets `handed_in` true and no `source`; an administrator who is not listed is answered as unlisted; a source with nothing recorded has no listed member, so no viewer gets `source`; an upload and an email capture answer `handed_in` false; a capture the viewer may not see answers as one with no source. Control: no answer holds the pseudonym, knock id, digest, entry or rung. *(not yet met: T53)*
+
 ## Private
 
 ### Uses
 
 - `record-grammar`: `isMachineIdentity` (its R15).
 - `record-core`: `transact`, `stampInstant`, `mintOpaqueId` (a source's id) and `mintExhausted` (its R62, when no source id can be drawn; N376), `declarePurge` (R13's exemption), and `declareTable` (its R21; R19, T33-22).
-- `provenance`: `captureGrade` (R17), and `record-grammar`'s `BASIS_GRADES` (R17).
-- `membership`: `listenerRefusal` (R10), the member session stamp, `activeAdmins` (R5's administrators).
+- `provenance`: `captureGrade` (R17, R23's route `doorbell`), `homeOf` (R23's sight of a capture), and `record-grammar`'s `BASIS_GRADES` (R17).
+- `membership`: `listenerRefusal` (R10), the member session stamp, `activeAdmins` (R5's administrators), and `viewerPredicate` (its R43) for R23's sight of a capture.
 - `doorbell` (T42, K2624; was `capture`): the inbox rows (`knocker_digest`, `pseudonym`, status; its R3, R14), `knocksOf` (its R15), `pulledKnocksOf` (its R18), `knockerDigestOf` (its R14; R11), `knockAttempt` (its R17), the pulled knock's `source` (`acquisition` R16, its R13), the knock's rate (its R2; R11).
 
 ### Invariants
@@ -86,12 +89,14 @@ Rows C-121.1–C-121.10 (R14; N364; C-121.7–.10 K1549), a new family, "a sourc
 - `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §2a (the doorbell): DEC-78 items 2, 3 and 5 (a source's history, its pseudonym, what may be published).
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §1.2 (the capturing member is not the source): R12.
 - DEC-78; Bob's rulings K509 (1), (4) and (5).
+- (T53) DEC-459 (a handed-in file's source link, for listed members only; Bob's L4 = B, K5518: the source's existence is confidential too; L19 = A, K5544: who is listed; K5456: administrators who are not listed do not see it; L20 = A, K5545: the Inbox follows the same rule): R23.
 
 ### Suggestions
 
 - **Factory.** `sourcesOf(ctx)` answers the one instance per Durable Object storage (K61); the op handlers live in this module's paths, and the control plane routes them and stamps `by` and `viewer`.
 - **Where a source comes from.** `doorbell` is earlier and cannot call this module, so R1's sources are derived from the doorbell's pulled inbox rows at read (one per pseudonym, one per knock without a secret), or minted on first read and kept; either keeps R1 true.
 - **Hand-carried material** (K509 (5)) has no intake route yet: R12 is its rule, and its intake is built with the upload redesign.
+- **T53 (R23).** The read is one batched read per page, at most 50 captures (as the held list reads 50 a page). `handed_in` follows `provenance` `captureGrade`'s route `doorbell` (its R51). `doorbell` supplies only the file's own name (its R29); the check is here because this module uses `doorbell`, so `doorbell` cannot use it. The screens that draw the answer (`screens-intake` R12 and R43, `screens-inquiry`'s Document page) are their own lines.
 - **Callers.** `reevaluation` registers on R10 (its R28); `publication` (its R51, R52) and `case-disclosures` (its R4) read R8; `op-grades` grades the ops (its R1, R2).
 - **Tests.** Each C-121 refusal gets a negative control; R5's withheld value and read log; R3's hostile claim never reads confirmed; R7's withdrawal leaves an earlier publication's statement unchanged; R11's refusal byte-identical for a wrong secret, an unknown entry and a malformed call; R13's exemption declared.
 
