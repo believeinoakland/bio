@@ -1,0 +1,83 @@
+# Requirement-line draft: A3 a handed-in file's source link (DEC-459) and A4 a member's photograph, the safe picture (DEC-460)
+
+**Status** · DRAFT for BOB · PLANNING L2, 2026-10-27. Drafted by a Sonnet reading worker from doorbell, screens-intake, file-safety, image-cover and image-codecs read whole (sources and provenance only searched for names: the `sourceLinksFor` line is a need for BOB to write from `sources` read whole); reviewed by PLANNING. Layer order: the listed-member check belongs in `sources` (L3, after doorbell), not doorbell as DEC-459's owed line says; file-safety (L3) gains uses of image-cover and image-codecs (L1), BOB's edges. PLANNING's notes: (1) A4 keeps every metadata field that can be read safely as typed data and drops only what is a second image, an opaque structure or a parser risk, each with its reason, which is how PLANNING reads Bob's "only drop metadata [that] is necessary"; (2) A4 overlaps FILES (image types, HEIC/WebP/TIFF decoders, K5435's AVIF/HEIF, BMP, JPEG 2000): v1 here is baseline JPEG and non-interlaced PNG, the rest by FILES's readers, so BOB relays this draft to FILES and PLATFORM (DEC-460 names both); (3) R64's security review has "Bob closes or accepts each finding", which BOB may set otherwise. Bob's open points: A3 §6.2 (is a source's existence itself confidential), §6.4 (the knocker-stated file name shown); A4 §7.3 (v1 formats), §7.4 (serials and owner name kept), §7.5 (coordinates shown, no map link), §7.6 (time and place display only).
+
+
+Read whole: doorbell, screens-intake, file-safety, image-cover, image-codecs. For A3 I only grepped `sources.md` and `provenance.md` for names (R5, R51).
+
+## A3. A handed-in file's source link
+
+**Placement.** `sources` (layer 3) uses `doorbell`, so doorbell cannot use it. "Listed members" are the `sight` lists of `sources` R5. The **check lives in `sources`**; doorbell supplies only the file's own name; the screens draw. Document page not read.
+
+**1. Lines touched.** doorbell R13: the pulled document's `source` is `{kind:"knocker", pseudonym, receipt:{knock_id..}}`, receipt address `knock:<id>` (the "machine reference" Held shows); no file name. R27: the inbox row holds `file_name`, but R13 never passes it on (gap). R15/R18 answer pseudonym and digest to any member session (unchanged; not the screens' way to show origin). screens-intake R7/R12/R43: `inbox` draws "A source" for every member, and `sourceof` is read for any viewer (values withheld, sources R5); R32(3) no `KNOCK-` id drawn; R54 names a document by title, else "the name its source states"; R4/R70 `held`. Nothing is contradicted; R12/R43 are narrowed by R72.
+
+**2. Highest ids.** doorbell **R28**, none retired. screens-intake **R71** (R41 retired). sources R22.
+
+**3. Draft lines**
+- **doorbell R29** (NEW; amends R13, R27) A pulled knock's document carries `knocker_file_name`, shaped as `knocker_note` (`{text, words_of: "the knocker", evidence_of_truth: false}`) holding R27's stored `fileName`, or null (name BOB's). `contact` never (R16); the `existed` answers add nothing. Test: a knock sent with `fileName: "notice.pdf"` and pulled answers that text; one without answers null. Control: R13's other fields unchanged.
+- **sources, needed** (BOB writes; name BOB's) `sourceLinksFor({captureShas (at most 50), viewer})` -> per sha `{handed_in, source}`: `source` only for a listed viewer (in the `sight` of a stored entry of that capture's source; recommended also administrators, as `readLog`); an unlisted viewer, a capture with no source and one the viewer may not see answer alike; `handed_in` is true for any capture the viewer may see whose receipt route is `doorbell` (provenance R51). Never pseudonym, knock id, digest, entry or rung. Test: listed member, unlisted member, administrator, a doorbell capture and an upload.
+- **screens-intake R72** (NEW; amends R4, R7, R12, R43, R70) **"A source" for listed members; the others are told how it came.** `inbox`, `held` (one batched read per page of at most 50) and the Document page (screens-inquiry, same read) draw the door "A source" exactly when the read answers a `source`. Every other viewer sees `screen.held.handedin` ("Handed in through the doorbell", name BOB's), with no link, pseudonym, `KNOCK-` id, `knock:` reference or rung. A held row of a pulled knock with no title is named by `knocker_file_name` as the knocker's word, never by `knock:<id>`. A failed read is drawn failed (R10). Test: listed viewer sees the door on all three screens; unlisted sees the sentence and none of the five; 50 rows make one read; `notice.pdf` is listed as `notice.pdf`. Control: an upload row unchanged (R40); a knock stating no name falls to R54's host-and-date rule.
+- **R73** (NEW, if Open 2 is yes; amends R43) `about-knocker` opened by address by a viewer with no `source` answer draws "Nothing is here". Test: that viewer, direct address.
+
+**4. Not yet existing.** `sources.sourceLinksFor`. Placement doubt: DEC-459 names doorbell for the listed check; doorbell holds no listing, so only R29 lands there.
+
+**5. Screen needs.** Per capture: `handed_in`, `source` (listed only), the file's own name. One sentence for "handed in through the doorbell", one door "A source". Never the machine reference.
+
+**6. Open points**
+1. BOB (technical): a source with no stored entry has no listed member. Recommend `sight` members of any stored entry plus administrators.
+2. Bob (meaning): is the source's existence confidential, or is hiding the link tidiness? If confidential, `about-knocker` by address (R73), `sourceof` for unlisted viewers (entries shown today) and the provenance document's `source.pseudonym` / `receipt.knock_id` also close. Recommend confidential.
+3. BOB: the Inbox door uses the same read. Recommend yes.
+4. Bob (small): the knocker-stated file name may name its sender. Recommend show it as the knocker's word (the note already travels so).
+
+## A4. A member's own photograph
+
+**Findings.** (a) file-safety does not use image-cover or image-codecs (`modules.json`); BOB adds them (layers 1 < 3). (b) `coverAreas(bytes,{areas:[]})` gives pixels only for baseline JPEG and 8-bit non-interlaced PNG, but is not a redraw: it re-encodes coefficients, keeps a minimal Orientation EXIF (R2), refuses progressive JPEG and interlaced PNG, exposes no metadata as data. (c) image-codecs decodes baseline JPEG (R1), PNG (R10), JPX; **no encoder** ("writes none"), no progressive, HEIC, WebP, GIF, TIFF, BMP. (d) `stripMetadata` (R8) never re-encodes, so it carries a hostile bitstream.
+
+**1. Lines touched.** file-safety R11 "`NO_SAFE_VIEW` (another format)": **amended** by R60. R45 Control "a PNG, an HTML file and a NUL file still `NO_SAFE_VIEW`" and C-140.10's translation: **contradicted for PNG and JPEG**. screens-intake R36 Control "a PNG draws `refusal.NO_SAFE_VIEW`" and R5 ("pages"): **contradicted / widened**; R68 and R71's picture keys stand. These stand and bind the picture: file-safety R1, R12, R22, R23, R25, R35, R37, R55, R56 (image graded by source, structure check `not_examined`, never `clean`), R10; case-disclosures R33 / DEC-185 (2) (camera metadata not read for `photosOf`); image-cover R2.
+
+**2. Highest ids.** file-safety **R59** (R42a lettered; none retired). image-cover **R11**. image-codecs R13 (no change drafted).
+
+**3. Metadata classification (recommended).** Rule: **no metadata byte is carried**; a closed whitelist is read into typed, bounded values shown beside the picture as "the file says" (unchecked); all else dropped and only named in `left_out`. Reasons concern parsers and payloads.
+
+| Field | Class | Reason |
+|---|---|---|
+| Orientation (EXIF, XMP) | DATA 1-8 | Scalar; screen turns the picture, no tag in file |
+| Capture time (DateTimeOriginal, Digitized, SubSec, OffsetTime, PNG tIME); ModifyDate | DATA as stated | Fixed grammar. Clocks lie: never graded, never dates a document |
+| GPS lat/lon/ref, altitude, GPS time, direction, speed, error, datum | DATA, ranges checked | Scalars. GPSProcessingMethod, AreaInformation: DROP (blobs) |
+| Make, Model, lens, Software, HostComputer | DATA strings | Bounded text; Software evidences editing |
+| Serial numbers, ImageUniqueID, owner name | DATA (Open 4) | Strings once typed; identify a device, so ordinary capture confidentiality |
+| Exposure, ISO, focal length, flash | DATA scalars | Scalars |
+| Width, height, depth | From frame header | Decoder facts |
+| JFIF/Adobe/density, PLTE, tRNS | Written fresh, not data | Decoding needs |
+| Artist, Copyright, ImageDescription, UserComment, XP*, JPEG COM, PNG text (whitelisted keys), XMP dc:*, IPTC byline/caption/keywords/credit/place | DATA text, capped, strict charset, control and bidi removed | Plain text, never markup; zTXt inflate bounded |
+| Thumbnails (IFD1, JFIF, Photoshop, MPF) | DROP; data: present | A second image; may show a pre-edit picture |
+| Maker notes, vendor IFDs | DROP; data: present, size | Opaque offset structures, exploit surface; serials inside not mined |
+| ICC profile (APP2, iCCP) | DROP; data: name and space from header | Profile parsers exploited; colours flatter (Open 7) |
+| XMP packet, Extended XMP | DROP; data: whitelisted properties via a scanner that expands no entity and follows no reference | XML bombs, references |
+| C2PA / JUMBF | DROP; data: present, "not checked here" | Nested containers; checking is another decision |
+| APP13 other than IPTC, PrintIM, FlashPix, audio link | DROP | Unneeded |
+| MPF extra pictures, gain and depth maps | DROP; data: count | Second images |
+| Bytes after the image's end | DROP; data: size | Hidden payload, polyglot, motion video |
+| Other PNG chunks (eXIf read as EXIF) | DROP | Same |
+
+**4. Draft lines** (file-safety unless named)
+- **R60** (NEW; amends R11, R45, C-140.10) **A photograph has a safe view: a picture redrawn from its pixels.** `safeView` of a baseline JPEG or 8-bit non-interlaced PNG answers `{ok:true, kind:"picture", derived:true, of, sha256, content_type, width, height, file_says, left_out, original}`, bytes served as the PDF view's. The picture is redrawn from decoded samples (image-cover R12) and holds nothing else: no EXIF, XMP, IPTC, comment, profile, thumbnail, second image, trailing byte, or orientation tag (`file_says.orientation` says how to turn it). No note is written and `clean` is never implied (R56); a held file has it (R12). Other formats stay `NO_SAFE_VIEW` (translation names pictures). Test: a JPEG with GPS EXIF, thumbnail, maker note, ICC, XMP, IPTC, MPF image and trailer answers a picture a reference decoder reads to the original's samples (rotate 0), and a byte search of the served bytes for each marker, string and coordinate finds none; likewise a PNG with tEXt, eXIf, iCCP. Control: PDF as before; HTML, NUL file, HEIC, TIFF, BMP still `NO_SAFE_VIEW`.
+- **R61** (NEW) **What is kept as data.** `file_says` holds only the closed table `PHOTO_FACTS` (name BOB's; the classification above, BOB confirming), each `{value, from:"the file", checked:false}`; a field absent, malformed, out of range or over bound is omitted and counted in `left_out`, never guessed; strings are plain text. It is display only: it never changes a grade, a date the record holds, `photosOf` or a note. Test: each field by name; latitude 91, a 1 MB string, `<script>` and a bidi override, a self-pointing IFD, a 5 MB maker note: each omitted or neutralised within bound. Control: nothing outside the table appears.
+- **R62** (NEW) **What was left out is said.** `left_out` is `[{kind, count, bytes}]`, `kind` in a closed set (`thumbnail`, `maker_note`, `profile`, `extra_picture`, `after_end`, `xmp`, `credentials`, `other_metadata`, `unreadable`). Test: the R60 fixture lists each with its size; a bare image lists none.
+- **R63** (NEW; amends R1, R12, R25, R35) **Same lifecycle.** A picture route is queued (R1 `safe_view` job), made by `renderBatch` within R55's bound, stored once under its own digest outside `captures/`, never registered (R37), purged with its bundle (R25), `file_says` stored only with it. Maker refusals travel as `SAFE_VIEW_FAILED` with `renderer_reason` the image-cover code, final; until made `SAFE_VIEW_PENDING`. No `file_says` value reaches a log, note, forwarded count or `file-scanner` request (R10, R23, R35); a picture counts under `safe_views`. Test: queued photo answers pending then a picture; a progressive JPEG answers `SAFE_VIEW_FAILED` with its reason; logs, notes and the forwarded record hold none of the fixture's GPS or serial. Control: bytes, digest, grade as before (R22).
+- **R64** (NEW) **The picture maker has a named security review.** It serves members only with a review on record (path BOB's, named under Satisfies) carrying the digest of the maker's source and covering: the threat (a stranger's file by the doorbell or upload); every parser reached (JPEG, PNG, TIFF/EXIF walker, XMP scanner, IPTC, ICC header read, text decoders, inflate); each bound from `READ_BOUNDS`; where it runs and what that process can reach; plain-text escaping where drawn; and a hostile corpus the module test runs (size bombs, truncation, bad Huffman or restart, `%PDF` or HTML in a comment, bytes after the end, cyclic or out-of-range IFD offsets, huge entry counts, a zTXt bomb, bidi text, an ICC claiming a gigabyte, a polyglot), checked against an independent decoder and exiftool/Pillow fixtures. A reviewer other than the builder signs; Bob closes or accepts each finding. Test: `safeView` of a photograph answers `NO_SAFE_VIEW` unless the record exists and its digest equals the source's; the corpus passes with the isolate alive and no allocation above bound.
+- **image-cover R12** (NEW) `redrawPicture(bytes) -> {ok:true, bytes, format:"png", width, height, orientation (as read, not applied)}` or a refusal (name BOB's): decode through image-codecs (R1 `rotate:0`, R10) to 8-bit samples (alpha over white as `decodePng`) and write a fresh PNG, nothing else; streamed (R4); refusals are R3's and R10's (progressive JPEG, interlaced PNG refused); answer bound `boundOf("image","picture_bytes")` (proposed), breach `IMAGE_TOO_LARGE`. Test: samples equal libjpeg-turbo / Pillow's, byte-exact over fixtures; the PNG holds only IHDR, IDAT, IEND (PLTE if used); 12 MP and 48 MP measured in workerd. Control: `coverAreas` unchanged.
+- **image-cover R13** (NEW) `photoFactsOf(bytes) -> {ok:true, facts, left_out}` (name BOB's): the table above; pure, never throws; bounds are new `READ_BOUNDS` rows (`meta_bytes`, `ifd_entries`, `ifd_depth`, `string_bytes`, `inflate_bytes`; proposed), no literal (as R11); unreadable parts omitted and listed, the picture never refused for them. **R14** (NEW) Strings are decoded charset-strict (a bad sequence drops the value), stripped of control and bidi characters, cut to bound. Test: R61's cases at this interface against reference fixtures.
+
+**5. Not yet existing.** `redrawPicture`, `photoFactsOf`, a PNG writer in image-cover (pagepixels.mjs:706-831 to read, not import), new `READ_BOUNDS` rows, and `image-cover`/`image-codecs` in file-safety's `uses`. No codec change drafted: HEIC, WebP, GIF, TIFF, BMP, progressive JPEG, interlaced PNG have no decoder.
+
+**6. Screen needs (open-file; any thumbnail).** The picture turned by `file_says.orientation` (turn and mirror, in the screen); "the file says" lines for when, where (coordinates as text, no map link), camera, serial, text, each unchecked; the `left_out` sentence; unsupported, pending and failed states; the derived mark and "the original is cited" (R5). The contradictory sentence goes. A list thumbnail (`screen.held.thumb`, R11) should be the safe picture, not the original: not verified.
+
+**7. Open points**
+1. BOB (technical): format. Recommend PNG from decoded samples with orientation as data, because a 90-degree turn cannot stream in 128 MB (image-cover R4; a 48 MP frame is 144 MB). Cost: large files.
+2. BOB (security): where it runs. Recommend in-plane via image-cover for JPEG/PNG; any native or WASM decoder (HEIC) only in `file-scanner`'s separate process. R64 decides.
+3. Bob: v1 is baseline JPEG and non-interlaced PNG; other kinds keep words only. Recommend accept after measuring what a phone upload sends.
+4. Bob: serial numbers and owner name kept as data (recommended: shows two photos share a camera) or dropped.
+5. Bob: coordinates shown to all who may see the capture, no map link (a link tells a map vendor the place). Recommend yes.
+6. Bob: the file's time and place are display only; citing or dating by them is later. Recommend none now.
+7. BOB: ICC dropped, so non-sRGB colours look flatter; accept and say "shown in standard colours".
