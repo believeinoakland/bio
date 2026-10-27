@@ -1,18 +1,14 @@
-/* action-plans K5292 (jurisdictions R98; causes-rewalk §3, §4): a team with no place profile that stated its time zone through
-   local-facts (R21, which writes record-core's `team_time_zone`, its R22) has its plan's dates judged on that zone; with none
+/* action-plans K5292 (jurisdictions R98; causes-rewalk §3, §4): a team with no place profile that stated its time zone (local-facts R21 writes
+   record-core's `team_time_zone`, its R22) has its plan's dates judged on that zone; with none
    stated the checks stay undetermined. Each has its control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, by, ms } from "./fixture.mjs";
-import { localFactsOf, TEAM_ZONE_PATH } from "../../../src/local-facts/index.mjs";
 
 const read = (w, nowMs) => w.ap.planRead({ id: w.PL, viewer: V("bob"), nowMs });
 const of = (r, check) => r.checks.filter((c) => c.check === check);
-const state = (w, zone) => {
-  const said = localFactsOf(w.host).factConfirm({ path: TEAM_ZONE_PATH, act: "correct", value: zone,
-    how: "the team's administrator chose it", source: "stated by the team's administrator", by: "member:ann", viewer: "member:ann" });
-  assert.equal(said.ok, true);
-};
+/* what local-facts R21/R22 leave for a module that reads settings alone: record-core's `team_time_zone` */
+const state = (w, zone) => { w.record.setSetting("team_time_zone", zone, "member:ann"); };
 
 test("R48, R98: with no profile and the team zone stated, date_past is determined on the team's local day; with none stated it is undetermined", () => {
   const w = seeded({ profiles: null });
