@@ -10286,7 +10286,7 @@
   },
   {
    "key": "queue.signer-self-registered.detail",
-   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key.",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key. If you did, answer that you know about this key.",
    "protected": false,
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members"
   },
@@ -43555,12 +43555,6 @@
    "note": "DEC-439: D-M1, C-M4: {ceiling} the record's ceiling, a letter"
   },
   {
-   "key": "screen.question.leggrade.act",
-   "en": "Record this grade",
-   "protected": false,
-   "note": "DEC-439: D-M1, C-M4: the act's label until the op is named"
-  },
-  {
    "key": "screen.case-editor.save",
    "en": "Save these details",
    "protected": false,
@@ -43997,6 +43991,24 @@
    "en": "Recorded by {author}, {date}",
    "protected": false,
    "note": "DEC-442: beneath an imposition or a benchmark: {author} the member (by), {date} the day (at)"
+  },
+  {
+   "key": "screen.setup.zone.how.help",
+   "en": "Required. For example: read it on a government website for your area, or asked a public office.",
+   "protected": false,
+   "note": "DEC-443: B538 (2), at setup, where no place is chosen yet (screen.group.timezone.how.help names the city's website)"
+  },
+  {
+   "key": "screen.document.people.none.summary",
+   "en": "When it finds no name",
+   "protected": false,
+   "note": "DEC-443: the mockup fold over screen.document.people.none"
+  },
+  {
+   "key": "control-plane.reading.not_registered",
+   "en": "The file is kept, but its reading could not be started, so it is not being read. Ask again.",
+   "protected": false,
+   "note": "DEC-443: control-plane R130, the stated refusal READING_NOT_REGISTERED (its stand-in replaced)"
   }
  ],
  "rewrite": {

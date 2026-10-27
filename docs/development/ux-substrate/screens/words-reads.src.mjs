@@ -252,6 +252,10 @@ const DECISIONS = [
   ["screens-daily", "screens-daily/queue.mjs", "^--- object_type: inquiry", dev("filegrammar")],
   ["screens-daily", "screens-daily/start-project.mjs", "^--- object_type: project", dev("filegrammar")],
   ["control-plane", "control-plane/archive.mjs", "^Changes: ${…}", dev("filegrammar")],
+  // DEC-443 (B538): the inquiry file's session-log lines (record grammar); control-plane R130's stand-in reads its key
+  ["screens-daily", "screens-daily/queue.mjs", "^### Session ${…} | Formation | interactive", dev("filegrammar")],
+  ["screens-daily", "screens-daily/queue.mjs", "^Changes: created.", dev("filegrammar")],
+  ["control-plane", "control-plane/index.mjs", "~the file is kept, but its reading could not be queued", "control-plane.reading.not_registered"],
   // op-grades' four statements and affordances' drifted act.queuemute.does now read their keys in the source (OP-GRADES #11,
   // AFFORDANCES #34, merged K3375): DEC-263 drops their decisions, the keys being read as literals; a client's usage hint
   ["affordances", "affordances/facts.mjs", "^affordances are asked of an object", dev("apiuse")],

@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7809,
+  "screen": 7810,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1287,
+  "act": 1294,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -156,6 +156,7 @@
   "office-readers": 1,
   "inquiry": 21,
   "citation": 4,
+  "control-plane": 1,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -236,8 +237,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19364,
-  "protected": 1157
+  "total": 19373,
+  "protected": 1160
  },
  "words": [
   {
@@ -43582,7 +43583,7 @@
   },
   {
    "key": "queue.signer-self-registered.detail",
-   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key.",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Nothing here changes the key. If you did not expect it, open Members and withdraw the key. If you did, answer that you know about this key.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779; DEC-384: B411 T-15: it named a revoke it did not offer, so it says where; the item carries the door queue.signer-self-registered.members"
@@ -82396,13 +82397,6 @@
    "note": "DEC-439: D-M1, C-M4: {ceiling} the record's ceiling, a letter"
   },
   {
-   "key": "screen.question.leggrade.act",
-   "en": "Record this grade",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-439: D-M1, C-M4: the act's label until the op is named"
-  },
-  {
    "key": "screen.case-editor.save",
    "en": "Save these details",
    "protected": false,
@@ -82912,6 +82906,27 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-442: beneath an imposition or a benchmark: {author} the member (by), {date} the day (at)"
+  },
+  {
+   "key": "screen.setup.zone.how.help",
+   "en": "Required. For example: read it on a government website for your area, or asked a public office.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-443: B538 (2), at setup, where no place is chosen yet (screen.group.timezone.how.help names the city's website)"
+  },
+  {
+   "key": "screen.document.people.none.summary",
+   "en": "When it finds no name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-443: the mockup fold over screen.document.people.none"
+  },
+  {
+   "key": "control-plane.reading.not_registered",
+   "en": "The file is kept, but its reading could not be started, so it is not being read. Ask again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-443: control-plane R130, the stated refusal READING_NOT_REGISTERED (its stand-in replaced)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -122268,6 +122283,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.factconfirm.label.setup",
+   "en": "Save the time zone",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.groupdescriptionset.label.group-identity",
    "en": "Save who your team is, and who sees it",
    "protected": true,
@@ -123152,6 +123173,12 @@
   {
    "key": "act.filingapprove.label.queue",
    "en": "Approve a letter",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.signerknown.label.queue",
+   "en": "I know about this key",
    "protected": true,
    "source": "registry.json"
   },
@@ -124130,6 +124157,12 @@
   {
    "key": "act.themeplace.label.question",
    "en": "Place a passage in a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.leggrade.label.question",
+   "en": "Record this grade",
    "protected": true,
    "source": "registry.json"
   },
@@ -127509,7 +127542,31 @@
   },
   {
    "key": "act.factconfirm.does",
-   "en": "Corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",
+   "en": "Sets or corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.authority.does",
+   "en": "Lists, for each captured file of this document, who issued it as the record now stands, with the dated basis, and whether a member reviewed it and could not tell. Changes nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.ruleservicesstate.does",
+   "en": "Says whether the rule services are switched on, so a screen draws their control only while they are. Changes nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.leggrade.does",
+   "en": "Records how well the copy your team holds shows this passage, up to the most the record allows, with your reason. The grade is yours, with your name on it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.signerknown.does",
+   "en": "Records that you know about this signing key and expected it. The key is not changed, and this item leaves the queue.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
