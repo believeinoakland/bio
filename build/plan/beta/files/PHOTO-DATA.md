@@ -1,35 +1,22 @@
-# DEC-460: the photo data kept as data and the photo data left out of the safe picture
+# DEC-460: the photo data kept as data and left out of the safe picture
 
-**Status** · READY for PLANNING and `file-safety`'s security review (FILES #1, F12, 2026-10-27). Owed by DEC-460 and DEC-467 (the design fills `{what}` in "Left out of the safe picture: {what}" from this list). The security call on each row is `file-safety`'s review (A4-R1 to A4-R6); the one policy question is at the end.
+**Status** · READY (FILES #1, F13, 2026-10-27). **One source:** PLANNING's `lines-A3-A4-source-picture.md` on `lane/planning` (§ A4: the two tables "Kept as data" and "Dropped", and lines A4-R2 and A4-R3). This file no longer carries a table of its own; F12's first table is withdrawn. It records only (1) what the screens read, (2) the differences from F12 and how each is settled, and (3) what is still open.
 
-**The rule (Bob, DEC-460):** the safe picture is redrawn from the pixels and carries nothing from the file; only metadata that must be dropped for safety is dropped from the **display**; what can be carried safely is read from the original as data and shown beside the picture, never as part of the file. The original is kept whole in the record whatever is shown.
+## 1. What the screens read
+- **Kept as data** ("the file says"): the fields of A4-R2's closed list, each `{value, from: "the file", checked: false}`, shown beside the safe picture. Plain text only, capped, never markup.
+- **Left out** (`{what}` in "Left out of the safe picture: {what}"): A4-R3's `left_out`, a closed set of kinds: `thumbnail`, `maker_note`, `profile`, `extra_picture`, `after_end`, `xmp`, `credentials`, `other_metadata`, `unreadable`, each with count and bytes. The screen's plain words for each kind are UX-DESIGN's, one per kind; the list above is their key set.
 
-## 1. Read as data and shown beside the picture
-
-| data | source in the file | shown as | note |
+## 2. Differences from F12, settled to A4's table
+| point | F12 said | A4's table | settled |
 |---|---|---|---|
-| when taken | EXIF DateTimeOriginal (+ offset, sub-seconds) | "Taken {date}" | the time as the camera wrote it; with its time zone if the file gives one, else stated "no time zone" |
-| where taken | EXIF GPS latitude, longitude, (altitude, direction if present) | "near {place}" | position rounded for the place name; the exact figures kept in the record's data, not rendered in the sentence |
-| orientation | EXIF Orientation | applied to the pixels (the redraw is upright); "turned upright" noted | the stored number is kept as data |
-| size | pixel width and height | "{w} × {h} pixels" | from the decoder, not the file's claim |
-| camera | EXIF Make and Model | "Camera: {make} {model}" | provenance; a model name, not a serial number |
-| editing | Software tag; XMP "CreatorTool"/history marker that the file was saved by an editor | "Saved by {software}" | useful provenance (an edited photo); shown as text, never as markup |
-| caption | IPTC caption/description, XMP description, EXIF ImageDescription, user comment | "Caption in the file: {text}" | untrusted text: shown as plain text, length-limited, never rendered as markup or followed as a link |
+| camera and exposure fields | make, model, software only | adds lens, exposure, ISO, focal length, flash | A4's (a superset) |
+| the photographer's text | one caption | artist, copyright, description, comments, keywords, byline, credit, place name, PNG text | A4's |
+| colour profile | pixels converted to sRGB | profile dropped; picture shown in standard colours; profile name and colour space beside it (Q-A3A4-4, Bob's/BOB's) | A4's; F12's conversion is option C of Q-A3A4-4, not assumed |
+| serial numbers and owner name | read into the record, not shown by default | in `file_says`, depending on L7 | **K5471 (BOB)**: read into the record, not shown by default; A4-R2 is to say so for these fields |
+| place | place name; exact figures one step away | latitude, longitude, altitude, direction, time, datum, range-checked (L8) | A4's fields; **K5471**: place name shown, exact coordinates one step away |
+| face regions, embedded audio, motion-photo video, paths and edit history | listed separately | covered by `xmp`, `after_end` (a motion photo's video follows the image), `other_metadata` | A4's kinds |
+| the "saved by" software | its own row | the software field (and XMP properties named in the kept list) | A4's |
 
-## 2. Left out of the safe picture (and stated: "Left out of the safe picture: …")
-
-| data | why left out | still kept? |
-|---|---|---|
-| embedded thumbnail and preview images | a second image that can differ from the main one; a parser path | in the original only |
-| maker notes (opaque camera data) | undocumented binary; a parser risk; can hold device identifiers | original only |
-| camera and lens serial numbers; owner name, artist, copyright holder, host computer name | identify a person or device beyond what the picture needs | read into the record as data, not shown by default; BOB decides if shown |
-| XMP packet, IPTC block and ICC profile as embedded blocks | scripts, links and large structures can ride in them; the profile is applied by converting the pixels to sRGB | original only |
-| face regions, depth maps, gain maps, embedded audio, motion-photo video | extra payloads | original only |
-| file path or document IDs and edit history lists | can reveal a person's folders or other files | original only |
-| anything else not in section 1 | the safe picture carries nothing else | original only |
-
-The safe picture is a fresh JPEG or PNG written by the redraw with no metadata block at all; section 1 is data in the record next to it.
-
-## 3. Open (policy, so BOB to Bob if BOB agrees)
-- **Place in a published case.** A member's photo may show where they live or where a witness stood. In the member's own record "near {place}" is shown (Bob's rule). Whether a **published edition** shows a photo's place by default, or only when the author chooses, is a publishing policy; I recommend the author chooses, with the default off. (Not decided here.)
-- Whether the exact GPS figures are shown to the member or only the place name (recommend: the place name, with the figures one step away).
+## 3. Open (not FILES')
+- **Published edition shows place?** On QUESTIONS.html to Bob; recommendation: the author chooses, off by default.
+- Q-A3A4-4 and Q-A3A4-5 are PLANNING's to bring; this lane's drafts follow whatever is ruled.

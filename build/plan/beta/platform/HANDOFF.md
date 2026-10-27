@@ -4,27 +4,30 @@
 
 ## 0. State now and next steps
 
-**Branch.** `lane/platform` restarted from `tranche/T53` after PR #46 merged; PR #47 (P-2) open; P-3 pushed on it.
+**Handover (PLATFORM #1 at about 37 % context).** PLATFORM #1 asked BOB to start PLATFORM #2; credentials do not transfer (`study/s1-tooling-notes.md`).
 
-**Drafts (this folder).**
-- `time-budgets-draft.md` **READY**: nine classes, PL1-PL6; the bar kept at every level (K5438).
-- `combined-read-and-fold-draft.md` **READY**: fold and combined read, PL10-PL17; throwaway tests first; two technical points BOB's.
-- `load-test-draft.md` **READY**: PL40-PL43, proposed module `load-check`; the scratch deployment is BOB's (K5120, K5434): say when and on what.
-- `record-placement-draft.md` **READY** for placement and the picker (P2 K5440, P3 K5441 folded; Cloudflare's pages re-read 2026-10-27 and quoted in §2, which changed the design: a jurisdiction covers only where the room runs and stores; Workers reach it from anywhere, so the words promise storage, and the R2 bucket needs its own jurisdiction at creation, PL34). The split (§4) waits on N1271's study.
-- `whole-record-move-draft.md` **DRAFT** (new, K5443 (4)): PL50-PL53 for `corpus-export` (whole-record export by resumable parts), PL54-PL57 for the installer's import; one point maybe Bob's (whether a move carries members' sign-in material; assumed not).
-- `levels-2-3-study-plan.md` **PLAN** (K5444): phases S0-S4, needs, about 3-3.5 lane days and 4-5 calendar days; S0 (table inventory, a worker is running) started now.
-- `service-levels-draft.md` **DRAFT**: PL20-PL28; names Team / Institution / Enterprise = Levels 1 / 2 / 3 (confirmed, K5442; 70 %/90 % thresholds stand); figures estimates until measured; waits on P4 and on load figures from FILES and CAPABILITIES.
-- `DECISIONS.md`: thirteen decisions (K5438, K5440-K5444).
+**Branch.** `lane/platform`; PR #47 merged; BOB merges this folder at his checks (lane branches directly). Push with `git -c http.version=HTTP/1.1 push origin lane/platform`; merge `tranche/T53` in first.
 
-**Open with Bob:** nothing; whether Bob can lend an Enterprise-plan account for the study (S3) is asked through BOB. P4 answered (K5444): a copy chooses its level at install, can move up, and unbuilt levels show "not yet measured" (PL29).
+**Drafts (this folder; each a PL-line set for PLANNING).**
+- `time-budgets-draft.md` **READY**: 13 classes (nine plus AI act, Gate 1 run, follow, explore), PL1-PL8; the bar kept at every level (K5438). Figures for AI act (60 s) and Gate 1 run (30 min) are mine, to be confirmed by AI-DESIGN's measurements.
+- `combined-read-and-fold-draft.md` **READY**: fold and combined read, PL10-PL17; two technical points BOB's.
+- `load-test-draft.md` **READY**: PL40-PL43 (`load-check`, built in R1 by K5448), the `eu` rehearsal, per-type load from FILES F5, archive fan-out (C12).
+- `record-placement-draft.md` **READY** for placement and the picker (K5440, K5441, K5443; Cloudflare's pages quoted 2026-10-27); the split (§4) superseded by S0.
+- `whole-record-move-draft.md` **DRAFT**: PL50-PL57 for `corpus-export` and the installer's import.
+- `service-levels-draft.md` **DRAFT**: Team / Institution / Enterprise = Levels 1 / 2 / 3 (K5442), PL20-PL29 (the install's level choice, outgrowing at 70 % / 90 %); figures not yet measured; Enterprise quoted, not measured (K5454).
+- `levels-2-3-study-plan.md` **PLAN** (K5444, K5448): S0 done, S1 under way, S2 two prototypes (B, C), S3 quoted, S4 report to Bob.
+- `study/`: `table-inventory.md` (+TSV), `s0-options-for-the-split.md`, `s1-steps.md`, `s1-results.md`, `s1-tooling-notes.md`, `second-copy-options.md`. `DECISIONS.md`: K4354, K4599, K4635, K4746, K4747, K3060 D5, K5438, K5440-K5444, K5448, K5454.
 
-**Needs from others.** FILES: per-type load (Tier 2, held types), per-image time of DEC-460's photo redraw, the reading rate floor, and whether a jurisdiction R2 bucket changes the direct-to-R2 route. CAPABILITIES: load of registers, team layers, N824, and the whole-record export (PL35, K5441's move). BOB: re-time biosmoke8's hop; the scratch deployment at the load test; PL34's effect on rehearsal installs (K4942). AI-DESIGN: the assistant's declared reads.
+**The study, where it stands.** S0 found a room per project is a re-architecture of whole-store `transact` (616 tables, about 106 project-scoped): first candidates are **B** (bulk text and indexes out; search from an index outside SQLite) and **C** (a Worker-side cache of shared reads), A only as paper. S1 runs on `plat-s1` (0.87.0, Level 1, installed by Bob; `s1-tooling-notes.md`): step 1a done (empty team, six screens, 0.58-0.66 s net, hop `do-session` 50-57 ms against biosmoke8's 108-135 ms: placement about halves it). **Next: 1b**, seed about 500 documents (0.4 GB); the open problem is how a document gets filed into a project (see tooling notes); then re-time the eight screens; 1c, 1d (needs the plane-only throwaway redeploy from `proto/levels-2-3`, BOB deploys), 1e ramp, 1f containers: **ask BOB before 1e and 1f**, naming what runs and for how long.
+
+**Open with Bob / BOB.** Nothing open with Bob. BOB: K5470 (auto mode refused setting `CIVICSMITH_TEST_INSTANCE` on plat-s1 via the API: not needed by my tools; say so if a journey-check walk is wanted). Needs from others: FILES' L1-L6 and P-M17 (BOB places); AI-DESIGN to confirm the AI-act and Gate 1 budgets.
 
 **Next steps.**
-1. Fold the table inventory (worker, scratchpad `table-inventory.md`) into S0's options; when S0 ends, send BOB the prototype spec (`study/prototype-spec.md`) and the `load-check` job request.
-2. Fold FILES' and CAPABILITIES' load figures into the rating (service-levels §2) and the load-test profile (§3).
-3. Re-read Cloudflare's Workers and Durable Object limits pages (figures of 2026-10-23) before any figure is final (the data-location pages are done).
-4. Hand over at 40 % context.
+1. Get an administrator invitation for PLATFORM #2 from Bob via BOB; enrol; invite a member.
+2. Solve filing a document into a project; seed (1b) and re-time; then 1c.
+3. Build the throwaway measuring ops and the plane-only patch on `proto/levels-2-3` (workers), ask BOB to deploy; run 1d.
+4. After S1, S2 (prototypes B and C by workers on `proto/levels-2-3`), S3 (Enterprise quoted), S4 (the report to Bob, plain words, through BOB onto QUESTIONS.html).
+5. Keep each draft in step with rulings BOB relays; hand over at 40 % context.
 
 ## Entries
 
@@ -57,3 +60,7 @@
 **P-14 · 2026-10-27** · CAPABILITIES C12's load item (one acquisition `member` job row per archive entry and attachment, bounded by `UNPACK_DAILY_ENTRIES`) added to `load-test-draft.md` §3. Still waiting on Bob's install and the invitation link.
 
 **P-15 · 2026-10-27** · CONSISTENCY rows 14, 16, 19 applied in `time-budgets-draft.md`: classes AI act and Gate 1 run (longer ceilings are classes, never overrides; the figures 60 s and 30 min are mine, to be confirmed by AI-DESIGN's first measuring run), Follow and Explore (the time lives in the class row; `CHAIN_LIMITS` stay counts), and PL8: N1260's 2-second journey is a PL5 walk judged by each screen's class.
+
+**P-16 · 2026-10-27** · `plat-s1` is installed (0.87.0), I am enrolled as administrator and my member too (credentials and recovery codes in my session's scratchpad only). S1 step 1a measured on the empty team: `study/s1-results.md`. Every screen drawn within 2.2 s raw and about 0.6 s net; the hop (`do-session`) is 50-57 ms against 108-135 ms on biosmoke8: placement near the team about halves it. Next: 1b seed A.
+
+**P-17 · 2026-10-27** · Handover written (about 37 % context): section 0 and the prompt rewritten; `study/s1-tooling-notes.md` holds how to drive `plat-s1` (project `PROJ-2026-7919-plat-s1-study-project` made; the upload API shape; how a document reaches a project is not yet found). Credentials stay in PLATFORM #1's scratchpad and cannot pass on.

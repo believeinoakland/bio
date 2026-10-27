@@ -53,7 +53,7 @@ The sheet-worker's vendored engine `assets/sheet-engine.wasm` is rebuilt only by
 
 ## Parallel work: the UX design stream (Bob, 2026-10-01; K945)
 
-Bob's UX design work runs under his **primary account**, outside this process and its sessions (today on branch `claude/gallant-brown-zg0wc1`, today UX design #42, `session_018BhcedaAqFXn43yDDqk4vj`, started by BOB #318 on #41's handover (U489, `ad969140b7`), K5356; #41 `session_01FfxzNZtq7F8arhiJhGFggR` archived by #42). It writes `docs/development/ux-substrate/`, mints **DEC** ids (DEC-96 onward) for Bob's UX rulings, and amends canon documents under `docs/architecture/`. Every record this process writes (rulings, plans, job records, handoffs, reports to Bob) recognises it:
+Bob's UX design work runs under his **primary account**, outside this process and its sessions (today on branch `claude/gallant-brown-zg0wc1`, today UX design #44, `session_018Bhcefdgy83sFMSkwg7xRc`, started by BOB #322 from #43's prompt (`668726baea`), K5295; earlier sessions archived by their successors). It writes `docs/development/ux-substrate/`, mints **DEC** ids (DEC-96 onward) for Bob's UX rulings, and amends canon documents under `docs/architecture/`. Every record this process writes (rulings, plans, job records, handoffs, reports to Bob) recognises it:
 - Its DEC rulings are Bob's, made there; this process never mints a DEC id, cites them as that stream's, and folds a DEC into module requirements only once it is on `main` (or Bob names it), as a requirement change with its DEC cited.
 - Its files are its own: no session of this process edits, reverts or re-words `docs/development/ux-substrate/` or that stream's canon amendments, and a merge conflict with them is resolved by keeping its text.
 - Entries left out as "Bob's: UX" (K633; N470 and the legacy-ui shares in `plan/next.md`) wait on that stream's outcome, not on a question from this process.
@@ -64,17 +64,9 @@ Bob's UX design work runs under his **primary account**, outside this process an
 
 Bob's design of the investigation engine and the project as an investigation (K1627, K2064, K2075) runs in its own session, **INVESTIGATION-DESIGN** (#2: `session_01WzvEVTg39Jijv4CesGz4Dc`, started by BOB #145, K2398; #1 `session_01MoJa8LUVd6PRJDtgoSdRvj` archived), on branch `design/investigation`, writing only `docs/development/investigation-design/`. It works with Bob directly and records his decisions as D-numbers (the study's D1–D24, new ones from D25), never K or DEC. Its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and at every backstop check; BOB folds each hand-off into requirements (N748) and answers with the K that folds it. Its screens are owed to the UX design stream. A successor (`#n+1`) is started by the BOB of the day when the lane asks.
 
-## Parallel work: the AI design lane (Bob, 2026-10-17; K3717)
+## Parallel work: the beta's design lanes (Bob, 2026-10-27; K5417, K5418)
 
-How the assistant is architected for several AIs chosen by team, project and member, none of them Anthropic's, is explored in its own session, **AI-DESIGN** (#1, `session_01GLY6Z5UAa6urPzovQPKCkR`, sonnet, started by BOB #204, K3718), writing only `build/plan/lane-ai-design/` on its own branch `lane/ai-design` (its `CHARTER.md` says how; BOB reads that branch's `HANDOFF.md`, K4421). It decides nothing: its options reach Bob through BOB, and his decisions are K rulings that feed N1220. BOB reads its `HANDOFF.md` (entries `A<n>`) at takeover and at every backstop check. The assistant-hosting study (ASSISTANT-HOSTING, K3538) is ended (K3718); its folder stays as input.
-
-## Parallel work: the journeys walk (Bob, 2026-10-16; K3539)
-
-Every feature and journey that does not need the assistant is walked in its own session, **JOURNEYS** (#3, `session_01RhkG3SUxrZ9ENpSuRHnBQt`, sonnet, started by BOB #194, K3576; #1, #2 archived), writing only `build/plan/lane-journeys/` (its `CHARTER.md`). The assistant's own testing is the assistant-hosting lane's. BOB reads its `HANDOFF.md` (entries `W<n>`) at takeover and at every backstop check, and turns each defect into a plan entry.
-
-## Parallel work: the performance lane (Bob, 2026-10-21; K4351)
-
-Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#3, `session_01Vp7GZTN9bpooZud5Wd2CuC`, sonnet, started by BOB #273 on the third account, K4851; #1 `session_015HB1ABUMedpZ4X94giQAiz` started by BOB #241; #2 on another account, unreachable), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
+AI-DESIGN, PLATFORM (which carries the former PERFORMANCE lane's scope), CAPABILITIES, FILES, JOURNEYS, TESTS-SWEEP and PLANNING: their rules, scopes, branches, folders and current sessions are in `build/plan/beta/LANES.md` (§3 the sessions), the needs between them in `build/plan/beta/MAP.md`. BOB reads each lane's `HANDOFF.md` section 0 at takeover and at every backstop check and merges each lane's folder into the tranche. The earlier lane sessions (AI-DESIGN #1, JOURNEYS #3, PERFORMANCE #3) are superseded by these.
 
 ## Parallel work: the process redesign (Bob, 2026-10-26; K5334; ended K5351)
 

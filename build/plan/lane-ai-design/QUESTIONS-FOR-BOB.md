@@ -66,3 +66,9 @@ Why A: it follows the same reasoning you used for the checks, which is that the 
 
 - **A. (recommended)** Adopt them as the beta's requirements. You revise any of them whenever you wish.
 - **B.** Bring each one separately.
+
+**AQ11 · Which projects may use a member's shared account** (added 2026-10-27; placed on Bob's page by BOB #322, K5471). A member can let "my projects" add her own AI account (one she pays for) to their lists.
+- **A. (drafted)** Only projects she owns.
+- **B.** Any project she has joined.
+
+Why A: her money is spent only where she also decides what the project does. With B, another project's owner could put her account to work on that project.
