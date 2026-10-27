@@ -13,7 +13,7 @@ The things that happen in the world (a meeting held or cancelled, a vote, an ado
 ### Provides
 
 Terms.
-- A **date-time** is `civil-time`'s value: an instant or band with its `precision` (day, minute, second, or an EDTF level-1 band) and its `zone`; the zone defaults to the jurisdiction's from the active profile (K1444 (iii), K1464). A day-precision value is never read as midnight.
+- A **date-time** is `civil-time`'s value: an instant or band with its `precision` (day, minute, second, or an EDTF level-1 band) and its `zone`; the zone defaults to the governing zone (K1444 (iii), K1464, K5292): `jurisdictions.governingZone(<the active profiles>, <record-core's `team_time_zone`>)` (`jurisdictions` R98; `local-facts` R22), the team's stated zone when it states one, else the active profiles' zone, else none. A day-precision value is never read as midnight.
 - **Dated-fact kinds** (closed): `meeting`, `adopted`, `effective`, `signed`, `entered`, `issued`, `published`, `received`, `hearing`, `period_covered`, `edited`.
 - **Event kinds** (closed): `meeting`, `vote`, `adoption`, `enactment`, `signing`, `award`, `payment`, `transfer`, `filing`, `order`, `hearing`, `issuance`, `publication`, `statement`, `communication`, `appointment`, `departure`, `inspection`, `other`; since T35, `discretion`, `waiver` and `assessment` (R43–R45).
 - A **provision key** (T35) is `{standard, portion?}`: `standard` a `standards` id and `portion` a portion path within it, each a non-blank string of at most 200 characters. This module holds it opaque: it checks its shape only, never whether `standards` holds it, and never reads its meaning (`events` does not use `standards`, P4); `standards` and `duties` read it.
@@ -62,7 +62,7 @@ Terms.
 
 **followedImport({captureSha, body, period, by})** (Legistar following: the machine's writes, K1443 as BOB extended it, K1468)
 - **R22** It refuses `NO_BODY` and `NO_PERIOD` (the member's scope: one body and one period a member follows; K1468), `CAPTURE_NOT_HELD`, then `NOT_LEGISTAR` (the capture is not one `legistar-reader` reads). It writes only what the reader's rows identify at both ends by source-native ids: events by `EventId` (meeting) and `EventItemId` (item votes, `within` their meeting), and participants whose `PersonId` resolves to a registered entity through its scheme identifier (`entities`, grade A). A participant whose id resolves to none is not written; it is answered in `unresolved` with its source row. Each meeting event it writes concerns the body it was imported for (`body`, one `concerns` end), so the followed body's events are read from it (`eventsFor`, R27). Each row is stamped as the machine's, cites its capture, and is correctable by R13, R14 and R20.
-- **R23** A meeting's start is the source's day and its separate local time joined in the profile's zone by `civil-time.joinLocal` (M-V2: no `EventDate` carries a zone), at minute precision. A source row that states cancellation (in its status or body name, M-V2 (2)) is written as the one event with status `EventCancelled`.
+- **R23** (K5292) A meeting's start is the source's day and its separate local time joined by `civil-time.joinLocal` in the governing zone, `jurisdictions.governingZone(<the active profiles>, <record-core's `team_time_zone`>)` (`jurisdictions` R98; `local-facts` R22): the team's stated zone when it states one, else the active profiles' zone, else none (M-V2: no `EventDate` carries a zone), at minute precision. A source row that states cancellation (in its status or body name, M-V2 (2)) is written as the one event with status `EventCancelled`.
 - **R24** A posting time (`EventAgendaLastPublishedUTC`, `EventMinutesLastPublishedUTC`) is a `publication` event of the agenda or minutes, `within` its meeting, whose `when` is an upper bound only: "on or before" the first instant the record observed that value (M-V2 (3)), never the time of first posting.
 - **R25** An import is idempotent by source id: a row already held under its id is updated in place only by a changed source value, with the change recorded and R15/R16 told; a row never held is added.
 
@@ -125,10 +125,10 @@ Terms.
 
 - `setup-words`: `word(key, vars)`, every member-facing sentence by key (plan T50 rule 6; K3668).
 - `record-grammar`: `ID_TABLE` and `isHypothesisId` (R6, R39); the shared refusal grammar.
-- `jurisdictions`: the active profile's zone, vote values, `proceeding_flows` (R23, R11, R34).
+- `jurisdictions`: `governingZone` (its R98; the governing zone, Terms, R23), the active profiles' vote values, `proceeding_flows` (R11, R34).
 - `civil-time`: date-time values, calendar validation, three-way comparison, `validAt`, the zone-less day-and-time join (R1, R9, R23, R31, R34).
 - `connection-grammar`: the connection shape, the owner registry and its battery, the bounds (R35).
-- `record-core`: `transact`, the opaque id allocator, `declareTable` and the derived-cache convention (R6, R10, R40); the `bundles` read contract (its R37: `object_type`), for a question (R1, R48; T35-28).
+- `record-core`: `getSetting` for `team_time_zone` (written by `local-facts` R22) and `jurisdiction_profiles` (Terms, R23); `transact`, the opaque id allocator, `declareTable` and the derived-cache convention (R6, R10, R40); the `bundles` read contract (its R37: `object_type`), for a question (R1, R48; T35-28).
 - `membership`: `viewerPredicate`, `listenerRefusal`, `MODULE_ORDER` (R15, R16, R30, R40); a question's sight (R48; T35-28).
 - `promotion`: `registerStep`, for events projected from a capture's reading.
 - `provenance`: whether a capture is held (R1, R22).
@@ -144,7 +144,7 @@ Terms.
 - **R39** One home per fact, checked at the store's gate: no event, attestation or participant row holds an amount; no role is payer or payee; no `HYP-` id is accepted in any field naming an id (`isHypothesisId`; K1467); every `when_cache` equals its rebuild.
 - **R40** Sight (K1489): an event, dated fact or relation is answered to a viewer only through attestations whose capture the viewer may see; one with none visible is not answered and not counted; testimony inside a hidden project stays fenced and uncounted. The tables are declared through `record-core.declareTable` with their purge, export and sight classes, the `when_cache` as derived-rebuildable.
 - **R41** Absence is never an event, sequence is never stored, and no event is minted only to join two readings of an aggregate (R-3 S-5). No machine-written row infers a cause, a relation other than `within`, or a participant from office holding.
-- **R42** No place is named in this module's behaviour, defaults or outward text; zones, vote values and flows come from the profile, and tests run against the fictional test profile.
+- **R42** (K5292) No place is named in this module's behaviour, defaults or outward text; vote values and flows come from the profile, and the zone is the governing zone (Terms; R23): the team's stated zone when it states one, else the profile's; tests run against the fictional test profile.
 
 ### Satisfies
 

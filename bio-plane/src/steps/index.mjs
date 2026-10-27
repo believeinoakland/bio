@@ -39,7 +39,7 @@ import { legEarningOf } from "../leg-earning/index.mjs";
 import { isRecordId, derivedId } from "../connection-grammar/index.mjs";
 import { localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { dec, decStr, addD } from "../calc-grammar/decimal.mjs";
-import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { combine as combineProfiles, governingZone } from "../../../jurisdictions/index.mjs";
 import { STEPS_SCHEMA, STEPS_TABLES, FOLLOWS_TABLE } from "./schema.mjs";
 import { STEPS_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -336,7 +336,9 @@ export class Steps {
         view = c && c.ok ? c.view : null;
       }
     } catch { view = null; }
-    const z = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
+    let g = null; /* K5292 (jurisdictions R98): the team's governing zone first */
+    try { g = governingZone(this.#record.getSetting("jurisdiction_profiles"), this.#record.getSetting("team_time_zone")); } catch { g = null; }
+    const z = g || (view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null);
     if (!z) return null;
     try { return typeof localDay("2026-01-01T00:00:00Z", z) === "string" ? z : null; } catch { return null; }
   }

@@ -60,7 +60,7 @@ import { dutiesOf } from "../duties/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { localDay, overdueOn, isCalendarDate, bounds } from "../civil-time/index.mjs";
-import { combine, get as profileOf } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone, get as profileOf } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
          createSha256, idPattern } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
@@ -460,7 +460,20 @@ export class Actions {
    *  the read for a module with no office (its `time_zone` the group's zone, `zoneOf(place())`), or null when none can
    *  be read. An action's clock is never read in it: it is read in R100's `actionZone`. Writes nothing; never throws. */
   place() {
-    try { return this.#view(); } catch { return null; }
+    try { return this.#teamZoned(this.#view()); } catch { return null; }
+  }
+  /* R68, K5292 (jurisdictions R98): `view` with its `time_zone` the team's governing zone: `governingZone` over the active
+     profiles and record-core's `team_time_zone` (local-facts R22), so the team's stated zone governs when no profile gives
+     one (a view of nothing but that zone then) and a profile's zone stands when no team zone is set. Never throws. */
+  #teamZoned(view) {
+    let z = null;
+    try {
+      let ids = this.record.getSetting("jurisdiction_profiles");
+      if (typeof ids === "string") { try { ids = JSON.parse(ids); } catch { ids = null; } }
+      z = governingZone(ids, this.record.getSetting("team_time_zone"));
+    } catch { z = null; }
+    if (!z || (view && view.time_zone && view.time_zone.value === z)) return view;
+    return { ...(view || {}), time_zone: { ...(view && typeof view.time_zone === "object" ? view.time_zone : {}), value: z } };
   }
   /** R10 (T45; N858; reconciliation R7): the view this module reads for kinds, counterparties, venues, records laws and
    *  response statuses: `local-facts.governingView` (its R12), so a group's confirmed rule governs here as in
@@ -475,7 +488,7 @@ export class Actions {
   }
   /** R10, R100: the view this module reads (`#governing`), for R100's `actionZone`; null with none. Never throws. */
   governingView() {
-    try { return this.#governing(); } catch { return null; }
+    try { return this.#teamZoned(this.#governing()); } catch { return null; }
   }
   /* R81 (T45): the response statuses the governing view holds for `kind` (jurisdictions R58, R77: an entry with no
      `applies_to` applies to every kind), as tokens; null when the view holds none. */

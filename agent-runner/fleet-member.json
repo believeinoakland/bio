@@ -14,8 +14,8 @@
   },
   "image": {
     "repository": "docker.io/civicsmith/agent-runner",
-    "digest": "sha256:d6694d2c50094ad13d0690a65d6795f92ad7e7d7bc3ad204dfa67f96edabad78",
-    "source_sha256": "23cf9ef6f8dac820f3e3148ea21963455adc74ad6ce70a97009ff61f2cf33a1c",
+    "digest": "sha256:4febfa540e99d9c0dbb21482a43f8997c7efce6ca63eaddb2dae9b57a8800415",
+    "source_sha256": "fecf834a4e8f2f3a3db66abf6d05e2d0d747cd6dd6d7600f66e73c7f48974681",
     "platform": "linux/amd64",
     "port": 8080,
     "schedulingPolicy": "default"

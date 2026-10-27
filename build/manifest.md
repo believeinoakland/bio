@@ -6,17 +6,19 @@
 
 | what | where |
 | --- | --- |
-| the process: principles, mechanics, role instructions, checks, the mail tool | `believeinoakland/civicos-process` (attach it to the session) |
+| the process: principles, mechanics, role indexes and situations, the process tool, hooks and checks | `believeinoakland/civicos-process`, cloned at `/home/user/civicos-process`; each role's skill here (`.claude/skills/civicos-bob`, `civicos-job`) is written by its `proc shims` |
+| the product's own procedures, each read whole when its situation arises | `build/situations/`: `release.md`, `deploy-and-walk.md`, `fix-round.md`, `design-channel.md`; `job.md`, every job's standing rules, named in each START |
 | the requirements canon (mission, product requirements, construct designs) | listed in `requirements/README.md`; the files are under `docs/architecture/` and `docs/development/` |
 | the layers, with their contracts and rulings | `build/layers.md` (rendered: `build/layers-view.html`); their split history, `build/plan/archive/layers-history.md` |
 | the modules in their total order, with paths, tests and uses | `build/modules.json` |
 | each module's requirements, and the conventions they follow | `build/requirements/<module>.md`, `build/requirements/README.md` |
-| the running tranche's plan, the next one, the finished ones | `build/plan/current.md`, `build/plan/next.md`, `build/plan/archive/T<n>.md` |
+| the running round's plan (its Status, Round, Jobs and Owed lines written by `proc`), the next one, the finished tranches and rounds | `build/plan/current.md`, `build/plan/next.md`, `build/plan/archive/T<n>.md`, `archive/T<n>-R<k>.md` |
 | what each coming extraction moves out of a legacy module (P18) | `build/extraction/<module>.md` |
-| one record per module job | `build/jobs/T<n>/<module>.md` |
+| one record per module job (its Status line and completion reports, written by `proc job …`) | `build/jobs/T<n>/<module>.md` |
 | the capability ladders: what each construct can do at each rung L0–L5, every need found, and what each later rung takes (read before planning a stage that adds capability, or when a member's situation shows a gap) | `docs/architecture/BIO_Capability_Ladders_v0_1.md` (canon); the study's full evidence on branch `study/constructs`, commit `892fca16c4` (never deleted, K1433) |
 | what Anthropic's plans and terms permit or forbid: verbatim quotes, each with its page, date read and the plan it governs (ids `AT-n`), the questions the pages leave open, and Bob's own choices; every other statement cites it (K1763) | `build/terms/anthropic.md` |
-| the rulings in force, read whole at takeover | `build/rulings-active.md` |
+| the rulings in force, read whole at takeover: Bob's process judgments and BOB's conventions no code holds | `build/rulings-active.md` |
+| Bob's product rulings by subject (K5323), each read whole by the work that touches it: `ai`, `installer-accounts`, `platform`, `quality`, `reading`, `scope`, `stewards`, `tests`, `words-ux` | `build/rulings-product/<subject>.md` |
 | every ruling, one line each (searched on need, never read whole) | `build/rulings.md` |
 | tokens processed per session | `build/metrics/T<n>.csv` (transition sessions under `T0`) |
 | the latest handoff (replaced whole at each handoff) | `build/handoff.md` |
@@ -33,28 +35,21 @@ The full regression runs only at a release or when Bob asks (P11): the GitHub wo
 
 ## Generated artifacts (PROCESS-MECHANICS §14)
 
-Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `writeMember`) from several modules' source. No job edits one by hand or writes another module's; a job that stales one reports it. At each layer close BOB regenerates every one, verifies, and commits the result on the tranche branch.
+Committed files built from several modules' source. No job edits one by hand or writes another module's; a job that stales one reports it. At every merge and every layer close, `proc merge` and `proc layer close` run each row's regenerate command, then its verify command, from the repository root, in this table's order (K1540: member-roster's order, setup-words, then program.mjs, which prints the members' words through setup-words' rows, K4355; court-data and wizard-scripts' data; the bundles, which take program.mjs; newgroup last), and commit what changed; a verify that fails undoes the merge. A `SKIP` in a bundle verify means a member's `node_modules` is missing (`npm ci` there first, `build/situations/job.md`). Baseline on `tranche/T1` @ BOB #40's takeover: 96 pass, 0 fail, no skip.
 
-| artifact, with its manifest | owned by | regenerate (run in that directory) | its inputs come from |
+| artifact | owned by | regenerate | verify |
 | --- | --- | --- | --- |
-| `bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json` | `not_product` | `bio-plane/`: `npm run build` (renders `src/signpage.mjs` first) | the plane's source |
-| `pdf-worker/dist/pdf-worker.bundled.mjs`, `.bundle.json` | `pdf-worker` | `pdf-worker/`: `npm run build` | `pdf-worker`, and `pdf-reader`, `subresources`, `runtime-limits` files |
-| `ocr-worker/dist/ocr-worker.bundled.mjs`, `.bundle.json` | `ocr-worker` | `ocr-worker/`: `npm run build` (re-renders `src/tesslib.mjs` when `tesseract-wasm` is installed) | `ocr-worker`, `pdf-pixels`, `image-codecs`, plane `pdfstructure` (and `subresources`, `cpu`) |
-| `agent-runner/dist/agent-runner.bundled.mjs`, `.bundle.json` | `agent-runner` | `agent-runner/`: `npm run build` (bundler's `writeMember`; `@cloudflare/containers` 0.3.7 inlined as a vendored input; K1799) | `agent-runner`, through `bundler` |
-| `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` | `agent-worker` | `agent-worker/`: `npm run build` | `agent-worker` and `agent-steps` (its delegate since T51-45/65, K3850, K3894), the plane's `bio-plane/src/tokens.mjs` (runtime-limits) and `run-rules` (with observation-log's `checks.mjs` and `vocabulary.mjs` through it, and record-grammar's `ids.mjs` through those since T33-30; K1598); query-language's `bio-plane/src/query.mjs` and its import tree since R085's R97 (the meaning arms, K3504); no catalogue, skills or ai-runs input since T18 layer 6 (R48 reads the rendered pack from `op=agentpack` since T36-24, K2135; K683) |
-| `bio-plane/public/newgroup/index.html` (the invitation page, R79; K4073) | `installer` | `newgroup/`: `node scripts/invite-page.mjs` (check: `--check`) | setup-words' rows (the 24 `installer.invite.*` keys) |
-| `newgroup/dist/newgroup.bundled.mjs` | `installer` | `newgroup/`: `npm run build` | `installer`, `installer-steps` (`newgroup/src/steps/`, K4083), and `signatures` (`sshsig.mjs`) and `record-grammar` (`document.mjs`, which reads `conformance.*` word rows at load; found at T24 L1, K1182, K4083) |
-| `bio-plane/src/case-checker/program.mjs` (the standalone checker, with its own SHA-256) | `case-checker` | repository root: `node bio-plane/src/case-checker/build-program.mjs` | `case-checker` and the modules it uses (record-grammar, signatures, content, strength, case-grammar), through `bundler` (K1315; verified byte-identical by case-checker's own test) |
-| `bio-plane/src/setup-words/rows.mjs` (the interface's word list, K3366) | `setup-words` | repository root: `node bio-plane/src/setup-words/build.mjs` (check: `--check`) | the design stream's `docs/development/ux-substrate/screens/words.json` (R10), and every `t(id, en)` call in tracked product source under a module's `paths` (R15; a new file is seen only once `git add`ed); it also writes and checks `bio-plane/src/setup-words/words-unreviewed.json`, the design's review list (R16, K3932); `--pseudo` writes the never-committed `rows.pseudo.mjs` (R17) |
-| `bio-plane/src/wizard-scripts/screen-registry.mjs`, `front-doors.mjs`, `civicsmith-library.mjs` (K3771) | `wizard-scripts` | repository root: `node bio-plane/src/wizard-scripts/build-data.mjs` (check: `--check`) | the design stream's `docs/development/ux-substrate/` registry, front doors and wizard library at the design commit wizard-scripts R41 names |
-| `site/src/pages.mjs` (civicsmith.org's pages, K3372) | `site` | repository root: `node site/build.mjs` (check: `--check`) | `site`'s design drawing `SCR.site` at `SITE_COMMIT`, `words.json` through setup-words, `jurisdictions/profiles/` |
-| `bio-plane/src/member-roster/order.mjs` (`MODULE_ORDER`'s source since CR-4, K3633, K3972, K3979) | `member-roster` | repository root: `node bio-plane/src/member-roster/order-build.mjs` (check: `--check`) | `build/modules.json` (regenerate whenever it changes) |
-| `court-citations/court-data.mjs` (reporters-db and courts-db, translated) | `court-citations` | repository root: `node court-citations/build.mjs` (check: `--check`) | the vendored, pinned packages under `court-citations/vendor/` (K1518) |
-| `sheet-worker/dist/sheet-worker.bundled.mjs`, `.bundle.json` | `sheet-worker` | `sheet-worker/`: `npm run build` (the vendored engine `assets/sheet-engine.wasm` is rebuilt only by `npm run build:engine`, which needs rustup's `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2.126; K1531) | `sheet-worker`, and `runtime-limits`' `cpu.mjs` |
+| `bio-plane/src/member-roster/order.mjs` | member-roster (from `build/modules.json`; K3633, K3972, K3979) | `node bio-plane/src/member-roster/order-build.mjs` | `node bio-plane/src/member-roster/order-build.mjs --check` |
+| `bio-plane/src/setup-words/rows.mjs`, `bio-plane/src/setup-words/words-unreviewed.json` | setup-words (from `words.json` and every `t(id, en)` call; K3366, K3932) | `node bio-plane/src/setup-words/build.mjs` | `node bio-plane/src/setup-words/build.mjs --check` |
+| `bio-plane/src/case-checker/program.mjs` | case-checker (through `bundler`; K1315) | `node bio-plane/src/case-checker/build-program.mjs` | `node --test bio-plane/test/m/case-checker/program.test.mjs` |
+| `court-citations/court-data.mjs` | court-citations (vendored packages; K1518) | `node court-citations/build.mjs` | `node court-citations/build.mjs --check` |
+| `bio-plane/src/wizard-scripts/screen-registry.mjs`, `bio-plane/src/wizard-scripts/front-doors.mjs`, `bio-plane/src/wizard-scripts/civicsmith-library.mjs` | wizard-scripts (the design registry; K3771) | `node bio-plane/src/wizard-scripts/build-data.mjs` | `node bio-plane/src/wizard-scripts/build-data.mjs --check` |
+| `site/src/pages.mjs` | site (K3372) | `node site/build.mjs` | `node site/build.mjs --check` |
+| `bio-plane/public/newgroup/index.html` | installer (R79; K4073) | `cd newgroup && node scripts/invite-page.mjs` | `cd newgroup && node scripts/invite-page.mjs --check` |
+| `bio-plane/dist`, `pdf-worker/dist`, `ocr-worker/dist`, `agent-runner/dist`, `agent-worker/dist`, `sheet-worker/dist`, `file-scanner/dist` | each member (`bundler`; the plane `not_product`) | `node bio-plane/scripts/bundles.mjs` | `node --test --test-force-exit bio-plane/test/system/fleetbundles.test.mjs` |
+| `newgroup/dist` | installer (K4083) | `cd newgroup && npm run build` | `node --test --test-force-exit bio-plane/test/system/newgroup-bundle-fresh.test.mjs` |
 
-**Order (K1540):** regenerate member-roster's `order.mjs` (K3633, K3979), setup-words' `rows.mjs`, then `program.mjs` (it prints the members' words through setup-words' rows, so it follows them; K4355), `court-data.mjs` and wizard-scripts' data first, then the bundles with `node bio-plane/scripts/bundles.mjs` from the repository root (it rebuilds every stale bundle; the plane bundles `program.mjs`), then `newgroup`.
-
-**Verify, after regenerating:** `node --test bio-plane/test/system/fleetbundles.test.mjs` from the repository root (`verifyStatic` and `verifyFresh` over every member: input hashes, byte identity, externals). Also `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs` for the installer's bundle. Each must print `0 fail` with no `SKIP`; a `SKIP` means a member's `node_modules` is missing (`npm ci` there first). Baseline on `tranche/T1` @ BOB #40's takeover: 96 pass, 0 fail, no skip.
+The sheet-worker's vendored engine `assets/sheet-engine.wasm` is rebuilt only by `npm run build:engine` there (rustup's `wasm32-unknown-unknown` and `wasm-bindgen-cli` 0.2.126; K1531), never at a merge.
 
 ## Parallel work: the UX design stream (Bob, 2026-10-01; K945)
 
@@ -81,9 +76,9 @@ Every feature and journey that does not need the assistant is walked in its own 
 
 Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#3, `session_01Vp7GZTN9bpooZud5Wd2CuC`, sonnet, started by BOB #273 on the third account, K4851; #1 `session_015HB1ABUMedpZ4X94giQAiz` started by BOB #241; #2 on another account, unreachable), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
 
-## Parallel work: the process redesign (Bob, 2026-10-26; K5334)
+## Parallel work: the process redesign (Bob, 2026-10-26; K5334; ended K5351)
 
-The process redesign (K5319, K5326; `build/plan/draft-process-redesign.md`) is designed, built and certified by dry run in its own session, **PROCESS-REDESIGN** (#2, `session_01PpUDVnuZpceq4TvX8bQ7gq`, started by BOB #314; #1 `session_014M1HxBsrXKac2pDaf9LPqF` archived), on branch `lane/process-redesign` of `believeinoakland/civicos-process` (its `lane-process-redesign/CHARTER.md`). It never changes the process in use, bio, or that repository's `main`: its result reaches use only certified, at a tranche boundary or on Bob's ruling. BOB reads its `HANDOFF.md` (entries `R<n>`; `RELEASE` marks a fault seen in the alpha's cut) at takeover and at every backstop check.
+The PROCESS-REDESIGN lane designed, built and certified the redesigned process, now in use (civicos-process `main`); its record is `lane-process-redesign/HANDOFF.md` there (R1-R17). It ended once T51b R1 ran clean on the process (#3 `session_016AUJRfwhxT75qBeN33AT57` archived; #2 left idle, K5344). Its last work, R14 (test runs that name a missing result's cause, the memory watch, `proc tests`), is civicos-process PR #13, merged by BOB at T52's open (`next.md`). A new process fault goes to BOB, or to a lane BOB restarts.
 
 ## Parallel work: the reading architecture (Bob, 2026-10-23; K4812; ended K4834)
 
@@ -91,6 +86,6 @@ The READING-ARCHITECTURE lane designed how Civicsmith reads every file type and 
 
 ## Starting a session
 
-- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current, on Bob's **primary** account: **ROOT #10**, `session_01XHjMEPkzmkLycoWtxb4yn6` (started by Bob 2026-10-26, replacing ROOT #7 `session_01NBNGB2ziVqiZg4ewLgRSWm`; K5313), replaced (by Bob) when its context passes 55% of its window (Bob, 2026-10-11, K2679). ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy` is archived. On the **third** account, where the work runs since BOB #269 (K4786-K4790): **ROOT #9**, `session_01GndWUi5ubGmXCVVnFqtJAi` (started by Bob 2026-10-23; K4789), which started BOB #269. On the **secondary** account, superseded by ROOT #9 and unreachable from the third: **ROOT #8**, `session_01R3hvN64bYHG3vPQmYmaeLR` (started by Bob 2026-10-20; K4213), which started BOB #232 to #268; ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022) is superseded. Sessions on one account are unreachable from the other. Earlier ROOTs are archived (rulings K693–K2022).
-- **BOB:** read `roles/BOB.md` in the process repository, then this file, then `build/rulings-active.md`, then the latest handoff, `build/handoff.md`.
-- **A module job:** read `roles/JOB.md` in the process repository; BOB's first message names the module and the tranche.
+- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`; woken by a BOB's `send_message` and by the platform's event when a BOB it started fails. Current, on Bob's **primary** account: **ROOT #10**, `session_01XHjMEPkzmkLycoWtxb4yn6` (started by Bob 2026-10-26, replacing ROOT #7 `session_01NBNGB2ziVqiZg4ewLgRSWm`; K5313), replaced (by Bob) when its context passes 55% of its window (Bob, 2026-10-11, K2679). ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy` is archived. On the **third** account, where the work runs since BOB #269 (K4786-K4790): **ROOT #9**, `session_01GndWUi5ubGmXCVVnFqtJAi` (started by Bob 2026-10-23; K4789), which started BOB #269. On the **secondary** account, superseded by ROOT #9 and unreachable from the third: **ROOT #8**, `session_01R3hvN64bYHG3vPQmYmaeLR` (started by Bob 2026-10-20; K4213), which started BOB #232 to #268; ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022) is superseded. Sessions on one account are unreachable from the other. Earlier ROOTs are archived (rulings K693–K2022).
+- **BOB:** invoke the skill `civicos-bob` (`CLAUDE.md`); it names the takeover reading.
+- **A module job:** invoke the skill `civicos-job`; its first command prints the START.

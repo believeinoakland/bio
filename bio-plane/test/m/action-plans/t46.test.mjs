@@ -71,13 +71,13 @@ test("R46 (b): plansToLookAgain answers a look_again day on the local day of now
   assert.equal(due.day, "2026-11-01");
   assert.deepEqual(due.items.map((i) => [i.plan, i.look_again]), [[w.PL, "2026-11-01"]], "control: the local day has begun");
   /* the reverse: a zone ahead of UTC (the place's view as actions R68 answers it) */
-  w.actions.place = () => ({ time_zone: { value: "Asia/Tokyo", status: "researched", basis: "TEST" } });
+  w.record.setSetting("team_time_zone", "Asia/Tokyo", "test");   /* the team's stated zone governs (K5292) */
   const ahead = look("2026-10-31T15:00:00Z");
   assert.equal(ahead.day, "2026-11-01");
   assert.deepEqual(ahead.items.map((i) => i.plan), [w.PL], "begun in the plan's zone, not yet in UTC");
   assert.deepEqual(look("2026-10-31T14:59:59Z").items, [], "control: a second before local midnight");
   /* no zone held: the day is undetermined and nothing is answered due, however late */
-  w.actions.place = () => null;
+  w.record.setSetting("team_time_zone", "", "test"); w.record.setSetting("jurisdiction_profiles", [], "test"); w.actions.place = () => null;
   const none = look("2027-06-01T12:00:00Z");
   assert.deepEqual(none.items, []);
   assert.equal(none.day.state, "undetermined");

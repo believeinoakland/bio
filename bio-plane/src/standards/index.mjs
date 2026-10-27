@@ -69,7 +69,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { contentOf, contentIdFor, canonicalExtent, describeExtent, extentRelation,
          CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { noSha } from "../extraction/index.mjs";
-import { combine as combineProfiles, STANDARD_SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
+import { combine as combineProfiles, governingZone, STANDARD_SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { parseFigure } from "../calc-grammar/index.mjs";
@@ -263,7 +263,9 @@ export class Standards {
      every zone, so with none stated the days are compared in UTC and nothing depends on it. */
   #zone() {
     const { view } = this.#view();
-    return view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : "UTC";
+    let g = null; /* K5292 (jurisdictions R98): the team's governing zone first */
+    try { g = governingZone(this.record.getSetting("jurisdiction_profiles"), this.record.getSetting("team_time_zone")); } catch { g = null; }
+    return g || (view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : "UTC");
   }
 
   /** The module's tables (R14), created at construction (R16); kept, idempotent, for a caller that still calls it. */

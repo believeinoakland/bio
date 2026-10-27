@@ -24,7 +24,7 @@ import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER
 import { normAlias, labelTerms, noSha } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
-import { combine, SECTORS, FORUM_KINDS } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone, SECTORS, FORUM_KINDS } from "../../../jurisdictions/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { SHARED_ACT_CHECKS } from "../record-grammar/acts.mjs";
 import { BASIS_GRADES } from "../record-grammar/grades.mjs";
@@ -1149,7 +1149,7 @@ export class Entities {
     const who = by == null ? null : String(by);
     const b = this.#identifierBasis(sch, basis, who);
     if (!b.ok) return b;
-    return this.#holdIdentifier({ entityId, scheme: sch.scheme, scope: "", rec, valid: valid ?? null, basis: b.text, by: who, zone: viewZone(view) });
+    return this.#holdIdentifier({ entityId, scheme: sch.scheme, scope: "", rec, valid: valid ?? null, basis: b.text, by: who, zone: this.#teamZone(view) });
   }
 
   /* R43 (K1443): a member's basis is a cited source (non-empty text) or a system's row; a machine holds an identifier
@@ -1346,7 +1346,7 @@ export class Entities {
                              ORDER BY relation_id LIMIT ?`, node, ...want, after, node, ...want, after, BOUNDS.fanout + 1);
     const more = rows.length > BOUNDS.fanout;
     const view = this.view();
-    const zone = viewZone(view) || "UTC";
+    const zone = this.#teamZone(view) || "UTC";
     const items = (more ? rows.slice(0, BOUNDS.fanout) : rows).map((r) => {
       const c = { id: r.relation_id, from: r.from_entity, to: r.to_entity, kind: r.relation, owner: CONNECTION_OWNER,
                   valid: { from: null, to: null, precision: "day", zone },
@@ -2071,6 +2071,16 @@ export class Entities {
     this.#heldKey = key;
     this.#viewBuilds++;
     return this.#heldView;
+  }
+
+  /* K5292 (jurisdictions R98): the team's governing zone (its stated `team_time_zone`, else the profiles'), else the view's; or null. */
+  #teamZone(view) {
+    try {
+      const g = this.#record && typeof this.#record.getSetting === "function"
+        ? governingZone(this.#record.getSetting("jurisdiction_profiles"), this.#record.getSetting("team_time_zone")) : null;
+      if (g) return g;
+    } catch { /* read the view below */ }
+    return viewZone(view);
   }
 
   /** R20, R44 (G55): how many times `view()` has built the view (it is held while the setting it is built from is

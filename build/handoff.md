@@ -1,44 +1,29 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #313 (`session_018r9K5wgMTUrdGRUqami37X`, depth 1, parent ROOT #10; **Bob's primary account**) for BOB #314, 2026-10-26, at 40 % of its window; no step half done. **T51 is OPEN** on `tranche/T51`. ROOT is **ROOT #10** `session_01XHjMEPkzmkLycoWtxb4yn6`. Read rulings K5317-K5330 whole (they record today's diagnosis of why the process has been failing, and Bob's direction for fixing it), `build/plan/walk-T51-alpha/BRIEF-rewalk11.md`, `diagnosis-S1.md` and `alpha-cut.md` whole.
+**Status** · Replaced whole at each handoff. Written by BOB #317 (`session_01224iDvCaoPmHYZNq2oLxtm`, depth 1, parent ROOT #10 `session_01XHjMEPkzmkLycoWtxb4yn6`; Bob's primary account) for BOB #318, 2026-10-27, at 50 % of its window; no step half done, no job live. **T51b is OPEN** on `tranche/T51b`, its round R1 closed. Read whole: K5343, K5346, K5348, K5350, K5351 (`build/rulings.md`), then `next.md`'s first five sections.
 
-## Bob's direction now (all in `rulings-active.md`; run `node build/plan/bob-rulings-check.mjs` at takeover: it must print 0)
+## Bob's direction now
 
-- **The alpha first (K5311, K5313, K5319):** no new job unless a member's operation fails; running jobs merge; then artifacts, redeploy, re-walk, cut, each step checked before the next. "We can try, but let's we aware that we have problems." (K5319).
-- **Then the process redesign before T52 opens (K5319, K5323, K5326):** `build/plan/draft-process-redesign.md` and its inventory `draft-process-inventory.md` (140 rules classed CODE/SKILL/INDEX/PRODUCT/RETIRE). Bob: "Step that must aways happen belong in code, not instructions! Follow all of these best practices." No job cap unless usage risks running out (K5323; watch `get_session`'s `rate_limit_info.status`).
-- Releases are BOB's acts, never Bob's approval (K5293). Bob's one act in the cut: approving the `release-sign` run on GitHub (alpha-cut step 9).
+- **The alpha is out (K5350):** 0.87.0 signed, the installer (`newgroup` `ec1b82c9-9584-40da-801b-8926b0448a17`) and civicsmith.org (`civicsmith-site` `e5696abf-1554-47c0-95a2-2e3e48cc3d5a`) deployed, biosmoke8 on 0.87.0, the cut merged into the tranche (`d44c7e9d9`). Rollback: newgroup `fa4267b9-a38b-4302-8189-f7b233b1e45a`, site `97a23ece-8276-400b-9a24-3ee720abd6c2`.
+- **Merges and every repository act are BOB's, never asked of Bob; his one development act is approving a GitHub release (K5346).** Releases: K5293. Code and test deploys: K5120.
+- **The live walk follows the release, its findings T52's (K5348).** Test fixing waits until after the alpha, installer and site (K5343): that point is now reached.
+- **Every ruling of BOB's goes through `proc ruling --line-file <f> [--files …]`** (K5351; never hand-numbered: K5349 was given twice).
 
-## Where the work stands
+## Waiting on Bob (asked by BOB #317 in its last report; P17, his: public visibility)
 
-- Fix round 10's jobs all merged (K5318 interface-shell, K5321 screens-entry R34, K5322 screens-daily R107). Artifacts regenerated `07a3dfe6a1`; biosmoke8 redeployed (run 40379661431, K5325).
-- **Re-walk 11** (`BRIEF-rewalk11.md`; records on `walk/T51-rewalk11-<A-E>`): B 2/2 fixed (one MINOR wording: the documents-count widen button reads only "Search": UX-DESIGN HANDOFF); D 3/4 (R135's unsaved line not drawn for the case editor's radios and tick: screens-publish lacks `typing: edited` at `case-editor.mjs:121,126,178`; MINOR, in `next.md`); A 2/3 and **S-1 MAJOR** (setup stays "Still loading" for a signed founder; K5327); E 14/17 (K5328: adoption MAJOR, merged K5329; three minors in `next.md`); C 9/9 walkable, two blocked by money (K5329) (they finished after this handoff was drafted if their branches exist; read them whole, place every NOT FIXED and new finding by K4426's four, a failing member operation as a job now, else `next.md`).
-- **Running: SCREENS-ENTRY #16** (`session_01HPbxRrBFoxDBNSYkhtnFYP`, START B24, S-1) and SCREENS-INVESTIGATE #26 merged (K5329). At SCREENS-ENTRY #16's COMPLETE: `node build/plan/premerge.mjs <module>`, push (one plain command), strike nothing (no new id), ruling, archive with row, `mail retire`. Then regenerate the artifacts (the plane bundle and `program.mjs` change), redeploy (`deploy-test/biosmoke8/dry-run` then `/deploy`, plain pushes after checking each is a fast-forward), re-walk S-1, A's setup zone row and E's adoption row at 1280 and 390.
+- Should civicsmith.org be listed by search engines yet? Today every page sends `noindex` because the site's `STEWARDS_ADDRESS` is unset (site R6); setting it to stewards@civicsmith.org (K5298) makes the site public. Options put: **A (recommended)** keep it unlisted until the beta; **B** make it public now. If he answers B: set `STEWARDS_ADDRESS` in `site/wrangler.jsonc`'s `vars`, deploy (`wrangler deploy` from `site/`, account `…7f72` only), check the header is gone and the address shows, ruling. Do not ask again.
+- Bob's own install of the alpha under his throwaway account (K5258) is his to do when he chooses; a fresh install through the installer's Cloudflare consent has not been done by any session (bot protection; K4942). Nothing owed by BOB for it.
 
-## Before the cut: the team-zone pass (K5329 reverses K5324)
+## Next, in order
 
-- Money's "Read a figure" is refused for every period (`MONEY_BAD_PERIOD`, re-walk 11 C new 1): `money/index.mjs:276` reads the zone from the profiles only. So the pass `build/plan/pass-zone-K5292.md` (§5.10) runs **before the cut**, once SCREENS-ENTRY #16 is merged and no job runs: one worker (sonnet, medium) applies it on the tranche, every site re-listed by grep first; a site needing judgment is its own job; the whole suite, checks and artifacts once; then the redeploy and the re-walk of C's money rows (C-M8's document node, money `exclude`), E-AP2/N2, E-C2a.
-- C's other findings (`walk/T51-rewalk11-C`): reinstating a grounded leg onto the other side is refused `BASIS_REFUSED` with the wrong reason (MAJOR edge case: place it by K4426 now if the act cannot be done at all, else `next.md`); three minors to `next.md`.
+1. **The live walk of 0.87.0 on biosmoke8** (`next.md` "The alpha's live walk"; `build/situations/deploy-and-walk.md`, `build/plan/walk-coverage-T51.md`): one complete pass, 5 walkers at once (sonnet, medium), every screen as administrator and member at 1280 and 390 px, re-walk 11's open rows named in `next.md`. Each defect becomes a T52 entry by cause (`fix-round.md`'s grouping); nothing of it is fixed in T51b.
+2. **T51b's close** (`situations/merge-close.md`): `proc history --ref origin/main`; merge `main` into the tranche (never a rebase); the checks and the suites of modules changed since their last tested merge and their users' (K5339, never the whole suite); old reds named, never a reason to hold the close (K5343); Status `CLOSING`; PR `tranche/T51b` to `main`, merged with the GitHub tool; delete the backstop; report to Bob in plain words with `proc footprint`. The design stream's DEC-443 (K5315: held until after the alpha's deployment, now done) is asked of UX-DESIGN as its MERGE at this close.
+3. **T52 opens as the beta (K5257)**, `next.md` first: adopt R14 (civicos-process PR #13 into `lane/process-redesign`, then that branch's PR to `main`) before T52's first test run; the test-fixing rethink Bob asked for (K5258) as a plan brought to him; the reds deferred at K5343 and K5350.
 
-## Then, in order (the cut: `alpha-cut.md`)
+## State worth knowing
 
-1. (Done: the re-walk 11 records are merged into the tranche.)
-2. Finalize the notes from `build/plan/walk-T51-alpha/notes-0.87.0-draft.json` with what the re-walk shows (state R135's missing line and any limit left plainly); commit as `release/notes/0.87.0.json`.
-3. The cut 0.87.0, steps 1-17 of `alpha-cut.md`, **with civicsmith.org (step 13) deployed only after the rehearsal (step 14) passes** (K5319's ordering). Rollback targets: newgroup `fa4267b9-a38b-4302-8189-f7b233b1e45a`, civicsmith-site `97a23ece-8276-400b-9a24-3ee720abd6c2`. The rehearsal runs on a fresh test copy in the project account, never Bob's throwaway (K5258). Then Bob's own install (K4935).
-4. The process redesign (`draft-process-redesign.md`), certified by dry run, then T52 opens as the beta (K5257), `next.md` first: DEC-443 (K5315), the zone pass (K5324), the served-source check (K5327), the word-key test sweep (K5313).
-
-## How to wait (K5321)
-
-- Never rely on doorbells alone: after a CHANGE or START, run `build/plan/watch-job.sh "<module>|<module>"` as a background task (it loops `mail check` every 30 s and exits when a job has a READ entry or is COMPLETE with nothing open); the doorbell is a backup. Before telling Bob a job is "waiting", read its session's events.
-- A job's COMPLETE with its cursor behind BOB's newest entry: post a one-line CHANGE asking `mail done` and ring (K5320).
-
-## Acts on main or sessions (reviewed acts, §5.8)
-
-- bio `main` moves only by T51's close PR (§5.7 (3), CLAUDE.md's standing direction); the design's MERGE first; DEC-443 is held until after the deployment (K5315).
-- Release acts: K5293. biosmoke8 deploys: K5120 (never `-f`: a typed force push was refused at K5325). Branch deletion: only by `prune-branches.yml` (K5300, K5302; it starts itself once on `main`, K5317).
-- Process repository edits: none yet this tranche; `premerge.mjs` and `bob-rulings-check.mjs` live in `build/plan/` (K5309, K5311); the redesign moves them into the tool.
-
-## Tools and limits
-
-- The mail tool with `retire`: `/home/user/cp-retire` = civicos-process `prep/retire-K5296` (`git -C /home/user/civicos-process worktree add /home/user/cp-retire origin/prep/retire-K5296` after fetching it).
-- `rulings-active.md` 78 lines, about 25,585 bytes of 25,600: a new rule replaces or merges a line. `fix-round-10-T51.md` ~49.9 KB of 51.2 KB.
-- Lanes: no new HANDOFF entries (W4, A41, H43 last). UX-DESIGN read through U486; it has read B539.
+- `/home/user/cut` (worktree on `dist/cut-0.87.0`, its `node_modules` linked from `/home/user/bio`) and `/home/user/bob-wt` are leftovers: remove them (`git worktree remove --force`) before work that needs disk.
+- The container's memory limit (about 15 GB, shared by every command) kills a test process that grows past it; run suites one at a time, never three at once (K5343). Until R14 lands, a suite with no summary is a NO RESULT to diagnose (kernel log `dmesg | grep -i killed`), never a red.
+- `deploy-test.yml` cannot build a fresh copy (members deploy before the plane; a script copy has no store or secrets), and on the shared test account any copy's member run re-points the one `agent-worker` (K5350, `next.md`). Use it for biosmoke8 only.
+- Lanes: PROCESS-REDESIGN ended (K5351). UX-DESIGN read through U487 (nothing unread at BOB #317's last read). JOURNEYS (W4), AI-DESIGN (A41), INVESTIGATION-DESIGN (H43), PERFORMANCE (P26): nothing new at BOB #317's takeover; read each at takeover.
+- `rulings-active.md` is about 11 KB of its 25 KB.

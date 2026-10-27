@@ -41,7 +41,7 @@
     {
       "path": "../bio-plane/src/setup-words/rows.mjs",
       "bytes": 4196,
-      "sha256": "57dcfe60142fbf190caf4ebbc52d58701f2f0d770927867dda36a6f2acb4cd54"
+      "sha256": "1c29c2a138d4897464c074c52deceafd2d928ad0ce79e6a116ad192a32140ec4"
     },
     {
       "path": "src/contract.mjs",
@@ -98,6 +98,6 @@
   },
   "lock": {
     "path": "package-lock.json",
-    "sha256": "c4a39408caea12afaa5af6c52d26d5b80d6700355eae890cca27f10560b544c0"
+    "sha256": "18981a4f5c44ba52c36daf0a3131d6f3bb9f9a8deb98449f513db75defe8e43c"
   }
 }
