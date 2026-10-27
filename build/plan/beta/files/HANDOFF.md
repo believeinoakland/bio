@@ -6,7 +6,7 @@
 
 **State.** Bob answered F1-F3 (K5435 A2, K5436 B2, K5437) and K5427 (text 100 MB). READY for PLANNING: `STUDY-N1266-file-types.md` (type table final), `SIZES-N1267.md`, `CORPUS-N1268.md`, `REQ-format-registry-beta.md` (RF1-RF11), `REQ-readers-beta.md` (new modules `structured-text-reader`, `mail-reader`; container client lines CC1-CC6), `UX-NEEDS.md` (sent to BOB). First count of Oakland sources in study §2a (Legistar 1,243/1,243 PDF; portal files PDF 48, ZIP 26, XLS 22).
 
-**Open (BOB's or others').** Protective limits are set (K5439, in REQ-readers-beta). Whether `structured-text-reader` also takes text/HTML; N1267a before any workbook bound above 250,000 cells; PLATFORM's record and container load per added type; CAPABILITIES for map files (N1257) and email capture (N824).
+**Also READY:** `LOAD-PER-TYPE.md` (record and container load per type, for PLATFORM). **Open (BOB's or others').** Protective limits are set (K5439, in REQ-readers-beta). Whether `structured-text-reader` also takes text/HTML; N1267a before any workbook bound above 250,000 cells; PLATFORM's record and container load per added type; CAPABILITIES for map files (N1257) and email capture (N824).
 
 **Next steps.**
 1. S2 (does not block READY): Legistar PDF sizes measured (150 random: median 218 KB, p90 1.6 MB, max 19.4 MB). Still to do: open the portal's 26 zips and 22 "Excel" files; page counts.
@@ -26,3 +26,6 @@ Bob's answers K5435-K5437 carried. Study final; REQ-format-registry-beta, REQ-re
 
 ### F4 · 2026-10-27
 K5439 limits carried into REQ-readers-beta (SR7 new, ML3, SR6). Legistar PDF sizes added to study §2a and corpus.
+
+### F5 · 2026-10-27
+PLATFORM's need answered: `LOAD-PER-TYPE.md` (every figure marked M/D/U; L1-L6 measurements proposed to fill the U cells). Sent to BOB.
