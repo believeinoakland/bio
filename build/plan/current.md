@@ -1,6 +1,6 @@
 **Round** · R1 · closed
 # Plan T52 · the beta (K5257)
-**Status** · OPEN · BOB #320 · session_018BhcecJrZBGdFHx6zQiGAc · depth 1
+**Status** · CLOSING · BOB #320 · session_018BhcecJrZBGdFHx6zQiGAc · depth 1
 **Jobs** · none
 **Owed** · none
 
