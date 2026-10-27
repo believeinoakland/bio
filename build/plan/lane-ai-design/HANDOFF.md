@@ -4,14 +4,14 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 ## 0 · The state now and the next steps
 
-**Lane** · AI-DESIGN #4 (`session_018BhcedHXD9yareupMq6poX`, Opus), started 2026-10-27 by BOB #322; #3 archived. Branch `lane/ai-design` (T53 merged in at takeover). BOB is the session on `build/plan/current.md`'s Status line on `tranche/T53` (BOB #323, `session_018BhcefwigYo6VB6PEac3TJ`; #322 archived; at A60). PLANNING #2 is `session_018Bhceg7ptZUBDjGtWWSVz4`. Scope: AI provider selection and the assistant designed whole (LANES.md §2).
+**Lane** · AI-DESIGN #4 (`session_018BhcedHXD9yareupMq6poX`, Opus), started 2026-10-27 by BOB #322; #3 archived. Branch `lane/ai-design` (T53 merged in at takeover). BOB is the session on `build/plan/current.md`'s Status line on `tranche/T53` (BOB #323, `session_018BhcefwigYo6VB6PEac3TJ`; #322 archived; at A61). PLANNING #2 is `session_018Bhceg7ptZUBDjGtWWSVz4`. Scope: AI provider selection and the assistant designed whole (LANES.md §2).
 
 **The design is complete and folded by PLANNING** (A43–A47 merged into `tranche/T53`). Every draft is READY:
 - New modules: `draft-ai-catalogue.md` (L2), `draft-ai-gate.md` (L6), `draft-ai-issuer.md` (L11, Civicsmith's own Worker).
 - Adapted modules: `draft-ai-accounts.md` with `draft-ai-accounts-dec465.md`; `draft-credentials.md`; `draft-agent-model.md`; `draft-ai-use.md`; `draft-agent-runner.md`; `draft-agent-run-path.md`; `draft-run-record.md`; `draft-run-rules.md`; `draft-signatures.md`; `draft-instance-setup.md`.
 - Screens and costs: `draft-assistant-screens.md`; `draft-ai-costs.md`. Supporting: `NEXT-ENTRIES.md`, `DESIGN-BRIEF.md`, `INVENTORY.md`.
 
-**Bob's answers** are in `DECISIONS.md` (AD1–AD58), each with its K. All folded, AI1–AI14 included (AI8 and AI9 at A52; AI12's opt-in health counts, missed earlier, at A53). **Open with Bob:** nothing. Every AI question, AI1–AI16, is answered (last: AI15 K5493 at A57, AI16 K5494 at A60), and no draft carries a pending mark.
+**Bob's answers** are in `DECISIONS.md` (AD1–AD58), each with its K. All folded, AI1–AI14 included (AI8 and AI9 at A52; AI12's opt-in health counts, missed earlier, at A53). **Open with Bob:** nothing. Every AI question, AI1–AI16, is answered (last: AI15 K5493 at A57, AI16 K5494 at A61), and no draft carries a pending mark.
 
 **BOB's decisions since takeover:** K5490 (catalogue For BOB 14, 15; issuer 12, 13: as recommended), K5492 (A54's For BOB 5–7), K5491 (ai-use B9 changed: a personal subscription's calls stay out of the health report, the counter carries a `personal` flag; B10 and issuer 9 as recommended). U8, U9 relayed to UX-DESIGN (B559).
 
@@ -97,3 +97,6 @@ UX-DESIGN's DEC-475 (U508) drew U8–U10 and Bob's AI6, AI8, AI9, AI11–AI14. A
 
 ## A60 · 2026-10-27 · Wait lengths confirmed
 BOB #323 confirmed `WAIT_THEN_SWITCH_CHOICES` 5, 15, 60 minutes for `aiwaitswitch` and `aiwait`; run-record R105 marked. Nothing open with BOB or Bob.
+
+## A61 · 2026-10-27 · Aligned with DEC-476 (U11 drawn)
+DEC-476 drew AI15: no terms acceptance at connection, a fold of quoted terms beside "Switch it on", `ai.notice.termschange` (already dec465 R76's key). Aligned: `draft-ai-accounts.md` R47 no longer refuses a personal subscription for a changed terms version (`PERSONAL_CHOICE_TERMS_CHANGED` dropped; the version is recorded and marked stale later, as before); screens `aitermsaccept` is the free-tier warning only; U11 marked drawn. **Need:** nothing.
