@@ -172,9 +172,10 @@ console.log("\n--- R5: the R2 key, by .get only; NOT_FOUND ---");
 
 /* pdf-reader's own answer for the range asked (R6, R7): the fields the member passes through beside its `text` and `tier`. */
 const rangeFields = async (bytes, range = {}) => {
-  const { text: _t, ...rest } = await (await openPdfRange(bytes)).range(range);
+  const { text: _t, notes: _n, ...rest } = await (await openPdfRange(bytes)).range(range);
   return JSON.parse(JSON.stringify(rest));
 };
+const rangeNotes = async (bytes, range = {}) => (await (await openPdfRange(bytes)).range(range)).notes ?? [];
 
 console.log("\n--- R6: pdf-reader's refusal, verbatim, at 422 ---");
 {
@@ -190,7 +191,7 @@ console.log("\n--- R7 and R9: tier 2 replaces .text, everything else passes thro
   t("R7 200 and tier 2", [st, out.ok, out.tier], [200, true, 2]);
   const { text: _a, tier: _b, notes, ...rest } = out;
   t("R7 every other field is pdf-reader's own for the range, unchanged", rest, await rangeFields(DOC));
-  t("R7 the notes are the member's own, none here", notes, []);
+  t("R7 the notes are pdf-reader's own for the range, none added here", notes, await rangeNotes(DOC));
   t("R9 one entry per page, pages kept separate", out.text.pages.map((p) => [p.page, p.text.trim()]),
     [[0, "First page words"], [1, ""], [2, "Third page words"]]);
   const marker = { page: 1, reason: "no_text_layer", font: null, codes: "", count: 0 };
@@ -284,9 +285,10 @@ console.log("\n--- R10: the tier-2 pass throws ---");
     counts: { chars: 0, undetermined: 1 } });
   const note = out.notes[out.notes.length - 1] || "";
   t("R10 one tier2_error note appended, message at most 80 chars",
-    [out.notes.length, /^tier2_error:.{1,80}$/s.test(note)], [1, true]);
+    [out.notes.filter((n) => n.startsWith("tier2_error:")).length, /^tier2_error:.{1,80}$/s.test(note)], [1, true]);
   const { text: _a, tier: _b, notes: _n, ...rest } = out;
   t("R10 the range's fields are kept", rest, await rangeFields(BROKEN));
+  t("R10 pdf-reader's own notes are kept, the tier2_error note after them", out.notes.slice(0, -1), await rangeNotes(BROKEN));
 }
 
 console.log("\n--- R10: a file cut before its trailer is read on a repaired view (fix round 10, cause 8) ---");
