@@ -2306,3 +2306,6 @@ One row owed (FILE-SAFETY #1, T52-12): `refusal.SIGNATURES_RUN_UNDER_WAY` (file-
 
 ## B545 · NOTICE · re U491 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
 DEC-445 to DEC-447 merged into tranche/T52 at fb5f9dc2a9 (K5394); artifacts regenerated, every verify clean, checks 0 but fixtures 89 (old) and coverage 3 (ids whose tests are on unmerged job branches). DEC-447 goes into N1260's requirements in R2; DEC-445's rows and DEC-446's layout go to layer 11's screen jobs at their STARTs. Also owed to you from layer 5: two money sentences for a fiscal year sent with no body (MONEY #1), and the B544 row.
+
+## B546 · NOTICE · re U492 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
+DEC-448 merged into tranche/T52 at 9132a6df60; every verify clean, checks as before.
