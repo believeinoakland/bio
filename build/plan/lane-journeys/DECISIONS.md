@@ -15,3 +15,4 @@ id · date · his words (quoted, never reworded) · source
 - K5558 · 2026-10-27 · J5 A: the project's owner files a correction, a withdrawal or a court order, from the docket page · same
 - K5559 · 2026-10-27 · J6 A: each new edition is recorded on the docket automatically, with its "what changed" text · same
 - K5560 · 2026-10-27 · J7 B: an outside reader's acknowledgement is shown by name only if they tick that it may be · same
+- K5561 · 2026-10-27 · BOB's, P17: duplicate office answers the existing one and lists show one; a question opened from a chain belongs to the project the explore page was opened from, else the member chooses; replies listed by the day each arrived, then the order recorded; a failed response the app itself requests is a defect, the step-up 403 is accepted · via BOB #324
