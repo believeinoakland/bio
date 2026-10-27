@@ -1,0 +1,82 @@
+<title>Questions for Bob</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Public+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column. Open questions first, each a card; answered ones in a quieter list at the bottom.
+   Kept by BOB (Bob, K5426): every question for Bob from every lane is added here; when he answers, it moves to Answered. */
+:root{
+  --bg:#f7f8f6; --surface:#ffffff; --fg:#1d2321; --muted:#5b6662; --line:#d9dfdb; --accent:#1f6b52; --accent-soft:#e3f0ea; --open:#9a5b13; --open-soft:#fbf1e3;
+  --serif:"Source Serif 4", Georgia, serif; --sans:"Public Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141917;--surface:#1c2320;--fg:#e6ebe8;--muted:#9aa7a1;--line:#2f3a35;--accent:#6fcba4;--accent-soft:#1f3a2f;--open:#e9b46a;--open-soft:#3a2d1a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141917;--surface:#1c2320;--fg:#e6ebe8;--muted:#9aa7a1;--line:#2f3a35;--accent:#6fcba4;--accent-soft:#1f3a2f;--open:#e9b46a;--open-soft:#3a2d1a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--sans);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 48px}
+main{max-width:46rem;margin:0 auto;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2rem;line-height:1.2} h2{font-size:1.45rem} h3{font-size:1.2rem}
+p{margin:0}
+.lede{color:var(--muted)}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.count{display:inline-block;font-size:.8rem;font-weight:600;border-radius:999px;padding:2px 10px;background:var(--open-soft);color:var(--open)}
+.count.done{background:var(--accent-soft);color:var(--accent)}
+.group{display:grid;gap:16px}
+article.q{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--open);border-radius:10px;padding:20px;display:grid;gap:14px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:.85rem;color:var(--muted)}
+.opts{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.opts li{border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:4px}
+.opts li.rec{border-color:var(--accent);background:var(--accent-soft)}
+.tag{font-size:.75rem;font-weight:600;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+.k{font-weight:600}
+.note{border-left:3px solid var(--line);padding-left:12px;color:var(--muted)}
+ul.plain{margin:0;padding-left:1.2rem;display:grid;gap:6px}
+.how{font-family:var(--serif);font-size:1.05rem;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:16px 20px}
+.answered{display:grid;gap:0;border-top:1px solid var(--line)}
+.answered details{border-bottom:1px solid var(--line);padding:12px 2px}
+.answered summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.answered summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.answered .when{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.answered .body{padding-top:8px;display:grid;gap:6px;color:var(--fg)}
+blockquote{margin:0;border-left:3px solid var(--accent);padding-left:12px;font-family:var(--serif)}
+.empty{color:var(--muted);font-style:italic}
+</style>
+<main>
+  <header style="display:grid;gap:10px">
+    <span class="eyebrow">Kept by BOB · last updated 27 October 2026, BOB #321</span>
+    <h1>Questions for Bob</h1>
+    <p class="lede">Every question from every lane that needs your decision is on this page, explained, with options and a recommendation. When you answer one, it moves to <a href="#answered">Answered</a> at the bottom, with your words and where they were recorded.</p>
+    <p id="counts"><span class="count">… open</span></p>
+  </header>
+
+  <div class="how">To answer, reply in chat and name the question. For example: <em>"P2 as recommended. C1: A."</em> You can also comment "As recommended" on an option right on this page You can answer some now and leave the rest.</div>
+
+  <section class="group" id="open">
+    <h2>Open</h2>
+    <div class="group" data-part="QUESTIONS-open-platform.html"><p class="empty">Loading…</p></div>
+    <div class="group" data-part="QUESTIONS-open-ai.html"><p class="empty">Loading…</p></div>
+    <div class="group" data-part="QUESTIONS-open-capabilities.html"><p class="empty">Loading…</p></div>
+    <div class="group" data-part="QUESTIONS-open-planning.html"><p class="empty">Loading…</p></div>
+  </section>
+
+  <section class="group" id="answered">
+    <h2>Answered</h2>
+    <div class="answered" data-part="QUESTIONS-answered.html"><p class="empty">Loading the answered questions…</p></div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+  var boxes=[].slice.call(document.querySelectorAll('[data-part]'));
+  Promise.all(boxes.map(function(box){
+    return fetch(box.getAttribute('data-part')).then(function(r){if(!r.ok)throw new Error(r.status);return r.text();})
+      .then(function(t){box.innerHTML=t;})
+      .catch(function(){box.innerHTML='<p class="empty">This part could not be loaded. Reload the page to try again.</p>';});
+  })).then(function(){
+    var open=document.querySelectorAll('#open article.q').length;
+    var done=document.querySelectorAll('#answered details').length;
+    var c=document.getElementById('counts');
+    if(c) c.innerHTML='<span class="count">'+open+' open</span> <span class="count done">'+done+' answered</span>';
+    if(location.hash){var el=document.getElementById(location.hash.slice(1)); if(el) el.scrollIntoView();}
+  });
+})();
+</script>
+

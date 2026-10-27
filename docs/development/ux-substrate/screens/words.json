@@ -11,10 +11,10 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 498,
+  "queue": 499,
   "transcribe": 19,
-  "capture": 74,
-  "document": 78,
+  "capture": 96,
+  "document": 79,
   "question": 82,
   "connection": 34,
   "guide": 7,
@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2605,
+  "refusal": 2606,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -49,11 +49,11 @@
   "session": 11,
   "updates": 37,
   "home": 19,
-  "installer": 486,
+  "installer": 487,
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7869,
+  "screen": 7944,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1298,
+  "act": 1304,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -114,7 +114,7 @@
   "timeline": 2,
   "caseimport": 4,
   "acquisition": 47,
-  "file-safety": 57,
+  "file-safety": 62,
   "extraction": 25,
   "events": 86,
   "entities": 30,
@@ -158,6 +158,7 @@
   "citation": 4,
   "control-plane": 1,
   "project-stage": 17,
+  "doorbell": 14,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -166,7 +167,6 @@
   "idspaces": 51,
   "record-core": 3,
   "explore": 31,
-  "doorbell": 13,
   "doc-clean": 7,
   "case-tensions": 9,
   "project-roster": 1,
@@ -237,8 +237,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19467,
-  "protected": 1162
+  "total": 19580,
+  "protected": 1166
  },
  "words": [
   {
@@ -37823,7 +37823,7 @@
   },
   {
    "key": "document.held.says",
-   "en": "Awaiting review: held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
+   "en": "Awaiting review. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-289: a copy the viewer captured, not yet vouched for (release)"
@@ -38495,7 +38495,7 @@
   },
   {
    "key": "ceremony.gate.other",
-   "en": "This stops the signing: {what}. Put it right above, then check again.",
+   "en": "This stops the signing: {what}. Fix it above, then check again.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-299: any other gate, {what} its own plain sentence"
@@ -67398,7 +67398,7 @@
   },
   {
    "key": "screen.project.a.question.this.project.holds.has",
-   "en": "A question this project holds has a leg in its basis.",
+   "en": "A question this project holds has a source behind it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
@@ -77709,14 +77709,14 @@
   },
   {
    "key": "screen.aichecks.origin.name",
-   "en": "Not made by an organization based in China",
+   "en": "Not developed by a Chinese organization",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aichecks: origin name"
   },
   {
    "key": "screen.aichecks.origin.line",
-   "en": "The organization that makes the AI is not based in China.",
+   "en": "Judged by who developed the model, whichever company serves it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aichecks: origin line"
@@ -78189,13 +78189,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aiproviders: refused personal"
-  },
-  {
-   "key": "screen.aiproviders.refused.origin",
-   "en": "Not offered while the team requires the check “Not made by an organization based in China”.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-420: B488 aiproviders: refused origin"
   },
   {
    "key": "screen.aiproviders.held.head",
@@ -78731,7 +78724,7 @@
   },
   {
    "key": "screen.aiconnect.s3.why",
-   "en": "Four ways. Choose one.",
+   "en": "Five ways. Choose one.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-420: B488 aiconnect: s3 why"
@@ -80523,7 +80516,7 @@
   },
   {
    "key": "money.ingest.partial",
-   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Reading reference: {ingest}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; DEC-451: {ingest} kept while money R31's test pins the key in this sentence; {ingest} the ingest's key"
@@ -81052,13 +81045,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-431: B514 J27 R84 (3): the cron-trigger count in the limit stop; {n} a number"
-  },
-  {
-   "key": "act.captureuploadabort.does",
-   "en": "Stops sending a large document in parts. Nothing of it is kept.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-431: affordances act-help.mjs:153 (T51 K4900, capture R113), word for word its default, so the reads list regenerates"
   },
   {
    "key": "act.captureuploadbegin.does",
@@ -83554,10 +83540,766 @@
   },
   {
    "key": "ceremony.gate.name.c12_2",
-   "en": "The record's history is complete",
+   "en": "The completeness of the record's history",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-453: the signing gate: the plain name of check C-12.2, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "screen.capture.finish.pending",
+   "en": "The page as a visitor saw it is still being made. It is filed as a second document when it is ready; look again in a moment.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, finishing a capture: in place of acquisition.index.render_pending_note (capture.mjs:496)"
+  },
+  {
+   "key": "screen.capture.finish.files",
+   "en": "Nothing new was filed: the page itself was already captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, finishing a capture that files no new document: in place of acquisition.note.continuation_files_new"
+  },
+  {
+   "key": "screen.capture.finish.done",
+   "en": "Finished: {title}, the page as a visitor saw it, is filed as a second document. It waits in Held captures until a member vouches for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a finished capture; {title} the second document's title"
+  },
+  {
+   "key": "screen.capture.address.reading.pending",
+   "en": "Your team already holds a copy of this page. It hasn't been read yet, so its words can't be found or cited until it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, an address your team already holds, its reading not done"
+  },
+  {
+   "key": "screen.capture.address.reading.done",
+   "en": "Your team already holds a copy of this page, and it has been read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, an address your team already holds, read"
+  },
+  {
+   "key": "screen.capture.fetch.done.noproject",
+   "en": "Fetched. {document} waits in Held captures until a member vouches for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a fetch done with no project; {document} the document, as a link"
+  },
+  {
+   "key": "screen.document.text.partial.one",
+   "en": "Partial: page {pages} has no text",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: the singular of screen.document.text.partial (one page without text)"
+  },
+  {
+   "key": "screen.document.reading.beingread",
+   "en": "The rest of this file is still being read. Look again in a few minutes; a search covers what has been read so far.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Document, in place of state.loading while pages are still being read (document.mjs:377)"
+  },
+  {
+   "key": "document.read.more",
+   "en": "More passages",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Document's passage pager (document.mjs:573), apart from document.read.next 'Next page', the page bar's"
+  },
+  {
+   "key": "screen.document.reading.firstn",
+   "en": "Showing {n} of {m} passages",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Document, the passage count, in place of passages.head plus 'n / m'; {n} {m}"
+  },
+  {
+   "key": "screen.capture.file.parts.hashing",
+   "en": "Checking the file before it is sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a parted upload being hashed (in place of state.loading)"
+  },
+  {
+   "key": "screen.capture.file.parts.sending",
+   "en": "Sending part {n} of {m}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a parted upload being sent; {n} {m}"
+  },
+  {
+   "key": "screen.capture.read.fetching",
+   "en": "Fetching the file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, the reading's first step"
+  },
+  {
+   "key": "screen.capture.read.reading",
+   "en": "Being read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, the reading under way"
+  },
+  {
+   "key": "screen.capture.read.about",
+   "en": "About {minutes} more minutes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, the reading's estimate; {minutes}"
+  },
+  {
+   "key": "screen.capture.read.about.one",
+   "en": "About a minute more.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: the singular of screen.capture.read.about"
+  },
+  {
+   "key": "screen.capture.read.refused.ENCRYPTED",
+   "en": "The file is locked with a password, so its words can't be read. Add a copy that isn't locked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a reading refused ENCRYPTED (in place of refusal.ENCRYPTED's 'The document is encrypted.')"
+  },
+  {
+   "key": "screen.capture.read.refused.TOO_LARGE",
+   "en": "This file is {size}, more than the {bound} your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a reading refused TOO_LARGE; {size} {bound} in MB (size.mb)"
+  },
+  {
+   "key": "screen.capture.read.refused.STRUCTURE_OVER_BOUND",
+   "en": "{part} is over the {bound} your team's Civicsmith can read. The file is kept whole and you can open it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a reading refused STRUCTURE_OVER_BOUND; {part} a plain part name (code owed), {bound}"
+  },
+  {
+   "key": "screen.capture.read.refused.ENCODING_UNSUPPORTED",
+   "en": "This file's text is written in a character set ({name}) that isn't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, a reading refused ENCODING_UNSUPPORTED; {name} the encoding's name"
+  },
+  {
+   "key": "screen.capture.refusal.upload.TOO_LARGE.figures",
+   "en": "That file is {size}, more than the {bound} that can be brought in this way. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Add, an upload refused TOO_LARGE, with its figures (in place of the bare 'size · bound', capture.mjs:1436); {size} {bound} in MB"
+  },
+  {
+   "key": "screen.document.unsupported.ico",
+   "en": "Icon files (.ico) aren't read yet. The file is kept and you can open it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Document, a file of a kind not read: drawn by the reading's kind in place of the stored reading-pipeline.index.unsupported_ico sentence (stored in the reading's basis, so its English stays)"
+  },
+  {
+   "key": "capture.index.job_not_registered",
+   "en": "Your team's Civicsmith couldn't set up the reading for this file, so it wasn't added. Nothing was saved. Try adding it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture: a file whose reading job could not be registered"
+  },
+  {
+   "key": "capture.index.body_over_request_ceiling",
+   "en": "This file is larger than the {bound} bytes one request can carry, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture: over the request ceiling; {bound} in bytes as the code passes it"
+  },
+  {
+   "key": "capture.ops.body_over_request_ceiling",
+   "en": "This file is larger than the {bound} bytes one request can carry, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture ops: the same as capture.index.body_over_request_ceiling"
+  },
+  {
+   "key": "capture.ops.body_over_capture_ceiling",
+   "en": "This file is larger than the {bound} bytes your team's Civicsmith keeps as one capture, so it wasn't added. Nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture ops: over the capture ceiling; {bound} bytes"
+  },
+  {
+   "key": "doorbell.index.job_not_registered",
+   "en": "The reading for this knock couldn't be set up, so the knock was left as it was and nothing was filed. Try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: doorbell: a knock whose reading job could not be registered"
+  },
+  {
+   "key": "capture.index.upload_unknown",
+   "en": "Your team's Civicsmith has no file being sent under that name for you. Add the file again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload (1 of 18)"
+  },
+  {
+   "key": "capture.index.upload_expired",
+   "en": "This upload was left open too long, so it was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.upload_not_open",
+   "en": "This file has already been sent in full. Look for it in Held captures.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_conflict",
+   "en": "Something went wrong while sending this file, so it was stopped and nothing was kept. Add the file again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_out_of_order",
+   "en": "Sending this file got out of step, so it was stopped and nothing was kept. Add the file again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.upload_lost",
+   "en": "Your team's Civicsmith lost track of the parts sent so far, so the upload was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_in_progress",
+   "en": "Sending this file got out of step, so it was stopped and nothing was kept. Add the file again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_size",
+   "en": "This file couldn't be sent, so nothing was stored. Add it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload; {bound} bytes"
+  },
+  {
+   "key": "capture.index.part_not_read",
+   "en": "This part couldn't be read, so nothing was stored. Send it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_digest_mismatch",
+   "en": "This part doesn't match the fingerprint sent with it, so nothing was stored. Send it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.part_not_stored",
+   "en": "Your team's file storage wouldn't accept this part, so nothing was recorded. Send it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parts_missing",
+   "en": "Not all of this file arrived, so it wasn't added. Nothing was saved. Add the file again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parts_out_of_order",
+   "en": "The pieces of this file didn't arrive as they were sent, so it wasn't added. Nothing was saved. Add the file again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.whole_digest_mismatch",
+   "en": "The parts put together don't match the fingerprint sent for the whole file, so the upload was stopped and nothing was kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_completed",
+   "en": "Your team's file storage wouldn't finish the upload, so it was stopped and nothing was kept. Start it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_unavailable",
+   "en": "Your team's Civicsmith can't take a file in parts right now, so nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_begun",
+   "en": "Your team's file storage wouldn't start an upload in parts, so nothing was saved. Try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload"
+  },
+  {
+   "key": "capture.index.parted_not_aborted",
+   "en": "Your team's file storage wouldn't cancel the upload. It stays open until it runs out of time, then it is stopped.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: capture, parted upload (18 of 18)"
+  },
+  {
+   "key": "refusal.WORKBOOK_TOO_LARGE",
+   "en": "This workbook has {cells} cells, more than the {bound_cells} your team's Civicsmith can hold and read, so it wasn't added. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: workbooks: the refusal (until now only the code's stand-in); {cells} {bound_cells}"
+  },
+  {
+   "key": "file-safety.index.the_file_is_encrypted_so_no_safe_view",
+   "en": "This file is locked with a password, so no safe view can be made of it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: file-safety: a safe view refused for an encrypted file"
+  },
+  {
+   "key": "file-safety.checks.the_file_scanner_could_not_read",
+   "en": "The file scanner couldn't read all of this file, so it counts as not checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: file-safety: a partial scan (the reason beside it is still a code: owed)"
+  },
+  {
+   "key": "file-safety.index.reading_is_not_gated",
+   "en": "Your team's Civicsmith reads this file without waiting for its safety scan. The scan is a separate check; if it finds a threat, the file stays readable and searchable for now.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: file-safety: drawn on Document once this row is held (document.mjs:399)"
+  },
+  {
+   "key": "file-safety.index.safe_view_first_pages",
+   "en": "This shows the first {pages} of the document's {source_pages} pages.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: file-safety: a safe view of the first pages; {pages} {source_pages}"
+  },
+  {
+   "key": "file-safety.index.safe_view_is_a_view",
+   "en": "This is a view of the document, not a reading of it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: file-safety: a safe view"
+  },
+  {
+   "key": "queue.kind.reading-ended",
+   "en": "Files you added, now read, partly read, or not read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: the Queue's list of kinds (screens-daily reads every queue.kind.* row); beside the fetch-done kind's"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.pending",
+   "en": "This page is still being made in the background, so its supporting files haven't been looked for yet. Look again in a few minutes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Document: supporting files not walked, RENDER_PENDING"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.toolarge",
+   "en": "This page is too large to look through for supporting files, so none were looked for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Document: supporting files not walked, TOO_LARGE_TO_PARSE or PRIMARY_TOO_LARGE"
+  },
+  {
+   "key": "screen.document.supporting.notwalked.unavailable",
+   "en": "Your team's Civicsmith couldn't look through this page for supporting files, so none were looked for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-454: Document: supporting files not walked, any other reason"
+  },
+  {
+   "key": "screen.capture.preview.cut",
+   "en": "Showing rows 1 to {shown} of {total}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-455: Add, a spreadsheet or CSV preview cut at a row (screens-intake R5, next_row); {shown} {total}"
+  },
+  {
+   "key": "screen.capture.file.parts.cancelled",
+   "en": "Sending was canceled. Nothing was kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-455: Add, a file being sent in parts, canceled (captureuploadabort)"
+  },
+  {
+   "key": "screen.aiproviders.origin.notoffered",
+   "en": "Not offered while your team requires the origin check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiproviders: the catalogue entry for an AI that fails the origin check (DeepSeek)"
+  },
+  {
+   "key": "screen.aiproviders.optin",
+   "en": "Projects and members may add this account to their own lists",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiproviders: the owner opt-in on a team account row, off by default"
+  },
+  {
+   "key": "screen.aiproviders.optin.note",
+   "en": "Off until an administrator turns it on. Work never moves to it from another list otherwise.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiproviders: the opt-in note"
+  },
+  {
+   "key": "screen.aimine.optin",
+   "en": "My projects may add this account to their lists",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimine: the opt-in on a member's own API-key account, off by default"
+  },
+  {
+   "key": "screen.aimine.subscription.ownlist",
+   "en": "A personal subscription is only ever on your own list, never on your team's or a project's.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimine: the line on a member's personal subscription row"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed",
+   "en": "Keep it sealed in your team's Civicsmith",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiconnect step 3: the fifth way a key is held"
+  },
+  {
+   "key": "screen.aiconnect.key.sealed.line",
+   "en": "Your team's Civicsmith keeps the key sealed, readable only by its own programs, until you remove it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiconnect step 3: the sealed way, its line"
+  },
+  {
+   "key": "screen.aimoments.checksapply",
+   "en": "Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimoments: whose checks apply; {project}"
+  },
+  {
+   "key": "screen.aiconnect.s3.sealgo",
+   "en": "Keep it sealed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aiconnect step 3: the sealed way, its button"
+  },
+  {
+   "key": "screen.aimoments.mock.i",
+   "en": "whose checks apply",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimoments: the mock choice for the new moment"
+  },
+  {
+   "key": "screen.aimoments.continued.crossowner",
+   "en": "It went on with your team's second account, which your administrators let projects use.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-465: aimoments a: the continued account belongs to another owner"
+  },
+  {
+   "key": "screen.machine.draft.ai",
+   "en": "Draft · the assistant's ({ai})",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a draft by the assistant, with the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.draft.asked.ai",
+   "en": "Draft · the assistant's ({ai}), asked by {handle}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a draft, the AI named, who asked (U1)"
+  },
+  {
+   "key": "screen.machine.proposed.ai",
+   "en": "Proposed by the assistant ({ai})",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a proposal, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.date.ai",
+   "en": "Suggested by the assistant ({ai}), {date} · not yet weighed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a suggested version, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.suggested.plan.ai",
+   "en": "Suggested by the assistant ({ai}) · for a fixing project · not yet in the plan",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a suggested plan option, the AI named (U1)"
+  },
+  {
+   "key": "screen.machine.judgment.ai",
+   "en": "The assistant's judgment ({ai}), not a finding: a conflict in the world",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: the contradiction judgment, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.proposes.tier.ai",
+   "en": "The assistant ({ai}) proposes tier 1 · file freely",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: machine label: a proposed risk tier, the AI named (U1; wording added)"
+  },
+  {
+   "key": "screen.machine.ai.tip",
+   "en": "Which AI did this work. On a long job the AI can change; the run's record lists each part.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: tooltip on every machine label that names an AI (U1)"
+  },
+  {
+   "key": "screen.run.parts.head",
+   "en": "How this run went",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a finished run: the parts list head (U2)"
+  },
+  {
+   "key": "screen.run.part",
+   "en": "Part {n} · {ai} on {account} · {from} to {to}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a finished run: one part (U2)"
+  },
+  {
+   "key": "screen.run.switch",
+   "en": "Went on to {ai} on {account}, because {reason}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a finished run: the change of AI between parts (U2)"
+  },
+  {
+   "key": "screen.run.declined",
+   "en": "{member} declined to go on with another AI; the run stopped.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: a run that stopped because the member declined the change (U2)"
+  },
+  {
+   "key": "screen.ai.ready",
+   "en": "The assistant is ready: {n} accounts on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: setup and AI providers: the ready state (U3)"
+  },
+  {
+   "key": "screen.ai.ready.one",
+   "en": "The assistant is ready: one account on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: setup: the ready state, one account (U3)"
+  },
+  {
+   "key": "screen.ai.notready",
+   "en": "The assistant isn't ready: no account is on yet. Add one in AI providers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: AI providers: not ready (U3)"
+  },
+  {
+   "key": "screen.ai.projectonly",
+   "en": "Your team has no account of its own. The assistant works in {project} only, on that project's account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: AI providers: a project-only account (U3, interface-shell R20)"
+  },
+  {
+   "key": "screen.aiproviders.mock.e",
+   "en": "no account of the team's own, one project's only",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: aiproviders: the mock choice for the project-only state (U3)"
+  },
+  {
+   "key": "installer.cf.asks.gateway",
+   "en": "Create a gateway for the assistant, and keep your team's AI keys in it, in your own Cloudflare account. Civicsmith never sees them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-466: installer: the Cloudflare ask for the gateway (U5, AIR45)"
+  },
+  {
+   "key": "screen.document.held.kind",
+   "en": "{kind}: kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Document and Add, a file of a kind not read yet (K5436); {kind} a plain name, such as \"A Visio drawing\""
+  },
+  {
+   "key": "screen.capture.refused.type",
+   "en": "{kind} files aren't kept: {reason}. Nothing was kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, a file of a refused type (K5436); {kind} {reason}"
+  },
+  {
+   "key": "screen.capture.refused.type.rar",
+   "en": "they can't be unpacked safely here",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: the {reason} for a RAR file"
+  },
+  {
+   "key": "screen.capture.refused.type.program",
+   "en": "they can run on a device",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: the {reason} for a program, installer or disk image"
+  },
+  {
+   "key": "screen.document.macros",
+   "en": "This file contains macros. Its text is read; the macros were never run.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Document, a .docm, .xlsm or .pptm (K5435)"
+  },
+  {
+   "key": "screen.capture.types.head",
+   "en": "What can be added",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, the fold before choosing a file (K5435-K5437)"
+  },
+  {
+   "key": "screen.capture.types.read",
+   "en": "Read: {kinds}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, the types read, each with its size limit; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.held",
+   "en": "Kept, not read yet: {kinds}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, the types kept whole and named; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.refused",
+   "en": "Not kept: {kinds}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, the types not kept; {kinds}"
+  },
+  {
+   "key": "screen.capture.types.size",
+   "en": "Each kind's size limit is shown beside it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, under the list of types"
+  },
+  {
+   "key": "screen.capture.refused.limit",
+   "en": "This {kind} is {size}, over the {limit} allowed for {kind} files, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, a file over its kind's size limit (K5439); {kind} {size} {limit}"
+  },
+  {
+   "key": "screen.capture.refused.limit.count",
+   "en": "This {kind} holds {n} {units}, over the {limit} allowed, so it wasn't added. Nothing was kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Add, a file over a count limit, such as a mailbox's messages (K5439); {kind} {n} {units} {limit}"
+  },
+  {
+   "key": "screen.photo.taken",
+   "en": "Taken {date}, near {place}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: open-file, a photo's carried data beside the safe picture (DEC-460)"
+  },
+  {
+   "key": "screen.photo.taken.noplace",
+   "en": "Taken {date}. The photo holds no place.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: a photo with a date and no place"
+  },
+  {
+   "key": "screen.photo.none",
+   "en": "This photo holds no date or place.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: a photo with neither"
+  },
+  {
+   "key": "screen.photo.beside",
+   "en": "Shown beside the safe picture, read from the original; not carried in the picture.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: the line saying where the data is read from"
+  },
+  {
+   "key": "screen.photo.dropped",
+   "en": "Left out of the safe picture: {what}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: what was dropped for safety; {what}"
+  },
+  {
+   "key": "screen.archive.mailbox.count",
+   "en": "{n} messages: {read} read, {held} kept but not read yet, {refused} not kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Archive, a mailbox opened (K5437); {n} {read} {held} {refused}"
+  },
+  {
+   "key": "screen.archive.from",
+   "en": "From {parent}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Document, a member of an archive or mailbox: its parent"
+  },
+  {
+   "key": "screen.document.cite.page",
+   "en": "Page {n} of {m}, {file}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Document, the citation line of a multi-page file"
+  },
+  {
+   "key": "screen.document.converted",
+   "en": "Read from a converted copy of {file}; the original is kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Document, a file read from a converted copy"
+  },
+  {
+   "key": "screen.document.encrypted",
+   "en": "Needs a password. Civicsmith never asks for it or keeps it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-467: Document, an encrypted file (K4831 (6))"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -122973,7 +123715,7 @@
   },
   {
    "key": "act.release.label.home",
-   "en": "Vouch for photos",
+   "en": "Vouch for copies",
    "protected": true,
    "source": "registry.json"
   },
@@ -123676,7 +124418,7 @@
   },
   {
    "key": "act.release.label.dash-project",
-   "en": "Vouch for photos",
+   "en": "Vouch for copies",
    "protected": true,
    "source": "registry.json"
   },
@@ -123966,6 +124708,18 @@
   {
    "key": "act.capturerequestretry.label.capture",
    "en": "Try a refused request again",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_previewmore.label.capture",
+   "en": "Show more rows",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.captureuploadabort.label.capture",
+   "en": "Cancel sending",
    "protected": true,
    "source": "registry.json"
   },
@@ -126504,6 +127258,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_aikeyseal.label.aiconnect",
+   "en": "Keep it sealed",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_aitermsaccept.label.aiconnect",
    "en": "Accept the terms that bind our use",
    "protected": true,
@@ -126542,6 +127302,12 @@
   {
    "key": "act.owed_aimycheckset.label.aimine",
    "en": "Require a check for my own work",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aiorderset.label.aimine",
+   "en": "Move an account up or down",
    "protected": true,
    "source": "registry.json"
   },
@@ -127694,6 +128460,18 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.captureuploadabort.does",
+   "en": "Stops sending a large file in parts. Nothing of it is kept.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_previewmore.does",
+   "en": "Shows the next rows of this file, from where the preview was cut. The file itself is not changed.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.owed_declareorigin.does",
    "en": "Records, with your name and the date, the system this document came from. A second declaration is added beside the first and never replaces it. The document itself does not change.",
    "protected": false,
@@ -127906,6 +128684,12 @@
   {
    "key": "act.owed_aisignin.does",
    "en": "Takes you to the provider's own page to sign in and approve the connection. Civicsmith never sees your password.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aikeyseal.does",
+   "en": "Keeps the key sealed in your team's Civicsmith, readable only by its own programs, until you remove it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

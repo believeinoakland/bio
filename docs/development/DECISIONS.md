@@ -6950,3 +6950,195 @@ the design: reworded: `refusal.ACQUIRE_TIMED_OUT` and `.held` "add it as a file"
 verified: on tranche/T52 with these words and registry files: words 0, format 0; attestation, following, money, ratification, control-plane, provenance, promotion and screens-investigate fix4-seam: 1473 pass, 54 fail, the same with and without.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows in place; DEC-453 block); `screens/mock-screens.js`; `screens/later-ux-T52-triage.md`.
 owed: BOB: merge this commit (MERGE). Code, for the owning jobs: screens-inquiry assistant.mjs adds REMOTE_UNAVAILABLE to its withheld codes; queue-producers' #memberName (index.mjs:267) draws `member.unnamed` for a member's id; promotion picks `.unseen` where the member cannot see the project; screens-inquiry document.mjs's A34 legs draw the para rows; ceremony.mjs draws `screen.ceremony.gate.check` filled with `ceremony.gate.name.<check>` (C-41.1 as `c41_1`) in place of the raw id.
+
+### DEC-454 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (`screens/later-ux-T52-triage.md`, the Add and Document line: `build/plan/later-ux.md` items 82 to 159, round 9's code keys)
+for: design (T52)
+question: Add's and Document's sentences that had only the code's developer English, or a stand-in borrowed from another row.
+why it is Bob's: it is not (P17): member words.
+provisional: as below. alternative: reword the readings' stored sentences in place (refused: a sentence stored in a reading keeps its English, DEC-445, and r10-declared-kind, r9-document and r10-skip pin some). recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: 68 rows minted, none reworded. Display rows the screens draw in place of stand-ins: finishing a capture (`screen.capture.finish.pending|files|done`), an address already held (`screen.capture.address.reading.pending|done`), `screen.capture.fetch.done.noproject` ("Fetched."), `screen.document.text.partial.one`, `screen.document.reading.beingread`, `document.read.more` "More passages" (apart from the page bar's "Next page"), `screen.document.reading.firstn`, the reading's steps (`screen.capture.read.queued|fetching|reading|about(.one)`), the parted upload's (`screen.capture.file.parts.hashing|sending`), the reading's refusals by code (`screen.capture.read.refused.ENCRYPTED|TOO_LARGE|STRUCTURE_OVER_BOUND|ENCODING_UNSUPPORTED`), `screen.capture.refusal.upload.TOO_LARGE.figures`, and `screen.document.unsupported.<kind>` for the 13 kinds not read (drawn by the reading's kind; the stored `reading-pipeline.index.unsupported_*` sentences keep theirs). Returned sentences: the upload ceilings and the 18 parted-upload refusals in `capture.index.*`/`capture.ops.*` (no "group", "evidence store", "digest" or "abort"), `doorbell.index.job_not_registered`, `refusal.WORKBOOK_TOO_LARGE`, file-safety's five (encrypted, the partial scan, reading not gated, the safe view's two), `queue.kind.reading-ended`, `screen.document.supporting.notwalked.pending|toolarge|unavailable`. Already done: 108, 120, 126's copy note, 127, 143's DEC-432 rows. Left: the readings' stored sentences (`reading-pipeline.index.*`, `extraction.*`, `content.extent*`, `workbooks.cells_not_kept`); `notice-producers.reading.*` (its tests repeat the English); 144's argument shapes (read by programs); 132's CSV notes (no key yet); sizes in bytes (code passes MB first).
+verified: on tranche/T52 with these words and registry files: words 0, format 0; the run of capture, doorbell, file-safety, workbooks, screens-daily, screens-intake, queue- and notice-producers and two screens-inquiry files, with and without: 1675/16 without, 1674/17 with; the one more is screens-intake r9-states R65, which still asks for `screen.capture.reading.pending` where a queued read now drew `screen.capture.read.queued`, so DEC-456 withdraws that row.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-454 block); `screens/later-ux-T52-triage.md`.
+owed: BOB: merge this commit (MERGE). Code, for the owning jobs: screens-intake capture.mjs and screens-inquiry document.mjs draw the display rows named above in place of their stand-ins (and `screen.document.unsupported.<kind>` by the reading's kind); sizes reach members in MB; file-safety's partial-scan reason and `content.extent`'s part key get plain names.
+
+### DEC-455 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (`screens/later-ux-T52-triage.md`'s B items 125, 149, 152: fix round 9's G137a, G137b; SCREENS-INTAKE #23's J46, J47, K4922, K4930)
+for: design (T52)
+question: Three drawings owed by the design: the safe view of a long document shows only its first pages; a spreadsheet preview cut at a row, and how to see more; Cancel for a file being sent in parts.
+why it is Bob's: it is not (P17): screen detail beneath his rulings.
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: Opening a file: both safe-view panels open with `file-safety.index.safe_view_first_pages` (DEC-454), filled "the first 500 of the document's 812 pages". Add: a CSV's preview ends at its cut with `screen.capture.preview.cut` "Showing rows 1 to {shown} of {total}." and a "Show more rows" button that loads the next rows from the cut (`owed:previewmore DEC-455`, its line "Shows the next rows of this file, from where the preview was cut. The file itself is not changed."); a file sent in parts shows "Sending part {n} of {m}." with "Cancel sending" (`captureuploadabort`, declared), and after it `screen.capture.file.parts.cancelled` "Sending was canceled. Nothing was kept." `act.captureuploadabort.does` (DEC-431) is now written from `mock-acts.js`, its English unchanged.
+verified: the page's checks (walk, drawn words, library against tranche/T52) pass; the rows are new, so no test reads them.
+reasoning recorded in: this entry; `screens/mock-screens.js`; `screens/mock-acts.js`; `screens/registry.src.py`; `screens/words-drawn.src.py` (DEC-455 block).
+owed: BOB: merge this commit (MERGE). Code, for screens-intake (J46, J47): an op that reads a preview's next rows from `next_row`, then `act.owed_previewmore.*` takes its name; the parted-upload page draws Cancel and the canceled line.
+
+### DEC-456 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (a consistency read of DEC-451 to DEC-455, a review worker's table checked by the design; DEC-454's module run)
+for: design (T52)
+question: Where today's words disagree with their neighbors, compete on one screen, ask a member for an act they cannot take, or keep a developer term.
+why it is Bob's: it is not (P17): member words.
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: `act.release.label.home|dash-project` "Vouch for copies" (as the vouch rows); `screen.project.a.question.this.project.holds.has` "has a source behind it" (as Stage's need lines); `ceremony.gate.other` "Fix it above" (as the heading); `document.held.says` opens "Awaiting review." without repeating "held"; `money.ingest.partial` ends "Reading reference: {ingest}" (R31 still finds the key; its drop stays parked); the parted-upload refusals tell a member to add the file again, never to send a part (the screen sends the parts): `upload_unknown`, `upload_not_open` ("Look for it in Held captures"), `part_conflict`, `part_out_of_order`, `part_in_progress`, `part_size` (drops {bound}), `parts_missing`, `parts_out_of_order`; `screen.capture.read.refused.ENCODING_UNSUPPORTED` "character set"; `file-safety.index.safe_view_first_pages` drops its tail, which `safe_view_is_a_view` and the safe view's own line already say; `queue.kind.reading-ended` "Files you added, now read, partly read, or not read"; `ceremony.gate.name.c12_2` a noun phrase as its siblings; `screen.document.supporting.notwalked.pending` "being made" (as the visitor copy's) and "Look again in a few minutes"; `file-safety.checks.the_file_scanner_could_not_read` promises no reason beside it until the code names one; `act.captureuploadabort.does` "file". The mocks follow. Withdrawn: `screen.capture.read.queued` (r9-states R65 asks for the stand-in key; screens-intake's job re-points it, then the row returns). Kept: "Fetched." (a later fetch is not a capture), "A follow" (Following's own noun), bytes until the code passes MB.
+verified: the page's checks pass; on tranche/T52, the DEC-454 module set and DEC-453's, with these words, against their runs without: words 0, format 0; DEC-454's set 1675/16 both ways, DEC-453's set 1473/54 both ways (the same failures).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`; `screens/registry.src.py`; `screens/mock-screens.js`, `mock-acts.js`.
+owed: BOB: merge this commit with DEC-454 and DEC-455 (one MERGE). Screens-intake: re-point r9-states R65 at `screen.capture.read.queued` when the design returns the row.
+
+### DEC-457 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A1)
+for: Bob
+question: A1, A question's subject. Who a question is about: may a member name it, and when?
+why it is Bob's: what Civicsmith must do (requirements): grading connections rests on it.
+provisional: no subject is ever asked (questions created through screens have none).
+alternative: B, at opening only; C, suggested from the question's words.
+recommendation: A: asked at opening, optional, and changeable later with a reason kept in the question's history.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: A. A question's opening form asks, optionally, "Who is this question about?", choosing from the people and organizations the team follows; a member may add or change it later, the reason kept in the question's history; a question without one says so plainly, with the control to name one.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A1); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through PLANNING): a requirement for the subject at opening and a subject-change act with its reason and history (inquiry, screens-inquiry); the design draws the field, the act and the plain sentence when the act is named.
+
+### DEC-458 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A2)
+for: Bob
+question: A2, Whose fiscal year Money counts in. Whose fiscal year Money uses to group a government's figures.
+why it is Bob's: what Civicsmith must do, and a stated fact's doctrine.
+provisional: the place's records only; "*" printed when they hold none.
+alternative: A, one fiscal year for the team; C, calendar years only.
+recommendation: B: each government's own fiscal year, from the place's records or stated by a member with how they checked it, as the time zone is.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B. A government's fiscal year comes from the place's records; where they hold none, a member states it for that government with how they checked it, as the time zone is set; Money offers the fiscal-year view only for a government whose year is known, says why where it is not, and never prints "*". DEC-451's two sentences stand until the view is redrawn.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A2); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through PLANNING, CAPABILITIES): a stated fiscal-year fact per government (money, civil-time, places) and its form; the design draws the form, the view's offer and its sentence.
+
+### DEC-459 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A3)
+for: Bob
+question: A3, A handed-in file's source link. Who sees the link to a handed-in file's source, and where.
+why it is Bob's: who may see what (doctrine).
+provisional: "A source" in the Inbox only; Held shows a machine reference; Document shows nothing.
+alternative: B, Inbox only; C, every member.
+recommendation: A: the link on Document and Held for the members the team listed; every other member sees "Handed in through the doorbell" with no link; Held shows the file's own name.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: A, as recommended: the confidentiality rule stands; listed members see "A source" on Document and Held; others see "Handed in through the doorbell"; Held names the file by its own name.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A3); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: the listed-member check on Document and Held (screens-inquiry, screens-intake, doorbell); the design draws both views.
+
+### DEC-460 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A4)
+for: Bob
+question: A4, A member's own photograph. How a member looks at a photograph in Civicsmith.
+why it is Bob's: doctrine on opening outside files (the safe-view rule).
+provisional: no safe view for pictures; only "Open the original on your own device"; a sentence contradicting itself.
+alternative: A, words only; C, the uploader may open their own original.
+recommendation: B, with A's wording fix now: a safe picture redrawn from each photo's pixels, carrying nothing else from the file.
+reversal cost: medium (a requirement for the beta's plan).
+response: "B, but only drop metadata is necessary"
+decided: 2026-10-27 · Bob
+the design: B, with Bob's limit: the safe picture is redrawn from the photo's pixels, and only the metadata that must be dropped for safety is dropped; what can be carried safely (such as when and where it was taken, the camera's orientation) is read from the original as data and shown beside the picture, never carried as part of the file. The contradictory sentence goes now.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A4); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through FILES, PLATFORM): a safe-picture maker and its security review, and the list of photo metadata kept as data versus dropped (file-safety); the design draws the picture's safe view and its metadata lines.
+
+### DEC-461 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A5)
+for: Bob
+question: A5, Two "Capture"s and publishing an ungraded case. The two measures both named "Capture", and whether a case may be published with passages ungraded (the publish gate).
+why it is Bob's: policy on publishing (the publish gate, BQ22).
+provisional: "Capture" names both the record's ceiling and a member's grade; a case may be signed with none graded; nothing points the member to the grading fold.
+alternative: A, rename and guide only; C, block signing until every passage is graded.
+recommendation: B: rename the two measures and guide the member, and the signing screen names every passage still ungraded; the member grades there or signs anyway, and the edition says it was published with them ungraded.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B. The two measures are named apart ("How well it could be captured"; "Your team's grade for the copy"); the question points to the grading fold; signing lists every passage still ungraded, with grading there or signing anyway, and the edition states it was published with them ungraded.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A5); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: the signing check that lists ungraded passages and the edition's statement (ratification, case-authoring); the design words the two names and draws the signing step.
+
+### DEC-462 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A6)
+for: Bob
+question: A6, Signing keys in the Queue. The queue items each new signing key raises, and the "Keep it on this device" box.
+why it is Bob's: what Civicsmith must do (the Queue's duty to administrators).
+provisional: one item per key; the box unticked; nothing replaces an earlier key.
+alternative: A, the box ticked by default; C, both.
+recommendation: B: one queue item per member listing each new key with when it was made; the box stays unticked, with a sentence that a key not kept is gone when the browser closes.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B, as recommended.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A6); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: grouping a member's key items into one (queue-producers, signing); the design words the item and the box's sentence.
+
+### DEC-463 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A7)
+for: Bob
+question: A7, Documents from other projects in pickers. Whether a document picker lists other projects' documents with this project's.
+why it is Bob's: what Civicsmith must do across projects.
+provisional: one long list: this project's, then every other document the member may see.
+alternative: A, keep one list; C, this project only.
+recommendation: B: this project's documents first; "Show documents from your other projects" adds the rest, each labeled with its project.
+reversal cost: medium (a requirement for the beta's plan).
+response: "as recommended"
+decided: 2026-10-27 · Bob
+the design: B, as recommended.
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A7); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB: the picker's two scopes (screens-inquiry); the design draws the control and the labels.
+
+### DEC-464 · answered
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (the alpha's live walks, B541; `questions-alpha-walk.html`, A8)
+for: Bob
+question: A8, Citing a typed page. Whether a page a member typed in may be cited, and when.
+why it is Bob's: what counts as evidence (doctrine).
+provisional: typed words are shown with no Cite; a second member's check is shown and counts toward trust.
+alternative: A, citable once a second member has checked it; C, never citable.
+recommendation: A: citable once a second member has checked it.
+reversal cost: medium (a requirement for the beta's plan).
+response: "B, with the proper grade assigned. Having a review further attest to a reading is better than not, but still only incrementally better."
+decided: 2026-10-27 · Bob
+the design: B, with Bob's grading: a typed page is citable as soon as it is typed, labeled "typed by Dev, not yet checked", and graded as its typist's word; a second member's check raises that grade, but only by a step, never to the standing of text Civicsmith read itself; the citation names the typist and any checker and never presents the words as Civicsmith's reading or as the original. Supersedes the recommendation (A).
+reasoning recorded in: this entry; `questions-alpha-walk.html` (A8); `docs/architecture/BIO_Capability_Ladders_v0_1.md` (the amendment of 2026-10-27).
+owed: BOB (through PLANNING): Cite on typed words, the typed passage's grade (unchecked, and checked as one step higher), and the citation's labels (transcription, leg-earning, strength); the design draws Cite on typed words and the labels.
+
+### DEC-465 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (B554, B555: AI-DESIGN's delta read with Bob's K5429-K5433; DEC-420 already met UX-REQUIREMENTS.md, B488)
+for: design (T53, the beta)
+question: What DEC-420's AI screens must change under Bob's reconciliations of today: privacy as evidence and seven team-set checks (K5430), origin as the seventh check (K5431), API keys from the first build (K5429), personal subscriptions only for their owner and ordered lists by owner opt-in (K5433).
+why it is Bob's: it is not (P17): screen detail beneath his rulings. One point that is his went to BOB for his questions page: whether administrators see each member's AI cost by name (options A by name, B per account and project only, C as B with the breakdown at a limit, recorded; recommended C; B stays until he answers).
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: the origin check is "Not developed by a Chinese organization", "Judged by who developed the model, whichever company serves it."; "Not offered" loses its standing category row (`screen.aiproviders.refused.origin` removed), and such a model is an ordinary catalogue entry (drawn: "DeepSeek · API key", origin Not met, "Not offered while your team requires the origin check."); each team account carries an unticked "Projects and members may add this account to their own lists", off until an administrator turns it on; a member's own API account carries "My projects may add this account to their lists"; a personal subscription says it "is only ever on your own list, never on your team's or a project's"; the member's list has Move up and Move down (`owed:aiorderset`); aiconnect's step 3 has five ways, the fifth "Keep it sealed in your team's Civicsmith" (`owed:aikeyseal DEC-465`); aimoments adds "whose checks apply" and names a continuation on another owner's account.
+verified: the page's checks (walk, drawn words, library against tranche/T53) pass.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `mock-acts.js`, `registry.src.py`, `words-drawn.src.py` (DEC-465 block).
+owed: BOB: merge this commit (MERGE); place Bob's answer on member cost when it comes. AI-DESIGN and PLANNING: the sealed hold's op (`aikeyseal`), the owner opt-in on accounts, a member's list order (`aiorderset`).
+
+### DEC-466 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (B555: AI-DESIGN's `draft-assistant-screens.md` §5, U1, U2, U3, U5)
+for: design (T53, the beta)
+question: With several AIs in use, which AI did a piece of work; how a run that switched AI is recorded; when the assistant is ready to use; the installer's ask for Cloudflare to hold the team's AI keys.
+why it is Bob's: it is not (P17): screen detail beneath his rulings (K4443, K4464, K5429-K5433).
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: U1: each label on the assistant's work names the AI, in parentheses after "the assistant" (`screen.machine.*.ai`, with {ai} the model's display name, never the account), with the tooltip "Which AI did this work. On a long job the AI can change; the run's record lists each part." (`screen.machine.ai.tip`); rows code reads today keep their English. U2: a finished run lists "How this run went": each part ("Part {n} · {ai} on {account} · {from} to {to}"), each switch with its reason, or the member's refusal to go on. U3: Setup says "The assistant is ready: …" or "isn't ready: no account is on yet. Add one in AI providers."; a team with only a project's account says the assistant works in that project only; the AI providers card keeps its own count, so it draws only the not-ready and project-only states. U5: the installer's Cloudflare list adds "Create a gateway for the assistant, and keep your team's AI keys in it, in your own Cloudflare account. Civicsmith never sees them." Not drawn: U4 (the charge-or-rule answer waits on its tranche and Bob's Q1, Q2); U6 (the Cloudflare dashboard's labels need a live AI Gateway dashboard to check, AIR45's live test L1).
+verified: the page's checks (walk, drawn words, library against tranche/T53) pass.
+reasoning recorded in: this entry; `screens/mock-kit.js`, `mock-screens.js`, `words-drawn.src.py` (DEC-466 block).
+owed: BOB: merge this commit (MERGE). AI-DESIGN and PLANNING: the run record's parts (N1219), the ready state's read (interface-shell R20), the installer's gateway permission matched to K4464's grant; U6's dashboard labels at live test L1.
+
+### DEC-467 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (B555: FILES' `build/plan/beta/files/UX-NEEDS.md`, for the types Bob ruled today, K5435-K5437; limits K5439; DEC-460)
+for: design (T53, the beta)
+question: What Add, Document, the archive and the safe view say about the beta's file types: a type kept but not read, a type refused, a file over a limit, macros, the list of what can be added, a photo's carried data, a mailbox's messages, pages and converted files, a locked file.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: `screen.document.held.kind` "{kind}: kept whole and findable by its name and details. It isn't read yet; it will be read once Civicsmith reads files of this kind." (K5436, on Document and as Add's result); refused types "{kind} files aren't kept: {reason}. Nothing was kept." (RAR: "they can't be unpacked safely here"; programs: "they can run on a device"); over a limit, by size or by count (a mailbox's messages, K5439); "This file contains macros. Its text is read; the macros were never run." (K5435); Add's folded "What can be added" (read, kept not read yet, not kept, each kind's limit, from `SIZES-N1267.md` and K5439); a photo's safe picture with "Taken {date}, near {place}.", its no-place and none forms, "Shown beside the safe picture, read from the original; not carried in the picture." and "Left out of the safe picture: {what}." (DEC-460); the archive screen's mailbox state ("{n} messages: {read} read, {held} kept but not read yet, {refused} not kept.") and "From {parent}"; "Page {n} of {m}, {file}"; "Read from a converted copy of {file}; the original is kept."; "Needs a password. Civicsmith never asks for it or keeps it." Withdrawn: DEC-454's twelve `screen.document.unsupported.<kind>` rows for kinds the beta reads (rtf, email, legacy Excel, PowerPoint and Office, TIFF, GIF, WebP, HEIC, AVIF, BMP, JPEG 2000); `ico` stays.
+verified: the page's checks pass; on tranche/T53 with these words files, words 0 (format's one failure is the tranche's own, the same without them).
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py` (DEC-467 block; w454 lines removed).
+owed: BOB: merge this commit (MERGE). FILES and PLANNING: the plain kind names ({kind}) and the per-kind limits as one table the screens read; DEC-460's list of photo data kept and dropped (the design fills {what} from it).
