@@ -77,6 +77,9 @@
 - T53 · A8 · a typing graded as its typist's word, one step once checked; who typed and who checked, by key · `planning/lines-A8-typed-page.md` §3 (content R63-R64)
 - T53 · DEC-454 · `content.extent`'s part key in plain words · DEC-454
 
+**extraction** (with screens-inquiry)
+- T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents · `[owed: CAPABILITIES N1269-N1272 READY]`
+
 **reading-pipeline**, **extraction**
 - T53 · N1266, N1267 (K5427) · the text bound 100 MB, HTML streamed to it; the held-unread verdict re-run when a reader arrives · `files/SIZES-N1267.md` §3, `REQ-format-registry-beta.md` RF10 `[owed: lines for reading-pipeline not drafted]`
 
@@ -160,6 +163,7 @@
 - C T52-66 to T52-73 · T53 · A1 (R140, R141), A7 (R142), A3 (the Document page's source line), A8 (Cite on typed words, the labels), DEC-454 (`document.mjs` display rows) · the named `planning/lines-*` files and DEC-454
 
 **screens-intake**
+- T53 · N1269 (K5446, K5447) · before a file is added, each kind's largest file read whole is stated; a file over its limit refused with its size and limit and offered a way in (a register by a filter, N1259; else the part the member needs) · `files/SIZES-N1267.md`, K5446, K5447
 - C T52-59 to T52-61 · T53 · A3 (R72, R73), DEC-454 and DEC-455 (`capture.mjs`: display rows, "Show more rows", Cancel sending), DEC-456 (r9-states R65 `[waits: the design's row]`), held-and-named and refused sentences (FILES UX-NEEDS) · as named
 
 **screens-investigate**, **screens-publish**
@@ -167,6 +171,8 @@
 
 **screens-settings**, **installer**, **installer-steps**
 - C T52-58, T52-92 to T52-95 · T53 · N1257 (the places screen, the install choice) `[owed: READY]`; AI-DESIGN's provider screens `[owed]`
+- T53 · K5444, K5442 · a copy chooses its level at install (Team, Institution, Enterprise) and can move up later · `[owed: PLATFORM service levels; Levels 2-3 study]`
+- T53 · N1273 (K5440, K5441, K5443) · the region picker's two honest choices ("near me" a hint; "keep my data in this region" a jurisdiction, for the record and its R2 bucket, never combined); a Level 1 region fixed once the store exists, said before the choice; moving by export and import (PL35: corpus-export and installer import) · `[owed: PLATFORM record-placement READY]`
 
 **control-plane**, **plane**
 - C T52-85 to T52-91 · T53 · N1264, K4599: routes `screenread` and the folded admission · `platform/combined-read-and-fold-draft.md` §3
@@ -185,6 +191,7 @@ The load test per level (N1274, `load-test-draft.md`), its short "before" run on
 
 ## Left out of T53 (P19), each with its hard reason
 
-- K5424 · lift civicsmith.org's `noindex` · Bob's: "not until the 1.0 release is deployed" (Q5 to BOB: unless T53 builds 1.0)
+- K5424 · lift civicsmith.org's `noindex` · Bob's: "not until the 1.0 release is deployed" (L12 on Bob's page: is the beta 1.0? recommended "before 1.0")
+- K5447 (B) · keeping an over-limit file and reading only part · Bob's: waits until Civicsmith's proposals work well (K5445)
 - N1270 · audio, video, forum formats · Bob's: after 1.0 (K4628); held and named meanwhile (K5436)
 - FILES Tier 3 readers (PST/OST, Access and the rest) · Bob's (K5437): each by its own ruling when a real file is shown

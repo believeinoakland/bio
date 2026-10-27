@@ -14,3 +14,9 @@
 - K5435 · 2026-10-27 · on QUESTIONS.html F1, of option A2: "As recommended" (FILES's Tier 2 types read in the beta) · `build/rulings.md`
 - K5437 · 2026-10-27 · on QUESTIONS.html F3: "as recommened" (MBOX read; Tier 3 held and named until a real file is shown) · `build/rulings.md`
 - DEC-457 to DEC-464 · 2026-10-27 · A1-A8: "as recommended" (A1, A2, A3, A5, A6, A7); A4 "B, but only drop metadata is necessary"; A8 "B, with the proper grade assigned. Having a review further attest to a reading is better than not, but still only incrementally better." · `docs/development/DECISIONS.md`
+- K5438 · 2026-10-27 · on P1: "keep the current bar, but also recognize that different sized teams will require different levels of capabilities (Team, Institution, Enterprise)..." · `build/rulings.md`
+- K5440 · 2026-10-27 · on P2, option B: "as recommended" (the region picker's "near me" and "keep my data in this region") · `build/rulings.md`
+- K5441 · 2026-10-27 · on P3, option A: "a recommended" (a Level 1 region fixed once the store exists) · `build/rulings.md`
+- K5444 · 2026-10-27 · on P4: "Shouldn't, for example, a newsroom be able to start a CS copy at the institution level ... If a study of how to support levels 2 and 3 is needed, then let's start that study." · `build/rulings.md`
+- K5445 · 2026-10-27 · on C1: "as recommended, with the understanding that C is the objective - even if we aren't able to support that until after the beta." · `build/rulings.md`
+- K5446, K5447 · 2026-10-27 · on C3 and C4, option A: "as recommended" · `build/rulings.md`
