@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19432 design words, 1162 protected; SHA-256
-   2efa5d8a2e81654e2a2b88ca3945dd0d675e13fc6a021ecc2242fe7d2051a8bd) followed by 7515 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   2efa5d8a2e81654e2a2b88ca3945dd0d675e13fc6a021ecc2242fe7d2051a8bd) followed by 7517 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -24896,6 +24896,8 @@ export const WORD_ROWS = Object.freeze([
   ["money.index.money_sets_are_listed_by","money sets are listed by what they concern: name the id (moneysets&concerns=...)",null,null,false,"code"],
   ["money.index.name_the_money_facts_by","name the money facts by their ids",null,null,false,"code"],
   ["money.index.no_authorising_event_is_held","no authorising event is held for this event",null,null,false,"code"],
+  ["money.index.no_body_named_for_fiscal","no body was named for the fiscal year {fiscal}, and the active profiles hold no fiscal year that applies to every body, so it cannot be mapped",null,null,false,"code"],
+  ["money.index.no_body_named_no_period","no body was named, and the profiles' fiscal year names no period {fiscal}",null,null,false,"code"],
   ["money.index.no_money_fact_id_could","no money fact id could be drawn",null,null,false,"code"],
   ["money.index.no_money_fact_with_that","no money fact with that id is held here, or it is not visible to the asker; a money fact is recorded with op=moneyrecord before anything can name it",null,null,false,"code"],
   ["money.index.no_money_set_string_is","no money set {String} is held",null,null,false,"code"],
