@@ -9,6 +9,7 @@
 **Next steps, in order.**
 1. (PLANNING #3) Takeover; merge tranche/T53 in; read MAP.md and every lane's section 0.
 2. Fold each new READY draft as BOB relays it. Not yet READY: CAPABILITIES N1259 (a-e), N824 (with its container member job), N1110, N858, N1265, N1269-N1272 (K5460-K5466 and later are its rulings); PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's list of fixtures findings needing a module's judgment (K5425 (b)).
+2a. Since the hand-over: K5495-K5500 (Bob on CAPABILITIES C2, C7-C10, C21; CAPABILITIES folds, then its drafts come READY) and DEC-472 (UX-DESIGN decided JOURNEYS' eight UX points, B558): unbracket those lines in `plan-T53-journeys.md` §B.
 3. On Bob's answers (L1-L26, J1-J7, N1257 D3, the published-place default for photos): unbracket or change the lines each decides (A drafts here; JOURNEYS's and CAPABILITIES' in their lanes).
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py`, 600 KB; heavy: screens-inquiry 153 KB and interface-shell 123 KB of requirements before drafts; agent-worker about 100 KB); the plan under 51,200 bytes (detail files beside it, K5434 (4)); mark READY for BOB.
 
