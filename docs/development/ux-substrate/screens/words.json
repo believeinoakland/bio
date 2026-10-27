@@ -108,7 +108,7 @@
   "page": 2,
   "person": 1,
   "findin": 9,
-  "money": 50,
+  "money": 52,
   "passage": 2,
   "period": 1,
   "timeline": 2,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19436,
+  "total": 19438,
   "protected": 1162
  },
  "words": [
@@ -80522,10 +80522,10 @@
   },
   {
    "key": "money.ingest.partial",
-   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete.",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key"
+   "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; DEC-451: {ingest} kept while money R31's test pins the key in this sentence; {ingest} the ingest's key"
   },
   {
    "key": "case-authoring.index.case_document_too_large",
@@ -83340,6 +83340,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-450: the singular of screen.capture.supporting.unavailable"
+  },
+  {
+   "key": "money.index.no_body_named_for_fiscal",
+   "en": "{fiscal} names no body, and your team's profiles hold no fiscal year shared by every body, so it can't be turned into dates. Name the body whose fiscal year it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-451: money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal} the fiscal year as sent. Beside money.index.the_active_profiles_hold_no"
+  },
+  {
+   "key": "money.index.no_body_named_no_period",
+   "en": "Your team's profiles have no fiscal year {fiscal} shared by every body. Name the body whose fiscal year it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-451: money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal}. Beside money.index.the_profiles_fiscal_year_for"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

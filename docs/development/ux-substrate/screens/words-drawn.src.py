@@ -7786,7 +7786,7 @@ w424('calculations.index.one_act_reads_at_most', "One request can read at most {
 w424('calculations.declared.moneyingestread', "Reads what a money ingest has stored, a page at a time, with the true counts and whether the ingest is complete. Changes nothing.", "G55: the declared op's description (a builders' line like the other declared ops'; written because BOB asked for the row)")
 w424('notice-producers.ingest.done', "Your table has been read: {written} of {rows} rows were written as money facts, and {not_written} were not.", "G55: the Queue item to the member who asked, when a background ingest is done; {written} {rows} {not_written} counts")
 w424('notice-producers.ingest.stopped', 'Reading your table stopped after {written} of {rows} rows were written as money facts; the rest were not. The facts already written stay, marked as not complete.', "G55: the Queue item when a background ingest was stopped; {written} {rows} counts; the stop's own reason follows from calculations.ingest.stopped_*")
-w424('money.ingest.partial', "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete.", "G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key")
+w424('money.ingest.partial', "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}", "G55: beside any money fact written by an open or stopped ingest; DEC-451: {ingest} kept while money R31's test pins the key in this sentence; {ingest} the ingest's key")
 # G47 (K4666): a case document over its size bound
 w424('case-authoring.index.case_document_too_large', "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.", "case-authoring R14 (G47): preparing a case whose document is over its bound; {size} {bound} in MB, {materials} {members} counts")
 w424('case-authoring.checks.case_document_too_large', "This case document is {size} MB, over the {bound} MB a case document may be. It names {materials} materials and {members} findings. Nothing was prepared and nothing was changed. Leave out some of the materials or findings and prepare the case again.", "G47: the same sentence as the check's translation (C-136.9); same fills")
@@ -8274,6 +8274,12 @@ def w450(key, en, note):
 w450('screen.document.reading.notext.one', "Page {pages} has no words that can be read, so it can't be searched or cited. You can still open it.", 'the singular of screen.document.reading.notext (one page)')
 w450('screen.capture.supporting.toolarge.one', 'One was too large to keep.', 'the singular of screen.capture.supporting.toolarge')
 w450('screen.capture.supporting.unavailable.one', "One couldn't be fetched from where it is published.", 'the singular of screen.capture.supporting.unavailable')
+
+def w451(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-451: ' + note))
+# B545 (MONEY #1): a fiscal year sent with no body; the stand-in `*` is never printed (money R34)
+w451('money.index.no_body_named_for_fiscal', "{fiscal} names no body, and your team's profiles hold no fiscal year shared by every body, so it can't be turned into dates. Name the body whose fiscal year it is.", "money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal} the fiscal year as sent. Beside money.index.the_active_profiles_hold_no")
+w451('money.index.no_body_named_no_period', "Your team's profiles have no fiscal year {fiscal} shared by every body. Name the body whose fiscal year it is.", "money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal}. Beside money.index.the_profiles_fiscal_year_for")
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
