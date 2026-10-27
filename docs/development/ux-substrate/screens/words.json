@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2602,
+  "refusal": 2603,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7863,
+  "screen": 7866,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19432,
+  "total": 19436,
   "protected": 1162
  },
  "words": [
@@ -19668,10 +19668,10 @@
   },
   {
    "key": "screen.money.proposed",
-   "en": "proposed by the machine; not included",
+   "en": "proposed by the assistant; not included",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.money.notyet",
@@ -77400,7 +77400,7 @@
   },
   {
    "key": "screen.document.reading.stated",
-   "en": "This document is {size}, which is more than your team's Civicsmith can read. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "en": "This document holds {size}, more than your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-418: B481 screens-inquiry (G6, K4571): a reading stated final with its size (a bound that must stay is stated); no OCR act is offered after it"
@@ -80522,7 +80522,7 @@
   },
   {
    "key": "money.ingest.partial",
-   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; {ingest} the ingest's key"
@@ -80704,7 +80704,7 @@
   },
   {
    "key": "money.index.events_is_not_wired_here",
-   "en": "Events aren't connected here yet, so the contract's award and its change orders can't be read.",
+   "en": "Contract awards and change orders aren't connected here yet, so they can't be read for this contract.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-424: B495 money: the reason the money screen's committed-against-paid line gives when no figure can be shown (screens-investigate/money.mjs, cap.difference.why)"
@@ -80725,7 +80725,7 @@
   },
   {
    "key": "notice-producers.index.fetch_done_detail",
-   "en": "The large page you asked for is fetched and filed. Open it to read it.",
+   "en": "The large file you captured is fetched and filed. Open it to read it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-424: B495 notice-producers R27: the Queue item's line (fetch-done)"
@@ -80942,7 +80942,7 @@
   },
   {
    "key": "calculations.index.the_source_reads_as_one",
-   "en": "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",
+   "en": "the source reads as one cell per line (separator found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-428: B503 calculations/index.mjs:566 (G64)"
@@ -83312,6 +83312,34 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-447: B543: the fold shows that dimension's rows for the item in place; this link opens the whole screen narrowed to it"
+  },
+  {
+   "key": "refusal.SIGNATURES_RUN_UNDER_WAY",
+   "en": "Your team's Civicsmith is already fetching the newest list of known harmful files, so it did not start another. Look again in a few minutes. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-449: B544, the refusal while the signature run is under way (scanMirror)"
+  },
+  {
+   "key": "screen.document.reading.notext.one",
+   "en": "Page {pages} has no words that can be read, so it can't be searched or cited. You can still open it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-450: the singular of screen.document.reading.notext (one page)"
+  },
+  {
+   "key": "screen.capture.supporting.toolarge.one",
+   "en": "One was too large to keep.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-450: the singular of screen.capture.supporting.toolarge"
+  },
+  {
+   "key": "screen.capture.supporting.unavailable.one",
+   "en": "One couldn't be fetched from where it is published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-450: the singular of screen.capture.supporting.unavailable"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
