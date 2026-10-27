@@ -273,8 +273,28 @@ export class LegEarning {
    *
    * The offenders are named by (bundle_id, ord): REC-11's ord is what makes a
    * leg ADDRESSABLE, and one document legitimately carries two legs (D4). */
+  /** R17: a leg is severed or live of its own. The citer's `basis[]` entry at the leg's ord carries the status
+   *  `citation` R25 records per passage (`status: severed`; absent or `confirmed` is live). A leg that records none
+   *  (a citer written before R25, or a leg of a document whose entry was severed whole) is read by the document's
+   *  `references[]` edge, as before. `own` caches each citer's parsed basis for one read. */
+  #legSevered(bundleId, ord, targetId, own) {
+    if (!own.has(bundleId)) {
+      const md = this.record.readFile(bundleId, "bundle.md");
+      let basis = null;
+      if (md && typeof md.text === "string") {
+        const b = parseFrontmatter(md.text).data?.basis;
+        if (Array.isArray(b)) basis = b;
+      }
+      own.set(bundleId, basis);
+    }
+    const leg = own.get(bundleId)?.[ord];
+    if (leg && typeof leg === "object" && leg.target === targetId && typeof leg.status === "string")
+      return leg.status === "severed";
+    return this.connections.edgeSevered(bundleId, targetId);
+  }
+
   restsOnLive(id) {
-    const confirmed = [], severed = [], frozen = [];
+    const confirmed = [], severed = [], frozen = [], own = new Map();
     for (const r of this.#rows(
       `SELECT ib.bundle_id, ib.ord, ib.role, b.current_state, b.object_type
          FROM inquiry_basis ib JOIN bundles b ON b.bundle_id = ib.bundle_id
@@ -285,7 +305,7 @@ export class LegEarning {
       /* D-267: the same one severance confirmation #citesInto and the queue's
          ancestor walk read, with NO relation constraint — a basis leg is a
          reference entry and the leg does not restate the rel. */
-      if (this.connections.edgeSevered(r.bundle_id, id)) { severed.push(leg); continue; }
+      if (this.#legSevered(r.bundle_id, r.ord, id, own)) { severed.push(leg); continue; }
       /* FROZEN vs WORKING, and the split is the D-5 refinement this item makes
          (reported to CONDUCT rather than buried): a `published` dependent's
          basis is inside a SIGNED EDITION and cannot be edited at all, so it can
@@ -995,11 +1015,12 @@ export class LegEarning {
        here would make a READ disagree with the table it reads, and a caller
        that wants the live set has `#restsOnLive`'s ops. Additive: no row and no
        field is removed (IC-61). */
+    const own = new Map();
     const dependents = this.#rows(
       `SELECT bundle_id, ord, role, grade, grade_axis, grade_source
        FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, targetId)
       .map((d) => ({ ...d,
-        status: this.connections.edgeSevered(d.bundle_id, targetId) ? "severed" : "confirmed" }));
+        status: this.#legSevered(d.bundle_id, d.ord, targetId, own) ? "severed" : "confirmed" }));
     return { ok: true, targetId, dependents };
   }
 
