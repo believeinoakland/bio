@@ -34,3 +34,5 @@
 - May a researched legal fact be offered without the professional review a text needs? (Bob, K5538, on C34: "as recommended"): A · Yes: offered with its citation and marked "researched, not reviewed" Members can check the source themselves; the "legal information, not legal advice" label stays.
 - Who may change a question's subject? (Bob, K5539, on L14: "B"): B · Only its owner or an administrator
 - Can a published question, or one divided into parts, have its subject changed? (Bob, K5540, on L15: "B"): B · Both, with the change shown
+- May a member remove the subject altogether, with a reason? (Bob, K5541, on L16: "as recommended"): A · Yes A question named about the wrong person must be correctable.
+- May a concluded question's subject change, keeping its conclusion? (Bob, K5542, on L17: "as recommended"): A · Yes, with the strength before and after shown
