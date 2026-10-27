@@ -2,3 +2,4 @@ session,role,module,cache-read,cache-write,input,output,turns,test runs,module l
 session_018BhcecJrZBGdFHx6zQiGAc,BOB-cleared,reply: ROUTINES DELETED: 1 (trig_01XZrgjhf8kXQoNQ9KFcX8Rz  the BOB #320 backstop; deleted by its own session  accepted). No other routine into session_018BhcecJrZBGdFHx6zQiGAc.,,,,,,,
 session_018BhcecJrZBGdFHx6zQiGAc,BOB-final,,62539253,751845,6788,154458,,,
 session_018BhcefWqhwJGg3zA2NE2PZ,BOB-cleared,reply: ROUTINES DELETED: 2 (trig_01AdpP4rTsKbWuiK7AuTQQbw and trig_017W5xeD1J82udQ9M9ccg4ZG  both BOB #321 backstops; deleted by their own session  accepted),,,,,,,
+session_018BhcefWqhwJGg3zA2NE2PZ,BOB-final,,134439259,715719,16198,194300,,,
