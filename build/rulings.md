@@ -5540,3 +5540,4 @@
 - K5546 · 2026-10-27 · beta plan (Bob's; L21) · Bob, on QUESTIONS.html L21 (2026-10-27): "B": A photo's colour profile: drop it, keep it, or convert it? B · Keep it · P17; K5426
 - K5547 · 2026-10-27 · beta plan (Bob's; L22) · Bob, on QUESTIONS.html L22 (2026-10-27): "as recommended": Beyond when, where and orientation, how much of a photo's own data is shown? A · All of it, as "the file says", plain text, capped in length · P17; K5426
 - K5548 · 2026-10-27 · beta plan (Bob's; L23) · Bob, on QUESTIONS.html L23 (2026-10-27): "as recommended": What counts as "still ungraded" at signing? A · A passage the team hasn't graded at all · P17; K5426
+- K5549 · 2026-10-27 · beta plan (Bob's; L24) · Bob, on QUESTIONS.html L24 (2026-10-27): "as recommended": When a typed page is cited, does the record grade it automatically? A · The record grades it, as it already does for derived connections · P17; K5426
