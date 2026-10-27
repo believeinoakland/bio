@@ -53,6 +53,9 @@ One line per decision (LANES.md §1): id · date · his words, quoted, never rew
 
 ## The beta's bar
 - AD44 · 2026-10-27 · "as recommended" (AI1, option B: a part reaches members once the chosen AI passes Gate 1 at marks Bob sets after the first measuring run; the real public-matters set, once written, is a standing accuracy check shown to teams, a part below its mark there switched off for that AI) · QUESTIONS-FOR-BOB AQ1, BOB #322's relay · K5475
+- AD45 · 2026-10-27 · "as recommended" (AI3: ask the member before a run continues only when the payer changes; a move between one owner's accounts goes ahead, is shown, and can be stopped) · AQ3, BOB #322's relay · K5477
+- AD46 · 2026-10-27 · "as recommended" (AI4: if Cloudflare's credits paid instead of the team's key, keep the answer, tell the administrators, and stop the account's further calls until an administrator clears it) · AQ4 · K5478
+- AD47 · 2026-10-27 · "as recommended" (AI5: a personal subscription must also be on the team's allowed list) · AQ5 · K5479
 
 ## Costs
 - AD43 · 2026-10-27 · "If the team or project is paying for the AI usage, then they should see who's using what so that they can manage usage with that member before it gets out of control." (option A of UX-DESIGN's cost-visibility question; personal subscriptions stay private) · BOB #321's relay · K5459
