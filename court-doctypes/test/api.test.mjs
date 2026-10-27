@@ -3,7 +3,7 @@
  * checked on no real answer, M-R9) and the captured page of the same docket. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { EVENTS } from "../../docprofile/registry.mjs";
 import { courtlistenerApi as API, courtlistenerDocket as CL, KEYS, COURT_TYPES, COURT_API_TYPES, registerCourtTypes, registerCourtApiTypes } from "../index.mjs";
 import { fixture, viewFor, widenedFor, LOCATORS, API_LOCATORS, ctxFor, FIRST, TEST, wordRe, reOf, ANY } from "./helpers.mjs";
@@ -160,7 +160,7 @@ test("R19: one JSON reading and one HTML reading of one docket together: the sam
     const r = API.assess(a, b);
     assert.deepEqual(r.events, []);
     assert.equal(r.meaningful, false);
-    assert.equal(r.why, word("court-doctypes.common.all_length_rows_of_this", { length: 27 }));
+    assert.equal(r.why, localize("court-doctypes.common.all_length_rows_of_this", "all {length} rows of this register are unchanged", { length: 27 }));
     assert.deepEqual(r.confirmed, { rows: 27, intact: 27 });
     assert.deepEqual(CL.assess(a, b), r, "either type's assess gives the same answer");
   }
