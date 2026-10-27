@@ -18,3 +18,4 @@
 - Email capture (Bob, K5504, K5505, K5506, on C12, C13, C14: "as recommended"): the forwarding address on the team's own domain, uploading a saved email always beside it; a private address per member; forwarded mail waits in the member's private list until they state where it came from.
 - The group directory (Bob, K5507, on C15: "as recommended"): the hand-kept list on civicsmith.org; the record of a declined listing and a group's application built now, a listing desk later.
 - Procedure guides (Bob, K5508, on C16: "B, but a member should be able to opt-out of the review if they're the only member of the team."): what a template needs; a team's only member may opt out of the review (recorded, the guide marked not reviewed).
+- Kinds with texts in the beta (Bob, K5509, on C17: "B"): the records request plus Oakland's other lower-stakes kinds (civil grand jury complaint, State Controller referral, public comment, media outreach); never court petitions.
