@@ -109,7 +109,7 @@
 - T53 · N1266, N1267 · held-and-named filed whole with an owed reading (RF10), refused not filed (RF11), the refusal before any read (CC6) · `files/REQ-format-registry-beta.md` RF10-RF11
 - T53 · DEC-455 · capture: an op reading a preview's next rows from `next_row` (`previewmore`, name BOB's) · DEC-455
 - T53 · N824 (K2425, K5504-K5506, K5527 (1), (2)) · provenance's `email` origin, `emailCapture` with her statement, `fileMember` for a message's attachments and a ZIP's entries, discarded knocks cleared; new module **mail-door** after doorbell (K5530) `[R7, doc-clean R13 wait: Bob's N824 B4, C31]` · `planning/plan-T53-capabilities.md` §A Layer 3
-- T53 · N1259 (K4403, K5498, K5503, K5513) · `streamRegister`, `probeRegister`, the docket read for a followed case (R36, `planning/lines-K5513-daily-follow.md`), segments as captures · `planning/plan-T53-capabilities.md` §A Layer 3 `[owed: CAPABILITIES' officers line, K5498]`
+- T53 · N1259 (K4403, K5498, K5503, K5513) · `streamRegister`, `probeRegister`, the docket read for a followed case (R36, `planning/lines-K5513-daily-follow.md`), segments as captures · `planning/plan-T53-capabilities.md` §A Layer 3 (officers: registers R46, K5532; jurisdictions R130, R133 and guardrail R73 in `planning/lines-K5532-officers-guardrail-listing.md`)
 
 ## Layer 4
 

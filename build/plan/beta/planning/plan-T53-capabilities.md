@@ -65,7 +65,7 @@
 **acquisition** (N1259-a R125-R133, c's R134, N1269 R135, N824 R136; no collision, BOB numbers in plan order; replaces the plan's Layer 3 `[owed: N1259 registers ...]` for these)
 - T53 · N1259 (K4403 (2), (5), (7); K1485, K1492; K5498, K5513) · `streamRegister` stores only the reduced copy, in segments, input bounded by its own ceiling, resumable slices; `probeRegister` (size and change without a body); `sourceChanged`; the docket poll on the alarm for a followed case only (the same words as acquisition R36), the stated call limits counted in a durable ledger; fetch only from the definition's hosts; one capture per segment, `existed` on a repeat; segments' `origin` kind `named_request` (C-18.1 admits no new kind), capture grade stays R18's rule · N1259-a R125-R133 `[R126 waits: M-R7]`
 - T53 · PLANNING (K5513) · acquisition R36 (`planning/lines-K5513-daily-follow.md`) uses N1259-c R41's purpose names (`docket-entries`, `standing`); with the key off `keyedFetch` answers `KEYED_SERVICE_OFF` and the follow falls back to re-reading the public page (c R41) · R36 and N1259-c R41 `[owed: a line filing a keyed answer as a capture attributed to the follow]`
-- T53 · N1259 (K5498, K5513; G7) · keyed services off by default, key in no answer, daily alarm read for a followed case only · N1259-d R134 (test) `[owed: the line filing a keyed answer as a capture, above]`
+- T53 · N1259 (K5498, K5513; G7) · keyed services off by default, key in no answer, daily alarm read for a followed case only · N1259-d R134 (test) (acquisition R137, `N1259-a2-additions.md`, C31, K5532)
 - T53 · N1269 (K5446) · `limitsByKind` quoting `READ_BOUNDS` through `boundOf`; reads KIND-TABLE's plain names and limits (format-registry) so there is one source; `how_long` derived from the budget classes (PL1), not cited from `HELD_AT_CHECK_MAX` · N1269-N1272 R135
 - T53 · N824 (C9 (2), CC5, ML4) · `fileMember`: job kind `member` serves a ZIP's entries and a message's attachments; amends R38; N824's receipt builder for `email-attachment` here (or provenance), writing the message receipt and the document of capture R117's rows; test (f) (R136) moved to store-assembly R102 · N824-container-member-job R136 `first: settle problem 1` (the builder placement above)
 
@@ -78,7 +78,7 @@
 **mail-door** (new, §B) (K5530: BOB's packaging; layer 3 after doorbell, `member-roster` in its uses)
 - T53 · N824 (K5504-K5506, K5527) · a private address per member (digest only; no member email stored), mail waits 14 days privately, filed only with her statement, rate bounds, count-only tally, never AI, off by default; relays `mail-reader` ML10's nesting refusal (no `MAIL_TOO_NESTED`); runs `mail-reader` before accepting (R3, R10) · N824 R1-R14 `[waits: M1, R12 only]`
 - T53 · N824 · R7, what of a message is published `[waits: Bob's N824 B4, C31]`
-- T53 · N824 (R6) · the removal of a member's unconfirmed mail: `mail-clear` returns counts (cannot call layer 11) and a notice-producers line reads them `[owed: that line]`
+- T53 · N824 (R6) · the removal of a member's unconfirmed mail: `mail-clear` returns counts (cannot call layer 11) and a notice-producers line reads them (N824 R6 amended, C31)
 - T53 · N824 · declares `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete` in its own `DECLARED_OPS`, see op-declarations.
 
 ### Layer 4
@@ -112,7 +112,7 @@
 - T53 · N1259 (K4403 (1)-(7), K4405 (1)-(6)) · the listing with each figure's basis; an import planned (prefilled filter, delta, estimate), queued, run as resumable slices on the scheduler's alarm, stored once per row version behind one port (S2 behind the port; M-R3 moves a register later), never in the way of screens · N1259-b R1-R23
 - T53 · N1259 · search of held rows (absence says where it looked; never logged), use-limit notice and caps, cite a row as a labelled extract, compare two imports, a tombstone removal that never comes back, a project's stated interest and the refresh a watch asks for, the count-only change read for the queue; no judgment, no name matching, ops declared · N1259-b R24-R45; with b2's decision that store-assembly replaces `plane` and `journey-check` in the omitted-edge list
 - T53 · N1259 (guardrails) · N1259-d R61-R72: module-local halves in the registers job; cross-module scenarios (R61, R63, R64, R67, R69, R70, G11) as `storeWorld()` tests in store-assembly's job · N1259-d R61-R72 (R46-R60 should be part c's)
-- T53 · K5498 · officers (California's own API on the team's key, read when a member asks; the state's bulk file brought in) `[owed: CAPABILITIES' officers line; R3 still refuses officers]` (R3 holds `PRODUCT_PHASE` alpha, no pieces, `gate: account`; the line sets `PRODUCT_PHASE`)
+- T53 · K5498 · officers (California's own API on the team's key, read when a member asks; the state's bulk file brought in) (met by registers R46 and R3 amended, C31, K5532: N1259 R84 allows exactly this one keyed service inside registers; the bulk-file stream's route to `streamRegister` the job verifies; PLANNING's jurisdictions R130, R133 and guardrail R73 in `planning/lines-K5532-officers-guardrail-listing.md`) (R3 holds `PRODUCT_PHASE` alpha, no pieces, `gate: account`; the line sets `PRODUCT_PHASE`)
 - Ops (N1259-e §1; * admin; ms): read: registerlist 500, registerfilter 1000, registerimportstatus 500, registerrow 500, registerproposals* 500; Explore class (2.0 s, stops and says so): registerdelta 2000, registersearch 1500, registercompare 1500. reversible: registerpropose 500, registerfileimport 1000, registerpreread* 1000, registerimportset 500, registerrowcite 1000, registerinterest 500, registerrefresh 1000, registerwatch 1000, registerwatchstop 500. reasoned: registerdefine 1000, rowexpunge* 1000 (irreversible; adds `ROW_EXPUNGE_NO_REASON` to `JUSTIFICATION_REFUSALS`). credential: alertconnect* 1000 (already `credential`).
 
 ### Layer 6
@@ -142,7 +142,7 @@
 - T53 · N1259 · extract labels and notice by key, no phone or address shape; extracts inside the signed document, no segment · N1259-d R46, R47, **numbered R50, R51**
 
 **network-notices**
-- T53 · N1110 (K5507) · `listingRequest`: an administrator's prefilled request to be listed on civicsmith.org, public items only, sends nothing; `place` omitted if no field holds it; uses `member-roster` · N1110 R32 `[owed: where a group's "place" is held; display name passed in by the layer 11 door]`
+- T53 · N1110 (K5507) · `listingRequest`: an administrator's prefilled request to be listed on civicsmith.org, public items only, sends nothing; `place` omitted if no field holds it; uses `member-roster` · N1110 R32 `[owed: where a group's "place" is held; display name passed in by the layer 11 door]` · the optional `contact` field (K5532, K5530 B2): `planning/lines-K5532-officers-guardrail-listing.md`
 
 **case-checker**
 - T53 · N1259 · checks each extract and the notice; says the source file is not in the package; program rebuilt · N1259-d R29-R32
@@ -183,7 +183,7 @@
 
 **notice-producers**
 - T53 · K4403 (7) · a change told once to the watch's owner with counts; an import done, stopped, failed told to its starter; no name in any item · N1259-c R30-R32
-- `[owed: that line]` · the private notice that a member's unconfirmed mail was removed (N824 R6); reads `mail-clear`'s counts; kind UNVERIFIED; no line drafted
+- (N824 R6 amended, C31) · the private notice that a member's unconfirmed mail was removed (N824 R6); reads `mail-clear`'s counts; kind UNVERIFIED; no line drafted
 
 **action-producers** R27 (a fact due names its layer) · **queue-producers** R59 (arrival item keyed by layer) · N1257 layer-names
 
@@ -302,7 +302,7 @@ Conflicts with PLANNING resolved as in §A (`/10`, acquisition R36); none with j
 
 ## E. Left out of T53 (P19), each with its hard reason
 
-- Company officers' bulk import: K4403 (6), listed and refused (registers R3); lifted by BETA-2 data (that line was not found in e: name it). The officers line is `[owed]` under registers.
+- Company officers: now registers R46 (K5498, K5532): a keyed lookup on a member's ask or the state's bulk file brought in by a member; what stays out is any background or name search (R73).
 - `registerask`, `registermatch`, `registerwatchpropose` (the assisted part): K4403, not built; Bob's, after the alpha (AI-DESIGN's hand-off, e §4). Assistant proposals (N1272 R32): Bob, K5445, only with N1220's assistant.
 - OpenCorporates (Bob: never, K5498, K1492), paid or account-gated sources and any people-search; webhooks (paid organisation feature, K5498); OpenFEC (bulk files need no key).
 - Form 700, licence files, the state's company bulk file, NetFile as an importable register: not measured (listed `not_measured`); a team defines its own (N1259-a R7).
