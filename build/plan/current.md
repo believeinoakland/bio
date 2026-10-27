@@ -1,8 +1,8 @@
-**Round** · R1 · layer 5 OPEN · layer 9 OPEN
+**Round** · R1 · layer 5 CLOSED · layer 9 OPEN
 # Plan T51b · the alpha, on the redesigned process
 **Status** · OPEN · BOB #317 · session_01224iDvCaoPmHYZNq2oLxtm · depth 1
 **Jobs** · events: EVENTS #1 session_01Ko31oRwx6KqRAKesZzHQ8g
-**Owed** · none
+**Owed** · archive events
 
 # Plan: T51b round R1 · the team-zone pass, finished
 
