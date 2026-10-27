@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 500,
+  "queue": 501,
   "transcribe": 19,
   "capture": 96,
   "document": 79,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7999,
+  "screen": 8021,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 67,
-  "act": 1308,
+  "act": 1318,
   "prompt": 3,
   "term": 3,
   "ceremony": 24,
@@ -237,8 +237,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19696,
-  "protected": 1170
+  "total": 19729,
+  "protected": 1175
  },
  "words": [
   {
@@ -83981,7 +83981,7 @@
   },
   {
    "key": "screen.aimine.optin",
-   "en": "My projects may add this account to their lists",
+   "en": "Projects I've joined may add this account to their lists",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-465: aimine: the opt-in on a member's own API-key account, off by default"
@@ -85091,6 +85091,167 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-474: a question or finding strength pair in running text (the team grade, DEC-461)"
+  },
+  {
+   "key": "screen.airesults.notlisted",
+   "en": "Tested, not on your team's list",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: airesults: meta line on an AI tested but not on the team's list (K5482)"
+  },
+  {
+   "key": "screen.airesults.combined",
+   "en": "Combined from {n} results reported in the last six months; Civicsmith confirmed {confirmed} of them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: airesults: per AI and part; {n} results, {confirmed} confirmed (K5482)"
+  },
+  {
+   "key": "screen.airesults.reported",
+   "en": "Reported by teams, not confirmed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: airesults: a result Civicsmith has not repeated (K5482)"
+  },
+  {
+   "key": "screen.airesults.own",
+   "en": "Reported by your team, not yet confirmed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: airesults: the team's own just-sent result, at the top (K5482)"
+  },
+  {
+   "key": "screen.airesults.own.prelim",
+   "en": "Preliminary figures from your test, until it is scored: {figures}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: airesults: under the own result; {figures} the parts and counts (K5482)"
+  },
+  {
+   "key": "screen.airesults.own.open",
+   "en": "Open your team's result",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: airesults: the button on the own result (owed op airesultown, K5482)"
+  },
+  {
+   "key": "screen.aiproviders.health.switch",
+   "en": "Share daily counts of errors and refusals with Civicsmith",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the switch for sharing health counts (K5487)"
+  },
+  {
+   "key": "screen.aiproviders.health.note",
+   "en": "Off until an administrator turns it on. For each AI and day it sends calls, refusals, no answer and errors by kind; never what was asked, who asked or which account.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the health-counts note (K5487)"
+  },
+  {
+   "key": "screen.aiproviders.health.preview",
+   "en": "See exactly what would be sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the button that previews what would be sent (owed op aihealthpreview, K5487)"
+  },
+  {
+   "key": "screen.aiproviders.health.row",
+   "en": "{ai} · {date}: {calls} calls, {refusals} refusals, {noanswer} no answer, errors: {errors}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: one sample row of the preview (K5487)"
+  },
+  {
+   "key": "screen.aiproviders.retest.switch",
+   "en": "Re-test the AIs your team uses, each month",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the monthly re-test switch, on (owed op airetestset, K5480)"
+  },
+  {
+   "key": "screen.aiproviders.retest.note",
+   "en": "Re-tests catch an AI that has changed. While re-testing is off, a reminder stays in your Queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the re-test note (K5480)"
+  },
+  {
+   "key": "queue.retesting-off.summary",
+   "en": "Re-testing is off for your team's AIs. An administrator can turn it back on in AI providers.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: the Queue item administrators see while re-testing is off (K5480); not drawn"
+  },
+  {
+   "key": "screen.aimoments.d.waitfor",
+   "en": "Wait for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aimoments d: the label of the wait-time chooser (K5489)"
+  },
+  {
+   "key": "screen.aimoments.d.waitswitch",
+   "en": "Wait, then switch to {account} if it's still down",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aimoments d: wait, then switch (owed op aiwaitswitch, K5489); {account}"
+  },
+  {
+   "key": "screen.aiproviders.mock.g",
+   "en": "an account stopped: another gateway recorded the call",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the mock option (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.stands.othergateway",
+   "en": "{account}'s answer at {time} was recorded by a gateway that isn't your team's, so Civicsmith can't tell it was paid with your team's key. The answer was kept, and {account} takes no more work until an administrator clears it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the stopped account, also the administrators' Queue item (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.mock.h",
+   "en": "an account stopped: the gateway log couldn't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the mock option (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.stands.logunreadable",
+   "en": "Civicsmith couldn't read your team's gateway log for {account}'s answer at {time}, even after trying again, so it can't confirm who paid. The answer was kept, and {account} takes no more work until an administrator clears it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the stopped account, also the administrators' Queue item (B560, K5492)"
+  },
+  {
+   "key": "screen.aiproviders.mock.i",
+   "en": "the list of AIs is out of date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders: the mock option (K5483)"
+  },
+  {
+   "key": "screen.aiproviders.list.old",
+   "en": "Civicsmith hasn't been able to fetch the list of AIs since {date}, so it is offering the last list it had, which may be out of date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aiproviders, Add an AI: the list is stale; {date} (K5483)"
+  },
+  {
+   "key": "screen.aimoments.mock.l",
+   "en": "a new AI with no estimate yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aimoments: the mock option (K5488)"
+  },
+  {
+   "key": "screen.aimoments.h.noestimate",
+   "en": "No estimate yet for {ai}: Civicsmith hasn't measured it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-475: aimoments l: no estimate before a run; {ai} (K5488)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -127991,6 +128152,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_airetestset.label.aiproviders",
+   "en": "Turn monthly re-testing on or off",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aihealthset.label.aiproviders",
+   "en": "Turn on or off sharing daily counts with Civicsmith",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aihealthpreview.label.aiproviders",
+   "en": "See what the daily counts would send",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_aitestopen.label.aiproviders",
    "en": "Test an AI that isn't listed",
    "protected": true,
@@ -128213,6 +128392,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_aiwaitswitch.label.aimoments",
+   "en": "Wait, then switch to another account if the provider is still down",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_aitestsetup.label.aitest",
    "en": "Save the endpoint and key",
    "protected": true,
@@ -128239,6 +128424,12 @@
   {
    "key": "act.owed_airesultsread.label.airesults",
    "en": "Read the results for an AI",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_airesultown.label.airesults",
+   "en": "Open your team's own result",
    "protected": true,
    "source": "registry.json"
   },
@@ -129489,6 +129680,36 @@
   {
    "key": "act.owed_aisignin.does",
    "en": "Takes you to the provider's own page to sign in and approve the connection. Civicsmith never sees your password.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_airetestset.does",
+   "en": "Turns the monthly re-test of the AIs your team uses on or off. The choice is recorded with your name and the time.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aihealthset.does",
+   "en": "Turns on or off sharing daily counts of calls, refusals, no answers and errors with Civicsmith. The choice is recorded with your name and the time.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aihealthpreview.does",
+   "en": "Shows the exact rows that would be sent, so you can check them before you turn sharing on.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aiwaitswitch.does",
+   "en": "Waits the time you chose. If the provider is still down, the answer goes on with the other account you named.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_airesultown.does",
+   "en": "Opens the result your team just sent, with the preliminary figures from its test.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
