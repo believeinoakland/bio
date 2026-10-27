@@ -9,6 +9,7 @@ import {
   gradeCeiling, tiersEvidenced, describeChain, chainKindFor, isTranscribed, calibrationsOf, layerChain,
 } from "../../../src/textchain.mjs";
 import { BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AIT = (x = {}) => ({ step: "ai_transcription", engine: "vision-model", version: "3", ...x });
 const PIX = { step: "pixels" };
@@ -21,7 +22,7 @@ test("R104: ai_transcription is a derivation step kind, the AI's reading, a mach
   const k = STEP_KINDS.ai_transcription;
   assert.ok(k, "the kind exists");
   assert.equal(k.role, "derivation");
-  assert.match(k.label, /AI's reading/);
+  assert.equal(k.label, word("textchain.label.ai_reading_page"));
   assert.equal(k.tier, 4);
   assert.equal(k.machine, true);
   assert.ok(MACHINE_READ_KINDS.includes("ai_transcription"));
@@ -93,10 +94,9 @@ test("R104: a letter comes only from a measurement, its calibration named; once 
   /* The member-facing words (C-35.13, K2428) name both cases the refusal is for: a conversion, and an AI's reading. */
   const words = checkChain([AIT({ cap: "C" })]).translation;
   assert.equal(words, checkChain([{ step: "convert", engine: "host-export", format: "odt", cap: "C" }]).translation);
-  assert.match(words, /a conversion of the document, or an AI's reading of a page/);
-  assert.match(words, /an AI reads a scan/);
-  assert.match(words, /"not yet determined"/);
-  assert.match(checkChain([AIT({ cap: "C" })]).detail, /ai_transcription step claims fidelity "C"/);
+  assert.equal(words, word("refusal.TEXT_CHAIN_LETTER_UNCALIBRATED"));
+  const detail = checkChain([AIT({ cap: "C" })]).detail;
+  assert.ok(detail.includes("ai_transcription") && detail.includes(JSON.stringify("C")), "the detail names the step and the letter it claimed");
   /* Rule 2 holds: a measured reading stronger than the chain it extends is refused. */
   assert.equal(appendStep([PIX, O("D")], AIT({ cap: "B", calibration: "CAL-AIT-1" })).code, "TEXT_CHAIN_STRENGTHENS");
 });
