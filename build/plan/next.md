@@ -65,6 +65,9 @@
 ## Requirements not yet met, re-marked T52 at T51b's opening (K5342; P19 (1): T51b is the alpha only, by Bob's order K5336)
 - 11 files' `*(not yet met: T51)*` marks re-marked `T52` (adoption README; 13 at its count, two cleared since): control-plane R29 R64 R72 R74 R107; journey-check R20 R21 R23 R24 R25 R26 R28; plane R1 R9 R111 R112 R113 R114; installer-steps R26 R31; public-read R45; capture R113; screens-entry R2; store-request R22; op-grades R46's `expertisewithdraw` clause; screens-inquiry's and screens-publish's block rules. Each is a job's entry in T52 unless the alpha's walk finds it failing a member's operation, then a T51b fix round's.
 
+## The alpha's live walk, after the release, installer and site (Bob, K5348; P19 (1): after the release, by Bob's order)
+- One complete walk of 0.87.0 on biosmoke8 (`deploy-and-walk.md`): re-walk 11's open rows (S-1 setup "Still loading", A's setup zone row, E's adoption row, C's money rows and C-M8, E-AP2/N2, E-C2a, the plan's date checks), every screen as administrator and member (K3052, the dead-end census K4164); each defect an entry of T52.
+
 ## Tests assert the word key, never the English: first after the alpha's deployment (Bob, K5313; P19 (1): after the release, by Bob's order)
 - Reds left uncompared at the zone pass (K5343; deferred by Bob until the alpha, installer and site are out): ratification 2, installer 13, store-assembly 1, screens-inquiry 5 (with `fr28-document.test.mjs` reaching 12.6 GB and killed by the container's memory limit, an old defect), plane 4, control-plane (no result); each measured on the tranche tip, then traced to its cause.
 - The sweep (K5313): every finding and refusal carries its code, word key and values; every test and saved expected output asserts those, never a sentence or a fragment; the words check refuses sentence fragments in tests; one mechanical pass (§5.10), a module needing judgment its own job.
