@@ -123,3 +123,7 @@ BOB #324 sent a defect found on plat-s1 (P9): with two or more administrators, `
 ## L42 · 2026-10-27 · DEC-479 to DEC-483 placed
 
 BOB #324: DEC-483 drew the stale-link sentence (`screen.members.invite.nolink`), named in the screens-settings entry; U512-U516 merge together with the job building `inboxview`. Read DEC-479 to DEC-483's owed on the design branch (d5d75136) and placed every owed item in a new detail file, `plan-T53-design-rows.md`, by module (the plan is near its cap; one pointer line there). `inboxview` is doorbell's (layer 3, in R1), so the merge is Before R1 (10). Found: DEC-479 puts file-safety in doorbell's uses, but doorbell (49) precedes file-safety (50); file-safety does not use doorbell and every user of doorbell comes after both, so the swap is recommended (BOB's, P4). Owners for BOB: the unsure-word count (reading-pipeline or extraction), the email names' mark (case-disclosures recommended).
+
+## L43 · 2026-10-27 · L42's points decided
+
+BOB #324 decided L42's three points (K line with R1-R7's): file-safety before doorbell in layer 3, `MODULE_ORDER` re-pinned in the same act; the unsure-word count in reading-pipeline (the measure in text-chain); the email names' mark in case-disclosures. `plan-T53-design-rows.md` marked.

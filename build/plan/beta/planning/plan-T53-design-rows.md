@@ -1,11 +1,11 @@
 # T53's entries from the design rows DEC-479 to DEC-483 (PLANNING L42)
 
-**Status** · DRAFT for BOB · PLANNING #4, 2026-10-27. The owed work of DEC-479 to DEC-483 (UX-DESIGN U512-U516, on `claude/gallant-brown-zg0wc1` at d5d75136, not yet on `tranche/T53`), one entry per owning module, beside `plan-T53-draft.md` (which is near its cap). Each module's START carries its rows here verbatim with the DEC row (L37 R1, R3). Every point marked BOB's is lower-level (P17): owner, order, op names.
+**Status** · Placed; its three points decided by BOB #324 (L42: the swap, reading-pipeline, case-disclosures; K line to follow) · PLANNING #4, 2026-10-27. The owed work of DEC-479 to DEC-483 (UX-DESIGN U512-U516, on `claude/gallant-brown-zg0wc1` at d5d75136, not yet on `tranche/T53`), one entry per owning module, beside `plan-T53-draft.md` (which is near its cap). Each module's START carries its rows here verbatim with the DEC row (L37 R1, R3). Every point marked BOB's is lower-level (P17): owner, order, op names.
 
 ## Before R1
 
 - **The merge.** U512-U516 merge together (DEC-481 and DEC-483 sit on U512-U515's commits) before R1 or with the first job of layer 3: DEC-479 turns screens-publish's R10 test red until the Inbox draws "Show it safely", so the merge comes with `doorbell`'s `inboxview` and screens-publish's Inbox in the same R1 (BOB's). Plan Before R1 (10).
-- **Order within layer 3 (BOB's, P4).** DEC-479 puts `file-safety` in `doorbell`'s uses, but `doorbell` (49) is before `file-safety` (50) in `modules.json`. `file-safety` does not use `doorbell`, and every user of `doorbell` (`sources` 51 and later) stays after both, so **recommend** swapping the two (doorbell 50, file-safety 49), with Before R1 (2)'s re-pin of `MODULE_ORDER`. The alternative, `inboxview` inside file-safety, puts a doorbell read in a module that knows nothing of knocks.
+- **Order within layer 3 (BOB's, P4).** DEC-479 puts `file-safety` in `doorbell`'s uses, but `doorbell` (49) is before `file-safety` (50) in `modules.json`. `file-safety` does not use `doorbell`, and every user of `doorbell` (`sources` 51 and later) stays after both, so the two are swapped (file-safety 49, doorbell 50), member-roster R27's `MODULE_ORDER` re-pinned in the same act (decided, BOB #324).
 - **DEC-482** is docs only: BOB regenerates the case-checker bundle with the words.
 
 ## Layer 3
@@ -15,7 +15,7 @@
 
 ## Layer 4
 
-**reading-pipeline** or **extraction** (BOB's: the module that holds a reading's per-character measure)
+**reading-pipeline** (decided, BOB #324: the per-character measure lives in text-chain, layer 1; reading-pipeline produces the reading)
 - T53 · DEC-479 (51) · a count of the words below the reader's own measured clarity on a reading, with their positions; only where the reader measured it (never a model's opinion of itself, `TEXT_CONFIDENCE_PSEUDO`) · DEC-479
 
 **extraction** (op declarations)
@@ -28,7 +28,7 @@
 
 ## Layer 8
 
-**case-disclosures** (recommended over publication: it holds a case's per-item disclosure choices; BOB's)
+**case-disclosures** (decided, BOB #324)
 - T53 · DEC-480 (K5534) · the per-name mark on a forwarded email's names (From, To, Cc), `mailnameshow` (Reasoned: "Why this name is material") and `mailnamewithhold` (Reversible), held on the case with reason and member; the published copy built from it, each unmarked name withheld (`screen.ceremony.emails.withheld`), no address and no technical header; a change after preparing asks the case to be prepared again; an unchecked email never stops signing · DEC-480; `capabilities/N824-email-capture.md` (K5534)
 
 **public-read**
