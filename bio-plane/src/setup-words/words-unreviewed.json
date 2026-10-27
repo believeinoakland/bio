@@ -2182,217 +2182,217 @@
       "en": "scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2469
+      "line": 2475
     },
     {
       "id": "action-plans.declared.optionadd",
       "en": "plan-directed: a member adds an option to a plan, keyed by plan; writes an option row",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2461
+      "line": 2467
     },
     {
       "id": "action-plans.declared.optionadopt",
       "en": "proposal-directed: a member adopts a proposal as an option, keyed by proposal; at most once",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2463
+      "line": 2469
     },
     {
       "id": "action-plans.declared.optiondispose",
       "en": "option-directed: a member disposes of one or more options (open, chosen, declined, done, blocked), keyed by (plan, options); every change kept in the option's history",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2465
+      "line": 2471
     },
     {
       "id": "action-plans.declared.optionstart",
       "en": "option-directed: a member starts a chosen option as an action, keyed by (plan, option); composes and promotes the action",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2471
+      "line": 2477
     },
     {
       "id": "action-plans.declared.optionstartpreview",
       "en": "read: what starting a chosen option would do at this instant, keyed by (plan, option) — the action it would compose, the reminders it would set, and whether it would start or the refusal it would answer; allocates no id, sets no reminder and writes nothing",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2473
+      "line": 2479
     },
     {
       "id": "action-plans.declared.planask",
       "en": "plan-directed: keyed by a plan; a member asks the assistant for options on it, opening one planning run whose proposals reach the member's tray; writes no option and moves no bundle",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2475
+      "line": 2481
     },
     {
       "id": "action-plans.declared.planclose",
       "en": "plan-directed: a member closes a plan with a reason, keyed by plan id; the plan stays readable",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2459
+      "line": 2465
     },
     {
       "id": "action-plans.declared.planopen",
       "en": "project-directed: a member opens a plan for one project over named subjects, keyed by project; writes a PLN- record object",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2455
+      "line": 2461
     },
     {
       "id": "action-plans.declared.plansubjectadd",
       "en": "plan-directed: a member adds a subject to a plan with a reason, keyed by (plan, subject); kept in the plan's history",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2457
+      "line": 2463
     },
     {
       "id": "action-plans.declared.scenarioset",
       "en": "plan-directed: a member sets one of a plan's scenarios whole, keyed by (plan, scenario); the earlier version kept in history",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2467
+      "line": 2473
     },
     {
       "id": "action-plans.index.a_plan_is_about_at",
       "en": "a plan is about at least one matter, and that is its last. Close the plan instead. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 745
+      "line": 746
     },
     {
       "id": "action-plans.index.a_proposal_names_who_made",
       "en": "a proposal names who made it, and this one came with no stamped caller. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 817
+      "line": 818
     },
     {
       "id": "action-plans.index.a_source_named_is_not",
       "en": "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 901
+      "line": 902
     },
     {
       "id": "action-plans.index.action_plans_provider_was_not",
       "en": "action-plans: {provider} was not given",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2345
+      "line": 2351
     },
     {
       "id": "action-plans.index.addressee_left_part_empty",
       "en": "an addressee's {empty} was left empty; state it. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 456
+      "line": 457
     },
     {
       "id": "action-plans.index.id_goes_outside_the_team",
       "en": "{id} goes outside the team before the infraction it serves is documented; say why it goes first, in 1 to {REASON_MAX} characters with no quotation mark, backslash or line break. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1458
+      "line": 1459
     },
     {
       "id": "action-plans.index.matter_i_is_already_in",
       "en": "matter {i} is already in the open plan {plan_id} of this project. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 412
+      "line": 413
     },
     {
       "id": "action-plans.index.matter_is_neither",
       "en": "matter {i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 366
+      "line": 367
     },
     {
       "id": "action-plans.index.matter_named_twice",
       "en": "matter {i} is named twice. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 365
+      "line": 366
     },
     {
       "id": "action-plans.index.phase_id_addresses_someone_outside",
       "en": "phase {id} addresses someone outside the team and has no branch for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1941
+      "line": 1947
     },
     {
       "id": "action-plans.index.phase_index_holds_an_option",
       "en": "phase {index} holds an option the team has not chosen: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1247
+      "line": 1248
     },
     {
       "id": "action-plans.index.phase_index_names_a_phase",
       "en": "phase {index} names a phase or a matter this scenario does not hold: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1251
+      "line": 1252
     },
     {
       "id": "action-plans.index.phase_v1_is_not_a",
       "en": "phase {v1} is not a phase this scenario can hold: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1243
+      "line": 1244
     },
     {
       "id": "action-plans.index.regulated_dates_list",
       "en": "regulated dates are a list of at most {max} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 472
+      "line": 473
     },
     {
       "id": "action-plans.index.run_string_is_not_a",
       "en": "run {String} is not a planning run of this plan. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2331
+      "line": 2337
     },
     {
       "id": "action-plans.index.that_checkpoint_was_judged_judged",
       "en": "that checkpoint was judged {judged} by {author}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1401
+      "line": 1402
     },
     {
       "id": "action-plans.index.the_plan_holds_no_scenario",
       "en": "the plan holds no scenario {String}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1200
+      "line": 1201
     },
     {
       "id": "action-plans.index.tier_stated_by_the_option",
       "en": "the tier option {option} of plan {plan} states",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1469
+      "line": 1470
     },
     {
       "id": "action-plans.says.phase_leads_here_not_led",
       "en": "the phase that leads here has not led here yet, so no occurrence is read",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1295
+      "line": 1296
     },
     {
       "id": "action-plans.why.suspected_matter_concluded",
       "en": "a suspected matter: a question concluded in this project, not yet a determination",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 244
+      "line": 245
     },
     {
       "id": "action-producers.index.a_checkpoint_come_due_is",
