@@ -4,18 +4,22 @@
 
 ## 0. State now and next steps
 
-**State.** Read: CLAUDE.md, LANES.md §1-2, MAP.md, K4628/K4630/K4632/K4636/K4831 and N1266-N1272 in `next.md`, `format-registry.md` (head), GAP.md and stage0/RESULTS.md whole. Drafted `STUDY-N1266-file-types.md` (DRAFT 1): the file-type study with Bob's four questions (A list width, B unlisted types, C text size 100 vs 50 MB, D Outlook/Access) and a recommendation each. Not READY: waits on Bob's answers through BOB. No other draft yet.
+**State.** Bob answered F1-F3 (K5435 A2, K5436 B2, K5437) and K5427 (text 100 MB). READY for PLANNING: `STUDY-N1266-file-types.md` (type table final), `SIZES-N1267.md`, `CORPUS-N1268.md`, `REQ-format-registry-beta.md` (RF1-RF11), `REQ-readers-beta.md` (new modules `structured-text-reader`, `mail-reader`; container client lines CC1-CC6), `UX-NEEDS.md` (sent to BOB). First count of Oakland sources in study §2a (Legistar 1,243/1,243 PDF; portal files PDF 48, ZIP 26, XLS 22).
 
-**Found, for BOB.** (1) N1267 says text to 100 MB, GAP-1.8 (b) and K4906 used 50 MB: one answer needed (question C). (2) N1266 omits BMP, which GAP-3.3 reads, and .ppt, implied by "PowerPoint". (3) Prevalence of types in Oakland sources is unmeasured; the web gave guidance only. (4) The 250,000-cell row of K4831 (10) and N1267a still open as BOB's.
+**Open (BOB's or others').** Protective limits (messages per mailbox, depth); whether `structured-text-reader` also takes text/HTML; N1267a before any workbook bound above 250,000 cells; PLATFORM's record and container load per added type; CAPABILITIES for map files (N1257) and email capture (N824).
 
 **Next steps.**
-1. On Bob's answers (via BOB): finalize the type table; write requirement drafts for format-registry entries and each reader class in the house format.
-2. Test a route to Oakland's public sources (Legistar, data.oaklandca.gov); sample files by type to put counts under the table (S2).
-3. Draft the sizes table (N1267) with the added types, and N1267a.
-4. Draft the acceptance corpus (N1268): per type a small, typical and largest-allowed file, upload and capture.
-5. Needs to send BOB for `MAP.md`: PLATFORM (record and container load per added type), CAPABILITIES (map files N1257, email capture N824), UX-DESIGN (held-and-named sentence, macros not run, type list before upload).
+1. S2 continues (does not block READY): open the portal's 26 zips and 22 "Excel" files; measure Legistar packet sizes and pages; update CORPUS source rows.
+2. On BOB's review of the drafts: amend as asked.
+3. Answer PLANNING's questions on the drafts; a need from another lane goes to BOB.
 
 ## Entries
 
 ### F1 · 2026-10-27
 Study of the file types (N1266) drafted: five tiers (ruled; cheap siblings; costly; held and named; refused). Four questions for Bob. Sent to BOB.
+
+### F2 · 2026-10-27
+BOB's reply read (C = K5427, DEC-460 A4). S2 begun: counts from Legistar and the open data portal (study §2a). Drafted SIZES-N1267.md and CORPUS-N1268.md. Sent to BOB.
+
+### F3 · 2026-10-27
+Bob's answers K5435-K5437 carried. Study final; REQ-format-registry-beta, REQ-readers-beta, UX-NEEDS written; SIZES and CORPUS READY. Sent to BOB.
