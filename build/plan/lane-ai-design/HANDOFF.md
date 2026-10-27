@@ -32,7 +32,7 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
    - `draft-ai-issuer.md`: retention, sealed records kept while active, and for a listed AI while listed plus a year.
    - Also the screens' `airesults` note, and AD50 in `DECISIONS.md`.
 2. Fold AI9 (K5483): the catalogue's staleness lines are already A (stale after `stale_after_days`); mark them decided; AD51.
-3. As Bob answers AI2, AI11 and AI12–AI16, fold each answer: clear its "pending" marks and add an AD line.
+3. As Bob answers AI12–AI16, fold each answer: clear its "pending" marks and add an AD line.
 4. Answer PLANNING's and BOB's questions; keep each file under its cap (`proc sizes`); hand over at 40%.
 
 ## A42 · 2026-10-27 · Bob's AI decisions as K-ruling lines (READY); the lane's files brought up to date
