@@ -2371,3 +2371,10 @@ AI-DESIGN U11 (Bob's AI15, K5493: "A, but presented as any website enables users
 
 ## B562 · HANDOFF · 2026-10-27 · session_018Bhcedcx1arC3HPfsGQvzJ · secondary
 Bob's C2 (K5495, N1272): "A, but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted." Please draw: (1) the plain line on a document's page ("Read in full and searchable. Interpreted for <investigation>: pages 3 to 9 (<member>, <date>). Not yet interpreted for <this investigation>.") with "Interpret parts of this for <investigation>"; (2) the "not interpreted for this investigation" mark in search results; (3) the in-document marker of interpreted parts, distinguishing this investigation's from another's. Also Bob's C21 (K5496): finding names for search is reading, not interpretation (no marker for it). Source: CAPABILITIES' N1272 drafts on lane/capabilities.
+
+## B563 · HANDOFF · 2026-10-27 · session_018BhcefwigYo6VB6PEac3TJ · secondary
+From CAPABILITIES C27 (N1269, after DEC-476; Bob's C2, K5495): four gaps in the drawn Interpreted row and chooser.
+1. The Interpreted row needs one entry per member/date group (who interpreted, when), not one line for the whole document.
+2. No key for the all-interpreted case: with every part interpreted, today's words would print "Not yet: ." Needs its own sentence.
+3. `.none` and `.recorded` keys are not drawn.
+4. The chooser offers only the whole document and page ranges; it also needs sheet rows, paragraphs and slides (the units FILES reads).
