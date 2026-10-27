@@ -29,7 +29,9 @@ export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces",
   /* T48 (R89) */
   "pointers",
   /* T50 (R93, R94) */
-  "records_help", "forums"]);
+  "records_help", "forums",
+  /* T53 (R99, R108, R114): a layer's place in the forest, how far its facts reach, a package of layers */
+  "layer", "coverage", "package"]);
 /* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's; `body` and
    `office` (a legislative system's body and office-record numbers, N569, N613) T34's, and `institution` (one form per
    institution scheme, N574, K1729). */
@@ -55,7 +57,12 @@ export const MEMBER_CAPACITIES = Object.freeze(["elected", "appointed"]);
 export const LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
 /* R88 (T47; amends R24, R28): the one vocabulary of an office's level, which validate reads (outside it, LEVEL_UNKNOWN)
    and a caller offering an office's level imports (setup-page R5). Not a law's level (R31). */
-export const COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
+export const COUNTERPARTY_LEVELS = Object.freeze(["federal", "state", "county", "city", "district"]);
+/* R99: who made a layer: Civicsmith's shipped data, or a team's own. */
+export const LAYER_ORIGINS = Object.freeze(["civicsmith", "team"]);
+/* R106: the levels of office a records law may govern (an office's level, R88). */
+export const GOVERNS_LEVELS = COUNTERPARTY_LEVELS;
+const LAYER_RANK = Object.freeze({ federal: 0, state: 1, county: 2, city: 3 });
 /* R23: `SOURCE_KINDS` stays the six `standards` reads (its R1, R12); the seven, with T35's `standard`, are
    `STANDARD_SOURCE_KINDS`, which validate accepts and `standards` adopts in its own job (K1902 (1)). */
 export const SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
@@ -409,6 +416,59 @@ function validateInto(p, errors) {
   const list = (path, v) => { if (!Array.isArray(v)) { err(path, "VALUE_INVALID", "a list"); return []; } return v; };
   const entry = (path, e) => { if (!isObj(e)) { err(path, "VALUE_INVALID", "an entry is an object"); return false; } return true; };
 
+  /* R114 (T53): a package is a profile of one field, the ids of the layers it stands for. */
+  if (own(p, "package")) {
+    for (const k of Object.keys(p)) if (!["id", "name", "covers", "test", "package"].includes(k))
+      err(k, "PACKAGE_INVALID", "a package holds only its layers' ids, besides its id, name and covers");
+    if (!Array.isArray(p.package) || !p.package.length || !p.package.every((x) => typeof x === "string" && ID_RE.test(x))
+        || new Set(p.package).size !== p.package.length)
+      err("package", "PACKAGE_INVALID", "package is a non-empty list of layer ids, each once");
+    else if (p.package.includes(p.id)) err("package", "PACKAGE_INVALID", "a package does not name itself");
+    return;
+  }
+  /* R99, R100, R108 (T53): a profile may be a layer of the forest; a layer says how far its facts reach. */
+  const layer = isObj(p.layer) ? p.layer : null;
+  const teamLayer = layer !== null && layer.origin === "team";
+  if (own(p, "layer")) {
+    const la = "layer";
+    if (!layer) err(la, "LAYER_INVALID", "layer is {level, place, within?, origin}");
+    else {
+      fields(la, layer, ["level", "place", "within", "origin"]);
+      if (!LAYER_ORIGINS.includes(layer.origin)) err(`${la}.origin`, "LAYER_INVALID", localize("jurisdictions.index.origin_is_one_of_layer", "origin is one of {LAYER_ORIGINS}", { LAYER_ORIGINS: String(LAYER_ORIGINS.join(", ")) }));
+      if (teamLayer) {
+        /* R115: the one team layer has no level and no place */
+        for (const k of ["level", "place"]) if (own(layer, k)) err(`${la}.${k}`, "LAYER_INVALID", "the team layer has no level and no place");
+        if (p.id !== "team") err("id", "LAYER_INVALID", "the team layer's id is team");
+      } else {
+        if (!LAW_LEVELS.includes(layer.level)) err(`${la}.level`, "LAYER_INVALID", localize("jurisdictions.index.level_is_one_of_law_4", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
+        if (typeof layer.place !== "string" || !layer.place.trim() || layer.place.length > 200 || /[\r\n]/.test(layer.place))
+          err(`${la}.place`, "LAYER_INVALID", "place is the place's name, 1 to 200 characters on one line");
+      }
+      if (own(layer, "within")) {
+        if (typeof layer.within !== "string" || !ID_RE.test(layer.within)) err(`${la}.within`, "LAYER_INVALID", "within is the id of the layer this one sits in");
+        else if (layer.within === p.id) err(`${la}.within`, "LAYER_INVALID", "a layer does not sit within itself");
+        else if (layer.level === "federal") err(`${la}.within`, "LAYER_INVALID", "a federal layer sits within none");
+      } else if (!teamLayer && LAW_LEVELS.includes(layer.level) && layer.level !== "federal")
+        err(`${la}.within`, "LAYER_INVALID", "a layer below the federal one sits within another layer");
+    }
+  }
+  if (own(p, "coverage")) {
+    const c = p.coverage;
+    if (!isObj(c)) err("coverage", "LAYER_INVALID", "coverage is {as_of, holidays_through?}");
+    else {
+      fields("coverage", c, ["as_of", "holidays_through"]);
+      if (!isDate(c.as_of)) err("coverage.as_of", "LAYER_INVALID", "as_of is the date the facts were last researched, YYYY-MM-DD");
+      if (own(c, "holidays_through") && !isYear(c.holidays_through)) err("coverage.holidays_through", "LAYER_INVALID", "holidays_through is a four-digit year");
+    }
+  }
+  /* R100: a layer holds only its own level (a district office sits in a county or a city). A team entry's level is its
+     `government.level` (R115). */
+  const ownLevel = layer && !teamLayer && LAW_LEVELS.includes(layer.level) ? layer.level : null;
+  const levelFits = (level) => ownLevel === null || level === ownLevel;
+  const officeLevelFits = (level) => ownLevel === null || level === ownLevel || (level === "district" && (ownLevel === "city" || ownLevel === "county"));
+  /* R104: a layer within another may name a closure list that layer (or one above it) holds; `combine` judges it. */
+  const inheritsLists = layer !== null && (teamLayer || (typeof layer.within === "string" && ID_RE.test(layer.within)));
+
   /* systems first: floors and file numbers name their origins. */
   const origins = new Set();
   const noPathHosts = new Map();
@@ -630,7 +690,7 @@ function validateInto(p, errors) {
         else {
           fields("practice.minutes_due_days", m, ["value", "count", "closures", "basis"]);
           /* K1533: the closure list a business count skips; with none, the due is undetermined */
-          if (own(m, "closures") && !(own(p, "holidays") && Array.isArray(p.holidays) && p.holidays.some((h) => isObj(h) && h.list === m.closures)))
+          if (own(m, "closures") && !inheritsLists && !(own(p, "holidays") && Array.isArray(p.holidays) && p.holidays.some((h) => isObj(h) && h.list === m.closures)))
             err("practice.minutes_due_days.closures", "VALUE_INVALID", localize("jurisdictions.index.no_holidays_entry_of_this", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(m.closures)) }));
           if (!isPosInt(m.value)) err("practice.minutes_due_days.value", "VALUE_INVALID", "a positive integer");
           if (own(m, "count") && !COUNTS.includes(m.count)) err("practice.minutes_due_days.count", "COUNT_UNKNOWN", "count is calendar or business");
@@ -651,8 +711,15 @@ function validateInto(p, errors) {
   if (own(p, "records_laws")) list("records_laws", p.records_laws).forEach((l, i) => {
     const at = `records_laws[${i}]`;
     if (!entry(at, l)) return;
-    fields(at, l, ["level", "name", "citation", "stages", "requesters", "response", "basis"]);
+    fields(at, l, ["level", "name", "citation", "stages", "requesters", "response", "governs", "basis"]);
     if (!LAW_LEVELS.includes(l.level)) err(`${at}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
+    else if (!levelFits(l.level)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only", "a {ownLevel} layer holds only {ownLevel_2} laws, not {level}", { ownLevel: String(ownLevel), ownLevel_2: String(ownLevel), level: String(l.level) }));
+    /* R106 (T53): whose records the law governs, by level of office, from the statute's own definition */
+    if (own(l, "governs")) {
+      if (!Array.isArray(l.governs) || !l.governs.length || new Set(l.governs).size !== l.governs.length)
+        err(`${at}.governs`, "VALUE_INVALID", "governs is a non-empty list of levels of office, each once");
+      else l.governs.forEach((g, j) => { if (!GOVERNS_LEVELS.includes(g)) err(`${at}.governs[${j}]`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_counterparty_2", "level is one of {GOVERNS_LEVELS}", { GOVERNS_LEVELS: String(GOVERNS_LEVELS.join(", ")) })); });
+    }
     str(`${at}.name`, l.name, "name"); str(`${at}.citation`, l.citation, "citation");
     /* R76 (T45): the stages the law has, in its order, each a product stage name with the law's own term; a stage the
        law lacks is absent. Whether action-grammar knows a stage is that module's check. */
@@ -753,6 +820,7 @@ function validateInto(p, errors) {
     /* R31, R64 (T35-1): a statute, regulation, ordinance or court entry carries a law level; a policy, commitment or
        standard carries one only when its issuer is a government at one of the four, and otherwise its sector. An entry
        with a level reads sector government; a level beside another sector is refused. */
+    if (LAW_LEVELS.includes(s.level) && !levelFits(s.level)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only_2", "a {ownLevel} layer holds only {ownLevel_2} sources, not {level}", { ownLevel: String(ownLevel), ownLevel_2: String(ownLevel), level: String(s.level) }));
     const levelled = !["policy", "commitment", "standard"].includes(s.kind);
     if (own(s, "level") || levelled) {
       if (!LAW_LEVELS.includes(s.level)) err(`${at}.level`, "LEVEL_UNKNOWN", levelled && !own(s, "level")
@@ -839,6 +907,7 @@ function validateInto(p, errors) {
     if (isStr(c.role) && isStr(c.body)) offices.add(`${c.role}\u0000${c.body}`);
     if (own(c, "hours")) hours(`${at}.hours`, c.hours);
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_counterparty", "level is one of {COUNTERPARTY_LEVELS}", { COUNTERPARTY_LEVELS: String(COUNTERPARTY_LEVELS.join(", ")) }));
+    else if (!officeLevelFits(c.level)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only_3", "a {ownLevel} layer holds only {ownLevel_2} offices (or district), not {level}", { ownLevel: String(ownLevel), ownLevel_2: String(ownLevel), level: String(c.level) }));
     if (typeof c.elected !== "boolean") err(`${at}.elected`, "VALUE_INVALID", "elected is true or false");
     if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at}.oversight`, "VALUE_INVALID", "oversight is true or false");
     basis(at, c);
@@ -1045,7 +1114,7 @@ function validateInto(p, errors) {
     }
     if (own(d, "defends") && d.defends !== true) err(`${at}.defends`, "VALUE_INVALID", "defends is true, or absent");
     if (own(d, "roll") && typeof d.roll !== "boolean") err(`${at}.roll`, "VALUE_INVALID", "roll is true or false");
-    if (own(d, "closures") && !closureLists.has(d.closures))
+    if (own(d, "closures") && !inheritsLists && !closureLists.has(d.closures))
       err(`${at}.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_2", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(d.closures)) }));
     if (own(d, "computation") && !computationKeys.has(d.computation))
       err(`${at}.computation`, "COMPUTATION_UNKNOWN", localize("jurisdictions.index.no_computation_entry_of_this", "no computation entry of this profile has key '{String}'", { String: String(String(d.computation)) }));
@@ -1072,7 +1141,7 @@ function validateInto(p, errors) {
       if (!isObj(o)) err(`${at}.observed`, "VALUE_INVALID", "observed is {closures, status, basis}");
       else {
         fields(`${at}.observed`, o, ["closures", "status", "basis"]);
-        if (!closureLists.has(o.closures))
+        if (!inheritsLists && !closureLists.has(o.closures))
           err(`${at}.observed.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_3", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(o.closures)) }));
         statusBasis(`${at}.observed`, o);
       }
@@ -1452,23 +1521,33 @@ function validateInto(p, errors) {
       err(`${at}.basis`, "BASIS_INVALID", "a pointer rests on the day its page was read, a dated entry YYYY-MM-DD");
   });
 
-  /* R93 (T50): what the place's public-records law obliges an office to do, so the help page fills its sentences from data.
-     Every field is required but `portal` and `faster`; it rests on the day the statute's text was read (R44). */
+  /* R93 (T50), R105 (T53): what the place's public-records law obliges an office to do, so the help page fills its sentences
+     from data. A block is one law's: `law` and `status`/`basis` always; the layer that holds the law gives the core
+     (`days`, `extra_days`, `extension_reasons`, `citations`, all or none), a layer below it may give `portal` and `faster`
+     alone. It rests on the day the statute's text was read (R44). A profile gives one block, or a list of blocks, one per law. */
   if (own(p, "records_help")) {
-    const h = p.records_help, at = "records_help";
-    if (!isObj(h)) err(at, "VALUE_INVALID", "records_help is {law, days, extra_days, extension_reasons, portal?, faster?, citations, status, basis}");
-    else {
-      fields(at, h, ["law", "days", "extra_days", "extension_reasons", "portal", "faster", "citations", "status", "basis"]);
+    const CORE = ["days", "extra_days", "extension_reasons", "citations"];
+    const block = (at, h) => {
+      if (!isObj(h)) { err(at, "VALUE_INVALID", "records_help is {law, days, extra_days, extension_reasons, portal?, faster?, citations, status, basis}"); return; }
+      fields(at, h, ["law", ...CORE, "portal", "faster", "status", "basis"]);
       str(`${at}.law`, h.law, "law");
-      if (!isPosInt(h.days)) err(`${at}.days`, "VALUE_INVALID", "days is a positive integer");
-      if (!isPosInt(h.extra_days)) err(`${at}.extra_days`, "VALUE_INVALID", "extra_days is a positive integer");
-      if (!Array.isArray(h.extension_reasons) || !h.extension_reasons.length) err(`${at}.extension_reasons`, "VALUE_INVALID", "extension_reasons is a non-empty list of {reason, citation}");
-      else h.extension_reasons.forEach((r, j) => {
-        const ra = `${at}.extension_reasons[${j}]`;
-        if (!entry(ra, r)) return;
-        fields(ra, r, ["reason", "citation"]);
-        str(`${ra}.reason`, r.reason, "reason"); str(`${ra}.citation`, r.citation, "citation");
-      });
+      const core = CORE.filter((f) => own(h, f));
+      if (core.length || !(own(h, "portal") || own(h, "faster"))) {
+        if (!isPosInt(h.days)) err(`${at}.days`, "VALUE_INVALID", "days is a positive integer");
+        if (!isPosInt(h.extra_days)) err(`${at}.extra_days`, "VALUE_INVALID", "extra_days is a positive integer");
+        if (!Array.isArray(h.extension_reasons) || !h.extension_reasons.length) err(`${at}.extension_reasons`, "VALUE_INVALID", "extension_reasons is a non-empty list of {reason, citation}");
+        else h.extension_reasons.forEach((r, j) => {
+          const ra = `${at}.extension_reasons[${j}]`;
+          if (!entry(ra, r)) return;
+          fields(ra, r, ["reason", "citation"]);
+          str(`${ra}.reason`, r.reason, "reason"); str(`${ra}.citation`, r.citation, "citation");
+        });
+        if (!isObj(h.citations)) err(`${at}.citations`, "VALUE_INVALID", `citations is {${RECORDS_HELP_CITATIONS.join(", ")}}`);
+        else {
+          fields(`${at}.citations`, h.citations, RECORDS_HELP_CITATIONS);
+          for (const f of RECORDS_HELP_CITATIONS) str(`${at}.citations.${f}`, h.citations[f], "the citation");
+        }
+      }
       if (own(h, "portal")) {
         if (!isObj(h.portal)) err(`${at}.portal`, "VALUE_INVALID", "portal is {name, url}");
         else {
@@ -1484,15 +1563,21 @@ function validateInto(p, errors) {
           for (const f of ["ordinance", "window", "request", "citation"]) str(`${at}.faster.${f}`, h.faster[f], f);
         }
       }
-      if (!isObj(h.citations)) err(`${at}.citations`, "VALUE_INVALID", `citations is {${RECORDS_HELP_CITATIONS.join(", ")}}`);
-      else {
-        fields(`${at}.citations`, h.citations, RECORDS_HELP_CITATIONS);
-        for (const f of RECORDS_HELP_CITATIONS) str(`${at}.citations.${f}`, h.citations[f], "the citation");
-      }
       if (h.status !== "researched") err(`${at}.status`, "BASIS_INVALID", "records_help is researched: it is read from the statute's own text");
       if (basis(at, h) && !(test && h.basis === "TEST") && !basisParts(h.basis).every((b) => { const m = DATED_REF.exec(b); return !!m && isDate(m[1]); }))
         err(`${at}.basis`, "BASIS_INVALID", "records_help rests on the day the text was read, a dated entry YYYY-MM-DD");
-    }
+    };
+    if (Array.isArray(p.records_help)) {
+      const laws = new Set();
+      if (!p.records_help.length) err("records_help", "VALUE_INVALID", "records_help is a block, or a non-empty list of blocks, one per law");
+      p.records_help.forEach((h, i) => {
+        block(`records_help[${i}]`, h);
+        if (isObj(h) && isStr(h.law)) {
+          if (laws.has(h.law)) err(`records_help[${i}].law`, "VALUE_INVALID", localize("jurisdictions.index.law_has_one_block", "{law} has one block", { law: String(h.law) }));
+          laws.add(h.law);
+        }
+      });
+    } else block("records_help", p.records_help);
   }
 
   /* R94 (T50): the courts and other forums of the place, each once. `ids` are its identifiers in a scheme of the profile. */

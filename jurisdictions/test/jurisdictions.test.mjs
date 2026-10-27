@@ -328,8 +328,8 @@ test("R24 counterparties: role and body, never a person; level; elected; oversig
   const v = combine([sample()]).view;
   assert.equal(v.counterparties.find((c) => c.role === "Clerk").oversight, undefined);
   assert.equal(v.counterparties.find((c) => c.role === "Auditor").oversight, true);
-  /* an office's level keeps its own vocabulary: district, never federal */
-  assert.ok(hasError(breakIt((p) => { p.counterparties[0].level = "federal"; }), "LEVEL_UNKNOWN", "counterparties[0].level"));
+  /* an office's level keeps its own vocabulary: district, and since R107 federal; never national */
+  assert.ok(hasError(breakIt((p) => { p.counterparties[0].level = "national"; }), "LEVEL_UNKNOWN", "counterparties[0].level"));
   for (const level of ["state", "county", "city", "district"]) assert.ok(breakIt((p) => { p.counterparties[0].level = level; }).ok, level);
   assert.ok(hasError(breakIt((p) => { p.counterparties[0].elected = "no"; }), "VALUE_INVALID", "counterparties[0].elected"));
   assert.ok(hasError(breakIt((p) => { delete p.counterparties[0].role; }), "VALUE_INVALID", "counterparties[0].role"));
@@ -821,7 +821,7 @@ test("R31 LAW_LEVELS: federal, state, county, city in that order, the one vocabu
   }
   /* an office's level keeps its own vocabulary */
   for (const level of ["state", "county", "city", "district"]) assert.ok(breakIt((p) => { p.counterparties[0].level = level; }).ok, level);
-  assert.equal(breakIt((p) => { p.counterparties[0].level = "federal"; }).ok, false);
+  assert.equal(breakIt((p) => { p.counterparties[0].level = "national"; }).ok, false);
   /* the combined view carries each law's level as given */
   const v = combine([sample(), two((b) => { b.records_laws.push({ level: "federal", name: "Federal Act", citation: "F § 1", basis: "M-1" }); })]).view;
   assert.deepEqual(v.records_laws.map((l) => [l.name, l.level]), [["Records Law", "state"], ["Federal Act", "federal"]]);
