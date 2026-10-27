@@ -75,4 +75,4 @@ The run-rules standing measure is now per entry: R75 records carry `entry_id`, a
 No line changed meaning: run-path R94, agent-model R47 and F1, ai-accounts R45 and R46, and screens §7 already followed the recommendations, and are now marked decided. AD45–AD47 added. **Need:** AI2, AI6–AI11.
 
 ## A50 · 2026-10-27 · Bob's AI6, AI7 folded (K5480, K5481)
-New: `draft-ai-use.md` R28 `retestSet`/`retestAllowed` (`op=airetestset`; per-AI monthly cap as an R2 limit; admin of the paying account), R29 the `retesting-off` queue kind (one item, stays while off), R30. ai-gate R52 asks `retestAllowed`; issuer R7 cites K5481; screens §4 row. AD48, AD49. **For PLANNING:** `queue`'s `classOfKind` gains `retesting-off` (REMINDER). **Need:** AI2, AI8–AI11.
+New: `draft-ai-use.md` R28 `retestSet`/`retestAllowed` (`op=airetestset`; per-AI monthly cap as an R2 limit; admin of the paying account), R29 the `retesting-off` queue kind (one item, stays while off), R30. ai-gate R52 asks `retestAllowed`; issuer R7 cites K5481; screens §4 row. AD48, AD49. **For PLANNING:** `queue`'s `classOfKind` gains `retesting-off` (OBLIGATION). **Need:** AI2, AI8–AI11.
