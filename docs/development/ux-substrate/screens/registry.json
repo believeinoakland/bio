@@ -5978,7 +5978,7 @@
    "purpose": "The public registers the team holds (campaign finance, economic interests, lobbyists, licenses, company officers), bringing one in whole, searching and citing a row, watching a named filer, license or docket, outside alerts, and the assisted asking that comes after the alpha.",
    "acts": [
     {
-     "op": "owed:registerimport DEC-406",
+     "op": "owed:registerfileimport DEC-406",
      "label": "Bring in a register",
      "status": "owed"
     },
@@ -6094,6 +6094,11 @@
     {
      "op": "owed:aiplanconnect DEC-420",
      "label": "Connect a plan",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aicreditsclear K5478",
+     "label": "Clear a charge to Cloudflare's credits and turn the account back on",
      "status": "owed"
     },
     {

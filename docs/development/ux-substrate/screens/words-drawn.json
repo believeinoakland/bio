@@ -37948,7 +37948,7 @@
    "key": "screen.registers.import.go",
    "en": "Bring in this register",
    "protected": false,
-   "note": "DEC-407: button (registerimport)"
+   "note": "DEC-407: button (registerfileimport, K5471)"
   },
   {
    "key": "screen.registers.search.head",
@@ -39788,7 +39788,7 @@
   },
   {
    "key": "screen.aiproviders.use.note",
-   "en": "Work goes to the first account that is on, is allowed for that work and is within its limit. When it continues on a later account, the member is shown the switch and may decline it. A use that is switched off is refused, and is never moved to another account.",
+   "en": "Work goes to the first account that is on, is allowed for that work and is within its limit. When it continues on a later account the member is shown the move and can stop it, and when that account has another payer the member is asked first. A use that is switched off is refused, and is never moved to another account.",
    "protected": false,
    "note": "DEC-420: B488 aiproviders: use note"
   },
@@ -41222,7 +41222,7 @@
   },
   {
    "key": "screen.aimoments.a.note",
-   "en": "The order is set by the team's administrators. You may decline the switch, and the answer waits until you choose.",
+   "en": "Your team's administrators set the order. Both accounts are your team's, so the answer goes on by itself; you can stop it here.",
    "protected": false,
    "note": "DEC-420: B488 aimoments: a note"
   },
@@ -44906,7 +44906,7 @@
   },
   {
    "key": "screen.aimine.subscription.ownlist",
-   "en": "A personal subscription is only ever on your own list, never on your team's or a project's.",
+   "en": "A personal subscription is only ever on your own list, never on your team's or a project's. It does your team's work only with an AI on your team's allowed list.",
    "protected": false,
    "note": "DEC-465: aimine: the line on a member's personal subscription row"
   },
@@ -45275,6 +45275,48 @@
    "en": "you stopped instead of switching",
    "protected": false,
    "note": "DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)"
+  },
+  {
+   "key": "act.owed_registerimport.does",
+   "en": "Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",
+   "protected": false,
+   "note": "DEC-470: held under the old op name while the code still reads it (screens-settings keys.mjs and the L11 modules); dropped when they read act.owed_registerfileimport.does"
+  },
+  {
+   "key": "screen.aimoments.mock.k",
+   "en": "the next account has another payer",
+   "protected": false,
+   "note": "DEC-471: aimoments: the mock option for a move to another payer (K5477)"
+  },
+  {
+   "key": "screen.aimoments.k.what",
+   "en": "This project's {from} account reached its monthly limit at {time}. The next account on the list is {to}, which your team pays for.",
+   "protected": false,
+   "note": "DEC-471: aimoments k: the move the member is asked about (K5477)"
+  },
+  {
+   "key": "screen.aimoments.k.ask",
+   "en": "The answer waits until you choose.",
+   "protected": false,
+   "note": "DEC-471: aimoments k (K5477)"
+  },
+  {
+   "key": "screen.aiproviders.mock.f",
+   "en": "an account stopped after a charge to Cloudflare's credits",
+   "protected": false,
+   "note": "DEC-471: aiproviders: the mock option (K5478)"
+  },
+  {
+   "key": "screen.aiproviders.stands.credits",
+   "en": "{account}'s answer at {time} was charged to Cloudflare's own credits instead of your team's key. The answer was kept, and {account} takes no more work until an administrator clears it.",
+   "protected": false,
+   "note": "DEC-471: aiproviders: the stopped account, also the administrators' Queue item (K5478)"
+  },
+  {
+   "key": "screen.aiproviders.credits.clear",
+   "en": "Clear it and turn the account back on",
+   "protected": false,
+   "note": "DEC-471: aiproviders: the administrator clears the stop (K5478; owed op aicreditsclear)"
   }
  ],
  "rewrite": {

@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19595 design words, 1166 protected; SHA-256
-   201641d9b9a1daedc3e9a91191b5d57c2d0a3c9f31e30ebc4ae5a28c57ce1d34) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19604 design words, 1167 protected; SHA-256
+   b8e4ae4468c76707aebc4272c4138f2cac87680b6a78d01d0c0ce9c8239f9b0d) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "201641d9b9";
+export const WORDS_COMMIT = "b8e4ae4468";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10911,7 +10911,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.registers.import.which.form700","Economic interest filings (Form 700)","DEC-407: option",null,false,"design"],
   ["screen.registers.import.which.lobbyists","Oakland lobbyist directory","DEC-407: option",null,false,"design"],
   ["screen.registers.import.which.licenses","State license files","DEC-407: option",null,false,"design"],
-  ["screen.registers.import.go","Bring in this register","DEC-407: button (registerimport)",null,false,"design"],
+  ["screen.registers.import.go","Bring in this register","DEC-407: button (registerfileimport, K5471)",null,false,"design"],
   ["screen.registers.search.head","Search the registers","DEC-407: section",null,false,"design"],
   ["screen.registers.search.who","Person or organization","DEC-407: field",null,false,"design"],
   ["screen.registers.search.min","Smallest amount","DEC-407: field",null,false,"design"],
@@ -11218,7 +11218,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aiproviders.listed.lapsed","lapsed","DEC-420: B488 aiproviders: listed lapsed",null,false,"design"],
   ["screen.aiproviders.listed.retired","retired","DEC-420: B488 aiproviders: listed retired",null,false,"design"],
   ["screen.aiproviders.use.switchon","Switch on","DEC-420: B488 aiproviders: use switchon",null,false,"design"],
-  ["screen.aiproviders.use.note","Work goes to the first account that is on, is allowed for that work and is within its limit. When it continues on a later account, the member is shown the switch and may decline it. A use that is switched off is refused, and is never moved to another account.","DEC-420: B488 aiproviders: use note",null,false,"design"],
+  ["screen.aiproviders.use.note","Work goes to the first account that is on, is allowed for that work and is within its limit. When it continues on a later account the member is shown the move and can stop it, and when that account has another payer the member is asked first. A use that is switched off is refused, and is never moved to another account.","DEC-420: B488 aiproviders: use note",null,false,"design"],
   ["screen.aiproviders.add.head","Add an AI","DEC-420: B488 aiproviders: add head",null,false,"design"],
   ["screen.aiproviders.add.intro","Providers are listed alphabetically, each with the ways to pay for it: a developer account (an API key), a subscription, a reseller that offers several providers, a gateway, one built into Civicsmith, or an AI you run yourself. Pick the one your team pays for.","DEC-420: B488 aiproviders: add intro",null,false,"design"],
   ["screen.aiproviders.add.grades","Each answer carries its grade. Reproduced: Civicsmith or another team repeated it. Reported: a team reported it. Stated: only the provider says so.","DEC-420: B488 aiproviders: add grades",null,false,"design"],
@@ -11457,7 +11457,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aimoments.intro","What the assistant panel shows, one moment at a time. It never changes account, model or provider without telling you, and it waits for your choice.","DEC-420: B488 aimoments: intro",null,false,"design"],
   ["screen.aimoments.panel","The assistant","DEC-420: B488 aimoments: panel",null,false,"design"],
   ["screen.aimoments.a.what","The team's {from} account reached its monthly limit at {time}, so this answer continues on {to}.","DEC-420: B488 aimoments: a what",null,false,"design"],
-  ["screen.aimoments.a.note","The order is set by the team's administrators. You may decline the switch, and the answer waits until you choose.","DEC-420: B488 aimoments: a note",null,false,"design"],
+  ["screen.aimoments.a.note","Your team's administrators set the order. Both accounts are your team's, so the answer goes on by itself; you can stop it here.","DEC-420: B488 aimoments: a note",null,false,"design"],
   ["screen.aimoments.a.keep","Keep going on {provider}","DEC-420: B488 aimoments: a keep",null,false,"design"],
   ["screen.aimoments.a.stop","Stop here","DEC-420: B488 aimoments: a stop",null,false,"design"],
   ["screen.aimoments.b.what","{provider} would receive {sent}. It runs in {where}, keeps it {keep}, does not train on it and shares it only with companies it names.","DEC-420: B488 aimoments: b what",null,false,"design"],
@@ -12071,7 +12071,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.aiproviders.optin","Projects and members may add this account to their own lists","DEC-465: aiproviders: the owner opt-in on a team account row, off by default",null,false,"design"],
   ["screen.aiproviders.optin.note","Off until an administrator turns it on. Until then, only your team's own list uses this account.","DEC-465: aiproviders: the opt-in note",null,false,"design"],
   ["screen.aimine.optin","My projects may add this account to their lists","DEC-465: aimine: the opt-in on a member's own API-key account, off by default",null,false,"design"],
-  ["screen.aimine.subscription.ownlist","A personal subscription is only ever on your own list, never on your team's or a project's.","DEC-465: aimine: the line on a member's personal subscription row",null,false,"design"],
+  ["screen.aimine.subscription.ownlist","A personal subscription is only ever on your own list, never on your team's or a project's. It does your team's work only with an AI on your team's allowed list.","DEC-465: aimine: the line on a member's personal subscription row",null,false,"design"],
   ["screen.aiconnect.key.sealed","Keep it sealed in your team's Civicsmith","DEC-465: aiconnect step 3: the fifth way a key is held",null,false,"design"],
   ["screen.aiconnect.key.sealed.line","Your team's Civicsmith keeps the key sealed, readable only by its own programs, until you remove it.","DEC-465: aiconnect step 3: the sealed way, its line",null,false,"design"],
   ["screen.aimoments.checksapply","Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.","DEC-465: aimoments: whose checks apply; {project}",null,false,"design"],
@@ -12133,6 +12133,13 @@ export const WORD_ROWS = Object.freeze([
   ["queue.kind.rules-changed","Rules that changed in this update","DEC-468: queue: the kind, for an administrator (K5450; the style of queue.kind.*)",null,false,"design"],
   ["screen.queue.ruleschanged","{n} rules your team uses changed in this update: {list}. You're told once.","DEC-468: queue: an administrator item after an update (K5450); {n} {list}",null,false,"design"],
   ["screen.aimoments.mock.j","you stopped instead of switching","DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)",null,false,"design"],
+  ["act.owed_registerimport.does","Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.","DEC-470: held under the old op name while the code still reads it (screens-settings keys.mjs and the L11 modules); dropped when they read act.owed_registerfileimport.does",null,false,"design"],
+  ["screen.aimoments.mock.k","the next account has another payer","DEC-471: aimoments: the mock option for a move to another payer (K5477)",null,false,"design"],
+  ["screen.aimoments.k.what","This project's {from} account reached its monthly limit at {time}. The next account on the list is {to}, which your team pays for.","DEC-471: aimoments k: the move the member is asked about (K5477)",null,false,"design"],
+  ["screen.aimoments.k.ask","The answer waits until you choose.","DEC-471: aimoments k (K5477)",null,false,"design"],
+  ["screen.aiproviders.mock.f","an account stopped after a charge to Cloudflare's credits","DEC-471: aiproviders: the mock option (K5478)",null,false,"design"],
+  ["screen.aiproviders.stands.credits","{account}'s answer at {time} was charged to Cloudflare's own credits instead of your team's key. The answer was kept, and {account} takes no more work until an administrator clears it.","DEC-471: aiproviders: the stopped account, also the administrators' Queue item (K5478)",null,false,"design"],
+  ["screen.aiproviders.credits.clear","Clear it and turn the account back on","DEC-471: aiproviders: the administrator clears the stop (K5478; owed op aicreditsclear)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -18652,7 +18659,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.owed_sweepset.label.watching","Define a sweep",null,"Saves a sweep: the sites it may visit, the pages it starts from, what it keeps, how often it runs and the most it may fetch. It does not run until the project's owner ratifies it.",true,"design"],
   ["act.owed_sweepratify.label.watching","Ratify or stop a sweep",null,"The project's owner starts a sweep, or any member who can write to the project stops it. Ratifying sends your team's fetches to the named sites, within the scope and budget shown.",true,"design"],
   ["act.writinghelp.label.watching","Help me write this",null,"Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",true,"design"],
-  ["act.owed_registerimport.label.registers","Bring in a register",null,"Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",true,"design"],
+  ["act.owed_registerfileimport.label.registers","Bring in a register",null,"Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",true,"design"],
   ["act.owed_registerlist.label.registers","List the registers the team holds",null,"Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.",true,"design"],
   ["act.owed_registersearch.label.registers","Search the registers",null,"Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.",true,"design"],
   ["act.owed_registerrowcite.label.registers","Cite a row as evidence",null,"Cites one row of a register as evidence, with the register, its source and the date it was brought in.",true,"design"],
@@ -18670,6 +18677,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.search.label.registers","Search",null,"Searches everything your team holds that you may see: documents, passages, questions, people.",true,"design"],
   ["act.explore.label.registers","Explore connections",null,"Looks for chains of links between two people or organizations, each step cited and graded.",true,"design"],
   ["act.owed_aiplanconnect.label.aiproviders","Connect a plan",null,"Opens the guided connection for this plan: what it is sent, how to sign up, how to give the key, a test and then turning it on. Nothing is connected until you finish.",true,"design"],
+  ["act.owed_aicreditsclear.label.aiproviders","Clear a charge to Cloudflare's credits and turn the account back on",null,"Lets the account take work again after you have checked why a call was charged to Cloudflare's credits. The clearing is recorded with your name and the time.",true,"design"],
   ["act.owed_aitestopen.label.aiproviders","Test an AI that isn't listed",null,"Opens the test for an AI no release lists yet. It shows what the test costs before it runs and what would be sent afterward.",true,"design"],
   ["act.owed_airesultsopen.label.aiproviders","Read results other teams sent",null,"Opens the results other teams sent about the AIs they tested: the parts each passed, its limits, and how fast and costly it was.",true,"design"],
   ["act.owed_aiorderset.label.aiproviders","Move an account up or down",null,"Moves this account one place up or down in the order. Work goes to the first account that is on, allowed for that work and within its limits.",true,"design"],
@@ -18893,7 +18901,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.owed_exploreall.does","Lists every connection found between the two ends within the search's limits, each with its steps, its weakest step and its dates. It says when the search was cut short, and never that the list is complete.",null,null,false,"design"],
   ["act.owed_explorepath.does","Shows the most direct chain between the two ends first: the fewest steps, then the strongest weakest step, then the date. It is a fact about the chains, not a judgment.",null,null,false,"design"],
   ["act.owed_exploreshorter.does","Puts paths with fewer steps between the same two ends beside the one you built, evidenced paths first and then leads, so you can see them or keep your own. Your chain is never changed.",null,null,false,"design"],
-  ["act.owed_registerimport.does","Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",null,null,false,"design"],
+  ["act.owed_registerfileimport.does","Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",null,null,false,"design"],
   ["act.owed_registerlist.does","Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.",null,null,false,"design"],
   ["act.owed_registersearch.does","Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.",null,null,false,"design"],
   ["act.owed_registerrowcite.does","Cites one row of a register as evidence, with the register, its source and the date it was brought in.",null,null,false,"design"],
@@ -18920,6 +18928,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.owed_aikeyenter.does","Sends the key straight to Cloudflare's AI Gateway store in your team's own account. Civicsmith keeps no copy, and the key is never shown again.",null,null,false,"design"],
   ["act.owed_aikeycloudflare.does","Records that you entered the key yourself in Cloudflare's dashboard. Civicsmith then checks that it works, without ever holding the key.",null,null,false,"design"],
   ["act.owed_aisignin.does","Takes you to the provider's own page to sign in and approve the connection. Civicsmith never sees your password.",null,null,false,"design"],
+  ["act.owed_aicreditsclear.does","Lets the account take work again after you have checked why a call was charged to Cloudflare's credits. The clearing is recorded with your name and the time.",null,null,false,"design"],
   ["act.owed_aikeyseal.does","Keeps the key sealed in your team's Civicsmith, readable only by its own programs, until you remove it.",null,null,false,"design"],
   ["act.owed_aikeyreference.does","Saves where the key is kept, not the key. Civicsmith asks for it from there each time it is needed.",null,null,false,"design"],
   ["act.owed_aitermsaccept.does","Records, with your name and the date, that you accepted the terms that bind your team's use of this plan, and any warning it carried.",null,null,false,"design"],

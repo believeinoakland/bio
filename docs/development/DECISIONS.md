@@ -7166,3 +7166,27 @@ the design: (1) "When the AI can't go on", moment a: the switch was said twice a
 verified: the page's checks pass (walk, words drawn 0 unkeyed, library); on tranche/T53 with these words files, words 0 failures, format 0; screens-settings panel, connect and teamai 44/0 with and without.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `registry.src.py`, `words-drawn.src.py` (DEC-469 block; `screen.teamai.use.why`, `screen.aimoments.continued.crossowner`, `screen.aimine.seenby`, `screen.aiproviders.optin.note` in place; `screen.panel.usage.group` by REWRITE).
 owed: BOB: merge this commit (MERGE). Screens-settings: none beyond DEC-468's (the reworded rows are read by key; its tests pass unchanged).
+
+### DEC-470 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018Bhcefdgy83sFMSkwg7xRc, UX design #44) (B557: K5471 (4), CAPABILITIES C20)
+for: design (T53, the beta)
+question: Rename the register file import's op in the drawings, since events R38's `registerimport` is a different act already live.
+why it is Bob's: it is not; an op's name is BOB's (K5471), its drawing the design's (P17).
+provisional: as below. alternative: none. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: DEC-407's public registers screen and its act sentence name the op `registerfileimport`: `act.owed_registerfileimport.*` (from `mock-acts.js`, `mock-kit.js`), the registry's owed act, the "Bring in this register" button's note (`screen.registers.import.go` keeps its key, which names no op). The English is unchanged. `act.owed_registerimport.does` is held under the old name, the same English, while the code still reads it (screens-settings `keys.mjs` and four L11 modules list it in `words-reads.json`); it goes when they read the new key.
+verified: the page's checks pass; on tranche/T53 with these words files, words 0 failures (5 missing keys without the held row), format 0.
+reasoning recorded in: this entry; `screens/mock-acts.js`, `mock-kit.js`, `mock-screens.js`, `registry.src.py`, `words-drawn.src.py` (DEC-470 block; the button's note in place).
+owed: BOB: merge this commit (MERGE). Screens-settings (and affordances, screens-action, screens-daily, screens-entry through `words-reads.json`): read `act.owed_registerfileimport.does`; then the design drops the held row.
+
+### DEC-471 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018Bhcefdgy83sFMSkwg7xRc, UX design #44) (Bob's answers on QUESTIONS.html, recorded by BOB: AI3 K5477, AI4 K5478, AI5 K5479)
+for: design (T53, the beta)
+question: How the AI screens show Bob's AI3 (a member is asked only when the payer changes), AI4 (a call charged to Cloudflare's own credits stops the account) and AI5 (a personal subscription works for the team only with an AI on the team's list).
+why it is Bob's: the rulings are (K5477, K5478, K5479, each "as recommended"); their drawing is not (P17).
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: K5477: "When the AI can't go on", moment a (the team's account to the team's next one) goes on by itself: "Your team's administrators set the order. Both accounts are your team's, so the answer goes on by itself; you can stop it here." with only "Stop here"; a new moment k ("the next account has another payer") asks: "This project's {from} account reached its monthly limit at {time}. The next account on the list is {to}, which your team pays for.", "Your administrators let projects use this team account.", "The answer waits until you choose.", with "Keep going on {provider}" and "Stop here"; AI providers' order note: "When it continues on a later account the member is shown the move and can stop it, and when that account has another payer the member is asked first." K5478: AI providers state f: "{account}'s answer at {time} was charged to Cloudflare's own credits instead of your team's key. The answer was kept, and {account} takes no more work until an administrator clears it." with "Clear it and turn the account back on" (owed act `aicreditsclear`, recorded with name and time); the same sentence is the administrators' Queue item. K5479: Your AI's subscription row adds "It does your team's work only with an AI on your team's allowed list."
+verified: the page's checks pass (walk, words drawn, library); on tranche/T53 with these words files, words 0 failures, format 0; no test reads the reworded keys.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `mock-acts.js`, `registry.src.py`, `words-drawn.src.py` (DEC-471 block; `screen.aimoments.a.note`, `screen.aiproviders.use.note`, `screen.aimine.subscription.ownlist` in place).
+owed: BOB: merge this commit (MERGE). AI-DESIGN (through BOB): the op that clears a credits stop (`aicreditsclear`) and the Queue item to administrators with `screen.aiproviders.stands.credits`; the run's same-payer move needs no choice from the member (moment a), a payer change waits (moment k).
