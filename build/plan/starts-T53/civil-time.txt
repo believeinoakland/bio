@@ -1,0 +1,8 @@
+Round R1, layer 1, module civil-time, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module civil-time`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-15 · A2 · `fiscalPeriod` over a stated entry
+- T53-16 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/civil-time.md`

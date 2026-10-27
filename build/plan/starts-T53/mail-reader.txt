@@ -1,0 +1,8 @@
+Round R1, layer 1, module mail-reader, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module mail-reader`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-36 · N1266 (K5435, K5437) · EML, MSG, MBOX; attachments as members
+- T53-37 · CAPABILITIES · CAPABILITIES rows
+- rows: `build/plan/T53-R1/mail-reader.md`

@@ -1,0 +1,9 @@
+Round R1, layer 1, module signatures, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module signatures`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-28 · K5457, K5471 · three more namespaces; run-key check
+- T53-29 · K5565 · English in tests: its entry
+- T53-504 · K5577 (5) · `CATALOGUE_KEYS` with test keys; the ceremony's public lines arrive as a CHANGE
+- rows: `build/plan/T53-R1/signatures.md`

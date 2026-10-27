@@ -1,0 +1,7 @@
+Round R1, layer 1, module structured-text-reader, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module structured-text-reader`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-35 · N1266 (K5435) · JSON, XML, ICS and more in windows to 100 MB
+- rows: `build/plan/T53-R1/structured-text-reader.md`

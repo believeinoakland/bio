@@ -1,0 +1,9 @@
+Round R1, layer 1, module format-registry, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module format-registry`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-42 · N1266 (K5435-K5437) · roster, detection, refused set
+- T53-43 · DEC-467 · KIND-TABLE: plain names and limits (the audio and video figure decided, K5571 (3))
+- T53-44 · DEC-473 · {kind} and {reason} read by key; A4-R3 dropped kinds
+- rows: `build/plan/T53-R1/format-registry.md`

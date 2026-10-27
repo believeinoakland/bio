@@ -1,0 +1,12 @@
+Round R1, layer 1, module runtime-limits, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module runtime-limits`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-22 · N1267 (K4628, K5427) · per-kind bounds as one table; PL20, PL21, PL45
+- T53-23 · K4354, K5438 · `TIME_BUDGETS`, `budgetOf`
+- T53-24 · N1273 (K5440) · `STORE_JURISDICTIONS`, room and R2 jurisdiction
+- T53-25 · K4746, K5569 · three levels as rows of the bounds table
+- T53-26 · N824, K5527, N1259 · CAPABILITIES rows
+- T53-27 · K5565 · English in tests: its entry
+- rows: `build/plan/T53-R1/runtime-limits.md`

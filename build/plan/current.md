@@ -2,7 +2,7 @@
 # Plan T53 · the beta's build (K5417, K5418)
 **Status** · OPEN · BOB #326 · session_018BhcecwedTZuFi4aJevK1N · depth 1
 **Jobs** · none
-**Owed** · none
+**Owed** · start setup-words; start record-grammar; start jurisdictions; start civil-time; start calc-grammar; start connection-grammar; start test-support; start runtime-limits; start signatures; start bundler; start court-citations; start id-spaces; start subresources; start structured-text-reader; start mail-reader; start csv-reader; start office-readers; start odf-reader; start pdf-reader; start format-registry; start text-chain; start docprofile; start doctypes; start legistar-reader; start roster-reader; start court-doctypes; start register-readers; start budget-doctypes; start image-codecs; start pdf-pixels; start image-cover; start doc-clean; start pdf-worker; start ocr-worker; start sheet-worker; start file-scanner; start reader-container
 
 T53 is the beta's build. By Bob's direction (K5417) nothing is built until the beta is designed whole and integrated into one comprehensive build plan: the design lanes (`build/plan/beta/LANES.md`) design, the PLANNING lane turns their designs into drafted requirement lines and this plan, BOB reviews and writes them, and only then does round R1 open. The entries T52 left are in `build/plan/carried-T52-R1.md`; the test sweep (option A, K5258) is the TESTS-SWEEP lane's, merged before R1.
 
