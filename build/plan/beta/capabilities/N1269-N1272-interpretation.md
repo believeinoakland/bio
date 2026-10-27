@@ -22,6 +22,10 @@ Plain picture: a 400-page budget PDF or a 600,000-row register is held and searc
 
 ## Q2 (N1272). How is it shown, and how does a later investigation find what was not interpreted?
 
+**ANSWERED, K5495 (C2): option A**, "but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted." The document view marks interpreted parts visibly (requirement R147; UX-DESIGN draws it).
+
+**C21 (what "interpretation" means for non-sheet files): ANSWERED, K5496, option A.** Finding names, organisations and dates across a whole document to make it searchable is reading, not interpretation.
+
 - On the document page, one plain line: "Read in full and searchable. Interpreted for {investigation}: pages 3 to 9. Not interpreted: the rest." Never silent (K4571).
 - When another investigation opens a document already held, the page offers "Interpret parts of this for {this investigation}" and says what it was interpreted for before, by whom and when. Search still finds every line.
 - Options: **A (recommended)** the above, shown on the document page and in search results as a small "not interpreted for this investigation" mark; **B** the same, plus a standing list on the investigation of "held documents not yet interpreted for it that matched its search" (more helpful, more screen).
