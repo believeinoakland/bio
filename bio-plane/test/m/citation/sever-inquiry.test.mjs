@@ -48,7 +48,7 @@ test("R15: sever on a question moves the references entry of each selected leg's
   assert.equal(s.ok, true, JSON.stringify(s).slice(0, 300));
   assert.deepEqual(entry(w, Q, DOC), { rel: "cites", target: DOC, status: "severed",
                                        note: `why it holds | Severed ${STAMP}: the wrong edition` });
-  assert.equal(blockOf(w.md(Q), "basis"), basis, "the leg is not deleted or rewritten");
+  assert.equal(blockOf(w.md(Q), "basis"), basis.replace("    role: supports\n    note: \"why it holds\"\n    extent_capture: \"" + w.content.captureFor(DOC) + "\"", "    role: supports\n    status: \"severed\"\n    note: \"why it holds\"\n    extent_capture: \"" + w.content.captureFor(DOC) + "\""), "the leg is not deleted, and only its own severed status is added (K5407)");
   assert.deepEqual(rests(w, DOC), { confirmed: [], severed: [Q] });
   /* Only the selected leg moved. */
   assert.deepEqual([entry(w, Q, DOC2).status, entry(w, Q, Q2).status], ["confirmed", "confirmed"]);

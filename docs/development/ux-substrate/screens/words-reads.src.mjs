@@ -335,6 +335,9 @@ const DECISIONS = [
   ["plane", "plane/ask.mjs", "^the reply's text is not held", dev("assistantinput")],
   // DEC-431: capture R113's begin act, its default saying "group" (DEC-281: team): the design's word is the key's
   ["affordances", "affordances/act-help.mjs", "^Starts sending a large document to the group's store", "act.captureuploadbegin.does"],
+  /* DEC-444: T51's stand-ins for the two ops DEC-443 worded (K5303); the design's sentences are ACT_HELP's leggrade and signerknown */
+  ["affordances", "affordances/act-help.mjs", "^Records how well your team's copy of a cited document shows the passage", "act.leggrade.does"],
+  ["affordances", "affordances/act-help.mjs", "^An administrator says they know about a signing key a member registered", "act.signerknown.does"],
   ...[["The queue", "screen.queue.name"], ["Everything the record is asking of somebody", "screen.queue.purpose"],
       ["The evidence finder", "screen.finder.name"], ["One query surface over the record", "screen.finder.purpose"],
       ["What the record knows about a person, office or thing", "screen.people.purpose"],

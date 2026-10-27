@@ -1,0 +1,7 @@
+Round R1, layer 5, module entities, tranche T52. Your depth: 2. BOB: BOB #319 (session_018Bhced5gpDxaidQNabEbp6).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module entities`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-14 · W6 · C-K24 · MINOR (parked, K5303) · a free-prose memo naming followed entities yields names the resolver can match; `resolutions.unresolved` also lists the unmatched names; `resolvetestify` no longer requires `ref` for a document with no recognised reference (C-M7). Joins this round: entities R67 (K5387). PL1 W6.
+- T52-15 · `resolve` declared `weight: reasoned` but takes no `reason` field; the act works (K5314). First: settle which side is wrong, the op's fields or its grade, with op-grades' entry.

@@ -176,7 +176,7 @@ test("R14 the bundle-grain shapes: page, count, ids, snapshot, facets and facetS
   assert.deepEqual(Object.keys(page[0]), [...PROVENANCE_COLS, "snippet", "snippet_from", "snippet_unit"], "R33 adds snippet_from and R34 snippet_unit, always columns");
   assert.ok(page.every((r) => r.snippet === null && r.snippet_from === null), "null when there is no term");
   const hit = w.run({ q: "water", viewer: V }).rows;
-  assert.ok(hit.every((r) => /\[water\]/.test(r.snippet)));
+  assert.ok(hit.every((r) => /\u0001water\u0002/.test(r.snippet)));
   assert.deepEqual(w.run({ q: "water", viewer: V }, "count").rows, [{ n: 2 }]);
   assert.deepEqual(w.run({ q: "water", viewer: V }, "ids").rows.map((r) => r.bundle_id), hit.map((r) => r.bundle_id));
   assert.deepEqual(w.run({ q: "", viewer: V }, "snapshot").rows, [{ bundle_id: "C", bundle_sha: "s3" },
@@ -262,7 +262,7 @@ test("R15 rows=<arm>: the whole meaning set of each bundle in scope, the gate on
   p.insert("content", { content_id: "cur", capture_sha: "s", bundle_id: "D", extent_kind: "pdf-page", extent: '{"page":0}', stale: 0, at: "2" });
   const pr = p.run({ q: "passage:culvert passage:budget", viewer: V, rows: "passage" }, "meaning");
   assert.deepEqual(pr.rows.map((x) => [x.ref, x.content_id]), [["p0", "cur"], ["p1", null]]);
-  assert.ok(pr.rows.every((x) => /\[/.test(x.snippet)));
+  assert.ok(pr.rows.every((x) => /\u0001/.test(x.snippet)));
   assert.equal(pr.plan.meaning.matched, true);
   assert.deepEqual(p.run({ q: "passage:culvert passage:budget", viewer: V, rows: "passage" }, "meaning", { mode: "count" }).rows, [{ n: 2 }]);
   const none = p.run({ q: "", viewer: V, rows: "passage" }, "meaning");

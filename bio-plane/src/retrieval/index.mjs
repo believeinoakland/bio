@@ -22,7 +22,7 @@ import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_S
   from "../observation-log/index.mjs";
 import * as QL from "../query.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
-         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
+         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP, MARK_OPEN, MARK_CLOSE } from "../query.mjs";
 import { localFactsOf, TEAM_ZONE_PATH } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -838,7 +838,7 @@ export class Retrieval {
   }
 
   /* R92: a question's excerpt, cut from "title, conclusion" (never `bundle.md`, which holds its markdown, ids and
-     hashes) around the first of the query's terms it holds, `snip` words long, the matches in `[ ]` and the cuts in `…`
+     hashes) around the first of the query's terms it holds, `snip` words long, the matches in `MARK_OPEN`/`MARK_CLOSE` and the cuts in `…`
      as R6's snippet has them; with no term in those words, their start. */
   static #questionExcerpt(title, conclusion, terms, snip) {
     const words = [title, conclusion].filter((t) => typeof t === "string" && t.trim()).join(" ").split(/\s+/).filter(Boolean);
@@ -852,7 +852,7 @@ export class Retrieval {
       const low = w.toLowerCase(), hit = needles.find((x) => low.includes(x));
       if (!hit) return w;
       const i = low.indexOf(hit);
-      return w.slice(0, i) + "[" + w.slice(i, i + hit.length) + "]" + w.slice(i + hit.length);
+      return w.slice(0, i) + MARK_OPEN + w.slice(i, i + hit.length) + MARK_CLOSE + w.slice(i + hit.length);
     });
     return (from > 0 ? "\u2026 " : "") + part.join(" ") + (from + n < words.length ? " \u2026" : "");
   }

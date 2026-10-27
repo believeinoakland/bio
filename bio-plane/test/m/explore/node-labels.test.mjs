@@ -14,16 +14,16 @@ const docsOf = (table, calls = []) => ({ titlesOf: ({ ids, viewer }) => { calls.
 const rows = () => [conn("line:belongs_to", A, evt(7), { id: "a-e" }), conn("line:part_of", A, INFO, { id: "a-i" }), conn("line:part_of", A, B, { id: "a-b" })];
 const labels = (g) => Object.fromEntries(g.nodes.map((n) => [n.id, n.label]));
 
-test("R29 R25 an EVT- node is named by its kind and date, an undated one by its kind and undated, an INFO- node by its document's title, and an ENT- node as before", () => {
+test("R29 R25 an EVT- node is named by its kind and date, an undated one by its kind alone (T52-18), an INFO- node by its document's title, and an ENT- node as before", () => {
   const events = eventsOf({ [evt(7)]: { kind: "meeting", when: { value: "2026-02-10", precision: "day", zone: "America/Los_Angeles" } } });
   const documents = docsOf({ [INFO]: "Council minutes, 10 February" });
   const entities = { labelsOf: ({ ids }) => ({ ok: true, labels: Object.fromEntries(ids.map((id) => [id, id === A ? { label: "Alice Alder", kind: "person" } : null])) }) };
   const g = make(rows(), { events, documents, entities }).neighbourhood({ centre: A, at: AT, viewer: V, kinds: ["line:belongs_to", "line:part_of"] });
   assert.deepEqual(labels(g), { [A]: "Alice Alder", [evt(7)]: "meeting · 2026-02-10", [INFO]: "Council minutes, 10 February", [B]: null });
   const undated = make(rows(), { events: eventsOf({ [evt(7)]: { kind: "award", when: null } }), documents }).neighbourhood({ centre: A, at: AT, viewer: V, kinds: ["line:belongs_to"] });
-  assert.equal(labels(undated)[evt(7)], "award · undated");
+  assert.equal(labels(undated)[evt(7)], "award");
   const undetermined = make(rows(), { events: eventsOf({ [evt(7)]: { kind: "award", when: "undetermined" } }) }).neighbourhood({ centre: A, at: AT, viewer: V, kinds: ["line:belongs_to"] });
-  assert.equal(labels(undetermined)[evt(7)], "award · undated");
+  assert.equal(labels(undetermined)[evt(7)], "award");
 });
 
 test("R29 control: an event or document the record holds nothing for, or the viewer may not see, stays null; no reader leaves every such node null; a label is never the id", () => {

@@ -101,6 +101,13 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
     where: 'src/inquiry-grammar/grammar.mjs derivedLegRefusal > is-derived-leg-form',
     translation: word('refusal.DERIVED_LEG_MALFORMED'),
   },
+  /* R16, R70 (T52-20; K5332): a leg that cuts against and names a ground, refused by `checkGrounds` in `./grammar.mjs`
+     (carried inside `BASIS_REFUSED` by `inquiry`'s write and `citation`'s relay). Stamped by promotion's next stamping. */
+  CUTTING_LEG_IN_GROUND: {
+    check: 'C-2.8',
+    where: 'src/inquiry-grammar/grammar.mjs checkGrounds > is-cutting-leg-in-ground',
+    translation: localize('inquiry-grammar.checks.a_passage_that_cuts_against_the_conclusion', 'A passage that cuts against the conclusion is not a reason for it, so it cannot sit in a ground, which groups the passages that support it. Take the passage out of its ground first, then put it on the other side. Nothing was written.'),
+  },
   /* R18 (T41-13; D59): a bias application at a leg whose form departs from R18's shape, C-2.8, refused by
      `biasApplicationRefusal` in `./grammar.mjs` (carried inside `BASIS_REFUSED` by `inquiry`'s write, its R11).
      Stamped by promotion's next stamping. */

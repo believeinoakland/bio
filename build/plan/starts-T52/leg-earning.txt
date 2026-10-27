@@ -1,0 +1,6 @@
+Round R1, layer 6, module leg-earning, tranche T52. Your depth: 2. BOB: BOB #320 (session_018BhcecJrZBGdFHx6zQiGAc).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module leg-earning`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-105 · W11 (with T52-21) · `restingOn` and `restsOnLive` read each leg's own severed status, so a passage severed while another of the same document rests is not counted live: leg-earning R17 (K5405). Carried to citation by BOB (P10).

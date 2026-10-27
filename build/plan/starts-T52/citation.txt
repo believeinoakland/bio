@@ -1,0 +1,6 @@
+Round R1, layer 6, module citation, tranche T52. Your depth: 2. BOB: BOB #320 (session_018BhcecJrZBGdFHx6zQiGAc).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module citation`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-21 · W11 · C-K5 · MAJOR · "Remove a citation" removes the one passage cited and "Put it on the other side" moves that passage's leg only, so the record's per-document edge no longer drags every passage (BOB's ruling of the placement, PLB BQ15). W29 maps the refusal's own sentence. citation R25 (K5405). PL1 W11.

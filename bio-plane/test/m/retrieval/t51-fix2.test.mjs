@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { MARK_OPEN, MARK_CLOSE } from "../../../src/query.mjs";
 
 const LOG = "\n## Session log\n\nINQ-SEWER opened by member:ann; bundle sha256:" + "ab12cd34".repeat(8)
   + " read the sewer ledger twice; the sewer fund was never opened.\n";
@@ -18,10 +19,10 @@ test("R92: a question hit's excerpt is drawn from its title and conclusion: no m
   const hit = w.retrieval.search({ q: "sewer", viewer: V("vera") }).hits[0];
   assert.equal(hit.bundle_id, "INQ-SEWER");
   assert.equal(hit.snippet_from, "text");
-  assert.match(hit.snippet, /\[sewer\]/i);
+  assert.match(hit.snippet, new RegExp(`${MARK_OPEN}sewer${MARK_CLOSE}`, "i"));
   assert.doesNotMatch(hit.snippet, /##|INQ-|sha256|[0-9a-f]{16}|session log|opened by/i);
   const source = "Who pays for the sewer repair? The city pays for the sewer repair from the general fund.";
-  for (const word of hit.snippet.replace(/[\[\]…]/g, "").split(/\s+/).filter(Boolean))
+  for (const word of hit.snippet.replace(new RegExp(`[${MARK_OPEN}${MARK_CLOSE}…]`, "g"), "").split(/\s+/).filter(Boolean))
     assert.ok(source.includes(word), `${word} is in the title or the conclusion`);
 });
 
@@ -30,7 +31,7 @@ test("R92: a question without a conclusion has its title as the excerpt; a concl
   question(w, "INQ-OPEN");
   const hit = w.retrieval.search({ q: "repair", viewer: V("vera") }).hits[0];
   assert.equal(hit.bundle_id, "INQ-OPEN");
-  assert.match(hit.snippet, /\[repair\]/);
+  assert.match(hit.snippet, new RegExp(`${MARK_OPEN}repair${MARK_CLOSE}`));
   assert.doesNotMatch(hit.snippet, /##|INQ-|sha256|session log/i);
 });
 
@@ -39,7 +40,7 @@ test("R92 control: a document hit's excerpt is unchanged, cut from its own text"
   w.doc("INFO-NOTE", {}, { body: "\n## Summary\n\nthe sewer fund holds nothing\n" });
   const hit = w.retrieval.search({ q: "sewer", viewer: V("vera") }).hits[0];
   assert.equal(hit.snippet_from, "text");
-  assert.match(hit.snippet, /\[sewer\] fund holds nothing/);
+  assert.match(hit.snippet, new RegExp(`${MARK_OPEN}sewer${MARK_CLOSE} fund holds nothing`));
 });
 
 test("R92: every search hit names its document, a passage hit included, and a decoration cannot replace it", () => {

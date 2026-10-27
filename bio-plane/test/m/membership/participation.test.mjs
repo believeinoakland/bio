@@ -37,7 +37,8 @@ test("R32 projectInvite: NOT_THE_OWNER, NO_SUCH_HANDLE, NOT_ACTIVE, ALREADY_A_PA
   assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "second", viewer: V("second") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "zed", by: "ann", viewer: V("ann") }).reason, "NO_SUCH_HANDLE");
   assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "eve", by: "ann", viewer: V("ann") }).reason, "NOT_ACTIVE");
-  assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "cal", by: "ann", viewer: V("ann") }).reason, "ALREADY_A_PARTICIPANT");
+  assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "cal", by: "ann", viewer: V("ann") }).reason, "ALREADY_INVITED");   /* R157 */
+  assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") }).reason, "ALREADY_A_PARTICIPANT");
   const ok = w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") });
   assert.deepEqual([ok.ok, ok.state], [true, "invited"]);
   assert.deepEqual(w.row(`SELECT state, owner, invited_by FROM project_participants WHERE member_id='dee'`),

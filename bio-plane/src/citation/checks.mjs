@@ -57,6 +57,13 @@ export const CITE_CHECKS = {
     where: 'src/citation/index.mjs cite > is-cite-ground',
     translation: localize('citation.checks.bad_ground', 'A new citation can join only a group its question already declares, and a case has no groups. Name one of the question\'s groups, or cite without one. Nothing was written.'),
   },
+  /* T52 (R25; T52-21; W11, C-K5): a question resting on a document in several passages, severed or reinstated with no
+     passage named; the next free C-33 row, awaiting the stamp. Minted in `#edgeTransition`'s region is-which-passage. */
+  WHICH_PASSAGE: {
+    check: 'C-33.65',
+    where: 'src/citation/index.mjs #edgeTransition > is-which-passage',
+    translation: localize('citation.checks.which_passage', 'This question rests on this document in more than one passage, and the call did not say which one to take out or put back. Name the passage by its part. Nothing was written.'),
+  },
   NOT_AN_INQUIRY: {
     check: 'C-33.53',
     where: 'src/citation/index.mjs cite > is-cite-question',

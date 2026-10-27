@@ -343,7 +343,7 @@ test("R15 (passage-arm) rows=passage: only the units that matched, each an addre
   assert.deepEqual(hit.rows.map((r) => [r.bundle_id, JSON.parse(r.extent).page, r.ref, r.seq, r.chain_kind, r.truncated, r.content_id]),
     [["BIG", 0, "page 1", 0, "layer", 1, null], ["BIG", 1, "page 2", 1, "layer", 0, "cur"], ["PACKET", 0, "page 1", 0, "layer", 0, null]],
     "one of the packet's three pages; both truncation values carried; a content id only where a current row exists");
-  assert.ok(hit.rows.every((r) => r.snippet.includes("[hydrostatic]")), "the snippet centres on the term");
+  assert.ok(hit.rows.every((r) => r.snippet.includes("\u0001hydrostatic\u0002")), "the snippet centres on the term");
   assert.deepEqual(w.run({ q: "passage:hydrostatic", viewer: V, rows: "passage" }, "meaning", { mode: "count" }).rows, [{ n: 3 }]);
   const bare = w.run({ q: "id:PACKET", viewer: V, rows: "passage" }, "meaning");
   assert.equal(bare.plan.meaning.matched, false);

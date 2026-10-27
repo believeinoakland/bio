@@ -302,11 +302,15 @@ function smooth(g, w, h) {
   return out;
 }
 
-/** A pixel under this share (of 255) of the paper beneath it is ink; fewer than INK_MIN of them is no ink. */
-const INK_RATIO = 200, INK_MIN = 32;
+/** A pixel under this share (of 255) of the paper beneath it is ink; fewer than INK_MIN of them is no ink. A faint print
+ *  (a thermal receipt, ink at 80 to 90 percent of the paper) has none under INK_RATIO: `preparePicture` levels it again
+ *  with the share INK_RATIO_FAINT when the first pass found no text lines, and keeps that only if it finds them
+ *  (T52-4, C-K13). The faint share alone would take a blank photograph's grain for ink (R44 (d)): the faint ink must be at
+ *  least INK_FAINT_SHARE of the pixels (a blank photograph holds a hundredth of that, a three-line receipt several times it). */
+const INK_RATIO = 200, INK_RATIO_FAINT = 228, INK_MIN = 32, INK_FAINT_SHARE = 0.001;
 
 /** Levels the light and stretches the contrast in place; returns the grey. */
-function levelLight(g, w, h) {
+function levelLight(g, w, h, faint = false) {
   const cell = Math.max(12, Math.min(64, Math.round(Math.max(w, h) / 60)));
   const cw = Math.ceil(w / cell), ch = Math.ceil(h / cell);
   let bg = new Float32Array(cw * ch);
@@ -354,13 +358,14 @@ function levelLight(g, w, h) {
    * under half a percent ink, and a level taken there falls among the paper's own greys and turns the page dark. The
    * ink is the pixels well under the paper (ratio under INK_RATIO); its level is the darkest twentieth of them. A
    * picture with next to no such pixels has no ink to level by: its paper is stretched to 255 and nothing more. */
+  const inkRatio = faint ? INK_RATIO_FAINT : INK_RATIO;
   let inkN = 0;
-  for (let v = 0; v < INK_RATIO; v++) inkN += rh[v];
+  for (let v = 0; v < inkRatio; v++) inkN += rh[v];
   let lo = 0;
-  if (inkN >= INK_MIN) {
+  if (inkN >= (faint ? Math.max(INK_MIN, w * h * INK_FAINT_SHARE) : INK_MIN)) {
     const target = Math.max(1, Math.round(inkN * 0.05));
     let acc = 0;
-    while (lo < INK_RATIO - 1 && (acc += rh[lo]) < target) lo++;
+    while (lo < inkRatio - 1 && (acc += rh[lo]) < target) lo++;
   }
   const hi = 235;
   const span = Math.max(32, hi - lo);
@@ -442,14 +447,22 @@ function resample(g, w, h, deg, s) {
  *  in it (no ink, or ink everywhere: noise, a blank wall) is handed on as it is,
  *  `text_found:false`: stretching its noise would make marks for the engine to read. */
 export function preparePicture({ samples, width: w, height: h }, maxEdge) {
-  const g = levelLight(smooth(samples, w, h), w, h);
-  const deskew = skewOf(g, w, h);
-  const turn = Math.abs(deskew) < PREPARE_TILT_FLOOR ? 0 : deskew;
-  /* the line height is measured on the picture as it will lie: turn, then measure */
-  let cur = turn ? resample(g, w, h, turn, 1) : { samples: g, width: w, height: h };
-  const { lines, median } = textLines(cur.samples, cur.width, cur.height);
-  if (lines < 2 || median > cur.height / 4)
+  const smoothed = smooth(samples, w, h);
+  const level = (faint) => {
+    const g = levelLight(smoothed.slice(), w, h, faint);
+    const deskew = skewOf(g, w, h);
+    const turn = Math.abs(deskew) < PREPARE_TILT_FLOOR ? 0 : deskew;
+    /* the line height is measured on the picture as it will lie: turn, then measure */
+    const cur = turn ? resample(g, w, h, turn, 1) : { samples: g, width: w, height: h };
+    return { g, turn, cur, ...textLines(cur.samples, cur.width, cur.height) };
+  };
+  const noText = (m) => m.lines < 2 || m.median > m.cur.height / 4;
+  let m = level(false);
+  if (noText(m)) { const f = level(true); if (!noText(f)) m = f; }
+  if (noText(m))
     return { samples, width: w, height: h, comps: 1, prepared: { text_found: false, tilt_deg: 0, scale: 1, line_px: 0 } };
+  const { g, turn, median } = m;
+  let cur = m.cur;
   let scale = median < PREPARE_LINE_PX ? Math.min(PREPARE_SCALE_MAX, PREPARE_LINE_PX / median) : 1;
   scale = Math.min(scale, maxEdge / Math.max(cur.width, cur.height));
   scale = scale < 1.05 ? 1 : Math.round(scale * 100) / 100;

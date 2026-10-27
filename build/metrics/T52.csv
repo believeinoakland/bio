@@ -1,0 +1,27 @@
+session,role,module,cache-read,cache-write,input,output,turns,test runs,module lines
+session_018BhceeGH5hZkAW1ppWNrbh,job,setup-words,1980011,39731,42,6001,,1,86145
+session_018BhcegUYKt4HvsMstng9cS,job,record-grammar,2042759,47910,42,7043,,1,2665
+session_018BhcecAZj5QC9cHVQCT81f,job,format-registry,2401825,64909,48,7447,,1,506
+session_018Bhcee86hcxpTAeDLQWjph,job,pdf-pixels,5794007,91659,598,21203,,2,1761
+session_018BhcednmrjuEzLGiVejiWF,job,pdf-worker,2220726,44690,46,6966,,1,28917
+session_018BhcecvoXTMTpRGK9c3KwB,BOB-final,,350212367,3845143,13049,1144175,,,
+session_018BhcefqKiHdmRnqkPsWrrx,job,member-roster,1471936,44067,32,4344,,1,2965
+session_018BhcefkQnJJfBgtYuqcBsn,job,membership,2637197,59529,556,9429,,2,1685
+session_018BhcegixzKL2KvktYcXKVM,job,promotion,4569406,79996,582,14867,,1,4009
+session_018BhcegMxh4iiztuNYqgHTJ,job,project-roster,1973676,54333,40,7399,,1,1729
+session_018BhcegeZLSnAJh5Ey7J1cm,job,provenance,4403093,89689,72,19231,,1,3391
+session_018BhcecZdYrp1PSPuA5cddp,job,acquisition,1865135,106687,42,8717,,1,4491
+session_018Bhceg3SiVazrFQtyH9cRX,job,capture,1721043,49923,36,3855,,1,5033
+session_018BhcedELyQVJKrBr63sLkm,job,file-safety,7402161,117874,608,18980,,1,3419
+session_018BhcecQhnVK36CsiRUDvsz,job,entities,9583977,277989,118,22703,,2,2646
+session_018BhcefVAkEW3F8ikST3nS6,job,events,3302785,67660,60,9565,,1,2837
+session_018Bhcef9ixS7sA7mnPM5bZx,job,money,6801164,90422,1624,19725,,2,1646
+session_018BhcefeUbMPbsVYnH7PqGj,job,explore,1847259,46958,38,6552,,1,1167
+session_018Bhced7XwxHM61Lrxj2vxC,job,query-language,4646616,74959,629,18220,,2,3029
+session_018BhcedyRp1uFhsb5WwxYio,job,retrieval,7858513,161818,125,32642,,3,3187
+session_018Bhced5gpDxaidQNabEbp6,BOB-final,,95075171,801787,6784,224292,,,
+session_018BhcefZe8MJ26gSBpswxfA,job,inquiry-grammar,2840975,64916,54,8719,,1,2059
+session_018BhceeCT96yvS78CHqWUdd,job,leg-earning,3574812,78773,64,9863,,1,1409
+session_018BhcedirTswJ5Q8CK6bwqc,job,citation,6680199,132099,92,27323,,2,2152
+session_018BhceevdQgJU32nQYsevt6,job,contradiction,3512783,60780,66,12042,,1,3840
+session_018Bhcedo9RydAw6BpX6Z7Jy,job,agent-worker,3974760,62492,579,11428,,1,17477

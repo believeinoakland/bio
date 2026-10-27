@@ -45,7 +45,7 @@ const SCREEN_REFS = {
     ["public cases","published","<b>Public cases</b> · a team's signed, published findings · permanent, corrected only by a new edition","A handle on your work there is public too; that is the choice the guidance weighs."]
   ],
   "home": [
-    ["3 photos you captured on Seminary Avenue","held","<b>Photos · Seminary Avenue</b> · captured by you for Pothole repairs · capture B · held, not yet vouched for","Until you vouch for them they cannot support the pothole question."],
+    ["3 copies you captured at Seminary Avenue","held","<b>Photos · Seminary Avenue</b> · captured by you for Pothole repairs · capture B · held, not yet vouched for","Until you vouch for them they cannot support the pothole question."],
     ["records request","action","<b>Records request: inspection logs</b> · to the Office of the City Clerk · sent October 2 by Mai · acknowledged October 3, ref. R26-0412","The reply decides the next step of the pothole plan."],
     ["due October 14","due-date","<b>Due October 14</b> · the 10-day public records window from October 2 · rolled past a Sunday and a city holiday","If no reply is recorded by then, your queue says so once and the plan can move on."],
     ["Rents and leases on city land, and the streets we live on.","group-identity","<b>Your team's focus</b> · written by Rosa in Who your team is · seen by members only","It shapes which starting points Home offers you first."]
@@ -431,7 +431,7 @@ const SCREEN_HELP = {
   forgot: 'How to get back in without email: use one of your recovery codes, or ask an administrator for a one-time reset link.',
   group: 'Administrators only: your team\'s name, website, languages, what a court can reach, who holds the hosting account, and its bar.',
   settings: 'Every setting in one list: yours first, then the team\'s.',
-  more: 'The places the tabs below do not hold: projects, people and settings.',
+  more: 'The places the tabs do not hold: projects, people and settings.',
   theme: 'The team\'s themes: lenses that gather documents and passages, never evidence.',
   projects: 'Every project you can see: its stage, who works on it, how busy it is, and when it last changed.',
   'dash-action': 'The Action area as a dashboard: clocks and whose move it is first, then what needs you, then every action.',

@@ -59,10 +59,12 @@ function validOf(w, zone) {
 }
 const marks = (xs) => xs.map(() => "?").join(",");
 const isEvt = (n) => /^EVT-/.test(n);
-/* `q(part)` over `ids` in slices of 400 bound values, the rows joined. */
+/* `q(part)` over `ids` in slices of SLICE bound values (R56), the rows joined. */
+/* R56: a statement binds at most 99 values (a Durable Object's SQLite allows 100); the slice leaves room for the fixed roles and links bound beside it. */
+export const SLICE = 50;
 function inSlices(ids, q) {
   const out = [];
-  for (let i = 0; i < ids.length; i += 400) out.push(...q(ids.slice(i, i + 400)));
+  for (let i = 0; i < ids.length; i += SLICE) out.push(...q(ids.slice(i, i + SLICE)));
   return out;
 }
 

@@ -1,7 +1,7 @@
 /* contradiction's published fixtures (fixtures.mjs): each is called here and its real answer checked. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { candidateReads, readRefusals } from "./fixtures.mjs";
+import { candidateReads, flaggedRead, readRefusals } from "./fixtures.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 test("R25: candidateReads answers the real candidate read in each shape: a clean one, a truncated page, an undetermined read and no subject", () => {
@@ -38,4 +38,15 @@ test("R50, R19: readRefusals answers the real refusals and undetermined answers 
   /* control: the same project read before the index went answers a joined participant cleanly */
   assert.equal(r.noticesClean.ok, true);
   assert.equal(r.noticesClean.undetermined, undefined);
+});
+
+test("R25, R61: flaggedRead answers the real read of a member's flag: the candidate carries flagged_by and no machine judgement", () => {
+  const r = flaggedRead();
+  assert.equal(r.flagged.ok, true);
+  assert.equal(r.read.ok, true);
+  assert.ok(r.candidate, "the flagged candidate is listed to its flagger");
+  assert.equal(r.candidate.candidate, r.flagged.candidate);
+  assert.deepEqual(r.candidate.flagged_by, { member: "member:m1", at: r.candidate.flagged_by.at, reason: r.candidate.flagged_by.reason });
+  assert.equal(typeof r.candidate.flagged_by.at, "string");
+  assert.equal(r.candidate.machine, null, "a member's flag is never labelled machine work");
 });
