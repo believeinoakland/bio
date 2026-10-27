@@ -303,6 +303,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 
 **screens-settings**
 - T53 · DEC-470 · the file-import key `registerfileimport` read by `keys.mjs`; the old key held until then · DEC-470
+- T53 · P9 (BOB #324, found on plat-s1) · with two or more administrators, `memberadd` and `adminendorse` answering `CONSENSUS_REQUIRED` (member-roster 4.7) leave an earlier `ui.invite` drawn (`members.mjs:317, 336` set it only when the answer carries `invite`, never clear it), so a dead `#invite=` link stays on screen: on `CONSENSUS_REQUIRED` clear any shown link and say in its place that no link exists until every named administrator endorses; a link only when the answer carries `invite` · Test: a shown link, then `memberadd` answering `CONSENSUS_REQUIRED`, leaves no link and draws the awaiting sentence; Control: an ordinary invitation draws its link `[owed: the sentence's words, UX-DESIGN]`
 - T53 · N1220 (K5457) · `connect`, `teamai`, `projectai` and their acts retired, in the same change as screens-ai's first screens · `lane-ai-design/draft-assistant-screens.md` §2
 
 **screens-ai** (new, Before R1 (9); the AI screens)
