@@ -60,3 +60,4 @@
 - K5537 · 2026-10-27 · on QUESTIONS.html C33: "A" (Bob prepares the M-N1272 gold set himself, marking blind) · `build/rulings.md`
 - K5538 · 2026-10-27 · on QUESTIONS.html C34: "as recommended" (researched facts offered marked "researched, not reviewed") · `build/rulings.md`
 - K5539 · 2026-10-27 · on QUESTIONS.html L14: "B" (only a question's owner or an administrator may change its subject) · `build/rulings.md`
+- K5540 · 2026-10-27 · on QUESTIONS.html L15: "B" (a published question, or one divided into parts, may have its subject changed, with the change shown) · `build/rulings.md`

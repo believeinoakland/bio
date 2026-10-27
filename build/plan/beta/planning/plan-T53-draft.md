@@ -151,7 +151,7 @@
 - T53 · N1257 · procedure guides side by side, one per layer, unranked (R17) · `capabilities/N1257-requirements-modules.md`
 
 **inquiry**
-- T53 · A1 (DEC-457) · `setSubject` with a reason, `subjectHistory`, the private-person warning on a subject · `planning/lines-A1-A7-subject-pickers.md` (inquiry R87-R90) (L1 decided, K5515: offices too; L13, K5536: a change refused until the named connections are re-graded; L14, K5539: only its owner or an administrator, else `NOT_THE_QUESTION_OWNER`)
+- T53 · A1 (DEC-457) · `setSubject` with a reason, `subjectHistory`, the private-person warning on a subject · `planning/lines-A1-A7-subject-pickers.md` (inquiry R87-R90) (L1 decided, K5515: offices too; L13, K5536: a change refused until the named connections are re-graded; L14, K5539: only its owner or an administrator, else `NOT_THE_QUESTION_OWNER`; L15, K5540: a published or divided question too, the change shown; public-read A1-R7 the dated line on the published case `[UX need to UX-DESIGN]`)
 
 **leg-earning**
 - T53 · A8 · a typed passage's ceiling at its own grain; a leg on it graded by the record · `planning/lines-A8-typed-page.md` §4
