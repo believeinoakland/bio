@@ -63,6 +63,13 @@ export const LAYER_ORIGINS = Object.freeze(["civicsmith", "team"]);
 /* R106: the levels of office a records law may govern (an office's level, R88). */
 export const GOVERNS_LEVELS = COUNTERPARTY_LEVELS;
 const LAYER_RANK = Object.freeze({ federal: 0, state: 1, county: 2, city: 3 });
+/* R116: what a team may write in its one layer (DEC-151 (2); DEC-458 A2); any other section there is TEAM_SECTION_REFUSED. */
+export const TEAM_LAYER_SECTIONS = Object.freeze(["records_laws", "deadlines", "holidays", "counterparties", "action_kinds", "systems",
+  "time_zone", "fiscal_year", "weekend"]);
+/* The sections of a team layer whose entries are each about one government (R115); the others are the team's own. */
+const TEAM_ENTRY_SECTIONS = ["records_laws", "deadlines", "holidays", "counterparties", "action_kinds", "systems", "fiscal_year"];
+/* R115: a team's entry rests on the capture it was read from. */
+const TEAM_BASIS = /^team:[0-9a-f]{64}$/;
 /* R23: `SOURCE_KINDS` stays the six `standards` reads (its R1, R12); the seven, with T35's `standard`, are
    `STANDARD_SOURCE_KINDS`, which validate accepts and `standards` adopts in its own job (K1902 (1)). */
 export const SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
@@ -305,6 +312,11 @@ function validateInto(p, errors) {
     if (!own(o, "basis") || o.basis === undefined || o.basis === null || o.basis === "") {
       err(`${path}.basis`, "BASIS_MISSING", "every fact names its basis"); return false;
     }
+    /* R115: a team's entry rests on the capture it was read from, team:<capture sha> (TEST in a test profile) */
+    if (teamLayer) {
+      if (typeof o.basis === "string" && TEAM_BASIS.test(o.basis)) return true;
+      if (!(test && o.basis === "TEST")) { err(`${path}.basis`, "BASIS_INVALID", "a team entry rests on the capture it was read from (team:<capture sha>)"); return false; }
+    }
     if (!basisValid(o.basis, test)) {
       err(`${path}.basis`, "BASIS_INVALID", o.basis === "TEST"
         ? "TEST is a basis only in a test profile" : localize("jurisdictions.index.string_names_no_measurement_or", "'{String}' names no measurement or ruling", { String: String(String(o.basis)) }));
@@ -324,7 +336,7 @@ function validateInto(p, errors) {
     if (!ok || (test && o.basis === "TEST")) return;
     if (o.basis === "UNMEASURED")
       err(`${path}.basis`, "BASIS_INVALID", "a calendar fact without a source is not written: UNMEASURED is no basis for it");
-    else if (!basisParts(o.basis).every((x) => (o.status === "researched" ? MEASUREMENT_REF : RULING_REF).test(x)))
+    else if (!basisParts(o.basis).every((x) => (o.status === "researched" ? MEASUREMENT_REF : RULING_REF).test(x) || (teamLayer && o.status === "researched" && TEAM_BASIS.test(x))))
       err(`${path}.basis`, "BASIS_INVALID", o.status === "researched"
         ? "a researched fact rests on a measurement (M-<n> or a dated entry)" : "a ruled fact rests on a ruling (D-<n>, DEC-<n> or K<n>)");
   };
@@ -464,10 +476,53 @@ function validateInto(p, errors) {
   /* R100: a layer holds only its own level (a district office sits in a county or a city). A team entry's level is its
      `government.level` (R115). */
   const ownLevel = layer && !teamLayer && LAW_LEVELS.includes(layer.level) ? layer.level : null;
-  const levelFits = (level) => ownLevel === null || level === ownLevel;
-  const officeLevelFits = (level) => ownLevel === null || level === ownLevel || (level === "district" && (ownLevel === "city" || ownLevel === "county"));
+  /* R100, R115: the level an entry is judged against: its layer's, or for the team layer its `government.level` */
+  const levelOf = (e) => (teamLayer ? (isObj(e) && isObj(e.government) && LAW_LEVELS.includes(e.government.level) ? e.government.level : null) : ownLevel);
+  const levelFits = (level, e) => { const l = levelOf(e); return l === null || level === l; };
+  const officeLevelFits = (level, e) => { const l = levelOf(e); return l === null || level === l || (level === "district" && (l === "city" || l === "county")); };
   /* R104: a layer within another may name a closure list that layer (or one above it) holds; `combine` judges it. */
   const inheritsLists = layer !== null && (teamLayer || (typeof layer.within === "string" && ID_RE.test(layer.within)));
+
+  /* R115, R116, R134 (T53): the team's one layer holds only the sections a team may write, each entry about one government, and
+     a stated fiscal year needs neither a source nor a second member. */
+  const government = (path, g, wide) => {
+    if (!isObj(g)) { err(path, "LAYER_INVALID", "government is {level, place}: the government an entry is about"); return; }
+    fields(path, g, ["level", "place"]);
+    const levels = wide ? LAW_LEVELS : ["county", "city"];
+    if (!levels.includes(g.level)) err(`${path}.level`, "LAYER_INVALID", localize("jurisdictions.index.a_governments_level_is_one", "a government's level is one of {levels}", { levels: String(levels.join(", ")) }));
+    else if (g.level === "federal") { if (own(g, "place")) err(`${path}.place`, "LAYER_INVALID", "the federal government has no place"); }
+    else if (typeof g.place !== "string" || !g.place.trim() || g.place.length > 200 || /[\r\n]/.test(g.place)) err(`${path}.place`, "LAYER_INVALID", "place is the government's name, 1 to 200 characters on one line");
+  };
+  if (teamLayer) {
+    for (const k of Object.keys(p)) if (!["id", "name", "covers", "test", "layer", "coverage", ...TEAM_LAYER_SECTIONS].includes(k))
+      err(k, "TEAM_SECTION_REFUSED", localize("jurisdictions.index.a_team_layer_holds_only_the", "a team layer holds only {TEAM_LAYER_SECTIONS}", { TEAM_LAYER_SECTIONS: String(TEAM_LAYER_SECTIONS.join(", ")) }));
+    for (const sec of TEAM_ENTRY_SECTIONS) if (Array.isArray(p[sec])) p[sec].forEach((e, i) => {
+      if (!isObj(e)) return;
+      if (!own(e, "government")) err(`${sec}[${i}].government`, "LAYER_INVALID", "a team entry names the government it is about");
+      else government(`${sec}[${i}].government`, e.government, sec === "fiscal_year");
+      if (sec !== "fiscal_year" && e.status !== "researched") err(`${sec}[${i}].status`, "BASIS_INVALID", "a team entry is researched: it is read from a capture");
+    });
+    if (own(p, "fiscal_year")) {
+      const seen = new Set();
+      list("fiscal_year", p.fiscal_year).forEach((f, i) => {
+        const at = `fiscal_year[${i}]`;
+        if (!entry(at, f)) return;
+        fields(at, f, ["government", "body", "start", "named_by", "label", "how", "stated_by", "stated_on"]);
+        if (!isStr(f.body) || f.body === "*" || f.body.length > 200 || /[\r\n]/.test(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", "body is the government's name, 1 to 200 characters on one line, never *");
+        else if (isObj(f.government)) {
+          const k = `${f.government.level}\u0000${f.government.place || ""}`;
+          if (seen.has(k)) err(`${at}.government`, "FISCAL_YEAR_INVALID", "the team layer holds one fiscal year for each government");
+          seen.add(k);
+        }
+        if (!isMonthDay(f.start)) err(`${at}.start`, "FISCAL_YEAR_INVALID", "start is the first day, MM-DD");
+        if (!FISCAL_NAMED_BY.includes(f.named_by)) err(`${at}.named_by`, "FISCAL_YEAR_INVALID", `named_by is ${FISCAL_NAMED_BY.join(" or ")}`);
+        if (!isStr(f.label) || !FISCAL_PLACEHOLDERS.some((x) => f.label.includes(x)) || (f.label.match(/\{[^}]*\}/g) || []).some((x) => !FISCAL_PLACEHOLDERS.includes(x)))
+          err(`${at}.label`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.label_is_a_template_using", "label is a template using {FISCAL_PLACEHOLDERS}", { FISCAL_PLACEHOLDERS: String(FISCAL_PLACEHOLDERS.join(", ")) }));
+        /* R124: how the member checked it; who and when are `local-facts`' record, kept beside it */
+        if (own(f, "how") && (!isStr(f.how) || f.how.length > 500)) err(`${at}.how`, "VALUE_INVALID", "how is 1 to 500 characters saying how the member checked it");
+      });
+    }
+  }
 
   /* systems first: floors and file numbers name their origins. */
   const origins = new Set();
@@ -475,7 +530,7 @@ function validateInto(p, errors) {
   if (own(p, "systems")) list("systems", p.systems).forEach((s, i) => {
     const at = `systems[${i}]`;
     if (!entry(at, s)) return;
-    fields(at, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
+    fields(at, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "government", ...(teamLayer ? ["status"] : []), "basis"]);
     str(`${at}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
     str(`${at}.name`, s.name, "name");
@@ -711,9 +766,9 @@ function validateInto(p, errors) {
   if (own(p, "records_laws")) list("records_laws", p.records_laws).forEach((l, i) => {
     const at = `records_laws[${i}]`;
     if (!entry(at, l)) return;
-    fields(at, l, ["level", "name", "citation", "stages", "requesters", "response", "governs", "basis"]);
+    fields(at, l, ["level", "name", "citation", "stages", "requesters", "response", "governs", "government", ...(teamLayer ? ["status"] : []), "basis"]);
     if (!LAW_LEVELS.includes(l.level)) err(`${at}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
-    else if (!levelFits(l.level)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only", "a {ownLevel} layer holds only {ownLevel_2} laws, not {level}", { ownLevel: String(ownLevel), ownLevel_2: String(ownLevel), level: String(l.level) }));
+    else if (!levelFits(l.level, l)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only", "a {ownLevel} layer holds only {ownLevel_2} laws, not {level}", { ownLevel: String(levelOf(l)), ownLevel_2: String(levelOf(l)), level: String(l.level) }));
     /* R106 (T53): whose records the law governs, by level of office, from the statute's own definition */
     if (own(l, "governs")) {
       if (!Array.isArray(l.governs) || !l.governs.length || new Set(l.governs).size !== l.governs.length)
@@ -820,7 +875,7 @@ function validateInto(p, errors) {
     /* R31, R64 (T35-1): a statute, regulation, ordinance or court entry carries a law level; a policy, commitment or
        standard carries one only when its issuer is a government at one of the four, and otherwise its sector. An entry
        with a level reads sector government; a level beside another sector is refused. */
-    if (LAW_LEVELS.includes(s.level) && !levelFits(s.level)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only_2", "a {ownLevel} layer holds only {ownLevel_2} sources, not {level}", { ownLevel: String(ownLevel), ownLevel_2: String(ownLevel), level: String(s.level) }));
+    if (LAW_LEVELS.includes(s.level) && !levelFits(s.level, s)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only_2", "a {ownLevel} layer holds only {ownLevel_2} sources, not {level}", { ownLevel: String(levelOf(s)), ownLevel_2: String(levelOf(s)), level: String(s.level) }));
     const levelled = !["policy", "commitment", "standard"].includes(s.kind);
     if (own(s, "level") || levelled) {
       if (!LAW_LEVELS.includes(s.level)) err(`${at}.level`, "LEVEL_UNKNOWN", levelled && !own(s, "level")
@@ -879,7 +934,7 @@ function validateInto(p, errors) {
   if (own(p, "counterparties")) list("counterparties", p.counterparties).forEach((c, i) => {
     const at = `counterparties[${i}]`;
     if (!entry(at, c)) return;
-    fields(at, c, ["role", "body", "level", "elected", "oversight", "hours", "time_zone", "ids", "within", "organisation", "basis"]);
+    fields(at, c, ["role", "body", "level", "elected", "oversight", "hours", "time_zone", "ids", "within", "organisation", "government", ...(teamLayer ? ["status"] : []), "basis"]);
     if (own(c, "time_zone")) zone(`${at}.time_zone`, c.time_zone); /* R74 */
     /* R59: the office's and its body's identifiers, the organisation the body is part of, its body-variant key */
     if (own(c, "ids")) {
@@ -907,7 +962,7 @@ function validateInto(p, errors) {
     if (isStr(c.role) && isStr(c.body)) offices.add(`${c.role}\u0000${c.body}`);
     if (own(c, "hours")) hours(`${at}.hours`, c.hours);
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_counterparty", "level is one of {COUNTERPARTY_LEVELS}", { COUNTERPARTY_LEVELS: String(COUNTERPARTY_LEVELS.join(", ")) }));
-    else if (!officeLevelFits(c.level)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only_3", "a {ownLevel} layer holds only {ownLevel_2} offices (or district), not {level}", { ownLevel: String(ownLevel), ownLevel_2: String(ownLevel), level: String(c.level) }));
+    else if (!officeLevelFits(c.level, c)) err(`${at}.level`, "LAYER_LEVEL_MISMATCH", localize("jurisdictions.index.a_level_layer_holds_only_3", "a {ownLevel} layer holds only {ownLevel_2} offices (or district), not {level}", { ownLevel: String(levelOf(c)), ownLevel_2: String(levelOf(c)), level: String(c.level) }));
     if (typeof c.elected !== "boolean") err(`${at}.elected`, "VALUE_INVALID", "elected is true or false");
     if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at}.oversight`, "VALUE_INVALID", "oversight is true or false");
     basis(at, c);
@@ -992,7 +1047,7 @@ function validateInto(p, errors) {
   if (own(p, "action_kinds")) list("action_kinds", p.action_kinds).forEach((k, i) => {
     const at = `action_kinds[${i}]`;
     if (!entry(at, k)) return;
-    fields(at, k, ["kind", "label", "tier", "laws", "venue", "template", "templates", "advisory", "evidence", "shape", "basis"]);
+    fields(at, k, ["kind", "label", "tier", "laws", "venue", "template", "templates", "advisory", "evidence", "shape", "government", ...(teamLayer ? ["status"] : []), "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
     else if (kinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", localize("jurisdictions.index.kind_is_given_twice", "'{kind}' is given twice", { kind: String(k.kind) }));
     else { kinds.add(k.kind); if (k.tier === 2 || k.tier === 3) tier23.add(k.kind); }
@@ -1092,7 +1147,7 @@ function validateInto(p, errors) {
     if (!entry(at, d)) return;
     fields(at, d, ["rule", "applies_to", "units", "amount", "days", "count", "direction", "starts", "starter", "roll", "closures",
       "computation", "extension", "tolling", "observed", "applies_on", "due_at", "owed_by", "consequence", "defends", "citation",
-      "status", "label", "basis"]);
+      "status", "label", "government", "basis"]);
     str(`${at}.rule`, d.rule, "rule");
     /* R97 (T51): the rule's name in the profile's words */
     if (own(d, "label")) str(`${at}.label`, d.label, "label");
@@ -1208,7 +1263,7 @@ function validateInto(p, errors) {
     list("holidays", p.holidays).forEach((h, i) => {
       const at = `holidays[${i}]`;
       if (!entry(at, h)) return;
-      fields(at, h, ["year", "list", "citation", "offices", "days", "status", "basis"]);
+      fields(at, h, ["year", "list", "citation", "offices", "days", "status", "government", "basis"]);
       /* R47: the closure list the entry belongs to, with the provision that makes it. */
       let key = "";
       if (own(h, "list")) {
@@ -1262,7 +1317,7 @@ function validateInto(p, errors) {
   }
 
   /* R49: a fiscal year per body that keeps one. */
-  if (own(p, "fiscal_year")) {
+  if (own(p, "fiscal_year") && !teamLayer) {
     const seen = new Set();
     list("fiscal_year", p.fiscal_year).forEach((f, i) => {
       const at = `fiscal_year[${i}]`;
@@ -2034,14 +2089,65 @@ function holidaysThrough(l) {
   return last.size ? Math.min(...last.values()) : undefined;
 }
 
+/* R115, R117, R134, R135: the team layer's entries are each about one government. In a chain, the team's entries for the
+   governments of the chain's layers (the layer with the same level and place) are read as one more layer at its end, without
+   their `government`; a government no layer stands for is read alone, beside the federal layer. A fiscal year a layer gives
+   the government is the records' year: the team's different one is set aside, not a conflict (R135). */
+const govKey = (level, place) => (level === "federal" ? "federal" : `${level}\u0000${place || ""}`);
+function teamSub(team, civ, setAside) {
+  const keys = new Set(civ.map((l) => govKey(l.layer.level, l.layer.place)));
+  const sub = { id: team.id, name: team.name, covers: team.covers, test: team.test, layer: { origin: "team" } };
+  let any = false;
+  for (const sec of TEAM_LAYER_SECTIONS) {
+    if (!own(team, sec)) continue;
+    if (!TEAM_ENTRY_SECTIONS.includes(sec)) { sub[sec] = copy(team[sec]); any = true; continue; }
+    const mine = team[sec].filter((e) => keys.has(govKey(e.government.level, e.government.place)));
+    const kept = [];
+    for (const e of mine) {
+      const { government, ...rest } = copy(e);
+      if (sec === "fiscal_year") {
+        /* the records give the government a year: an entry of its body, or `*` in the layer of that government */
+        const at = civ.find((l) => govKey(l.layer.level, l.layer.place) === govKey(government.level, government.place));
+        const giver = civ.find((l) => (l.fiscal_year || []).some((f) => f.body === rest.body || (f.body === "*" && l === at)));
+        if (giver) {
+          const theirs = giver.fiscal_year.find((f) => f.body === rest.body) || giver.fiscal_year.find((f) => f.body === "*");
+          if ([theirs.start, theirs.named_by, theirs.label].join() !== [rest.start, rest.named_by, rest.label].join())
+            setAside.push({ section: "fiscal_year", origin: "team", entry: copy(e), by: giver.id, at: `fiscal_year[${rest.body}]` });
+          continue;
+        }
+      }
+      kept.push(rest);
+    }
+    if (kept.length) { sub[sec] = kept; any = true; }
+  }
+  return any ? sub : null;
+}
+
 function mergeLayers(all) {
   const layers = all.filter((p) => isObj(p.layer)).sort(layerOrder);
   const plain = all.filter((p) => !isObj(p.layer));
   const errors = forestErrors(layers);
   if (errors.length) return { ok: false, errors };
-  const isParent = new Set(layers.map((l) => parentOf(l, layers)).filter((x) => x !== null));
-  const leaves = layers.filter((l) => !isParent.has(l.id));
-  const branches = leaves.map((l) => merge([...plain, ...chainOf(l, layers)]));
+  const team = layers.find((l) => l.layer.origin === "team") || null;
+  const civ = layers.filter((l) => l !== team);
+  const isParent = new Set(civ.map((l) => parentOf(l, civ)).filter((x) => x !== null));
+  const setAside = [];
+  const chains = civ.filter((l) => !isParent.has(l.id)).map((l) => chainOf(l, civ));
+  const merged = chains.map((c) => { const t = team ? teamSub(team, c, setAside) : null; return merge([...plain, ...c, ...(t ? [t] : [])]); });
+  if (team) {
+    /* a government no layer stands for is read alone, beside the federal layer when it is active */
+    const stands = new Set(civ.map((l) => govKey(l.layer.level, l.layer.place)));
+    const lone = new Map();
+    for (const sec of TEAM_ENTRY_SECTIONS) for (const e of team[sec] || []) { const k = govKey(e.government.level, e.government.place); if (!stands.has(k)) lone.set(k, e.government); }
+    const fed = civ.filter((l) => l.layer.level === "federal");
+    for (const g of lone.values()) {
+      const here = (e) => govKey(e.government.level, e.government.place) === govKey(g.level, g.place);
+      const only = { ...team, ...Object.fromEntries(TEAM_ENTRY_SECTIONS.filter((x) => own(team, x)).map((x) => [x, team[x].filter(here)])) };
+      const t = teamSub(only, [{ layer: { level: g.level, place: g.place } }], setAside);
+      if (t) merged.push(merge([...plain, ...fed, t]));
+    }
+  }
+  const branches = merged.length ? merged : [merge([...plain, ...layers])];
   const whole = merge([...plain, ...layers]);
   const view = uniteViews(branches.map((b) => b.view));
   for (const k of ["id", "name", "covers", "test", "profiles"]) view[k] = whole.view[k];
@@ -2057,6 +2163,7 @@ function mergeLayers(all) {
   };
   for (const b of branches) for (const c of b.conflicts) if (!TEAM_CONFLICTS.includes(c.at)) add(c);
   for (const c of whole.conflicts) if (TEAM_CONFLICTS.includes(c.at)) add(c);
+  if (setAside.length) view.set_aside = [...new Map(setAside.map((x) => [stable(x), x])).values()];
   view.layers = layers.map((l) => {
     const t = holidaysThrough(l);
     return { id: l.id, ...(l.layer.level ? { level: l.layer.level, place: l.layer.place } : {}), origin: l.layer.origin,
