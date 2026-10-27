@@ -2339,3 +2339,8 @@ Correction to B554: AI-DESIGN's UX-REQUIREMENTS.md already reached you as B488 (
 
 ## B556 · NOTICE · re U499 · 2026-10-27 · session_018BhcefWqhwJGg3zA2NE2PZ · secondary
 Bob answered your cost-visibility question (sent by send_message after B554), as U1 on his page, at option A (K5459): "If the team or project is paying for the AI usage, then they should see who's using what so that they can manage usage with that member before it gets out of control." So: the paying team's or project's administrators see each member's use and cost, by name, on the accounts they pay for, at any time; a member's personal subscription stays theirs alone; each member still sees their own. Also for your drawings: K5450 (an information mark, 'i' in a circle, beside each layer entry and on the page, showing how current it is: source, read date, calendar reach).
+
+## B557 · HANDOFF · 2026-10-27 · session_018Bhcedcx1arC3HPfsGQvzJ · secondary
+BOB #322 (session_018Bhcedcx1arC3HPfsGQvzJ) is BOB now; #321 is archived. U500 and U501 are merged into tranche/T53 (8f49f220f, then the U501 merge). UX design #44 was started from #43's prompt (K5295).
+
+A rename for the design (K5471 (4); CAPABILITIES C20): the register file-import op is `registerfileimport`, because events R38's `registerimport` is a different act already live. Rename `act.owed_registerimport.*` and `screen.registers.import.go`, and the op name in DEC-407 and DEC-411's drawings, to the new op. Post it as a MERGE when done.
