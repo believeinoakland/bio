@@ -8195,11 +8195,6 @@ REWRITE.update({
  'act.taskforward.label.home': 'Pass it to another member',
  'act.taskforward.label.queue': 'Pass it to another member',
  'screen.more.sub': 'The places the tabs do not hold.',
- 'capture.authority_basis': 'Added by a member rather than fetched from its source, so who issued it is not yet known. Recorded {at}; a member can settle it from the queue.',
- 'reading-pipeline.why.reader_found_entities': 'No names of people or organizations were found in this document\'s text. The document itself is unchanged.',
- 'textchain.say.push.page_re_read': 'Civicsmith read {replaced} pages again more carefully and recovered more of their text; the other {kept} kept their first reading.',
- 'reading-pipeline.scanned_page_transcribed': '{filled} scanned pages were turned into text and added to this document\'s own text{kept}',
- 'acquisition.authority_basis.assertion_supplied_mechanical': 'Who issued this is not yet known: nothing said so when it was fetched. Recorded {retrieved}; a member can settle it from the queue.',
  'refusal.CO_ATTESTATION_UNACKNOWLEDGED': 'A document this case rests on has no independent proof of when it was captured. Try getting that proof again, or say, with a reason, that you publish it on your team\'s word alone. Nothing was written.',
  'observation-log.partial.looked_got_part': 'we looked and found only part of it',
  'screen.standard.inforce.none': 'The record does not say when it took effect.',
@@ -8212,13 +8207,19 @@ REWRITE.update({
  'act.successrecord.label.matter': 'Record what this matter achieved',
  'refusal.TEMPLATE_NOT_NAMED': 'There is no file template for this kind of filing in your place\'s rules. Write the words yourself on this screen, or ask an administrator to add a template for this kind. Nothing was written.',
  'screen.action.pressuremark.reply': 'came in reply number {ord}',
- 'refusal.SUBJECT_IN_ACTIVE_PLAN': 'That matter is already in another open plan of this project: {plan}. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.',
  'capture.fieldneeded': 'This can be captured only once “{field}” is filled in.',
+ 'refusal.SUBJECT_IN_ACTIVE_PLAN': 'That matter is already in another open plan of this project. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.',
  'screen.find-in.notread': '{n} documents could not be searched, because they are not read yet or are pictures of text. They may hold what you looked for.',
  'screen.find-in.notread.one': 'One document could not be searched, because it is not read yet or is a picture of text. It may hold what you looked for.',
 })
 def w445(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-445: ' + note))
+w445('refusal.SUBJECT_IN_ACTIVE_PLAN.named', 'That matter is already in another open plan of this project: {plan}. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.', 'shown in place of refusal.SUBJECT_IN_ACTIVE_PLAN, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.basis.added', 'Added by a member rather than fetched from its source, so who issued it is not yet known. Recorded {at}; a member can settle it from the queue.', 'shown in place of capture.authority_basis, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.reading.nonames', 'No names of people or organizations were found in this document\'s text. The document itself is unchanged.', 'shown in place of reading-pipeline.why.reader_found_entities, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.reading.reread', 'Civicsmith read {replaced} pages again more carefully and recovered more of their text; the other {kept} kept their first reading.', 'shown in place of textchain.say.push.page_re_read, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.reading.transcribed', '{filled} scanned pages were turned into text and added to this document\'s own text{kept}', 'shown in place of reading-pipeline.scanned_page_transcribed, which stays as stored (record text, digests pinned); the screen draws this')
+w445('screen.document.basis.fetched', 'Who issued this is not yet known: nothing said so when it was fetched. Recorded {retrieved}; a member can settle it from the queue.', 'shown in place of acquisition.authority_basis.assertion_supplied_mechanical, which stays as stored (record text, digests pinned); the screen draws this')
 w445('screen.finder.named.one', 'named in 1 document, {document}', 'DS11: the singular of screen.finder.named')
 w445('screen.findin.searched.one', 'Searched {read} of 1 document.', 'DS11: the singular of screen.findin.searched')
 w445('screen.finder.shown', '{shown} of {total} documents shown.', 'DS11: Find\'s own row, in place of screen.held.archivemore ("files", a Held row)')

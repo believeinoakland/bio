@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2601,
+  "refusal": 2602,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7858,
+  "screen": 7863,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19426,
+  "total": 19432,
   "protected": 1162
  },
  "words": [
@@ -83041,6 +83041,48 @@
    "note": "DEC-444: E-K7: counselPacketExport records who, which version, when, which counsel"
   },
   {
+   "key": "refusal.SUBJECT_IN_ACTIVE_PLAN.named",
+   "en": "That matter is already in another open plan of this project: {plan}. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: shown in place of refusal.SUBJECT_IN_ACTIVE_PLAN, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.basis.added",
+   "en": "Added by a member rather than fetched from its source, so who issued it is not yet known. Recorded {at}; a member can settle it from the queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: shown in place of capture.authority_basis, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.reading.nonames",
+   "en": "No names of people or organizations were found in this document's text. The document itself is unchanged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: shown in place of reading-pipeline.why.reader_found_entities, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.reading.reread",
+   "en": "Civicsmith read {replaced} pages again more carefully and recovered more of their text; the other {kept} kept their first reading.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: shown in place of textchain.say.push.page_re_read, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.reading.transcribed",
+   "en": "{filled} scanned pages were turned into text and added to this document's own text{kept}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: shown in place of reading-pipeline.scanned_page_transcribed, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
+   "key": "screen.document.basis.fetched",
+   "en": "Who issued this is not yet known: nothing said so when it was fetched. Recorded {retrieved}; a member can settle it from the queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-445: shown in place of acquisition.authority_basis.assertion_supplied_mechanical, which stays as stored (record text, digests pinned); the screen draws this"
+  },
+  {
    "key": "screen.finder.named.one",
    "en": "named in 1 document, {document}",
    "protected": false,
@@ -86801,10 +86843,10 @@
   },
   {
    "key": "acquisition.authority_basis.assertion_supplied_mechanical",
-   "en": "Who issued this is not yet known: nothing said so when it was fetched. Recorded {retrieved}; a member can settle it from the queue.",
+   "en": "no assertion was supplied and no mechanical determination is implemented; recorded {retrieved} for resolution through the task list",
    "protected": false,
    "source": "DEC-260",
-   "note": "acquisition, authority_basis; DEC-259: reworded"
+   "note": "acquisition, authority_basis"
   },
   {
    "key": "acquisition.authority.internet_archive",
@@ -87844,10 +87886,10 @@
   },
   {
    "key": "capture.authority_basis",
-   "en": "Added by a member rather than fetched from its source, so who issued it is not yet known. Recorded {at}; a member can settle it from the queue.",
+   "en": "a file a member brought into the record, which no one fetched; no authority is asserted; recorded {at} for resolution through the task list",
    "protected": false,
    "source": "DEC-260",
-   "note": "capture, authority_basis; DEC-259: reworded"
+   "note": "capture, authority_basis"
   },
   {
    "key": "capture.note.attempt_recorded_late",
@@ -110425,10 +110467,10 @@
   },
   {
    "key": "textchain.say.push.page_re_read",
-   "en": "Civicsmith read {replaced} pages again more carefully and recovered more of their text; the other {kept} kept their first reading.",
+   "en": "{replaced} page(s) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other {kept} page(s) kept tier 1's reading",
    "protected": false,
    "source": "DEC-260",
-   "note": "textchain, say.push(); DEC-259: reworded"
+   "note": "textchain, say.push()"
   },
   {
    "key": "textchain.say.push.document_text_layer",
@@ -114625,7 +114667,7 @@
   },
   {
    "key": "refusal.SUBJECT_IN_ACTIVE_PLAN",
-   "en": "That matter is already in another open plan of this project: {plan}. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.",
+   "en": "That matter is already in another open plan of this project. A matter is in one open plan at a time; work in that plan, or close it first. Nothing was written.",
    "protected": false,
    "source": "DEC-260",
    "note": "action-plans' translation, keyed by its code; DEC-259: reworded"
@@ -117917,10 +117959,9 @@
   },
   {
    "key": "reading-pipeline.scanned_page_transcribed",
-   "en": "{filled} scanned pages were turned into text and added to this document's own text{kept}",
+   "en": "{filled} scanned page(s) were transcribed by the OCR member and merged into this document's own text{kept}",
    "protected": false,
-   "source": "DEC-260",
-   "note": "DEC-259: reworded"
+   "source": "DEC-260"
   },
   {
    "key": "reading-pipeline.already_text_kept",
@@ -118188,10 +118229,9 @@
   },
   {
    "key": "reading-pipeline.why.reader_found_entities",
-   "en": "No names of people or organizations were found in this document's text. The document itself is unchanged.",
+   "en": "the {key} reader found no entities in this document's {fmt} text-layer text (tier {wired_tier}); recorded as an empty reading, never an emptied document",
    "protected": false,
-   "source": "DEC-260",
-   "note": "DEC-259: reworded"
+   "source": "DEC-260"
   },
   {
    "key": "reading-pipeline.why.capture_bytes_parts",
