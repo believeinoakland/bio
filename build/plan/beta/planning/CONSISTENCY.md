@@ -9,6 +9,9 @@
 | jurisdictions | PLANNING A2 R99 (`governingFiscalYear`, `withStatedFiscalYears`) | CAPABILITIES N1257 R99-R120 (layers) | N1257 keeps R99-R120; A2's line becomes R121, rewritten as a layer fact (§2 row 1) |
 | local-facts | PLANNING A2 R23, R24 (stated fiscal year, its setting) | CAPABILITIES N1257 R23-R27 (team layer entries, reports, old paths) | N1257 keeps R23-R27; A2's become R28, R29, as an entry of the team layer (§2 row 1) |
 | queue-producers | PLANNING A6 R56, R57 (one item per member's keys) | CAPABILITIES N1257 R56 (layer changes told once) | A6 keeps R56, R57 (Bob's answer, already decided); N1257's becomes R58 |
+| money | PLANNING A2 R36-R38 (fiscal keys, the view) | CAPABILITIES N1260-a | cite draft ids (A2-R4..R7); BOB numbers at writing (K5448) |
+| screens-inquiry | PLANNING A1 R140 (opening form) | CAPABILITIES N1260-b | as above (A1-R4) |
+| content | PLANNING A8 R63-R64 (typed grade, labels) | CAPABILITIES N1259-a | as above (A8's content lines) |
 | (general) | every lane drafts from the file's highest id | — | BOB numbers at writing, in the order the plan's entries list them; drafts cite each other by draft id (A2-R99, N1257-R99) until then |
 
 ## 2. Overlaps of subject (one owner each)

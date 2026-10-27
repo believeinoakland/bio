@@ -104,7 +104,7 @@
 
 **leg-earning**
 - T53 · A8 · a typed passage's ceiling at its own grain; a leg on it graded by the record · `planning/lines-A8-typed-page.md` §4
-- T53 · A1 · "no subject named" as its own `why` · CONSISTENCY (A1 note)
+- T53 · A1 · "no subject named" as its own `why` (A1-R6) · `planning/lines-A1-A7-subject-pickers.md`
 
 **strength**
 - T53 · A8 · a leg on a typed passage counts at its grade; `bio-grading/5` · `planning/lines-A8-typed-page.md` §5
@@ -117,7 +117,10 @@
 ## Layer 8
 
 **case-grammar**, **case-catalogue**, **publication**, **public-read**, **case-import**
-- T53 · A5 (DEC-461) · the ungraded-passages block in the signed document, its C-41 check, the edition's statement, carried to readers · `planning/lines-A5-A6-signing.md` (A5 needs) `[owed: lines for these five not drafted]`
+- T53 · A5 (DEC-461), A8 (DEC-464) · case-document format `/10`: the ungraded-passages and typed-passages blocks, their C-41.18 and C-41.19 checks, the edition's statements recorded and served, imported editions' statements kept apart, typist and checkers credited as each chose · `planning/lines-A5-A8-case-modules.md` `[owed: Q-A5-1, Q-A58-1, Q-A58-2, L11]`
+
+**case-disclosures**, **basis-versions**
+- T53 · A5, A8 · ungraded passages listed; a typed passage printed as typed, labelled as of signing; a frozen reading names typist and checkers · `planning/lines-A5-A8-case-modules.md`
 
 **case-authoring**
 - T53 · A5 · the sign step lists ungraded passages; the edition states it; never refused for it · `planning/lines-A5-A6-signing.md` (case-authoring R88-R90)
@@ -152,12 +155,12 @@
 - T53 · N1257 · a layer change told once (renumbered R58) `[owed: READY]`
 
 **queue**, **screens-daily**
-- T53 · A6 · an act per listed key `[owed: lines not drafted]`
+- T53 · A6 · a per-key choice of act passed through (queue), a line and two acts per key, never handled by "choose several" (screens-daily) · `planning/lines-A6-queue-acts.md` `[owed: Q-A6-1, Q-A6-2]`
 - C T52-62 to T52-65, T52-104 (screens-daily)
 
 **interface-shell**
 - C T52-49 to T52-53 · T53 · one `screenread` per screen open (PL16, PL17) · `platform/combined-read-and-fold-draft.md` §3
-- T53 · A7 · one document-picker element with two scopes, cited by every screens module that picks a document `[owed: BOB's placement]`
+- T53 · A7 · one document-picker element with two scopes (A7-R1), cited by screens-inquiry R137, screens-investigate R34 and R52, screens-publish R8 · `planning/lines-A1-A7-subject-pickers.md` `[owed: L2]`
 
 **screens-inquiry**
 - C T52-66 to T52-73 · T53 · A1 (R140, R141), A7 (R142), A3 (the Document page's source line), A8 (Cite on typed words, the labels), DEC-454 (`document.mjs` display rows) · the named `planning/lines-*` files and DEC-454
