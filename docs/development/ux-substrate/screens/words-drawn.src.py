@@ -8688,6 +8688,23 @@ W.append(dict(key='screen.ceremony.emails.note', protected=True, note='DEC-480: 
 w480('screen.ceremony.emails.why', 'Why this name is material', 'ceremony: the reason asked before a name is shown')
 w480('screen.ceremony.emails.after', 'If a name is shown or withheld after the case is prepared, prepare it again before signing; after signing, the case is not published until it is prepared and signed again.', 'ceremony: as for a photo mark')
 
+def w481(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-481: ' + note))
+# BOB #324's ask (PLANNING L32; K5540, K5541, K5551): a subject changed after publishing, in public and in the team
+w481('screen.published.subjectchanged.named', 'Subject changed after this edition, on {date}: the question behind this finding is now about {subject}.', "published: under a finding whose question's subject changed after the edition, the new subject publicly nameable (K5540)")
+w481('screen.published.subjectchanged.unnamed', 'Subject changed after this edition, on {date}: the question behind this finding is now about someone this page does not name.', 'published: as .named, the new subject not publicly nameable (K5540)')
+w481('screen.published.subjectchanged.removed', 'Subject changed after this edition, on {date}: the question behind this finding no longer names who it is about.', 'published: the subject removed (K5541)')
+w481('screen.published.subjectchanged.part.named', 'Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about {subject}.', 'published: one part of a divided question, each part shown on its own (K5551)')
+w481('screen.published.subjectchanged.part.unnamed', 'Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about someone this page does not name.', 'published: as .part.named, not nameable (K5551)')
+w481('screen.published.subjectchanged.part.removed', 'Subject changed after this edition, on {date}: part “{part}” of the question behind this finding no longer names who it is about.', "published: a part's subject removed (K5541, K5551)")
+w481('screen.published.subjectchanged.forms', 'When the subject cannot be named, was removed, or changed for one part', "published: the design page's fold of the line's other forms")
+w481('screen.question.about.head', 'Who it is about', 'question: the section with the subject and its changes (K5540)')
+w481('screen.question.subjectchanged', '{member} changed who this question is about, from {old} to {new}, on {date}.', "question: the team's note of a change (K5540)")
+w481('screen.question.subjectremoved', '{member} removed {old} as who this question is about, on {date}: “{reason}”', "question: the team's note of a removal, with its reason (K5541)")
+w481('screen.question.part.subjectchanged', '{member} changed who part “{part}” is about, from {old} to {new}, on {date}.', "question: a part's change, noted on its own (K5551)")
+w481('screen.question.part.subjectremoved', '{member} removed {old} as who part “{part}” is about, on {date}: “{reason}”', "question: a part's removal (K5541, K5551)")
+w481('screen.question.subjectchanged.published', 'This question is in {case}, edition {n}. Its public page now says the subject changed after that edition.', 'question: under a change, when a published case carries the question (K5540)')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

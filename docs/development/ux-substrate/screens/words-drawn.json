@@ -46217,6 +46217,84 @@
    "en": "If a name is shown or withheld after the case is prepared, prepare it again before signing; after signing, the case is not published until it is prepared and signed again.",
    "protected": false,
    "note": "DEC-480: ceremony: as for a photo mark"
+  },
+  {
+   "key": "screen.published.subjectchanged.named",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding is now about {subject}.",
+   "protected": false,
+   "note": "DEC-481: published: under a finding whose question's subject changed after the edition, the new subject publicly nameable (K5540)"
+  },
+  {
+   "key": "screen.published.subjectchanged.unnamed",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding is now about someone this page does not name.",
+   "protected": false,
+   "note": "DEC-481: published: as .named, the new subject not publicly nameable (K5540)"
+  },
+  {
+   "key": "screen.published.subjectchanged.removed",
+   "en": "Subject changed after this edition, on {date}: the question behind this finding no longer names who it is about.",
+   "protected": false,
+   "note": "DEC-481: published: the subject removed (K5541)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.named",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about {subject}.",
+   "protected": false,
+   "note": "DEC-481: published: one part of a divided question, each part shown on its own (K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.unnamed",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding is now about someone this page does not name.",
+   "protected": false,
+   "note": "DEC-481: published: as .part.named, not nameable (K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.part.removed",
+   "en": "Subject changed after this edition, on {date}: part “{part}” of the question behind this finding no longer names who it is about.",
+   "protected": false,
+   "note": "DEC-481: published: a part's subject removed (K5541, K5551)"
+  },
+  {
+   "key": "screen.published.subjectchanged.forms",
+   "en": "When the subject cannot be named, was removed, or changed for one part",
+   "protected": false,
+   "note": "DEC-481: published: the design page's fold of the line's other forms"
+  },
+  {
+   "key": "screen.question.about.head",
+   "en": "Who it is about",
+   "protected": false,
+   "note": "DEC-481: question: the section with the subject and its changes (K5540)"
+  },
+  {
+   "key": "screen.question.subjectchanged",
+   "en": "{member} changed who this question is about, from {old} to {new}, on {date}.",
+   "protected": false,
+   "note": "DEC-481: question: the team's note of a change (K5540)"
+  },
+  {
+   "key": "screen.question.subjectremoved",
+   "en": "{member} removed {old} as who this question is about, on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-481: question: the team's note of a removal, with its reason (K5541)"
+  },
+  {
+   "key": "screen.question.part.subjectchanged",
+   "en": "{member} changed who part “{part}” is about, from {old} to {new}, on {date}.",
+   "protected": false,
+   "note": "DEC-481: question: a part's change, noted on its own (K5551)"
+  },
+  {
+   "key": "screen.question.part.subjectremoved",
+   "en": "{member} removed {old} as who part “{part}” is about, on {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-481: question: a part's removal (K5541, K5551)"
+  },
+  {
+   "key": "screen.question.subjectchanged.published",
+   "en": "This question is in {case}, edition {n}. Its public page now says the subject changed after that edition.",
+   "protected": false,
+   "note": "DEC-481: question: under a change, when a published case carries the question (K5540)"
   }
  ],
  "rewrite": {
