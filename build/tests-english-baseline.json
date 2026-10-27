@@ -675,6 +675,7 @@
   "jurisdictions/test/t34.test.mjs": 1,
   "jurisdictions/test/t37.test.mjs": 1,
   "jurisdictions/test/t45.test.mjs": 1,
+  "legistar-reader/test/legistar-reader.test.mjs": 2,
   "newgroup/test/requirements.test.mjs": 20,
   "newgroup/test/t47.test.mjs": 4,
   "newgroup/test/t48.test.mjs": 2,

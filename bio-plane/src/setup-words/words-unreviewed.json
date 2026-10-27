@@ -16955,6 +16955,34 @@
       "line": 10
     },
     {
+      "id": "connection-grammar.why.chain_limit_over",
+      "en": "a list shows at most {max} chains; {requested} were asked",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/bounds.mjs",
+      "line": 95
+    },
+    {
+      "id": "connection-grammar.why.chain_limit_whole",
+      "en": "a chain limit is a whole number of chains from 1 to {max}; {requested} is not",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/bounds.mjs",
+      "line": 92
+    },
+    {
+      "id": "connection-grammar.why.hops_list",
+      "en": "hops is a list of at most {max} connections",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/walk.mjs",
+      "line": 181
+    },
+    {
+      "id": "connection-grammar.why.paths_list",
+      "en": "paths is a list, each a non-empty list of connections, or an object holding hops and quantities",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/walk.mjs",
+      "line": 117
+    },
+    {
       "id": "connections.checks.a_membership_is_taken_back",
       "en": "A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it.",
       "module": "connections",
@@ -35519,13 +35547,6 @@
       "line": 455
     },
     {
-      "id": "legistar-reader.index.the_address_is_not_a_legistar",
-      "en": "the address is not a Legistar Web API address (webapi.legistar.com/v1/<client>/<endpoint>)",
-      "module": "legistar-reader",
-      "file": "legistar-reader/index.mjs",
-      "line": 70
-    },
-    {
       "id": "legistar-reader.index.the_address_names_a_client",
       "en": "the address names a Legistar client but no endpoint",
       "module": "legistar-reader",
@@ -35552,13 +35573,6 @@
       "module": "legistar-reader",
       "file": "legistar-reader/index.mjs",
       "line": 138
-    },
-    {
-      "id": "legistar-reader.index.the_bytes_are_json_but_not",
-      "en": "the bytes are JSON but not an object or an array of objects",
-      "module": "legistar-reader",
-      "file": "legistar-reader/index.mjs",
-      "line": 137
     },
     {
       "id": "legistar-reader.index.the_bytes_are_not_json",
