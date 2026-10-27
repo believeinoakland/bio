@@ -5348,7 +5348,7 @@
   },
   {
    "key": "document.held.says",
-   "en": "Awaiting review: held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
+   "en": "Awaiting review. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
    "protected": false,
    "note": "DEC-289: a copy the viewer captured, not yet vouched for (release)"
   },
@@ -5924,7 +5924,7 @@
   },
   {
    "key": "ceremony.gate.other",
-   "en": "This stops the signing: {what}. Put it right above, then check again.",
+   "en": "This stops the signing: {what}. Fix it above, then check again.",
    "protected": false,
    "note": "DEC-299: any other gate, {what} its own plain sentence"
   },
@@ -30698,7 +30698,7 @@
   },
   {
    "key": "screen.project.a.question.this.project.holds.has",
-   "en": "A question this project holds has a leg in its basis.",
+   "en": "A question this project holds has a source behind it.",
    "protected": false,
    "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
   },
@@ -41948,7 +41948,7 @@
   },
   {
    "key": "money.ingest.partial",
-   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Background reading: {ingest}",
+   "en": "This money fact comes from a table that was still being read in the background, or whose reading was stopped. What is held so far may not be the whole table, so don't treat it as complete. Reading reference: {ingest}",
    "protected": false,
    "note": "DEC-424: B495 G55: beside any money fact written by an open or stopped ingest; DEC-451: {ingest} kept while money R31's test pins the key in this sentence; {ingest} the ingest's key"
   },
@@ -44540,7 +44540,7 @@
   },
   {
    "key": "ceremony.gate.name.c12_2",
-   "en": "The record's history is complete",
+   "en": "The completeness of the record's history",
    "protected": false,
    "note": "DEC-453: the signing gate: the plain name of check C-12.2, filling screen.ceremony.gate.check {check}"
   },
@@ -44605,12 +44605,6 @@
    "note": "DEC-454: Document, the passage count, in place of passages.head plus 'n / m'; {n} {m}"
   },
   {
-   "key": "screen.capture.read.queued",
-   "en": "Waiting its turn to be read. Its words can be found and cited once it has been read.",
-   "protected": false,
-   "note": "DEC-454: Add, a reading queued (in place of screen.capture.reading.pending's 'Kept.')"
-  },
-  {
    "key": "screen.capture.file.parts.hashing",
    "en": "Checking the file before it is sent.",
    "protected": false,
@@ -44666,7 +44660,7 @@
   },
   {
    "key": "screen.capture.read.refused.ENCODING_UNSUPPORTED",
-   "en": "This file's text uses an encoding ({name}) that isn't read yet. The file is kept and you can open it.",
+   "en": "This file's text is written in a character set ({name}) that isn't read yet. The file is kept and you can open it.",
    "protected": false,
    "note": "DEC-454: Add, a reading refused ENCODING_UNSUPPORTED; {name} the encoding's name"
   },
@@ -44786,7 +44780,7 @@
   },
   {
    "key": "capture.index.upload_unknown",
-   "en": "Your team's Civicsmith has no file being sent in parts under that name for you. Start sending it again.",
+   "en": "Your team's Civicsmith has no file being sent under that name for you. Add the file again.",
    "protected": false,
    "note": "DEC-454: capture, parted upload (1 of 18)"
   },
@@ -44798,19 +44792,19 @@
   },
   {
    "key": "capture.index.upload_not_open",
-   "en": "Every part of this file has already been sent. Finish the upload.",
+   "en": "This file has already been sent in full. Look for it in Held captures.",
    "protected": false,
    "note": "DEC-454: capture, parted upload"
   },
   {
    "key": "capture.index.part_conflict",
-   "en": "That part was already sent with different contents, so this one was refused.",
+   "en": "Something went wrong while sending this file, so it was stopped and nothing was kept. Add the file again.",
    "protected": false,
    "note": "DEC-454: capture, parted upload"
   },
   {
    "key": "capture.index.part_out_of_order",
-   "en": "Parts have to be sent in order. Send the next part in line.",
+   "en": "Sending this file got out of step, so it was stopped and nothing was kept. Add the file again.",
    "protected": false,
    "note": "DEC-454: capture, parted upload"
   },
@@ -44822,13 +44816,13 @@
   },
   {
    "key": "capture.index.part_in_progress",
-   "en": "A part is still arriving. Send the next one when it has been received.",
+   "en": "Sending this file got out of step, so it was stopped and nothing was kept. Add the file again.",
    "protected": false,
    "note": "DEC-454: capture, parted upload"
   },
   {
    "key": "capture.index.part_size",
-   "en": "Each part must be exactly {bound} bytes, except the last, which holds the rest of the file. This one wasn't, so nothing was stored.",
+   "en": "This file couldn't be sent, so nothing was stored. Add it again.",
    "protected": false,
    "note": "DEC-454: capture, parted upload; {bound} bytes"
   },
@@ -44852,13 +44846,13 @@
   },
   {
    "key": "capture.index.parts_missing",
-   "en": "Some parts haven't been sent, so the upload wasn't finished and nothing was saved. Send the missing parts.",
+   "en": "Not all of this file arrived, so it wasn't added. Nothing was saved. Add the file again.",
    "protected": false,
    "note": "DEC-454: capture, parted upload"
   },
   {
    "key": "capture.index.parts_out_of_order",
-   "en": "The parts listed aren't the ones that were sent, in the order they were sent, so the upload wasn't finished and nothing was saved.",
+   "en": "The pieces of this file didn't arrive as they were sent, so it wasn't added. Nothing was saved. Add the file again.",
    "protected": false,
    "note": "DEC-454: capture, parted upload"
   },
@@ -44906,7 +44900,7 @@
   },
   {
    "key": "file-safety.checks.the_file_scanner_could_not_read",
-   "en": "The file scanner couldn't read all of this file, so it counts as not checked. The reason is given beside it.",
+   "en": "The file scanner couldn't read all of this file, so it counts as not checked.",
    "protected": false,
    "note": "DEC-454: file-safety: a partial scan (the reason beside it is still a code: owed)"
   },
@@ -44918,7 +44912,7 @@
   },
   {
    "key": "file-safety.index.safe_view_first_pages",
-   "en": "This shows the first {pages} of the document's {source_pages} pages. It is a view of the document, not a reading of it.",
+   "en": "This shows the first {pages} of the document's {source_pages} pages.",
    "protected": false,
    "note": "DEC-454: file-safety: a safe view of the first pages; {pages} {source_pages}"
   },
@@ -44930,13 +44924,13 @@
   },
   {
    "key": "queue.kind.reading-ended",
-   "en": "Documents you added, now read, partly read, or not taken in",
+   "en": "Files you added, now read, partly read, or not read",
    "protected": false,
    "note": "DEC-454: the Queue's list of kinds (screens-daily reads every queue.kind.* row); beside the fetch-done kind's"
   },
   {
    "key": "screen.document.supporting.notwalked.pending",
-   "en": "This page is still being drawn in the background, so its supporting files haven't been looked for yet.",
+   "en": "This page is still being made in the background, so its supporting files haven't been looked for yet. Look again in a few minutes.",
    "protected": false,
    "note": "DEC-454: Document: supporting files not walked, RENDER_PENDING"
   },

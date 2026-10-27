@@ -420,7 +420,7 @@
    "acts": [
     {
      "op": "release",
-     "label": "Vouch for photos",
+     "label": "Vouch for copies",
      "status": "declared",
      "modules": [
       "capture",
@@ -1626,7 +1626,7 @@
    "acts": [
     {
      "op": "release",
-     "label": "Vouch for photos",
+     "label": "Vouch for copies",
      "status": "declared",
      "modules": [
       "capture",
