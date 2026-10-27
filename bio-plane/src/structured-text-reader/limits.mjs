@@ -6,7 +6,7 @@ import { boundOf, statement } from "../read-bounds.mjs";
 const ROWS = Object.freeze({
   bytes: ["text", "bytes"],
   nesting: ["text", "nesting"],
-  events: ["calendar", "events"],
+  events: ["text", "calendar_events"],
 });
 
 /** The text bound: the most bytes a file of any kind this module reads may hold (100 MB, K5427). */

@@ -17,7 +17,7 @@ const code = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`\\])\/\
 test("R9 the module's ceilings are runtime-limits' figures, quoted through boundOf", () => {
   assert.equal(S.TEXT_BYTES_MAX, boundOf("text", "bytes"));
   assert.equal(S.NESTING_MAX, boundOf("text", "nesting"));
-  assert.equal(S.CALENDAR_EVENTS_MAX, boundOf("calendar", "events"));
+  assert.equal(S.CALENDAR_EVENTS_MAX, boundOf("text", "calendar_events"));
 });
 
 test("R9 no numeric literal in the module's code is one of its ceilings", () => {
