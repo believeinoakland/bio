@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (19764 design words, 1176 protected; SHA-256
-   d5ec5a821c527113af70833a1da9580fd33aca9b84a75700665e0e7e3331fe9d) followed by 7477 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   d5ec5a821c527113af70833a1da9580fd33aca9b84a75700665e0e7e3331fe9d) followed by 7481 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22194,6 +22194,10 @@ export const WORD_ROWS = Object.freeze([
   ["connection-grammar.registry.viewer_missing","a read names the member reading; an absent viewer is neither an administrator nor the public",null,null,false,"code"],
   ["connection-grammar.shape.grade_shape","grade is not {shape} in the letters {letters}",null,null,false,"code"],
   ["connection-grammar.shape.label_declared","declared, not evidenced",null,null,false,"code"],
+  ["connection-grammar.why.chain_limit_over","a list shows at most {max} chains; {requested} were asked",null,null,false,"code"],
+  ["connection-grammar.why.chain_limit_whole","a chain limit is a whole number of chains from 1 to {max}; {requested} is not",null,null,false,"code"],
+  ["connection-grammar.why.hops_list","hops is a list of at most {max} connections",null,null,false,"code"],
+  ["connection-grammar.why.paths_list","paths is a list, each a non-empty list of connections, or an object holding hops and quantities",null,null,false,"code"],
   ["connections.checks.a_membership_is_taken_back","A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it.",null,null,false,"code"],
   ["connections.checks.leg_claims_through_theme","{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",null,null,false,"code"],
   ["connections.checks.leg_names_theme","{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",null,null,false,"code"],

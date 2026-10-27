@@ -77,7 +77,7 @@ test("R19 R6 an answer that breaks the contract is refused whole as OWNER_NONCON
   }
   const t = read(withOwner("throws"));
   assert.equal(t.refused, "OWNER_FAILED");
-  assert.match(t.why, /the store is closed/);
+  assert.ok(t.why.includes("OWNER_STORE_CLOSED"), "the owner's own failure travels in why");
   assert.equal(createRegistry().neighbours({ owner: "nobody", node: NODE, at: AT, viewer: "a", scope: null }).refused, "OWNER_UNKNOWN");
 });
 
