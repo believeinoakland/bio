@@ -1,7 +1,7 @@
 # N1259 (f): `events`, one event per register entry however it was read (requirement draft)
 
 **Status** · DRAFT by a worker for CAPABILITIES #1 (2026-10-27); not READY, not merged into `build/requirements/events.md`.
-**Decision** · BOB, C13 (5): `events` is owed a line so that one entry of a followed register read as JSON (a keyed CourtListener answer, N1259 (c) `following` R41, `court-doctypes` R18) and as HTML (a docket page, `courtlistener_docket`) is one event, not two. Ids and numbers below are drafts for PLANNING to renumber. (A keyed answer arrives by a member's refresh, or on the alarm only if Bob's C8-poll allows it, CONDITIONAL on C8-poll; this line holds either way.)
+**Decision** · BOB, C13 (5): `events` is owed a line so that one entry of a followed register read as JSON (a keyed CourtListener answer, N1259 (c) `following` R41, `court-doctypes` R18) and as HTML (a docket page, `courtlistener_docket`) is one event, not two. Ids and numbers below are drafts for PLANNING to renumber. (A keyed answer arrives by a member's refresh, or on the alarm for a follow a member made, K5498.)
 **Read / not read** · Read: `events.md`; `court-doctypes.md` R1-R17; N1259 (c) `following` R41, `court-doctypes` R18-R20; the N1259 (d) review; `events/follow.mjs`, `schema.mjs`, `index.mjs` and the tests named below. Not run: the test suites (run them before and after).
 
 ## Id

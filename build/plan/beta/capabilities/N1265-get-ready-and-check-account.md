@@ -83,7 +83,7 @@ DEC-415 asks that the date effect be reported to Bob and that this be placed bef
 
 ## Review (C7 worker)
 
-Checked against the checkout at `810dfe0a` (branch lane/capabilities). Counts: **22 corrections in this file** and **16 in `N858-templates-and-guides-texts.md`** (both listed here), **9 + 5 items unverifiable**. The edit of this file also applied K5449 as the caller decided it; N858's Bob-points stay open, as asked.
+Checked against the checkout at `810dfe0a` (branch lane/capabilities). Counts: **22 corrections in this file** and **16 in `N858-templates-and-guides-texts.md`** (both listed here), **9 + 5 items unverifiable**. The edit of this file also applied K5449 as the caller decided it; N858's Bob-points stayed open, as asked (B1 and B2 answered later: K5508, K5509).
 
 ### Corrections (line id: was -> now; evidence)
 

@@ -1,6 +1,6 @@
 # N1257 places in layers, with N1256 federal offices: analysis, points and needs (draft)
 
-**Status** · DRAFT, not READY (it becomes READY once Bob's L18 and the work-outside-US remainder are answered); reviewed by CAPABILITIES #1, C2, with section J added; written by a worker, checked against the reading in section H. Revised 2026-10-27 for Bob's ruling K5452 (a team's work, not the team's location, decides its layers; its footprint is any set of places at any level): every changed line is listed in section L.
+**Status** · DRAFT; READY once L18 is answered (everything else is answered, including the work-outside-US remainder, K5497); reviewed by CAPABILITIES #1, C2, with section J added; written by a worker, checked against the reading in section H. Revised 2026-10-27 for Bob's ruling K5452 (a team's work, not the team's location, decides its layers; its footprint is any set of places at any level): every changed line is listed in section L.
 For the beta's build plan, tranche T53. Carries DEC-404 (Bob, 2026-10-21: "Let's go with A after the alpha"), K4362, and DEC-401's option B (N1256). Design and requirements only; no code was changed.
 The requirement lines (section B) are in two companions: `N1257-requirements-jurisdictions.md` (draft R99 to R133, see section M) and `N1257-requirements-modules.md` (local-facts, instance-setup, installer, screens-settings, screens-action, actions, action-clocks, queue-producers, entities, filing-templates, reading-guides). Sections A and C to I are here.
 
@@ -89,10 +89,8 @@ Recommended A; it is what the draft's lines build (R108, `instance-setup` R108, 
 - B. Reports only, for everything; corrections of calendar facts go. Matches the words "does not edit" most strictly; a team with a wrong holiday waits for a release.
 - C. The team may apply its own value over a shipped one, marked. Overrides: contradicts DEC-404.
 
-**D3. A team whose work is focused outside the United States.** (Bob, K5452: a team merely LOCATED abroad, with its work focused on a United States jurisdiction, is settled: it chooses the United States places of its work as any team does. A team whose WORK is focused in another country remains open.) The four levels (federal, state, county, city) and the federal layer are the United States'; Civicsmith holds United States places only. A team whose work is in another country has no layer to choose; today it gets nothing filled in (DEC-150), and the draft preselects the federal layer for every team, removable. A team working in both (some United States places and some abroad) gets the layers of the United States places it names and names the rest as free-text places.
-- A (recommended). Say so on the choice: Civicsmith holds United States places; a team whose work is elsewhere removes the federal layer, names its places in the free-text place and writes none of the four levels, and adds its offices itself as today. The level names stay as DEC-404 has them.
-- B. Rename the levels generally (nation, region, county, city) and let a team add a national layer. A bigger change to the vocabulary (R31) and to the decision.
-The draft assumes A (`installer` R94: the federal layer may be removed, and the page says what that means).
+**D3. A team whose work is focused outside the United States. ANSWERED, K5497 (C7 remainder), option A, "as recommended".** (K5452: a team merely LOCATED abroad, with its work focused on a United States jurisdiction, chooses the United States places of its work as any team does.) The four levels (federal, state, county, city) and the federal layer are the United States'; Civicsmith holds United States places only. A team whose work is in another country has no layer to choose; today it gets nothing filled in (DEC-150), and the draft preselects the federal layer for every team, removable. A team working in both (some United States places and some abroad) gets the layers of the United States places it names and names the rest as free-text places.
+- Ruling (A): Civicsmith ships United States places only; the team is told so when choosing its places; a team whose work is outside the United States names its places (the free-text place) and adds their offices and rules itself, as its own research (DEC-150); the level names are unchanged (DEC-404). Applied in `installer` R94 (installer) and R107 (instance-setup) and `jurisdictions` R109. Option B (renaming the levels) was not chosen.
 
 ## E. What the places screen needs from UX-DESIGN (needs only, to go through BOB)
 
@@ -155,7 +153,7 @@ Bob (via UX-DESIGN, DEC-458, A2 "as recommended"): a government's fiscal year co
 
 ## K. Bob's answers (2026-10-27)
 
-D1 (K5450): option A, plus an 'information' tag ('i' in a circle) next to each entry, or on the page overall, showing how current the information is: add to section E (UX need, sent through BOB). D2 (K5451): "as recommended": option A. D3 still with Bob.
+D1 (K5450): option A, plus an 'information' tag ('i' in a circle) next to each entry, or on the page overall, showing how current the information is: add to section E (UX need, sent through BOB). D2 (K5451): "as recommended": option A. D3 answered, K5497, option A.
 
 Bob (K5452, 2026-10-27): "A team might be located outside the US even if their work is focused on some US jurisdiction. It's also worth noting that a team's work might be state-wide or some other footprint not specific to a city or county." `DECISIONS.md` C7. Written in: section C1 (forest of chains), D3 (only a team whose work is outside the United States remains), E1, E2, E8, F5, F11, and the lines of section L.
 
@@ -166,7 +164,7 @@ Bob's ruling (K5452; `DECISIONS.md` C7): a team's layers follow where its WORK i
 **This file (`N1257-places-in-layers.md`).**
 - Head: the status line (revision note). Section A: row 7 (the choice is the work's places, a set), row 8 (any number of county or city layers), row 11 (federal plus the held layers the team names). Section B: the list of ids (R101, R113, R115, `instance-setup` R107 re-described).
 - C1 rewritten: option A is "a forest of chains", with what it costs (its list of costs), the sub-point "at most one layer per level" removed (settled by K5452), a new open sub-point (a saved footprint).
-- D3 rewritten into the remaining Bob-point: a team whose work is focused outside the United States; options A (recommended) and B; a team merely located abroad noted as settled.
+- D3 rewritten into the remaining Bob-point: a team whose work is focused outside the United States; options A (recommended) and B; a team merely located abroad noted as settled. Answered since: K5497, option A.
 - E: needs 1 (a tree), 2 (a set of the work's places, nothing preselected below what the team names), 8 (the install page). F: measure 5 (1, 3 and 8 layers), new measure 11 (chain check and names over 1, 3 and 8 layers). G: PLATFORM's question (one to eight or more layers). K: the K5452 entry added. L: this section.
 - Unchanged on purpose: C2 to C7, D1, D2, J, H, I.
 
