@@ -3050,7 +3050,7 @@
    "id": "projectai",
    "name": "AI for this project",
    "frame": "working",
-   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
+   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, and by member for its owners; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
    "acts": [
     {
      "op": "projectkeyset",

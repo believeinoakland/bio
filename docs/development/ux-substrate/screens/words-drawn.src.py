@@ -1152,7 +1152,7 @@ w284(T + 'on', 'On')
 w284(T + 'uses.why', 'Everyday help is {everyday}; exploring is {explore}.', False, '{everyday}: on, off or partly on; {explore}: on, off or asked each day')
 w284(T + 'limits.why', '{overall} overall; {each} for each member.', False, 'when no limit is set: screen.teamai.limits.none')
 w284(T + 'limits.none', 'None set.')
-w284(T + 'use.why', 'Summed over members; nobody is named.')
+w284(T + 'use.why', 'What the team\'s key was used for, month by month.')
 w284(T + 'key', 'The key itself')
 w284(T + 'key.why', 'Replace it, switch it off or remove it.')
 w284(T + 'changes.why', 'Every change, with who made it and when.')
@@ -8399,7 +8399,7 @@ def w465(key, en, note):
 # Bob's rulings K5430, K5431, K5433: the origin check judged by developer, the owner's opt-in, aimine's order, a sealed key, whose checks apply
 w465('screen.aiproviders.origin.notoffered', 'Not offered while your team requires the origin check.', 'aiproviders: the catalogue entry for an AI that fails the origin check (DeepSeek)')
 w465('screen.aiproviders.optin', 'Projects and members may add this account to their own lists', 'aiproviders: the owner opt-in on a team account row, off by default')
-w465('screen.aiproviders.optin.note', 'Off until an administrator turns it on. Work never moves to it from another list otherwise.', 'aiproviders: the opt-in note')
+w465('screen.aiproviders.optin.note', 'Off until an administrator turns it on. Until then, only your team\'s own list uses this account.', 'aiproviders: the opt-in note')
 w465('screen.aimine.optin', 'My projects may add this account to their lists', "aimine: the opt-in on a member's own API-key account, off by default")
 w465('screen.aimine.subscription.ownlist', "A personal subscription is only ever on your own list, never on your team's or a project's.", "aimine: the line on a member's personal subscription row")
 w465('screen.aiconnect.key.sealed', "Keep it sealed in your team's Civicsmith", 'aiconnect step 3: the fifth way a key is held')
@@ -8407,7 +8407,7 @@ w465('screen.aiconnect.key.sealed.line', "Your team's Civicsmith keeps the key s
 w465('screen.aimoments.checksapply', "Your team's checks and the {project} project's checks apply to this work. Work outside a project uses your team's checks only.", 'aimoments: whose checks apply; {project}')
 w465('screen.aiconnect.s3.sealgo', 'Keep it sealed', 'aiconnect step 3: the sealed way, its button')
 w465('screen.aimoments.mock.i', 'whose checks apply', 'aimoments: the mock choice for the new moment')
-w465('screen.aimoments.continued.crossowner', "It went on with your team's second account, which your administrators let projects use.", 'aimoments a: the continued account belongs to another owner')
+w465('screen.aimoments.continued.crossowner', "Your administrators let projects use this team account.", 'aimoments a: the continued account belongs to another owner')
 def w466(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-466: ' + note))
 # AI-DESIGN needs U1, U2, U3, U5: the AI's name in machine labels, a run's parts, the ready state, the installer's gateway ask
@@ -8423,7 +8423,7 @@ w466('screen.run.parts.head', 'How this run went', 'a finished run: the parts li
 w466('screen.run.part', 'Part {n} · {ai} on {account} · {from} to {to}', 'a finished run: one part (U2)')
 w466('screen.run.switch', 'Went on to {ai} on {account}, because {reason}', 'a finished run: the change of AI between parts (U2)')
 w466('screen.run.declined', '{member} declined to go on with another AI; the run stopped.', 'a run that stopped because the member declined the change (U2)')
-w466('screen.ai.ready', 'The assistant is ready: {n} accounts on.', 'setup and AI providers: the ready state (U3)')
+w466('screen.ai.ready', 'The assistant is ready: {n} accounts on.', 'setup: the ready state, several accounts (U3); AI providers says it with screen.aiproviders.stands.on (DEC-469)')
 w466('screen.ai.ready.one', 'The assistant is ready: one account on.', 'setup: the ready state, one account (U3)')
 w466('screen.ai.notready', "The assistant isn't ready: no account is on yet. Add one in AI providers.", 'AI providers: not ready (U3)')
 w466('screen.ai.projectonly', "Your team has no account of its own. The assistant works in {project} only, on that project's account.", 'AI providers: a project-only account (U3, interface-shell R20)')
@@ -8462,7 +8462,7 @@ w468('screen.aiproviders.bymember.note', "Your team pays for this account, so it
 w468('screen.aiproviders.bymember.th.member', 'Member', 'aiproviders and aiproject: the by-member table, the member column (K5459)')
 w468('screen.aiproviders.bymember.th.runs', 'Runs', 'aiproviders and aiproject: the by-member table, the runs column (K5459)')
 w468('screen.aiproject.bymember.note', "This project pays for this account, so its owners see each member's use on it.", 'aiproject: the line under the by-member table (K5459)')
-w468('screen.aimine.seenby', "Your use on accounts your team or a project pays for is shown to their administrators. Your own subscription's use is yours alone.", 'aimine, Your use and cost (K5459)')
+w468('screen.aimine.seenby', "Your use on accounts your team or a project pays for is shown to your team's administrators or that project's owners. Your own subscription's use is yours alone.", 'aimine, Your use and cost (K5459)')
 w468('screen.layers.head', 'The rules each place brings', 'places: the heading of the layers, each with its information mark (K5450, DEC-404)')
 w468('screen.layers.info.label', 'How current this is', 'places: the information mark\'s name for assistive technology (K5450)')
 w468('screen.layers.info.entry', 'Read from {source} on {date}. Its calendars reach {reach}.', 'places: the information mark beside a layer; {source} {date} {reach} (K5450)')
@@ -8471,6 +8471,14 @@ w468('screen.layers.info.promise', "Civicsmith promises the date it read this, n
 w468('screen.layers.info.page', "This page's rules come with each Civicsmith update. The newest was read on {date}.", 'places: the information mark by the page title; {date} (K5450)')
 w468('queue.kind.rules-changed', 'Rules that changed in this update', 'queue: the kind, for an administrator (K5450; the style of queue.kind.*)')
 w468('screen.queue.ruleschanged', "{n} rules your team uses changed in this update: {list}. You're told once.", 'queue: an administrator item after an update (K5450); {n} {list}')
+REWRITE.update({
+  'screen.panel.usage.group': "Summed over members, and nothing asked is shown. Whoever pays for the account, administrators or owners, also sees each member's use. A member sees their own use on Settings › The assistant.",   # DEC-469: K5459, the payer sees use by member
+})
+def w469(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-469: ' + note))
+# the consistency read of DEC-465 to DEC-468
+w469('screen.aimoments.mock.j', 'you stopped instead of switching', 'aimoments: the mock option for a run the member stopped (screen.run.declined)')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
