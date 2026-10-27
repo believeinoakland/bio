@@ -252,7 +252,9 @@ const REL = (rules) => [
    (`BUILTIN_OK` false: every release before control-plane's statement) they would be refused, so they now serve `NEWER()`,
    the built-in's own bytes plus the statement, signed by a key the arm arms, one version on. The arms ABOUT the
    built-in fallback assert whichever holds, so they survive the cut that embeds a release stating its limits. */
-const LIM = "bio-plane-limits/1 subrequests=10000";
+/* From 0.87.0 the built-in states its own limits (cpu_ms beside subrequests): \`NEWER()\` then repeats that statement, never a
+   second, different one, which the installer rightly refuses as unreadable (statements.mjs: exactly one distinct statement). */
+const LIM = (RELEASE_SOURCE.match(/"(bio-plane-limits\/1 [^"]+)"/) || [])[1] ?? "bio-plane-limits/1 subrequests=10000";
 const BUILTIN_OK = NG.planeLimits(RELEASE_SOURCE).ok;
 const CUR = await signer("current-release");
 const CUR_VER = bump(RELEASE_VERSION);
@@ -348,7 +350,7 @@ console.log("\n--- install: the whole conversation ---");
     { new_tag: "v1", new_sqlite_classes: ["Store"] });
   t("Durable Object bound", meta.bindings.some((b) => b.type === "durable_object_namespace" && b.class_name === "Store"), true);
   t("VERSION is the release chosen", meta.bindings.find((b) => b.name === "VERSION")?.text, CUR_VER);
-  t("R20: limits are the release's own statement", meta.limits, { subrequests: 10000 });
+  t("R20: limits are the release's own statement", meta.limits, { ...NG.planeLimits(curSrc).limits });
   /* D-102: the instance name IS the worker name, so the slug the group already
      chose is what the agent advertises. Bound here rather than asked for
      separately; a second name would be a second source of truth that drifts.

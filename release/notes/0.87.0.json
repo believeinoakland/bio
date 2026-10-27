@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-27",
+  "security": false,
+  "notes": {
+    "members": "Publishing a case now works: you can prepare it, sign it with your key and publish it, and anyone can then read it without signing in. A records request can be started, an office named with its body and dates, the sending recorded and the reply, with its fee, shown back. Find no longer fails on common words and now understands OR, quoted phrases and NOT. A standard's page now lets you record whom it binds and from when, so a determination that an act did or did not comply can be recorded. Once an administrator has set your team's time zone, it is used for every date: sharing a case for review, figures read for a period, the timeline's events and a plan's date checks. Not working yet: the assistant is not part of this release. Old Word files and files inside archives are not read. This is still a test release, and this version was not walked through screen by screen before it was released.",
+    "administrators": "Set your team's time zone under Settings, Your team: it now governs every date your team records or reads, and a place profile's zone is used only when none is set. Your team page opens faster, and a member's request to forward an item to an administrator now works. Known gaps: a notice that a member registered a signing key cannot yet be marked done. The safe view of some Word files may not show yet. Old Word files are not read. The assistant is not included in this release. This version was not walked through screen by screen before it was released; problems found afterwards are fixed in the next release. Nothing you run today needs to change.",
+    "must_do": ""
+  }
+}

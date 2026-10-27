@@ -245,6 +245,7 @@ for _s in S:
     if _s['id'] in ('people','money','timeline','document','finder','registers','explore'):
         _have = {a['op'] for a in _s['acts']}
         for _op, _l in _FOLLOW_ACTS + (_EXPLORE_ACTS if _s['id'] == 'explore' else []):
+            # DEC-443 (B538 (4)): on Explore, search is drawn only inside "Follow from here" ("Documents that name them", DEC-410)
             if _op not in _have and not (_s['id'] == 'document' and _op == 'search'): _s['acts'].append(dict(op=_op, label=_l))
 
 # DEC-244: the queue holds the to-dos Home shows (vouching for photos, approving a letter).
@@ -253,6 +254,13 @@ for _s in S:
         _have = {a['op'] for a in _s['acts']}
         for _op, _l in [('release','Vouch for a capture'),('filingapprove','Approve a letter')]:
             if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
+
+# DEC-443 (B538 (1), K5308): the acts DEC-439 worded, now served: the time zone at setup, a leg's capture grade, finding the names in a
+# document, and the signing-key item's answer (credentials R83)
+for _s in S:
+    _have = {a['op'] for a in _s['acts']}
+    for _sid, _op, _l in [('setup','factconfirm','Save the time zone'),('question','leggrade','Record this grade'),('document','resolve','Find the people and offices it names'),('queue','signerknown','I know about this key')]:
+        if _s['id'] == _sid and _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
 
 # DEC-245 (K3320): the first investigation on the question: find a source, ask the assistant, stop it, accept its reading.
 for _s in S:

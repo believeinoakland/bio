@@ -26,6 +26,9 @@ function legistar(w, name, { body = null, locator = null, at = null } = {}) {
 function setup({ zone = GOLD.zone, votes = "none" } = {}) {
   const view = testView({ legistar: true, votes });
   const w = world({ view: { ...view, time_zone: { value: zone, status: "researched", basis: "TEST" } } });
+  /* K5292: the team states its zone (local-facts R22), which governs over the profile's */
+  const set = w.record.setSetting("team_time_zone", zone, "member:alice");
+  if (set && set.ok === false) throw new Error(`setup: team_time_zone refused ${set.reason}`);
   const body = w.entity("A followed body", "body");
   return { w, body };
 }

@@ -1,0 +1,6 @@
+# Bob's product rulings: the scheduler, the record's size and service levels
+
+**Status** · Bob's product rulings on the scheduler, the record's size and service levels, by subject (Bob, K5323), read whole by the work that plans or changes the scheduler, storage or service levels. Each line keeps its source ids; `build/rulings.md` is the full log. Moved from `rulings-active.md` when the process redesign was adopted; a ruling of Bob's on this subject is added here in the commit that records it.
+
+- The scheduler heals itself unseen (Bob, K4565): a stall is never shown to anyone; a past alarm is never trusted, any request re-arms; the scheduled trigger is a watchdog, "efficient - but mission-critical bulletproof" (K4566), that never fails silently.
+- The record's size (Bob, K4635): teams are told it depends on their Cloudflare plan and the infrastructure; now one Durable Object per team with a measured storage gauge and stated warnings; for the beta, split across objects with bulk tables in R2 (N1271). Service levels (K4746, in the requirements) name their design stage and Cloudflare plan, figures measured before a team sees them (K4747: the minimum in the alpha).

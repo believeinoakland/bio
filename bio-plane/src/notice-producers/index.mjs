@@ -62,7 +62,7 @@ import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { overdueOn, dayRange, localDay, localClock } from "../civil-time/index.mjs";
-import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { combine as combineProfiles, governingZone } from "../../../jurisdictions/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyChecksOf } from "../money-checks/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
@@ -1591,6 +1591,9 @@ export class NoticeProducers {
   }
   #readZone() {
     try {
+      /* K5292 (jurisdictions R98): the team's governing zone (its stated `team_time_zone`, else the profiles') first */
+      const held = (name) => { const row = this.#rows(`SELECT value FROM settings WHERE name=? ORDER BY rowid DESC LIMIT 1`, name)[0]; return row ? JSON.parse(row.value) : null; };
+      try { const g = governingZone(held("jurisdiction_profiles"), held("team_time_zone")); if (g && typeof localDay("2026-01-01T00:00:00Z", g) === "string") return g; } catch { /* read the view below */ }
       let view = this.#deps.view;
       if (typeof view === "function") view = view();
       if (!view) {

@@ -2,7 +2,7 @@
   "name": "pdf-worker",
   "private": true,
   "type": "module",
-  "version": "0.86.0",
+  "version": "0.87.0",
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test --test-force-exit --test-concurrency=1 test/*.test.mjs test/codecs/*.test.mjs"

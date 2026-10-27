@@ -16,7 +16,7 @@ import { entitiesOf, noEntity, noSuchEntity, notAProceeding, gradeRank } from ".
 import { readHooksOf } from "../reading-pipeline/hooks.mjs";
 import { idPattern, isHypothesisId, isMachineIdentity, sha256HexSync, canonicalJson, TESTIMONY_GRADE }
   from "../record-grammar/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { combine, governingZone } from "../../../jurisdictions/index.mjs";
 import { registerOwner } from "../connection-grammar/index.mjs";
 import { EVENTS_SCHEMA, EVENTS_ADDED_COLUMNS } from "./schema.mjs";
 import { EVENT_CHECKS } from "./checks.mjs";
@@ -157,7 +157,7 @@ export function eventsOf(ctx, opts = {}) {
 export class Events {
   #sql; #record; #membership; #now; #viewOpt; #deps;
   #onWhen = []; #onChanged = []; #sources = []; #started = false; #migrated = false; #actAt = null;
-  #kept = { stamp: null, answers: new Map(), sets: new Map(), pending: new Map() };
+  #kept = { stamp: null, zone: undefined, answers: new Map(), sets: new Map(), pending: new Map() };
 
   constructor(storage, { record, membership = null, provenance = null, extraction = null, content = null,
                          entities = null, now = null, view = null } = {}) {
@@ -246,7 +246,15 @@ export class Events {
     const c = combine(Array.isArray(ids) ? ids : []);
     return c && c.ok ? c.view : {};
   }
-  zone() { const z = this.view().time_zone; return z && typeof z.value === "string" ? z.value : null; }
+  /* K5292 (jurisdictions R98): the team's governing zone (its stated `team_time_zone`, else the profiles'), else the view's. */
+  zone() {
+    try {
+      const g = typeof this.#record.getSetting === "function"
+        ? governingZone(this.#record.getSetting("jurisdiction_profiles"), this.#record.getSetting("team_time_zone")) : null;
+      if (g) return g;
+    } catch { /* read the view below */ }
+    const z = this.view().time_zone; return z && typeof z.value === "string" ? z.value : null;
+  }
 
   /* ---- sight (R40; membership R43) ---- */
 
@@ -1427,7 +1435,7 @@ export class Events {
     try { n = Number(this.#one(`SELECT total_changes() AS n`).n); } catch { return null; }
     if (!Number.isFinite(n)) return null;
     const c = this.#kept;
-    if (c.stamp !== n || c.answers.size + c.pending.size > KEPT_MAX) { c.stamp = n; c.answers.clear(); c.sets.clear(); c.pending.clear(); }
+    if (c.stamp !== n || c.answers.size + c.pending.size > KEPT_MAX) { c.stamp = n; c.zone = undefined; c.answers.clear(); c.sets.clear(); c.pending.clear(); }
     return c;
   }
 

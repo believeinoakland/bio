@@ -1,0 +1,84 @@
+<title>Bringing the Tests Up to Date</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column, a decision brief: situation, two options side by side, the recommendation set apart. */
+:root {
+  --bg: #f7f8f6; --fg: #1d2420; --muted: #5a655e; --line: #d6ddd8; --panel: #ffffff; --accent: #2f6b4f; --accent-soft: #e3efe8;
+  --display: "Source Serif 4", Georgia, serif; --body: "IBM Plex Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141917; --fg: #e4ebe6; --muted: #9aa8a0; --line: #2c3631; --panel: #1b221f; --accent: #7cc4a0; --accent-soft: #1f3329; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141917; --fg: #e4ebe6; --muted: #9aa8a0; --line: #2c3631; --panel: #1b221f; --accent: #7cc4a0; --accent-soft: #1f3329; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; }
+main { max-width: 44rem; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.3rem; }
+p, ul, ol { margin: 0; }
+section { display: grid; gap: 10px; }
+.eyebrow { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); font-size: 1.05rem; }
+.ask { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 14px 16px; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 16px; }
+.opt { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.opt.rec { border-color: var(--accent); }
+.tag { font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.opt h3 { margin: 0; font-family: var(--display); font-size: 1.1rem; }
+ol, ul { padding-left: 1.2rem; display: grid; gap: 6px; }
+.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.foot { color: var(--muted); font-size: .9rem; }
+</style>
+<main>
+  <header style="display:grid;gap:8px">
+    <div class="eyebrow">For Bob · T52, the beta · 27 Oct 2026</div>
+    <h1>Bringing the tests up to date</h1>
+    <p class="lede">You asked for a way to bring the tests up to date without spending a week on it, and without opening jobs just to fix tests. This is that plan.</p>
+  </header>
+
+  <section>
+    <h2>Where things stand</h2>
+    <ul>
+      <li>Many tests check the exact English a screen shows. When the design stream changes a word, those tests fail even though nothing is broken. A quick count finds at least <span class="num">265</span> of the <span class="num">3,069</span> test files doing this.</li>
+      <li>About <span class="num">30</span> known failing tests were set aside until after the alpha. Some are stale tests, some may be real faults. Nobody can tell which yet, partly because a test that runs out of memory used to report nothing at all.</li>
+      <li>You already decided the direction: tests check the word's key, never the English (your words, 26 Oct). What's left to decide is how to get there quickly.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The two ways to do it</h2>
+    <div class="options">
+      <div class="opt rec">
+        <div class="tag">Recommended</div>
+        <h3>A · One tooled sweep when T52 opens</h3>
+        <ol>
+          <li>Turn on the new test runner first, so a test that crashes says why.</li>
+          <li>A program finds every test that checks English and switches it to check the word key. This is one pass in my session, before T52's first jobs start.</li>
+          <li>Where a screen doesn't give a key yet, that module's T52 job adds it alongside its real work. No job is opened only for tests.</li>
+          <li>The word check is extended to refuse English in new tests, so the problem doesn't return.</li>
+          <li>Each of the 30 failing tests is run once and sorted. A stale test gets fixed in the sweep. A real fault goes to its module's T52 job.</li>
+        </ol>
+        <p><strong>Cost:</strong> about a day before T52's first jobs start. After that, wording changes stop breaking tests, and a failing test means something is actually broken.</p>
+      </div>
+      <div class="opt">
+        <div class="tag">Alternative</div>
+        <h3>B · Fix tests only as modules are touched</h3>
+        <ol>
+          <li>Nothing is done up front. T52's jobs start right away.</li>
+          <li>Each job switches its own module's tests to word keys as part of its work.</li>
+          <li>Modules no job touches keep their English tests.</li>
+        </ol>
+        <p><strong>Cost:</strong> no delay at the start. But jobs spend part of their time on test cleanup, real failures stay mixed in with stale ones for weeks, and any wording change from the design stream keeps breaking the modules nobody has touched yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ask">
+    <h2>What I need from you</h2>
+    <p>Choose A or B. I recommend <strong>A</strong>: it costs about a day once, it opens no jobs just for tests, and afterwards a red test means something is really broken. If the sweep runs past a day, I'll tell you why.</p>
+  </section>
+
+  <p class="foot">Not affected by this choice: the alpha's live walk on 0.87.0 is running now. Its findings become T52 work.</p>
+</main>

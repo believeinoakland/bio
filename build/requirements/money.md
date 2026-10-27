@@ -98,6 +98,7 @@ Terms.
 - `events`: `has`, relations (`amends`, `authorises`) and the award and change-order events (R1, R14, R15). Since T36, `readEvent` (its R26: kind, `when`, the governing attestation) for R25, and R49's shape for R24 (an existing edge).
 - `lines`, `standards`, `progressions`: named by the plan's Rule 3; nothing in R1–R19 calls them. *(BOB's: keep or drop)*
 - `jurisdictions` (not in the plan's list): fiscal years, classification schemes, balance-class families (R1). *(a new edge; BOB's)*
+- (T51b; K5292, K5343) `jurisdictions`: `governingZone` (its R98), and `record-core`: `getSetting` for `team_time_zone` and `jurisdiction_profiles`: a period stating no zone is read in the team's governing zone (R1). `local-facts`: `factConfirm`, `TEAM_ZONE_PATH` (its R21, R22), in tests only, to state the team's zone at the interface.
 
 ### Invariants
 

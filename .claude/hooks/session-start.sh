@@ -48,10 +48,10 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
 fi
 
 # 2 · full history ----------------------------------------------------------------------------
-if [ "$(git -C "$REPO" rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
-  say "unshallowing the clone"
-  git -C "$REPO" fetch --quiet --unshallow origin || say "FAILED to unshallow — git-history checks will misread dates"
-fi
+# RETIRED 2026-10-26 (the process redesign, civicos-process lane HANDOFF R8; Bob, in that lane's session): the full
+# history was fetched here for the old process's date checks (`tools/corpuscheck.mjs`, retired 2026-09-26), and cost
+# every session about 3 minutes (T51: 39,093 commits in 30 days). A session now starts shallow; the process tool fetches
+# the history a merge needs when it needs it (`proc history`, PROCESS-MECHANICS §4).
 
 # 2b · the id ledger's directory: RETIRED 2026-10-01 with the old process's id allocator (T19 BOB-5, K653).
 
@@ -60,7 +60,7 @@ fi
 # (PROCESS-MECHANICS §8), and it is no longer installed.
 
 # 3 · dependencies ----------------------------------------------------------------------------
-for pkg in bio-plane pdf-worker ocr-worker newgroup; do
+for pkg in bio-plane pdf-worker ocr-worker newgroup file-scanner agent-runner sheet-worker; do   # the bundle members verified at each merge (manifest)
   dir="$REPO/$pkg"
   [ -f "$dir/package-lock.json" ] || continue
   # Skip when an install exists and is newer than the lockfile; npm ci otherwise (it refuses drift).

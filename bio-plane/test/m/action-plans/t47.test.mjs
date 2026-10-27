@@ -13,7 +13,9 @@ const WORDS = Object.fromEntries(
     .filter((w) => w && typeof w.key === "string").map((w) => [w.key, w.en]));
 const read = (w, nowMs) => w.ap.planRead({ id: w.PL, viewer: V("bob"), nowMs });
 const of = (r, check) => r.checks.filter((c) => c.check === check);
-const TOKYO = () => ({ time_zone: { value: "Asia/Tokyo", status: "researched", basis: "TEST" } });
+/* K5292: the team's stated zone governs, so a zone other than the profile's is the team's own; none held is no stated zone, no profile and no place. */
+const TOKYO = (w) => w.record.setSetting("team_time_zone", "Asia/Tokyo", "test");
+const NONE = (w) => { w.record.setSetting("team_time_zone", "", "test"); w.record.setSetting("jurisdiction_profiles", [], "test"); w.actions.place = () => null; };
 
 test("R48: date_past compares a pending option's regulated date with the plan's local day of the read's instant, never the UTC day, in a zone west and east of UTC; with no zone held it is answered undetermined with its reason", () => {
   /* the test profile's zone, America/Halifax: on 15 October 2026, local midnight is 03:00 UTC */
@@ -26,11 +28,11 @@ test("R48: date_past compares a pending option's regulated date with the plan's 
   assert.deepEqual(after.map((c) => [c.option, c.date, c.state ?? null]), [[o, "2026-10-14", null]], "control: on the local day after, it is past");
   assert.match(after[0].says, /has passed \(the order\)/);
   /* the reverse: a zone east of UTC, where the local day has begun before the UTC day */
-  w.actions.place = TOKYO;
+  TOKYO(w);
   assert.equal(of(read(w, ms("2026-10-14T15:00:00Z")), "date_past").length, 1, "the local day is the 15th, the UTC day still the 14th");
   assert.deepEqual(of(read(w, ms("2026-10-14T14:59:59Z")), "date_past"), [], "control: a second before local midnight");
   /* no zone held: undetermined with its reason, never computed on the UTC day and never left out */
-  w.actions.place = () => null;
+  NONE(w);
   for (const at of ["2026-10-01T12:00:00Z", "2027-06-01T12:00:00Z"]) {
     const none = of(read(w, ms(at)), "date_past");
     assert.equal(none.length, 1, at);
@@ -66,10 +68,10 @@ test("R48: date_before_phase compares a regulated date with the plan's local day
     "the 14th is the phase's local start day, so only the 13th falls before it");
   assert.match(found[0].says, /falls before phase a can start \(2026-10-14\)/);
   /* control: in a zone east of UTC the same instant's local day is the 15th, and both fall before it */
-  w.actions.place = TOKYO;
+  TOKYO(w);
   assert.deepEqual(of(read(w, at), "date_before_phase").map((c) => c.option).sort(), [on, before].sort());
   /* no zone held: each is answered undetermined with its reason */
-  w.actions.place = () => null;
+  NONE(w);
   const none = of(read(w, at), "date_before_phase");
   assert.deepEqual(none.map((c) => [c.option, c.state]).sort(), [[on, "undetermined"], [before, "undetermined"]].sort());
   for (const c of none) { assert.equal(c.phase, "a"); assert.match(c.says, /no time zone is held/); }

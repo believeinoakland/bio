@@ -57,7 +57,7 @@ test("R54 an event with no when answers sequence undetermined with why {key: eve
   assert.equal(word(q.why.key, q.why.vars), word("events.why.placed_nowhere_event"));
   const view = testView();
   delete view.time_zone;
-  const z = world({ view });
+  const z = world({ view, profiles: false });
   const x = z.event({ value: "2026-07-01" }).event_id, y = z.event({ value: "2026-07-02" }).event_id;
   const zq = z.ev.sequence({ a: x, b: y });
   assert.equal(zq.answer, "undetermined");

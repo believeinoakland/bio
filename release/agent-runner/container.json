@@ -1,6 +1,6 @@
 {
   "class_name": "AgentRunner",
-  "image": "docker.io/civicsmith/agent-runner@sha256:78b09547d8a2e9962f7d1ee373e5f9d80c0e730a8fc97613b3599a92c81bbb63",
+  "image": "docker.io/civicsmith/agent-runner@sha256:4febfa540e99d9c0dbb21482a43f8997c7efce6ca63eaddb2dae9b57a8800415",
   "scheduling_policy": "default",
   "max_instances": 10,
   "instance_type": "standard-1",
