@@ -40610,7 +40610,7 @@
   },
   {
    "key": "screen.aiconnect.s4.recorded",
-   "en": "Your acceptance is recorded with your name and the date. The terms are accepted once for this account, and shown again if they change.",
+   "en": "Your acceptance is recorded with your name and the date.",
    "protected": false,
    "note": "DEC-420: B488 aiconnect: s4 recorded"
   },
@@ -41714,7 +41714,7 @@
   },
   {
    "key": "screen.document.sheet.read",
-   "en": "Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.",
+   "en": "Every line of this sheet is read, and can be searched and cited.",
    "protected": false,
    "note": "DEC-422: B491 (2) G41 (K4636): on the Document page of a sheet"
   },
@@ -45989,6 +45989,96 @@
    "en": "No estimate yet for {ai}: Civicsmith hasn't measured it.",
    "protected": false,
    "note": "DEC-475: aimoments l: no estimate before a run; {ai} (K5488)"
+  },
+  {
+   "key": "screen.aiconnect.s4.none",
+   "en": "This plan carries no warning, so there is nothing to accept.",
+   "protected": false,
+   "note": "DEC-476: aiconnect step 4: a plan with no warning (K5493); the terms are no longer accepted here"
+  },
+  {
+   "key": "screen.aiconnect.terms.link",
+   "en": "Read {provider}'s terms for this use",
+   "protected": false,
+   "note": "DEC-476: aiconnect: the optional fold beside Switch it on; never a required step or a tick box (K5493)"
+  },
+  {
+   "key": "screen.aiconnect.terms.quoted",
+   "en": "From {provider}'s {page}, as of {date}:",
+   "protected": false,
+   "note": "DEC-476: aiconnect: the line above the quoted terms; {page} and {date} the provider's own (K5493)"
+  },
+  {
+   "key": "ai.notice.termschange",
+   "en": "{provider} changes its terms on {date}. Read what changes before then.",
+   "protected": false,
+   "note": "DEC-476: the notice when a provider announces new terms (K5493); not drawn"
+  },
+  {
+   "key": "screen.document.interp.label",
+   "en": "Interpreted",
+   "protected": false,
+   "note": "DEC-476: document: the label of the head fact row (K5495)"
+  },
+  {
+   "key": "screen.document.interp.tip",
+   "en": "Interpreting turns a part into the figures, dates and connections the record relies on. It happens only for the parts a member opens, cites or marks, for one investigation at a time; the whole document is searchable either way.",
+   "protected": false,
+   "note": "DEC-476: document: the label's tip (K5495); finding names for search is reading, not interpreting (K5496), so no marker for it"
+  },
+  {
+   "key": "screen.document.interp.for",
+   "en": "For {investigation}: {parts} ({member}, {date}). Not yet: {ranges}.",
+   "protected": false,
+   "note": "DEC-476: document: the fact value for the current investigation (K5495)"
+  },
+  {
+   "key": "screen.document.interp.other",
+   "en": "For {investigation}: {parts} ({member}, {date}).",
+   "protected": false,
+   "note": "DEC-476: document: beneath it, another investigation the viewer can see (K5495)"
+  },
+  {
+   "key": "screen.document.interp.none",
+   "en": "Nothing yet for {investigation}.",
+   "protected": false,
+   "note": "DEC-476: document: the fact value before any part is interpreted; not drawn (K5495)"
+  },
+  {
+   "key": "screen.document.interp.recorded",
+   "en": "Interpreted for {investigation}: {part}.",
+   "protected": false,
+   "note": "DEC-476: document: the history line when a part is interpreted; not drawn (K5495)"
+  },
+  {
+   "key": "screen.document.interp.offer",
+   "en": "Interpret parts of this for {investigation}",
+   "protected": false,
+   "note": "DEC-476: document: the act, owed op interpretmark (K5495)"
+  },
+  {
+   "key": "screen.document.interp.chooser.will",
+   "en": "This reads the parts you choose for {investigation}.",
+   "protected": false,
+   "note": "DEC-476: document: the legend of the chooser (K5495)"
+  },
+  {
+   "key": "screen.document.interp.chooser.whole",
+   "en": "The whole document",
+   "protected": false,
+   "note": "DEC-476: document: the first option of the chooser, then page ranges, none pre-ticked (K5495)"
+  },
+  {
+   "key": "screen.document.interp.legend.this",
+   "en": "Interpreted for {investigation}",
+   "protected": false,
+   "note": "DEC-476: document: the legend under the page text, once per bar (K5495)"
+  },
+  {
+   "key": "screen.finder.notinterp",
+   "en": "not interpreted for {investigation}",
+   "protected": false,
+   "note": "DEC-476: finder: on a document or passage hit whose document is not interpreted for the current investigation (K5495)"
   }
  ],
  "rewrite": {
