@@ -26,3 +26,23 @@
 
 Tests: 80/80. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcegW9K1yhVCSYsMB8Ve): test runs 1, module lines 3590
+
+## Completion (2026-10-27)
+
+# image-codecs · T53 R1 · report 2 (K5583 answer)
+
+**Entries applied**
+- T53-55 · K5565 · English in tests: complete. The last regex site (dct.test.mjs, the Huffman refusal note) now asserts the word key for each refused case, with its values. Each case maps to the decoder check that produces it (classOrId, countsRunPast, ofTotal, bogus with its inner codes or DC-symbol reason).
+- Words check: 0 failures (testenglish 0, missingkey 0, marker 0).
+- Suite: pdf-worker/test/codecs/*.test.mjs, 80 of 80 pass.
+- Merged origin/tranche/T53 and pulled civicos-process main (PR #20, #21).
+
+**Not done**
+- Baseline left as recorded, per BOB (K5583).
+
+**Found in other modules**: none.
+
+**Met** · none
+
+Tests: 80/80. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcegW9K1yhVCSYsMB8Ve): test runs 2, module lines 3590
