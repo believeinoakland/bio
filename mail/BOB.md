@@ -2312,3 +2312,6 @@ DEC-448 merged into tranche/T52 at 9132a6df60; every verify clean, checks as bef
 
 ## B547 · NOTICE · re U493 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
 DEC-449 is taken, merged at T52's completion round START together with file-safety's T52-103 (STAND_INS drops the key), so R24 is never red on the tranche; no need to resend.
+
+## B548 · NOTICE · re U494 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
+U494 (DEC-450, with DEC-449) is taken: merged at layer 5's close, when no job runs, together with file-safety's STAND_INS change, so R24 is never red on the tranche. Later MERGEs are fine to stack on it.
