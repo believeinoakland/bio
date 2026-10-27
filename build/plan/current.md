@@ -1,8 +1,8 @@
 **Round** · R1 · layer 1 CLOSED · layer 2 CLOSED · layer 3 CLOSED · layer 5 CLOSED · layer 6 CLOSED · layer 8 OPEN · layer 9 OPEN · layer 10 OPEN · layer 11 OPEN
 # Plan T52 · the beta (K5257)
 **Status** · OPEN · BOB #320 · session_018BhcecJrZBGdFHx6zQiGAc · depth 1
-**Jobs** · inquiry-grammar: INQUIRY-GRAMMAR #1 session_018BhcefZe8MJ26gSBpswxfA; leg-earning: LEG-EARNING #1 session_018BhceeCT96yvS78CHqWUdd; citation: CITATION #1 session_018BhcedirTswJ5Q8CK6bwqc; contradiction: CONTRADICTION #1 session_018BhceevdQgJU32nQYsevt6; agent-worker: AGENT-WORKER #1 session_018Bhcedo9RydAw6BpX6Z7Jy
-**Owed** · archive inquiry-grammar; archive leg-earning; archive citation; archive contradiction; archive agent-worker
+**Jobs** · leg-earning: LEG-EARNING #1 session_018BhceeCT96yvS78CHqWUdd; citation: CITATION #1 session_018BhcedirTswJ5Q8CK6bwqc; contradiction: CONTRADICTION #1 session_018BhceevdQgJU32nQYsevt6; agent-worker: AGENT-WORKER #1 session_018Bhcedo9RydAw6BpX6Z7Jy
+**Owed** · archive leg-earning; archive citation; archive contradiction; archive agent-worker
 
 T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are written from `next.md` and the 0.87.0 walk's placement (K5354); R14 (civicos-process PR #13) is adopted before its first test run (K5351).
 
