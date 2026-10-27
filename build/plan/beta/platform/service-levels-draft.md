@@ -43,14 +43,19 @@ A level is defined by what a copy can do, each naming the design stage it needs 
 - **PL28** While Level 2 does not exist (until N1271 is built), a Level 1 copy that is outgrowing is told so truthfully: what it can do now (pare the record, K4635's second factor; a paring aid is a screen need) and that the next level is not yet offered. Test: the words key differs for "next level not yet offered".
 - *Screen need (to UX-DESIGN through BOB):* the Settings gauge gains the three indicators, the "approaching" and "outgrowing" states and the next-level line; the installer's level line (PL22) names the range.
 
+**Choosing a level at install (K5444)** (installer, installer-steps; with UX-DESIGN)
+- **PL29** The install offers Team, Institution and Enterprise, each stating: what it is for (in a plain sentence), its measured range (members at once, record, upload) or "not yet measured", the Cloudflare plan it needs, and what it costs the team a month by Cloudflare's published prices (Enterprise: by quote). A level whose design stage is not yet built is shown and not selectable ("not yet available"). The chosen level sets the design stage the copy is created at (Level 1: one room; Level 2: the split record from creation, N1271; Level 3: Level 2 with its further splitting and caching) and is recorded as the copy's declared level (`levelOf`, PL20). The installer's preflight (`installer` R70) checks the plan the level needs, and a level that needs a plan the account lacks is refused before anything is created, naming the plan. Test: an unbuilt level is listed unselectable; a built one sets the stage and the declared level; Enterprise on a non-Enterprise account refused before the room exists; the words say "not yet measured" while `measured` is null.
+- *Screen need (to UX-DESIGN through BOB):* the level choice at install with the sentence, range, plan and cost for each; "not yet available" and "not yet measured" states; the line that a copy can move up later and not down, and how (PL24, PL50-PL57).
+
 ## 4. What must be measured, and on what copy
 
 Per level, on a scratch copy at that design stage, never biosmoke8: record bound (writes fail at the shelf, the gauge's 70 % and 90 % hold), members-at-once at the budget (`time-budgets-draft.md`), upload size through the Worker and direct-to-R2, and the cost at the rated load (rows written is the first charge past the $5, P17: about $20 a month on the test copy's busiest day, sustained). Level 3 differs from Level 2 only by what Enterprise adds; those parts (5 GB uploads, region-held data) are measured on a copy whose owner holds the contract, so they are *stated, not measured*, until one does: the words say so (a figure from Cloudflare's published limit carries its source).
 
-## 5. For Bob (through BOB)
+## 5. Decided, and what is left (P4, K5444)
 
-- **(P4, open) Whether to show a level's figures to a team before Level 2 and 3 exist.** Options: (a) show Level 1 only, and name Levels 2 and 3 as "when your record outgrows this" without figures; (b) show all three with the Level 2-3 figures marked as planned. *Recommend (a): K4746 forbids unmeasured figures, and Level 2's rest on a study not yet done.*
-- **Whether a team is told its level at install** (N1273) or only in Settings. Recommend at install, as one line, since the founder chooses a plan then (N1265).
+Bob (K5444, as BOB relayed it): a newsroom should be able to start a copy at the Institution level, set up from the start for the demand it will get on day one; if a study of how to support Levels 2 and 3 is needed, start it now. So: a copy **chooses** Team, Institution or Enterprise at install and can still move up later; until a level is built and measured its figures show as "not yet measured" (PL21); the study starts now (`levels-2-3-study-plan.md`).
+
+**Left, technical (BOB's):** a level that is not built cannot be created, so the install lists all three but a level is *selectable* only once built (PL29); recommend that, over letting a team pick a level whose design does not yet exist. **A question for BOB, not Bob:** whether a team may also move *down* (no: rooms do not merge; the only move is an export and an import, PL50-PL57).
 
 ## 6. What I need from other lanes
 

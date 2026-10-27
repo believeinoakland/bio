@@ -12,15 +12,16 @@
 - `load-test-draft.md` **READY**: PL40-PL43, proposed module `load-check`; the scratch deployment is BOB's (K5120, K5434): say when and on what.
 - `record-placement-draft.md` **READY** for placement and the picker (P2 K5440, P3 K5441 folded; Cloudflare's pages re-read 2026-10-27 and quoted in §2, which changed the design: a jurisdiction covers only where the room runs and stores; Workers reach it from anywhere, so the words promise storage, and the R2 bucket needs its own jurisdiction at creation, PL34). The split (§4) waits on N1271's study.
 - `whole-record-move-draft.md` **DRAFT** (new, K5443 (4)): PL50-PL53 for `corpus-export` (whole-record export by resumable parts), PL54-PL57 for the installer's import; one point maybe Bob's (whether a move carries members' sign-in material; assumed not).
+- `levels-2-3-study-plan.md` **PLAN** (K5444): phases S0-S4, needs, about 3-3.5 lane days and 4-5 calendar days; S0 (table inventory, a worker is running) started now.
 - `service-levels-draft.md` **DRAFT**: PL20-PL28; names Team / Institution / Enterprise = Levels 1 / 2 / 3 (confirmed, K5442; 70 %/90 % thresholds stand); figures estimates until measured; waits on P4 and on load figures from FILES and CAPABILITIES.
-- `DECISIONS.md`: twelve decisions (K5438, K5440-K5443).
+- `DECISIONS.md`: thirteen decisions (K5438, K5440-K5444).
 
-**Open with Bob:** P4 (which levels' figures teams see).
+**Open with Bob:** nothing; whether Bob can lend an Enterprise-plan account for the study (S3) is asked through BOB. P4 answered (K5444): a copy chooses its level at install, can move up, and unbuilt levels show "not yet measured" (PL29).
 
 **Needs from others.** FILES: per-type load (Tier 2, held types), per-image time of DEC-460's photo redraw, the reading rate floor, and whether a jurisdiction R2 bucket changes the direct-to-R2 route. CAPABILITIES: load of registers, team layers, N824, and the whole-record export (PL35, K5441's move). BOB: re-time biosmoke8's hop; the scratch deployment at the load test; PL34's effect on rehearsal installs (K4942). AI-DESIGN: the assistant's declared reads.
 
 **Next steps.**
-1. On P4, fold it into `service-levels-draft.md`; mark it READY once the load figures are in.
+1. Fold the table inventory (worker, scratchpad `table-inventory.md`) into S0's options; when S0 ends, send BOB the prototype spec (`study/prototype-spec.md`) and the `load-check` job request.
 2. Fold FILES' and CAPABILITIES' load figures into the rating (service-levels §2) and the load-test profile (§3).
 3. Re-read Cloudflare's Workers and Durable Object limits pages (figures of 2026-10-23) before any figure is final (the data-location pages are done).
 4. Hand over at 40 % context.
@@ -34,3 +35,5 @@
 **P-3 · 2026-10-27** · Bob's P2 and P3 answered (K5440, K5441). Cloudflare's data-location pages (Durable Objects, 2026-06-26; R2, 2026-08-19) read and quoted in `record-placement-draft.md` §2; design changed by what they say (storage-only promise; R2 bucket in the same jurisdiction; hint and jurisdiction not combined; jurisdictions are eu, us, fedramp). New lines PL34 (R2 bucket) and PL35 (whole-record export, deferred to its owner).
 
 **P-4 · 2026-10-27** · K5443 folded: `whole-record-move-draft.md` (PL50-PL57) written for `corpus-export` and the installer; the one-`eu`-rehearsal added to `load-test-draft.md` §2; placement §3 and §5 updated.
+
+**P-5 · 2026-10-27** · P4 answered (K5444): `service-levels-draft.md` §5 and PL29 (the install's level choice) revised; `levels-2-3-study-plan.md` written; S0's table inventory started.
