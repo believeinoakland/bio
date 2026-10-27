@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19595 design words, 1166 protected; SHA-256
-   201641d9b9a1daedc3e9a91191b5d57c2d0a3c9f31e30ebc4ae5a28c57ce1d34) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19596 design words, 1166 protected; SHA-256
+   7bdbe42a7da0fa4515cca072b87458ffa9a968e9777c362c00397a901ebf6422) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "201641d9b9";
+export const WORDS_COMMIT = "7bdbe42a7d";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10911,7 +10911,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.registers.import.which.form700","Economic interest filings (Form 700)","DEC-407: option",null,false,"design"],
   ["screen.registers.import.which.lobbyists","Oakland lobbyist directory","DEC-407: option",null,false,"design"],
   ["screen.registers.import.which.licenses","State license files","DEC-407: option",null,false,"design"],
-  ["screen.registers.import.go","Bring in this register","DEC-407: button (registerimport)",null,false,"design"],
+  ["screen.registers.import.go","Bring in this register","DEC-407: button (registerfileimport, K5471)",null,false,"design"],
   ["screen.registers.search.head","Search the registers","DEC-407: section",null,false,"design"],
   ["screen.registers.search.who","Person or organization","DEC-407: field",null,false,"design"],
   ["screen.registers.search.min","Smallest amount","DEC-407: field",null,false,"design"],
@@ -12133,6 +12133,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue.kind.rules-changed","Rules that changed in this update","DEC-468: queue: the kind, for an administrator (K5450; the style of queue.kind.*)",null,false,"design"],
   ["screen.queue.ruleschanged","{n} rules your team uses changed in this update: {list}. You're told once.","DEC-468: queue: an administrator item after an update (K5450); {n} {list}",null,false,"design"],
   ["screen.aimoments.mock.j","you stopped instead of switching","DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)",null,false,"design"],
+  ["act.owed_registerimport.does","Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.","DEC-470: held under the old op name while the code still reads it (screens-settings keys.mjs and the L11 modules); dropped when they read act.owed_registerfileimport.does",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -18652,7 +18653,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.owed_sweepset.label.watching","Define a sweep",null,"Saves a sweep: the sites it may visit, the pages it starts from, what it keeps, how often it runs and the most it may fetch. It does not run until the project's owner ratifies it.",true,"design"],
   ["act.owed_sweepratify.label.watching","Ratify or stop a sweep",null,"The project's owner starts a sweep, or any member who can write to the project stops it. Ratifying sends your team's fetches to the named sites, within the scope and budget shown.",true,"design"],
   ["act.writinghelp.label.watching","Help me write this",null,"Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",true,"design"],
-  ["act.owed_registerimport.label.registers","Bring in a register",null,"Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",true,"design"],
+  ["act.owed_registerfileimport.label.registers","Bring in a register",null,"Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",true,"design"],
   ["act.owed_registerlist.label.registers","List the registers the team holds",null,"Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.",true,"design"],
   ["act.owed_registersearch.label.registers","Search the registers",null,"Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.",true,"design"],
   ["act.owed_registerrowcite.label.registers","Cite a row as evidence",null,"Cites one row of a register as evidence, with the register, its source and the date it was brought in.",true,"design"],
@@ -18893,7 +18894,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.owed_exploreall.does","Lists every connection found between the two ends within the search's limits, each with its steps, its weakest step and its dates. It says when the search was cut short, and never that the list is complete.",null,null,false,"design"],
   ["act.owed_explorepath.does","Shows the most direct chain between the two ends first: the fewest steps, then the strongest weakest step, then the date. It is a fact about the chains, not a judgment.",null,null,false,"design"],
   ["act.owed_exploreshorter.does","Puts paths with fewer steps between the same two ends beside the one you built, evidenced paths first and then leads, so you can see them or keep your own. Your chain is never changed.",null,null,false,"design"],
-  ["act.owed_registerimport.does","Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",null,null,false,"design"],
+  ["act.owed_registerfileimport.does","Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",null,null,false,"design"],
   ["act.owed_registerlist.does","Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.",null,null,false,"design"],
   ["act.owed_registersearch.does","Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.",null,null,false,"design"],
   ["act.owed_registerrowcite.does","Cites one row of a register as evidence, with the register, its source and the date it was brought in.",null,null,false,"design"],
