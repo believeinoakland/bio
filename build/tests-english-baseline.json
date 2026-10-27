@@ -115,8 +115,6 @@
   "bio-plane/test/m/bundler/bundler.test.mjs": 1,
   "bio-plane/test/m/bundler/g54-observability.test.mjs": 3,
   "bio-plane/test/m/bundler/release.test.mjs": 4,
-  "bio-plane/test/m/calc-grammar/figures.test.mjs": 2,
-  "bio-plane/test/m/calc-grammar/recipe.test.mjs": 3,
   "bio-plane/test/m/calculations/analysis.test.mjs": 1,
   "bio-plane/test/m/calculations/application.test.mjs": 4,
   "bio-plane/test/m/calculations/calculations.test.mjs": 3,

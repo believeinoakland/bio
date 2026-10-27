@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import * as calc from "../../../src/calc-grammar/index.mjs";
 import { bothWays, streamed, asObjects } from "./fixtures/stream.mjs";
 import { FIELDS, rowAt, table, RECIPES, recipeOf, resolveId } from "./fixtures/heap.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const { relate, evaluate, METHOD, OPS } = calc;
 const fig = (s, extra = {}) => (s.startsWith("-") ? { value: s.slice(1), sign: "-", precision: "exact", ...extra }
@@ -148,7 +149,7 @@ test("R22 a malformed streamed table is refused INPUT_INVALID, as a malformed ta
   let pass = 0;
   const shifting = { fields: f, rows: () => { pass += 1; return Array.from({ length: pass === 1 ? 3 : 2 }, () => ["x", "1"])[Symbol.iterator](); } };
   const r = evaluate({ ...rec, steps: [{ op: "sum", as: "z", from: "t", field: "b" }], output: "z" }, { t: shifting });
-  assert.equal(r.refused, "INPUT_INVALID"); assert.equal(r.step, "z"); assert.match(r.why, /3 rows on its first pass and 2/);
+  assert.equal(r.refused, "INPUT_INVALID"); assert.equal(r.step, "z"); assert.ok(r.why.endsWith(word("calc-grammar.rows_first_pass", { size: "3", n: "2" })));
   pass = 0;
   const bad = { fields: f, rows: () => { pass += 1; return [pass === 1 ? ["x", "1"] : ["x"]][Symbol.iterator](); } };
   assert.equal(evaluate({ ...rec, steps: [{ op: "sum", as: "z", from: "t", field: "b" }], output: "z" }, { t: bad }).refused, "INPUT_INVALID");

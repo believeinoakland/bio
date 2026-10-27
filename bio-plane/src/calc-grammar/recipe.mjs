@@ -532,7 +532,7 @@ const RUN = {
     let keyOf;
     if (st.space !== undefined) {
       if (typeof opts.resolveId !== "function") {
-        return { kind: "table", value: undetermined(`no resolver for the space "${st.space}"`), inputRows: L.size, set };
+        return { kind: "table", value: undetermined(localize("calc-grammar.no_resolver_space", "no resolver for the space \"{space}\"", { space: String(st.space) })), inputRows: L.size, set };
       }
       keyOf = (v) => {
         let k;

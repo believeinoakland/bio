@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
-   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19755 design words, 1176 protected; SHA-256
+   fda2629165280f9d0e5fb1f5c38dfb19f161e511063f0fbbe7434b53988dfd98) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "3498b203ac";
+export const WORDS_COMMIT = "fda2629165";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -17564,6 +17564,8 @@ export const WORD_ROWS = Object.freeze([
   ["calc-grammar.opening_parenthesis_closed","an opening parenthesis is not closed, or the reverse",null,null,false,"design"],
   ["calc-grammar.figure_carries_two","the figure carries two signs",null,null,false,"design"],
   ["calc-grammar.scale_word_module","\"{word}\" is not a scale word this module reads",null,null,false,"design"],
+  ["calc-grammar.no_resolver_space","no resolver for the space \"{space}\"",null,null,false,"design"],
+  ["calc-grammar.rows_first_pass","it answered {size} rows on its first pass and {n} on a later one",null,null,false,"design"],
   ["calc-grammar.figure_carries_two_currency","the figure carries two currency marks",null,null,false,"design"],
   ["calc-grammar.figure_cannot_currency","a figure cannot be both a currency amount and a percentage",null,null,false,"design"],
   ["calc-grammar.range_two_figures","a range's two figures name different currencies",null,null,false,"design"],
