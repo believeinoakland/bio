@@ -23,6 +23,10 @@ A budget is a ceiling stated once per screen or op, kept in the module that owns
 | Web capture, plain | 5 s | n/a | 2.35 s |
 | Web capture, as a visitor sees it | 15 s (K4354) | n/a | 5.0-11.2 s |
 | Capture of a file up to the K4628 bound | acknowledged within 2 s with `fetch_pending`; reading runs behind a stated progress | n/a | 8.8 MB 0.59 s, 15.9 MB 0.90 s (P25) |
+| **AI act** (an assistant answer or step; row 14 of CONSISTENCY) | acknowledged within 2 s with progress visible; completion ceiling 60 s for one answer *(proposed; AI-DESIGN confirms after its first measuring run, since the provider's time is outside the room)*; a longer act continues in the background with progress | 2 (start, result) | not measured |
+| **Gate 1 run** (the capability suite scored by code for one (entry, part), AI-DESIGN's) | acknowledged within 2 s; runs in the background and never in the member-facing room's thread (PL7); completion ceiling stated per suite from its first run (for example 200 invented scanned pages), *proposed 30 min* | 2 | not measured |
+| **Follow** (`followfrom`, one read) | 1.0 s, as a read act | 2 | N1260 |
+| **Explore** (the chain search a member waits on; N1260's "stop at 2 seconds", DEC-411) | 2.0 s, and a search that reaches it stops and says it stopped; the time is this row's `ceiling_ms`, the one place it is kept: `connection-grammar`'s `CHAIN_LIMITS` stay counts (CONSISTENCY row 16) | 2 | N1260 |
 | The reading itself, whole file | a stated rate floor, not a total (FILES owns the rate; read stage ran 0.69 MB/s, P12) | n/a | open |
 
 Larger files cannot meet one total (a 100 MB document at today's rate is minutes); what a member needs is the acknowledgement and the progress, so the budget is the answer and the rate floor, not the end (P12's open large-file bar, Bob's if he wants a time promised, §5).
@@ -39,20 +43,28 @@ Every registry screen (`docs/development/ux-substrate/`) and every op (`op-decla
 ## 4. Requirement lines (draft; module owners proposed, PLANNING places them)
 
 **runtime-limits** (layer 1; keeps `PLATFORM_FIGURES`, R34)
-- **PL1** `TIME_BUDGETS` is a frozen map `class -> {ceiling_ms, p90_factor, hops}` for the nine classes of §2, with `source` naming the ruling (K4354) or `PLATFORM.md` row; `budgetOf(class)` answers a row and throws an `Error` naming the class when none exists. Test: each class by `budgetOf`, an unknown class, the map deeply frozen.
-- **PL2** A per-screen or per-op row names its class and may override `ceiling_ms` downward (a faster promise); an override above its class's ceiling is refused. Test: an override above the class refused, below accepted.
+- **PL1** The classes of §2 (thirteen with AI act, Gate 1 run, follow and explore) are rows of `runtime-limits`' one bounds table (`READ_BOUNDS`' family, R29-R31; kind `time`, never a second table, K5448 (8)), each `{ceiling_ms, p90_factor, hops}`, with `source` naming the ruling (K4354) or `PLATFORM.md` row; `budgetOf(class)` answers that row and throws an `Error` naming the class when none exists. Test: each class by `budgetOf`, an unknown class, the map deeply frozen.
+- **PL2** A per-screen or per-op row names its class and may override `ceiling_ms` downward (a faster promise); an override above its class's ceiling is refused. A longer ceiling is a class of its own, never an override (CONSISTENCY row 14: AI act and Gate 1 run). Test: an override above the class refused, below accepted.
 
 **op-declarations** (layer 11; owns each op's and screen's declaration)
-- **PL3** Every op spec and every screen declares its `budget_class`; a declaration with none is a check finding (`proc check`). Test: a spec with none is reported by the check, one with an unknown class refused.
+- **PL3** Every op spec and every screen declares its `budget_class`; a declaration with none is a check finding (`proc check`). Test (first an `op-declarations` test, K5448 (7)): a spec with none is reported by the check, one with an unknown class refused.
 - **PL4** A screen's declaration lists its reads by name and wave (the combined read's input, `combined-read-and-fold-draft.md` PL10); its hop count is derived (one for the session, one per wave), never typed. Test: the derived count equals the declared waves plus one.
 
 **journey-check** (layer 11; the deployed copy's walker) and a measuring tool (§6)
 - **PL5** The budget check opens each screen as the role named, at 1280 and 390 px, 5 runs at least, and reports the net median and p90 against `budgetOf(class)`; a screen over is a finding naming the screen, the figure and the slowest request; it never changes a copy's data and never prints a credential. Test: a fixture copy with one screen delayed beyond its ceiling reports exactly that screen.
+- **PL8** N1260's two-second journey (a member follows a trail and each hop answers within the stop) is a walk of PL5: it opens each screen of the journey and is judged by that screen's class, with `explore` for the search itself; there is no second measuring tool. Test: a fixture journey with one hop over the `explore` ceiling reports that hop and screen.
 - **PL6** The check reports the structure figures (hops in the critical path, requests, repeats) beside the time, from the door's `Server-Timing` (`do-<route>`, `in-<route>`; control-plane R121). Test: a request chain of known hops reports that count.
+
+**reading-pipeline, extraction and any module that lands rows or runs long work in the room** (FILES' LOAD-PER-TYPE M3: a landing write blocks the object for its duration, about 28-72 ms per 1 MB batch)
+- **PL7** Background work yields the room between batches: no single hold of the room's thread by work that is not a member's act exceeds 100 ms (a batch of at most about 1 MB), and a door window arriving during background work waits at most one batch, not the work's total. Test: a landing of 150 MB in 1 MB batches, with a call arriving in the middle, answers that call within one batch's time plus its own; no batch's measured hold exceeds the stated bound.
 
 **screens (all)**: a new screen's UX needs arrive with its budget class (no design from this lane).
 
-## 5. For Bob (through BOB): the beta's bar
+## 5. The beta's bar: ANSWERED (K5438, Bob on P1, option A)
+
+Bob: "keep the current bar, but also recognize that different sized teams will require different levels of capabilities (Team, Institution, Enterprise)...". The bar stays as §2 states it, at every level; each level's range is the range within which it holds (`service-levels-draft.md` PL26-PL28). Options B and C below are kept for the record only; the classes in §2 stand as written (in-app moves and read acts keep their 2 s and 1 s as measured today; no tighter figure is adopted).
+
+The question as put:
 
 K4354 said "A for now, we may want to look at further reductions once the alpha-level workflow is done". The alpha's workflow is done; the beta can keep the bar or tighten it. This is policy, so it is Bob's.
 - **A. Keep K4354's figures** (2 s screen, 2 s act, 15 s capture). Lowest cost; the 8 measured screens already meet it, so the beta's work is holding it as the product grows and under load (§6 of `load-test-draft.md`). *Recommended.*

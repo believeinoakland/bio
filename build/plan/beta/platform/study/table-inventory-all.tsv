@@ -1,0 +1,617 @@
+table	module	scope_heuristic	project_cols	bundle_cols	sight	export	derive
+files	record-core	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	yes	stored
+history	record-core	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	yes	stored
+manifest	record-core	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	yes	stored
+leases	record-core	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	never	stored
+bundles	record-core	MIXED(project col, not key)	project	bundle_id+bundle_sha	bundle	yes	stored
+seq	record-core	TEAM			group	admin-only	stored
+minted_ids	record-core	TEAM			group	never	stored
+settings	record-core	TEAM			group	admin-only	stored
+tombstones	record-core	TEAM			group	yes	stored
+derived_stale	record-core	TEAM			group	never	stored
+bookkeeping_tally	record-core	TEAM			group	never	stored
+register	provenance	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+register_parts	provenance	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+origin_declarations	provenance	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+authority_decisions	provenance	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+captured_locators	provenance	TEAM			group	admin-only	stored
+signed_receipts	attestation	TEAM			group	admin-only	stored
+receipt_keys	attestation	TEAM			group	admin-only	stored
+provenance_route_marks	provenance-routes	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+lead_shares	observation-log	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	owner	admin-only	stored
+observation_log	observation-log	TEAM			source	admin-only	stored
+leads	observation-log	TEAM			owner	admin-only	stored
+calibrations	calibration	TEAM			group	admin-only	stored
+calibration_subjects	calibration	TEAM			group	admin-only	stored
+calibration_signals	calibration	TEAM			group	admin-only	stored
+content	content	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+transcriptions	content	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+transcription_attestations	content	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+text_attestations	content	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+local_fact_acts	local-facts	TEAM			group	admin-only	stored
+local_rule_acts	local-facts	TEAM			group	admin-only	stored
+law_relations	law-relations	TEAM			group	admin-only	stored
+court_links	law-relations	TEAM			group	admin-only	stored
+court_treatments	law-relations	TEAM			group	admin-only	stored
+law_withdrawals	law-relations	TEAM			group	admin-only	stored
+law_proposals	law-relations	TEAM			group	admin-only	stored
+standards	standards	TEAM			group	admin-only	stored
+standard_texts	standards	TEAM			group	admin-only	stored
+standard_proposals	standards	MIXED(project col, not key)	project		group	admin-only	stored
+standard_adoptions	standards	TEAM			group	admin-only	stored
+standard_forces	standards	TEAM			group	admin-only	stored
+standard_force_withdrawals	standards	TEAM			group	admin-only	stored
+standard_force_proposals	standards	TEAM			group	admin-only	stored
+standard_overrides	standards	TEAM			group	admin-only	stored
+standard_releases	standards	TEAM			group	admin-only	stored
+standard_body_adoptions	standards	TEAM			group	admin-only	stored
+standard_impositions	standards	TEAM			group	admin-only	stored
+standard_benchmarks	standards	TEAM			group	admin-only	stored
+standard_in_force_through	standards	TEAM			group	admin-only	stored
+standard_in_force_through_withdrawals	standards	TEAM			group	admin-only	stored
+progression_instances	progressions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+progression_exceptions	progressions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+progression_thread_placements	progressions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+progression_exception_versions	progressions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+progression_defs	progressions	TEAM			group	admin-only	stored
+progression_stages	progressions	TEAM			group	admin-only	stored
+progression_def_versions	progressions	TEAM			group	admin-only	stored
+progression_stage_versions	progressions	TEAM			group	admin-only	stored
+progression_threads	progressions	TEAM			group	admin-only	stored
+proposal_dispositions	progressions	TEAM			group	admin-only	stored
+money_check_params	money-checks	TEAM			group	admin-only	stored
+money_detectors	money-checks	TEAM			group	admin-only	stored
+money_detector_versions	money-checks	TEAM			group	admin-only	stored
+money_detector_switches	money-checks	MIXED(project col, not key)	project_id		group	admin-only	stored
+money_detector_results	money-checks	TEAM			source	admin-only	derived-rebuildable
+money_detector_result_times	money-checks	TEAM			group	admin-only	stored
+money_detector_gates	money-checks	TEAM			group	admin-only	stored
+duty_proposals	duties	TEAM			source	admin-only	stored
+duties	duties	TEAM			source	yes	stored
+duty_versions	duties	TEAM			source	yes	stored
+duty_matches	duties	TEAM			source	yes	stored
+duty_transitions	duties	TEAM			source	yes	stored
+duty_use_links	duties	TEAM			source	yes	stored
+bundle_projection	retrieval	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	derived-rebuildable
+bundles_fts	retrieval	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	derived-rebuildable
+selection_items	retrieval	MIXED(two or more bundle cols: cross-bundle)		bundle_id+bundle_sha	owner	admin-only	stored
+selections	retrieval	TEAM			owner	admin-only	stored
+bundle_terms	retrieval	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	derived-rebuildable
+calc_tables	calculations	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	yes	stored
+calc_table_bytes	calculations	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	never	stored
+calc_bindings	calculations	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	yes	stored
+calc_ingests	calculations	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	yes	stored
+calc_ingest_parts	calculations	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	yes	stored
+calculations	calculations	PROJECT	project		bundle	yes	stored
+calc_inputs	calculations	PROJECT	project		bundle	yes	stored
+calc_recomputes	calculations	PROJECT	project		bundle	yes	stored
+calc_draws	calculations	PROJECT	project		bundle	yes	stored
+calc_visits	calculations	PROJECT	project		bundle	yes	stored
+calc_sets	calculations	PROJECT	project		bundle	yes	stored
+calc_uses	calculations	PROJECT	project		bundle	yes	stored
+calc_pattern_results	calculations	TEAM			group	admin-only	stored
+calc_pattern_runs	calculations	TEAM			group	admin-only	stored
+calc_pattern_gates	calculations	TEAM			group	admin-only	stored
+calc_pattern_switches	calculations	PROJECT	project		bundle	admin-only	stored
+calc_pattern_cursor	calculations	TEAM			group	never	stored
+workbooks	workbooks	PROJECT	project		source	yes	stored
+workbook_cells	workbooks	PROJECT	project		source	yes	stored
+workbook_bindings	workbooks	PROJECT	project		source	yes	stored
+workbook_recomputes	workbooks	PROJECT	project		source	yes	stored
+workbook_lint_notes	workbooks	PROJECT	project		source	yes	stored
+workbook_method_notes	workbooks	PROJECT	project		source	yes	stored
+workbook_checks	workbooks	PROJECT	project		source	yes	stored
+inquiry_basis	leg-earning	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_exclusions	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_migration_replays	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_member_agents	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_contradiction_links	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_bundle_facts	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_findings	inquiry	PROJECT	project_id	bundle_id	bundle	admin-only	stored
+inquiry_dated_waits	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	owner	admin-only	stored
+inquiry_person_warnings	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_ground_changes	inquiry	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_basis_versions	basis-versions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inquiry_basis_version_legs	basis-versions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+step_refs	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+steps	steps	PROJECT	project_id		bundle	admin-only	stored
+step_events	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_outcomes	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_products	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_learned	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_waits	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_reminders	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_costs	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_later_found	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_cost_messages	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_cost_message_to	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_proposal_refs	steps	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+step_proposals	steps	PROJECT	project_id		bundle	admin-only	stored
+question_follows	steps	TEAM			owner	never	stored
+ai_usage	ai-use	TEAM			group	admin-only	stored
+ai_use_acts	ai-use	TEAM			group	admin-only	stored
+ai_use_act_models	ai-use	TEAM			group	admin-only	stored
+ai_use_migrations	ai-use	TEAM			group	admin-only	stored
+ai_limits	ai-use	PROJECT	project_id		group	admin-only	stored
+ai_limit_history	ai-use	PROJECT	project_id		group	admin-only	stored
+ai_limit_reached	ai-use	PROJECT	project_id		group	admin-only	stored
+ai_explore_asks	ai-use	PROJECT	project_id		group	admin-only	stored
+inquiry_run_surfacings	ai-runs	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+ai_run_bounds	ai-runs	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+ai_runs	ai-runs	MIXED(project col, not key)	project		bundle	admin-only	stored
+ai_mode_verifications	ai-runs	TEAM			group	admin-only	stored
+ai_run_looks	ai-runs	TEAM			group	admin-only	stored
+ai_test_bar	ai-runs	TEAM			group	admin-only	stored
+ai_group_tests	ai-runs	TEAM			group	admin-only	stored
+bias_statements	bias	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+bias_adoptions	bias	MIXED(two or more bundle cols: cross-bundle)		bundle_id+bundle_sha	bundle	admin-only	stored
+bias_debts	bias	TEAM			group	admin-only	stored
+bias_debt_settlements	bias	TEAM			group	admin-only	stored
+bias_debt_sweeps	bias	TEAM			group	admin-only	stored
+hypotheses	hypotheses	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	yes	stored
+hypothesis_revisions	hypotheses	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	yes	stored
+member_notes	hypotheses	TEAM			owner	never	stored
+member_note_turns	hypotheses	TEAM			owner	never	stored
+member_note_told	hypotheses	TEAM			owner	never	stored
+member_note_numbers	hypotheses	TEAM			owner	never	stored
+hypothesis_proposals	hypotheses	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	yes	stored
+narrative_shares	hypotheses	PROJECT	project_id		bundle	never	stored
+answers_tallies	answers	TEAM			group	admin-only	stored
+standing_questions	answers	TEAM			owner	never	stored
+standing_runs	answers	TEAM			owner	never	stored
+reevaluation_notices	reevaluation	MIXED(bundle-keyed; bundles.project nullable)		newer_bundle	bundle	admin-only	stored
+reevaluation_records	reevaluation	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+reevaluation_case_notices	reevaluation	MIXED(project col, not key)	project	newer_bundle	group	admin-only	stored
+reevaluation_source_moves	reevaluation	TEAM			group	admin-only	stored
+reevaluation_level_moves	reevaluation	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+reevaluation_capture_level_moves	reevaluation	TEAM			group	admin-only	stored
+reevaluation_event_changes	reevaluation	TEAM			group	admin-only	stored
+reevaluation_input_changes	reevaluation	TEAM			group	admin-only	stored
+reevaluation_sweep	reevaluation	TEAM			group	admin-only	stored
+sources	sources	TEAM			group	never	stored
+source_knocks	sources	TEAM			group	admin-only	stored
+source_entries	sources	TEAM			source	never	stored
+source_sight	sources	TEAM			source	never	stored
+source_consents	sources	TEAM			source	never	stored
+source_reads	sources	TEAM			source	never	stored
+source_keyed_marks	sources	TEAM			source	never	stored
+published_edges	publication	MIXED(two or more bundle cols: cross-bundle)		from_bundle+to_bundle	bundle	admin-only	stored
+published_held_references	publication	MIXED(two or more bundle cols: cross-bundle)		from_bundle+to_bundle	bundle	admin-only	stored
+case_documents	publication	TEAM			group	admin-only	stored
+case_exclusions	publication	MIXED(project col, not key)	project_id	bundle_id	group	admin-only	stored
+published_bundles	publication	MIXED(two or more bundle cols: cross-bundle)		bundle_id+bundle_sha	bundle	admin-only	stored
+published_shas	publication	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+published_cases	publication	TEAM			group	admin-only	stored
+published_case_members	publication	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+cases	publication	MIXED(project col, not key)	project_id		group	admin-only	stored
+edition_stamps	publication	TEAM			group	admin-only	stored
+export_log	corpus-export	MIXED(bundle-keyed; bundles.project nullable)		bundles	group	admin-only	stored
+published_material_texts	case-carriage	TEAM			group	admin-only	stored
+published_case_materials	case-carriage	TEAM			group	admin-only	stored
+photo_marks	case-carriage	TEAM			source	admin-only	stored
+photo_mark_withdrawals	case-carriage	TEAM			source	admin-only	stored
+photo_copies	case-carriage	TEAM			source	admin-only	stored
+document_copy_queue	case-carriage	TEAM			source	admin-only	stored
+document_copies	case-carriage	TEAM			source	admin-only	stored
+case_revision_flags	case-tensions	MIXED(project col, not key)	project_id	bundle_id	bundle	admin-only	stored
+observation_attributions	case-tensions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+capture_attributions	case-tensions	TEAM			group	admin-only	stored
+docket_record	docket	TEAM			group	admin-only	stored
+docket_marks	docket	TEAM			group	admin-only	stored
+docket_entries	docket	TEAM			group	admin-only	stored
+nn_notices	network-notices	PROJECT	project		group	admin-only	stored
+nn_revisions	network-notices	PROJECT			group	admin-only	stored
+nn_attestations	network-notices	PROJECT			group	admin-only	stored
+nn_misses	network-notices	PROJECT			group	admin-only	stored
+nn_week_seals	network-notices	PROJECT	project		group	admin-only	stored
+nn_week_leaves	network-notices	PROJECT	project	bundle_id	group	admin-only	stored
+nn_week_roots	network-notices	PROJECT			group	admin-only	stored
+nn_openings	network-notices	PROJECT	project		group	admin-only	stored
+nn_open_requests	network-notices	PROJECT	project		group	admin-only	stored
+scheduled_editions	publish-schedule	TEAM			group	admin-only	stored
+determinations	conformance	PROJECT	project_id		bundle	admin-only	stored
+determination_standards	conformance	PROJECT			bundle	admin-only	stored
+determination_rows	conformance	PROJECT			bundle	admin-only	stored
+determination_findings	conformance	PROJECT			bundle	admin-only	stored
+determination_questions	conformance	PROJECT	project_id		bundle	admin-only	stored
+determination_supersessions	conformance	PROJECT			bundle	admin-only	stored
+determination_flags	conformance	PROJECT			bundle	admin-only	stored
+comparison_proposals	conformance	PROJECT	project_id		bundle	admin-only	stored
+comparison_proposal_uses	conformance	PROJECT			bundle	admin-only	stored
+determination_causes	conformance	PROJECT			bundle	admin-only	stored
+comparison_proposal_contradictions	conformance	PROJECT			bundle	admin-only	stored
+determination_cures	conformance	PROJECT			bundle	admin-only	stored
+determination_cure_ends	conformance	PROJECT			bundle	admin-only	stored
+action_basis	actions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+correspondence	actions	MIXED(two or more bundle cols: cross-bundle)		bundle_id+artifact_bundle_id	bundle	admin-only	stored
+action_quotes	actions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_overrides	actions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_field_history	actions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_law_proposals	action-records	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_risk_proposals	action-records	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_seeks_proposals	action-records	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_receipts	action-records	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_scopes	action-records	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_promises	action-records	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_stakes	action-records	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+consequence_parts	consequences	MIXED(project col, not key)	project	bundle_id	bundle	admin-only	stored
+consequence_operands	consequences	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+consequence_addressed	consequences	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+success_records	consequences	MIXED(project col, not key)	project		bundle	admin-only	stored
+consequence_carries	consequences	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+intent_departures	intent	PROJECT	project_id		bundle	admin-only	stored
+intent_triage	intent	PROJECT	project_id		bundle	admin-only	stored
+intent_person_warnings	intent	PROJECT	project_id		bundle	admin-only	stored
+action_pressure	action-holds	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_holds	action-holds	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_hold_projects	action-holds	MIXED(project col, not key)	project	bundle_id	bundle	admin-only	stored
+hold_notices	action-holds	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+pressure_records	action-holds	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+inbox	doorbell	TEAM			group	admin-only	stored
+knock_rate	doorbell	TEAM			group	admin-only	stored
+knock_key	doorbell	TEAM			group	admin-only	stored
+knocker_key	doorbell	TEAM			group	admin-only	stored
+doorbell_tally	doorbell	TEAM			group	admin-only	stored
+doorbell_limit_last	doorbell	TEAM			group	admin-only	stored
+refs	connections	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+connections	connections	MIXED(two or more bundle cols: cross-bundle)		a_bundle_id+b_bundle_id	bundle	admin-only	stored
+connection_pair_choices	connections	MIXED(two or more bundle cols: cross-bundle)		a_bundle_id+b_bundle_id	bundle	admin-only	stored
+connection_dirty	connections	TEAM			group	admin-only	stored
+connection_derivations	connections	TEAM			group	admin-only	stored
+themes	connections	TEAM			group	admin-only	stored
+theme_placements	connections	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+theme_placement_acts	connections	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+asserted_connections	connections	MIXED(two or more bundle cols: cross-bundle)		a_bundle_id+b_bundle_id	bundle	admin-only	stored
+asserted_connection_judgements	connections	MIXED(two or more bundle cols: cross-bundle)		a_bundle_id+b_bundle_id	bundle	admin-only	stored
+file_membership_pending	connections	MIXED(bundle-keyed; bundles.project nullable)		agenda_bundle	bundle	admin-only	stored
+step_sources	connections	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+strength_cache	strength	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	derived-rebuildable
+group_strength_bar	strength	TEAM			group	admin-only	stored
+case_imports	case-import	TEAM			group	admin-only	stored
+case_import_editions	case-import	TEAM			group	admin-only	stored
+case_import_parts	case-import	TEAM			group	admin-only	stored
+case_import_files	case-import	TEAM			group	admin-only	stored
+case_import_blobs	case-import	TEAM			group	admin-only	stored
+case_import_checks	case-import	TEAM			group	admin-only	stored
+case_import_results	case-import	TEAM			group	admin-only	stored
+case_import_calculations	case-import	TEAM			group	admin-only	stored
+case_import_documents	case-import	TEAM			group	admin-only	stored
+case_import_acceptances	case-import	TEAM			group	admin-only	stored
+case_import_withdrawals	case-import	TEAM			group	admin-only	stored
+case_import_flags	case-import	TEAM			group	admin-only	stored
+case_import_clears	case-import	TEAM			group	admin-only	stored
+case_import_edition_keys	case-import	TEAM			group	admin-only	stored
+case_import_group_fields	case-import	TEAM			group	admin-only	stored
+case_import_watches	case-import	TEAM			group	admin-only	stored
+case_import_watch_ends	case-import	TEAM			group	admin-only	stored
+case_import_docket_reads	case-import	TEAM			group	admin-only	stored
+case_import_docket_entries	case-import	TEAM			group	admin-only	stored
+case_import_reruns	case-import	MIXED(project col, not key)	project		group	admin-only	stored
+case_import_rerun_pairs	case-import	MIXED(project col, not key)	project		group	admin-only	stored
+account_drafts	case-account	TEAM			group	admin-only	stored
+account_acceptances	case-account	TEAM			group	admin-only	stored
+advocacy_checks	case-account	MIXED(project col, not key)	project_id		group	admin-only	stored
+proposed_readings	run-productions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+suggest_refusals	run-productions	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+proposed_connections	run-productions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+proposal_acceptances	run-productions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+bearing_notes	run-productions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+run_pages_read	run-productions	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+case_approvals	review	TEAM			group	admin-only	stored
+approval_rules	review	TEAM			group	admin-only	stored
+review_comments	review	TEAM			group	admin-only	stored
+review_grants	review	TEAM			group	admin-only	stored
+case_drafts	review	MIXED(project col, not key)	project_id		group	admin-only	stored
+inv_milestones	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_milestone_items	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_milestone_history	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_milestone_reminders	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_reports	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_interviews	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_claims	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_plan_proposals	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_quiet_spells	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_quiet_acts	investigation	PROJECT	project_id		bundle	admin-only	stored
+inv_watch_arrivals	investigation	PROJECT	project_id		bundle	admin-only	stored
+statement_acknowledgements	case-inputs	MIXED(project col, not key)	project_id		group	admin-only	stored
+what_changed_drafts	case-inputs	TEAM			group	admin-only	stored
+carried_outcomes	case-inputs	TEAM			group	admin-only	stored
+carried_outcome_withdrawals	case-inputs	TEAM			group	admin-only	stored
+case_details	case-inputs	TEAM			group	admin-only	stored
+case_checks	case-check	PROJECT	project_id		group	admin-only	stored
+action_reminders	action-clocks	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_clock_proposals	action-clocks	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_reply_bearings	action-replies	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_bearing_proposals	action-replies	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+action_arose_from	action-replies	MIXED(project col, not key)	project	bundle_id	bundle	admin-only	stored
+action_reply_quoting	action-replies	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_templates	filing-templates	MIXED(project col, not key)	project	bundle_id	bundle	admin-only	stored
+tpl_versions	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_revisions	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_notes	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_events	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_reviewers	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_proposals	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_reviews	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_grants	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_grant_revocations	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+tpl_comments	filing-templates	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+filing_drafts	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+filing_approvals	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+filing_sendings	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+counsel_packets	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+counsel_packet_exports	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+theory_proposals	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+communication_drafts	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+filing_templates	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+joint_signatories	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+filing_second_approvals	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+filing_hold_notices	filings	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+escalations	escalation	PROJECT	project_id		bundle	admin-only	stored
+escalation_moves	escalation	PROJECT			bundle	admin-only	stored
+escalation_evaluations	escalation	PROJECT			bundle	admin-only	stored
+escalation_attachments	escalation	PROJECT			bundle	admin-only	stored
+escalation_declines	escalation	PROJECT			bundle	admin-only	stored
+escalation_declines_to_open	escalation	PROJECT	project_id		bundle	admin-only	stored
+plans	action-plans	PROJECT	project_id		bundle	admin-only	stored
+plan_subjects	action-plans	PROJECT			bundle	admin-only	stored
+plan_options	action-plans	PROJECT			bundle	admin-only	stored
+plan_option_revisions	action-plans	PROJECT			bundle	admin-only	stored
+plan_option_proposals	action-plans	PROJECT			bundle	admin-only	stored
+plan_scenarios	action-plans	PROJECT			bundle	admin-only	stored
+plan_checkpoints	action-plans	PROJECT			bundle	admin-only	stored
+plan_history	action-plans	PROJECT			bundle	admin-only	stored
+plan_runs	action-plans	PROJECT	project_id		bundle	admin-only	stored
+plan_marks	action-plans	PROJECT			bundle	admin-only	stored
+pw_outcomes	plan-work	PROJECT			bundle	admin-only	stored
+pw_rhythms	plan-work	PROJECT			bundle	admin-only	stored
+pw_reviews	plan-work	PROJECT			bundle	admin-only	stored
+pw_prep	plan-work	PROJECT			bundle	admin-only	stored
+pw_comments	plan-work	PROJECT			bundle	admin-only	stored
+pw_reports	plan-work	PROJECT			bundle	admin-only	stored
+pw_takeups	plan-work	PROJECT			bundle	admin-only	stored
+pw_reexams	plan-work	PROJECT			bundle	admin-only	stored
+pw_reexam_runs	plan-work	PROJECT			bundle	admin-only	stored
+keeps_pending	store-assembly	TEAM			group	admin-only	stored
+keeps_last	store-assembly	TEAM			group	admin-only	stored
+acquire_stages	store-assembly	TEAM			group	admin-only	stored
+job_unit_attempts	store-assembly	TEAM			group	admin-only	stored
+job_batches	store-assembly	TEAM			group	admin-only	stored
+archive_entries	acquisition	TEAM			source	yes	stored
+unpack_days	acquisition	TEAM			group	never	stored
+capture_credentials	capture-sources	PROJECT	project		bundle	never	stored
+capture_requests	capture-requests	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+capture_request_platforms	capture-requests	TEAM			group	admin-only	stored
+records_requests	capture-requests	MIXED(bundle-keyed; bundles.project nullable)			bundle	yes	stored
+reading_guides	reading-guides	TEAM			group	admin-only	stored
+reading_guide_history	reading-guides	TEAM			group	admin-only	stored
+reading_guide_proposals	reading-guides	TEAM			group	admin-only	stored
+explore_runs	question-explorer	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+explore_persons	question-explorer	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+explore_refusals	question-explorer	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+explore_finds	question-explorer	MIXED(two or more bundle cols: cross-bundle)		bundle_id+bundle_b	bundle	admin-only	stored
+explore_doors	question-explorer	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+explore_considered	question-explorer	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+monitor_fired	monitoring	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+monitor_tick_epoch	monitoring	TEAM			group	admin-only	stored
+monitor_address_type	monitoring	TEAM			group	admin-only	stored
+monitor_address_frequency	monitoring	TEAM			group	admin-only	stored
+monitor_address_end	monitoring	TEAM			group	admin-only	stored
+monitor_address_look	monitoring	TEAM			group	admin-only	stored
+monitor_gathering_run	monitoring	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+sweep_runs	link-sweep	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+sweep_filed	link-sweep	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+follows	following	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+follow_reads	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+per_meeting_links	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+per_meeting_captures	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+portal_snapshots	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+portal_snapshot_parts	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+policy_versions	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+follow_ends	following	TEAM			group	admin-only	stored
+watch_links	following	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+watch_answers	following	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+watch_marks	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	owner	never	stored
+second_looks	following	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+wiz_scripts	wizard-scripts	MIXED(project col, not key)	project	bundle_id	bundle	admin-only	stored
+wiz_versions	wizard-scripts	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+wiz_revisions	wizard-scripts	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+wiz_events	wizard-scripts	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+wiz_proposals	wizard-scripts	MIXED(project col, not key)	project	bundle_id	bundle	admin-only	stored
+wiz_editor_grants	wizard-scripts	TEAM			group	admin-only	stored
+wiz_editor_revocations	wizard-scripts	TEAM			group	admin-only	stored
+wiz_breaks	wizard-scripts	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+wiz_tallies	wizard-scripts	TEAM			group	admin-only	stored
+wiz_refusal_tallies	wizard-scripts	TEAM			group	admin-only	stored
+wiz_copies	wizard-scripts	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+wiz_base_seen	wizard-scripts	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+admission_door_window	admission	TEAM			group	never	stored
+admission_session_window	admission	TEAM			group	never	stored
+project_participants	membership	PROJECT	project_id		bundle	admin-only	stored
+project_removals	membership	PROJECT	project_id		bundle	admin-only	stored
+project_visibility	membership	PROJECT	project_id		bundle	admin-only	stored
+project_sight	membership	PROJECT	project_id		bundle	admin-only	stored
+members	membership	TEAM			group	admin-only	stored
+member_expertise	membership	TEAM			group	admin-only	stored
+admin_votes	membership	TEAM			group	admin-only	stored
+hosting_access	membership	TEAM			group	admin-only	stored
+group_description	membership	TEAM			group	admin-only	stored
+court_notice	membership	TEAM			group	admin-only	stored
+handle_history	membership	TEAM			group	admin-only	stored
+handle_check_window	membership	TEAM			group	admin-only	stored
+founder_handle	membership	TEAM			group	admin-only	stored
+join_doors	membership	TEAM			group	never	stored
+home_looks	membership	TEAM			owner	never	stored
+project_join_requests	project-roster	PROJECT	project_id+project_name		bundle	admin-only	stored
+project_owner_votes	project-roster	PROJECT	project_id		bundle	admin-only	stored
+project_owner_decisions	project-roster	PROJECT	project_id		bundle	admin-only	stored
+project_scopes	project-roster	PROJECT	project_id		bundle	admin-only	stored
+project_approval_settings	project-roster	PROJECT	project_id		bundle	admin-only	stored
+project_stakes	project-roster	PROJECT	project_id		bundle	admin-only	stored
+account_references	ai-accounts	TEAM			owner	never	stored
+group_key	ai-accounts	TEAM			group	never	stored
+group_key_acts	ai-accounts	TEAM			group	never	stored
+group_key_notices	ai-accounts	TEAM			owner	never	stored
+subscription_connections	ai-accounts	TEAM			owner	never	stored
+ai_keep_away	ai-accounts	TEAM			group	admin-only	stored
+project_accounts	ai-accounts	PROJECT	project_id		group	never	stored
+project_account_acts	ai-accounts	PROJECT	project_id		group	never	stored
+project_key_notices	ai-accounts	PROJECT	project_id		group	never	stored
+project_keep_away	ai-accounts	PROJECT	project_id		group	admin-only	stored
+account_changes	ai-accounts	PROJECT	project_id		group	never	stored
+credentials	credentials	TEAM			group	never	stored
+sessions	credentials	TEAM			group	never	stored
+bootstrap	credentials	TEAM			group	admin-only	stored
+signers	credentials	TEAM			group	yes	stored
+ai_credentials	credentials	MIXED(project col, not key)	project		group	never	stored
+keyed_services	credentials	TEAM			group	never	stored
+ai_grants	credentials	MIXED(project col, not key)	project		group	never	stored
+signin_window	credentials	TEAM			group	never	stored
+security_counts	credentials	TEAM			group	never	stored
+security_pending	credentials	TEAM			group	never	stored
+security_key	credentials	TEAM			group	never	stored
+recovery_codes	credentials	TEAM			group	never	stored
+recoveries	credentials	TEAM			group	never	stored
+password_reset_links	credentials	TEAM			group	never	stored
+host_governor	host-governor	TEAM			group	admin-only	stored
+task_queue	capture	TEAM			group	admin-only	stored
+source_reachability	capture	TEAM			group	admin-only	stored
+link_verdicts	capture	MIXED(bundle-keyed; bundles.project nullable)		target_bundle	group	admin-only	stored
+links	capture	MIXED(bundle-keyed; bundles.project nullable)		source_bundle	group	admin-only	stored
+site_asset_refs	capture	TEAM			group	admin-only	stored
+site_assets	capture	TEAM			group	admin-only	stored
+reuse_verdicts	capture	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	group	admin-only	stored
+capture_sessions	capture	TEAM			group	admin-only	stored
+site_chrome_refs	capture	TEAM			group	admin-only	stored
+site_chrome	capture	TEAM			group	admin-only	stored
+link_chrome	capture	TEAM			group	admin-only	stored
+capture_validators	capture	TEAM			group	admin-only	stored
+capture_actors	capture	TEAM			group	admin-only	stored
+capture_accounts	capture	TEAM			group	admin-only	stored
+late_attestations	capture	TEAM			group	admin-only	stored
+held_acts	capture	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	group	admin-only	stored
+held_act_questions	capture	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	group	admin-only	stored
+captured_for	capture	TEAM			group	admin-only	stored
+seen_in	capture	MIXED(project col, not key)	project		group	admin-only	stored
+fetch_done	capture	MIXED(project col, not key)	project		group	admin-only	stored
+parted_uploads	capture	TEAM			group	admin-only	stored
+capture_limits	capture	TEAM			group	admin-only	stored
+render_allowance	capture	TEAM			group	admin-only	stored
+render_slots	capture	TEAM			group	admin-only	stored
+fs_files	file-safety	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+fs_notes	file-safety	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+fs_holds	file-safety	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+fs_deeper	file-safety	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+fs_copies	file-safety	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	admin-only	stored
+fs_tools	file-safety	TEAM			group	never	stored
+fs_tool_usage	file-safety	TEAM			group	never	stored
+fs_tool_events	file-safety	TEAM			group	never	stored
+fs_counts	file-safety	TEAM			group	never	stored
+fs_wakes	file-safety	TEAM			group	never	stored
+readings	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+reading_refs	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+reading_ref_terms	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+reading_text_source	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+reading_history	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+capture_text	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+capture_text_skipped	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+capture_text_state	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+reading_repairs	extraction	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+capture_text_fts	extraction	TEAM			group	admin-only	stored
+composed_readings	extraction	TEAM			group	admin-only	stored
+reading_migrations	extraction	TEAM			group	admin-only	stored
+resolution_defects	entities	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+resolutions	entities	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	bundle	admin-only	stored
+entity_sectors	entities	TEAM			group	yes	stored
+entity_identifiers	entities	TEAM			group	yes	stored
+entity_proceedings	entities	TEAM			group	yes	stored
+entity_relations	entities	TEAM			group	yes	stored
+entity_aliases	entities	TEAM			group	yes	stored
+entities	entities	TEAM			group	yes	stored
+dated_facts	events	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	yes	stored
+events	events	TEAM			source	yes	stored
+event_attestations	events	MIXED(bundle-keyed; bundles.project nullable)		bundle_id	source	yes	stored
+event_concerns	events	TEAM			source	yes	stored
+event_participants	events	TEAM			source	yes	stored
+event_relations	events	TEAM			source	yes	stored
+event_when_cache	events	TEAM			source	yes	derived-rebuildable
+event_choices	events	TEAM			source	yes	stored
+event_aliases	events	TEAM			group	yes	stored
+event_changes	events	TEAM			source	yes	stored
+event_sources	events	TEAM			source	admin-only	stored
+event_uses	events	TEAM			source	yes	stored
+event_unmet	events	TEAM			source	yes	stored
+event_read_optin	events	TEAM			group	admin-only	stored
+lines	lines	MIXED(bundle-keyed; bundles.project nullable)		sight_bundle	source	yes	stored
+line_withdrawals	lines	TEAM			source	yes	stored
+line_current_through	lines	MIXED(bundle-keyed; bundles.project nullable)		sight_bundle	source	yes	stored
+line_bound_cache	lines	TEAM			source	yes	derived-rebuildable
+money_facts	money	MIXED(bundle-keyed; bundles.project nullable)		sight_bundle	source	yes	stored
+money_codes	money	MIXED(bundle-keyed; bundles.project nullable)		sight_bundle	source	yes	stored
+money_concerns	money	MIXED(bundle-keyed; bundles.project nullable)		sight_bundle	source	yes	stored
+money_withdrawals	money	MIXED(bundle-keyed; bundles.project nullable)		sight_bundle	source	yes	stored
+money_sets	money	TEAM			group	yes	stored
+money_set_acts	money	TEAM			group	yes	stored
+money_set_proposals	money	TEAM			group	yes	stored
+money_ingests	money	TEAM			group	yes	stored
+money_fund_types	money	TEAM			group	yes	stored
+person_facts	people	TEAM			source	yes	stored
+person_contacts	people	TEAM			source	never	stored
+identity_claims	people	PROJECT	project		bundle	yes	stored
+member_ties	people	TEAM			owner	never	stored
+source_person_links	people	TEAM			owner	never	stored
+source_person_link_history	people	TEAM			owner	never	stored
+person_removals	people	TEAM			owner	never	stored
+interest_checks	people	PROJECT	project		group	admin-only	stored
+interest_check_switches	people	MIXED(project col, not key)	project		group	admin-only	stored
+interest_check_gates	people	TEAM			group	admin-only	stored
+interest_check_gate_history	people	TEAM			group	admin-only	stored
+interest_check_results	people	PROJECT	project		bundle	admin-only	stored
+interest_check_cursor	people	TEAM			group	never	stored
+identity_cluster	people	TEAM			group	admin-only	derived-rebuildable
+contradiction_candidates	contradiction	MIXED(two or more bundle cols: cross-bundle)		a_bundle_id+b_bundle_id	bundle	admin-only	stored
+contradiction_acts	contradiction	MIXED(two or more bundle cols: cross-bundle)		a_bundle_id+b_bundle_id	bundle	admin-only	stored
+contradiction_recommendations	contradiction	MIXED(two or more bundle cols: cross-bundle)		a_bundle_id+b_bundle_id	bundle	admin-only	stored
+contradiction_optins	contradiction	PROJECT	project_id	a_bundle_id+b_bundle_id	bundle	admin-only	stored
+contradiction_responses	contradiction	PROJECT	project_id	a_bundle_id+b_bundle_id	bundle	admin-only	stored
+translation_grants	translations	TEAM			group	never	stored
+translation_drafts	translations	TEAM			group	never	stored
+translation_adoptions	translations	TEAM			group	never	stored
+translation_confirmations	translations	TEAM			group	never	stored
+translation_undos	translations	TEAM			group	never	stored
+translation_marks	translations	TEAM			group	never	stored
+translation_readings	translations	TEAM			group	never	stored
+queue_state	queue	MIXED(bundle-keyed; bundles.project nullable)			bundle	admin-only	stored
+queue_item_mutes	queue	TEAM			group	admin-only	stored
+finding_dispositions	queue	MIXED(project col, not key)	project_id		group	admin-only	stored
+tasks	tasks	TEAM			group	admin-only	stored
+check_requests	tasks	TEAM			group	admin-only	stored
+check_todos	tasks	TEAM			group	admin-only	stored
+check_takes	tasks	TEAM			group	admin-only	stored
+check_records	tasks	TEAM			group	admin-only	stored
+sign_requests	tasks	MIXED(project col, not key)	project		group	admin-only	stored
+sign_todos	tasks	TEAM			group	admin-only	stored
+instance_group	instance-setup	TEAM			group	admin-only	stored
+group_identity_history	instance-setup	TEAM			group	admin-only	stored
+group_domain_checks	instance-setup	TEAM			group	admin-only	stored
+runtime_observations	instance-setup	TEAM			group	admin-only	stored
+cpu_probe_runs	instance-setup	TEAM			group	admin-only	stored
+cpu_probe_steps	instance-setup	TEAM			group	admin-only	stored
+assistant_switch	instance-setup	TEAM			group	admin-only	stored
+assistant_disclosures	instance-setup	TEAM			group	never	stored
+place_wanted	instance-setup	TEAM			group	never	stored
+place_seen	instance-setup	TEAM			group	never	stored
+place_arrivals	instance-setup	TEAM			group	never	stored
+member_languages	instance-setup	TEAM			group	admin-only	stored
+member_info_levels	instance-setup	TEAM			group	admin-only	stored
+declared_stake_history	instance-setup	TEAM			group	admin-only	stored
+group_logos	instance-setup	TEAM			group	admin-only	stored
+update_check_slot	instance-setup	TEAM			group	never	stored
+release_notices	instance-setup	TEAM			group	admin-only	stored
+update_checks	instance-setup	TEAM			group	admin-only	stored
+running_releases	instance-setup	TEAM			group	admin-only	stored
+update_decisions	instance-setup	TEAM			group	admin-only	stored
+seed_entities	instance-setup	TEAM			group	admin-only	stored
+seed_lines	instance-setup	TEAM			group	admin-only	stored
+seed_offices	instance-setup	TEAM			group	admin-only	stored
+seed_bodies	instance-setup	TEAM			group	admin-only	stored
