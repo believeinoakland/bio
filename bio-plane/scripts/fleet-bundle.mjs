@@ -660,15 +660,24 @@ function ownDurableObjects(c, missing) {
   if (!Array.isArray(migs)) missing.push("migrations");
   const migrations = [];
   for (const m of Array.isArray(migs) ? migs : []) {
-    const classes = isBlock(m) ? m.new_sqlite_classes : undefined;
-    if (!isBlock(m) || Object.keys(m).some((k) => k !== "tag" && k !== "new_sqlite_classes") || typeof m.tag !== "string" || !/^v[0-9]+$/.test(m.tag)
-        || !Array.isArray(classes) || !classes.every((x) => typeof x === "string" && x)) {
+    /* R43: a migration may also delete classes; the part states the migrations as they leave the member (below), so a
+       deletion is no field of it. A deleted-only migration has no `new_sqlite_classes`. */
+    const classes = isBlock(m) ? (m.new_sqlite_classes === undefined && Array.isArray(m.deleted_classes) ? [] : m.new_sqlite_classes) : undefined;
+    if (!isBlock(m) || Object.keys(m).some((k) => k !== "tag" && k !== "new_sqlite_classes" && k !== "deleted_classes") || typeof m.tag !== "string" || !/^v[0-9]+$/.test(m.tag)
+        || !Array.isArray(classes) || !classes.every((x) => typeof x === "string" && x)
+        || (m.deleted_classes !== undefined && !(Array.isArray(m.deleted_classes) && m.deleted_classes.every((x) => typeof x === "string" && x)))) {
       missing.push("migrations");
       continue;
     }
     migrations.push({ tag: m.tag, classes: [...classes] });
   }
-  return bindings.length || migrations.length ? { bindings, migrations } : null;
+  /* R43: a class the member's migrations leave deleted is no class of the release: an install creates only the live ones. */
+  const gone = deletedClasses({ migrations: Array.isArray(migs) ? migs : [] });
+  const deleting = new Set((Array.isArray(migs) ? migs : []).filter((r) => isBlock(r) && r.deleted_classes !== undefined).map((r) => r.tag));
+  const live = migrations
+    .map((m) => ({ tag: m.tag, classes: m.classes.filter((x) => !gone.has(x)) }))
+    .filter((m) => m.classes.length || !deleting.has(m.tag));
+  return bindings.length || live.length ? { bindings, migrations: live } : null;
 }
 
 /** A member's `Worker` part from its parsed `wrangler.jsonc`: `{part: null}` when it binds no bucket, states no cron
@@ -713,12 +722,28 @@ export function bundleExports(member, built) {
   return new Set(out && Array.isArray(out.exports) ? out.exports : []);
 }
 
+/** R43: the classes a member's migrations leave deleted, in order: a `deleted_classes` entry adds, a later migration that
+ *  creates the class again (or renames or transfers to it) takes it off. */
+function deletedClasses(config) {
+  const gone = new Set();
+  const list = (x) => (Array.isArray(x) ? x : []);
+  for (const m of list(isBlock(config) ? config.migrations : null)) {
+    if (!isBlock(m)) continue;
+    for (const cls of list(m.deleted_classes)) if (typeof cls === "string") gone.add(cls);
+    for (const cls of [...list(m.new_classes), ...list(m.new_sqlite_classes),
+      ...list(m.renamed_classes).map((r) => (isBlock(r) ? r.to : undefined)),
+      ...list(m.transferred_classes).map((r) => (isBlock(r) ? r.to : undefined))]) gone.delete(cls);
+  }
+  return gone;
+}
+
 /** R39: the bindings of a release that name something the release does not export. `units` is the plane and every member
  *  the release carries, each `{name, config, exports}`: its parsed `wrangler.jsonc` (null: none) and the names its
  *  bundle exports. Returns one finding per binding, `{member, binding, name, text}`: `name` is the class or service,
  *  `text` says it for a person. A service names the plane or a member; a Durable Object binding with a `script_name`
  *  names a member exporting its class, one without names its own bundle's; a container class and each class a migration
- *  creates, renames to or transfers are its own bundle's. Never throws. */
+ *  creates, renames to or transfers are its own bundle's. A class a member's migrations delete (R43) may not be bound by any
+ *  member of the release. Never throws. */
 export function bindingFindings(units) {
   const list = Array.isArray(units) ? units : [];
   const byName = new Map(list.map((u) => [u.name, u]));
@@ -739,18 +764,21 @@ export function bindingFindings(units) {
       if (!host) found(b.name, b.class_name, `Durable Object binding ${b.name} names class ${b.class_name} of the script ${b.script_name}, which is not a member of this release`);
       else if (!new Set(host.exports).has(b.class_name))
         found(b.name, b.class_name, `Durable Object binding ${b.name} names class ${b.class_name}, which the bundle of ${host.name} does not export`);
+      else if (deletedClasses(host.config).has(b.class_name))
+        found(b.name, b.class_name, `Durable Object binding ${b.name} names class ${b.class_name}, which a migration of ${host.name} deletes`);
     }
     for (const k of names(c.containers)) {
       if (isBlock(k) && !mine.has(k.class_name))
         found(k.class_name, k.class_name, `container class ${k.class_name} is not exported by its bundle`);
     }
+    const gone = deletedClasses(c);
     for (const m of names(c.migrations)) {
       if (!isBlock(m)) continue;
       const created = [...names(m.new_classes), ...names(m.new_sqlite_classes),
         ...names(m.renamed_classes).map((r) => (isBlock(r) ? r.to : undefined)),
         ...names(m.transferred_classes).map((r) => (isBlock(r) ? r.to : undefined))];
       for (const cls of created)
-        if (typeof cls === "string" && !mine.has(cls)) found(`migration ${m.tag}`, cls, `migration ${m.tag} creates class ${cls}, which its bundle does not export`);
+        if (typeof cls === "string" && !mine.has(cls) && !gone.has(cls)) found(`migration ${m.tag}`, cls, `migration ${m.tag} creates class ${cls}, which its bundle does not export`);
     }
   }
   return out;

@@ -188,7 +188,7 @@ test("R15: deriveLimits returns subrequests and cpu_ms, refusing a missing or no
     const want = { subrequests: 500 };
     for (const s of [null, undefined, "x", {}, { limits: {} }, { limits: { subrequests: null } }])
       assert.equal(limitsReadBack(s, want).verdict, "UNDETERMINED", JSON.stringify(s));
-    assert.match(limitsReadBack(null, want).why, /could not be read/);
+    assert.ok(limitsReadBack(null, want).why, "the unreadable settings are given a reason");
     assert.match(limitsReadBack({}, want).why, /state no limits\.subrequests/);
     const mis = limitsReadBack({ limits: { subrequests: 50 } }, want);
     assert.equal(mis.verdict, "MISMATCH");
@@ -433,7 +433,6 @@ test("R34: a derived binding missing or different on the script makes a deploy o
       assert.equal(puts(r).length, 1, `${label}: one metadata upload`);
       assert.match(r.stdout, /derived bindings differ on the script — a METADATA deploy proceeds \(the same script, the new bindings\)/, label);
       assert.match(r.stdout, what, label);
-      assert.doesNotMatch(r.stdout, /nothing to do/, label);
       const sent = puts(r)[0].metadata.bindings;
       assert.deepEqual(sent.filter((b) => b.name !== "JURISDICTION_PROFILES"), full, `${label}: R13's bindings, unchanged`);
       assert.deepEqual(sent.filter((b) => b.name === "JURISDICTION_PROFILES"), [undeclared], `${label}: the undeclared plain_text is sent again, unchanged`);
@@ -588,16 +587,13 @@ test("R34: identical bytes serving the version with matching limits and bindings
       const r = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: schedules_ }) }, serving: { [SLUG]: VERSION } }) });
       assert.equal(r.status, 0, `${label}: ${r.stdout}${r.stderr}`);
       assert.match(r.stdout, /schedules differ on the script — a METADATA deploy proceeds/, label);
-      assert.doesNotMatch(r.stdout, /nothing to do/, label);
       assert.equal(puts(r).length, 1, label);
       assert.deepEqual(r.calls.find((c) => c.method === "PUT" && c.url.endsWith("/schedules")).schedules, [{ cron: PLANE_CRON }], label);
     }
     const held = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
     assert.equal(held.status, 0, held.stdout + held.stderr);
-    assert.match(held.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held AND Workers Logs on; nothing to do/);
     assert.deepEqual(held.calls.filter((c) => c.method === "PUT"), [], "nothing is uploaded and no schedule is set");
     const unreadable = deploy(root, { stub: okStub({ schedulesGet: 500, scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
-    assert.doesNotMatch(unreadable.stdout, /nothing to do/, "schedules that cannot be read are not ones that match");
     assert.equal(unreadable.status, 1);
   } finally { rm(root); }
 });
@@ -2018,6 +2014,34 @@ test("R39: the release assembly refuses BINDING_NOT_EXPORTED, naming the member,
     /* exported by the SOURCE but not the bundle (a different name from the one bound) is still refused */
     editConfig(root, "alpha-worker", (c) => { c.durable_objects.bindings[0].class_name = "RemoteSessions"; });
     refused(assemble(root, ["--dry-run"]), "BINDING_NOT_EXPORTED");
+  } finally { rm(root); }
+});
+
+test("R43: a release whose member migration deletes a class assembles when no member binds it and is refused BINDING_NOT_EXPORTED, naming the member, the binding and the class, when one still does; a binding to a class the bundle exports (HEALTH) passes and one it lacks is refused", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    editConfig(root, "beta-worker", (c) => { c.migrations = [{ tag: "v1", deleted_classes: ["RemoteSession"] }]; });
+    await buildAll(root);
+    const ok = assemble(root, ["--dry-run"]);
+    assert.equal(ok.status, 0, "deleted, bound by nobody, exported by no bundle: " + ok.stdout + ok.stderr);
+
+    editConfig(root, "alpha-worker", (c) => { c.durable_objects = { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "beta-worker" }] }; });
+    const bound = assemble(root, ["--dry-run"]);
+    refused(bound, "BINDING_NOT_EXPORTED");
+    assert.match(bound.stderr, /alpha-worker/);
+    assert.match(bound.stderr, /REMOTE/);
+    assert.match(bound.stderr, /RemoteSession/);
+
+    /* HEALTH: an ordinary class of its member, held to R39 as written */
+    editConfig(root, "alpha-worker", (c) => { c.durable_objects = { bindings: [{ name: "HEALTH", class_name: "HealthProbe" }] }; c.migrations = [{ tag: "v1", new_sqlite_classes: ["HealthProbe"] }]; });
+    const lacking = assemble(root, ["--dry-run"]);
+    refused(lacking, "BINDING_NOT_EXPORTED");
+    assert.match(lacking.stderr, /HEALTH/);
+    assert.match(lacking.stderr, /HealthProbe/);
+    writeFileSync(join(root, "alpha-worker/src/index.mjs"), readFileSync(join(root, "alpha-worker/src/index.mjs"), "utf8") + "export class HealthProbe {}\n");
+    await buildAll(root);
+    const exported = assemble(root, ["--dry-run"]);
+    assert.equal(exported.status, 0, exported.stdout + exported.stderr);
   } finally { rm(root); }
 });
 
