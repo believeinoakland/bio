@@ -39,5 +39,5 @@
 | FILES #1 | `session_018Bhcecv29TYVd71UxV9qGX` | 2026-10-27, BOB #320 |
 | JOURNEYS #4 | `session_018Bhcef2FG9FpTXzkPVijim` | 2026-10-27, BOB #320 |
 | TESTS-SWEEP #1 | `session_018BhcechYohm1LHA7fup1fn` | 2026-10-27, BOB #320 |
-| PLANNING #4 | `session_018BhcegRAv8rTTw6mRQKqWZ` | 2026-10-27, BOB #324 (#3 `session_018BhceeU1GqFDsqidzDGQQ8` archived by #4) |
+| PLANNING #5 | `session_018BhcefTwpymZ6ZLNMR9SQR` | 2026-10-27, BOB #325 (#4 `session_018BhcegRAv8rTTw6mRQKqWZ` archived by #5) |
 | UX-DESIGN #45 | `session_018BhceeRn5Di4Q4kwmEsXF9` | 2026-10-27, BOB #323 (#44 `session_018Bhcefdgy83sFMSkwg7xRc` archived by #45) |
