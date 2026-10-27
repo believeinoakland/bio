@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19755 design words, 1176 protected; SHA-256
-   fda2629165280f9d0e5fb1f5c38dfb19f161e511063f0fbbe7434b53988dfd98) followed by 7486 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7490 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "fda2629165";
+export const WORDS_COMMIT = "3498b203ac";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -17564,8 +17564,6 @@ export const WORD_ROWS = Object.freeze([
   ["calc-grammar.opening_parenthesis_closed","an opening parenthesis is not closed, or the reverse",null,null,false,"design"],
   ["calc-grammar.figure_carries_two","the figure carries two signs",null,null,false,"design"],
   ["calc-grammar.scale_word_module","\"{word}\" is not a scale word this module reads",null,null,false,"design"],
-  ["calc-grammar.no_resolver_space","no resolver for the space \"{space}\"",null,null,false,"design"],
-  ["calc-grammar.rows_first_pass","it answered {size} rows on its first pass and {n} on a later one",null,null,false,"design"],
   ["calc-grammar.figure_carries_two_currency","the figure carries two currency marks",null,null,false,"design"],
   ["calc-grammar.figure_cannot_currency","a figure cannot be both a currency amount and a percentage",null,null,false,"design"],
   ["calc-grammar.range_two_figures","a range's two figures name different currencies",null,null,false,"design"],
@@ -22185,6 +22183,10 @@ export const WORD_ROWS = Object.freeze([
   ["connection-grammar.registry.viewer_missing","a read names the member reading; an absent viewer is neither an administrator nor the public",null,null,false,"code"],
   ["connection-grammar.shape.grade_shape","grade is not {shape} in the letters {letters}",null,null,false,"code"],
   ["connection-grammar.shape.label_declared","declared, not evidenced",null,null,false,"code"],
+  ["connection-grammar.why.chain_limit_over","a list shows at most {max} chains; {requested} were asked",null,null,false,"code"],
+  ["connection-grammar.why.chain_limit_whole","a chain limit is a whole number of chains from 1 to {max}; {requested} is not",null,null,false,"code"],
+  ["connection-grammar.why.hops_list","hops is a list of at most {max} connections",null,null,false,"code"],
+  ["connection-grammar.why.paths_list","paths is a list, each a non-empty list of connections, or an object holding hops and quantities",null,null,false,"code"],
   ["connections.checks.a_membership_is_taken_back","A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it.",null,null,false,"code"],
   ["connections.checks.leg_claims_through_theme","{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",null,null,false,"code"],
   ["connections.checks.leg_names_theme","{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",null,null,false,"code"],

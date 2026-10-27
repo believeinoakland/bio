@@ -120788,18 +120788,6 @@
    "source": "DEC-260"
   },
   {
-   "key": "calc-grammar.no_resolver_space",
-   "en": "no resolver for the space \"{space}\"",
-   "protected": false,
-   "source": "K5565"
-  },
-  {
-   "key": "calc-grammar.rows_first_pass",
-   "en": "it answered {size} rows on its first pass and {n} on a later one",
-   "protected": false,
-   "source": "K5565"
-  },
-  {
    "key": "calc-grammar.figure_carries_two_currency",
    "en": "the figure carries two currency marks",
    "protected": false,
