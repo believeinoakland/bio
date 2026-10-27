@@ -16,7 +16,7 @@
 **Naming.** The keyed-poll question (state API key read only when a member asks) is **C8-poll** in the N1259 files; DECISIONS' installer item is **C8-installer**. K5469 is now in DECISIONS.
 
 **Next steps for #2 (after C21):**
-1. Wait for / read new K rulings on Bob's page (C8-poll, C21, Q2, L18, work-focused-outside-US); carry them in DECISIONS.md; apply by worker where lines depend (L18 → a2 R135 keep/drop; C8-poll → N1259 CONDITIONAL lines; C21/Q2 → N1269 PENDING lines). None had arrived at C21.
+1. Wait for / read new K rulings on Bob's page (C8-poll, C21, Q2, L18, work-focused-outside-US); carry them in DECISIONS.md; apply by worker where lines depend (L18 → a2 R135 keep/drop; C8-poll → N1259 CONDITIONAL lines; C21/Q2 → N1269 PENDING lines). None had arrived at C21 (BOB confirmed at C21: all five still open; K5471 (4) confirms `registerfileimport`, relayed to UX-DESIGN as B557).
 2. Mark each draft READY once BOB confirms nothing of Bob's is open on it (N1260-a/b are READY; N1257 after L18 and outside-US, now DRAFT; N1259 after C8-poll; N824 after M1 is run; N1269 after Q2 and C21).
 3. Sibling-folder id collisions are BOB's/PLANNING's to renumber (reported at C21): content R63-R64 (N1259-a) vs planning lines-A8; citation R26 (N1259-d) vs lines-A8; queue R97 (N1259-c) vs lines-A6; screens-settings R82 (N1257 modules) vs lines-A5-A6; screens-daily R108/R109 already in PLANNING's CONSISTENCY L6.
 4. N751/N1261/N1263: PLANNING folds them; no draft from this lane. `events` pinned-test and old-key store checks are the events job's.
