@@ -7,60 +7,18 @@
     <span class="eyebrow">The assistant · from the AI-DESIGN lane</span>
     <p class="lede">In the beta, a team, a project or a member chooses which AI the assistant runs on, from a list Civicsmith keeps. Each AI on the list carries Civicsmith's evidence: the privacy checks the team set, and a test of whether it can do each part of the assistant's work (asking, drafting, reading documents, reading unclear pages, checks and plans, drafting a case's account).</p>
     <article class="q" id="AI2">
-      <div class="meta"><span class="k">AI2</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
+      <div class="meta"><span class="k">AI2</span><span>AI-DESIGN</span><span>asked 27 Oct · rewritten 27 Oct at your request</span></div>
       <h3>Which parts of the assistant does the beta offer?</h3>
-      <p>You asked for "full support for the assistant". Already built: asking, drafting, reading unclear pages, checks and plans. Built but switched off behind accuracy bars you set: investigating, extracting and exploring (at most 20% false alarms).</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Every built part, plus three more: the intake interview, the case's account, and "what does this charge or rule mean" answers</span><span>Investigating, extracting and exploring stay behind their bars and switch on for an AI as soon as it passes them.</span></li>
-        <li><span class="k">B · As A, and switch investigating, extracting and exploring on now</span></li>
+      <p>You asked for "full support for the assistant". Already built and ready to switch on: asking, drafting, reading unclear pages, and checks and plans. Three more are built but switched off, each behind a bar it has to clear first:</p>
+      <ul class="plain">
+        <li><span class="k">Investigating</span> is the assistant working through a question across the record and raising findings ("these two payments look connected"). Its bar comes from your investigation design (D11): at most 1 in 5 of the findings it raises may turn out to be wrong (at most 20% false alarms). A finding that's wrong costs a member time and can mislead a case, so this part waits until an AI is shown to stay under that limit.</li>
+        <li><span class="k">Exploring</span> is investigating started by Civicsmith itself on an open question, without a member asking, once a day at most and with the cost shown. Because it is investigating run on its own initiative, it stays off until investigating clears its bar.</li>
+        <li><span class="k">Extracting</span> is the assistant proposing exact quotes and readings from a document, for example the figures in a table, which a member then accepts into the record. Each quote is checked in code to really be in the document. It must pass its own accuracy test, and you ruled it never runs unattended: only when a member asks.</li>
       </ul>
-    </article>
-    <article class="q" id="AI3">
-      <div class="meta"><span class="k">AI3</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>When work moves to an account someone else pays for, is the member asked?</h3>
-      <p>You allowed work to continue down an ordered list of accounts when one hits its limit.</p>
+      <p>With your AI1 answer, each bar is now measured by Civicsmith's automatic test for each AI, at the marks you set after the first measuring run. The 20% false-alarm limit stands unless you change it.</p>
       <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Ask only when the payer changes</span><span>A move to another account of the same owner goes ahead, is shown, and can be stopped.</span></li>
-        <li><span class="k">B · Ask on every move</span></li>
-        <li><span class="k">C · Never ask; only show it</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI4">
-      <div class="meta"><span class="k">AI4</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>If Cloudflare's own credits get charged instead of the team's key, what happens?</h3>
-      <p>A team's provider key can be held by Cloudflare's AI Gateway, so Civicsmith never holds it. Cloudflare says that if the key is missing, some requests are charged to Cloudflare's own credits instead. Each call is checked afterwards against the gateway's log.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Keep that one answer, tell the team's administrators, and stop the account's further calls until an administrator clears it</span><span>Withholding the answer would not undo the charge.</span></li>
-        <li><span class="k">B · As A, and withhold the answer</span></li>
-        <li><span class="k">C · Only tell the administrators</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI5">
-      <div class="meta"><span class="k">AI5</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>Does the team's list of allowed AIs also bind a member's personal subscription?</h3>
-      <p>You decided a personal subscription is the member's alone, and that the team's required privacy checks still bind it.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Yes: a personal subscription must also be on the team's allowed list</span><span>The same reasoning as for the checks: the team decides what its work may run on.</span></li>
-        <li><span class="k">B · No: only the privacy checks bind it</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI6">
-      <div class="meta"><span class="k">AI6</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>How much may Civicsmith spend re-testing AIs on your accounts?</h3>
-      <p>Keeping the list honest means re-testing listed AIs regularly, to catch one that quietly gets worse. That spends your money continuously.</p>
-      <ul class="opts">
-        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Re-test only the AIs teams actually use, each with a monthly cap you set</span></li>
-        <li><span class="k">B · No regular re-tests until you ask</span></li>
-        <li><span class="k">C · No cap</span></li>
-      </ul>
-    </article>
-    <article class="q" id="AI7">
-      <div class="meta"><span class="k">AI7</span><span>AI-DESIGN</span><span>asked 27 Oct</span></div>
-      <h3>Can Civicsmith take an AI off the list before you look?</h3>
-      <p>For example, when a provider retires a model or a re-test shows it got worse.</p>
-      <ul class="opts">
-        <li><span class="k">A · Every change waits for you</span></li>
-        <li class="rec"><span class="tag">Recommended</span><span class="k">B · A standing rule lets Civicsmith mark an AI "watch", "lapsed" or "retired" when a stated trigger fires, telling you each time</span><span>Triggers: the provider's shutdown date, a failed re-test, a different model answering. Adding an AI or bringing one back stays yours.</span></li>
+        <li class="rec"><span class="tag">Recommended</span><span class="k">A · Every built part, plus three more: the intake interview, the case's account, and "what does this charge or rule mean" answers</span><span>Investigating, extracting and exploring stay behind their bars and switch on for an AI as soon as it clears them.</span></li>
+        <li><span class="k">B · As A, and switch investigating, extracting and exploring on now</span><span>Faster, but members could meet wrong findings before any AI has shown it stays under the limit.</span></li>
       </ul>
     </article>
     <article class="q" id="AI8">
