@@ -79,6 +79,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 **explore**
 - T52-18 · W9 · C-K22 label · MINOR · an event node is named in the Timeline's words (`screen.timeline.kind`), not "award · undated". W30 draws the grade word and the source link. PL1 W9.
 
+**retrieval**
+- T52-101 · query-language R35 (K5389) · test-only · retrieval's tests that assert a snippet's match in brackets (`passage-arm.test.mjs`'s R11/R15/R54 and R79 tests, `t51-round9.test.mjs` R95, `t51-fix2.test.mjs`) read `MARK_OPEN` and `MARK_CLOSE` (imported from query-language, never copied); after query-language merges (K5393).
+
 **query-language**
 - T52-19 · W10 · B-K5 marker · MAJOR · the match marker in a snippet is one the stored text cannot contain (or offsets), so a literal "[placed nowhere]" or "[object Object]" is not eaten; W28 adapts the drawer. PL1 W10.
 
@@ -92,6 +95,9 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 **contradiction**
 - T52-22 · `candidatesFor` publishes a member-flagged candidate (`flagged_by`) in its answer, so screens-inquiry's `t51-fix11-b89.test.mjs` `answer(c)` takes it and R138's flags list can be drawn (SCREENS-INQUIRY #34 J64; K5282).
+
+**agent-worker**
+- T52-102 · `requirements.test.mjs` red in a batch run of query-language's users (`proc tests --users`), green alone (QUERY-LANGUAGE #1, K5393): first: settle the cause (shared state, ordering or memory; R14's memory watch), then fix it; "flake" is not a cause.
 
 ## Layer 8
 
