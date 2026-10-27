@@ -85,3 +85,5 @@
 
 **P-26 · 2026-10-27** · `proto/levels-2-3-all` 50c43739 built (bundle ac48aaea…, tests no new failures) and its dry run passes; **my real deploy was refused by auto mode, so BOB deploys** (commands sent). Next once deployed: `tablebytes` baseline, then C (`PROTO_C=1`, `PROTO_C_HELD=1`) with the mixed ramp, then B. Meanwhile: record sizes and the soak.
 
+**P-27 · 2026-10-27** · BOB deployed the baseline (flags off) and then `03a5c65e` with C on (see s1-results.md §1d for hashes and rollback). Baseline: the new code does nothing with flags off. `tablebytes`: no `dbstat` in Durable Object SQLite (count-only); 96 % of the room's 430,564 rows are the text units and their search index; database 676,630,528 bytes. Running now: the screens and the mixed ramp with C on, then `protocprobe`. BOB #326 takes over; send B ON and later requests to the BOB on the plan's Status line.
+
