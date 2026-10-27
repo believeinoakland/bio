@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2602,
+  "refusal": 2603,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -237,7 +237,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19432,
+  "total": 19433,
   "protected": 1162
  },
  "words": [
@@ -83312,6 +83312,13 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-447: B543: the fold shows that dimension's rows for the item in place; this link opens the whole screen narrowed to it"
+  },
+  {
+   "key": "refusal.SIGNATURES_RUN_UNDER_WAY",
+   "en": "Your team's Civicsmith is already fetching the newest list of known harmful files, so it did not start another. Look again in a few minutes. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-449: B544, the refusal while the signature run is under way (scanMirror)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

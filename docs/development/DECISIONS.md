@@ -6890,3 +6890,14 @@ the design: Brief counsel says "assembled" throughout, as its act does ("Packets
 verified: the screens' checks pass; on tranche/T52 words 0, format 0; no test holds an old phrase.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`; `screens/mock-screens.js`; `screens/mock-kit.js`.
 owed: BOB: merge this commit (MERGE).
+
+### DEC-449 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcedaAqFXn43yDDqk4vj, UX design #42) (BOB's B544; FILE-SAFETY #1, T52-12)
+for: design (T52; FILE-SAFETY)
+question: `refusal.SIGNATURES_RUN_UNDER_WAY` (file-safety C-140.45: the signature run is already under way) has no design row; the code keeps a stand-in.
+why it is Bob's: it is not (P17). provisional: as below. alternative: none. recommendation: as below. reversal cost: low. response: none needed (the design's detail).
+decided: 2026-10-27 · the design session (P17)
+the design: "Your team's Civicsmith is already fetching the newest list of known harmful files, so it did not start another. Look again in a few minutes. Nothing was changed." ("signatures" is the engine's word; members meet "the list of known harmful files".) The reads list regenerated from tranche/T52.
+verified: on tranche/T52 at its tip with these words files: words 0, format 0; file-safety one failure more than without, R24 in `test/m/file-safety/rows.test.mjs`, which lists the stand-ins still owed and now finds this row landed: FILE-SAFETY drops `refusal.SIGNATURES_RUN_UNDER_WAY` from that list and its stand-in.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`; `screens/words-reads.json`.
+owed: BOB: merge this commit (MERGE) with FILE-SAFETY's R24 list brought up to date.

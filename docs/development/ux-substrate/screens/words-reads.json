@@ -5612,7 +5612,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 26881
+    "generatedRows": 26908
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"

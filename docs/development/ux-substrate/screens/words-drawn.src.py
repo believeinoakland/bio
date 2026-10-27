@@ -8262,6 +8262,9 @@ w447('screen.follow.docs.words', 'Their name appears, not matched to them', 'B54
 w447('screen.follow.docs.words.note', 'These documents contain the same name, but nothing yet shows it is the same person or organization. Open one to say whether it is.', 'B543 (3): beneath the second heading')
 w447('screen.follow.open.whole', 'Open all of it in {screen}', 'B543: the fold shows that dimension\'s rows for the item in place; this link opens the whole screen narrowed to it')
 
+# DEC-449: B544 (FILE-SAFETY #1, T52-12; file-safety C-140.45)
+W.append(dict(key='refusal.SIGNATURES_RUN_UNDER_WAY', en='Your team\'s Civicsmith is already fetching the newest list of known harmful files, so it did not start another. Look again in a few minutes. Nothing was changed.', protected=False, note='DEC-449: B544, the refusal while the signature run is under way (scanMirror)'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
