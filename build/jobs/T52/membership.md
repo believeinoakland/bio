@@ -1,6 +1,6 @@
 # membership (T52)
 
-**Status** · session_018BhcefkQnJJfBgtYuqcBsn · depth 2 · COMPLETE
+**Status** · session_018BhcefkQnJJfBgtYuqcBsn · depth 2 · WAITING: complete; awaiting BOB (archive or CHANGE)
 **Sessions** · 1
 
 ## Completion (2026-10-27)
