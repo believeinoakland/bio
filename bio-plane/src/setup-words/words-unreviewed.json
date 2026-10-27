@@ -10326,13 +10326,6 @@
       "line": 2664
     },
     {
-      "id": "capture.index.body_over_request_ceiling",
-      "en": "the file is larger than the {bound} bytes one request may carry, so it was refused whole; nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 800
-    },
-    {
       "id": "capture.index.bundle_ids_shape",
       "en": "a list of at most {max} document ids",
       "module": "capture",
@@ -10515,13 +10508,6 @@
       "line": 1925
     },
     {
-      "id": "capture.index.job_not_registered",
-      "en": "the work this file owes could not be registered, so nothing was filed",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 965
-    },
-    {
       "id": "capture.index.kind_must_be_one_of",
       "en": "kind must be one of: {TASK_KINDS}",
       "module": "capture",
@@ -10562,97 +10548,6 @@
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
       "line": 3709
-    },
-    {
-      "id": "capture.index.part_conflict",
-      "en": "that part was already put with other bytes, so this one was refused",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1229
-    },
-    {
-      "id": "capture.index.part_digest_mismatch",
-      "en": "the part does not hash to the digest given for it, so nothing was stored; send it again",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1271
-    },
-    {
-      "id": "capture.index.part_in_progress",
-      "en": "a part of this upload is still arriving; send the next one when it is answered",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1243
-    },
-    {
-      "id": "capture.index.part_not_read",
-      "en": "the part's bytes could not be read, so nothing was stored; send it again",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1265
-    },
-    {
-      "id": "capture.index.part_not_stored",
-      "en": "the evidence store would not take the part, so nothing was recorded; send it again",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1276
-    },
-    {
-      "id": "capture.index.part_out_of_order",
-      "en": "the parts go in order, because the file's digest is taken across them in order; send the part named next",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1233
-    },
-    {
-      "id": "capture.index.part_size",
-      "en": "a part must be exactly {bound} bytes (the last one the rest of the file), and this one is not; nothing was stored",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1246
-    },
-    {
-      "id": "capture.index.parted_not_aborted",
-      "en": "the evidence store would not abort the upload; it stays open and is aborted at its expiry",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1367
-    },
-    {
-      "id": "capture.index.parted_not_begun",
-      "en": "the evidence store would not begin an upload in parts, so nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1167
-    },
-    {
-      "id": "capture.index.parted_not_completed",
-      "en": "the evidence store would not complete the upload, so it was aborted and holds nothing; begin it again",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1334
-    },
-    {
-      "id": "capture.index.parted_unavailable",
-      "en": "your group's Civicsmith cannot take a file in parts (its evidence bucket offers no multipart upload, or its key is not known), so nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1153
-    },
-    {
-      "id": "capture.index.parts_missing",
-      "en": "the upload lacks parts, so it was not completed and nothing was written; send the parts named in missing",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1312
-    },
-    {
-      "id": "capture.index.parts_out_of_order",
-      "en": "the parts named are not the ones put, in the order they were put, so the upload was not completed and nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1316
     },
     {
       "id": "capture.index.reattest_needs_sha",
@@ -10795,32 +10690,11 @@
       "line": 1889
     },
     {
-      "id": "capture.index.upload_expired",
-      "en": "this upload was left open too long, so it was aborted and holds nothing; begin it again",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1084
-    },
-    {
-      "id": "capture.index.upload_lost",
-      "en": "your group's Civicsmith lost the digest of the parts so far, so the upload was aborted and holds nothing; begin it again",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1238
-    },
-    {
       "id": "capture.index.upload_no_bytes",
       "en": "the upload carried no bytes; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
       "line": 812
-    },
-    {
-      "id": "capture.index.upload_not_open",
-      "en": "this upload has no part left to put; complete it",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1223
     },
     {
       "id": "capture.index.upload_receipt_evidence",
@@ -10830,39 +10704,11 @@
       "line": 1386
     },
     {
-      "id": "capture.index.upload_unknown",
-      "en": "your group's Civicsmith holds no upload in parts under that name for you; begin it again",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1080
-    },
-    {
-      "id": "capture.index.whole_digest_mismatch",
-      "en": "the parts, taken in order, do not hash to the digest declared for the file, so the upload was aborted and nothing was held",
-      "module": "capture",
-      "file": "bio-plane/src/capture/index.mjs",
-      "line": 1328
-    },
-    {
       "id": "capture.ops.body_hash_mismatch",
       "en": "body hash does not match the sha256 parameter",
       "module": "capture",
       "file": "bio-plane/src/capture/ops.mjs",
       "line": 151
-    },
-    {
-      "id": "capture.ops.body_over_capture_ceiling",
-      "en": "the body is larger than the {bound} bytes this surface keeps as one capture, so it was refused whole; nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/ops.mjs",
-      "line": 85
-    },
-    {
-      "id": "capture.ops.body_over_request_ceiling",
-      "en": "the body is larger than the {bound} bytes one request may carry, so it was refused whole; nothing was written",
-      "module": "capture",
-      "file": "bio-plane/src/capture/ops.mjs",
-      "line": 84
     },
     {
       "id": "case-account.document.v1_on_v2_replace",
@@ -17109,6 +16955,34 @@
       "line": 10
     },
     {
+      "id": "connection-grammar.why.chain_limit_over",
+      "en": "a list shows at most {max} chains; {requested} were asked",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/bounds.mjs",
+      "line": 95
+    },
+    {
+      "id": "connection-grammar.why.chain_limit_whole",
+      "en": "a chain limit is a whole number of chains from 1 to {max}; {requested} is not",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/bounds.mjs",
+      "line": 92
+    },
+    {
+      "id": "connection-grammar.why.hops_list",
+      "en": "hops is a list of at most {max} connections",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/walk.mjs",
+      "line": 181
+    },
+    {
+      "id": "connection-grammar.why.paths_list",
+      "en": "paths is a list, each a non-empty list of connections, or an object holding hops and quantities",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/walk.mjs",
+      "line": 117
+    },
+    {
       "id": "connections.checks.a_membership_is_taken_back",
       "en": "A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it.",
       "module": "connections",
@@ -23213,13 +23087,6 @@
       "line": 428
     },
     {
-      "id": "doorbell.index.job_not_registered",
-      "en": "the reading this knock owes could not be registered, so the knock stays as it was and nothing was filed",
-      "module": "doorbell",
-      "file": "bio-plane/src/doorbell/index.mjs",
-      "line": 674
-    },
-    {
       "id": "doorbell.index.knock_bytes_no_longer_held",
       "en": "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written",
       "module": "doorbell",
@@ -26083,13 +25950,6 @@
       "line": 3009
     },
     {
-      "id": "file-safety.checks.the_file_scanner_could_not_read",
-      "en": "The file scanner could not read all of this file, so it counts as not checked. The reason is stated beside it.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/checks.mjs",
-      "line": 111
-    },
-    {
       "id": "file-safety.declared.deepercheck",
       "en": "file-directed: keyed by a capture's digest; asks the group's outside tools about this file; records no one",
       "module": "file-safety",
@@ -26181,13 +26041,6 @@
       "line": 1704
     },
     {
-      "id": "file-safety.index.reading_is_not_gated",
-      "en": "This file is read without waiting for its scan. The scan is a separate check, and a threat it finds does not yet take the file out of reading or search.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 134
-    },
-    {
       "id": "file-safety.index.reading_scanners_state",
       "en": "reading the scanner's state",
       "module": "file-safety",
@@ -26207,20 +26060,6 @@
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
       "line": 1609
-    },
-    {
-      "id": "file-safety.index.safe_view_first_pages",
-      "en": "This shows the first {pages} pages of the document's {source_pages}. It is a view of the document, not a reading of it.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 997
-    },
-    {
-      "id": "file-safety.index.safe_view_is_a_view",
-      "en": "This is a view of the document, not a reading of it.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1000
     },
     {
       "id": "file-safety.index.signatures_run_download",
@@ -26270,13 +26109,6 @@
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
       "line": 1032
-    },
-    {
-      "id": "file-safety.index.the_file_is_encrypted_so_no_safe_view",
-      "en": "The file is encrypted, so no safe view can be made of it.",
-      "module": "file-safety",
-      "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1028
     },
     {
       "id": "file-safety.index.the_text_could_not_be",
@@ -46661,13 +46493,6 @@
       "module": "workbooks",
       "file": "bio-plane/src/workbooks/index.mjs",
       "line": 72
-    },
-    {
-      "id": "refusal.WORKBOOK_TOO_LARGE",
-      "en": "This workbook has {cells} cells, more than the {bound_cells} that can be held and read here.",
-      "module": "workbooks",
-      "file": "bio-plane/src/workbooks/index.mjs",
-      "line": 78
     },
     {
       "id": "retrieval-browse.browse.marks_another_shape",

@@ -3,7 +3,7 @@
    measures how connected a node is (R17): each limits work, never ranks. */
 
 /** The hub bound of every kind not named in `hub_by_kind` (R10). */
-import { word } from '../setup-words/index.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 const HUB = 1000;
 
@@ -72,4 +72,27 @@ export function exhausted(arg) {
     return { refused: 'VISITED_INVALID', why: word('connection-grammar.why.visited_count_nodes') };
   }
   return { truncated: true, undetermined: true, why: WHY[/** @type {keyof typeof WHY} */ (reason)], visited };
+}
+
+/**
+ * The most chains a member's list of every chain shows (R25; N1260, DEC-409, DEC-411): a count only, kept apart from
+ * `BOUNDS`. The times a search waits are `runtime-limits`' budget classes, never here.
+ */
+export const CHAIN_LIMITS = Object.freeze({ chains: Object.freeze({ default: 50, max: 200 }) });
+
+/**
+ * The count a list of every chain is cut at: 50 when none is asked, the asked count from 1 to 200, else a refusal
+ * saying why (R25, R18).
+ * @param {unknown} [requested]
+ */
+export function chainLimitOf(requested) {
+  const { default: dflt, max } = CHAIN_LIMITS.chains;
+  if (requested === undefined || requested === null) return dflt;
+  if (typeof requested !== 'number' || !Number.isInteger(requested) || requested < 1) {
+    return { refused: 'CHAIN_LIMIT_INVALID', why: localize('connection-grammar.why.chain_limit_whole', 'a chain limit is a whole number of chains from 1 to {max}; {requested} is not', { max, requested: String(requested).slice(0, 40) }) };
+  }
+  if (requested > max) {
+    return { refused: 'CHAIN_LIMIT_OVER_MAX', why: localize('connection-grammar.why.chain_limit_over', 'a list shows at most {max} chains; {requested} were asked', { max, requested }) };
+  }
+  return requested;
 }

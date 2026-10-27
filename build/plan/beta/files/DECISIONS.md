@@ -1,0 +1,24 @@
+# FILES: decisions of Bob's that this lane carries
+
+**Status** · Kept by FILES #1. One line per decision: id · date · his words, quoted · source. Never reworded; an answer of his not yet in `build/rulings.md` is not here.
+
+- K4628 · 2026-10-22 · "Let's set a standard for the beta release to confirm that it can successfully capture any and interpret any type of file of any reasonable size." · BOB #256's session
+- K4628 · 2026-10-22 · "Audio, video, and discussion forum formats won't be supported in the initial final release, but that support should be marked as an element of the next release after 1.0." · BOB #256's session
+- K4628 · 2026-10-22 · "3. B, but we need to carefully consider the "stretch goal" of being able to read any file that would realistically be of value in an investigation. As we consider really large files, we may need to communicate some limits to members - like a maximum file size for each type, and interpreting only those sections of the document that would be of interest to the investigation." · BOB #256's session
+- K4630 · 2026-10-22 · "Failures like that shouldn't be failures." (a large file within the standard is read, never refused or left to fail) · BOB #256's session
+- K4632 · 2026-10-22 · "N1266: the specific types will be closely studied before finalizing the list. But again, that's for a follow-on release." · BOB #256's session
+- K4632 · 2026-10-22 · "N1268: again this is for beta, not the alpha we're currently working on reaching." · BOB #256's session
+- K4632 · 2026-10-22 · "The act of adding a document to the record does not require that every line/cell/slide be interpreted immediately." · BOB #256's session
+- K4636 · 2026-10-22 · "I also agree with your earlier suggestion that (for now) all documents be read and searchable, though we design a means whereby not all content is interpreted." · BOB #257's session
+- K4831 · 2026-10-23 · "Files architecture decisions: 1. as recommended ... 10. as recommended" (the answers: (3) alpha ships with its limits, standard by the beta; (4) refused above either limit, archives 500 MB uploaded and 2 GB unpacked; (7) every part read, Excel dates typed; (8) protective limits as a class; (9) TAR, GZ, 7z, OCR with Spanish first, not RAR) · reading-for-bob.html, BOB
+- K5427 · 2026-10-27 · BOB's ruling, Bob agreed N1267: 100 MB for text, JSON, XML and every text-like type; K4906's 50 MB gives way · BOB #321
+- DEC-460 A4 · 2026-10-27 · "B, but only drop metadata is necessary" (a safe picture is redrawn from the photo's pixels, dropping only the metadata safety requires; what can be carried safely, as when and where taken and orientation, is read as data and shown beside it) · Bob via UX-DESIGN, relayed by BOB #321
+- K5435 · 2026-10-27 · F1 (A2) "As recommended" (the ruled list plus the cheap siblings of the study's Tier 2) · Bob, via BOB #321
+- K5436 · 2026-10-27 · F2 (B2) "as recommened" (an unreadable type is held whole, named plainly, findable, read when a reader arrives; RAR and programs stay refused) · Bob, via BOB #321
+- K5437 · 2026-10-27 · F3 "as recommened" (MBOX read in the beta; PST, Access and the rest of Tier 3 held and named until a real file shows they turn up) · Bob, via BOB #321
+- K5439 · 2026-10-27 · BOB's protective limits under K4831 (8): 100,000 messages per mailbox; JSON/XML depth 1,000; 100,000 events per calendar file; archive depth 3 and 10,000 members; a file past a limit is refused whole with the limit named · BOB #321
+- K5448 · 2026-10-27 · PLANNING's CONSISTENCY decisions, BOB's: one safe picture (A4); mail-reader reads and N824 files through it; the container unpacks; journey-check walks the corpus; bounds become runtime-limits' Level 1 row; reader-container, structured-text-reader, mail-reader are new layer-1 modules · BOB #321
+- K5466 (C14) · 2026-10-27 · CAPABILITIES' mail-reader additions, BOB's (next K after K5465): headers received[] and authentication_results; auto_submitted, precedence, list_id, return_path; attachment listing with stable index; nesting_depth to 4; failures returned never thrown; one nesting count at most 3; one ledger, acquisition's member job; address 25 MiB, uploaded EML/MSG 100 MB · BOB #321
+- K5471 · 2026-10-27 · BOB's, beneath DEC-460: on a member's own record a photo shows its place name with exact coordinates one step away; camera serial and owner name are read into the record, not shown by default · BOB #322
+- K5546 · 2026-10-27 · Bob answered L21 "B": a photo keeps its colour profile · BOB #324
+- K5555 · 2026-10-27 · BOB's, bounding K5546: the ICC profile is re-embedded unchanged and never converted, and only when a strict structural check passes · BOB #324

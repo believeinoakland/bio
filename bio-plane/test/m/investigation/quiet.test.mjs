@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, projectMd, ANN, BOB, DAN, OUT, AI, P1, P2, PH, Q1, Q2 } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 test("R17: quietState is quiet when every step of the project and its questions is ended or set aside and nothing is awaited; a display, never a stage", () => {
   const w = world();
@@ -147,7 +148,7 @@ test("R19: projectStanding answers the objective and condition, progress (or tha
   w.progress.delete(P1);
   const n = w.inv.projectStanding({ project: P1, viewer: ANN });
   assert.equal(n.progress.computable, false);
-  assert.match(n.progress.why, /cannot be computed/);
+  assert.match(n.progress.why, wordRx("investigation.why.cannot_computed"));
   assert.equal(n.questions[0].bar, null);
   assert.equal(w.inv.projectStanding({ project: P1, viewer: DAN }).code, "PROJECT_SEEN_NOT_A_PARTICIPANT");
   assert.equal(w.inv.projectStanding({ project: PH, viewer: ANN }).code, "NO_SUCH_PROJECT");

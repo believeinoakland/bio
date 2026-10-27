@@ -12,7 +12,7 @@ const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' 
 const WEIGHT = {
   owed_followfrom:1, owed_exploreall:1, owed_explorepath:1, owed_exploreshorter:1,
   owed_aiplanconnect:1, owed_aitestopen:1, owed_airesultsopen:1, owed_aiorderset:1, owed_aiaccountswitch:2, owed_aiaccountremove:3, owed_aibudgetset:2, owed_aicheckset:2, owed_aimemberallow:2, owed_aikeyenter:2, owed_aikeycloudflare:2, owed_aisignin:2, owed_aikeyreference:2, owed_aitermsaccept:2, owed_aiconnecttest:1, owed_aiaccountadd:2, owed_aipersonalchoose:2, owed_aimineuse:1, owed_aiownadd:1, owed_aimycheckset:1, owed_aiprojectuse:2, owed_aiprojectbudget:2, owed_aiprojectorder:1, owed_aiprojectcheckset:2, owed_aicontinue:1, owed_aistop:1, owed_aisend:2, owed_aisendrefuse:1, owed_aiwait:1, owed_aiwithout:1, owed_aiswitchaccount:1, owed_aimodelchoose:1, owed_aichooseother:1, owed_aiaskadmin:1, owed_airunstart:1, owed_aiaccountpick:1, owed_aitestsetup:2, owed_aitestrun:1, owed_airesultsend:3, owed_airesultsdecline:1, owed_airesultsread:1,
-  owed_registerimport:1, owed_registerlist:1, owed_registersearch:1, owed_registerrowcite:1, owed_registerwatch:1, owed_registerwatchstop:1, owed_alertconnect:2, owed_registerask:1, owed_registermatch:1, owed_registerwatchpropose:1, owed_registerfilter:1, owed_registerdelta:1, owed_registerpreread:1, owed_registerpropose:1, owed_explorecontinue:1,
+  owed_registerfileimport:1, owed_registerlist:1, owed_registersearch:1, owed_registerrowcite:1, owed_registerwatch:1, owed_registerwatchstop:1, owed_alertconnect:2, owed_registerask:1, owed_registermatch:1, owed_registerwatchpropose:1, owed_registerfilter:1, owed_registerdelta:1, owed_registerpreread:1, owed_registerpropose:1, owed_explorecontinue:1,
   contradictionflag:2, owed_citeimported:1, owed_withdrawimported:2, owed_namedrequestset:1, owed_sweepset:1, owed_sweepratify:1,
   owed_casedetailsset:1, owed_casedetails:1, owed_casedetailspublic:1, templatesave:1, reattest:1, captureaccount:2,
   owed_importregrade:1, owed_rerunstart:1, owed_rerunpair:1, owed_rerunread:1,
@@ -61,7 +61,7 @@ function btn(op, label, o = {}) {
 }
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon, help) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet"${help ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(help)}"` : ''}>${icon ? I(icon) : ''}${esc(label)}</a>`;
-const grade = (scale, l, full) => `<span class="cs-grade" data-scale="${scale}" tabindex="0" aria-label="${scale} ${l}">${I(scale === 'subject' ? 'subject' : scale)}${full ? `<span class="sc">${full}</span> ` : ''}${l}</span>`;
+const grade = (scale, l, full) => `<span class="cs-grade" data-scale="${scale}" tabindex="0" aria-label="${scale} ${l}">${I(scale === 'ceiling' ? 'capture' : scale)}${full ? `<span class="sc">${full}</span> ` : ''}${l}</span>`;
 // DEC-160: anything the record holds that a screen names is a link: click opens it (here, the screen that shows it), hover
 // or focus shows its card. `go` is the screen it opens.
 const ref = (text, go, tip, cls = '') => `<a href="#" class="cs-ref${cls ? ' ' + cls : ''}" data-goto="${go}" data-tip="${esc(tip)}">${text}</a>`;
@@ -69,7 +69,7 @@ const ref = (text, go, tip, cls = '') => `<a href="#" class="cs-ref${cls ? ' ' +
 const card = (text, tip) => `<span class="cs-card" tabindex="0" data-tip="${esc(tip)}">${text}</span>`;
 const strength = (c, n, phrase, t, weak) => `<span class="cs-strength"${weak ? ` data-weak="${esc(weak)}"` : ''}>${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
 const gapm = (k, html) => `<span class="cs-gap" data-gap="${k}">${I({undetermined:'undetermined', withheld:'withheld', unrated:'unrated', nobody:'nobody', refused:'refused'}[k])}<span>${html}</span></span>`;
-const origin = (k, t) => `<span class="cs-origin" data-origin="${k}">${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged', search:'search'}[k])}${esc(t)}</span>`;
+const origin = (k, t, tip) => `<span class="cs-origin" data-origin="${k}"${tip ? ` data-tip="${esc(tip)}"` : ''}>${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged', search:'search'}[k])}${esc(t)}</span>`;
 const kindm = k => `<span class="cs-kind" data-kind="${k}">${I(k === 'todo' ? 'todo' : k)}${{todo:'To do', noticed:'Noticed', status:'Status'}[k]}</span>`;
 const due = (s, t) => `<span class="cs-due"${s ? ` data-due="${s}"` : ''}>${I(s === 'met' ? 'accepted' : 'clock')}${esc(t)}</span>`;
 const hint = t => `<span class="cs-hint">${I('hint')}${esc(t || 'Hint · machine work')}</span>`;

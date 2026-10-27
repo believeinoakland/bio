@@ -13,7 +13,7 @@ const source = () => new Response(bytes, { headers: { "content-type": "applicati
 
 async function failed() {
   const w = world();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "P" }, { settle: false });
   const session = first.body.fetch_pending.session;

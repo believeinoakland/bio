@@ -18,7 +18,7 @@ const HELD = "CAPTURE_HELD_BY_ANOTHER_BUNDLE";
 
 async function parked() {
   const w = world();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "PROJ-1" }, { settle: false });
   assert.equal(first.status, 200);
@@ -96,7 +96,7 @@ function pending() {
   let open; const gate = new Promise((r) => (open = r));
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(R_ANSWER(JSON.parse(init.body).url))); } } } });
   const entries = new Map();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   return { w, entries, open };
 }

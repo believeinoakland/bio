@@ -10,6 +10,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { escalationOf } from "../../../src/escalation/index.mjs";
 import { seeded, opened, toStage, storage, V, MACHINE, ms } from "./fixture.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 /* Every act, called with `extra` over arguments that would otherwise land (at stage 4, with a response to read). */
 function acts(w) {
@@ -452,7 +453,7 @@ test("R26 R7 R8 a withheld action meets no trigger for the viewer who may not se
   let a = as("alice"), b = as("bob");
   assert.deepEqual([edge(a, 6).met, edge(a, 6).ids], [true, [H, `${H}#0`]]);
   assert.deepEqual([edge(b, 6).met, edge(b, 6).ids], [false, []]);
-  assert.match(edge(b, 6).missing, /no breach action is attached at stage 5/, "the missing sentence counts no withheld action");
+  assert.match(edge(b, 6).missing, wordRx("escalation.breach_action_attached_stage"), "the missing sentence counts no withheld action");
   assert.deepEqual([a.proposed.map((p) => p.to), b.proposed.map((p) => p.to)], [[6, 7], [7]]);
   for (const x of [a, b]) assert.deepEqual(edge(x, 7).ids, [`${w.E}/evaluation#1`], "R8's to 7 names R7's id");
   /* monitoring's list, and the acts, derive the same way per viewer */

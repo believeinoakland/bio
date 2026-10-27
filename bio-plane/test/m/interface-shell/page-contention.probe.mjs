@@ -2,7 +2,7 @@
  * workerd. A probe, not a test (no `.test.mjs`: it boots workerd and takes a minute):
  *   node page-contention.probe.mjs <dir> [<path of an interface-shell index.mjs to measure, default this module's>]
  * It bundles the module with the real screens of the nine modules and the plane's registration of the owners' declarations
- * (`plane/register.mjs`), serves, from one isolate, the three routes control-plane's door gives the page: `GET /` (what `page()` does: the
+ * (`store-assembly/register.mjs`), serves, from one isolate, the three routes control-plane's door gives the page: `GET /` (what `page()` does: the
  * script's hash for the page policy, then the page), the versioned script, and a body drained as `captureupload` drains one; then times, on
  * the wall clock OUTSIDE the isolate (workerd freezes the clock during synchronous work, so inside it reads as nothing: R-CLOCK), the first
  * `GET /` of a release (the build), the same idle, and ten `GET /` with ten script fetches while a 20 MB body is being sent. Prints one line
@@ -18,7 +18,7 @@ if (!dir) { console.error("usage: page-contention.probe.mjs <dir> [<interface-sh
 mkdirSync(dir, { recursive: true });
 const MODS = ["screens-settings", "screens-intake", "screens-daily", "screens-inquiry", "screens-entry", "screens-wizards", "screens-investigate", "screens-publish", "screens-action"];
 writeFileSync(join(dir, "worker.mjs"), `
-import ${JSON.stringify(here("../../../src/plane/register.mjs"))};
+import ${JSON.stringify(here("../../../src/store-assembly/register.mjs"))};
 import { interfacePage, interfaceScript, interfaceScriptHash, scriptPath } from ${JSON.stringify(shellIndex)};
 ${MODS.map((m, i) => `import * as m${i} from ${JSON.stringify(here(`../../../src/${m}/index.mjs`))};`).join("\n")}
 const mods = [${MODS.map((m, i) => `m${i}`).join(", ")}];

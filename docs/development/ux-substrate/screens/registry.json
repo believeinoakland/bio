@@ -420,7 +420,7 @@
    "acts": [
     {
      "op": "release",
-     "label": "Vouch for photos",
+     "label": "Vouch for copies",
      "status": "declared",
      "modules": [
       "capture",
@@ -1626,7 +1626,7 @@
    "acts": [
     {
      "op": "release",
-     "label": "Vouch for photos",
+     "label": "Vouch for copies",
      "status": "declared",
      "modules": [
       "capture",
@@ -2100,6 +2100,19 @@
      ]
     },
     {
+     "op": "owed:previewmore DEC-455",
+     "label": "Show more rows",
+     "status": "owed"
+    },
+    {
+     "op": "captureuploadabort",
+     "label": "Cancel sending",
+     "status": "declared",
+     "modules": [
+      "capture"
+     ]
+    },
+    {
      "op": "owed:capturecredentiallist DEC-381",
      "label": "Show the stored logins",
      "status": "owed"
@@ -2290,6 +2303,11 @@
       "op-declarations",
       "ratification"
      ]
+    },
+    {
+     "op": "owed:interpretmark K5495",
+     "label": "Interpret parts of this for an investigation",
+     "status": "owed"
     },
     {
      "op": "cite",
@@ -3037,7 +3055,7 @@
    "id": "projectai",
    "name": "AI for this project",
    "frame": "working",
-   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
+   "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, and by member for its owners; keeping the project's material away from AI; every change, seen by every owner (DEC-188). In the first beta, AI for this project takes its place (DEC-420).",
    "acts": [
     {
      "op": "projectkeyset",
@@ -5478,6 +5496,14 @@
      "op": "owed:casedetails K4169",
      "label": "See the details of this work",
      "status": "owed"
+    },
+    {
+     "op": "leggrade",
+     "label": "Record this grade",
+     "status": "declared",
+     "modules": [
+      "citation"
+     ]
     }
    ],
    "journeys": [
@@ -5965,7 +5991,7 @@
    "purpose": "The public registers the team holds (campaign finance, economic interests, lobbyists, licenses, company officers), bringing one in whole, searching and citing a row, watching a named filer, license or docket, outside alerts, and the assisted asking that comes after the alpha.",
    "acts": [
     {
-     "op": "owed:registerimport DEC-406",
+     "op": "owed:registerfileimport DEC-406",
      "label": "Bring in a register",
      "status": "owed"
     },
@@ -6084,6 +6110,26 @@
      "status": "owed"
     },
     {
+     "op": "owed:aicreditsclear K5478",
+     "label": "Clear a charge to Cloudflare's credits and turn the account back on",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airetestset K5480",
+     "label": "Turn monthly re-testing on or off",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aihealthset K5487",
+     "label": "Turn on or off sharing daily counts with Civicsmith",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aihealthpreview K5487",
+     "label": "See what the daily counts would send",
+     "status": "owed"
+    },
+    {
      "op": "owed:aitestopen DEC-420",
      "label": "Test an AI that isn't listed",
      "status": "owed"
@@ -6155,8 +6201,13 @@
      "status": "owed"
     },
     {
+     "op": "owed:aikeyseal DEC-465",
+     "label": "Keep it sealed",
+     "status": "owed"
+    },
+    {
      "op": "owed:aitermsaccept DEC-420",
-     "label": "Accept the terms that bind our use",
+     "label": "Accept the free-tier warning",
      "status": "owed"
     },
     {
@@ -6198,6 +6249,11 @@
     {
      "op": "owed:aimycheckset DEC-420",
      "label": "Require a check for my own work",
+     "status": "owed"
+    },
+    {
+     "op": "owed:aiorderset DEC-420",
+     "label": "Move an account up or down",
      "status": "owed"
     }
    ],
@@ -6301,6 +6357,11 @@
      "op": "owed:aiaccountpick DEC-420",
      "label": "Choose another account",
      "status": "owed"
+    },
+    {
+     "op": "owed:aiwaitswitch K5489",
+     "label": "Wait, then switch to another account if the provider is still down",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -6347,6 +6408,11 @@
     {
      "op": "owed:airesultsread DEC-420",
      "label": "Read the results for an AI",
+     "status": "owed"
+    },
+    {
+     "op": "owed:airesultown K5482",
+     "label": "Open your team's own result",
      "status": "owed"
     }
    ],

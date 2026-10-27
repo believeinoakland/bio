@@ -16,7 +16,7 @@ const source = () => new Response(bytes, { headers: { "content-type": "applicati
 async function parked() {
   const w = world();
   const entries = [];
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async (e) => { entries.push(e); return { ok: true }; };
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "PROJ-1" }, { settle: false });
   assert.equal(first.status, 200);

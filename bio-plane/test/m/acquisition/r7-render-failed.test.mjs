@@ -23,7 +23,7 @@ function pending(answer) {
   let open; const gate = new Promise((r) => (open = r));
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(typeof answer === "function" ? answer(JSON.parse(init.body).url) : answer)); } } } });
   const entries = new Map();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   return { w, entries, open };
 }

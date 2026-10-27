@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, V, infoMd } from "./fixture.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 import { staleBaseRefusal } from "../promotion/fixtures.mjs";
 import { monitorOp, monitoringOps, MONITOR_AUTHOR, DRIVE_TICK_CHECKS } from "../../../src/monitoring/index.mjs";
@@ -561,7 +561,7 @@ test("R9 a non-rendered modified tick captures what it fetched, files it with a 
 
 test("R79 a copy the tick files carries its provenance document entry and owes a reading through the capture's registrar", async () => {
   const w = world();
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const jobs = jobRegistrarStub();
   w.capture.registerJob = jobs.registerJob;
   w.capture.armJobs = jobs.armJobs;
@@ -604,7 +604,7 @@ test("R79 a copy the tick files carries its provenance document entry and owes a
   await tick(w, id4);
   assert.equal(owed.length, 1);
   /* a registrar that refuses is stated in the answer, never swallowed */
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   w.capture.registerJob = () => ({ ok: false, reason: "REGISTRAR_REFUSED" });
   const id5 = "INFO-2026-0093-refuses";
   w.monitored(id5, "https://records.example.org/fifth.txt", "f1");

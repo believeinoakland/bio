@@ -1,0 +1,18 @@
+Round R1, layer 1, module jurisdictions, tranche T53. Your depth: 2. BOB: BOB #326 (session_018BhcecwedTZuFi4aJevK1N).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T53 --module jurisdictions`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T53-4 · N1257 (DEC-404) · four defects first
+- T53-5 · N1257 (K5452, K5458) · layer model, forest check, `governs`
+- T53-6 · N1257 · shipped layers, footprint check, test forest
+- T53-7 · N1257 (K5451) · team layers, one placeless team-rules layer
+- T53-8 · N1256 (DEC-401 B) · federal offices snapshot `[waits: F4, makers' key]`
+- T53-9 · K5497 · US places only; others named by the team
+- T53-10 · A2 (DEC-458) · `fiscal_year` in the team layer
+- T53-11 · K5527 (4), (5) · N858's text record in the profile
+- T53-12 · N1257, K5458, K5462 · CAPABILITIES rows
+- T53-13 · K5471 (6) · JOURNEYS's defects: its rows
+- T53-14 · K5565 · English in tests: its entry
+- T53-502 · K5577 (2) · the federal layer's `street_types` (USPS suffixes) as data for register-readers
+- rows: `build/plan/T53-R1/jurisdictions.md`

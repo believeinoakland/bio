@@ -9,6 +9,7 @@ import { PROJECTS_DRAWING_MAX, PROJECTS_PAGE_MAX, PROJECTS_PAGE_DEFAULT, PROJECT
 import { ARCHIVE_VIA, UPLOAD_VIA, DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING, BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const Q = "INQ-2026-4101-q";
 
@@ -207,7 +208,7 @@ test("R15 an attested AI passage of an uploaded capture earns its letter stated 
   const e = w.k.earnedBasis({ id, viewer: "admin" }).earned;
   assert.deepEqual([e.content[u].capture.grade, e.content[u].capture.stated_as, e.content[u].capture.route_basis],
                    [EARNED_CAPTURE_CEILING, "authored", ["CAPTURE_RECEIVED_NOT_FETCHED"]]);
-  assert.match(e.content[u].capture.why, /uploaded by a member/);
+  assert.match(e.content[u].capture.why, wordRx("leg-earning.freeze.uploaded_member"));
   assert.deepEqual([e.content[p].capture.grade, e.content[p].capture.undetermined_because], [null, "CAPTURE_GRADE_VIA_UNRULED"]);
 });
 

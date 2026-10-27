@@ -7,6 +7,7 @@ import { seeded, opened, toStage, V, MACHINE, OFFICE, DAY, ms } from "./fixture.
 import { noSuchAction } from "../../../src/actions/index.mjs";
 import { ACTION_CATALOGUE_CHECKS } from "../../../src/action-grammar/checks.mjs";
 import { ESCALATION_CHECKS } from "../../../src/escalation/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
 const edge = (r, to) => r.triggers.find((t) => t.to === to);
@@ -20,7 +21,7 @@ test("R5 stage 2's act is a breach action attached at stage 2; its trigger to 3 
   adv(w, 2);
   let r = read(w);
   assert.deepEqual([edge(r, 3).met, r.proposed.length], [false, 0]);
-  assert.match(edge(r, 3).missing, /no breach action is attached at stage 2/);
+  assert.match(edge(r, 3).missing, wordRx("escalation.breach_action_attached"));
   /* an action resting on the determination but not attached: its sent entry does not count */
   const other = w.action({ project: w.P, restsOn: [w.D] });
   w.correspond(other, "sent", "2026-09-01");
@@ -158,7 +159,7 @@ test("R8 stage 5: breach actions attached here with their filings or counsel pac
   assert.deepEqual(w.calls.availableActions.at(-1), { determination: w.D, viewer: V("bob") });
   assert.deepEqual(r.available.kinds.map((k) => [k.kind, k.tier]), [["complaint", 1], ["lawsuit", 3]]);
   assert.equal(edge(r, 6).met, false);
-  assert.match(edge(r, 6).missing, /no breach action is attached at stage 5/);
+  assert.match(edge(r, 6).missing, wordRx("escalation.breach_action_attached_stage"));
   /* N462: the evaluation is named by its place among the evaluations (#1), not by the log's number, which counts the
      open, the advances and the attachment before it */
   assert.deepEqual([edge(r, 7).met, edge(r, 7).ids], [true, [`${w.E}/evaluation#1`]], "to 7 from the evaluation in force");

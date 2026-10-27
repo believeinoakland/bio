@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, contract, ALICE, ADMIN_BOB, MACHINE, FORBIDDEN, texts } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const byCheck = (r) => Object.fromEntries(r.checks.map((c) => [c.check, c]));
 const share = (w, value = "10%", con = null) =>
@@ -131,7 +132,7 @@ test("R1: a signed amount differing from the award, read from the facts sourced 
   const s = w.rec({ amount: "1200", concerns: [k.id], capture: k.signedCap });
   const none = w.c.junctionCheck({ progressionKey: "proc", entityId: k.id, viewer: ALICE });
   assert.equal(none.checks[0].holds, "undetermined");
-  assert.match(none.checks[0].why, /no award or signed stage stated/);
+  assert.match(none.checks[0].why, wordRx("money-checks.why.award_signed_stage"));
   stages(w, k.id);
   const r = w.c.junctionCheck({ progressionKey: "proc", entityId: k.id, viewer: ALICE });
   assert.equal(r.ok, true);

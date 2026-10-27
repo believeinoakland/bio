@@ -23,7 +23,7 @@ function pending() {
   const registered = [];
   const w = world({ provOpts: { registered }, env: { RENDERER: { fetch: async (u, init) => { await gate; return new Response(JSON.stringify(R_ANSWER(JSON.parse(init.body).url))); } } } });
   const entries = new Map();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   return { w, entries, open, registered };
 }

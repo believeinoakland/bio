@@ -14,6 +14,7 @@ import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { readFileSync } from "node:fs";
 import { localize, word as listed } from "../../../src/setup-words/index.mjs";
 import { preflightRefusal } from "../ratification/fixtures.mjs";
+import { wordRx } from "../../word-rx.mjs";
 /* words.json's words, read by key (K2220). */
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const word = (key) => WORDS.words.find((x) => x.key === key).en;
@@ -245,7 +246,7 @@ test("R55 (case-disclosures R2): a timestamp or co-archive obtained late (captur
   const row = caseDocumentBlocks(docOf(w, ok).text).captures.find((c) => c.capture === b);
   assert.deepEqual([row.co_attested, row.late, row.timestamp_at, row.co_archive],
     [true, true, "2026-09-28T00:00:00Z", "https://archive.example/web/late2"]);
-  assert.match(bodyOf(docOf(w, ok).text), /obtained LATE: it proves the bytes existed by then, not at capture/);
+  assert.match(bodyOf(docOf(w, ok).text), wordRx("case-disclosures.obtained_late_proves"));
 });
 
 test("R55 (case-disclosures R2): an empty reason is SELF_ATTESTED_NO_REASON (C-120.5); an entry for a co-attested capture, or one not in the case, is SELF_ATTESTATION_NOT_STANDING (C-120.6); a malformed list is R3's BAD_COMPLETENESS naming the field; each writes nothing", () => {
