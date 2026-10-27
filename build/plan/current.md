@@ -249,7 +249,7 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 
 **journey-check**
 - T52-97 · R20, R21, R23, R24, R25, R26, R28 *(not yet met: T52)* · assistant-needing steps reported as not walked, never failed; the carried screens and states become pairs; "Page 1"; the published frame is walked; the `OLD_PAGE` trip-wire and `/sign` 404; R17's scan clears; DEC-340's checks.
-- T52-98 · a knock, pull and vouch step (W5's gap: `journeys.mjs` has none), and the walk of N1265's three installer steps.
+- T52-98 · a knock, pull and vouch step and a testimony vouched (W5's gap: `journeys.mjs` has none; provenance R81 files both, K5381), and the walk of N1265's three installer steps.
 
 ## Left out, each with its one hard reason
 
