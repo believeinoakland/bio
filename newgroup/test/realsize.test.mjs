@@ -45,7 +45,8 @@ const C1 = String.fromCharCode(...Array.from({ length: 32 }, (_, i) => 0x80 + i)
 const REAL = RELEASE_SOURCE + `\n/* R33 real-size release ${NEXT}: ${C1} */\nexport const PLANE_CRONS_STATEMENT = "${CRONS_STATEMENT}";\n`;
 const realSized = () => {
   const b = new TextEncoder().encode(REAL);
-  assert.ok(b.length > 29e6, "the release is the real size: " + b.length);
+  /* The built-in release's own size, whatever it is (0.86.0's plane was 29 MB, 0.87.0's 28.2 MB); never a toy. */
+  assert.ok(b.length >= new TextEncoder().encode(RELEASE_SOURCE).length && b.length > 25e6, "the release is the real size: " + b.length);
   assert.ok(b.some((x) => x >= 0x80 && x <= 0x9f), "its bytes include 0x80-0x9F");
   assert.ok(planeLimits(REAL).ok && reportsBuilds(REAL), "it states its limits and reports builds");
   return b.length;

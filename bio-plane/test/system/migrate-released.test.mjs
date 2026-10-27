@@ -166,6 +166,10 @@ const RELEASES = [
      was written on it, so 0.86.0 boots on that store. The commit is dist/cut-0.85.0's signed cut with the installer's
      embed (step 8), whose release/ holds it. */
   ["0.85.0", "1053faa726f56a1e322ff64ad9243eb0adab6e90"],
+  /* 0.86.0: deployed to biosmoke8 from 2026-10-20 (K4176, K4178) and the release installed by the installer since; biosmoke8's
+     store migrated and was written on it, so 0.87.0 boots on that store. The commit is dist/cut-0.86.0's signed cut with the
+     installer's embed, whose release/ holds it. */
+  ["0.86.0", "1a1715414958c6d99ca2ecd14b320b360266149f"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
@@ -184,7 +188,8 @@ export class ProbeStore extends Store {
     const url = new URL(req.url);
     if (url.pathname === "/rawsql") {
       const { sql, args = [] } = await req.json();
-      try { return Response.json({ ok: true, rows: [...this.sql.exec(sql, ...args)] }); }
+      /* The released planes' Store held \`this.sql\`; the current one (plane R1, T51) reads its SQLite as \`this.ctx.storage.sql\`. */
+      try { return Response.json({ ok: true, rows: [...(this.sql ?? this.ctx.storage.sql).exec(sql, ...args)] }); }
       catch (e) { return Response.json({ ok: false, error: String(e && e.message || e) }); }
     }
     return super.fetch(req);
