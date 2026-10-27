@@ -46,3 +46,4 @@
 - Do further checks raise a typed page higher? (Bob, K5550, on L25: "as recommended"): A · No: one check raises it from D to C; later checks are named but raise nothing
 - Who chooses how a typist or checker is credited in a published case, and what is the default? (Bob, K5552, on L26: "as recommended"): A · Each person chooses for their own typing, per edition; the default is "a member of the team"; it never blocks signing
 - Can an administrator set aside held material in their own name? (Bob, K5553, on J1: "as recommended"): A · Yes, when the administrator is also a person on the team Their own sign-in counts as a member's. An administrator account that isn't a team member sees a sentence saying who can do it.
+- When a member opens a record that isn't theirs to see, does Civicsmith admit it exists? (Bob, K5554, on J2: "as recommended"): C · "You can't open this", with who to ask The project's owner is named only when the member can already see that project.
