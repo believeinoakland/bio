@@ -8169,6 +8169,26 @@ W.append(dict(key='screen.setup.zone.how.help', en='Required. For example: read 
 W.append(dict(key='screen.document.people.none.summary', en='When it finds no name', protected=False, note='DEC-443: the mockup fold over screen.document.people.none'))
 W.append(dict(key='control-plane.reading.not_registered', en='The file is kept, but its reading could not be started, so it is not being read. Ask again.', protected=False, note='DEC-443: control-plane R130, the stated refusal READING_NOT_REGISTERED (its stand-in replaced)'))
 
+# DEC-444: B541 (the 0.87.0 live walk, D-K9 and E-K7): a published case's editor, and the counsel packets made
+def w444(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-444: ' + note))
+w444('screen.case-editor.published.sub', 'Published: Edition {n}, {date}, signed by {who}', 'D-K9: the editor of a case whose newest edition is published, in place of "Draft · prepared by"; no draft lines, no ladder')
+w444('screen.case-editor.published.note', 'Edition {n} is published and is never changed. Its scope, what it leaves out, its findings and the declared bias it was signed under are fixed in it as published. A correction, or anything new, goes in the next edition.', 'D-K9: replaces the stale bias line and draft fields once published')
+w444('screen.case-editor.published.reach', 'read by anyone with its address', 'D-K9: the edition row, after its date and findings count')
+w444('screen.case-editor.published.read', 'Read Edition {n} as published', 'D-K9: link to the published case')
+w444('screen.case-editor.next.lead', 'A next edition starts from Docket, where your team keeps everything the case has filed and received. It starts as a draft and is published like any case.', 'D-K9: above the link to Docket\'s "Start the next edition" (casedraft with the case, R52, DEC-374)')
+w444('screen.counsel.made.head', 'Packets made for this action', 'E-K7 (filings R11, R13): the versions made, newest first')
+w444('screen.counsel.made.lead', 'Each time a member assembles the packet, a new version is made from the record as it stands then. Earlier versions stay readable, exactly as they were made. Only a member who may see this action and every project the packet draws on can read or save one.', 'E-K7: filings R11 (who may read), R13 (the versions listed)')
+w444('screen.counsel.made.by', 'Made by {who}, {date}, for {counsel}, {organization}', 'E-K7: a version\'s made line beside its id and version; {counsel} the counsel named and {organization} theirs (screen.counsel.made.by.noorg without one); then the reason quoted')
+w444('screen.counsel.made.by.noorg', 'Made by {who}, {date}, for {counsel}', 'E-K7: the made line when no organization is named')
+w444('screen.counsel.made.changed', 'The record changed since version {n}: {what}', 'E-K7: basis_changed, in plain words; absent when nothing changed')
+w444('screen.counsel.made.exported', 'Saved as a file once: by {who}, {date}, for {counsel}.', 'E-K7: the export record (counselPacketExport); one row per export')
+w444('screen.counsel.section.matters', 'The matters, each as the record stands', 'E-K7: a section of the packet, with its count')
+w444('screen.counsel.section.exhibits', 'Exhibits, with their fingerprints and grades', 'E-K7: a section of the packet')
+w444('screen.counsel.section.standards', 'Standards, candidate theories and remedies', 'E-K7: a section of the packet')
+w444('screen.counsel.sections.marking', 'Every section, and every file saved from it, carries the marking: prepared for review by {counsel}; not legal advice; not for filing.', 'E-K7: under the sections, the marking R11 keeps')
+w444('screen.counsel.export.note', 'Saving a version as a file records who saved it, when, and for which lawyer. The file keeps the marking on every page.', 'E-K7: counselPacketExport records who, which version, when, which counsel')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

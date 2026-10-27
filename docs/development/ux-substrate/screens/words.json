@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7810,
+  "screen": 7826,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1294,
+  "act": 1298,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -237,8 +237,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19373,
-  "protected": 1160
+  "total": 19393,
+  "protected": 1162
  },
  "words": [
   {
@@ -82929,6 +82929,118 @@
    "note": "DEC-443: control-plane R130, the stated refusal READING_NOT_REGISTERED (its stand-in replaced)"
   },
   {
+   "key": "screen.case-editor.published.sub",
+   "en": "Published: Edition {n}, {date}, signed by {who}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: D-K9: the editor of a case whose newest edition is published, in place of \"Draft · prepared by\"; no draft lines, no ladder"
+  },
+  {
+   "key": "screen.case-editor.published.note",
+   "en": "Edition {n} is published and is never changed. Its scope, what it leaves out, its findings and the declared bias it was signed under are fixed in it as published. A correction, or anything new, goes in the next edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: D-K9: replaces the stale bias line and draft fields once published"
+  },
+  {
+   "key": "screen.case-editor.published.reach",
+   "en": "read by anyone with its address",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: D-K9: the edition row, after its date and findings count"
+  },
+  {
+   "key": "screen.case-editor.published.read",
+   "en": "Read Edition {n} as published",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: D-K9: link to the published case"
+  },
+  {
+   "key": "screen.case-editor.next.lead",
+   "en": "A next edition starts from Docket, where your team keeps everything the case has filed and received. It starts as a draft and is published like any case.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: D-K9: above the link to Docket's \"Start the next edition\" (casedraft with the case, R52, DEC-374)"
+  },
+  {
+   "key": "screen.counsel.made.head",
+   "en": "Packets made for this action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7 (filings R11, R13): the versions made, newest first"
+  },
+  {
+   "key": "screen.counsel.made.lead",
+   "en": "Each time a member assembles the packet, a new version is made from the record as it stands then. Earlier versions stay readable, exactly as they were made. Only a member who may see this action and every project the packet draws on can read or save one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: filings R11 (who may read), R13 (the versions listed)"
+  },
+  {
+   "key": "screen.counsel.made.by",
+   "en": "Made by {who}, {date}, for {counsel}, {organization}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: a version's made line beside its id and version; {counsel} the counsel named and {organization} theirs (screen.counsel.made.by.noorg without one); then the reason quoted"
+  },
+  {
+   "key": "screen.counsel.made.by.noorg",
+   "en": "Made by {who}, {date}, for {counsel}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: the made line when no organization is named"
+  },
+  {
+   "key": "screen.counsel.made.changed",
+   "en": "The record changed since version {n}: {what}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: basis_changed, in plain words; absent when nothing changed"
+  },
+  {
+   "key": "screen.counsel.made.exported",
+   "en": "Saved as a file once: by {who}, {date}, for {counsel}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: the export record (counselPacketExport); one row per export"
+  },
+  {
+   "key": "screen.counsel.section.matters",
+   "en": "The matters, each as the record stands",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: a section of the packet, with its count"
+  },
+  {
+   "key": "screen.counsel.section.exhibits",
+   "en": "Exhibits, with their fingerprints and grades",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: a section of the packet"
+  },
+  {
+   "key": "screen.counsel.section.standards",
+   "en": "Standards, candidate theories and remedies",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: a section of the packet"
+  },
+  {
+   "key": "screen.counsel.sections.marking",
+   "en": "Every section, and every file saved from it, carries the marking: prepared for review by {counsel}; not legal advice; not for filing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: under the sections, the marking R11 keeps"
+  },
+  {
+   "key": "screen.counsel.export.note",
+   "en": "Saving a version as a file records who saved it, when, and for which lawyer. The file keeps the marking on every page.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-444: E-K7: counselPacketExport records who, which version, when, which counsel"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -125073,6 +125185,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.counselpacketread.label.counsel",
+   "en": "Read this version",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.counselpacketexport.label.counsel",
+   "en": "Save as a file",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.ruledraft.label.grouprules",
    "en": "Draft the rule",
    "protected": true,
@@ -128773,6 +128897,18 @@
   {
    "key": "act.holdnoticeprepare.does",
    "en": "Assembles a plain notice from the record: the place the hold is for, your reason, the date and the kinds of material to keep. Nothing is sent.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.counselpacketread.does",
+   "en": "Shows this version of the packet exactly as it was made, with its sections and its marking. Changes nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.counselpacketexport.does",
+   "en": "Saves this version of the packet as a file for your team's lawyer, with its marking on every page. The record keeps who saved which version, when, and for which lawyer.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

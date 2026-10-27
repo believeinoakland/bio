@@ -464,6 +464,8 @@ const ACT_HELP = {
   actionpressure: 'Marks a reply as pressure (a threat, a demand to stop), kept on the record.',
   actionhold: 'Records a litigation hold with your reason. While it lasts, what it covers is not purged, a scheduled publication of it does not go out, and the doorbell clears nothing. Any member who can see the action or the case may place one.',
   holdnoticeprepare: 'Assembles a plain notice from the record: the place the hold is for, your reason, the date and the kinds of material to keep. Nothing is sent.',
+  counselpacketread: 'Shows this version of the packet exactly as it was made, with its sections and its marking. Changes nothing.',
+  counselpacketexport: 'Saves this version of the packet as a file for your team\'s lawyer, with its marking on every page. The record keeps who saved which version, when, and for which lawyer.',
   counselpacket: 'Assembles what the record holds on this action as one packet for your team\'s lawyer, as it stands today, with your reason kept beside it. It is never published and never filed.',
   escalationopen: 'Opens an escalation: taking the matter to a higher body, with the reason.',
   escalationadvance: 'Moves the escalation to its next level, with what happened.',

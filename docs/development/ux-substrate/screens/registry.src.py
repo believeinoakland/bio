@@ -158,7 +158,7 @@ screen('hold', 'Litigation hold', 'working', 'A litigation hold (Actions D10; ac
 screen('holdnotice', 'Hold notice', 'working', 'The plain-words notice telling members what to keep outside Civicsmith, prepared from the record and sent by a member\'s own hand, with no record of any member (Actions D10; filings R47; action-holds R11).',
   [('holdnoticeprepare','Prepare the notice'),('holdnoticesent','Record that I sent it'),('writinghelp','Help me write this')], [])
 screen('counsel', 'Brief counsel', 'working', 'A packet for the team\'s lawyer, for a claim or for a defense: each matter\'s support as it stands, never refused for lack of a determination (Actions D9; filings R8, R9).',
-  [('counselpacket','Assemble the packet, with a reason')], [])
+  [('counselpacket','Assemble the packet, with a reason'),('counselpacketread','Read this version'),('counselpacketexport','Save as a file')], [])
 screen('grouprules', 'Your team\'s own rules', 'working', 'A deadline or a legal fact the jurisdiction\'s profile lacks, drafted by a member from its primary source and applied only after a second member confirms it (Actions D8; local-facts R10 to R13).',
   [('ruledraft','Draft the rule'),('ruleconfirm','Confirm this rule'),('rulewithdraw','Withdraw this rule, with a reason'),('writinghelp','Help me write this')], [])
 screen('matter', 'Matter', 'working', 'One government act: determination, consequences, escalation, actions.',
