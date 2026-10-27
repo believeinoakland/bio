@@ -2,6 +2,8 @@
    Each is made by contradiction's real code when the test runs, over `world()`, and is never stored. */
 import { world } from "./fixture.mjs";
 import { seeded, cand, IQ, M1 } from "./seed.mjs";
+import { flagWorld, HERE, OTHER, WHY, CID } from "./flag-seed.mjs";
+import { contradictionOps } from "../../../src/contradiction/index.mjs";
 
 const RUN = "RUN-2026-0001";
 const PA = "PROJ-2026-0001-alpha", PB = "PROJ-2026-0002-beta";
@@ -21,6 +23,19 @@ export function candidateReads({ viewer = M1 } = {}) {
   const undetermined = u.c.candidatesFor({ on: { inquiry: IQ.a }, viewer });
   const noSubject = seeded().c.candidatesFor({ viewer });
   return { clean, truncated, undetermined, noSubject };
+}
+
+/** R25, R61: the real answer of `candidatesFor` for a candidate a member flagged by hand (`contradictionflag`, as the door
+ *  runs it), read by its flagger on the notice's passage: the candidate carries `flagged_by` (the member, the instant, the
+ *  reason) and `machine: null`. Made over `flagWorld()` when the test runs, never stored; a user's test takes it in place
+ *  of a hand-built `flagged_by`. */
+export function flaggedRead({ viewer = M1 } = {}) {
+  const w = flagWorld();
+  const flagged = contradictionOps(w.c, new URL(`http://x/?${new URLSearchParams({ op: "contradictionflag", viewer: M1, author: M1 })}`),
+                                   { here: HERE, other: OTHER, reason: WHY }).contradictionflag();
+  if (!flagged.ok) throw new Error(`flag refused: ${JSON.stringify(flagged).slice(0, 300)}`);
+  const read = w.c.candidatesFor({ on: { content: CID.notice3 }, viewer });
+  return { flagged, read, candidate: read.candidates.find((c) => c.candidate === flagged.candidate) ?? null };
 }
 
 /** R19, R25, R50: the real refusals and partial answers of `candidatesFor` and `conflictNotices` for a project. Two projects
