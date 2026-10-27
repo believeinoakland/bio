@@ -7,6 +7,7 @@ import { INTENT_CHECKS } from "../../../src/intent/index.mjs";
 import { noSuchProject, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { noSuchEntity, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 import { world, seeded, V, MACHINE, COND, projMd } from "./fixture.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const strip = (r) => { const { detail, project, ...rest } = r; return rest; };
 
@@ -201,7 +202,7 @@ test("R3 with no condition the answer carries condition null and says progress c
   assert.equal(r.ok, true);
   assert.equal(r.condition, null);
   assert.equal(r.computable, false);
-  assert.match(r.why, /cannot be computed/);
+  assert.match(r.why, wordRx("investigation.why.cannot_computed"));
   for (const k of ["matched", "meeting", "short", "undetermined", "satisfied"]) assert.equal(r[k], null, `${k} is not zero`);
   assert.equal(r.objective, "Find out what happened.");
   const hidden = w.project("Hidden", "carol");

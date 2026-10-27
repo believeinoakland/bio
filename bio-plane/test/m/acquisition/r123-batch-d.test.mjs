@@ -63,7 +63,7 @@ const BIG = "https://www.oaklandca.gov/files/BIG.pdf";
 const big = new Uint8Array(9 * MIB).fill(7);
 const source = () => new Response(big, { headers: { "content-type": "application/pdf", "content-length": String(big.length) } });
 const parked = async (w) => {
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "P" }, { settle: false });
   return first.body.fetch_pending.session;

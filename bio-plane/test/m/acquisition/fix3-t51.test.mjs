@@ -168,7 +168,7 @@ test("R96 (C5c): a keep that outlasts what is left of the bound is handed to kee
   const w = world();
   const calls = withPutFromParts(w, async () => { await sleep(1500); return { ok: true }; });
   const registered = [];
-  // fixtures-contract: plane keep-later
+  // fixtures-contract: store-assembly keep-later
   w.store.keepLater = async (k) => { registered.push(k); return { ok: true }; };
   const t0 = Date.now();
   const r = await run(w, { "https://a.example/slow": octet(big) }, { locator: "https://a.example/slow" }, { boundMs: 5600 });
@@ -183,7 +183,7 @@ test("R96 (C5c): a keep that outlasts what is left of the bound is handed to kee
   const f = world();
   withPutFromParts(f, async () => ({ ok: true }));
   const fr2 = [];
-  // fixtures-contract: plane keep-later
+  // fixtures-contract: store-assembly keep-later
   f.store.keepLater = async (k) => { fr2.push(k); return { ok: true }; };
   const ok = await run(f, { "https://a.example/fast": octet(big) }, { locator: "https://a.example/fast" });
   assert.equal(ok.body.keep_pending, undefined);

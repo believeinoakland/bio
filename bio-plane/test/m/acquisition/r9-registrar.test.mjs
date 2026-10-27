@@ -6,12 +6,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, sha, HTML } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 import { jobRegistrarStub } from "../../job-registrar-stub.mjs";
 
 const MIB = 1024 * 1024;
 const member = { cls: "member", member: true, sessMember: "m1", storeName: "bio", settle: false };
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 const stubbed = (w) => { const j = jobRegistrarStub(); w.store.registerJob = j.registerJob; return j; };
 const bytes = (n, seed = 1) => new Uint8Array(n).map((_, i) => (i * 2654435761 + seed * 977 + (i >> 9)) >>> 24);
 
@@ -68,7 +68,7 @@ test("R116 (unpack): an `acquire` of a ZIP registers one `unpack` row with the a
 test("R116: a registrar that refuses is stated in the answer, never swallowed; with no registrar at all the answer says so; a small plain capture owes nothing and registers nothing (control)", async () => {
   const z = makeZip([{ name: "a.txt", data: "alpha" }]);
   const route = { "https://f.example/b.zip": () => new Response(z, { headers: { "content-type": "application/zip" } }) };
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const w = world(); w.store.registerJob = () => ({ ok: false, reason: "JOB_NOT_KEPT" });
   const r = await run(w, route, { locator: "https://f.example/b.zip" }, member);
   assert.deepEqual(r.body.jobs.not_registered, [{ kind: "unpack", reason: "JOB_NOT_KEPT" }]);
@@ -84,7 +84,7 @@ test("R116: a registrar that refuses is stated in the answer, never swallowed; w
 /* R116 amended (fix round 9, G175; K5005): every row `registerJob` accepts is followed, after the commit, by `armJobs` (the store handed in's, else `opts.armJobs`),
    so owed work is due at once and never waits on an alarm set for later. On the stub a registration un-arms the table and `armJobs` arms it, so `armed()` is
    true exactly when the last row written was armed after. */
-// fixtures-contract: plane job-registrar
+// fixtures-contract: store-assembly job-registrar
 const armed = (w) => { const j = jobRegistrarStub(); w.store.registerJob = j.registerJob; w.store.armJobs = j.armJobs; return j; };
 
 test("R116 (G175, fetch): right after `acquire` answers `fetch_pending` the row is armed; control: a registrar that refuses arms nothing", async () => {
@@ -96,7 +96,7 @@ test("R116 (G175, fetch): right after `acquire` answers `fetch_pending` the row 
   assert.equal(j.rows().length, 1);
   assert.equal(j.armed(), true, "the alarm is armed after the row is written");
   const refused = world(); let arms = 0;
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   refused.store.registerJob = () => ({ ok: false, reason: "JOB_NOT_KEPT" }); refused.store.armJobs = async () => { arms++; };
   await run(refused, routes, { locator: "https://a.example/big.pdf", project: "P" }, member);
   assert.equal(arms, 0, "a row the registrar refused is not armed");
@@ -131,12 +131,12 @@ test("R116 (G175, keep): the `keep` row, the `subresources` row and the `unpack`
 test("R116 (G175): the arm is the store handed in's, else the call's `opts.armJobs`; a throwing arm never fails the capture; a small capture that owes nothing arms nothing (control)", async () => {
   const z = makeZip([{ name: "a.txt", data: "alpha" }]);
   const route = { "https://f.example/b.zip": () => new Response(z, { headers: { "content-type": "application/zip" } }) };
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const wo = world(); const jo = jobRegistrarStub(); wo.store.registerJob = jo.registerJob;
   const viaOpts = await run(wo, route, { locator: "https://f.example/b.zip" }, { ...member, armJobs: jo.armJobs });
   assert.equal(viaOpts.status, 200);
   assert.equal(jo.armed(), true, "opts.armJobs serves when the store has none");
-  // fixtures-contract: plane job-registrar
+  // fixtures-contract: store-assembly job-registrar
   const wt = world(); const jt = jobRegistrarStub(); wt.store.registerJob = jt.registerJob; wt.store.armJobs = async () => { throw new Error("alarm unreachable"); };
   const thrown = await run(wt, route, { locator: "https://f.example/b.zip" }, member);
   assert.equal(thrown.status, 200, "an alarm not armed is the backstop's, never the capture's");

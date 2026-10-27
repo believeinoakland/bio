@@ -25,6 +25,7 @@ import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, withEntry, i2, noText, folio, member, ocrAnswer } from "./fixture.mjs";
 import { registerDoctype, readText } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 registerDoctypes(registerDoctype);
 const { tier4Pages, tier4Extend, tier3SeedFrom, tier3Extend, TRANSCRIBE_USE, AI_READING_LABEL, AI_TRANSCRIPTION_SOURCE } = rp;
@@ -244,7 +245,7 @@ test("R29 R6 R9 R23: tier4Pages and tier4Extend: the pages selected are the unre
   assert.match(nothing.aiNote, /returned no text for any page/);
   const thrown = await tier4Extend({ member: "ann", accounts: acc, useCheck: async () => null, transcribe: async () => { throw new Error("down"); } },
                                    { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: null });
-  assert.match(thrown.aiNote, /the AI could not be reached/);
+  assert.match(thrown.aiNote, wordRx("reading-pipeline.reached"));
   assert.equal((await tier4Extend(null, { i2text: i2(PAGES) })).aiNote, null, "no act: nothing said, nothing done");
 });
 
@@ -415,7 +416,7 @@ test("R31 (through T48): a transcription that hands credentials and no accounts 
   assert.deepEqual([annAcc.asked.length, both.filled, both.wiredTier], [1, [1, 2], 4]);
   /* an accounts handed with no accountFor stops, even beside a credentials that would answer */
   const stopped = await t4On({ member: "ann", accounts: {}, credentials: delegate, useCheck: limits(null).useCheck, transcribe: ai((q) => model(q.pages)).transcribe });
-  assert.match(stopped.aiNote, /the account that would pay for it could not be checked/);
+  assert.match(stopped.aiNote, wordRx("reading-pipeline.account_pay_checked"));
   unchanged(stopped, "accounts without accountFor beside credentials");
 });
 

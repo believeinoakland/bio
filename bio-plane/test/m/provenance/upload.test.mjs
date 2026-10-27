@@ -12,6 +12,7 @@ import { EARNED_CAPTURE_CEILING, parseFrontmatter } from "../../../src/record-gr
 import { migrateProvenance } from "../../../src/provenance/schema.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { DatabaseSync } from "node:sqlite";
+import { wordRx } from "../../word-rx.mjs";
 
 const T = "2026-10-09T01:00:00Z";
 const up = (s) => `upload:${s}`;
@@ -45,7 +46,7 @@ test("R63: a capture brought in by a member's upload is graded exactly as R51 gr
   /* Stated as authored, never as measured; existence proven by the upload's own receipt and its timestamp. */
   assert.match(g.why, /never fetched/);
   assert.match(g.why, /stated as authored/);
-  assert.match(g.why, /brought in by a member who holds the file/);
+  assert.match(g.why, wordRx("provenance.brought_member_holds"));
   assert.match(g.why, /2026-10-09T04:05:06Z/);
   assert.match(g.why, new RegExp(up(s)));
   assert.doesNotMatch(g.why, /doorbell/, "an upload is not said to have come through the doorbell");

@@ -18,7 +18,7 @@ const SESSION_OF = (w) => [...w.store.state.sessions.values()].find((s) => s.sta
 /* a member's large press, parked by the real `acquire` under the member's id exactly as the plane stamps it */
 async function parked(sessMember = "m1", cls = "member") {
   const w = world();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async () => ({ ok: true });
   const first = await run(w, { [BIG]: source }, { locator: BIG, project: "PROJ-1" }, { settle: false, sessMember, cls });
   assert.equal(first.status, 200);

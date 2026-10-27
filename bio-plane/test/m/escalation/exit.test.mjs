@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, MACHINE, ms } from "./fixture.mjs";
 import { noSuchDetermination } from "../../../src/conformance/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const end = (w, extra = {}) => w.esc.escalationEnd({ id: w.E, author: V("bob"), viewer: V("bob"), ...extra });
 const actOf = (w) => w.determinations.get(w.D).act.id;
@@ -49,7 +50,7 @@ test("R14 escalationEnd refuses MACHINE_CANNOT_END, NO_SUCH_ESCALATION, COMPLIAN
   w.addressedBy.delete(w.D);
   r = end(w);
   assert.equal(r.reason, "CONSEQUENCES_UNDETERMINED", "no consequence recorded (K172)");
-  assert.match(r.detail, /no consequence recorded/);
+  assert.match(r.detail, wordRx("escalation.consequence_recorded"));
   w.addressedBy.set(w.D, { state: "undetermined", parts: [{ id: "CONS-2026-0002-p" }] });
   assert.equal(end(w).reason, "CONSEQUENCES_UNDETERMINED");
   /* the escalation's own determination, superseded (by the compliant ones, say), is still what consequences reads */

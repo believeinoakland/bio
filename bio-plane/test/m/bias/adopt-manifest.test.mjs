@@ -7,6 +7,7 @@ import { BIAS_MANIFEST_LIMIT_MAX, BIAS_MANIFEST_LIMIT_DEFAULT, INSTANCE_ADOPTION
          INSTANCE_ADOPTION_REMEDY, BIAS_ADOPTION_REASON_MAX, BIAS_CHECKS } from "../../../src/bias/index.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const A = "BIAS-2026-0001-a", B = "BIAS-2026-0002-b", P = "PROJ-2026-0001-p";
 const ADMIN = { reason: WHY, author: "admin", identity: "member:admin", viewer: "admin" };
@@ -215,7 +216,7 @@ test("R14: instance adoptions, and a project's too, of sets not retired and visi
   w.sql.exec(`UPDATE bias_adoptions SET bundle_sha='0000' WHERE bundle_id=?`, A);
   const m4 = w.bias.biasManifest({ viewer: "admin" });
   assert.deepEqual([m4.in_force, m4.unresolved_pins, m4.statements_sha], [null, [{ bundle_id: A, revision: "0000", scope: "instance" }], null]);
-  assert.match(m4.stated, /cannot be computed/);
+  assert.match(m4.stated, wordRx("investigation.why.cannot_computed"));
   w.sql.exec(`UPDATE bias_adoptions SET bundle_sha=? WHERE bundle_id=?`, w.record.head(A).bundleSha, A);
   w.promote(A, FM(A, { statements: [S("s1")], current_state: "retired", prior_state: "adopted" }));
   assert.equal(w.bias.biasManifest({ viewer: "admin" }).in_force, false, "a retired set is out of force");

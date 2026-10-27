@@ -20,6 +20,7 @@ const SHA = /^[0-9a-f]{64}$/;
  * lists the committed rows in the order first written; `bump` stands in for a reader's progress write (counters and
  * state), so a test can show a re-registration keeps them.
  */
+// fixtures-contract: store-assembly job-registrar
 export function jobRegistrarStub() {
   let table = new Map();
   let changed = false, armedSince = false;
@@ -32,9 +33,11 @@ export function jobRegistrarStub() {
     return typeof e.sha === "string" && SHA.test(e.sha) ? null : "JOB_SHA_INVALID";
   }
 
+  // fixtures-contract: store-assembly job-registrar
   function registerJob(e) {
     try {
       const reason = check(e);
+      // fixtures-contract: store-assembly job-registrar
       if (reason) return { ok: false, reason };
       const key = keyOf(e), row = table.get(key);
       if (row) {
@@ -53,6 +56,7 @@ export function jobRegistrarStub() {
       changed = true; armedSince = false;
       return { ok: true, existed: false, state: "queued" };
     } catch (err) {
+      // fixtures-contract: store-assembly job-registrar
       return { ok: false, reason: "JOB_ENTRY_INVALID" };
     }
   }

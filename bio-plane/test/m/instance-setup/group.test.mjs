@@ -8,6 +8,7 @@ import { boot, stubOver, doAnswer } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import { GROUP_SLUG_RE, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, NO_GROUP_RECORDED, instanceSetupOps } from "../../../src/setup.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const post = async (m, path, body) => doAnswer(stubOver(m).fetch(new Request(`http://do/${path}`,
   { method: "POST", body: JSON.stringify(body) })));
@@ -51,7 +52,7 @@ test("R3 instanceGroup answers the row or the stated absence; instanceGroupPubli
   assert.deepEqual(none.m.instanceGroup(), { ok: true, group: null, recorded_at: null, source: null, recorded_by: null,
                                              detail: NO_GROUP_RECORDED });
   assert.deepEqual(none.m.instanceGroupPublic(), { ok: true, group: null, detail: NO_GROUP_RECORDED });
-  assert.match(NO_GROUP_RECORDED, /no producing team is recorded/);
+  assert.match(NO_GROUP_RECORDED, wordRx("filings.why.producing_group_recorded"));
   const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
   assert.deepEqual(Object.keys(w.m.instanceGroup()).sort(), ["group", "ok", "recorded_at", "recorded_by", "source"]);
   assert.deepEqual(w.m.instanceGroupPublic(), { ok: true, group: "river-town" });

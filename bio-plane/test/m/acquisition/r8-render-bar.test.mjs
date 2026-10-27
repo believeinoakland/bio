@@ -32,7 +32,7 @@ function world90(n, trip) {
   const w = world({ env: { RENDERER: { fetch: async (u, init) => { const q = JSON.parse(init.body); calls.push(q); await sleep(RENDER_MS);
     return new Response(JSON.stringify(reply(q.url, n))); } } } });
   const entries = new Map();
-  // fixtures-contract: plane owed-ledger
+  // fixtures-contract: store-assembly owed-ledger
   w.store.owedLater = async (e) => { entries.set(e.session, e); return { ok: true }; };
   if (trip) slowStore(w, trip);
   return { w, calls, entries };

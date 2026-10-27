@@ -8,6 +8,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_STATUS, RUN_NEVER_STARTED, runStatusFor, S
          checkSkillVersion, parseSkillVersion, translationOf, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const BOUNDS = ["fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "pages", "lease"];
 const ENDINGS = ["completed", "cancelled", "nothing-written", "mode-not-deployed"];
@@ -27,9 +28,9 @@ test("R1: the bounds and endings are exactly the named ones; runStatusFor answer
     assert.equal(typeof v, "string");
     assert.ok(v.length >= 10, v);
   }
-  assert.match(RUN_ENDINGS.cancelled, /a member stopped it/);
+  assert.match(RUN_ENDINGS.cancelled, wordRx("run-rules.member_stopped"));
   assert.match(RUN_ENDINGS["mode-not-deployed"], /\bno member\b/);
-  assert.doesNotMatch(RUN_ENDINGS["mode-not-deployed"], /a member stopped it/);
+  assert.doesNotMatch(RUN_ENDINGS["mode-not-deployed"], wordRx("run-rules.member_stopped"));
   assert.notEqual(RUN_ENDINGS.cancelled, RUN_ENDINGS["mode-not-deployed"]);
   for (const e of ENDINGS) assert.equal(Object.prototype.hasOwnProperty.call(RUN_BOUNDS, e), false, `${e} is an ending, not a bound`);
 });

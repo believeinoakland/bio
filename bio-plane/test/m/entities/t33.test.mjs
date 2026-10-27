@@ -10,6 +10,7 @@ import { entitiesOf, SECTORS, ORGANISATION_KINDS, CONNECTION_KINDS, CONNECTION_D
          TABLE_DECLARATIONS, ENTITIES_TABLES } from "../../../src/entities/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { reasonText } from "../../../src/civil-time/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 import { kindOf, neighbours as registryNeighbours, ownerConformance, checkConnection, BOUNDS, DECLARED_LABEL,
          LOWEST_GRADE, isRecordId } from "../../../src/connection-grammar/index.mjs";
 
@@ -211,7 +212,7 @@ test("R44 entityByIdentifier answers the one entity holding the scheme identifie
   assert.deepEqual([in21.entity_id, in21.kind, in21.label, in21.normal, in21.undetermined], [w.pat, "person", "Pat Quill", "P010", undefined]);
   const in25 = at("2025-05-05");
   assert.deepEqual([in25.entity_id, in25.undetermined, typeof in25.why.key], [w.lee, true, "string"], "no end is stated: undetermined, answered as such");
-  assert.match(reasonText(in25.why), /no end is stated/);
+  assert.match(reasonText(in25.why), wordRx("civil-time.end_stated"));
   assert.equal(at("2019-05-05"), null, "out for both");
   const none = w.e.entityByIdentifier({ scheme: "ellery_person", id: "P010" });
   assert.deepEqual([none.undetermined, none.candidates], [true, [w.pat, w.lee].sort()], "two holders and no date: not settled here");
