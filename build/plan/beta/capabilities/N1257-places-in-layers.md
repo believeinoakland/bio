@@ -150,3 +150,7 @@ Bob (via UX-DESIGN, DEC-458, A2 "as recommended"): a government's fiscal year co
 2. Where no layer states a government's year, the year is undetermined and Money offers no fiscal-year view for it (money R34 states the period refusal naming no placeholder). No default of July–June is ever assumed.
 3. The F1 measure (section F) covers `fiscal_year`: combine two synthetic profiles equal in value, different in citation.
 4. Money and civil-time lines belong to a separate job's reading; this lane gives the layer side only.
+
+## K. Bob's answers (2026-10-27)
+
+D1 (K5450): option A, plus an 'information' tag ('i' in a circle) next to each entry, or on the page overall, showing how current the information is: add to section E (UX need, sent through BOB). D2 (K5451): "as recommended": option A. D3 still with Bob.

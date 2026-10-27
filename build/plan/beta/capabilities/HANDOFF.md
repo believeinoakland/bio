@@ -9,6 +9,7 @@
 **BOB #321 asked (K5426):** Bob's questions go on one page, build/plan/beta/QUESTIONS.html: send N1259's open points, N1269 and N1272 written so Bob can follow them without my files, options and recommendation. N1269/N1272 are not yet drafted: write `N1269-N1272-interpretation.md` (context: K4628, K4632, K4636, extraction R96-R98, G41; lane-reading-architecture/options-brief.md).
 
 **Next steps, in order:**
+000. K5450/K5451/K5449 recorded in DECISIONS.md. N1257 D1 gets the 'i' information tag (UX need via BOB: add to N1257 §E). N1257 D3 (non-US teams) and N1269 Q2 still with Bob. N751, N1261, N1263: BOB confirms PLANNING folds them; no draft from me.
 00. K5445: Bob answered N1272 Q1 "as recommended, with C the objective" (DECISIONS.md). Write the N1269/N1272 requirement lines (extraction, reading-pipeline, screens-inquiry; A now, B deliberate act, C proposals as the objective with a measurement on real documents in the plan, never D). Q3 (K5446) and Q4 (K5447) answered "as recommended" (DECISIONS.md); Q2 and N1257's D1-D3 still with Bob.
 0. BOB #321 relays PLATFORM's need (K5442 levels Team, Institution, Enterprise) and FILES': write `LOAD-TABLE.md` here: per capability (N1259, N1260, N1257, N824, N1110, N1265, N858, N1269/N1272), rows/bytes stored, ops per member action, background work, per level; N1257's map files and N824's mail go through FILES' readers (mail-reader for N824). Figures from the drafts' measures where they exist, else marked 'to measure'.
 1. Review the N1259 drafts when the worker reports; send BOB its open points in plain words.

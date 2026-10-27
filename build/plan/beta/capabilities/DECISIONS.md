@@ -17,6 +17,9 @@
 - C3 (QUESTIONS page) · 2026-10-27 · "as recommended" (N1269 Q3: limits shown per kind before a file is added; a file over its limit refused with its size and the limit) · K5446
 - C4 (QUESTIONS page) · 2026-10-27 · "as recommended" (N1269 Q4: a file over the limit refused with the reason and a way in: a register by filter via N1259, else the member's own part; reading only the first part waits until proposals work well) · K5447
 - K5448 (PLANNING CONSISTENCY, BOB's) · 2026-10-27 · N1257 keeps jurisdictions R99-R120 and local-facts R23-R27; queue-producers A6 keeps R56-R57, N1257's layer-change line becomes R58; a member-stated fiscal year (A2) is a team-layer entry of N1257 (same job), A2's own lines only the fallback; N824's intake files through FILES' mail-reader and adds no parser; BOB numbers every line at writing
+- C5 (QUESTIONS page; N1257 D1, how current the shipped layers are promised to be) · 2026-10-27 · option A (every layer says where each rule comes from and its date, how far its calendars reach, "not legal advice", an administrator told once which rules changed at an update) plus "an 'information' tag ('i' in circle) next to each entry or the page overall which shows how current the information is" · K5450 (a UX need, BOB sends it)
+- C6 (QUESTIONS page; N1257 D2, read-only vs a team's correction) · 2026-10-27 · "as recommended" (the layer is never changed; calendar facts, i.e. holiday dates, hours, the zone, stay correctable by the team, marked as its own; for laws and deadlines the team can only report, and add a rule of its own beside the shipped one) · K5451
+- K5449 (BOB's) · N1265 decided as recommended: card line from reads only; the second Cloudflare Allow page accepted and said; no email-verification check; no new scope, no act for Bob; installer R2's scope count corrected
 
 ## Design's (not Bob's, P17), carried because they bind this lane's drafts
 
