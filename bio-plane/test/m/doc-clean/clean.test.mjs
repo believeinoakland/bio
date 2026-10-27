@@ -504,3 +504,12 @@ test("K3964 every member-readable refusal sentence is read by id, each refusal a
   for (const k of ["ENCRYPTED", "EMBEDDED_FILE", "HTML_EMBEDS_IMAGE", "ARCHIVE", "IMAGE_NOT_CLEANABLE", "EMBEDDED_MEDIA", "NOT_A_CLEANABLE_FORMAT", "DOCUMENT_TOO_LARGE", "DOCUMENT_UNREADABLE"])
     assert.equal(typeof CLEAN_REFUSALS[k], "string", k);
 });
+
+test("R13 an email's own metadata is removed from its published copy", { todo: "needs mail-reader and format-registry's eml/msg entries (T53); BOB sends the reading call as a CHANGE" }, () => {});
+
+test("R13 materialNames is a list of names; anything else is refused by name", async () => {
+  const r = await cleanDocument(new TextEncoder().encode("plain text"), { materialNames: "Ada" });
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "NOT_A_CLEANABLE_FORMAT");
+  assert.equal((await cleanDocument(new TextEncoder().encode("plain text"), { materialNames: ["Ada"] })).clean, true);
+});
