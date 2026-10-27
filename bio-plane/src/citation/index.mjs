@@ -357,9 +357,12 @@ export class Citation {
        member to the position in `basis[]` of the leg to move; `legs` is each target's legs with their own status, a leg
        with none read through the document's entry, as every leg written before a passage had a status of its own. */
     const legAt = new Map();
-    const statusOf = (leg, e) => {
-      const own = typeof leg.status === "string" ? leg.status : null;
-      return own === "severed" || own === "confirmed" || own === "proposed" ? own : e.status;
+    /* K5407: a leg carries `status: "severed"` while severed and none while live. A leg of a document severed before a passage
+       had a status of its own (its entry `severed`, no leg of it carrying a status) reads through the entry. */
+    const statusOf = (leg, e, doc_) => {
+      if (typeof leg.status === "string" && leg.status !== "") return leg.status;
+      const sibs = (Array.isArray(doc_.data.basis) ? doc_.data.basis : []).filter((l) => l && typeof l === "object" && l.target === leg.target);
+      return e.status === "severed" && !sibs.some((l) => typeof l.status === "string" && l.status !== "") ? "severed" : e.status === "severed" ? "confirmed" : e.status;
     };
     if (onInquiry) {
       const basisAll = Array.isArray(doc.data.basis) ? doc.data.basis : [];
@@ -373,7 +376,7 @@ export class Citation {
         if (named) at = held.find((n) => partKey(basisAll[n]) === mine) ?? -1;
         else if (held.length === 1) at = held[0];
         else if (held.length > 1) { ambiguous.push({ id, parts: held.map((n) => ({ ...Object.fromEntries(Object.keys(EXTENT_PARAMS).filter((k) => basisAll[n][k] !== undefined && basisAll[n][k] !== null && String(basisAll[n][k]).trim() !== "").map((k) => [k, basisAll[n][k]])) })) }); continue; }
-        if (at < 0 || !e || !from.includes(statusOf(basisAll[at], e))) { wrong.push(id); continue; }
+        if (at < 0 || !e || !from.includes(statusOf(basisAll[at], e, doc))) { wrong.push(id); continue; }
         legAt.set(id, at);
       }
       /* DEC-49 REGION is-which-passage — C-33.65. */
@@ -406,12 +409,9 @@ export class Citation {
       if (onInquiry) {
         const basisAll = doc.data.basis;
         const at = legAt.get(id);
-        /* A document held in one leg is the edge itself: its entry's status is that leg's, as it was before a passage had a
-           status of its own, so the leg's bytes are untouched. Only a document held in several legs writes each leg's own. */
-        const several = basisAll.filter((l) => l && typeof l === "object" && l.target === id).length > 1;
-        if (several || rl !== null) legChanges.set(at, { target: id, ...(several ? { status: to } : {}), ...(rl !== null ? { role: rl } : {}) });
+        legChanges.set(at, { target: id, status: to, ...(rl !== null ? { role: rl } : {}) });
         const live = basisAll.some((l, n) => l && typeof l === "object" && l.target === id
-          && (n === at ? to !== "severed" : statusOf(l, current.get(id)) !== "severed"));
+          && (n === at ? to !== "severed" : statusOf(l, current.get(id), doc) !== "severed"));
         const entryTo = live ? (current.get(id).status === "severed" ? "confirmed" : current.get(id).status) : "severed";
         if (entryTo === current.get(id).status) continue;
         const prev = String(current.get(id).note ?? "");

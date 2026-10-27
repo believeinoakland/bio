@@ -244,7 +244,7 @@ export function setLegGrade(text, n, target, grade) {
   return [...lines.slice(0, from), ...entry, ...lines.slice(to + 1)].join("\n");
 }
 
-/** R25: set the own `status` of the `n`th legs of the `basis` block (`changes`: order in the block → {target, status?, role?}; a `status` is written only when given, and a `role` rewrites that leg's role line, and no other leg's),
+/** R25 (K5407): set the own `status` of the `n`th legs of the `basis` block (`changes`: order in the block → {target, status?, role?}; a `status` of `severed` is written as `status: "severed"` and any other drops the line (absent is live, K5407), and a `role` rewrites that leg's role line, and no other leg's),
  *  touching nothing else of any leg or the document: a `status` line a leg held is dropped and the new one written after
  *  its `role:` line. `target` is checked against the entry, as `setLegGrade` checks it, so a document that moved under the
  *  caller is not written. Answers the new text, or null when the block is not in a shape this grammar can edit in place,
@@ -285,7 +285,7 @@ export function setLegStatus(text, changes) {
       kept.push(ln);
     }
     if (found !== ch.target) return null;
-    if (ch.status) kept.splice((roleAt === -1 ? targetAt : roleAt) + 1, 0, `    status: ${ch.status}`);
+    if (ch.status === "severed") kept.splice((roleAt === -1 ? targetAt : roleAt) + 1, 0, `    status: "severed"`);
     out.push(...kept);
   }
   for (const n of changes.keys()) if (!Number.isInteger(n) || n < 0 || n >= starts.length) return null;

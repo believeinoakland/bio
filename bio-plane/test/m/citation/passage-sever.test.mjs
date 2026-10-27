@@ -35,7 +35,7 @@ test("R25: severing one passage by its part leaves the other leg live and the do
   assert.deepEqual(rests(w), [Q]);
   const r = w.cit.reinstate({ project: Q, handle: h, ...ANN, reason: "wrong side", extent: P3, role: "supports" });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  assert.deepEqual(legs(w), [[0, "supports", null], [1, "supports", "confirmed"]]);
+  assert.deepEqual(legs(w), [[0, "supports", null], [1, "supports", null]]);
   assert.equal(entry(w).status, "confirmed");
   /* the leg itself is never deleted: both stay, with their parts */
   assert.equal(w.fm(Q).basis.length, 2);
@@ -49,7 +49,7 @@ test("R25, control: severing both passages severs the document's entry, reinstat
   assert.equal(w.cit.cite({ project: Q, handle: h, ...ANN, role: "supports", extent: { extent_kind: "pdf-page", extent_page: "5" } }).reason, "SEVERED_EDGE");
   assert.equal(w.cit.reinstate({ project: Q, handle: h, ...ANN, reason: "back", extent: P2 }).ok, true);
   assert.equal(entry(w).status, "confirmed");
-  assert.deepEqual(legs(w), [[0, "supports", "confirmed"], [1, "cuts_against", "severed"]]);
+  assert.deepEqual(legs(w), [[0, "supports", null], [1, "cuts_against", "severed"]]);
 });
 
 test("R25: two legs and no part named answers WHICH_PASSAGE naming each part, writing nothing; a part no leg holds, or a leg not in the source state, is NOT_CITED / NOT_SEVERED", async () => {
@@ -67,7 +67,7 @@ test("R25: two legs and no part named answers WHICH_PASSAGE naming each part, wr
   assert.equal(w.cit.sever({ project: Q, handle: h, ...ANN, reason: "again", extent: P3 }).reason, "NOT_CITED");
 });
 
-test("R25, control: a one-leg document with no part named behaves as R15 states, its leg's bytes untouched", async () => {
+test("R25, control: a one-leg document with no part named behaves as R15 states; its leg is severed and, reinstated, as cited", async () => {
   const w = world({ inquiry: true });
   w.info(DOC);
   w.inquiry(Q);
@@ -76,8 +76,10 @@ test("R25, control: a one-leg document with no part named behaves as R15 states,
   const basis = JSON.stringify(w.fm(Q).basis);
   assert.equal(w.cit.sever({ project: Q, handle: h, ...ANN, reason: "cut" }).ok, true);
   assert.equal(entry(w).status, "severed");
-  assert.equal(JSON.stringify(w.fm(Q).basis), basis);
+  assert.equal(w.fm(Q).basis[0].status, "severed", "the leg carries its own status while severed (K5407)");
   assert.deepEqual(rests(w), []);
+  assert.equal(w.cit.reinstate({ project: Q, handle: h, ...ANN, reason: "back" }).ok, true);
+  assert.equal(JSON.stringify(w.fm(Q).basis), basis, "reinstated, the status line is gone and the leg is as cited");
 });
 
 test("R25: a part on a call naming several documents is EXTENT_ON_MANY; an unknown part field is refused by name; the declaration accepts the part's fields", async () => {
