@@ -108,7 +108,7 @@
 - T53 · K5513 (C22) · acquisition R36: a daemon fetches on the team's key only for the daily check of a court case a member follows, stopping at the last unfollow; else `NOT_PERMITTED` (credentials R29 unchanged: the words are R36's) · `planning/lines-K5513-daily-follow.md`
 - T53 · N1266, N1267 · held-and-named filed whole with an owed reading (RF10), refused not filed (RF11), the refusal before any read (CC6) · `files/REQ-format-registry-beta.md` RF10-RF11
 - T53 · DEC-455 · capture: an op reading a preview's next rows from `next_row` (`previewmore`, name BOB's) · DEC-455
-- T53 · N824 (K2425, K5504-K5506, K5527 (1), (2)) · provenance's `email` origin, `emailCapture` with her statement, `fileMember` for a message's attachments and a ZIP's entries, discarded knocks cleared; new module **mail-door** after doorbell (K5530) `[R7, doc-clean R13 wait: Bob's N824 B4, C31]` · `planning/plan-T53-capabilities.md` §A Layer 3
+- T53 · N824 (K2425, K5504-K5506, K5527 (1), (2)) · provenance's `email` origin, `emailCapture` with her statement, `fileMember` for a message's attachments and a ZIP's entries, discarded knocks cleared; new module **mail-door** after doorbell (K5530) (published copy per K5534) · `planning/plan-T53-capabilities.md` §A Layer 3
 - T53 · N1259 (K4403, K5498, K5503, K5513) · `streamRegister`, `probeRegister`, the docket read for a followed case (R36, `planning/lines-K5513-daily-follow.md`), segments as captures · `planning/plan-T53-capabilities.md` §A Layer 3 (officers: registers R46, K5532; jurisdictions R130, R133 and guardrail R73 in `planning/lines-K5532-officers-guardrail-listing.md`)
 
 ## Layer 4
@@ -118,7 +118,7 @@
 - T53 · DEC-454 · `content.extent`'s part key in plain words · DEC-454
 
 **extraction** (with screens-inquiry)
-- T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents; finding names, organisations and dates across a whole document is reading, not interpretation (K5496, C21 A); the page and search say what was interpreted, for which investigation, by whom and when, with "not interpreted for this investigation" in search, and the document view marks interpreted parts visibly (K5495, C2 A; the mark UX-DESIGN's) · · `planning/plan-T53-capabilities.md` §A Layer 4 (extraction R114-R119, reading-pipeline R64-R65, acquisition R135) and Layer 7 (investigation R26-R32) `[R119: Bob, a member-visible limit?]`
+- T53 · N1272 (K5445) · what is interpreted: what a member opens or cites; a member's "interpret these parts for <investigation>"; Civicsmith's own proposals from the investigation's words (no AI), labelled and interpreted only on acceptance, built in the beta if they test well on real documents; finding names, organisations and dates across a whole document is reading, not interpretation (K5496, C21 A); the page and search say what was interpreted, for which investigation, by whom and when, with "not interpreted for this investigation" in search, and the document view marks interpreted parts visibly (K5495, C2 A; the mark UX-DESIGN's) · · `planning/plan-T53-capabilities.md` §A Layer 4 (extraction R114-R119, reading-pipeline R64-R65, acquisition R135) and Layer 7 (investigation R26-R32) (R119: a ceiling per level, K5535, PLATFORM's figure)
 
 **reading-pipeline**, **extraction**
 - T53 · N1266, N1267 (K5427) · the text bound 100 MB, HTML streamed to it; the held-unread verdict re-run when a reader arrives · `files/SIZES-N1267.md` §3, `REQ-format-registry-beta.md` RF10 `[owed: lines for reading-pipeline not drafted]`
@@ -151,7 +151,7 @@
 - T53 · N1257 · procedure guides side by side, one per layer, unranked (R17) · `capabilities/N1257-requirements-modules.md`
 
 **inquiry**
-- T53 · A1 (DEC-457) · `setSubject` with a reason, `subjectHistory`, the private-person warning on a subject · `planning/lines-A1-A7-subject-pickers.md` (inquiry R87-R90) (L1 decided, K5515: offices too)
+- T53 · A1 (DEC-457) · `setSubject` with a reason, `subjectHistory`, the private-person warning on a subject · `planning/lines-A1-A7-subject-pickers.md` (inquiry R87-R90) (L1 decided, K5515: offices too; L13, K5536: a change refused until the named connections are re-graded)
 
 **leg-earning**
 - T53 · A8 · a typed passage's ceiling at its own grain; a leg on it graded by the record · `planning/lines-A8-typed-page.md` §4

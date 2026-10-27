@@ -7,12 +7,12 @@
 **State.** PLANNING #3 at L23. Folded into `plan-T53-draft.md` by layer (42 KB): the seven A drafts (every L1-L12 answer applied); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (C29), its detail in `plan-T53-capabilities.md` (45 KB: §A entries by layer and module, §B new modules register-readers L1, registers L5, mail-door L3, §C acts and measurements, §D collisions applied, §E left-outs, §F BOB's points, §G Bob's points); JOURNEYS (`plan-T53-journeys.md`, only J1-J7 wait on Bob); PLANNING's own lines: `lines-K5501-role-change.md`, `lines-K5513-daily-follow.md` (aligned with N1259-c R41), `lines-K5527-texts-and-listing.md` (K5528). `CONSISTENCY.md` rows 1-20 decided.
 
 **Next steps, in order.**
-1. Bob: C31-C34 (N824 B4, R119's ceiling, the gold-set reviewer, DEC-340's facts). CAPABILITIES' gaps closed by C31 (K5532); K5532's lines decided (K5533).
+1. Bob: C33, C34 (the gold-set reviewer, DEC-340's facts). CAPABILITIES' gaps closed by C31 (K5532); K5532's lines decided (K5533).
 2. Fold what is still not READY as BOB relays it: PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's fixtures findings list (K5425 (b)); DEC-474 to DEC-477 once merged.
 3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L13-L26, J1-J7, C31-C34. Lanes: PLATFORM, TESTS-SWEEP; CAPABILITIES' five gaps.
+**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L14-L26, J1-J7, C33, C34. Lanes: PLATFORM, TESTS-SWEEP; CAPABILITIES' five gaps.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -121,3 +121,7 @@ CAPABILITIES C31 (K5532) closed the L23 gaps: registers R46 (California officers
 ## L27 · 2026-10-27 · K5533
 
 BOB decided L26's five points as recommended (K5533), including acquisition R131's `LIMITS_NOT_MEASURED` (a one-line amendment BOB writes). `lines-K5532-officers-guardrail-listing.md` marked decided.
+
+## L28 · 2026-10-27 · K5534-K5536
+
+Bob answered L13 as recommended (K5536): the two A1 brackets on Q-A1-1 now read decided. C31 (K5534, not P1 as recommended: visible headers without addresses, names the author marks material) and C32 (K5535: a ceiling per service level, PLATFORM's figure) noted in `plan-T53-capabilities.md` and the plan; CAPABILITIES applied both to its lines. DECISIONS gains K5534-K5536.

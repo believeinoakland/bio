@@ -46,7 +46,7 @@
 - T53 · N1259 (K4403 (2), (5); K1484, K1485, DEC-408) · streams delimited files to rows under a definition, zip by directory and member (ZIP64), drops contact columns before any other code sees a row (street lines only, K5499), withholds phone and address shapes in free text, the closed filter (`validateFilter`, `matches`, `autoWatchable`), the reducer with the original's fingerprint, estimates; pure, no AI · N1259-a register-readers R1-R11
 
 **doc-clean**
-- T53 · N824 (K2334 (2), K1485) · a captured message's published copy is body and attachments only; no header but the date and an official's name; reads format-registry's detection, not judging bytes again · N824 R13 `[waits: Bob's N824 B4, C31]`
+- T53 · N824 (K2334 (2), K1485) · a captured message's published copy is body and attachments only; no header but the date and an official's name; reads format-registry's detection, not judging bytes again · N824 R13 (K5534, C31: visible headers From, To, Cc, Date, Subject; never MIME or routing headers or any address; a recipient's name only where the author marks it material; CAPABILITIES applied it)
 
 ### Layer 2
 
@@ -77,7 +77,7 @@
 
 **mail-door** (new, §B) (K5530: BOB's packaging; layer 3 after doorbell, `member-roster` in its uses)
 - T53 · N824 (K5504-K5506, K5527) · a private address per member (digest only; no member email stored), mail waits 14 days privately, filed only with her statement, rate bounds, count-only tally, never AI, off by default; relays `mail-reader` ML10's nesting refusal (no `MAIL_TOO_NESTED`); runs `mail-reader` before accepting (R3, R10) · N824 R1-R14 `[waits: M1, R12 only]`
-- T53 · N824 · R7, what of a message is published `[waits: Bob's N824 B4, C31]`
+- T53 · N824 · R7, what of a message is published (K5534, C31: visible headers From, To, Cc, Date, Subject; never MIME or routing headers or any address; a recipient's name only where the author marks it material; CAPABILITIES applied it)
 - T53 · N824 (R6) · the removal of a member's unconfirmed mail: `mail-clear` returns counts (cannot call layer 11) and a notice-producers line reads them (N824 R6 amended, C31)
 - T53 · N824 · declares `mailaddress`, `mailwaiting`, `mailread`, `mailbringin`, `maildelete` in its own `DECLARED_OPS`, see op-declarations.
 
@@ -331,10 +331,10 @@ Conflicts with PLANNING resolved as in §A (`/10`, acquisition R36); none with j
 
 ## G. Bob's (flagged, not decided)
 
-- **N824 B4** (what of a message is published; extends K2334 (2)): not ruled; recommend P1 (body and attachments only). doc-clean R13 and mail-door R7 wait.
+- **N824 B4**: answered, K5534 (C31): visible headers without addresses; names marked material by the author.
 - **mail-door as a capability module** (layers.md ruling 5): recommend yes.
 - **N1110 B2** (how a declined group learns part and reason): recommend the steward's own mail, never public. **B3** (four parts as a closed list with the text's date): recommend yes; R24 is written so. Also the steward address and keys.
-- **N1272 R119**: a member-visible limit on interpreted parts (Bob's K4628 cares): recommend telling Bob; he decides if the beta has one.
+- **N1272 R119**: answered, K5535 (C32): a ceiling per service level, shown when reached; PLATFORM sets the figure from measurements.
 - **M-N1272 gold-set reviewer**: needs a person who knows the topic: possibly Bob (flag).
 - **N1259-d R36 (case-disclosures R41)**: decided by BOB, K5531: a member's own written observation is the group's words, checked before signing and refused if it holds a home address or phone (DEC-408); refusing alters nothing, so R26 stands. Not Bob's.
 - **N858**: per-text writer, reviewer and any payment; the opt-out screen as an experience; whether DEC-340's two `researched` facts suffice; the K ruling for each text.

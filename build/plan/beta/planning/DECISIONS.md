@@ -54,3 +54,6 @@
 - K5524 · 2026-10-27 · on QUESTIONS.html L10, option A: "as recommended" (a checked typing may equal a checked machine reading; said in the explanation) · `build/rulings.md`
 - K5525 · 2026-10-27 · on QUESTIONS.html L11, option A: "as recommended" (the member's credit choice wins) · `build/rulings.md`
 - K5526 · 2026-10-27 · on QUESTIONS.html L12, option A: "as recommended" (the beta is a release before 1.0) · `build/rulings.md`
+- K5534 · 2026-10-27 · on QUESTIONS.html C31 (N824): "All visible headers, though not all MIME headers. It does not include email addresses, but may include the names of recipients when that's material to the case." · `build/rulings.md`
+- K5535 · 2026-10-27 · on QUESTIONS.html C32, option A: "as recommended" (a ceiling on interpreted parts per service level, shown when reached) · `build/rulings.md`
+- K5536 · 2026-10-27 · on QUESTIONS.html L13, option A: "as recommended" (a subject change refused until the named connections are re-graded) · `build/rulings.md`
