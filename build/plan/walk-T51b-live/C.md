@@ -49,3 +49,64 @@ Plan, step 6 choose | 1280 | admin | Acts > "Choose" on the legal option, reason
 Transcription, typed then confirmed (re-walk 11 C-M2; journey k "reading") | 1280 | admin then member | a PDF of a typed page and a faint picture page (`c087-mixed.pdf`, INFO-2026-0261): the Document page says "PAGES YOUR TEAM'S CIVICSMITH COULDN'T READ · Pages 2 are pictures of text that Civicsmith's own reading couldn't make out ..."; admin "Type a page's words yourself" with a reason; the administrator invited the member (the member's Home shows "Walk 087 C · Join"); the member joined, opened the page and pressed "Confirm that this typing matches the page" with a note | FIXED | before: "A page typed by a member / Page 2, typed by sparky, October 27, 2026 / Not yet checked by a second member. What sparky typed is sparky's own reading of the page, and counts for no more than sparky's word until someone else checks it against the page."; `transcriptionattest` answered ok (transcriber admin, attestor walker); after: "Checked by walker, October 27, 2026". Words: "Pages 2 are pictures" (the page number run into the sentence, STILL from the alpha walk); the heading of this PDF reads "untitled" (the .txt and image files show their names) | typing ST under 0.3 s; confirm 3.0 s wall | MINOR (words, "untitled") | shots/C/transcribed-admin-1280.png, shots/C/member-confirm-1280.png
 Document with nothing readable (journey k "reading", dead end census) | 1280 | admin | a one-page faint scan as a PDF (`c087-faint2.pdf`, INFO-2026-0260) and as a PNG (`c087-faint-receipt.png`, INFO-2026-0258), vouched | MAJOR | the PDF reads "A page in it is too faint to read, or could not be turned upright, so no text is given for it rather than text that is mostly wrong." and the PNG reads "Reading its pages found no words, so it has no text to search or cite." Neither page offers "Type a page's words yourself" (that section appears only when another page of the file was read): a member holding a picture of a receipt that OCR cannot read has no way on, nor a way back (no sentence says what to do). The same pixels as a PDF (`c087-faint-receipt.pdf`) were read perfectly by OCR ("Receipt 87C-9 Oak Roofing LLC ... Paid in full 61,200 on Oct 21", about 20 s), but as a PNG `owedwork` shows OCR `finished` in 80 ms with `NOTHING_TRANSCRIBED` ("the OCR member declined to transcribe this document ... 1 undecodable region(s): no_text_layer") | OCR 80 ms (PNG) vs read in full (PDF) | MAJOR (a dead end; the same picture read as a PDF and not as a PNG) | shots/C/faint-after-vouch-admin-1280.png
 Member joins a hidden project (journey k, two people) | 1280 | member | before joining, the member opened the document link | MAJOR | the page reads "Nothing is here. This address doesn't lead to anything in your team's Civicsmith." (no way back, no mention that an invitation to "Walk 087 C" waits on Home); the Join button is on Home only ("TO DO Walk 087 C Join"); `/app` drawn 3.6 s | 3.6 s | MINOR (a bare "Nothing is here" for a project the member is invited to) | -
+
+## Every screen at both widths and both roles (sweep)
+Admin and member, 1280 px and 390 px, 13 screens each (Home, Queue, project, question, Document (a text file and a scan), Timeline, Money trail, Plan, Standard, People, person, Matter): page scroll width equals the viewport width on all 52 (no overflow); drawn within the 2 s bar (load to settled, others acting) on all but: admin 1280 project 3.7 s, admin 390 project 3.2 s and Document 3.3 s, member 1280 Standard 2.5 s and Timeline 2.5 s, member 390 Timeline 2.8 s; earlier single opens: Document 6.6 s, Money trail 3.4-6.2 s, `/app` as member 3.6 s, project AI 3.2 s (D and E acting; every op's `Server-Timing` under 1.2 s except `captureupload` 3.5 s on a 12 KB picture and 22.6 s wall for a small PDF upload at 06:38Z). Member cite at 390 (mixed PDF page 1): "Cited" at once. Raw record codes on screen: "INFO-2026-0235-c087-council-memo-txt" in the question's shared-origin line (finding above); no other. Screenshots: shots/C/sweep-*.png.
+
+## Re-walk 11 rows (area C), at my exact case
+- Money rows (re-walk 11 finding 1), dated period: FIXED (`recordfact` answers, three figures recorded). Fiscal year only: NOT FIXED, new sentence "Your team's profiles hold no fiscal year for *, so FY2026-27 can't be turned into dates."
+- Money `exclude`: FIXED ("Leave out" answered `exclude`, row reads 'left out · "..."').
+- C-M8 (document by title, after a money trail is started): NOT FIXED: the trail's Connections map and `exploregraph` hold only the trail itself, no document node.
+- C-M12 contradiction flag: FIXED (quoted above). C-M2 typed then confirmed: FIXED. C-M6 form: FIXED; its result for a leg moved across a ground: NOT FIXED (wrong sentence, finding 2 of re-walk 11).
+- C-M5 (memo "Yes" naming the ordinance answered "No"): NOT FIXED: no "Set aside" sentence anywhere; the answer is silently dropped.
+- C-M7 (people named in a document): known gap, quoted ("Civicsmith found no name in this document it could match to a person or an office.").
+- C-M1 (`reading.at`): FIXED (non-null `at` "2026-10-27T05:53:30Z" on the OCR-read picture, kept after vouching). C-M13 (generic wording) not reached (no contradiction screen opened). leggrade fold and "resolve on Document": resolve sentence FIXED (as in re-walk 11); leggrade fold not drawn on my OCR-read documents (no "What this passage earns" quoted) except it is drawn under the two scans ("What this passage earns" appears on the invoice and change-order passages) and was not pressed: not walked.
+- Re-walk 11 findings 3-5 (empty "strength before / after" figures, mixed event kinds, C-M7): event picker now labelled ("An award · Undated · c087-council-memo.txt"): FIXED; the other two not reached.
+
+## (e) Delegating to the assistant
+Not walked. "AI for this project" (`/app/projectai/<project>`) reads "Who pays for the assistant's work in this project ... Your questions in Walk 087 C, and the material read to answer them, go to Anthropic under the project's API account." and offers "Hold the project's API key": it does not say plainly that the assistant is not ready (only the page-top banner "Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so."). MINOR (K3717).
+
+## Dead-end census (K4164)
+- Document with nothing readable (PNG or one-page scan PDF): no way on (MAJOR, above).
+- Money trail Connections map: a box with the trail's name and nothing else, "everything drawn is joined to it" (MAJOR).
+- Timeline link and dated fact: the act's result is nowhere on the screen (MAJOR); person tie: shows "None yet" after success (MAJOR).
+- "Remove a citation" pressed before the screen finished loading does nothing (MINOR). Buttons that say "Asks for a reason" but ask nothing: "Start a money trail", "Follow them" (MINOR).
+- "Nothing is here. This address doesn't lead to anything in your team's Civicsmith." for a member who has an unanswered invitation (MINOR).
+- Words a member would not understand: "the generic reader found no entities ... recorded as an empty reading, never an emptied document", "png text-layer text (tier 3)", "transcribed by the OCR member", "Undetermined / for resolution through the task list", "Kind of copy not known", "placed nowhere: no attestation you can see dates this event", "Shared origin: ... Paragraph 2, part 2", "did not move: a adopted figure", "Pages 2 are pictures of text", "Assumed: not shown yet", "Left as it was the question already cited it".
+
+## Leftovers I made (project "Walk 087 C" and team-wide)
+Project PROJ-2026-1353-walk-087-c (hidden, owner sparky; the test member joined); documents INFO-2026-0235 to 0239, 0258 to 0261 (and the same files filed under the project); question INQ-2026-0019 with citations on memo (both paragraphs), ordinance, payments, invoice, change order, mixed PDF (as member); money trail MSR-2026-0003 with three figures (two included); plan PLN-2026-0005 with two options (one chosen); standard STD-2026-0005-ordinance; two timeline events with a participant, a link and a dated fact; a person Lena Ortiz (Walk 087 C) and the tie REL-2026-0002 (Miguel Alvarez, member of City of Walkton); a contradiction flag (memo and change order); a typed page on INFO-2026-0261, confirmed by the member. The housekeeping directory /home/user/bio/w (my first scripts and a session file, made by a mistaken first command) could not be deleted by me: the shell refused `rm -rf` there; BOB has excluded it from git.
+
+## Ledger, end
+`op=owedwork` at 06:49Z (administrator, 0.2 s): `owed` reading 5 (final 2), subresources 0 (final 1); `stale` false, `oldest_overdue` null, `running_since` null, `watchdog_seen` 1793083540386, `watchdog_ran` 1793083542974, `last_run` 1793083759897, `alarm_at` 140 s after `last_run`. No row of mine stranded (`owedwork&sha=` of the faint PNG: `owed []`).
+
+## Findings, sorted
+BLOCKER: none.
+MAJOR
+1. Question, "How strong the answer is": handed-in and OCR-read documents never get a grade, both axes "Unrated: ... Not counted yet: <all six files>" (STILL from the alpha walk).
+2. Question, "What each passage carries": a "Yes, because of others I cite" answer naming a passage answered "No" is dropped with no "Set aside" sentence (re-walk 11 C-M5 NOT FIXED); reopened, the form shows no answer ticked.
+3. Question: "Shared origin: c087-council-memo.txt · Paragraph 2, part 2 both come from INFO-2026-0235-c087-council-memo-txt, so one error there could undo both." (raw code, "part 2").
+4. Question, "Remove a citation" on one passage removes every passage cited from that document, on both sides, without saying so.
+5. Question, "Reinstate" with "Put it on the other side": "These documents cannot be used here: one of them rests on something that is not evidence ..." (STILL, wrong sentence, act cannot be done).
+6. Money, fiscal year: "Your team's profiles hold no fiscal year for *, so FY2026-27 can't be turned into dates."
+7. Money trail Connections map holds only the trail; no document node (re-walk 11 C-M8 NOT FIXED).
+8. Person, "Declare the tie": after success the screen still reads "None yet. A tie such as “member of” a larger body goes here ..." until a reload.
+9. Document, "This contradicts another document", "Find a document": typing a held file's full name finds nothing (the filter narrows only the 20 listed; ten "Next page" presses reach the file).
+10. Timeline: a link between events is drawn nowhere; a dated fact appears apart ("DATED IN THE DOCUMENTS") and the event stays "UNDATED ... placed nowhere".
+11. Document with nothing readable (one-page faint scan PDF, or a PNG): no way on (no typing offered); the same picture read in full as a PDF and declined (`NOTHING_TRANSCRIBED`) as a PNG.
+MINOR
+12. Question and Document first paint: passages named "Undetermined, because · Paragraph 2" for about 0.8 s (screen settles at 3.0 s); a press in that moment does nothing.
+13. Document words: "the generic reader found no entities ...", "png text-layer text (tier 3)", "OCR member", a raw timestamp and "for resolution through the task list" beside "Undetermined".
+14. Money words and layout: "−19400.00 USD" (no separators), "did not move: a adopted figure", changing "WHEN IT MOVED" wording; the document picker lists every document, oldest first.
+15. "Asks for a reason" shown on buttons that ask none ("Start a money trail", "Follow them").
+16. Cite: "Left as it was the question already cited it · Page 1 · ..." (run together).
+17. Standard: "Undetermined / when it is in force is not recorded", "Kind of copy not known"; list mixes other projects' standards.
+18. Plan: "Assumed: not shown yet"; no suggestions tray or sentence; stale tier after a successful option add; tier not shown in the row.
+19. Contradiction fold: "One is missing, is not held here, or is not one you can see; the answer says which." names none.
+20. Transcription: "Pages 2 are pictures of text"; a PDF heading reads "untitled".
+21. People: Miguel Alvarez and Oak Roofing LLC "not named in any document yet" though the vouched memo names both (C-M7 known gap); person connections read "award · undated", "D", "the cited passage" (whole file).
+22. A member with an unanswered project invitation opening a document link reads "Nothing is here."
+23. Timings over 2 s: Document 6.6 s, Money trail 3.4-6.2 s, uploads 1.4-3.2 s wall (22.6 s once), `captureupload` ST 3.5 s once, `entitycreate` ST 1.15 s.
+24. Project AI screen does not say plainly the assistant is not ready.
+
+Journeys completed of journeys walked: 2 of 2 (k steps 1 to 6 with the evidence and connection screens, and the evidence steps of b: capture, release, cite, strength; none BLOCKED, 11 MAJOR).
