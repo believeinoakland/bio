@@ -49,7 +49,7 @@ T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are writt
 ## Layer 3
 
 **provenance**
-- T52-9 · W5 · B-K1 · BLOCKER · one helper files a releasable bundle (canonical dataset with its own `content_hash`, `data/dataset.json`, the `snapshots/` file, the chain), reusing `screens-intake/capture.mjs:141-189`'s dataset (BOB decides move or copy at the job, PLB BQ2); the testimony filer (`provenance/index.mjs:2010-2018`) calls it. `ratification/release.mjs:195-201` is right and untouched. Tested through the real entries: a pulled knock, an unpacked archive member, a testimony each vouched ("Vouched for by …"); control: an upload. W22 (store-door) and W33 (control-plane) call it. PL1 W5.
+- T52-9 · W5 · B-K1 · BLOCKER · one helper files a releasable bundle (canonical dataset with its own `content_hash`, `data/dataset.json`, the `snapshots/` file, the chain), with `screens-intake/capture.mjs:141-189`'s dataset shape (copied, not moved: that file is served to the browser and stays as it is; BOB's, K5370): provenance R81; the testimony filer (`provenance/index.mjs:2010-2018`) calls it. `ratification/release.mjs:195-201` is right and untouched. Tested through the real entries: a pulled knock, an unpacked archive member, a testimony each vouched ("Vouched for by …"); control: an upload. W22 (store-door) and W33 (control-plane) call it. PL1 W5.
 
 **acquisition**
 - T52-10 · N1261 · K4459 · `checks.mjs:362` reads `refusal.CAPTURE_NOT_KEPT` (DEC-412's row, now on `main`) instead of its stand-in; `checks.test.mjs` R29 R31 stay green. START drafted at `build/plan/archive/starts-T51-F4/acquisition-2.txt`.
