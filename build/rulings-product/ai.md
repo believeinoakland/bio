@@ -17,3 +17,5 @@
 - Teams' test results (Bob, K5482, on AI8: "A, but the shared results page shows all AI, even those not approved yet by the team. They stay active for 6 months and are statistically joined to present overall results"): the team sees its own at once, unconfirmed; the shared page shows every tested AI; results count six months, combined into overall figures.
 - A copy out of touch (Bob, K5483, on AI9: "as recommended"): it keeps its last list of AIs and says after two weeks that the list is old.
 - The five unruled AI requirements (Bob, K5484, on AI10: "B"): each is brought to Bob separately (AI12-AI16); its lines stay drafts until he answers.
+- The beta's assistant parts (Bob, K5485, on AI2: "as recommended"): every built part plus the intake interview, the case's account and charge-or-rule answers; investigating, extracting and exploring switch on per AI as each clears its bar.
+- A shared team account on projects (Bob, K5486, on AI11: "B"): any project the member has joined, once the owner allows sharing.
