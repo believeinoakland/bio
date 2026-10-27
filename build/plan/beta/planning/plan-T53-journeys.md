@@ -19,12 +19,12 @@
 ### Layer 1
 
 **jurisdictions**
-- T53 · R-66 · BLOCKS · a team with no jurisdiction profile has `proceeding_kinds: []`, so "Register the proceeding" offers only "Nothing here" · REG2 R-66 · D2 jurisdictions/affordances R?1 (waits Q2(D2)). LANE: PLANNING A (jurisdictions) and CAPABILITIES N1257 jurisdictions also change this module (see OUT collisions; not read by me).
+- T53 · R-66 · BLOCKS · a team with no jurisdiction profile has `proceeding_kinds: []`, so "Register the proceeding" offers only "Nothing here" · REG2 R-66 · D2 jurisdictions/affordances R?1 (waits J3, Bob's). LANE: PLANNING A (jurisdictions) and CAPABILITIES N1257 jurisdictions also change this module (see OUT collisions; not read by me).
 
 ### Layer 2
 
 **promotion**
-- T53 · R-73 · "Open a question from this chain" promotes with no project and a raw-id title · REG2 R-73 · D2 explore/promotion R?1 (waits Q5(D2)).
+- T53 · R-73 · "Open a question from this chain" promotes with no project and a raw-id title · REG2 R-73 · D2 explore/promotion R?1 (decided, K5474).
 
 ### Layer 3
 
@@ -35,7 +35,7 @@
 **capture**
 - T53 · R-21 (owner half) · a member's own testimony lacks the author stamp, so it is not in "Mine" · REG R-21 · D1 capture R?1. +T52-59 (B-K17: order and search only).
 - T53 · R-22 · Held shows an archive's files "Refused", Archive says "filed and held for review" · REG R-22 · D1 screens-intake R?3 (screens; owner capture not traced).
-- T53 · R-23 · `#heldActRefusal` refuses set-aside when the stamped author is an administrator or machine · REG R-23 · D1 screens-intake R?4 (waits Q3(D1)); owner capture, control-plane (stamp).
+- T53 · R-23 · `#heldActRefusal` refuses set-aside when the stamped author is an administrator or machine · REG R-23 · D1 screens-intake R?4 (waits J1, Bob's); owner capture, control-plane (stamp).
 
 **file-safety**
 - T53 · R-28 · "Open the original" saves under the digest, not the file name · REG R-28 · D1 screens-intake R?6 (register owner file-safety). LANE: FILES (named in D1 Needs).
@@ -44,10 +44,10 @@
 ### Layer 5
 
 **entities**
-- T53 · R-39 (owner half) · duplicate office entities (same folded name, same body) are all kept · REG R-39 · D1 entities R?1 (waits Q5(D1)). Register: SAME AS E-N9, no T52 entry. LANE: CAPABILITIES N1257 layer-names matches "duplicate office|folded name" (inferred; check).
+- T53 · R-39 (owner half) · duplicate office entities (same folded name, same body) are all kept · REG R-39 · D1 entities R?1 (decided, K5474). Register: SAME AS E-N9, no T52 entry. LANE: CAPABILITIES N1257 layer-names matches "duplicate office|folded name" (inferred; check).
 - T53 · R-69 (owner half) · the note given at follow time is not kept/returned for a person · REG2 R-69 · D2 entities R?2.
 - T53 · R-70 (owner half) · first alias has no `declared_by`, so the screen cannot tell hand-typed from roster · REG2 R-70 · D2 entities R?1.
-- T53 · R-67 · BLOCKS · a team's only office-like body is a court via Proceeding; People has no body kind · REG2 R-67 · D2 screens-action request R?1 (waits Q3(D2) between request add, People body kind, or both).
+- T53 · R-67 · BLOCKS · a team's only office-like body is a court via Proceeding; People has no body kind · REG2 R-67 · D2 screens-action request R?1 (decided DEC-472 (7) between request add, People body kind, or both).
 
 **events**
 - T53 · R-84 · `timeline` with `captures=` answers 502 on every standard-page load · REG2 R-84 · D2 events R?1 (owner half), screens-investigate R?17 (screen half). Register: SAME AS E-K4; the plane fix is NOT in carried-T52-R1.md (T52-74 covers only the screen sentence after W7). LANE: PLATFORM (D2 Needs: which limit the 502 hits).
@@ -67,10 +67,10 @@
 ### Layer 8
 
 **publication**
-- T53 · R-96 (owner half) · publishing an edition files no edition entry on the docket · REG3 R-96 · D3 publication R?1 (waits Q2(D3)).
+- T53 · R-96 (owner half) · publishing an edition files no edition entry on the docket · REG3 R-96 · D3 publication R?1 (waits J6, Bob's).
 
 **docket**
-- T53 · R-94 (owner half) · BLOCKS · entry kinds the screen offers are not the kinds the act accepts for the viewer; correction/withdrawal/court order not fileable; Outcome fields missing · REG3 R-94 · D3 docket R?1 (waits Q1(D3)).
+- T53 · R-94 (owner half) · BLOCKS · entry kinds the screen offers are not the kinds the act accepts for the viewer; correction/withdrawal/court order not fileable; Outcome fields missing · REG3 R-94 · D3 docket R?1 (waits J5, Bob's).
 
 **public-read**
 - T53 · R-108 (owner half) · case-level evidence entries carry no name/locator/fingerprint · REG3 R-108 · D3 public-read R?1.
@@ -86,13 +86,13 @@
 **review**
 - T53 · R-98 (owner half) · a reader grant's acknowledgement is stored with no reader name · REG3 R-98 · D3 review R?1.
 - T53 · R-99 · owner's "Acknowledge what it leaves out" reaches the reviewer route, 404 `NO_REVIEW_COPY` · REG3 R-99 · MERGE T52-26 (W13, case-inputs), still open on 0.87.0; no draft line.
-- T53 · R-107 (owner part) · acknowledge/comment both answer "Sent to the team." · REG3 R-107 · D3 screens-publish R?12 (waits Q5(D3)); register owner review.
+- T53 · R-107 (owner part) · acknowledge/comment both answer "Sent to the team." · REG3 R-107 · D3 screens-publish R?12 (waits J7, Bob's); register owner review.
 
 ### Layer 9
 
 **actions**
 - T53 · R-117 (owner half) · move to `resolved` with no resolution defaults to "complied" · REG3 R-117 · D3 actions R?1.
-- T53 · R-119 · "No reply came by the date" accepted ahead of the due date; replies listed in recorded order · REG3 R-119 · MERGE T52-30 (U25, write half). +T52-30 for the order of replies: D3 screens-action R?7 (waits Q3(D3)).
+- T53 · R-119 · "No reply came by the date" accepted ahead of the due date; replies listed in recorded order · REG3 R-119 · MERGE T52-30 (U25, write half). +T52-30 for the order of replies: D3 screens-action R?7 (decided, K5474).
 - T53 · R-120 · new action's named addressee ("Public Works Director") stored as state audience, never drawn · REG3 R-120 · D3 screens-action R?8 (owner actions).
 - T53 · R-118 · reply stage after the request refused; "If it follows" omits position 0 · REG3 R-118 · D3 screens-action R?6 (owner action-replies, actions, action-grammar R5).
 - T53 · R-115 · proposed law has no control to choose it · REG3 R-115 · MERGE T52-81 (E-K6); no draft line.
@@ -112,22 +112,22 @@
 
 **interface-shell**
 - T53 · R-2 · phone row rule never applies to published-case rows (`front` cs-row; auto minmax grid), text column 8 px · REG R-2 · D1 interface-shell R?1.
-- T53 · R-10 · no screen says the assistant is not ready (Team's assistant, Ask, dock, Plan tray) · REG R-10 · D1 interface-shell R?9 (waits Q6(D1)); LANE: AI-DESIGN (`assistantreadiness` op, `draft-instance-setup.md` R109, `draft-assistant-screens.md`), D1 Needs names the readiness fact. No T52 entry.
+- T53 · R-10 · no screen says the assistant is not ready (Team's assistant, Ask, dock, Plan tray) · REG R-10 · D1 interface-shell R?9 (decided, DEC-472 (3)); LANE: AI-DESIGN (`assistantreadiness` op, `draft-instance-setup.md` R109, `draft-assistant-screens.md`), D1 Needs names the readiness fact. No T52 entry.
 - T53 · R-31 · a press shows no word for 150-250 ms and acts take 2.6-4.6 s on a shared copy · REG R-31 · D1 interface-shell R?4. Register: SAME AS B-K20; no T52 entry. LANE: PLATFORM time budgets (draft `time-budgets-draft.md`) for the act times.
-- T53 · R-33 · tooltip opens over the text it explains; headings/spans are tab stops · REG R-33 · D1 interface-shell R?2 (waits Q7(D1)). Register: SAME AS B-20; no T52 entry.
-- T53 · R-34 · no skip link, 14-22 Tab stops before the first control, unnamed stops · REG R-34 · D1 interface-shell R?3 (waits Q7(D1)).
+- T53 · R-33 · tooltip opens over the text it explains; headings/spans are tab stops · REG R-33 · D1 interface-shell R?2 (decided, DEC-472 (4)). Register: SAME AS B-20; no T52 entry.
+- T53 · R-34 · no skip link, 14-22 Tab stops before the first control, unnamed stops · REG R-34 · D1 interface-shell R?3 (decided, DEC-472 (4)).
 - T53 · R-46 · ~350 px empty space above the heading on short public pages at 390 · REG R-46 · D1 interface-shell R?6 (threshold 422 px provisional, UX-DESIGN to confirm).
 - T53 · R-51 · "The places the tabs below do not hold" with no tabs; `more` has no `data-screen` · REG R-51 · D1 interface-shell R?8. Register: SAME AS LA-17(d); no T52 entry.
 - T53 · R-53 · "Asks for a reason" mark on buttons that ask nothing; stale lines · REG R-53 · D1 interface-shell R?7. +T52-74 (C-K18) and T52-81 (C-K20) carry the walked buttons; the sweep is new.
 - T53 · R-101 · weight popover's Confirm/Cancel below the viewport, not scrolled to · REG3 R-101 · D1 interface-shell R?5.
 - T53 · R-127 · empty required field opens the reason box before naming the missing field · REG3 R-127 · D3 screens-action R?14 (changes interface-shell R119; the draft heads it under screens-action: owner is interface-shell).
-- T53 · R-130 · console errors on normal acts (403 on first `caseratify`, 404 `statementack`, 404 `reviewcopy`) · REG3 R-130 · NO DRAFT LINE; waits Q4(D3); D3 Measure "Console"; LANE: PLATFORM (D3 Needs: step-up 403).
+- T53 · R-130 · console errors on normal acts (403 on first `caseratify`, 404 `statementack`, 404 `reviewcopy`) · REG3 R-130 · NO DRAFT LINE; decided K5474; D3 Measure "Console"; LANE: PLATFORM (D3 Needs: step-up 403).
 - T53 · R-41 · signed-out deep link/unknown address shows the sign-in front with no word · REG R-41 · MERGE T52-49 (W23, A-K12); no draft line.
 - T53 · R-54 · queue shows three numbers (4/6/10) · REG R-54 · MERGE T52-49 (W23, A-K11) and T52-62 (Queue half); U4 CANNOT TELL; D1 Measure only; no draft line.
 - T53 · R-52 · cold loads 2.1-11.8 s over the 2 s bar (K4354) · REG R-52 · no draft line; owner not placed (control-plane, plane named by S4). LANE: PLATFORM time budgets, T52-42/T52-43 CHANGED BY THE BETA (D1/D2/D3 Measure and Needs).
 
 **screens-entry**
-- T53 · R-3 · signed-in member sees the sign-in form on `/app/front` and after the tour · REG R-3 · D1 screens-entry R?1 (waits Q8(D1)).
+- T53 · R-3 · signed-in member sees the sign-in form on `/app/front` and after the tour · REG R-3 · D1 screens-entry R?1 (decided, DEC-472 (5)).
 - T53 · R-45 · `forgot` fields 1232 px wide at 1280 · REG R-45 · D1 screens-entry R?2.
 
 **screens-wizards**
@@ -136,17 +136,17 @@
 
 **screens-settings**
 - T53 · R-4 · Appearance and On/Off are bare green words, no selected state, no label · REG R-4 · D1 screens-settings R?1.
-- T53 · R-5 · 22 identical "Revoke your signing key" buttons; one click, no word after · REG R-5 · D1 screens-settings R?2 (waits Q1(D1)); list layout is T52-58 (A-K13). LANE: PLANNING A5/A6 (per-key signing items in queue: `lines-A5-A6-signing.md`, `lines-A6-queue-acts.md`) touches the same acts on the queue, not this screen (inferred).
-- T53 · R-6 · "Take a copy of the record" stays "Working…"; the list of copies draws nothing · REG R-6 · D1 screens-settings R?3 (waits Q1(D1)).
+- T53 · R-5 · 22 identical "Revoke your signing key" buttons; one click, no word after · REG R-5 · D1 screens-settings R?2 (decided, DEC-472 (1)); list layout is T52-58 (A-K13). LANE: PLANNING A5/A6 (per-key signing items in queue: `lines-A5-A6-signing.md`, `lines-A6-queue-acts.md`) touches the same acts on the queue, not this screen (inferred).
+- T53 · R-6 · "Take a copy of the record" stays "Working…"; the list of copies draws nothing · REG R-6 · D1 screens-settings R?3 (decided, DEC-472 (1)).
 - T53 · R-7 · missing date reported as "Dates in the wrong order" · REG R-7 · D1 screens-settings R?4. Register: SAME AS B-35; no T52 entry.
-- T53 · R-8 · Security says "stayed near your team's usual" above a table showing 9 against usual 0 · REG R-8 · D1 screens-settings R?5 (waits Q2(D1)); owner also credentials (counts).
+- T53 · R-8 · Security says "stayed near your team's usual" above a table showing 9 against usual 0 · REG R-8 · D1 screens-settings R?5 (decided, DEC-472 (2)); owner also credentials (counts).
 - T53 · R-9 · assistant sentence ends "exploring is no." · REG R-9 · D1 screens-settings R?6.
 - T53 · R-11 · note "Turn it into" asks for record ids · REG R-11 · D1 screens-settings R?7 (owner also hypotheses).
-- T53 · R-12 · "Delete your note" is one press, no word after · REG R-12 · D1 screens-settings R?8 (waits Q1(D1)).
+- T53 · R-12 · "Delete your note" is one press, no word after · REG R-12 · D1 screens-settings R?8 (decided, DEC-472 (1)).
 - T53 · R-13 · tie preview fills the kind where the party goes · REG R-13 · D1 screens-settings R?9 (module not traced: screens-settings or screens-investigate). Register: SAME AS B-10; no T52 entry.
 - T53 · R-35 · language list has one option, sentence appears twice · REG R-35 · D1 screens-settings R?10.
 - T53 · R-38 · "No place is chosen" above a list naming two places · REG R-38 · D1 screens-settings R?11.
-- T53 · R-39 (screens) · same office listed twice in office lists · REG R-39 · D1 screens-settings R?12 (waits Q5(D1)); also matter, request.
+- T53 · R-39 (screens) · same office listed twice in office lists · REG R-39 · D1 screens-settings R?12 (decided, K5474); also matter, request.
 - T53 · R-47 · one admin's PROJECTS cell is 22 names in a run · REG R-47 · MERGE T52-58 (A-K13).
 - T53 · R-48 · "Not joined yet" rows show no handle and no "n of m endorsed" · REG R-48 · MERGE T52-58 (A-K6, screen half; owner half FIXED IN CODE).
 - T53 · R-49 · "In the last October 20, 2026 to October 27, 2026" · REG R-49 · MERGE T52-58 (A-K15).
@@ -166,7 +166,7 @@
 - T53 · R-22 · see capture (D1 screens-intake R?3).
 - T53 · R-23 · see capture (D1 screens-intake R?4).
 - T53 · R-24 · see provenance (D1 screens-intake R?5).
-- T53 · R-29 · a member told another's record is missing or damaged; own project's document "Nothing is here" · REG R-29 · D1 screens-intake R?7 (waits Q4(D1)); owner capture.
+- T53 · R-29 · a member told another's record is missing or damaged; own project's document "Nothing is here" · REG R-29 · D1 screens-intake R?7 (waits J2, Bob's); owner capture.
 - T53 · R-56 · stage word breaks at 390 ("Investigatin/g"); Held row has an empty square; small targets · REG R-56 · D1 screens-intake R?8; 44 px part is T52-52 (CANNOT TELL, N1263).
 - T53 · R-57 · every inbox row reads "less than 1 KB handed in"; no link after "Move into the record" · REG R-57 · D1 screens-intake R?9. Register: SAME AS B-K19 for the link (T52-59, T52-66 only wait on it); titles and legend new.
 - T53 · R-58 · doorbell receipt above the form at 390; phrase label twice; chooser keeps the file · REG R-58 · D1 screens-intake R?11 (the doorbell lines are screens-entry/screens-intake per the draft's own note).
@@ -190,15 +190,15 @@
 - T53 · R-55 · breadcrumb "Projects > Project" for an unjoined project · REG R-55 · MERGE T52-66 (D-K10); no draft line.
 - T53 · R-59 · empty Conclude gives a plane sentence about "taking the place of a named reading" · REG R-59 · D2 screens-inquiry R?6.
 - T53 · R-60 · "1 questions - 1 resting…"; "Unrated Unrated" · REG R-60 · D2 screens-inquiry R?7.
-- T53 · R-61 · pickers/lists show every team document, other projects' questions, standards, findings · REG R-61 · D2 screens-inquiry R?9 (waits Q1(D2)); standards list D2 screens-investigate R?16. +T52-76 (U23, documents). LANE: PLANNING A7 (DEC-463, document picker's two scopes: `lines-A1-A7-subject-pickers.md`) covers the document picker and the three screens modules; its Bob point A7 §7.1 matches Q1(D2).
-- T53 · R-62 · non-member dashboard asks `casedrafts` and gets 400 · REG R-62 · D2 screens-inquiry R?8 (policy on handled 4xx: Q4(D3)).
-- T53 · R-110 · signed case: "Capture/Connection Not graded yet", long "NO BAR IS RECORDED" · REG3 R-110 · D3 screens-publish R?15 (waits Q6(D3)); register owners acquisition, attestation, screens-publish. Register: SAME AS walk-T51b-live/C.md MAJOR 1; no T52 entry of its own.
+- T53 · R-61 · pickers/lists show every team document, other projects' questions, standards, findings · REG R-61 · D2 screens-inquiry R?9 (decided, DEC-472 (6)); standards list D2 screens-investigate R?16. +T52-76 (U23, documents). LANE: PLANNING A7 (DEC-463, document picker's two scopes: `lines-A1-A7-subject-pickers.md`) covers the document picker and the three screens modules; its Bob point A7 §7.1 matches Q1(D2).
+- T53 · R-62 · non-member dashboard asks `casedrafts` and gets 400 · REG R-62 · D2 screens-inquiry R?8 (handled 4xx decided, K5474: the app-asked 400 is a defect).
+- T53 · R-110 · signed case: "Capture/Connection Not graded yet", long "NO BAR IS RECORDED" · REG3 R-110 · D3 screens-publish R?15 (decided, DEC-472 (8)); register owners acquisition, attestation, screens-publish. Register: SAME AS walk-T51b-live/C.md MAJOR 1; no T52 entry of its own.
 
 **screens-investigate**
 - T53 · R-69 · note given when following a person is shown nowhere · REG2 R-69 · D2 screens-investigate R?1 (+ entities R?2 owner half).
 - T53 · R-70 · every first alias reads "the name on the city roster" · REG2 R-70 · D2 screens-investigate R?2 (+ entities R?1).
 - T53 · R-71 · People filters change nothing until Search; empty sentence wrong · REG2 R-71 · D2 screens-investigate R?3.
-- T53 · R-72 · section titled career/credentials/memberships/interests but only six fact kinds offered · REG2 R-72 · D2 screens-investigate R?4 (owner people; waits Q4(D2)).
+- T53 · R-72 · section titled career/credentials/memberships/interests but only six fact kinds offered · REG2 R-72 · D2 screens-investigate R?4 (owner people; waits J4 (Bob's)).
 - T53 · R-80 · strong bases of "Say another record is this person" give no place for evidence · REG2 R-80 · D2 screens-investigate R?5 (owner people, identity grammar; not traced). F9 follow-on.
 - T53 · R-81 · progression steps typed as bar-separated lines with machine words · REG2 R-81 · D2 screens-investigate R?6 (owner progressions).
 - T53 · R-83 · hunch form's "Beside which question" empty with no pointer · REG2 R-83 · D2 screens-investigate R?7 (event controls: events R?2).
@@ -218,9 +218,9 @@
 - T53 · R-79 · see action-clocks (D2 screens-investigate R?11).
 
 **screens-publish**
-- T53 · R-94 · BLOCKS · docket form's four kinds all refuse; no correction, withdrawal or court order · REG3 R-94 · D3 screens-publish R?1 (waits Q1(D3)); + docket R?1.
+- T53 · R-94 · BLOCKS · docket form's four kinds all refuse; no correction, withdrawal or court order · REG3 R-94 · D3 screens-publish R?1 (waits J5, Bob's); + docket R?1.
 - T53 · R-95 · project page's "Docket" link opens "Nothing is here" · REG3 R-95 · D3 screens-publish R?2 (module also screens-inquiry project.mjs:431 link). T52-78 (D-K18) is the nearby entry for the raw project id.
-- T53 · R-96 · after edition 2 the public docket and case page show no change · REG3 R-96 · D3 screens-publish R?3 (waits Q2(D3)).
+- T53 · R-96 · after edition 2 the public docket and case page show no change · REG3 R-96 · D3 screens-publish R?3 (waits J6, Bob's).
 - T53 · R-97 · refused Reaction listed as "drafted, not yet posted"; "Post it" gives no cause · REG3 R-97 · D3 screens-publish R?4.
 - T53 · R-98 · owner's page: "Acknowledged by A member of your team" for Lee Outsider · REG3 R-98 · D3 screens-publish R?5 (+ review R?1).
 - T53 · R-100 · edition 2 refused without naming the unchanged box; ceremony does not link to the editor · REG3 R-100 · D3 screens-publish R?6 (+ case-authoring R?1).
@@ -229,7 +229,7 @@
 - T53 · R-104 · status lines are appended and not replaced by the next act · REG3 R-104 · D3 screens-publish R?9. +T52-78 (D-K6, D-K7 for the case editor); stale refusals on docket/outside page are new.
 - T53 · R-105 · two "Stop sharing Ends something" buttons; press gives no word · REG3 R-105 · D3 screens-publish R?10. +T52-78 (D-K14, "ended" word); same-name duplicate buttons new.
 - T53 · R-106 · outside page heading "A DRAFT THAT DOES NOT NAME A CASE YET…"; never says who shared it · REG3 R-106 · MERGE T52-78 (D-K15; the walker called it NEW). D3 screens-publish R?11 adds only "who shared it" as a new part.
-- T53 · R-107 · "Acknowledge it" and "Send your comment" both answer "Sent to the team." · REG3 R-107 · D3 screens-publish R?12 (waits Q5(D3)).
+- T53 · R-107 · "Acknowledge it" and "Send your comment" both answer "Sent to the team." · REG3 R-107 · D3 screens-publish R?12 (waits J7, Bob's).
 - T53 · R-108 · case-level EVIDENCE draws an empty row · REG3 R-108 · D3 screens-publish R?13 (+ public-read R?1).
 - T53 · R-109 · "Read the case", "Check it" (short paste), "Print the case" show nothing · REG3 R-109 · D3 screens-publish R?14 (owner also public-read).
 - T53 · R-111 · see case-import (D3 screens-publish R?16).
@@ -239,7 +239,7 @@
 
 **screens-action**
 - T53 · R-26 · dash-action: "WHOSE MOVE", "THE CLOCK", "NEXT" blank for most; no "needs you" tier · REG R-26 · D3 screens-action R?17. +T52-81 (E-K14 blanks); the "needs you" tier is new.
-- T53 · R-67 · BLOCKS · see entities (request add; D2 screens-action request R?1, R?2 for the sentence; waits Q3(D2)).
+- T53 · R-67 · BLOCKS · see entities (request add; D2 screens-action request R?1, R?2 for the sentence; decided DEC-472 (7)).
 - T53 · R-77 · hold notice carries `PROJ-` id, ISO instant, doubled full stop; "Record that I sent it" says nothing · REG2 R-77 · D3 screens-action R?2 (owner filings; setup-words `filings.hold_place`).
 - T53 · R-63 · see screens-daily (records-help half: D3 screens-action R?16).
 - T53 · R-114 · "Propose another law" with an empty citation does nothing · REG3 R-114 · D3 screens-action R?4.
@@ -258,7 +258,7 @@
 
 ## B. The 19 "Not decided" points (Bob's)
 
-**Sorted by K5474 (BOB #322):** seven are Bob's, J1-J7 on QUESTIONS.html (draft 1 #3, #4; draft 2 #2, #4; draft 3 #1, #2, #5); eight are UX detail sent to UX-DESIGN (B558: draft 1 #1, #2, #6, #7, #8; draft 2 #1, #3; draft 3 #6); four decided by BOB as the lane recommends: R-39 (a duplicate office's add answers the existing office; lists draw one entry), R-73 (a question opened from a chain belongs to the explore page's project, else the member chooses), R-119 (an action's replies list by arrival day, then recorded order), R-130 with R-62, R-105 (a journey fails on a failed response the app itself asks for; the step-up 403 accepted). Their lines are unbracketed at writing.
+**Sorted by K5474 (BOB #322):** seven are Bob's, J1-J7 on QUESTIONS.html (draft 1 #3, #4; draft 2 #2, #4; draft 3 #1, #2, #5); eight are UX detail sent to UX-DESIGN (B558: draft 1 #1, #2, #6, #7, #8; draft 2 #1, #3; draft 3 #6); four decided by BOB as the lane recommends: R-39 (a duplicate office's add answers the existing office; lists draw one entry), R-73 (a question opened from a chain belongs to the explore page's project, else the member chooses), R-119 (an action's replies list by arrival day, then recorded order), R-130 with R-62, R-105 (a journey fails on a failed response the app itself asks for; the step-up 403 accepted). Their lines are unbracketed at writing. **The eight UX points decided by UX-DESIGN, all as the lane recommended (DEC-472, PLANNING L16):** (1) Q1(D1) only a signing key's withdrawal asks first, a note's deletion and a copy say what they did; (2) Q2(D1) a zero usual reads "none", the floor (3) stated under the table, a constant of Security's job; (3) Q6(D1) one banner `screen.ai.notready` on Home and a per-screen offer sentence; (4) Q7(D1) an explanation control (`infoMark`) beside an explained non-control, headings no longer tab stops (interface-shell's rule); (5) Q8(D1) the tour's end to Home, `/app/front` signed in shows the team's page without the form; (6) Q1(D2) every picker as DEC-463; (7) Q3(D2) both routes over one office record, no new "body" kind; (8) Q6(D3) one short line at a signed case's top with a fold, drawn with DEC-461. In §A each line reads "decided, DEC-472 (n)" or "decided, K5474"; the seven still Bob's read "waits Jn" (J1 Q3(D1), J2 Q4(D1), J3 Q2(D2), J4 Q4(D2), J5 Q1(D3), J6 Q2(D3), J7 Q5(D3)).
 
 Part 1 (`DRAFT-requirements-1.md`), 8 points:
 

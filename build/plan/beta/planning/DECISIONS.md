@@ -24,3 +24,26 @@
 - K5451 · 2026-10-27 · on QUESTIONS.html C6, option A (N1257): "as recommended" (a shipped layer never changed by a team; a team's marked correction of a calendar fact stands; laws and deadlines only reported) · `build/rulings.md`
 - K5452 · 2026-10-27 · on QUESTIONS.html C7 (N1257): "A team might be located outside the US even if their work is focused on some US jurisdiction. It's lso worth noting that a team's work might be state-wide or some other footprint not specific to a city or county." · `build/rulings.md`
 - K5454 · 2026-10-27 · on QUESTIONS.html P5, option A: "as recommended - we'll need to work with a CS team interested in setting up an enterprise scale copy before we can provide that support." (Enterprise listed at install as not yet available; Team and Institution built and measured in the beta) · `build/rulings.md`
+- K5495 · 2026-10-27 · on QUESTIONS.html C2 (N1272): "A, but perhaps also a visual indicator in the view of the document (a thin margin color, shading, or some other indicator) that shows what's been interpreted." · `build/rulings.md`
+- K5496 · 2026-10-27 · on QUESTIONS.html C21, option A (N1272): "as recommended" (finding names, organisations and dates across a document is reading, not interpretation) · `build/rulings.md`
+- K5497 · 2026-10-27 · on QUESTIONS.html C7 remainder, option A (N1257): "as recommended" (US places only shipped; a team working outside the US adds its own places) · `build/rulings.md`
+- K5498 · 2026-10-27 · on QUESTIONS.html C8, option C (N1259): "as recommended" (California's own sources for company officers; never OpenCorporates) · `build/rulings.md`
+- K5499 · 2026-10-27 · on QUESTIONS.html C9 (N1259): "A" (only a home address's street lines removed from donor lists) · `build/rulings.md`
+- K5500 · 2026-10-27 · on QUESTIONS.html C10, option A (N1259): "as recommended" (the donor-use guard federal only for now) · `build/rulings.md`
+- K5503 · 2026-10-27 · on QUESTIONS.html C11, option B (N1259): "as recommended" (a seventh reason for naming a person: named in the public filing the case cites) · `build/rulings.md`
+- K5504 · 2026-10-27 · on QUESTIONS.html C12, option A (N824): "as recommended" (the forwarding address on the team's own domain; upload always beside it) · `build/rulings.md`
+- K5505 · 2026-10-27 · on QUESTIONS.html C13, option A (N824): "as recommended" (a private forwarding address per member) · `build/rulings.md`
+- K5506 · 2026-10-27 · on QUESTIONS.html C14, option A (N824): "as recommended" (forwarded mail waits until the member states where it came from) · `build/rulings.md`
+- K5507 · 2026-10-27 · on QUESTIONS.html C15, option A (N1110): "as recommended" (the hand-kept directory on civicsmith.org; declined listings and applications recorded now) · `build/rulings.md`
+- K5508 · 2026-10-27 · on QUESTIONS.html C16 (N858): "B, but a member should be able to opt-out of the review if they're the only member of the team." · `build/rulings.md`
+- K5509 · 2026-10-27 · on QUESTIONS.html C17 (N858): "B" (texts for the records request and Oakland's lower-stakes actions; never court petitions) · `build/rulings.md`
+- K5510 · 2026-10-27 · on QUESTIONS.html C18 (N858): "as recommended" (a named volunteer lawyer or a paid firm reviews; name, organisation, credential shown) · `build/rulings.md`
+- K5511 · 2026-10-27 · on QUESTIONS.html C19 (N858): "A, though a machine can compose the initial draft of the text" · `build/rulings.md`
+- K5512 · 2026-10-27 · on QUESTIONS.html C20 (N858): "as recommended" (re-review at each release touching its kind and on a changed source; a stale text shows its dates) · `build/rulings.md`
+- K5513 · 2026-10-27 · on QUESTIONS.html C22, option A (K5498): "as recommended" (a followed case checked daily on the team's free CourtListener key) · `build/rulings.md`
+- K5514 · 2026-10-27 · on QUESTIONS.html F4, option A (DEC-460): "as recommended" (a photo's place shown in an edition only where the author turns it on) · `build/rulings.md`
+- K5515 · 2026-10-27 · on QUESTIONS.html L1, option B: "as recommended" (offices may be a question's subject) · `build/rulings.md`
+- K5516 · 2026-10-27 · on QUESTIONS.html L2, option B: "as recommended" (every document the member may see, labeled with its project) · `build/rulings.md`
+- K5517 · 2026-10-27 · on QUESTIONS.html L3, option A: "as recommended" (a disputed fiscal year still groups, shown disputed) · `build/rulings.md`
+- K5518 · 2026-10-27 · on QUESTIONS.html L4, option B: "as recommended" (a source's existence is confidential too) · `build/rulings.md`
+- K5519 · 2026-10-27 · on QUESTIONS.html L5, option A: "as recommended" (the sender's file name shown to all, marked as their words) · `build/rulings.md`

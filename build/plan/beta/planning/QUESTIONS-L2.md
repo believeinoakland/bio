@@ -1,6 +1,6 @@
 # Questions for Bob raised by the A1-A8 drafts (PLANNING L2)
 
-**Status** · For BOB to place on `build/plan/beta/QUESTIONS.html` (K5426). Each is small: the answer changes one or two requirement lines, never the decision Bob already gave. Each has a recommendation; if Bob says "as recommended" to all, the drafts stand as written.
+**Status** · L2-1 to L2-5 (L1-L5) answered by Bob as recommended, K5515-K5519 (applied L18). For BOB to place on `build/plan/beta/QUESTIONS.html` (K5426). Each is small: the answer changes one or two requirement lines, never the decision Bob already gave. Each has a recommendation; if Bob says "as recommended" to all, the drafts stand as written.
 
 | # | from | question in plain words | options | recommendation |
 |---|---|---|---|---|
