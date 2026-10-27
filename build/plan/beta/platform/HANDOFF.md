@@ -13,8 +13,8 @@
 - `combined-read-and-fold-draft.md` **READY**: fold and combined read, PL10-PL17; two technical points BOB's.
 - `load-test-draft.md` **READY**: PL40-PL43 (`load-check`, built in R1 by K5448), the `eu` rehearsal, per-type load from FILES F5, archive fan-out (C12).
 - `record-placement-draft.md` **READY** for placement and the picker (K5440, K5441, K5443; Cloudflare's pages quoted 2026-10-27); the split (§4) superseded by S0.
-- `whole-record-move-draft.md` **DRAFT**: PL50-PL57 for `corpus-export` and the installer's import.
-- `service-levels-draft.md` **DRAFT**: Team / Institution / Enterprise = Levels 1 / 2 / 3 (K5442), PL20-PL29 (the install's level choice, outgrowing at 70 % / 90 %); figures not yet measured; Enterprise quoted, not measured (K5454).
+- `whole-record-move-draft.md` **READY** (K5569): PL50-PL57 for `corpus-export` and the installer's import.
+- `service-levels-draft.md` **READY** (K5569): Team / Institution / Enterprise = Levels 1 / 2 / 3 (K5442), PL20-PL29 (the install's level choice, outgrowing at 70 % / 90 %); figures not yet measured; Enterprise quoted, not measured (K5454).
 - `levels-2-3-study-plan.md` **PLAN** (K5444, K5448): S0 done, S1 under way, S2 two prototypes (B, C), S3 quoted, S4 report to Bob.
 - `study/`: `table-inventory.md` (+TSV), `s0-options-for-the-split.md`, `s1-steps.md`, `s1-results.md`, `s1-tooling-notes.md`, `second-copy-options.md`. `DECISIONS.md`: K4354, K4599, K4635, K4746, K4747, K3060 D5, K5438, K5440-K5444, K5448, K5454.
 
@@ -78,4 +78,6 @@
 **P-22 · 2026-10-27** · Seed A complete (503 documents, about 297 MB, 127,502 text units, about 600 MB database) and the eight screens re-timed idle: `study/s1-results.md` §1b-full. **Finding:** the administrator's Home, Queue, Add and Project pass the 2 s bar (3.5, 3.5, 2.8, 4.8 s net) while the member's stay at 0.55-0.66 s: cheap ops wait behind the administrator-only `heldcaptures` and list reads over about 500 captures held unvouched (P24 again, at scale). The Add door timed out on 17 files (0.1-2.5 MB) with three parallel uploaders; all 17 passed alone in 11-15 s (contention, not file size): a defect candidate for the door's module, put to BOB. Next: 1c (record sizes) and the ramp (1e, approved), after specifying 1d's deploy for BOB.
 
 **P-23 · 2026-10-27** · Step 1e done in its first form (`study/s1-results.md` §1e): a member-frame ramp, 5 to 60 members, no step broke the stop rule (errors at most 0.03 %), p90 1.1-2.5 s raw with the proxy in and no rising trend. Not shown: administrator frames, uploads and reading in progress, the soak. A first printout with a wrong "net" column was discarded. Next: the ramp with an administrator walker and uploads, the soak, the record sizes (1c).
+
+**P-24 · 2026-10-27** · Step 1e with administrator walkers and uploads (`study/s1-results.md` §1e-mixed): **Level 1 on the alpha's code breaks at 15 members** (502 answers on varied ops, 0.4-1.2 %, past the 1 % rule; member p90 2.5-4.7 s), against the members-only ramp's no break to 60. Prototype C built on `proto/levels-2-3-c` (head a760607c, about 255 lines: a Worker-side cache keyed by the room's write count, `PROTO_C=1|2`, `heldcaptures` paged by `PROTO_C_HELD=1`, op `protocprobe`; unit tests pass, nothing run against a real room); prototype B's full build is 1,300-2,000 lines (spec only, `proto/levels-2-3-b` c84af621), so the ~250-line measuring variant is being built. A shared-device session ends after 15 min idle: refresh tokens before each run.
 
