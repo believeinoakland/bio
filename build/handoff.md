@@ -30,3 +30,10 @@
 - The account-move procedure is written and certified (K5472; civicos-process PR #18): `situations/account-move.md`.
 - Lanes at handoff: AI-DESIGN #4 READY and final (nothing open); PLATFORM #2 waiting on the invitation, specifying measuring ops; CAPABILITIES #2 folding C2-C10, waits on C11-C20 and L18; FILES #1 READY; JOURNEYS #4 drafts READY, aligning with DEC-472; TESTS-SWEEP #1 converting tests (merged only before the build); PLANNING #3 just started (archives #2); UX-DESIGN #44 drawing B559-B562 (U8-U11, C2's marker).
 - `rulings-active.md` unchanged by me; about 12 KB of its 25 KB.
+
+## Arrived after the handoff (BOB #322, 17:25Z)
+
+- **For Bob's page (do first):** CAPABILITIES C22 asks whether a team's CourtListener docket poll, run on a schedule with the team's own free token after a member makes a follow, counts as "read only when a member asks" under K5498 (Bob's C8). CAPABILITIES drafted it so (the follow is the ask); a literal reading drops the scheduled poll. Write it as a question with a plain example and options (A: the follow is the ask, recommended; B: literal, no scheduled poll), add it to `QUESTIONS-open-capabilities.html`, republish. If A, PLANNING amends `credentials` R29 ("never one a daemon uses").
+- **To relay:** CAPABILITIES' N1269 R147 (the document view marks interpreted parts) is already in B562 to UX-DESIGN; nothing more.
+- JOURNEYS W8: drafts aligned with DEC-472; waits on J1-J7 and a re-walk instruction (re-walk only after biosmoke8 is redeployed from the tranche, K5473 (3)).
+- PLANNING #3 took over; L16's five points decided (K5502).
