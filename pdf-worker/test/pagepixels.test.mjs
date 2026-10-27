@@ -20,7 +20,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
+import { renderPageToPixels, REFUSALS, encodePng8 } from "../src/pagepixels.mjs";
 import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS, PNG_CODE_REASONS, PREPARE_TILT_MAX, PREPARE_TILT_FLOOR, PREPARE_LINE_PX, PREPARE_SCALE_MAX } from "../src/picturepixels.mjs";
 import { PNG_REFUSES } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
@@ -861,6 +861,27 @@ console.log("\n--- R44: a photographed page, made ready for the engine ---");
     t("R44 sparse page control: a dense page is still text, its ink at most 30", [dense.r.prepared.text_found, inkLevel(dense.r.bytes) <= 30], [true, true]);
     const words3 = words(await readByEngine((await sparse({})).r.bytes));
     t("R44 sparse page: the engine reads words from the prepared three-line page", words3.length > 0, true);
+  }
+
+  /* R44 (a), (d) (T52-4; C-K13): a faint print. A receipt whose ink is 80 to 90 percent of its paper (ink 200 on paper 240,
+     the same page as the sparse test's) is found to hold text, as the same pixels are read inside a PDF, and the engine
+     reads its words; a blank page of that paper stays no text. */
+  {
+    const g = generate({ kind: "png", seed: "rw9-A-7", size: { pages: 1, lines: 3 } });
+    const base = readPng((await renderPictureToPixels(await g.bytes(), 0, { maxEdge: 4096, grey: true })).bytes);
+    const faint = async (inkAt, paperAt, blank = false) => {
+      const px = base.samples.map((v) => blank ? paperAt : Math.round(inkAt + (v * (paperAt - inkAt)) / 255));
+      const r = await renderPictureToPixels(await encodePng8(px, base.width, base.height, 1), 0, { maxEdge: 4096, prepare: true });
+      answers.push(r);
+      return r;
+    };
+    for (const [ink, paper] of [[200, 240], [205, 240]]) {
+      const r = await faint(ink, paper);
+      t(`R44 faint print: ink ${ink} on paper ${paper} is found to hold text, the lines 15 to 30 px, the paper light`,
+        [r.ok, r.prepared.text_found, r.prepared.line_px >= 15 && r.prepared.line_px <= 30, light(r.bytes).paper >= 243], [true, true, true, true]);
+    }
+    t("R44 faint print: the engine reads words from the prepared faint page", words(await readByEngine((await faint(200, 240)).bytes)).length > 0, true);
+    t("R44 faint print control: a blank page of that paper is still no text", (await faint(200, 240, true)).prepared.text_found, false);
   }
 
   {
