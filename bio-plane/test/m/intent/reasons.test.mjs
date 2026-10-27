@@ -11,6 +11,7 @@ import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { seeded, V, MACHINE, COND } from "./fixture.mjs";
 import { homeOfEmpty } from "../provenance/fixtures.mjs";
 import { world as runsWorld, PROJ, ORG, T0 } from "../ai-runs/world.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const ROW = INTENT_CHECKS.INTENT_NO_REASON;
 /* every reason that is not one: absent, not a string, blank or only whitespace */
@@ -102,7 +103,7 @@ test("R2 a reasoned condition is carried on the revision with it, in the author'
   assert.equal(off.reason, "We measure this a different way now.");
   assert.equal(w.fm(P).objective_condition, undefined);
   const last = w.text(P).split("### Session ").at(-1);
-  assert.match(last, /Objective condition removed/);
+  assert.match(last, wordRx("intent.objective_condition_removed"));
   assert.match(last, /Reason: We measure this a different way now\./);
 });
 

@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, V, MACHINE, OFFICE, DAY, ms } from "./fixture.mjs";
 import { ESCALATION_CHECKS } from "../../../src/escalation/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 test("R1 refusals in order: MACHINE_CANNOT_OPEN, NO_SUCH_DETERMINATION (absent and invisible one answer, through conformance R19), DETERMINATION_SUPERSEDED (through conformance R20, its successor named only when readable), NOT_NONCOMPLIANT, ESCALATION_NOT_A_PARTICIPANT (C-116.6), ALREADY_OPEN (named); otherwise open at stage 1 recording the noncompliant standards pursued, who and when; any joined member may open", () => {
   const w = seeded();
@@ -128,7 +129,7 @@ test("R3 exit answers R14's two conditions apart, each met, not_met or undetermi
   assert.deepEqual(Object.keys(e).filter((k) => k !== "says").sort(), ["compliance", "consequences"]);
   assert.equal(e.compliance.state, "not_met");
   assert.equal(e.consequences.state, "undetermined");
-  assert.match(e.consequences.why, /no consequence recorded/);
+  assert.match(e.consequences.why, wordRx("escalation.consequence_recorded"));
   for (const c of [e.compliance, e.consequences]) {
     assert.ok(states.includes(c.state));
     assert.ok(Array.isArray(c.ids));

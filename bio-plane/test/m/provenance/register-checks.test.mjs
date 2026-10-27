@@ -10,6 +10,7 @@ import { registerChecks, withRegisterChecks } from "../../../src/provenance/inde
 import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
 import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const run = (docs, { md = infoMd("INFO-2026-0001-x"), files = {}, reg = null } = {}) => registerChecks({
   files: new Map([["bundle.md", md], ["data/provenance.json", reg ?? JSON.stringify({ documents: docs })], ...Object.entries(files)]),
@@ -263,7 +264,7 @@ test("R42, R51 (N381): at the write, a pulled knock's bundle is filed with its r
   const lettered = pulledKnock({ bytes });
   const refused = w.promotion.promote(file({ ...lettered, capture: { ...lettered.capture, grade: "B" } }));
   assert.deepEqual([refused.ok, refused.reason, refused.findings.map((x) => x.check)], [false, "PROVENANCE_REGISTER_REFUSED", ["C-18.1"]]);
-  assert.match(refused.findings[0].detail, /received through the doorbell/);
+  assert.match(refused.findings[0].detail, wordRx("leg-earning.freeze.received_through_doorbell"));
   assert.deepEqual(w.snapshot(), before, "nothing written");
   /* The document as the pull writes it is filed, and its capture registered to the bundle. */
   const doc = pulledKnock({ bytes });

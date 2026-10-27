@@ -7,6 +7,7 @@ import * as M from "../../../src/idspaces.mjs";
 import * as CC from "../../../../court-citations/index.mjs";
 import { HARBOR, LAKESHORE, DISSENT, UNMEASURED, NEW_SPACES, REPORTERS, combine, viewOf, withNewSpaces } from "./fixtures.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const { spaces, recognise, reach, parcelStanding, systemOf, judgePair, recogniseCitations } = M;
 const H = viewOf(HARBOR);
@@ -371,7 +372,7 @@ test("R14 a host serving many offices, an unmatched address, and an unparseable 
   assert.match(unknown.why, /no system in the active profiles matches nowhere\.test/);
   const bad = systemOf(H, ["not a url"]);
   assert.equal(bad.origin, null);
-  assert.match(bad.why, /not a parseable address/);
+  assert.match(bad.why, wordRx("idspaces.why.parseable_address"));
   assert.deepEqual(bad.addresses, ["not a url"]);
   assert.equal(systemOf(EMPTY, [A.legis]).origin, null);
 });

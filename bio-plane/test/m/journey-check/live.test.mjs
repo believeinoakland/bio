@@ -20,6 +20,7 @@ import { STEP_NAMES, notReady } from "../../../src/journey-check/investigation.m
 import { ACTION_BLOCK_NOT_DRAWN } from "../../../src/journey-check/journeys.mjs";
 import { NO_PUBLISHED_NOTE } from "../../../src/journey-check/published.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const SRC = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 const COMMIT = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
@@ -277,14 +278,14 @@ test("R24 (live arm): the published case the environment names is walked signed 
     const r = await runLive({ base: fp.base, env: { ...ENV, JOURNEY_PUBLISHED_CASE: PUBLISHED_PATH }, out, commit: COMMIT, screens: only("members"), investigate: false });
     assert.deepEqual(r.walk.failures.filter((f) => /published/.test(f.step || "") || /published/.test(f.detail)), [], r.report);
     for (const w of WIDTHS) assert.ok(r.walk.pairs.includes(`pairs/published-${w}.png`), `pairs/published-${w}.png`);
-    assert.ok(r.walk.steps.some((s) => /Print the case/.test(s.label) && s.ok), r.report);
+    assert.ok(r.walk.steps.some((s) => wordRx("act.owed_pubprint.label.published").test(s.label) && s.ok), r.report);
     assert.ok(!r.walk.notes.includes(NO_PUBLISHED_NOTE));
     /* the arm signed in and swept as a person does, and the published case was opened with no session at all: the requests for it carry no credential */
     const forCase = fp.seen.filter((x) => x.includes(PUBLISHED_PATH));
     assert.ok(forCase.length >= 4 && forCase.every((x) => !/ AUTH$/.test(x)), JSON.stringify(forCase));
     const none = await runLive({ base: fp.base, env: ENV, out: join(dir, String(Math.random()).slice(2)), commit: COMMIT, screens: only("members"), investigate: false });
     assert.ok(none.walk.notes.includes(NO_PUBLISHED_NOTE), none.report);
-    assert.ok(!none.walk.steps.some((s) => /Print the case/.test(s.label)));
+    assert.ok(!none.walk.steps.some((s) => wordRx("act.owed_pubprint.label.published").test(s.label)));
   } finally { await fp.close(); }
 });
 

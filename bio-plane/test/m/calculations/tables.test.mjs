@@ -7,6 +7,7 @@ import { seeded, V, MACHINE, sha } from "./fixture.mjs";
 import { canonicalCsv, parseCsv, ROLES, MONEY_ROLES, KEY_ROLES, ROSTER_ROLES, TABLE_MAX_BYTES, TABLE_MAX_CELLS }
   from "../../../src/calculations/index.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
 const F = [{ name: "vendor", type: "string" }, { name: "amount", type: "number", currency: "USD" }, { name: "paid", type: "date" }];
@@ -199,7 +200,7 @@ test("R3 a table may carry a vintage under a key the member names; tablesAt answ
   assert.match(two.why, /undetermined|valid on/);
   const open = await at("2026-01-01");
   assert.equal(open.state, "undetermined", "a null bound is not stated, never always");
-  assert.match(open.why, /no end is stated/);
+  assert.match(open.why, wordRx("civil-time.end_stated"));
   assert.equal(open.vintages.find((v) => v.sha === c.sha).at, "undetermined");
   const d = await vint(4, { from: "2022-01-01", to: "2022-12-31" });
   const e = await vint(5, { from: "2022-06-01", to: "2022-12-31" });

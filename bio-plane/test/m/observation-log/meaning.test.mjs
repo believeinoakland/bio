@@ -9,6 +9,7 @@ import { OBSERVATION_LOG_MODULE, derivationStatement, derivationDocumentsFrom, d
 import { Connections } from "../../../src/connections/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const reading = (over = {}) => ({ content_type: "agenda", reader_version: 2, read_from_text: true, found: true,
   entities: [{ ref: "k:1" }, { ref: "k:2" }], ...over });
@@ -109,7 +110,7 @@ test("R8 R27 the derivation statement read back from the row: whole, cut, formed
   const odd = derivationStatement({ state: "LOOKED_INDETERMINATE", at: "t", detail: "something else" });
   assert.deepEqual([odd.documents, odd.cut], [null, false]);
   assert.match(odd.says, /recorded state LOOKED_INDETERMINATE/);
-  assert.match(derivationStatement({ state: "PRESENT", at: "t", detail: null }).says, /an unrecorded number of documents/);
+  assert.match(derivationStatement({ state: "PRESENT", at: "t", detail: null }).says, wordRx("observation-log.text.unrecorded_number_documents"));
   // no row: §5.1's cause decides the word
   assert.deepEqual([derivationStatement(null, "never_looked").derived, derivationStatement(null, "pre_log").derived,
                     derivationStatement(null, "purged").derived, derivationStatement(null, "watermark_band").derived,

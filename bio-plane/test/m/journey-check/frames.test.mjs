@@ -15,6 +15,7 @@ import { walkPublished, NO_PUBLISHED_NOTE } from "../../../src/journey-check/pub
 import { walkDashboards } from "../../../src/journey-check/journeys.mjs";
 import { fakePlane, publishedPage } from "./fake-plane.mjs";
 import { localize } from "../../../src/setup-words/index.mjs";
+import { wordRx } from "../../word-rx.mjs";
 
 const COMMIT = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 let B, dir, mock;
@@ -85,7 +86,7 @@ test("R24: with a published case on the instance, the live arm opens it signed o
     await walkPublished(walk, B, inst.base, mock, { path: "/app/published/c1", out: walk.out });
     assert.deepEqual(walk.failures, [], walk.failures.map((f) => f.detail).join(" | "));
     assert.equal(walk.pairs.filter((p) => /^pairs\/published-(1280|390)\.png$/.test(p)).length, 2);
-    assert.ok(walk.steps.some((s) => /Print the case/.test(s.label) && s.ok));
+    assert.ok(walk.steps.some((s) => wordRx("act.owed_pubprint.label.published").test(s.label) && s.ok));
     assert.ok(!inst.seen.some((x) => /AUTH$/.test(x)), "no request carried an Authorization header");
   } finally { inst.close(); }
 });
