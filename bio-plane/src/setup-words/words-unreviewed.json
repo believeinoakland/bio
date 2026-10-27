@@ -16189,28 +16189,28 @@
       "en": "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 39
+      "line": 45
     },
     {
       "id": "civil-time.calendar.list_cannot_read_why",
       "en": "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith: {why}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 41
+      "line": 47
     },
     {
       "id": "civil-time.calendar.list_disputed",
       "en": "the closure list '{list}' for {year}{offices} is disputed in your team's Civicsmith",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 37
+      "line": 43
     },
     {
       "id": "civil-time.calendar.list_year_withheld",
       "en": "the closure list '{list}' for {year} is withheld: the active profiles disagree on it",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 31
+      "line": 37
     },
     {
       "id": "civil-time.calendar.no_source_stated",
@@ -16224,70 +16224,70 @@
       "en": "the office calendar for {year}{offices} cannot be read in your team's Civicsmith",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 40
+      "line": 46
     },
     {
       "id": "civil-time.calendar.office_cannot_read_why",
       "en": "the office calendar for {year}{offices} cannot be read in your team's Civicsmith: {why}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 42
+      "line": 48
     },
     {
       "id": "civil-time.calendar.office_disputed",
       "en": "the office calendar for {year}{offices} is disputed in your team's Civicsmith",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 38
+      "line": 44
     },
     {
       "id": "civil-time.calendar.office_year_withheld",
       "en": "the office calendar for {year} is withheld: the active profiles disagree on it",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 32
+      "line": 38
     },
     {
       "id": "civil-time.calendar.uncovered_list",
       "en": "the count reaches {year}, a year the closure list '{list}' does not cover for every office",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 33
+      "line": 39
     },
     {
       "id": "civil-time.calendar.uncovered_list_office",
       "en": "the count reaches {year}, a year the closure list '{list}' does not cover for {office}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 34
+      "line": 40
     },
     {
       "id": "civil-time.calendar.uncovered_office",
       "en": "the count reaches {year}, a year the office calendar does not cover for every office",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 35
+      "line": 41
     },
     {
       "id": "civil-time.calendar.uncovered_office_office",
       "en": "the count reaches {year}, a year the office calendar does not cover for {office}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 36
+      "line": 42
     },
     {
       "id": "civil-time.missing.closure_list_absent",
       "en": "the closure list '{list}', which the rule names, is not held by the jurisdiction view",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 30
+      "line": 36
     },
     {
       "id": "civil-time.missing.closure_list_withheld",
       "en": "the closure list '{list}', which the rule names, is withheld: the active profiles disagree on it ({at})",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 29
+      "line": 35
     },
     {
       "id": "civil-time.missing.computation_absent",
@@ -16309,6 +16309,13 @@
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
       "line": 28
+    },
+    {
+      "id": "civil-time.missing.fiscal_year_no_body",
+      "en": "no government was named, so no fiscal year can be read from the jurisdiction view",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 29
     },
     {
       "id": "civil-time.missing.fiscal_year_withheld",
@@ -16357,28 +16364,56 @@
       "en": "an hours rule counts from the anchor's time, and {value} is held at {precision} precision",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 59
+      "line": 65
     },
     {
       "id": "civil-time.rules.anchor_open_end",
       "en": "the anchor {value} has an open or unknown end",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 58
+      "line": 64
     },
     {
       "id": "civil-time.rules.anchor_undetermined",
       "en": "the anchor is undetermined: {why}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 60
+      "line": 66
     },
     {
       "id": "civil-time.rules.anchor_undetermined_unsaid",
       "en": "the anchor is undetermined: no why given",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 61
+      "line": 67
+    },
+    {
+      "id": "civil-time.rules.calendar_entry_on_correction",
+      "en": "calendar entry {year}{list}: counted on its correction, now {status}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 34
+    },
+    {
+      "id": "civil-time.rules.calendar_entry_status",
+      "en": "calendar entry {year}{list}: {status}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 33
+    },
+    {
+      "id": "civil-time.rules.close_of_business_no_hours",
+      "en": "the close of business is undetermined: the jurisdiction view holds no hours for the governing office",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 32
+    },
+    {
+      "id": "civil-time.rules.close_of_business_no_opening",
+      "en": "the close of business is undetermined: the office's hours list no opening on {weekday}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 31
     },
     {
       "id": "civil-time.rules.daytext_has_no_such_day",
@@ -16392,231 +16427,231 @@
       "en": "the due {value} has an open end",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 66
+      "line": 72
     },
     {
       "id": "civil-time.rules.due_undetermined",
       "en": "the due date is undetermined: {why}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 64
+      "line": 70
     },
     {
       "id": "civil-time.rules.due_undetermined_unsaid",
       "en": "the due date is undetermined: no why given",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 65
+      "line": 71
     },
     {
       "id": "civil-time.rules.invalid_amount",
       "en": "the rule's amount is not a positive whole number",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 44
+      "line": 50
     },
     {
       "id": "civil-time.rules.invalid_applies_on",
       "en": "the rule's applies_on is not a list of day names",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 52
+      "line": 58
     },
     {
       "id": "civil-time.rules.invalid_closures",
       "en": "the rule's closures is not a list's name",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 50
+      "line": 56
     },
     {
       "id": "civil-time.rules.invalid_computation",
       "en": "the rule's computation names '{rule}', a computation this module does not count",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 56
+      "line": 62
     },
     {
       "id": "civil-time.rules.invalid_count",
       "en": "the rule's count '{count}' is neither calendar nor business",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 47
+      "line": 53
     },
     {
       "id": "civil-time.rules.invalid_count_unstated",
       "en": "the rule's count is not stated (calendar or business)",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 46
+      "line": 52
     },
     {
       "id": "civil-time.rules.invalid_count_with_units",
       "en": "the rule's count is given with units '{units}'",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 48
+      "line": 54
     },
     {
       "id": "civil-time.rules.invalid_direction",
       "en": "the rule's direction '{direction}' is neither forward nor backward",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 45
+      "line": 51
     },
     {
       "id": "civil-time.rules.invalid_due_at",
       "en": "the rule's due_at is neither close_of_business nor HH:MM",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 51
+      "line": 57
     },
     {
       "id": "civil-time.rules.invalid_extension_count",
       "en": "the rule's extension count '{count}' is neither calendar nor business",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 54
+      "line": 60
     },
     {
       "id": "civil-time.rules.invalid_extension_days",
       "en": "the rule's extension has no positive whole number of days",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 53
+      "line": 59
     },
     {
       "id": "civil-time.rules.invalid_receipt",
       "en": "the rule's venue receipt '{rule}' is not a receipt rule this module counts",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 55
+      "line": 61
     },
     {
       "id": "civil-time.rules.invalid_roll",
       "en": "the rule's roll is not true or false",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 49
+      "line": 55
     },
     {
       "id": "civil-time.rules.invalid_units",
       "en": "the rule's units '{units}' is not one of {allowed}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 43
+      "line": 49
     },
     {
       "id": "civil-time.rules.not_applicable_day",
       "en": "the rule applies only to an event on {days}, and the anchor is a {weekday}",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 62
+      "line": 68
     },
     {
       "id": "civil-time.rules.not_applicable_span",
       "en": "the rule applies only to an event on {days}, and the anchor is not a single day",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 63
+      "line": 69
     },
     {
       "id": "civil-time.rules.possibly_overdue_day",
       "en": "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {day} in {zone} lies after the first and not after the second (K1444 (i))",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 67
+      "line": 73
     },
     {
       "id": "civil-time.rules.possibly_overdue_instant",
       "en": "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {instant} lies after the first and not after the second (K1444 (i))",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 68
+      "line": 74
     },
     {
       "id": "civil-time.rules.span_needs_view",
       "en": "a span in business days needs the jurisdiction view",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 70
+      "line": 76
     },
     {
       "id": "civil-time.rules.span_open_end",
       "en": "{value} has an open or unknown end",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 69
+      "line": 75
     },
     {
       "id": "civil-time.rules.unmeasured",
       "en": "the rule's basis is UNMEASURED: no measurement or ruling sources it (K1445)",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 57
+      "line": 63
     },
     {
       "id": "civil-time.values.end_open",
       "en": "{value} has an open end, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 73
+      "line": 79
     },
     {
       "id": "civil-time.values.end_unknown",
       "en": "{value} has an unknown end, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 74
+      "line": 80
     },
     {
       "id": "civil-time.values.event_unresolved",
       "en": "the bounding event {event} ({edge}) is not resolved",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 78
+      "line": 84
     },
     {
       "id": "civil-time.values.event_unresolved_edgeless",
       "en": "the bounding event {event} is not resolved",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 79
+      "line": 85
     },
     {
       "id": "civil-time.values.overlap",
       "en": "{value} ({precision} precision, {zone}) and {value_2} ({precision_2} precision, {zone_2}) overlap, so the precision held does not say which came first",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 75
+      "line": 81
     },
     {
       "id": "civil-time.values.overlaps_end",
       "en": "{value} overlaps the end {bound} at the precision held",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 77
+      "line": 83
     },
     {
       "id": "civil-time.values.overlaps_start",
       "en": "{value} overlaps the start {bound} at the precision held",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 76
+      "line": 82
     },
     {
       "id": "civil-time.values.start_open",
       "en": "{value} has an open start, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 71
+      "line": 77
     },
     {
       "id": "civil-time.values.start_unknown",
       "en": "{value} has an unknown start, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 72
+      "line": 78
     },
     {
       "id": "conformance.checks.a_cure_is_already_recorded",
@@ -16953,6 +16988,34 @@
       "module": "connection-grammar",
       "file": "bio-plane/src/connection-grammar/shape.mjs",
       "line": 10
+    },
+    {
+      "id": "connection-grammar.why.chain_limit_over",
+      "en": "a list shows at most {max} chains; {requested} were asked",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/bounds.mjs",
+      "line": 95
+    },
+    {
+      "id": "connection-grammar.why.chain_limit_whole",
+      "en": "a chain limit is a whole number of chains from 1 to {max}; {requested} is not",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/bounds.mjs",
+      "line": 92
+    },
+    {
+      "id": "connection-grammar.why.hops_list",
+      "en": "hops is a list of at most {max} connections",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/walk.mjs",
+      "line": 181
+    },
+    {
+      "id": "connection-grammar.why.paths_list",
+      "en": "paths is a list, each a non-empty list of connections, or an object holding hops and quantities",
+      "module": "connection-grammar",
+      "file": "bio-plane/src/connection-grammar/walk.mjs",
+      "line": 117
     },
     {
       "id": "connections.checks.a_membership_is_taken_back",

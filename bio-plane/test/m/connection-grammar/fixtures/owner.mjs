@@ -85,7 +85,7 @@ export function makeNeighbours(broken, mode = {}) {
   return function neighbours({ node, kinds, at, page, viewer, scope }) {
     calls++;
     if (broken === "async") return Promise.resolve({ items: [] });
-    if (broken === "throws") throw new Error("the store is closed");
+    if (broken === "throws") throw new Error("OWNER_STORE_CLOSED");
     if ((viewer === undefined || viewer === null) && broken !== "viewer") return { refused: "VIEWER_MISSING", why: "no viewer" };
     let set = [];
     for (const c of rows) {
