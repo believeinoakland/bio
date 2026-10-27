@@ -299,7 +299,8 @@ test("R54 its leading token differs from the payload's and the advisory's, so th
 test("R55 runBundleStatement is exactly the three lines over the manifest's SHA-256 and the payload digest, byte for byte the same every time", () => {
   const a = runBundleStatement(MANIFEST, D1);
   assert.ok(a instanceof Uint8Array);
-  assert.equal(td.decode(a), `bio-ai-run/1\nmanifest ${createHash("sha256").update(MANIFEST).digest("hex")}\npayload ${D1}\n`);
+  const lines = ["bio-ai-run/1", ["manifest", createHash("sha256").update(MANIFEST).digest("hex")].join(" "), ["payload", D1].join(" ")];
+  assert.equal(td.decode(a), lines.join("\n") + "\n");
   assert.deepEqual(runBundleStatement(new Uint8Array(MANIFEST), D1), a);
 });
 
