@@ -37948,7 +37948,7 @@
    "key": "screen.registers.import.go",
    "en": "Bring in this register",
    "protected": false,
-   "note": "DEC-407: button (registerimport)"
+   "note": "DEC-407: button (registerfileimport, K5471)"
   },
   {
    "key": "screen.registers.search.head",
@@ -45275,6 +45275,12 @@
    "en": "you stopped instead of switching",
    "protected": false,
    "note": "DEC-469: aimoments: the mock option for a run the member stopped (screen.run.declined)"
+  },
+  {
+   "key": "act.owed_registerimport.does",
+   "en": "Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.",
+   "protected": false,
+   "note": "DEC-470: held under the old op name while the code still reads it (screens-settings keys.mjs and the L11 modules); dropped when they read act.owed_registerfileimport.does"
   }
  ],
  "rewrite": {

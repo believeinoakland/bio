@@ -183,7 +183,7 @@ const ACT_HELP = {
   owed_exploreall: 'Lists every connection found between the two ends within the search\'s limits, each with its steps, its weakest step and its dates. It says when the search was cut short, and never that the list is complete.',
   owed_explorepath: 'Shows the most direct chain between the two ends first: the fewest steps, then the strongest weakest step, then the date. It is a fact about the chains, not a judgment.',
   owed_exploreshorter: 'Puts paths with fewer steps between the same two ends beside the one you built, evidenced paths first and then leads, so you can see them or keep your own. Your chain is never changed.',
-  owed_registerimport: 'Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.',
+  owed_registerfileimport: 'Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.',
   owed_registerlist: 'Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.',
   owed_registersearch: 'Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.',
   owed_registerrowcite: 'Cites one row of a register as evidence, with the register, its source and the date it was brought in.',
