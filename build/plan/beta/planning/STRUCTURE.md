@@ -100,13 +100,13 @@ Each carries product capability, so its addition, layer and place come to Bob (l
 | 4 | `registers` (imports, search, cite a row, watches) | CAPABILITIES | L5, after people and money | register-readers, capture, provenance, people, money, entities | as row 3 |
 | 5 | email intake (N824, a per-team forwarding address) | CAPABILITIES, FILES | L3, after capture | capture, provenance, the email reader (row 7) | Bob: "D42 - email: A", after upload is in use (K2425) |
 | 5a | FILES's tiers (K5435-K5437): Tier 2 read in the beta (macro-enabled Office and templates, .ics, .vcf, MBOX, MHTML, SVG, BMP, AVIF/HEIF, JPEG 2000, JSON Lines, GeoJSON, KML/KMZ, .srt/.vtt, text by content, single-file .gz/.bz2/.xz/.zst); a type not yet read held whole, safe-graded and named (K5436); Tier 3 held until a real file appears | FILES | readers in L1; the held-and-named path in file-safety, capture (L3) and reading-pipeline (L4) | — | ruled; FILES's draft places each |
-| 6 | legacy binary Office reader (.doc, .xls; and .msg, which shares the compound-file format) | FILES | L1, before office-readers' users | ooxml-like structure, runtime-limits | waits on FILES's study (K4632) |
-| 7 | email reader (.eml MIME; .msg via row 6), attachments as files | FILES | L1, after format-registry | format-registry, the readers | as row 6 |
-| 8 | archive reader (ZIP, each member within its kind's bound) | FILES | L1, after format-registry | format-registry, runtime-limits | as row 6; RTF, JSON, XML, TSV and the image types more likely extend existing readers |
-| 9 | acceptance corpus (N1268) | FILES | L11, beside journey-check (non-product, like it) | none (walks over HTTP) | Bob's text names journey-check "or a new acceptance module, BOB's" |
-| 10 | per-level load test (N1274) | PLATFORM | L11, beside journey-check (non-product) | none | BOB's (a helper, P17) |
-| 11 | bulk record tables in R2 (N1271's split) | PLATFORM | L2, after record-core | record-core | waits on PLATFORM's capacity study; the option is Bob's (K4635) |
-| 12 | place layers (federal, state, county, city; a team's own layer, N1257) | CAPABILITIES | data in jurisdictions (L1); a team's own layer needs the record, so L2 or L5 | jurisdictions, record-core | waits on CAPABILITIES; "how layers stack" is BOB's (DEC-404) |
+| 6 | `structured-text-reader` (JSON, NDJSON, XML, SVG, KML, GeoJSON, ICS, VCF, SRT, VTT, to 100 MB) | FILES | L1, after ooxml, before format-registry | ooxml, setup-words, runtime-limits, test-support | READY (`files/REQ-readers-beta.md` SR1-SR7) |
+| 7 | `mail-reader` (EML, MSG, MBOX; attachments as members) | FILES | L1, after structured-text-reader, before format-registry | ooxml, structured-text-reader, setup-words, runtime-limits, test-support | READY (ML1-ML6); N824's intake uses it (CONSISTENCY §2.3) |
+| 8 | `reader-container` (legacy Office and RTF by conversion, every image kind, archives; K4831 (2)) | FILES | L1, a standalone worker like file-scanner | runtime-limits, bundler, test-support | READY as CC1-CC6; not yet in `modules.json` (CONSISTENCY §2.9) |
+| 9 | acceptance corpus (N1268) | FILES | no new module: a walk of journey-check (CONSISTENCY §2.5) | — | READY (`files/CORPUS-N1268.md`) |
+| 10 | `load-check` (N1274) | PLATFORM | L11, beside journey-check (non-product) | op-declarations, runtime-limits, test-support (not journey-check, CONSISTENCY §2.6) | READY (`platform/load-test-draft.md` PL40-PL43) |
+| 11 | bulk record tables in R2 (N1271's split) | PLATFORM | L2, after record-core | record-core | `record-placement-draft.md` not READY (three points Bob's) |
+| 12 | place layers (N1257) | CAPABILITIES | no new module: layers in jurisdictions (L1), team layers held through instance-setup and local-facts | — | READY (`capabilities/N1257-places-in-layers.md`); its two requirement companions not READY |
 
 Adding modules re-pins membership's `MODULE_ORDER` (R83) and regenerates `layers-view.html`; that work is a BOB act before R1's layer 2 START.
 
