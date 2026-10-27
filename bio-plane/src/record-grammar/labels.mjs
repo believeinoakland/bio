@@ -5,7 +5,7 @@
    `isMachineMinted` had no reader and went with the catalogue (K750). */
 
 import { isMachineIdentity } from './actors.mjs';
-import { word } from '../setup-words/index.mjs';
+import { localize, word } from '../setup-words/index.mjs';
 
 /* A value stringified and trimmed; one that cannot be stringified (a throwing `toString`, an object with no prototype)
    is blank, never a throw (R37, R38). */
@@ -200,8 +200,9 @@ export function proposalLabel(proposedBy, subject) {
   const table = typeof subject === 'string' && Object.prototype.hasOwnProperty.call(PROPOSAL_STATES, subject)
     ? PROPOSAL_STATES[subject] : null;
   if (!table)
-    throw new RangeError(`proposalLabel: '${String(subject).slice(0, 40)}' is not a proposal subject; `
-      + `one of ${Object.keys(PROPOSAL_STATES).join(', ')}`);
+    throw new RangeError(localize('record-grammar.labels.unknown_subject',
+      "proposalLabel: '{subject}' is not a proposal subject; one of {subjects}",
+      { subject: String(subject).slice(0, 40), subjects: Object.keys(PROPOSAL_STATES).join(', ') }));
   const state = lawProposalState(proposedBy);
   return { by: proposedBy ?? null, state, machine_work: state === 'machine_proposed', says: table[state] };
 }

@@ -45466,13 +45466,6 @@
       "line": 400
     },
     {
-      "id": "record-grammar.bundle.current_state_cur_is_not",
-      "en": "current_state '{cur}' is not legal for {ot} (legal: {legal})",
-      "module": "record-grammar",
-      "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 258
-    },
-    {
       "id": "record-grammar.bundle.data_changes_json_records_were_mutated",
       "en": "data/changes.json records were mutated or removed (append-only surface)",
       "module": "record-grammar",
@@ -45669,13 +45662,6 @@
       "line": 519
     },
     {
-      "id": "record-grammar.bundle.object_type_ot_is_not",
-      "en": "object_type '{ot}' is not a known type",
-      "module": "record-grammar",
-      "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 186
-    },
-    {
       "id": "record-grammar.bundle.orphaned_pending_file_p_with",
       "en": "orphaned pending file '{p}' with no manifest",
       "module": "record-grammar",
@@ -45786,13 +45772,6 @@
       "module": "record-grammar",
       "file": "bio-plane/src/record-grammar/bundle.mjs",
       "line": 518
-    },
-    {
-      "id": "record-grammar.bundle.references_i_rel_rel_is",
-      "en": "references[{i}].rel '{rel}' is not in the closed vocabulary",
-      "module": "record-grammar",
-      "file": "bio-plane/src/record-grammar/bundle.mjs",
-      "line": 519
     },
     {
       "id": "record-grammar.bundle.references_i_rel_rel_is_2",

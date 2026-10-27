@@ -531,8 +531,6 @@
   "bio-plane/test/m/record-core/t35.test.mjs": 1,
   "bio-plane/test/m/record-core/t47.test.mjs": 1,
   "bio-plane/test/m/record-core/t48.test.mjs": 1,
-  "bio-plane/test/m/record-grammar/bundle.test.mjs": 4,
-  "bio-plane/test/m/record-grammar/labels.test.mjs": 7,
   "bio-plane/test/m/reevaluation/acceptance.test.mjs": 4,
   "bio-plane/test/m/reevaluation/across.test.mjs": 2,
   "bio-plane/test/m/reevaluation/attribution.test.mjs": 1,
