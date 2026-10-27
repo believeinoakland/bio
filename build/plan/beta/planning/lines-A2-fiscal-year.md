@@ -1,5 +1,7 @@
 # Requirement-line draft: A2, a government's fiscal year (DEC-458)
 
+**Decided (K5448, CONSISTENCY §1, §2.1):** the stated fiscal year is an entry of N1257's team layer, not a separate local-facts fact. The money (R36-R38) and civil-time (R31) lines below stand. The jurisdictions line (R99 here) becomes R121 and the local-facts lines (R23, R24 here) become R28, R29, re-cut onto N1257's R23 and R115-R117 once CAPABILITIES' companions are READY; until then they are the fallback.
+
 **Status** · DRAFT for BOB · PLANNING L2, 2026-10-27. Drafted by a Sonnet reading worker from money, civil-time, local-facts and jurisdictions read whole; reviewed by PLANNING (layer order holds: money L5 #66 uses local-facts #60 and jurisdictions #3; civil-time #4 takes stated years as view entries, so it needs nothing later). Open points §6: 2 is Bob's (a disputed stated year: still known?), the rest BOB's.
 
 Read in full: the brief, dec457-464.md, README, money.md, civil-time.md, local-facts.md, jurisdictions.md (all 198 lines); also DEC-451, walk-T51b-triage C-K6, screens-settings R45, money/index.mjs `#period`.
