@@ -73,7 +73,7 @@
 **ai-accounts**
 - T53 · N1220 (K5457) · the account model (owner, provider, plan, means gateway/sealed/reference/issued/none, ordered entries); plan scope and the personal-subscription rule from the catalogue; the hop; disclosure per provider and host; checks P1-P7; free-tier acceptance; the gateway payer check · `lane-ai-design/draft-ai-accounts.md` R1-R64 (AI3-AI5 answered A, K5477-K5479)
 - T53 · K5457 · R8, R12, R13, R18, R35 and twelve old ops retired, nineteen new declared, every user re-pointed in this tranche, no aliases (FOLD-AI §2 lists the sixteen modules) · same, Part 1, R36, R38, R61
-- T53 · DEC-465, DEC-466, K5471 · `aikeyseal` (R69), a member's own list order (R70), declared ops (R71), a share flag turned off (R72), `GATEWAY_UNAVAILABLE` naming who can grant it (R73), the readiness summary (R74); a member clears the payer flag on her own account (R68) · `lane-ai-design/draft-ai-accounts-dec465.md` `[waits: AQ11 on Bob's page, "my projects" owned or joined, drafted "owns"]`
+- T53 · DEC-465, DEC-466, K5471 · `aikeyseal` (R69), a member's own list order (R70), declared ops (R71), a share flag turned off (R72), `GATEWAY_UNAVAILABLE` naming who can grant it (R73), the readiness summary (R74); a member clears the payer flag on her own account (R68) · `lane-ai-design/draft-ai-accounts-dec465.md` (AI11 B, K5486: any project the member has joined; the draft's "owns" changed by AI-DESIGN)
 - T53 · K5457 · migration: apikey to the Anthropic API plan (sealed), signin to subscription (issued), project sign-in accounts ended and told once · same, R59
 
 **credentials**
@@ -153,7 +153,7 @@
 - T53 · K5457 · the test bar read per AI and part: R19, R29, R30 amended; `GATE_PART_OF` and `gatePartOf` (R36); `PART_WITHDRAWN` (R37), per AI and naming it (A48) · `lane-ai-design/draft-run-rules.md` (the map, `draft:reading` → `draft`; FOLD-AI §1 decided) (AI1 answered B, K5475)
 
 **ai-runs**
-- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97 and the amended; R75's `testBarRecord` gains `entry_id`, named in run-rules R19, A48) `[waits: AI10]` (AI1, AI3 answered, K5475, K5477)
+- T53 · K5457 (K2892 as K5457 reads it) · `principal_ai`; the account per act; Gate 1 per (entry, part) through `partAdmitted`; segments, labels, hops; pause and resume; a recipient notice holds the run; ops `aicontinue`, `aistop`, `aiwait`, `aiswitchaccount`, `aiwithout`, `aisend`, `aisendrefuse` · `lane-ai-design/draft-agent-run-path.md` (ai-runs R91-R97, R105 `aiwaitswitch` with `WAIT_THEN_SWITCH_CHOICES` set at START (K5489), and the amended; R75's `testBarRecord` gains `entry_id`, named in run-rules R19, A48) `[waits: AI-DESIGN's drafts re-marked READY (every AI question answered, K5475-K5494)]` (AI1, AI3 answered, K5475, K5477)
 - T53 · N1219, DEC-466 · `read` and `disagree` passed through (R99), `op=airunlog` (R100), segments as parts, hops and refusals recorded (R101, R102), `op=airunparts` "How this run went" (R103), the label names the AI, never the account (R104) · `lane-ai-design/draft-run-record.md`
 
 **observation-log** (layer 5)
@@ -164,7 +164,7 @@
 
 **agent-model** (position 90, FOLD-AI §2.9)
 - T53 · K5457 · first: the interface (`turn`, `converse`, `capabilities`, `estimate`, `health`) with the Anthropic adapter behind it, today's tests passing through `turn` (N1205's landing place) · `lane-ai-design/draft-agent-model.md` R1-R36, R43, R44, R54, R55
-- T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI10; live checks L2, L3]` (AI4 answered, K5478)
+- T53 · K5457 · then the OpenAI-compatible adapter and host profiles (openrouter first, ai_gateway, workers_ai, custom), the served-host pin, the payer check, bounded retry and the circuit, `provider_limit` · same, R37-R42, R45-R53 `[waits: AI-DESIGN's drafts re-marked READY (every AI question answered, K5475-K5494); live checks L2, L3]` (AI4 answered, K5478)
 
 **agent-runner**
 - T53 · K5457 · the Claude Code route retired in one change (R35, R42; RUNNER and REMOTE bindings off) · `lane-ai-design/draft-agent-runner.md` R13 `first: N1205's split`
@@ -174,17 +174,19 @@
 - T53 · K5457 · the entry by need per conversation, Gate 1 per part before the first turn, `ai_stop` at a step boundary, a notice before a new recipient, `idem`, `produced_by` · `lane-ai-design/draft-agent-run-path.md` (agent-steps R50-R57)
 
 **agent-worker**
+- T53 · K5485 (AI2 A) · the beta offers every built part plus the intake interview, the case's account and charge-or-rule answers; investigate, extract and explore per AI behind their bars · K5485
 - T53 · N1205 (K5457) · first: the split: `/signin`, its relay and REMOTE dispatch (R66, R67, R81-R85, R109, R111) to agent-model's adapter; `ai_account`; no credential in the Worker · `lane-ai-design/draft-agent-run-path.md` (agent-worker) `first: agent-model's interface`
-- T53 · K5457 · each path takes its entry by need, refuses by name, labels every result, fails fast with three choices, turn-level progress, the sealed key by `aicredential` at the call · same, R120-R127 `[waits: AI10 (R124)]` (AI1 answered, K5475)
+- T53 · K5457 · each path takes its entry by need, refuses by name, labels every result, fails fast with three choices, turn-level progress, the sealed key by `aicredential` at the call · same, R120-R127 `[waits: AI-DESIGN's drafts re-marked READY (every AI question answered, K5475-K5494) (R124)]` (AI1 answered, K5475)
 
 **ai-use**
 - T53 · K5457 · the neutral usage record (provider-reported money apart from Civicsmith's estimate; never zero for the unmeasured); provider limits as limits reached; thresholds, alerts, reconciliation · `lane-ai-design/draft-ai-use.md` R1-R26
 - T53 · K5459 · a paying team or project sees each member's use over thirty days; a personal subscription never · same, R27
+- T53 · K5480 · op `airetestset`, an administrator's switch turning re-testing off (R28) · `lane-ai-design/draft-ai-use.md` (A50)
 
 **ai-gate** (new; after agent-worker; K5457)
 - T53 · K5457 · the Gate 1 suite: signed bank and thresholds, items scored by code on a stub plane through agent-model, per-part verdicts, Wilson intervals, the gate record · `lane-ai-design/draft-ai-gate.md` R1-R40, R65, R66 `[waits: Bob's pass marks after the first measuring run, AD13, K5475]`
-- T53 · K5457 · characterization and cost shown before a run, consent, canaries, the lifecycle signal · same, R41-R53 `[waits: AI6, AI7]`
-- T53 · K5457 · the results bundle and the library row, `partsRefused` · same, R54-R64 `[waits: AI8; ai-issuer]`
+- T53 · K5457 · characterization and cost shown before a run, consent, canaries, the lifecycle signal · same, R41-R53 (AI6 A with an administrator's switch to turn re-testing off and a queue reminder while off, K5480; AI7 B, K5481) ; R52 asks `retestAllowed` before each canary (A50)
+- T53 · K5457 · the results bundle and the library row, `partsRefused` · same, R54-R64 (AI8 as Bob amended it, K5482: the shared results page shows every tested AI; a team's results active six months, combined statistically) `[waits: ai-issuer]`
 
 N1258 and N829: the real public-matters set, when it exists, is a standing check that can switch a part off for an AI (K5475, supersedes N829's and K2479's gate for the beta); who writes the set is Bob's, later
 
@@ -231,6 +233,9 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 - T53 · A6 (DEC-462) · one item per member listing each new key, by key words (R56, R57) · `planning/lines-A5-A6-signing.md` (A6)
 - T53 · N1257 · `place-profile-arrived` for a layer of any level; a rule change told once to administrators (R58) · `capabilities/N1257-requirements-modules.md`
 
+**queue**
+- T53 · K5480 · `classOfKind` gains `retesting-off`, an OBLIGATION kind: one undismissable item while re-testing is off (R1) · AI-DESIGN A50
+
 **queue**, **screens-daily**
 - T53 · A6 · a per-key choice of act passed through (queue), a line and two acts per key, never handled by "choose several" (screens-daily) · `planning/lines-A6-queue-acts.md` (Q-A6-1, Q-A6-2 decided, K5456; their wording a UX need)
 - C T52-62 to T52-65, T52-104 (screens-daily)
@@ -268,15 +273,16 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 - C T52-97, T52-98 · T53 · K4354 · the budget walk at 1280 and 390 px (PL5, PL6) · `platform/time-budgets-draft.md` §4 · T53 · N1268 · the acceptance corpus walk · `files/CORPUS-N1268.md` (CONSISTENCY §2.5)
 
 **ai-issuer** (new; Civicsmith's own Worker; K5457)
-- T53 · K5457 · serves the signed catalogue, advisories and seal key; single-use challenges; sealed test bundles received and kept for the off-Worker scorer; Bob's decisions recorded; signs and opens nothing · `lane-ai-design/draft-ai-issuer.md` R1-R24 `[waits: BOB's deploy to account 20b5…7f72, the operator's tools; AI8 for R18]`
+- T53 · K5457 · serves the signed catalogue, advisories and seal key; single-use challenges; sealed test bundles received and kept for the off-Worker scorer; Bob's decisions recorded; signs and opens nothing · `lane-ai-design/draft-ai-issuer.md` R1-R24 `[waits: BOB's deploy to account 20b5…7f72, the operator's tools; R18's retention per K5482]`
 
 **screens-settings** (the AI screens)
+- T53 · DEC-470 · the file-import key `registerfileimport` read by `keys.mjs`; the old key held until then · DEC-470
 - T53 · N1220 (DEC-420, K5457) · `aiproviders`, `aiconnect`, `aimine`, `aiproject`, `aimoments`, `aitest`, `airesults`; `connect`, `teamai`, `projectai` and their acts retired · `lane-ai-design/draft-assistant-screens.md` §2, §4, §5; `UX-REQUIREMENTS.md` `[waits: UX-DESIGN's rows, B555]`
 - T53 · DEC-465 · origin an ordinary check ("Not offered" row removed); a team account's owner opt-in "Projects and members may add this account"; a member's list ordered (`aiorderset`); a key kept sealed in the team's Civicsmith (`aikeyseal`); aimoments names whose checks apply · DEC-465 → ai-accounts R69-R74 (layer 2)
 - T53 · DEC-466 · each label names the AI (`screen.machine.*.ai`); a finished run lists its parts and switches (N1219: ai-runs' segments); Setup's ready and not-ready states (interface-shell R20's read); the installer's gateway line matched to K4464's grant · DEC-466 → ai-runs R99-R104 (layer 6), instance-setup R109 and the installer lines below
 - T53 · DEC-466 U5, K5471 (2) · the installer asks for exactly the AI gateway's two permissions (installer R2, A47's R107) and an install without them completes, the assistant still usable (installer-steps R45, A47's R108); Setup's ready state (instance-setup R109, A47) · `lane-ai-design/draft-instance-setup.md` `[owed: whether "AI Gateway - Edit" carries reading, OPEN in the draft]`
 - T53 · K5471 (5) · the installer's Logpush read is refused (Cloudflare "Authentication error" on plat-s1's install): its scopes (K5449, K5460) lack Logs Read: the installer asks for a read-only Logs scope (installer R2's count to seven), the check keeping its strength (K5473 (2)) · K5471, K5473 `[first: Bob's one act, registering the scope on the OAuth client]`
-- T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7
+- T53 · K5459 · per-member use on accounts the team or project pays for (`aiusebymember`) · same, §5 U7; DEC-468, DEC-469 (the words reconciled: the payer's by-member view, the opt-in note, moment j)
 
 **op-declarations**, **op-grades**, **interface-shell** (the assistant)
 - T53 · N1220 · the 43 AI ops declared with grade and budget class (an "AI act" class owed by PLATFORM, P1), the retired ops removed; the assistant's reads as one combined read (P2) · `lane-ai-design/draft-assistant-screens.md` §4, §5 P1, P2 `[owed: PLATFORM's AI act class]`
