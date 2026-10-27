@@ -31,7 +31,6 @@ it never invents (D-112).
   why.
 - **R6** (fix round 9, G132h; CF-35; K4834) The object's size is judged against the envelope (R8) before any parse of its bytes: a file over the envelope is answered by R8 with no parse made at all. Within the envelope it is asked for the range only (R42); it runs `pdf-reader` over the bytes once, for that range (`openPdfRange`'s `range`; no whole-file tier-1 parse beside the tier-2 pass, so tier 2 never costs two whole parses). When `pdf-reader` answers `ok:false` (not a PDF, or not bytes), that answer is returned verbatim at 422 and no tier-2 pass runs.
 - **R7** Otherwise its `.text` is replaced by this member's own reading of the pages asked (R42) and `.tier` is set (1 or 2) by R8–R10; every other field `pdf-reader` produced for the range (including R46's document-level members) is passed through unchanged, at 200.
-  R8–R10; every other field `extractPdfStructure` produced is passed through unchanged, at 200.
 - **R8** Over envelope: bytes larger than `MAX_PDF_BYTES` (env override, default 16,777,216) skip tier 2:
   `.text` becomes `{document:"", pages:[], undetermined:[{page:null, reason:"over_envelope", font:null,
   codes:"", count:0, bytes, limit}], counts:{chars:0, undetermined:1}}`, `.tier` is 1, and
@@ -79,7 +78,6 @@ the build actually serving rather than the build that was meant to (D-108).
   (grepped 2026-09-25: none outside one comment citing an Oakland measurement as evidence).
 - **R41** Pure per call: the same bytes and options always answer the same way; no clock, no randomness,
 - **R44** (fix round 9, G124; K4835 (1)) No numeric literal in this module's code is a ceiling it keeps (`MAX_PDF_BYTES`): it is read from `READ_BOUNDS`, and a test reads `src/index.mjs` and finds none.
-  no state carried between requests.
 
 ### Satisfies
 
