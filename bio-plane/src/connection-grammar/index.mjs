@@ -7,8 +7,8 @@ import { createRegistry } from './registry.mjs';
 
 export { CLASSES, DECLARED_LABEL, HUNCH_LABEL, LOWEST_GRADE, derivedId, isRecordId } from './shape.mjs';
 export { FORBIDDEN_WORDS, createRegistry } from './registry.mjs';
-export { BOUNDS, depthOf, exhausted, EXHAUSTION_REASONS, hubBoundOf } from './bounds.mjs';
-export { chainGrade, chainLabel, orderPaths } from './walk.mjs';
+export { BOUNDS, CHAIN_LIMITS, chainLimitOf, depthOf, exhausted, EXHAUSTION_REASONS, hubBoundOf } from './bounds.mjs';
+export { chainGrade, chainLabel, chainStrength, strongerChain, orderPaths, foldParallel } from './walk.mjs';
 export { ownerConformance } from './conformance.mjs';
 
 /** The default registry, which the plane wires and every owner registers into at load (R5). */
