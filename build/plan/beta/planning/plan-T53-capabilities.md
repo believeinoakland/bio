@@ -336,5 +336,5 @@ Conflicts with PLANNING resolved as in §A (`/10`, acquisition R36); none with j
 - **N1110 B2** (how a declined group learns part and reason): recommend the steward's own mail, never public. **B3** (four parts as a closed list with the text's date): recommend yes; R24 is written so. Also the steward address and keys.
 - **N1272 R119**: a member-visible limit on interpreted parts (Bob's K4628 cares): recommend telling Bob; he decides if the beta has one.
 - **M-N1272 gold-set reviewer**: needs a person who knows the topic: possibly Bob (flag).
-- **N1259-d R36**: is a member's authored observation exempt from "relied-on documents travel whole" (DEC-100)? Recommend refused as the group's words; Bob's if read as doctrine (K1483).
+- **N1259-d R36 (case-disclosures R41)**: decided by BOB, K5531: a member's own written observation is the group's words, checked before signing and refused if it holds a home address or phone (DEC-408); refusing alters nothing, so R26 stands. Not Bob's.
 - **N858**: per-text writer, reviewer and any payment; the opt-out screen as an experience; whether DEC-340's two `researched` facts suffice; the K ruling for each text.

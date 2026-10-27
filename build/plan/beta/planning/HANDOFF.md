@@ -7,12 +7,12 @@
 **State.** PLANNING #3 at L23. Folded into `plan-T53-draft.md` by layer (42 KB): the seven A drafts (every L1-L12 answer applied); FILES; PLATFORM's READY drafts; AI-DESIGN final; CAPABILITIES' whole READY scope (C29), its detail in `plan-T53-capabilities.md` (45 KB: §A entries by layer and module, §B new modules register-readers L1, registers L5, mail-door L3, §C acts and measurements, §D collisions applied, §E left-outs, §F BOB's points, §G Bob's points); JOURNEYS (`plan-T53-journeys.md`, only J1-J7 wait on Bob); PLANNING's own lines: `lines-K5501-role-change.md`, `lines-K5513-daily-follow.md` (aligned with N1259-c R41), `lines-K5527-texts-and-listing.md` (K5528). `CONSISTENCY.md` rows 1-20 decided.
 
 **Next steps, in order.**
-1. BOB: whether N1259-d's case-disclosures R36 (R41) is doctrine (asked in plain words at L24). Bob: C31-C34 (N824 B4, R119's ceiling, the gold-set reviewer, DEC-340's facts). Gaps owed by CAPABILITIES (relayed by BOB): K5498's officers line; the line filing a keyed docket answer as a capture; N858 R137's source address and flag storage (K5529); N858 §3 step 3 the listed-group step; N824 R6's notice line.
+1. Bob: C31-C34 (N824 B4, R119's ceiling, the gold-set reviewer, DEC-340's facts). Gaps owed by CAPABILITIES (relayed by BOB): K5498's officers line; the line filing a keyed docket answer as a capture; N858 R137's source address and flag storage (K5529); N858 §3 step 3 the listed-group step; N824 R6's notice line.
 2. Fold what is still not READY as BOB relays it: PLATFORM service levels (PL20-PL29), whole-record move (PL50-PL57), Levels 2-3 study; TESTS-SWEEP's fixtures findings list (K5425 (b)); DEC-474 to DEC-477 once merged.
 3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** BOB: case-disclosures R41. Bob: L13-L26, J1-J7, C31-C34. Lanes: PLATFORM, TESTS-SWEEP; CAPABILITIES' five gaps.
+**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L13-L26, J1-J7, C31-C34. Lanes: PLATFORM, TESTS-SWEEP; CAPABILITIES' five gaps.
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -109,3 +109,7 @@ CAPABILITIES marked its whole scope READY (C29). Five Sonnet reading workers rea
 ## L24 · 2026-10-27 · K5530
 
 BOB #323 decided L23 (K5530): §F all as recommended (F7: the probe upload only where no read can answer; F10 supersedes K5528 T3: `jurisdictions` imports `record-grammar`'s functions directly, applied to `lines-K5527-texts-and-listing.md` R126 (d)); mail-door BOB's packaging (layer 3 after doorbell, uses member-roster; in Before R1 (7)); N1110 B2 T1 (stewards' own mail) and B3 (`RULE_PARTS` 1-4 closed, date stored): stewards' entry unbracketed; N824 B4, R119's ceiling, the gold-set reviewer and DEC-340's facts on Bob's page as C31-C34; N858's per-text people Bob's acts at each text. BOB asked which N1259-d R36: answered in one paragraph (case-disclosures' second R36, now R41: a member's authored observation checked as the group's words, recommended).
+
+## L25 · 2026-10-27 · K5531
+
+BOB decided case-disclosures R41 (N1259-d's second R36) as recommended (K5531): a member's own written observation is the group's words, checked before signing; R26 stands. `plan-T53-capabilities.md` §G updated. Nothing is open with BOB from this lane but the UX merges.
