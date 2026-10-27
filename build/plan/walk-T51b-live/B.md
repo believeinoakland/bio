@@ -1,0 +1,20 @@
+# Live walk of 0.87.0, area B (walker B): finding documents and capturing content
+
+Copy biosmoke8, `/version` reads `0.87.0`. Walked 2026-10-27 from about 05:50Z (my clock). Reached through the environment proxy only (Chromium `/opt/pw-browsers/chromium`, `playwright-core`, `proxy: HTTPS_PROXY`, default HOME), one browser launch per act, own context per role and width. Signed in through the sign-in screen as administrator ("sparky") and member ("walker"); credentials, tokens and links never printed or committed (the knock secret phrase of the 390 px knock is not recorded here). My project: "Walk 087 B" (PROJ-2026-2526-walk-087-b, findable). Files: `bio-plane/test/corpus.mjs`, seeds `live087-B-<n>`. Four other walkers worked at the same time, so the copy was not quiet. Times: wall clock from the act to the page quiet (proxy included) and `Server-Timing` `dur` of the act's own call; K4354 bars are 2 s (drawn or answered) and 15 s (web capture); MAJOR over 5 s.
+
+Severity: BLOCKER a journey cannot complete; MAJOR wrong result, error, over 5 s, or a member would not understand; MINOR layout, wording, or over the 2 s bar but under 5 s.
+
+## Journey (f) From a knock to the record
+
+| step | width | role | result |
+| --- | --- | --- | --- |
+| f1 Someone knocks (`/app/doorbell`, no account) | 1280 | knocker | OK. Page drawn in 2.4 s on a warm second load (7.2 s on the very first cold load, proxy included, one `bootstrap` 478 ms and `groupidentity` 133 ms). A PDF (3.3 kB) with a note and my own secret phrase: "Received on October 27, 2026. A member of the team will read it. Keep the reference and the date ...", "Fingerprint of what you sent: 86961f12…3a8d3c35", "Size: 3.3 kB", "Your pseudonym: knocker-...", "Your reference: KNOCK-2026-10-27-66ca56e2". Click to receipt 2.6 s wall. shots/B/f1-receipt-1280.png |
+| f1 | 390 | knocker | OK. A PNG (6.4 kB) with "Make one for me": receipt shows the secret phrase once with "Write it down now. This page shows it once and nobody can show it to you again; without it you cannot answer a request to publish something about you.", reference KNOCK-2026-10-27-83158184. `knock;dur=421`, click to receipt 0.54 s. No horizontal scroll. shots/B/f1-receipt-390.png |
+| f2 Member reads the inbox (`/app/inbox`) | 1280 | administrator | OK. Both new knocks listed first ("6 KB handed in on October 27, 2026 / New / png-....png · image/png / Their note: ..."). 2.3 s wall, `inbox;dur=133`. shots/B/f2-inbox-admin-1280.png |
+| f2 open one knock | 1280 | member | OK. 0.53 s; `inboxget;dur=380`. Fingerprint, the five-level strip (Unknown ... Public) with its sentence, "Move into the record", "Why discard it? (asked before anything is discarded)", "Discard with a reason". shots/B/f2-knock-MEMBER-1280.png. See LB-5 |
+| f2 Discard with no reason | 1280 | member | OK. "Say why first: a knock is discarded only with a reason, and it stays as it was until you give one." Nothing changed |
+| f2 Discard with a reason | 1280 | member | OK. State "Discarded", "Discarded: “live087-B walk: testing discard”", `inboxresolve;dur=186`. shots/B/f2-discarded-1280.png |
+| f2 Put it back, no reason, then with a reason | 1280 | member | OK for the refusal ("Say why first ..."). The put-back with a reason did not show its answer within 1.8 s (no call had answered yet); the later look showed "Put back in the inbox as new. The discard and its reason stay on the record." and a `inboxresolve;dur=2870` on the next act (see LB-4) |
+| f2 Pull ("Move into the record") | 390 | member | OK in result: "Moved into the record. It waits in Held captures until a member vouches for it." Result drawn 3.1 s after the press; `inboxpull;dur=2600` (over the 2 s bar). shots/B/f2-pulled-member-390.png. LB-4 |
+| f2 Pull | 1280 | member | State read afterwards "In the record"; the screen at 4.1 s after the press still showed the knock "New" with the "Move into the record" button and the old "Put back ..." line (the pull was done: a reload read "In the record"). LB-4 |
+| f3 What is known of the source grows (`/app/about-knocker/<fingerprint>`) | | | see below |
