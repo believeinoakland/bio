@@ -244,6 +244,14 @@ export class ProjectRoster {
     } catch { return null; }
   }
 
+  /* R45: a handle resolved to its member, the founder's held handle answering the founder (`admin`, active), so it never
+     answers NO_SUCH_HANDLE; any other handle is membership's, null when no one holds it. */
+  #memberOfHandle(handle) {
+    const fh = this.#founderHandle();
+    if (fh !== null && handle === fh) return { member_id: ROOT_ADMIN, handle: fh, status: "active" };
+    return this.m.memberByHandle(handle);
+  }
+
   /* R29: a member id shown where a handle is read: the founder's held handle (null while none), others as they are. */
   #nm(id) { return id === ROOT_ADMIN ? this.#founderHandle() : id; }
 
@@ -291,7 +299,7 @@ export class ProjectRoster {
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: localize("project-roster.index.owner_add_needs_an_owner", "only an owner of this project may propose another owner of it") };
-    const target = this.m.memberByHandle(handle);
+    const target = this.#memberOfHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     const p = this.m.participation(projectId, target.member_id);
@@ -359,7 +367,7 @@ export class ProjectRoster {
     if (blocked) return named(blocked);
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: localize("project-roster.index.rescue_needs_a_reason", "authority changes are recorded with a reason") };
-    const target = this.m.memberByHandle(handle);
+    const target = this.#memberOfHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
 
@@ -384,7 +392,7 @@ export class ProjectRoster {
     if (!this.m.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: localize("project-roster.index.owner_remove_needs_an_owner", "only an owner of this project votes on its ownership") };
-    const target = this.m.memberByHandle(handle);
+    const target = this.#memberOfHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (!this.m.isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
