@@ -210,6 +210,7 @@ const ACT_HELP = {
   owed_aikeyenter: 'Sends the key straight to Cloudflare\'s AI Gateway store in your team\'s own account. Civicsmith keeps no copy, and the key is never shown again.',
   owed_aikeycloudflare: 'Records that you entered the key yourself in Cloudflare\'s dashboard. Civicsmith then checks that it works, without ever holding the key.',
   owed_aisignin: 'Takes you to the provider\'s own page to sign in and approve the connection. Civicsmith never sees your password.',
+  owed_aicreditsclear: "Lets the account take work again after you have checked why a call was charged to Cloudflare's credits. The clearing is recorded with your name and the time.",
   owed_aikeyseal: "Keeps the key sealed in your team's Civicsmith, readable only by its own programs, until you remove it.",
   owed_aikeyreference: 'Saves where the key is kept, not the key. Civicsmith asks for it from there each time it is needed.',
   owed_aitermsaccept: 'Records, with your name and the date, that you accepted the terms that bind your team\'s use of this plan, and any warning it carried.',
