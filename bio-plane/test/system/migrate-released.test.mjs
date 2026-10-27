@@ -188,7 +188,8 @@ export class ProbeStore extends Store {
     const url = new URL(req.url);
     if (url.pathname === "/rawsql") {
       const { sql, args = [] } = await req.json();
-      try { return Response.json({ ok: true, rows: [...this.sql.exec(sql, ...args)] }); }
+      /* The released planes' Store held \`this.sql\`; the current one (plane R1, T51) reads its SQLite as \`this.ctx.storage.sql\`. */
+      try { return Response.json({ ok: true, rows: [...(this.sql ?? this.ctx.storage.sql).exec(sql, ...args)] }); }
       catch (e) { return Response.json({ ok: false, error: String(e && e.message || e) }); }
     }
     return super.fetch(req);
