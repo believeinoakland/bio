@@ -35,7 +35,7 @@
 |---|---|---|
 | AI-DESIGN #3 | `session_018BhcedQQCRAKFMw8Mi8Xka` | 2026-10-27, BOB #320 |
 | PLATFORM #1 | `session_018BhceduzvspNp7pagSnBaL` | 2026-10-27, BOB #320 |
-| CAPABILITIES #1 | `session_018BhcefgnFUeeyqm8N5bN75` | 2026-10-27, BOB #320 |
+| CAPABILITIES #2 | `session_018BhceefmwyUmQFrnSkiEv7` | 2026-10-27, BOB #322 (#1 `session_018BhcefgnFUeeyqm8N5bN75` archived by #2) |
 | FILES #1 | `session_018Bhcecv29TYVd71UxV9qGX` | 2026-10-27, BOB #320 |
 | JOURNEYS #4 | `session_018Bhcef2FG9FpTXzkPVijim` | 2026-10-27, BOB #320 |
 | TESTS-SWEEP #1 | `session_018BhcechYohm1LHA7fup1fn` | 2026-10-27, BOB #320 |
