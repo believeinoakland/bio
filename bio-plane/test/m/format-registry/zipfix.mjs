@@ -43,8 +43,8 @@ export function makeZip(entries, opts = {}) {
     const name = enc(e.name);
     const data = enc(e.data ?? "");
     const method = e.method ?? 8;
-    const stored = method === 8 ? new Uint8Array(deflateRawSync(data)) : data;
-    const flags = e.utf8 ? 0x0800 : 0;
+    const stored = method === 8 && !e.encrypted ? new Uint8Array(deflateRawSync(data)) : data;
+    const flags = (e.utf8 ? 0x0800 : 0) | (e.encrypted ? 0x0001 : 0); // an encrypted member is marked, its bytes are not really encrypted
     const crc = crc32(data);
     const offset = out.length;
     out.u32(0x04034b50); out.u16(20); out.u16(flags); out.u16(method); out.u16(0); out.u16(0x21);

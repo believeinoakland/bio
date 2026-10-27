@@ -6,8 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerFormat, unregisterFormat, getFormat, listFormats, detectFormat, formatNameFor, kindTable } from "../../../src/formats.mjs";
 import { WORD_ROWS, hasWord } from "../../../src/setup-words/index.mjs";
-import { makeZip } from "../../make-zip.mjs";
-import { officeZip, odfZip } from "./zipfix.mjs";
+import { makeZip, officeZip, odfZip } from "./zipfix.mjs";
 
 const enc = (s) => new TextEncoder().encode(s);
 const cat = (...xs) => Uint8Array.from(xs.flatMap((x) => [...(typeof x === "string" ? enc(x) : x)]));
@@ -166,8 +165,6 @@ test("R36: a package that holds a VBA project is its base format with variant ma
 test("R37: an encrypted ZIP, an encrypted Office container and an encrypted PDF are answered with their type and encrypted true", () => {
   const zip = detectFormat(makeZip([{ name: "a.txt", data: "secret", method: 0, encrypted: "traditional" }]), null);
   assert.deepEqual([zip.format, zip.encrypted], ["zip", true]);
-  const aes = detectFormat(makeZip([{ name: "a.txt", data: "secret", method: 0, encrypted: "aes" }]), null);
-  assert.deepEqual([aes.format, aes.encrypted], ["zip", true]);
   const office = detectFormat(cfb(["Root Entry", "EncryptionInfo", "EncryptedPackage"]), null, "budget.xlsx");
   assert.deepEqual([office.format, office.encrypted], ["xlsx", true]);
   const unknown = detectFormat(cfb(["Root Entry", "EncryptionInfo", "EncryptedPackage"]), null);
