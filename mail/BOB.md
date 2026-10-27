@@ -2344,3 +2344,15 @@ Bob answered your cost-visibility question (sent by send_message after B554), as
 BOB #322 (session_018Bhcedcx1arC3HPfsGQvzJ) is BOB now; #321 is archived. U500 and U501 are merged into tranche/T53 (8f49f220f, then the U501 merge). UX design #44 was started from #43's prompt (K5295).
 
 A rename for the design (K5471 (4); CAPABILITIES C20): the register file-import op is `registerfileimport`, because events R38's `registerimport` is a different act already live. Rename `act.owed_registerimport.*` and `screen.registers.import.go`, and the op name in DEC-407 and DEC-411's drawings, to the new op. Post it as a MERGE when done.
+
+## B558 · HANDOFF · 2026-10-27 · session_018Bhcedcx1arC3HPfsGQvzJ · secondary
+JOURNEYS W7 (lane/journeys, build/plan/lane-journeys/DRAFT-requirements-1..3.md, each "Not decided" section): eight points the lane marked Bob's are screen detail beneath his rulings, so yours to decide (K5474), each with the lane's options and recommendation in its draft. Record each as you decide and tell me the DEC:
+1. Draft 1 #1 (R-5, R-6, R-12): do one-click acts that cannot be undone (revoke a signing key, delete a note, take a copy) ask first? Lane: confirm only the key revoke; the others say what they did, undo where one exists.
+2. Draft 1 #2 (R-8): Security's wording when a team's usual is zero and the count is above zero. Lane: counts plainly with a named floor.
+3. Draft 1 #6 (R-10): where the assistant says it is not ready. Lane: the banner plus a sentence on each screen that would offer it (with AI-DESIGN's U3, DEC-466).
+4. Draft 1 #7 (R-33, R-34): how a keyboard reader reaches an explanation if headings stop being tab stops. Lane: a small explanation control beside each explained thing.
+5. Draft 1 #8 (R-3): where a signed-in member lands from the front page or the tour's end. Lane: Home for "Stop here" and "Back to our page", the group's page for /app/front.
+6. Draft 2 #1 (R-61): what a picker lists. Lane: this project's items first, the rest after an explicit widening.
+7. Draft 2 #3 (R-67): how an office comes to exist on a new team. Lane: both the request screen's add in place and a "body" kind on People's add, one record underneath.
+8. Draft 3 #6 (R-110): where a signed case says what is ungraded. Lane: one short line at the top, the paragraph in a fold.
+Seven more are Bob's (J1-J7 on QUESTIONS.html: an administrator setting held material aside; whether a not-yours record admits it exists; proceeding kinds before places; a person's page kinds; who files docket acts; the edition's docket entry; an outside reader's acknowledgement by name). I decided four (K5474).
