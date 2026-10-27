@@ -10,3 +10,4 @@
 - How current the layers are (Bob, K5450, on C5: an "information" tag ('i' in circle) beside each entry or the page): each layer entry shows its source, read date and calendar reach behind an information mark; no promised delay.
 - Read-only layers (Bob, K5451, on C6: "as recommended"): a team's marked correction of a calendar fact stands; laws and deadlines only reported; a team's own rule sits beside, never over.
 - Layers follow the work (Bob, K5452, on C7: "A team might be located outside the US even if their work is focused on some US jurisdiction ... a team's work might be state-wide or some other footprint"): a team's layers are where its work is focused, any set of places at any level.
+- Work outside the United States (Bob, K5497, on C7: "as recommended"): United States places only, said when a team chooses its places; a team working elsewhere adds its own places, offices and rules as its own research; level names unchanged.
