@@ -104,7 +104,7 @@ test("R10 control: a fixture file with one en changed makes --check fail, naming
     assert.notEqual(run("--check", "--words", variant("prot.json", (f) => { f.words[0].protected = !f.words[0].protected; }), "--out", rows).code, 0);
     const dup = run("--check", "--words", variant("dup.json", (f) => { f.words[1].key = f.words[0].key; }), "--out", rows);
     assert.notEqual(dup.code, 0);
-    assert.match(dup.out, /not distinct/);
+    assert.match(dup.out, new RegExp(file.words[0].key.replace(/\./g, "\\.")), "names the repeated key");
     assert.notEqual(run("--check", "--words", changed, "--out", join(dir, "absent.mjs")).code, 0);
     /* the writing form, over the fixture, agrees with the check */
     const out = join(dir, "rows.mjs");

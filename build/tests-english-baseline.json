@@ -602,7 +602,6 @@
   "bio-plane/test/m/screens-publish/public.test.mjs": 2,
   "bio-plane/test/m/screens-settings/connect.test.mjs": 1,
   "bio-plane/test/m/screens-settings/members.test.mjs": 2,
-  "bio-plane/test/m/setup-words/word-list.test.mjs": 1,
   "bio-plane/test/m/signin-door/declared-ops.test.mjs": 1,
   "bio-plane/test/m/skills/action.test.mjs": 6,
   "bio-plane/test/m/skills/ask.test.mjs": 3,
