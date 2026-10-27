@@ -171,7 +171,7 @@ test("R14 tolled days are not counted; a rule due by close of business is due at
   /* a due day the hours list no opening for (Saturday): the day, with why */
   const sat = ev(t, "registry_answer", day("2026-10-06", HFX), { office: "Town Clerk" });
   assert.deepEqual(sat.due, { value: "2026-10-10", precision: "day", zone: HFX });
-  assert.match(sat.trace.notes.join(" "), /close of business is undetermined/);
+  assert.ok(sat.trace.notes.includes(reasonText({ key: "civil-time.rules.close_of_business_no_opening", vars: { weekday: "sat" } })), JSON.stringify(sat.trace.notes));
   /* the test profile's tolling: its claim_notice, 90 days from 01-05 is Sun 04-05 → Mon 04-06; with 03-01..03-03 tolled, Wed 04-08 */
   assert.equal(ev(t, "claim_notice", day("2026-01-05", HFX)).due.value, "2026-04-06");
   assert.equal(ev(t, "claim_notice", day("2026-01-05", HFX), { tolled: [{ from: "2026-03-01", to: "2026-03-03" }] }).due.value, "2026-04-08");
@@ -180,7 +180,7 @@ test("R14 tolled days are not counted; a rule due by close of business is due at
   assert.equal(val(evaluateRule({ rule: cob, anchor: day("2026-10-05", LA), view: v, office: "City Auditor" })), "2026-10-07T17:00");
   const none = evaluateRule({ rule: cob, anchor: day("2026-10-05", LA), view: v, office: "City Council" });
   assert.equal(none.due.value, "2026-10-07");
-  assert.match(none.trace.notes.join(" "), /holds no hours/);
+  assert.ok(none.trace.notes.includes(reasonText({ key: "civil-time.rules.close_of_business_no_hours", vars: {} })), JSON.stringify(none.trace.notes));
   /* a stated time */
   assert.equal(val(evaluateRule({ rule: { ...cob, due_at: "09:30" }, anchor: day("2026-10-05", LA), view: v, office: "City Council" })), "2026-10-07T09:30");
 });
@@ -229,10 +229,10 @@ test("R16 R25 DEC-149: a disputed or unreadable entry, and a correction counted 
   const gov = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("confirmed", { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
   assert.ok(gov.trace.calendar.notes.includes(word("civil-time.counted_correction_governs", { status: "confirmed", says: " (corrected locally by a member, 2026-10-02)", year: "2026" })), JSON.stringify(gov.trace.calendar.notes));
   const cor = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed, by: "a member", at: "2026-10-02" }) });
-  assert.ok(cor.trace.calendar.notes.includes("counted on a calendar corrected in your team's Civicsmith by a member, 2026-10-02 (2026)"), JSON.stringify(cor.trace.calendar.notes));
+  assert.ok(cor.trace.calendar.notes.includes(word("civil-time.counted_calendar_corrected", { corrected_by: " by a member", corrected_at: ", 2026-10-02", year: "2026" })), JSON.stringify(cor.trace.calendar.notes));
   const plain = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed }) });
-  assert.ok(plain.trace.calendar.notes.includes("counted on a calendar corrected in your team's Civicsmith (2026)"), JSON.stringify(plain.trace.calendar.notes));
-  for (const r of [dis, abs, bare, gov, cor, plain]) assert.doesNotMatch(JSON.stringify(r), /this instance|the plane/);
+  assert.ok(plain.trace.calendar.notes.includes(word("civil-time.counted_calendar_corrected", { corrected_by: "", corrected_at: "", year: "2026" })), JSON.stringify(plain.trace.calendar.notes));
+  /* the removed phrasing ("this instance", "the plane") is a word-table matter, not asserted here (K3810): the notes above are read by key */
 });
 
 test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed or absent entry, an UNMEASURED basis, an undetermined anchor, a rule form not counted", () => {
@@ -253,10 +253,10 @@ test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed 
   assert.equal(ev(v, "records_response", day("2026-10-01", LA), { factOf: () => null }).code, "FACT_ABSENT");
   const un = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("unconfirmed") });
   assert.equal(un.due.value, "2026-10-12");
-  assert.match(un.trace.calendar.notes.join(" "), /unconfirmed calendar/);
+  assert.ok(un.trace.calendar.notes.includes(word("civil-time.counted_unconfirmed_calendar", { basis: un.trace.calendar.entries[0].basis, year: "2026" })), JSON.stringify(un.trace.calendar.notes));
   const cor = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: [{ date: "2026-10-12", name: "corrected in" }], by: "a member", at: "2026-10-02" }) });
   assert.equal(cor.due.value, "2026-10-13", "the corrected list governs");
-  assert.match(cor.trace.calendar.notes.join(" "), /corrected in your team's Civicsmith by a member/);
+  assert.ok(cor.trace.calendar.notes.includes(word("civil-time.counted_calendar_corrected", { corrected_by: " by a member", corrected_at: ", 2026-10-02", year: "2026" })), JSON.stringify(cor.trace.calendar.notes));
   /* N603 (local-facts R2, R3): a correction governs until a later act and a later confirm confirms it, so it is counted
      on whenever the answer says the governing value is a correction, whatever the status reads now; never otherwise */
   const fixed = [{ date: "2026-10-12", name: "corrected in" }];
@@ -265,7 +265,7 @@ test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed 
     assert.equal(r.due.value, "2026-10-13", `the confirmed correction governs (${status})`);
     assert.ok(r.trace.calendar.notes.includes(word("civil-time.counted_correction_governs", { status, says: " (corrected locally by a member, 2026-10-02)", year: "2026" })), JSON.stringify(r.trace.calendar.notes));
     assert.ok(r.trace.calendar.entries.some((e) => e.governs === "correction" && e.status === status));
-    assert.match(r.trace.notes.join(" "), new RegExp(`counted on its correction, now ${status}`));
+    assert.ok(r.trace.notes.includes(reasonText({ key: "civil-time.rules.calendar_entry_on_correction", vars: { year: "2026", list: " (judicial)", status } })), JSON.stringify(r.trace.notes));
   }
   const whole = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("confirmed", { corrected: true, value: { year: 2026, days: fixed } }) });
   assert.equal(whole.due.value, "2026-10-13", "a correction given as the whole entry governs by its days");
