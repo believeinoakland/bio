@@ -61,3 +61,5 @@
 - K5538 · 2026-10-27 · on QUESTIONS.html C34: "as recommended" (researched facts offered marked "researched, not reviewed") · `build/rulings.md`
 - K5539 · 2026-10-27 · on QUESTIONS.html L14: "B" (only a question's owner or an administrator may change its subject) · `build/rulings.md`
 - K5540 · 2026-10-27 · on QUESTIONS.html L15: "B" (a published question, or one divided into parts, may have its subject changed, with the change shown) · `build/rulings.md`
+- K5541 · 2026-10-27 · on QUESTIONS.html L16, option A: "as recommended" (a member may take the subject off, with a reason) · `build/rulings.md`
+- K5542 · 2026-10-27 · on QUESTIONS.html L17, option A: "as recommended" (a concluded question's subject may change, the conclusion kept, the strength before and after shown) · `build/rulings.md`

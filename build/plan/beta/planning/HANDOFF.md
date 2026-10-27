@@ -1,6 +1,6 @@
 # PLANNING: handoff
 
-**Writer** · PLANNING #3 (prefix L), session in `build/plan/beta/LANES.md` §3, Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #322 (BOB now #323 `session_018BhcefwigYo6VB6PEac3TJ`; PLANNING #1 L1-L5 and #2 `session_018Bhceg7ptZUBDjGtWWSVz4` L6-L15, both archived). Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
+**Writer** · PLANNING #3 (prefix L), session in `build/plan/beta/LANES.md` §3, Opus, branch `lane/planning`, folder `build/plan/beta/planning/`, started 2026-10-27 by BOB #322 (BOB now #324 `session_018BhceeH2URWcU8Mf7u5KoM`; PLANNING #1 L1-L5 and #2 `session_018Bhceg7ptZUBDjGtWWSVz4` L6-L15, both archived). Section 0 is rewritten whole after every entry; entries below are numbered L1, L2, ….
 
 ## 0. State now and next steps
 
@@ -12,7 +12,7 @@
 3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L16-L26, J1-J7. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
+**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L18-L26, J1-J7. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -141,3 +141,7 @@ Bob answered L14 B (K5539, not the recommendation): only a question's owner or a
 ## L32 · 2026-10-27 · K5540
 
 Bob answered L15 B (K5540, not the recommendation): a published or divided question's subject may change, the change shown. A1-R1 drops the two restructure refusals for it (signed bytes never change; a divided question's parts keep their own subjects); A1-R5 offers the control there with a note naming the edition; new A1-R7 (public-read): a dated line on the published case, naming the new subject only where case-disclosures would allow it, the reason kept inside the team. Its drawing is a UX need for UX-DESIGN through BOB.
+
+## L33 · 2026-10-27 · K5541, K5542
+
+BOB #324 took over from #323. Bob answered L16 and L17 as recommended (K5541: the subject may be taken off with a reason; K5542: a concluded question's subject may change, the conclusion kept): A1's four remaining brackets now read decided, and the Suggestions lose `SUBJECT_REQUIRED`. Every A1 question is answered.
