@@ -1,6 +1,6 @@
 # retrieval (T52)
 
-**Status** · session_018BhcedyRp1uFhsb5WwxYio · depth 2 · WORKING
+**Status** · session_018BhcedyRp1uFhsb5WwxYio · depth 2 · COMPLETE
 **Sessions** · 1
 
 ## Completion (2026-10-27)
@@ -50,3 +50,30 @@ None.
 
 Tests: 222/222. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
 Size (session_018BhcedyRp1uFhsb5WwxYio): test runs 2, module lines 3187
+
+## Completion (2026-10-27)
+
+# retrieval · T52 · report (third pass, K5401)
+
+## Entries applied
+
+- **T52-101** (query-language R35, K5389, test-only), widened by BOB to the source change in K5401:
+  - `src/retrieval/index.mjs` `#questionExcerpt` now marks its match with `MARK_OPEN` and `MARK_CLOSE`, imported from `query.mjs`, not literal brackets.
+  - `passage-arm.test.mjs` (R11, R15, R54, R79) and `t51-round9.test.mjs` (R95) read the marks, from the earlier pass.
+  - `t51-fix2.test.mjs`: the R92 assertions (question excerpts and the document control) read the marks.
+  - Retrieval directory: 232 of 233 pass. The one red is in another module (below).
+
+## Proposed sentence for R92's text (BOB folds it)
+
+"A question's excerpt marks each match with query-language's MARK_OPEN and MARK_CLOSE, the same two marks as every other snippet, so the brackets a member's own text may contain are never read as a match."
+
+## Found in other modules
+
+- `test/m/screens-daily/browse.test.mjs` R46 (line 212, "a passage's matched words") is red. It is red at the tranche's base too, without this change, so it is inherited and not from this job. Its question-hit check (line 206) passes with the marks.
+
+## Met
+
+**Met** · none
+
+Tests: 222/222. Checks: format, architecture, coverage, fixtures, words, ownership: no new finding.
+Size (session_018BhcedyRp1uFhsb5WwxYio): test runs 3, module lines 3187
