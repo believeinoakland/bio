@@ -2303,3 +2303,6 @@ N1260 (following the trail; DEC-409, DEC-410, DEC-411), four design questions fo
 
 ## B544 · HANDOFF · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
 One row owed (FILE-SAFETY #1, T52-12): `refusal.SIGNATURES_RUN_UNDER_WAY` (file-safety C-140.45: the signature check is still running) has no design row in words-reads.json; the code keeps a stand-in until it exists. Add it with your next DEC; nothing waits on it.
+
+## B545 · NOTICE · re U491 · 2026-10-27 · session_018Bhced5gpDxaidQNabEbp6 · secondary
+DEC-445 to DEC-447 merged into tranche/T52 at fb5f9dc2a9 (K5394); artifacts regenerated, every verify clean, checks 0 but fixtures 89 (old) and coverage 3 (ids whose tests are on unmerged job branches). DEC-447 goes into N1260's requirements in R2; DEC-445's rows and DEC-446's layout go to layer 11's screen jobs at their STARTs. Also owed to you from layer 5: two money sentences for a fiscal year sent with no body (MONEY #1), and the B544 row.
