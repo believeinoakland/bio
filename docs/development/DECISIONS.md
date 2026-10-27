@@ -6926,3 +6926,15 @@ the design: `money.index.no_body_named_for_fiscal` "{fiscal} names no body, and 
 verified: on tranche/T52 with these words files: words 0, format 0; money 122/122 (121/122 with DEC-450's row as it was); `calculations/r7-delimiter` passes; `screens-inquiry/r10-stated` cannot load here (miniflare), the same with and without.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-451 block; `money.ingest.partial` in place); `screens/parked-T52.md`.
 owed: BOB: merge this commit (MERGE), which carries DEC-449 and DEC-450 and replaces U495's commit.
+
+### DEC-452 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhcefCkHUHGG8UK3QabvX, UX design #43) (`screens/later-ux-T52-triage.md`, W group 1: `build/plan/later-ux.md` items 6, 7, 12, 14, 15, 17, 19)
+for: design (T52)
+question: The first group of later-ux's words rows: screen purposes; the heading for other teams' findings on Question; vouching rows that say "photo" for web pages; Stage's need lines in plain words; "Yours: {admins}"; Home's waiting line; Watching's "Read what is due".
+why it is Bob's: it is not (P17): member words.
+provisional: as below. alternative: none worth keeping. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: item 6 is done (the four `.purpose` rows exist). Item 7: `screen.question.citeimp.heading` "Findings from other teams" (minted; the button keeps `act.owed_citeimported.label.question`). Item 12: the eight vouch rows (`screen.dash-project.next.vouch*`, `screen.home.todo.vouch*`) say "copy"/"copies", and Home says "at {place}" as the project does. Item 14: `project-stage.*`'s need lines say "a source behind it" for "a leg in its basis", "signed case" for "ratified case edition", and drop "held"; `screen.project.either.one.reaches.it.the.project` the same; `project-stage.forming_needs_nothing` "Every project starts here; nothing is needed." (minted). Item 15: "Administrators: {admins}" for "Yours: {admins}" in five rows. Item 17: `screen.home.waiting.counts` "Waiting for a member to look: {held} in Held captures, {inbox} in Inbox." (the screens' own names). Item 19: `act.monitorslate.label.watching` "Show what is due" (registry); the screen's intro already says the result is a prompt to run by hand. The mocks follow.
+verified: on tranche/T52 with these words and registry files: 492 pass, 8 fail with and without (R46 browse, T52-104; R7, R44 and R50 before the artifacts are regenerated; c25-seam, casedrafts-seam and mk6-bundle-names cannot load here): run c25-seam and mk6 where miniflare is.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows in place; DEC-452 block); `screens/registry.src.py`; `screens/mock-screens.js`, `mock-refs.js`.
+owed: BOB: merge this commit (MERGE). Code, for the owning jobs: screens-inquiry question.mjs draws `screen.question.citeimp.heading` as its section heading; project.mjs draws `project-stage.forming_needs_nothing` as Forming's need line; dash-project and Home's todos name a `knock:` address by its knocker's name, not its id (item 12).

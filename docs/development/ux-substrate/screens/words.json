@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7866,
+  "screen": 7867,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -157,6 +157,7 @@
   "inquiry": 21,
   "citation": 4,
   "control-plane": 1,
+  "project-stage": 17,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -231,13 +232,12 @@
   "render": 24,
   "question-explorer": 13,
   "attestation": 13,
-  "project-stage": 16,
   "extractrun": 9,
   "tokens": 1,
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19438,
+  "total": 19440,
   "protected": 1162
  },
  "words": [
@@ -6956,7 +6956,7 @@
   },
   {
    "key": "screen.updates.admins",
-   "en": "Only your team's administrators install updates. Yours: {admins}. If something needs updating, ask one of them.",
+   "en": "Only your team's administrators install updates. Administrators: {admins}. If something needs updating, ask one of them.",
    "protected": false,
    "source": "DEC-236",
    "note": "DEC-236: B203; screens-settings R27, what a member who is not an administrator sees; DEC-259: reworded"
@@ -26262,7 +26262,7 @@
   },
   {
    "key": "screen.security.admins",
-   "en": "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
+   "en": "Security is set by your team's administrators. Administrators: {admins}. Ask one of them about anything here.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-settings's own rows; DEC-259: reworded"
@@ -29682,9 +29682,10 @@
   },
   {
    "key": "screen.home.todo.vouch",
-   "en": "Vouch for {count} photos you captured on {place}",
+   "en": "Vouch for the {count} copies you captured at {place}",
    "protected": false,
-   "source": "DEC-257"
+   "source": "DEC-257",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "screen.home.todo.newer",
@@ -32076,7 +32077,7 @@
   },
   {
    "key": "screen.dash-project.next.vouch",
-   "en": "Vouch for the {count} photos you captured at {place}",
+   "en": "Vouch for the {count} copies you captured at {place}",
    "protected": false,
    "source": "DEC-259"
   },
@@ -37696,14 +37697,14 @@
   },
   {
    "key": "screen.home.join.nocreate",
-   "en": "Starting a project of your own is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "en": "Starting a project of your own is for members your team's administrators allow. Administrators: {admins}. Ask if you have a problem to bring.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-286: {admins}: the handles of the team's active administrators, joined with commas and “and”"
   },
   {
    "key": "screen.home.join.none",
-   "en": "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Yours: {admins}.",
+   "en": "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Administrators: {admins}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-286: when no project is invited or findable; {admins}: the handles of the team's active administrators, joined with commas and “and”"
@@ -37738,7 +37739,7 @@
   },
   {
    "key": "screen.projects.nocreate",
-   "en": "Starting a project is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "en": "Starting a project is for members your team's administrators allow. Administrators: {admins}. Ask if you have a problem to bring.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-286: in place of “Start a project” for a member who may not start one; {admins}: the handles of the team's active administrators, joined with commas and “and”"
@@ -59753,14 +59754,14 @@
   },
   {
    "key": "screen.dash-project.next.vouch.noplace",
-   "en": "Vouch for the {count} photos you captured",
+   "en": "Vouch for the {count} copies you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; a held capture with no address (an upload)"
   },
   {
    "key": "screen.home.todo.vouch.noplace",
-   "en": "Vouch for the {count} photos you captured",
+   "en": "Vouch for the {count} copies you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the same on Home"
@@ -60166,14 +60167,14 @@
   },
   {
    "key": "screen.dash-project.next.vouch.noplace.one",
-   "en": "Vouch for the photo you captured",
+   "en": "Vouch for the copy you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): the one-photo form"
   },
   {
    "key": "screen.home.todo.vouch.noplace.one",
-   "en": "Vouch for the photo you captured",
+   "en": "Vouch for the copy you captured",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): the one-photo form on Home"
@@ -60320,7 +60321,7 @@
   },
   {
    "key": "screen.dash-project.next.vouch.one",
-   "en": "Vouch for the photo you captured at {place}",
+   "en": "Vouch for the copy you captured at {place}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-364 (B379 A): screens-inquiry, dash-project; the one-photo form of screen.dash-project.next.vouch"
@@ -67404,7 +67405,7 @@
   },
   {
    "key": "screen.project.either.one.reaches.it.the.project",
-   "en": "Either one reaches it: the project concludes one of the {held} questions it holds, or it owns a case edition that has been ratified.",
+   "en": "Either one reaches it: the project concludes one of its {held} questions, or it has a signed case.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-376: B398 C64 (project-stage projectstage): the project screen, section What each stage needs; a sentence a member reads; translate in the same plain register, \"team\" never \"group\""
@@ -72990,7 +72991,7 @@
   },
   {
    "key": "screen.home.waiting.counts",
-   "en": "Waiting for a member to look: held captures {held}, Inbox items {inbox}.",
+   "en": "Waiting for a member to look: {held} in Held captures, {inbox} in Inbox.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-387: B426: one status line on Home; both counts shown, a zero shown as 0, never worded as a plural"
@@ -74649,7 +74650,7 @@
   },
   {
    "key": "screen.home.todo.vouch.one",
-   "en": "Vouch for the photo you captured on {place}",
+   "en": "Vouch for the copy you captured at {place}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch"
@@ -83354,6 +83355,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-451: money R29/R34 detail drawn beside MONEY_BAD_PERIOD, for a fiscal year sent with no body; {fiscal}. Beside money.index.the_profiles_fiscal_year_for"
+  },
+  {
+   "key": "screen.question.citeimp.heading",
+   "en": "Findings from other teams",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-452: Question: the heading of the section where another team's finding is cited (screens-inquiry question.mjs's cs.sec, which today reuses act.owed_citeimported.label.question, the button's label)"
+  },
+  {
+   "key": "project-stage.forming_needs_nothing",
+   "en": "Every project starts here; nothing is needed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-452: Stage: Forming's need line, drawn whether or not it is reached (screens-inquiry project.mjs; today an unreached stage's needs is null, so Forming reads blank)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -121145,39 +121160,45 @@
   },
   {
    "key": "project-stage.held_questions_read",
-   "en": "{with_legs} of the {read} held questions read have at least one leg in their basis",
+   "en": "{with_legs} of the {read} questions read have at least one source behind them",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.reached_later_stage",
-   "en": "reached because a later stage is reached; none of the {read} held questions read has a leg in its basis",
+   "en": "reached because a later stage is reached; none of the {read} questions read has a source behind it",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_holds_question",
-   "en": "the project holds no question yet; a held question with a leg in its basis reaches this stage",
+   "en": "the project has no question yet; a question with a source behind it reaches this stage",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_holds_questions",
-   "en": "the project holds {read} questions and none has a leg in its basis; a leg on any one of them reaches this stage",
+   "en": "the project has {read} questions and none has a source behind it; a source behind any one of them reaches this stage",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_concluded_held",
-   "en": "the project has concluded {concluded} of the {read} held questions read and owns {editions} ratified case editions",
+   "en": "the project has concluded {concluded} of the {read} questions read; signed cases: {editions}",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_concluded_none",
-   "en": "the project has concluded none of the {read} held questions read and owns no ratified case edition; concluding one of them, or a ratified case edition of a case it owns, reaches this stage",
+   "en": "the project has concluded none of the {read} questions read and has no signed case; concluding one of them, or signing a case it owns, reaches this stage",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.project_closed_further",
@@ -121223,15 +121244,17 @@
   },
   {
    "key": "project-stage.why.unsigned_case_document",
-   "en": "no unsigned case document of this case is stored",
+   "en": "no draft of this case is saved",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "project-stage.why.edition_case_ratified",
-   "en": "no edition of this case is ratified",
+   "en": "this case has not been signed",
    "protected": false,
-   "source": "DEC-260"
+   "source": "DEC-260",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "extractrun.holds_number_date",
@@ -126070,7 +126093,7 @@
   },
   {
    "key": "act.monitorslate.label.watching",
-   "en": "Read what is due",
+   "en": "Show what is due",
    "protected": true,
    "source": "registry.json"
   },
