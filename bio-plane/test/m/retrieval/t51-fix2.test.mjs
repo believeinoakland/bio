@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { MARK_OPEN, MARK_CLOSE } from "../../../src/query.mjs";
 
 const LOG = "\n## Session log\n\nINQ-SEWER opened by member:ann; bundle sha256:" + "ab12cd34".repeat(8)
   + " read the sewer ledger twice; the sewer fund was never opened.\n";
@@ -39,7 +40,7 @@ test("R92 control: a document hit's excerpt is unchanged, cut from its own text"
   w.doc("INFO-NOTE", {}, { body: "\n## Summary\n\nthe sewer fund holds nothing\n" });
   const hit = w.retrieval.search({ q: "sewer", viewer: V("vera") }).hits[0];
   assert.equal(hit.snippet_from, "text");
-  assert.match(hit.snippet, /\[sewer\] fund holds nothing/);
+  assert.match(hit.snippet, new RegExp(`${MARK_OPEN}sewer${MARK_CLOSE} fund holds nothing`));
 });
 
 test("R92: every search hit names its document, a passage hit included, and a decoration cannot replace it", () => {
