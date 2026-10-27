@@ -27,11 +27,11 @@ const tooLarge = (what, size, bound) => new CoverRefusal("IMAGE_TOO_LARGE", loca
 function fromPng(e) {
   if (!(e instanceof PngRefusal)) throw e;
   const note = e.detail?.note ? `: ${e.detail.note}` : "";
-  if (e.code === "NOT_A_PNG") return new CoverRefusal("NOT_A_COVERABLE_FORMAT", `not a PNG${note}`);
+  if (e.code === "NOT_A_PNG") return new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.redraw.not_a_png", "not a PNG{note}", { note }));
   if (e.code === "TRUNCATED") return new CoverRefusal("TRUNCATED_IMAGE_DATA", localize("image-cover.png.the_png_data_ends_before", "the PNG data ends before the image does: {why}", { why: String(e.detail?.note ?? "") }));
   if (e.code === "IMAGE_TOO_LARGE") return new CoverRefusal("IMAGE_TOO_LARGE", localize("image-cover.redraw.the_png_declares_more_than", "the PNG declares more than this module redraws{v1}", { v1: note }));
-  if (e.code === "UNSUPPORTED" && e.detail?.feature === "interlaced") return new CoverRefusal("PNG_INTERLACED", "an interlaced (Adam7) PNG is not redrawn");
-  if (e.code === "UNSUPPORTED") return new CoverRefusal("NOT_A_COVERABLE_FORMAT", `the PNG uses a feature that is not redrawn${note}`);
+  if (e.code === "UNSUPPORTED" && e.detail?.feature === "interlaced") return new CoverRefusal("PNG_INTERLACED", localize("image-cover.redraw.an_interlaced_adam7_png_is", "an interlaced (Adam7) PNG is not redrawn"));
+  if (e.code === "UNSUPPORTED") return new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.redraw.the_png_uses_a_feature", "the PNG uses a feature that is not redrawn{note}", { note }));
   return new CoverRefusal("IMAGE_DATA_CORRUPT", localize("image-cover.png.the_png_data_cannot_be", "the PNG data cannot be read: {why}", { why: String(e.detail?.note ?? e.code) }));
 }
 
