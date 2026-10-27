@@ -36,3 +36,12 @@
 - Can a published question, or one divided into parts, have its subject changed? (Bob, K5540, on L15: "B"): B · Both, with the change shown
 - May a member remove the subject altogether, with a reason? (Bob, K5541, on L16: "as recommended"): A · Yes A question named about the wrong person must be correctable.
 - May a concluded question's subject change, keeping its conclusion? (Bob, K5542, on L17: "as recommended"): A · Yes, with the strength before and after shown
+- If the place's records later give a year for a government the team already stated, which governs? (Bob, K5543, on L18: "as recommended"): A · The records' year; the team's statement is listed as set aside
+- Who counts as "listed" for a source that has nothing recorded about it yet? (Bob, K5544, on L19: "as recommended"): A · "Listed" means named on any recorded detail of that source; with none recorded, nobody is listed
+- Does the Inbox follow the same rule? (Bob, K5545, on L20: "as recommended"): A · Yes Otherwise the Inbox would be a way around it.
+- A photo's colour profile: drop it, keep it, or convert it? (Bob, K5546, on L21: "B"): B · Keep it
+- Beyond when, where and orientation, how much of a photo's own data is shown? (Bob, K5547, on L22: "as recommended"): A · All of it, as "the file says", plain text, capped in length
+- What counts as "still ungraded" at signing? (Bob, K5548, on L23: "as recommended"): A · A passage the team hasn't graded at all
+- When a typed page is cited, does the record grade it automatically? (Bob, K5549, on L24: "as recommended"): A · The record grades it, as it already does for derived connections
+- Do further checks raise a typed page higher? (Bob, K5550, on L25: "as recommended"): A · No: one check raises it from D to C; later checks are named but raise nothing
+- Who chooses how a typist or checker is credited in a published case, and what is the default? (Bob, K5552, on L26: "as recommended"): A · Each person chooses for their own typing, per edition; the default is "a member of the team"; it never blocks signing
