@@ -36692,133 +36692,133 @@
       "en": "section 4.7 governance — the subject is a proposed administrator, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2144
+      "line": 2154
     },
     {
       "id": "member-roster.declared.adminremove",
       "en": "section 4.7 governance — the subject is an administrator's standing, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2146
+      "line": 2156
     },
     {
       "id": "member-roster.declared.courtnoticeset",
       "en": "the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2148
+      "line": 2158
     },
     {
       "id": "member-roster.declared.enroll",
       "en": "an invitee becoming a member",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2150
+      "line": 2160
     },
     {
       "id": "member-roster.declared.expertiseconfirm",
       "en": "administrator act on a declaration, class-gated",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2152
+      "line": 2162
     },
     {
       "id": "member-roster.declared.expertisedeclare",
       "en": "a member's own declaration, not a corpus act",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2154
+      "line": 2164
     },
     {
       "id": "member-roster.declared.founderhandleset",
       "en": "member-directed: the founder's own handle, the one she signs in and is known by, chosen once and never changed (`HANDLE_FIXED`); writes no record and moves no bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2158
+      "line": 2168
     },
     {
       "id": "member-roster.declared.groupdescriptionset",
       "en": "the group's description of itself — the subject is the group's identity, not a bundle; an administrator's",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2160
+      "line": 2170
     },
     {
       "id": "member-roster.declared.handlecheck",
       "en": "read: whether a handle is free, taken or not allowed, never who holds it",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2162
+      "line": 2172
     },
     {
       "id": "member-roster.declared.hostingaccessset",
       "en": "operator record of who holds hosting access — the subject is the instance's operators, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2164
+      "line": 2174
     },
     {
       "id": "member-roster.declared.invitelook",
       "en": "read: what a live invitation offers the invitee (the cover, the role, the capabilities and the declared expertise), never the member's id",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2166
+      "line": 2176
     },
     {
       "id": "member-roster.declared.invitewithdraw",
       "en": "roster governance: an administrator's withdrawal of an invitation; the subject is who may join, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2168
+      "line": 2178
     },
     {
       "id": "member-roster.declared.joinlinkenable",
       "en": "roster governance: the join link, an administrator's; the subject is who may join, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2170
+      "line": 2180
     },
     {
       "id": "member-roster.declared.joinlinkinvite",
       "en": "a person holding the join link asks to be invited under a cover name (membership R104)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2172
+      "line": 2182
     },
     {
       "id": "member-roster.declared.memberadd",
       "en": "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2174
+      "line": 2184
     },
     {
       "id": "member-roster.declared.membercaps",
       "en": "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2176
+      "line": 2186
     },
     {
       "id": "member-roster.declared.memberpairingset",
       "en": "a member's published cover-and-handle pairing — the subject is how a member is shown, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2178
+      "line": 2188
     },
     {
       "id": "member-roster.declared.memberset",
       "en": "roster governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2180
+      "line": 2190
     },
     {
       "id": "member-roster.declared.websitekeycreate",
       "en": "roster governance: the website's key, an administrator's; the subject is who may join, not a bundle",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2182
+      "line": 2192
     },
     {
       "id": "member-roster.index.a_cover_is_the_label_you",
@@ -36832,7 +36832,7 @@
       "en": "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1340
+      "line": 1342
     },
     {
       "id": "member-roster.index.a_listener_names_the_module",
@@ -36860,7 +36860,7 @@
       "en": "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1399
+      "line": 1401
     },
     {
       "id": "member-roster.index.capabilities_is_an_array",
@@ -36874,42 +36874,42 @@
       "en": "changing the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1705
+      "line": 1707
     },
     {
       "id": "member-roster.index.changing_the_teams_join_link",
       "en": "changing the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1704
+      "line": 1706
     },
     {
       "id": "member-roster.index.changing_the_teams_website_key",
       "en": "changing the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1606
+      "line": 1608
     },
     {
       "id": "member-roster.index.changing_the_website_key",
       "en": "changing the website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1607
+      "line": 1609
     },
     {
       "id": "member-roster.index.choose_the_name_the_team_will",
       "en": "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1746
+      "line": 1748
     },
     {
       "id": "member-roster.index.choosing_whether_members_are_told",
       "en": "choosing whether members are told what a court can reach",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1919
+      "line": 1929
     },
     {
       "id": "member-roster.index.confirming_or_withdrawing_a_members_declared",
@@ -36923,7 +36923,7 @@
       "en": "creating the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1590
+      "line": 1592
     },
     {
       "id": "member-roster.index.declared_and_unconfirmed_which_costs_nothing",
@@ -36937,7 +36937,7 @@
       "en": "describing the team",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1992
+      "line": 2002
     },
     {
       "id": "member-roster.index.endorsing_a_proposed_administrator",
@@ -36972,14 +36972,14 @@
       "en": "reading the administrator removals under way",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1804
+      "line": 1806
     },
     {
       "id": "member-roster.index.reading_the_teams_website_key_and",
       "en": "reading the team's website key and join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1769
+      "line": 1771
     },
     {
       "id": "member-roster.index.recording_who_holds_hosting_access",
@@ -37000,14 +37000,14 @@
       "en": "replacing the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1718
+      "line": 1720
     },
     {
       "id": "member-roster.index.replacing_the_teams_join_link",
       "en": "replacing the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1717
+      "line": 1719
     },
     {
       "id": "member-roster.index.resigning_administrator_status",
@@ -37028,42 +37028,42 @@
       "en": "setting a member's status",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1386
+      "line": 1388
     },
     {
       "id": "member-roster.index.switching_off_the_join_link",
       "en": "switching off the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1729
+      "line": 1731
     },
     {
       "id": "member-roster.index.switching_off_the_teams_join_link",
       "en": "switching off the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1728
+      "line": 1730
     },
     {
       "id": "member-roster.index.switching_off_the_teams_website_key",
       "en": "switching off the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1619
+      "line": 1621
     },
     {
       "id": "member-roster.index.switching_off_the_website_key",
       "en": "switching off the website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1620
+      "line": 1622
     },
     {
       "id": "member-roster.index.switching_on_the_teams_join_link",
       "en": "switching on the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1688
+      "line": 1690
     },
     {
       "id": "member-roster.index.the_registration_could_not_be_read",
@@ -37119,7 +37119,7 @@
       "en": "withdrawing an invitation",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1507
+      "line": 1509
     },
     {
       "id": "member-roster.order-build.line_have_the_file_gives",
@@ -37175,7 +37175,7 @@
       "en": "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1470
+      "line": 1472
     },
     {
       "id": "membership.index.a_member_joins_a_project",
@@ -37196,14 +37196,14 @@
       "en": "{act} acts on the team's live website key, and there is none. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1575
+      "line": 1577
     },
     {
       "id": "membership.index.act_acts_on_the_teams_2",
       "en": "{act} acts on the team's join link, and it is off. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1584
+      "line": 1586
     },
     {
       "id": "membership.index.act_on_string_is_work",
@@ -37245,7 +37245,7 @@
       "en": "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1459
+      "line": 1461
     },
     {
       "id": "membership.index.an_owner_is_not_removed",
@@ -37266,7 +37266,7 @@
       "en": "{detail} Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1993
+      "line": 2003
     },
     {
       "id": "membership.index.gate_mark_outside_or_participant",
@@ -37280,7 +37280,7 @@
       "en": "{name} is at most {max} characters.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2004
+      "line": 2014
     },
     {
       "id": "membership.index.name_who_holds_hosting_access",
@@ -37315,7 +37315,7 @@
       "en": "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1513
+      "line": 1515
     },
     {
       "id": "membership.index.only_an_owner_of_this",
@@ -37336,14 +37336,14 @@
       "en": "`other` was chosen, and the kind it describes was left empty.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2000
+      "line": 2010
     },
     {
       "id": "membership.index.reactivated_as_an_ordinary_member",
       "en": "reactivated as an ordinary member. Administrator status is not restored by reactivation: the team voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1430
+      "line": 1432
     },
     {
       "id": "membership.index.recorded_as_a_request_to",
@@ -37392,28 +37392,28 @@
       "en": "the choice is `tell` or `dont`, and nothing else. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1923
+      "line": 1933
     },
     {
       "id": "membership.index.the_description_is_seen_by",
       "en": "the description is seen by `members` or by the `public` too.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 2007
+      "line": 2017
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen",
       "en": "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1372
+      "line": 1374
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen_2",
       "en": "the founder's handle is chosen once and never changed (DEC-197), and one is held. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1375
+      "line": 1377
     },
     {
       "id": "membership.index.the_founding_administrator_holds_admin",
@@ -37434,14 +37434,14 @@
       "en": "the join link has let in its daily number of people in the last 24 hours. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1750
+      "line": 1752
     },
     {
       "id": "membership.index.the_kinds_are_a_list",
       "en": "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1996
+      "line": 2006
     },
     {
       "id": "membership.index.the_member_named_holds_no",
@@ -37462,14 +37462,14 @@
       "en": "the team holds one live website key at a time (DEC-133). Nothing was created.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1594
+      "line": 1596
     },
     {
       "id": "membership.index.the_team_holds_one_live_2",
       "en": "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1692
+      "line": 1694
     },
     {
       "id": "membership.index.the_team_would_be_left",
@@ -37483,14 +37483,14 @@
       "en": "the website key has made its daily number of invitations in the last 24 hours. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1679
+      "line": 1681
     },
     {
       "id": "membership.index.the_website_names_the_person",
       "en": "the website names the person by the cover the team will know them by. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1675
+      "line": 1677
     },
     {
       "id": "membership.index.this_invitation_is_not_live",
@@ -37504,14 +37504,14 @@
       "en": "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1671
+      "line": 1673
     },
     {
       "id": "membership.index.this_link_opens_no_door",
       "en": "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1742
+      "line": 1744
     },
     {
       "id": "membership.index.this_project_has_no_owner_rows",
@@ -37539,7 +37539,7 @@
       "en": "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1303
+      "line": 1305
     },
     {
       "id": "membership.index.what_is_an_administrators_act",
