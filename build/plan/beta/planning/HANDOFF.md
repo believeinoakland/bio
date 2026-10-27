@@ -62,3 +62,7 @@ K5473: row 20 decided as recommended; A4 aligned by a Sonnet worker (serials, ow
 ## L12 · 2026-10-27 · K5474, K5475, C21's ids
 
 K5475 (Bob, AI1 B): Gate 1 at Bob's marks admits a part; the real public-matters set later a standing check; the plan's AI1 waits cleared, N1258 and N829 restated. K5474: JOURNEYS' 19 points sorted (J1-J7 Bob's, B558 to UX-DESIGN, four decided), noted in `plan-T53-journeys.md` §B. BOB's C21 rule recorded in CONSISTENCY §1: the A lines keep their ids; colliding CAPABILITIES lines take the next free (content R65, citation R28, queue R98, screens-settings R83, screens-daily R110).
+
+## L13 · 2026-10-27 · K5476
+
+`plan-T53-journeys.md` §D replaced by BOB's placements (K5476): R-127 interface-shell, R-13 screens-investigate, R-84 a new events entry with the plane's route, R-83 `withdrawEvent` in events, R-65 calculations with retrieval R18-R19 as control; the two numbers at START.

@@ -311,10 +311,11 @@ Module of the line uncertain in the draft: R-13 ("module not traced"; screens-se
 
 Counts check: rows listed in A cover R-1..R-130 (R-5, R-39, R-67, R-68, R-69, R-70, R-76, R-83, R-84, R-94, R-96, R-98, R-100, R-103, R-108, R-117, R-122 appear in more than one module as owner halves; each is one defect).
 
-## D. For BOB (PLANNING's recommendations; placement is BOB's)
+## D. Placements (decided, K5476, BOB #322)
 
-- R-127: DRAFT-3 puts the line under screens-action, but it changes interface-shell R119: **interface-shell owns it**, screens-action draws it.
-- R-13: owning module not traced (screens-settings or screens-investigate): JOURNEYS to trace before the plan is written.
-- R-84: no carried entry holds the `events` plane fix (the 502): a new entry under events (layer 5) and plane's route, with PLATFORM.
-- R-73: placed under explore; decided by K5474.
-- Four open items not among the 19: the owner of R-83's event edit and withdraw act; which side holds the identity in R-65 (a BLOCK); interface-shell R?6's 422 px; the Tab-stop count. The first two are BOB's; the last two are numbers set at the job's START.
+- R-127: interface-shell owns it (R119); screens-action draws it.
+- R-13: screens-investigate (`ties.mjs` draws the preview).
+- R-84: a new entry under events, with the plane's route (PLATFORM on the route).
+- R-83: events gains `withdrawEvent({eventId, reason, by})` in withdrawRelation R20's form (`NO_REASON`, `NO_SUCH_EVENT`, a repeat answers `already: true`, the event stays shown withdrawn, nothing deleted); dating through the existing `attest` and `recordDatedFact`; screens-investigate draws the controls.
+- R-65 (a BLOCK): calculations' line as drafted, the job finding the cause; retrieval R18, R19 as its control.
+- interface-shell R?6's 422 px and the Tab-stop count: set at their jobs' START.
