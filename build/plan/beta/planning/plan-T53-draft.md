@@ -1,6 +1,6 @@
-# Plan T53 round R1 · the beta's build (draft by PLANNING, for BOB)
+# Plan T53 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L34 (CAPABILITIES' READY scope; every L question answered; K5495-K5552, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L34 (CAPABILITIES' READY scope; every L question answered; K5495-K5552, DEC-472, DEC-473). Form by K5434 (4) and K5567: one round, measurements at once unless they measure R1's code, no R3; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
@@ -76,7 +76,7 @@
 - T53 · K5501 · `onProjectLeft(module, fn)` called inside `projectRemove` (R36), `why: "removed"`; `projectLeave` and `projectOwnerRemove` call nobody (R158) · `planning/lines-K5501-role-change.md`
 
 **member-roster** (with op-declarations' rows)
-- T53 · K5562, K5563 · the founder removes an administrator alone with a reason, recorded and read by the team (`founderremovals`); her endorsement alone issues an administrator invitation; a waiting proposal cancelled by the founder or the proposer (`adminproposalcancel`); others' rules unchanged · `planning/lines-K5562-K5563-founder.md` K5562-R1 to R3, K5563-R1 to R6
+- T53 · K5562, K5563 · the founder removes an administrator alone with a reason, and every removal by vote shown to the team with who and why (`adminremovals`, K5568); her endorsement alone issues an administrator invitation; a waiting proposal cancelled by the founder or the proposer (`adminproposalcancel`); others' rules unchanged · `planning/lines-K5562-K5563-founder.md` K5562-R1 to R3, K5563-R1 to R6
 
 **ai-catalogue** (new; before ai-accounts; K5457)
 - T53 · N1220 (K5428-K5433, K5457) · the signed closed list of AIs: entry, plan, evidence, the seven checks, Gate 1 verdict per part, lifecycle, advisories, results library; signed updates verified and applied, the last good kept, rollback · `lane-ai-design/draft-ai-catalogue.md` R1-R53
@@ -268,7 +268,7 @@
 **screens-settings**
 - T53 · DEC-470 · the file-import key `registerfileimport` read by `keys.mjs`; the old key held until then · DEC-470
 - T53 · P9 (BOB #324, found on plat-s1) · with two or more administrators, `memberadd` and `adminendorse` answering `CONSENSUS_REQUIRED` (member-roster 4.7) leave an earlier `ui.invite` drawn (`members.mjs:317, 336` set it only when the answer carries `invite`, never clear it), so a dead `#invite=` link stays on screen: on `CONSENSUS_REQUIRED` clear any shown link and draw `screen.members.invite.nolink` with `awaiting`'s names (DEC-483); a link only when the answer carries `invite` · Test: a shown link, then `memberadd` answering `CONSENSUS_REQUIRED`, leaves no link and draws the awaiting sentence; Control: an ordinary invitation draws its link
-- T53 · K5562, K5563 · Members: the founder's remove control at two administrators, her removals and reasons shown to the team, her issuing endorsement, the cancel control, `nolink` never for her · `planning/lines-K5562-K5563-founder.md` K5562-R4, R5, K5563-R7, R8 `[owed: words, UX-DESIGN]`
+- T53 · K5562, K5563 · Members: the founder's remove control at two administrators, every removal and its reasons shown to the team (K5568), her issuing endorsement, the cancel control, `nolink` never for her · `planning/lines-K5562-K5563-founder.md` K5562-R4, R5, K5563-R7, R8 `[owed: words, UX-DESIGN]`
 - T53 · N1220 (K5457) · `connect`, `teamai`, `projectai` and their acts retired, in the same change as screens-ai's first screens · `lane-ai-design/draft-assistant-screens.md` §2
 
 **screens-ai** (new, Before R1 (9); the AI screens)
@@ -303,11 +303,22 @@
 
 The other carried layer-11 entries (wizard-scripts T52-35, T52-36; op-grades T52-37, T52-38; affordances T52-39; tasks T52-40; instance-setup T52-41; store-assembly T52-46, T52-47; store-request T52-48; screens-entry T52-54 to T52-56; screens-wizards T52-57; screens-action T52-81 to T52-84; site T52-96) stand as carried, each `C`.
 
-## R2 (measure, scratch copy, BOB's under K5120)
+## Measurements (K5567: at once unless it measures code R1 builds; scratch copies BOB's under K5120, never biosmoke8)
 
-CAPABILITIES' (§C of `planning/plan-T53-capabilities.md`): M-R3, M-R4, M-R7, M-R8, M-R10-M-R12 (registers: storage, streaming limits, counts, contact-shape false hits, extract sizes; the federal zips BOB's download), M-N1272 (proposals on the N1268 corpus; BOB records the bar and prepares the files and pinned questions; Bob's act: he marks the gold set blind before the run, K5537), interpretation timings, N824 P3 if not before R1, the registers journey.
+**At once, alongside R1** (each measures what exists now or prepares a copy; its result goes to the job that reads it, before that job's layer START where it can):
+- Registers, on the source files and a throwaway on a scratch copy (`planning/plan-T53-capabilities.md` §C): M-R3 index storage at 73,043 / 1M / 5M rows (decides S1-S4 before registers' layer-5 START), M-R7 streaming throughput, CPU, subrequests and decoder state (sets `REGISTER_STREAM_MAX`, `SLICE_*` before register-readers' layer-1 START), M-R4 identifier forms, M-R8 count queries, M-R10 contact-shape false hits (by script, the drafted rule), M-R11 volatile text, M-R12 extract sizes; the federal zips BOB's download.
+- The load test's short "before" run on the alpha's design (`platform/load-test-draft.md` §6), with PLATFORM's study driver on a Level 1 scratch copy (load-check itself is built in R1); and the budget walk's L1 figures on today's deploy (`platform/time-budgets-draft.md` §6).
+- Preparation: the acceptance corpus's files (N1268, `files/CORPUS-N1268.md`); M-N1272's files, pinned questions and bar in `MEASUREMENTS.md`, and Bob's blind marking of the gold set (K5537); N824 P1-P2 with M1 (Before R1 (6)) and P3's delivery checks once Bob's Email Routing domain exists (N1159).
 
-The load test per level (N1274, `load-test-draft.md`), its short "before" run on the alpha's design first; the budget walk (L1, L2, L3 of `time-budgets-draft.md` §6); the acceptance corpus (N1268). Their defects are R3's entries.
+**After the code it measures** (each on a scratch copy deployed from the tranche; the one dependency named):
+- M-N1272, the proposals' precision and recall on the corpus · after extraction R114-R119 (layer 4).
+- Interpretation timings (`interpretationOf`, `proposeParts`, `partsOf` at 5,000 pages and 1M rows) and the per-level ceiling's figure (R119, K5535) · after extraction and investigation (layers 4, 7).
+- N824's door CPU at 25 MiB · after mail-reader and mail-door (layers 1, 3).
+- The acceptance corpus walk (N1268) · after journey-check's walk and the readers (layers 1, 11).
+- The registers journey · after registers and the registers screen (layers 5, 11).
+- The load test per level (N1274) and the budget walk L2, L3 · after load-check and layer 11's deploy; Level 2 after N1271's design is built (PLATFORM's study).
+
+**No R3.** A defect a measurement finds goes to its module's job, which stays open until its layer closes (P10); a defect in a layer already closed goes to the tranche's completion round (§5.2), the only later round.
 
 ## Left out of T53 (P19), each with its hard reason
 

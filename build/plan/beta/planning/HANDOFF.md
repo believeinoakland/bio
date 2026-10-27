@@ -10,7 +10,7 @@
 1. (done L38: J7.)
 2. Fold as BOB relays: PLATFORM's service levels (PL20-PL29), whole-record move (PL50-PL57), the Levels 2-3 study, the interpretation ceiling's figure per level (K5535, PL44-PL45); (TESTS-SWEEP's fixtures findings: done L44.)
 3. (done L40: R1-R7 applied, re-measured, every job under 600 KB.)
-4. When every lane is folded: the plan under 51,200 bytes, detail files beside it; mark READY for BOB.
+4. When PLATFORM is folded: the plan under 51,200 bytes (everything new in detail files); mark READY for BOB.
 
 **Waiting on.** Bob: nothing. BOB: nothing (R1-R7 recorded K5564). Lanes: PLATFORM only (service levels, whole-record move still DRAFT). Own work: none open; BOB's word on `lines-K5562-K5563-founder.md`'s eleven technical points and Found 3.
 
@@ -147,3 +147,7 @@ BOB #324 agreed the 58 modules whose only T53 work is the English conversion are
 ## L48 · 2026-10-27 · K5566; DEC-484 compared
 
 BOB decided L46's eleven technical points as recommended and Found 3 `TARGET_NOT_AN_ADMIN` (K5566); technical 5 (vote-carried removals' reasons shown too) is Bob's B3, bracketed in K5562-R2, R5. DEC-484 (U517) draws Members for K5562-K5563, merging with U512-U516 (Before R1 (10), `plan-T53-design-rows.md`). Compared with the eight word NEEDs: still owed 3's heading, 5 (her act in a removal under way) and 8 (the two new refusals, `IMPOSSIBLE_AT_TWO`), sent to BOB. `lines-K5562-K5563-founder.md` READY for BOB.
+
+## L49 · 2026-10-27 · K5568 and K5567 applied
+
+K5568 (Bob's B3 = A): every removal shows the team who removed and why; `lines-K5562-K5563-founder.md`'s read is now `adminRemovals` (`op=adminremovals`, apart from R75's `adminRemovalsOpen`), each entry `how` founder or vote with deciders and reasons; K5562-R5 draws both; the vote line's words owed. K5567 (Bob: "Don't run multiple tranches or rounds when things can instead be done at once"): the plan's R2 and R3 rewritten as "Measurements": at once, alongside R1, the registers' M-R3, M-R4, M-R7, M-R8, M-R10-M-R12, the load test's "before" run with PLATFORM's study driver, the budget walk's L1, and the preparations (corpus files, M-N1272's files and Bob's gold set, N824 P1-P3 as they can); after R1's code, each with its one dependency; no R3 (defects to the module's open job, P10; a closed layer's to the completion round). STRUCTURE §1 and the detail file follow. DECISIONS gains K5567, K5568.

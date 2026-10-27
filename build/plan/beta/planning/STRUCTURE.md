@@ -8,8 +8,8 @@
 |---|---|---|
 | R0 | TESTS-SWEEP's merge (option A, K5418): BOB's §5.10 mechanical pass, every touched module run once; then the words and fixtures checks at 0 | Every R1 job edits tests the sweep rewrites; sweep first means no job inherits an English-pinned test, and the checks a job's `complete` runs are clean (§5.2 (1): no tranche opens while the words check reports a finding). |
 | R1 | One round, layers 1 to 11 in order, one job per module that has entries (K5319): the carried entries, the defects JOURNEYS finds, and every new capability the lanes design | Bob's direction (K5417): design whole, one comprehensive plan, then build. One round keeps every capability's layers in one pass, so no capability's top half waits for a later round. |
-| R2 (measure) | Deploy R1 to a scratch copy and run what only a deployment can show: the per-level load test (N1274), the acceptance corpus (N1268), K4354's 2 s and 15 s budgets per screen (PLATFORM), the charge-or-rule accuracy measure (N1258) | Each is a measurement on a live copy (P19's "a measurement"); its defects become R3's entries. The scratch deploys are BOB's under K5120, never biosmoke8 (K5434 (1)). |
-| R3 (completion) | Fixes from R2 and modules whose layer closed (P10) | §5.2: the tranche's completion round is its last. |
+| Measurements (K5567) | At once, alongside R1: every measurement of what exists now and every scratch copy's setup; after R1's code only what measures that code (the plan's "Measurements" lists each with its one dependency) | Bob: "Don't run multiple tranches or rounds when things can instead be done at once." |
+| Completion | A defect a measurement finds goes to its module's still-open job (P10); only a layer already closed sends it to the completion round (§5.2) | No R3 (K5567). |
 
 **Within-layer order** (K5434 (2), BOB's). No waves: P10 starts every job of a layer at once. A job whose used service another job of its layer changes takes the change as a CHANGE; a dependency that truly cannot run concurrently is placed in a lower layer (the order BOB's, P4; a new layer Bob's). So §3's `after` column marks where a CHANGE is expected, not a start order.
 

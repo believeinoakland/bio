@@ -81,3 +81,5 @@
 - K5560 · 2026-10-27 · on QUESTIONS.html J7: "as recommended" (Is an outside reader's acknowledgement shown publicly by name? B · Shown by name only if they tick that it may be) · `build/rulings.md`
 - K5562 · 2026-10-27 · on QUESTIONS.html B1: "as recommended" (The founder may remove an administrator alone, with a reason, recorded and shown to the team; other administrators still need a majority vote, and still can't remove the founder) · `build/rulings.md`
 - K5563 · 2026-10-27 · on QUESTIONS.html B2: "as recommened" (The founder's approval is enough to add an administrator; other administrators' proposals still need every administrator's approval; the founder or the proposer can cancel a waiting proposal) · `build/rulings.md`
+- K5567 · 2026-10-27 · Bob, in chat: "Don't run multiple tranches or rounds when things can instead be done at once." · `build/rulings.md`
+- K5568 · 2026-10-27 · on QUESTIONS.html B3: "A" (Every removal of an administrator shows the team who removed them and why, whether the founder acted alone or the administrators voted) · `build/rulings.md`
