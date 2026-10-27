@@ -16,7 +16,7 @@ import { createHash } from "node:crypto";
 import * as dp from "../registry.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { PORT_ALDER, LAKEMONT, view, EMPTY, HELD, PA_ITEMS, PA_ITEMS_PAGES, calendarHtml, shellHtml } from "./fixtures.mjs";
-import { registerStubs, stubMeetings, stubItems, stubFallback } from "./stubs.mjs";
+import { registerStubs, stubMeetings, stubItems, stubFallback, STUB_MEETINGS_UNREAD, STUB_NO_PROFILE_WHY } from "./stubs.mjs";
 
 const {
   identify, doctypeFor, assess, readText, flattenText, makeLocator, registerDoctype,
@@ -167,7 +167,7 @@ test("R13 meaningful is true only for changed, false for the settled verdicts, n
     assess: () => ({ meaningful: false, events: [event("item_added")], why: "added" }) })).ok, true);
   const c = await assess(enc("<p>BROKEN a</p>"), enc("<p>BROKEN b</p>"), { sha256 });
   assert.deepEqual([c.verdict, c.meaningful, c.connections], ["routine", false, []]);
-  assert.match(c.trail.at(-1).said, /failed to derive them/);
+  assert.equal(c.trail.at(-1).said, localize("docprofile.pipeline.none_stated_the_content_type", "none stated: the {content_type} reader failed to derive them", { content_type: "stub_broken" }));
   // a type that says meaningful while emitting no event: meaningful is the events', not its claim (R14)
   assert.equal(registerDoctype(broken({ assess: () => ({ meaningful: true, events: [], why: "claimed" }) })).ok, true);
   const d = await assess(enc("<p>BROKEN a</p>"), enc("<p>BROKEN b</p>"), { sha256 });
@@ -239,7 +239,7 @@ test("R16 confirmation states what was verified unchanged, even beside events, n
   for (const [a, b] of [[rows, []], [[], rows]]) {
     const f = await assess(enc(calendarHtml(a)), enc(calendarHtml(b)), calCtx());
     assert.equal(f.meaningful, null);
-    assert.match(f.why, /could not be read/);
+    assert.equal(f.why, localize("docprofile.pipeline.the_substance_differs_and_why", "the substance differs and {why}, so what changed is not described", { why: STUB_MEETINGS_UNREAD }));
     assert.deepEqual(f.events, []);
   }
 });
@@ -271,7 +271,7 @@ test("R18 readText refuses when no honest reading may be produced, and says whic
   assert.match(undecoded.why, /undetermined .*no_tounicode/);
   const mostly = readText({ document: "Harbor", counts: { undetermined: 50 }, undetermined: [{ reason: "encrypted" }] });
   assert.deepEqual([mostly.determined, mostly.partial], [false, true]);
-  assert.match(mostly.why, /could not decode most of it/);
+  assert.equal(mostly.why, localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: 50, chars: 6, named: ": encrypted" }));
   // at the line, not over it: read, and partial
   assert.equal(readText({ document: "Harbor", counts: { undetermined: 6 } }).determined, true);
 });
@@ -341,13 +341,13 @@ test("R22 document is preferred, and a segment map is laid over it only when the
   assert.deepEqual(ok.segments.map((s) => [s.start, s.end, s.source.page]), [[0, 1, 0], [2, 3, 2]]);
   const bad = flattenText({ document: "a b", pages: [{ page: 0, text: "a" }, { page: 1, text: "b" }] });
   assert.deepEqual([bad.text, bad.segments], ["a b", []]);
-  assert.match(bad.position_why, /not its pages joined/);
+  assert.equal(bad.position_why, localize("docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed"));
   const paras = flattenText({ document: "x\ny", paragraphs: [{ para: 0, text: "x" }, { para: 1, text: "z" }] });
   assert.deepEqual(paras.segments, []);
-  assert.match(paras.position_why, /not its paragraphs joined/);
+  assert.equal(paras.position_why, localize("docprofile.readtext.this_producers_document_text_is_not_its_paragraphs", "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed"));
   const parasOk = flattenText({ document: "x\ny", paragraphs: [{ para: 0, text: "x" }, { para: 1, text: "y" }] });
   assert.deepEqual(parasOk.segments.map((s) => s.source.ref), ["¶1", "¶2"]);
-  assert.match(flattenText({ document: "only" }).position_why, /no itemised pages or paragraphs/);
+  assert.equal(flattenText({ document: "only" }).position_why, localize("docprofile.readtext.this_producer_emitted_document_text", "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said"));
 });
 
 test("R23 with no document, pages or paragraphs flatten to their non-empty items, newline-joined, one segment each", () => {
@@ -361,7 +361,7 @@ test("R23 with no document, pages or paragraphs flatten to their non-empty items
     { kind: "doc-para", ref: "¶1", para: 0, run: null }, { kind: "doc-para", ref: "¶5", para: 4, run: null }]);
   const unnamed = flattenText({ pages: [{ text: "a" }] });
   assert.deepEqual(unnamed.segments, []);
-  assert.match(unnamed.position_why, /carry no part index/);
+  assert.equal(unnamed.position_why, localize("docprofile.readtext.this_producers_source_carry_no", "this producer's {source} carry no part index, so where in the document a reference was read cannot be said", { source: "pages" }));
 });
 
 test("R24 undetermined is the producer's stated count, else summed from its markers, never invented", () => {
@@ -412,7 +412,7 @@ test("R30 R36 the shared helpers take every local fact from the view they are gi
   const items = (v) => keys(stubItems.parse({ text: PA_ITEMS, view: v }));
   assert.deepEqual(items(PA), ["PA-101", "PA-102", "PA-103"]);
   assert.deepEqual([items(LK), items(EMPTY)], [[], []]);
-  assert.match(stubItems.parse({ text: PA_ITEMS, view: EMPTY }).references_why, /no active jurisdiction profile/);
+  assert.equal(stubItems.parse({ text: PA_ITEMS, view: EMPTY }).references_why, STUB_NO_PROFILE_WHY);
   // K39 (permanent, K880): no view reads with every NON-TEST held profile, never a test one
   assert.deepEqual(readerView({}), HELD);
   assert.deepEqual(readerView(undefined), HELD);
@@ -494,12 +494,12 @@ test("R35 every no says which no and why", async () => {
   assert.match(readText("").why, /./);
   assert.match(readText({ document: "x", counts: { undetermined: 9 } }).why, /./);
   assert.match(flattenText("x").position_why, /./);
-  assert.match(flattenText(null).position_why, /no text was supplied/);
+  assert.equal(flattenText(null).position_why, localize("docprofile.readtext.no_text_was_supplied", "no text was supplied"));
   const u = await assess(enc("<p>a</p>"), enc("<p>b</p>"), { sha256, headers: { "x-powered-by": "ASP.NET" } });
   assert.equal(u.verdict, "undetermined");
   assert.equal(u.why, localize("docprofile.pipeline.the_document_differs_and_this", "the document differs and this kind of document is not recognised well enough to say whether the difference matters"));
   const nohash = await assess(enc("<p>a</p>"), enc("<p>b</p>"), {});
-  assert.match(nohash.why, /could not be compared/);
+  assert.ok(nohash.why.startsWith(localize("docprofile.pipeline.the_two_captures_could_not_be_compared", "the two captures could not be compared")));
   // a stub's connection with no practice in the view says why it set no date
   const p = stubMeetings.parse({ text: calendarHtml([["7", "Harbor Commission", "3/2/2026"]]) });
   const c = stubMeetings.connections(p, p, { now: NOW, view: EMPTY }).find((x) => x.relation === "minutes_not_yet_published");
