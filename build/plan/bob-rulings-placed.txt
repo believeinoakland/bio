@@ -14,3 +14,4 @@ K5342 · done: requirements and next.md (BOB's)
 K5343 · done: the pass committed; Bob's direction (alpha, installer, site first; tests after) in `rulings-product/scope.md`
 K5344 · done: the manifest's PROCESS-REDESIGN line
 K5345 · done: process repository PR #14; Bob's merge owed
+K5346 · rulings-active.md §2
