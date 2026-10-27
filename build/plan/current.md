@@ -1,13 +1,7 @@
-**Round** · R1 · closed
-# Plan T51b · the alpha, on the redesigned process
-**Status** · CLOSING · BOB #318 · session_018BhcecvoXTMTpRGK9c3KwB · depth 1
+**Round** · none
+# Plan T52 · the beta (K5257)
+**Status** · OPEN · BOB #318 · session_018BhcecvoXTMTpRGK9c3KwB · depth 1
 **Jobs** · none
 **Owed** · none
 
-# Plan: T51b round R1 · the team-zone pass, finished
-
-**Status** · Written by BOB #315 for BOB #316, who opens it with `proc round open --round R1 --plan build/plan/T51b-R1.md` (adoption README step 4). T51b is the alpha only, on the redesigned process, nothing of the beta (Bob, K5336, K5337; `build/rulings-product/scope.md`). Its order: R1 (this round); the artifacts, the redeploy of biosmoke8 and the live walk (`build/situations/deploy-and-walk.md`), every defect in fix rounds (`fix-round.md`); the cut 0.87.0 through the rehearsal, which passes before Bob is told (K5333; `release.md`, `build/plan/walk-T51-alpha/alpha-cut.md`); civicsmith.org and the installer; Bob's own install (K4935).
-
-**Before R1 opens (BOB's, §5.10):** the pass's edits on branch `pass/zone-T51b` (K5292, `build/plan/pass-zone-K5292.md`; 18 sites) are taken onto `tranche/T51b` for the 16 modules whose own suites read as before (K5338), each of those modules' suites and their users' run once with the checks (never the whole suite, K5338), then committed with a ruling naming every module. The edits to `action-plans` and `events` are not taken: their jobs below make them. Before their STARTs, BOB writes K5292 (the team's stated zone governs, else the place profile's) into both modules' requirements, re-marking the ids below `*(not yet met: T51b)*`.
-
-**Also at the opening (BOB's; README "Before you run it"):** the 13 requirement files' `*(not yet met: T51)*` marks are re-marked `T51b` where T51b meets them, else each moves to `next.md` with its P19 reason; the adoption README's step 7 retirements (bio's `premerge.mjs`, `watch-job.sh`, `bob-rulings-check.mjs`; the process repository's probe, prep and dry-run branches by `prune-branches.yml`); JOURNEY-CHECK #16's unmerged work (test-only, K5311) and OP-CAPABILITIES #2's (no change needed, K5239) enter neither.
+T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are written from `next.md` and the 0.87.0 walk's placement (K5354); R14 (civicos-process PR #13) is adopted before its first test run (K5351).
