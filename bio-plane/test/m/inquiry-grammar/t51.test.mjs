@@ -114,6 +114,27 @@ test("R68 control: a basis with no cutting leg is judged as before, and a cuttin
   assert.deepEqual(grounded([SUP({}), CUT({})], undefined), []);
 });
 
+/* R70 (T52-20; K5332): the cutting leg in a ground has its own code and a repair that says to take it out of the ground first. */
+test("R70 a cutting leg that names a declared ground is one C-2.8 error with its own code, naming the leg and the label, and one repair in plain words", () => {
+  const r = grounded([SUP({ ground: "a" }), CUT({ ground: "a" })], [G_A]);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].check, "C-2.8");
+  assert.equal(r[0].severity, "error");
+  assert.equal(r[0].code, "CUTTING_LEG_IN_GROUND");
+  assert.ok(r[0].message.includes("basis leg 1") && r[0].message.includes("'a'"), r[0].message);
+  assert.equal(r[0].repairs.length, 1);
+  assert.ok(/out of its ground first/.test(r[0].repairs[0]) && r[0].repairs[0].includes("basis leg 1"), r[0].repairs[0]);
+  assert.equal(IG.INQUIRY_GRAMMAR_CHECKS.CUTTING_LEG_IN_GROUND.check, "C-2.8");
+  assert.ok(IG.INQUIRY_GRAMMAR_CHECKS.CUTTING_LEG_IN_GROUND.translation.length > 0);
+});
+
+test("R70 control: the same leg with no ground is clean, a supporting leg in a ground is clean, and no other finding carries the code", () => {
+  assert.deepEqual(grounded([SUP({ ground: "a" }), CUT({})], [G_A]), []);
+  assert.deepEqual(grounded([SUP({ ground: "a" }), SUP({ ground: "a" })], [G_A]), []);
+  const other = grounded([SUP({ ground: "a" }), SUP({})], []);
+  assert.ok(other.length >= 1 && other.every((x) => x.code !== "CUTTING_LEG_IN_GROUND"));
+});
+
 /* R4 (fix round 9, G167; K4985): the leg's extent is judged by content's ten kinds, `doc-part` among them. */
 const extentOf = (l) => plain(run((f) => IG.checkLegExtentGrammar(l, "basis leg 0", "C-2.8", f)).findings);
 const partLeg = (o) => ({ target: "INF-2026-0001-doc", role: "supports", extent_kind: "doc-part", ...o });
