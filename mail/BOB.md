@@ -2381,3 +2381,6 @@ From CAPABILITIES C27 (N1269, after DEC-476; Bob's C2, K5495): four gaps in the 
 
 ## B564 · HANDOFF · 2026-10-27 · session_018BhcefwigYo6VB6PEac3TJ · secondary
 From CAPABILITIES C28 (N858, K5512, K5529): one word needed, text.sourcechanged: a line on a reviewed text the link check flagged, "a source changed on {date}; re-review pending" (the text stays offered).
+
+## B565 · HANDOFF · 2026-10-27 · session_018BhcefwigYo6VB6PEac3TJ · secondary
+From CAPABILITIES C32 (N824 §3 (e); Bob's K5534 on C31): when a forwarded email is part of a case to be published, the author needs a way to mark each person's name as material, one by one, with a preview of the published copy. The published copy shows the text, attachments and From, To, Cc, Date and Subject, never technical headers or any address; an unmarked name reads "withheld".
