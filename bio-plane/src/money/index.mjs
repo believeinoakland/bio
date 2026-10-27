@@ -25,7 +25,7 @@ import { parseFigure, add, subtract, relate, SUM_RULE } from "../calc-grammar/in
 import { BOUNDS, LOWEST_GRADE, exhausted, defaultRegistry } from "../connection-grammar/index.mjs";
 import { MONEY_SCHEMA, MONEY_TABLES, MONEY_ADDED_COLUMNS } from "./schema.mjs";
 import { MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, FUND_TYPES, BALANCE_FAMILIES, METHODS,
-  MACHINE_METHODS, SET_PURPOSES, CONCERNS_KINDS, CHANGES, CONNECTION_KIND, CONNECTION_WORD, SET_SOURCE_KIND, SET_SOURCE_WORD } from "./vocab.mjs";
+  MACHINE_METHODS, SET_PURPOSES, CONCERNS_KINDS, CHANGES, CONNECTION_KIND, CONNECTION_WORD } from "./vocab.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 export { MONEY_SCHEMA, MONEY_TABLES, MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, FUND_TYPES,
@@ -1253,8 +1253,7 @@ export class Money {
     if (r && r.ok) this.#registered = true;
     return r;
   }
-  static CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: CONNECTION_WORD, class: "evidentiary" }),
-    Object.freeze({ kind: SET_SOURCE_KIND, word: SET_SOURCE_WORD, class: "evidentiary" })]);
+  static CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: CONNECTION_WORD, class: "evidentiary" })]);
 
   /* One fact as its R16 edge, or null when it is out of the date asked. */
   #edge(r, at) {
@@ -1304,10 +1303,10 @@ export class Money {
     if (!items.length) return none;
     for (const d of docs.values()) {
       nodes.set(d.id, d);
-      items.push({ id: `${node}>${d.id}`, from: node, to: d.id, kind: SET_SOURCE_KIND, owner: "money", valid: { from: null, to: null, precision: "day", zone: items[0].valid.zone },
+      items.push({ id: `${node}>${d.id}`, from: node, to: d.id, kind: CONNECTION_KIND, owner: "money", valid: { from: null, to: null, precision: "day", zone: items[0].valid.zone },
         evidence: [{ source: d.capture_sha }], grade: { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] }, derived: null });
     }
-    const asked = Array.isArray(kinds) ? items.filter((i) => kinds.includes(i.kind)) : items;
+    const asked = Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND) ? [] : items;
     const after = isObj(page) && typeof page.after === "string" ? page.after : null;
     const start = after ? asked.findIndex((i) => i.id > after) : 0;
     const from = start === -1 ? asked.length : start;

@@ -35,11 +35,11 @@ test("R35 a set of three figures between followed entities answers payer, payee 
   const ids = [1, 2, 3].map((n) => s.rec({ amount: String(n * 100), as_read: `$${n * 100}`, source: { capture_sha: s.cap, extent: { kind: "pdf-page", page: n } } }));
   for (const f of ids) assert.equal(s.m.include({ setId: set, factId: f, reason: "in the CSV", by: ANN }).ok, true);
   const a = s.m.neighbours({ node: set, at: AT, viewer: ANN });
-  assert.deepEqual(a.items.filter((i) => i.kind === "money_flow").map((i) => i.id).sort(), [...ids].sort());
+  assert.deepEqual(a.items.filter((i) => i.from !== set).map((i) => i.id).sort(), [...ids].sort());
   const byId = new Map(a.nodes.map((n) => [n.id, n]));
   assert.ok(byId.has(s.city) && byId.has(s.vendor));
   assert.equal(byId.get("INFO-1").title, "Port Ellery payments 2013-14");
-  const link = a.items.filter((i) => i.kind === "money_source");
+  const link = a.items.filter((i) => i.from === set);
   assert.deepEqual(link.map((i) => [i.from, i.to]), [[set, "INFO-1"]]);
 });
 
