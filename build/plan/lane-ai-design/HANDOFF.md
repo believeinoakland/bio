@@ -20,7 +20,7 @@ Entries `A<n>`, newest last; section 0 is rewritten whole after every entry (LAN
 
 **Bob's AI1 answered (K5475):** option B, as recommended. A part reaches members once the chosen AI passes Gate 1; the real-matters set becomes a standing check, and a part below its mark is switched off for that AI only. Folded into `draft-run-rules.md` R19 and R37 (per entry) and `draft-assistant-screens.md` §3; recorded as AD44. AI2–AI11 still open.
 
-**Bob's AI3, AI4, AI5 answered (K5477–K5479),** all as recommended: a run asks the member only when the payer changes; on a payer mismatch the answer is kept and the account is stopped until cleared; a personal subscription must be on the team's allowed list. Drafts already worked this way; marked decided; AD45–AD47. Still open: AI2, AI6–AI11.
+**Bob's AI3, AI4, AI5 answered (K5477–K5479),** all as recommended: a run asks the member only when the payer changes; on a payer mismatch the answer is kept and the account is stopped until cleared; a personal subscription must be on the team's allowed list. Drafts already worked this way; marked decided; AD45–AD47. Then AI6 (K5480) and AI7 (K5481) answered: re-testing gets a per-AI monthly cap, an administrator's switch and a standing queue reminder while off (`draft-ai-use.md` R28–R30; `airetestset`; queue kind `retesting-off`); issuer R7's standing rule decided. Still open: AI2, AI8–AI11.
 
 **Merged and decided (BOB #322, K5471):** A46 and A47 merged into `tranche/T53`. `NS_AI_RUN` approved as a third signing namespace. A member may clear a payer flag on their own account (R68). R107 and R108 placed by PLANNING in `installer` R2 and `installer-steps` R45. "My projects" (owned or joined) is now on Bob's page; "owns" stays drafted until he answers.
 
@@ -73,3 +73,6 @@ The run-rules standing measure is now per entry: R75 records carry `entry_id`, a
 
 ## A49 · 2026-10-27 · Bob's AI3, AI4, AI5 folded (K5477–K5479)
 No line changed meaning: run-path R94, agent-model R47 and F1, ai-accounts R45 and R46, and screens §7 already followed the recommendations, and are now marked decided. AD45–AD47 added. **Need:** AI2, AI6–AI11.
+
+## A50 · 2026-10-27 · Bob's AI6, AI7 folded (K5480, K5481)
+New: `draft-ai-use.md` R28 `retestSet`/`retestAllowed` (`op=airetestset`; per-AI monthly cap as an R2 limit; admin of the paying account), R29 the `retesting-off` queue kind (one item, stays while off), R30. ai-gate R52 asks `retestAllowed`; issuer R7 cites K5481; screens §4 row. AD48, AD49. **For PLANNING:** `queue`'s `classOfKind` gains `retesting-off` (REMINDER). **Need:** AI2, AI8–AI11.
