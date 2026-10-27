@@ -32,7 +32,7 @@ No new refusal code. `followedRegister` stays machine-driven and never refuses a
 4. `follow.mjs:297-298` an entry already held is `unchanged` and gets no further attestation, so today a second form is silently not recorded, and a held entry is never updated or compared; rows with no `entry_id` are `skipped`.
 5. `follow.mjs:73-81`: `event_sources` keeps one `capture_sha` per source key (replaced on write), `rowAttestation` uses `k.sameAttestation(...) ?? k.addAttestation(...)` and the capture's own grade (`captureGrade`), so a further attestation on the same event is an existing operation.
 6. `events/schema.mjs:144` `event_sources` and `:41` `event_attestations` have no content-type column; a reading's type is read from `extraction.readingOf(capture_sha)` (`follow.mjs:63`).
-7. `kindOf` (`follow.mjs:283`) reads `kind_as_written` and the opening words, so the two forms can state different kinds; `followedRegister` takes `by = MACHINE` and writes `class:daemon` (asserted in `follow.test.mjs:218-222`).
+7. `kindOf` (`follow.mjs:279`) reads `kind_as_written` and the opening words, so the two forms can state different kinds; `followedRegister` takes `by = MACHINE` and writes `class:daemon` (asserted in `follow.test.mjs:218-222`).
 8. The tests named above exist at the lines given; `follow.test.mjs` and `proceeding.test.mjs` assert no key string.
 9. `refusal.NOT_A_REGISTER` has one row (`setup-words/rows.mjs:7869`); the proposed-and-rejected codes in the Refusals section appear nowhere in `bio-plane/src` or `build/`.
 10. `following/index.mjs:428-432` hands the newest capture to `events.followedRegister` as the machine (R29); `court-doctypes/index.mjs:18-19` and `readers.test.mjs:355-359` pin three types.
