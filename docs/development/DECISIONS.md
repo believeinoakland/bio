@@ -7322,3 +7322,15 @@ the design: `screen.photo.dropped.profile` reads "a color profile that failed it
 verified: the page's checks pass; on tranche/T53 with these words files, words 0 failures, format 0; no test reads the phrase; `case-checker/program.mjs` embeds the rows and changes at the next bundle regeneration.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (the DEC-473 row, in place).
 owed: BOB: merge this commit (MERGE; docs only); regenerate the case-checker bundle with the words.
+
+### DEC-483 · decided
+raised: 2026-10-27 · the UX design session with Bob (session_018BhceeRn5Di4Q4kwmEsXF9, UX design #45) (BOB #324's message, ~19:51 UTC: inviting an administrator answered CONSENSUS_REQUIRED left an earlier invitation's link on screen, and Bob copied it on plat-s1)
+for: design (T53, the beta)
+question: What Members shows in place of the invitation link while a new administrator waits on every administrator's endorsement.
+why it is Bob's: it is not (P17, beneath the consensus rule, interface-shell R112).
+provisional: as below. alternative: none. recommendation: as below. reversal cost: low. response: none needed.
+decided: 2026-10-27 · the design session (P17)
+the design: When `memberadd` answers CONSENSUS_REQUIRED, the place where the link is shown holds no link, and one line says so: "No invitation link exists yet. It appears here once {names} have endorsed." ({names}: the administrators still to endorse, from the answer's `awaiting`, by member name, joined with "and"); any link shown before is cleared, never left on screen. The success line `refusal.CONSENSUS_REQUIRED` ("Your endorsement is recorded. … Still to endorse: …") stays as the act's answer.
+verified: the page's checks pass; on tranche/T53 with these words files, words 0 failures, format 0; no code reads the new key.
+reasoning recorded in: this entry; `screens/mock-screens.js` (Members, Invite a member), `words-drawn.src.py` (DEC-483 block).
+owed: BOB: merge this commit (MERGE; it sits on U512-U515's commits, so with them); screens-settings `members.mjs`: on CONSENSUS_REQUIRED from `memberadd`, clear any invitation link held in the view and draw `screen.members.invite.nolink` with `awaiting`'s names.

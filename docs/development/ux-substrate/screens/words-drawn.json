@@ -46295,6 +46295,18 @@
    "en": "This question is in {case}, edition {n}. Its public page now says the subject changed after that edition.",
    "protected": false,
    "note": "DEC-481: question: under a change, when a published case carries the question (K5540)"
+  },
+  {
+   "key": "screen.members.invite.nolink",
+   "en": "No invitation link exists yet. It appears here once {names} have endorsed.",
+   "protected": false,
+   "note": "DEC-483: members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen"
+  },
+  {
+   "key": "screen.members.invite.waiting.summary",
+   "en": "When a new administrator waits on endorsements",
+   "protected": false,
+   "note": "DEC-483: members: the design page's fold for the nolink line"
   }
  ],
  "rewrite": {

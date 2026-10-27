@@ -8705,6 +8705,12 @@ w481('screen.question.part.subjectchanged', '{member} changed who part “{part}
 w481('screen.question.part.subjectremoved', '{member} removed {old} as who part “{part}” is about, on {date}: “{reason}”', "question: a part's removal (K5541, K5551)")
 w481('screen.question.subjectchanged.published', 'This question is in {case}, edition {n}. Its public page now says the subject changed after that edition.', 'question: under a change, when a published case carries the question (K5540)')
 
+def w483(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-483: ' + note))
+# BOB #324's ask: inviting an administrator answered CONSENSUS_REQUIRED shows no link
+w483('screen.members.invite.nolink', 'No invitation link exists yet. It appears here once {names} have endorsed.', 'members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen')
+w483('screen.members.invite.waiting.summary', 'When a new administrator waits on endorsements', "members: the design page's fold for the nolink line")
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

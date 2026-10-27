@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 8064,
+  "screen": 8066,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -239,7 +239,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19788,
+  "total": 19790,
   "protected": 1180
  },
  "words": [
@@ -85611,6 +85611,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-481: question: under a change, when a published case carries the question (K5540)"
+  },
+  {
+   "key": "screen.members.invite.nolink",
+   "en": "No invitation link exists yet. It appears here once {names} have endorsed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-483: members: in place of the link when memberadd answers CONSENSUS_REQUIRED; {names} the administrators still to endorse, joined with and; no earlier link stays on screen"
+  },
+  {
+   "key": "screen.members.invite.waiting.summary",
+   "en": "When a new administrator waits on endorsements",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-483: members: the design page's fold for the nolink line"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
