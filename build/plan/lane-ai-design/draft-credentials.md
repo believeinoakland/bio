@@ -1,6 +1,6 @@
 # credentials (delta)
 
-**Status** · READY for PLANNING, AI-DESIGN #3, 2026-10-27 (lines that depend on Bob's answers to `QUESTIONS-FOR-BOB.md` follow the recommendation and are marked pending). Delta to `build/requirements/credentials.md`, moved out of `draft-ai-accounts.md` to keep that file within its size; read with it. Frame `DESIGN-BRIEF.md`; Bob's words `DECISIONS.md` (AD-n); bar `AI-PROVIDER-REQUIREMENTS.md` (AIR) and `BOUNDARY-REQUIREMENTS.md` (BR). Not a ruling; every [rec] is BOB's. Ids are never reused.
+**Status** · READY for PLANNING, AI-DESIGN #3, 2026-10-27 (every line that depended on Bob's answers now stands: AI1–AI16 all answered, K5475–K5494, folded by AI-DESIGN #3 and #4). Delta to `build/requirements/credentials.md`, moved out of `draft-ai-accounts.md` to keep that file within its size; read with it. Frame `DESIGN-BRIEF.md`; Bob's words `DECISIONS.md` (AD-n); bar `AI-PROVIDER-REQUIREMENTS.md` (AIR) and `BOUNDARY-REQUIREMENTS.md` (BR). Not a ruling; every [rec] is BOB's. Ids are never reused.
 
 Per WAY-THERE's credentials row. **KEEP** every id not named below (R12–R15, R28, R29, R31, R42, R53, R79 and every id already retired). **AMEND (6)** R27, R32, R48, R63, R66, R73: the text stands except the quoted words, which the new words replace. **RETIRE (1)** R72.
 

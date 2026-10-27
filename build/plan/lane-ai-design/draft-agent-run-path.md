@@ -1,6 +1,6 @@
 # Run path for the multi-AI assistant: deltas to agent-worker, agent-steps, agent-harness, ai-runs
 
-**Status** · READY for PLANNING, AI-DESIGN #3, 2026-10-27, revised after PLANNING's fold (lines that depend on Bob's answers follow the recommendation and are marked pending). Not a ruling: BOB decides (P17). Layer 6, no new module and no new `uses` edge except where a section says so. Frame: `DESIGN-BRIEF.md` §1–§3. Canon unchanged (BR §1).
+**Status** · READY for PLANNING, AI-DESIGN #3, 2026-10-27, revised after PLANNING's fold (every line that depended on Bob's answers now stands: AI1–AI16 all answered, K5475–K5494, folded by AI-DESIGN #3 and #4). Not a ruling: BOB decides (P17). Layer 6, no new module and no new `uses` edge except where a section says so. Frame: `DESIGN-BRIEF.md` §1–§3. Canon unchanged (BR §1).
 
 **Conventions.** A changed clause is given in full; text not quoted stands. Tests assert word keys and codes (K3810). "team", never "group", in words (K3472). Ids are never reused. Every number is a named parameter (Suggestions).
 
@@ -154,4 +154,4 @@
 **Suggestions.** Parameters (each "proposed <value>; set at START (K5457)"): `pause_max` proposed 24 h; `RUN_LEASE_MS` proposed 10 minutes (today's value); `DISPATCH_WAIT_MS` proposed 10 s (today's value); `PROBE_BATCH` proposed 20 pairs per firing; `PROBE_INTERVAL_MS` proposed 60 s; `INTERACTIVE_ATTEMPTS` proposed 2 and `INTERACTIVE_WAIT_TOTAL_MS` proposed 5 s (set in `agent-model`).
 
 ## For Bob (only what is his)
-1. **When a switch to another account changes who pays, does the run wait for the member's yes?** (a) [rec] A hop that changes the paying owner waits for her `accept`; a same-payer hop goes ahead at once, shown, and she may stop it. (b) Every hop waits. (c) No hop waits. Reason for (a): money and material are what a member must not be moved onto without her word; waiting on every same-payer switch would stall standing runs.
+1. **Answered as recommended (K5477, AI3).** **When a switch to another account changes who pays, does the run wait for the member's yes?** (a) [rec] A hop that changes the paying owner waits for her `accept`; a same-payer hop goes ahead at once, shown, and she may stop it. (b) Every hop waits. (c) No hop waits. Reason for (a): money and material are what a member must not be moved onto without her word; waiting on every same-payer switch would stall standing runs.
