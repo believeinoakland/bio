@@ -256,7 +256,12 @@
    c5885eaf..., over `tranche/T51` after the completion round's jobs before this one merged, K4114); the 1.78.0 snapshot
    (no stamp reads it) renamed to it; the rows T51's layers 3-11 and R1 to R8 added or changed (5 new, 75 changed, none
    retired; none declared here) stamped in 1.79.0; the `civicos-ui/` patterns gone with the directory (N1246). A row a
-   T52 job adds or changes turns this suite red until T53's stamp, so none is declared. */
+   T52 job adds or changes turns this suite red until T53's stamp, so none is declared.
+   RE-PINNED 2026-10-27 (PROMOTION #1, T52-8, K5339): over 1.80.0, the stamp's own lines (`fixtures/row-census-1.80.0.jsonl`,
+   written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in `build/jobs/T52/promotion.md`; 1971 rows,
+   17406b47...); the 1.79.0 snapshot (no stamp reads it) renamed to it; the rows added or changed after 1.79.0 (48 new,
+   12 changed, none retired; none declared here) stamped in 1.80.0. A row a T52 job adds or changes turns this suite red
+   until T53's stamp, so none is declared. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
@@ -276,8 +281,8 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-19 (PROMOTION #51, CR-5): over 1.79.0, the stamp's own lines (`fixtures/row-census-1.79.0.jsonl`).
-     T51's layers 3–11 rows are stamped in 1.79.0. None is open (see the header). */
+  /* RE-ANCHORED 2026-10-19 (PROMOTION #51, CR-5): over 1.80.0, the stamp's own lines (`fixtures/row-census-1.80.0.jsonl`).
+     The rows added or changed after 1.79.0 are stamped in 1.80.0. None is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
    declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
@@ -287,7 +292,7 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  /* PROMOTION #51 (T51, CR-5, 2026-10-19): re-anchored at 1.79.0; no job record names a composition change, and none is
+  /* PROMOTION #51 (T51, CR-5, 2026-10-19): re-anchored at 1.80.0; no job record names a composition change, and none is
      open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
