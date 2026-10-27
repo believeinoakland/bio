@@ -12,7 +12,7 @@
 3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L18-L26, J1-J7. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
+**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: J1-J7. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -145,3 +145,7 @@ Bob answered L15 B (K5540, not the recommendation): a published or divided quest
 ## L33 · 2026-10-27 · K5541, K5542
 
 BOB #324 took over from #323. Bob answered L16 and L17 as recommended (K5541: the subject may be taken off with a reason; K5542: a concluded question's subject may change, the conclusion kept): A1's four remaining brackets now read decided, and the Suggestions lose `SUBJECT_REQUIRED`. Every A1 question is answered.
+
+## L34 · 2026-10-27 · every L question answered (K5543-K5552)
+
+Bob answered L18-L26 (K5543-K5550, K5552), all as recommended but L21 (K5546, B: keep the colour profile); BOB decided L32's point (K5551: a divided question's parts keep their own subjects; the public line and in-team note relayed to UX-DESIGN). Applied: A2's R135 condition met (L18); A3's listed-member and Inbox brackets (L19, L20); A4: new A4-R8 re-embeds an ICC profile, bytes unchanged and unconverted, only when a strict structural check passes (RGB display class, size within `PHOTO_PROFILE_MAX`, bounded tag table), else left out and named; A4-R1, R3, R6 and the table follow; L22's fields shown; A5 (L23), A8 (L24, L25), A58 (L26) brackets decided. CONSISTENCY row 20 (3) updated (FILES' sRGB conversion withdrawn); QUESTIONS-L4 all answered; DECISIONS gains them. No bracket on a Bob question remains in PLANNING's drafts.

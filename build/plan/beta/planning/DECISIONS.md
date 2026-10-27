@@ -63,3 +63,12 @@
 - K5540 · 2026-10-27 · on QUESTIONS.html L15: "B" (a published question, or one divided into parts, may have its subject changed, with the change shown) · `build/rulings.md`
 - K5541 · 2026-10-27 · on QUESTIONS.html L16, option A: "as recommended" (a member may take the subject off, with a reason) · `build/rulings.md`
 - K5542 · 2026-10-27 · on QUESTIONS.html L17, option A: "as recommended" (a concluded question's subject may change, the conclusion kept, the strength before and after shown) · `build/rulings.md`
+- K5543 · 2026-10-27 · on QUESTIONS.html L18, option A: "as recommended" (the records' year governs; the team's statement listed as set aside) · `build/rulings.md`
+- K5544 · 2026-10-27 · on QUESTIONS.html L19, option A: "as recommended" ("listed" means named on any recorded detail of the source) · `build/rulings.md`
+- K5545 · 2026-10-27 · on QUESTIONS.html L20, option A: "as recommended" (the Inbox follows the same rule) · `build/rulings.md`
+- K5546 · 2026-10-27 · on QUESTIONS.html L21: "B": keep the colour profile · `build/rulings.md`
+- K5547 · 2026-10-27 · on QUESTIONS.html L22, option A: "as recommended" (all of a photo's data shown as "the file says", plain text, capped) · `build/rulings.md`
+- K5548 · 2026-10-27 · on QUESTIONS.html L23, option A: "as recommended" ("still ungraded" is a passage the team has not graded at all) · `build/rulings.md`
+- K5549 · 2026-10-27 · on QUESTIONS.html L24, option A: "as recommended" (the record grades a cited typed page) · `build/rulings.md`
+- K5550 · 2026-10-27 · on QUESTIONS.html L25, option A: "as recommended" (one check raises a typed page D to C; later checks raise nothing) · `build/rulings.md`
+- K5552 · 2026-10-27 · on QUESTIONS.html L26, option A: "as recommended" (each typist or checker chooses her credit per edition; default "a member of the team") · `build/rulings.md`

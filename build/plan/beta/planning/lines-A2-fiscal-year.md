@@ -25,7 +25,7 @@ Ids here are draft ids `A2-R<n>`; BOB numbers at writing (K5448), as the Decided
 
 ### jurisdictions
 
-**A2-R1** *(retired here, K5468)* Now `N1257-a2` jurisdictions R134 (and R135, conditional on Q-A2-2), CAPABILITIES. Test content: all carried by R134.
+**A2-R1** *(retired here, K5468)* Now `N1257-a2` jurisdictions R134 (and R135, its condition met: K5543, L18 = A, the records' year governs and the team's statement is listed as set aside), CAPABILITIES. Test content: all carried by R134.
 
 ### local-facts
 

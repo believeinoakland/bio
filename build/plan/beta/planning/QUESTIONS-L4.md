@@ -1,6 +1,6 @@
 # Questions for Bob raised in L4 (PLANNING), for QUESTIONS.html
 
-**Status** · For BOB to place on `build/plan/beta/QUESTIONS.html` (K5426). Each question is set out in full (plain words, options, a recommendation) in the "Questions for Bob raised in L4" section of the draft named; this is the index. All are small: each changes one or two draft lines, which are already bracketed on it. If Bob says "as recommended" to all, the drafts stand as written.
+**Status** · Every row answered (L13-L26, K5536 and K5539-K5552; as recommended except L14 B (K5539), L15 B (K5540), L21 B (K5546)); applied L28-L34. For BOB to place on `build/plan/beta/QUESTIONS.html` (K5426). Each question is set out in full (plain words, options, a recommendation) in the "Questions for Bob raised in L4" section of the draft named; this is the index. All are small: each changes one or two draft lines, which are already bracketed on it. If Bob says "as recommended" to all, the drafts stand as written.
 
 | # | draft | the question | recommendation |
 |---|---|---|---|

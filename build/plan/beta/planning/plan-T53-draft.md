@@ -1,6 +1,6 @@
 # Plan T53 round R1 · the beta's build (draft by PLANNING, for BOB)
 
-**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L23 (CAPABILITIES' READY scope; K5495-K5529, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
+**Status** · DRAFT, growing; PLANNING L3, 2026-10-27; last fold L34 (CAPABILITIES' READY scope; every L question answered; K5495-K5552, DEC-472, DEC-473). Form by K5434 (4): one round; each entry its cause line and a pointer; each capability's detail in its own file under `build/plan/beta/`, read whole at the job's START. BOB writes the plan and every requirement line; this draft proposes. Entries marked `[owed: X]` wait on a lane draft not yet READY or on a question; they are listed so the module's job is known to exist. Carried entries keep their ids and text in `build/plan/carried-T52-R1.md` (pointer `C`); new ones are numbered `T53-n` when BOB writes the plan.
 
 **Legacy census** (§5.2 (2)): no module is legacy (`modules.json` carries no `from`; legacy-ui retired at T51, K4100).
 
@@ -20,7 +20,7 @@
 - T53 · N1256 (DEC-401 B) · the federal offices of the government's own list, a dated snapshot rebuilt before a release · same, R119, R120 `[owed: F4's measure; the makers' key]`
 - T53 · N1257 (K5458, K5462) · `nameResolve` (R121, pure: callers pass the active layer set), the one-government fiscal year (R123, R124), N1259's register sections (R127-R133), N858's court-kind refusal (R136) and R137's display half, the beta's profile texts; every module that stores a rule, list or office name stores its layer (local-facts, entities, duties, reading-guides, layer 9, instance-setup, producers, screens) · `planning/plan-T53-capabilities.md` §A
 - T53 · K5497 (C7 remainder) · Civicsmith ships United States places only; a team choosing its places is told so; a team whose work is about a place outside the US names its places and adds their offices and rules itself (DEC-150); level names unchanged · `[owed: CAPABILITIES' lines]`
-- T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` `[owed: READY; L18 (Bob)]` (L3 decided, K5517: a disputed year still groups, shown disputed)
+- T53 · A2 (DEC-458; K5468) · `fiscal_year` a section of the one team layer, any level of government where no shipped layer states its year, the records read first (R134); for L18 = A only, the records' year governs and the team's is set aside (R135) · `capabilities/N1257-requirements-a2.md` (L18 decided, K5543: the records' year governs, the team's statement set aside; R135 stands) (L3 decided, K5517: a disputed year still groups, shown disputed)
 
 - T53 · K5527 (4), (5) · N858's text record in the profile: a review's `reviewed_text_sha` (R40), a guide's attribution fields (R125), what counts as the professional review and `countedReview` (R126), R138 on `authored_by` and `machine_draft` · `planning/lines-K5527-texts-and-listing.md` §1, §3, §4 (T1-T8 decided, K5528) `[owed: CAPABILITIES' N858 READY]`
 
@@ -100,7 +100,7 @@
 - T53 · A3 · a pulled knock carries the knocker's file name as the knocker's word · `planning/lines-A3-A4-source-picture.md` (doorbell R29) (L5 decided, K5519)
 
 **file-safety**
-- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name shown beside the picture to members who may see it (K5521, governing K5473 (1) for them); image id, artist, copyright read, not shown by default; the place name shown, exact figures one step away A4 the one source (K5473 (1)); "near {place}" from the shipped and team layers only, else rounded figures `[waits: L21, L22]` (the published place decided, K5514: shown in an edition only where the author turns it on, per photo, off by default)
+- T53 · A4 · the safe picture of a photograph, `file_says`, `left_out`, lifecycle, the named security review · `planning/lines-A3-A4-source-picture.md` (file-safety R60-R64); FILES's `files/PHOTO-DATA.md` checked against A4 §2 (one source, K5471 (3)): serials and owner name shown beside the picture to members who may see it (K5521, governing K5473 (1) for them); image id, artist, copyright read, not shown by default; the place name shown, exact figures one step away A4 the one source (K5473 (1)); "near {place}" from the shipped and team layers only, else rounded figures (L21, K5546: a colour profile passing A4-R8's check kept in the picture, not the recommendation; L22, K5547: all the photo's data shown as "the file says") (the published place decided, K5514: shown in an edition only where the author turns it on, per photo, off by default)
 - T53 · DEC-454 · the partial-scan reason in plain words · `docs/development/DECISIONS.md` DEC-454
 - T53 · N1266 (K5436) · a held-and-named file safe-graded like any other · `files/REQ-format-registry-beta.md` RF10
 
@@ -209,7 +209,7 @@ N1258 and N829: the real public-matters set, when it exists, is a standing check
 ## Layer 8
 
 **case-grammar**, **case-catalogue**, **publication**, **public-read**, **case-import**
-- T53 · A5 (DEC-461), A8 (DEC-464) · case-document format `/10`: the ungraded-passages and typed-passages blocks, their C-41.18 and C-41.19 checks, the edition's statements recorded and served, imported editions' statements kept apart, typist and checkers credited as each chose · `planning/lines-A5-A8-case-modules.md` `[owed: L23 (Q-A5-1), L26 (Q-A58-1), L11]`
+- T53 · A5 (DEC-461), A8 (DEC-464) · case-document format `/10`: the ungraded-passages and typed-passages blocks, their C-41.18 and C-41.19 checks, the edition's statements recorded and served, imported editions' statements kept apart, typist and checkers credited as each chose · `planning/lines-A5-A8-case-modules.md` (L23 K5548, L26 K5552, L11 K5525 decided)
 
 **case-disclosures**, **basis-versions**
 - T53 · A5, A8 · ungraded passages listed; a typed passage printed as typed, labelled as of signing; a frozen reading names typist and checkers · `planning/lines-A5-A8-case-modules.md`
