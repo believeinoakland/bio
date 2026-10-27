@@ -6,7 +6,7 @@
 
 **Done:** takeover reading (CLAUDE.md, LANES §1-§2, MAP, `tests-rethink-T52.html`, K5258, K5313, K5339, K5343, K5418). `civicos-process` cloned. Baseline measured on the branch: words check 0 failures (`dev 322, unkeyed 1970`); fixtures check 89 failures (answer 4, stub 73, contract 12; accepted 366), in 28 test files, all under `bio-plane/test`.
 
-**Next:**
+**Next (S9: all done but the successor's call on a second sweep):**
 1. DONE S2: census (`CENSUS.md`). Next: classify the regex assertions (`rx-files.txt`, 653 files) the same way A/B/C; then convert class A and the regex tests whose English is a `words.json` value.
 2. DONE S4 (`FIXTURES.md`).
 3. Run each K5339/K5343 red once (`proc tests`), sort stale / real.
@@ -32,3 +32,7 @@ Touched modules so far: installer (`newgroup/test/wizard.test.mjs`). Full `proc 
 
 ### S5 · 2026-10-27 · regex assertions classified (CENSUS-RX.md)
 `classify-rx.mjs`: A 972 sites in 452 files, B 1,054 in 450, C 1,123 in 534. Only 34 A sites equal one key's whole value (tool-convertible); 655 are fragments of longer values, so the key and its placeholders must be read from the product call (not mechanical). Finding for BOB: a full conversion of A and B is about 900 files, most needing a per-site reading or the module's key first; the words check must therefore refuse *new* English in tests (a ratchet: the files now holding English are a recorded baseline that only shrinks) rather than all English, or it cannot merge before T53's jobs finish. Recommendation sent to BOB; waiting on his word on the shape of the check before I write it.
+
+### S9 · 2026-10-27 · verdict of the full run, reds sorted (REDS.md)
+`proc tests --base origin/tranche/T53` on the 23 modules touched by S3-S6 (acquisition, bias, calculations, capture, case-authoring, doorbell, entities, escalation, file-safety, id-spaces, installer, instance-setup, intent, investigation, journey-check, leg-earning, money-checks, monitoring, observation-log, provenance, reading-pipeline, run-rules, test-support): **no new red**; installer (4, R33) and journey-check (22) show the identical lists at the tranche tip. S8's fix (following, answer-envelope, interface-shell: `plane/register.mjs` moved to `store-assembly/register.mjs`): the three modules, no new red (following 128/128, answer-envelope 48/52 and interface-shell 384/385 inherited). Of BOB's 23 reds, none could be proved stale except answer-envelope's and following's import (K5343); the others have product or stamp causes, in REDS.md.
+**READY for BOB's merge:** the bio branch (comment-only fixtures markers, 26 regex + 8 literal conversions, baseline `build/tests-english-baseline.json`, 3 import paths). The civicos-process branch `lane/tests-sweep` (e106145) merges after it. Left for T53 jobs: FIXTURES.md (3), CONVERSION-ENTRIES.md, REDS.md.
