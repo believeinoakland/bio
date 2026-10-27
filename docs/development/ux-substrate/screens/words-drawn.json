@@ -5348,7 +5348,7 @@
   },
   {
    "key": "document.held.says",
-   "en": "Held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
+   "en": "Awaiting review: held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
    "protected": false,
    "note": "DEC-289: a copy the viewer captured, not yet vouched for (release)"
   },
@@ -5912,7 +5912,7 @@
   },
   {
    "key": "ceremony.gate.heading",
-   "en": "Put these right before you sign",
+   "en": "Fix these before you sign",
    "protected": false,
    "note": "DEC-299: the ceremony's list of what stops the signing"
   },
@@ -9164,7 +9164,7 @@
   },
   {
    "key": "refusal.ACQUIRE_TIMED_OUT",
-   "en": "The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file or photo.",
+   "en": "The site took longer than 25 seconds to answer, so your team's Civicsmith stopped and kept nothing. The site may be slow, or may be refusing automated requests. Try again later, or save the page yourself and add it as a file.",
    "protected": false,
    "note": "DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED"
   },
@@ -19280,7 +19280,7 @@
   },
   {
    "key": "refusal.HOST_COOLING_OFF",
-   "en": "Civicsmith is holding off asking that website for now so it is not overloaded. Nothing was fetched; try again in a little while.",
+   "en": "Your team's Civicsmith is waiting a while before it asks that website again. Nothing was fetched. Try again in a little while, or save the page yourself and add it as a file.",
    "protected": false,
    "note": "DEC-342: per-host request governor is pausing that site"
   },
@@ -37472,7 +37472,7 @@
   },
   {
    "key": "refusal.ACQUIRE_TIMED_OUT.held",
-   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file or photo.",
+   "en": "The site took longer than 25 seconds to finish, so your team's Civicsmith stopped. What it had already received is kept and held for you to check before anyone relies on it. Try again later for the whole page, or save the page yourself and add it as a file.",
    "protected": false,
    "note": "DEC-397: B446 (control-plane R105, R116): a timed-out capture whose received part was kept"
   },
@@ -39218,7 +39218,7 @@
   },
   {
    "key": "plane.pending.interrupted",
-   "en": "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.",
+   "en": "The reading kept stopping before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.",
    "protected": false,
    "note": "DEC-417: B477 plane #50 J29: an owed reading the object stopped three times"
   },
@@ -44387,6 +44387,168 @@
    "en": "Every project starts here; nothing is needed.",
    "protected": false,
    "note": "DEC-452: Stage: Forming's need line, drawn whether or not it is reached (screens-inquiry project.mjs; today an unreached stage's needs is null, so Forming reads blank)"
+  },
+  {
+   "key": "refusal.MONEY_BAD_PERIOD",
+   "en": "Your team's Civicsmith can't read that period. Check its dates or its fiscal year, and try again.",
+   "protected": false,
+   "note": "DEC-453: money R29: the refusal; the money.index.* detail is drawn beside it (until now only the code's stand-in)"
+  },
+  {
+   "key": "dock.withheld.REMOTE_UNAVAILABLE",
+   "en": "The assistant isn't answering right now, so this run can't start. Nothing was sent. Try again in a few minutes; if it keeps happening, tell an administrator, with the reference below.",
+   "protected": false,
+   "note": "DEC-453: the assistant panel, when the agent runner answers 503 REMOTE_UNAVAILABLE (beside dock.withheld.other)"
+  },
+  {
+   "key": "member.unnamed",
+   "en": "A member",
+   "protected": false,
+   "note": "DEC-453: the name drawn for a member with no handle, in place of the member's id (queue-producers #memberName; beside member.founder.unnamed)"
+  },
+  {
+   "key": "refusal.PROMOTE_NOT_A_PARTICIPANT.unseen",
+   "en": "You can't file into that project: only its members, and those invited to it, can. Nothing was filed. Ask whoever told you about it to have an owner invite you, or file it into a project you are in.",
+   "protected": false,
+   "note": "DEC-453: promotion: PROMOTE_NOT_A_PARTICIPANT where the member cannot see the project (membership sight NONE), so no id or title is shown"
+  },
+  {
+   "key": "screen.document.a34.para_same",
+   "en": "paragraph {n}: the same in both",
+   "protected": false,
+   "note": "DEC-453: Document's comparison (A34): beside screen.document.a34.page_same; {n} the paragraph number, or numbers joined with commas"
+  },
+  {
+   "key": "screen.document.a34.para_differs",
+   "en": "paragraph {n}: reads differently",
+   "protected": false,
+   "note": "DEC-453: Document's comparison (A34): beside screen.document.a34.page_differs; {n} as para_same"
+  },
+  {
+   "key": "ceremony.gate.name.c41_1",
+   "en": "The kind of case file",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.1, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_2",
+   "en": "Which case this is",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.2, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_3",
+   "en": "Which edition this is",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.3, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_4",
+   "en": "Which project the case belongs to",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.4, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_5",
+   "en": "What the case is about",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.5, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_6",
+   "en": "Your statement of bias",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.6, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_7",
+   "en": "The findings the case rests on",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.7, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_8",
+   "en": "Which findings carry the case and which support it",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.8, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_9",
+   "en": "The version of each finding the case uses",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.9, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_10",
+   "en": "What the case says it leaves out",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.10, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_11",
+   "en": "What the case excludes",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.11, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_12",
+   "en": "The standard of evidence the case sets",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.12, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_13",
+   "en": "Who wrote the statement of bias, and what it admits",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.13, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_14",
+   "en": "Proposed changes the case relies on",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.14, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_15",
+   "en": "The sources the case cites, and the version of each",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.15, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_16",
+   "en": "What changed since the last edition",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.16, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c41_17",
+   "en": "The notice the project is working on",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-41.17, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c3_1",
+   "en": "The \"What This Excludes\" section",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-3.1, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c21_1",
+   "en": "Limits and bias written fresh for this edition",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-21.1, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c2_8",
+   "en": "How each finding's grade rests on its sources",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-2.8, filling screen.ceremony.gate.check {check}"
+  },
+  {
+   "key": "ceremony.gate.name.c12_2",
+   "en": "The record's history is complete",
+   "protected": false,
+   "note": "DEC-453: the signing gate: the plain name of check C-12.2, filling screen.ceremony.gate.check {check}"
   }
  ],
  "rewrite": {
@@ -44605,6 +44767,9 @@
   "project-stage.project_concluded_held": "the project has concluded {concluded} of the {read} questions read; signed cases: {editions}",
   "project-stage.project_concluded_none": "the project has concluded none of the {read} questions read and has no signed case; concluding one of them, or signing a case it owns, reaches this stage",
   "project-stage.why.unsigned_case_document": "no draft of this case is saved",
-  "project-stage.why.edition_case_ratified": "this case has not been signed"
+  "project-stage.why.edition_case_ratified": "this case has not been signed",
+  "refusal.BAD_PERIOD": "A follow needs a first day, and a last day that isn't before it, or no last day. Nothing was written.",
+  "refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE": "Your team's Civicsmith already holds this document, filed in another place, so it wasn't filed again here: a document has one home. Nothing was written. If you found it at a new address, that address is already noted with the copy your team holds.",
+  "attestation.register_row_names": "no register row names this capture under a record that exists, so the record states no attestation for it"
  }
 }
