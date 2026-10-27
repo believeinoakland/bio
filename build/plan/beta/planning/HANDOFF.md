@@ -12,7 +12,7 @@
 3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L14-L26, J1-J7, C33, C34. Lanes: PLATFORM, TESTS-SWEEP; CAPABILITIES' five gaps.
+**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L14-L26, J1-J7, C33, C34. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
