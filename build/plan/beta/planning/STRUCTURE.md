@@ -125,3 +125,25 @@ For every lane: requirement drafts per module (provides, uses, keeps, satisfies,
 - **Q2** · Layer 11's waves. Recommend the plan states each layer-11 job's start-after set and `proc layer start` honours it (K5319's "started once what it uses has merged"); if the tool cannot yet, BOB starts the waves by hand in §3's order.
 - **Q3** · T52-100 (file-scanner) moves from a completion-round entry into R1's layer 1, since R1 reopens layer 1 for FILES's readers. Recommend yes.
 - **Q4** · The plan's size. `proc round open` copies one plan file whole into `current.md`, and every file under `build/plan/` is capped at 51,200 bytes (§17). The 78 carried entries already take about 24 KB; every lane's new work will pass the cap. Options: (a) one round, entries kept to their cause lines and a pointer, each capability's detail in its own file under `build/plan/beta/` read whole at START (T52's PL-file pattern); (b) rounds by layer group (R1a layers 1-5, R1b 6-10, R1c 11), each its own plan; (c) both. Recommend (a), falling back to (b) only if (a) still passes the cap: (b) adds round boundaries the design does not need.
+
+## 8. Owed to the plan by rulings and design merges since L1 (BOB #321, 2026-10-27)
+
+| source | what the plan carries | module(s) | state |
+|---|---|---|---|
+| DEC-454 (U498, merged `c08ea4029`) | draw the display rows in place of stand-ins; `screen.document.unsupported.<kind>` by the reading's kind; sizes reach members in MB; plain names for file-safety's partial-scan reason and `content.extent`'s part key | screens-intake (`capture.mjs`), screens-inquiry (`document.mjs`), file-safety, content | entries (code only, no new requirement) |
+| DEC-455 (U498) | a preview's next rows from `next_row` (owed op `previewmore`, name BOB's) and "Show more rows"; the parted upload's Cancel and canceled line (`captureuploadabort`, declared) | screens-intake (J46, J47), capture (the op), op-declarations | entries; the op needs a requirement line (capture) |
+| DEC-456 (U498) | screens-intake re-points r9-states R65 at `screen.capture.read.queued` once the design returns the row | screens-intake | entry, `[waits: the row's return]` |
+| A1 DEC-457 | a question's subject at opening, optional, changeable with a reason in history | inquiry, screens-inquiry | lines drafting (L2) |
+| A2 DEC-458 | a government's fiscal year: from the place's records, else stated by a member with how checked; the view only when known | money, civil-time, the place's module | lines drafting (L2) |
+| A3 DEC-459 | the source link for listed members on Document and Held; others "Handed in through the doorbell" | doorbell, screens-intake, screens-inquiry | lines drafting (L2) |
+| A4 DEC-460 | a safe picture redrawn from pixels; only metadata unsafe to carry dropped, the rest shown as data; its security review | file-safety (with FILES, PLATFORM) | lines drafting (L2) |
+| A5 DEC-461 | signing lists every ungraded passage; sign anyway; the edition says so | ratification, case-authoring | lines drafting (L2) |
+| A6 DEC-462 | one queue item per member listing each new signing key | queue-producers, the key's module | lines drafting (L2) |
+| A7 DEC-463 | pickers: this project's documents first, "Show documents from your other projects" | screens-inquiry (and every picker) | lines drafting (L2) |
+| A8 DEC-464 | a typed page citable at once, graded as its typist's word, one step higher once checked | extraction, leg-earning, strength, citation | lines drafting (L2) |
+| K5425 (b) | the fixtures findings that need a module's judgment, listed by TESTS-SWEEP by module and test file, become T53 job entries | per TESTS-SWEEP's list | waits on TESTS-SWEEP |
+| K5427 | the text bound is 100 MB for plain text, JSON, XML and every text-like type | the readers, runtime-limits (FILES's draft) | waits on FILES |
+| K5424 | civicsmith.org stays noindex until 1.0 is deployed; 1.0's plan carries the lift | site | left out of T53, hard reason: Bob's (1.0's deployment) unless T53 is 1.0's build (Q5) |
+
+- **Q5** · Is T53's beta the 1.0 release, or a release before it? It decides whether K5424's entry (lift `noindex`) is in T53's plan. I read "the beta" as before 1.0 and leave it out; BOB to confirm from the rulings.
+- **Bob's questions** from this lane now go to BOB for `build/plan/beta/QUESTIONS.html` (K5426), each with its explanation, options and recommendation.
