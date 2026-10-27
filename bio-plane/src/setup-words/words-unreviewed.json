@@ -35397,175 +35397,175 @@
       "en": "basis[{ord}] rests on {target_id}, another team's finding, graded as the edition this leg names publishes it. This record holds no part of it, so it has no content row here",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 343
+      "line": 363
     },
     {
       "id": "leg-earning.index.basis_ord_rests_on_target_2",
       "en": "basis[{ord}] rests on {target_id}, which is an inquiry rather than a document. An inquiry has no capture and therefore no part to point at — the content axis ranges over documents (DEC-21), and this is undetermined and stated rather than a document-extent row invented for it",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 353
+      "line": 373
     },
     {
       "id": "leg-earning.index.bundleid_is_a_members_authored",
       "en": "{bundleId} is a member's authored observation: its bytes are the member's own words, recorded through op=testify, and nothing was read in from anywhere. The capture axis measures that act, so it earns no letter here — a {EARNED_CAPTURE_CEILING} would be true of the bytes and would read as strength the observation does not have. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter. Its grade is testimony, {TESTIMONY_GRADE}, on the testimony axis.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 660
+      "line": 680
     },
     {
       "id": "leg-earning.index.bundleid_is_a_members_own",
       "en": "{bundleId} is a member's own firsthand observation, recorded through op=testify: it is graded as testimony, {TESTIMONY_GRADE}, and stands on the observing member's trust. Nothing raises it — another member agreeing with it is a co-signature, not a second observation.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 652
+      "line": 672
     },
     {
       "id": "leg-earning.index.capture_route_no_ruling",
       "en": "capture route — the bytes of this document were served by a route no ruling grades",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 714
+      "line": 734
     },
     {
       "id": "leg-earning.index.captureword_but_every_transcription_of",
       "en": "{captureWord}, but every transcription of its text is UNMEASURED: no step in the provenance of this document's text carries a measured fidelity, so what a leg resting on that text may claim about how it was captured is undetermined. That is a statement, not a permission — DEC-4 bounds the capture axis by transcription fidelity as its weakest link, so an unmeasured derivation bounds it to nothing rather than to {EARNED_CAPTURE_CEILING}. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter this record cannot support.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 725
+      "line": 745
     },
     {
       "id": "leg-earning.index.duty_derives_no_occurrence_key",
       "en": "{duty} derives no occurrence {key} between {from} and {to} as of {as_of}, so this leg's derivation is undetermined{v1}.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 910
+      "line": 930
     },
     {
       "id": "leg-earning.index.fidelity_bound_bytes_fetched",
       "en": "{captureWord}, and the bytes as your team's Civicsmith fetched them would be worth {EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that derivation is measured at {bound}. The capture axis is bounded by the weakest link of byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest capture grade this document can earn is {bound}. Transcription never RAISES a capture grade, and it is not a separate measurement a member can cite instead.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 760
+      "line": 780
     },
     {
       "id": "leg-earning.index.id_holds_no_captured_text",
       "en": "{id} holds no captured text at this version, so nothing bounds what a leg resting on it may claim on the capture axis: undetermined. A leg may state NO capture grade; it may not state a letter.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 858
+      "line": 878
     },
     {
       "id": "leg-earning.index.id_is_a_normalizetype_an",
       "en": "{id} is a {normalizeType}. An earned basis grade is a fact about an INQUIRY's legs — what each candidate target earns against the question's subject — and only an inquiry has a basis.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 1086
+      "line": 1107
     },
     {
       "id": "leg-earning.index.id_names_no_subject_entity",
       "en": "{id} names NO subject entity, so no leg of it earns an A/B/C connection grade. That is a stated position, not a defect (DEC-15): the capture axis still earns from the capture record, and a connection a member can account for is testimony at grade D.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 1182
+      "line": 1203
     },
     {
       "id": "leg-earning.index.id_names_subject_entity_v1",
       "en": "{id} names {subject_entity}{v1} as its subject. A target listed under earned.connection may be written as a leg with grade_source: resolution AT THAT GRADE and no other; one listed under earned.capture may be written with grade_source: capture at that grade. A target absent from a list earns nothing on that axis — the honest leg is testimony (grade D, with an author and a date) or no grade at all, which suspends the axis and names the leg rather than pretending to a number.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 1181
+      "line": 1202
     },
     {
       "id": "leg-earning.index.id_resolves_to_subjectentity_v1",
       "en": "{id} resolves to {subjectEntity}{v1} at grade {grade} — the strongest of the {captures} capture(s) of that document the recogniser matched to this subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the document is.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 543
+      "line": 563
     },
     {
       "id": "leg-earning.index.id_s_text_is_held",
       "en": "{id}'s text is held in a member's authored words, which nobody read in from anywhere: the capture axis does not apply to it, and a leg may state no letter on it.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 871
+      "line": 891
     },
     {
       "id": "leg-earning.index.id_s_text_is_held_2",
       "en": "{id}'s text is held in a capture served by a route no ruling grades, so what a leg resting on it may claim about how it was captured is undetermined.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 875
+      "line": 895
     },
     {
       "id": "leg-earning.index.id_s_text_was_derived",
       "en": "{id}'s text was derived by a machine and no step in that derivation carries a measured fidelity, so what a leg resting on it may claim about how it was captured is undetermined (DEC-4).",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 878
+      "line": 898
     },
     {
       "id": "leg-earning.index.no_basis_leg_ord_on",
       "en": "no basis leg {ord} on {bundleId}",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 336
+      "line": 356
     },
     {
       "id": "leg-earning.index.passage_ai_reading_member_check",
       "en": "a member's check — this passage's text is the AI's reading of the page, graded undetermined until its accuracy is measured or a member checks it against the page",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 812
+      "line": 832
     },
     {
       "id": "leg-earning.index.ref_of_bundle_id_was",
       "en": "{ref} of {bundle_id} was read off the page by an AI, and that reading is graded undetermined until its accuracy is measured, so what a leg resting on this passage may claim about how it was captured is undetermined. A member who checks the passage against the page (op=attesttext) gives it the capture's own grade. A leg may state NO capture grade; it may not state a letter.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 813
+      "line": 833
     },
     {
       "id": "leg-earning.index.testimony_this_document_is_a",
       "en": "testimony — this document is a member's own firsthand observation, graded on that member's trust on the testimony axis at {TESTIMONY_GRADE} (MEMBER-KNOWLEDGE-DESIGN.md section 3); the capture axis does not apply to it",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 659
+      "line": 679
     },
     {
       "id": "leg-earning.index.the_record_could_not_derive",
       "en": "the record could not derive {ref}: {v1}. Its derivation is undetermined.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 907
+      "line": 927
     },
     {
       "id": "leg-earning.index.the_record_holds_n_captures",
       "en": "the record holds {n} captures of {target} and this leg's bytes name none of them, so which version it was made against is undetermined. The capture named is the one the record resolved when this question was first projected; it is not a record of what the member read, and nothing here moves it",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 1062
+      "line": 1083
     },
     {
       "id": "leg-earning.index.the_record_holds_no_standard",
       "en": "the record holds no standard {id}, so what a leg resting on it may claim about how its text was captured is undetermined. A leg may state NO capture grade; it may not state a letter.",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 855
+      "line": 875
     },
     {
       "id": "leg-earning.index.this_record_holds_no_capture",
       "en": "this record holds no capture of {target_id}, so there are no bytes for a content row to address. Absence here is a fact about what was captured and never evidence about what the document says (CLAUDE.md's sparse rule)",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 358
+      "line": 378
     },
     {
       "id": "leg-earning.index.transcription_fidelity_unmeasured",
       "en": "transcription fidelity — this document's text was derived by a machine and no step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, per version)",
       "module": "leg-earning",
       "file": "bio-plane/src/leg-earning/index.mjs",
-      "line": 724
+      "line": 744
     },
     {
       "id": "leg-earning.index.write_basis_requires_bundle_id",
