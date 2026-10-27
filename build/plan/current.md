@@ -262,7 +262,7 @@ Every screen job of this layer also draws DEC-445's rows and DEC-446's layout th
 ## Completion round (P10: modules whose layer has closed)
 
 **file-safety** (layer 3)
-- T52-103 · DEC-449 (UX-DESIGN U493, `cf94163859`, B544) · test-only · `STAND_INS` drops `SIGNATURES_RUN_UNDER_WAY` now that `refusal.SIGNATURES_RUN_UNDER_WAY` has its row; R24 (`rows.test.mjs`) green. BOB merges DEC-449 into the tranche at this round's START, so R24 is never red on the tranche (K5396).
+- T52-103 · DEC-449 (UX-DESIGN U493, `cf94163859`, B544) · test-only · `STAND_INS` drops `SIGNATURES_RUN_UNDER_WAY` now that `refusal.SIGNATURES_RUN_UNDER_WAY` has its row; R24 (`rows.test.mjs`) green. Done instead by BOB as a §5.10 mechanical pass at layer 5's close (no job running), with DEC-449 and DEC-450 (U494, `2ac5195725`) merged in the same step, so R24 is never red on the tranche (K5397).
 
 **file-scanner** (layer 1)
 - T52-100 · U5 (T52-13 settled by FILE-SAFETY #1, K5384) · MAJOR · the pinned LibreOffice 7.4.7.2 cannot load a streamed docx (data-descriptor flag 0x8, 28-byte extras; corpus docgen `alpha-B-6`); `renderer.mjs`'s `plainPackage` already converts it, but a render failed before stays failed because `renderer_version` holds only package versions (`handler.mjs:27`): file-scanner R36 (parked in `req-ahead-T52.md` until this round's START). Test with the streamed docx: refused by the old version, rendered once the version moves. After T52's redeploy (BOB's act 7) the live image is checked to carry `plainPackage` and capture `9dce360a…` renders.
