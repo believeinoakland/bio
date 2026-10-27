@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (19760 design words, 1176 protected; SHA-256
-   2038856c5f138588f920cf75585a723a1d7c03567e195fa0f82d3c35945b47e8) followed by 7483 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (19753 design words, 1176 protected; SHA-256
+   3498b203ac7a90a202b066079e9e7f4f8b78cf50303a2b74ba3cd85c02c81707) followed by 7490 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "2038856c5f";
+export const WORDS_COMMIT = "3498b203ac";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -19761,13 +19761,6 @@ export const WORD_ROWS = Object.freeze([
   ["wizard.WIZ-a8c349d7d71b6bb0.step6.why","This tells the office what your team is looking at, and starts the clock.",null,null,false,"design"],
   ["wizard.WIZ-a8c349d7d71b6bb0.step7.what","The due date and next checkpoint go into your queue. A next step can wait on the reply.",null,null,false,"design"],
   ["wizard.WIZ-a8c349d7d71b6bb0.step7.why","If no reply comes, the next step is ready without anyone remembering.",null,null,false,"design"],
-  ["record-grammar.bundle.object_type_ot_is_not","object_type '{ot}' is not a known type","record-grammar, code message held as a word for its test",null,false,"design"],
-  ["record-grammar.bundle.current_state_cur_is_not","current_state '{cur}' is not legal for {ot} (legal: {legal})","record-grammar, code message held as a word for its test",null,false,"design"],
-  ["record-grammar.bundle.references_i_rel_rel_is","references[{i}].rel '{rel}' is not in the closed vocabulary","record-grammar, code message held as a word for its test",null,false,"design"],
-  ["record-grammar.acts.no_basis.progressions","first declaration and revision of a declared flow","record-grammar, code message held as a word for its test",null,false,"design"],
-  ["record-grammar.acts.no_basis.entities","held identifier and grade-D testimony","record-grammar, code message held as a word for its test",null,false,"design"],
-  ["record-grammar.acts.no_citation.progressions","revision of a declared flow and exception document","record-grammar, code message held as a word for its test",null,false,"design"],
-  ["record-grammar.labels.unknown_subject","proposalLabel: '{subject}' is not a proposal subject; one of {subjects}","record-grammar, code message held as a word for its test",null,false,"design"],
   ["accepted-work.index.a_leg_rests_on_another","a leg rests on another team's finding without an acceptance of that edition known to be in force. Nothing was written.",null,null,false,"code"],
   ["accepted-work.index.basis_ord_rests_on_ref","basis[{ord}] rests on {ref}{at}, and no acceptance of that edition is in force for this team",null,null,false,"code"],
   ["accepted-work.index.could_not_answer","the module holding another team's work could not answer",null,null,false,"code"],
@@ -22190,6 +22183,10 @@ export const WORD_ROWS = Object.freeze([
   ["connection-grammar.registry.viewer_missing","a read names the member reading; an absent viewer is neither an administrator nor the public",null,null,false,"code"],
   ["connection-grammar.shape.grade_shape","grade is not {shape} in the letters {letters}",null,null,false,"code"],
   ["connection-grammar.shape.label_declared","declared, not evidenced",null,null,false,"code"],
+  ["connection-grammar.why.chain_limit_over","a list shows at most {max} chains; {requested} were asked",null,null,false,"code"],
+  ["connection-grammar.why.chain_limit_whole","a chain limit is a whole number of chains from 1 to {max}; {requested} is not",null,null,false,"code"],
+  ["connection-grammar.why.hops_list","hops is a list of at most {max} connections",null,null,false,"code"],
+  ["connection-grammar.why.paths_list","paths is a list, each a non-empty list of connections, or an object holding hops and quantities",null,null,false,"code"],
   ["connections.checks.a_membership_is_taken_back","A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it.",null,null,false,"code"],
   ["connections.checks.leg_claims_through_theme","{label} claims its support through a THEME, and membership in a theme is never a reason a leg counts: it rests on the document or passage it cites, or on nothing",null,null,false,"code"],
   ["connections.checks.leg_names_theme","{label} names {subject}, and a theme is never the basis of a claim: it is one member's declared lens for gathering material, not evidence, so no leg can rest on it or on membership in it",null,null,false,"code"],
@@ -26263,6 +26260,7 @@ export const WORD_ROWS = Object.freeze([
   ["record-grammar.bundle.apply_disjoint_if_file_sets_prove","apply-disjoint if file sets prove disjoint (requires history manifests)",null,null,false,"code"],
   ["record-grammar.bundle.complete_consumption_archive_manifest_delete_consumed","complete consumption: archive manifest, delete consumed files (idempotent)",null,null,false,"code"],
   ["record-grammar.bundle.complete_consumption_or_discard_with_reason","complete consumption or discard with reason",null,null,false,"code"],
+  ["record-grammar.bundle.current_state_cur_is_not","current_state '{cur}' is not legal for {ot} (legal: {legal})",null,null,false,"code"],
   ["record-grammar.bundle.data_changes_json_records_were_mutated","data/changes.json records were mutated or removed (append-only surface)",null,null,false,"code"],
   ["record-grammar.bundle.delete_the_stale_claim_or_presence","delete the stale claim or presence marker",null,null,false,"code"],
   ["record-grammar.bundle.discard_the_package_never_promote","discard the package (never promote)",null,null,false,"code"],
@@ -26291,6 +26289,7 @@ export const WORD_ROWS = Object.freeze([
   ["record-grammar.bundle.manifest_keys_out_of_order","manifest keys out of order at '{key}'",null,null,false,"code"],
   ["record-grammar.bundle.manifest_target_target_does_not","manifest target '{target}' does not match record '{folderName}'",null,null,false,"code"],
   ["record-grammar.bundle.map_to_the_nearest_vocabulary_value","map to the nearest vocabulary value",null,null,false,"code"],
+  ["record-grammar.bundle.object_type_ot_is_not","object_type '{ot}' is not a known type",null,null,false,"code"],
   ["record-grammar.bundle.orphaned_pending_file_p_with","orphaned pending file '{p}' with no manifest",null,null,false,"code"],
   ["record-grammar.bundle.package_file_name_pending_listed","package file '{name}.pending' listed in manifest is missing",null,null,false,"code"],
   ["record-grammar.bundle.path_does_not_parse_as","{path} does not parse as JSON",null,null,false,"code"],
@@ -26307,6 +26306,7 @@ export const WORD_ROWS = Object.freeze([
   ["record-grammar.bundle.record_a_tamper_finding_if_history","record a tamper finding if history lacks the original",null,null,false,"code"],
   ["record-grammar.bundle.record_has_been_updated_but_carries","record has been updated but carries no Session Log entry",null,null,false,"code"],
   ["record-grammar.bundle.references_i_is_not_an","references[{i}] is not an object",null,null,false,"code"],
+  ["record-grammar.bundle.references_i_rel_rel_is","references[{i}].rel '{rel}' is not in the closed vocabulary",null,null,false,"code"],
   ["record-grammar.bundle.references_i_rel_rel_is_2","references[{i}].rel '{rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim",null,null,false,"code"],
   ["record-grammar.bundle.references_i_rel_rel_is_3","references[{i}].rel '{rel}' is a member's relation and cannot be asserted_by 'source'",null,null,false,"code"],
   ["record-grammar.bundle.references_i_rel_rel_must","references[{i}].rel '{rel}' must carry the address the source wrote, as a comment string beside the canonical target",null,null,false,"code"],

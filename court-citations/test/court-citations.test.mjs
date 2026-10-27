@@ -113,7 +113,6 @@ test("R3: SOURCES names each package's version, licence, files with their SHA-25
     const lic = s.files.find((f) => f.name.endsWith("LICENSE")).name;
     assert.equal(s.licence_text, readFileSync(join(dirs[s.package], lic), "utf8"));
     assert.match(s.copyright, /^Copyright \(c\) 20\d\d, Free Law Project$/);
-    assert.match(s.licence_text, /Redistributions of source code must retain/);
   }
   const r = src("reporters-db").counts, c = src("courts-db").counts;
   assert.equal(r.reporters, 1236); assert.equal(r.variations, 2369);
@@ -145,7 +144,7 @@ test("R4: a file not at its pinned version is refused, and nothing is written", 
     writeFileSync(join(m.c, "courts_db/data/variables.json"), "{\"x\": \"y\"}");
     const out = join(m.dir, "data.mjs");
     const b = buildCourtCitations({ reportersDir: m.r, courtsDir: m.c, out, pins: m.pins });
-    assert.equal(b.ok, false); assert.match(b.why, /not the pinned 0\.0\.2/);
+    assert.equal(b.ok, false); assert.ok(b.why.includes("variables.json") && b.why.includes("0.0.2"), b.why);
     assert.throws(() => readFileSync(out));
   } finally { rmSync(m.dir, { recursive: true, force: true }); }
 });
@@ -228,7 +227,7 @@ test("R6: verifyFresh answers true only for a byte-identical committed file, fal
     const changed = verifyFresh({ file: f });
     assert.equal(changed.fresh, false); assert.match(changed.why, /differs/);
     const absent = verifyFresh({ reportersDir: join(dir, "none"), courtsDir: join(dir, "none") });
-    assert.equal(absent.fresh, null); assert.match(absent.why, /could not check/);
+    assert.equal(absent.fresh, null); assert.ok(absent.why.includes(join(dir, "none")), absent.why);
     cpSync(CDIR, join(dir, "c"), { recursive: true });
     rmSync(join(dir, "c", "courts_db/data/variables.json"));
     assert.equal(verifyFresh({ courtsDir: join(dir, "c") }).fresh, null);

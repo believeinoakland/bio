@@ -133984,55 +133984,6 @@
    "en": "If no reply comes, the next step is ready without anyone remembering.",
    "protected": false,
    "source": "library.json"
-  },
-  {
-   "key": "record-grammar.bundle.object_type_ot_is_not",
-   "en": "object_type '{ot}' is not a known type",
-   "protected": false,
-   "source": "T53 record-grammar job",
-   "note": "record-grammar, code message held as a word for its test"
-  },
-  {
-   "key": "record-grammar.bundle.current_state_cur_is_not",
-   "en": "current_state '{cur}' is not legal for {ot} (legal: {legal})",
-   "protected": false,
-   "source": "T53 record-grammar job",
-   "note": "record-grammar, code message held as a word for its test"
-  },
-  {
-   "key": "record-grammar.bundle.references_i_rel_rel_is",
-   "en": "references[{i}].rel '{rel}' is not in the closed vocabulary",
-   "protected": false,
-   "source": "T53 record-grammar job",
-   "note": "record-grammar, code message held as a word for its test"
-  },
-  {
-   "key": "record-grammar.acts.no_basis.progressions",
-   "en": "first declaration and revision of a declared flow",
-   "protected": false,
-   "source": "T53 record-grammar job",
-   "note": "record-grammar, code message held as a word for its test"
-  },
-  {
-   "key": "record-grammar.acts.no_basis.entities",
-   "en": "held identifier and grade-D testimony",
-   "protected": false,
-   "source": "T53 record-grammar job",
-   "note": "record-grammar, code message held as a word for its test"
-  },
-  {
-   "key": "record-grammar.acts.no_citation.progressions",
-   "en": "revision of a declared flow and exception document",
-   "protected": false,
-   "source": "T53 record-grammar job",
-   "note": "record-grammar, code message held as a word for its test"
-  },
-  {
-   "key": "record-grammar.labels.unknown_subject",
-   "en": "proposalLabel: '{subject}' is not a proposal subject; one of {subjects}",
-   "protected": false,
-   "source": "T53 record-grammar job",
-   "note": "record-grammar, code message held as a word for its test"
   }
  ]
 }
