@@ -1,0 +1,6 @@
+Round R1, layer 6, module contradiction, tranche T52. Your depth: 2. BOB: BOB #320 (session_018BhcecJrZBGdFHx6zQiGAc).
+The process tool: `node /home/user/civicos-process/tools/proc.mjs <command> --product . --tranche T52 --module contradiction`. Start with `<command>` = `job start --session <your session id> --depth 2`.
+Before changing code, read `build/situations/job.md` whole: the product's standing rules for every job.
+
+Entries:
+- T52-22 · `candidatesFor` publishes a member-flagged candidate (`flagged_by`) in its answer, so screens-inquiry's `t51-fix11-b89.test.mjs` `answer(c)` takes it and R138's flags list can be drawn (SCREENS-INQUIRY #34 J64; K5282). R25 already states the field and `#present` sets it: the step is contradiction's published fixtures (its tests' own, from its real code) carrying a flagged candidate's answer, so a user's test builds none by hand; no requirement changes (K5405).
