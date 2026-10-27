@@ -28904,60 +28904,221 @@
       "line": 1456
     },
     {
+      "id": "format-registry.formats.compound_file_unknown",
+      "en": "a compound file of a kind this list does not name",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 515
+    },
+    {
       "id": "format-registry.formats.container_judged_from_end",
       "en": "judged from the end record and the central directory of {size} bytes",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 181
+      "line": 201
     },
     {
       "id": "format-registry.formats.content_type_ct_matched_no",
       "en": "content type \"{ct}\" matched no registered format",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 139
+      "line": 140
+    },
+    {
+      "id": "format-registry.formats.encrypt_in_trailer",
+      "en": "/Encrypt in the trailer",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 408
+    },
+    {
+      "id": "format-registry.formats.encrypted_office_container",
+      "en": "an encrypted Office container; the kind is taken from its name or declared type",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 509
+    },
+    {
+      "id": "format-registry.formats.encrypted_office_unknown",
+      "en": "an encrypted Office container whose kind cannot be read",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 510
+    },
+    {
+      "id": "format-registry.formats.epub_mimetype",
+      "en": "the first member is the EPUB mimetype",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 442
+    },
+    {
+      "id": "format-registry.formats.installer_package",
+      "en": "a Windows installer package",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 503
     },
     {
       "id": "format-registry.formats.magic_doctype_root_tag",
       "en": "magic: doctype/root tag in the first 1024 bytes",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 301
+      "line": 649
+    },
+    {
+      "id": "format-registry.formats.magic_hex_at_offset",
+      "en": "magic: {hex} at offset {at}",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 251
     },
     {
       "id": "format-registry.formats.magic_hex_at_offset_0",
       "en": "magic: {hex} at offset 0",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 236
+      "line": 582
+    },
+    {
+      "id": "format-registry.formats.member_encrypted",
+      "en": "a member is encrypted",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 431
     },
     {
       "id": "format-registry.formats.name_and_delimited_head",
       "en": "name \"{name}\" and a head of delimited text",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 155
+      "line": 161
+    },
+    {
+      "id": "format-registry.formats.name_disagrees_with_content",
+      "en": "the name \"{name}\" suggests {expected}, the content is {format}",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 556
+    },
+    {
+      "id": "format-registry.formats.native_executable",
+      "en": "a program for another system: ELF or Mach-O",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 495
     },
     {
       "id": "format-registry.formats.no_bytes_to_sniff",
       "en": "no bytes were available to sniff",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 138
+      "line": 139
     },
     {
       "id": "format-registry.formats.no_content_type_declared",
       "en": "no content type was declared",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 139
+      "line": 140
     },
     {
       "id": "format-registry.formats.no_magic_byte_match",
       "en": "no registered magic-byte signature matched",
       "module": "format-registry",
       "file": "bio-plane/src/formats.mjs",
-      "line": 138
+      "line": 139
+    },
+    {
+      "id": "format-registry.formats.part_android_manifest",
+      "en": "part: AndroidManifest.xml and classes.dex",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 450
+    },
+    {
+      "id": "format-registry.formats.part_iwork_index",
+      "en": "part: an Apple iWork Index",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 448
+    },
+    {
+      "id": "format-registry.formats.part_jar_manifest",
+      "en": "part: META-INF/MANIFEST.MF",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 452
+    },
+    {
+      "id": "format-registry.formats.part_visio_document",
+      "en": "part: visio/document.xml",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 445
+    },
+    {
+      "id": "format-registry.formats.part_xl_workbook_bin",
+      "en": "part: xl/workbook.bin",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 444
+    },
+    {
+      "id": "format-registry.formats.portable_executable",
+      "en": "a Windows program: MZ with a PE header",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 490
+    },
+    {
+      "id": "format-registry.formats.script_echo_off",
+      "en": "a script: it begins with @echo off",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 529
+    },
+    {
+      "id": "format-registry.formats.script_name",
+      "en": "a script file: the text is named .{ext}",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 532
+    },
+    {
+      "id": "format-registry.formats.script_shebang",
+      "en": "a script: it begins with #!",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 528
+    },
+    {
+      "id": "format-registry.formats.template_package",
+      "en": "the package is a template",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 423
+    },
+    {
+      "id": "format-registry.formats.valid_text_no_structure",
+      "en": "valid text in a known encoding with no other leading structure",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 370
+    },
+    {
+      "id": "format-registry.formats.vba_project_present",
+      "en": "a VBA project is in the package; nothing is run",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 420
+    },
+    {
+      "id": "format-registry.formats.virtual_disk",
+      "en": "a virtual disk",
+      "module": "format-registry",
+      "file": "bio-plane/src/formats.mjs",
+      "line": 497
     },
     {
       "id": "hypotheses.checks.a_hypothesis_is_held_in",
