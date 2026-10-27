@@ -2,7 +2,7 @@
 # Plan T52 · the beta (K5257)
 **Status** · OPEN · BOB #319 · session_018Bhced5gpDxaidQNabEbp6 · depth 1
 **Jobs** · entities: ENTITIES #1 session_018BhcecQhnVK36CsiRUDvsz; events: EVENTS #1 session_018BhcefVAkEW3F8ikST3nS6; money: MONEY #1 session_018Bhcef9ixS7sA7mnPM5bZx; explore: EXPLORE #1 session_018BhcefeUbMPbsVYnH7PqGj; query-language: QUERY-LANGUAGE #1 session_018Bhced7XwxHM61Lrxj2vxC; retrieval: RETRIEVAL #1 session_018BhcedyRp1uFhsb5WwxYio
-**Owed** · message events; message money; message explore; message query-language
+**Owed** · message money; message explore; message query-language
 
 T52 is the beta, with all of its requirements (Bob, K5257). Its rounds are written from `next.md` and the 0.87.0 walk's placement (K5354); R14 (civicos-process PR #13) is adopted before its first test run (K5351).
 
