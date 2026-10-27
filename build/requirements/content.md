@@ -51,7 +51,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 
 **transcribe({bundleId, extent, text, transcriber, viewer, at}), transcriptionAttest({contentId, attestor, viewer, at, note}), transcriptionRead({id, viewer})** (`op=transcribe`, `op=transcriptionattest`, `op=transcription`)
 - **R23** Refusals in order: C-52.1 (a machine or empty transcriber), C-52.2 (no, invisible or non-document target), C-52.3 (no capture), C-52.4 (no portion: null or `{}`), R7's against the typed chain, C-52.5 (a portion no attestation could scope: `bytes`, or not document, page or region), C-52.6 (empty text), C-52.7 (over 131,072 bytes, never truncated).
-- **R24** Success mints a row whose chain is one `typed` step (the member, the text's SHA-256), minted by the typist, and keeps the text byte for byte; the same typing again is found, not rewritten. Its fidelity is undetermined until a different member attests it.
+- **R24** *(not yet met: T53)* Success mints a row whose chain is one `typed` step (the member, the text's SHA-256), minted by the typist, and keeps the text byte for byte; the same typing again is found, not rewritten. Its fidelity is graded as R63 states (T53; DEC-464: it was undetermined until a different member attested it).
 - **R25** `transcriptionAttest`: C-52.8 (no or invisible typing), then `text-chain.checkAttestation` (C-35.10, C-35.11), then C-52.9 (the typist), then `ATTEST_NO_NOTE` (C-52.10: the `note`, the attestor's words on what they compared, absent, not a string, blank or over 2,000 characters); one attestation per (row, attestor), a repeat replacing it, kept with its note; the answer carries the ceiling before and after; the typing is unchanged. (DEC-88; K1025)
 - **R26** `transcriptionRead`: C-52.8; the text, digest, chain, cap, ceiling and attestations, each with `counts` false for the typist's own.
 
@@ -121,6 +121,24 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - **R61** (G128g; amends R46) **`heldTextAt` is one rule over extents.** `passageText`, `cellsAt` and R31's grade read a passage's held text through the one rule `heldTextAt(row)`: a `document` extent's text is the units' lines once each, a repeated header block line dropped (R46), so a CSV of 18,098 rows yields 18,098 data lines and a table declared from it has no extra rows. Test: `passageText` of a `document` extent equals the file's lines once each for a CSV, an xlsx and an ods sheet (controls 127 KiB and 129 KiB) and the comma CSV's table sha equals its tab twin's. Control: a text that is not a sheet is joined as R46 states.
 - **R62** (K5157; walk-T51-final 06 §5) An extent of a kind the capture's format cannot hold (a page of a Word file, a slide of a text, a cell of a PDF) is refused `CONTENT_EXTENT_OUT_OF_RANGE` (C-45.1), naming the kind and the format; where the format is not held it is not refused (R8).
 
+**A typed page: its grade and who typed and checked it (T53; A8, DEC-464)**
+
+- **R63** *(not yet met: T53)* (T53; DEC-464; amends content R21, R24, R25, R26; supersedes R24's last sentence) **A typing is graded as its typist's word, and a second member's check raises it one step.** [grades as `text-chain` R107; K5524.] The transcription grade of a typed row is `text-chain` `text-chain` R107's answer: D, determinant typist, until a member other than the typist attests the typing; C, determinant second member, from the first such attestation on; further attestations are kept with their notes (R25), named, and raise nothing. It is never undetermined and never `EARNED_CAPTURE_CEILING`. Typing a page, attesting it, and every read of it state this grade; a repeat attestation by the same member replaces her own (R25) and does not change the grade. Test: a page typed reads D; a second member attests it: before D, after C; a third member attests: C; the typist's own attestation leaves it at D. Control: the check of the machine text of the same page (R43) leaves the typing at D.
+
+- **R64** *(not yet met: T53)* (T53; DEC-464; amends content R16, R19, R20, R26) **A typed row says who typed it and who checked it, by key, except as credited.** [decided: K5525, L11 as recommended] Every read and the standings carry for a typed row the typist, when, the checkers (only members other than the typist, in time order, each with when) and a label by key: `content.typed.unchecked` ("typed by {typist}, not yet checked") or `content.typed.checked` ("typed by {typist}, checked by {checkers}"); the words are the design stream's (the first is Bob's). A member is named as the credit level in force for her allows ("a member of the team" where she asked not to be named); the label never names someone the level hides. Its mint label stays "member marked", never machine work, and no field of it says the words are Civicsmith's reading or the original. Test: before and after a check the matching key and names; a hidden bundle answers as absent; a member credited anonymously is "a member of the team" where credit applies. Control: a machine-read row has no typed block; a member credited by name is named.
+
+**A register row as content (T53; N1259)**
+
+- **R65** *(not yet met: T53)* (T53; N1259; K4403 (4); amends R7, R12, R52) **`registerRowContext(provider)`: one registration by the module that holds register captures.** Offered once at start (as `listenerRefusal` rules); a second registration is refused. The provider answers, for a capture sha, `holds(sha)` and `rowAt(sha, n)` (the cells of the reduced file's row `n`, with the header row as row 1, or null past the end). For a capture the provider holds, R7's check of a `sheet-range` extent and R12's mint use the provider in place of a reading (`reading-pipeline` is not asked; `CONTENT_EXTENT_NO_CHAIN` does not apply: chain null), `cellsAt` (R52) answers from it, and the row is minted as the existing `sheet-range` extent `{sheet: <segment file name>, range: "A<n>:<lastcol><n>"}`: no new extent kind. A row past the segment's rows is `CONTENT_EXTENT_OUT_OF_RANGE`. With no provider registered or none holding the capture, behaviour is as before. Test: a 5-row fixture segment mints row 3 and `cellsAt` answers its kept cells; row 7 is out of range; a capture the provider lacks reads as before; a second registration is refused. Control: an ordinary sheet-range is checked against its reading.
+
+- **R66** *(not yet met: T53)* (T53; N1259; K4403 (4); amends R21) **A register row carries no machine-reading grade.** The transcription axis (R21) of a row over a register segment is "not applicable: bytes as filed", never `text-chain.gradeCeiling`; the row's human form is by key ("row {n} of {file}") and its `cited_as` is `text`. Test: a minted register row has axis `not applicable` and no grade; a sheet row of an ordinary workbook is graded as before. Control: unchanged for every other kind.
+
+- **R67** *(not yet met: T53)* (T53; N1259; K4403 (4); amends R12) **The content row remembers the reduction it points into.** The row written at mint also holds `register: {segment_sha, original_sha256, original_covers, dropped_columns, src_row, import}` (a new column: a `migrateContent` step, `schema.mjs:244`; UNVERIFIED that no test pins them), read from the segment's hop through the provider (`rowAt` also answers its `reduced` block). A row over a capture the provider does not hold has no `register` key. Test: the minted row holds the original fingerprint equal to the hop's and the row's `src_row`; a plain row has no `register`. Control: the content id recomputes by `contentIdFor` (R3) unchanged.
+
+**A part of a document, in plain words (T53)**
+
+- **R68** *(not yet met: T53)* (T53; DEC-454 owed: `content.extent`'s part key gets plain names; amends R1, R58) **A part is named in plain words, never by its package path or element key.** The human form of a `doc-part` extent (R1) and every sentence this module answers about one (a malformed part, an undetermined part list, a part past the reading's units) name the part by its kind's plain name by key (`content.part_kind.<kind>`, R58's closed list: footnote, endnote, header, footer, comment, tracked deletion, text box, speaker note, master text, cell note), with the element's number where the reader names one ("footnote 3"), and never print the package part path or the element reference the reader emitted (`word/footnotes.xml`, `fn3`). The canonical form `{kind, part, ref}`, and so the content id (R3), is unchanged. Test: a citation of a footnote unit reads "footnote 3" in `contentRead`'s human form and in a refusal for a malformed sibling, and neither holds `word/` or `.xml`; the content id equals the one minted before this line. Control: a `doc-para` extent reads as before; a unit whose kind is unknown reads "part" with its number, never `body`.
+
 ## Private
 
 ### Uses
@@ -129,7 +147,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - `text-chain`: `rectSpace` and `RECT_USER_SPACE` (R87), in place of a copy of their own (N252, K292).
 
 - `legacy-checks`: the C-45, C-52 and C-80 rows until they move here (R38), `isMachineIdentity`, `canonicalJson`, `sha256HexSync`.
-- `text-chain`: `checkChain`, `checkAttestation`, `derivationCap`, `gradeCeiling`, `extentCovers`, `describeChain`, `chainKindFor`.
+- `text-chain`: `checkChain`, `checkAttestation`, `derivationCap`, `gradeCeiling`, `extentCovers`, `describeChain`, `chainKindFor`. (T53) `TYPED_UNCHECKED_GRADE`, `TYPED_CHECKED_GRADE` and `gradeCeiling`'s typed answer (its R107; R63, R64).
 - `format-registry`: `getFormat(...).parts`, for a container's kind (K134).
 - `pdf-pixels` (K70): the crop (R32).
 - `record-core`: `recordOf(ctx)`, `transact`, `bundleInfo` (a target's type), `declarePurge`, `declareTable` (its R21; R54, T33-24).
@@ -140,6 +158,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - (Fix round 9) `acquisition`: `readRange` (its R113), for R59's crop (a `uses` edge, K4840).
 - `extraction`: `readingOf` (its R30), `capturesReadFor` (its R51, for R11), under this module's `contentContextFor`; `unitsOf` (its R36), for the text units and index state of a capture (R31); and `onReading` (R22). `attestText`, `attestationsFor`, `text_attestations` and `contentContextFor` are this module's (K73 (1), K134). `noSha` (its R63), R44's refusal (N285).
 - `capture`, `id-spaces`: nothing in this module's share calls them (map §5).
+- (T53, R65–R67) The provider of register captures is handed in at start (`registerRowContext`, R65) and imported from no module; `registers` registers itself.
 
 ### Invariants
 
@@ -160,6 +179,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3 (tables and images as content, `cited_as`).
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (sight).
 - `docs/architecture/BIO_Design_Requirements_v2.md`: machine work labelled, never presented as the publisher's.
+- (T53) DEC-464 (K5524, K5525): R63, R64; N1259 (K4403 (4)): R65–R67; DEC-454: R68.
 
 ### Suggestions
 

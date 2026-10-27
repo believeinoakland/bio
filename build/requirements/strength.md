@@ -79,6 +79,12 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - **R38** (K1447 (i)) A duty-occurrence leg counts on the capture axis at the weakest of what its derivation rests on (`leg-earning` R9: the source in force, the trigger date, the due date and the level searched): the capture grade of the source's text at its version, and the grade of the trigger date's attestation (`events`); a part of the derivation `duties` answers undetermined makes the leg `undetermined`, named with why. The occurrence's state (`met`, `overdue` and the others) is stated beside the grade and never raises or lowers it.
 - **R45** (K5157; walk-T51-final 03 §8) `projectBarSet` takes `expected`, the bar the writer saw (`{capture, connection}`, each null for none); when the project's bar has changed since, it writes nothing and answers `BAR_STALE` naming the bar now held (`previous`); with `expected` absent it keeps today's behaviour (R40).
 
+**A leg on a typed passage (T53; A8, DEC-464)**
+
+- **R46** *(not yet met: T53)* (T53; DEC-464; amends strength R1, R9) **A leg on a typed passage counts at the passage's grade.** (decided, K5549, K5524) On the capture axis it counts at `leg-earning` R18/R19's grade (D unchecked, C checked), in every reading of strength alike (the question's, a version's, a candidate pair, a recomputation); its member's `why` says "the typist's word" or "typed by X, checked by Y" by key, never "Civicsmith read". The arithmetic of R4 is unchanged. Test: byte grade B, legs: attested AI passage (B), checked typing (C), unchecked typing (D): the axis reads D naming the unchecked typing; after its check, C; never B for a typing. Control: a stored version keeps its stored grade (R9).
+
+- **R47** *(not yet met: T53)* (T53; DEC-464; amends strength R31, R35) **The grading method gains its rule and a new version.** (decided, K5549) A typed passage is worth its typist's word, one step more once a second member checked it, never the standing of text Civicsmith read; the method has a new version naming this rule, and every earlier version keeps its words and arithmetic, each recomputing from the leg's recorded grade as before. The grading facts of a leg on a typed passage say it is typed and whether it is checked (no names). Test: the new version's text names the rule; earlier versions byte-identical. Control: a stored pair keeps its version.
+
 ## Private
 
 ### Uses
@@ -121,6 +127,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §3 (testimony, a third axis), as amended by DEC-102 (identity sets testimony's weight: R29, R30; K1019).
 - DEC-112 (R31, R32); DEC-119 (3) (R34; K1275); DEC-96 item 1 (R33; N522).
 - `docs/archive/CASE-AS-PRODUCTION.md` by way of DEC-72 (the bar is a project's property), DEC-17, DEC-32, DEC-40, DEC-44.
+- (T53) DEC-464 (K5524, K5549): R46, R47.
 
 ### Suggestions
 
