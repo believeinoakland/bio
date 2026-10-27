@@ -19322,7 +19322,7 @@
   },
   {
    "key": "refusal.IMPOSSIBLE_AT_TWO",
-   "en": "With only two administrators, a removal can never carry, so neither can remove the other. Nothing was written.",
+   "en": "With only two administrators, a removal by vote can never carry, so only the team's founder can remove an administrator. Nothing was written.",
    "protected": false,
    "note": "DEC-342: administrator removal vote with two administrators"
   },
@@ -46321,12 +46321,6 @@
    "note": "DEC-484: members: the fold with the founder's own removal (K5562)"
   },
   {
-   "key": "screen.members.founder.remove.reason",
-   "en": "Why remove their administrator's powers? (everyone on the team will see this)",
-   "protected": false,
-   "note": "DEC-484: members: the founder's reason field (K5562)"
-  },
-  {
    "key": "screen.members.removed.byfounder",
    "en": "{founder}, the team's founder, removed {handle} as an administrator on {date}: “{reason}”",
    "protected": false,
@@ -46349,6 +46343,60 @@
    "en": "{handle}'s proposal is cancelled. They stay a member, without an administrator's powers; the endorsements given so far stay in the history.",
    "protected": false,
    "note": "DEC-484: members: after Cancel this proposal (K5563)"
+  },
+  {
+   "key": "screen.members.removals.head",
+   "en": "Administrators removed",
+   "protected": false,
+   "note": "DEC-485: members: the team's list of every administrator removal, the founder's and by vote (K5568)"
+  },
+  {
+   "key": "screen.members.removals.none",
+   "en": "No administrator has been removed.",
+   "protected": false,
+   "note": "DEC-485: members: the list, empty"
+  },
+  {
+   "key": "screen.members.removed.byvote",
+   "en": "{handle} was removed as an administrator by vote on {date}.",
+   "protected": false,
+   "note": "DEC-485: members: a removal by vote, then each voter's reason (K5568)"
+  },
+  {
+   "key": "screen.members.removed.voter",
+   "en": "{member}: “{reason}”",
+   "protected": false,
+   "note": "DEC-485: members: one voter's reason under a removal by vote (K5568)"
+  },
+  {
+   "key": "screen.members.founder.remove.now",
+   "en": "Remove {member} now, as the founder",
+   "protected": false,
+   "note": "DEC-485: members: the founder's act inside a removal vote under way; it removes at once (K5562; members.mjs:284 drew Agree)"
+  },
+  {
+   "key": "screen.members.founder.seen",
+   "en": "Seen by the team's founder",
+   "protected": false,
+   "note": "DEC-485: members: the design page's fold for the founder's act inside a vote"
+  },
+  {
+   "key": "screen.members.founder.remove.now.what",
+   "en": "As the team's founder, you can remove {member} now, without waiting for the vote. Your reason is shown to the team.",
+   "protected": false,
+   "note": "DEC-485: members: above the founder's act inside a vote"
+  },
+  {
+   "key": "refusal.NO_WAITING_PROPOSAL",
+   "en": "There is no waiting proposal to cancel: it was already accepted or cancelled. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-485: adminproposalcancel (K5566)"
+  },
+  {
+   "key": "refusal.NOT_YOUR_PROPOSAL",
+   "en": "Only the team's founder or the member who proposed it can cancel this proposal. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-485: adminproposalcancel (K5566)"
   }
  ],
  "rewrite": {
@@ -46581,6 +46629,7 @@
   "standard.source.capture.whole": "could be captured: {capture}",
   "calculations.capture_capped_derivation": "could be captured: {capture}, capped by its derivation at {cap}",
   "screen.doorbell.happens.court": "A court can order the team to hand over what it holds, including what you send and when it arrived. Think about what your files and note could reveal about you before you send them.",
-  "refusal.CONSENSUS_REQUIRED": "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}."
+  "refusal.CONSENSUS_REQUIRED": "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}.",
+  "screen.members.remove.reason": "Why remove their administrator's powers? (everyone on the team will see this)"
  }
 }

@@ -3789,7 +3789,7 @@ W.append(dict(key='refusal.IDENTIFIER_NOT_IN_SPACE', en="That identifier does no
 W.append(dict(key='refusal.IDENTIFIER_TAKEN', en='Another entity already holds that identifier for an overlapping or unstated period. Nothing was written.', protected=False, note='DEC-342: identifier already held by another entity'))
 W.append(dict(key='refusal.IDENTITY_GRADE_UNEARNED', en='The evidence given does not yet support that kind of identity claim. Add what it needs, or choose a weaker basis. Nothing was written.', protected=False, note='DEC-342: identity claim lacks evidence for its grade'))
 W.append(dict(key='refusal.IMAGE_TOO_LARGE', en='One of the pages makes an image too large to transcribe, so it was left out. Nothing was sent for it.', protected=False, note='DEC-342: transcription page image over size limit'))
-W.append(dict(key='refusal.IMPOSSIBLE_AT_TWO', en='With only two administrators, a removal can never carry, so neither can remove the other. Nothing was written.', protected=False, note='DEC-342: administrator removal vote with two administrators'))
+W.append(dict(key='refusal.IMPOSSIBLE_AT_TWO', en="With only two administrators, a removal by vote can never carry, so only the team's founder can remove an administrator. Nothing was written.", protected=False, note='DEC-342: administrator removal vote with two administrators'))
 W.append(dict(key='refusal.INPUT_INVALID', en="One of this calculation's inputs is not valid or could not be read again. Nothing was written.", protected=False, note='DEC-342: recipe input table invalid or unreadable on rescan'))
 W.append(dict(key='refusal.INPUT_UNBOUND', en='This calculation needs an input that was not supplied. Nothing was written.', protected=False, note='DEC-342: recipe input has no bound value'))
 W.append(dict(key='refusal.INQUIRY_UNAVAILABLE', en="Your team's Civicsmith is not set up for questions, so this could not be done. Nothing was written.", protected=False, note='DEC-342: inquiry services not wired into this instance'))
@@ -8716,12 +8716,25 @@ def w484(key, en, note):
 # BOB #324's ask: Bob's K5562 (the founder removes an administrator alone, with a reason the team sees) and K5563 (the founder's endorsement alone; cancelling a waiting proposal)
 w484('screen.members.founder.removes', "The team's founder can remove any other administrator alone, with a reason everyone on the team sees. Other administrators still need a majority vote, and no one can remove the founder.", 'members: in What removing an administrator takes, at every size (K5562)')
 w484('screen.members.founder.remove.summary', 'When the founder removes an administrator', "members: the fold with the founder's own removal (K5562)")
-w484('screen.members.founder.remove.reason', "Why remove their administrator's powers? (everyone on the team will see this)", "members: the founder's reason field (K5562)")
 w484('screen.members.removed.byfounder', '{founder}, the team\'s founder, removed {handle} as an administrator on {date}: “{reason}”', 'members, and the team\'s updates: the removal and its reason, shown to the team (K5562)')
 w484('screen.members.endorse.founder', "{handle} is proposed as an administrator. As the team's founder, your endorsement alone makes them one.", "members: endorse.what's line for the founder (K5563)")
 w484('screen.members.proposal.summary', 'When the founder endorses, or the proposal is cancelled', "members: the design page's fold for a proposed administrator's two outcomes")
 w484('screen.members.proposal.cancelled', '{handle}\'s proposal is cancelled. They stay a member, without an administrator\'s powers; the endorsements given so far stay in the history.', 'members: after Cancel this proposal (K5563)')
 REWRITE.update({'refusal.CONSENSUS_REQUIRED': "Your endorsement is recorded. While the team has two or more administrators, a new one is invited once every administrator endorses, or once the team's founder does. Still to endorse: {awaiting}."})
+
+def w485(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-485: ' + note))
+# BOB #324's ask (PLANNING L48) and Bob's K5568: every removal shown to the team with who and why; the founder inside a vote; Cancel's refusals
+w485('screen.members.removals.head', 'Administrators removed', 'members: the team\'s list of every administrator removal, the founder\'s and by vote (K5568)')
+w485('screen.members.removals.none', 'No administrator has been removed.', 'members: the list, empty')
+w485('screen.members.removed.byvote', '{handle} was removed as an administrator by vote on {date}.', 'members: a removal by vote, then each voter\'s reason (K5568)')
+w485('screen.members.removed.voter', '{member}: “{reason}”', 'members: one voter\'s reason under a removal by vote (K5568)')
+w485('screen.members.founder.remove.now', 'Remove {member} now, as the founder', 'members: the founder\'s act inside a removal vote under way; it removes at once (K5562; members.mjs:284 drew Agree)')
+w485('screen.members.founder.seen', "Seen by the team's founder", "members: the design page's fold for the founder's act inside a vote")
+w485('screen.members.founder.remove.now.what', "As the team's founder, you can remove {member} now, without waiting for the vote. Your reason is shown to the team.", 'members: above the founder\'s act inside a vote')
+w485('refusal.NO_WAITING_PROPOSAL', 'There is no waiting proposal to cancel: it was already accepted or cancelled. Nothing was changed.', 'adminproposalcancel (K5566)')
+w485('refusal.NOT_YOUR_PROPOSAL', "Only the team's founder or the member who proposed it can cancel this proposal. Nothing was changed.", 'adminproposalcancel (K5566)')
+REWRITE.update({'screen.members.remove.reason': "Why remove their administrator's powers? (everyone on the team will see this)"})
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
