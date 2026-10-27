@@ -12,7 +12,7 @@
 3. On Bob's answers (L13-L26, L18 among them; J1-J7; §G's points): unbracket or change the lines each decides.
 4. When every lane is folded: each job's reading set measured (`build/plan/reading-sets.py` counts code and tests too: measure requirements plus the drafts a job reads against the 600 KB budget; heavy: screens-inquiry, interface-shell, agent-worker, jurisdictions now with six drafts); the plan under 51,200 bytes (detail files beside it); mark READY for BOB.
 
-**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L14-L26, J1-J7. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
+**Waiting on.** BOB: DEC-474 to DEC-477's merge. Bob: L15-L26, J1-J7. Lanes: PLATFORM, TESTS-SWEEP (CAPABILITIES' gaps closed, K5532).
 
 ## L1 · 2026-10-27 · the plan's structure drafted
 
@@ -133,3 +133,7 @@ Bob answered C33 A (K5537): he marks M-N1272's gold set blind himself; named as 
 ## L30 · 2026-10-27 · K5538
 
 Bob answered C34 as recommended (K5538): DEC-340's two researched facts are offered marked "researched, not reviewed"; noted in `plan-T53-capabilities.md`. Every C question is answered; open with Bob from this lane's scope: L14-L26 and J1-J7.
+
+## L31 · 2026-10-27 · K5539; L28's bracket repaired
+
+Bob answered L14 B (K5539, not the recommendation): only a question's owner or an administrator may name or change its subject; A1-R1 refuses any other viewer `NOT_THE_QUESTION_OWNER` (PLANNING's name) after `NOT_AN_INQUIRY`; A1-R5 offers the control to them only. L28's regex had cut A1-R1's Q-A1-1 bracket at its inner `findings[]`, leaving stray text; both Q-A1-1 lines restored from history as decided text.
