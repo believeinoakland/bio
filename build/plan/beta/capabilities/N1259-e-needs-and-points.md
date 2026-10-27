@@ -30,7 +30,7 @@ Grade is `op-grades` R49's `weight`: a rung (`reversible`, `reasoned`), a ground
 | `registerwatch` | following | watch a filer, licence, docket or company number (following R37) | reversible | 1,000 ms | yes |
 | `registerwatchstop` | following | stop a watch (following R45) | reversible | 500 ms | yes |
 | `alertconnect` | credentials | set or switch the group's CourtListener key; administrator (credentials R84) | ground `credential` | 1,000 ms | yes (but see 6.4) |
-| `rowexpunge` | registers | remove a row on a K1493 ground; administrator (R30) | reasoned (`EXPUNGE_GROUND_REFUSED`) + consequence statement | 1,000 ms | NO |
+| `rowexpunge` | registers | remove a row on a K1493 ground; administrator (R30) | reasoned (`ROW_EXPUNGE_NO_REASON`), irreversible weight + consequence statement | 1,000 ms | NO |
 | `registerproposals` | registers | the held proposals as data for an administrator (R6) | read; class admin | 500 ms | NO |
 
 Machine authors are refused by name on the acts part (c) R55 lists. After the alpha, left out (R37 of part (b)): `registerask`, `registermatch`, `registerwatchpropose`. Reads the screens already have and this work adds a field to: `follows` (following R40).
@@ -137,3 +137,11 @@ Nothing here repeats an answer in K4403, K4405 (its ten points) or DEC-447. Each
 13. Draft ids: `N1257-requirements-jurisdictions.md` (another worker) uses `jurisdictions` R99-R133; part (a)'s R99-R105 are its R127-R133. `journey-check` R32-R34 are the N1260 draft's; this part starts at R35.
 14. The mock draws no import progress, pause, comparison, refresh, row removal, definition step or proposals list; the plan's T52-34 lists progress and pause.
 15. The mock's watch dropdown offers "State license files" for a watch by licence number; no licence source or query form is measured, so no `query_template` can be written for it yet.
+
+## Changed for C18
+
+1. Stale `jurisdictions` cites: part (a)'s R99-R105 are `N1257-requirements-jurisdictions.md` R127-R133; cites corrected in (a) (R100, R101, R102, R104 -> R128, R129, R130, R132), (b) (R100, R101, R105), (c) (R102, R104, header), (d) (R100-R105 header, R103 -> R131 in three places, review items) and this part (R105 in two points, item 13). (a)'s own heading lines keep their draft ids R99-R105; its header says so.
+2. `N1265` review log: N858's R99/R100 are `jurisdictions` R125/R126, its reading-guides R17 is R18; the "now" cites say so and name the former ids.
+3. Part (b): `store-assembly` (the composition root) replaces `plane` in the `uses` edge list and `journey-check` is no longer named; `importTick(now, budget, host)`; R24 refuses `budget_ms` above 10,000 with the new `SEARCH_BAD_BUDGET`, with a Test; `rowExpunge` takes a required `reason` (new refusal `ROW_EXPUNGE_NO_REASON`). Review items moved to `N1259-b2-additions.md` for size.
+4. Part (c) op-grades R55: `rowexpunge` is `reasoned` with `ROW_EXPUNGE_NO_REASON` and joins `IRREVERSIBLE_WEIGHT` (`phoneOf` false); `MACHINE_REFUSALS` gains every register write op (`registerimport`, `registerpreread`, `registerpropose`, `registerdefine`, `registerrowcite`, `registerinterest`, `registerwatch`, `registerrefresh`, `registerimportset`, `registerwatchstop`, `rowexpunge`), reads stay open to the assistant; Tests added. The §1 table's `rowexpunge` row matches.
+5. `N1260-following-the-trail-b.md` R34: the quote of `journey-check` R21 is corrected (a state the live instance does not hold is a note, never a pass, never a failure).
