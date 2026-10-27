@@ -1,6 +1,6 @@
 # N1260 following the trail (a): connection-grammar, connections, money, explore, affordances
 
-**Status.** DRAFT for CAPABILITIES #1 review; derived from draft-T52-N1260-requirements.md, corrected by fact check and DEC-447.
+**Status.** READY for PLANNING (reviewed by CAPABILITIES #1, C2); derived from draft-T52-N1260-requirements.md, corrected by fact check and DEC-447.
 Part (a) of two: connection-grammar, connections, money, explore, affordances. Part (b) (interface-shell, the screens, journey-check, ops and edges, the closing note) is `N1260-following-the-trail-b.md`.
 Nothing in the repository was edited; the lines below are proposals, in `modules.json` order, ids the next free except money's (R36-R38, the first draft's R34-R36 renumbered because money R34 and R35 exist).
 

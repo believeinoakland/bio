@@ -1,6 +1,6 @@
 # N1260 following the trail (b): interface-shell, the screens, journey-check, ops and edges
 
-**Status.** DRAFT for CAPABILITIES #1 review; derived from draft-T52-N1260-requirements.md, corrected by fact check and DEC-447.
+**Status.** READY for PLANNING (reviewed by CAPABILITIES #1, C2); derived from draft-T52-N1260-requirements.md, corrected by fact check and DEC-447.
 Part (b) of two: interface-shell, screens-daily, screens-inquiry, screens-investigate, journey-check, ops and edges, the closing note on Bob's points. Part (a) (connection-grammar, connections, money, explore, affordances) is `N1260-following-the-trail-a.md`, whose R-ids and section 1 these lines cite.
 Nothing in the repository was edited; ids are the next free (interface-shell R136, screens-daily R108, screens-inquiry R140, screens-investigate R67 to R70, journey-check R32).
 
